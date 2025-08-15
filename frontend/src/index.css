@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans;
+  }
+}
+
+@layer components {
+  .card-border {
+    @apply border-2 border-gray-300 rounded-lg;
+  }
+  
+  .card-border-common {
+    @apply border-2 border-white rounded-lg;
+  }
+  
+  .card-border-uncommon {
+    @apply border-2 border-green-500 rounded-lg;
+  }
+  
+  .card-border-rare {
+    @apply border-2 border-blue-500 rounded-lg;
+  }
+  
+  .card-border-very-rare {
+    @apply border-2 border-purple-500 rounded-lg;
+  }
+  
+  .card-border-artifact {
+    @apply border-2 border-orange-500 rounded-lg;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+  
+  .card-preview {
+    width: 52.5mm;
+    height: 74.25mm;
+    @apply bg-white rounded-lg shadow-card border-2;
+  }
+}
