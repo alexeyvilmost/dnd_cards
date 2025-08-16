@@ -22,8 +22,8 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <h1 className="text-2xl font-fantasy font-bold text-gray-900">
-                DnD Cards
+              <h1 className="text-2xl font-bold text-gray-900">
+                DND CARDS
               </h1>
             </div>
 

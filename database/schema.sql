@@ -1,6 +1,4 @@
--- Создание базы данных
-CREATE DATABASE dnd_cards;
-
+-- База данных уже создана в docker-compose.yml
 -- Подключение к базе данных
 \c dnd_cards;
 

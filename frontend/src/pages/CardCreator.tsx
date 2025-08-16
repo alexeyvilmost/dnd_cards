@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Save, Eye, EyeOff, Wand2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { CreateCardRequest } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
+import { PROPERTIES_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
+import RaritySelector from '../components/RaritySelector';
 
 const CardCreator = () => {
   const navigate = useNavigate();
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewCard, setPreviewCard] = useState<any>(null);
@@ -18,25 +19,32 @@ const CardCreator = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
-  } = useForm<CreateCardRequest>();
+  } = useForm<CreateCardRequest>({
+    defaultValues: {
+      name: 'Название карты',
+      rarity: 'common',
+      properties: '',
+      description: 'Описание эффекта'
+    }
+  });
 
   const watchedValues = watch();
 
   // Обновление предварительного просмотра
   const updatePreview = () => {
-    if (watchedValues.name && watchedValues.description && watchedValues.rarity && watchedValues.properties) {
-      setPreviewCard({
-        id: 'preview',
-        name: watchedValues.name,
-        description: watchedValues.description,
-        rarity: watchedValues.rarity,
-        properties: watchedValues.properties,
-        card_number: 'PREVIEW',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
+    // Обновляем предпросмотр даже если не все поля заполнены
+    setPreviewCard({
+      id: 'preview',
+      name: watchedValues.name || 'Название карты',
+      description: watchedValues.description || 'Описание эффекта',
+      rarity: watchedValues.rarity || 'common',
+      properties: watchedValues.properties || '',
+      card_number: 'PREVIEW',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
   };
 
   // Обработка отправки формы
@@ -63,9 +71,14 @@ const CardCreator = () => {
   };
 
   // Обновляем предварительный просмотр при изменении значений
-  useState(() => {
+  useEffect(() => {
     updatePreview();
-  });
+  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties]);
+
+  // Инициализируем предпросмотр при загрузке
+  useEffect(() => {
+    updatePreview();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -110,20 +123,15 @@ const CardCreator = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Редкость *
               </label>
-              <select
-                {...register('rarity', { required: 'Выберите редкость' })}
-                className="input-field"
-              >
-                <option value="">Выберите редкость</option>
-                {RARITY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.rarity && (
-                <p className="mt-1 text-sm text-red-600">{errors.rarity.message}</p>
-              )}
+              <RaritySelector
+                value={watchedValues.rarity || ''}
+                onChange={(value) => {
+                  setValue('rarity', value, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                  // Немедленно обновляем предпросмотр
+                  updatePreview();
+                }}
+                error={errors.rarity?.message}
+              />
             </div>
 
             {/* Свойства */}
@@ -160,6 +168,7 @@ const CardCreator = () => {
                 rows={4}
                 className="input-field resize-none"
                 placeholder="Опишите эффект зелья..."
+                defaultValue="Описание эффекта"
               />
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>

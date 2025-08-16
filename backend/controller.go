@@ -13,48 +13,52 @@ import (
 
 // CardController - контроллер для работы с карточками
 type CardController struct {
-	db *gorm.DB
+	db            *gorm.DB
+	openaiService *OpenAIService
 }
 
 // NewCardController - создание нового контроллера
 func NewCardController(db *gorm.DB) *CardController {
-	return &CardController{db: db}
+	return &CardController{
+		db:            db,
+		openaiService: NewOpenAIService(),
+	}
 }
 
 // GetCards - получение списка карточек с фильтрацией
 func (cc *CardController) GetCards(c *gin.Context) {
 	var cards []Card
-	
+
 	query := cc.db.Model(&Card{})
-	
+
 	// Фильтрация по редкости
 	if rarity := c.Query("rarity"); rarity != "" {
 		query = query.Where("rarity = ?", rarity)
 	}
-	
+
 	// Фильтрация по свойствам
 	if properties := c.Query("properties"); properties != "" {
 		query = query.Where("properties = ?", properties)
 	}
-	
+
 	// Поиск по названию
 	if search := c.Query("search"); search != "" {
 		query = query.Where("name ILIKE ?", "%"+search+"%")
 	}
-	
+
 	// Пагинация
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset := (page - 1) * limit
-	
+
 	var total int64
 	query.Count(&total)
-	
+
 	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cards).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
 	}
-	
+
 	// Преобразование в ответы
 	var responses []CardResponse
 	for _, card := range cards {
@@ -70,7 +74,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			UpdatedAt:   card.UpdatedAt,
 		})
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"cards": responses,
 		"total": total,
@@ -86,7 +90,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID карточки"})
 		return
 	}
-	
+
 	var card Card
 	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -96,7 +100,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточки"})
 		return
 	}
-	
+
 	response := CardResponse{
 		ID:          card.ID,
 		Name:        card.Name,
@@ -108,7 +112,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -119,10 +123,10 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
 		return
 	}
-	
+
 	// Генерация уникального номера карточки
-	cardNumber := generateCardNumber()
-	
+	cardNumber := generateCardNumber(cc.db)
+
 	card := Card{
 		Name:        req.Name,
 		Properties:  req.Properties,
@@ -130,12 +134,12 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Rarity:      req.Rarity,
 		CardNumber:  cardNumber,
 	}
-	
+
 	if err := cc.db.Create(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания карточки"})
 		return
 	}
-	
+
 	response := CardResponse{
 		ID:          card.ID,
 		Name:        card.Name,
@@ -147,7 +151,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
-	
+
 	c.JSON(http.StatusCreated, response)
 }
 
@@ -158,13 +162,13 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID карточки"})
 		return
 	}
-	
+
 	var req UpdateCardRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
 		return
 	}
-	
+
 	var card Card
 	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -174,7 +178,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточки"})
 		return
 	}
-	
+
 	// Обновление полей
 	if req.Name != "" {
 		card.Name = req.Name
@@ -188,12 +192,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Rarity != "" {
 		card.Rarity = req.Rarity
 	}
-	
+
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
 		return
 	}
-	
+
 	response := CardResponse{
 		ID:          card.ID,
 		Name:        card.Name,
@@ -205,7 +209,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -216,12 +220,12 @@ func (cc *CardController) DeleteCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID карточки"})
 		return
 	}
-	
+
 	if err := cc.db.Where("id = ?", id).Delete(&Card{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления карточки"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Карточка удалена"})
 }
 
@@ -232,30 +236,41 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
 		return
 	}
-	
+
 	var card Card
 	if err := cc.db.Where("id = ?", req.CardID).First(&card).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Карточка не найдена"})
 		return
 	}
-	
+
 	// Генерация промпта для ИИ
 	prompt := req.Prompt
 	if prompt == "" {
-		prompt = fmt.Sprintf("Фэнтезийное зелье '%s', минималистичный стиль, белый фон, высокое качество", card.Name)
+		prompt = GenerateImagePrompt(card.Name, card.Description)
 	}
-	
-	// TODO: Интеграция с OpenAI API для генерации изображения
-	// Пока возвращаем заглушку
-	imageURL := "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")
-	
+
+	// Генерация изображения через OpenAI API
+	var imageURL string
+	if cc.openaiService != nil {
+		generatedURL, err := cc.openaiService.GenerateImage(prompt)
+		if err != nil {
+			// Если OpenAI недоступен, используем заглушку
+			imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")
+		} else {
+			imageURL = generatedURL
+		}
+	} else {
+		// Если OpenAI API не настроен, используем заглушку
+		imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")
+	}
+
 	// Обновление карточки с URL изображения
 	card.ImageURL = imageURL
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения изображения"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"image_url": imageURL,
 		"message":   "Изображение сгенерировано",
@@ -269,16 +284,16 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
 		return
 	}
-	
+
 	var cards []Card
 	if err := cc.db.Where("id IN ?", req.CardIDs).Find(&cards).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
 	}
-	
+
 	// TODO: Генерация PDF с карточками для печати
 	// Пока возвращаем данные карточек
-	
+
 	var responses []CardResponse
 	for _, card := range cards {
 		responses = append(responses, CardResponse{
@@ -293,15 +308,29 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			UpdatedAt:   card.UpdatedAt,
 		})
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"cards": responses,
+		"cards":   responses,
 		"message": "Карточки готовы для экспорта",
 	})
 }
 
 // generateCardNumber - генерация уникального номера карточки
-func generateCardNumber() string {
-	// Простая генерация номера в формате CARD-XXXX
-	return fmt.Sprintf("CARD-%04d", len(uuid.New().String()[:4]))
+func generateCardNumber(db *gorm.DB) string {
+	// Находим максимальный номер карточки
+	var maxCard Card
+	db.Order("card_number DESC").First(&maxCard)
+
+	// Извлекаем номер из строки CARD-XXXX
+	var nextNum int = 1
+	if maxCard.CardNumber != "" {
+		if len(maxCard.CardNumber) >= 9 { // CARD-XXXX
+			numStr := maxCard.CardNumber[5:9]
+			if num, err := strconv.Atoi(numStr); err == nil {
+				nextNum = num + 1
+			}
+		}
+	}
+
+	return fmt.Sprintf("CARD-%04d", nextNum)
 }

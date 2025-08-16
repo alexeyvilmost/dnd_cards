@@ -52,6 +52,7 @@
   .card-preview {
     width: 52.5mm;
     height: 74.25mm;
-    @apply bg-white rounded-lg shadow-card border-2;
+    @apply bg-white rounded-lg shadow-lg relative;
+    position: relative;
   }
 }
