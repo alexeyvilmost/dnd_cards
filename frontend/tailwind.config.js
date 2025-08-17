@@ -17,7 +17,7 @@ export default {
         }
       },
       fontFamily: {
-        'fantasy': ['Cinzel', 'serif'],
+        'fantasy': ['Pangolin', 'cursive'],
         'sans': ['Inter', 'sans-serif'],
       },
       boxShadow: {

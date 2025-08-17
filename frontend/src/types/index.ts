@@ -15,6 +15,7 @@ export interface Card {
   weight?: number | null;
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
+  damage_type?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +29,7 @@ export interface CreateCardRequest {
   weight?: number | null;
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
+  damage_type?: string | null;
 }
 
 export interface UpdateCardRequest {
@@ -39,6 +41,7 @@ export interface UpdateCardRequest {
   weight?: number | null;
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
+  damage_type?: string | null;
 }
 
 export interface CardsResponse {

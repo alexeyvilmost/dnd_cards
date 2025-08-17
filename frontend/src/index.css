@@ -26,11 +26,15 @@
   }
   
   .card-border-very-rare {
-    @apply border-2 border-purple-500 rounded-lg;
+    @apply border-4 rounded-lg;
+    border-image: linear-gradient(45deg, #8B5CF6, #EC4899) 1;
+    border-style: solid;
   }
   
   .card-border-artifact {
-    @apply border-2 border-orange-500 rounded-lg;
+    @apply border-6 rounded-lg;
+    border-image: linear-gradient(45deg, #F59E0B, #EF4444) 1;
+    border-style: solid;
   }
   
   .btn-primary {
@@ -54,5 +58,42 @@
     height: 74.25mm;
     @apply bg-white rounded-lg shadow-lg relative;
     position: relative;
+  }
+  
+  .card-preview-large {
+    width: 52.5mm; /* Оригинальный размер */
+    height: 74.25mm; /* Оригинальный размер */
+    @apply bg-white rounded-lg shadow-lg relative;
+    position: relative;
+    transform: scale(1.5);
+    transform-origin: center center;
+    margin: 2rem 0; /* Добавляем отступы сверху и снизу */
+    /* VERSION 4 - масштаб теперь управляется через JavaScript */
+  }
+
+  /* Градиентные заголовки для редких карт */
+  .title-gradient-very-rare {
+    background: linear-gradient(45deg, #8B5CF6, #EC4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .title-gradient-artifact {
+    background: linear-gradient(45deg, #F59E0B, #EF4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  }
+
+  /* Усиленное свечение для редких карт */
+  .glow-very-rare {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(236, 72, 153, 0.3);
+  }
+
+  .glow-artifact {
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.5), 0 0 50px rgba(239, 68, 68, 0.4);
   }
 }

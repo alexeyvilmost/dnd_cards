@@ -174,9 +174,14 @@ const CardLibrary = () => {
 
       {!loading && cards.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {cards.map((card) => (
-            <div key={card.id} className="relative group">
-              <CardPreview card={card} />
+          {cards.map((card) => {
+            const isExtended = card.description && card.description.length > 100;
+            return (
+              <div 
+                key={card.id} 
+                className={`relative group flex justify-center ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+              >
+                <CardPreview card={card} />
               
               {/* Действия */}
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -205,7 +210,8 @@ const CardLibrary = () => {
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>

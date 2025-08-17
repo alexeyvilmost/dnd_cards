@@ -75,6 +75,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			Weight:      card.Weight,
 			BonusType:   card.BonusType,
 			BonusValue:  card.BonusValue,
+			DamageType:  card.DamageType,
 			CreatedAt:   card.CreatedAt,
 			UpdatedAt:   card.UpdatedAt,
 		})
@@ -118,6 +119,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		Weight:      card.Weight,
 		BonusType:   card.BonusType,
 		BonusValue:  card.BonusValue,
+		DamageType:  card.DamageType,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
@@ -172,6 +174,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Weight:      req.Weight,
 		BonusType:   req.BonusType,
 		BonusValue:  req.BonusValue,
+		DamageType:  req.DamageType,
 		CardNumber:  cardNumber,
 	}
 
@@ -192,6 +195,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Weight:      card.Weight,
 		BonusType:   card.BonusType,
 		BonusValue:  card.BonusValue,
+		DamageType:  card.DamageType,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
@@ -277,6 +281,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.BonusValue != nil {
 		card.BonusValue = req.BonusValue
 	}
+	if req.DamageType != nil {
+		card.DamageType = req.DamageType
+	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
@@ -295,6 +302,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		Weight:      card.Weight,
 		BonusType:   card.BonusType,
 		BonusValue:  card.BonusValue,
+		DamageType:  card.DamageType,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}

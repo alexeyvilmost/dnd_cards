@@ -20,7 +20,9 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     const option = PROPERTIES_OPTIONS.find(opt => opt.value === prop);
     return option?.label || prop;
   }).join(', ');
-  const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt();
+  const isLarge = className.includes('card-preview-large');
+  const isExtended = className.includes('card-preview-extended') || (card.description && card.description.length > 100);
+  const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt({ isLarge });
 
   // Функция для определения размера шрифта заголовка
   const getTitleFontSize = (title: string) => {
@@ -62,12 +64,32 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     }
   };
 
+  // Функция для получения класса заголовка в зависимости от редкости
+  const getTitleClass = (rarity: string, name: string) => {
+    const baseClass = `${getTitleFontSize(name)} font-fantasy font-bold leading-tight mb-0.5 min-h-[1.2rem] flex items-center justify-center`;
+    
+    switch (rarity) {
+      case 'very_rare': return `${baseClass} title-gradient-very-rare`;
+      case 'artifact': return `${baseClass} title-gradient-artifact`;
+      default: return `${baseClass} text-gray-900`;
+    }
+  };
+
+  // Функция для получения класса усиленного свечения
+  const getEnhancedGlowClass = (rarity: string) => {
+    switch (rarity) {
+      case 'very_rare': return 'hover:glow-very-rare';
+      case 'artifact': return 'hover:glow-artifact';
+      default: return '';
+    }
+  };
+
   // Функция форматирования цены
   const formatPrice = (price: number): string => {
     if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K`;
+      return `${(price / 1000).toFixed(1)}K зм`;
     }
-    return price.toString();
+    return `${price} зм`;
   };
 
   // Функция форматирования веса
@@ -82,7 +104,15 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     const length = description.length;
     const hasBonus = card.bonus_type && card.bonus_value;
     
-    // Если есть бонус, уменьшаем шрифт намного раньше
+    // Для расширенных карточек используем более мягкие ограничения
+    if (isExtended) {
+      if (length > 200) return 'text-[8px]';
+      if (length > 150) return 'text-[9px]';
+      if (length > 100) return 'text-[10px]';
+      return 'text-xs';
+    }
+    
+    // Для стандартных карточек
     if (hasBonus) {
       if (length > 50) return 'text-[8px]';
       if (length > 35) return 'text-[9px]';
@@ -122,109 +152,221 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     return bonusValue;
   };
 
-  // Функция для извлечения типа урона из описания
-  const getDamageTypeFromDescription = (description: string): string => {
-    if (description.includes('колющий')) return 'колющий';
-    if (description.includes('рубящий')) return 'рубящий';
-    if (description.includes('дробящий')) return 'дробящий';
-    return '';
+  // Функция для получения типа урона из поля damage_type
+  const getDamageTypeLabel = (damageType: string): string => {
+    switch (damageType) {
+      case 'piercing': return 'колющий';
+      case 'slashing': return 'рубящий';
+      case 'bludgeoning': return 'дробящий';
+      default: return '';
+    }
   };
 
   return (
     <div 
       ref={cardRef}
-      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl group ${getRarityGlowColor(card.rarity)}`}
+      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-96' : ''} ${className.includes('card-preview-large') ? '' : 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl'}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={tiltStyle}
     >
-      {/* Заголовок */}
-      <div className="p-1 text-center border-b border-gray-200">
-        <h3 className={`${getTitleFontSize(card.name)} font-bold text-gray-900 leading-tight mb-0.5 min-h-[1.2rem] flex items-center justify-center`}>
-          {card.name}
-        </h3>
-        <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center`}>
-          {(() => {
-            console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
-            return renderProperties(propertiesArray);
-          })()}
-        </div>
-      </div>
-
-      {/* Изображение - без отступов */}
-      <div className="flex items-center justify-center min-h-[64px]">
-        {card.image_url && card.image_url.trim() !== '' ? (
-          <img
-            src={card.image_url}
-            alt={card.name}
-            className="max-w-[80%] max-h-[80%] object-contain rounded"
-            onError={(e) => {
-              // Если изображение не загружается, заменяем на дефолтное
-              const target = e.target as HTMLImageElement;
-              target.src = '/default_image.png';
-            }}
-          />
-        ) : (
-          <img
-            src="/default_image.png"
-            alt="Default D&D"
-            className="max-w-[80%] max-h-[80%] object-contain rounded"
-          />
-        )}
-      </div>
-
-      {/* Описание и бонусы */}
-      <div className="p-2 pb-6 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
-        {/* Описание - ограничено 75% при наличии бонусов */}
-        <div className={`${card.bonus_type && card.bonus_value ? 'w-[75%]' : 'w-full'}`}>
-          <p className={`text-gray-700 leading-relaxed ${getDescriptionFontSize(card.description)}`}>
-            {card.description || 'Нет описания'}
-          </p>
-        </div>
-        
-        {/* Бонусы - абсолютно позиционированные справа */}
-        {card.bonus_type && card.bonus_value && (
-          <>
-            {/* Разделительная линия */}
-            <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
-            
-            {/* Бонусы */}
-            <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
-              <div className="text-[9px] text-gray-900 font-medium leading-none">
-                {getBonusShortName(card.bonus_type)}
+      {isExtended ? (
+        // Расширенный формат для карт с большим описанием
+        <>
+          {/* Основной контент - горизонтальная компоновка */}
+          <div className="flex flex-1">
+            {/* Левая половина - заголовок, изображение, свойства и бонусы */}
+            <div className="w-1/2 flex flex-col">
+              {/* Заголовок только над левой половиной */}
+              <div className="p-1 text-center border-b border-gray-200">
+                <h3 className={getTitleClass(card.rarity, card.name)}>
+                  {card.name}
+                </h3>
               </div>
-              <div className="text-[11px] font-bold text-gray-900 leading-none">
-                {getBonusShortValue(card.bonus_value)}
+
+              {/* Изображение - увеличенное */}
+              <div className="flex items-center justify-center min-h-[120px] w-full">
+                {card.image_url && card.image_url.trim() !== '' ? (
+                  <img
+                    src={card.image_url}
+                    alt={card.name}
+                    className="max-w-[85%] max-h-[85%] object-contain rounded"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/default_image.png';
+                    }}
+                  />
+                ) : (
+                  <img
+                    src="/default_image.png"
+                    alt="Default D&D"
+                    className="max-w-[85%] max-h-[85%] object-contain rounded"
+                  />
+                )}
               </div>
-              {/* Тип урона для оружия */}
-              {card.bonus_type === 'damage' && (
-                <div className="text-[8px] text-gray-600 leading-none">
-                  {getDamageTypeFromDescription(card.description)}
+
+              {/* Свойства и бонусы - как на обычных картах */}
+              <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
+                {/* Свойства - ограничены 75% при наличии бонусов */}
+                <div className={`${card.bonus_type && card.bonus_value ? 'w-[75%]' : 'w-full'}`}>
+                  <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
+                    {(() => {
+                      console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
+                      return renderProperties(propertiesArray, isExtended);
+                    })()}
+                  </div>
                 </div>
+                
+                {/* Бонусы - абсолютно позиционированные справа */}
+                {card.bonus_type && card.bonus_value && (
+                  <>
+                    {/* Разделительная линия - доходит до нижней панели */}
+                    <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
+                    
+                    {/* Бонусы - центрированы в блоке описания */}
+                    <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
+                      <div className="text-[9px] text-gray-900 font-fantasy font-medium leading-none">
+                        {getBonusShortName(card.bonus_type)}
+                      </div>
+                      <div className="text-[11px] font-fantasy font-bold text-gray-900 leading-none">
+                        {getBonusShortValue(card.bonus_value)}
+                      </div>
+                      {/* Тип урона для оружия */}
+                      {card.bonus_type === 'damage' && card.damage_type && (
+                        <div className="text-[8px] text-gray-600 font-fantasy leading-none">
+                          {getDamageTypeLabel(card.damage_type)}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Правая половина - только описание */}
+            <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col">
+              {/* Описание */}
+              <div className="flex-1 overflow-hidden">
+                <p className={`text-gray-700 leading-relaxed font-fantasy whitespace-pre-wrap`} style={{ fontSize: card.description && card.description.length > 200 ? '8px !important' : card.description && card.description.length > 150 ? '9px !important' : card.description && card.description.length > 100 ? '10px !important' : '12px !important' }}>
+                  {card.description || 'Нет описания'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Вес, цена и номер карточки - абсолютно позиционированные */}
+          <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
+            <div className="flex items-center space-x-2">
+              {card.weight && (
+                <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                  {formatWeight(card.weight)}
+                </span>
+              )}
+              {card.price && (
+                <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+                  {formatPrice(card.price)}
+                </span>
               )}
             </div>
-          </>
-        )}
-      </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] text-gray-400 font-mono">
+                {card.card_number}
+              </span>
+            </div>
+          </div>
+        </>
+      ) : (
+        // Стандартный формат
+        <>
+          {/* Заголовок */}
+          <div className="p-1 text-center border-b border-gray-200">
+            <h3 className={getTitleClass(card.rarity, card.name)}>
+              {card.name}
+            </h3>
+            <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
+              {(() => {
+                console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
+                return renderProperties(propertiesArray, isExtended);
+              })()}
+            </div>
+          </div>
 
-      {/* Вес, цена и номер карточки - абсолютно позиционированные */}
-      <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white">
-        <div className="flex items-center space-x-2">
-          {card.weight && (
-            <span className="text-[10px] text-gray-900 font-medium">
-              {formatWeight(card.weight)}
+          {/* Изображение - без отступов */}
+          <div className="flex items-center justify-center min-h-[64px]">
+            {card.image_url && card.image_url.trim() !== '' ? (
+              <img
+                src={card.image_url}
+                alt={card.name}
+                className="max-w-[80%] max-h-[80%] object-contain rounded"
+                onError={(e) => {
+                  // Если изображение не загружается, заменяем на дефолтное
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/default_image.png';
+                }}
+              />
+            ) : (
+              <img
+                src="/default_image.png"
+                alt="Default D&D"
+                className="max-w-[80%] max-h-[80%] object-contain rounded"
+              />
+            )}
+          </div>
+
+          {/* Описание и бонусы */}
+          <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
+            {/* Описание - ограничено 75% при наличии бонусов */}
+            <div className={`${card.bonus_type && card.bonus_value ? 'w-[75%]' : 'w-full'}`}>
+              <p className={`text-gray-700 leading-relaxed font-fantasy ${getDescriptionFontSize(card.description)} whitespace-pre-wrap`}>
+                {card.description || 'Нет описания'}
+              </p>
+            </div>
+            
+            {/* Бонусы - абсолютно позиционированные справа */}
+            {card.bonus_type && card.bonus_value && (
+              <>
+                {/* Разделительная линия - доходит до нижней панели */}
+                <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
+                
+                {/* Бонусы - центрированы в блоке описания */}
+                <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
+                  <div className="text-[9px] text-gray-900 font-fantasy font-medium leading-none">
+                    {getBonusShortName(card.bonus_type)}
+                  </div>
+                  <div className="text-[11px] font-fantasy font-bold text-gray-900 leading-none">
+                    {getBonusShortValue(card.bonus_value)}
+                  </div>
+                  {/* Тип урона для оружия */}
+                  {card.bonus_type === 'damage' && card.damage_type && (
+                    <div className="text-[8px] text-gray-600 font-fantasy leading-none">
+                      {getDamageTypeLabel(card.damage_type)}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Вес, цена и номер карточки - абсолютно позиционированные */}
+          <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
+            <div className="flex items-center space-x-2">
+              {card.weight && (
+                <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                  {formatWeight(card.weight)}
+                </span>
+              )}
+              {card.price && (
+                <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+                  {formatPrice(card.price)}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-gray-400 font-mono">
+              {card.card_number}
             </span>
-          )}
-          {card.price && (
-            <span className="text-[10px] text-yellow-600 font-bold">
-              {formatPrice(card.price)}
-            </span>
-          )}
-        </div>
-        <span className="text-[10px] text-gray-400 font-mono">
-          {card.card_number}
-        </span>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

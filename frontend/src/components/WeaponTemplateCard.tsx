@@ -39,12 +39,17 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
     return 'group-hover:shadow-gray-400/50';
   };
 
+  // Функция для получения класса заголовка (шаблоны всегда обычные)
+  const getTitleClass = () => {
+    return `${getTitleFontSize(template.name)} font-fantasy font-bold text-gray-900 leading-tight mb-0.5 min-h-[1.2rem] flex items-center justify-center`;
+  };
+
   // Функция форматирования цены
   const formatPrice = (price: number): string => {
     if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K`;
+      return `${(price / 1000).toFixed(1)}K зм`;
     }
-    return price.toString();
+    return `${price} зм`;
   };
 
   // Функция форматирования веса
@@ -79,24 +84,19 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
 
 
 
-  // Функция для извлечения типа урона из описания
-  const getDamageTypeFromDescription = (description: string): string => {
-    if (description.includes('колющий')) return 'колющий';
-    if (description.includes('рубящий')) return 'рубящий';
-    if (description.includes('дробящий')) return 'дробящий';
-    return '';
+  // Функция для получения типа урона из поля damage_type
+  const getDamageTypeLabel = (damageType: string): string => {
+    switch (damageType) {
+      case 'piercing': return 'колющий';
+      case 'slashing': return 'рубящий';
+      case 'bludgeoning': return 'дробящий';
+      default: return '';
+    }
   };
 
   // Генерируем описание для шаблона
   const generateDescription = (template: WeaponTemplate): string => {
-    let description = `${template.name} - это ${getWeaponCategoryLabel(template.category)} оружие, наносящее ${template.damage} ${getDamageTypeLabel(template.damage_type)} урона.`;
-
-    if (template.properties.length > 0) {
-      const properties = template.properties.map(p => getPropertyLabel(p)).join(', ');
-      description += ` Свойства: ${properties}.`;
-    }
-
-    return description;
+    return `${template.name} - это ${getWeaponCategoryLabel(template.category)} оружие.`;
   };
 
   // Функция для определения размера шрифта описания
@@ -104,10 +104,9 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
     if (!description) return 'text-xs';
     
     const length = description.length;
-    // Для шаблонов всегда есть бонус (урон), поэтому уменьшаем шрифт раньше
-    if (length > 50) return 'text-[8px]';
-    if (length > 35) return 'text-[9px]';
-    if (length > 25) return 'text-[10px]';
+    // Для шаблонов описания теперь короткие, используем стандартные размеры
+    if (length > 35) return 'text-[10px]';
+    if (length > 25) return 'text-[11px]';
     return 'text-xs';
   };
 
@@ -124,7 +123,7 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
     >
       {/* Заголовок */}
       <div className="p-1 text-center border-b border-gray-200">
-        <h3 className={`${getTitleFontSize(template.name)} font-bold text-gray-900 leading-tight mb-0.5 min-h-[1.2rem] flex items-center justify-center`}>
+        <h3 className={getTitleClass()}>
           {template.name}
         </h3>
                             <div className={`${getPropertiesFontSize(template.properties)} font-medium ${getRarityColor()} flex justify-center items-center`}>
@@ -147,30 +146,30 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
       </div>
 
       {/* Описание и бонусы */}
-      <div className="p-2 pb-6 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
+      <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
         {/* Описание - ограничено 75% при наличии бонусов */}
         <div className="w-[75%]">
-          <p className={`text-gray-700 leading-relaxed ${getDescriptionFontSize(description)}`}>
+          <p className={`text-gray-700 leading-relaxed font-fantasy ${getDescriptionFontSize(description)}`}>
             {description}
           </p>
         </div>
         
         {/* Бонусы - абсолютно позиционированные справа */}
         <>
-          {/* Разделительная линия */}
+          {/* Разделительная линия - доходит до нижней панели */}
           <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
           
-          {/* Бонусы */}
+          {/* Бонусы - центрированы в блоке описания */}
           <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
-            <div className="text-[9px] text-gray-900 font-medium leading-none">
+            <div className="text-[9px] text-gray-900 font-fantasy font-medium leading-none">
               {getBonusShortName('damage')}
             </div>
-            <div className="text-[11px] font-bold text-gray-900 leading-none">
+            <div className="text-[11px] font-fantasy font-bold text-gray-900 leading-none">
               {getBonusShortValue(template.damage)}
             </div>
             {/* Тип урона для оружия */}
-            <div className="text-[8px] text-gray-600 leading-none">
-              {getDamageTypeFromDescription(description)}
+            <div className="text-[8px] text-gray-600 font-fantasy leading-none">
+              {getDamageTypeLabel(template.damage_type)}
             </div>
           </div>
         </>
@@ -179,10 +178,10 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
       {/* Вес, цена и номер карточки - абсолютно позиционированные */}
       <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white">
         <div className="flex items-center space-x-2">
-          <span className="text-[10px] text-gray-900 font-medium">
+          <span className="text-[10px] text-gray-900 font-fantasy font-medium">
             {formatWeight(template.weight)}
           </span>
-          <span className="text-[10px] text-yellow-600 font-bold">
+          <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
             {formatPrice(template.price)}
           </span>
         </div>

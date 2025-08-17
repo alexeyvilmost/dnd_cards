@@ -3,9 +3,10 @@ import { useState, useRef, useCallback } from 'react';
 interface UseCardTiltProps {
   maxTilt?: number;
   perspective?: number;
+  isLarge?: boolean;
 }
 
-export const useCardTilt = ({ maxTilt = 10, perspective = 1000 }: UseCardTiltProps = {}) => {
+export const useCardTilt = ({ maxTilt = 10, perspective = 1000, isLarge = false }: UseCardTiltProps = {}) => {
   const [tiltStyle, setTiltStyle] = useState({});
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -24,15 +25,15 @@ export const useCardTilt = ({ maxTilt = 10, perspective = 1000 }: UseCardTiltPro
     const rotateY = (mouseX / (rect.width / 2)) * maxTilt;
 
     setTiltStyle({
-      transform: `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+      transform: `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)${isLarge ? ' scale(1.5)' : ''}`,
     });
   }, [maxTilt, perspective]);
 
   const handleMouseLeave = useCallback(() => {
     setTiltStyle({
-      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
+      transform: `perspective(1000px) rotateX(0deg) rotateY(0deg)${isLarge ? ' scale(1.5)' : ''}`,
     });
-  }, []);
+  }, [isLarge]);
 
   return {
     cardRef,

@@ -55,7 +55,8 @@ const WeaponTemplates: React.FC = () => {
     // Передаем данные шаблона через URL параметры
     const params = new URLSearchParams({
       name: template.name,
-      description: generateDescription(template),
+      category: template.category,
+      damage_type: template.damage_type,
       price: template.price.toString(),
       weight: template.weight.toString(),
       bonus_type: 'damage',
@@ -114,7 +115,7 @@ const WeaponTemplates: React.FC = () => {
       ) : (
         <>
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Шаблоны оружия</h1>
+            <h1 className="text-3xl font-fantasy font-bold text-gray-900 mb-4">Шаблоны оружия</h1>
             <p className="text-gray-600">Выберите шаблон оружия для создания карты</p>
           </div>
 

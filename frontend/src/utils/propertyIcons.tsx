@@ -17,9 +17,11 @@ export const PROPERTY_ICONS: Record<string, string> = {
 };
 
 // Функция для определения, когда показывать иконки вместо текста
-export const shouldShowIcons = (properties: string[], maxTextLength: number = 15): boolean => {
-  // Принудительно показываем иконки для всех карточек с несколькими свойствами
-  return properties.length > 1;
+export const shouldShowIcons = (properties: string[], isExtended: boolean = false): boolean => {
+  // Для обычных карточек - если больше 3 свойств
+  // Для расширенных карточек - если больше 4 свойств
+  const maxProperties = isExtended ? 4 : 3;
+  return properties.length > maxProperties;
 };
 
 // Функция для получения иконки свойства
@@ -27,9 +29,11 @@ export const getPropertyIcon = (property: string): string => {
   return PROPERTY_ICONS[property] || property; // Возвращаем название свойства, если иконки нет
 };
 
-// Функция для отображения свойств с иконками (VERSION 4)
-export const renderProperties = (properties: string[], maxTextLength: number = 30): JSX.Element => {
-  console.log('renderProperties VERSION 4 called with:', properties, 'length:', properties.length);
+// Функция для отображения свойств с иконками (VERSION 7)
+export const renderProperties = (properties: string[], isExtended: boolean = false): JSX.Element => {
+  console.log('renderProperties VERSION 7 called with:', properties, 'length:', properties.length, 'isExtended:', isExtended);
+  console.log('Properties type:', typeof properties, 'isArray:', Array.isArray(properties));
+  console.log('Properties content:', JSON.stringify(properties));
   
   // Если свойств нет или они пустые, показываем пустую строку
   if (!properties || properties.length === 0) {
@@ -50,16 +54,24 @@ export const renderProperties = (properties: string[], maxTextLength: number = 3
     }
   }
   
-  // Если только одно свойство, показываем его как текст
-  if (cleanProperties.length === 1) {
+  // Определяем, нужно ли показывать иконки
+  const shouldUseIcons = shouldShowIcons(cleanProperties, isExtended);
+  
+  // Если только одно свойство или не нужно показывать иконки, показываем как текст
+  if (cleanProperties.length === 1 || !shouldUseIcons) {
     return (
-      <span className="text-center w-full">
-        {getPropertyLabel(cleanProperties[0])}
-      </span>
+      <div className="flex items-center justify-center space-x-1 w-full">
+        {cleanProperties.map((property, index) => (
+          <span key={index} className="text-center font-fantasy text-xs">
+            {getPropertyLabel(property)}
+            {index < cleanProperties.length - 1 && <span className="mx-1">•</span>}
+          </span>
+        ))}
+      </div>
     );
   }
   
-  // Если несколько свойств, показываем иконки
+  // Если несколько свойств и нужно показывать иконки
   return (
     <div className="flex items-center justify-center space-x-1 w-full">
       {cleanProperties.map((property, index) => {
@@ -80,12 +92,12 @@ export const renderProperties = (properties: string[], maxTextLength: number = 3
                   e.currentTarget.style.display = 'none';
                   const errorSpan = document.createElement('span');
                   errorSpan.textContent = getPropertyLabel(property);
-                  errorSpan.className = 'text-xs font-medium';
+                  errorSpan.className = 'text-xs font-fantasy font-medium';
                   e.currentTarget.parentNode?.appendChild(errorSpan);
                 }}
               />
             ) : (
-              <span className="text-xs font-medium">{getPropertyLabel(property)}</span>
+              <span className="text-xs font-fantasy font-medium">{getPropertyLabel(property)}</span>
             )}
           </span>
         );

@@ -67,6 +67,7 @@ type Card struct {
 	Weight      *float64       `json:"weight" gorm:"type:decimal(5,2)"`
 	BonusType   *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
 	BonusValue  *string        `json:"bonus_value" gorm:"type:varchar(20)"`
+	DamageType  *string        `json:"damage_type" gorm:"type:varchar(20)"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
@@ -83,6 +84,7 @@ type CreateCardRequest struct {
 	Weight      *float64    `json:"weight"`
 	BonusType   *BonusType  `json:"bonus_type"`
 	BonusValue  *string     `json:"bonus_value"`
+	DamageType  *string     `json:"damage_type"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -96,6 +98,7 @@ type UpdateCardRequest struct {
 	Weight      *float64    `json:"weight"`
 	BonusType   *BonusType  `json:"bonus_type"`
 	BonusValue  *string     `json:"bonus_value"`
+	DamageType  *string     `json:"damage_type"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -122,6 +125,7 @@ type CardResponse struct {
 	Weight      *float64    `json:"weight"`
 	BonusType   *BonusType  `json:"bonus_type"`
 	BonusValue  *string     `json:"bonus_value"`
+	DamageType  *string     `json:"damage_type"`
 	CreatedAt   time.Time   `json:"created_at"`
 	UpdatedAt   time.Time   `json:"updated_at"`
 }

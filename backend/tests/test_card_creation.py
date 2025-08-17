@@ -85,6 +85,71 @@ class TestCardCreation:
         
         # Очистка
         api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
+
+    def test_create_card_with_damage_type(self, api_client: requests.Session):
+        """Тест создания карточки с типом урона"""
+        card_data = {
+            "name": "Тестовый кинжал",
+            "description": "Острый кинжал для тестирования",
+            "rarity": "common",
+            "properties": ["light", "finesse", "thrown"],
+            "price": 2,
+            "weight": 1.0,
+            "bonus_type": "damage",
+            "bonus_value": "1d4",
+            "damage_type": "piercing"
+        }
+        
+        print(f"DEBUG: Sending card data: {card_data}")
+        
+        response = api_client.post(get_api_url("/cards"), json=card_data)
+        print(f"DEBUG: Response status: {response.status_code}")
+        print(f"DEBUG: Response body: {response.text}")
+        
+        assert response.status_code == 201
+        created_card = response.json()
+        
+        print(f"DEBUG: Created card: {created_card}")
+        
+        # Проверяем, что damage_type сохранился
+        assert created_card["name"] == "Тестовый кинжал"
+        assert created_card["properties"] == ["light", "finesse", "thrown"]
+        assert created_card["bonus_type"] == "damage"
+        assert created_card["bonus_value"] == "1d4"
+        assert created_card["damage_type"] == "piercing", f"Expected 'piercing', got {created_card.get('damage_type')}"
+        
+        # Очистка
+        api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
+
+    def test_create_card_with_different_damage_types(self, api_client: requests.Session):
+        """Тест создания карточек с разными типами урона"""
+        damage_types = ["slashing", "piercing", "bludgeoning"]
+        
+        for damage_type in damage_types:
+            card_data = {
+                "name": f"Тестовое оружие {damage_type}",
+                "description": f"Оружие с типом урона {damage_type}",
+                "rarity": "common",
+                "properties": ["light"],
+                "price": 10,
+                "weight": 2.0,
+                "bonus_type": "damage",
+                "bonus_value": "1d6",
+                "damage_type": damage_type
+            }
+            
+            print(f"DEBUG: Testing damage_type: {damage_type}")
+            
+            response = api_client.post(get_api_url("/cards"), json=card_data)
+            assert response.status_code == 201
+            created_card = response.json()
+            
+            print(f"DEBUG: Created card damage_type: {created_card.get('damage_type')}")
+            
+            assert created_card["damage_type"] == damage_type, f"Expected {damage_type}, got {created_card.get('damage_type')}"
+            
+            # Очистка
+            api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
     
     def test_create_card_with_different_rarities(self, api_client: requests.Session):
         """Тест создания карточек с разными редкостями"""
@@ -314,3 +379,229 @@ class TestCardCreation:
         # Очистка
         for card_id in created_ids:
             api_client.delete(get_api_url(f"/cards/{card_id}"))
+
+    def test_edit_card_functionality(self, api_client: requests.Session):
+        """Тест функциональности редактирования карточки"""
+        # Создаем карточку для редактирования
+        original_data = {
+            "name": "Оригинальная карточка",
+            "description": "Оригинальное описание",
+            "rarity": "common",
+            "properties": ["light"],
+            "price": 10,
+            "weight": 1.0,
+            "bonus_type": "damage",
+            "bonus_value": "1d6",
+            "damage_type": "slashing"
+        }
+        
+        response = api_client.post(get_api_url("/cards"), json=original_data)
+        assert response.status_code == 201
+        original_card = response.json()
+        card_id = original_card["id"]
+        
+        # Редактируем карточку
+        updated_data = {
+            "name": "Обновленная карточка",
+            "description": "Обновленное описание",
+            "rarity": "rare",
+            "properties": ["light", "finesse"],
+            "price": 50,
+            "weight": 2.0,
+            "bonus_type": "damage",
+            "bonus_value": "1d8",
+            "damage_type": "piercing"
+        }
+        
+        response = api_client.put(get_api_url(f"/cards/{card_id}"), json=updated_data)
+        assert response.status_code == 200
+        updated_card = response.json()
+        
+        # Проверяем, что карточка обновилась
+        assert updated_card["name"] == "Обновленная карточка"
+        assert updated_card["description"] == "Обновленное описание"
+        assert updated_card["rarity"] == "rare"
+        assert updated_card["properties"] == ["light", "finesse"]
+        assert updated_card["price"] == 50
+        assert updated_card["weight"] == 2.0
+        assert updated_card["bonus_type"] == "damage"
+        assert updated_card["bonus_value"] == "1d8"
+        assert updated_card["damage_type"] == "piercing"
+        
+        # Проверяем, что ID остался тем же
+        assert updated_card["id"] == card_id
+        
+        # Очистка
+        api_client.delete(get_api_url(f"/cards/{card_id}"))
+
+    def test_create_as_new_card_functionality(self, api_client: requests.Session):
+        """Тест функциональности 'Создать как новую карту'"""
+        # Создаем исходную карточку
+        original_data = {
+            "name": "Исходная карточка",
+            "description": "Исходное описание",
+            "rarity": "uncommon",
+            "properties": ["consumable"],
+            "price": 25,
+            "weight": 0.5,
+            "bonus_type": "strength",
+            "bonus_value": "+2",
+            "damage_type": "bludgeoning"
+        }
+        
+        response = api_client.post(get_api_url("/cards"), json=original_data)
+        assert response.status_code == 201
+        original_card = response.json()
+        original_id = original_card["id"]
+        
+        # Создаем новую карту на основе исходной (имитируем функцию "Создать как новую")
+        new_card_data = {
+            "name": "Новая карточка на основе исходной",
+            "description": "Новое описание",
+            "rarity": "rare",
+            "properties": ["consumable", "single_use"],
+            "price": 100,
+            "weight": 1.0,
+            "bonus_type": "strength",
+            "bonus_value": "+3",
+            "damage_type": "bludgeoning"
+        }
+        
+        response = api_client.post(get_api_url("/cards"), json=new_card_data)
+        assert response.status_code == 201
+        new_card = response.json()
+        new_id = new_card["id"]
+        
+        # Проверяем, что новая карта создалась с новым ID
+        assert new_card["id"] != original_id
+        assert new_card["name"] == "Новая карточка на основе исходной"
+        assert new_card["description"] == "Новое описание"
+        assert new_card["rarity"] == "rare"
+        assert new_card["properties"] == ["consumable", "single_use"]
+        assert new_card["price"] == 100
+        assert new_card["weight"] == 1.0
+        assert new_card["bonus_type"] == "strength"
+        assert new_card["bonus_value"] == "+3"
+        assert new_card["damage_type"] == "bludgeoning"
+        
+        # Проверяем, что оригинальная карта осталась неизменной
+        response = api_client.get(get_api_url(f"/cards/{original_id}"))
+        assert response.status_code == 200
+        unchanged_card = response.json()
+        assert unchanged_card["name"] == "Исходная карточка"
+        assert unchanged_card["description"] == "Исходное описание"
+        assert unchanged_card["rarity"] == "uncommon"
+        
+        # Очистка
+        api_client.delete(get_api_url(f"/cards/{original_id}"))
+        api_client.delete(get_api_url(f"/cards/{new_id}"))
+
+    def test_edit_card_partial_update(self, api_client: requests.Session):
+        """Тест частичного обновления карточки при редактировании"""
+        # Создаем карточку
+        original_data = {
+            "name": "Карточка для частичного обновления",
+            "description": "Полное описание",
+            "rarity": "common",
+            "properties": ["light", "finesse"],
+            "price": 15,
+            "weight": 1.5,
+            "bonus_type": "damage",
+            "bonus_value": "1d6",
+            "damage_type": "piercing"
+        }
+        
+        response = api_client.post(get_api_url("/cards"), json=original_data)
+        assert response.status_code == 201
+        original_card = response.json()
+        card_id = original_card["id"]
+        
+        # Обновляем только некоторые поля
+        partial_update = {
+            "name": "Обновленное название",
+            "rarity": "rare"
+        }
+        
+        response = api_client.put(get_api_url(f"/cards/{card_id}"), json=partial_update)
+        assert response.status_code == 200
+        updated_card = response.json()
+        
+        # Проверяем, что обновились только указанные поля
+        assert updated_card["name"] == "Обновленное название"
+        assert updated_card["rarity"] == "rare"
+        
+        # Проверяем, что остальные поля остались неизменными
+        assert updated_card["description"] == "Полное описание"
+        assert updated_card["properties"] == ["light", "finesse"]
+        assert updated_card["price"] == 15
+        assert updated_card["weight"] == 1.5
+        assert updated_card["bonus_type"] == "damage"
+        assert updated_card["bonus_value"] == "1d6"
+        assert updated_card["damage_type"] == "piercing"
+        
+        # Очистка
+        api_client.delete(get_api_url(f"/cards/{card_id}"))
+
+    def test_edit_card_preserves_damage_type(self, api_client: requests.Session):
+        """Тест, что при редактировании карточки сохраняется тип урона"""
+        # Создаем карточку с типом урона
+        original_data = {
+            "name": "Карточка с типом урона",
+            "description": "Описание",
+            "rarity": "common",
+            "bonus_type": "damage",
+            "bonus_value": "1d4",
+            "damage_type": "piercing"
+        }
+        
+        response = api_client.post(get_api_url("/cards"), json=original_data)
+        assert response.status_code == 201
+        original_card = response.json()
+        card_id = original_card["id"]
+        
+        # Редактируем карточку, изменяя только название
+        update_data = {
+            "name": "Обновленная карточка с типом урона"
+        }
+        
+        response = api_client.put(get_api_url(f"/cards/{card_id}"), json=update_data)
+        assert response.status_code == 200
+        updated_card = response.json()
+        
+        # Проверяем, что тип урона сохранился
+        assert updated_card["damage_type"] == "piercing"
+        assert updated_card["bonus_type"] == "damage"
+        assert updated_card["bonus_value"] == "1d4"
+        
+        # Очистка
+        api_client.delete(get_api_url(f"/cards/{card_id}"))
+
+    def test_edit_card_with_price_formatting(self, api_client: requests.Session):
+        """Тест редактирования карточки с форматированием цены (зм)"""
+        # Создаем карточку
+        original_data = {
+            "name": "Карточка для теста цены",
+            "description": "Описание",
+            "rarity": "common",
+            "price": 5
+        }
+        
+        response = api_client.post(get_api_url("/cards"), json=original_data)
+        assert response.status_code == 201
+        original_card = response.json()
+        card_id = original_card["id"]
+        
+        # Обновляем цену
+        update_data = {
+            "price": 1500  # Должно отображаться как "1.5K зм"
+        }
+        
+        response = api_client.put(get_api_url(f"/cards/{card_id}"), json=update_data)
+        assert response.status_code == 200
+        updated_card = response.json()
+        
+        # Проверяем, что цена обновилась
+        assert updated_card["price"] == 1500
+        
+        # Очистка
+        api_client.delete(get_api_url(f"/cards/{card_id}"))

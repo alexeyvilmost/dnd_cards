@@ -18,6 +18,7 @@ CREATE TABLE cards (
     weight DECIMAL(5,2) CHECK (weight >= 0.01 AND weight <= 1000),
     bonus_type VARCHAR(50) CHECK (bonus_type IN ('damage', 'defense', 'attack', 'armor_class', 'initiative', 'stealth', 'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma') OR bonus_type IS NULL),
     bonus_value VARCHAR(20),
+    damage_type VARCHAR(20) CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning') OR damage_type IS NULL),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE

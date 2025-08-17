@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Eye, EyeOff, Wand2 } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Save, Eye, EyeOff, Wand2, ArrowLeft, Copy } from 'lucide-react';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
-import type { CreateCardRequest } from '../types';
+import type { CreateCardRequest, UpdateCardRequest } from '../types';
 import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import RaritySelector from '../components/RaritySelector';
 import ImageUploader from '../components/ImageUploader';
+import { getWeaponCategoryLabel } from '../utils/propertyLabels';
 
 const CardCreator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { id } = useParams<{ id: string }>();
   const [showPreview, setShowPreview] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewCard, setPreviewCard] = useState<any>(null);
   const [cardImage, setCardImage] = useState<string>('');
+  const [originalCard, setOriginalCard] = useState<any>(null);
+
+  // Определяем, находимся ли мы в режиме редактирования
+  const isEditMode = !!id;
 
   const {
     register,
@@ -37,30 +44,104 @@ const CardCreator = () => {
     }
   });
 
+  // Получаем damage_type из URL параметров
+  const damageType = searchParams.get('damage_type');
+
+  // Загрузка карты в режиме редактирования
+  useEffect(() => {
+    const loadCard = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const loadedCard = await cardsApi.getCard(id);
+        setOriginalCard(loadedCard);
+        
+        // Заполняем форму
+        setValue('name', loadedCard.name);
+        setValue('description', loadedCard.description);
+        setValue('rarity', loadedCard.rarity);
+        setValue('properties', loadedCard.properties);
+        setValue('price', loadedCard.price);
+        setValue('weight', loadedCard.weight);
+        setValue('bonus_type', loadedCard.bonus_type);
+        setValue('bonus_value', loadedCard.bonus_value);
+        
+        // Устанавливаем изображение
+        setCardImage(loadedCard.image_url || '');
+        
+        setPreviewCard(loadedCard);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Ошибка загрузки карточки');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isEditMode) {
+      loadCard();
+    }
+  }, [id, setValue, isEditMode]);
+
+  // Если это создание из шаблона, генерируем описание автоматически
+  useEffect(() => {
+    if (!isEditMode) {
+      const name = searchParams.get('name');
+      const category = searchParams.get('category');
+      if (name && category) {
+        const generatedDescription = generateDescriptionFromTemplate(name, category);
+        setValue('description', generatedDescription);
+      }
+    }
+  }, [searchParams, setValue, isEditMode]);
+
   const watchedValues = watch();
+
+  // Функция для генерации описания из шаблона
+  const generateDescriptionFromTemplate = (name: string, category: string): string => {
+    return `${name} - это ${getWeaponCategoryLabel(category)} оружие.`;
+  };
 
   // Обновление предварительного просмотра
   const updatePreview = () => {
-    // Обновляем предпросмотр даже если не все поля заполнены
-    setPreviewCard({
-      id: 'preview',
-      name: watchedValues.name || 'Название карты',
-      description: watchedValues.description || 'Описание эффекта',
-      rarity: watchedValues.rarity || 'common',
-      properties: watchedValues.properties || [],
-      image_url: cardImage || null,
-      price: watchedValues.price || null,
-      weight: watchedValues.weight || null,
-      bonus_type: watchedValues.bonus_type || null,
-      bonus_value: watchedValues.bonus_value || null,
-      card_number: 'PREVIEW',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    if (isEditMode && originalCard) {
+      // В режиме редактирования используем данные оригинальной карты
+      setPreviewCard({
+        ...originalCard,
+        name: watchedValues.name || originalCard.name || '',
+        description: watchedValues.description || originalCard.description || '',
+        rarity: watchedValues.rarity || originalCard.rarity || 'common',
+        properties: watchedValues.properties || originalCard.properties || [],
+        image_url: cardImage || originalCard.image_url || null,
+        price: watchedValues.price || originalCard.price || null,
+        weight: watchedValues.weight || originalCard.weight || null,
+        bonus_type: watchedValues.bonus_type || originalCard.bonus_type || null,
+        bonus_value: watchedValues.bonus_value || originalCard.bonus_value || null,
+        damage_type: originalCard.damage_type || damageType || null,
+      });
+    } else {
+      // В режиме создания используем данные формы
+      setPreviewCard({
+        id: 'preview',
+        name: watchedValues.name || 'Название карты',
+        description: watchedValues.description || 'Описание эффекта',
+        rarity: watchedValues.rarity || 'common',
+        properties: watchedValues.properties || [],
+        image_url: cardImage || null,
+        price: watchedValues.price || null,
+        weight: watchedValues.weight || null,
+        bonus_type: watchedValues.bonus_type || null,
+        bonus_value: watchedValues.bonus_value || null,
+        damage_type: damageType || null,
+        card_number: 'PREVIEW',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
   };
 
   // Обработка отправки формы
-  const onSubmit = async (data: CreateCardRequest) => {
+  const onSubmit = async (data: CreateCardRequest | UpdateCardRequest) => {
     try {
       setLoading(true);
       setError(null);
@@ -73,9 +154,54 @@ const CardCreator = () => {
         price: data.price || null, // Добавляем цену
         weight: data.weight || null, // Добавляем вес
         bonus_type: data.bonus_type || null, // Добавляем тип бонуса
-        bonus_value: data.bonus_value || null // Добавляем значение бонуса
+        bonus_value: data.bonus_value || null, // Добавляем значение бонуса
+        damage_type: damageType || null // Добавляем тип урона
       };
+
+      if (isEditMode && id) {
+        // Режим редактирования
+        await cardsApi.updateCard(id, cardData);
+        navigate('/');
+      } else {
+        // Режим создания
+        const newCard = await cardsApi.createCard(cardData);
+        
+        // Генерация изображения только если не загружено пользователем
+        if (!cardImage) {
+          try {
+            await cardsApi.generateImage({ card_id: newCard.id });
+          } catch (imageError) {
+            console.warn('Ошибка генерации изображения:', imageError);
+          }
+        }
+        
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Ошибка ${isEditMode ? 'обновления' : 'создания'} карточки`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Функция для создания новой карты на основе текущей
+  const handleCreateAsNew = async (data: CreateCardRequest | UpdateCardRequest) => {
+    try {
+      setSaving(true);
+      setError(null);
       
+      // Создаем новую карту на основе текущих данных
+      const cardData = {
+        ...data,
+        properties: data.properties && data.properties.length > 0 ? data.properties : null,
+        image_url: cardImage || '',
+        price: data.price || null,
+        weight: data.weight || null,
+        bonus_type: data.bonus_type || null,
+        bonus_value: data.bonus_value || null,
+        damage_type: damageType || null
+      };
+
       const newCard = await cardsApi.createCard(cardData);
       
       // Генерация изображения только если не загружено пользователем
@@ -89,9 +215,9 @@ const CardCreator = () => {
       
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка создания карточки');
+      setError(err instanceof Error ? err.message : 'Ошибка создания новой карточки');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -117,9 +243,18 @@ const CardCreator = () => {
     <div className="space-y-6">
       {/* Заголовок */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-fantasy font-bold text-gray-900">
-          Создать карточку
-        </h1>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate('/')}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <ArrowLeft size={18} />
+            <span>Назад</span>
+          </button>
+          <h1 className="text-3xl font-fantasy font-bold text-gray-900">
+            {isEditMode ? 'Редактировать карточку' : 'Создать карточку'}
+          </h1>
+        </div>
         <div className="flex space-x-2">
           <button
             onClick={() => setShowPreview(!showPreview)}
@@ -305,12 +440,29 @@ const CardCreator = () => {
             <div className="flex space-x-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || saving}
                 className="btn-primary flex items-center space-x-2 disabled:opacity-50"
               >
                 <Save size={18} />
-                <span>{loading ? 'Создание...' : 'Создать карточку'}</span>
+                <span>
+                  {loading || saving 
+                    ? (isEditMode ? 'Сохранение...' : 'Создание...') 
+                    : (isEditMode ? 'Сохранить изменения' : 'Создать карточку')
+                  }
+                </span>
               </button>
+              
+              {isEditMode && (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={handleSubmit(handleCreateAsNew)}
+                  className="btn-secondary flex items-center space-x-2 disabled:opacity-50"
+                >
+                  <Copy size={18} />
+                  <span>{saving ? 'Создание...' : 'Создать как новую карту'}</span>
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -318,13 +470,16 @@ const CardCreator = () => {
         {/* Предварительный просмотр */}
         {showPreview && previewCard && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">Предварительный просмотр</h2>
-            <div className="flex justify-center">
-              <CardPreview card={previewCard} />
+                          <h2 className="text-xl font-fantasy font-semibold text-gray-900">Предварительный просмотр</h2>
+            <div className="flex justify-center py-8">
+              <CardPreview 
+                card={previewCard} 
+                className={`card-preview-large ${previewCard.description && previewCard.description.length > 100 ? 'card-preview-extended' : ''}`} 
+              />
             </div>
             <div className="text-center text-sm text-gray-500">
-              <p>Размер карточки: 52.5мм x 74.25мм</p>
-              <p>16 карточек на А4 лист</p>
+              <p>Размер карточки: 78.75мм x 111.375мм (увеличенный предпросмотр)</p>
+              <p>Печать: 52.5мм x 74.25мм, 16 карточек на А4 лист</p>
             </div>
           </div>
         )}
