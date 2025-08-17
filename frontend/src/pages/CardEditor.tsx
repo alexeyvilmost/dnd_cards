@@ -7,6 +7,7 @@ import type { UpdateCardRequest } from '../types';
 import { PROPERTIES_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import RaritySelector from '../components/RaritySelector';
+import ImageUploader from '../components/ImageUploader';
 
 const CardEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const CardEditor = () => {
   const [error, setError] = useState<string | null>(null);
   const [card, setCard] = useState<any>(null);
   const [previewCard, setPreviewCard] = useState<any>(null);
+  const [cardImage, setCardImage] = useState<string>('');
 
   const {
     register,
@@ -43,6 +45,11 @@ const CardEditor = () => {
         setValue('description', loadedCard.description);
         setValue('rarity', loadedCard.rarity);
         setValue('properties', loadedCard.properties);
+        setValue('price', loadedCard.price);
+        setValue('weight', loadedCard.weight);
+        
+        // Устанавливаем изображение
+        setCardImage(loadedCard.image_url || '');
         
         setPreviewCard(loadedCard);
       } catch (err) {
@@ -57,20 +64,21 @@ const CardEditor = () => {
 
   // Обновление предварительного просмотра
   const updatePreview = () => {
-    if (watchedValues.name && watchedValues.description && watchedValues.rarity && watchedValues.properties) {
-      setPreviewCard({
-        ...card,
-        name: watchedValues.name,
-        description: watchedValues.description,
-        rarity: watchedValues.rarity,
-        properties: watchedValues.properties,
-      });
-    }
+    setPreviewCard({
+      ...card,
+      name: watchedValues.name || card?.name || '',
+      description: watchedValues.description || card?.description || '',
+      rarity: watchedValues.rarity || card?.rarity || 'common',
+      properties: watchedValues.properties || card?.properties || '',
+      image_url: cardImage || card?.image_url || null,
+      price: watchedValues.price || card?.price || null,
+      weight: watchedValues.weight || card?.weight || null,
+    });
   };
 
   useEffect(() => {
     updatePreview();
-  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties]);
+  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties, watchedValues.price, watchedValues.weight, cardImage]);
 
   // Обработка отправки формы
   const onSubmit = async (data: UpdateCardRequest) => {
@@ -80,7 +88,16 @@ const CardEditor = () => {
       setSaving(true);
       setError(null);
       
-      await cardsApi.updateCard(id, data);
+      // Добавляем изображение к данным карточки и обрабатываем пустые свойства
+      const cardData = {
+        ...data,
+        properties: data.properties || null, // Преобразуем пустую строку в null
+        image_url: cardImage || '',
+        price: data.price || null, // Добавляем цену
+        weight: data.weight || null // Добавляем вес
+      };
+      
+      await cardsApi.updateCard(id, cardData);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка обновления карточки');
@@ -172,22 +189,19 @@ const CardEditor = () => {
             {/* Свойства */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Свойства *
+                Свойства
               </label>
               <select
-                {...register('properties', { required: 'Выберите свойства' })}
+                {...register('properties')}
                 className="input-field"
               >
-                <option value="">Выберите свойства</option>
+                <option value="">Выберите свойства (необязательно)</option>
                 {PROPERTIES_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
-              {errors.properties && (
-                <p className="mt-1 text-sm text-red-600">{errors.properties.message}</p>
-              )}
             </div>
 
             {/* Описание */}
@@ -204,6 +218,61 @@ const CardEditor = () => {
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
               )}
+            </div>
+
+            {/* Цена */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Цена (золотые монеты)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50000"
+                placeholder="Например: 100"
+                className="input-field"
+                defaultValue={card?.price || ''}
+                {...register('price', {
+                  setValueAs: (value) => value ? parseInt(value) : null
+                })}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Цена от 1 до 50000 золотых монет (необязательно)
+              </p>
+            </div>
+
+            {/* Вес */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Вес (фунты)
+              </label>
+              <input
+                type="number"
+                min="0.01"
+                max="1000"
+                step="0.01"
+                placeholder="Например: 2.5"
+                className="input-field"
+                defaultValue={card?.weight || ''}
+                {...register('weight', {
+                  setValueAs: (value) => value ? parseFloat(value) : null
+                })}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Вес от 0.01 до 1000 фунтов (необязательно)
+              </p>
+            </div>
+
+            {/* Изображение */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Изображение карточки
+              </label>
+              <ImageUploader
+                onImageUpload={setCardImage}
+                currentImageUrl={cardImage}
+                className="min-h-[200px]"
+              />
             </div>
 
             {/* Кнопки */}
@@ -223,7 +292,7 @@ const CardEditor = () => {
         {/* Предварительный просмотр */}
         {showPreview && previewCard && (
           <div className="flex justify-center">
-            <CardPreview card={previewCard} />
+                          <CardPreview card={previewCard} />
           </div>
         )}
       </div>

@@ -56,6 +56,10 @@ func main() {
 		api.DELETE("/cards/:id", cardController.DeleteCard)
 		api.POST("/cards/generate-image", cardController.GenerateImage)
 		api.POST("/cards/export", cardController.ExportCards)
+
+		// Шаблоны оружия
+		api.GET("/weapon-templates", cardController.GetWeaponTemplates)
+		api.GET("/weapon-templates/:id", cardController.GetWeaponTemplate)
 	}
 
 	// Запуск сервера

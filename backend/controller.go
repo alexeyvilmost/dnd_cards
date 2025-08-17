@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -60,7 +61,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	var responses []CardResponse
+	responses := make([]CardResponse, 0)
 	for _, card := range cards {
 		responses = append(responses, CardResponse{
 			ID:          card.ID,
@@ -70,6 +71,10 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			ImageURL:    card.ImageURL,
 			Rarity:      card.Rarity,
 			CardNumber:  card.CardNumber,
+			Price:       card.Price,
+			Weight:      card.Weight,
+			BonusType:   card.BonusType,
+			BonusValue:  card.BonusValue,
 			CreatedAt:   card.CreatedAt,
 			UpdatedAt:   card.UpdatedAt,
 		})
@@ -109,6 +114,10 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		ImageURL:    card.ImageURL,
 		Rarity:      card.Rarity,
 		CardNumber:  card.CardNumber,
+		Price:       card.Price,
+		Weight:      card.Weight,
+		BonusType:   card.BonusType,
+		BonusValue:  card.BonusValue,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
@@ -124,14 +133,45 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
+	// Валидация данных
+	if !IsValidRarity(req.Rarity) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость"})
+		return
+	}
+
+	if req.BonusType != nil && !IsValidBonusType(*req.BonusType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип бонуса"})
+		return
+	}
+
+	if !ValidateProperties(req.Properties) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
+		return
+	}
+
+	if !ValidatePrice(req.Price) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+		return
+	}
+
+	if !ValidateWeight(req.Weight) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		return
+	}
+
 	// Генерация уникального номера карточки
 	cardNumber := generateCardNumber(cc.db)
 
 	card := Card{
 		Name:        req.Name,
-		Properties:  req.Properties,
+		Properties:  req.Properties, // Теперь это указатель, GORM сам обработает nil
 		Description: req.Description,
 		Rarity:      req.Rarity,
+		ImageURL:    req.ImageURL,
+		Price:       req.Price,
+		Weight:      req.Weight,
+		BonusType:   req.BonusType,
+		BonusValue:  req.BonusValue,
 		CardNumber:  cardNumber,
 	}
 
@@ -148,6 +188,10 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		ImageURL:    card.ImageURL,
 		Rarity:      card.Rarity,
 		CardNumber:  card.CardNumber,
+		Price:       card.Price,
+		Weight:      card.Weight,
+		BonusType:   card.BonusType,
+		BonusValue:  card.BonusValue,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
@@ -169,6 +213,32 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		return
 	}
 
+	// Валидация данных
+	if req.Rarity != "" && !IsValidRarity(req.Rarity) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость"})
+		return
+	}
+
+	if req.BonusType != nil && !IsValidBonusType(*req.BonusType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип бонуса"})
+		return
+	}
+
+	if req.Properties != nil && !ValidateProperties(req.Properties) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
+		return
+	}
+
+	if req.Price != nil && !ValidatePrice(req.Price) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+		return
+	}
+
+	if req.Weight != nil && !ValidateWeight(req.Weight) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		return
+	}
+
 	var card Card
 	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -183,7 +253,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Name != "" {
 		card.Name = req.Name
 	}
-	if req.Properties != "" {
+	if req.Properties != nil {
 		card.Properties = req.Properties
 	}
 	if req.Description != "" {
@@ -191,6 +261,21 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.Rarity != "" {
 		card.Rarity = req.Rarity
+	}
+	if req.ImageURL != "" {
+		card.ImageURL = req.ImageURL
+	}
+	if req.Price != nil {
+		card.Price = req.Price
+	}
+	if req.Weight != nil {
+		card.Weight = req.Weight
+	}
+	if req.BonusType != nil {
+		card.BonusType = req.BonusType
+	}
+	if req.BonusValue != nil {
+		card.BonusValue = req.BonusValue
 	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
@@ -206,6 +291,10 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		ImageURL:    card.ImageURL,
 		Rarity:      card.Rarity,
 		CardNumber:  card.CardNumber,
+		Price:       card.Price,
+		Weight:      card.Weight,
+		BonusType:   card.BonusType,
+		BonusValue:  card.BonusValue,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}
@@ -221,7 +310,19 @@ func (cc *CardController) DeleteCard(c *gin.Context) {
 		return
 	}
 
-	if err := cc.db.Where("id = ?", id).Delete(&Card{}).Error; err != nil {
+	// Проверяем, существует ли карточка
+	var card Card
+	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Карточка не найдена"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточки"})
+		return
+	}
+
+	// Удаляем карточку
+	if err := cc.db.Delete(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления карточки"})
 		return
 	}
@@ -304,6 +405,10 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			ImageURL:    card.ImageURL,
 			Rarity:      card.Rarity,
 			CardNumber:  card.CardNumber,
+			Price:       card.Price,
+			Weight:      card.Weight,
+			BonusType:   card.BonusType,
+			BonusValue:  card.BonusValue,
 			CreatedAt:   card.CreatedAt,
 			UpdatedAt:   card.UpdatedAt,
 		})
@@ -317,9 +422,9 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 
 // generateCardNumber - генерация уникального номера карточки
 func generateCardNumber(db *gorm.DB) string {
-	// Находим максимальный номер карточки
+	// Находим максимальный номер карточки (включая удаленные, так как card_number должен быть уникальным)
 	var maxCard Card
-	db.Order("card_number DESC").First(&maxCard)
+	db.Unscoped().Order("card_number DESC").First(&maxCard)
 
 	// Извлекаем номер из строки CARD-XXXX
 	var nextNum int = 1
@@ -333,4 +438,82 @@ func generateCardNumber(db *gorm.DB) string {
 	}
 
 	return fmt.Sprintf("CARD-%04d", nextNum)
+}
+
+// GetWeaponTemplates - получение списка шаблонов оружия
+func (cc *CardController) GetWeaponTemplates(c *gin.Context) {
+	var templates []WeaponTemplate
+	query := cc.db
+
+	// Фильтр по категории
+	if category := c.Query("category"); category != "" {
+		query = query.Where("category = ?", category)
+	}
+
+	if err := query.Find(&templates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения шаблонов"})
+		return
+	}
+
+	var responses []WeaponTemplateResponse
+	for _, template := range templates {
+		properties := []string{}
+		if template.Properties != "" {
+			// Парсим JSON из строки
+			if err := json.Unmarshal([]byte(template.Properties), &properties); err != nil {
+				// Если не удалось распарсить JSON, оставляем пустой массив
+				properties = []string{}
+			}
+		}
+
+		responses = append(responses, WeaponTemplateResponse{
+			ID:         template.ID,
+			Name:       template.Name,
+			NameEn:     template.NameEn,
+			Category:   template.Category,
+			DamageType: template.DamageType,
+			Damage:     template.Damage,
+			Weight:     template.Weight,
+			Price:      template.Price,
+			Properties: properties,
+			ImagePath:  template.ImagePath,
+		})
+	}
+
+	c.JSON(http.StatusOK, responses)
+}
+
+// GetWeaponTemplate - получение конкретного шаблона оружия
+func (cc *CardController) GetWeaponTemplate(c *gin.Context) {
+	id := c.Param("id")
+
+	var template WeaponTemplate
+	if err := cc.db.First(&template, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Шаблон не найден"})
+		return
+	}
+
+	properties := []string{}
+	if template.Properties != "" {
+		// Парсим JSON из строки
+		if err := json.Unmarshal([]byte(template.Properties), &properties); err != nil {
+			// Если не удалось распарсить JSON, оставляем пустой массив
+			properties = []string{}
+		}
+	}
+
+	response := WeaponTemplateResponse{
+		ID:         template.ID,
+		Name:       template.Name,
+		NameEn:     template.NameEn,
+		Category:   template.Category,
+		DamageType: template.DamageType,
+		Damage:     template.Damage,
+		Weight:     template.Weight,
+		Price:      template.Price,
+		Properties: properties,
+		ImagePath:  template.ImagePath,
+	}
+
+	c.JSON(http.StatusOK, response)
 }

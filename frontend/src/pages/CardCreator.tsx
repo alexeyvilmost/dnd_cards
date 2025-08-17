@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Save, Eye, EyeOff, Wand2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { CreateCardRequest } from '../types';
-import { PROPERTIES_OPTIONS } from '../types';
+import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import RaritySelector from '../components/RaritySelector';
+import ImageUploader from '../components/ImageUploader';
 
 const CardCreator = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showPreview, setShowPreview] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewCard, setPreviewCard] = useState<any>(null);
+  const [cardImage, setCardImage] = useState<string>('');
 
   const {
     register,
@@ -23,10 +26,14 @@ const CardCreator = () => {
     formState: { errors },
   } = useForm<CreateCardRequest>({
     defaultValues: {
-      name: 'Название карты',
+      name: searchParams.get('name') || 'Название карты',
       rarity: 'common',
-      properties: '',
-      description: 'Описание эффекта'
+      properties: searchParams.get('properties') ? searchParams.get('properties')!.split(',') as Properties : [],
+      description: searchParams.get('description') || 'Описание эффекта',
+      price: searchParams.get('price') ? parseInt(searchParams.get('price')!) : null,
+      weight: searchParams.get('weight') ? parseFloat(searchParams.get('weight')!) : null,
+      bonus_type: searchParams.get('bonus_type') || null,
+      bonus_value: searchParams.get('bonus_value') || null
     }
   });
 
@@ -40,7 +47,12 @@ const CardCreator = () => {
       name: watchedValues.name || 'Название карты',
       description: watchedValues.description || 'Описание эффекта',
       rarity: watchedValues.rarity || 'common',
-      properties: watchedValues.properties || '',
+      properties: watchedValues.properties || [],
+      image_url: cardImage || null,
+      price: watchedValues.price || null,
+      weight: watchedValues.weight || null,
+      bonus_type: watchedValues.bonus_type || null,
+      bonus_value: watchedValues.bonus_value || null,
       card_number: 'PREVIEW',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -53,13 +65,26 @@ const CardCreator = () => {
       setLoading(true);
       setError(null);
       
-      const newCard = await cardsApi.createCard(data);
+      // Добавляем изображение к данным карточки и обрабатываем пустые свойства
+      const cardData = {
+        ...data,
+        properties: data.properties && data.properties.length > 0 ? data.properties : null, // Массив свойств
+        image_url: cardImage || '',
+        price: data.price || null, // Добавляем цену
+        weight: data.weight || null, // Добавляем вес
+        bonus_type: data.bonus_type || null, // Добавляем тип бонуса
+        bonus_value: data.bonus_value || null // Добавляем значение бонуса
+      };
       
-      // Генерация изображения
-      try {
-        await cardsApi.generateImage({ card_id: newCard.id });
-      } catch (imageError) {
-        console.warn('Ошибка генерации изображения:', imageError);
+      const newCard = await cardsApi.createCard(cardData);
+      
+      // Генерация изображения только если не загружено пользователем
+      if (!cardImage) {
+        try {
+          await cardsApi.generateImage({ card_id: newCard.id });
+        } catch (imageError) {
+          console.warn('Ошибка генерации изображения:', imageError);
+        }
       }
       
       navigate('/');
@@ -70,10 +95,18 @@ const CardCreator = () => {
     }
   };
 
+  // Загружаем изображение из шаблона, если оно есть
+  useEffect(() => {
+    const imagePath = searchParams.get('image_path');
+    if (imagePath && !cardImage) {
+      setCardImage(imagePath);
+    }
+  }, [searchParams, cardImage]);
+
   // Обновляем предварительный просмотр при изменении значений
   useEffect(() => {
     updatePreview();
-  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties]);
+  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties, watchedValues.price, watchedValues.weight, watchedValues.bonus_type, watchedValues.bonus_value, cardImage]);
 
   // Инициализируем предпросмотр при загрузке
   useEffect(() => {
@@ -137,22 +170,24 @@ const CardCreator = () => {
             {/* Свойства */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Свойства *
+                Свойства
               </label>
-              <select
-                {...register('properties', { required: 'Выберите свойства' })}
-                className="input-field"
-              >
-                <option value="">Выберите свойства</option>
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2">
                 {PROPERTIES_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                  <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      value={option.value}
+                      {...register('properties')}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{option.label}</span>
+                  </label>
                 ))}
-              </select>
-              {errors.properties && (
-                <p className="mt-1 text-sm text-red-600">{errors.properties.message}</p>
-              )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Выберите одно или несколько свойств (необязательно)
+              </p>
             </div>
 
             {/* Описание */}
@@ -173,6 +208,90 @@ const CardCreator = () => {
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
               )}
+            </div>
+
+            {/* Цена */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Цена (золотые монеты)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50000"
+                placeholder="Например: 100"
+                className="input-field"
+                {...register('price', {
+                  setValueAs: (value) => value ? parseInt(value) : null
+                })}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Цена от 1 до 50000 золотых монет (необязательно)
+              </p>
+            </div>
+
+            {/* Вес */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Вес (фунты)
+              </label>
+              <input
+                type="number"
+                min="0.01"
+                max="1000"
+                step="0.01"
+                placeholder="Например: 2.5"
+                className="input-field"
+                {...register('weight', {
+                  setValueAs: (value) => value ? parseFloat(value) : null
+                })}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Вес от 0.01 до 1000 фунтов (необязательно)
+              </p>
+            </div>
+
+            {/* Бонусы */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Тип бонуса
+                </label>
+                <select
+                  className="input-field"
+                  {...register('bonus_type')}
+                >
+                  <option value="">Выберите тип (необязательно)</option>
+                  {BONUS_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Значение бонуса
+                </label>
+                <input
+                  type="text"
+                  placeholder="Например: +2, 1к4, advantage"
+                  className="input-field"
+                  {...register('bonus_value')}
+                />
+              </div>
+            </div>
+
+            {/* Изображение */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Изображение карточки
+              </label>
+              <ImageUploader
+                onImageUpload={setCardImage}
+                currentImageUrl={cardImage}
+                className="min-h-[200px]"
+              />
             </div>
 
             {/* Сообщение об ошибке */}
