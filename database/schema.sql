@@ -16,9 +16,11 @@ CREATE TABLE cards (
     card_number VARCHAR(20) NOT NULL,
     price INTEGER CHECK (price >= 1 AND price <= 50000),
     weight DECIMAL(5,2) CHECK (weight >= 0.01 AND weight <= 1000),
-    bonus_type VARCHAR(50) CHECK (bonus_type IN ('damage', 'defense', 'attack', 'armor_class', 'initiative', 'stealth', 'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma') OR bonus_type IS NULL),
+    bonus_type VARCHAR(50) CHECK (bonus_type IN ('damage', 'defense') OR bonus_type IS NULL),
     bonus_value VARCHAR(20),
     damage_type VARCHAR(20) CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning') OR damage_type IS NULL),
+    defense_type VARCHAR(20) CHECK (defense_type IN ('cloth', 'light', 'medium', 'heavy') OR defense_type IS NULL),
+    description_font_size INTEGER CHECK (description_font_size >= 6 AND description_font_size <= 20) DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE
@@ -65,14 +67,17 @@ CREATE TRIGGER update_cards_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Вставка тестовых данных карточек (только если таблица пустая)
-INSERT INTO cards (name, properties, description, rarity, card_number, price, weight, bonus_type, bonus_value)
+INSERT INTO cards (name, properties, description, rarity, card_number, price, weight, bonus_type, bonus_value, damage_type, defense_type)
 SELECT * FROM (VALUES
-    ('Зелье лечения', '["consumable"]', 'Восстанавливает 2d4+2 очка здоровья при употреблении.', 'common', 'CARD-0001', 10, 0.5, NULL, NULL),
-    ('Зелье силы', '["single_use"]', 'Увеличивает силу на +2 на 1 час.', 'uncommon', 'CARD-0002', 50, 0.5, 'strength', '+2'),
-    ('Эликсир невидимости', '["single_use"]', 'Делает потребителя невидимым на 1 час.', 'rare', 'CARD-0003', 300, 0.25, 'stealth', 'advantage'),
-    ('Зелье полета', '["consumable"]', 'Позволяет летать со скоростью 60 футов в течение 10 минут.', 'very_rare', 'CARD-0004', 1000, 1.0, NULL, NULL),
-    ('Философский камень', '["single_use"]', 'Превращает любой металл в золото.', 'artifact', 'CARD-0005', 15000, 5.0, NULL, NULL)
-) AS v(name, properties, description, rarity, card_number, price, weight, bonus_type, bonus_value)
+    ('Зелье лечения', '["consumable"]', 'Восстанавливает 2d4+2 очка здоровья при употреблении.', 'common', 'CARD-0001', 10, 0.5, NULL, NULL, NULL, NULL),
+    ('Меч пламени', '["magical"]', 'Магический меч, излучающий тепло.', 'rare', 'CARD-0002', 500, 3.0, 'damage', '1d8', 'slashing', NULL),
+    ('Кожаная броня', '["armor"]', 'Легкая кожаная броня для подвижности.', 'common', 'CARD-0003', 10, 10.0, 'defense', '11', NULL, 'light'),
+    ('Тканевая броня', '["armor"]', 'Простая тканевая броня для магов.', 'common', 'CARD-0006', 5, 2.0, 'defense', '10', NULL, 'cloth'),
+    ('Кольчуга', '["armor"]', 'Средняя металлическая броня из переплетенных колец.', 'common', 'CARD-0007', 50, 20.0, 'defense', '14', NULL, 'medium'),
+    ('Латная броня', '["armor"]', 'Тяжелая металлическая броня для максимальной защиты.', 'rare', 'CARD-0008', 1500, 40.0, 'defense', '18', NULL, 'heavy'),
+    ('Зелье полета', '["consumable"]', 'Позволяет летать со скоростью 60 футов в течение 10 минут.', 'very_rare', 'CARD-0004', 1000, 1.0, NULL, NULL, NULL, NULL),
+    ('Философский камень', '["single_use"]', 'Превращает любой металл в золото.', 'artifact', 'CARD-0005', 15000, 5.0, NULL, NULL, NULL, NULL)
+) AS v(name, properties, description, rarity, card_number, price, weight, bonus_type, bonus_value, damage_type, defense_type)
 WHERE NOT EXISTS (SELECT 1 FROM cards LIMIT 1);
 
 -- Вставка шаблонов оружия (только если таблица пустая)

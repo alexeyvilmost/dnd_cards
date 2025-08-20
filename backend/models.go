@@ -40,65 +40,61 @@ const (
 type BonusType string
 
 const (
-	BonusDamage       BonusType = "damage"
-	BonusDefense      BonusType = "defense"
-	BonusAttack       BonusType = "attack"
-	BonusArmorClass   BonusType = "armor_class"
-	BonusInitiative   BonusType = "initiative"
-	BonusStealth      BonusType = "stealth"
-	BonusStrength     BonusType = "strength"
-	BonusDexterity    BonusType = "dexterity"
-	BonusConstitution BonusType = "constitution"
-	BonusIntelligence BonusType = "intelligence"
-	BonusWisdom       BonusType = "wisdom"
-	BonusCharisma     BonusType = "charisma"
+	BonusDamage  BonusType = "damage"
+	BonusDefense BonusType = "defense"
 )
 
 // Card - модель карточки
 type Card struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name        string         `json:"name" gorm:"not null"`
-	Properties  *Properties    `json:"properties" gorm:"type:text;serializer:json"` // Храним как JSON
-	Description string         `json:"description" gorm:"type:text;not null"`
-	ImageURL    string         `json:"image_url" gorm:"type:text"`
-	Rarity      Rarity         `json:"rarity" gorm:"not null"`
-	CardNumber  string         `json:"card_number" gorm:"uniqueIndex;not null"`
-	Price       *int           `json:"price" gorm:"type:int"`
-	Weight      *float64       `json:"weight" gorm:"type:decimal(5,2)"`
-	BonusType   *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
-	BonusValue  *string        `json:"bonus_value" gorm:"type:varchar(20)"`
-	DamageType  *string        `json:"damage_type" gorm:"type:varchar(20)"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                  uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                string         `json:"name" gorm:"not null"`
+	Properties          *Properties    `json:"properties" gorm:"type:text;serializer:json"` // Храним как JSON
+	Description         string         `json:"description" gorm:"type:text;not null"`
+	ImageURL            string         `json:"image_url" gorm:"type:text"`
+	Rarity              Rarity         `json:"rarity" gorm:"not null"`
+	CardNumber          string         `json:"card_number" gorm:"uniqueIndex;not null"`
+	Price               *int           `json:"price" gorm:"type:int"`
+	Weight              *float64       `json:"weight" gorm:"type:decimal(5,2)"`
+	BonusType           *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
+	BonusValue          *string        `json:"bonus_value" gorm:"type:varchar(20)"`
+	DamageType          *string        `json:"damage_type" gorm:"type:varchar(20)"`
+	DefenseType         *string        `json:"defense_type" gorm:"type:varchar(20)"`
+	DescriptionFontSize *int           `json:"description_font_size" gorm:"type:int"`
+	CreatedAt           time.Time      `json:"created_at"`
+	UpdatedAt           time.Time      `json:"updated_at"`
+	DeletedAt           gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // CreateCardRequest - запрос на создание карточки
 type CreateCardRequest struct {
-	Name        string      `json:"name" binding:"required"`
-	Properties  *Properties `json:"properties"`
-	Description string      `json:"description" binding:"required"`
-	Rarity      Rarity      `json:"rarity" binding:"required"`
-	ImageURL    string      `json:"image_url"`
-	Price       *int        `json:"price"`
-	Weight      *float64    `json:"weight"`
-	BonusType   *BonusType  `json:"bonus_type"`
-	BonusValue  *string     `json:"bonus_value"`
-	DamageType  *string     `json:"damage_type"`
+	Name                string      `json:"name" binding:"required"`
+	Properties          *Properties `json:"properties"`
+	Description         string      `json:"description" binding:"required"`
+	Rarity              Rarity      `json:"rarity" binding:"required"`
+	ImageURL            string      `json:"image_url"`
+	Price               *int        `json:"price"`
+	Weight              *float64    `json:"weight"`
+	BonusType           *BonusType  `json:"bonus_type"`
+	BonusValue          *string     `json:"bonus_value"`
+	DamageType          *string     `json:"damage_type"`
+	DefenseType         *string     `json:"defense_type"`
+	DescriptionFontSize *int        `json:"description_font_size"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
 type UpdateCardRequest struct {
-	Name        string      `json:"name"`
-	Properties  *Properties `json:"properties"`
-	Description string      `json:"description"`
-	Rarity      Rarity      `json:"rarity"`
-	ImageURL    string      `json:"image_url"`
-	Price       *int        `json:"price"`
-	Weight      *float64    `json:"weight"`
-	BonusType   *BonusType  `json:"bonus_type"`
-	BonusValue  *string     `json:"bonus_value"`
-	DamageType  *string     `json:"damage_type"`
+	Name                string      `json:"name"`
+	Properties          *Properties `json:"properties"`
+	Description         string      `json:"description"`
+	Rarity              Rarity      `json:"rarity"`
+	ImageURL            string      `json:"image_url"`
+	Price               *int        `json:"price"`
+	Weight              *float64    `json:"weight"`
+	BonusType           *BonusType  `json:"bonus_type"`
+	BonusValue          *string     `json:"bonus_value"`
+	DamageType          *string     `json:"damage_type"`
+	DefenseType         *string     `json:"defense_type"`
+	DescriptionFontSize *int        `json:"description_font_size"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -114,20 +110,22 @@ type ExportCardsRequest struct {
 
 // CardResponse - ответ с карточкой
 type CardResponse struct {
-	ID          uuid.UUID   `json:"id"`
-	Name        string      `json:"name"`
-	Properties  *Properties `json:"properties"`
-	Description string      `json:"description"`
-	ImageURL    string      `json:"image_url"`
-	Rarity      Rarity      `json:"rarity"`
-	CardNumber  string      `json:"card_number"`
-	Price       *int        `json:"price"`
-	Weight      *float64    `json:"weight"`
-	BonusType   *BonusType  `json:"bonus_type"`
-	BonusValue  *string     `json:"bonus_value"`
-	DamageType  *string     `json:"damage_type"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at"`
+	ID                  uuid.UUID   `json:"id"`
+	Name                string      `json:"name"`
+	Properties          *Properties `json:"properties"`
+	Description         string      `json:"description"`
+	ImageURL            string      `json:"image_url"`
+	Rarity              Rarity      `json:"rarity"`
+	CardNumber          string      `json:"card_number"`
+	Price               *int        `json:"price"`
+	Weight              *float64    `json:"weight"`
+	BonusType           *BonusType  `json:"bonus_type"`
+	BonusValue          *string     `json:"bonus_value"`
+	DamageType          *string     `json:"damage_type"`
+	DefenseType         *string     `json:"defense_type"`
+	DescriptionFontSize *int        `json:"description_font_size"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
 }
 
 // GetRarityColor - получение цвета для редкости
@@ -210,26 +208,6 @@ func (bt BonusType) GetLocalizedName() string {
 		return "Урон"
 	case BonusDefense:
 		return "Защита"
-	case BonusAttack:
-		return "Атака"
-	case BonusArmorClass:
-		return "Класс брони"
-	case BonusInitiative:
-		return "Инициатива"
-	case BonusStealth:
-		return "Скрытность"
-	case BonusStrength:
-		return "Сила"
-	case BonusDexterity:
-		return "Ловкость"
-	case BonusConstitution:
-		return "Телосложение"
-	case BonusIntelligence:
-		return "Интеллект"
-	case BonusWisdom:
-		return "Мудрость"
-	case BonusCharisma:
-		return "Харизма"
 	default:
 		return string(bt)
 	}
@@ -293,9 +271,7 @@ func IsValidRarityString(rarity string) bool {
 // IsValidBonusType - проверяет, является ли тип бонуса допустимым
 func IsValidBonusType(bonusType BonusType) bool {
 	switch bonusType {
-	case BonusDamage, BonusDefense, BonusAttack, BonusArmorClass, BonusInitiative,
-		BonusStealth, BonusStrength, BonusDexterity, BonusConstitution, BonusIntelligence,
-		BonusWisdom, BonusCharisma:
+	case BonusDamage, BonusDefense:
 		return true
 	default:
 		return false

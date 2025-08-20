@@ -64,20 +64,22 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	responses := make([]CardResponse, 0)
 	for _, card := range cards {
 		responses = append(responses, CardResponse{
-			ID:          card.ID,
-			Name:        card.Name,
-			Properties:  card.Properties,
-			Description: card.Description,
-			ImageURL:    card.ImageURL,
-			Rarity:      card.Rarity,
-			CardNumber:  card.CardNumber,
-			Price:       card.Price,
-			Weight:      card.Weight,
-			BonusType:   card.BonusType,
-			BonusValue:  card.BonusValue,
-			DamageType:  card.DamageType,
-			CreatedAt:   card.CreatedAt,
-			UpdatedAt:   card.UpdatedAt,
+			ID:                  card.ID,
+			Name:                card.Name,
+			Properties:          card.Properties,
+			Description:         card.Description,
+			ImageURL:            card.ImageURL,
+			Rarity:              card.Rarity,
+			CardNumber:          card.CardNumber,
+			Price:               card.Price,
+			Weight:              card.Weight,
+			BonusType:           card.BonusType,
+			BonusValue:          card.BonusValue,
+			DamageType:          card.DamageType,
+			DefenseType:         card.DefenseType,
+			DescriptionFontSize: card.DescriptionFontSize,
+			CreatedAt:           card.CreatedAt,
+			UpdatedAt:           card.UpdatedAt,
 		})
 	}
 
@@ -108,20 +110,22 @@ func (cc *CardController) GetCard(c *gin.Context) {
 	}
 
 	response := CardResponse{
-		ID:          card.ID,
-		Name:        card.Name,
-		Properties:  card.Properties,
-		Description: card.Description,
-		ImageURL:    card.ImageURL,
-		Rarity:      card.Rarity,
-		CardNumber:  card.CardNumber,
-		Price:       card.Price,
-		Weight:      card.Weight,
-		BonusType:   card.BonusType,
-		BonusValue:  card.BonusValue,
-		DamageType:  card.DamageType,
-		CreatedAt:   card.CreatedAt,
-		UpdatedAt:   card.UpdatedAt,
+		ID:                  card.ID,
+		Name:                card.Name,
+		Properties:          card.Properties,
+		Description:         card.Description,
+		ImageURL:            card.ImageURL,
+		Rarity:              card.Rarity,
+		CardNumber:          card.CardNumber,
+		Price:               card.Price,
+		Weight:              card.Weight,
+		BonusType:           card.BonusType,
+		BonusValue:          card.BonusValue,
+		DamageType:          card.DamageType,
+		DefenseType:         card.DefenseType,
+		DescriptionFontSize: card.DescriptionFontSize,
+		CreatedAt:           card.CreatedAt,
+		UpdatedAt:           card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -165,17 +169,19 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	cardNumber := generateCardNumber(cc.db)
 
 	card := Card{
-		Name:        req.Name,
-		Properties:  req.Properties, // Теперь это указатель, GORM сам обработает nil
-		Description: req.Description,
-		Rarity:      req.Rarity,
-		ImageURL:    req.ImageURL,
-		Price:       req.Price,
-		Weight:      req.Weight,
-		BonusType:   req.BonusType,
-		BonusValue:  req.BonusValue,
-		DamageType:  req.DamageType,
-		CardNumber:  cardNumber,
+		Name:                req.Name,
+		Properties:          req.Properties, // Теперь это указатель, GORM сам обработает nil
+		Description:         req.Description,
+		Rarity:              req.Rarity,
+		ImageURL:            req.ImageURL,
+		Price:               req.Price,
+		Weight:              req.Weight,
+		BonusType:           req.BonusType,
+		BonusValue:          req.BonusValue,
+		DamageType:          req.DamageType,
+		DefenseType:         req.DefenseType,
+		DescriptionFontSize: req.DescriptionFontSize,
+		CardNumber:          cardNumber,
 	}
 
 	if err := cc.db.Create(&card).Error; err != nil {
@@ -184,20 +190,22 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	}
 
 	response := CardResponse{
-		ID:          card.ID,
-		Name:        card.Name,
-		Properties:  card.Properties,
-		Description: card.Description,
-		ImageURL:    card.ImageURL,
-		Rarity:      card.Rarity,
-		CardNumber:  card.CardNumber,
-		Price:       card.Price,
-		Weight:      card.Weight,
-		BonusType:   card.BonusType,
-		BonusValue:  card.BonusValue,
-		DamageType:  card.DamageType,
-		CreatedAt:   card.CreatedAt,
-		UpdatedAt:   card.UpdatedAt,
+		ID:                  card.ID,
+		Name:                card.Name,
+		Properties:          card.Properties,
+		Description:         card.Description,
+		ImageURL:            card.ImageURL,
+		Rarity:              card.Rarity,
+		CardNumber:          card.CardNumber,
+		Price:               card.Price,
+		Weight:              card.Weight,
+		BonusType:           card.BonusType,
+		BonusValue:          card.BonusValue,
+		DamageType:          card.DamageType,
+		DefenseType:         card.DefenseType,
+		DescriptionFontSize: card.DescriptionFontSize,
+		CreatedAt:           card.CreatedAt,
+		UpdatedAt:           card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -284,6 +292,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.DamageType != nil {
 		card.DamageType = req.DamageType
 	}
+	if req.DefenseType != nil {
+		card.DefenseType = req.DefenseType
+	}
+	if req.DescriptionFontSize != nil {
+		card.DescriptionFontSize = req.DescriptionFontSize
+	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
@@ -291,20 +305,22 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 
 	response := CardResponse{
-		ID:          card.ID,
-		Name:        card.Name,
-		Properties:  card.Properties,
-		Description: card.Description,
-		ImageURL:    card.ImageURL,
-		Rarity:      card.Rarity,
-		CardNumber:  card.CardNumber,
-		Price:       card.Price,
-		Weight:      card.Weight,
-		BonusType:   card.BonusType,
-		BonusValue:  card.BonusValue,
-		DamageType:  card.DamageType,
-		CreatedAt:   card.CreatedAt,
-		UpdatedAt:   card.UpdatedAt,
+		ID:                  card.ID,
+		Name:                card.Name,
+		Properties:          card.Properties,
+		Description:         card.Description,
+		ImageURL:            card.ImageURL,
+		Rarity:              card.Rarity,
+		CardNumber:          card.CardNumber,
+		Price:               card.Price,
+		Weight:              card.Weight,
+		BonusType:           card.BonusType,
+		BonusValue:          card.BonusValue,
+		DamageType:          card.DamageType,
+		DefenseType:         card.DefenseType,
+		DescriptionFontSize: card.DescriptionFontSize,
+		CreatedAt:           card.CreatedAt,
+		UpdatedAt:           card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusOK, response)

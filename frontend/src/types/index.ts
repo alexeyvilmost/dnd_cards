@@ -1,7 +1,7 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact';
 export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special';
 export type Properties = Property[];
-export type BonusType = 'damage' | 'defense' | 'attack' | 'armor_class' | 'initiative' | 'stealth' | 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
+export type BonusType = 'damage' | 'defense';
 
 export interface Card {
   id: string;
@@ -16,6 +16,8 @@ export interface Card {
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
   damage_type?: string | null;
+  defense_type?: string | null;
+  description_font_size?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +32,8 @@ export interface CreateCardRequest {
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
   damage_type?: string | null;
+  defense_type?: string | null;
+  description_font_size?: number | null;
 }
 
 export interface UpdateCardRequest {
@@ -42,6 +46,8 @@ export interface UpdateCardRequest {
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
   damage_type?: string | null;
+  defense_type?: string | null;
+  description_font_size?: number | null;
 }
 
 export interface CardsResponse {
@@ -90,16 +96,6 @@ export const PROPERTIES_OPTIONS = [
 export const BONUS_TYPE_OPTIONS = [
   { value: 'damage', label: 'Урон' },
   { value: 'defense', label: 'Защита' },
-  { value: 'attack', label: 'Атака' },
-  { value: 'armor_class', label: 'Класс брони' },
-  { value: 'initiative', label: 'Инициатива' },
-  { value: 'stealth', label: 'Скрытность' },
-  { value: 'strength', label: 'Сила' },
-  { value: 'dexterity', label: 'Ловкость' },
-  { value: 'constitution', label: 'Телосложение' },
-  { value: 'intelligence', label: 'Интеллект' },
-  { value: 'wisdom', label: 'Мудрость' },
-  { value: 'charisma', label: 'Харизма' },
 ] as const;
 
 // Шаблоны оружия
@@ -114,6 +110,7 @@ export interface WeaponTemplate {
   price: number;
   properties: string[];
   image_path: string;
+  description_font_size?: number | null;
 }
 
 export const WEAPON_CATEGORIES = [
@@ -127,4 +124,11 @@ export const DAMAGE_TYPES = [
   { value: 'slashing', label: 'Рубящий' },
   { value: 'piercing', label: 'Колющий' },
   { value: 'bludgeoning', label: 'Дробящий' }
+];
+
+export const DEFENSE_TYPES = [
+  { value: 'cloth', label: 'Тканевая' },
+  { value: 'light', label: 'Легкая' },
+  { value: 'medium', label: 'Средняя' },
+  { value: 'heavy', label: 'Тяжелая' }
 ];

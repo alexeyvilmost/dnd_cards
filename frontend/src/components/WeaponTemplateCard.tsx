@@ -47,9 +47,9 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
   // Функция форматирования цены
   const formatPrice = (price: number): string => {
     if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K зм`;
+      return `${(price / 1000).toFixed(1)}K`;
     }
-    return `${price} зм`;
+    return `${price}`;
   };
 
   // Функция форматирования веса
@@ -145,45 +145,42 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
         />
       </div>
 
-      {/* Описание и бонусы */}
+      {/* Описание */}
       <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
-        {/* Описание - ограничено 75% при наличии бонусов */}
-        <div className="w-[75%]">
-          <p className={`text-gray-700 leading-relaxed font-fantasy ${getDescriptionFontSize(description)}`}>
+        <div className="w-full">
+          <p 
+            className={`text-gray-700 leading-relaxed font-fantasy`}
+            style={{ 
+              fontSize: template.description_font_size ? `${template.description_font_size}px` : 
+                      getDescriptionFontSize(description)
+            }}
+          >
             {description}
           </p>
         </div>
-        
-        {/* Бонусы - абсолютно позиционированные справа */}
-        <>
-          {/* Разделительная линия - доходит до нижней панели */}
-          <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
-          
-          {/* Бонусы - центрированы в блоке описания */}
-          <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
-            <div className="text-[9px] text-gray-900 font-fantasy font-medium leading-none">
-              {getBonusShortName('damage')}
-            </div>
-            <div className="text-[11px] font-fantasy font-bold text-gray-900 leading-none">
-              {getBonusShortValue(template.damage)}
-            </div>
-            {/* Тип урона для оружия */}
-            <div className="text-[8px] text-gray-600 font-fantasy leading-none">
-              {getDamageTypeLabel(template.damage_type)}
-            </div>
-          </div>
-        </>
       </div>
 
-      {/* Вес, цена и номер карточки - абсолютно позиционированные */}
-      <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white">
+      {/* Вес, цена, бонусы и номер карточки - абсолютно позиционированные */}
+      <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
         <div className="flex items-center space-x-2">
-          <span className="text-[10px] text-gray-900 font-fantasy font-medium">
-            {formatWeight(template.weight)}
-          </span>
-          <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
-            {formatPrice(template.price)}
-          </span>
+          <div className="flex items-center space-x-1">
+            <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+              {template.weight}
+            </span>
+            <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
+          </div>
+          <div className="flex items-center space-x-1">
+            <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+              {formatPrice(template.price)}
+            </span>
+            <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+          </div>
+          <div className="flex items-center space-x-0.5">
+            <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+              {getBonusShortValue(template.damage)}
+            </span>
+            <img src={`/icons/${template.damage_type}.png`} alt={getDamageTypeLabel(template.damage_type)} className="w-3 h-3" />
+          </div>
         </div>
         <span className="text-[10px] text-gray-400 font-mono">
           TEMPLATE

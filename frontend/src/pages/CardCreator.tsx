@@ -66,6 +66,7 @@ const CardCreator = () => {
         setValue('weight', loadedCard.weight);
         setValue('bonus_type', loadedCard.bonus_type);
         setValue('bonus_value', loadedCard.bonus_value);
+        setValue('description_font_size', loadedCard.description_font_size);
         
         // Устанавливаем изображение
         setCardImage(loadedCard.image_url || '');
@@ -118,6 +119,7 @@ const CardCreator = () => {
         bonus_type: watchedValues.bonus_type || originalCard.bonus_type || null,
         bonus_value: watchedValues.bonus_value || originalCard.bonus_value || null,
         damage_type: originalCard.damage_type || damageType || null,
+        description_font_size: watchedValues.description_font_size || originalCard.description_font_size || null,
       });
     } else {
       // В режиме создания используем данные формы
@@ -133,6 +135,7 @@ const CardCreator = () => {
         bonus_type: watchedValues.bonus_type || null,
         bonus_value: watchedValues.bonus_value || null,
         damage_type: damageType || null,
+        description_font_size: watchedValues.description_font_size || null,
         card_number: 'PREVIEW',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -155,7 +158,8 @@ const CardCreator = () => {
         weight: data.weight || null, // Добавляем вес
         bonus_type: data.bonus_type || null, // Добавляем тип бонуса
         bonus_value: data.bonus_value || null, // Добавляем значение бонуса
-        damage_type: damageType || null // Добавляем тип урона
+        damage_type: damageType || null, // Добавляем тип урона
+        description_font_size: data.description_font_size || null // Добавляем размер шрифта
       };
 
       if (isEditMode && id) {
@@ -199,7 +203,8 @@ const CardCreator = () => {
         weight: data.weight || null,
         bonus_type: data.bonus_type || null,
         bonus_value: data.bonus_value || null,
-        damage_type: damageType || null
+        damage_type: damageType || null,
+        description_font_size: data.description_font_size || null
       };
 
       const newCard = await cardsApi.createCard(cardData);
@@ -232,7 +237,7 @@ const CardCreator = () => {
   // Обновляем предварительный просмотр при изменении значений
   useEffect(() => {
     updatePreview();
-  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties, watchedValues.price, watchedValues.weight, watchedValues.bonus_type, watchedValues.bonus_value, cardImage]);
+  }, [watchedValues.name, watchedValues.description, watchedValues.rarity, watchedValues.properties, watchedValues.price, watchedValues.weight, watchedValues.bonus_type, watchedValues.bonus_value, watchedValues.description_font_size, cardImage]);
 
   // Инициализируем предпросмотр при загрузке
   useEffect(() => {
@@ -415,6 +420,37 @@ const CardCreator = () => {
                   {...register('bonus_value')}
                 />
               </div>
+            </div>
+
+            {/* Размер шрифта описания */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Размер шрифта описания (необязательно)
+              </label>
+              <input
+                type="number"
+                min="6"
+                max="20"
+                placeholder="Автоматический размер"
+                className="input-field"
+                {...register('description_font_size', { 
+                  valueAsNumber: true,
+                  min: { value: 6, message: 'Минимум 6px' },
+                  max: { value: 20, message: 'Максимум 20px' }
+                })}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : null;
+                  setValue('description_font_size', value, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                  // Немедленно обновляем предпросмотр
+                  updatePreview();
+                }}
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Оставьте пустым для автоматического размера. Диапазон: 6-20px
+              </p>
+              {errors.description_font_size && (
+                <p className="mt-1 text-sm text-red-600">{errors.description_font_size.message}</p>
+              )}
             </div>
 
             {/* Изображение */}

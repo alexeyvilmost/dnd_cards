@@ -87,9 +87,9 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
   // Функция форматирования цены
   const formatPrice = (price: number): string => {
     if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K зм`;
+      return `${(price / 1000).toFixed(1)}K`;
     }
-    return `${price} зм`;
+    return `${price}`;
   };
 
   // Функция форматирования веса
@@ -104,11 +104,13 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     const length = description.length;
     const hasBonus = card.bonus_type && card.bonus_value;
     
-    // Для расширенных карточек используем более мягкие ограничения
+    // Для расширенных карточек используем более точные ограничения
     if (isExtended) {
-      if (length > 200) return 'text-[8px]';
-      if (length > 150) return 'text-[9px]';
-      if (length > 100) return 'text-[10px]';
+      if (length > 300) return 'text-[7px]';
+      if (length > 250) return 'text-[8px]';
+      if (length > 200) return 'text-[9px]';
+      if (length > 150) return 'text-[10px]';
+      if (length > 100) return 'text-[11px]';
       return 'text-xs';
     }
     
@@ -132,16 +134,6 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     switch (bonusType) {
       case 'damage': return 'УРОН';
       case 'defense': return 'ЗАЩ';
-      case 'attack': return 'АТК';
-      case 'armor_class': return 'КБ';
-      case 'initiative': return 'ИНИ';
-      case 'stealth': return 'СКР';
-      case 'strength': return 'СИЛ';
-      case 'dexterity': return 'ЛОВ';
-      case 'constitution': return 'ТЕЛ';
-      case 'intelligence': return 'ИНТ';
-      case 'wisdom': return 'МДР';
-      case 'charisma': return 'ХАР';
       default: return bonusType.toUpperCase();
     }
   };
@@ -159,6 +151,44 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
       case 'slashing': return 'рубящий';
       case 'bludgeoning': return 'дробящий';
       default: return '';
+    }
+  };
+
+  // Функция для получения типа защиты из поля defense_type
+  const getDefenseTypeLabel = (defenseType: string): string => {
+    switch (defenseType) {
+      case 'cloth': return 'тканевая';
+      case 'light': return 'легкая';
+      case 'medium': return 'средняя';
+      case 'heavy': return 'тяжелая';
+      default: return '';
+    }
+  };
+
+  // Функция для отображения иконок защиты
+  const renderDefenseIcons = (defenseType: string) => {
+    switch (defenseType) {
+      case 'cloth':
+        return <img src="/icons/cloth.png" alt="Тканевая броня" className="w-3 h-3" />;
+      case 'light':
+        return <img src="/icons/defense.png" alt="Легкая броня" className="w-3 h-3" />;
+      case 'medium':
+        return (
+          <div className="flex space-x-0">
+            <img src="/icons/defense.png" alt="Средняя броня" className="w-3 h-3" />
+            <img src="/icons/defense.png" alt="Средняя броня" className="w-3 h-3" />
+          </div>
+        );
+      case 'heavy':
+        return (
+          <div className="flex space-x-0">
+            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-3 h-3" />
+            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-3 h-3" />
+            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-3 h-3" />
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -205,10 +235,9 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
                 )}
               </div>
 
-              {/* Свойства и бонусы - как на обычных картах */}
+              {/* Свойства */}
               <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
-                {/* Свойства - ограничены 75% при наличии бонусов */}
-                <div className={`${card.bonus_type && card.bonus_value ? 'w-[75%]' : 'w-full'}`}>
+                <div className="w-full">
                   <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
                     {(() => {
                       console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
@@ -216,56 +245,62 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
                     })()}
                   </div>
                 </div>
-                
-                {/* Бонусы - абсолютно позиционированные справа */}
-                {card.bonus_type && card.bonus_value && (
-                  <>
-                    {/* Разделительная линия - доходит до нижней панели */}
-                    <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
-                    
-                    {/* Бонусы - центрированы в блоке описания */}
-                    <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
-                      <div className="text-[9px] text-gray-900 font-fantasy font-medium leading-none">
-                        {getBonusShortName(card.bonus_type)}
-                      </div>
-                      <div className="text-[11px] font-fantasy font-bold text-gray-900 leading-none">
-                        {getBonusShortValue(card.bonus_value)}
-                      </div>
-                      {/* Тип урона для оружия */}
-                      {card.bonus_type === 'damage' && card.damage_type && (
-                        <div className="text-[8px] text-gray-600 font-fantasy leading-none">
-                          {getDamageTypeLabel(card.damage_type)}
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
               </div>
             </div>
 
             {/* Правая половина - только описание */}
-            <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col">
+            <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
               {/* Описание */}
-              <div className="flex-1 overflow-hidden">
-                <p className={`text-gray-700 leading-relaxed font-fantasy whitespace-pre-wrap`} style={{ fontSize: card.description && card.description.length > 200 ? '8px !important' : card.description && card.description.length > 150 ? '9px !important' : card.description && card.description.length > 100 ? '10px !important' : '12px !important' }}>
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <p 
+                  className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap flex-1`} 
+                  style={{ 
+                    fontSize: card.description_font_size ? `${card.description_font_size}px` : 
+                            card.description && card.description.length > 700 ? '8px' : 
+                            card.description && card.description.length > 500 ? '9px' : 
+                            card.description && card.description.length > 400 ? '10px' : 
+                            card.description && card.description.length > 300 ? '11px' : 
+                            card.description && card.description.length > 200 ? '12px' : 
+                            card.description && card.description.length > 100 ? '13px' : '14px'
+                  }}
+                >
                   {card.description || 'Нет описания'}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Вес, цена и номер карточки - абсолютно позиционированные */}
+          {/* Вес, цена, бонусы и номер карточки - абсолютно позиционированные */}
           <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
             <div className="flex items-center space-x-2">
               {card.weight && (
-                <span className="text-[10px] text-gray-900 font-fantasy font-medium">
-                  {formatWeight(card.weight)}
-                </span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                    {card.weight}
+                  </span>
+                  <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
+                </div>
               )}
               {card.price && (
-                <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
-                  {formatPrice(card.price)}
-                </span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+                    {formatPrice(card.price)}
+                  </span>
+                  <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+                </div>
+              )}
+              {card.bonus_type && card.bonus_value && (
+                <div className="flex items-center space-x-0.5">
+                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                    {getBonusShortValue(card.bonus_value)}
+                  </span>
+                  {card.bonus_type === 'damage' && card.damage_type && (
+                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-3 h-3" />
+                  )}
+                  {card.bonus_type === 'defense' && card.defense_type && (
+                    renderDefenseIcons(card.defense_type)
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center space-x-2">
@@ -313,52 +348,52 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
             )}
           </div>
 
-          {/* Описание и бонусы */}
-          <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
-            {/* Описание - ограничено 75% при наличии бонусов */}
-            <div className={`${card.bonus_type && card.bonus_value ? 'w-[75%]' : 'w-full'}`}>
-              <p className={`text-gray-700 leading-relaxed font-fantasy ${getDescriptionFontSize(card.description)} whitespace-pre-wrap`}>
+          {/* Описание */}
+          <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 relative overflow-hidden flex">
+            <div className="w-full flex flex-col">
+              <p 
+                className={`text-gray-700 leading-relaxed font-fantasy whitespace-pre-wrap flex-1`}
+                style={{ 
+                  fontSize: card.description_font_size ? `${card.description_font_size}px` : 
+                          getDescriptionFontSize(card.description || '')
+                }}
+              >
                 {card.description || 'Нет описания'}
               </p>
             </div>
-            
-            {/* Бонусы - абсолютно позиционированные справа */}
-            {card.bonus_type && card.bonus_value && (
-              <>
-                {/* Разделительная линия - доходит до нижней панели */}
-                <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gray-300"></div>
-                
-                {/* Бонусы - центрированы в блоке описания */}
-                <div className="absolute right-0 top-0 bottom-0 w-[25%] flex flex-col justify-center items-center space-y-0.5">
-                  <div className="text-[9px] text-gray-900 font-fantasy font-medium leading-none">
-                    {getBonusShortName(card.bonus_type)}
-                  </div>
-                  <div className="text-[11px] font-fantasy font-bold text-gray-900 leading-none">
-                    {getBonusShortValue(card.bonus_value)}
-                  </div>
-                  {/* Тип урона для оружия */}
-                  {card.bonus_type === 'damage' && card.damage_type && (
-                    <div className="text-[8px] text-gray-600 font-fantasy leading-none">
-                      {getDamageTypeLabel(card.damage_type)}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
           </div>
 
-          {/* Вес, цена и номер карточки - абсолютно позиционированные */}
+          {/* Вес, цена, бонусы и номер карточки - абсолютно позиционированные */}
           <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
             <div className="flex items-center space-x-2">
               {card.weight && (
-                <span className="text-[10px] text-gray-900 font-fantasy font-medium">
-                  {formatWeight(card.weight)}
-                </span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                    {card.weight}
+                  </span>
+                  <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
+                </div>
               )}
               {card.price && (
-                <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
-                  {formatPrice(card.price)}
-                </span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+                    {formatPrice(card.price)}
+                  </span>
+                  <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+                </div>
+              )}
+              {card.bonus_type && card.bonus_value && (
+                <div className="flex items-center space-x-0.5">
+                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                    {getBonusShortValue(card.bonus_value)}
+                  </span>
+                  {card.bonus_type === 'damage' && card.damage_type && (
+                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-3 h-3" />
+                  )}
+                  {card.bonus_type === 'defense' && card.defense_type && (
+                    renderDefenseIcons(card.defense_type)
+                  )}
+                </div>
               )}
             </div>
             <span className="text-[10px] text-gray-400 font-mono">
