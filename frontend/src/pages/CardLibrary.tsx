@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Plus, Image as ImageIcon, Edit, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
+import CardDetailModal from '../components/CardDetailModal';
 
 const CardLibrary = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -14,6 +15,8 @@ const CardLibrary = () => {
   const [rarityFilter, setRarityFilter] = useState<string>('');
   const [propertiesFilter, setPropertiesFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Загрузка карточек
   const loadCards = async () => {
@@ -56,9 +59,29 @@ const CardLibrary = () => {
     try {
       await cardsApi.deleteCard(cardId);
       loadCards();
+      setIsModalOpen(false); // Закрываем модальное окно
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления карточки');
     }
+  };
+
+  // Открытие модального окна
+  const handleCardClick = (card: Card) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  // Закрытие модального окна
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+  };
+
+  // Редактирование карточки
+  const handleEditCard = (cardId: string) => {
+    setIsModalOpen(false);
+    // Здесь можно добавить навигацию к редактированию
+    window.location.href = `/edit/${cardId}`;
   };
 
   return (
@@ -173,47 +196,30 @@ const CardLibrary = () => {
       )}
 
       {!loading && cards.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
           {cards.map((card) => {
             const isExtended = card.description && card.description.length > 100;
             return (
               <div 
                 key={card.id} 
-                className={`relative group flex justify-center ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                className={`relative group flex justify-center cursor-pointer ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                onClick={() => handleCardClick(card)}
               >
                 <CardPreview card={card} />
-              
-              {/* Действия */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => handleGenerateImage(card.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded"
-                    title="Сгенерировать изображение"
-                  >
-                    <ImageIcon size={14} />
-                  </button>
-                  <Link
-                    to={`/edit/${card.id}`}
-                    className="bg-gray-600 hover:bg-gray-700 text-white p-1 rounded"
-                    title="Редактировать"
-                  >
-                    <Edit size={14} />
-                  </Link>
-                  <button
-                    onClick={() => handleDeleteCard(card.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white p-1 rounded"
-                    title="Удалить"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
               </div>
-            </div>
           );
           })}
         </div>
       )}
+
+      {/* Модальное окно с детальной информацией */}
+      <CardDetailModal
+        card={selectedCard}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onEdit={handleEditCard}
+        onDelete={handleDeleteCard}
+      />
     </div>
   );
 };

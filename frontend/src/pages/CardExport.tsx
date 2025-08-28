@@ -168,9 +168,11 @@ const CardExport = () => {
           <h2 className="text-xl font-fantasy font-semibold text-gray-900">
             Выберите карточки для экспорта
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {cards.map((card) => (
-              <div key={card.id} className="relative group">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
+            {cards.map((card) => {
+              const isExtended = card.description && card.description.length > 100;
+              return (
+                <div key={card.id} className={`relative group ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}>
                 <div
                   className={`cursor-pointer transition-all duration-200 ${
                     selectedCards.includes(card.id) 
@@ -199,7 +201,8 @@ const CardExport = () => {
                   </p>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       )}
