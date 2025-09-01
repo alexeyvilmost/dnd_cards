@@ -21,7 +21,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     return option?.label || prop;
   }).join(', ');
   const isLarge = className.includes('card-preview-large');
-  const isExtended = className.includes('card-preview-extended') || (card.description && card.description.length > 100);
+  const isExtended = card.is_extended !== null ? card.is_extended : (card.description && card.description.length > 100);
   const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt({ isLarge });
 
   // Функция для определения размера шрифта заголовка

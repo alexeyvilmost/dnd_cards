@@ -23,13 +23,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: dnd_cards_backend
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: host=postgres user=postgres password=postgres dbname=dnd_cards port=5432 sslmode=disable
       PORT: 8080
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
+    # depends_on:
+    #   - postgres
     networks:
       - dnd_cards_network
     restart: unless-stopped

@@ -1,6 +1,10 @@
 package main
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,12 +25,82 @@ const (
 // Properties - свойства предмета (массив строк)
 type Properties []string
 
+// Scan - кастомный сканер для Properties
+func (p *Properties) Scan(value interface{}) error {
+	if value == nil {
+		*p = nil
+		return nil
+	}
+
+	switch v := value.(type) {
+	case string:
+		// Если это JSON строка, парсим её
+		if strings.HasPrefix(v, "[") && strings.HasSuffix(v, "]") {
+			return json.Unmarshal([]byte(v), p)
+		}
+		// Если это PostgreSQL массив, парсим его
+		*p = parsePostgreSQLArray(v)
+		return nil
+	case []byte:
+		// Если это JSON байты, парсим их
+		if len(v) > 0 && v[0] == '[' {
+			return json.Unmarshal(v, p)
+		}
+		// Если это PostgreSQL массив, парсим его
+		*p = parsePostgreSQLArray(string(v))
+		return nil
+	default:
+		return fmt.Errorf("неподдерживаемый тип для Properties: %T", value)
+	}
+}
+
+// Value - кастомный value для Properties
+func (p Properties) Value() (driver.Value, error) {
+	if p == nil {
+		return nil, nil
+	}
+	return json.Marshal(p)
+}
+
+// parsePostgreSQLArray - парсинг PostgreSQL массива
+func parsePostgreSQLArray(s string) Properties {
+	// Убираем фигурные скобки
+	s = strings.Trim(s, "{}")
+	if s == "" {
+		return Properties{}
+	}
+
+	// Разбиваем по запятым, учитывая кавычки
+	var result Properties
+	var current strings.Builder
+	inQuotes := false
+
+	for i := 0; i < len(s); i++ {
+		char := s[i]
+		if char == '"' {
+			inQuotes = !inQuotes
+		} else if char == ',' && !inQuotes {
+			result = append(result, strings.TrimSpace(current.String()))
+			current.Reset()
+		} else {
+			current.WriteByte(char)
+		}
+	}
+
+	// Добавляем последний элемент
+	if current.Len() > 0 {
+		result = append(result, strings.TrimSpace(current.String()))
+	}
+
+	return result
+}
+
 const (
 	PropertyConsumable = "consumable" // Расходуемое
 	PropertySingleUse  = "single_use" // Одноразовое
 	PropertyLight      = "light"      // Легкое
 	PropertyHeavy      = "heavy"      // Тяжелое
-	PropertyFinesse    = "finesse"    // Изящное
+	PropertyFinesse    = "finesse"    // Фехтовальное
 	PropertyThrown     = "thrown"     // Метательное
 	PropertyVersatile  = "versatile"  // Универсальное
 	PropertyTwoHanded  = "two-handed" // Двуручное
@@ -48,7 +122,7 @@ const (
 type Card struct {
 	ID                  uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                string         `json:"name" gorm:"not null"`
-	Properties          *Properties    `json:"properties" gorm:"type:text;serializer:json"` // Храним как JSON
+	Properties          *Properties    `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
 	Description         string         `json:"description" gorm:"type:text;not null"`
 	ImageURL            string         `json:"image_url" gorm:"type:text"`
 	Rarity              Rarity         `json:"rarity" gorm:"not null"`
@@ -60,6 +134,7 @@ type Card struct {
 	DamageType          *string        `json:"damage_type" gorm:"type:varchar(20)"`
 	DefenseType         *string        `json:"defense_type" gorm:"type:varchar(20)"`
 	DescriptionFontSize *int           `json:"description_font_size" gorm:"type:int"`
+	IsExtended          *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt           time.Time      `json:"created_at"`
 	UpdatedAt           time.Time      `json:"updated_at"`
 	DeletedAt           gorm.DeletedAt `json:"-" gorm:"index"`
@@ -79,6 +154,7 @@ type CreateCardRequest struct {
 	DamageType          *string     `json:"damage_type"`
 	DefenseType         *string     `json:"defense_type"`
 	DescriptionFontSize *int        `json:"description_font_size"`
+	IsExtended          *bool       `json:"is_extended"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -95,6 +171,7 @@ type UpdateCardRequest struct {
 	DamageType          *string     `json:"damage_type"`
 	DefenseType         *string     `json:"defense_type"`
 	DescriptionFontSize *int        `json:"description_font_size"`
+	IsExtended          *bool       `json:"is_extended"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -124,6 +201,7 @@ type CardResponse struct {
 	DamageType          *string     `json:"damage_type"`
 	DefenseType         *string     `json:"defense_type"`
 	DescriptionFontSize *int        `json:"description_font_size"`
+	IsExtended          *bool       `json:"is_extended"`
 	CreatedAt           time.Time   `json:"created_at"`
 	UpdatedAt           time.Time   `json:"updated_at"`
 }
@@ -181,7 +259,7 @@ func (p Properties) GetPropertiesName() string {
 	case PropertyHeavy:
 		return "Тяжелое"
 	case PropertyFinesse:
-		return "Изящное"
+		return "Фехтовальное"
 	case PropertyThrown:
 		return "Метательное"
 	case PropertyVersatile:
@@ -215,23 +293,23 @@ func (bt BonusType) GetLocalizedName() string {
 
 // WeaponTemplate представляет шаблон оружия
 type WeaponTemplate struct {
-	ID         uint      `json:"id" gorm:"primaryKey"`
-	Name       string    `json:"name" gorm:"not null"`
-	NameEn     string    `json:"name_en" gorm:"not null"`
-	Category   string    `json:"category" gorm:"not null"`    // simple_melee, martial_melee, simple_ranged, martial_ranged
-	DamageType string    `json:"damage_type" gorm:"not null"` // slashing, piercing, bludgeoning
-	Damage     string    `json:"damage" gorm:"not null"`      // 1d4, 1d6, 1d8, etc.
-	Weight     float64   `json:"weight" gorm:"not null"`
-	Price      int       `json:"price" gorm:"not null"`
-	Properties string    `json:"properties" gorm:"type:text"` // Храним как JSON
-	ImagePath  string    `json:"image_path"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID         string     `json:"id" gorm:"primaryKey;type:uuid"`
+	Name       string     `json:"name" gorm:"not null"`
+	NameEn     string     `json:"name_en" gorm:"not null"`
+	Category   string     `json:"category" gorm:"not null"`    // simple_melee, martial_melee, simple_ranged, martial_ranged
+	DamageType string     `json:"damage_type" gorm:"not null"` // slashing, piercing, bludgeoning
+	Damage     string     `json:"damage" gorm:"not null"`      // 1d4, 1d6, 1d8, etc.
+	Weight     float64    `json:"weight" gorm:"not null"`
+	Price      int        `json:"price" gorm:"not null"`
+	Properties Properties `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
+	ImagePath  string     `json:"image_path"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
 // WeaponTemplateResponse представляет ответ с шаблоном оружия
 type WeaponTemplateResponse struct {
-	ID         uint     `json:"id"`
+	ID         string   `json:"id"`
 	Name       string   `json:"name"`
 	NameEn     string   `json:"name_en"`
 	Category   string   `json:"category"`

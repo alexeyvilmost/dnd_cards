@@ -3,7 +3,7 @@ export const getPropertyLabel = (property: string): string => {
   const propertyLabels: Record<string, string> = {
     'light': 'легкое',
     'heavy': 'тяжелое',
-    'finesse': 'изящное',
+    	'finesse': 'фехтовальное',
     'thrown': 'метательное',
     'versatile': 'универсальное',
     'two-handed': 'двуручное',

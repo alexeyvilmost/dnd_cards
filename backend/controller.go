@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,12 +53,19 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	var total int64
-	query.Count(&total)
-
-	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cards).Error; err != nil {
+	if err := query.Count(&total).Error; err != nil {
+		log.Printf("Ошибка подсчета карточек: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
 	}
+	log.Printf("Найдено карточек: %d", total)
+
+	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cards).Error; err != nil {
+		log.Printf("Ошибка получения карточек: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
+		return
+	}
+	log.Printf("Загружено карточек: %d", len(cards))
 
 	// Преобразование в ответы
 	responses := make([]CardResponse, 0)
@@ -78,6 +85,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			DamageType:          card.DamageType,
 			DefenseType:         card.DefenseType,
 			DescriptionFontSize: card.DescriptionFontSize,
+			IsExtended:          card.IsExtended,
 			CreatedAt:           card.CreatedAt,
 			UpdatedAt:           card.UpdatedAt,
 		})
@@ -181,6 +189,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DamageType:          req.DamageType,
 		DefenseType:         req.DefenseType,
 		DescriptionFontSize: req.DescriptionFontSize,
+		IsExtended:          req.IsExtended,
 		CardNumber:          cardNumber,
 	}
 
@@ -297,6 +306,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.DescriptionFontSize != nil {
 		card.DescriptionFontSize = req.DescriptionFontSize
+	}
+	if req.IsExtended != nil {
+		card.IsExtended = req.IsExtended
 	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
@@ -482,12 +494,8 @@ func (cc *CardController) GetWeaponTemplates(c *gin.Context) {
 	var responses []WeaponTemplateResponse
 	for _, template := range templates {
 		properties := []string{}
-		if template.Properties != "" {
-			// Парсим JSON из строки
-			if err := json.Unmarshal([]byte(template.Properties), &properties); err != nil {
-				// Если не удалось распарсить JSON, оставляем пустой массив
-				properties = []string{}
-			}
+		if template.Properties != nil {
+			properties = []string(template.Properties)
 		}
 
 		responses = append(responses, WeaponTemplateResponse{
@@ -518,12 +526,8 @@ func (cc *CardController) GetWeaponTemplate(c *gin.Context) {
 	}
 
 	properties := []string{}
-	if template.Properties != "" {
-		// Парсим JSON из строки
-		if err := json.Unmarshal([]byte(template.Properties), &properties); err != nil {
-			// Если не удалось распарсить JSON, оставляем пустой массив
-			properties = []string{}
-		}
+	if template.Properties != nil {
+		properties = []string(template.Properties)
 	}
 
 	response := WeaponTemplateResponse{

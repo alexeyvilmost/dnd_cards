@@ -18,6 +18,7 @@ export interface Card {
   damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
+  is_extended?: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +35,7 @@ export interface CreateCardRequest {
   damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
+  is_extended?: boolean | null;
 }
 
 export interface UpdateCardRequest {
@@ -48,6 +50,7 @@ export interface UpdateCardRequest {
   damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
+  is_extended?: boolean | null;
 }
 
 export interface CardsResponse {
@@ -83,7 +86,7 @@ export const PROPERTIES_OPTIONS = [
   { value: 'single_use', label: 'Одноразовое' },
   { value: 'light', label: 'Легкое' },
   { value: 'heavy', label: 'Тяжелое' },
-  { value: 'finesse', label: 'Изящное' },
+  		{ value: 'finesse', label: 'Фехтовальное' },
   { value: 'thrown', label: 'Метательное' },
   { value: 'versatile', label: 'Универсальное' },
   { value: 'two-handed', label: 'Двуручное' },

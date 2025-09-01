@@ -67,6 +67,7 @@ const CardCreator = () => {
         setValue('bonus_type', loadedCard.bonus_type);
         setValue('bonus_value', loadedCard.bonus_value);
         setValue('description_font_size', loadedCard.description_font_size);
+        setValue('is_extended', loadedCard.is_extended);
         
         // Устанавливаем изображение
         setCardImage(loadedCard.image_url || '');
@@ -120,6 +121,7 @@ const CardCreator = () => {
         bonus_value: watchedValues.bonus_value || originalCard.bonus_value || null,
         damage_type: originalCard.damage_type || damageType || null,
         description_font_size: watchedValues.description_font_size || originalCard.description_font_size || null,
+      is_extended: watchedValues.is_extended !== undefined ? watchedValues.is_extended : originalCard.is_extended,
       });
     } else {
       // В режиме создания используем данные формы
@@ -159,7 +161,8 @@ const CardCreator = () => {
         bonus_type: data.bonus_type || null, // Добавляем тип бонуса
         bonus_value: data.bonus_value || null, // Добавляем значение бонуса
         damage_type: damageType || null, // Добавляем тип урона
-        description_font_size: data.description_font_size || null // Добавляем размер шрифта
+        description_font_size: data.description_font_size || null, // Добавляем размер шрифта
+      is_extended: data.is_extended || null
       };
 
       if (isEditMode && id) {
@@ -451,6 +454,58 @@ const CardCreator = () => {
               {errors.description_font_size && (
                 <p className="mt-1 text-sm text-red-600">{errors.description_font_size.message}</p>
               )}
+            </div>
+
+            {/* Расширенный формат карточки */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Расширенный формат карточки
+              </label>
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="is_extended"
+                    value="auto"
+                    defaultChecked={true}
+                    onChange={() => {
+                      setValue('is_extended', null, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                      updatePreview();
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Автоматически (по длине описания)</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="is_extended"
+                    value="true"
+                    onChange={() => {
+                      setValue('is_extended', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                      updatePreview();
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Принудительно расширенный</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="is_extended"
+                    value="false"
+                    onChange={() => {
+                      setValue('is_extended', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                      updatePreview();
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Принудительно обычный</span>
+                </label>
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Расширенные карточки в два раза шире и подходят для длинных описаний
+              </p>
             </div>
 
             {/* Изображение */}

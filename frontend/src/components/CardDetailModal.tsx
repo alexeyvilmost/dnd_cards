@@ -73,7 +73,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       'single_use': 'Одноразовое',
       'light': 'Легкое',
       'heavy': 'Тяжелое',
-      'finesse': 'Изящное',
+      		'finesse': 'Фехтовальное',
       'thrown': 'Метательное',
       'versatile': 'Универсальное',
       'two-handed': 'Двуручное',

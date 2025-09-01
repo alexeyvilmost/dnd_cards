@@ -17,21 +17,23 @@ func main() {
 		log.Println("Файл .env не найден, используем переменные окружения")
 	}
 
-	// Подключение к базе данных
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		dsn = "host=localhost user=postgres password=postgres dbname=dnd_cards port=5432 sslmode=disable"
-	}
+	// Загрузка конфигурации
+	dbConfig := LoadConfig()
+	log.Printf("Подключение к БД: %s:%s/%s", dbConfig.DBHost, dbConfig.DBPort, dbConfig.DBName)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// Подключение к базе данных
+	db, err := gorm.Open(postgres.Open(dbConfig.GetDSN()), &gorm.Config{
+		DisableAutomaticPing: true,
+		PrepareStmt:          false,
+	})
 	if err != nil {
 		log.Fatal("Ошибка подключения к базе данных:", err)
 	}
 
-	// Автомиграция моделей
-	if err := db.AutoMigrate(&Card{}); err != nil {
-		log.Fatal("Ошибка миграции:", err)
-	}
+	// Автомиграция моделей (отключена, так как таблицы созданы в Supabase)
+	// if err := db.AutoMigrate(&Card{}); err != nil {
+	// 	log.Fatal("Ошибка миграции:", err)
+	// }
 
 	// Настройка Gin
 	r := gin.Default()
