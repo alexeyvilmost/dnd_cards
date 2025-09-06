@@ -46,8 +46,8 @@ services:
       YANDEX_AI_API_KEY: ${YANDEX_AI_API_KEY:-}
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
+    # depends_on:
+    #   - postgres  # Раскомментируйте для локальной разработки
     networks:
       - dnd_cards_network
     restart: unless-stopped
