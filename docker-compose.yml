@@ -1,25 +1,26 @@
 version: '3.8'
 
 services:
-  # PostgreSQL база данных
-  postgres:
-    image: postgres:15
-    container_name: dnd_cards_db
-    environment:
-      POSTGRES_DB: dnd_cards
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/migration_auth.sql:/docker-entrypoint-initdb.d/02_migration_auth.sql
-      - ./database/add_foreign_keys.sql:/docker-entrypoint-initdb.d/03_add_foreign_keys.sql
-      - ./database/migration_characters.sql:/docker-entrypoint-initdb.d/04_migration_characters.sql
-      - ./database/migration_images.sql:/docker-entrypoint-initdb.d/05_migration_images.sql
-    networks:
-      - dnd_cards_network
+  # PostgreSQL база данных (локальная для разработки)
+  # Раскомментируйте для локальной разработки
+  # postgres:
+  #   image: postgres:15
+  #   container_name: dnd_cards_db
+  #   environment:
+  #     POSTGRES_DB: dnd_cards
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #     - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+  #     - ./database/migration_auth.sql:/docker-entrypoint-initdb.d/02_migration_auth.sql
+  #     - ./database/add_foreign_keys.sql:/docker-entrypoint-initdb.d/03_add_foreign_keys.sql
+  #     - ./database/migration_characters.sql:/docker-entrypoint-initdb.d/04_migration_characters.sql
+  #     - ./database/migration_images.sql:/docker-entrypoint-initdb.d/05_migration_images.sql
+  #   networks:
+  #     - dnd_cards_network
 
   # Backend API (Golang)
   backend:
@@ -29,12 +30,12 @@ services:
     container_name: dnd_cards_backend
     environment:
       PORT: 8080
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: dnd_cards
-      DB_SSLMODE: disable
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-dnd_cards}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_here}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
       # Yandex Cloud Object Storage (опционально)
