@@ -13,7 +13,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/migration_auth.sql:/docker-entrypoint-initdb.d/02_migration_auth.sql
+      - ./database/add_foreign_keys.sql:/docker-entrypoint-initdb.d/03_add_foreign_keys.sql
+      - ./database/migration_characters.sql:/docker-entrypoint-initdb.d/04_migration_characters.sql
+      - ./database/migration_images.sql:/docker-entrypoint-initdb.d/05_migration_images.sql
     networks:
       - dnd_cards_network
 
@@ -23,14 +27,27 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: dnd_cards_backend
-    env_file:
-      - .env
     environment:
       PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: dnd_cards
+      DB_SSLMODE: disable
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_here}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
+      # Yandex Cloud Object Storage (опционально)
+      YANDEX_CLOUD_ACCESS_KEY_ID: ${YANDEX_CLOUD_ACCESS_KEY_ID:-}
+      YANDEX_CLOUD_SECRET_ACCESS_KEY: ${YANDEX_CLOUD_SECRET_ACCESS_KEY:-}
+      YANDEX_CLOUD_BUCKET_NAME: ${YANDEX_CLOUD_BUCKET_NAME:-}
+      YANDEX_CLOUD_REGION: ${YANDEX_CLOUD_REGION:-ru-central1}
+      YANDEX_CLOUD_ENDPOINT: ${YANDEX_CLOUD_ENDPOINT:-https://storage.yandexcloud.net}
+      YANDEX_AI_API_KEY: ${YANDEX_AI_API_KEY:-}
     ports:
       - "8080:8080"
-    # depends_on:
-    #   - postgres
+    depends_on:
+      - postgres
     networks:
       - dnd_cards_network
     restart: unless-stopped

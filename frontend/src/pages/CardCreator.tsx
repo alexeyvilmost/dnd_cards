@@ -3,11 +3,13 @@ import { useForm } from 'react-hook-form';
 import { Save, Eye, EyeOff, Wand2, ArrowLeft, Copy } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
+import { imagesApi } from '../api/imagesApi';
 import type { CreateCardRequest, UpdateCardRequest } from '../types';
 import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import RaritySelector from '../components/RaritySelector';
 import ImageUploader from '../components/ImageUploader';
+import ImageGenerator from '../components/ImageGenerator';
 import { getWeaponCategoryLabel } from '../utils/propertyLabels';
 
 const CardCreator = () => {
@@ -148,7 +150,7 @@ const CardCreator = () => {
   // Обработка отправки формы
   const onSubmit = async (data: CreateCardRequest | UpdateCardRequest) => {
     try {
-      setLoading(true);
+      setSaving(true);
       setError(null);
       
       // Добавляем изображение к данным карточки и обрабатываем пустые свойства
@@ -162,32 +164,49 @@ const CardCreator = () => {
         bonus_value: data.bonus_value || null, // Добавляем значение бонуса
         damage_type: damageType || null, // Добавляем тип урона
         description_font_size: data.description_font_size || null, // Добавляем размер шрифта
-      is_extended: data.is_extended || null
+        is_extended: data.is_extended || null
       };
+
+      let cardId: string;
 
       if (isEditMode && id) {
         // Режим редактирования
         await cardsApi.updateCard(id, cardData);
-        navigate('/');
+        cardId = id;
       } else {
         // Режим создания
         const newCard = await cardsApi.createCard(cardData);
-        
-        // Генерация изображения только если не загружено пользователем
-        if (!cardImage) {
-          try {
-            await cardsApi.generateImage({ card_id: newCard.id });
-          } catch (imageError) {
-            console.warn('Ошибка генерации изображения:', imageError);
-          }
-        }
-        
-        navigate('/');
+        cardId = newCard.id;
       }
+
+      // Загружаем изображение в облако, если оно есть и это base64
+      if (cardImage && cardImage.startsWith('data:image/')) {
+        try {
+          // Конвертируем base64 в File
+          const response = await fetch(cardImage);
+          const blob = await response.blob();
+          const file = new File([blob], 'card-image.png', { type: 'image/png' });
+
+          const uploadResult = await imagesApi.uploadImage('card', cardId, file);
+          
+          if (uploadResult.success) {
+            // Обновляем карту с URL изображения из облака
+            await cardsApi.updateCard(cardId, {
+              ...cardData,
+              image_url: uploadResult.image_url
+            });
+          }
+        } catch (uploadError) {
+          console.warn('Ошибка загрузки изображения в облако:', uploadError);
+          // Продолжаем без ошибки, изображение остается в base64
+        }
+      }
+      
+      navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : `Ошибка ${isEditMode ? 'обновления' : 'создания'} карточки`);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -509,14 +528,30 @@ const CardCreator = () => {
             </div>
 
             {/* Изображение */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">
                 Изображение карточки
               </label>
+              
+              {/* Генератор изображений */}
+              <ImageGenerator
+                entityType="card"
+                entityId={id || 'new'}
+                entityName={watchedValues.name || ''}
+                entityRarity={watchedValues.rarity || 'common'}
+                onImageGenerated={setCardImage}
+                disabled={!watchedValues.name || watchedValues.name === 'Название карты'}
+                className="mb-4"
+              />
+              
+              {/* Загрузчик изображений */}
               <ImageUploader
                 onImageUpload={setCardImage}
                 currentImageUrl={cardImage}
                 className="min-h-[200px]"
+                entityType="card"
+                entityId={id || 'new'}
+                enableCloudUpload={!!id} // Включаем загрузку в облако только для существующих карт
               />
             </div>
 

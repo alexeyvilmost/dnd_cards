@@ -3,6 +3,7 @@ import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
 import { useCardTilt } from '../hooks/useCardTilt';
+import { getRarityColor } from '../utils/rarityColors';
 
 interface CardPreviewProps {
   card: Card;
@@ -67,11 +68,12 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
   // Функция для получения класса заголовка в зависимости от редкости
   const getTitleClass = (rarity: string, name: string) => {
     const baseClass = `${getTitleFontSize(name)} font-fantasy font-bold leading-tight mb-0.5 min-h-[1.2rem] flex items-center justify-center`;
+    const rarityColor = getRarityColor(rarity);
     
     switch (rarity) {
       case 'very_rare': return `${baseClass} title-gradient-very-rare`;
       case 'artifact': return `${baseClass} title-gradient-artifact`;
-      default: return `${baseClass} text-gray-900`;
+      default: return `${baseClass} ${rarityColor}`;
     }
   };
 
@@ -241,7 +243,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
                   <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
                     {(() => {
                       console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
-                      return renderProperties(propertiesArray, isExtended);
+                      return renderProperties(propertiesArray, Boolean(isExtended));
                     })()}
                   </div>
                 </div>
@@ -276,7 +278,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
               {card.weight && (
                 <div className="flex items-center space-x-1">
                   <span className="text-[10px] text-gray-900 font-fantasy font-medium">
-                    {card.weight}
+                    {formatWeight(card.weight)}
                   </span>
                   <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
                 </div>
@@ -321,7 +323,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
             <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
               {(() => {
                 console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
-                return renderProperties(propertiesArray, isExtended);
+                return renderProperties(propertiesArray, Boolean(isExtended));
               })()}
             </div>
           </div>
@@ -369,7 +371,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
               {card.weight && (
                 <div className="flex items-center space-x-1">
                   <span className="text-[10px] text-gray-900 font-fantasy font-medium">
-                    {card.weight}
+                    {formatWeight(card.weight)}
                   </span>
                   <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
                 </div>

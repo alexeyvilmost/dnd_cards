@@ -135,3 +135,279 @@ export const DEFENSE_TYPES = [
   { value: 'medium', label: 'Средняя' },
   { value: 'heavy', label: 'Тяжелая' }
 ];
+
+// Авторизация
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  display_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthRequest {
+  username: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  display_name: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+// Группы
+export type UserRole = 'dm' | 'player';
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  dm_id: string;
+  created_at: string;
+  updated_at: string;
+  dm: User;
+  members: GroupMember[];
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: UserRole;
+  group: Group;
+  user: User;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateGroupRequest {
+  name: string;
+  description?: string;
+}
+
+export interface JoinGroupRequest {
+  group_id: string;
+}
+
+// Инвентарь
+export type InventoryType = 'personal' | 'group';
+
+export interface Inventory {
+  id: string;
+  type: InventoryType;
+  user_id?: string | null;
+  group_id?: string | null;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  user?: User | null;
+  group?: Group | null;
+  items: InventoryItem[];
+}
+
+export interface InventoryItem {
+  id: string;
+  inventory_id: string;
+  card_id: string;
+  quantity: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  inventory: Inventory;
+  card: Card;
+}
+
+export interface CreateInventoryRequest {
+  type: InventoryType;
+  group_id?: string | null;
+  name: string;
+}
+
+export interface AddItemToInventoryRequest {
+  card_id: string;
+  quantity: number;
+  notes?: string;
+}
+
+export interface UpdateInventoryItemRequest {
+  quantity: number;
+  notes?: string;
+}
+
+// Character - модель персонажа D&D
+export interface Character {
+  id: string;
+  user_id: string;
+  group_id?: string;
+  name: string;
+  data: string; // JSON строка с данными персонажа
+  created_at: string;
+  updated_at: string;
+  
+  // Связанные данные
+  user?: User;
+  group?: Group;
+  inventories?: Inventory[];
+}
+
+// CreateCharacterRequest - запрос на создание персонажа
+export interface CreateCharacterRequest {
+  name: string;
+  group_id?: string;
+  data: string; // JSON строка с данными персонажа
+}
+
+// UpdateCharacterRequest - запрос на обновление персонажа
+export interface UpdateCharacterRequest {
+  name?: string;
+  group_id?: string;
+  data?: string;
+}
+
+// ImportCharacterRequest - запрос на импорт персонажа из JSON
+export interface ImportCharacterRequest {
+  character_data: string; // JSON строка с данными персонажа
+  group_id?: string;
+}
+
+// ExportCharacterResponse - ответ с экспортом персонажа
+export interface ExportCharacterResponse {
+  character_data: string; // JSON строка с данными персонажа
+}
+
+// CharacterData - структура данных персонажа из JSON
+export interface CharacterData {
+  name: {
+    value: string;
+  };
+  info: {
+    charClass: {
+      name: string;
+      value: string;
+    };
+    charSubclass: {
+      name: string;
+      value: string;
+    };
+    level: {
+      name: string;
+      value: number;
+    };
+    background: {
+      name: string;
+      value: string;
+    };
+    race: {
+      name: string;
+      value: string;
+    };
+    playerName?: {
+      name: string;
+      value: string;
+    };
+    alignment?: {
+      name: string;
+      value: string;
+    };
+    experience?: {
+      name: string;
+      value: number;
+    };
+  };
+  stats: {
+    str: {
+      name: string;
+      score: number;
+      modifier: number;
+    };
+    dex: {
+      name: string;
+      score: number;
+      modifier: number;
+    };
+    con: {
+      name: string;
+      score: number;
+      modifier: number;
+    };
+    int: {
+      name: string;
+      score: number;
+      modifier: number;
+    };
+    wis: {
+      name: string;
+      score: number;
+      modifier: number;
+    };
+    cha: {
+      name: string;
+      score: number;
+      modifier: number;
+    };
+  };
+  vitality: {
+    'hp-current': {
+      value: number;
+    };
+    'hp-max': {
+      value: number;
+    };
+    'hp-temp': {
+      value: number;
+    };
+    ac: {
+      value: number;
+    };
+    speed: {
+      value: number;
+    };
+  };
+  coins: {
+    gp: {
+      value: number;
+    };
+  };
+  weaponsList?: Array<{
+    id: string;
+    name: {
+      value: string;
+    };
+    mod: {
+      value: string;
+    };
+    dmg: {
+      value: string;
+    };
+    isProf: boolean;
+    notes: {
+      value: string;
+    };
+    ability?: string;
+  }>;
+  feats?: {
+    value: {
+      data: {
+        type: string;
+        content: Array<{
+          type: string;
+          content?: Array<{
+            type: string;
+            text?: string;
+            marks?: Array<{
+              type: string;
+            }>;
+          }>;
+        }>;
+      };
+    };
+  };
+}

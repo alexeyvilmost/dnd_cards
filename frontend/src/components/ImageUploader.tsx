@@ -1,16 +1,29 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Clipboard, X } from 'lucide-react';
+import { Upload, Clipboard, X, Cloud, Loader2 } from 'lucide-react';
+import { imagesApi } from '../api/imagesApi';
 
 interface ImageUploaderProps {
   onImageUpload: (imageUrl: string) => void;
   currentImageUrl?: string;
   className?: string;
+  entityType?: 'card' | 'weapon_template';
+  entityId?: string;
+  enableCloudUpload?: boolean;
 }
 
-const ImageUploader = ({ onImageUpload, currentImageUrl, className = '' }: ImageUploaderProps) => {
+const ImageUploader = ({ 
+  onImageUpload, 
+  currentImageUrl, 
+  className = '',
+  entityType,
+  entityId,
+  enableCloudUpload = false
+}: ImageUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingToCloud, setIsUploadingToCloud] = useState(false);
+  const [cloudUploadError, setCloudUploadError] = useState<string | null>(null);
 
   // Обработка загрузки из буфера обмена
   const handlePaste = async (event: React.ClipboardEvent) => {
@@ -101,6 +114,35 @@ const ImageUploader = ({ onImageUpload, currentImageUrl, className = '' }: Image
     }
   };
 
+  // Загрузка изображения в облако
+  const handleCloudUpload = async (imageUrl: string) => {
+    if (!enableCloudUpload || !entityType || !entityId) {
+      return;
+    }
+
+    try {
+      setIsUploadingToCloud(true);
+      setCloudUploadError(null);
+
+      // Конвертируем base64 в File
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'image.png', { type: 'image/png' });
+
+      const result = await imagesApi.uploadImage(entityType, entityId, file);
+      
+      if (result.success) {
+        onImageUpload(result.image_url);
+      } else {
+        setCloudUploadError('Не удалось загрузить изображение в облако');
+      }
+    } catch (error) {
+      setCloudUploadError(error instanceof Error ? error.message : 'Ошибка загрузки в облако');
+    } finally {
+      setIsUploadingToCloud(false);
+    }
+  };
+
   // Удаление текущего изображения
   const handleRemoveImage = () => {
     onImageUpload('');
@@ -118,19 +160,47 @@ const ImageUploader = ({ onImageUpload, currentImageUrl, className = '' }: Image
       onDragLeave={() => setIsDragOver(false)}
     >
       {currentImageUrl ? (
-        <div className="relative">
+        <div className="relative space-y-3">
           <img
             src={currentImageUrl}
             alt="Загруженное изображение"
             className="max-w-full max-h-48 mx-auto rounded"
           />
-          <button
-            type="button"
-            onClick={handleRemoveImage}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex justify-center space-x-2">
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="flex items-center space-x-1 px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+            >
+              <X size={14} />
+              <span>Удалить</span>
+            </button>
+            {enableCloudUpload && entityType && entityId && (
+              <button
+                type="button"
+                onClick={() => handleCloudUpload(currentImageUrl)}
+                disabled={isUploadingToCloud}
+                className="flex items-center space-x-1 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
+              >
+                {isUploadingToCloud ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Загрузка...</span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud size={14} />
+                    <span>В облако</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+          {cloudUploadError && (
+            <div className="text-red-600 text-sm text-center">
+              {cloudUploadError}
+            </div>
+          )}
         </div>
       ) : (
         <div className={`space-y-4 ${isDragOver ? 'bg-blue-50' : ''}`}>

@@ -120,24 +120,28 @@ const (
 
 // Card - модель карточки
 type Card struct {
-	ID                  uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name                string         `json:"name" gorm:"not null"`
-	Properties          *Properties    `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
-	Description         string         `json:"description" gorm:"type:text;not null"`
-	ImageURL            string         `json:"image_url" gorm:"type:text"`
-	Rarity              Rarity         `json:"rarity" gorm:"not null"`
-	CardNumber          string         `json:"card_number" gorm:"uniqueIndex;not null"`
-	Price               *int           `json:"price" gorm:"type:int"`
-	Weight              *float64       `json:"weight" gorm:"type:decimal(5,2)"`
-	BonusType           *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
-	BonusValue          *string        `json:"bonus_value" gorm:"type:varchar(20)"`
-	DamageType          *string        `json:"damage_type" gorm:"type:varchar(20)"`
-	DefenseType         *string        `json:"defense_type" gorm:"type:varchar(20)"`
-	DescriptionFontSize *int           `json:"description_font_size" gorm:"type:int"`
-	IsExtended          *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
-	CreatedAt           time.Time      `json:"created_at"`
-	UpdatedAt           time.Time      `json:"updated_at"`
-	DeletedAt           gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                  string         `json:"name" gorm:"not null"`
+	Properties            *Properties    `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
+	Description           string         `json:"description" gorm:"type:text;not null"`
+	ImageURL              string         `json:"image_url" gorm:"type:text"`
+	ImageCloudinaryID     string         `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL    string         `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated        bool           `json:"image_generated" gorm:"type:boolean;default:false"`
+	ImageGenerationPrompt string         `json:"image_generation_prompt" gorm:"type:text"`
+	Rarity                Rarity         `json:"rarity" gorm:"not null"`
+	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
+	Price                 *int           `json:"price" gorm:"type:int"`
+	Weight                *float64       `json:"weight" gorm:"type:decimal(5,2)"`
+	BonusType             *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
+	BonusValue            *string        `json:"bonus_value" gorm:"type:varchar(20)"`
+	DamageType            *string        `json:"damage_type" gorm:"type:varchar(20)"`
+	DefenseType           *string        `json:"defense_type" gorm:"type:varchar(20)"`
+	DescriptionFontSize   *int           `json:"description_font_size" gorm:"type:int"`
+	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
+	CreatedAt             time.Time      `json:"created_at"`
+	UpdatedAt             time.Time      `json:"updated_at"`
+	DeletedAt             gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // CreateCardRequest - запрос на создание карточки
@@ -293,18 +297,21 @@ func (bt BonusType) GetLocalizedName() string {
 
 // WeaponTemplate представляет шаблон оружия
 type WeaponTemplate struct {
-	ID         string     `json:"id" gorm:"primaryKey;type:uuid"`
-	Name       string     `json:"name" gorm:"not null"`
-	NameEn     string     `json:"name_en" gorm:"not null"`
-	Category   string     `json:"category" gorm:"not null"`    // simple_melee, martial_melee, simple_ranged, martial_ranged
-	DamageType string     `json:"damage_type" gorm:"not null"` // slashing, piercing, bludgeoning
-	Damage     string     `json:"damage" gorm:"not null"`      // 1d4, 1d6, 1d8, etc.
-	Weight     float64    `json:"weight" gorm:"not null"`
-	Price      int        `json:"price" gorm:"not null"`
-	Properties Properties `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
-	ImagePath  string     `json:"image_path"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+	ID                 string     `json:"id" gorm:"primaryKey;type:uuid"`
+	Name               string     `json:"name" gorm:"not null"`
+	NameEn             string     `json:"name_en" gorm:"not null"`
+	Category           string     `json:"category" gorm:"not null"`    // simple_melee, martial_melee, simple_ranged, martial_ranged
+	DamageType         string     `json:"damage_type" gorm:"not null"` // slashing, piercing, bludgeoning
+	Damage             string     `json:"damage" gorm:"not null"`      // 1d4, 1d6, 1d8, etc.
+	Weight             float64    `json:"weight" gorm:"not null"`
+	Price              int        `json:"price" gorm:"not null"`
+	Properties         Properties `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
+	ImagePath          string     `json:"image_path"`
+	ImageCloudinaryID  string     `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL string     `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated     bool       `json:"image_generated" gorm:"type:boolean;default:false"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }
 
 // WeaponTemplateResponse представляет ответ с шаблоном оружия
@@ -395,4 +402,221 @@ func ValidateWeight(weight *float64) bool {
 		return true
 	}
 	return *weight >= 0.01 && *weight <= 1000
+}
+
+// UserRole - роль пользователя в группе
+type UserRole string
+
+const (
+	RoleDM     UserRole = "dm"     // Мастер игры
+	RolePlayer UserRole = "player" // Игрок
+)
+
+// User - модель пользователя
+type User struct {
+	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Username     string         `json:"username" gorm:"uniqueIndex;not null"`
+	Email        string         `json:"email" gorm:"uniqueIndex;not null"`
+	PasswordHash string         `json:"-" gorm:"not null"` // Хеш пароля (не возвращаем в JSON)
+	DisplayName  string         `json:"display_name" gorm:"not null"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// Group - модель группы
+type Group struct {
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name        string         `json:"name" gorm:"not null"`
+	Description string         `json:"description" gorm:"type:text"`
+	DMID        uuid.UUID      `json:"dm_id" gorm:"not null"` // ID мастера игры
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+
+	// Связи
+	DM      User          `json:"dm" gorm:"foreignKey:DMID"`
+	Members []GroupMember `json:"members" gorm:"foreignKey:GroupID"`
+}
+
+// GroupMember - участник группы
+type GroupMember struct {
+	ID      uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	GroupID uuid.UUID `json:"group_id" gorm:"not null"`
+	UserID  uuid.UUID `json:"user_id" gorm:"not null"`
+	Role    UserRole  `json:"role" gorm:"not null"`
+
+	// Связи
+	Group Group `json:"group" gorm:"foreignKey:GroupID"`
+	User  User  `json:"user" gorm:"foreignKey:UserID"`
+
+	// Индексы
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// InventoryType - тип инвентаря
+type InventoryType string
+
+const (
+	InventoryTypePersonal  InventoryType = "personal"  // Личный инвентарь
+	InventoryTypeGroup     InventoryType = "group"     // Групповой инвентарь
+	InventoryTypeCharacter InventoryType = "character" // Инвентарь персонажа
+)
+
+// Inventory - модель инвентаря
+type Inventory struct {
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Type        InventoryType  `json:"type" gorm:"not null"`
+	UserID      *uuid.UUID     `json:"user_id" gorm:"type:uuid"`      // Для личного инвентаря
+	GroupID     *uuid.UUID     `json:"group_id" gorm:"type:uuid"`     // Для группового инвентаря
+	CharacterID *uuid.UUID     `json:"character_id" gorm:"type:uuid"` // Для инвентаря персонажа
+	Name        string         `json:"name" gorm:"not null"`          // Название инвентаря
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+
+	// Связи
+	User      *User           `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Group     *Group          `json:"group,omitempty" gorm:"foreignKey:GroupID"`
+	Character *Character      `json:"character,omitempty" gorm:"foreignKey:CharacterID"`
+	Items     []InventoryItem `json:"items" gorm:"foreignKey:InventoryID"`
+}
+
+// InventoryItem - предмет в инвентаре
+type InventoryItem struct {
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	InventoryID uuid.UUID      `json:"inventory_id" gorm:"not null"`
+	CardID      uuid.UUID      `json:"card_id" gorm:"not null"`
+	Quantity    int            `json:"quantity" gorm:"not null;default:1"`
+	Notes       string         `json:"notes" gorm:"type:text"` // Заметки игрока
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+
+	// Связи
+	Inventory Inventory `json:"inventory" gorm:"foreignKey:InventoryID"`
+	Card      Card      `json:"card" gorm:"foreignKey:CardID"`
+}
+
+// AuthRequest - запрос на авторизацию
+type AuthRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// RegisterRequest - запрос на регистрацию
+type RegisterRequest struct {
+	Username    string `json:"username" binding:"required,min=3,max=50"`
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required,min=6"`
+	DisplayName string `json:"display_name" binding:"required,min=1,max=100"`
+}
+
+// AuthResponse - ответ авторизации
+type AuthResponse struct {
+	Token string `json:"token"`
+	User  User   `json:"user"`
+}
+
+// CreateGroupRequest - запрос на создание группы
+type CreateGroupRequest struct {
+	Name        string `json:"name" binding:"required,min=1,max=100"`
+	Description string `json:"description"`
+}
+
+// JoinGroupRequest - запрос на присоединение к группе
+type JoinGroupRequest struct {
+	GroupID uuid.UUID `json:"group_id" binding:"required"`
+}
+
+// CreateInventoryRequest - запрос на создание инвентаря
+type CreateInventoryRequest struct {
+	Type    InventoryType `json:"type" binding:"required"`
+	GroupID *uuid.UUID    `json:"group_id"` // Для группового инвентаря
+	Name    string        `json:"name" binding:"required,min=1,max=100"`
+}
+
+// AddItemToInventoryRequest - запрос на добавление предмета в инвентарь
+type AddItemToInventoryRequest struct {
+	CardID   uuid.UUID `json:"card_id" binding:"required"`
+	Quantity int       `json:"quantity" binding:"required,min=1"`
+	Notes    string    `json:"notes"`
+}
+
+// UpdateInventoryItemRequest - запрос на обновление предмета в инвентаре
+type UpdateInventoryItemRequest struct {
+	Quantity int    `json:"quantity" binding:"required,min=0"`
+	Notes    string `json:"notes"`
+}
+
+// Character - модель персонажа D&D
+type Character struct {
+	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	UserID    uuid.UUID      `json:"user_id" gorm:"not null"`
+	GroupID   *uuid.UUID     `json:"group_id" gorm:"type:uuid"` // Может быть null для персонажей без группы
+	Name      string         `json:"name" gorm:"not null"`
+	Data      string         `json:"data" gorm:"type:text;not null"` // JSON строка с данными персонажа
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+
+	// Связи
+	User        User        `json:"user" gorm:"foreignKey:UserID"`
+	Group       *Group      `json:"group,omitempty" gorm:"foreignKey:GroupID"`
+	Inventories []Inventory `json:"inventories,omitempty" gorm:"foreignKey:CharacterID"`
+}
+
+// CreateCharacterRequest - запрос на создание персонажа
+type CreateCharacterRequest struct {
+	Name    string     `json:"name" binding:"required,min=1,max=100"`
+	GroupID *uuid.UUID `json:"group_id"`                // Может быть null
+	Data    string     `json:"data" binding:"required"` // JSON строка с данными персонажа
+}
+
+// UpdateCharacterRequest - запрос на обновление персонажа
+type UpdateCharacterRequest struct {
+	Name    string     `json:"name"`
+	GroupID *uuid.UUID `json:"group_id"`
+	Data    string     `json:"data"`
+}
+
+// CharacterResponse - ответ с персонажем
+type CharacterResponse struct {
+	ID        uuid.UUID  `json:"id"`
+	UserID    uuid.UUID  `json:"user_id"`
+	GroupID   *uuid.UUID `json:"group_id"`
+	Name      string     `json:"name"`
+	Data      string     `json:"data"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+
+	// Связанные данные
+	User        *User       `json:"user,omitempty"`
+	Group       *Group      `json:"group,omitempty"`
+	Inventories []Inventory `json:"inventories,omitempty"`
+}
+
+// ImportCharacterRequest - запрос на импорт персонажа из JSON
+type ImportCharacterRequest struct {
+	CharacterData string     `json:"character_data" binding:"required"` // JSON строка с данными персонажа
+	GroupID       *uuid.UUID `json:"group_id"`                          // Может быть null
+}
+
+// ExportCharacterResponse - ответ с экспортом персонажа
+type ExportCharacterResponse struct {
+	CharacterData string `json:"character_data"` // JSON строка с данными персонажа
+}
+
+// ImageGenerationLog - лог генерации изображений
+type ImageGenerationLog struct {
+	ID               uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	EntityType       string    `json:"entity_type" gorm:"not null"`               // "card" или "weapon_template"
+	EntityID         uuid.UUID `json:"entity_id" gorm:"not null"`                 // ID сущности
+	CloudinaryID     string    `json:"cloudinary_id" gorm:"not null"`             // ID изображения в Cloudinary
+	CloudinaryURL    string    `json:"cloudinary_url" gorm:"not null"`            // URL изображения
+	GenerationPrompt string    `json:"generation_prompt" gorm:"type:text"`        // Промпт для генерации
+	GenerationModel  string    `json:"generation_model" gorm:"type:varchar(100)"` // Модель ИИ
+	GenerationTimeMs int       `json:"generation_time_ms" gorm:"type:int"`        // Время генерации в мс
+	CreatedAt        time.Time `json:"created_at"`
 }

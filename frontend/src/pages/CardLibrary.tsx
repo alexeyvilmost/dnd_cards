@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Filter, Plus, Package, Users, User, Sword } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -98,6 +98,59 @@ const CardLibrary = () => {
           <Plus size={18} />
           <span>Создать карту</span>
         </Link>
+      </div>
+
+      {/* Быстрые действия */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Быстрые действия</h2>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Link
+            to="/inventory"
+            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+          >
+            <Package className="h-8 w-8 text-blue-600 group-hover:text-blue-700 mb-2" />
+            <span className="text-sm font-medium text-gray-900">Инвентарь</span>
+            <span className="text-xs text-gray-500 text-center">Управление предметами</span>
+          </Link>
+          
+          <Link
+            to="/groups"
+            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
+          >
+            <Users className="h-8 w-8 text-green-600 group-hover:text-green-700 mb-2" />
+            <span className="text-sm font-medium text-gray-900">Группы</span>
+            <span className="text-xs text-gray-500 text-center">Игровые группы</span>
+          </Link>
+          
+          <Link
+            to="/templates"
+            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors group"
+          >
+            <Sword className="h-8 w-8 text-purple-600 group-hover:text-purple-700 mb-2" />
+            <span className="text-sm font-medium text-gray-900">Шаблоны</span>
+            <span className="text-xs text-gray-500 text-center">Оружие и предметы</span>
+          </Link>
+          
+          <Link
+            to="/export"
+            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors group"
+          >
+            <svg className="h-8 w-8 text-orange-600 group-hover:text-orange-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-900">Экспорт</span>
+            <span className="text-xs text-gray-500 text-center">Скачать карточки</span>
+          </Link>
+          
+          <Link
+            to="/inventory/create"
+            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
+          >
+            <Plus className="h-8 w-8 text-indigo-600 group-hover:text-indigo-700 mb-2" />
+            <span className="text-sm font-medium text-gray-900">Создать инвентарь</span>
+            <span className="text-xs text-gray-500 text-center">Новый инвентарь</span>
+          </Link>
+        </div>
       </div>
 
       {/* Поиск и фильтры */}

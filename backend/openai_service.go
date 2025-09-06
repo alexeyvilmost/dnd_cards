@@ -31,22 +31,13 @@ func (s *OpenAIService) GenerateImage(prompt string) (string, error) {
 		return "", fmt.Errorf("OpenAI API не настроен")
 	}
 
-	// Улучшаем промпт для лучшего результата
-	enhancedPrompt := fmt.Sprintf(
-		"Create a fantasy potion bottle illustration for D&D: %s. "+
-			"Style: minimalist, clean, white background, high quality, "+
-			"magical glowing effects, suitable for a trading card. "+
-			"Format: 3:4 aspect ratio, centered composition.",
-		prompt,
-	)
-
 	ctx := context.Background()
 	resp, err := s.client.CreateImage(ctx, openai.ImageRequest{
-		Prompt:         enhancedPrompt,
-		Size:           openai.CreateImageSize1024x1024,
-		Quality:        openai.CreateImageQualityHD,
-		ResponseFormat: openai.CreateImageResponseFormatURL,
-		N:              1,
+		Prompt:  prompt,
+		Model:   "gpt-image-1",
+		Size:    openai.CreateImageSize1024x1024,
+		Quality: "medium",
+		N:       1,
 	})
 
 	if err != nil {
@@ -54,24 +45,61 @@ func (s *OpenAIService) GenerateImage(prompt string) (string, error) {
 	}
 
 	if len(resp.Data) == 0 {
-		return "", fmt.Errorf("не получен URL изображения")
+		return "", fmt.Errorf("не получены данные изображения")
 	}
 
-	return resp.Data[0].URL, nil
+	// При использовании B64JSON формата, данные приходят в поле B64JSON
+	if resp.Data[0].B64JSON != "" {
+		// Возвращаем как data URL для PNG изображения
+		return "data:image/png;base64," + resp.Data[0].B64JSON, nil
+	}
+
+	// Fallback на URL если доступен
+	if resp.Data[0].URL != "" {
+		return resp.Data[0].URL, nil
+	}
+
+	return "", fmt.Errorf("не получены данные изображения")
 }
 
 // GenerateImagePrompt - генерация промпта для изображения на основе карточки
-func GenerateImagePrompt(cardName, description string) string {
-	// Извлекаем ключевые слова из описания
-	keywords := extractKeywords(description)
+func GenerateImagePrompt(cardName, description, rarity string) string {
+	// Определяем цвет редкости
+	rarityColor := getRarityColor(rarity)
 
-	// Формируем промпт
-	prompt := fmt.Sprintf("Potion: %s", cardName)
-	if len(keywords) > 0 {
-		prompt += fmt.Sprintf(", Effects: %s", strings.Join(keywords[:min(3, len(keywords))], ", "))
+	// Базовый промпт
+	prompt := fmt.Sprintf("Фэнтезийный предмет, выполненный в стиле видеоигровой иконки.\nОбъект: %s", cardName)
+
+	// Добавляем описание предмета из базы данных
+	if description != "" {
+		prompt += fmt.Sprintf(" %s", description)
 	}
 
+	// Добавляем акцентные цвета и свечение только для необычных предметов
+	if rarity != "common" {
+		prompt += fmt.Sprintf(" с акцентным %s цветом и %s свечением", rarityColor, rarityColor)
+	}
+
+	// Добавляем стиль
+	prompt += "\nБез дополнительных элементов, рамок и прочего. Самое главное - предмет. Фон — полностью белый, без лишних деталей. Стиль — полуреалистичная отрисовка, мягкое освещение, лёгкое свечение по контуру, яркие акценты на металле, дереве или камне. Качество — как иконка предмета из RPG, детализированное, но с упрощённым белым фоном, чтобы предмет выделялся.\nОбязательно на белом однотонном фоне"
+
 	return prompt
+}
+
+// getRarityColor - возвращает цвет для редкости
+func getRarityColor(rarity string) string {
+	switch rarity {
+	case "uncommon":
+		return "зеленый"
+	case "rare":
+		return "синий"
+	case "very_rare":
+		return "фиолетовый"
+	case "artifact":
+		return "золотой"
+	default:
+		return "белый"
+	}
 }
 
 // extractKeywords - извлечение ключевых слов из описания

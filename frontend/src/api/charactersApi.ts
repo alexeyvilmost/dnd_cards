@@ -1,0 +1,65 @@
+import apiClient from './client';
+import type { 
+  Character, 
+  CreateCharacterRequest, 
+  UpdateCharacterRequest, 
+  ImportCharacterRequest, 
+  ExportCharacterResponse 
+} from '../types';
+
+export const charactersApi = {
+  // Получение списка персонажей
+  getCharacters: async (params?: {
+    group_id?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    characters: Character[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> => {
+    const searchParams = new URLSearchParams();
+    if (params?.group_id) searchParams.append('group_id', params.group_id);
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.offset) searchParams.append('offset', params.offset.toString());
+
+    const response = await apiClient.get(`/characters?${searchParams.toString()}`);
+    return response.data;
+  },
+
+  // Получение персонажа по ID
+  getCharacter: async (id: string): Promise<Character> => {
+    const response = await apiClient.get(`/characters/${id}`);
+    return response.data;
+  },
+
+  // Создание персонажа
+  createCharacter: async (data: CreateCharacterRequest): Promise<Character> => {
+    const response = await apiClient.post('/characters', data);
+    return response.data;
+  },
+
+  // Обновление персонажа
+  updateCharacter: async (id: string, data: UpdateCharacterRequest): Promise<Character> => {
+    const response = await apiClient.put(`/characters/${id}`, data);
+    return response.data;
+  },
+
+  // Удаление персонажа
+  deleteCharacter: async (id: string): Promise<void> => {
+    await apiClient.delete(`/characters/${id}`);
+  },
+
+  // Импорт персонажа из JSON
+  importCharacter: async (data: ImportCharacterRequest): Promise<Character> => {
+    const response = await apiClient.post('/characters/import', data);
+    return response.data;
+  },
+
+  // Экспорт персонажа в JSON
+  exportCharacter: async (id: string): Promise<ExportCharacterResponse> => {
+    const response = await apiClient.get(`/characters/${id}/export`);
+    return response.data;
+  },
+};
