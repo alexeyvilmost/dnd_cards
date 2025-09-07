@@ -7,6 +7,7 @@ interface ImageGeneratorProps {
   entityId: string;
   entityName: string;
   entityRarity: string;
+  entityDescription?: string;
   onImageGenerated: (imageUrl: string) => void;
   disabled?: boolean;
   className?: string;
@@ -17,6 +18,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   entityId,
   entityName,
   entityRarity,
+  entityDescription,
   onImageGenerated,
   disabled = false,
   className = '',
@@ -37,7 +39,11 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       setError(null);
       setSuccess(false);
 
-      const response = await imagesApi.generateImage(entityType, entityId);
+      const response = await imagesApi.generateImage(entityType, entityId, undefined, {
+        name: entityName,
+        description: entityDescription,
+        rarity: entityRarity,
+      });
       
       if (response.success) {
         onImageGenerated(response.image_url);
@@ -68,6 +74,23 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         return 'Артефакт';
       default:
         return rarity;
+    }
+  };
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common':
+        return 'text-gray-600';
+      case 'uncommon':
+        return 'text-green-600';
+      case 'rare':
+        return 'text-blue-600';
+      case 'very_rare':
+        return 'text-purple-600';
+      case 'artifact':
+        return 'text-yellow-600';
+      default:
+        return 'text-gray-600';
     }
   };
 

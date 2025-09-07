@@ -22,6 +22,28 @@ const (
 	RarityArtifact Rarity = "artifact"  // Артефакт (оранжевый)
 )
 
+// ItemType - тип предмета
+type ItemType string
+
+const (
+	ItemTypeWeapon     ItemType = "weapon"     // Оружие
+	ItemTypeShield     ItemType = "shield"     // Щит
+	ItemTypeHelmet     ItemType = "helmet"     // Головной убор
+	ItemTypeChest      ItemType = "chest"      // Торс
+	ItemTypeGloves     ItemType = "gloves"     // Перчатки
+	ItemTypeCloak      ItemType = "cloak"      // Плащ
+	ItemTypeBoots      ItemType = "boots"      // Обувь
+	ItemTypeRing       ItemType = "ring"       // Кольцо
+	ItemTypeNecklace   ItemType = "necklace"   // Ожерелье
+	ItemTypePotion     ItemType = "potion"     // Зелье
+	ItemTypeScroll     ItemType = "scroll"     // Свиток
+	ItemTypeAmmunition ItemType = "ammunition" // Боеприпас
+	ItemTypeFood       ItemType = "food"       // Еда
+	ItemTypeTool       ItemType = "tool"       // Инструмент
+	ItemTypeIngredient ItemType = "ingredient" // Ингредиент
+	ItemTypeNone       ItemType = "none"       // Без типа
+)
+
 // Properties - свойства предмета (массив строк)
 type Properties []string
 
@@ -139,6 +161,14 @@ type Card struct {
 	DefenseType           *string        `json:"defense_type" gorm:"type:varchar(20)"`
 	DescriptionFontSize   *int           `json:"description_font_size" gorm:"type:int"`
 	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
+	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source                *string        `json:"source" gorm:"type:varchar(255)"`
+	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
+	RelatedCards          *Properties    `json:"related_cards" gorm:"type:text[]"`   // JSON массив ID
+	RelatedActions        *Properties    `json:"related_actions" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
+	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
+	Attunement            *string        `json:"attunement" gorm:"type:text"`
+	Tags                  *Properties    `json:"tags" gorm:"type:text[]"` // Массив тегов
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
 	DeletedAt             gorm.DeletedAt `json:"-" gorm:"index"`
@@ -159,6 +189,14 @@ type CreateCardRequest struct {
 	DefenseType         *string     `json:"defense_type"`
 	DescriptionFontSize *int        `json:"description_font_size"`
 	IsExtended          *bool       `json:"is_extended"`
+	Author              string      `json:"author"`
+	Source              *string     `json:"source"`
+	Type                *string     `json:"type"`
+	RelatedCards        *Properties `json:"related_cards"`
+	RelatedActions      *Properties `json:"related_actions"`
+	RelatedEffects      *Properties `json:"related_effects"`
+	Attunement          *string     `json:"attunement"`
+	Tags                *Properties `json:"tags"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -176,6 +214,34 @@ type UpdateCardRequest struct {
 	DefenseType         *string     `json:"defense_type"`
 	DescriptionFontSize *int        `json:"description_font_size"`
 	IsExtended          *bool       `json:"is_extended"`
+	Author              string      `json:"author"`
+	Source              *string     `json:"source"`
+	Type                *string     `json:"type"`
+	RelatedCards        *Properties `json:"related_cards"`
+	RelatedActions      *Properties `json:"related_actions"`
+	RelatedEffects      *Properties `json:"related_effects"`
+	Attunement          *string     `json:"attunement"`
+	Tags                *Properties `json:"tags"`
+}
+
+// CreateWeaponTemplateRequest - запрос на создание шаблона оружия
+type CreateWeaponTemplateRequest struct {
+	Name           string   `json:"name" binding:"required"`
+	NameEn         string   `json:"name_en" binding:"required"`
+	Category       string   `json:"category" binding:"required"`
+	DamageType     string   `json:"damage_type" binding:"required"`
+	Damage         string   `json:"damage" binding:"required"`
+	Weight         float64  `json:"weight" binding:"required"`
+	Price          float64  `json:"price" binding:"required"`
+	Properties     []string `json:"properties"`
+	Author         string   `json:"author"`
+	Source         string   `json:"source"`
+	Type           string   `json:"type"`
+	RelatedCards   []string `json:"related_cards"`
+	RelatedActions []string `json:"related_actions"`
+	RelatedEffects []string `json:"related_effects"`
+	Attunement     string   `json:"attunement"`
+	Tags           []string `json:"tags"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -297,35 +363,44 @@ func (bt BonusType) GetLocalizedName() string {
 
 // WeaponTemplate представляет шаблон оружия
 type WeaponTemplate struct {
-	ID                 string     `json:"id" gorm:"primaryKey;type:uuid"`
-	Name               string     `json:"name" gorm:"not null"`
-	NameEn             string     `json:"name_en" gorm:"not null"`
-	Category           string     `json:"category" gorm:"not null"`    // simple_melee, martial_melee, simple_ranged, martial_ranged
-	DamageType         string     `json:"damage_type" gorm:"not null"` // slashing, piercing, bludgeoning
-	Damage             string     `json:"damage" gorm:"not null"`      // 1d4, 1d6, 1d8, etc.
-	Weight             float64    `json:"weight" gorm:"not null"`
-	Price              int        `json:"price" gorm:"not null"`
-	Properties         Properties `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
-	ImagePath          string     `json:"image_path"`
-	ImageCloudinaryID  string     `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
-	ImageCloudinaryURL string     `json:"image_cloudinary_url" gorm:"type:text"`
-	ImageGenerated     bool       `json:"image_generated" gorm:"type:boolean;default:false"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          time.Time  `json:"updated_at"`
+	ID                 int         `json:"id" gorm:"primaryKey;autoIncrement"`
+	Name               string      `json:"name" gorm:"not null"`
+	NameEn             string      `json:"name_en" gorm:"not null"`
+	Category           string      `json:"category" gorm:"not null"`    // simple_melee, martial_melee, simple_ranged, martial_ranged
+	DamageType         string      `json:"damage_type" gorm:"not null"` // slashing, piercing, bludgeoning
+	Damage             string      `json:"damage" gorm:"not null"`      // 1d4, 1d6, 1d8, etc.
+	Weight             float64     `json:"weight" gorm:"not null"`
+	Price              int         `json:"price" gorm:"not null"`
+	Properties         Properties  `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
+	ImagePath          string      `json:"image_path"`
+	ImageCloudinaryID  string      `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL string      `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated     bool        `json:"image_generated" gorm:"type:boolean;default:false"`
+	Author             string      `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source             *string     `json:"source" gorm:"type:varchar(255)"`
+	Type               *string     `json:"type" gorm:"type:varchar(50)"`
+	RelatedCards       *Properties `json:"related_cards" gorm:"type:text[]"`   // JSON массив ID
+	RelatedActions     *Properties `json:"related_actions" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
+	RelatedEffects     *Properties `json:"related_effects" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
+	Attunement         *string     `json:"attunement" gorm:"type:text"`
+	Tags               *Properties `json:"tags" gorm:"type:text[]"` // Массив тегов
+	CreatedAt          time.Time   `json:"created_at"`
+	UpdatedAt          time.Time   `json:"updated_at"`
 }
 
 // WeaponTemplateResponse представляет ответ с шаблоном оружия
 type WeaponTemplateResponse struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	NameEn     string   `json:"name_en"`
-	Category   string   `json:"category"`
-	DamageType string   `json:"damage_type"`
-	Damage     string   `json:"damage"`
-	Weight     float64  `json:"weight"`
-	Price      int      `json:"price"`
-	Properties []string `json:"properties"`
-	ImagePath  string   `json:"image_path"`
+	ID                 int      `json:"id"`
+	Name               string   `json:"name"`
+	NameEn             string   `json:"name_en"`
+	Category           string   `json:"category"`
+	DamageType         string   `json:"damage_type"`
+	Damage             string   `json:"damage"`
+	Weight             float64  `json:"weight"`
+	Price              int      `json:"price"`
+	Properties         []string `json:"properties"`
+	ImagePath          string   `json:"image_path"`
+	ImageCloudinaryURL string   `json:"image_cloudinary_url"`
 }
 
 // GetWeaponTemplatesRequest представляет запрос на получение шаблонов
@@ -619,4 +694,26 @@ type ImageGenerationLog struct {
 	GenerationModel  string    `json:"generation_model" gorm:"type:varchar(100)"` // Модель ИИ
 	GenerationTimeMs int       `json:"generation_time_ms" gorm:"type:int"`        // Время генерации в мс
 	CreatedAt        time.Time `json:"created_at"`
+}
+
+// ImageLibrary - библиотека изображений
+type ImageLibrary struct {
+	ID               uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	CloudinaryID     string     `json:"cloudinary_id" gorm:"uniqueIndex;not null"`
+	CloudinaryURL    string     `json:"cloudinary_url" gorm:"not null"`
+	OriginalName     *string    `json:"original_name"`
+	FileSize         *int       `json:"file_size"`
+	CardName         *string    `json:"card_name"`
+	CardRarity       *string    `json:"card_rarity"`
+	GenerationPrompt *string    `json:"generation_prompt"`
+	GenerationModel  *string    `json:"generation_model"`
+	GenerationTimeMs *int       `json:"generation_time_ms"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	DeletedAt        *time.Time `json:"deleted_at,omitempty" gorm:"index"`
+}
+
+// TableName указывает имя таблицы для GORM
+func (ImageLibrary) TableName() string {
+	return "image_library"
 }

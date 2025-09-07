@@ -23,6 +23,7 @@ type ImageController struct {
 	db            *gorm.DB
 	yandexStorage *YandexStorageService
 	openAIService *OpenAIService
+	imageLibrary  *ImageLibraryController
 }
 
 // NewImageController создает новый экземпляр контроллера
@@ -31,6 +32,7 @@ func NewImageController(db *gorm.DB, yandexStorage *YandexStorageService, openAI
 		db:            db,
 		yandexStorage: yandexStorage,
 		openAIService: openAIService,
+		imageLibrary:  NewImageLibraryController(db),
 	}
 }
 
@@ -80,6 +82,9 @@ func (ic *ImageController) UploadImage(c *gin.Context) {
 		return
 	}
 
+	// Автоматически добавляем в библиотеку изображений (для загруженных изображений)
+	ic.addUploadedImageToLibrary(entityType, entityID, cloudinaryID, imageURL, file.Filename, file.Size)
+
 	c.JSON(http.StatusOK, ImageUploadResponse{
 		Success:      true,
 		ImageURL:     imageURL,
@@ -97,10 +102,18 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	}
 
 	// Получаем информацию о сущности для создания промпта
-	entityInfo, err := ic.getEntityInfo(req.EntityType, req.EntityID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "сущность не найдена"})
-		return
+	var entityInfo map[string]interface{}
+	var err error
+
+	// Если переданы данные сущности, используем их, иначе получаем из базы
+	if req.EntityData != nil && len(req.EntityData) > 0 {
+		entityInfo = req.EntityData
+	} else {
+		entityInfo, err = ic.getEntityInfo(req.EntityType, req.EntityID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "сущность не найдена"})
+			return
+		}
 	}
 
 	// Создаем промпт для генерации изображения
@@ -149,6 +162,9 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 
 	// Логируем генерацию изображения
 	ic.logImageGeneration(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
+
+	// Автоматически добавляем в библиотеку изображений
+	ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
 
 	c.JSON(http.StatusOK, ImageGenerationResponse{
 		Success:        true,
@@ -437,16 +453,16 @@ func (ic *ImageController) downloadImage(url string) ([]byte, error) {
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("неверный формат data URL")
 		}
-		
+
 		// Декодируем base64
 		data, err := base64.StdEncoding.DecodeString(parts[1])
 		if err != nil {
 			return nil, fmt.Errorf("ошибка декодирования base64: %v", err)
 		}
-		
+
 		return data, nil
 	}
-	
+
 	// Обычный HTTP URL
 	resp, err := http.Get(url)
 	if err != nil {
@@ -464,4 +480,113 @@ func (ic *ImageController) downloadImage(url string) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+// addToImageLibrary автоматически добавляет изображение в библиотеку
+func (ic *ImageController) addToImageLibrary(entityType, entityID, cloudinaryID, imageURL, prompt, model string, generationTime int) {
+	// Получаем информацию о сущности для тегов
+	entityInfo, err := ic.getEntityInfo(entityType, entityID)
+	if err != nil {
+		log.Printf("Ошибка получения информации о сущности для библиотеки: %v", err)
+		return
+	}
+
+	// Извлекаем данные для тегов
+	var cardName, cardRarity *string
+	if nameVal, ok := entityInfo["name"].(string); ok && nameVal != "" {
+		cardName = &nameVal
+	}
+	if rarityVal, ok := entityInfo["rarity"].(string); ok && rarityVal != "" {
+		cardRarity = &rarityVal
+	}
+
+	// Создаем запись для библиотеки
+	image := ImageLibrary{
+		CloudinaryID:     cloudinaryID,
+		CloudinaryURL:    imageURL,
+		OriginalName:     nil, // Для сгенерированных изображений
+		FileSize:         nil, // Размер файла не известен
+		CardName:         cardName,
+		CardRarity:       cardRarity,
+		GenerationPrompt: &prompt,
+		GenerationModel:  &model,
+		GenerationTimeMs: &generationTime,
+	}
+
+	// Проверяем, не существует ли уже такое изображение
+	var existing ImageLibrary
+	if err := ic.db.Where("cloudinary_id = ?", cloudinaryID).First(&existing).Error; err == nil {
+		log.Printf("Изображение %s уже существует в библиотеке", cloudinaryID)
+		return
+	}
+
+	// Добавляем в библиотеку
+	if err := ic.db.Create(&image).Error; err != nil {
+		log.Printf("Ошибка добавления изображения в библиотеку: %v", err)
+		return
+	}
+
+	log.Printf("Изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s",
+		cloudinaryID,
+		getStringValue(cardName),
+		getStringValue(cardRarity))
+}
+
+// addUploadedImageToLibrary автоматически добавляет загруженное изображение в библиотеку
+func (ic *ImageController) addUploadedImageToLibrary(entityType, entityID, cloudinaryID, imageURL, filename string, fileSize int64) {
+	// Получаем информацию о сущности для тегов
+	entityInfo, err := ic.getEntityInfo(entityType, entityID)
+	if err != nil {
+		log.Printf("Ошибка получения информации о сущности для библиотеки: %v", err)
+		return
+	}
+
+	// Извлекаем данные для тегов
+	var cardName, cardRarity *string
+	if nameVal, ok := entityInfo["name"].(string); ok && nameVal != "" {
+		cardName = &nameVal
+	}
+	if rarityVal, ok := entityInfo["rarity"].(string); ok && rarityVal != "" {
+		cardRarity = &rarityVal
+	}
+
+	// Создаем запись для библиотеки
+	fileSizeInt := int(fileSize)
+	image := ImageLibrary{
+		CloudinaryID:     cloudinaryID,
+		CloudinaryURL:    imageURL,
+		OriginalName:     &filename,
+		FileSize:         &fileSizeInt,
+		CardName:         cardName,
+		CardRarity:       cardRarity,
+		GenerationPrompt: nil, // Для загруженных изображений
+		GenerationModel:  nil, // Для загруженных изображений
+		GenerationTimeMs: nil, // Для загруженных изображений
+	}
+
+	// Проверяем, не существует ли уже такое изображение
+	var existing ImageLibrary
+	if err := ic.db.Where("cloudinary_id = ?", cloudinaryID).First(&existing).Error; err == nil {
+		log.Printf("Изображение %s уже существует в библиотеке", cloudinaryID)
+		return
+	}
+
+	// Добавляем в библиотеку
+	if err := ic.db.Create(&image).Error; err != nil {
+		log.Printf("Ошибка добавления загруженного изображения в библиотеку: %v", err)
+		return
+	}
+
+	log.Printf("Загруженное изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s",
+		cloudinaryID,
+		getStringValue(cardName),
+		getStringValue(cardRarity))
+}
+
+// getStringValue безопасно получает строку из указателя
+func getStringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

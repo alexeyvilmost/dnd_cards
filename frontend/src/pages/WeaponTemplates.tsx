@@ -61,8 +61,13 @@ const WeaponTemplates: React.FC = () => {
       weight: template.weight.toString(),
       bonus_type: 'damage',
       bonus_value: template.damage,
-      image_path: template.image_path,
-      properties: template.properties.join(',')
+      image_url: template.image_cloudinary_url || template.image_path || '',
+      properties: template.properties.join(','),
+      // Добавляем новые поля
+      author: 'Admin',
+      source: 'Player\'s Handbook',
+      type: 'weapon',
+      tags: template.name + ',Оружие'
     });
     navigate(`/create?${params.toString()}`);
   };

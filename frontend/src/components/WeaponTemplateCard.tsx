@@ -54,7 +54,7 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
 
   // Функция форматирования веса
   const formatWeight = (weight: number): string => {
-    return `${weight} фнт.`;
+    return `${weight}`;
   };
 
   // Функция для получения сокращенного названия бонуса
@@ -101,13 +101,7 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
 
   // Функция для определения размера шрифта описания
   const getDescriptionFontSize = (description: string): string => {
-    if (!description) return 'text-xs';
-    
-    const length = description.length;
-    // Для шаблонов описания теперь короткие, используем стандартные размеры
-    if (length > 35) return 'text-[10px]';
-    if (length > 25) return 'text-[11px]';
-    return 'text-xs';
+    return 'text-sm';
   };
 
   const description = generateDescription(template);
@@ -115,14 +109,14 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
   return (
     <div 
       ref={cardRef}
-      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor()} border-4 ${className} cursor-pointer transition-all duration-300 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl group ${getRarityGlowColor()}`}
+      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor()} border-4 ${className} cursor-pointer transition-all duration-300 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl group ${getRarityGlowColor()} flex flex-col`}
       onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={tiltStyle}
     >
       {/* Заголовок */}
-      <div className="p-1 text-center border-b border-gray-200">
+      <div className="px-1 py-0.5 text-center">
         <h3 className={getTitleClass()}>
           {template.name}
         </h3>
@@ -132,11 +126,11 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
       </div>
 
       {/* Изображение - без отступов */}
-      <div className="flex items-center justify-center min-h-[64px]">
+      <div className="flex items-center justify-center h-36">
         <img
-          src={template.image_path}
+          src={template.image_cloudinary_url || template.image_path || '/default_image.png'}
           alt={template.name}
-          className="max-w-[80%] max-h-[80%] object-contain rounded"
+          className="w-full h-full object-contain rounded"
           onError={(e) => {
             // Если изображение не загружается, заменяем на дефолтное
             const target = e.target as HTMLImageElement;
@@ -146,13 +140,14 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
       </div>
 
       {/* Описание */}
-      <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
+      <div className="px-2 pt-0 pb-8 bg-gray-50 flex-1 min-h-[60px] relative overflow-hidden">
         <div className="w-full">
           <p 
             className={`text-gray-700 leading-relaxed font-fantasy`}
             style={{ 
               fontSize: template.description_font_size ? `${template.description_font_size}px` : 
-                      getDescriptionFontSize(description)
+                      getDescriptionFontSize(description) === 'text-sm' ? '14px' : 
+                      getDescriptionFontSize(description).replace('text-[', '').replace('px]', 'px')
             }}
           >
             {description}
@@ -160,12 +155,12 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
         </div>
       </div>
 
-      {/* Вес, цена, бонусы и номер карточки - абсолютно позиционированные */}
-      <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
+      {/* Вес, цена, бонусы и номер карточки - приклеены к низу */}
+      <div className="flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200 p-1">
         <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1">
             <span className="text-[10px] text-gray-900 font-fantasy font-medium">
-              {template.weight}
+              {formatWeight(template.weight)}
             </span>
             <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
           </div>

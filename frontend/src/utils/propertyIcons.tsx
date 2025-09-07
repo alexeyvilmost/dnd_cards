@@ -18,9 +18,9 @@ export const PROPERTY_ICONS: Record<string, string> = {
 
 // Функция для определения, когда показывать иконки вместо текста
 export const shouldShowIcons = (properties: string[], isExtended: boolean = false): boolean => {
-  // Для обычных карточек - если больше 3 свойств
-  // Для расширенных карточек - если больше 4 свойств
-  const maxProperties = isExtended ? 4 : 3;
+  // Для обычных карточек - если больше 2 свойств
+  // Для расширенных карточек - если больше 3 свойств
+  const maxProperties = isExtended ? 3 : 2;
   return properties.length > maxProperties;
 };
 
@@ -57,18 +57,32 @@ export const renderProperties = (properties: string[], isExtended: boolean = fal
   // Определяем, нужно ли показывать иконки
   const shouldUseIcons = shouldShowIcons(cleanProperties, isExtended);
   
-  // Если только одно свойство или не нужно показывать иконки, показываем как текст
-  if (cleanProperties.length === 1 || !shouldUseIcons) {
-    return (
-      <div className="flex items-center justify-center space-x-1 w-full">
-        {cleanProperties.map((property, index) => (
-          <span key={index} className="text-center font-fantasy text-xs">
-            {getPropertyLabel(property)}
-            {index < cleanProperties.length - 1 && <span className="mx-1">•</span>}
-          </span>
-        ))}
-      </div>
-    );
+  // Если не нужно показывать иконки, показываем как текст
+  if (!shouldUseIcons) {
+    if (isExtended) {
+      // Для расширенных карт - по одной на строку без точек
+      return (
+        <div className="flex flex-col items-center justify-center space-y-1 w-full">
+          {cleanProperties.map((property, index) => (
+            <span key={index} className="text-center font-fantasy text-xs">
+              {getPropertyLabel(property)}
+            </span>
+          ))}
+        </div>
+      );
+    } else {
+      // Для обычных карт - в одну строку с точками
+      return (
+        <div className="flex items-center justify-center space-x-1 w-full">
+          {cleanProperties.map((property, index) => (
+            <span key={index} className="text-center font-fantasy text-xs">
+              {getPropertyLabel(property)}
+              {index < cleanProperties.length - 1 && <span className="mx-1">•</span>}
+            </span>
+          ))}
+        </div>
+      );
+    }
   }
   
   // Если несколько свойств и нужно показывать иконки

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { X, Edit, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card } from '../types';
+import { getItemTypeLabel } from '../constants/itemTypes';
 import CardPreview from './CardPreview';
 
 interface CardDetailModalProps {
@@ -110,18 +111,18 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl max-w-6xl w-full h-full max-h-[90vh] overflow-hidden"
+        className={`relative flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl w-full h-full max-h-[90vh] overflow-hidden ${card.is_extended ? 'max-w-7xl' : 'max-w-6xl'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Левая часть: Увеличенная карточка */}
-        <div className="flex-shrink-0 flex items-center justify-center p-4 lg:w-1/2">
+        <div className={`flex-shrink-0 flex items-center justify-center p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
           <div className="transform scale-[1.5] origin-center">
             <CardPreview card={card} />
           </div>
         </div>
 
         {/* Правая часть: Детальная информация */}
-        <div className="flex-grow p-6 overflow-y-auto lg:w-1/2 space-y-4">
+        <div className={`flex-grow p-6 overflow-y-auto space-y-4 flex flex-col justify-center ${card.is_extended ? 'lg:w-1/3' : 'lg:w-1/2'}`}>
           <div className="flex justify-between items-start">
             <h2 className="font-bold text-3xl font-fantasy">{card.name}</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -149,6 +150,9 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
           <div className="text-sm space-y-1">
             <p><strong>Редкость:</strong> {getRarityLabel(card.rarity)}</p>
             <p><strong>Номер:</strong> {card.card_number}</p>
+            {card.author && <p><strong>Автор:</strong> {card.author}</p>}
+            {card.source && <p><strong>Источник:</strong> {card.source}</p>}
+            {card.type && <p><strong>Тип:</strong> {getItemTypeLabel(card.type)}</p>}
             {card.price && <p><strong>Цена:</strong> {formatPrice(card.price)} золота</p>}
             {card.weight && <p><strong>Вес:</strong> {formatWeight(card.weight)}</p>}
             {card.bonus_type && card.bonus_value && (
@@ -156,6 +160,15 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             )}
             {card.properties && card.properties.length > 0 && (
               <p><strong>Свойства:</strong> {getPropertyLabels(card.properties).join(', ')}</p>
+            )}
+            {card.tags && card.tags.length > 0 && (
+              <p><strong>Теги:</strong> {card.tags.join(', ')}</p>
+            )}
+            {card.attunement && (
+              <div>
+                <p><strong>Настройка:</strong></p>
+                <p className="text-xs text-gray-300 mt-1">{card.attunement}</p>
+              </div>
             )}
           </div>
 

@@ -83,12 +83,18 @@ export const imagesApi = {
   generateImage: async (
     entityType: 'card' | 'weapon_template',
     entityId: string,
-    prompt?: string
+    prompt?: string,
+    entityData?: {
+      name?: string;
+      description?: string;
+      rarity?: string;
+    }
   ): Promise<ImageGenerationResponse> => {
     const response = await apiClient.post<ImageGenerationResponse>('/images/generate', {
       entity_type: entityType,
       entity_id: entityId,
       prompt: prompt || '',
+      entity_data: entityData,
     });
     return response.data;
   },

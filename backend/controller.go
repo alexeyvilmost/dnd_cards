@@ -190,6 +190,14 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DefenseType:         req.DefenseType,
 		DescriptionFontSize: req.DescriptionFontSize,
 		IsExtended:          req.IsExtended,
+		Author:              req.Author,
+		Source:              req.Source,
+		Type:                req.Type,
+		RelatedCards:        req.RelatedCards,
+		RelatedActions:      req.RelatedActions,
+		RelatedEffects:      req.RelatedEffects,
+		Attunement:          req.Attunement,
+		Tags:                req.Tags,
 		CardNumber:          cardNumber,
 	}
 
@@ -309,6 +317,30 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.IsExtended != nil {
 		card.IsExtended = req.IsExtended
+	}
+	if req.Author != "" {
+		card.Author = req.Author
+	}
+	if req.Source != nil {
+		card.Source = req.Source
+	}
+	if req.Type != nil {
+		card.Type = req.Type
+	}
+	if req.RelatedCards != nil {
+		card.RelatedCards = req.RelatedCards
+	}
+	if req.RelatedActions != nil {
+		card.RelatedActions = req.RelatedActions
+	}
+	if req.RelatedEffects != nil {
+		card.RelatedEffects = req.RelatedEffects
+	}
+	if req.Attunement != nil {
+		card.Attunement = req.Attunement
+	}
+	if req.Tags != nil {
+		card.Tags = req.Tags
 	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
@@ -499,16 +531,17 @@ func (cc *CardController) GetWeaponTemplates(c *gin.Context) {
 		}
 
 		responses = append(responses, WeaponTemplateResponse{
-			ID:         template.ID,
-			Name:       template.Name,
-			NameEn:     template.NameEn,
-			Category:   template.Category,
-			DamageType: template.DamageType,
-			Damage:     template.Damage,
-			Weight:     template.Weight,
-			Price:      template.Price,
-			Properties: properties,
-			ImagePath:  template.ImagePath,
+			ID:                 template.ID,
+			Name:               template.Name,
+			NameEn:             template.NameEn,
+			Category:           template.Category,
+			DamageType:         template.DamageType,
+			Damage:             template.Damage,
+			Weight:             template.Weight,
+			Price:              template.Price,
+			Properties:         properties,
+			ImagePath:          template.ImagePath,
+			ImageCloudinaryURL: template.ImageCloudinaryURL,
 		})
 	}
 
@@ -531,6 +564,62 @@ func (cc *CardController) GetWeaponTemplate(c *gin.Context) {
 	}
 
 	response := WeaponTemplateResponse{
+		ID:                 template.ID,
+		Name:               template.Name,
+		NameEn:             template.NameEn,
+		Category:           template.Category,
+		DamageType:         template.DamageType,
+		Damage:             template.Damage,
+		Weight:             template.Weight,
+		Price:              template.Price,
+		Properties:         properties,
+		ImagePath:          template.ImagePath,
+		ImageCloudinaryURL: template.ImageCloudinaryURL,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// CreateWeaponTemplate - создание нового шаблона оружия
+func (cc *CardController) CreateWeaponTemplate(c *gin.Context) {
+	var req CreateWeaponTemplateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса: " + err.Error()})
+		return
+	}
+
+	// Создаем новый шаблон
+	template := WeaponTemplate{
+		Name:           req.Name,
+		NameEn:         req.NameEn,
+		Category:       req.Category,
+		DamageType:     req.DamageType,
+		Damage:         req.Damage,
+		Weight:         req.Weight,
+		Price:          int(req.Price * 100), // Конвертируем в медные монеты
+		Properties:     Properties(req.Properties),
+		Author:         req.Author,
+		Source:         &req.Source,
+		Type:           &req.Type,
+		RelatedCards:   (*Properties)(&req.RelatedCards),
+		RelatedActions: (*Properties)(&req.RelatedActions),
+		RelatedEffects: (*Properties)(&req.RelatedEffects),
+		Attunement:     &req.Attunement,
+		Tags:           (*Properties)(&req.Tags),
+	}
+
+	if err := cc.db.Create(&template).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания шаблона"})
+		return
+	}
+
+	// Возвращаем созданный шаблон
+	properties := []string{}
+	if template.Properties != nil {
+		properties = []string(template.Properties)
+	}
+
+	response := WeaponTemplateResponse{
 		ID:         template.ID,
 		Name:       template.Name,
 		NameEn:     template.NameEn,
@@ -543,5 +632,5 @@ func (cc *CardController) GetWeaponTemplate(c *gin.Context) {
 		ImagePath:  template.ImagePath,
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusCreated, response)
 }

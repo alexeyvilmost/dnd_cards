@@ -10,6 +10,7 @@ import CardDetailModal from '../components/CardDetailModal';
 const CardLibrary = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<string>('');
@@ -17,30 +18,60 @@ const CardLibrary = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCards, setTotalCards] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   // Загрузка карточек
-  const loadCards = async () => {
+  const loadCards = async (page = 1, append = false) => {
     try {
-      setLoading(true);
-      const params: any = {};
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const params: any = {
+        page,
+        limit: 20
+      };
       
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       if (propertiesFilter) params.properties = propertiesFilter;
       
       const response = await cardsApi.getCards(params);
-      setCards(response.cards);
+      
+      if (append) {
+        setCards(prev => [...prev, ...response.cards]);
+      } else {
+        setCards(response.cards);
+      }
+      
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setHasMore(response.cards.length === 20 && cards.length + response.cards.length < response.total);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки карточек');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    loadCards();
+    setCurrentPage(1);
+    setCards([]);
+    loadCards(1, false);
   }, [search, rarityFilter, propertiesFilter]);
+
+  // Функция для загрузки следующей страницы
+  const loadMoreCards = () => {
+    if (!loadingMore && hasMore) {
+      loadCards(currentPage + 1, true);
+    }
+  };
 
   // Генерация изображения
   const handleGenerateImage = async (cardId: string) => {
@@ -249,20 +280,48 @@ const CardLibrary = () => {
       )}
 
       {!loading && cards.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
-          {cards.map((card) => {
-            const isExtended = card.description && card.description.length > 100;
-            return (
-              <div 
-                key={card.id} 
-                className={`relative group flex justify-center cursor-pointer ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
-                onClick={() => handleCardClick(card)}
+        <>
+          {/* Счетчик карт */}
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {cards.length} из {totalCards} карт
+          </div>
+          
+          {/* Сетка карт */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
+            {cards.map((card) => {
+              const isExtended = Boolean(card.is_extended);
+              return (
+                <div 
+                  key={card.id} 
+                  className={`relative group flex justify-center cursor-pointer ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                  onClick={() => handleCardClick(card)}
+                >
+                  <CardPreview card={card} />
+                </div>
+            );
+            })}
+          </div>
+          
+          {/* Кнопка "Загрузить еще" */}
+          {hasMore && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={loadMoreCards}
+                disabled={loadingMore}
+                className="btn-primary px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CardPreview card={card} />
-              </div>
-          );
-          })}
-        </div>
+                {loadingMore ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Загрузка...
+                  </div>
+                ) : (
+                  'Загрузить еще'
+                )}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Модальное окно с детальной информацией */}

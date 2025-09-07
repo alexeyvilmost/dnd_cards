@@ -9,6 +9,8 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"dnd-cards-backend/migrations"
 )
 
 func main() {
@@ -30,10 +32,18 @@ func main() {
 		log.Fatal("Ошибка подключения к базе данных:", err)
 	}
 
-	// Автомиграция моделей (отключена, так как таблицы созданы в Supabase)
-	// if err := db.AutoMigrate(&Card{}); err != nil {
-	// 	log.Fatal("Ошибка миграции:", err)
-	// }
+	// Получаем *sql.DB для миграций
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("Ошибка получения sql.DB:", err)
+	}
+
+	// Запускаем миграции
+	migrator := migrations.NewMigrator(sqlDB)
+	if err := migrator.Run(); err != nil {
+		log.Fatal("Ошибка выполнения миграций:", err)
+	}
+	log.Println("Миграции выполнены успешно")
 
 	// Настройка Gin
 	r := gin.Default()
@@ -60,6 +70,7 @@ func main() {
 	groupController := NewGroupController(db)
 	inventoryController := NewInventoryController(db)
 	characterController := NewCharacterController(db)
+	imageLibraryController := NewImageLibraryController(db)
 
 	// Инициализация сервисов для работы с изображениями
 	yandexStorage, err := NewYandexStorageService()
@@ -90,6 +101,7 @@ func main() {
 		// Шаблоны оружия (публичные)
 		api.GET("/weapon-templates", cardController.GetWeaponTemplates)
 		api.GET("/weapon-templates/:id", cardController.GetWeaponTemplate)
+		api.POST("/weapon-templates", AuthMiddleware(authService), cardController.CreateWeaponTemplate)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")
@@ -130,6 +142,13 @@ func main() {
 			protected.DELETE("/images/:entity_type/:entity_id", imageController.DeleteImage)
 			protected.POST("/images/setup-cors", imageController.SetupCORS)
 			protected.GET("/images/status", imageController.GetStatus)
+
+			// Библиотека изображений
+			protected.GET("/image-library", imageLibraryController.GetImageLibrary)
+			protected.POST("/image-library", imageLibraryController.AddToLibrary)
+			protected.PUT("/image-library/:id", imageLibraryController.UpdateImageLibrary)
+			protected.DELETE("/image-library/:id", imageLibraryController.DeleteFromLibrary)
+			protected.GET("/image-library/rarities", imageLibraryController.GetRarities)
 		}
 	}
 

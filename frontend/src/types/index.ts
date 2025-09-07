@@ -2,6 +2,7 @@ export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact';
 export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
+export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'none';
 
 export interface Card {
   id: string;
@@ -19,6 +20,14 @@ export interface Card {
   defense_type?: string | null;
   description_font_size?: number | null;
   is_extended?: boolean | null;
+  author?: string;
+  source?: string | null;
+  type?: ItemType | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  related_effects?: Properties | null;
+  attunement?: string | null;
+  tags?: Properties | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +45,14 @@ export interface CreateCardRequest {
   defense_type?: string | null;
   description_font_size?: number | null;
   is_extended?: boolean | null;
+  author?: string;
+  source?: string | null;
+  type?: ItemType | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  related_effects?: Properties | null;
+  attunement?: string | null;
+  tags?: Properties | null;
 }
 
 export interface UpdateCardRequest {
@@ -51,6 +68,14 @@ export interface UpdateCardRequest {
   defense_type?: string | null;
   description_font_size?: number | null;
   is_extended?: boolean | null;
+  author?: string;
+  source?: string | null;
+  type?: ItemType | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  related_effects?: Properties | null;
+  attunement?: string | null;
+  tags?: Properties | null;
 }
 
 export interface CardsResponse {
@@ -71,6 +96,20 @@ export interface ExportCardsRequest {
 
 export interface ApiError {
   error: string;
+}
+
+export interface WeaponTemplate {
+  id: number;
+  name: string;
+  name_en: string;
+  category: string;
+  damage_type: string;
+  damage: string;
+  weight: number;
+  price: number;
+  properties: string[];
+  image_path: string;
+  image_cloudinary_url?: string;
 }
 
 export const RARITY_OPTIONS = [

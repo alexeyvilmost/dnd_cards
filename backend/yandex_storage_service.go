@@ -154,7 +154,7 @@ func (s *YandexStorageService) GetImageURL(cloudinaryID string) string {
 	if cloudinaryID == "" {
 		return ""
 	}
-	return fmt.Sprintf("https://%s.storage.yandexcloud.net/%s", s.bucket, cloudinaryID)
+	return fmt.Sprintf("https://storage.yandexcloud.net/%s/cards/%s", s.bucket, cloudinaryID)
 }
 
 // SetupCORS настраивает CORS для бакета
@@ -215,9 +215,10 @@ type ImageUploadResponse struct {
 
 // ImageGenerationRequest структура для запроса генерации изображения
 type ImageGenerationRequest struct {
-	EntityType string `json:"entity_type" binding:"required"` // "card" или "weapon_template"
-	EntityID   string `json:"entity_id" binding:"required"`   // ID карты или шаблона оружия
-	Prompt     string `json:"prompt"`                         // Промпт для генерации (опционально)
+	EntityType string                 `json:"entity_type" binding:"required"` // "card" или "weapon_template"
+	EntityID   string                 `json:"entity_id" binding:"required"`   // ID карты или шаблона оружия
+	Prompt     string                 `json:"prompt"`                         // Промпт для генерации (опционально)
+	EntityData map[string]interface{} `json:"entity_data"`                    // Данные сущности (название, описание, редкость)
 }
 
 // ImageGenerationResponse структура для ответа генерации изображения

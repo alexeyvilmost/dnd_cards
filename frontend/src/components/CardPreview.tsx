@@ -8,9 +8,10 @@ import { getRarityColor } from '../utils/rarityColors';
 interface CardPreviewProps {
   card: Card;
   className?: string;
+  disableHover?: boolean;
 }
 
-const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
+const CardPreview = ({ card, className = '', disableHover = false }: CardPreviewProps) => {
   console.log('CardPreview component rendered for card:', card.name);
   const rarityOption = RARITY_OPTIONS.find(option => option.value === card.rarity);
   // Для совместимости с одним свойством и массивом свойств
@@ -22,14 +23,23 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
     return option?.label || prop;
   }).join(', ');
   const isLarge = className.includes('card-preview-large');
-  const isExtended = card.is_extended !== null ? card.is_extended : (card.description && card.description.length > 100);
+  console.log('CardPreview - card.is_extended:', card.is_extended, 'type:', typeof card.is_extended);
+  const isExtended = Boolean(card.is_extended);
   const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt({ isLarge });
 
   // Функция для определения размера шрифта заголовка
   const getTitleFontSize = (title: string) => {
-    if (title.length > 20) return 'text-xs';
-    if (title.length > 15) return 'text-sm';
-    return 'text-sm';
+    if (isExtended) {
+      // Для расширенных карт используем больший шрифт
+      if (title.length > 20) return 'text-lg';
+      if (title.length > 15) return 'text-xl';
+      return 'text-xl';
+    } else {
+      // Для обычных карт используем стандартный размер
+      if (title.length > 20) return 'text-xs';
+      if (title.length > 15) return 'text-sm';
+      return 'text-sm';
+    }
   };
 
   const getBorderColor = (rarity: string) => {
@@ -96,39 +106,12 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
 
   // Функция форматирования веса
   const formatWeight = (weight: number): string => {
-    return `${weight} фнт.`;
+    return `${weight}`;
   };
 
   // Функция для определения размера шрифта описания
   const getDescriptionFontSize = (description: string): string => {
-    if (!description) return 'text-xs';
-    
-    const length = description.length;
-    const hasBonus = card.bonus_type && card.bonus_value;
-    
-    // Для расширенных карточек используем более точные ограничения
-    if (isExtended) {
-      if (length > 300) return 'text-[7px]';
-      if (length > 250) return 'text-[8px]';
-      if (length > 200) return 'text-[9px]';
-      if (length > 150) return 'text-[10px]';
-      if (length > 100) return 'text-[11px]';
-      return 'text-xs';
-    }
-    
-    // Для стандартных карточек
-    if (hasBonus) {
-      if (length > 50) return 'text-[8px]';
-      if (length > 35) return 'text-[9px]';
-      if (length > 25) return 'text-[10px]';
-      return 'text-xs';
-    }
-    
-    // Если нет бонуса, используем стандартные размеры
-    if (length > 70) return 'text-[9px]';
-    if (length > 50) return 'text-[10px]';
-    if (length > 35) return 'text-[11px]';
-    return 'text-xs';
+    return 'text-sm';
   };
 
   // Функция для получения сокращенного названия бонуса
@@ -197,7 +180,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
   return (
     <div 
       ref={cardRef}
-      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-96' : ''} ${className.includes('card-preview-large') ? '' : 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl'}`}
+      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={tiltStyle}
@@ -210,19 +193,19 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
             {/* Левая половина - заголовок, изображение, свойства и бонусы */}
             <div className="w-1/2 flex flex-col">
               {/* Заголовок только над левой половиной */}
-              <div className="p-1 text-center border-b border-gray-200">
+              <div className="px-1 py-0.5 text-center">
                 <h3 className={getTitleClass(card.rarity, card.name)}>
                   {card.name}
                 </h3>
               </div>
 
-              {/* Изображение - увеличенное */}
-              <div className="flex items-center justify-center min-h-[120px] w-full">
+              {/* Изображение - стандартный размер */}
+              <div className="flex items-center justify-center w-full h-36">
                 {card.image_url && card.image_url.trim() !== '' ? (
                   <img
                     src={card.image_url}
                     alt={card.name}
-                    className="max-w-[85%] max-h-[85%] object-contain rounded"
+                    className="w-full h-full object-contain rounded"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = '/default_image.png';
@@ -232,13 +215,13 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
                   <img
                     src="/default_image.png"
                     alt="Default D&D"
-                    className="max-w-[85%] max-h-[85%] object-contain rounded"
+                    className="w-full h-full object-contain rounded"
                   />
                 )}
               </div>
 
               {/* Свойства */}
-              <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 min-h-[60px] relative overflow-hidden">
+              <div className="px-2 pt-0 pb-2 bg-gray-50 flex-1 min-h-[60px] relative overflow-hidden">
                 <div className="w-full">
                   <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
                     {(() => {
@@ -258,12 +241,8 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
                   className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap flex-1`} 
                   style={{ 
                     fontSize: card.description_font_size ? `${card.description_font_size}px` : 
-                            card.description && card.description.length > 700 ? '8px' : 
-                            card.description && card.description.length > 500 ? '9px' : 
-                            card.description && card.description.length > 400 ? '10px' : 
-                            card.description && card.description.length > 300 ? '11px' : 
-                            card.description && card.description.length > 200 ? '12px' : 
-                            card.description && card.description.length > 100 ? '13px' : '14px'
+                            getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
+                            getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px')
                   }}
                 >
                   {card.description || 'Нет описания'}
@@ -316,7 +295,7 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
         // Стандартный формат
         <>
           {/* Заголовок */}
-          <div className="p-1 text-center border-b border-gray-200">
+          <div className="px-1 py-0.5 text-center">
             <h3 className={getTitleClass(card.rarity, card.name)}>
               {card.name}
             </h3>
@@ -329,12 +308,12 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
           </div>
 
           {/* Изображение - без отступов */}
-          <div className="flex items-center justify-center min-h-[64px]">
+          <div className="flex items-center justify-center h-36">
             {card.image_url && card.image_url.trim() !== '' ? (
               <img
                 src={card.image_url}
                 alt={card.name}
-                className="max-w-[80%] max-h-[80%] object-contain rounded"
+                className="w-full h-full object-contain rounded"
                 onError={(e) => {
                   // Если изображение не загружается, заменяем на дефолтное
                   const target = e.target as HTMLImageElement;
@@ -345,19 +324,20 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
               <img
                 src="/default_image.png"
                 alt="Default D&D"
-                className="max-w-[80%] max-h-[80%] object-contain rounded"
+                className="w-full h-full object-contain rounded"
               />
             )}
           </div>
 
           {/* Описание */}
-          <div className="p-2 bg-gray-50 border-t border-gray-200 flex-1 relative overflow-hidden flex">
+          <div className="px-1 pt-0 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex">
             <div className="w-full flex flex-col">
               <p 
-                className={`text-gray-700 leading-relaxed font-fantasy whitespace-pre-wrap flex-1`}
+                className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap flex-1`}
                 style={{ 
                   fontSize: card.description_font_size ? `${card.description_font_size}px` : 
-                          getDescriptionFontSize(card.description || '')
+                          getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
+                          getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px')
                 }}
               >
                 {card.description || 'Нет описания'}
@@ -365,8 +345,8 @@ const CardPreview = ({ card, className = '' }: CardPreviewProps) => {
             </div>
           </div>
 
-          {/* Вес, цена, бонусы и номер карточки - абсолютно позиционированные */}
-          <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
+          {/* Вес, цена, бонусы и номер карточки - приклеены к низу */}
+          <div className="flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200 p-1">
             <div className="flex items-center space-x-2">
               {card.weight && (
                 <div className="flex items-center space-x-1">

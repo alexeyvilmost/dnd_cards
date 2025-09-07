@@ -19,6 +19,7 @@ services:
   #     - ./database/add_foreign_keys.sql:/docker-entrypoint-initdb.d/03_add_foreign_keys.sql
   #     - ./database/migration_characters.sql:/docker-entrypoint-initdb.d/04_migration_characters.sql
   #     - ./database/migration_images.sql:/docker-entrypoint-initdb.d/05_migration_images.sql
+  #     - ./database/migration_is_extended.sql:/docker-entrypoint-initdb.d/06_migration_is_extended.sql
   #   networks:
   #     - dnd_cards_network
 
@@ -69,8 +70,8 @@ services:
       - dnd_cards_network
     restart: unless-stopped
 
-volumes:
-  postgres_data:
+# volumes:
+#   postgres_data:  # Раскомментируйте для локальной разработки
 
 networks:
   dnd_cards_network:
