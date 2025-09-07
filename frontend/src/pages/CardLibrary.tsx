@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Plus, Package, Users, User, Sword } from 'lucide-react';
+import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import CardDetailModal from '../components/CardDetailModal';
+import { getRarityColor } from '../utils/rarityColors';
 
 const CardLibrary = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -21,6 +22,8 @@ const CardLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
 
   // Загрузка карточек
   const loadCards = async (page = 1, append = false) => {
@@ -33,7 +36,7 @@ const CardLibrary = () => {
       
       const params: any = {
         page,
-        limit: 20
+        limit: 50
       };
       
       if (search) params.search = search;
@@ -50,7 +53,7 @@ const CardLibrary = () => {
       
       setTotalCards(response.total);
       setCurrentPage(page);
-      setHasMore(response.cards.length === 20 && cards.length + response.cards.length < response.total);
+      setHasMore(response.cards.length === 50 && cards.length + response.cards.length < response.total);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки карточек');
@@ -201,6 +204,32 @@ const CardLibrary = () => {
             </div>
           </div>
 
+          {/* Переключатель режимов отображения */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg border ${
+                viewMode === 'grid' 
+                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+              title="Сетка"
+            >
+              <Grid3X3 size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg border ${
+                viewMode === 'list' 
+                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+              title="Список"
+            >
+              <List size={18} />
+            </button>
+          </div>
+
           {/* Кнопка фильтров */}
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -286,21 +315,120 @@ const CardLibrary = () => {
             Показано: {cards.length} из {totalCards} карт
           </div>
           
-          {/* Сетка карт */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
-            {cards.map((card) => {
-              const isExtended = Boolean(card.is_extended);
-              return (
-                <div 
-                  key={card.id} 
-                  className={`relative group flex justify-center cursor-pointer ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
-                  onClick={() => handleCardClick(card)}
-                >
-                  <CardPreview card={card} />
+          {/* Отображение в зависимости от режима */}
+          {viewMode === 'grid' ? (
+            /* Сетка карт */
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
+              {cards.map((card) => {
+                const isExtended = Boolean(card.is_extended);
+                return (
+                  <div 
+                    key={card.id} 
+                    className={`relative group flex justify-center cursor-pointer ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                    onClick={() => handleCardClick(card)}
+                  >
+                    <CardPreview card={card} />
+                  </div>
+              );
+              })}
+            </div>
+          ) : (
+            /* Список названий в три колонки */
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {cards.map((card) => (
+                  <div
+                    key={card.id}
+                    className="relative"
+                    onMouseEnter={() => setHoveredCard(card)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    <button
+                      onClick={() => handleCardClick(card)}
+                      className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {/* Маленькая картинка слева */}
+                        <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 overflow-hidden">
+                          {card.image_url && card.image_url.trim() !== '' ? (
+                            <img
+                              src={card.image_url}
+                              alt={card.name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/default_image.png';
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src="/default_image.png"
+                              alt="Default D&D"
+                              className="w-full h-full object-contain"
+                            />
+                          )}
+                        </div>
+                        
+                        {/* Текст справа */}
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-medium truncate ${getRarityColor(card.rarity)}`}>
+                            {card.name}
+                          </div>
+                          
+                          {/* Нижняя панель с весом, ценой, номером карты */}
+                          <div className="flex items-center justify-between mt-1 text-xs">
+                            <div className="flex items-center space-x-2">
+                              {card.weight && (
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-gray-900 font-medium">
+                                    {card.weight}
+                                  </span>
+                                  <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
+                                </div>
+                              )}
+                              {card.price && (
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-yellow-600 font-bold">
+                                    {card.price >= 1000 ? `${(card.price / 1000).toFixed(1)}K` : card.price}
+                                  </span>
+                                  <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+                                </div>
+                              )}
+                              {card.bonus_type && card.bonus_value && (
+                                <div className="flex items-center space-x-0.5">
+                                  <span className="text-gray-900 font-medium">
+                                    {card.bonus_value.toLowerCase() === 'advantage' ? 'ADV' : card.bonus_value}
+                                  </span>
+                                  {card.bonus_type === 'damage' && card.damage_type && (
+                                    <img src={`/icons/${card.damage_type}.png`} alt={card.damage_type} className="w-3 h-3" />
+                                  )}
+                                  {card.bonus_type === 'defense' && card.defense_type && (
+                                    <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-gray-400 font-mono">
+                              {card.card_number}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Показ карточки при наведении */}
+              {hoveredCard && (
+                <div className="fixed top-4 right-4 z-50 pointer-events-none">
+                  <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
+                    <CardPreview card={hoveredCard} />
+                  </div>
                 </div>
-            );
-            })}
-          </div>
+              )}
+            </div>
+          )}
           
           {/* Кнопка "Загрузить еще" */}
           {hasMore && (
