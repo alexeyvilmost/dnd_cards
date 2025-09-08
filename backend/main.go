@@ -98,11 +98,6 @@ func main() {
 		api.POST("/cards/generate-image", AuthMiddleware(authService), cardController.GenerateImage)
 		api.POST("/cards/export", AuthMiddleware(authService), cardController.ExportCards)
 
-		// Шаблоны оружия (публичные)
-		api.GET("/weapon-templates", cardController.GetWeaponTemplates)
-		api.GET("/weapon-templates/:id", cardController.GetWeaponTemplate)
-		api.POST("/weapon-templates", AuthMiddleware(authService), cardController.CreateWeaponTemplate)
-
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")
 		protected.Use(AuthMiddleware(authService))

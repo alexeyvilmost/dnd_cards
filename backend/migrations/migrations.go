@@ -20,6 +20,30 @@ func GetAllMigrations() []Migration {
 			Up:          addExtendedFields,
 			Down:        removeExtendedFields,
 		},
+		{
+			Version:     "003_add_armor_support",
+			Description: "Add armor support to weapon_templates table",
+			Up:          addArmorSupport,
+			Down:        removeArmorSupport,
+		},
+		{
+			Version:     "004_add_is_template_field",
+			Description: "Add is_template field to cards table",
+			Up:          addIsTemplateField,
+			Down:        removeIsTemplateField,
+		},
+		{
+			Version:     "005_remove_weapon_templates_table",
+			Description: "Remove weapon_templates table as templates are now handled by cards table",
+			Up:          removeWeaponTemplatesTable,
+			Down:        restoreWeaponTemplatesTable,
+		},
+		{
+			Version:     "006_add_detailed_description",
+			Description: "Add detailed_description field to cards table",
+			Up:          addDetailedDescriptionField,
+			Down:        removeDetailedDescriptionField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -205,5 +229,220 @@ func removeExtendedFields(db *sql.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// addArmorSupport добавляет поддержку доспехов в weapon_templates
+func addArmorSupport(db *sql.DB) error {
+	// Обновляем ограничения для категорий, добавляя доспехи
+	queries := []string{
+		// Удаляем старое ограничение категорий
+		"ALTER TABLE weapon_templates DROP CONSTRAINT IF EXISTS weapon_templates_category_check",
+		// Добавляем новое ограничение с поддержкой доспехов
+		"ALTER TABLE weapon_templates ADD CONSTRAINT weapon_templates_category_check CHECK (category IN ('simple_melee', 'martial_melee', 'simple_ranged', 'martial_ranged', 'light_armor', 'medium_armor', 'heavy_armor', 'shield'))",
+
+		// Удаляем старое ограничение damage_type
+		"ALTER TABLE weapon_templates DROP CONSTRAINT IF EXISTS weapon_templates_damage_type_check",
+		// Добавляем новое ограничение с поддержкой defense
+		"ALTER TABLE weapon_templates ADD CONSTRAINT weapon_templates_damage_type_check CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning', 'defense'))",
+
+		// Добавляем колонку defense_type для доспехов
+		"ALTER TABLE weapon_templates ADD COLUMN IF NOT EXISTS defense_type VARCHAR(20) CHECK (defense_type IN ('cloth', 'light', 'medium', 'heavy') OR defense_type IS NULL)",
+
+		// Добавляем колонку armor_class для класса доспеха
+		"ALTER TABLE weapon_templates ADD COLUMN IF NOT EXISTS armor_class VARCHAR(20)",
+
+		// Добавляем колонку strength_requirement для требований к силе
+		"ALTER TABLE weapon_templates ADD COLUMN IF NOT EXISTS strength_requirement INTEGER",
+
+		// Добавляем колонку stealth_disadvantage для помехи скрытности
+		"ALTER TABLE weapon_templates ADD COLUMN IF NOT EXISTS stealth_disadvantage BOOLEAN DEFAULT FALSE",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute armor support query: %w", err)
+		}
+	}
+
+	// Создаем индексы для новых полей
+	indexQueries := []string{
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_defense_type ON weapon_templates(defense_type)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_armor_class ON weapon_templates(armor_class)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_strength_requirement ON weapon_templates(strength_requirement)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_stealth_disadvantage ON weapon_templates(stealth_disadvantage)",
+	}
+
+	for _, query := range indexQueries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to create armor support index: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// removeArmorSupport удаляет поддержку доспехов из weapon_templates
+func removeArmorSupport(db *sql.DB) error {
+	// Удаляем индексы
+	dropIndexQueries := []string{
+		"DROP INDEX IF EXISTS idx_weapon_templates_defense_type",
+		"DROP INDEX IF EXISTS idx_weapon_templates_armor_class",
+		"DROP INDEX IF EXISTS idx_weapon_templates_strength_requirement",
+		"DROP INDEX IF EXISTS idx_weapon_templates_stealth_disadvantage",
+	}
+
+	for _, query := range dropIndexQueries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to drop armor support index: %w", err)
+		}
+	}
+
+	// Удаляем колонки
+	queries := []string{
+		"ALTER TABLE weapon_templates DROP COLUMN IF EXISTS defense_type",
+		"ALTER TABLE weapon_templates DROP COLUMN IF EXISTS armor_class",
+		"ALTER TABLE weapon_templates DROP COLUMN IF EXISTS strength_requirement",
+		"ALTER TABLE weapon_templates DROP COLUMN IF EXISTS stealth_disadvantage",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to remove armor support column: %w", err)
+		}
+	}
+
+	// Восстанавливаем старые ограничения
+	restoreQueries := []string{
+		"ALTER TABLE weapon_templates DROP CONSTRAINT IF EXISTS weapon_templates_category_check",
+		"ALTER TABLE weapon_templates ADD CONSTRAINT weapon_templates_category_check CHECK (category IN ('simple_melee', 'martial_melee', 'simple_ranged', 'martial_ranged'))",
+		"ALTER TABLE weapon_templates DROP CONSTRAINT IF EXISTS weapon_templates_damage_type_check",
+		"ALTER TABLE weapon_templates ADD CONSTRAINT weapon_templates_damage_type_check CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning'))",
+	}
+
+	for _, query := range restoreQueries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to restore original constraints: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// addIsTemplateField добавляет поле is_template в таблицу cards
+func addIsTemplateField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS is_template VARCHAR(20) DEFAULT 'false'",
+		"ALTER TABLE cards ADD CONSTRAINT cards_is_template_check CHECK (is_template IN ('false', 'template', 'only_template'))",
+		"CREATE INDEX IF NOT EXISTS idx_cards_is_template ON cards(is_template)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeIsTemplateField удаляет поле is_template из таблицы cards
+func removeIsTemplateField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_cards_is_template",
+		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_is_template_check",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS is_template",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeWeaponTemplatesTable удаляет таблицу weapon_templates
+func removeWeaponTemplatesTable(db *sql.DB) error {
+	queries := []string{
+		"DROP TABLE IF EXISTS weapon_templates CASCADE",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// restoreWeaponTemplatesTable восстанавливает таблицу weapon_templates
+func restoreWeaponTemplatesTable(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS weapon_templates (
+			id SERIAL PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			name_en VARCHAR(255) NOT NULL,
+			category VARCHAR(50) NOT NULL CHECK (category IN ('simple_melee', 'martial_melee', 'simple_ranged', 'martial_ranged', 'light_armor', 'medium_armor', 'heavy_armor', 'shield')),
+			damage_type VARCHAR(20) NOT NULL CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning', 'defense')),
+			damage VARCHAR(20) NOT NULL,
+			weight DECIMAL(5,2) NOT NULL,
+			price INTEGER NOT NULL,
+			properties TEXT[] DEFAULT '{}',
+			image_path TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT FALSE,
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			type VARCHAR(50),
+			related_cards TEXT[] DEFAULT '{}',
+			related_actions TEXT[] DEFAULT '{}',
+			related_effects TEXT[] DEFAULT '{}',
+			attunement TEXT,
+			tags TEXT[] DEFAULT '{}',
+			defense_type VARCHAR(20),
+			armor_class VARCHAR(20),
+			strength_requirement INTEGER,
+			stealth_disadvantage BOOLEAN DEFAULT FALSE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_category ON weapon_templates(category)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_damage_type ON weapon_templates(damage_type)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_defense_type ON weapon_templates(defense_type)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_armor_class ON weapon_templates(armor_class)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_strength_requirement ON weapon_templates(strength_requirement)",
+		"CREATE INDEX IF NOT EXISTS idx_weapon_templates_stealth_disadvantage ON weapon_templates(stealth_disadvantage)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// addDetailedDescriptionField добавляет поле detailed_description в таблицу cards
+func addDetailedDescriptionField(db *sql.DB) error {
+	query := `ALTER TABLE cards ADD COLUMN detailed_description TEXT`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to add detailed_description column: %w", err)
+	}
+	return nil
+}
+
+// removeDetailedDescriptionField удаляет поле detailed_description из таблицы cards
+func removeDetailedDescriptionField(db *sql.DB) error {
+	query := `ALTER TABLE cards DROP COLUMN IF EXISTS detailed_description`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to remove detailed_description column: %w", err)
+	}
 	return nil
 }

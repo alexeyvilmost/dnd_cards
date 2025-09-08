@@ -44,6 +44,13 @@ function App() {
             </Layout>
           </ProtectedRoute>
         } />
+        <Route path="/card-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <CardCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/edit/:id" element={
           <ProtectedRoute>
             <Layout>

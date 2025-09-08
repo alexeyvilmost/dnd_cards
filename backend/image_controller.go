@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -278,20 +277,6 @@ func (ic *ImageController) updateEntityImage(entityType, entityID, imageURL, clo
 
 		return ic.db.Model(&Card{}).Where("id = ?", cardID).Updates(updates).Error
 
-	case "weapon_template":
-		templateID, err := strconv.Atoi(entityID)
-		if err != nil {
-			return fmt.Errorf("неверный ID шаблона оружия: %v", err)
-		}
-
-		updates := map[string]interface{}{
-			"image_cloudinary_url": imageURL,
-			"image_cloudinary_id":  cloudinaryID,
-			"image_generated":      isGenerated,
-		}
-
-		return ic.db.Model(&WeaponTemplate{}).Where("id = ?", templateID).Updates(updates).Error
-
 	default:
 		return fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
 	}
@@ -312,19 +297,6 @@ func (ic *ImageController) getEntityImageID(entityType, entityID string) (string
 		}
 
 		return card.ImageCloudinaryID, nil
-
-	case "weapon_template":
-		templateID, err := strconv.Atoi(entityID)
-		if err != nil {
-			return "", fmt.Errorf("неверный ID шаблона оружия: %v", err)
-		}
-
-		var template WeaponTemplate
-		if err := ic.db.Where("id = ?", templateID).First(&template).Error; err != nil {
-			return "", err
-		}
-
-		return template.ImageCloudinaryID, nil
 
 	default:
 		return "", fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
@@ -350,26 +322,6 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 			"description": card.Description,
 			"rarity":      string(card.Rarity),
 			"properties":  card.Properties,
-		}, nil
-
-	case "weapon_template":
-		templateID, err := strconv.Atoi(entityID)
-		if err != nil {
-			return nil, fmt.Errorf("неверный ID шаблона оружия: %v", err)
-		}
-
-		var template WeaponTemplate
-		if err := ic.db.Where("id = ?", templateID).First(&template).Error; err != nil {
-			return nil, err
-		}
-
-		return map[string]interface{}{
-			"name":        template.Name,
-			"name_en":     template.NameEn,
-			"category":    template.Category,
-			"damage_type": template.DamageType,
-			"damage":      template.Damage,
-			"properties":  template.Properties,
 		}, nil
 
 	default:
@@ -407,10 +359,6 @@ func (ic *ImageController) createImagePrompt(userPrompt string, entityInfo map[s
 // logImageGeneration логирует генерацию изображения
 func (ic *ImageController) logImageGeneration(entityType, entityID, cloudinaryID, imageURL, prompt, model string, generationTime int) {
 	entityUUID, _ := uuid.Parse(entityID)
-	if entityType == "weapon_template" {
-		// Для weapon_template создаем UUID из ID
-		entityUUID = uuid.New()
-	}
 
 	log := ImageGenerationLog{
 		EntityType:       entityType,

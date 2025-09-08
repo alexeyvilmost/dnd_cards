@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid3X3, List } from 'lucide-react';
-import { weaponTemplatesApi } from '../services/weaponTemplatesApi';
-import { WeaponTemplate, WEAPON_CATEGORIES } from '../types';
-import WeaponTemplateCard from '../components/WeaponTemplateCard';
+import { cardsApi } from '../api/client';
+import { Card } from '../types';
+import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
+import CardPreview from '../components/CardPreview';
+import { getRarityColor } from '../utils/rarityColors';
 
 const WeaponTemplates: React.FC = () => {
-  const [templates, setTemplates] = useState<WeaponTemplate[]>([]);
-  const [filteredTemplates, setFilteredTemplates] = useState<WeaponTemplate[]>([]);
+  const [templates, setTemplates] = useState<Card[]>([]);
+  const [filteredTemplates, setFilteredTemplates] = useState<Card[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [hoveredTemplate, setHoveredTemplate] = useState<WeaponTemplate | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [hoveredTemplate, setHoveredTemplate] = useState<Card | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,8 +28,12 @@ const WeaponTemplates: React.FC = () => {
   const loadTemplates = async () => {
     try {
       setLoading(true);
-      const data = await weaponTemplatesApi.getWeaponTemplates();
-      setTemplates(data);
+      const response = await cardsApi.getCards({
+        // Показываем только карты, которые являются шаблонами
+        template_only: true,
+        limit: 100
+      });
+      setTemplates(response.cards);
     } catch (error) {
       console.error('Ошибка загрузки шаблонов:', error);
     } finally {
@@ -38,79 +44,53 @@ const WeaponTemplates: React.FC = () => {
   const filterTemplates = () => {
     let filtered = templates;
 
-    // Фильтр по категории
+    // Фильтр по типу (оружие, доспех и т.д.)
     if (selectedCategory) {
-      filtered = filtered.filter(template => template.category === selectedCategory);
+      filtered = filtered.filter(template => template.type === selectedCategory);
     }
 
     // Фильтр по поиску
     if (searchTerm) {
       filtered = filtered.filter(template =>
-        template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.name_en.toLowerCase().includes(searchTerm.toLowerCase())
+        template.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     setFilteredTemplates(filtered);
   };
 
-  const handleTemplateSelect = (template: WeaponTemplate) => {
-    // Передаем данные шаблона через URL параметры
-    const params = new URLSearchParams({
-      name: template.name,
-      category: template.category,
-      damage_type: template.damage_type,
-      price: template.price.toString(),
-      weight: template.weight.toString(),
-      bonus_type: 'damage',
-      bonus_value: template.damage,
-      image_url: template.image_cloudinary_url || template.image_path || '',
-      properties: template.properties.join(','),
-      // Добавляем новые поля
-      author: 'Admin',
-      source: 'Player\'s Handbook',
-      type: 'weapon',
-      tags: template.name + ',Оружие'
-    });
-    navigate(`/create?${params.toString()}`);
+  const handleTemplateSelect = (template: Card) => {
+    // Передаем только ID шаблона, остальную информацию загрузим с бэкенда
+    navigate(`/card-creator?template_id=${template.id}`);
   };
 
-  const generateDescription = (template: WeaponTemplate): string => {
-    const damageTypeLabels: Record<string, string> = {
-      'slashing': 'рубящий',
-      'piercing': 'колющий',
-      'bludgeoning': 'дробящий'
-    };
-
-    const categoryLabels: Record<string, string> = {
-      'simple_melee': 'простое рукопашное',
-      'martial_melee': 'воинское рукопашное',
-      'simple_ranged': 'простое дальнобойное',
-      'martial_ranged': 'воинское дальнобойное'
-    };
-
-    let description = `${template.name} - это ${categoryLabels[template.category]} оружие, наносящее ${template.damage} ${damageTypeLabels[template.damage_type]} урона.`;
-
-    if (template.properties.length > 0) {
-      const propertyLabels: Record<string, string> = {
-        'light': 'легкое',
-        'heavy': 'тяжелое',
-        		'finesse': 'фехтовальное',
-        'thrown': 'метательное',
-        'versatile': 'универсальное',
-        'two-handed': 'двуручное',
-        'reach': 'досягаемости',
-        'ammunition': 'требует боеприпасы',
-        'loading': 'зарядка',
-        'special': 'особое'
-      };
-
-      const properties = template.properties.map(p => propertyLabels[p] || p).join(', ');
-      description += ` Свойства: ${properties}.`;
+  // Функция для получения цвета полоски редкости
+  const getRarityBorderColor = (rarity: string): string => {
+    switch (rarity?.toLowerCase()) {
+      case 'common':
+      case 'обычное':
+        return 'border-l-gray-400'; // Серая полоска для обычных предметов
+      case 'uncommon':
+      case 'необычное':
+        return 'border-l-green-500';
+      case 'rare':
+      case 'редкое':
+        return 'border-l-blue-500';
+      case 'epic':
+      case 'эпическое':
+        return 'border-l-purple-500';
+      case 'legendary':
+      case 'легендарное':
+        return 'border-l-orange-500';
+      case 'artifact':
+      case 'артефакт':
+        return 'border-l-red-500';
+      default:
+        return 'border-l-gray-400'; // По умолчанию серая
     }
-
-    return description;
   };
+
+
 
 
 
@@ -145,7 +125,7 @@ const WeaponTemplates: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Все категории</option>
-                {WEAPON_CATEGORIES.map(category => (
+                {ITEM_TYPE_OPTIONS.map(category => (
                   <option key={category.value} value={category.value}>
                     {category.label}
                   </option>
@@ -190,9 +170,9 @@ const WeaponTemplates: React.FC = () => {
           /* Сетка шаблонов */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
             {filteredTemplates.map((template) => (
-              <WeaponTemplateCard
+              <CardPreview
                 key={template.id}
-                template={template}
+                card={template}
                 onClick={() => handleTemplateSelect(template)}
               />
             ))}
@@ -210,24 +190,14 @@ const WeaponTemplates: React.FC = () => {
                 >
                   <button
                     onClick={() => handleTemplateSelect(template)}
-                    className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50 text-gray-900"
+                    className={`w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50 text-gray-900 border-l-4 ${getRarityBorderColor(template.rarity)}`}
                   >
                     <div className="flex items-center space-x-3">
                       {/* Маленькая картинка слева */}
                       <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 overflow-hidden">
-                        {template.image_cloudinary_url && template.image_cloudinary_url.trim() !== '' ? (
+                        {template.image_url && template.image_url.trim() !== '' ? (
                           <img
-                            src={template.image_cloudinary_url}
-                            alt={template.name}
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/default_image.png';
-                            }}
-                          />
-                        ) : template.image_path && template.image_path.trim() !== '' ? (
-                          <img
-                            src={template.image_path}
+                            src={template.image_url}
                             alt={template.name}
                             className="w-full h-full object-contain"
                             onError={(e) => {
@@ -269,10 +239,10 @@ const WeaponTemplates: React.FC = () => {
                                 <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
                               </div>
                             )}
-                            {template.damage && (
+                            {template.bonus_value && (
                               <div className="flex items-center space-x-0.5">
                                 <span className="text-gray-900 font-medium">
-                                  {template.damage}
+                                  {template.bonus_value}
                                 </span>
                                 {template.damage_type && (
                                   <img src={`/icons/${template.damage_type}.png`} alt={template.damage_type} className="w-3 h-3" />
@@ -281,7 +251,7 @@ const WeaponTemplates: React.FC = () => {
                             )}
                           </div>
                           <span className="text-gray-400 font-mono">
-                            #{template.id}
+                            {template.card_number}
                           </span>
                         </div>
                       </div>
@@ -295,8 +265,8 @@ const WeaponTemplates: React.FC = () => {
             {hoveredTemplate && (
               <div className="fixed top-4 right-4 z-50 pointer-events-none">
                 <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
-                  <WeaponTemplateCard
-                    template={hoveredTemplate}
+                  <CardPreview
+                    card={hoveredTemplate}
                     onClick={() => {}}
                   />
                 </div>

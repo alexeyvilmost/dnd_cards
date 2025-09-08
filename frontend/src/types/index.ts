@@ -3,12 +3,14 @@ export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finess
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
 export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'none';
+export type TemplateType = 'false' | 'template' | 'only_template';
 
 export interface Card {
   id: string;
   name: string;
   properties: Properties | null;
   description: string;
+  detailed_description?: string | null;
   image_url?: string;
   rarity: Rarity;
   card_number: string;
@@ -28,6 +30,7 @@ export interface Card {
   related_effects?: Properties | null;
   attunement?: string | null;
   tags?: Properties | null;
+  is_template: TemplateType;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +39,7 @@ export interface CreateCardRequest {
   name: string;
   properties?: Properties | null;
   description: string;
+  detailed_description?: string | null;
   rarity: Rarity;
   price?: number | null;
   weight?: number | null;
@@ -53,12 +57,14 @@ export interface CreateCardRequest {
   related_effects?: Properties | null;
   attunement?: string | null;
   tags?: Properties | null;
+  is_template?: TemplateType;
 }
 
 export interface UpdateCardRequest {
   name?: string;
   properties?: Properties | null;
   description?: string;
+  detailed_description?: string | null;
   rarity?: Rarity;
   price?: number | null;
   weight?: number | null;
@@ -76,6 +82,7 @@ export interface UpdateCardRequest {
   related_effects?: Properties | null;
   attunement?: string | null;
   tags?: Properties | null;
+  is_template?: TemplateType;
 }
 
 export interface CardsResponse {
@@ -450,3 +457,10 @@ export interface CharacterData {
     };
   };
 }
+
+// Константы для опций шаблонов
+export const TEMPLATE_TYPE_OPTIONS = [
+  { value: 'false', label: 'Обычная карта' },
+  { value: 'template', label: 'Карта и шаблон' },
+  { value: 'only_template', label: 'Только шаблон' },
+] as const;

@@ -1,4 +1,4 @@
-# DnD Cards Frontend
+# Bag of Holding Frontend
 
 Frontend приложение для сервиса создания карточек D&D на React + TypeScript.
 

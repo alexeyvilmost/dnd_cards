@@ -22,7 +22,7 @@ const CardLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
 
   // Загрузка карточек
@@ -36,7 +36,9 @@ const CardLibrary = () => {
       
       const params: any = {
         page,
-        limit: 50
+        limit: 50,
+        // Показываем только карты, которые не являются только шаблонами
+        exclude_template_only: true
       };
       
       if (search) params.search = search;
@@ -116,6 +118,32 @@ const CardLibrary = () => {
     setIsModalOpen(false);
     // Здесь можно добавить навигацию к редактированию
     window.location.href = `/edit/${cardId}`;
+  };
+
+  // Функция для получения цвета полоски редкости
+  const getRarityBorderColor = (rarity: string): string => {
+    switch (rarity?.toLowerCase()) {
+      case 'common':
+      case 'обычное':
+        return 'border-l-gray-400'; // Серая полоска для обычных предметов
+      case 'uncommon':
+      case 'необычное':
+        return 'border-l-green-500';
+      case 'rare':
+      case 'редкое':
+        return 'border-l-blue-500';
+      case 'epic':
+      case 'эпическое':
+        return 'border-l-purple-500';
+      case 'legendary':
+      case 'легендарное':
+        return 'border-l-orange-500';
+      case 'artifact':
+      case 'артефакт':
+        return 'border-l-red-500';
+      default:
+        return 'border-l-gray-400'; // По умолчанию серая
+    }
   };
 
   return (
@@ -345,7 +373,7 @@ const CardLibrary = () => {
                   >
                     <button
                       onClick={() => handleCardClick(card)}
-                      className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                      className={`w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50 border-l-4 ${getRarityBorderColor(card.rarity)}`}
                     >
                       <div className="flex items-center space-x-3">
                         {/* Маленькая картинка слева */}

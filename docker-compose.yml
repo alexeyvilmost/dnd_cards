@@ -2,7 +2,6 @@ version: '3.8'
 
 services:
   # PostgreSQL база данных (локальная для разработки)
-  # Раскомментируйте для локальной разработки
   # postgres:
   #   image: postgres:15
   #   container_name: dnd_cards_db
@@ -49,7 +48,7 @@ services:
     ports:
       - "8080:8080"
     # depends_on:
-    #   - postgres  # Раскомментируйте для локальной разработки
+    #   - postgres
     networks:
       - dnd_cards_network
     restart: unless-stopped
@@ -71,7 +70,7 @@ services:
     restart: unless-stopped
 
 # volumes:
-#   postgres_data:  # Раскомментируйте для локальной разработки
+#   postgres_data:
 
 networks:
   dnd_cards_network:

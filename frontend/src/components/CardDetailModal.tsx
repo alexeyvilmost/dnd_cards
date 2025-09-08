@@ -134,6 +134,15 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             <p className="text-lg whitespace-pre-wrap">{card.description}</p>
           )}
 
+          {card.detailed_description && (
+            <div className="mt-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
+              <h3 className="text-sm font-semibold text-gray-300 mb-2">Подробное описание:</h3>
+              <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">
+                {card.detailed_description}
+              </p>
+            </div>
+          )}
+
           {/* Тип урона и брони */}
           {(card.damage_type || card.defense_type) && (
             <div className="text-sm space-y-1">

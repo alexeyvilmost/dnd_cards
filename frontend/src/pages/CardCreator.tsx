@@ -14,6 +14,7 @@ import ImageUploader from '../components/ImageUploader';
 import ImageGenerator from '../components/ImageGenerator';
 import ImageLibraryModal from '../components/ImageLibraryModal';
 import TagsInput from '../components/TagsInput';
+import CollapsibleBlock from '../components/CollapsibleBlock';
 import type { ImageLibraryItem } from '../api/imageLibraryApi';
 
 const CardCreator = () => {
@@ -287,31 +288,121 @@ const CardCreator = () => {
         {/* Форма */}
           <div className="bg-white rounded-lg shadow p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Название */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Название карты
-              </label>
-              <input
-                {...register('name', { required: 'Название обязательно' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Введите название карты"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-              )}
+            {/* Основная информация */}
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-gray-900">Основная информация</h2>
+              
+              {/* Название */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Название карты
+                </label>
+                <input
+                  {...register('name', { required: 'Название обязательно' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Введите название карты"
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                )}
+              </div>
+
+              {/* Редкость */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Редкость
+                </label>
+                  <RaritySelector
+                    value={memoizedWatchedValues.rarity}
+                    onChange={(rarity) => setValue('rarity', rarity)}
+                  />
+              </div>
+
+              {/* Описание */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Описание
+                </label>
+                <textarea
+                    {...register('description', { required: 'Описание обязательно' })}
+                  rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Введите описание эффекта"
+                />
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                )}
+              </div>
+
+              {/* Цена и вес */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Цена (золото)
+                  </label>
+                  <input
+                    type="number"
+                    {...register('price', { valueAsNumber: true })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Вес (фунты)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    {...register('weight', { valueAsNumber: true })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.0"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Редкость */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Редкость
-              </label>
-                <RaritySelector
-                  value={memoizedWatchedValues.rarity}
-                  onChange={(rarity) => setValue('rarity', rarity)}
+            {/* Блок "Изображение" */}
+            <CollapsibleBlock title="Изображение" defaultOpen={true}>
+              <div className="space-y-4">
+                {/* Генератор изображений */}
+                <ImageGenerator
+                  entityType="card"
+                  entityId={id || ''}
+                  entityName={memoizedWatchedValues.name}
+                  entityRarity={memoizedWatchedValues.rarity}
+                  entityDescription={memoizedWatchedValues.description}
+                  onImageGenerated={setCardImage}
+                  disabled={!memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
+                  className="mb-4"
                 />
-            </div>
+
+                {/* Кнопка выбора из библиотеки */}
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowImageLibrary(true)}
+                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Library size={20} />
+                    <span>Выбрать из библиотеки</span>
+                  </button>
+                </div>
+                
+                {/* Загрузчик изображений */}
+                <ImageUploader
+                  onImageUpload={setCardImage}
+                  currentImageUrl={cardImage}
+                  entityType="card"
+                  entityId={id || ''}
+                  enableCloudUpload={false}
+                />
+              </div>
+            </CollapsibleBlock>
+
+            {/* Блок "Дополнительно" */}
+            <CollapsibleBlock title="Дополнительно">
+              <div className="space-y-6">
 
             {/* Расширенная карта */}
             <div>
@@ -397,59 +488,32 @@ const CardCreator = () => {
               />
             </div>
 
-            {/* Описание */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Описание
-              </label>
-              <textarea
-                  {...register('description', { required: 'Описание обязательно' })}
-                rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Введите описание эффекта"
-              />
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-              )}
-            </div>
-
-              {/* Свойства */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Свойства
-                </label>
-                <PropertySelector
-                  value={memoizedWatchedValues.properties || []}
-                  onChange={(properties) => setValue('properties', properties)}
-                />
-              </div>
-
-              {/* Цена и вес */}
-              <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Цена (золото)
-              </label>
-              <input
-                type="number"
-                    {...register('price', { valueAsNumber: true })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
+                {/* Детальное описание */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Детальное описание
+                  </label>
+                  <textarea
+                      {...register('detailed_description')}
+                    rows={6}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Введите подробное описание (необязательно)"
                   />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Вес (фунты)
-              </label>
-              <input
-                type="number"
-                    step="0.1"
-                    {...register('weight', { valueAsNumber: true })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.0"
+                  <p className="mt-1 text-sm text-gray-500">
+                    Подробное описание будет отображаться в модальном окне с детальным просмотром карты
+                  </p>
+                </div>
+
+                {/* Свойства */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Свойства
+                  </label>
+                  <PropertySelector
+                    value={memoizedWatchedValues.properties || []}
+                    onChange={(properties) => setValue('properties', properties)}
                   />
                 </div>
-            </div>
 
               {/* Бонус */}
             <div className="grid grid-cols-2 gap-4">
@@ -516,44 +580,8 @@ const CardCreator = () => {
                 </select>
               </div>
             )}
-
-              {/* Изображение */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">Изображение</h3>
-                
-                {/* Генератор изображений */}
-                <ImageGenerator
-                  entityType="card"
-                  entityId={id || ''}
-                  entityName={memoizedWatchedValues.name}
-                  entityRarity={memoizedWatchedValues.rarity}
-                  entityDescription={memoizedWatchedValues.description}
-                  onImageGenerated={setCardImage}
-                  disabled={!memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
-                  className="mb-4"
-                />
-
-                {/* Кнопка выбора из библиотеки */}
-                <div className="mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowImageLibrary(true)}
-                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Library size={20} />
-                    <span>Выбрать из библиотеки</span>
-                  </button>
-                </div>
-                
-                {/* Загрузчик изображений */}
-              <ImageUploader
-                onImageUpload={setCardImage}
-                currentImageUrl={cardImage}
-                  entityType="card"
-                  entityId={id || ''}
-                  enableCloudUpload={false}
-                />
               </div>
+            </CollapsibleBlock>
 
             {/* Кнопки */}
               <div className="flex justify-end space-x-4 pt-6">

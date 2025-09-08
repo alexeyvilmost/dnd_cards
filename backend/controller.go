@@ -47,6 +47,17 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		query = query.Where("name ILIKE ?", "%"+search+"%")
 	}
 
+	// Фильтрация по типу шаблона
+	if excludeTemplateOnly := c.Query("exclude_template_only"); excludeTemplateOnly == "true" {
+		// Показываем только карты, которые не являются только шаблонами
+		query = query.Where("is_template != ? OR is_template IS NULL", "only_template")
+	}
+
+	if templateOnly := c.Query("template_only"); templateOnly == "true" {
+		// Показываем только карты, которые являются шаблонами
+		query = query.Where("is_template IN ?", []string{"template", "only_template"})
+	}
+
 	// Пагинация
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -75,6 +86,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			Name:                card.Name,
 			Properties:          card.Properties,
 			Description:         card.Description,
+			DetailedDescription: card.DetailedDescription,
 			ImageURL:            card.ImageURL,
 			Rarity:              card.Rarity,
 			CardNumber:          card.CardNumber,
@@ -86,6 +98,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			DefenseType:         card.DefenseType,
 			DescriptionFontSize: card.DescriptionFontSize,
 			IsExtended:          card.IsExtended,
+			IsTemplate:          card.IsTemplate,
 			CreatedAt:           card.CreatedAt,
 			UpdatedAt:           card.UpdatedAt,
 		})
@@ -122,6 +135,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		Name:                card.Name,
 		Properties:          card.Properties,
 		Description:         card.Description,
+		DetailedDescription: card.DetailedDescription,
 		ImageURL:            card.ImageURL,
 		Rarity:              card.Rarity,
 		CardNumber:          card.CardNumber,
@@ -180,6 +194,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Name:                req.Name,
 		Properties:          req.Properties, // Теперь это указатель, GORM сам обработает nil
 		Description:         req.Description,
+		DetailedDescription: req.DetailedDescription,
 		Rarity:              req.Rarity,
 		ImageURL:            req.ImageURL,
 		Price:               req.Price,
@@ -211,6 +226,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Name:                card.Name,
 		Properties:          card.Properties,
 		Description:         card.Description,
+		DetailedDescription: card.DetailedDescription,
 		ImageURL:            card.ImageURL,
 		Rarity:              card.Rarity,
 		CardNumber:          card.CardNumber,
@@ -288,6 +304,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Description != "" {
 		card.Description = req.Description
 	}
+	if req.DetailedDescription != nil && *req.DetailedDescription != "" {
+		card.DetailedDescription = req.DetailedDescription
+	}
 	if req.Rarity != "" {
 		card.Rarity = req.Rarity
 	}
@@ -342,6 +361,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Tags != nil {
 		card.Tags = req.Tags
 	}
+	if req.IsTemplate != "" {
+		card.IsTemplate = req.IsTemplate
+	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
@@ -353,6 +375,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		Name:                card.Name,
 		Properties:          card.Properties,
 		Description:         card.Description,
+		DetailedDescription: card.DetailedDescription,
 		ImageURL:            card.ImageURL,
 		Rarity:              card.Rarity,
 		CardNumber:          card.CardNumber,
@@ -466,19 +489,20 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 	var responses []CardResponse
 	for _, card := range cards {
 		responses = append(responses, CardResponse{
-			ID:          card.ID,
-			Name:        card.Name,
-			Properties:  card.Properties,
-			Description: card.Description,
-			ImageURL:    card.ImageURL,
-			Rarity:      card.Rarity,
-			CardNumber:  card.CardNumber,
-			Price:       card.Price,
-			Weight:      card.Weight,
-			BonusType:   card.BonusType,
-			BonusValue:  card.BonusValue,
-			CreatedAt:   card.CreatedAt,
-			UpdatedAt:   card.UpdatedAt,
+			ID:                  card.ID,
+			Name:                card.Name,
+			Properties:          card.Properties,
+			Description:         card.Description,
+			DetailedDescription: card.DetailedDescription,
+			ImageURL:            card.ImageURL,
+			Rarity:              card.Rarity,
+			CardNumber:          card.CardNumber,
+			Price:               card.Price,
+			Weight:              card.Weight,
+			BonusType:           card.BonusType,
+			BonusValue:          card.BonusValue,
+			CreatedAt:           card.CreatedAt,
+			UpdatedAt:           card.UpdatedAt,
 		})
 	}
 
@@ -506,131 +530,4 @@ func generateCardNumber(db *gorm.DB) string {
 	}
 
 	return fmt.Sprintf("CARD-%04d", nextNum)
-}
-
-// GetWeaponTemplates - получение списка шаблонов оружия
-func (cc *CardController) GetWeaponTemplates(c *gin.Context) {
-	var templates []WeaponTemplate
-	query := cc.db
-
-	// Фильтр по категории
-	if category := c.Query("category"); category != "" {
-		query = query.Where("category = ?", category)
-	}
-
-	if err := query.Find(&templates).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения шаблонов"})
-		return
-	}
-
-	var responses []WeaponTemplateResponse
-	for _, template := range templates {
-		properties := []string{}
-		if template.Properties != nil {
-			properties = []string(template.Properties)
-		}
-
-		responses = append(responses, WeaponTemplateResponse{
-			ID:                 template.ID,
-			Name:               template.Name,
-			NameEn:             template.NameEn,
-			Category:           template.Category,
-			DamageType:         template.DamageType,
-			Damage:             template.Damage,
-			Weight:             template.Weight,
-			Price:              template.Price,
-			Properties:         properties,
-			ImagePath:          template.ImagePath,
-			ImageCloudinaryURL: template.ImageCloudinaryURL,
-		})
-	}
-
-	c.JSON(http.StatusOK, responses)
-}
-
-// GetWeaponTemplate - получение конкретного шаблона оружия
-func (cc *CardController) GetWeaponTemplate(c *gin.Context) {
-	id := c.Param("id")
-
-	var template WeaponTemplate
-	if err := cc.db.First(&template, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Шаблон не найден"})
-		return
-	}
-
-	properties := []string{}
-	if template.Properties != nil {
-		properties = []string(template.Properties)
-	}
-
-	response := WeaponTemplateResponse{
-		ID:                 template.ID,
-		Name:               template.Name,
-		NameEn:             template.NameEn,
-		Category:           template.Category,
-		DamageType:         template.DamageType,
-		Damage:             template.Damage,
-		Weight:             template.Weight,
-		Price:              template.Price,
-		Properties:         properties,
-		ImagePath:          template.ImagePath,
-		ImageCloudinaryURL: template.ImageCloudinaryURL,
-	}
-
-	c.JSON(http.StatusOK, response)
-}
-
-// CreateWeaponTemplate - создание нового шаблона оружия
-func (cc *CardController) CreateWeaponTemplate(c *gin.Context) {
-	var req CreateWeaponTemplateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса: " + err.Error()})
-		return
-	}
-
-	// Создаем новый шаблон
-	template := WeaponTemplate{
-		Name:           req.Name,
-		NameEn:         req.NameEn,
-		Category:       req.Category,
-		DamageType:     req.DamageType,
-		Damage:         req.Damage,
-		Weight:         req.Weight,
-		Price:          int(req.Price * 100), // Конвертируем в медные монеты
-		Properties:     Properties(req.Properties),
-		Author:         req.Author,
-		Source:         &req.Source,
-		Type:           &req.Type,
-		RelatedCards:   (*Properties)(&req.RelatedCards),
-		RelatedActions: (*Properties)(&req.RelatedActions),
-		RelatedEffects: (*Properties)(&req.RelatedEffects),
-		Attunement:     &req.Attunement,
-		Tags:           (*Properties)(&req.Tags),
-	}
-
-	if err := cc.db.Create(&template).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания шаблона"})
-		return
-	}
-
-	// Возвращаем созданный шаблон
-	properties := []string{}
-	if template.Properties != nil {
-		properties = []string(template.Properties)
-	}
-
-	response := WeaponTemplateResponse{
-		ID:         template.ID,
-		Name:       template.Name,
-		NameEn:     template.NameEn,
-		Category:   template.Category,
-		DamageType: template.DamageType,
-		Damage:     template.Damage,
-		Weight:     template.Weight,
-		Price:      template.Price,
-		Properties: properties,
-		ImagePath:  template.ImagePath,
-	}
-
-	c.JSON(http.StatusCreated, response)
 }

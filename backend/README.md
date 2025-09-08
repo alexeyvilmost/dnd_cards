@@ -1,4 +1,4 @@
-# DnD Cards Backend
+# Bag of Holding Backend
 
 Backend API для сервиса создания карточек D&D на Golang.
 

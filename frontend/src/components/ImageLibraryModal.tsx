@@ -16,7 +16,8 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   const [rarities, setRarities] = useState<string[]>([]);
   const [editingImage, setEditingImage] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ card_name: '', card_rarity: '' });
-  const [pagination, setPagination] = useState({ page: 1, limit: 30, total: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 100, total: 0 });
+  const [selectedImage, setSelectedImage] = useState<ImageLibraryItem | null>(null);
 
   // Загрузка изображений
   const loadImages = async (filters: ImageLibraryFilters = {}) => {
@@ -30,6 +31,11 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
       });
       setImages(response.images);
       setPagination(response.pagination);
+      
+      // Автоматически выбираем первое изображение, если ничего не выбрано
+      if (response.images.length > 0 && !selectedImage) {
+        setSelectedImage(response.images[0]);
+      }
     } catch (error) {
       console.error('Ошибка загрузки изображений:', error);
     } finally {
@@ -109,7 +115,13 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
     setEditForm({ card_name: '', card_rarity: '' });
   };
 
-  // Выбор изображения
+  // Выбор изображения для предпросмотра
+  const handleImageClick = (image: ImageLibraryItem) => {
+    setSelectedImage(image);
+    setEditingImage(null);
+  };
+
+  // Выбор изображения для использования
   const handleSelectImage = (image: ImageLibraryItem) => {
     onSelectImage(image);
     onClose();
@@ -119,7 +131,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col">
         {/* Заголовок */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">Библиотека изображений</h2>
@@ -132,7 +144,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
         </div>
 
         {/* Фильтры */}
-        <div className="p-6 border-b bg-gray-50">
+        <div className="p-4 border-b bg-gray-50">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-64">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -188,70 +200,83 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
           </div>
         </div>
 
-        {/* Список изображений */}
-        <div className="p-6 overflow-y-auto max-h-96">
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : images.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              Изображения не найдены
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {images.map((image) => (
-                <div key={image.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <div className="aspect-square bg-gray-100 relative group">
-                    <img
-                      src={image.cloudinary_url}
-                      alt={image.card_name || 'Изображение'}
-                      className="w-full h-full object-cover"
-                    />
-                    
-                    {/* Кнопки действий */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSelectImage(image)}
-                          className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
-                          title="Выбрать"
-                        >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleStartEdit(image)}
-                          className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-                          title="Редактировать"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(image.id)}
-                          className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
-                          title="Удалить"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+        {/* Основной контент - две колонки */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Левая колонка - таблица изображений */}
+          <div className="w-1/2 border-r overflow-y-auto">
+            <div className="p-4">
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : images.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  Изображения не найдены
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                  {images.map((image) => (
+                    <div
+                      key={image.id}
+                      onClick={() => handleImageClick(image)}
+                      className={`w-20 h-20 bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
+                        selectedImage?.id === image.id
+                          ? 'border-blue-500 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                      }`}
+                    >
+                      <img
+                        src={image.cloudinary_url}
+                        alt={image.card_name || 'Изображение'}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                  </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-                  {/* Информация об изображении */}
-                  <div className="p-3">
-                    {editingImage === image.id ? (
-                      <div className="space-y-2">
+          {/* Правая колонка - предпросмотр */}
+          <div className="w-1/2 flex flex-col">
+            {selectedImage ? (
+              <>
+                {/* Предпросмотр изображения */}
+                <div className="flex-1 p-4 flex items-center justify-center bg-gray-50 min-h-0">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <img
+                      src={selectedImage.cloudinary_url}
+                      alt={selectedImage.card_name || 'Изображение'}
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                      style={{ maxHeight: 'calc(100vh - 400px)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Информация и кнопки */}
+                <div className="h-[200px] p-4 border-t bg-white overflow-y-auto">
+                  {editingImage === selectedImage.id ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Название карты
+                        </label>
                         <input
                           type="text"
                           value={editForm.card_name}
                           onChange={(e) => setEditForm({ ...editForm, card_name: e.target.value })}
-                          placeholder="Название карты"
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                          placeholder="Введите название карты"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Редкость
+                        </label>
                         <select
                           value={editForm.card_rarity}
                           onChange={(e) => setEditForm({ ...editForm, card_rarity: e.target.value })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">Выберите редкость</option>
                           <option value="common">Обычная</option>
@@ -260,48 +285,81 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
                           <option value="very_rare">Очень редкая</option>
                           <option value="artifact">Артефакт</option>
                         </select>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={handleSaveEdit}
-                            className="flex-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                          >
-                            <Check size={12} className="inline mr-1" />
-                            Сохранить
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="flex-1 px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
-                          >
-                            <XIcon size={12} className="inline mr-1" />
-                            Отмена
-                          </button>
-                        </div>
                       </div>
-                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        >
+                          <Check size={16} className="inline mr-2" />
+                          Сохранить
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                        >
+                          <XIcon size={16} className="inline mr-2" />
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
                       <div>
-                        <div className="font-medium text-sm text-gray-900 truncate">
-                          {image.card_name || 'Без названия'}
-                        </div>
-                        {image.card_rarity && (
-                          <div className="text-xs text-gray-500 capitalize">
-                            {image.card_rarity}
-                          </div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {selectedImage.card_name || 'Без названия'}
+                        </h3>
+                        {selectedImage.card_rarity && (
+                          <p className="text-sm text-gray-600 capitalize">
+                            Редкость: {selectedImage.card_rarity}
+                          </p>
                         )}
-                        <div className="text-xs text-gray-400 mt-1">
-                          {new Date(image.created_at).toLocaleDateString('ru-RU')}
-                        </div>
+                        <p className="text-sm text-gray-500">
+                          Добавлено: {new Date(selectedImage.created_at).toLocaleDateString('ru-RU')}
+                        </p>
                       </div>
-                    )}
-                  </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSelectImage(selectedImage)}
+                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        >
+                          <Check size={16} className="inline mr-2" />
+                          Выбрать
+                        </button>
+                        <button
+                          onClick={() => handleStartEdit(selectedImage)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          <Edit3 size={16} className="inline mr-2" />
+                          Редактировать
+                        </button>
+                        <button
+                          onClick={() => handleDelete(selectedImage.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          <Trash2 size={16} className="inline mr-2" />
+                          Удалить
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <div className="text-lg font-medium mb-2">Выберите изображение</div>
+                  <div className="text-sm">Кликните на изображение в списке слева для предпросмотра</div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Пагинация */}
         {pagination.total > pagination.limit && (
-          <div className="p-6 border-t bg-gray-50">
+          <div className="p-4 border-t bg-gray-50">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
                 Показано {images.length} из {pagination.total} изображений

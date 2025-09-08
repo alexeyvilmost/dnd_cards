@@ -50,7 +50,7 @@ const Layout = ({ children }: LayoutProps) => {
             {/* Logo */}
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">
-                DND CARDS
+                Bag of Holding
               </h1>
             </div>
 

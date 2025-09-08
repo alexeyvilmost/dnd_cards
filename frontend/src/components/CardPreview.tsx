@@ -236,9 +236,9 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
             {/* Правая половина - только описание */}
             <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
               {/* Описание */}
-              <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden flex flex-col justify-start pt-4">
                 <p 
-                  className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap flex-1`} 
+                  className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap text-center`} 
                   style={{ 
                     fontSize: card.description_font_size ? `${card.description_font_size}px` : 
                             getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
@@ -330,19 +330,17 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
           </div>
 
           {/* Описание */}
-          <div className="px-1 pt-0 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex">
-            <div className="w-full flex flex-col">
-              <p 
-                className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap flex-1`}
-                style={{ 
-                  fontSize: card.description_font_size ? `${card.description_font_size}px` : 
-                          getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
-                          getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px')
-                }}
-              >
-                {card.description || 'Нет описания'}
-              </p>
-            </div>
+          <div className="px-1 pt-4 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
+            <p 
+              className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap text-center`}
+              style={{ 
+                fontSize: card.description_font_size ? `${card.description_font_size}px` : 
+                        getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
+                        getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px')
+              }}
+            >
+              {card.description || 'Нет описания'}
+            </p>
           </div>
 
           {/* Вес, цена, бонусы и номер карточки - приклеены к низу */}
