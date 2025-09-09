@@ -3,6 +3,7 @@ import { X, Edit, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
+import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
 
 interface CardDetailModalProps {
@@ -162,6 +163,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             {card.author && <p><strong>Автор:</strong> {card.author}</p>}
             {card.source && <p><strong>Источник:</strong> {card.source}</p>}
             {card.type && <p><strong>Тип:</strong> {getItemTypeLabel(card.type)}</p>}
+            {card.slot && <p><strong>Слот:</strong> {getEquipmentSlotLabel(card.slot)}</p>}
             {card.price && <p><strong>Цена:</strong> {formatPrice(card.price)} золота</p>}
             {card.weight && <p><strong>Вес:</strong> {formatWeight(card.weight)}</p>}
             {card.bonus_type && card.bonus_value && (

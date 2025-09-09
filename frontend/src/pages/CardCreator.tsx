@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
 import type { CreateCardRequest, UpdateCardRequest, Properties } from '../types';
-import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS } from '../types';
+import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../types';
 import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
 import CardPreview from '../components/CardPreview';
 import RaritySelector from '../components/RaritySelector';
@@ -59,7 +59,8 @@ const CardCreator = () => {
       related_actions: [],
       related_effects: [],
       attunement: null,
-      tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : []
+      tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : [],
+      slot: null
     }
   });
 
@@ -102,6 +103,7 @@ const CardCreator = () => {
           setValue('related_effects', card.related_effects || []);
           setValue('attunement', card.attunement);
           setValue('tags', card.tags || []);
+          setValue('slot', card.slot);
           
           if (card.image_url) {
             setCardImage(card.image_url);
@@ -456,6 +458,24 @@ const CardCreator = () => {
               >
                 <option value="">Выберите тип</option>
                 {ITEM_TYPE_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Слот экипировки */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Слот экипировки
+              </label>
+              <select
+                {...register('slot')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Не экипируется</option>
+                {EQUIPMENT_SLOTS.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

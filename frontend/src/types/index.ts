@@ -4,6 +4,7 @@ export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
 export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'none';
 export type TemplateType = 'false' | 'template' | 'only_template';
+export type EquipmentSlot = 'head' | 'body' | 'arms' | 'feet' | 'cloak' | 'one_hand' | 'versatile' | 'two_hands' | 'necklace' | 'ring';
 
 export interface Card {
   id: string;
@@ -31,6 +32,7 @@ export interface Card {
   attunement?: string | null;
   tags?: Properties | null;
   is_template: TemplateType;
+  slot?: EquipmentSlot | null;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +60,7 @@ export interface CreateCardRequest {
   attunement?: string | null;
   tags?: Properties | null;
   is_template?: TemplateType;
+  slot?: EquipmentSlot | null;
 }
 
 export interface UpdateCardRequest {
@@ -83,6 +86,7 @@ export interface UpdateCardRequest {
   attunement?: string | null;
   tags?: Properties | null;
   is_template?: TemplateType;
+  slot?: EquipmentSlot | null;
 }
 
 export interface CardsResponse {
@@ -244,7 +248,6 @@ export interface JoinGroupRequest {
 }
 
 // Инвентарь
-export type InventoryType = 'personal' | 'group';
 
 export interface Inventory {
   id: string;
@@ -490,3 +493,22 @@ export interface Inventory {
   updated_at: string;
   items: InventoryItem[];
 }
+
+// Утилиты для EquipmentSlot
+export const EQUIPMENT_SLOTS: { value: EquipmentSlot; label: string }[] = [
+  { value: 'head', label: 'Голова' },
+  { value: 'body', label: 'Тело' },
+  { value: 'arms', label: 'Наручи' },
+  { value: 'feet', label: 'Обувь' },
+  { value: 'cloak', label: 'Плащ' },
+  { value: 'one_hand', label: 'Одна рука' },
+  { value: 'versatile', label: 'Универсальное' },
+  { value: 'two_hands', label: 'Две руки' },
+  { value: 'necklace', label: 'Ожерелье' },
+  { value: 'ring', label: 'Кольцо' },
+];
+
+export const getEquipmentSlotLabel = (slot: EquipmentSlot): string => {
+  const slotConfig = EQUIPMENT_SLOTS.find(s => s.value === slot);
+  return slotConfig ? slotConfig.label : slot;
+};

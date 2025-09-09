@@ -100,6 +100,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			DescriptionFontSize: card.DescriptionFontSize,
 			IsExtended:          card.IsExtended,
 			IsTemplate:          card.IsTemplate,
+			Slot:                card.Slot,
 			CreatedAt:           card.CreatedAt,
 			UpdatedAt:           card.UpdatedAt,
 		})
@@ -189,6 +190,11 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
+	if req.Slot != nil && !IsValidEquipmentSlot(*req.Slot) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый слот экипировки"})
+		return
+	}
+
 	// Генерация уникального номера карточки
 	cardNumber := generateCardNumber(cc.db)
 
@@ -215,6 +221,8 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		RelatedEffects:      req.RelatedEffects,
 		Attunement:          req.Attunement,
 		Tags:                req.Tags,
+		IsTemplate:          req.IsTemplate,
+		Slot:                req.Slot,
 		CardNumber:          cardNumber,
 	}
 
