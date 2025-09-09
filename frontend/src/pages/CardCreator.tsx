@@ -60,7 +60,8 @@ const CardCreator = () => {
       related_effects: [],
       attunement: null,
       tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : [],
-      slot: null
+      slot: null,
+      is_template: 'false'
     }
   });
 
@@ -104,6 +105,7 @@ const CardCreator = () => {
           setValue('attunement', card.attunement);
           setValue('tags', card.tags || []);
           setValue('slot', card.slot);
+          setValue('is_template', card.is_template);
           
           if (card.image_url) {
             setCardImage(card.image_url);
@@ -139,7 +141,9 @@ const CardCreator = () => {
     watchedValues.related_actions,
     watchedValues.related_effects,
     watchedValues.attunement,
-    watchedValues.tags
+    watchedValues.tags,
+    watchedValues.slot,
+    watchedValues.is_template
   ]);
 
   // Обновляем превью при изменении данных
@@ -182,7 +186,9 @@ const CardCreator = () => {
         related_actions: data.related_actions || null,
         related_effects: data.related_effects || null,
         attunement: data.attunement || null,
-        tags: data.tags && data.tags.length > 0 ? data.tags : null
+        tags: data.tags && data.tags.length > 0 ? data.tags : null,
+        slot: data.slot || null,
+        is_template: data.is_template || 'false'
       };
 
       let cardId: string;
