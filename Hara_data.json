@@ -1,0 +1,799 @@
+{
+  "attunementsList": [
+    {
+      "checked": false,
+      "id": "attunement-1747668414906",
+      "value": ""
+    }
+  ],
+  "avatar": {
+    "jpeg": "https://hotbox.longstoryshort.app/avatar/682b4dc2ec4dd643dd810e1c.jpeg?mod=1748585992903",
+    "webp": "https://hotbox.longstoryshort.app/avatar/682b4dc2ec4dd643dd810e1c.webp?mod=1748585992852"
+  },
+  "bonusesSkills": {},
+  "bonusesStats": {},
+  "coins": {
+    "gp": {
+      "value": 320
+    }
+  },
+  "conditions": [],
+  "createdAt": "2025-05-19T15:26:58.563Z",
+  "info": {
+    "alignment": {
+      "name": "alignment",
+      "value": ""
+    },
+    "background": {
+      "name": "background",
+      "value": "Прислужник"
+    },
+    "charClass": {
+      "name": "charClass",
+      "value": "Жрец"
+    },
+    "charSubclass": {
+      "name": "charSubclass",
+      "value": "Домен мира"
+    },
+    "experience": {
+      "name": "experience",
+      "value": ""
+    },
+    "level": {
+      "name": "level",
+      "value": 6
+    },
+    "playerName": {
+      "name": "playerName",
+      "value": ""
+    },
+    "race": {
+      "name": "race",
+      "value": "Демон (Тифлинг)"
+    }
+  },
+  "inspiration": false,
+  "isDefault": true,
+  "jsonType": "character",
+  "name": {
+    "value": "Хара"
+  },
+  "prof": {
+    "armor-label": {
+      "value": true
+    },
+    "armor-light": {
+      "value": true
+    },
+    "armor-medium": {
+      "value": true
+    },
+    "weapon-simple": {
+      "value": true
+    }
+  },
+  "proficiency": 3,
+  "resources": {},
+  "saves": {
+    "cha": {
+      "isProf": true,
+      "name": "cha"
+    },
+    "con": {
+      "isProf": false,
+      "name": "con"
+    },
+    "dex": {
+      "isProf": false,
+      "name": "dex"
+    },
+    "int": {
+      "isProf": false,
+      "name": "int"
+    },
+    "str": {
+      "isProf": false,
+      "name": "str"
+    },
+    "wis": {
+      "isProf": true,
+      "name": "wis"
+    }
+  },
+  "skills": {
+    "acrobatics": {
+      "baseStat": "dex",
+      "isProf": 0,
+      "name": "acrobatics"
+    },
+    "animal handling": {
+      "baseStat": "wis",
+      "name": "animal handling"
+    },
+    "arcana": {
+      "baseStat": "int",
+      "isProf": 1,
+      "name": "arcana"
+    },
+    "athletics": {
+      "baseStat": "str",
+      "name": "athletics"
+    },
+    "deception": {
+      "baseStat": "cha",
+      "isProf": 2,
+      "name": "deception"
+    },
+    "history": {
+      "baseStat": "int",
+      "isProf": 1,
+      "name": "history"
+    },
+    "insight": {
+      "baseStat": "wis",
+      "isProf": 1,
+      "name": "insight"
+    },
+    "intimidation": {
+      "baseStat": "cha",
+      "name": "intimidation"
+    },
+    "investigation": {
+      "baseStat": "int",
+      "name": "investigation"
+    },
+    "medicine": {
+      "baseStat": "wis",
+      "isProf": 1,
+      "name": "medicine"
+    },
+    "nature": {
+      "baseStat": "int",
+      "name": "nature"
+    },
+    "perception": {
+      "baseStat": "wis",
+      "name": "perception"
+    },
+    "performance": {
+      "baseStat": "cha",
+      "isProf": 1,
+      "name": "performance"
+    },
+    "persuasion": {
+      "baseStat": "cha",
+      "isProf": 1,
+      "name": "persuasion"
+    },
+    "religion": {
+      "baseStat": "int",
+      "isProf": 1,
+      "name": "religion"
+    },
+    "sleight of hand": {
+      "baseStat": "dex",
+      "name": "sleight of hand"
+    },
+    "stealth": {
+      "baseStat": "dex",
+      "name": "stealth"
+    },
+    "survival": {
+      "baseStat": "wis",
+      "name": "survival"
+    }
+  },
+  "spells": {
+    "slots-1": {
+      "filled": 0,
+      "value": 4
+    },
+    "slots-2": {
+      "value": 3
+    },
+    "slots-3": {
+      "value": 3
+    }
+  },
+  "spellsInfo": {
+    "available": {
+      "classes": [
+        "cleric",
+        "paladin",
+        "wizard"
+      ]
+    },
+    "base": {
+      "code": "wis",
+      "name": "base",
+      "value": ""
+    },
+    "mod": {
+      "name": "mod",
+      "value": ""
+    },
+    "save": {
+      "name": "save",
+      "value": ""
+    }
+  },
+  "spellsPact": {},
+  "stats": {
+    "cha": {
+      "modifier": 0,
+      "name": "cha",
+      "score": 12
+    },
+    "con": {
+      "check": -5,
+      "modifier": -5,
+      "name": "con",
+      "score": 15
+    },
+    "dex": {
+      "check": -5,
+      "modifier": -5,
+      "name": "dex",
+      "score": 13
+    },
+    "int": {
+      "check": -5,
+      "modifier": null,
+      "name": "int",
+      "score": 10
+    },
+    "str": {
+      "check": -5,
+      "modifier": -5,
+      "name": "str",
+      "score": 12
+    },
+    "wis": {
+      "check": -5,
+      "modifier": -5,
+      "name": "wis",
+      "score": 18
+    }
+  },
+  "subInfo": {
+    "age": {
+      "name": "age",
+      "value": ""
+    },
+    "eyes": {
+      "name": "eyes",
+      "value": ""
+    },
+    "hair": {
+      "name": "hair",
+      "value": ""
+    },
+    "height": {
+      "name": "height",
+      "value": ""
+    },
+    "skin": {
+      "name": "skin",
+      "value": ""
+    },
+    "weight": {
+      "name": "weight",
+      "value": ""
+    }
+  },
+  "template": "default",
+  "text": {
+    "attacks": {
+      "value": {
+        "data": {
+          "content": [
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "underline"
+                    }
+                  ],
+                  "text": "Сопротивление огню, холоду и яду.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "Демоническая сила",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": ".",
+                  "type": "text"
+                },
+                {
+                  "text": " Все ваши характеристики увеличены на 2. Физические характеристики увеличиваются, только если вы в облике демона",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "Демоническая харизма.",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": " ",
+                  "type": "text"
+                },
+                {
+                  "text": "Вы владеете навыками Убеждение и Проницательность, у вас компетентность в Обмане.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "Адское сопротивление",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": ".",
+                  "type": "text"
+                },
+                {
+                  "text": " Вы получаете сопротивление урону огнём.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "Тёмное зрение",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": ".",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-attacks-6093131"
+      }
+    },
+    "background": {
+      "value": {
+        "data": {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Божество: Тиир",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-background-02763198"
+      }
+    },
+    "feats": {
+      "value": {
+        "data": {
+          "content": [
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "Обучение у друидов",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": ".",
+                  "type": "text"
+                },
+                {
+                  "text": " Мудрость +1",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "(4) Инфернальное телосложение.",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "  ",
+                  "type": "text"
+                },
+                {
+                  "text": "+1 к Телосложению, сопротивление холоду и ядам. Преимущество к спасброскам против состояния ",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "underline"
+                    }
+                  ],
+                  "text": "отравления.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-feats-9288526"
+      }
+    },
+    "features": {
+      "value": {
+        "data": {
+          "content": [
+            {
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-features-07399693"
+      }
+    },
+    "items": {
+      "customLabel": "Пассивы",
+      "value": {
+        "data": {
+          "content": [
+            {
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-items-2287687"
+      }
+    },
+    "prof": {
+      "value": {
+        "data": {
+          "content": [
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    },
+                    {
+                      "type": "italic"
+                    }
+                  ],
+                  "text": "Языки. ",
+                  "type": "text"
+                },
+                {
+                  "text": "Общий, Инфернальный",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-prof-9888758"
+      }
+    },
+    "traits": {
+      "size": 7,
+      "value": {
+        "data": {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Можно подготовить до 10 заклинаний.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Божественный канал:",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Изгнание нежити - ",
+                  "type": "text"
+                },
+                {
+                  "text": "Вся Нежить, которая может видеть или слышать вас в пределах 30 футов, должна совершить спасбросок Мудрости. Если существо провалило спасбросок, оно изгоняется на 1 минуту, или пока не получит урон.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Восстановление - ",
+                  "type": "text"
+                },
+                {
+                  "text": "2 раза в день можно восстановить ячейку 2 уровня.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Бальзам мира -",
+                  "type": "text"
+                },
+                {
+                  "text": " Действием вы можете передвинуться на любое расстояние вплоть до своей скорости, не провоцируя атак. Когда вы оказываетесь в пределах 5 футов от любого другого существа во время этого действия, вы можете восстановить существу количество хитов, равное ",
+                  "type": "text"
+                },
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "2к6 + 4",
+                  "type": "text"
+                },
+                {
+                  "text": ". Существо может получить это исцеление только один раз, пока вы совершаете это действие.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Ободряющая связь",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "text": "Действием вы можете выбрать количество согласных существ (целью можете быть и вы), равное вашему бонусу мастерства, которых вы можете видеть в пределах 30 футов от вас. Вы создаёте между этими существами магическую связь, которая длится 10 минут или до тех пор, пока не используете это умение повторно. Пока любое из связанных существ находится в пределах 30 футов от другого, каждое существо может бросить к4 и добавить выпавшее значение к своим броску атаки, проверке характеристики или спасброску. Каждое существо может добавлять к4 не более одного раза за ход.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Защитная связь",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "text": "Когда существо, связанное вашим умением «Ободряющая связь», должно получить урон, другое связанное с ним существо, находящееся в пределах 30 футов от него, может реакцией телепортироваться в свободное пространство в пределах 5 футов от первого существа, после чего оно получает весь урон, который был предназначен первому существу.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc"
+        },
+        "id": "hover-toolbar-traits-4270896"
+      }
+    }
+  },
+  "vitality": {
+    "ac": {
+      "value": 14
+    },
+    "deathFails": 0,
+    "deathSuccesses": 0,
+    "hit-die": {
+      "value": "d8"
+    },
+    "hp-current": {
+      "value": 43
+    },
+    "hp-dice-current": {
+      "value": 6
+    },
+    "hp-dice-multi": {},
+    "hp-max": {
+      "value": 43
+    },
+    "hp-temp": {},
+    "initiative": {
+      "value": 2
+    },
+    "isDying": false,
+    "shield": {
+      "value": false
+    },
+    "speed": {
+      "value": 35
+    }
+  },
+  "weapons": {},
+  "weaponsList": [
+    {
+      "ability": "wis",
+      "dmg": {
+        "value": "2к10 лучистого"
+      },
+      "id": "weapon-1747668414906",
+      "mod": {
+        "value": "+0"
+      },
+      "modBonus": {
+        "value": 3
+      },
+      "name": {
+        "value": "Священное пламя"
+      }
+    }
+  ]
+}

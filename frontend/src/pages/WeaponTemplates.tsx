@@ -76,6 +76,9 @@ const WeaponTemplates: React.FC = () => {
       case 'rare':
       case 'редкое':
         return 'border-l-blue-500';
+      case 'very_rare':
+      case 'очень редкое':
+        return 'border-l-purple-500';
       case 'epic':
       case 'эпическое':
         return 'border-l-purple-500';
@@ -84,7 +87,7 @@ const WeaponTemplates: React.FC = () => {
         return 'border-l-orange-500';
       case 'artifact':
       case 'артефакт':
-        return 'border-l-red-500';
+        return 'border-l-orange-500';
       default:
         return 'border-l-gray-400'; // По умолчанию серая
     }

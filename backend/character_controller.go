@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -182,6 +183,18 @@ func (cc *CharacterController) CreateCharacter(c *gin.Context) {
 		return
 	}
 
+	// Создаем автоматически инвентарь для персонажа
+	defaultInventory := Inventory{
+		Type:        InventoryTypeCharacter,
+		CharacterID: &character.ID,
+		Name:        "Инвентарь " + character.Name,
+	}
+
+	if err := cc.db.Create(&defaultInventory).Error; err != nil {
+		// Логируем ошибку, но не прерываем создание персонажа
+		log.Printf("Ошибка создания инвентаря для персонажа %s: %v", character.Name, err)
+	}
+
 	// Загружаем связанные данные
 	cc.db.Preload("Group").Preload("Inventories").First(&character, character.ID)
 
@@ -334,12 +347,22 @@ func (cc *CharacterController) ImportCharacter(c *gin.Context) {
 		return
 	}
 
+	// Логируем размер входящих данных
+	log.Printf("=== ИМПОРТ ПЕРСОНАЖА ===")
+	log.Printf("Размер входящих данных: %d байт", len(req.CharacterData))
+	log.Printf("Первые 200 символов: %s", req.CharacterData[:minInt(200, len(req.CharacterData))])
+	log.Printf("Последние 200 символов: %s", req.CharacterData[maxInt(0, len(req.CharacterData)-200):])
+
 	// Проверяем, что JSON валидный
 	var characterData map[string]interface{}
 	if err := json.Unmarshal([]byte(req.CharacterData), &characterData); err != nil {
+		log.Printf("Ошибка парсинга JSON: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат JSON данных персонажа"})
 		return
 	}
+
+	// Логируем ключи верхнего уровня
+	log.Printf("Ключи верхнего уровня: %v", getKeys(characterData))
 
 	// Извлекаем имя персонажа из JSON
 	var characterName string
@@ -347,39 +370,80 @@ func (cc *CharacterController) ImportCharacter(c *gin.Context) {
 
 	// Проверяем, является ли это файлом экспорта с полной структурой
 	if dataField, exists := characterData["data"]; exists {
+		log.Printf("Найдено поле 'data' в верхнем уровне")
 		if dataStr, ok := dataField.(string); ok {
+			log.Printf("Поле 'data' является строкой, размер: %d байт", len(dataStr))
+			log.Printf("Последние 200 символов поля 'data': %s", dataStr[maxInt(0, len(dataStr)-200):])
+
 			// Это файл экспорта, извлекаем данные из поля "data"
 			actualData = dataStr
+
 			// Парсим вложенные данные для извлечения имени
 			var nestedData map[string]interface{}
 			if err := json.Unmarshal([]byte(dataStr), &nestedData); err == nil {
+				log.Printf("Успешно распарсили вложенные данные")
+				log.Printf("Ключи вложенных данных: %v", getKeys(nestedData))
+
+				// Проверяем наличие traits во вложенных данных
+				if _, hasTraits := nestedData["traits"]; hasTraits {
+					log.Printf("✓ Найдено поле 'traits' во вложенных данных")
+				} else if textField, hasText := nestedData["text"]; hasText {
+					if textMap, ok := textField.(map[string]interface{}); ok {
+						if _, hasTraitsInText := textMap["traits"]; hasTraitsInText {
+							log.Printf("✓ Найдено поле 'traits' в data.text")
+						} else {
+							log.Printf("✗ Поле 'traits' НЕ найдено в data.text")
+						}
+					}
+				} else {
+					log.Printf("✗ Поле 'traits' НЕ найдено во вложенных данных")
+				}
+
 				if nameData, exists := nestedData["name"]; exists {
 					if nameMap, ok := nameData.(map[string]interface{}); ok {
 						if nameValue, exists := nameMap["value"]; exists {
 							if nameStr, ok := nameValue.(string); ok {
 								characterName = nameStr
+								log.Printf("Имя персонажа извлечено из вложенных данных: %s", characterName)
 							}
 						}
 					}
 				}
+			} else {
+				log.Printf("Ошибка парсинга вложенных данных: %v", err)
 			}
+		} else {
+			log.Printf("Поле 'data' не является строкой")
 		}
 	} else {
+		log.Printf("Поле 'data' НЕ найдено в верхнем уровне")
 		// Это прямые данные персонажа
 		if nameData, exists := characterData["name"]; exists {
 			if nameMap, ok := nameData.(map[string]interface{}); ok {
 				if nameValue, exists := nameMap["value"]; exists {
 					if nameStr, ok := nameValue.(string); ok {
 						characterName = nameStr
+						log.Printf("Имя персонажа извлечено из прямых данных: %s", characterName)
 					}
 				}
 			}
+		}
+
+		// Проверяем наличие traits в прямых данных
+		if _, hasTraits := characterData["traits"]; hasTraits {
+			log.Printf("✓ Найдено поле 'traits' в прямых данных")
+		} else {
+			log.Printf("✗ Поле 'traits' НЕ найдено в прямых данных")
 		}
 	}
 
 	if characterName == "" {
 		characterName = "Импортированный персонаж"
+		log.Printf("Имя персонажа не найдено, используется по умолчанию: %s", characterName)
 	}
+
+	log.Printf("Финальное имя персонажа: %s", characterName)
+	log.Printf("Размер данных для сохранения: %d байт", len(actualData))
 
 	// Проверяем, что пользователь является участником группы (если указана группа)
 	if req.GroupID != nil {
@@ -398,10 +462,33 @@ func (cc *CharacterController) ImportCharacter(c *gin.Context) {
 		Data:    actualData,
 	}
 
+	log.Printf("Создаем персонажа в БД:")
+	log.Printf("- UserID: %s", character.UserID)
+	log.Printf("- GroupID: %v", character.GroupID)
+	log.Printf("- Name: %s", character.Name)
+	log.Printf("- Data размер: %d байт", len(character.Data))
+
 	result := cc.db.Create(&character)
 	if result.Error != nil {
+		log.Printf("Ошибка создания персонажа в БД: %v", result.Error)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка импорта персонажа"})
 		return
+	}
+
+	log.Printf("Персонаж успешно создан в БД с ID: %s", character.ID)
+
+	// Создаем автоматически инвентарь для персонажа
+	defaultInventory := Inventory{
+		Type:        InventoryTypeCharacter,
+		CharacterID: &character.ID,
+		Name:        "Инвентарь " + character.Name,
+	}
+
+	if err := cc.db.Create(&defaultInventory).Error; err != nil {
+		// Логируем ошибку, но не прерываем импорт персонажа
+		log.Printf("Ошибка создания инвентаря для персонажа %s: %v", character.Name, err)
+	} else {
+		log.Printf("Инвентарь успешно создан для персонажа %s", character.Name)
 	}
 
 	// Загружаем связанные данные
@@ -419,6 +506,7 @@ func (cc *CharacterController) ImportCharacter(c *gin.Context) {
 		Inventories: character.Inventories,
 	}
 
+	log.Printf("=== ИМПОРТ ЗАВЕРШЕН ===")
 	c.JSON(http.StatusCreated, characterResponse)
 }
 
@@ -453,4 +541,29 @@ func (cc *CharacterController) ExportCharacter(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// getKeys возвращает список ключей из map
+func getKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// minInt возвращает минимальное из двух значений
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// maxInt возвращает максимальное из двух значений
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

@@ -4,7 +4,8 @@ import type {
   CreateCharacterRequest, 
   UpdateCharacterRequest, 
   ImportCharacterRequest, 
-  ExportCharacterResponse 
+  ExportCharacterResponse,
+  Inventory
 } from '../types';
 
 export const charactersApi = {
@@ -60,6 +61,12 @@ export const charactersApi = {
   // Экспорт персонажа в JSON
   exportCharacter: async (id: string): Promise<ExportCharacterResponse> => {
     const response = await apiClient.get(`/characters/${id}/export`);
+    return response.data;
+  },
+
+  // Получение инвентарей персонажа
+  getCharacterInventories: async (characterId: string): Promise<Inventory[]> => {
+    const response = await apiClient.get(`/characters/${characterId}/inventories`);
     return response.data;
   },
 };

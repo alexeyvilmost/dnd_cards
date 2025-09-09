@@ -125,6 +125,7 @@ func main() {
 			// Персонажи
 			protected.POST("/characters", characterController.CreateCharacter)
 			protected.GET("/characters", characterController.GetCharacters)
+			protected.GET("/characters/:id/inventories", inventoryController.GetCharacterInventories)
 			protected.GET("/characters/:id", characterController.GetCharacter)
 			protected.PUT("/characters/:id", characterController.UpdateCharacter)
 			protected.DELETE("/characters/:id", characterController.DeleteCharacter)

@@ -10,6 +10,9 @@ export const getRarityColor = (rarity: string): string => {
     case 'rare':
     case 'редкое':
       return 'text-blue-600'; // Синий
+    case 'very_rare':
+    case 'очень редкое':
+      return 'text-purple-600'; // Фиолетовый
     case 'epic':
     case 'эпическое':
       return 'text-purple-600'; // Фиолетовый
@@ -18,7 +21,7 @@ export const getRarityColor = (rarity: string): string => {
       return 'text-orange-600'; // Оранжевый
     case 'artifact':
     case 'артефакт':
-      return 'text-red-600'; // Красный
+      return 'text-orange-600'; // Оранжевый
     default:
       return 'text-gray-900'; // По умолчанию черный
   }
@@ -36,6 +39,9 @@ export const getRarityBgColor = (rarity: string): string => {
     case 'rare':
     case 'редкое':
       return 'bg-blue-50 border-blue-200';
+    case 'very_rare':
+    case 'очень редкое':
+      return 'bg-purple-50 border-purple-200';
     case 'epic':
     case 'эпическое':
       return 'bg-purple-50 border-purple-200';
@@ -44,7 +50,7 @@ export const getRarityBgColor = (rarity: string): string => {
       return 'bg-orange-50 border-orange-200';
     case 'artifact':
     case 'артефакт':
-      return 'bg-red-50 border-red-200';
+      return 'bg-orange-50 border-orange-200';
     default:
       return 'bg-gray-50 border-gray-200';
   }
@@ -62,6 +68,9 @@ export const getRarityBadgeColor = (rarity: string): string => {
     case 'rare':
     case 'редкое':
       return 'bg-blue-100 text-blue-800';
+    case 'very_rare':
+    case 'очень редкое':
+      return 'bg-purple-100 text-purple-800';
     case 'epic':
     case 'эпическое':
       return 'bg-purple-100 text-purple-800';
@@ -70,7 +79,7 @@ export const getRarityBadgeColor = (rarity: string): string => {
       return 'bg-orange-100 text-orange-800';
     case 'artifact':
     case 'артефакт':
-      return 'bg-red-100 text-red-800';
+      return 'bg-orange-100 text-orange-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }

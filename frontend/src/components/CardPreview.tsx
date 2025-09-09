@@ -12,18 +12,14 @@ interface CardPreviewProps {
 }
 
 const CardPreview = ({ card, className = '', disableHover = false }: CardPreviewProps) => {
-  console.log('CardPreview component rendered for card:', card.name);
   const rarityOption = RARITY_OPTIONS.find(option => option.value === card.rarity);
   // Для совместимости с одним свойством и массивом свойств
   const propertiesArray = Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []);
-  console.log('CardPreview - card.properties:', card.properties);
-  console.log('CardPreview - propertiesArray:', propertiesArray);
   const propertiesLabels = propertiesArray.map(prop => {
     const option = PROPERTIES_OPTIONS.find(opt => opt.value === prop);
     return option?.label || prop;
   }).join(', ');
   const isLarge = className.includes('card-preview-large');
-  console.log('CardPreview - card.is_extended:', card.is_extended, 'type:', typeof card.is_extended);
   const isExtended = Boolean(card.is_extended);
   const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt({ isLarge });
 
@@ -225,7 +221,6 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
                 <div className="w-full">
                   <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
                     {(() => {
-                      console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
                       return renderProperties(propertiesArray, Boolean(isExtended));
                     })()}
                   </div>
@@ -281,6 +276,9 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
                   {card.bonus_type === 'defense' && card.defense_type && (
                     renderDefenseIcons(card.defense_type)
                   )}
+                  {card.bonus_type === 'defense' && card.type === 'щит' && (
+                    <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
+                  )}
                 </div>
               )}
             </div>
@@ -301,7 +299,6 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
             </h3>
             <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
               {(() => {
-                console.log('About to call renderProperties for card:', card.name, 'with properties:', propertiesArray);
                 return renderProperties(propertiesArray, Boolean(isExtended));
               })()}
             </div>
@@ -372,6 +369,9 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
                   )}
                   {card.bonus_type === 'defense' && card.defense_type && (
                     renderDefenseIcons(card.defense_type)
+                  )}
+                  {card.bonus_type === 'defense' && card.type === 'щит' && (
+                    <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
                   )}
                 </div>
               )}

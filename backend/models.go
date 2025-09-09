@@ -266,6 +266,7 @@ type CardResponse struct {
 	BonusValue          *string      `json:"bonus_value"`
 	DamageType          *string      `json:"damage_type"`
 	DefenseType         *string      `json:"defense_type"`
+	Type                *string      `json:"type"`
 	DescriptionFontSize *int         `json:"description_font_size"`
 	IsExtended          *bool        `json:"is_extended"`
 	IsTemplate          TemplateType `json:"is_template"`

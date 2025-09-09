@@ -373,3 +373,39 @@ func (ic *InventoryController) RemoveItemFromInventory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "предмет успешно удален из инвентаря"})
 }
+
+// GetCharacterInventories - получение инвентарей персонажа
+func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	characterIDStr := c.Param("id")
+	characterID, err := uuid.Parse(characterIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character Character
+	if err := ic.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
+		return
+	}
+
+	// Получаем инвентари персонажа
+	var inventories []Inventory
+	if err := ic.db.Preload("Items.Card").Where("character_id = ?", characterID).Find(&inventories).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения инвентарей персонажа"})
+		return
+	}
+
+	c.JSON(http.StatusOK, inventories)
+}

@@ -464,3 +464,29 @@ export const TEMPLATE_TYPE_OPTIONS = [
   { value: 'template', label: 'Карта и шаблон' },
   { value: 'only_template', label: 'Только шаблон' },
 ] as const;
+
+// Инвентарь
+export type InventoryType = 'personal' | 'group' | 'character';
+
+export interface InventoryItem {
+  id: string;
+  inventory_id: string;
+  card_id: string;
+  quantity: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  card: Card;
+}
+
+export interface Inventory {
+  id: string;
+  type: InventoryType;
+  user_id?: string;
+  group_id?: string;
+  character_id?: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  items: InventoryItem[];
+}
