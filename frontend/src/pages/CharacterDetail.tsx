@@ -307,8 +307,9 @@ const CharacterDetail: React.FC = () => {
 
   // Компонент сетки инвентаря
   const InventoryGrid: React.FC<{ characterData: CharacterData | null }> = ({ characterData }) => {
-    const gridSize = 8; // 8x8 сетка
-    const totalSlots = gridSize * gridSize;
+    const equipmentSlots = 16; // 2 строки по 8 слотов для экипировки
+    const inventorySlots = 48; // 6 строк по 8 слотов для обычного инвентаря
+    const totalSlots = equipmentSlots + inventorySlots;
     const downPos = useRef<{x: number; y: number} | null>(null);
     
     // Получаем все предметы из всех инвентарей
@@ -318,6 +319,32 @@ const CharacterDetail: React.FC = () => {
         inventoryName: inventory.name
       }))
     );
+
+    // Определяем слоты экипировки
+    const equipmentSlotTypes = [
+      // Первая строка: Правая рука, правая рука, кольцо, шлем, перчатки, плащ, *, *
+      ['one_hand', 'one_hand', 'ring', 'head', 'arms', 'cloak', 'versatile', 'versatile'],
+      // Вторая строка: Левая рука, левая рука, кольцо, торс, сапоги, ожерелье, *, *
+      ['one_hand', 'one_hand', 'ring', 'body', 'feet', 'necklace', 'versatile', 'versatile']
+    ];
+
+    // Функция для получения иконки слота
+    const getSlotIcon = (slotType: string, isLeftHand: boolean = false) => {
+      const iconMap: { [key: string]: string } = {
+        'one_hand': 'hand.png',
+        'ring': 'ring.png',
+        'head': 'helm.png',
+        'arms': 'gloves.png',
+        'cloak': 'cloak.png',
+        'body': 'armor.png',
+        'feet': 'boots.png',
+        'necklace': 'necklace.png',
+        'versatile': 'hand.png' // Для универсальных слотов используем иконку руки
+      };
+      
+      const iconPath = iconMap[slotType] || 'hand.png';
+      return `/icons/slots/${iconPath}`;
+    };
     
 
     const handleAddItemClick = () => {
@@ -377,29 +404,30 @@ const CharacterDetail: React.FC = () => {
 
     return (
       <div className="relative" onMouseLeave={handleMouseLeave}>
-        <div className="grid grid-cols-8 gap-1">
-          {Array.from({ length: totalSlots }, (_, index) => {
-            const item = allItems[index];
-            const isLastSlot = index === totalSlots - 1;
-            
-            return (
-              <div
-                key={index}
-                className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
-                  item ? 'bg-white' : 
-                  isLastSlot ? 'bg-blue-50' : 'bg-gray-200'
-                }`}
-                title={item ? `${item.card.name} (${item.quantity})` : isLastSlot ? 'Добавить предмет' : 'Пустой слот'}
-                onClick={() => {
-                  // slot click debug
-                  if (isLastSlot) {
-                    // open add modal
-                    handleAddItemClick();
-                  } else {
-                    // empty slot
-                  }
-                }}
-              >
+        {/* Секция экипировки */}
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Экипировка</h3>
+          <div className="grid grid-cols-8 gap-1">
+            {Array.from({ length: equipmentSlots }, (_, index) => {
+              const item = allItems[index];
+              const row = Math.floor(index / 8);
+              const col = index % 8;
+              const slotType = equipmentSlotTypes[row][col];
+              const isLeftHand = row === 1 && (col === 0 || col === 1); // Левая рука во второй строке
+              
+              return (
+                <div
+                  key={index}
+                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
+                    item ? 'bg-white' : 'bg-gray-100'
+                  }`}
+                  title={item ? `${item.card.name} (${item.quantity})` : `Слот: ${slotType}`}
+                  onClick={() => {
+                    if (item) {
+                      handleItemClick(item);
+                    }
+                  }}
+                >
                 {item ? (
                   <div 
                     className="relative w-full h-full flex items-center justify-center"
@@ -489,26 +517,149 @@ const CharacterDetail: React.FC = () => {
                       </div>
                     )}
                   </div>
-                    ) : isLastSlot ? (
-                      <div 
-                        className="w-14 h-14 bg-blue-100 rounded flex items-center justify-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddItemClick();
-                        }}
-                      >
-                        <Plus className="w-6 h-6 text-blue-600" />
-                      </div>
                     ) : (
-                  <div className="w-14 h-14 bg-gray-200 rounded flex items-center justify-center pointer-events-none">
-                    <div className="w-8 h-8 border-2 border-dashed border-gray-400 rounded"></div>
-                  </div>
-                )}
+                      <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center pointer-events-none">
+                        <img
+                          src={getSlotIcon(slotType, isLeftHand)}
+                          alt={slotType}
+                          className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
+                        />
+                      </div>
+                    )}
               </div>
             );
           })}
         </div>
 
+        {/* Секция обычного инвентаря */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Инвентарь</h3>
+          <div className="grid grid-cols-8 gap-1">
+            {Array.from({ length: inventorySlots }, (_, index) => {
+              const actualIndex = equipmentSlots + index;
+              const item = allItems[actualIndex];
+              const isLastSlot = actualIndex === totalSlots - 1;
+              
+              return (
+                <div
+                  key={actualIndex}
+                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
+                    item ? 'bg-white' : 
+                    isLastSlot ? 'bg-blue-50' : 'bg-gray-200'
+                  }`}
+                  title={item ? `${item.card.name} (${item.quantity})` : isLastSlot ? 'Добавить предмет' : 'Пустой слот'}
+                  onClick={() => {
+                    if (isLastSlot) {
+                      handleAddItemClick();
+                    } else if (item) {
+                      handleItemClick(item);
+                    }
+                  }}
+                >
+                  {item ? (
+                    <div 
+                      className="relative w-full h-full flex items-center justify-center"
+                    >
+                      {item.card.image_url ? (
+                        <img
+                          src={item.card.image_url}
+                          alt={item.card.name}
+                          className="w-14 h-14 object-cover rounded pointer-events-none"
+                        />
+                      ) : (
+                        <div 
+                          className="w-14 h-14 bg-gray-300 rounded flex items-center justify-center pointer-events-none"
+                        >
+                          <Package className="w-6 h-6 text-gray-500" />
+                        </div>
+                      )}
+                      {/* Единый интерактивный слой поверх изображения: hover + click */}
+                      <div
+                        className="absolute inset-0 z-10 cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        onPointerDown={(e) => {
+                          isMouseDownRef.current = true;
+                          downPos.current = { x: e.clientX, y: e.clientY };
+                          (e.currentTarget as Element).setPointerCapture(e.pointerId);
+                        }}
+                        onPointerUp={(e) => {
+                          isMouseDownRef.current = false;
+                          (e.currentTarget as Element).releasePointerCapture(e.pointerId);
+
+                          const start = downPos.current;
+                          downPos.current = null;
+                          if (!start) return;
+                          const dx = Math.abs(e.clientX - start.x);
+                          const dy = Math.abs(e.clientY - start.y);
+                          const CLICK_TOLERANCE = 5;
+
+                          if (dx <= CLICK_TOLERANCE && dy <= CLICK_TOLERANCE) {
+                            handleItemClick(item);
+                          }
+                        }}
+                        onPointerCancel={() => {
+                          isMouseDownRef.current = false;
+                          downPos.current = null;
+                        }}
+                        onPointerEnter={(e) => {
+                          handleMouseEnter(item, actualIndex);
+                        }}
+                        onPointerLeave={() => {
+                          handleMouseLeave();
+                        }}
+                      />
+                      {item.quantity > 1 && (
+                        <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                          {item.quantity}
+                        </div>
+                      )}
+                      
+                      {/* Hover карточка */}
+                      {hoveredItem && hoveredItem.card && hoveredSlotIndex === actualIndex && (
+                        <div
+                          className="absolute z-50 pointer-events-auto"
+                          style={{
+                            right: '100%',
+                            top: '-20px',
+                            marginRight: '2px',
+                          }}
+                          onMouseEnter={() => {}}
+                          onMouseLeave={() => {
+                            setHoveredItem(null);
+                            setHoveredSlotIndex(null);
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleItemClick(hoveredItem);
+                          }}
+                        >
+                          <div className="scale-75 origin-top-right cursor-pointer">
+                            <CardPreview card={hoveredItem.card} disableHover={true} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : isLastSlot ? (
+                    <div 
+                      className="w-14 h-14 bg-blue-100 rounded flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddItemClick();
+                      }}
+                    >
+                      <Plus className="w-6 h-6 text-blue-600" />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 bg-gray-200 rounded flex items-center justify-center pointer-events-none">
+                      <div className="w-8 h-8 border-2 border-dashed border-gray-400 rounded"></div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   };
