@@ -149,6 +149,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		DefenseType:         card.DefenseType,
 		Type:                card.Type,
 		DescriptionFontSize: card.DescriptionFontSize,
+		Slot:                card.Slot,
 		CreatedAt:           card.CreatedAt,
 		UpdatedAt:           card.UpdatedAt,
 	}
@@ -248,6 +249,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DefenseType:         card.DefenseType,
 		Type:                card.Type,
 		DescriptionFontSize: card.DescriptionFontSize,
+		Slot:                card.Slot,
 		CreatedAt:           card.CreatedAt,
 		UpdatedAt:           card.UpdatedAt,
 	}
@@ -292,6 +294,11 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 
 	if req.Weight != nil && !ValidateWeight(req.Weight) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		return
+	}
+
+	if req.Slot != nil && !IsValidEquipmentSlot(*req.Slot) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый слот экипировки"})
 		return
 	}
 
@@ -375,6 +382,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.IsTemplate != "" {
 		card.IsTemplate = req.IsTemplate
 	}
+	if req.Slot != nil {
+		card.Slot = req.Slot
+	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
@@ -398,6 +408,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		DefenseType:         card.DefenseType,
 		Type:                card.Type,
 		DescriptionFontSize: card.DescriptionFontSize,
+		Slot:                card.Slot,
 		CreatedAt:           card.CreatedAt,
 		UpdatedAt:           card.UpdatedAt,
 	}
@@ -513,6 +524,7 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			Weight:              card.Weight,
 			BonusType:           card.BonusType,
 			BonusValue:          card.BonusValue,
+			Slot:                card.Slot,
 			CreatedAt:           card.CreatedAt,
 			UpdatedAt:           card.UpdatedAt,
 		})
