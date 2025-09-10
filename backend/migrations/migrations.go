@@ -44,6 +44,12 @@ func GetAllMigrations() []Migration {
 			Up:          addDetailedDescriptionField,
 			Down:        removeDetailedDescriptionField,
 		},
+		{
+			Version:     "007_add_slot_field",
+			Description: "Add slot field to cards table for equipment slots",
+			Up:          addSlotField,
+			Down:        removeSlotField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -444,5 +450,39 @@ func removeDetailedDescriptionField(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to remove detailed_description column: %w", err)
 	}
+	return nil
+}
+
+// addSlotField добавляет поле slot в таблицу cards
+func addSlotField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS slot VARCHAR(20)",
+		"ALTER TABLE cards ADD CONSTRAINT cards_slot_check CHECK (slot IN ('head', 'body', 'arms', 'feet', 'cloak', 'one_hand', 'versatile', 'two_hands', 'necklace', 'ring') OR slot IS NULL)",
+		"CREATE INDEX IF NOT EXISTS idx_cards_slot ON cards(slot)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeSlotField удаляет поле slot из таблицы cards
+func removeSlotField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_cards_slot",
+		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_slot_check",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS slot",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
 	return nil
 }
