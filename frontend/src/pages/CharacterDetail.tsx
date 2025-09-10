@@ -1093,7 +1093,8 @@ const CharacterDetail: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {/* Модал детального просмотра карточки */}
       {/* modal render debug removed */}
