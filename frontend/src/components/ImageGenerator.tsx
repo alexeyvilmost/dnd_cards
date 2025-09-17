@@ -4,7 +4,7 @@ import { imagesApi } from '../api/imagesApi';
 
 interface ImageGeneratorProps {
   entityType: 'card' | 'weapon_template';
-  entityId: string;
+  entityId?: string; // Опционально для новых карт
   entityName: string;
   entityRarity: string;
   entityDescription?: string;
@@ -39,9 +39,12 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       setError(null);
       setSuccess(false);
 
-      const response = await imagesApi.generateImage(entityType, entityId, undefined, {
+      // Для новых карт без ID используем временный идентификатор и передаем данные в entity_data
+      const validEntityId = entityId || 'temp-new-card';
+      
+      const response = await imagesApi.generateImage(entityType, validEntityId, undefined, {
         name: entityName,
-        description: entityDescription,
+        description: entityDescription || '',
         rarity: entityRarity,
       });
       
