@@ -43,4 +43,12 @@ export const inventoryApi = {
     const response = await apiClient.delete<{ message: string }>(`/inventories/${inventoryId}/items/${itemId}`);
     return response.data;
   },
+
+  // Экипировка/снятие предмета
+  equipItem: async (itemId: string, isEquipped: boolean): Promise<InventoryItem> => {
+    const response = await apiClient.put<InventoryItem>(`/inventories/items/${itemId}/equip`, {
+      is_equipped: isEquipped
+    });
+    return response.data;
+  },
 };

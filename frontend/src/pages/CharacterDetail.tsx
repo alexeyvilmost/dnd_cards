@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Eye, Plus, X } from 'lucide-react';
 import { charactersApi } from '../api/charactersApi';
+import { inventoryApi } from '../api/inventoryApi';
 import { useAuth } from '../contexts/AuthContext';
 import type { Character, CharacterData, Inventory } from '../types';
 import CardDetailModal from '../components/CardDetailModal';
@@ -22,6 +23,8 @@ const CharacterDetail: React.FC = () => {
   const [showCardDetailModal, setShowCardDetailModal] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
+  const [draggedItem, setDraggedItem] = useState<any>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const isOpeningRef = useRef<boolean>(false);
   const openingTimerRef = useRef<number | null>(null);
   const isMouseDownRef = useRef<boolean>(false);
@@ -320,6 +323,20 @@ const CharacterDetail: React.FC = () => {
       }))
     );
 
+    // Разделяем предметы на экипированные и неэкипированные
+    const equippedItems = allItems.filter(item => item.is_equipped);
+    const unequippedItems = allItems.filter(item => !item.is_equipped);
+
+    // Функция для поиска экипированного предмета для конкретного слота
+    const getEquippedItemForSlot = (slotType: string, slotIndex: number) => {
+      // Для универсальных слотов возвращаем null (они не привязаны к конкретному типу)
+      if (slotType === 'versatile') return null;
+      
+      return equippedItems.find(item => 
+        item.card.slot === slotType
+      ) || null;
+    };
+
     // Определяем слоты экипировки
     const equipmentSlotTypes = [
       // Первая строка: Правая рука, правая рука, кольцо, шлем, перчатки, плащ, *, *
@@ -402,6 +419,75 @@ const CharacterDetail: React.FC = () => {
       return () => window.removeEventListener('mouseout', onWindowMouseOut);
     }, []);
 
+    // Функция экипировки предмета
+    const handleEquipItem = async (item: any, isEquipped: boolean) => {
+      try {
+        await inventoryApi.equipItem(item.id, isEquipped);
+        // Перезагружаем инвентари для обновления состояния
+        if (id) {
+          await loadInventories(id);
+        }
+      } catch (error) {
+        console.error('Ошибка экипировки предмета:', error);
+      }
+    };
+
+    // Drag & Drop обработчики
+    const handleDragStart = (e: React.DragEvent, item: any) => {
+      setDraggedItem(item);
+      e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragEnd = () => {
+      setDraggedItem(null);
+      setDragOverSlot(null);
+    };
+
+    const handleDragOver = (e: React.DragEvent, slotIndex: number, isEquipmentSlot: boolean) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      
+      if (isEquipmentSlot) {
+        setDragOverSlot(slotIndex);
+      } else {
+        setDragOverSlot(null);
+      }
+    };
+
+    const handleDragLeave = () => {
+      setDragOverSlot(null);
+    };
+
+    const handleDrop = async (e: React.DragEvent, slotIndex: number, isEquipmentSlot: boolean) => {
+      e.preventDefault();
+      setDragOverSlot(null);
+      
+      if (!draggedItem) return;
+
+      if (isEquipmentSlot) {
+        // Перетаскивание в слот экипировки - экипируем предмет
+        const row = Math.floor(slotIndex / 8);
+        const col = slotIndex % 8;
+        const targetSlotType = equipmentSlotTypes[row][col];
+        
+        // Проверяем совместимость слота
+        const canEquip = draggedItem.card.slot === targetSlotType || targetSlotType === 'versatile';
+        
+        if (canEquip) {
+          await handleEquipItem(draggedItem, true);
+        } else {
+          console.log('Предмет нельзя экипировать в этот слот');
+        }
+      } else {
+        // Перетаскивание в рюкзак - снимаем предмет
+        if (draggedItem.is_equipped) {
+          await handleEquipItem(draggedItem, false);
+        }
+      }
+      
+      setDraggedItem(null);
+    };
+
     return (
       <div className="relative" onMouseLeave={handleMouseLeave}>
         {/* Секция экипировки */}
@@ -414,24 +500,131 @@ const CharacterDetail: React.FC = () => {
               const slotType = equipmentSlotTypes[row][col];
               const isLeftHand = row === 1 && (col === 0 || col === 1); // Левая рука во второй строке
               
+              // Ищем экипированный предмет для этого слота
+              const equippedItem = getEquippedItemForSlot(slotType, index);
+              
               return (
                 <div
                   key={index}
-                  className="w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group bg-gray-100"
-                  title={`Слот: ${slotType}`}
+                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
+                    equippedItem ? 'bg-white' : 'bg-gray-100'
+                  } ${
+                    dragOverSlot === index ? 'border-blue-500 bg-blue-50' : ''
+                  }`}
+                  title={equippedItem ? `${equippedItem.card.name} (${equippedItem.quantity})` : `Слот: ${slotType}`}
+                  onClick={() => {
+                    if (equippedItem) {
+                      handleItemClick(equippedItem);
+                    }
+                  }}
+                  onDragOver={(e) => handleDragOver(e, index, true)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index, true)}
                 >
-                  <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center pointer-events-none">
-                    {/* Показываем иконку только для первых 4 слотов в каждом ряду */}
-                    {col < 6 ? (
-                      <img
-                        src={getSlotIcon(slotType, isLeftHand)}
-                        alt={slotType}
-                        className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
+                  {equippedItem ? (
+                    <div 
+                      className="relative w-full h-full flex items-center justify-center"
+                    >
+                      {equippedItem.card.image_url ? (
+                        <img
+                          src={equippedItem.card.image_url}
+                          alt={equippedItem.card.name}
+                          className="w-14 h-14 object-cover rounded pointer-events-none"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, equippedItem)}
+                          onDragEnd={handleDragEnd}
+                        />
+                      ) : (
+                        <div 
+                          className="w-14 h-14 bg-gray-300 rounded flex items-center justify-center pointer-events-none"
+                        >
+                          <Package className="w-6 h-6 text-gray-500" />
+                        </div>
+                      )}
+                      {/* Единый интерактивный слой поверх изображения: hover + click */}
+                      <div
+                        className="absolute inset-0 z-10 cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        onPointerDown={(e) => {
+                          isMouseDownRef.current = true;
+                          downPos.current = { x: e.clientX, y: e.clientY };
+                          (e.currentTarget as Element).setPointerCapture(e.pointerId);
+                        }}
+                        onPointerUp={(e) => {
+                          isMouseDownRef.current = false;
+                          (e.currentTarget as Element).releasePointerCapture(e.pointerId);
+
+                          const start = downPos.current;
+                          downPos.current = null;
+                          if (!start) return;
+                          const dx = Math.abs(e.clientX - start.x);
+                          const dy = Math.abs(e.clientY - start.y);
+                          const CLICK_TOLERANCE = 5;
+
+                          if (dx <= CLICK_TOLERANCE && dy <= CLICK_TOLERANCE) {
+                            handleItemClick(equippedItem);
+                          }
+                        }}
+                        onPointerCancel={() => {
+                          isMouseDownRef.current = false;
+                          downPos.current = null;
+                        }}
+                        onPointerEnter={(e) => {
+                          handleMouseEnter(equippedItem, index);
+                        }}
+                        onPointerLeave={() => {
+                          handleMouseLeave();
+                        }}
                       />
-                    ) : (
-                      <div className="w-8 h-8 border-2 border-dashed border-gray-400 rounded"></div>
-                    )}
-                  </div>
+                      {equippedItem.quantity > 1 && (
+                        <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                          {equippedItem.quantity}
+                        </div>
+                      )}
+                      
+                      {/* Hover карточка прямо в слоте */}
+                      {hoveredItem && hoveredItem.card && hoveredSlotIndex === index && (
+                        <div
+                          className="absolute z-50 pointer-events-auto"
+                          style={{
+                            right: '100%',
+                            top: '-20px',
+                            marginRight: '2px',
+                          }}
+                          onMouseEnter={() => {
+                            // Не скрываем карточку при наведении на неё
+                          }}
+                          onMouseLeave={() => {
+                            // Скрываем только при уходе с карточки
+                            setHoveredItem(null);
+                            setHoveredSlotIndex(null);
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleItemClick(hoveredItem);
+                          }}
+                        >
+                          <div className="scale-75 origin-top-right cursor-pointer">
+                            <CardPreview card={hoveredItem.card} disableHover={true} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center pointer-events-none">
+                      {/* Показываем иконку только для первых 6 слотов в каждом ряду */}
+                      {col < 6 ? (
+                        <img
+                          src={getSlotIcon(slotType, isLeftHand)}
+                          alt={slotType}
+                          className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
+                        />
+                      ) : (
+                        <div className="w-8 h-8 border-2 border-dashed border-gray-400 rounded"></div>
+                      )}
+                    </div>
+                  )}
               </div>
             );
           })}
@@ -443,7 +636,7 @@ const CharacterDetail: React.FC = () => {
           <h3 className="text-sm font-medium text-gray-700 mb-3">Рюкзак</h3>
           <div className="grid grid-cols-8 gap-1">
             {Array.from({ length: inventorySlots }, (_, index) => {
-              const item = allItems[index]; // Показываем все предметы в рюкзаке
+              const item = unequippedItems[index]; // Показываем только неэкипированные предметы в рюкзаке
               const isLastSlot = index === inventorySlots - 1;
               
               return (
@@ -461,6 +654,9 @@ const CharacterDetail: React.FC = () => {
                       handleItemClick(item);
                     }
                   }}
+                  onDragOver={(e) => handleDragOver(e, index, false)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index, false)}
                 >
                   {item ? (
                     <div 
@@ -471,6 +667,9 @@ const CharacterDetail: React.FC = () => {
                           src={item.card.image_url}
                           alt={item.card.name}
                           className="w-14 h-14 object-cover rounded pointer-events-none"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, item)}
+                          onDragEnd={handleDragEnd}
                         />
                       ) : (
                         <div 
