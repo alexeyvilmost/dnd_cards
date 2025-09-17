@@ -46,9 +46,12 @@ export const inventoryApi = {
 
   // Экипировка/снятие предмета
   equipItem: async (itemId: string, isEquipped: boolean): Promise<InventoryItem> => {
-    const response = await apiClient.put<InventoryItem>(`/inventories/items/${itemId}/equip`, {
-      is_equipped: isEquipped
-    });
+    console.log('API equipItem called:', { itemId, isEquipped });
+    const requestData = { is_equipped: isEquipped };
+    console.log('Request data:', requestData);
+    
+    const response = await apiClient.put<InventoryItem>(`/inventories/items/${itemId}/equip`, requestData);
+    console.log('API response:', response.data);
     return response.data;
   },
 };

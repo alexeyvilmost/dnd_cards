@@ -415,7 +415,7 @@ func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
 
 // EquipItemRequest - запрос на экипировку предмета
 type EquipItemRequest struct {
-	IsEquipped bool `json:"is_equipped" binding:"required"`
+	IsEquipped bool `json:"is_equipped"`
 }
 
 // EquipItem - экипировка/снятие предмета

@@ -309,11 +309,17 @@ const CharacterDetail: React.FC = () => {
 
   // Функция экипировки предмета (вынесена на уровень основного компонента)
   const handleEquipItem = async (itemId: string, isEquipped: boolean) => {
+    console.log('handleEquipItem called:', { itemId, isEquipped });
     try {
-      await inventoryApi.equipItem(itemId, isEquipped);
+      console.log('Calling inventoryApi.equipItem...');
+      const result = await inventoryApi.equipItem(itemId, isEquipped);
+      console.log('equipItem result:', result);
+      
       // Перезагружаем инвентари для обновления состояния
       if (id) {
+        console.log('Reloading inventories...');
         await loadInventories(id);
+        console.log('Inventories reloaded');
       }
     } catch (error) {
       console.error('Ошибка экипировки предмета:', error);
@@ -339,14 +345,24 @@ const CharacterDetail: React.FC = () => {
     const equippedItems = allItems.filter(item => item.is_equipped);
     const unequippedItems = allItems.filter(item => !item.is_equipped);
 
+    console.log('All items:', allItems.length);
+    console.log('Equipped items:', equippedItems.length, equippedItems);
+    console.log('Unequipped items:', unequippedItems.length);
+
     // Функция для поиска экипированного предмета для конкретного слота
     const getEquippedItemForSlot = (slotType: string, slotIndex: number) => {
       // Для универсальных слотов возвращаем null (они не привязаны к конкретному типу)
       if (slotType === 'versatile') return null;
       
-      return equippedItems.find(item => 
+      const foundItem = equippedItems.find(item => 
         item.card.slot === slotType
       ) || null;
+      
+      if (foundItem) {
+        console.log(`Found equipped item for slot ${slotType}:`, foundItem);
+      }
+      
+      return foundItem;
     };
 
     // Определяем слоты экипировки
