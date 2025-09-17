@@ -524,15 +524,15 @@ const CharacterDetail: React.FC = () => {
                   {equippedItem ? (
                     <div 
                       className="relative w-full h-full flex items-center justify-center"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, equippedItem)}
+                      onDragEnd={handleDragEnd}
                     >
                       {equippedItem.card.image_url ? (
                         <img
                           src={equippedItem.card.image_url}
                           alt={equippedItem.card.name}
                           className="w-14 h-14 object-cover rounded pointer-events-none"
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, equippedItem)}
-                          onDragEnd={handleDragEnd}
                         />
                       ) : (
                         <div 
@@ -661,15 +661,15 @@ const CharacterDetail: React.FC = () => {
                   {item ? (
                     <div 
                       className="relative w-full h-full flex items-center justify-center"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item)}
+                      onDragEnd={handleDragEnd}
                     >
                       {item.card.image_url ? (
                         <img
                           src={item.card.image_url}
                           alt={item.card.name}
                           className="w-14 h-14 object-cover rounded pointer-events-none"
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, item)}
-                          onDragEnd={handleDragEnd}
                         />
                       ) : (
                         <div 

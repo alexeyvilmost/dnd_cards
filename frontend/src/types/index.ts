@@ -268,6 +268,7 @@ export interface InventoryItem {
   card_id: string;
   quantity: number;
   notes: string;
+  is_equipped: boolean;
   created_at: string;
   updated_at: string;
   inventory: Inventory;
@@ -289,6 +290,7 @@ export interface AddItemToInventoryRequest {
 export interface UpdateInventoryItemRequest {
   quantity: number;
   notes?: string;
+  is_equipped?: boolean;
 }
 
 // Character - модель персонажа D&D
