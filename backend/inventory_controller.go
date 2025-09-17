@@ -304,6 +304,9 @@ func (ic *InventoryController) UpdateInventoryItem(c *gin.Context) {
 	// Обновляем предмет
 	item.Quantity = req.Quantity
 	item.Notes = req.Notes
+	if req.IsEquipped != nil {
+		item.IsEquipped = *req.IsEquipped
+	}
 
 	if err := ic.db.Save(&item).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка обновления предмета"})
@@ -408,4 +411,96 @@ func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, inventories)
+}
+
+// EquipItemRequest - запрос на экипировку предмета
+type EquipItemRequest struct {
+	IsEquipped bool `json:"is_equipped" binding:"required"`
+}
+
+// EquipItem - экипировка/снятие предмета
+func (ic *InventoryController) EquipItem(c *gin.Context) {
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	itemIDStr := c.Param("itemId")
+	itemID, err := uuid.Parse(itemIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID предмета"})
+		return
+	}
+
+	var req EquipItemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса: " + err.Error()})
+		return
+	}
+
+	// Получаем предмет и проверяем права доступа
+	var item InventoryItem
+	if err := ic.db.Preload("Inventory").Preload("Card").First(&item, itemID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "предмет не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения предмета"})
+		return
+	}
+
+	// Проверяем права доступа к инвентарю
+	if item.Inventory.Type == InventoryTypePersonal {
+		if item.Inventory.UserID == nil || *item.Inventory.UserID != userID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "у вас нет доступа к этому инвентарю"})
+			return
+		}
+	} else if item.Inventory.Type == InventoryTypeGroup {
+		if item.Inventory.GroupID == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "неверная конфигурация группового инвентаря"})
+			return
+		}
+
+		// Проверяем, является ли пользователь участником группы
+		var member GroupMember
+		if err := ic.db.Where("group_id = ? AND user_id = ?", *item.Inventory.GroupID, userID).First(&member).Error; err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "у вас нет доступа к этому инвентарю"})
+			return
+		}
+	}
+
+	// Если экипируем предмет, проверяем, что у предмета есть слот экипировки
+	if req.IsEquipped && (item.Card.Slot == nil || *item.Card.Slot == "") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "этот предмет нельзя экипировать"})
+		return
+	}
+
+	// Если экипируем предмет, снимаем другие предметы в том же слоте
+	if req.IsEquipped && item.Card.Slot != nil {
+		// Находим все предметы в инвентарях персонажа с тем же слотом
+		var conflictingItems []InventoryItem
+		if err := ic.db.Preload("Card").
+			Joins("JOIN inventories ON inventory_items.inventory_id = inventories.id").
+			Where("inventories.character_id = ? AND inventory_items.is_equipped = true", item.Inventory.CharacterID).
+			Find(&conflictingItems).Error; err == nil {
+			
+			for _, conflictItem := range conflictingItems {
+				if conflictItem.Card.Slot != nil && *conflictItem.Card.Slot == *item.Card.Slot && conflictItem.ID != item.ID {
+					conflictItem.IsEquipped = false
+					ic.db.Save(&conflictItem)
+				}
+			}
+		}
+	}
+
+	// Обновляем статус экипировки
+	item.IsEquipped = req.IsEquipped
+
+	if err := ic.db.Save(&item).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка обновления предмета"})
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
 }

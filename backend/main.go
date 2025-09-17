@@ -121,6 +121,7 @@ func main() {
 			protected.POST("/inventories/:id/items", inventoryController.AddItemToInventory)
 			protected.PUT("/inventories/:id/items/:itemId", inventoryController.UpdateInventoryItem)
 			protected.DELETE("/inventories/:id/items/:itemId", inventoryController.RemoveItemFromInventory)
+			protected.PUT("/inventories/items/:itemId/equip", inventoryController.EquipItem)
 
 			// Персонажи
 			protected.POST("/characters", characterController.CreateCharacter)

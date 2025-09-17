@@ -50,6 +50,12 @@ func GetAllMigrations() []Migration {
 			Up:          addSlotField,
 			Down:        removeSlotField,
 		},
+		{
+			Version:     "008_add_is_equipped_field",
+			Description: "Add is_equipped field to inventory_items table",
+			Up:          addIsEquippedField,
+			Down:        removeIsEquippedField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -476,6 +482,38 @@ func removeSlotField(db *sql.DB) error {
 		"DROP INDEX IF EXISTS idx_cards_slot",
 		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_slot_check",
 		"ALTER TABLE cards DROP COLUMN IF EXISTS slot",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// addIsEquippedField добавляет поле is_equipped в таблицу inventory_items
+func addIsEquippedField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS is_equipped BOOLEAN NOT NULL DEFAULT false",
+		"CREATE INDEX IF NOT EXISTS idx_inventory_items_is_equipped ON inventory_items(is_equipped)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeIsEquippedField удаляет поле is_equipped из таблицы inventory_items
+func removeIsEquippedField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_inventory_items_is_equipped",
+		"ALTER TABLE inventory_items DROP COLUMN IF EXISTS is_equipped",
 	}
 
 	for _, query := range queries {

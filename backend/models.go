@@ -599,6 +599,7 @@ type InventoryItem struct {
 	CardID      uuid.UUID      `json:"card_id" gorm:"not null"`
 	Quantity    int            `json:"quantity" gorm:"not null;default:1"`
 	Notes       string         `json:"notes" gorm:"type:text"` // Заметки игрока
+	IsEquipped  bool           `json:"is_equipped" gorm:"default:false"` // Надет ли предмет
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
@@ -655,8 +656,9 @@ type AddItemToInventoryRequest struct {
 
 // UpdateInventoryItemRequest - запрос на обновление предмета в инвентаре
 type UpdateInventoryItemRequest struct {
-	Quantity int    `json:"quantity" binding:"required,min=0"`
-	Notes    string `json:"notes"`
+	Quantity   int  `json:"quantity" binding:"required,min=0"`
+	Notes      string `json:"notes"`
+	IsEquipped *bool `json:"is_equipped"` // Указатель для опциональности
 }
 
 // Character - модель персонажа D&D
