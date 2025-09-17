@@ -307,6 +307,19 @@ const CharacterDetail: React.FC = () => {
   const currentWeight = calculateCurrentWeight();
   const weightPercentage = carryingCapacity > 0 ? (currentWeight / carryingCapacity) * 100 : 0;
 
+  // Функция экипировки предмета (вынесена на уровень основного компонента)
+  const handleEquipItem = async (itemId: string, isEquipped: boolean) => {
+    try {
+      await inventoryApi.equipItem(itemId, isEquipped);
+      // Перезагружаем инвентари для обновления состояния
+      if (id) {
+        await loadInventories(id);
+      }
+    } catch (error) {
+      console.error('Ошибка экипировки предмета:', error);
+    }
+  };
+
   // Компонент сетки инвентаря
   const InventoryGrid: React.FC<{ characterData: CharacterData | null }> = ({ characterData }) => {
     const equipmentSlots = 16; // 2 строки по 8 слотов для экипировки
@@ -419,18 +432,6 @@ const CharacterDetail: React.FC = () => {
       return () => window.removeEventListener('mouseout', onWindowMouseOut);
     }, []);
 
-    // Функция экипировки предмета
-    const handleEquipItem = async (item: any, isEquipped: boolean) => {
-      try {
-        await inventoryApi.equipItem(item.id, isEquipped);
-        // Перезагружаем инвентари для обновления состояния
-        if (id) {
-          await loadInventories(id);
-        }
-      } catch (error) {
-        console.error('Ошибка экипировки предмета:', error);
-      }
-    };
 
 
     return (
