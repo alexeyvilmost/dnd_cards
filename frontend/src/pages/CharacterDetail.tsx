@@ -421,11 +421,16 @@ const CharacterDetail: React.FC = () => {
                   title={`Слот: ${slotType}`}
                 >
                   <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center pointer-events-none">
-                    <img
-                      src={getSlotIcon(slotType, isLeftHand)}
-                      alt={slotType}
-                      className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
-                    />
+                    {/* Показываем иконку только для первых 4 слотов в каждом ряду */}
+                    {col < 6 ? (
+                      <img
+                        src={getSlotIcon(slotType, isLeftHand)}
+                        alt={slotType}
+                        className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 border-2 border-dashed border-gray-400 rounded"></div>
+                    )}
                   </div>
               </div>
             );
