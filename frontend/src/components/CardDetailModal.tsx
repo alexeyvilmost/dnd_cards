@@ -207,14 +207,16 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             {/* Кнопка экипировки - только для предметов в инвентаре */}
             {inventoryItem && onEquip && card.slot && (
               <button
-                onClick={() => {
+                onClick={async () => {
                   console.log('Equip button clicked:', { 
                     itemId: inventoryItem.id, 
                     currentState: inventoryItem.is_equipped,
                     newState: !inventoryItem.is_equipped,
                     cardSlot: card.slot
                   });
-                  onEquip(inventoryItem.id, !inventoryItem.is_equipped);
+                  await onEquip(inventoryItem.id, !inventoryItem.is_equipped);
+                  // Закрываем модальное окно после успешной экипировки
+                  onClose();
                 }}
                 className={`px-4 py-2 rounded flex items-center space-x-2 ${
                   inventoryItem.is_equipped 
