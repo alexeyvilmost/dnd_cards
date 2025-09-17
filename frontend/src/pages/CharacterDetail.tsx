@@ -20,11 +20,10 @@ const CharacterDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState('basic');
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
   const [showCardDetailModal, setShowCardDetailModal] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
-  const [draggedItem, setDraggedItem] = useState<any>(null);
-  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const isOpeningRef = useRef<boolean>(false);
   const openingTimerRef = useRef<number | null>(null);
   const isMouseDownRef = useRef<boolean>(false);
@@ -384,6 +383,7 @@ const CharacterDetail: React.FC = () => {
       console.log('ITEM CLICK START:', { itemName: item?.card?.name });
       if (item && item.card) {
         setSelectedCard(item.card);
+        setSelectedInventoryItem(item); // Сохраняем информацию о предмете в инвентаре
         setShowCardDetailModal(true);
         setTimeout(() => {
           console.log('ITEM CLICK AFTER SET: modal should be open');
@@ -432,61 +432,6 @@ const CharacterDetail: React.FC = () => {
       }
     };
 
-    // Drag & Drop обработчики
-    const handleDragStart = (e: React.DragEvent, item: any) => {
-      setDraggedItem(item);
-      e.dataTransfer.effectAllowed = 'move';
-    };
-
-    const handleDragEnd = () => {
-      setDraggedItem(null);
-      setDragOverSlot(null);
-    };
-
-    const handleDragOver = (e: React.DragEvent, slotIndex: number, isEquipmentSlot: boolean) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      
-      if (isEquipmentSlot) {
-        setDragOverSlot(slotIndex);
-      } else {
-        setDragOverSlot(null);
-      }
-    };
-
-    const handleDragLeave = () => {
-      setDragOverSlot(null);
-    };
-
-    const handleDrop = async (e: React.DragEvent, slotIndex: number, isEquipmentSlot: boolean) => {
-      e.preventDefault();
-      setDragOverSlot(null);
-      
-      if (!draggedItem) return;
-
-      if (isEquipmentSlot) {
-        // Перетаскивание в слот экипировки - экипируем предмет
-        const row = Math.floor(slotIndex / 8);
-        const col = slotIndex % 8;
-        const targetSlotType = equipmentSlotTypes[row][col];
-        
-        // Проверяем совместимость слота
-        const canEquip = draggedItem.card.slot === targetSlotType || targetSlotType === 'versatile';
-        
-        if (canEquip) {
-          await handleEquipItem(draggedItem, true);
-        } else {
-          console.log('Предмет нельзя экипировать в этот слот');
-        }
-      } else {
-        // Перетаскивание в рюкзак - снимаем предмет
-        if (draggedItem.is_equipped) {
-          await handleEquipItem(draggedItem, false);
-        }
-      }
-      
-      setDraggedItem(null);
-    };
 
     return (
       <div className="relative" onMouseLeave={handleMouseLeave}>
@@ -508,8 +453,6 @@ const CharacterDetail: React.FC = () => {
                   key={index}
                   className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
                     equippedItem ? 'bg-white' : 'bg-gray-100'
-                  } ${
-                    dragOverSlot === index ? 'border-blue-500 bg-blue-50' : ''
                   }`}
                   title={equippedItem ? `${equippedItem.card.name} (${equippedItem.quantity})` : `Слот: ${slotType}`}
                   onClick={() => {
@@ -517,16 +460,10 @@ const CharacterDetail: React.FC = () => {
                       handleItemClick(equippedItem);
                     }
                   }}
-                  onDragOver={(e) => handleDragOver(e, index, true)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index, true)}
                 >
                   {equippedItem ? (
                     <div 
                       className="relative w-full h-full flex items-center justify-center"
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, equippedItem)}
-                      onDragEnd={handleDragEnd}
                     >
                       {equippedItem.card.image_url ? (
                         <img
@@ -539,7 +476,7 @@ const CharacterDetail: React.FC = () => {
                           className="w-14 h-14 bg-gray-300 rounded flex items-center justify-center pointer-events-none"
                         >
                           <Package className="w-6 h-6 text-gray-500" />
-                        </div>
+            </div>
                       )}
                       {/* Единый интерактивный слой поверх изображения: hover + click */}
                       <div
@@ -629,7 +566,7 @@ const CharacterDetail: React.FC = () => {
             );
           })}
         </div>
-        </div>
+      </div>
 
         {/* Секция обычного инвентаря */}
         <div>
@@ -654,16 +591,10 @@ const CharacterDetail: React.FC = () => {
                       handleItemClick(item);
                     }
                   }}
-                  onDragOver={(e) => handleDragOver(e, index, false)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index, false)}
                 >
                   {item ? (
                     <div 
                       className="relative w-full h-full flex items-center justify-center"
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, item)}
-                      onDragEnd={handleDragEnd}
                     >
                       {item.card.image_url ? (
                         <img
@@ -676,7 +607,7 @@ const CharacterDetail: React.FC = () => {
                           className="w-14 h-14 bg-gray-300 rounded flex items-center justify-center pointer-events-none"
                         >
                           <Package className="w-6 h-6 text-gray-500" />
-                        </div>
+            </div>
                       )}
                       {/* Единый интерактивный слой поверх изображения: hover + click */}
                       <div
@@ -717,7 +648,7 @@ const CharacterDetail: React.FC = () => {
                       {item.quantity > 1 && (
                         <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
                           {item.quantity}
-                        </div>
+          </div>
                       )}
                       
                       {/* Hover карточка */}
@@ -741,10 +672,10 @@ const CharacterDetail: React.FC = () => {
                         >
                           <div className="scale-75 origin-top-right cursor-pointer">
                             <CardPreview card={hoveredItem.card} disableHover={true} />
-                          </div>
-                        </div>
+            </div>
+          </div>
                       )}
-                    </div>
+            </div>
                   ) : isLastSlot ? (
                     <div 
                       className="w-14 h-14 bg-blue-100 rounded flex items-center justify-center"
@@ -754,17 +685,17 @@ const CharacterDetail: React.FC = () => {
                       }}
                     >
                       <Plus className="w-6 h-6 text-blue-600" />
-                    </div>
+          </div>
                   ) : (
                     <div className="w-14 h-14 bg-gray-200 rounded flex items-center justify-center pointer-events-none">
                       <div className="w-8 h-8 border-2 border-dashed border-gray-400 rounded"></div>
-                    </div>
+            </div>
                   )}
-                </div>
+          </div>
               );
             })}
-          </div>
         </div>
+      </div>
       </div>
     );
   };
@@ -786,17 +717,17 @@ const CharacterDetail: React.FC = () => {
                     {/* Название характеристики - 25% */}
                     <div className="flex items-center justify-center p-2 bg-gray-50 rounded-l-lg w-1/4">
                       <div className="text-xs text-gray-600 uppercase">{statNameInRussian}</div>
-                    </div>
+            </div>
                     
                     {/* Значение характеристики - 25% */}
                     <div className="flex items-center justify-center p-2 bg-gray-50 w-1/4">
                       <div className="text-xs text-gray-500">{stat.score}</div>
-                    </div>
+          </div>
                     
                     {/* Модификатор характеристики - 25% */}
                     <div className="flex items-center justify-center p-2 bg-gray-50 w-1/4">
                       <div className="text-sm font-bold text-gray-900">{getModifier(stat.score)}</div>
-                    </div>
+            </div>
                     
                     {/* Спасбросок - 25% */}
                     <div className="flex items-center justify-center p-2 bg-gray-50 rounded-r-lg w-1/4">
@@ -806,9 +737,9 @@ const CharacterDetail: React.FC = () => {
                         style={{ zIndex: 10 }}
                       >
                         {savingThrow.bonus}
-                      </div>
-                    </div>
-                  </div>
+          </div>
+            </div>
+          </div>
                 );
               })}
             </div>
@@ -818,13 +749,13 @@ const CharacterDetail: React.FC = () => {
               <div className="bg-blue-50 rounded-lg p-3 text-center">
                 <div className="text-xs text-blue-600 font-medium mb-1">Уровень</div>
                 <div className="text-lg font-bold text-blue-900">{characterData.info?.level?.value || 1}</div>
-              </div>
+          </div>
               <div className="bg-purple-50 rounded-lg p-3 text-center">
                 <div className="text-xs text-purple-600 font-medium mb-1">Мастерство</div>
                 <div className="text-lg font-bold text-purple-900">+{characterData.proficiency || 2}</div>
-              </div>
-            </div>
-            
+        </div>
+      </div>
+
             {/* Блок защиты, скорости, здоровья и пассивного восприятия - 2x2 */}
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div className="bg-green-50 rounded-lg p-3 text-center">
@@ -848,22 +779,22 @@ const CharacterDetail: React.FC = () => {
 
           {/* Навыки - уменьшенный столбец */}
           <div className="w-1/5">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Навыки</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Навыки</h2>
             <div className="grid grid-cols-1 gap-1">
-              {Object.entries(characterData.skills || {}).map(([skillName, skill]) => {
-                const isProficient = skill.isProf === 1 || skill.isProf === true;
-                return (
+          {Object.entries(characterData.skills || {}).map(([skillName, skill]) => {
+            const isProficient = skill.isProf === 1 || skill.isProf === true;
+            return (
                   <div key={skillName} className={`flex items-center justify-between p-1.5 rounded-lg ${isProficient ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
                     <div className="flex items-center space-x-1">
                       <span className="text-xs font-medium text-gray-900">{getSkillNameInRussian(skillName)}</span>
                       {isProficient && <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">М</span>}
-                    </div>
+                </div>
                     <div className="text-xs font-bold text-gray-900">{getSkillBonus(skillName)}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
           {/* Инвентарь */}
           <div className="w-3/5">
@@ -917,17 +848,17 @@ const CharacterDetail: React.FC = () => {
 
 
       {/* Особенности класса и расы */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Особенности класса и расы</h2>
-        <div className="prose max-w-none">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Особенности класса и расы</h2>
+          <div className="prose max-w-none">
           <div className="text-gray-700 text-sm leading-relaxed">
             {characterData.text?.traits?.value?.data?.content ? 
               parseTraitsContent(characterData.text.traits.value.data.content) : 
               <p className="text-gray-500">Данные о способностях не найдены</p>
             }
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 
@@ -1209,6 +1140,7 @@ const CharacterDetail: React.FC = () => {
           
           setShowCardDetailModal(false);
           setSelectedCard(null);
+          setSelectedInventoryItem(null);
         }}
         onEdit={(cardId: string) => {
           
@@ -1218,6 +1150,8 @@ const CharacterDetail: React.FC = () => {
           
           // Здесь можно добавить логику удаления из инвентаря
         }}
+        inventoryItem={selectedInventoryItem}
+        onEquip={handleEquipItem}
       />
     </div>
   );

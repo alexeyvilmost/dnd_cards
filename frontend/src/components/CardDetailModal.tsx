@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { X, Edit, Trash2 } from 'lucide-react';
+import { X, Edit, Trash2, Shield, ShieldOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Card } from '../types';
+import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
@@ -12,6 +12,8 @@ interface CardDetailModalProps {
   onClose: () => void;
   onEdit: (cardId: string) => void;
   onDelete: (cardId: string) => void;
+  inventoryItem?: InventoryItem | null; // Информация о предмете в инвентаре
+  onEquip?: (itemId: string, isEquipped: boolean) => void; // Функция экипировки
 }
 
 const CardDetailModal: React.FC<CardDetailModalProps> = ({
@@ -19,7 +21,9 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   isOpen,
   onClose,
   onEdit,
-  onDelete
+  onDelete,
+  inventoryItem,
+  onEquip
 }) => {
   if (!isOpen || !card) return null;
 
@@ -199,6 +203,30 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <Trash2 size={18} />
               <span>Удалить</span>
             </button>
+            
+            {/* Кнопка экипировки - только для предметов в инвентаре */}
+            {inventoryItem && onEquip && card.slot && (
+              <button
+                onClick={() => onEquip(inventoryItem.id, !inventoryItem.is_equipped)}
+                className={`px-4 py-2 rounded flex items-center space-x-2 ${
+                  inventoryItem.is_equipped 
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
+              >
+                {inventoryItem.is_equipped ? (
+                  <>
+                    <ShieldOff size={18} />
+                    <span>Снять</span>
+                  </>
+                ) : (
+                  <>
+                    <Shield size={18} />
+                    <span>Надеть</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
