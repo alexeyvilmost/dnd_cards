@@ -409,7 +409,6 @@ const CharacterDetail: React.FC = () => {
           <h3 className="text-sm font-medium text-gray-700 mb-3">Экипировка</h3>
           <div className="grid grid-cols-8 gap-1">
             {Array.from({ length: equipmentSlots }, (_, index) => {
-              const item = allItems[index];
               const row = Math.floor(index / 8);
               const col = index % 8;
               const slotType = equipmentSlotTypes[row][col];
@@ -418,114 +417,16 @@ const CharacterDetail: React.FC = () => {
               return (
                 <div
                   key={index}
-                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
-                    item ? 'bg-white' : 'bg-gray-100'
-                  }`}
-                  title={item ? `${item.card.name} (${item.quantity})` : `Слот: ${slotType}`}
-                  onClick={() => {
-                    if (item) {
-                      handleItemClick(item);
-                    }
-                  }}
+                  className="w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group bg-gray-100"
+                  title={`Слот: ${slotType}`}
                 >
-                {item ? (
-                  <div 
-                    className="relative w-full h-full flex items-center justify-center"
-                  >
-                    {item.card.image_url ? (
-                      <img
-                        src={item.card.image_url}
-                        alt={item.card.name}
-                        className="w-14 h-14 object-cover rounded pointer-events-none"
-                      />
-                    ) : (
-                      <div 
-                        className="w-14 h-14 bg-gray-300 rounded flex items-center justify-center pointer-events-none"
-                      >
-                        <Package className="w-6 h-6 text-gray-500" />
-                      </div>
-                    )}
-                    {/* Единый интерактивный слой поверх изображения: hover + click */}
-                    <div
-                      className="absolute inset-0 z-10 cursor-pointer"
-                      role="button"
-                      tabIndex={0}
-                      onPointerDown={(e) => {
-                        isMouseDownRef.current = true;
-                        downPos.current = { x: e.clientX, y: e.clientY };
-                        // важно: держим события даже если указатель вышел
-                        (e.currentTarget as Element).setPointerCapture(e.pointerId);
-                      }}
-                      onPointerUp={(e) => {
-                        isMouseDownRef.current = false;
-                        (e.currentTarget as Element).releasePointerCapture(e.pointerId);
-
-                        // определяем «клик» вручную
-                        const start = downPos.current;
-                        downPos.current = null;
-                        if (!start) return;
-                        const dx = Math.abs(e.clientX - start.x);
-                        const dy = Math.abs(e.clientY - start.y);
-                        const CLICK_TOLERANCE = 5; // px
-
-                        if (dx <= CLICK_TOLERANCE && dy <= CLICK_TOLERANCE) {
-                          handleItemClick(item);
-                        }
-                      }}
-                      onPointerCancel={() => {
-                        isMouseDownRef.current = false;
-                        downPos.current = null;
-                      }}
-                      onPointerEnter={(e) => {
-                        handleMouseEnter(item, index);
-                      }}
-                      onPointerLeave={() => {
-                        handleMouseLeave();
-                      }}
+                  <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center pointer-events-none">
+                    <img
+                      src={getSlotIcon(slotType, isLeftHand)}
+                      alt={slotType}
+                      className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
                     />
-                    {item.quantity > 1 && (
-                      <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
-                        {item.quantity}
-                      </div>
-                    )}
-                    
-                    {/* Hover карточка прямо в слоте */}
-                    {hoveredItem && hoveredItem.card && hoveredSlotIndex === index && (
-                      <div
-                        className="absolute z-50 pointer-events-auto"
-                        style={{
-                          right: '100%',
-                          top: '-20px',
-                          marginRight: '2px',
-                        }}
-                        onMouseEnter={() => {
-                          // Не скрываем карточку при наведении на неё
-                        }}
-                        onMouseLeave={() => {
-                          // Скрываем только при уходе с карточки
-                          setHoveredItem(null);
-                          setHoveredSlotIndex(null);
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleItemClick(hoveredItem);
-                        }}
-                      >
-                        <div className="scale-75 origin-top-right cursor-pointer">
-                          <CardPreview card={hoveredItem.card} disableHover={true} />
-                        </div>
-                      </div>
-                    )}
                   </div>
-                    ) : (
-                      <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center pointer-events-none">
-                        <img
-                          src={getSlotIcon(slotType, isLeftHand)}
-                          alt={slotType}
-                          className={`w-8 h-8 opacity-50 ${isLeftHand ? 'scale-x-[-1]' : ''}`}
-                        />
-                      </div>
-                    )}
               </div>
             );
           })}
@@ -534,16 +435,15 @@ const CharacterDetail: React.FC = () => {
 
         {/* Секция обычного инвентаря */}
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Инвентарь</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Рюкзак</h3>
           <div className="grid grid-cols-8 gap-1">
             {Array.from({ length: inventorySlots }, (_, index) => {
-              const actualIndex = equipmentSlots + index;
-              const item = allItems[actualIndex];
-              const isLastSlot = actualIndex === totalSlots - 1;
+              const item = allItems[index]; // Показываем все предметы в рюкзаке
+              const isLastSlot = index === inventorySlots - 1;
               
               return (
                 <div
-                  key={actualIndex}
+                  key={index}
                   className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center relative group cursor-pointer ${
                     item ? 'bg-white' : 
                     isLastSlot ? 'bg-blue-50' : 'bg-gray-200'
@@ -604,7 +504,7 @@ const CharacterDetail: React.FC = () => {
                           downPos.current = null;
                         }}
                         onPointerEnter={(e) => {
-                          handleMouseEnter(item, actualIndex);
+                          handleMouseEnter(item, equipmentSlots + index);
                         }}
                         onPointerLeave={() => {
                           handleMouseLeave();
@@ -617,7 +517,7 @@ const CharacterDetail: React.FC = () => {
                       )}
                       
                       {/* Hover карточка */}
-                      {hoveredItem && hoveredItem.card && hoveredSlotIndex === actualIndex && (
+                      {hoveredItem && hoveredItem.card && hoveredSlotIndex === (equipmentSlots + index) && (
                         <div
                           className="absolute z-50 pointer-events-auto"
                           style={{
