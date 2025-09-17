@@ -530,6 +530,7 @@ const CharacterDetail: React.FC = () => {
             );
           })}
         </div>
+        </div>
 
         {/* Секция обычного инвентаря */}
         <div>
@@ -1094,7 +1095,6 @@ const CharacterDetail: React.FC = () => {
           </div>
         </div>
         )}
-      </div>
 
       {/* Модал детального просмотра карточки */}
       {/* modal render debug removed */}
