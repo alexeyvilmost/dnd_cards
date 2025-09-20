@@ -338,20 +338,26 @@ const CharacterDetail: React.FC = () => {
       // Обновляем локальное состояние
       setCharacter(updatedCharacter);
       
-      // Обновляем characterData с новым значением
-      const updatedCharacterData = {
-        ...characterData,
-        stats: {
-          ...characterData.stats,
-          [statName]: {
-            ...characterData.stats[statName],
-            score: newValue
+      // Парсим обновленные данные с сервера
+      try {
+        const parsedUpdatedData = JSON.parse(updatedCharacter.data);
+        setCharacterData(parsedUpdatedData);
+        console.log(`Характеристика ${statName} обновлена на ${newValue}`);
+      } catch (parseError) {
+        console.error('Ошибка парсинга обновленных данных:', parseError);
+        // Fallback: обновляем вручную
+        const updatedCharacterData = {
+          ...characterData,
+          stats: {
+            ...characterData.stats,
+            [statName]: {
+              ...characterData.stats[statName],
+              score: newValue
+            }
           }
-        }
-      };
-      setCharacterData(updatedCharacterData);
-      
-      console.log(`Характеристика ${statName} обновлена на ${newValue}`);
+        };
+        setCharacterData(updatedCharacterData);
+      }
     } catch (error) {
       console.error('Ошибка обновления характеристики:', error);
       // Здесь можно добавить уведомление об ошибке

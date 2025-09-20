@@ -53,6 +53,7 @@ const EditableNumber: React.FC<EditableNumberProps> = ({
     
     if (!isNaN(numValue) && numValue >= min && numValue <= max) {
       onChange(numValue);
+      setEditValue(numValue.toString()); // Обновляем editValue новым значением
       setIsEditing(false);
     } else {
       // Если значение некорректное, возвращаем исходное
