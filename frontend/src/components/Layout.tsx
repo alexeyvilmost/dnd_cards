@@ -28,6 +28,7 @@ const Layout = ({ children }: LayoutProps) => {
       submenu: [
         { path: '/groups', label: 'Мои группы' },
         { path: '/characters', label: 'Мои персонажи' },
+        { path: '/characters-v2', label: 'Персонажи V2' },
         { path: '/inventory', label: 'Инвентарь' }
       ]
     }

@@ -20,6 +20,7 @@ import Characters from './pages/Characters';
 import CharacterDetail from './pages/CharacterDetail';
 import CharacterEdit from './pages/CharacterEdit';
 import CreateCharacter from './pages/CreateCharacter';
+import CharactersV2 from './pages/CharactersV2';
 
 function App() {
   return (
@@ -138,6 +139,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Characters />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/characters-v2" element={
+          <ProtectedRoute>
+            <Layout>
+              <CharactersV2 />
             </Layout>
           </ProtectedRoute>
         } />
