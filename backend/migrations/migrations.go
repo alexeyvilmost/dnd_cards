@@ -56,6 +56,12 @@ func GetAllMigrations() []Migration {
 			Up:          addIsEquippedField,
 			Down:        removeIsEquippedField,
 		},
+		{
+			Version:     "009_create_characters_v2_table",
+			Description: "Create characters_v2 table for new simplified character system",
+			Up:          createCharactersV2Table,
+			Down:        dropCharactersV2Table,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -522,5 +528,73 @@ func removeIsEquippedField(db *sql.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// createCharactersV2Table создает таблицу персонажей V2
+func createCharactersV2Table(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS characters_v2 (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id UUID NOT NULL,
+			group_id UUID,
+			name VARCHAR(255) NOT NULL,
+			race VARCHAR(100) NOT NULL,
+			class VARCHAR(100) NOT NULL,
+			level INTEGER NOT NULL DEFAULT 1,
+			speed INTEGER NOT NULL DEFAULT 30,
+			strength INTEGER NOT NULL DEFAULT 10,
+			dexterity INTEGER NOT NULL DEFAULT 10,
+			constitution INTEGER NOT NULL DEFAULT 10,
+			intelligence INTEGER NOT NULL DEFAULT 10,
+			wisdom INTEGER NOT NULL DEFAULT 10,
+			charisma INTEGER NOT NULL DEFAULT 10,
+			max_hp INTEGER NOT NULL DEFAULT 1,
+			current_hp INTEGER NOT NULL DEFAULT 1,
+			saving_throw_proficiencies TEXT,
+			skill_proficiencies TEXT,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL,
+			CHECK (level >= 1 AND level <= 20),
+			CHECK (speed >= 1),
+			CHECK (strength >= 1 AND strength <= 30),
+			CHECK (dexterity >= 1 AND dexterity <= 30),
+			CHECK (constitution >= 1 AND constitution <= 30),
+			CHECK (intelligence >= 1 AND intelligence <= 30),
+			CHECK (wisdom >= 1 AND wisdom <= 30),
+			CHECK (charisma >= 1 AND charisma <= 30),
+			CHECK (max_hp >= 1),
+			CHECK (current_hp >= 0)
+		)
+	`
+
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create characters_v2 table: %w", err)
+	}
+
+	// Создаем индексы
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_characters_v2_user_id ON characters_v2(user_id)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_v2_group_id ON characters_v2(group_id)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_v2_name ON characters_v2(name)",
+	}
+
+	for _, indexQuery := range indexes {
+		if _, err := db.Exec(indexQuery); err != nil {
+			return fmt.Errorf("failed to create index: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// dropCharactersV2Table удаляет таблицу персонажей V2
+func dropCharactersV2Table(db *sql.DB) error {
+	query := "DROP TABLE IF EXISTS characters_v2"
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to drop characters_v2 table: %w", err)
+	}
 	return nil
 }

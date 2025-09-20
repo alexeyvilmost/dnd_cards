@@ -70,6 +70,7 @@ func main() {
 	groupController := NewGroupController(db)
 	inventoryController := NewInventoryController(db)
 	characterController := NewCharacterController(db)
+	characterV2Controller := NewCharacterV2Controller(db)
 	imageLibraryController := NewImageLibraryController(db)
 
 	// Инициализация сервисов для работы с изображениями
@@ -133,6 +134,14 @@ func main() {
 			protected.POST("/characters/import", characterController.ImportCharacter)
 			protected.GET("/characters/:id/export", characterController.ExportCharacter)
 			protected.PATCH("/characters/:id/stats/:statName", characterController.UpdateCharacterStat)
+
+			// Персонажи V2 (новая система)
+			protected.POST("/characters-v2", characterV2Controller.CreateCharacterV2)
+			protected.GET("/characters-v2", characterV2Controller.GetCharactersV2)
+			protected.GET("/characters-v2/:id", characterV2Controller.GetCharacterV2)
+			protected.PUT("/characters-v2/:id", characterV2Controller.UpdateCharacterV2)
+			protected.DELETE("/characters-v2/:id", characterV2Controller.DeleteCharacterV2)
+			protected.PATCH("/characters-v2/:id/stats/:statName", characterV2Controller.UpdateCharacterV2Stat)
 
 			// Изображения
 			protected.POST("/images/upload", imageController.UploadImage)

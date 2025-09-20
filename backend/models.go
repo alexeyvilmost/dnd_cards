@@ -753,3 +753,109 @@ type ImageLibrary struct {
 func (ImageLibrary) TableName() string {
 	return "image_library"
 }
+
+// CharacterV2 - новая упрощенная модель персонажа
+type CharacterV2 struct {
+	ID        uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	UserID    uuid.UUID `json:"user_id" gorm:"type:uuid;not null"`
+	GroupID   *uuid.UUID `json:"group_id" gorm:"type:uuid"`
+	Name      string    `json:"name" gorm:"not null"`
+	Race      string    `json:"race" gorm:"not null"`
+	Class     string    `json:"class" gorm:"not null"`
+	Level     int       `json:"level" gorm:"not null;default:1"`
+	Speed     int       `json:"speed" gorm:"not null;default:30"`
+	
+	// Характеристики
+	Strength     int `json:"strength" gorm:"not null;default:10"`
+	Dexterity    int `json:"dexterity" gorm:"not null;default:10"`
+	Constitution int `json:"constitution" gorm:"not null;default:10"`
+	Intelligence int `json:"intelligence" gorm:"not null;default:10"`
+	Wisdom       int `json:"wisdom" gorm:"not null;default:10"`
+	Charisma     int `json:"charisma" gorm:"not null;default:10"`
+	
+	// Хиты
+	MaxHP int `json:"max_hp" gorm:"not null;default:1"`
+	CurrentHP int `json:"current_hp" gorm:"not null;default:1"`
+	
+	// Владения спасбросками (JSON массив строк)
+	SavingThrowProficiencies string `json:"saving_throw_proficiencies" gorm:"type:text"`
+	
+	// Владения навыками (JSON массив строк)
+	SkillProficiencies string `json:"skill_proficiencies" gorm:"type:text"`
+	
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	// Связи
+	User  User  `json:"user" gorm:"foreignKey:UserID"`
+	Group *Group `json:"group" gorm:"foreignKey:GroupID"`
+}
+
+// TableName указывает имя таблицы для GORM
+func (CharacterV2) TableName() string {
+	return "characters_v2"
+}
+
+// CreateCharacterV2Request - запрос на создание персонажа V2
+type CreateCharacterV2Request struct {
+	Name      string `json:"name" binding:"required"`
+	Race      string `json:"race" binding:"required"`
+	Class     string `json:"class" binding:"required"`
+	Level     int    `json:"level" binding:"required,min=1,max=20"`
+	Speed     int    `json:"speed" binding:"required,min=1"`
+	Strength  int    `json:"strength" binding:"required,min=1,max=30"`
+	Dexterity int    `json:"dexterity" binding:"required,min=1,max=30"`
+	Constitution int `json:"constitution" binding:"required,min=1,max=30"`
+	Intelligence int `json:"intelligence" binding:"required,min=1,max=30"`
+	Wisdom    int    `json:"wisdom" binding:"required,min=1,max=30"`
+	Charisma  int    `json:"charisma" binding:"required,min=1,max=30"`
+	MaxHP     int    `json:"max_hp" binding:"required,min=1"`
+	CurrentHP int    `json:"current_hp" binding:"required,min=0"`
+	SavingThrowProficiencies []string `json:"saving_throw_proficiencies"`
+	SkillProficiencies []string `json:"skill_proficiencies"`
+}
+
+// UpdateCharacterV2Request - запрос на обновление персонажа V2
+type UpdateCharacterV2Request struct {
+	Name      string `json:"name"`
+	Race      string `json:"race"`
+	Class     string `json:"class"`
+	Level     int    `json:"level" binding:"min=1,max=20"`
+	Speed     int    `json:"speed" binding:"min=1"`
+	Strength  int    `json:"strength" binding:"min=1,max=30"`
+	Dexterity int    `json:"dexterity" binding:"min=1,max=30"`
+	Constitution int `json:"constitution" binding:"min=1,max=30"`
+	Intelligence int `json:"intelligence" binding:"min=1,max=30"`
+	Wisdom    int    `json:"wisdom" binding:"min=1,max=30"`
+	Charisma  int    `json:"charisma" binding:"min=1,max=30"`
+	MaxHP     int    `json:"max_hp" binding:"min=1"`
+	CurrentHP int    `json:"current_hp" binding:"min=0"`
+	SavingThrowProficiencies []string `json:"saving_throw_proficiencies"`
+	SkillProficiencies []string `json:"skill_proficiencies"`
+}
+
+// CharacterV2Response - ответ с данными персонажа V2
+type CharacterV2Response struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	GroupID   *uuid.UUID `json:"group_id"`
+	Name      string    `json:"name"`
+	Race      string    `json:"race"`
+	Class     string    `json:"class"`
+	Level     int       `json:"level"`
+	Speed     int       `json:"speed"`
+	Strength  int       `json:"strength"`
+	Dexterity int       `json:"dexterity"`
+	Constitution int    `json:"constitution"`
+	Intelligence int    `json:"intelligence"`
+	Wisdom    int       `json:"wisdom"`
+	Charisma  int       `json:"charisma"`
+	MaxHP     int       `json:"max_hp"`
+	CurrentHP int       `json:"current_hp"`
+	SavingThrowProficiencies []string `json:"saving_throw_proficiencies"`
+	SkillProficiencies []string `json:"skill_proficiencies"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	User      User      `json:"user"`
+	Group     *Group    `json:"group"`
+}
