@@ -34,15 +34,18 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       return;
     }
 
+    // Для новых карт (без ID) нельзя генерировать изображение
+    if (!entityId) {
+      setError('Сначала сохраните карту, затем генерируйте изображение');
+      return;
+    }
+
     try {
       setIsGenerating(true);
       setError(null);
       setSuccess(false);
 
-      // Для новых карт без ID используем временный идентификатор и передаем данные в entity_data
-      const validEntityId = entityId || 'temp-new-card';
-      
-      const response = await imagesApi.generateImage(entityType, validEntityId, undefined, {
+      const response = await imagesApi.generateImage(entityType, entityId, undefined, {
         name: entityName,
         description: entityDescription || '',
         rarity: entityRarity,
@@ -121,11 +124,11 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       <button
         type="button"
         onClick={handleGenerate}
-        disabled={disabled || isGenerating || !entityName.trim()}
+        disabled={disabled || isGenerating || !entityName.trim() || !entityId}
         className={`
           w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg border
           transition-all duration-200
-          ${disabled || !entityName.trim()
+          ${disabled || !entityName.trim() || !entityId
             ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
             : isGenerating
             ? 'bg-blue-100 border-blue-300 text-blue-700'
@@ -148,10 +151,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         ) : (
           <>
             <Wand2 size={16} />
-            <span>Сгенерировать изображение</span>
+            <span>{entityId ? 'Сгенерировать изображение' : 'Сначала сохраните карту'}</span>
           </>
         )}
       </button>
+
+      {!entityId && (
+        <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+          💡 Сначала сохраните карту, чтобы сгенерировать для неё изображение
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center space-x-2 text-red-600 text-sm">

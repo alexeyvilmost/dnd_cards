@@ -107,12 +107,14 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	// Если переданы данные сущности, используем их, иначе получаем из базы
 	if req.EntityData != nil && len(req.EntityData) > 0 {
 		entityInfo = req.EntityData
+		log.Printf("Используем переданные данные сущности: %+v", req.EntityData)
 	} else {
 		entityInfo, err = ic.getEntityInfo(req.EntityType, req.EntityID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "сущность не найдена"})
 			return
 		}
+		log.Printf("Получены данные сущности из базы: %+v", entityInfo)
 	}
 
 	// Создаем промпт для генерации изображения
@@ -151,22 +153,19 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 		return
 	}
 
-	// Обновляем запись в базе данных только если это не временный ID
-	if !isTemporaryID(req.EntityID) {
-		if err := ic.updateEntityImage(req.EntityType, req.EntityID, imageURL, cloudinaryID, true, prompt); err != nil {
-			// Если не удалось обновить БД, удаляем загруженный файл
-			ic.yandexStorage.DeleteImage(ctx, cloudinaryID)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка обновления базы данных: %v", err)})
-			return
-		}
+	// Обновляем запись в базе данных
+	if err := ic.updateEntityImage(req.EntityType, req.EntityID, imageURL, cloudinaryID, true, prompt); err != nil {
+		// Если не удалось обновить БД, удаляем загруженный файл
+		ic.yandexStorage.DeleteImage(ctx, cloudinaryID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка обновления базы данных: %v", err)})
+		return
 	}
 
-	// Логируем генерацию изображения только для реальных ID
-	if !isTemporaryID(req.EntityID) {
-		ic.logImageGeneration(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
-		// Автоматически добавляем в библиотеку изображений
-		ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
-	}
+	// Логируем генерацию изображения
+	ic.logImageGeneration(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
+	
+	// Автоматически добавляем в библиотеку изображений (для всех сгенерированных изображений)
+	ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
 
 	c.JSON(http.StatusOK, ImageGenerationResponse{
 		Success:        true,
