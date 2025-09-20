@@ -132,6 +132,7 @@ func main() {
 			protected.DELETE("/characters/:id", characterController.DeleteCharacter)
 			protected.POST("/characters/import", characterController.ImportCharacter)
 			protected.GET("/characters/:id/export", characterController.ExportCharacter)
+			protected.PATCH("/characters/:id/stats/:statName", characterController.UpdateCharacterStat)
 
 			// Изображения
 			protected.POST("/images/upload", imageController.UploadImage)

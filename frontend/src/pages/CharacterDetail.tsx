@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Character, CharacterData, Inventory } from '../types';
 import CardDetailModal from '../components/CardDetailModal';
 import CardPreview from '../components/CardPreview';
+import EditableNumber from '../components/EditableNumber';
 
 const CharacterDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -323,6 +324,37 @@ const CharacterDetail: React.FC = () => {
       }
     } catch (error) {
       console.error('Ошибка экипировки предмета:', error);
+    }
+  };
+
+  // Функция обновления характеристики
+  const handleStatChange = async (statName: string, newValue: number) => {
+    if (!id || !characterData) return;
+    
+    try {
+      // Обновляем данные персонажа на сервере
+      const updatedCharacter = await charactersApi.updateCharacterStat(id, statName, newValue);
+      
+      // Обновляем локальное состояние
+      setCharacter(updatedCharacter);
+      
+      // Обновляем characterData с новым значением
+      const updatedCharacterData = {
+        ...characterData,
+        stats: {
+          ...characterData.stats,
+          [statName]: {
+            ...characterData.stats[statName],
+            score: newValue
+          }
+        }
+      };
+      setCharacterData(updatedCharacterData);
+      
+      console.log(`Характеристика ${statName} обновлена на ${newValue}`);
+    } catch (error) {
+      console.error('Ошибка обновления характеристики:', error);
+      // Здесь можно добавить уведомление об ошибке
     }
   };
 
@@ -738,7 +770,13 @@ const CharacterDetail: React.FC = () => {
                     
                     {/* Значение характеристики - 25% */}
                     <div className="flex items-center justify-center p-2 bg-gray-50 w-1/4">
-                      <div className="text-xs text-gray-500">{stat.score}</div>
+                      <EditableNumber
+                        value={stat.score}
+                        onChange={(newValue) => handleStatChange(key, newValue)}
+                        min={1}
+                        max={30}
+                        className="text-xs text-gray-500"
+                      />
           </div>
                     
                     {/* Модификатор характеристики - 25% */}

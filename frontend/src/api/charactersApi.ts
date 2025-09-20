@@ -69,4 +69,12 @@ export const charactersApi = {
     const response = await apiClient.get(`/characters/${characterId}/inventories`);
     return response.data;
   },
+
+  // Обновление характеристики персонажа
+  updateCharacterStat: async (characterId: string, statName: string, newValue: number): Promise<Character> => {
+    const response = await apiClient.patch(`/characters/${characterId}/stats/${statName}`, {
+      value: newValue
+    });
+    return response.data;
+  },
 };

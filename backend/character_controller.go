@@ -543,6 +543,98 @@ func (cc *CharacterController) ExportCharacter(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// UpdateCharacterStat - обновление характеристики персонажа
+func (cc *CharacterController) UpdateCharacterStat(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	characterIDStr := c.Param("id")
+	statName := c.Param("statName")
+	
+	characterID, err := uuid.Parse(characterIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
+		return
+	}
+
+	// Валидация названия характеристики
+	validStats := map[string]bool{
+		"str": true, "dex": true, "con": true,
+		"int": true, "wis": true, "cha": true,
+	}
+	if !validStats[statName] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверное название характеристики"})
+		return
+	}
+
+	var req struct {
+		Value int `json:"value" binding:"required,min=1,max=30"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса"})
+		return
+	}
+
+	// Получаем персонажа
+	var character Character
+	result := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
+		}
+		return
+	}
+
+	// Парсим JSON данные персонажа
+	var characterData map[string]interface{}
+	if err := json.Unmarshal([]byte(character.Data), &characterData); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка парсинга данных персонажа"})
+		return
+	}
+
+	// Обновляем значение характеристики
+	if stats, ok := characterData["stats"].(map[string]interface{}); ok {
+		if stat, ok := stats[statName].(map[string]interface{}); ok {
+			stat["score"] = req.Value
+			stat["modifier"] = (req.Value - 10) / 2
+		}
+	}
+
+	// Сохраняем обновленные данные
+	updatedData, err := json.Marshal(characterData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка сериализации данных персонажа"})
+		return
+	}
+
+	// Обновляем в базе данных
+	character.Data = string(updatedData)
+	if err := cc.db.Save(&character).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка сохранения персонажа"})
+		return
+	}
+
+	// Возвращаем обновленного персонажа
+	characterResponse := CharacterResponse{
+		ID:          character.ID,
+		UserID:      character.UserID,
+		GroupID:     character.GroupID,
+		Name:        character.Name,
+		Data:        character.Data,
+		CreatedAt:   character.CreatedAt,
+		UpdatedAt:   character.UpdatedAt,
+		Group:       character.Group,
+		Inventories: character.Inventories,
+	}
+
+	c.JSON(http.StatusOK, characterResponse)
+}
+
 // getKeys возвращает список ключей из map
 func getKeys(m map[string]interface{}) []string {
 	keys := make([]string, 0, len(m))
