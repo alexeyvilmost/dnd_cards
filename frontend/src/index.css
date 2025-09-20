@@ -71,6 +71,17 @@
     /* VERSION 4 - масштаб теперь управляется через JavaScript */
   }
 
+  /* Скрытие стрелочек у полей ввода чисел */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
   /* Градиентные заголовки для редких карт */
   .title-gradient-very-rare {
     background: linear-gradient(45deg, #8B5CF6, #EC4899);

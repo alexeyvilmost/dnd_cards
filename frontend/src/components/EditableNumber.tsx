@@ -86,7 +86,13 @@ const EditableNumber: React.FC<EditableNumberProps> = ({
         min={min}
         max={max}
         className={`text-center bg-white border border-blue-300 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 ${className}`}
-        style={{ width: '2rem' }}
+        style={{ 
+          width: '2rem',
+          // Скрываем стрелочки для всех браузеров
+          MozAppearance: 'textfield',
+          WebkitAppearance: 'none',
+          appearance: 'textfield'
+        }}
       />
     );
   }
