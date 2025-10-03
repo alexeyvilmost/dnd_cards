@@ -8,6 +8,7 @@ interface ImageGeneratorProps {
   entityName: string;
   entityRarity: string;
   entityDescription?: string;
+  entityPromptExtra?: string;
   onImageGenerated: (imageUrl: string) => void;
   disabled?: boolean;
   className?: string;
@@ -19,6 +20,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   entityName,
   entityRarity,
   entityDescription,
+  entityPromptExtra,
   onImageGenerated,
   disabled = false,
   className = '',
@@ -49,6 +51,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         name: entityName,
         description: entityDescription || '',
         rarity: entityRarity,
+        image_prompt_extra: entityPromptExtra,
       });
       
       if (response.success) {

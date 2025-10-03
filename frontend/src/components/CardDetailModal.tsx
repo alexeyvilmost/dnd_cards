@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
-import { X, Edit, Trash2, Shield, ShieldOff } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
+import { imagesApi } from '../api/imagesApi';
+import { cardsApi } from '../api/client';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -25,10 +27,14 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   inventoryItem,
   onEquip
 }) => {
-  if (!isOpen || !card) return null;
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
 
   // Обработчик для закрытия по Esc
   useEffect(() => {
+    if (!isOpen) return;
+    
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
@@ -38,7 +44,16 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [onClose]);
+  }, [onClose, isOpen]);
+
+  // Синхронизируем cardImage с card.image_url
+  useEffect(() => {
+    if (card?.image_url) {
+      setCardImage(card.image_url);
+    }
+  }, [card?.image_url]);
+
+  if (!isOpen || !card) return null;
 
   const formatPrice = (price: number): string => {
     if (price >= 1000) {
@@ -49,6 +64,35 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
   const formatWeight = (weight: number): string => {
     return `${weight} фнт.`;
+  };
+
+  // Функция генерации изображения
+  const handleGenerateImage = async () => {
+    if (!card) return;
+    
+    try {
+      setIsGenerating(true);
+      setGenerateError(null);
+
+      const response = await imagesApi.generateImage('card', card.id, undefined, {
+        name: card.name,
+        description: card.description,
+        rarity: card.rarity,
+        image_prompt_extra: card.image_prompt_extra || undefined,
+      });
+      
+      if (response.success) {
+        // Обновляем карту с URL изображения
+        await cardsApi.updateCard(card.id, { image_url: response.image_url });
+        setCardImage(response.image_url);
+      } else {
+        setGenerateError('Не удалось сгенерировать изображение');
+      }
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'Ошибка генерации изображения');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const getRarityLabel = (rarity: string): string => {
@@ -122,7 +166,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         {/* Левая часть: Увеличенная карточка */}
         <div className={`flex-shrink-0 flex items-center justify-center p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
           <div className="transform scale-[1.5] origin-center">
-            <CardPreview card={card} />
+            <CardPreview card={{...card, image_url: cardImage}} />
           </div>
         </div>
 
@@ -203,6 +247,20 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <Trash2 size={18} />
               <span>Удалить</span>
             </button>
+            {!card.image_url && (
+              <button
+                onClick={handleGenerateImage}
+                disabled={isGenerating}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGenerating ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Wand2 size={18} />
+                )}
+                <span>{isGenerating ? 'Генерация...' : 'Сгенерировать изображение'}</span>
+              </button>
+            )}
             
             {/* Кнопка экипировки - только для предметов в инвентаре */}
             {inventoryItem && onEquip && card.slot && (
@@ -238,6 +296,13 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               </button>
             )}
           </div>
+          
+          {/* Отображение ошибки генерации */}
+          {generateError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{generateError}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

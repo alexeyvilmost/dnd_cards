@@ -176,11 +176,26 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
   return (
     <div 
       ref={cardRef}
-      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col`}
+      className={`card-preview relative bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={tiltStyle}
     >
+      {/* Метка редкости для слабовидящих */}
+      <div className="absolute top-0.5 left-1 text-xs opacity-80 select-none">
+        <span>
+          {(() => {
+            switch (card.rarity) {
+              case 'common': return '•';
+              case 'uncommon': return ':';
+              case 'rare': return '✦';
+              case 'very_rare': return '✧';
+              case 'artifact': return '★';
+              default: return '•';
+            }
+          })()}
+        </span>
+      </div>
       {isExtended ? (
         // Расширенный формат для карт с большим описанием
         <>
@@ -231,7 +246,7 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
             {/* Правая половина - только описание */}
             <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
               {/* Описание */}
-              <div className="flex-1 overflow-hidden flex flex-col justify-start pt-4">
+              <div className="flex-1 overflow-hidden flex flex-col justify-start pt-2">
                 <p 
                   className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap text-center`} 
                   style={{ 
@@ -327,7 +342,7 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
           </div>
 
           {/* Описание */}
-          <div className="px-1 pt-4 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
+          <div className="px-1 pt-2 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
             <p 
               className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap text-center`}
               style={{ 

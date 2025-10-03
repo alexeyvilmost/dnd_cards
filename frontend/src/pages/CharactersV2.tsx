@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import apiClient from '../api/client';
 import { Plus, User, Sword, Shield, Heart, Zap } from 'lucide-react';
 
 interface CharacterV2 {
@@ -36,22 +37,48 @@ const CharactersV2: React.FC = () => {
   const fetchCharacters = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/characters-v2', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Ошибка загрузки персонажей');
-      }
-
-      const data = await response.json();
-      setCharacters(data);
+      const { data } = await apiClient.get<CharacterV2[]>('/characters-v2');
+      // Нормализуем поля-массивы и защищаемся от null/undefined
+      const normalized = (Array.isArray(data) ? data : []).map((c) => ({
+        ...c,
+        saving_throw_proficiencies: c?.saving_throw_proficiencies || [],
+        skill_proficiencies: c?.skill_proficiencies || [],
+        max_hp: typeof c?.max_hp === 'number' && c.max_hp > 0 ? c.max_hp : 1,
+        current_hp: typeof c?.current_hp === 'number' && c.current_hp >= 0 ? c.current_hp : 0,
+      }));
+      setCharacters(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const payload = {
+        name: 'Тест',
+        race: 'Эльф',
+        class: 'Колдун',
+        level: 5,
+        speed: 30,
+        strength: 8,
+        dexterity: 15,
+        constitution: 17,
+        intelligence: 12,
+        wisdom: 14,
+        charisma: 21,
+        max_hp: 45,
+        current_hp: 40,
+        saving_throw_proficiencies: ['charisma', 'dexterity'],
+        skill_proficiencies: [],
+      };
+      await apiClient.post('/characters-v2', payload);
+      await fetchCharacters();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось создать персонажа');
     } finally {
       setLoading(false);
     }
@@ -116,7 +143,7 @@ const CharactersV2: React.FC = () => {
               Новая упрощенная система персонажей
             </p>
           </div>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={handleCreate} className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             <Plus size={20} />
             <span>Создать персонажа</span>
           </button>
@@ -232,7 +259,7 @@ const CharactersV2: React.FC = () => {
             <p className="text-gray-600 mb-6">
               Создайте своего первого персонажа в новой системе
             </p>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button onClick={handleCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
               Создать персонажа
             </button>
           </div>

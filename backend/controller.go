@@ -99,6 +99,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			Type:                card.Type,
 			DescriptionFontSize: card.DescriptionFontSize,
 			IsExtended:          card.IsExtended,
+			Tags:                card.Tags,
 			IsTemplate:          card.IsTemplate,
 			Slot:                card.Slot,
 			CreatedAt:           card.CreatedAt,

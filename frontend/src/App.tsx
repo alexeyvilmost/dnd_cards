@@ -21,6 +21,12 @@ import CharacterDetail from './pages/CharacterDetail';
 import CharacterEdit from './pages/CharacterEdit';
 import CreateCharacter from './pages/CreateCharacter';
 import CharactersV2 from './pages/CharactersV2';
+import CardTypeSelection from './pages/CardTypeSelection';
+import WeaponSelection from './pages/WeaponSelection';
+import EquipmentSelection from './pages/EquipmentSelection';
+import PotionSelection from './pages/PotionSelection';
+import IngredientSelection from './pages/IngredientSelection';
+import TrinketSelection from './pages/TrinketSelection';
 
 function App() {
   return (
@@ -41,7 +47,7 @@ function App() {
         <Route path="/create" element={
           <ProtectedRoute>
             <Layout>
-              <CardCreator />
+              <CardTypeSelection />
             </Layout>
           </ProtectedRoute>
         } />
@@ -70,6 +76,43 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <WeaponTemplates />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        
+        {/* Card creation routes */}
+        <Route path="/card-creator/weapon" element={
+          <ProtectedRoute>
+            <Layout>
+              <WeaponSelection />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/card-creator/equipment" element={
+          <ProtectedRoute>
+            <Layout>
+              <EquipmentSelection />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/card-creator/potion" element={
+          <ProtectedRoute>
+            <Layout>
+              <PotionSelection />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/card-creator/ingredient" element={
+          <ProtectedRoute>
+            <Layout>
+              <IngredientSelection />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/card-creator/trinket" element={
+          <ProtectedRoute>
+            <Layout>
+              <TrinketSelection />
             </Layout>
           </ProtectedRoute>
         } />

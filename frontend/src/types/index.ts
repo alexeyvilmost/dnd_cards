@@ -33,6 +33,7 @@ export interface Card {
   tags?: Properties | null;
   is_template: TemplateType;
   slot?: EquipmentSlot | null;
+  image_prompt_extra?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +62,7 @@ export interface CreateCardRequest {
   tags?: Properties | null;
   is_template?: TemplateType;
   slot?: EquipmentSlot | null;
+  image_prompt_extra?: string | null;
 }
 
 export interface UpdateCardRequest {
@@ -68,6 +70,7 @@ export interface UpdateCardRequest {
   properties?: Properties | null;
   description?: string;
   detailed_description?: string | null;
+  image_url?: string;
   rarity?: Rarity;
   price?: number | null;
   weight?: number | null;
@@ -87,6 +90,7 @@ export interface UpdateCardRequest {
   tags?: Properties | null;
   is_template?: TemplateType;
   slot?: EquipmentSlot | null;
+  image_prompt_extra?: string | null;
 }
 
 export interface CardsResponse {

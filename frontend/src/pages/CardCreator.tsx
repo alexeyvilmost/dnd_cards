@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Eye, EyeOff, ArrowLeft, Library } from 'lucide-react';
+import { Save, Eye, EyeOff, ArrowLeft, Library, Wand2 } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
@@ -121,6 +121,52 @@ const CardCreator = () => {
     }
   }, [id, isEditMode, setValue]);
 
+  // Загружаем данные шаблона для создания карты
+  useEffect(() => {
+    const templateId = searchParams.get('template_id');
+    if (templateId && !isEditMode) {
+      const loadTemplate = async () => {
+        try {
+          setLoading(true);
+          const template = await cardsApi.getCard(templateId);
+          
+          // Заполняем форму данными шаблона
+          setValue('name', template.name);
+          setValue('rarity', template.rarity);
+          setValue('properties', template.properties || []);
+          setValue('description', template.description);
+          setValue('price', template.price);
+          setValue('weight', template.weight);
+          setValue('bonus_type', template.bonus_type);
+          setValue('bonus_value', template.bonus_value);
+          setValue('damage_type', template.damage_type);
+          setValue('defense_type', template.defense_type);
+          setValue('is_extended', template.is_extended || false);
+          setValue('author', template.author || 'Admin');
+          setValue('source', template.source);
+          setValue('type', template.type);
+          setValue('related_cards', template.related_cards || []);
+          setValue('related_actions', template.related_actions || []);
+          setValue('related_effects', template.related_effects || []);
+          setValue('attunement', template.attunement);
+          setValue('tags', template.tags || []);
+          setValue('slot', template.slot);
+          setValue('is_template', 'false'); // Новая карта не является шаблоном
+          
+          if (template.image_url) {
+            setCardImage(template.image_url);
+          }
+        } catch (err) {
+          setError('Ошибка загрузки шаблона');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadTemplate();
+    }
+  }, [searchParams, isEditMode, setValue]);
+
   // Мемоизируем watchedValues для предотвращения бесконечных циклов
   const memoizedWatchedValues = useMemo(() => watchedValues, [
     watchedValues.name,
@@ -188,7 +234,8 @@ const CardCreator = () => {
         attunement: data.attunement || null,
         tags: data.tags && data.tags.length > 0 ? data.tags : null,
         slot: data.slot || null,
-        is_template: data.is_template || 'false'
+        is_template: data.is_template || 'false',
+        image_prompt_extra: data.image_prompt_extra || null
       };
 
       let cardId: string;
@@ -204,13 +251,18 @@ const CardCreator = () => {
       }
 
       // Загружаем изображение в облако, если оно есть
-      if (cardImage && cardImage.startsWith('data:image/')) {
+      if (cardImage) {
         try {
-          const response = await fetch(cardImage);
-          const blob = await response.blob();
-          const file = new File([blob], 'card-image.png', { type: 'image/png' });
-
-          await imagesApi.uploadImage('card', cardId, file);
+          if (cardImage.startsWith('data:image/')) {
+            // Base64 изображение - конвертируем в файл и загружаем
+            const response = await fetch(cardImage);
+            const blob = await response.blob();
+            const file = new File([blob], 'card-image.png', { type: 'image/png' });
+            await imagesApi.uploadImage('card', cardId, file);
+          } else if (cardImage.startsWith('http')) {
+            // URL изображение из библиотеки - обновляем карту с этим URL
+            await cardsApi.updateCard(cardId, { image_url: cardImage });
+          }
         } catch (uploadError) {
           console.warn('Ошибка загрузки изображения в облако:', uploadError);
         }
@@ -220,6 +272,71 @@ const CardCreator = () => {
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка сохранения карты');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Функция для создания карты и генерации изображения
+  const handleCreateAndGenerate = async () => {
+    const formData = watch();
+    
+    try {
+      setSaving(true);
+      setError(null);
+      
+      // Подготавливаем данные карты
+      const cardData: CreateCardRequest = {
+        name: formData.name || 'Название карты',
+        description: formData.description || 'Описание эффекта',
+        rarity: formData.rarity || 'common',
+        properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
+        price: formData.price || null,
+        weight: formData.weight || null,
+        bonus_type: formData.bonus_type || null,
+        bonus_value: formData.bonus_value || null,
+        damage_type: formData.damage_type || null,
+        defense_type: formData.defense_type || null,
+        description_font_size: null,
+        is_extended: formData.is_extended || false,
+        author: formData.author || 'Admin',
+        source: formData.source || null,
+        type: formData.type || null,
+        related_cards: formData.related_cards || null,
+        related_actions: formData.related_actions || null,
+        related_effects: formData.related_effects || null,
+        attunement: formData.attunement || null,
+        tags: formData.tags && formData.tags.length > 0 ? formData.tags : null,
+        slot: formData.slot || null,
+        is_template: formData.is_template || 'false',
+        image_prompt_extra: formData.image_prompt_extra || null
+      };
+
+      // Создаем карту
+      const newCard = await cardsApi.createCard(cardData);
+      
+      // Генерируем изображение
+      try {
+        const response = await imagesApi.generateImage('card', newCard.id, undefined, {
+          name: newCard.name,
+          description: newCard.description,
+          rarity: newCard.rarity,
+          image_prompt_extra: newCard.image_prompt_extra || undefined,
+        });
+        
+        if (response.success) {
+          // Обновляем карту с URL изображения
+          await cardsApi.updateCard(newCard.id, { image_url: response.image_url });
+        }
+      } catch (generateError) {
+        console.warn('Ошибка генерации изображения:', generateError);
+        // Продолжаем, даже если генерация не удалась
+      }
+
+      // Перенаправляем на страницу библиотеки
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Ошибка создания карты');
     } finally {
       setSaving(false);
     }
@@ -380,6 +497,7 @@ const CardCreator = () => {
                   entityName={memoizedWatchedValues.name}
                   entityRarity={memoizedWatchedValues.rarity}
                   entityDescription={memoizedWatchedValues.description}
+                  entityPromptExtra={memoizedWatchedValues.image_prompt_extra}
                   onImageGenerated={setCardImage}
                   disabled={!memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
                   className="mb-4"
@@ -424,6 +542,24 @@ const CardCreator = () => {
               </label>
               <p className="text-xs text-gray-500 mt-1">
                 Расширенная карта имеет больший размер и больше места для описания
+              </p>
+            </div>
+
+            {/* Тип шаблона */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип шаблона
+              </label>
+              <select
+                {...register('is_template')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="false">Обычная карта</option>
+                <option value="template">Карта и шаблон</option>
+                <option value="only_template">Только шаблон</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Шаблоны используются для быстрого создания новых карт
               </p>
             </div>
 
@@ -530,6 +666,22 @@ const CardCreator = () => {
                   </p>
                 </div>
 
+                {/* Дополнительная информация к промпту для генерации изображения */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Дополнительная информация для генерации изображения
+                  </label>
+                  <textarea
+                    {...register('image_prompt_extra')}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Опишите особые пожелания к внешнему виду предмета (необязательно)"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Например: "с золотыми украшениями", "в стиле эльфийского оружия", "с рунами на лезвии"
+                  </p>
+                </div>
+
                 {/* Свойства */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -626,18 +778,29 @@ const CardCreator = () => {
                   <Save size={20} />
                   <span>{saving ? 'Сохранение...' : (isEditMode ? 'Сохранить' : 'Создать')}</span>
                 </button>
+                {!isEditMode && (
+                  <button
+                    type="button"
+                    onClick={handleCreateAndGenerate}
+                    disabled={saving || !memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
+                    className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Wand2 size={20} />
+                    <span>{saving ? 'Создание...' : 'Создать и сгенерировать изображение'}</span>
+                  </button>
+                )}
             </div>
           </form>
         </div>
 
           {/* Превью */}
           {showPreview && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6 lg:sticky lg:top-6 self-start">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Превью карты</h3>
               {previewCard ? (
                 <div className="flex justify-center">
                   <div className="transform scale-130 mt-16">
-                    <CardPreview card={previewCard} disableHover={true} />
+                    <CardPreview card={previewCard} disableHover={false} />
                   </div>
                 </div>
               ) : (

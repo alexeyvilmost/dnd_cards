@@ -88,6 +88,7 @@ export const imagesApi = {
       name?: string;
       description?: string;
       rarity?: string;
+      image_prompt_extra?: string;
     }
   ): Promise<ImageGenerationResponse> => {
     const response = await apiClient.post<ImageGenerationResponse>('/images/generate', {
