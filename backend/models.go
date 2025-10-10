@@ -130,6 +130,11 @@ const (
 	PropertyAmmunition = "ammunition" // Требует боеприпасы
 	PropertyLoading    = "loading"    // Зарядка
 	PropertySpecial    = "special"    // Особое
+	// Свойства брони
+	PropertyCloth      = "cloth"      // Ткань
+	PropertyLightArmor = "light_armor" // Легкая броня
+	PropertyMediumArmor = "medium_armor" // Средняя броня
+	PropertyHeavyArmor = "heavy_armor" // Тяжелая броня
 )
 
 // BonusType - тип бонуса
@@ -478,7 +483,8 @@ func IsValidProperty(property string) bool {
 	switch property {
 	case PropertyConsumable, PropertySingleUse, PropertyLight, PropertyHeavy,
 		PropertyFinesse, PropertyThrown, PropertyVersatile, PropertyTwoHanded,
-		PropertyReach, PropertyAmmunition, PropertyLoading, PropertySpecial:
+		PropertyReach, PropertyAmmunition, PropertyLoading, PropertySpecial,
+		PropertyCloth, PropertyLightArmor, PropertyMediumArmor, PropertyHeavyArmor:
 		return true
 	default:
 		return false

@@ -12,6 +12,8 @@ interface ImageGeneratorProps {
   onImageGenerated: (imageUrl: string) => void;
   disabled?: boolean;
   className?: string;
+  // Колбэк для создания карты перед генерацией (если нет ID)
+  onCreateEntity?: () => Promise<string>; // Возвращает ID созданной сущности
 }
 
 const ImageGenerator: React.FC<ImageGeneratorProps> = ({
@@ -24,6 +26,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   onImageGenerated,
   disabled = false,
   className = '',
+  onCreateEntity,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,18 +39,32 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       return;
     }
 
-    // Для новых карт (без ID) нельзя генерировать изображение
-    if (!entityId) {
-      setError('Сначала сохраните карту, затем генерируйте изображение');
-      return;
-    }
-
     try {
       setIsGenerating(true);
       setError(null);
       setSuccess(false);
 
-      const response = await imagesApi.generateImage(entityType, entityId, undefined, {
+      let targetEntityId = entityId;
+
+      // Если нет ID и есть колбэк для создания, создаем сущность
+      if (!targetEntityId && onCreateEntity) {
+        try {
+          targetEntityId = await onCreateEntity();
+        } catch (createError) {
+          setError('Не удалось создать карту перед генерацией');
+          setIsGenerating(false);
+          return;
+        }
+      }
+
+      // Если все еще нет ID, показываем ошибку
+      if (!targetEntityId) {
+        setError('Сначала сохраните карту, затем генерируйте изображение');
+        setIsGenerating(false);
+        return;
+      }
+
+      const response = await imagesApi.generateImage(entityType, targetEntityId, undefined, {
         name: entityName,
         description: entityDescription || '',
         rarity: entityRarity,
@@ -127,11 +144,11 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       <button
         type="button"
         onClick={handleGenerate}
-        disabled={disabled || isGenerating || !entityName.trim() || !entityId}
+        disabled={disabled || isGenerating || !entityName.trim() || (!entityId && !onCreateEntity)}
         className={`
           w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg border
           transition-all duration-200
-          ${disabled || !entityName.trim() || !entityId
+          ${disabled || !entityName.trim() || (!entityId && !onCreateEntity)
             ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
             : isGenerating
             ? 'bg-blue-100 border-blue-300 text-blue-700'
@@ -154,12 +171,12 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         ) : (
           <>
             <Wand2 size={16} />
-            <span>{entityId ? 'Сгенерировать изображение' : 'Сначала сохраните карту'}</span>
+            <span>{entityId || onCreateEntity ? 'Сгенерировать изображение' : 'Сначала сохраните карту'}</span>
           </>
         )}
       </button>
 
-      {!entityId && (
+      {!entityId && !onCreateEntity && (
         <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
           💡 Сначала сохраните карту, чтобы сгенерировать для неё изображение
         </div>

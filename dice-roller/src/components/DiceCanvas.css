@@ -1,0 +1,255 @@
+.dice-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.canvas-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+  z-index: 1;
+}
+
+.grid-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+}
+
+.compass-rose {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.compass-rose::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.rolling-animation {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+}
+
+.rolling-dice {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.rolling-cube {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: roll 2s infinite;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.cube-face {
+  font-size: 2rem;
+  animation: bounce 0.5s infinite alternate;
+}
+
+.rolling-text h2 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.result-display {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+}
+
+.result-dice {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.result-cube {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: dropIn 0.6s ease-out;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.cube-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.cube-label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.result-total {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 1rem 2rem;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.total-label {
+  color: white;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.total-number {
+  color: white;
+  font-size: 3rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-message {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: white;
+}
+
+.welcome-message h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-message p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+.welcome-dice {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.welcome-cube {
+  font-size: 3rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.welcome-cube:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.welcome-cube:nth-child(3) {
+  animation-delay: 1s;
+}
+
+@keyframes roll {
+  0% { transform: rotate(0deg) translateY(0px); }
+  25% { transform: rotate(90deg) translateY(-10px); }
+  50% { transform: rotate(180deg) translateY(-20px); }
+  75% { transform: rotate(270deg) translateY(-10px); }
+  100% { transform: rotate(360deg) translateY(0px); }
+}
+
+@keyframes bounce {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes dropIn {
+  0% { 
+    transform: translateY(-100px) rotate(360deg); 
+    opacity: 0; 
+  }
+  100% { 
+    transform: translateY(0) rotate(0deg); 
+    opacity: 1; 
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+
+
+

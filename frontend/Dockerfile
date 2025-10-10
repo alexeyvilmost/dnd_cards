@@ -1,14 +1,20 @@
 # Используем официальный образ Node.js
-FROM node:18-alpine
+FROM node:18-slim
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем файлы зависимостей
+# Копируем package.json и package-lock.json (если есть)
 COPY package*.json ./
 
-# Устанавливаем зависимости
-RUN npm install
+# Создаем пользователя для npm кэша
+RUN npm config set cache /tmp/.npm && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 3
+
+# Устанавливаем зависимости с кэшированием
+RUN npm ci --only=production --no-audit --no-fund || npm install --no-audit --no-fund
 
 # Копируем исходный код
 COPY . .

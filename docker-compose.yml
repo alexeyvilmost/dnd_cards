@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL база данных (локальная для разработки)
   # postgres:
@@ -30,7 +28,7 @@ services:
     container_name: dnd_cards_backend
     environment:
       PORT: 8080
-      DB_HOST: ${DB_HOST:-postgres}
+      DB_HOST: ${DB_HOST:-host.docker.internal}
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}

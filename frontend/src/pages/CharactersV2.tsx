@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
-import { Plus, User, Sword, Shield, Heart, Zap } from 'lucide-react';
+import { Plus, User, Sword, Shield, Heart, Zap, Eye, Edit, Trash2, Package } from 'lucide-react';
 
 interface CharacterV2 {
   id: string;
@@ -22,6 +23,7 @@ interface CharacterV2 {
   skill_proficiencies: string[];
   created_at: string;
   updated_at: string;
+  inventories?: any[]; // Добавляем инвентари
 }
 
 const CharactersV2: React.FC = () => {
@@ -46,7 +48,27 @@ const CharactersV2: React.FC = () => {
         max_hp: typeof c?.max_hp === 'number' && c.max_hp > 0 ? c.max_hp : 1,
         current_hp: typeof c?.current_hp === 'number' && c.current_hp >= 0 ? c.current_hp : 0,
       }));
-      setCharacters(normalized);
+      
+      // Загружаем инвентари для каждого персонажа
+      const charactersWithInventories = await Promise.all(
+        normalized.map(async (character) => {
+          try {
+            const inventoriesResponse = await apiClient.get(`/characters-v2/${character.id}/inventories`);
+            return {
+              ...character,
+              inventories: inventoriesResponse.data || []
+            };
+          } catch (err) {
+            console.warn(`Failed to load inventories for character ${character.id}:`, err);
+            return {
+              ...character,
+              inventories: []
+            };
+          }
+        })
+      );
+      
+      setCharacters(charactersWithInventories);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка');
     } finally {
@@ -81,6 +103,20 @@ const CharactersV2: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Не удалось создать персонажа');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteCharacter = async (id: string) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этого персонажа?')) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/characters-v2/${id}`);
+      setCharacters(characters.filter(char => char.id !== id));
+    } catch (err) {
+      setError('Ошибка удаления персонажа');
+      console.error('Error deleting character:', err);
     }
   };
 
@@ -149,103 +185,59 @@ const CharactersV2: React.FC = () => {
           </button>
         </div>
 
-        {/* Characters Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {characters.map((character) => (
             <div
               key={character.id}
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
             >
-              {/* Character Header */}
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
                     {character.name}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    {character.race} {character.class} {character.level}
+                    {character.race} • {character.class} {character.level} ур.
                   </p>
                 </div>
-              </div>
-
-              {/* HP */}
-              <div className="flex items-center space-x-2 mb-4">
-                <Heart className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-gray-600">
-                  {character.current_hp}/{character.max_hp} HP
-                </span>
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-red-500 h-2 rounded-full"
-                    style={{
-                      width: `${(character.current_hp / character.max_hp) * 100}%`,
-                    }}
-                  ></div>
+                <div className="flex space-x-1">
+                  <Link
+                    to={`/characters-v2/${character.id}`}
+                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                    title="Просмотр"
+                  >
+                    <Eye size={16} />
+                  </Link>
+                  <Link
+                    to={`/characters-v2/${character.id}/edit`}
+                    className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                    title="Редактировать"
+                  >
+                    <Edit size={16} />
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteCharacter(character.id)}
+                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Удалить"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
 
-              {/* Speed */}
-              <div className="flex items-center space-x-2 mb-4">
-                <Zap className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm text-gray-600">
-                  Скорость: {character.speed} фт
-                </span>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {[
-                  { key: 'strength', value: character.strength },
-                  { key: 'dexterity', value: character.dexterity },
-                  { key: 'constitution', value: character.constitution },
-                  { key: 'intelligence', value: character.intelligence },
-                  { key: 'wisdom', value: character.wisdom },
-                  { key: 'charisma', value: character.charisma },
-                ].map(({ key, value }) => {
-                  const modifier = getModifier(value);
-                  const isProficient = character.saving_throw_proficiencies.includes(key);
-                  const savingThrow = modifier + (isProficient ? getProficiencyBonus(character.level) : 0);
-                  
-                  return (
-                    <div key={key} className="text-center">
-                      <div className="text-xs text-gray-500 uppercase">
-                        {getStatName(key)}
-                      </div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {value}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {modifier >= 0 ? '+' : ''}{modifier}
-                      </div>
-                      {isProficient && (
-                        <div className="text-xs text-blue-600 font-medium">
-                          СБ: +{savingThrow}
-                        </div>
-                      )}
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center space-x-4">
+                  {character.inventories && character.inventories.length > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <Package size={14} />
+                      <span>{character.inventories.length} инвентарей</span>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Proficiency Bonus */}
-              <div className="text-center text-sm text-gray-600">
-                Мастерство: +{getProficiencyBonus(character.level)}
-              </div>
-
-              {/* Saving Throw Proficiencies */}
-              {character.saving_throw_proficiencies.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-500 mb-1">Владения спасбросками:</div>
-                  <div className="text-sm text-gray-700">
-                    {character.saving_throw_proficiencies
-                      .map(stat => getStatName(stat))
-                      .join(', ')}
-                  </div>
+                  )}
                 </div>
-              )}
+                <div>
+                  {new Date(character.created_at).toLocaleDateString('ru-RU')}
+                </div>
+              </div>
             </div>
           ))}
         </div>

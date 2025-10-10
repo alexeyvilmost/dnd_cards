@@ -12,7 +12,12 @@ export const getPropertyLabel = (property: string): string => {
     'loading': 'зарядка',
     'special': 'особое',
     'consumable': 'расходуемое',
-    'single_use': 'одноразовое'
+    'single_use': 'одноразовое',
+    // Свойства брони
+    'cloth': 'ткань',
+    'light_armor': 'легкая броня',
+    'medium_armor': 'средняя броня',
+    'heavy_armor': 'тяжелая броня'
   };
   return propertyLabels[property] || property;
 };

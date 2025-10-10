@@ -13,6 +13,7 @@ RUN go mod download
 # Копируем исходный код
 COPY . .
 
+
 # Собираем приложение
 RUN go build -o main .
 

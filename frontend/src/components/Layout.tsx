@@ -13,6 +13,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navItems = [
     { path: '/', label: 'Библиотека', icon: BookOpen },
+    { path: '/dice', label: '🎲 Кубики', icon: UserCircle },
     { 
       label: 'Предметы', 
       icon: UserCircle,

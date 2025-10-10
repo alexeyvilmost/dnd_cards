@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  dice-roller:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    container_name: dice_roller
+
+
+
+

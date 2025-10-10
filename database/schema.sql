@@ -19,7 +19,7 @@ CREATE TABLE cards (
     bonus_type VARCHAR(50) CHECK (bonus_type IN ('damage', 'defense') OR bonus_type IS NULL),
     bonus_value VARCHAR(20),
     damage_type VARCHAR(20) CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning') OR damage_type IS NULL),
-    defense_type VARCHAR(20) CHECK (defense_type IN ('cloth', 'light', 'medium', 'heavy') OR defense_type IS NULL),
+    defense_type VARCHAR(20) CHECK (defense_type IN ('cloth', 'light', 'medium', 'heavy', 'cloth', 'light_armor', 'medium_armor', 'heavy_armor') OR defense_type IS NULL),
     description_font_size INTEGER CHECK (description_font_size >= 6 AND description_font_size <= 20) DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

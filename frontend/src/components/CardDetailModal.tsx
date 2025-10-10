@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2 } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
@@ -7,6 +7,7 @@ import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
 import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
+import html2canvas from 'html2canvas';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -30,6 +31,10 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  // Отдельный ref для экспорта — рендерим карту без масштабирования и эффектов
+  const exportRef = useRef<HTMLDivElement>(null);
 
   // Обработчик для закрытия по Esc
   useEffect(() => {
@@ -92,6 +97,52 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       setGenerateError(err instanceof Error ? err.message : 'Ошибка генерации изображения');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Функция скачивания карты как PNG
+  const handleDownloadCard = async () => {
+    if (!exportRef.current || !card) return;
+    
+    try {
+      setIsDownloading(true);
+      
+      // Конвертируем элемент карты в canvas
+      // Экспортируем скрытый элемент без визуального масштабирования
+      const isExtended = Boolean(card.is_extended);
+      const exportWidth = isExtended ? 397 : 198;
+      const exportHeight = 280;
+
+      const canvas = await html2canvas(exportRef.current, {
+        backgroundColor: null,
+        scale: 3, // Большее разрешение для четкости при печати
+        logging: false,
+        useCORS: true, // Для корректной загрузки внешних изображений
+        width: exportWidth,
+        height: exportHeight,
+      });
+      
+      // Конвертируем canvas в blob
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setGenerateError('Не удалось создать изображение');
+          return;
+        }
+        
+        // Создаем ссылку для скачивания
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${card.name.replace(/[^a-zа-яё0-9]/gi, '_')}_${card.card_number}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'Ошибка при скачивании карты');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -165,8 +216,8 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       >
         {/* Левая часть: Увеличенная карточка */}
         <div className={`flex-shrink-0 flex items-center justify-center p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
-          <div className="transform scale-[1.5] origin-center">
-            <CardPreview card={{...card, image_url: cardImage}} />
+          <div ref={cardRef} className="transform scale-[1.5] origin-center">
+            <CardPreview card={{...card, image_url: cardImage}} disableHover={true} />
           </div>
         </div>
 
@@ -232,7 +283,19 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
           </div>
 
           {/* Кнопки действий */}
-          <div className="flex space-x-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={handleDownloadCard}
+              disabled={isDownloading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDownloading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Download size={18} />
+              )}
+              <span>{isDownloading ? 'Скачивание...' : 'Скачать карту'}</span>
+            </button>
             <button
               onClick={() => onEdit(card.id)}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
@@ -303,6 +366,16 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <p className="text-red-600 text-sm">{generateError}</p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Скрытый блок для корректного экспорта PNG без масштабирования */}
+      <div
+        aria-hidden
+        style={{ position: 'absolute', left: -10000, top: 0, width: 'auto', height: 'auto' }}
+      >
+        <div ref={exportRef}>
+          <CardPreview card={{...card, image_url: cardImage}} disableHover={true} />
         </div>
       </div>
     </div>

@@ -29,6 +29,8 @@ const CardCreator = () => {
   const [cardImage, setCardImage] = useState<string>('');
   const [originalCard, setOriginalCard] = useState<any>(null);
   const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [createdCardId, setCreatedCardId] = useState<string | null>(null); // ID карты, созданной при генерации изображения
+  const [isPollingImage, setIsPollingImage] = useState(false); // Флаг активного polling'а
 
   // Определяем, находимся ли мы в режиме редактирования
   const isEditMode = !!id;
@@ -244,9 +246,13 @@ const CardCreator = () => {
         // Режим редактирования
         await cardsApi.updateCard(id, cardData);
         cardId = id;
+      } else if (createdCardId) {
+        // Карта уже была создана при генерации изображения - обновляем её
+        await cardsApi.updateCard(createdCardId, cardData);
+        cardId = createdCardId;
       } else {
-        // Режим создания
-      const newCard = await cardsApi.createCard(cardData);
+        // Режим создания - создаём новую карту
+        const newCard = await cardsApi.createCard(cardData);
         cardId = newCard.id;
       }
 
@@ -277,7 +283,76 @@ const CardCreator = () => {
     }
   };
 
-  // Функция для создания карты и генерации изображения
+  // Функция для создания карты перед генерацией изображения
+  const handleCreateCardForGeneration = async (): Promise<string> => {
+    const formData = watch();
+    
+    // Подготавливаем данные карты
+    const cardData: CreateCardRequest = {
+      name: formData.name || 'Название карты',
+      description: formData.description || 'Описание эффекта',
+      rarity: formData.rarity || 'common',
+      properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
+      price: formData.price || null,
+      weight: formData.weight || null,
+      bonus_type: formData.bonus_type || null,
+      bonus_value: formData.bonus_value || null,
+      damage_type: formData.damage_type || null,
+      defense_type: formData.defense_type || null,
+      description_font_size: null,
+      is_extended: formData.is_extended || false,
+      author: formData.author || 'Admin',
+      source: formData.source || null,
+      type: formData.type || null,
+      related_cards: formData.related_cards || null,
+      related_actions: formData.related_actions || null,
+      related_effects: formData.related_effects || null,
+      attunement: formData.attunement || null,
+      tags: formData.tags && formData.tags.length > 0 ? formData.tags : null,
+      slot: formData.slot || null,
+      is_template: formData.is_template || 'false',
+      image_prompt_extra: formData.image_prompt_extra || null
+    };
+
+    // Создаем карту
+    const newCard = await cardsApi.createCard(cardData);
+    
+    // Сохраняем ID созданной карты
+    setCreatedCardId(newCard.id);
+    
+    // Запускаем polling для проверки появления изображения
+    startImagePolling(newCard.id);
+    
+    return newCard.id;
+  };
+
+  // Polling для проверки появления изображения
+  const startImagePolling = (cardId: string) => {
+    setIsPollingImage(true);
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const card = await cardsApi.getCard(cardId);
+        
+        if (card.image_url) {
+          // Изображение появилось - обновляем превью
+          setCardImage(card.image_url);
+          setIsPollingImage(false);
+          clearInterval(pollInterval);
+        }
+      } catch (error) {
+        console.error('Ошибка polling изображения:', error);
+      }
+    }, 2000); // Проверяем каждые 2 секунды
+
+    // Останавливаем polling через 30 секунд
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      setIsPollingImage(false);
+    }, 30000);
+  };
+
+  // Функция для создания карты и генерации изображения (старая функция - оставим для совместимости)
   const handleCreateAndGenerate = async () => {
     const formData = watch();
     
@@ -409,6 +484,19 @@ const CardCreator = () => {
           </div>
         )}
 
+        {isPollingImage && (
+          <div className="mb-6 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-700"></div>
+            <span>Генерируется изображение для карты... Это может занять 10-15 секунд.</span>
+          </div>
+        )}
+
+        {createdCardId && !isEditMode && (
+          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+            ✓ Карта создана. Продолжайте редактирование или нажмите "Сохранить" для применения изменений.
+          </div>
+        )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Форма */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -493,12 +581,13 @@ const CardCreator = () => {
                 {/* Генератор изображений */}
                 <ImageGenerator
                   entityType="card"
-                  entityId={id || ''}
+                  entityId={id || createdCardId || ''}
                   entityName={memoizedWatchedValues.name}
                   entityRarity={memoizedWatchedValues.rarity}
                   entityDescription={memoizedWatchedValues.description}
                   entityPromptExtra={memoizedWatchedValues.image_prompt_extra}
                   onImageGenerated={setCardImage}
+                  onCreateEntity={!id && !createdCardId ? handleCreateCardForGeneration : undefined}
                   disabled={!memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
                   className="mb-4"
                 />

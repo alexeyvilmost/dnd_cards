@@ -148,6 +148,11 @@ export const PROPERTIES_OPTIONS = [
   { value: 'ammunition', label: 'Требует боеприпасы' },
   { value: 'loading', label: 'Зарядка' },
   { value: 'special', label: 'Особое' },
+  // Свойства брони
+  { value: 'cloth', label: 'Ткань' },
+  { value: 'light_armor', label: 'Легкая броня' },
+  { value: 'medium_armor', label: 'Средняя броня' },
+  { value: 'heavy_armor', label: 'Тяжелая броня' },
 ] as const;
 
 export const BONUS_TYPE_OPTIONS = [
