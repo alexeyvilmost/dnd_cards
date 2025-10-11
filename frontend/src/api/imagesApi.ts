@@ -71,7 +71,7 @@ export const imagesApi = {
     formData.append('entity_id', entityId);
     formData.append('image', imageFile);
 
-    const response = await apiClient.post<ImageUploadResponse>('/images/upload', formData, {
+    const response = await apiClient.post<ImageUploadResponse>('/api/images/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -91,7 +91,7 @@ export const imagesApi = {
       image_prompt_extra?: string;
     }
   ): Promise<ImageGenerationResponse> => {
-    const response = await apiClient.post<ImageGenerationResponse>('/images/generate', {
+    const response = await apiClient.post<ImageGenerationResponse>('/api/images/generate', {
       entity_type: entityType,
       entity_id: entityId,
       prompt: prompt || '',
@@ -105,19 +105,19 @@ export const imagesApi = {
     entityType: 'card' | 'weapon_template',
     entityId: string
   ): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.delete(`/images/${entityType}/${entityId}`);
+    const response = await apiClient.delete(`/api/images/${entityType}/${entityId}`);
     return response.data;
   },
 
   // Проверка статуса Yandex Storage
   getStatus: async (): Promise<ImageStatusResponse> => {
-    const response = await apiClient.get<ImageStatusResponse>('/images/status');
+    const response = await apiClient.get<ImageStatusResponse>('/api/images/status');
     return response.data;
   },
 
   // Настройка CORS
   setupCORS: async (): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.post('/images/setup-cors');
+    const response = await apiClient.post('/api/images/setup-cors');
     return response.data;
   },
 };

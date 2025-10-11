@@ -60,42 +60,42 @@ export const cardsApi = {
     properties?: string;
     search?: string;
   }): Promise<CardsResponse> => {
-    const response = await apiClient.get<CardsResponse>('/cards', { params });
+    const response = await apiClient.get<CardsResponse>('/api/cards', { params });
     return response.data;
   },
 
   // Получение карточки по ID
   getCard: async (id: string): Promise<Card> => {
-    const response = await apiClient.get<Card>(`/cards/${id}`);
+    const response = await apiClient.get<Card>(`/api/cards/${id}`);
     return response.data;
   },
 
   // Создание новой карточки
   createCard: async (data: CreateCardRequest): Promise<Card> => {
-    const response = await apiClient.post<Card>('/cards', data);
+    const response = await apiClient.post<Card>('/api/cards', data);
     return response.data;
   },
 
   // Обновление карточки
   updateCard: async (id: string, data: UpdateCardRequest): Promise<Card> => {
-    const response = await apiClient.put<Card>(`/cards/${id}`, data);
+    const response = await apiClient.put<Card>(`/api/cards/${id}`, data);
     return response.data;
   },
 
   // Удаление карточки
   deleteCard: async (id: string): Promise<void> => {
-    await apiClient.delete(`/cards/${id}`);
+    await apiClient.delete(`/api/cards/${id}`);
   },
 
   // Генерация изображения
   generateImage: async (data: GenerateImageRequest): Promise<{ image_url: string; message: string }> => {
-    const response = await apiClient.post<{ image_url: string; message: string }>('/cards/generate-image', data);
+    const response = await apiClient.post<{ image_url: string; message: string }>('/api/cards/generate-image', data);
     return response.data;
   },
 
   // Экспорт карточек
   exportCards: async (data: ExportCardsRequest): Promise<{ cards: Card[]; message: string }> => {
-    const response = await apiClient.post<{ cards: Card[]; message: string }>('/cards/export', data);
+    const response = await apiClient.post<{ cards: Card[]; message: string }>('/api/cards/export', data);
     return response.data;
   },
 };

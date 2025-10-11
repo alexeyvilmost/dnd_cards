@@ -93,30 +93,30 @@ export const getImageLibrary = async (filters: ImageLibraryFilters = {}): Promis
   if (filters.search) params.append('search', filters.search);
   if (filters.rarity) params.append('rarity', filters.rarity);
 
-  const response = await api.get(`/image-library?${params.toString()}`);
+  const response = await api.get(`/api/image-library?${params.toString()}`);
   return response.data;
 };
 
 // Добавить изображение в библиотеку
 export const addToLibrary = async (data: AddToLibraryRequest): Promise<{ message: string; image: ImageLibraryItem }> => {
-  const response = await api.post('/image-library', data);
+  const response = await api.post('/api/image-library', data);
   return response.data;
 };
 
 // Обновить метаданные изображения в библиотеке
 export const updateImageLibrary = async (id: string, data: UpdateImageLibraryRequest): Promise<{ message: string; image: ImageLibraryItem }> => {
-  const response = await api.put(`/image-library/${id}`, data);
+  const response = await api.put(`/api/image-library/${id}`, data);
   return response.data;
 };
 
 // Удалить изображение из библиотеки
 export const deleteFromLibrary = async (id: string): Promise<{ message: string }> => {
-  const response = await api.delete(`/image-library/${id}`);
+  const response = await api.delete(`/api/image-library/${id}`);
   return response.data;
 };
 
 // Получить список доступных редкостей
 export const getRarities = async (): Promise<RaritiesResponse> => {
-  const response = await api.get('/image-library/rarities');
+  const response = await api.get('/api/image-library/rarities');
   return response.data;
 };
