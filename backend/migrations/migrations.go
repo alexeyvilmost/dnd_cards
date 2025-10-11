@@ -62,6 +62,18 @@ func GetAllMigrations() []Migration {
 			Up:          createCharactersV2Table,
 			Down:        dropCharactersV2Table,
 		},
+		{
+			Version:     "010_add_text_formatting_fields",
+			Description: "Add text_alignment and text_font_size fields to cards table",
+			Up:          addTextFormattingFields,
+			Down:        removeTextFormattingFields,
+		},
+		{
+			Version:     "011_add_detailed_description_toggle",
+			Description: "Add show_detailed_description, detailed_description_alignment and detailed_description_font_size fields to cards table",
+			Up:          addDetailedDescriptionToggleFields,
+			Down:        removeDetailedDescriptionToggleFields,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -596,5 +608,71 @@ func dropCharactersV2Table(db *sql.DB) error {
 	if _, err := db.Exec(query); err != nil {
 		return fmt.Errorf("failed to drop characters_v2 table: %w", err)
 	}
+	return nil
+}
+
+// addTextFormattingFields добавляет поля text_alignment и text_font_size в таблицу cards
+func addTextFormattingFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS text_alignment VARCHAR(20) CHECK (text_alignment IN ('left', 'center', 'right'))",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS text_font_size INTEGER CHECK (text_font_size >= 8 AND text_font_size <= 24)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeTextFormattingFields удаляет поля text_alignment и text_font_size из таблицы cards
+func removeTextFormattingFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP COLUMN IF EXISTS text_alignment",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS text_font_size",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// addDetailedDescriptionToggleFields добавляет поля show_detailed_description, detailed_description_alignment и detailed_description_font_size в таблицу cards
+func addDetailedDescriptionToggleFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS show_detailed_description BOOLEAN DEFAULT FALSE",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS detailed_description_alignment VARCHAR(20) CHECK (detailed_description_alignment IN ('left', 'center', 'right'))",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS detailed_description_font_size INTEGER CHECK (detailed_description_font_size >= 8 AND detailed_description_font_size <= 24)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeDetailedDescriptionToggleFields удаляет поля show_detailed_description, detailed_description_alignment и detailed_description_font_size из таблицы cards
+func removeDetailedDescriptionToggleFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP COLUMN IF EXISTS show_detailed_description",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS detailed_description_alignment",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS detailed_description_font_size",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
 	return nil
 }

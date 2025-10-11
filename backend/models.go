@@ -131,10 +131,10 @@ const (
 	PropertyLoading    = "loading"    // Зарядка
 	PropertySpecial    = "special"    // Особое
 	// Свойства брони
-	PropertyCloth      = "cloth"      // Ткань
-	PropertyLightArmor = "light_armor" // Легкая броня
+	PropertyCloth       = "cloth"        // Ткань
+	PropertyLightArmor  = "light_armor"  // Легкая броня
 	PropertyMediumArmor = "medium_armor" // Средняя броня
-	PropertyHeavyArmor = "heavy_armor" // Тяжелая броня
+	PropertyHeavyArmor  = "heavy_armor"  // Тяжелая броня
 )
 
 // BonusType - тип бонуса
@@ -172,95 +172,110 @@ const (
 
 // Card - модель карточки
 type Card struct {
-	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name                  string         `json:"name" gorm:"not null"`
-	Properties            *Properties    `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
-	Description           string         `json:"description" gorm:"type:text;not null"`
-	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
-	ImageURL              string         `json:"image_url" gorm:"type:text"`
-	ImageCloudinaryID     string         `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
-	ImageCloudinaryURL    string         `json:"image_cloudinary_url" gorm:"type:text"`
-	ImageGenerated        bool           `json:"image_generated" gorm:"type:boolean;default:false"`
-	ImageGenerationPrompt string         `json:"image_generation_prompt" gorm:"type:text"`
-	Rarity                Rarity         `json:"rarity" gorm:"not null"`
-	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
-	Price                 *int           `json:"price" gorm:"type:int"`
-	Weight                *float64       `json:"weight" gorm:"type:decimal(5,2)"`
-	BonusType             *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
-	BonusValue            *string        `json:"bonus_value" gorm:"type:varchar(20)"`
-	DamageType            *string        `json:"damage_type" gorm:"type:varchar(20)"`
-	DefenseType           *string        `json:"defense_type" gorm:"type:varchar(20)"`
-	DescriptionFontSize   *int           `json:"description_font_size" gorm:"type:int"`
-	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
-	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
-	Source                *string        `json:"source" gorm:"type:varchar(255)"`
-	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
-	RelatedCards          *Properties    `json:"related_cards" gorm:"type:text[]"`   // JSON массив ID
-	RelatedActions        *Properties    `json:"related_actions" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
-	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
-	Attunement            *string        `json:"attunement" gorm:"type:text"`
-	Tags                  *Properties    `json:"tags" gorm:"type:text[]"`                             // Массив тегов
-	IsTemplate            TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
-	Slot                  *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
-	CreatedAt             time.Time      `json:"created_at"`
-	UpdatedAt             time.Time      `json:"updated_at"`
-	DeletedAt             gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                         string         `json:"name" gorm:"not null"`
+	Properties                   *Properties    `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
+	Description                  string         `json:"description" gorm:"type:text;not null"`
+	DetailedDescription          *string        `json:"detailed_description" gorm:"type:text"`
+	ImageURL                     string         `json:"image_url" gorm:"type:text"`
+	ImageCloudinaryID            string         `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL           string         `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated               bool           `json:"image_generated" gorm:"type:boolean;default:false"`
+	ImageGenerationPrompt        string         `json:"image_generation_prompt" gorm:"type:text"`
+	Rarity                       Rarity         `json:"rarity" gorm:"not null"`
+	CardNumber                   string         `json:"card_number" gorm:"uniqueIndex;not null"`
+	Price                        *int           `json:"price" gorm:"type:int"`
+	Weight                       *float64       `json:"weight" gorm:"type:decimal(5,2)"`
+	BonusType                    *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
+	BonusValue                   *string        `json:"bonus_value" gorm:"type:varchar(20)"`
+	DamageType                   *string        `json:"damage_type" gorm:"type:varchar(20)"`
+	DefenseType                  *string        `json:"defense_type" gorm:"type:varchar(20)"`
+	DescriptionFontSize          *int           `json:"description_font_size" gorm:"type:int"`
+	TextAlignment                *string        `json:"text_alignment" gorm:"type:varchar(20)"`
+	TextFontSize                 *int           `json:"text_font_size" gorm:"type:int"`
+	ShowDetailedDescription      *bool          `json:"show_detailed_description" gorm:"type:boolean;default:false"`
+	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment" gorm:"type:varchar(20)"`
+	DetailedDescriptionFontSize  *int           `json:"detailed_description_font_size" gorm:"type:int"`
+	IsExtended                   *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
+	Author                       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
+	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
+	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:text[]"`   // JSON массив ID
+	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
+	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
+	Attunement                   *string        `json:"attunement" gorm:"type:text"`
+	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`                             // Массив тегов
+	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
+	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
+	CreatedAt                    time.Time      `json:"created_at"`
+	UpdatedAt                    time.Time      `json:"updated_at"`
+	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // CreateCardRequest - запрос на создание карточки
 type CreateCardRequest struct {
-	Name                string         `json:"name" binding:"required"`
-	Properties          *Properties    `json:"properties"`
-	Description         string         `json:"description" binding:"required"`
-	DetailedDescription *string        `json:"detailed_description"`
-	Rarity              Rarity         `json:"rarity" binding:"required"`
-	ImageURL            string         `json:"image_url"`
-	Price               *int           `json:"price"`
-	Weight              *float64       `json:"weight"`
-	BonusType           *BonusType     `json:"bonus_type"`
-	BonusValue          *string        `json:"bonus_value"`
-	DamageType          *string        `json:"damage_type"`
-	DefenseType         *string        `json:"defense_type"`
-	DescriptionFontSize *int           `json:"description_font_size"`
-	IsExtended          *bool          `json:"is_extended"`
-	Author              string         `json:"author"`
-	Source              *string        `json:"source"`
-	Type                *string        `json:"type"`
-	RelatedCards        *Properties    `json:"related_cards"`
-	RelatedActions      *Properties    `json:"related_actions"`
-	RelatedEffects      *Properties    `json:"related_effects"`
-	Attunement          *string        `json:"attunement"`
-	Tags                *Properties    `json:"tags"`
-	IsTemplate          TemplateType   `json:"is_template"`
-	Slot                *EquipmentSlot `json:"slot"`
+	Name                         string         `json:"name" binding:"required"`
+	Properties                   *Properties    `json:"properties"`
+	Description                  string         `json:"description" binding:"required"`
+	DetailedDescription          *string        `json:"detailed_description"`
+	Rarity                       Rarity         `json:"rarity" binding:"required"`
+	ImageURL                     string         `json:"image_url"`
+	Price                        *int           `json:"price"`
+	Weight                       *float64       `json:"weight"`
+	BonusType                    *BonusType     `json:"bonus_type"`
+	BonusValue                   *string        `json:"bonus_value"`
+	DamageType                   *string        `json:"damage_type"`
+	DefenseType                  *string        `json:"defense_type"`
+	DescriptionFontSize          *int           `json:"description_font_size"`
+	TextAlignment                *string        `json:"text_alignment"`
+	TextFontSize                 *int           `json:"text_font_size"`
+	ShowDetailedDescription      *bool          `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int           `json:"detailed_description_font_size"`
+	IsExtended                   *bool          `json:"is_extended"`
+	Author                       string         `json:"author"`
+	Source                       *string        `json:"source"`
+	Type                         *string        `json:"type"`
+	RelatedCards                 *Properties    `json:"related_cards"`
+	RelatedActions               *Properties    `json:"related_actions"`
+	RelatedEffects               *Properties    `json:"related_effects"`
+	Attunement                   *string        `json:"attunement"`
+	Tags                         *Properties    `json:"tags"`
+	IsTemplate                   TemplateType   `json:"is_template"`
+	Slot                         *EquipmentSlot `json:"slot"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
 type UpdateCardRequest struct {
-	Name                string         `json:"name"`
-	Properties          *Properties    `json:"properties"`
-	Description         string         `json:"description"`
-	DetailedDescription *string        `json:"detailed_description"`
-	Rarity              Rarity         `json:"rarity"`
-	ImageURL            string         `json:"image_url"`
-	Price               *int           `json:"price"`
-	Weight              *float64       `json:"weight"`
-	BonusType           *BonusType     `json:"bonus_type"`
-	BonusValue          *string        `json:"bonus_value"`
-	DamageType          *string        `json:"damage_type"`
-	DefenseType         *string        `json:"defense_type"`
-	DescriptionFontSize *int           `json:"description_font_size"`
-	IsExtended          *bool          `json:"is_extended"`
-	Author              string         `json:"author"`
-	Source              *string        `json:"source"`
-	Type                *string        `json:"type"`
-	RelatedCards        *Properties    `json:"related_cards"`
-	RelatedActions      *Properties    `json:"related_actions"`
-	RelatedEffects      *Properties    `json:"related_effects"`
-	Attunement          *string        `json:"attunement"`
-	Tags                *Properties    `json:"tags"`
-	IsTemplate          TemplateType   `json:"is_template"`
-	Slot                *EquipmentSlot `json:"slot"`
+	Name                         string         `json:"name"`
+	Properties                   *Properties    `json:"properties"`
+	Description                  string         `json:"description"`
+	DetailedDescription          *string        `json:"detailed_description"`
+	Rarity                       Rarity         `json:"rarity"`
+	ImageURL                     string         `json:"image_url"`
+	Price                        *int           `json:"price"`
+	Weight                       *float64       `json:"weight"`
+	BonusType                    *BonusType     `json:"bonus_type"`
+	BonusValue                   *string        `json:"bonus_value"`
+	DamageType                   *string        `json:"damage_type"`
+	DefenseType                  *string        `json:"defense_type"`
+	DescriptionFontSize          *int           `json:"description_font_size"`
+	TextAlignment                *string        `json:"text_alignment"`
+	TextFontSize                 *int           `json:"text_font_size"`
+	ShowDetailedDescription      *bool          `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int           `json:"detailed_description_font_size"`
+	IsExtended                   *bool          `json:"is_extended"`
+	Author                       string         `json:"author"`
+	Source                       *string        `json:"source"`
+	Type                         *string        `json:"type"`
+	RelatedCards                 *Properties    `json:"related_cards"`
+	RelatedActions               *Properties    `json:"related_actions"`
+	RelatedEffects               *Properties    `json:"related_effects"`
+	Attunement                   *string        `json:"attunement"`
+	Tags                         *Properties    `json:"tags"`
+	IsTemplate                   TemplateType   `json:"is_template"`
+	Slot                         *EquipmentSlot `json:"slot"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -276,28 +291,33 @@ type ExportCardsRequest struct {
 
 // CardResponse - ответ с карточкой
 type CardResponse struct {
-	ID                  uuid.UUID      `json:"id"`
-	Name                string         `json:"name"`
-	Properties          *Properties    `json:"properties"`
-	Description         string         `json:"description"`
-	DetailedDescription *string        `json:"detailed_description"`
-	ImageURL            string         `json:"image_url"`
-	Rarity              Rarity         `json:"rarity"`
-	CardNumber          string         `json:"card_number"`
-	Price               *int           `json:"price"`
-	Weight              *float64       `json:"weight"`
-	BonusType           *BonusType     `json:"bonus_type"`
-	BonusValue          *string        `json:"bonus_value"`
-	DamageType          *string        `json:"damage_type"`
-	DefenseType         *string        `json:"defense_type"`
-	Type                *string        `json:"type"`
-	DescriptionFontSize *int           `json:"description_font_size"`
-	IsExtended          *bool          `json:"is_extended"`
-	Tags                *Properties    `json:"tags"`
-	IsTemplate          TemplateType   `json:"is_template"`
-	Slot                *EquipmentSlot `json:"slot"`
-	CreatedAt           time.Time      `json:"created_at"`
-	UpdatedAt           time.Time      `json:"updated_at"`
+	ID                           uuid.UUID      `json:"id"`
+	Name                         string         `json:"name"`
+	Properties                   *Properties    `json:"properties"`
+	Description                  string         `json:"description"`
+	DetailedDescription          *string        `json:"detailed_description"`
+	ImageURL                     string         `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity"`
+	CardNumber                   string         `json:"card_number"`
+	Price                        *int           `json:"price"`
+	Weight                       *float64       `json:"weight"`
+	BonusType                    *BonusType     `json:"bonus_type"`
+	BonusValue                   *string        `json:"bonus_value"`
+	DamageType                   *string        `json:"damage_type"`
+	DefenseType                  *string        `json:"defense_type"`
+	Type                         *string        `json:"type"`
+	DescriptionFontSize          *int           `json:"description_font_size"`
+	TextAlignment                *string        `json:"text_alignment"`
+	TextFontSize                 *int           `json:"text_font_size"`
+	ShowDetailedDescription      *bool          `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int           `json:"detailed_description_font_size"`
+	IsExtended                   *bool          `json:"is_extended"`
+	Tags                         *Properties    `json:"tags"`
+	IsTemplate                   TemplateType   `json:"is_template"`
+	Slot                         *EquipmentSlot `json:"slot"`
+	CreatedAt                    time.Time      `json:"created_at"`
+	UpdatedAt                    time.Time      `json:"updated_at"`
 }
 
 // GetRarityColor - получение цвета для редкости

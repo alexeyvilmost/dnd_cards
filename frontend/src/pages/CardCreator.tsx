@@ -91,13 +91,19 @@ const CardCreator = () => {
           setValue('rarity', card.rarity);
           setValue('properties', card.properties || []);
           setValue('description', card.description);
+          setValue('detailed_description', card.detailed_description || null);
           setValue('price', card.price);
           setValue('weight', card.weight);
           setValue('bonus_type', card.bonus_type);
           setValue('bonus_value', card.bonus_value);
           setValue('damage_type', card.damage_type);
           setValue('defense_type', card.defense_type);
-          setValue('is_extended', card.is_extended || false);
+          setValue('text_alignment', card.text_alignment || null);
+          setValue('text_font_size', card.text_font_size || null);
+          setValue('show_detailed_description', card.show_detailed_description === true);
+          setValue('detailed_description_alignment', card.detailed_description_alignment || null);
+          setValue('detailed_description_font_size', card.detailed_description_font_size || null);
+          setValue('is_extended', card.is_extended === true);
           setValue('author', card.author || 'Admin');
           setValue('source', card.source);
           setValue('type', card.type);
@@ -137,13 +143,19 @@ const CardCreator = () => {
           setValue('rarity', template.rarity);
           setValue('properties', template.properties || []);
           setValue('description', template.description);
+          setValue('detailed_description', template.detailed_description || null);
           setValue('price', template.price);
           setValue('weight', template.weight);
           setValue('bonus_type', template.bonus_type);
           setValue('bonus_value', template.bonus_value);
           setValue('damage_type', template.damage_type);
           setValue('defense_type', template.defense_type);
-          setValue('is_extended', template.is_extended || false);
+          setValue('text_alignment', template.text_alignment || null);
+          setValue('text_font_size', template.text_font_size || null);
+          setValue('show_detailed_description', template.show_detailed_description === true);
+          setValue('detailed_description_alignment', template.detailed_description_alignment || null);
+          setValue('detailed_description_font_size', template.detailed_description_font_size || null);
+          setValue('is_extended', template.is_extended === true);
           setValue('author', template.author || 'Admin');
           setValue('source', template.source);
           setValue('type', template.type);
@@ -174,6 +186,7 @@ const CardCreator = () => {
     watchedValues.name,
     watchedValues.rarity,
     watchedValues.description,
+    watchedValues.detailed_description,
     watchedValues.properties,
     watchedValues.price,
     watchedValues.weight,
@@ -182,6 +195,11 @@ const CardCreator = () => {
     watchedValues.damage_type,
     watchedValues.defense_type,
     watchedValues.is_extended,
+    watchedValues.text_alignment,
+    watchedValues.text_font_size,
+    watchedValues.show_detailed_description,
+    watchedValues.detailed_description_alignment,
+    watchedValues.detailed_description_font_size,
     watchedValues.author,
     watchedValues.source,
     watchedValues.type,
@@ -217,6 +235,7 @@ const CardCreator = () => {
       const cardData: CreateCardRequest = {
         name: data.name || 'Название карты',
         description: data.description || 'Описание эффекта',
+        detailed_description: data.detailed_description || null,
         rarity: data.rarity || 'common',
         properties: data.properties && data.properties.length > 0 ? data.properties : null,
         price: data.price || null,
@@ -226,7 +245,12 @@ const CardCreator = () => {
         damage_type: data.damage_type || null,
         defense_type: data.defense_type || null,
         description_font_size: null,
-        is_extended: data.is_extended || false,
+        text_alignment: data.text_alignment || null,
+        text_font_size: data.text_font_size || null,
+        show_detailed_description: data.show_detailed_description === true,
+        detailed_description_alignment: data.detailed_description_alignment || null,
+        detailed_description_font_size: data.detailed_description_font_size || null,
+        is_extended: data.is_extended === true,
         author: data.author || 'Admin',
         source: data.source || null,
         type: data.type || null,
@@ -291,6 +315,7 @@ const CardCreator = () => {
     const cardData: CreateCardRequest = {
       name: formData.name || 'Название карты',
       description: formData.description || 'Описание эффекта',
+      detailed_description: formData.detailed_description || null,
       rarity: formData.rarity || 'common',
       properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
       price: formData.price || null,
@@ -300,7 +325,12 @@ const CardCreator = () => {
       damage_type: formData.damage_type || null,
       defense_type: formData.defense_type || null,
       description_font_size: null,
-      is_extended: formData.is_extended || false,
+      text_alignment: formData.text_alignment || null,
+      text_font_size: formData.text_font_size || null,
+      show_detailed_description: formData.show_detailed_description === true,
+      detailed_description_alignment: formData.detailed_description_alignment || null,
+      detailed_description_font_size: formData.detailed_description_font_size || null,
+      is_extended: formData.is_extended === true,
       author: formData.author || 'Admin',
       source: formData.source || null,
       type: formData.type || null,
@@ -364,6 +394,7 @@ const CardCreator = () => {
       const cardData: CreateCardRequest = {
         name: formData.name || 'Название карты',
         description: formData.description || 'Описание эффекта',
+        detailed_description: formData.detailed_description || null,
         rarity: formData.rarity || 'common',
         properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
         price: formData.price || null,
@@ -373,7 +404,11 @@ const CardCreator = () => {
         damage_type: formData.damage_type || null,
         defense_type: formData.defense_type || null,
         description_font_size: null,
-        is_extended: formData.is_extended || false,
+        text_alignment: formData.text_alignment || null,
+        text_font_size: formData.text_font_size || null,
+        detailed_description_alignment: formData.detailed_description_alignment || null,
+        detailed_description_font_size: formData.detailed_description_font_size || null,
+        is_extended: formData.is_extended === true,
         author: formData.author || 'Admin',
         source: formData.source || null,
         type: formData.type || null,
@@ -632,6 +667,104 @@ const CardCreator = () => {
               <p className="text-xs text-gray-500 mt-1">
                 Расширенная карта имеет больший размер и больше места для описания
               </p>
+            </div>
+
+            {/* Настройки текста */}
+            <div className="space-y-4 border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-semibold text-gray-700">Настройки текста описания</h3>
+              
+              {/* Выравнивание текста */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Выравнивание текста
+                </label>
+                <select
+                  {...register('text_alignment')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">По умолчанию (по центру)</option>
+                  <option value="left">Влево</option>
+                  <option value="center">По центру</option>
+                  <option value="right">Вправо</option>
+                </select>
+              </div>
+
+              {/* Размер шрифта */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Размер шрифта (8-24)
+                </label>
+                <input
+                  type="number"
+                  min="8"
+                  max="24"
+                  {...register('text_font_size', { valueAsNumber: true })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="14 (по умолчанию)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Оставьте пустым для автоматического размера
+                </p>
+              </div>
+            </div>
+
+            {/* Переключатель детального описания */}
+            <div className="space-y-4 border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-semibold text-gray-700">Настройки отображения</h3>
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    {...register('show_detailed_description')}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Показывать детальное описание вместо свойств
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  В расширенных картах под картинкой будет показано детальное описание вместо списка свойств
+                </p>
+              </div>
+            </div>
+
+            {/* Настройки детального описания */}
+            <div className="space-y-4 border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-semibold text-gray-700">Настройки детального описания</h3>
+              
+              {/* Выравнивание детального описания */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Выравнивание детального описания
+                </label>
+                <select
+                  {...register('detailed_description_alignment')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">По умолчанию (влево)</option>
+                  <option value="left">Влево</option>
+                  <option value="center">По центру</option>
+                  <option value="right">Вправо</option>
+                </select>
+              </div>
+
+              {/* Размер шрифта детального описания */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Размер шрифта детального описания (8-24)
+                </label>
+                <input
+                  type="number"
+                  min="8"
+                  max="24"
+                  {...register('detailed_description_font_size', { valueAsNumber: true })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="12 (по умолчанию)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Оставьте пустым для автоматического размера
+                </p>
+              </div>
             </div>
 
             {/* Тип шаблона */}

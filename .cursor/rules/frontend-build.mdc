@@ -1,4 +1,0 @@
----
-description: Если были внесены изменения во фронтенд, пересобирать его с docker build --no-cache
-alwaysApply: false
----

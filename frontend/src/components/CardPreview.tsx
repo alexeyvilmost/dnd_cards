@@ -5,6 +5,24 @@ import { renderProperties } from '../utils/propertyIcons';
 import { useCardTilt } from '../hooks/useCardTilt';
 import { getRarityColor } from '../utils/rarityColors';
 
+// Функция для получения значения цвета редкости для inline стилей
+const getRarityColorValue = (rarity: string) => {
+  switch (rarity) {
+    case 'common':
+      return '#6b7280'; // gray-500
+    case 'uncommon':
+      return '#10b981'; // emerald-500
+    case 'rare':
+      return '#3b82f6'; // blue-500
+    case 'epic':
+      return '#8b5cf6'; // violet-500
+    case 'legendary':
+      return '#f59e0b'; // amber-500
+    default:
+      return '#6b7280';
+  }
+};
+
 interface CardPreviewProps {
   card: Card;
   className?: string;
@@ -234,29 +252,46 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
               {/* Свойства */}
               <div className="px-2 pt-0 pb-2 bg-gray-50 flex-1 min-h-[60px] relative overflow-hidden">
                 <div className="w-full">
-                  <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
-                    {(() => {
-                      return renderProperties(propertiesArray, Boolean(isExtended));
-                    })()}
-                  </div>
+                  {card.show_detailed_description && card.detailed_description && card.detailed_description.trim() !== '' ? (
+                    <div 
+                      className={`text-xs font-fantasy whitespace-pre-wrap`}
+                      style={{
+                        fontSize: card.detailed_description_font_size ? `${card.detailed_description_font_size}px` : '12px',
+                        textAlign: card.detailed_description_alignment || 'left',
+                        color: getRarityColorValue(card.rarity)
+                      }}
+                    >
+                      {card.detailed_description}
+                    </div>
+                  ) : (
+                    <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
+                      {(() => {
+                        return renderProperties(propertiesArray, Boolean(isExtended));
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Правая половина - только описание */}
             <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
-              {/* Описание */}
-              <div className="flex-1 overflow-hidden flex flex-col justify-start pt-2">
+              {/* Описание и детальное описание */}
+              <div className="flex-1 overflow-hidden flex flex-col justify-start pt-2 space-y-2">
+                {/* Основное описание */}
                 <p 
-                  className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap text-center`} 
+                  className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`} 
                   style={{ 
-                    fontSize: card.description_font_size ? `${card.description_font_size}px` : 
+                    fontSize: card.text_font_size ? `${card.text_font_size}px` : 
+                            card.description_font_size ? `${card.description_font_size}px` : 
                             getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
-                            getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px')
+                            getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px'),
+                    textAlign: card.text_alignment || 'center'
                   }}
                 >
                   {card.description || 'Нет описания'}
                 </p>
+                
               </div>
             </div>
           </div>
@@ -344,11 +379,13 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
           {/* Описание */}
           <div className="px-1 pt-2 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
             <p 
-              className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap text-center`}
+              className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`}
               style={{ 
-                fontSize: card.description_font_size ? `${card.description_font_size}px` : 
+                fontSize: card.text_font_size ? `${card.text_font_size}px` : 
+                        card.description_font_size ? `${card.description_font_size}px` : 
                         getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
-                        getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px')
+                        getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px'),
+                textAlign: card.text_alignment || 'center'
               }}
             >
               {card.description || 'Нет описания'}

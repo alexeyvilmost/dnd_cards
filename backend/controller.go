@@ -82,28 +82,33 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	responses := make([]CardResponse, 0)
 	for _, card := range cards {
 		responses = append(responses, CardResponse{
-			ID:                  card.ID,
-			Name:                card.Name,
-			Properties:          card.Properties,
-			Description:         card.Description,
-			DetailedDescription: card.DetailedDescription,
-			ImageURL:            card.ImageURL,
-			Rarity:              card.Rarity,
-			CardNumber:          card.CardNumber,
-			Price:               card.Price,
-			Weight:              card.Weight,
-			BonusType:           card.BonusType,
-			BonusValue:          card.BonusValue,
-			DamageType:          card.DamageType,
-			DefenseType:         card.DefenseType,
-			Type:                card.Type,
-			DescriptionFontSize: card.DescriptionFontSize,
-			IsExtended:          card.IsExtended,
-			Tags:                card.Tags,
-			IsTemplate:          card.IsTemplate,
-			Slot:                card.Slot,
-			CreatedAt:           card.CreatedAt,
-			UpdatedAt:           card.UpdatedAt,
+			ID:                           card.ID,
+			Name:                         card.Name,
+			Properties:                   card.Properties,
+			Description:                  card.Description,
+			DetailedDescription:          card.DetailedDescription,
+			ImageURL:                     card.ImageURL,
+			Rarity:                       card.Rarity,
+			CardNumber:                   card.CardNumber,
+			Price:                        card.Price,
+			Weight:                       card.Weight,
+			BonusType:                    card.BonusType,
+			BonusValue:                   card.BonusValue,
+			DamageType:                   card.DamageType,
+			DefenseType:                  card.DefenseType,
+			Type:                         card.Type,
+			DescriptionFontSize:          card.DescriptionFontSize,
+			TextAlignment:                card.TextAlignment,
+			TextFontSize:                 card.TextFontSize,
+			ShowDetailedDescription:      card.ShowDetailedDescription,
+			DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
+			DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
+			IsExtended:                   card.IsExtended,
+			Tags:                         card.Tags,
+			IsTemplate:                   card.IsTemplate,
+			Slot:                         card.Slot,
+			CreatedAt:                    card.CreatedAt,
+			UpdatedAt:                    card.UpdatedAt,
 		})
 	}
 
@@ -134,25 +139,31 @@ func (cc *CardController) GetCard(c *gin.Context) {
 	}
 
 	response := CardResponse{
-		ID:                  card.ID,
-		Name:                card.Name,
-		Properties:          card.Properties,
-		Description:         card.Description,
-		DetailedDescription: card.DetailedDescription,
-		ImageURL:            card.ImageURL,
-		Rarity:              card.Rarity,
-		CardNumber:          card.CardNumber,
-		Price:               card.Price,
-		Weight:              card.Weight,
-		BonusType:           card.BonusType,
-		BonusValue:          card.BonusValue,
-		DamageType:          card.DamageType,
-		DefenseType:         card.DefenseType,
-		Type:                card.Type,
-		DescriptionFontSize: card.DescriptionFontSize,
-		Slot:                card.Slot,
-		CreatedAt:           card.CreatedAt,
-		UpdatedAt:           card.UpdatedAt,
+		ID:                           card.ID,
+		Name:                         card.Name,
+		Properties:                   card.Properties,
+		Description:                  card.Description,
+		DetailedDescription:          card.DetailedDescription,
+		ImageURL:                     card.ImageURL,
+		Rarity:                       card.Rarity,
+		CardNumber:                   card.CardNumber,
+		Price:                        card.Price,
+		Weight:                       card.Weight,
+		BonusType:                    card.BonusType,
+		BonusValue:                   card.BonusValue,
+		DamageType:                   card.DamageType,
+		DefenseType:                  card.DefenseType,
+		Type:                         card.Type,
+		DescriptionFontSize:          card.DescriptionFontSize,
+		TextAlignment:                card.TextAlignment,
+		TextFontSize:                 card.TextFontSize,
+		ShowDetailedDescription:      card.ShowDetailedDescription,
+		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
+		IsExtended:                   card.IsExtended,
+		Slot:                         card.Slot,
+		CreatedAt:                    card.CreatedAt,
+		UpdatedAt:                    card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -201,31 +212,36 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	cardNumber := generateCardNumber(cc.db)
 
 	card := Card{
-		Name:                req.Name,
-		Properties:          req.Properties, // Теперь это указатель, GORM сам обработает nil
-		Description:         req.Description,
-		DetailedDescription: req.DetailedDescription,
-		Rarity:              req.Rarity,
-		ImageURL:            req.ImageURL,
-		Price:               req.Price,
-		Weight:              req.Weight,
-		BonusType:           req.BonusType,
-		BonusValue:          req.BonusValue,
-		DamageType:          req.DamageType,
-		DefenseType:         req.DefenseType,
-		DescriptionFontSize: req.DescriptionFontSize,
-		IsExtended:          req.IsExtended,
-		Author:              req.Author,
-		Source:              req.Source,
-		Type:                req.Type,
-		RelatedCards:        req.RelatedCards,
-		RelatedActions:      req.RelatedActions,
-		RelatedEffects:      req.RelatedEffects,
-		Attunement:          req.Attunement,
-		Tags:                req.Tags,
-		IsTemplate:          req.IsTemplate,
-		Slot:                req.Slot,
-		CardNumber:          cardNumber,
+		Name:                         req.Name,
+		Properties:                   req.Properties, // Теперь это указатель, GORM сам обработает nil
+		Description:                  req.Description,
+		DetailedDescription:          req.DetailedDescription,
+		Rarity:                       req.Rarity,
+		ImageURL:                     req.ImageURL,
+		Price:                        req.Price,
+		Weight:                       req.Weight,
+		BonusType:                    req.BonusType,
+		BonusValue:                   req.BonusValue,
+		DamageType:                   req.DamageType,
+		DefenseType:                  req.DefenseType,
+		DescriptionFontSize:          req.DescriptionFontSize,
+		TextAlignment:                req.TextAlignment,
+		TextFontSize:                 req.TextFontSize,
+		ShowDetailedDescription:      req.ShowDetailedDescription,
+		DetailedDescriptionAlignment: req.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  req.DetailedDescriptionFontSize,
+		IsExtended:                   req.IsExtended,
+		Author:                       req.Author,
+		Source:                       req.Source,
+		Type:                         req.Type,
+		RelatedCards:                 req.RelatedCards,
+		RelatedActions:               req.RelatedActions,
+		RelatedEffects:               req.RelatedEffects,
+		Attunement:                   req.Attunement,
+		Tags:                         req.Tags,
+		IsTemplate:                   req.IsTemplate,
+		Slot:                         req.Slot,
+		CardNumber:                   cardNumber,
 	}
 
 	if err := cc.db.Create(&card).Error; err != nil {
@@ -234,25 +250,31 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	}
 
 	response := CardResponse{
-		ID:                  card.ID,
-		Name:                card.Name,
-		Properties:          card.Properties,
-		Description:         card.Description,
-		DetailedDescription: card.DetailedDescription,
-		ImageURL:            card.ImageURL,
-		Rarity:              card.Rarity,
-		CardNumber:          card.CardNumber,
-		Price:               card.Price,
-		Weight:              card.Weight,
-		BonusType:           card.BonusType,
-		BonusValue:          card.BonusValue,
-		DamageType:          card.DamageType,
-		DefenseType:         card.DefenseType,
-		Type:                card.Type,
-		DescriptionFontSize: card.DescriptionFontSize,
-		Slot:                card.Slot,
-		CreatedAt:           card.CreatedAt,
-		UpdatedAt:           card.UpdatedAt,
+		ID:                           card.ID,
+		Name:                         card.Name,
+		Properties:                   card.Properties,
+		Description:                  card.Description,
+		DetailedDescription:          card.DetailedDescription,
+		ImageURL:                     card.ImageURL,
+		Rarity:                       card.Rarity,
+		CardNumber:                   card.CardNumber,
+		Price:                        card.Price,
+		Weight:                       card.Weight,
+		BonusType:                    card.BonusType,
+		BonusValue:                   card.BonusValue,
+		DamageType:                   card.DamageType,
+		DefenseType:                  card.DefenseType,
+		Type:                         card.Type,
+		DescriptionFontSize:          card.DescriptionFontSize,
+		TextAlignment:                card.TextAlignment,
+		TextFontSize:                 card.TextFontSize,
+		ShowDetailedDescription:      card.ShowDetailedDescription,
+		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
+		IsExtended:                   card.IsExtended,
+		Slot:                         card.Slot,
+		CreatedAt:                    card.CreatedAt,
+		UpdatedAt:                    card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -323,7 +345,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Description != "" {
 		card.Description = req.Description
 	}
-	if req.DetailedDescription != nil && *req.DetailedDescription != "" {
+	if req.DetailedDescription != nil {
 		card.DetailedDescription = req.DetailedDescription
 	}
 	if req.Rarity != "" {
@@ -352,6 +374,21 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.DescriptionFontSize != nil {
 		card.DescriptionFontSize = req.DescriptionFontSize
+	}
+	if req.TextAlignment != nil {
+		card.TextAlignment = req.TextAlignment
+	}
+	if req.TextFontSize != nil {
+		card.TextFontSize = req.TextFontSize
+	}
+	if req.ShowDetailedDescription != nil {
+		card.ShowDetailedDescription = req.ShowDetailedDescription
+	}
+	if req.DetailedDescriptionAlignment != nil {
+		card.DetailedDescriptionAlignment = req.DetailedDescriptionAlignment
+	}
+	if req.DetailedDescriptionFontSize != nil {
+		card.DetailedDescriptionFontSize = req.DetailedDescriptionFontSize
 	}
 	if req.IsExtended != nil {
 		card.IsExtended = req.IsExtended
@@ -393,25 +430,31 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 
 	response := CardResponse{
-		ID:                  card.ID,
-		Name:                card.Name,
-		Properties:          card.Properties,
-		Description:         card.Description,
-		DetailedDescription: card.DetailedDescription,
-		ImageURL:            card.ImageURL,
-		Rarity:              card.Rarity,
-		CardNumber:          card.CardNumber,
-		Price:               card.Price,
-		Weight:              card.Weight,
-		BonusType:           card.BonusType,
-		BonusValue:          card.BonusValue,
-		DamageType:          card.DamageType,
-		DefenseType:         card.DefenseType,
-		Type:                card.Type,
-		DescriptionFontSize: card.DescriptionFontSize,
-		Slot:                card.Slot,
-		CreatedAt:           card.CreatedAt,
-		UpdatedAt:           card.UpdatedAt,
+		ID:                           card.ID,
+		Name:                         card.Name,
+		Properties:                   card.Properties,
+		Description:                  card.Description,
+		DetailedDescription:          card.DetailedDescription,
+		ImageURL:                     card.ImageURL,
+		Rarity:                       card.Rarity,
+		CardNumber:                   card.CardNumber,
+		Price:                        card.Price,
+		Weight:                       card.Weight,
+		BonusType:                    card.BonusType,
+		BonusValue:                   card.BonusValue,
+		DamageType:                   card.DamageType,
+		DefenseType:                  card.DefenseType,
+		Type:                         card.Type,
+		DescriptionFontSize:          card.DescriptionFontSize,
+		TextAlignment:                card.TextAlignment,
+		TextFontSize:                 card.TextFontSize,
+		ShowDetailedDescription:      card.ShowDetailedDescription,
+		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
+		IsExtended:                   card.IsExtended,
+		Slot:                         card.Slot,
+		CreatedAt:                    card.CreatedAt,
+		UpdatedAt:                    card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusOK, response)

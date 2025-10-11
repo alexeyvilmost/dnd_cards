@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -82,6 +83,11 @@ func main() {
 
 	openAIService := NewOpenAIService()
 	imageController := NewImageController(db, yandexStorage, openAIService)
+
+	// Health check endpoint
+	r.GET("/api/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now().Unix()})
+	})
 
 	// Маршруты API
 	api := r.Group("/api")

@@ -22,6 +22,11 @@ export interface Card {
   damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
   is_extended?: boolean | null;
   author?: string;
   source?: string | null;
@@ -51,6 +56,11 @@ export interface CreateCardRequest {
   damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
   is_extended?: boolean | null;
   author?: string;
   source?: string | null;
@@ -79,6 +89,11 @@ export interface UpdateCardRequest {
   damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
   is_extended?: boolean | null;
   author?: string;
   source?: string | null;
