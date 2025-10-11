@@ -87,16 +87,28 @@ func main() {
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now().Unix()})
+		c.JSON(200, gin.H{
+			"status": "ok", 
+			"timestamp": time.Now().Unix(),
+			"version": "fixed-v2", // Добавляем версию для проверки
+		})
 	})
 
 	// Debug endpoint
 	r.GET("/api/debug", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status": "ok", 
-			"timestamp": time.Now().Unix(),
+			"status":          "ok",
+			"timestamp":       time.Now().Unix(),
 			"auth_controller": authController != nil,
-			"auth_service": authService != nil,
+			"auth_service":    authService != nil,
+		})
+	})
+
+	// Test auth endpoint
+	r.GET("/api/test-auth", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Auth endpoint test",
+			"auth_available": authController != nil,
 		})
 	})
 
