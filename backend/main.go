@@ -65,16 +65,6 @@ func main() {
 	config.AllowCredentials = true
 	r.Use(cors.New(config))
 
-	// Инициализация сервисов и контроллеров
-	cardController := NewCardController(db)
-	authService := NewAuthService(db)
-	authController := NewAuthController(authService)
-	groupController := NewGroupController(db)
-	inventoryController := NewInventoryController(db)
-	characterController := NewCharacterController(db)
-	characterV2Controller := NewCharacterV2Controller(db)
-	imageLibraryController := NewImageLibraryController(db)
-
 	// Инициализация сервисов для работы с изображениями
 	yandexStorage, err := NewYandexStorageService()
 	if err != nil {
@@ -85,9 +75,29 @@ func main() {
 	openAIService := NewOpenAIService()
 	imageController := NewImageController(db, yandexStorage, openAIService)
 
+	// Инициализация сервисов и контроллеров
+	cardController := NewCardController(db)
+	authService := NewAuthService(db)
+	authController := NewAuthController(authService)
+	groupController := NewGroupController(db)
+	inventoryController := NewInventoryController(db)
+	characterController := NewCharacterController(db)
+	characterV2Controller := NewCharacterV2Controller(db)
+	imageLibraryController := NewImageLibraryController(db)
+
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now().Unix()})
+	})
+
+	// Debug endpoint
+	r.GET("/api/debug", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status": "ok", 
+			"timestamp": time.Now().Unix(),
+			"auth_controller": authController != nil,
+			"auth_service": authService != nil,
+		})
 	})
 
 	// Маршруты API
