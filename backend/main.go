@@ -88,9 +88,9 @@ func main() {
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status": "ok", 
+			"status":    "ok",
 			"timestamp": time.Now().Unix(),
-			"version": "fixed-v2", // Добавляем версию для проверки
+			"version":   "fixed-v3", // Обновляем версию для принудительного пересборки
 		})
 	})
 
@@ -107,7 +107,7 @@ func main() {
 	// Test auth endpoint
 	r.GET("/api/test-auth", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Auth endpoint test",
+			"message":        "Auth endpoint test",
 			"auth_available": authController != nil,
 		})
 	})
