@@ -115,6 +115,11 @@ func main() {
 	// Маршруты API
 	api := r.Group("/api")
 	{
+		// Тестовый endpoint в группе API
+		api.GET("/test", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "API group works", "auth_controller": authController != nil})
+		})
+
 		// Публичные маршруты (без авторизации)
 		api.POST("/auth/register", authController.Register)
 		api.POST("/auth/login", authController.Login)
