@@ -54,14 +54,15 @@ func main() {
 	config.AllowOrigins = []string{
 		"http://localhost:3000",
 		"http://localhost:5173",
+		"https://frontend-production-550b.up.railway.app", // Ваш конкретный frontend URL
 		"https://*.vercel.app",
-		"https://*.railway.app",
 		"https://*.netlify.app",
 		"https://*.render.com",
 		"https://*.digitalocean.app",
 	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	config.AllowCredentials = true
 	r.Use(cors.New(config))
 
 	// Инициализация сервисов и контроллеров
