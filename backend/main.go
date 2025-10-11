@@ -120,6 +120,11 @@ func main() {
 			c.JSON(200, gin.H{"message": "API group works", "auth_controller": authController != nil})
 		})
 
+		// Тест auth endpoints
+		api.GET("/auth/test", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "Auth endpoints work", "controller": authController != nil})
+		})
+
 		// Публичные маршруты (без авторизации)
 		api.POST("/auth/register", authController.Register)
 		api.POST("/auth/login", authController.Login)
