@@ -348,7 +348,7 @@ const CardLibrary = () => {
           
           {/* Отображение в зависимости от режима */}
           {viewMode === 'grid' ? (
-            /* Сетка карт */}
+            /* Сетка карт */
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
               {cards.map((card) => {
                 const isExtended = Boolean(card.is_extended);
