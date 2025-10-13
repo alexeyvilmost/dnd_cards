@@ -5,6 +5,7 @@ import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
+import ExportCardPreview from './ExportCardPreview';
 import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
 import html2canvas from 'html2canvas';
@@ -114,12 +115,14 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       const exportHeight = 280;
 
       const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: null,
+        backgroundColor: 'white',
         scale: 3, // Большее разрешение для четкости при печати
         logging: false,
         useCORS: true, // Для корректной загрузки внешних изображений
         width: exportWidth,
         height: exportHeight,
+        allowTaint: false,
+        foreignObjectRendering: false,
       });
       
       // Конвертируем canvas в blob
@@ -138,7 +141,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      }, 'image/png');
+      }, 'image/png', 0.95);
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : 'Ошибка при скачивании карты');
     } finally {
@@ -375,7 +378,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         style={{ position: 'absolute', left: -10000, top: 0, width: 'auto', height: 'auto' }}
       >
         <div ref={exportRef}>
-          <CardPreview card={{...card, image_url: cardImage}} disableHover={true} />
+          <ExportCardPreview card={{...card, image_url: cardImage}} />
         </div>
       </div>
     </div>

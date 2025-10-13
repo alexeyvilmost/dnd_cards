@@ -1,4 +1,4 @@
-import apiClient from './client';
+import { apiClient } from './client';
 import type { Group, GroupMember, CreateGroupRequest, JoinGroupRequest } from '../types';
 
 export const groupsApi = {

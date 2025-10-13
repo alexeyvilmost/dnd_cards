@@ -22,7 +22,7 @@ yarn install
 Создайте файл `.env` в корне frontend папки:
 
 ```env
-VITE_API_URL=http://localhost:8080/api
+VITE_API_URL=http://localhost:8080
 ```
 
 ### 3. Запуск в режиме разработки

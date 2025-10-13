@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Eye, Plus, X } from 'lucide-react';
-import apiClient from '../api/client';
+import { apiClient } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   CharacterV2, 

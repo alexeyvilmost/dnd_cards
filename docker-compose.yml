@@ -58,7 +58,7 @@ services:
       dockerfile: Dockerfile
     container_name: dnd_cards_frontend
     environment:
-      VITE_API_URL: http://localhost:8080/api
+      VITE_API_URL: http://localhost:8080
     ports:
       - "3000:3000"
     depends_on:

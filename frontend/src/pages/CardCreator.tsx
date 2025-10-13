@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Eye, EyeOff, ArrowLeft, Library, Wand2 } from 'lucide-react';
+import { Save, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
 import type { CreateCardRequest, UpdateCardRequest, Properties } from '../types';
-import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../types';
-import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
 import CardPreview from '../components/CardPreview';
-import RaritySelector from '../components/RaritySelector';
-import PropertySelector from '../components/PropertySelector';
-import ImageUploader from '../components/ImageUploader';
-import ImageGenerator from '../components/ImageGenerator';
 import ImageLibraryModal from '../components/ImageLibraryModal';
-import TagsInput from '../components/TagsInput';
-import CollapsibleBlock from '../components/CollapsibleBlock';
+import { CardCreatorNavigation } from '../components/CardCreatorNavigation';
+import { MainSection } from '../components/cardCreator/MainSection';
+import { ImageSection } from '../components/cardCreator/ImageSection';
+import { TextSection } from '../components/cardCreator/TextSection';
+import { EquipmentSection } from '../components/cardCreator/EquipmentSection';
+import { PrivacySection } from '../components/cardCreator/PrivacySection';
 import type { ImageLibraryItem } from '../api/imageLibraryApi';
 
 const CardCreator = () => {
@@ -31,6 +29,7 @@ const CardCreator = () => {
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [createdCardId, setCreatedCardId] = useState<string | null>(null); // ID карты, созданной при генерации изображения
   const [isPollingImage, setIsPollingImage] = useState(false); // Флаг активного polling'а
+  const [activeSection, setActiveSection] = useState('main'); // Активная секция навигации
 
   // Определяем, находимся ли мы в режиме редактирования
   const isEditMode = !!id;
@@ -382,75 +381,6 @@ const CardCreator = () => {
     }, 30000);
   };
 
-  // Функция для создания карты и генерации изображения (старая функция - оставим для совместимости)
-  const handleCreateAndGenerate = async () => {
-    const formData = watch();
-    
-    try {
-      setSaving(true);
-      setError(null);
-      
-      // Подготавливаем данные карты
-      const cardData: CreateCardRequest = {
-        name: formData.name || 'Название карты',
-        description: formData.description || 'Описание эффекта',
-        detailed_description: formData.detailed_description || null,
-        rarity: formData.rarity || 'common',
-        properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
-        price: formData.price || null,
-        weight: formData.weight || null,
-        bonus_type: formData.bonus_type || null,
-        bonus_value: formData.bonus_value || null,
-        damage_type: formData.damage_type || null,
-        defense_type: formData.defense_type || null,
-        description_font_size: null,
-        text_alignment: formData.text_alignment || null,
-        text_font_size: formData.text_font_size || null,
-        detailed_description_alignment: formData.detailed_description_alignment || null,
-        detailed_description_font_size: formData.detailed_description_font_size || null,
-        is_extended: formData.is_extended === true,
-        author: formData.author || 'Admin',
-        source: formData.source || null,
-        type: formData.type || null,
-        related_cards: formData.related_cards || null,
-        related_actions: formData.related_actions || null,
-        related_effects: formData.related_effects || null,
-        attunement: formData.attunement || null,
-        tags: formData.tags && formData.tags.length > 0 ? formData.tags : null,
-        slot: formData.slot || null,
-        is_template: formData.is_template || 'false',
-        image_prompt_extra: formData.image_prompt_extra || null
-      };
-
-      // Создаем карту
-      const newCard = await cardsApi.createCard(cardData);
-      
-      // Генерируем изображение
-      try {
-        const response = await imagesApi.generateImage('card', newCard.id, undefined, {
-          name: newCard.name,
-          description: newCard.description,
-          rarity: newCard.rarity,
-          image_prompt_extra: newCard.image_prompt_extra || undefined,
-        });
-        
-        if (response.success) {
-          // Обновляем карту с URL изображения
-          await cardsApi.updateCard(newCard.id, { image_url: response.image_url });
-        }
-      } catch (generateError) {
-        console.warn('Ошибка генерации изображения:', generateError);
-        // Продолжаем, даже если генерация не удалась
-      }
-
-      // Перенаправляем на страницу библиотеки
-      navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка создания карты');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // Функция для выбора изображения из библиотеки
   const handleSelectFromLibrary = (image: ImageLibraryItem) => {
@@ -532,459 +462,70 @@ const CardCreator = () => {
           </div>
         )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Навигация */}
+        <div className="lg:col-span-1">
+          <CardCreatorNavigation 
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+          />
+        </div>
+
         {/* Форма */}
+        <div className="lg:col-span-6">
           <div className="bg-white rounded-lg shadow p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Основная информация */}
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-900">Основная информация</h2>
+              {/* Рендер активной секции */}
+              {activeSection === 'main' && (
+                <MainSection 
+                  register={register}
+                  errors={errors}
+                  setValue={setValue}
+                  watch={watch}
+                />
+              )}
               
-              {/* Название */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Название карты
-                </label>
-                <input
-                  {...register('name', { required: 'Название обязательно' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Введите название карты"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                )}
-              </div>
-
-              {/* Редкость */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Редкость
-                </label>
-                  <RaritySelector
-                    value={memoizedWatchedValues.rarity}
-                    onChange={(rarity) => setValue('rarity', rarity)}
-                  />
-              </div>
-
-              {/* Описание */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Описание
-                </label>
-                <textarea
-                    {...register('description', { required: 'Описание обязательно' })}
-                  rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Введите описание эффекта"
-                />
-                {errors.description && (
-                  <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-                )}
-              </div>
-
-              {/* Цена и вес */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Цена (золото)
-                  </label>
-                  <input
-                    type="number"
-                    {...register('price', { valueAsNumber: true })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Вес (фунты)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    {...register('weight', { valueAsNumber: true })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.0"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Блок "Изображение" */}
-            <CollapsibleBlock title="Изображение" defaultOpen={true}>
-              <div className="space-y-4">
-                {/* Генератор изображений */}
-                <ImageGenerator
-                  entityType="card"
-                  entityId={id || createdCardId || ''}
-                  entityName={memoizedWatchedValues.name}
-                  entityRarity={memoizedWatchedValues.rarity}
-                  entityDescription={memoizedWatchedValues.description}
-                  entityPromptExtra={memoizedWatchedValues.image_prompt_extra}
+              {activeSection === 'image' && (
+                <ImageSection 
+                  register={register}
+                  errors={errors}
+                  setValue={setValue}
+                  watch={watch}
                   onImageGenerated={setCardImage}
                   onCreateEntity={!id && !createdCardId ? handleCreateCardForGeneration : undefined}
-                  disabled={!memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
-                  className="mb-4"
+                  entityId={id || createdCardId || ''}
+                  showImageLibrary={showImageLibrary}
+                  setShowImageLibrary={setShowImageLibrary}
                 />
-
-                {/* Кнопка выбора из библиотеки */}
-                <div className="mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowImageLibrary(true)}
-                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Library size={20} />
-                    <span>Выбрать из библиотеки</span>
-                  </button>
-                </div>
-                
-                {/* Загрузчик изображений */}
-                <ImageUploader
-                  onImageUpload={setCardImage}
-                  currentImageUrl={cardImage}
-                  entityType="card"
-                  entityId={id || ''}
-                  enableCloudUpload={false}
-                />
-              </div>
-            </CollapsibleBlock>
-
-            {/* Блок "Дополнительно" */}
-            <CollapsibleBlock title="Дополнительно">
-              <div className="space-y-6">
-
-            {/* Расширенная карта */}
-            <div>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  {...register('is_extended')}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Расширенная карта</span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
-                Расширенная карта имеет больший размер и больше места для описания
-              </p>
-            </div>
-
-            {/* Настройки текста */}
-            <div className="space-y-4 border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-semibold text-gray-700">Настройки текста описания</h3>
+              )}
               
-              {/* Выравнивание текста */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Выравнивание текста
-                </label>
-                <select
-                  {...register('text_alignment')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">По умолчанию (по центру)</option>
-                  <option value="left">Влево</option>
-                  <option value="center">По центру</option>
-                  <option value="right">Вправо</option>
-                </select>
-              </div>
-
-              {/* Размер шрифта */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Размер шрифта (8-24)
-                </label>
-                <input
-                  type="number"
-                  min="8"
-                  max="24"
-                  {...register('text_font_size', { valueAsNumber: true })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="14 (по умолчанию)"
+              {activeSection === 'text' && (
+                <TextSection 
+                  register={register}
+                  errors={errors}
+                  setValue={setValue}
+                  watch={watch}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Оставьте пустым для автоматического размера
-                </p>
-              </div>
-            </div>
-
-            {/* Переключатель детального описания */}
-            <div className="space-y-4 border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-semibold text-gray-700">Настройки отображения</h3>
-              <div>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    {...register('show_detailed_description')}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Показывать детальное описание вместо свойств
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  В расширенных картах под картинкой будет показано детальное описание вместо списка свойств
-                </p>
-              </div>
-            </div>
-
-            {/* Настройки детального описания */}
-            <div className="space-y-4 border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-semibold text-gray-700">Настройки детального описания</h3>
+              )}
               
-              {/* Выравнивание детального описания */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Выравнивание детального описания
-                </label>
-                <select
-                  {...register('detailed_description_alignment')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">По умолчанию (влево)</option>
-                  <option value="left">Влево</option>
-                  <option value="center">По центру</option>
-                  <option value="right">Вправо</option>
-                </select>
-              </div>
-
-              {/* Размер шрифта детального описания */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Размер шрифта детального описания (8-24)
-                </label>
-                <input
-                  type="number"
-                  min="8"
-                  max="24"
-                  {...register('detailed_description_font_size', { valueAsNumber: true })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="12 (по умолчанию)"
+              {activeSection === 'equipment' && (
+                <EquipmentSection 
+                  register={register}
+                  errors={errors}
+                  setValue={setValue}
+                  watch={watch}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Оставьте пустым для автоматического размера
-                </p>
-              </div>
-            </div>
-
-            {/* Тип шаблона */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тип шаблона
-              </label>
-              <select
-                {...register('is_template')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="false">Обычная карта</option>
-                <option value="template">Карта и шаблон</option>
-                <option value="only_template">Только шаблон</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Шаблоны используются для быстрого создания новых карт
-              </p>
-            </div>
-
-            {/* Автор */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Автор
-              </label>
-              <input
-                type="text"
-                {...register('author')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Admin"
-              />
-            </div>
-
-            {/* Источник */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Источник
-              </label>
-              <input
-                type="text"
-                {...register('source')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Player's Handbook"
-              />
-            </div>
-
-            {/* Тип предмета */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тип предмета
-              </label>
-              <select
-                {...register('type')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Выберите тип</option>
-                {ITEM_TYPE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Слот экипировки */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Слот экипировки
-              </label>
-              <select
-                {...register('slot')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Не экипируется</option>
-                {EQUIPMENT_SLOTS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Настройка */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Настройка
-              </label>
-              <textarea
-                {...register('attunement')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                placeholder="Описание настройки на артефакт..."
-              />
-            </div>
-
-            {/* Теги */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Теги
-              </label>
-              <TagsInput
-                value={memoizedWatchedValues.tags || []}
-                onChange={(tags) => setValue('tags', tags)}
-                placeholder="Короткий меч, Магическое, Одноручное"
-              />
-            </div>
-
-                {/* Детальное описание */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Детальное описание
-                  </label>
-                  <textarea
-                      {...register('detailed_description')}
-                    rows={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Введите подробное описание (необязательно)"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Подробное описание будет отображаться в модальном окне с детальным просмотром карты
-                  </p>
-                </div>
-
-                {/* Дополнительная информация к промпту для генерации изображения */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Дополнительная информация для генерации изображения
-                  </label>
-                  <textarea
-                    {...register('image_prompt_extra')}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Опишите особые пожелания к внешнему виду предмета (необязательно)"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Например: "с золотыми украшениями", "в стиле эльфийского оружия", "с рунами на лезвии"
-                  </p>
-                </div>
-
-                {/* Свойства */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Свойства
-                  </label>
-                  <PropertySelector
-                    value={memoizedWatchedValues.properties || []}
-                    onChange={(properties) => setValue('properties', properties)}
-                  />
-                </div>
-
-              {/* Бонус */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Тип бонуса
-                </label>
-                <select
-                  {...register('bonus_type')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="">Выберите тип</option>
-                  {BONUS_TYPE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Значение бонуса
-                </label>
-                <input
-                  {...register('bonus_value')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="+1"
+              )}
+              
+              {activeSection === 'privacy' && (
+                <PrivacySection 
+                  register={register}
+                  errors={errors}
                 />
-              </div>
-            </div>
-
-            {/* Тип урона - показывается только если выбран тип бонуса "Урон" */}
-            {memoizedWatchedValues.bonus_type === 'damage' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Тип урона
-                </label>
-                <select
-                  {...register('damage_type')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Выберите тип урона</option>
-                  <option value="slashing">Рубящий</option>
-                  <option value="piercing">Колющий</option>
-                  <option value="bludgeoning">Дробящий</option>
-                </select>
-              </div>
-            )}
-
-            {/* Тип брони - показывается только если выбран тип бонуса "Защита" */}
-            {memoizedWatchedValues.bonus_type === 'defense' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Тип брони
-                </label>
-                <select
-                  {...register('defense_type')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Выберите тип брони</option>
-                  <option value="light">Легкая</option>
-                  <option value="medium">Средняя</option>
-                  <option value="heavy">Тяжелая</option>
-                </select>
-              </div>
-            )}
-              </div>
-            </CollapsibleBlock>
+              )}
 
             {/* Кнопки */}
-              <div className="flex justify-end space-x-4 pt-6">
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => navigate('/')}
@@ -1000,24 +541,15 @@ const CardCreator = () => {
                   <Save size={20} />
                   <span>{saving ? 'Сохранение...' : (isEditMode ? 'Сохранить' : 'Создать')}</span>
                 </button>
-                {!isEditMode && (
-                  <button
-                    type="button"
-                    onClick={handleCreateAndGenerate}
-                    disabled={saving || !memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}
-                    className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Wand2 size={20} />
-                    <span>{saving ? 'Создание...' : 'Создать и сгенерировать изображение'}</span>
-                  </button>
-                )}
             </div>
           </form>
+          </div>
         </div>
 
-          {/* Превью */}
-          {showPreview && (
-            <div className="bg-white rounded-lg shadow p-6 lg:sticky lg:top-6 self-start">
+        {/* Превью */}
+        {showPreview && (
+          <div className="lg:col-span-5">
+            <div className="bg-white rounded-lg shadow p-6 sticky top-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Превью карты</h3>
               {previewCard ? (
                 <div className="flex justify-center">
@@ -1031,8 +563,8 @@ const CardCreator = () => {
             </div>
               )}
             </div>
+            </div>
           )}
-        </div>
       </div>
 
       {/* Модальное окно библиотеки изображений */}
@@ -1041,6 +573,7 @@ const CardCreator = () => {
         onClose={() => setShowImageLibrary(false)}
         onSelectImage={handleSelectFromLibrary}
       />
+      </div>
     </div>
   );
 };
