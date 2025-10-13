@@ -210,37 +210,37 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 sm:p-4"
       onClick={onClose}
     >
       <div
-        className={`relative flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl w-full h-full max-h-[90vh] overflow-hidden ${card.is_extended ? 'max-w-7xl' : 'max-w-6xl'}`}
+        className={`relative flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl w-full h-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden ${card.is_extended ? 'max-w-7xl' : 'max-w-6xl'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Левая часть: Увеличенная карточка */}
-        <div className={`flex-shrink-0 flex items-center justify-center p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
-          <div ref={cardRef} className="transform scale-[1.5] origin-center">
+        <div className={`flex-shrink-0 flex items-center justify-center p-2 sm:p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
+          <div ref={cardRef} className="transform scale-100 sm:scale-110 md:scale-125 lg:scale-150 origin-center">
             <CardPreview card={{...card, image_url: cardImage}} disableHover={true} />
           </div>
         </div>
 
         {/* Правая часть: Детальная информация */}
-        <div className={`flex-grow p-6 overflow-y-auto space-y-4 flex flex-col justify-center ${card.is_extended ? 'lg:w-1/3' : 'lg:w-1/2'}`}>
+        <div className={`flex-grow p-3 sm:p-4 md:p-6 overflow-y-auto space-y-3 sm:space-y-4 flex flex-col justify-center ${card.is_extended ? 'lg:w-1/3' : 'lg:w-1/2'}`}>
           <div className="flex justify-between items-start">
-            <h2 className="font-bold text-3xl font-fantasy">{card.name}</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
-              <X size={24} />
+            <h2 className="font-bold text-xl sm:text-2xl md:text-3xl font-fantasy">{card.name}</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-white flex-shrink-0 ml-2">
+              <X size={20} className="sm:w-6 sm:h-6" />
             </button>
           </div>
 
           {card.description && (
-            <p className="text-lg whitespace-pre-wrap">{card.description}</p>
+            <p className="text-sm sm:text-base md:text-lg whitespace-pre-wrap">{card.description}</p>
           )}
 
           {card.detailed_description && (
-            <div className="mt-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
-              <h3 className="text-sm font-semibold text-gray-300 mb-2">Подробное описание:</h3>
-              <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">
+            <div className="mt-2 sm:mt-4 p-3 sm:p-4 bg-gray-800 rounded-lg border border-gray-600">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-300 mb-2">Подробное описание:</h3>
+              <p className="text-xs sm:text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">
                 {card.detailed_description}
               </p>
             </div>
@@ -248,7 +248,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
           {/* Тип урона и брони */}
           {(card.damage_type || card.defense_type) && (
-            <div className="text-sm space-y-1">
+            <div className="text-xs sm:text-sm space-y-1">
               {card.damage_type && (
                 <p><strong>Тип урона:</strong> {getDamageTypeLabel(card.damage_type)}</p>
               )}

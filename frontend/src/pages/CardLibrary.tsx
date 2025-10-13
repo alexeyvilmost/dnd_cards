@@ -150,15 +150,15 @@ const CardLibrary = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Заголовок */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-fantasy font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">
           Библиотека карточек
         </h1>
         <Link
           to="/create"
-          className="btn-primary flex items-center space-x-2"
+          className="btn-primary flex items-center space-x-2 w-full sm:w-auto justify-center"
         >
           <Plus size={18} />
           <span>Создать карту</span>
@@ -166,9 +166,9 @@ const CardLibrary = () => {
       </div>
 
       {/* Быстрые действия */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Быстрые действия</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Быстрые действия</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
           <Link
             to="/inventory"
             className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
@@ -219,18 +219,18 @@ const CardLibrary = () => {
       </div>
 
       {/* Поиск и фильтры */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           {/* Поиск */}
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Поиск по названию..."
+                placeholder="Поиск..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="input-field pl-10"
+                className="input-field pl-10 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -264,7 +264,7 @@ const CardLibrary = () => {
           {/* Кнопка фильтров */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-secondary flex items-center space-x-2"
+            className="btn-secondary flex items-center justify-center space-x-2 text-sm sm:text-base"
           >
             <Filter size={18} />
             <span>Фильтры</span>
@@ -348,23 +348,25 @@ const CardLibrary = () => {
           
           {/* Отображение в зависимости от режима */}
           {viewMode === 'grid' ? (
-            /* Сетка карт */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
+            /* Сетка карт */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
               {cards.map((card) => {
                 const isExtended = Boolean(card.is_extended);
                 return (
                   <div 
                     key={card.id} 
-                    className={`relative group flex justify-center cursor-pointer ${isExtended ? 'sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                    className={`relative group flex justify-center cursor-pointer ${isExtended ? 'col-span-2 sm:col-span-2' : ''}`}
                     onClick={() => handleCardClick(card)}
                   >
-                    <CardPreview card={card} />
+                    <div className="w-full max-w-[198px] mx-auto">
+                      <CardPreview card={card} />
+                    </div>
                   </div>
               );
               })}
             </div>
           ) : (
-            /* Список названий в три колонки */
+            /* Список названий */
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {cards.map((card) => (

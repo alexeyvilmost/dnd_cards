@@ -414,30 +414,30 @@ const CardCreator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
       {/* Заголовок */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="mb-4 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate('/')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
-                <ArrowLeft size={20} />
-                <span>Назад к библиотеке</span>
+                <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+                <span className="text-sm sm:text-base">Назад</span>
           </button>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isEditMode ? 'Редактирование карты' : 'Создание карты'}
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+              {isEditMode ? 'Редактирование' : 'Создание'}
           </h1>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm sm:text-base"
           >
-                {showPreview ? <EyeOff size={20} /> : <Eye size={20} />}
-                <span>{showPreview ? 'Скрыть превью' : 'Показать превью'}</span>
+                {showPreview ? <EyeOff size={16} className="sm:w-5 sm:h-5" /> : <Eye size={16} className="sm:w-5 sm:h-5" />}
+                <span className="hidden sm:inline">{showPreview ? 'Скрыть' : 'Показать'}</span>
           </button>
         </div>
       </div>
@@ -462,7 +462,7 @@ const CardCreator = () => {
           </div>
         )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4">
         {/* Навигация */}
         <div className="lg:col-span-1">
           <CardCreatorNavigation 
@@ -473,7 +473,7 @@ const CardCreator = () => {
 
         {/* Форма */}
         <div className="lg:col-span-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Рендер активной секции */}
               {activeSection === 'main' && (

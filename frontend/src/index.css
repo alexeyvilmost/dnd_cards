@@ -58,6 +58,13 @@
     height: 74.25mm;
     @apply bg-white rounded-lg shadow-lg relative;
     position: relative;
+    
+    /* Адаптивность для мобильных */
+    @media (max-width: 640px) {
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 5.25 / 7.425;
+    }
   }
   
   .card-preview-large {
@@ -69,6 +76,13 @@
     transform-origin: center center;
     margin: 2rem 0; /* Добавляем отступы сверху и снизу */
     /* VERSION 4 - масштаб теперь управляется через JavaScript */
+    
+    /* Адаптивность для мобильных */
+    @media (max-width: 640px) {
+      transform: scale(1);
+      margin: 1rem 0;
+      max-width: 100%;
+    }
   }
 
   /* Скрытие стрелочек у полей ввода чисел */
@@ -106,5 +120,49 @@
 
   .glow-artifact {
     box-shadow: 0 0 25px rgba(245, 158, 11, 0.5), 0 0 50px rgba(239, 68, 68, 0.4);
+  }
+
+  /* Адаптивные утилиты для мобильных устройств */
+  @media (max-width: 640px) {
+    /* Уменьшаем заголовки на мобильных */
+    h1 {
+      @apply text-2xl;
+    }
+    
+    h2 {
+      @apply text-xl;
+    }
+    
+    h3 {
+      @apply text-lg;
+    }
+    
+    /* Компактные кнопки на мобильных */
+    .btn-primary, .btn-secondary, .btn-danger {
+      @apply text-sm px-3 py-2;
+    }
+    
+    /* Компактные отступы для контейнеров */
+    .space-y-6 > * + * {
+      margin-top: 1rem !important;
+    }
+    
+    .space-y-4 > * + * {
+      margin-top: 0.75rem !important;
+    }
+  }
+  
+  /* Touch-friendly элементы для мобильных */
+  @media (hover: none) and (pointer: coarse) {
+    /* Увеличиваем размер кликабельных элементов для сенсорных устройств */
+    button, a, input[type="checkbox"], input[type="radio"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Улучшаем отступы для элементов форм */
+    .input-field {
+      @apply py-3;
+    }
   }
 }

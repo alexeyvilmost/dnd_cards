@@ -83,16 +83,16 @@ const Groups: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Мои группы</h1>
-          <p className="text-gray-600 mt-1">Управляйте своими группами D&D</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Мои группы</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Управляйте своими группами D&D</p>
         </div>
         <Link
           to="/groups/create"
-          className="btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+          className="btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus size={20} />
           <span>Создать группу</span>
