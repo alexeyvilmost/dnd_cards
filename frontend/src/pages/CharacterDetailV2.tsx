@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Eye, Plus, X } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import ItemSelector from '../components/ItemSelector';
+import { Card } from '../types';
 import { 
   CharacterV2, 
   calculateDerivedStats, 
@@ -33,6 +35,12 @@ const CharacterDetailV2: React.FC = () => {
   const [customSavingThrowProficiencies, setCustomSavingThrowProficiencies] = useState<{ [key: string]: boolean }>({});
   const [customSkillProficiencies, setCustomSkillProficiencies] = useState<{ [key: string]: boolean }>({});
   
+  // Состояние для модального окна выбора предметов
+  const [showItemSelector, setShowItemSelector] = useState(false);
+  
+  // Состояние для инвентарей персонажа
+  const [characterInventories, setCharacterInventories] = useState<any[]>([]);
+  
   // Состояния для модальных окон производных характеристик
   const [selectedDerivedStat, setSelectedDerivedStat] = useState<string | null>(null);
   const [showDerivedStatModal, setShowDerivedStatModal] = useState(false);
@@ -47,16 +55,59 @@ const CharacterDetailV2: React.FC = () => {
   const loadCharacter = async () => {
     if (!id) return;
 
+    const startTime = performance.now();
+    console.log('🚀 [PERF] Начало загрузки персонажа');
+
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get<CharacterV2>(`/characters-v2/${id}`);
+      
+      const characterStartTime = performance.now();
+      const response = await apiClient.get<CharacterV2>(`/api/characters-v2/${id}`);
+      const characterEndTime = performance.now();
+      console.log(`⏱️ [PERF] Загрузка персонажа: ${(characterEndTime - characterStartTime).toFixed(2)}ms`);
+      
       setCharacter(response.data);
+      
+      // Загружаем инвентари персонажа
+      const inventoriesStartTime = performance.now();
+      await loadCharacterInventories();
+      const inventoriesEndTime = performance.now();
+      console.log(`⏱️ [PERF] Загрузка инвентарей: ${(inventoriesEndTime - inventoriesStartTime).toFixed(2)}ms`);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`✅ [PERF] Общее время загрузки: ${totalTime.toFixed(2)}ms`);
     } catch (err) {
       setError('Ошибка загрузки персонажа');
       console.error('Error loading character:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCharacterInventories = async () => {
+    if (!character) return;
+
+    const startTime = performance.now();
+    console.log('📦 [PERF] Начало загрузки инвентарей');
+
+    try {
+      const apiStartTime = performance.now();
+      const response = await apiClient.get(`/api/characters-v2/${character.id}/inventories`);
+      const apiEndTime = performance.now();
+      console.log(`🌐 [PERF] API запрос инвентарей: ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
+      
+      console.log('Инвентари персонажа:', response.data);
+      
+      const stateStartTime = performance.now();
+      setCharacterInventories(response.data || []);
+      const stateEndTime = performance.now();
+      console.log(`🔄 [PERF] Обновление состояния: ${(stateEndTime - stateStartTime).toFixed(2)}ms`);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`✅ [PERF] Общее время загрузки инвентарей: ${totalTime.toFixed(2)}ms`);
+    } catch (err) {
+      console.error('Ошибка загрузки инвентарей персонажа:', err);
     }
   };
 
@@ -66,11 +117,55 @@ const CharacterDetailV2: React.FC = () => {
     }
 
     try {
-      await apiClient.delete(`/characters-v2/${character.id}`);
+      await apiClient.delete(`/api/characters-v2/${character.id}`);
       navigate('/characters-v2');
     } catch (err) {
       setError('Ошибка удаления персонажа');
       console.error('Error deleting character:', err);
+    }
+  };
+
+  const [isAddingItems, setIsAddingItems] = useState(false);
+
+  const handleAddItems = async (items: Card[]) => {
+    if (isAddingItems) return; // Защита от двойного нажатия
+    
+    const startTime = performance.now();
+    console.log('➕ [PERF] Начало добавления предметов');
+
+    setIsAddingItems(true);
+    try {
+      if (!character) {
+        console.error('Персонаж не найден');
+        return;
+      }
+
+      const cardIds = items.map(item => item.id);
+      
+      const apiStartTime = performance.now();
+      const response = await apiClient.post(`/api/characters-v2/${character.id}/inventories/items`, {
+        card_ids: cardIds
+      });
+      const apiEndTime = performance.now();
+      console.log(`🌐 [PERF] API запрос добавления предметов: ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
+
+      console.log('Предметы добавлены в инвентарь:', response.data);
+      
+      // Обновляем инвентари персонажа
+      const reloadStartTime = performance.now();
+      await loadCharacterInventories();
+      const reloadEndTime = performance.now();
+      console.log(`🔄 [PERF] Перезагрузка инвентарей: ${(reloadEndTime - reloadStartTime).toFixed(2)}ms`);
+      
+      setShowItemSelector(false);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`✅ [PERF] Общее время добавления предметов: ${totalTime.toFixed(2)}ms`);
+    } catch (error) {
+      console.error('Ошибка добавления предметов:', error);
+      // TODO: Показать уведомление об ошибке пользователю
+    } finally {
+      setIsAddingItems(false);
     }
   };
 
@@ -372,7 +467,10 @@ const CharacterDetailV2: React.FC = () => {
   };
 
   // Компонент сетки инвентаря (упрощенная версия для V2)
-  const InventoryGrid: React.FC<{ character: CharacterV2 | null }> = ({ character }) => {
+  const InventoryGrid: React.FC<{ character: CharacterV2 | null; inventories: any[] }> = ({ character, inventories }) => {
+    const renderStartTime = performance.now();
+    console.log('🎨 [PERF] Начало рендеринга InventoryGrid');
+    
     const equipmentSlots = 16; // 2 строки по 8 слотов для экипировки
     const inventorySlots = 48; // 6 строк по 8 слотов для обычного инвентаря
     
@@ -403,8 +501,7 @@ const CharacterDetailV2: React.FC = () => {
     };
 
     const handleAddItemClick = () => {
-      // TODO: Открыть модальное окно добавления предмета
-      console.log('Add item clicked');
+      setShowItemSelector(true);
     };
 
     return (
@@ -443,19 +540,53 @@ const CharacterDetailV2: React.FC = () => {
             {Array.from({ length: inventorySlots }, (_, index) => {
               const isLastSlot = index === inventorySlots - 1;
               
+              // Находим предмет в этом слоте
+              // Пока что просто берем первые предметы из инвентарей
+              const allItems = inventories.flatMap(inv => inv.items || []);
+              const inventoryItem = allItems[index];
+              
               return (
                 <div
                   key={index}
                   className={`w-16 h-16 border rounded flex items-center justify-center relative ${
                     isLastSlot 
                       ? 'bg-blue-50 border-blue-300 cursor-pointer hover:bg-blue-100 transition-colors' 
-                      : 'border-dashed border-gray-300 bg-gray-50'
+                      : inventoryItem
+                        ? 'border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors'
+                        : 'border-dashed border-gray-300 bg-gray-50'
                   }`}
-                  title={isLastSlot ? 'Добавить предмет' : `Слот рюкзака ${index + 1}`}
+                  title={
+                    isLastSlot 
+                      ? 'Добавить предмет' 
+                      : inventoryItem 
+                        ? `${inventoryItem.card?.name || 'Предмет'} (${inventoryItem.quantity || 1})`
+                        : `Слот рюкзака ${index + 1}`
+                  }
                   onClick={isLastSlot ? handleAddItemClick : undefined}
                 >
                   {isLastSlot ? (
                     <Plus className="w-6 h-6 text-blue-600" />
+                  ) : inventoryItem ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      {inventoryItem.card?.image_url ? (
+                        <img 
+                          src={inventoryItem.card.image_url} 
+                          alt={inventoryItem.card.name}
+                          className="w-12 h-12 object-contain rounded"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/default_image.png';
+                          }}
+                        />
+                      ) : (
+                        <Package className="w-6 h-6 text-gray-600" />
+                      )}
+                      {inventoryItem.quantity > 1 && (
+                        <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {inventoryItem.quantity}
+                        </div>
+                      )}
+                    </div>
                   ) : index < 6 ? (
                     <Package className="w-4 h-4 text-gray-300" />
                   ) : null}
@@ -642,7 +773,7 @@ const CharacterDetailV2: React.FC = () => {
             <div className="w-3/5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Инвентарь</h2>
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <InventoryGrid character={character} />
+                <InventoryGrid character={character} inventories={characterInventories} />
               </div>
             </div>
           </div>
@@ -685,7 +816,7 @@ const CharacterDetailV2: React.FC = () => {
       <div className="space-y-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Инвентарь</h2>
-          <InventoryGrid character={character} />
+          <InventoryGrid character={character} inventories={characterInventories} />
         </div>
       </div>
     );
@@ -1361,6 +1492,14 @@ const CharacterDetailV2: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно выбора предметов */}
+      <ItemSelector
+        isOpen={showItemSelector}
+        onClose={() => setShowItemSelector(false)}
+        onAddItems={handleAddItems}
+        characterId={character?.id || ''}
+      />
     </div>
   );
 };

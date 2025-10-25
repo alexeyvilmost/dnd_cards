@@ -39,7 +39,7 @@ const CharactersV2: React.FC = () => {
   const fetchCharacters = async () => {
     try {
       setLoading(true);
-      const { data } = await apiClient.get<CharacterV2[]>('/characters-v2');
+      const { data } = await apiClient.get<CharacterV2[]>('/api/characters-v2');
       // Нормализуем поля-массивы и защищаемся от null/undefined
       const normalized = (Array.isArray(data) ? data : []).map((c) => ({
         ...c,
@@ -53,7 +53,7 @@ const CharactersV2: React.FC = () => {
       const charactersWithInventories = await Promise.all(
         normalized.map(async (character) => {
           try {
-            const inventoriesResponse = await apiClient.get(`/characters-v2/${character.id}/inventories`);
+            const inventoriesResponse = await apiClient.get(`/api/characters-v2/${character.id}/inventories`);
             return {
               ...character,
               inventories: inventoriesResponse.data || []
@@ -97,7 +97,7 @@ const CharactersV2: React.FC = () => {
         saving_throw_proficiencies: ['charisma', 'dexterity'],
         skill_proficiencies: [],
       };
-      await apiClient.post('/characters-v2', payload);
+      await apiClient.post('/api/characters-v2', payload);
       await fetchCharacters();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось создать персонажа');
@@ -112,7 +112,7 @@ const CharactersV2: React.FC = () => {
     }
 
     try {
-      await apiClient.delete(`/characters-v2/${id}`);
+      await apiClient.delete(`/api/characters-v2/${id}`);
       setCharacters(characters.filter(char => char.id !== id));
     } catch (err) {
       setError('Ошибка удаления персонажа');

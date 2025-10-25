@@ -1,7 +1,9 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -379,6 +381,9 @@ func (ic *InventoryController) RemoveItemFromInventory(c *gin.Context) {
 
 // GetCharacterInventories - получение инвентарей персонажа
 func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
+	startTime := time.Now()
+	log.Println("🚀 [PERF] GetCharacterInventories: Начало")
+
 	userID, err := GetCurrentUserID(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
@@ -393,7 +398,8 @@ func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
 	}
 
 	// Проверяем, что персонаж принадлежит пользователю
-	var character Character
+	checkStartTime := time.Now()
+	var character CharacterV2
 	if err := ic.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
@@ -402,14 +408,23 @@ func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
 		return
 	}
+	log.Printf("⏱️ [PERF] GetCharacterInventories: Проверка персонажа - %v", time.Since(checkStartTime))
 
 	// Получаем инвентари персонажа
+	queryStartTime := time.Now()
 	var inventories []Inventory
 	if err := ic.db.Preload("Items.Card").Where("character_id = ?", characterID).Find(&inventories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения инвентарей персонажа"})
 		return
 	}
+	log.Printf("⏱️ [PERF] GetCharacterInventories: Запрос инвентарей - %v", time.Since(queryStartTime))
+	log.Printf("📊 [PERF] GetCharacterInventories: Найдено инвентарей: %d", len(inventories))
 
+	for i, inv := range inventories {
+		log.Printf("📦 [PERF] GetCharacterInventories: Инвентарь %d - предметов: %d", i, len(inv.Items))
+	}
+
+	log.Printf("✅ [PERF] GetCharacterInventories: Общее время - %v", time.Since(startTime))
 	c.JSON(http.StatusOK, inventories)
 }
 
@@ -484,7 +499,7 @@ func (ic *InventoryController) EquipItem(c *gin.Context) {
 			Joins("JOIN inventories ON inventory_items.inventory_id = inventories.id").
 			Where("inventories.character_id = ? AND inventory_items.is_equipped = true", item.Inventory.CharacterID).
 			Find(&conflictingItems).Error; err == nil {
-			
+
 			for _, conflictItem := range conflictingItems {
 				if conflictItem.Card.Slot != nil && *conflictItem.Card.Slot == *item.Card.Slot && conflictItem.ID != item.ID {
 					conflictItem.IsEquipped = false

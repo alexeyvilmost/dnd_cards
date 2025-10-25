@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -47,23 +49,23 @@ func (cc *CharacterV2Controller) CreateCharacterV2(c *gin.Context) {
 	}
 
 	character := CharacterV2{
-		UserID:                    userID.(uuid.UUID),
-		GroupID:                   nil, // Пока не поддерживаем группы
-		Name:                      req.Name,
-		Race:                      req.Race,
-		Class:                     req.Class,
-		Level:                     req.Level,
-		Speed:                     req.Speed,
-		Strength:                  req.Strength,
-		Dexterity:                 req.Dexterity,
-		Constitution:              req.Constitution,
-		Intelligence:              req.Intelligence,
-		Wisdom:                    req.Wisdom,
-		Charisma:                  req.Charisma,
-		MaxHP:                     req.MaxHP,
-		CurrentHP:                 req.CurrentHP,
-		SavingThrowProficiencies:  string(savingThrowJSON),
-		SkillProficiencies:        string(skillJSON),
+		UserID:                   userID.(uuid.UUID),
+		GroupID:                  nil, // Пока не поддерживаем группы
+		Name:                     req.Name,
+		Race:                     req.Race,
+		Class:                    req.Class,
+		Level:                    req.Level,
+		Speed:                    req.Speed,
+		Strength:                 req.Strength,
+		Dexterity:                req.Dexterity,
+		Constitution:             req.Constitution,
+		Intelligence:             req.Intelligence,
+		Wisdom:                   req.Wisdom,
+		Charisma:                 req.Charisma,
+		MaxHP:                    req.MaxHP,
+		CurrentHP:                req.CurrentHP,
+		SavingThrowProficiencies: string(savingThrowJSON),
+		SkillProficiencies:       string(skillJSON),
 	}
 
 	if err := cc.db.Create(&character).Error; err != nil {
@@ -84,28 +86,28 @@ func (cc *CharacterV2Controller) CreateCharacterV2(c *gin.Context) {
 	json.Unmarshal([]byte(fullCharacter.SkillProficiencies), &skills)
 
 	response := CharacterV2Response{
-		ID:                        fullCharacter.ID,
-		UserID:                    fullCharacter.UserID,
-		GroupID:                   fullCharacter.GroupID,
-		Name:                      fullCharacter.Name,
-		Race:                      fullCharacter.Race,
-		Class:                     fullCharacter.Class,
-		Level:                     fullCharacter.Level,
-		Speed:                     fullCharacter.Speed,
-		Strength:                  fullCharacter.Strength,
-		Dexterity:                 fullCharacter.Dexterity,
-		Constitution:              fullCharacter.Constitution,
-		Intelligence:              fullCharacter.Intelligence,
-		Wisdom:                    fullCharacter.Wisdom,
-		Charisma:                  fullCharacter.Charisma,
-		MaxHP:                     fullCharacter.MaxHP,
-		CurrentHP:                 fullCharacter.CurrentHP,
-		SavingThrowProficiencies:  savingThrows,
-		SkillProficiencies:        skills,
-		CreatedAt:                 fullCharacter.CreatedAt,
-		UpdatedAt:                 fullCharacter.UpdatedAt,
-		User:                      fullCharacter.User,
-		Group:                     fullCharacter.Group,
+		ID:                       fullCharacter.ID,
+		UserID:                   fullCharacter.UserID,
+		GroupID:                  fullCharacter.GroupID,
+		Name:                     fullCharacter.Name,
+		Race:                     fullCharacter.Race,
+		Class:                    fullCharacter.Class,
+		Level:                    fullCharacter.Level,
+		Speed:                    fullCharacter.Speed,
+		Strength:                 fullCharacter.Strength,
+		Dexterity:                fullCharacter.Dexterity,
+		Constitution:             fullCharacter.Constitution,
+		Intelligence:             fullCharacter.Intelligence,
+		Wisdom:                   fullCharacter.Wisdom,
+		Charisma:                 fullCharacter.Charisma,
+		MaxHP:                    fullCharacter.MaxHP,
+		CurrentHP:                fullCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		CreatedAt:                fullCharacter.CreatedAt,
+		UpdatedAt:                fullCharacter.UpdatedAt,
+		User:                     fullCharacter.User,
+		Group:                    fullCharacter.Group,
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -143,28 +145,28 @@ func (cc *CharacterV2Controller) GetCharacterV2(c *gin.Context) {
 	json.Unmarshal([]byte(character.SkillProficiencies), &skills)
 
 	response := CharacterV2Response{
-		ID:                        character.ID,
-		UserID:                    character.UserID,
-		GroupID:                   character.GroupID,
-		Name:                      character.Name,
-		Race:                      character.Race,
-		Class:                     character.Class,
-		Level:                     character.Level,
-		Speed:                     character.Speed,
-		Strength:                  character.Strength,
-		Dexterity:                 character.Dexterity,
-		Constitution:              character.Constitution,
-		Intelligence:              character.Intelligence,
-		Wisdom:                    character.Wisdom,
-		Charisma:                  character.Charisma,
-		MaxHP:                     character.MaxHP,
-		CurrentHP:                 character.CurrentHP,
-		SavingThrowProficiencies:  savingThrows,
-		SkillProficiencies:        skills,
-		CreatedAt:                 character.CreatedAt,
-		UpdatedAt:                 character.UpdatedAt,
-		User:                      character.User,
-		Group:                     character.Group,
+		ID:                       character.ID,
+		UserID:                   character.UserID,
+		GroupID:                  character.GroupID,
+		Name:                     character.Name,
+		Race:                     character.Race,
+		Class:                    character.Class,
+		Level:                    character.Level,
+		Speed:                    character.Speed,
+		Strength:                 character.Strength,
+		Dexterity:                character.Dexterity,
+		Constitution:             character.Constitution,
+		Intelligence:             character.Intelligence,
+		Wisdom:                   character.Wisdom,
+		Charisma:                 character.Charisma,
+		MaxHP:                    character.MaxHP,
+		CurrentHP:                character.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		CreatedAt:                character.CreatedAt,
+		UpdatedAt:                character.UpdatedAt,
+		User:                     character.User,
+		Group:                    character.Group,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -192,28 +194,28 @@ func (cc *CharacterV2Controller) GetCharactersV2(c *gin.Context) {
 		json.Unmarshal([]byte(character.SkillProficiencies), &skills)
 
 		response := CharacterV2Response{
-			ID:                        character.ID,
-			UserID:                    character.UserID,
-			GroupID:                   character.GroupID,
-			Name:                      character.Name,
-			Race:                      character.Race,
-			Class:                     character.Class,
-			Level:                     character.Level,
-			Speed:                     character.Speed,
-			Strength:                  character.Strength,
-			Dexterity:                 character.Dexterity,
-			Constitution:              character.Constitution,
-			Intelligence:              character.Intelligence,
-			Wisdom:                    character.Wisdom,
-			Charisma:                  character.Charisma,
-			MaxHP:                     character.MaxHP,
-			CurrentHP:                 character.CurrentHP,
-			SavingThrowProficiencies:  savingThrows,
-			SkillProficiencies:        skills,
-			CreatedAt:                 character.CreatedAt,
-			UpdatedAt:                 character.UpdatedAt,
-			User:                      character.User,
-			Group:                     character.Group,
+			ID:                       character.ID,
+			UserID:                   character.UserID,
+			GroupID:                  character.GroupID,
+			Name:                     character.Name,
+			Race:                     character.Race,
+			Class:                    character.Class,
+			Level:                    character.Level,
+			Speed:                    character.Speed,
+			Strength:                 character.Strength,
+			Dexterity:                character.Dexterity,
+			Constitution:             character.Constitution,
+			Intelligence:             character.Intelligence,
+			Wisdom:                   character.Wisdom,
+			Charisma:                 character.Charisma,
+			MaxHP:                    character.MaxHP,
+			CurrentHP:                character.CurrentHP,
+			SavingThrowProficiencies: savingThrows,
+			SkillProficiencies:       skills,
+			CreatedAt:                character.CreatedAt,
+			UpdatedAt:                character.UpdatedAt,
+			User:                     character.User,
+			Group:                    character.Group,
 		}
 		responses = append(responses, response)
 	}
@@ -330,28 +332,28 @@ func (cc *CharacterV2Controller) UpdateCharacterV2(c *gin.Context) {
 	json.Unmarshal([]byte(fullCharacter.SkillProficiencies), &skills)
 
 	response := CharacterV2Response{
-		ID:                        fullCharacter.ID,
-		UserID:                    fullCharacter.UserID,
-		GroupID:                   fullCharacter.GroupID,
-		Name:                      fullCharacter.Name,
-		Race:                      fullCharacter.Race,
-		Class:                     fullCharacter.Class,
-		Level:                     fullCharacter.Level,
-		Speed:                     fullCharacter.Speed,
-		Strength:                  fullCharacter.Strength,
-		Dexterity:                 fullCharacter.Dexterity,
-		Constitution:              fullCharacter.Constitution,
-		Intelligence:              fullCharacter.Intelligence,
-		Wisdom:                    fullCharacter.Wisdom,
-		Charisma:                  fullCharacter.Charisma,
-		MaxHP:                     fullCharacter.MaxHP,
-		CurrentHP:                 fullCharacter.CurrentHP,
-		SavingThrowProficiencies:  savingThrows,
-		SkillProficiencies:        skills,
-		CreatedAt:                 fullCharacter.CreatedAt,
-		UpdatedAt:                 fullCharacter.UpdatedAt,
-		User:                      fullCharacter.User,
-		Group:                     fullCharacter.Group,
+		ID:                       fullCharacter.ID,
+		UserID:                   fullCharacter.UserID,
+		GroupID:                  fullCharacter.GroupID,
+		Name:                     fullCharacter.Name,
+		Race:                     fullCharacter.Race,
+		Class:                    fullCharacter.Class,
+		Level:                    fullCharacter.Level,
+		Speed:                    fullCharacter.Speed,
+		Strength:                 fullCharacter.Strength,
+		Dexterity:                fullCharacter.Dexterity,
+		Constitution:             fullCharacter.Constitution,
+		Intelligence:             fullCharacter.Intelligence,
+		Wisdom:                   fullCharacter.Wisdom,
+		Charisma:                 fullCharacter.Charisma,
+		MaxHP:                    fullCharacter.MaxHP,
+		CurrentHP:                fullCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		CreatedAt:                fullCharacter.CreatedAt,
+		UpdatedAt:                fullCharacter.UpdatedAt,
+		User:                     fullCharacter.User,
+		Group:                    fullCharacter.Group,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -403,7 +405,7 @@ func (cc *CharacterV2Controller) UpdateCharacterV2Stat(c *gin.Context) {
 
 	characterIDStr := c.Param("id")
 	statName := c.Param("statName")
-	
+
 	characterID, err := uuid.Parse(characterIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
@@ -475,29 +477,171 @@ func (cc *CharacterV2Controller) UpdateCharacterV2Stat(c *gin.Context) {
 	json.Unmarshal([]byte(fullCharacter.SkillProficiencies), &skills)
 
 	response := CharacterV2Response{
-		ID:                        fullCharacter.ID,
-		UserID:                    fullCharacter.UserID,
-		GroupID:                   fullCharacter.GroupID,
-		Name:                      fullCharacter.Name,
-		Race:                      fullCharacter.Race,
-		Class:                     fullCharacter.Class,
-		Level:                     fullCharacter.Level,
-		Speed:                     fullCharacter.Speed,
-		Strength:                  fullCharacter.Strength,
-		Dexterity:                 fullCharacter.Dexterity,
-		Constitution:              fullCharacter.Constitution,
-		Intelligence:              fullCharacter.Intelligence,
-		Wisdom:                    fullCharacter.Wisdom,
-		Charisma:                  fullCharacter.Charisma,
-		MaxHP:                     fullCharacter.MaxHP,
-		CurrentHP:                 fullCharacter.CurrentHP,
-		SavingThrowProficiencies:  savingThrows,
-		SkillProficiencies:        skills,
-		CreatedAt:                 fullCharacter.CreatedAt,
-		UpdatedAt:                 fullCharacter.UpdatedAt,
-		User:                      fullCharacter.User,
-		Group:                     fullCharacter.Group,
+		ID:                       fullCharacter.ID,
+		UserID:                   fullCharacter.UserID,
+		GroupID:                  fullCharacter.GroupID,
+		Name:                     fullCharacter.Name,
+		Race:                     fullCharacter.Race,
+		Class:                    fullCharacter.Class,
+		Level:                    fullCharacter.Level,
+		Speed:                    fullCharacter.Speed,
+		Strength:                 fullCharacter.Strength,
+		Dexterity:                fullCharacter.Dexterity,
+		Constitution:             fullCharacter.Constitution,
+		Intelligence:             fullCharacter.Intelligence,
+		Wisdom:                   fullCharacter.Wisdom,
+		Charisma:                 fullCharacter.Charisma,
+		MaxHP:                    fullCharacter.MaxHP,
+		CurrentHP:                fullCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		CreatedAt:                fullCharacter.CreatedAt,
+		UpdatedAt:                fullCharacter.UpdatedAt,
+		User:                     fullCharacter.User,
+		Group:                    fullCharacter.Group,
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// AddItemsToCharacterInventory добавляет предметы в инвентарь персонажа
+func (cc *CharacterV2Controller) AddItemsToCharacterInventory(c *gin.Context) {
+	startTime := time.Now()
+	log.Println("🚀 [PERF] AddItemsToCharacterInventory: Начало")
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	characterIDStr := c.Param("id")
+	characterID, err := uuid.Parse(characterIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
+		return
+	}
+
+	var req struct {
+		CardIDs []string `json:"card_ids" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса"})
+		return
+	}
+
+	log.Printf("📊 [PERF] AddItemsToCharacterInventory: Добавляем %d предметов", len(req.CardIDs))
+
+	// Проверяем, что персонаж принадлежит пользователю
+	checkStartTime := time.Now()
+	var character CharacterV2
+	result := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
+		}
+		return
+	}
+	log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Проверка персонажа - %v", time.Since(checkStartTime))
+
+	// Получаем или создаем инвентарь персонажа
+	inventoryStartTime := time.Now()
+	var inventory Inventory
+	err = cc.db.Where("character_id = ? AND type = ?", characterID, InventoryTypeCharacter).First(&inventory).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Создаем новый инвентарь для персонажа
+			createStartTime := time.Now()
+			inventory = Inventory{
+				Type:        InventoryTypeCharacter,
+				CharacterID: &characterID,
+				Name:        "Инвентарь " + character.Name,
+			}
+			if err := cc.db.Create(&inventory).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка создания инвентаря"})
+				return
+			}
+			log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Создание инвентаря - %v", time.Since(createStartTime))
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения инвентаря"})
+			return
+		}
+	} else {
+		log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Поиск инвентаря - %v", time.Since(inventoryStartTime))
+	}
+
+	// Добавляем предметы в инвентарь
+	itemsStartTime := time.Now()
+	var addedItems []InventoryItem
+	for i, cardIDStr := range req.CardIDs {
+		itemStartTime := time.Now()
+
+		cardID, err := uuid.Parse(cardIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID карты: " + cardIDStr})
+			return
+		}
+
+		// Проверяем, существует ли карта
+		cardCheckStartTime := time.Now()
+		var card Card
+		if err := cc.db.First(&card, cardID).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "карта не найдена: " + cardIDStr})
+			return
+		}
+		log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Проверка карты %d - %v", i+1, time.Since(cardCheckStartTime))
+
+		// Проверяем, есть ли уже такой предмет в инвентаре
+		existingCheckStartTime := time.Now()
+		var existingItem InventoryItem
+		err = cc.db.Where("inventory_id = ? AND card_id = ?", inventory.ID, cardID).First(&existingItem).Error
+		if err == nil {
+			// Предмет уже есть, увеличиваем количество
+			updateStartTime := time.Now()
+			existingItem.Quantity++
+			if err := cc.db.Save(&existingItem).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка обновления количества предмета"})
+				return
+			}
+			log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Обновление количества предмета %d - %v", i+1, time.Since(updateStartTime))
+			addedItems = append(addedItems, existingItem)
+		} else if err == gorm.ErrRecordNotFound {
+			// Создаем новый предмет в инвентаре
+			createStartTime := time.Now()
+			newItem := InventoryItem{
+				InventoryID: inventory.ID,
+				CardID:      cardID,
+				Quantity:    1,
+			}
+			if err := cc.db.Create(&newItem).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка добавления предмета в инвентарь"})
+				return
+			}
+			log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Создание предмета %d - %v", i+1, time.Since(createStartTime))
+			addedItems = append(addedItems, newItem)
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка проверки предмета в инвентаре"})
+			return
+		}
+		log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Проверка существования предмета %d - %v", i+1, time.Since(existingCheckStartTime))
+		log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Обработка предмета %d - %v", i+1, time.Since(itemStartTime))
+	}
+	log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Обработка всех предметов - %v", time.Since(itemsStartTime))
+
+	// Загружаем добавленные предметы с информацией о картах
+	preloadStartTime := time.Now()
+	if err := cc.db.Preload("Card").Where("inventory_id = ?", inventory.ID).Find(&addedItems).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка загрузки добавленных предметов"})
+		return
+	}
+	log.Printf("⏱️ [PERF] AddItemsToCharacterInventory: Загрузка предметов с картами - %v", time.Since(preloadStartTime))
+	log.Printf("📊 [PERF] AddItemsToCharacterInventory: Добавлено предметов: %d", len(addedItems))
+
+	log.Printf("✅ [PERF] AddItemsToCharacterInventory: Общее время - %v", time.Since(startTime))
+	c.JSON(http.StatusOK, gin.H{
+		"message": "предметы успешно добавлены в инвентарь",
+		"items":   addedItems,
+	})
 }
