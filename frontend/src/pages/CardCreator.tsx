@@ -39,6 +39,7 @@ const CardCreator = () => {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<CreateCardRequest>({
     defaultValues: {
@@ -85,34 +86,36 @@ const CardCreator = () => {
           const card = await cardsApi.getCard(id);
           setOriginalCard(card);
           
-          // Заполняем форму данными карты
-          setValue('name', card.name);
-          setValue('rarity', card.rarity);
-          setValue('properties', card.properties || []);
-          setValue('description', card.description);
-          setValue('detailed_description', card.detailed_description || null);
-          setValue('price', card.price);
-          setValue('weight', card.weight);
-          setValue('bonus_type', card.bonus_type);
-          setValue('bonus_value', card.bonus_value);
-          setValue('damage_type', card.damage_type);
-          setValue('defense_type', card.defense_type);
-          setValue('text_alignment', card.text_alignment || null);
-          setValue('text_font_size', card.text_font_size || null);
-          setValue('show_detailed_description', card.show_detailed_description === true);
-          setValue('detailed_description_alignment', card.detailed_description_alignment || null);
-          setValue('detailed_description_font_size', card.detailed_description_font_size || null);
-          setValue('is_extended', card.is_extended === true);
-          setValue('author', card.author || 'Admin');
-          setValue('source', card.source);
-          setValue('type', card.type);
-          setValue('related_cards', card.related_cards || []);
-          setValue('related_actions', card.related_actions || []);
-          setValue('related_effects', card.related_effects || []);
-          setValue('attunement', card.attunement);
-          setValue('tags', card.tags || []);
-          setValue('slot', card.slot);
-          setValue('is_template', card.is_template);
+          // Заполняем форму данными карты через reset для полной синхронизации
+          reset({
+            name: card.name,
+            rarity: card.rarity,
+            properties: card.properties || [],
+            description: card.description,
+            detailed_description: card.detailed_description || null,
+            price: card.price,
+            weight: card.weight,
+            bonus_type: card.bonus_type,
+            bonus_value: card.bonus_value,
+            damage_type: card.damage_type,
+            defense_type: card.defense_type,
+            text_alignment: card.text_alignment || null,
+            text_font_size: card.text_font_size || null,
+            show_detailed_description: card.show_detailed_description === true,
+            detailed_description_alignment: card.detailed_description_alignment || null,
+            detailed_description_font_size: card.detailed_description_font_size || null,
+            is_extended: card.is_extended === true,
+            author: card.author || 'Admin',
+            source: card.source,
+            type: card.type,
+            related_cards: card.related_cards || [],
+            related_actions: card.related_actions || [],
+            related_effects: card.related_effects || [],
+            attunement: card.attunement,
+            tags: card.tags || [],
+            slot: card.slot,
+            is_template: card.is_template || 'false'
+          });
           
           if (card.image_url) {
             setCardImage(card.image_url);
@@ -126,7 +129,7 @@ const CardCreator = () => {
 
       loadCard();
     }
-  }, [id, isEditMode, setValue]);
+  }, [id, isEditMode, reset]);
 
   // Загружаем данные шаблона для создания карты
   useEffect(() => {

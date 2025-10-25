@@ -135,6 +135,11 @@ const (
 	PropertyLightArmor  = "light_armor"  // Легкая броня
 	PropertyMediumArmor = "medium_armor" // Средняя броня
 	PropertyHeavyArmor  = "heavy_armor"  // Тяжелая броня
+	// Новые свойства
+	PropertyShield   = "shield"   // Щит
+	PropertyRing     = "ring"     // Кольцо
+	PropertyNecklace = "necklace" // Ожерелье
+	PropertyCloak    = "cloak"    // Плащ
 )
 
 // BonusType - тип бонуса
@@ -388,6 +393,22 @@ func (p Properties) GetPropertiesName() string {
 		return "Зарядка"
 	case PropertySpecial:
 		return "Особое"
+	case PropertyCloth:
+		return "Ткань"
+	case PropertyLightArmor:
+		return "Легкая броня"
+	case PropertyMediumArmor:
+		return "Средняя броня"
+	case PropertyHeavyArmor:
+		return "Тяжелая броня"
+	case PropertyShield:
+		return "Щит"
+	case PropertyRing:
+		return "Кольцо"
+	case PropertyNecklace:
+		return "Ожерелье"
+	case PropertyCloak:
+		return "Плащ"
 	default:
 		return "Неизвестно"
 	}
@@ -504,7 +525,8 @@ func IsValidProperty(property string) bool {
 	case PropertyConsumable, PropertySingleUse, PropertyLight, PropertyHeavy,
 		PropertyFinesse, PropertyThrown, PropertyVersatile, PropertyTwoHanded,
 		PropertyReach, PropertyAmmunition, PropertyLoading, PropertySpecial,
-		PropertyCloth, PropertyLightArmor, PropertyMediumArmor, PropertyHeavyArmor:
+		PropertyCloth, PropertyLightArmor, PropertyMediumArmor, PropertyHeavyArmor,
+		PropertyShield, PropertyRing, PropertyNecklace, PropertyCloak:
 		return true
 	default:
 		return false

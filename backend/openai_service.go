@@ -36,7 +36,7 @@ func (s *OpenAIService) GenerateImage(prompt string) (string, error) {
 		Prompt:  prompt,
 		Model:   "gpt-image-1",
 		Size:    openai.CreateImageSize1024x1024,
-		Quality: "medium",
+		Quality: "low",
 		N:       1,
 	})
 

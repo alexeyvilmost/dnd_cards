@@ -17,7 +17,12 @@ export const getPropertyLabel = (property: string): string => {
     'cloth': 'ткань',
     'light_armor': 'легкая броня',
     'medium_armor': 'средняя броня',
-    'heavy_armor': 'тяжелая броня'
+    'heavy_armor': 'тяжелая броня',
+    // Новые свойства
+    'shield': 'щит',
+    'ring': 'кольцо',
+    'necklace': 'ожерелье',
+    'cloak': 'плащ'
   };
   return propertyLabels[property] || property;
 };

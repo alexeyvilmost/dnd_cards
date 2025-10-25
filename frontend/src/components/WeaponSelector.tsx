@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -77,6 +77,34 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({ onClose }) => {
     navigate(`/card-creator?template_id=${template.id}`);
   };
 
+  const handleTemplateEdit = (template: Card) => {
+    navigate(`/edit/${template.id}`);
+  };
+
+  const handleTemplateDelete = async (template: Card) => {
+    if (window.confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"?`)) {
+      try {
+        await cardsApi.deleteCard(template.id);
+        // Перезагружаем список шаблонов
+        loadWeaponTemplates();
+      } catch (error) {
+        console.error('Ошибка удаления шаблона:', error);
+        alert('Ошибка при удалении шаблона');
+      }
+    }
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    const filteredTemplates = getFilteredTemplates(categoryId);
+    
+    // Если в категории только один шаблон, сразу переходим к созданию
+    if (filteredTemplates.length === 1) {
+      handleTemplateSelect(filteredTemplates[0]);
+    } else {
+      setSelectedCategory(categoryId);
+    }
+  };
+
   const handleBack = () => {
     if (selectedCategory) {
       setSelectedCategory(null);
@@ -124,7 +152,7 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({ onClose }) => {
               return (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => handleCategorySelect(category.id)}
                   className={`
                     ${category.color}
                     border-2 rounded-xl p-6 text-left transition-all duration-200
@@ -168,6 +196,8 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({ onClose }) => {
             <TemplateViewer
               templates={getFilteredTemplates(selectedCategory)}
               onTemplateSelect={handleTemplateSelect}
+              onTemplateEdit={handleTemplateEdit}
+              onTemplateDelete={handleTemplateDelete}
             />
           </div>
         )}

@@ -18,10 +18,17 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   const [editForm, setEditForm] = useState({ card_name: '', card_rarity: '' });
   const [pagination, setPagination] = useState({ page: 1, limit: 100, total: 0 });
   const [selectedImage, setSelectedImage] = useState<ImageLibraryItem | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   // Загрузка изображений
-  const loadImages = async (filters: ImageLibraryFilters = {}) => {
-    setLoading(true);
+  const loadImages = async (filters: ImageLibraryFilters = {}, append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       const response = await getImageLibrary({
         page: filters.page || pagination.page,
@@ -29,8 +36,15 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
         search: filters.search !== undefined ? filters.search : searchTerm,
         rarity: filters.rarity !== undefined ? filters.rarity : selectedRarity,
       });
-      setImages(response.images);
+      
+      if (append) {
+        setImages(prev => [...prev, ...response.images]);
+      } else {
+        setImages(response.images);
+      }
+      
       setPagination(response.pagination);
+      setHasMore(response.images.length === (filters.limit || pagination.limit));
       
       // Автоматически выбираем первое изображение, если ничего не выбрано
       if (response.images.length > 0 && !selectedImage) {
@@ -40,6 +54,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
       console.error('Ошибка загрузки изображений:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -53,6 +68,13 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
     }
   };
 
+  // Загрузка следующей страницы
+  const loadMoreImages = () => {
+    if (!loadingMore && hasMore && !loading) {
+      loadImages({ page: pagination.page + 1 }, true);
+    }
+  };
+
   // Инициализация
   useEffect(() => {
     if (isOpen) {
@@ -61,8 +83,33 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
     }
   }, [isOpen]);
 
+  // Автоматическая подгрузка при прокрутке
+  useEffect(() => {
+    const handleScroll = () => {
+      // Проверяем, когда пользователь прокрутил до конца контейнера с изображениями
+      const scrollContainer = document.getElementById('image-scroll-container');
+      if (scrollContainer) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+          if (hasMore && !loadingMore && !loading) {
+            loadMoreImages();
+          }
+        }
+      }
+    };
+
+    if (isOpen) {
+      const scrollContainer = document.getElementById('image-scroll-container');
+      if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', handleScroll);
+        return () => scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    }
+  }, [isOpen, hasMore, loadingMore, loading, pagination.page]);
+
   // Поиск
   const handleSearch = () => {
+    setHasMore(true);
     loadImages({ page: 1, search: searchTerm, rarity: selectedRarity });
   };
 
@@ -70,6 +117,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedRarity('');
+    setHasMore(true);
     loadImages({ page: 1, search: '', rarity: '' });
   };
 
@@ -131,7 +179,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col image-library-modal">
         {/* Заголовок */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">Библиотека изображений</h2>
@@ -203,7 +251,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
         {/* Основной контент - две колонки */}
         <div className="flex-1 flex overflow-hidden">
           {/* Левая колонка - таблица изображений */}
-          <div className="w-1/2 border-r overflow-y-auto">
+          <div className="w-1/2 border-r overflow-y-auto" id="image-scroll-container">
             <div className="p-4">
               {loading ? (
                 <div className="flex justify-center items-center py-12">
@@ -364,25 +412,13 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
               <div className="text-sm text-gray-700">
                 Показано {images.length} из {pagination.total} изображений
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => loadImages({ page: pagination.page - 1 })}
-                  disabled={pagination.page <= 1}
-                  className="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Назад
-                </button>
-                <span className="px-3 py-1 text-sm">
-                  Страница {pagination.page}
-                </span>
-                <button
-                  onClick={() => loadImages({ page: pagination.page + 1 })}
-                  disabled={pagination.page * pagination.limit >= pagination.total}
-                  className="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Вперед
-                </button>
-              </div>
+              {/* Индикатор загрузки при автоматической подгрузке */}
+              {loadingMore && (
+                <div className="flex items-center justify-center gap-2 text-gray-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  Загрузка изображений...
+                </div>
+              )}
             </div>
           </div>
         )}

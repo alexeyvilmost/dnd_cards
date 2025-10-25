@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Grid3X3, List } from 'lucide-react';
+import { Grid3X3, List, Edit, Trash2 } from 'lucide-react';
 import { Card } from '../types';
 import CardPreview from './CardPreview';
 import { getRarityColor } from '../utils/rarityColors';
@@ -7,17 +7,23 @@ import { getRarityColor } from '../utils/rarityColors';
 interface TemplateViewerProps {
   templates: Card[];
   onTemplateSelect: (template: Card) => void;
+  onTemplateEdit?: (template: Card) => void;
+  onTemplateDelete?: (template: Card) => void;
   title?: string;
   showCount?: boolean;
+  defaultViewMode?: 'grid' | 'list';
 }
 
 const TemplateViewer: React.FC<TemplateViewerProps> = ({
   templates,
   onTemplateSelect,
+  onTemplateEdit,
+  onTemplateDelete,
   title,
-  showCount = true
+  showCount = true,
+  defaultViewMode = 'list'
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(defaultViewMode);
   const [hoveredTemplate, setHoveredTemplate] = useState<Card | null>(null);
 
   const getRarityBorderColor = (rarity: string): string => {
@@ -94,21 +100,50 @@ const TemplateViewer: React.FC<TemplateViewerProps> = ({
         /* Сетка шаблонов */
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
           {templates.map((template) => (
-            <CardPreview
-              key={template.id}
-              card={template}
-              onClick={() => onTemplateSelect(template)}
-            />
+            <div key={template.id} className="relative group">
+              <CardPreview
+                card={template}
+                onClick={() => onTemplateSelect(template)}
+              />
+              
+              {/* Кнопки редактирования и удаления шаблона */}
+              <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                {onTemplateEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTemplateEdit(template);
+                    }}
+                    className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
+                    title="Редактировать шаблон"
+                  >
+                    <Edit size={14} />
+                  </button>
+                )}
+                {onTemplateDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTemplateDelete(template);
+                    }}
+                    className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                    title="Удалить шаблон"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       ) : (
         /* Список названий в три колонки */
         <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
             {templates.map((template) => (
               <div
                 key={template.id}
-                className="relative"
+                className="relative group"
                 onMouseEnter={() => setHoveredTemplate(template)}
                 onMouseLeave={() => setHoveredTemplate(null)}
               >
@@ -181,6 +216,34 @@ const TemplateViewer: React.FC<TemplateViewerProps> = ({
                     </div>
                   </div>
                 </button>
+                
+                {/* Кнопки редактирования и удаления шаблона */}
+                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  {onTemplateEdit && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTemplateEdit(template);
+                      }}
+                      className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
+                      title="Редактировать шаблон"
+                    >
+                      <Edit size={14} />
+                    </button>
+                  )}
+                  {onTemplateDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTemplateDelete(template);
+                      }}
+                      className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                      title="Удалить шаблон"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -42,6 +42,16 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		query = query.Where("properties = ?", properties)
 	}
 
+	// Фильтрация по слоту экипировки
+	if slot := c.Query("slot"); slot != "" {
+		query = query.Where("slot = ?", slot)
+	}
+
+	// Фильтрация по типу брони
+	if armorType := c.Query("armor_type"); armorType != "" {
+		query = query.Where("properties LIKE ?", "%"+armorType+"%")
+	}
+
 	// Поиск по названию
 	if search := c.Query("search"); search != "" {
 		query = query.Where("name ILIKE ?", "%"+search+"%")
@@ -71,7 +81,30 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	}
 	log.Printf("Найдено карточек: %d", total)
 
-	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&cards).Error; err != nil {
+	// Сортировка
+	orderBy := "created_at DESC" // По умолчанию
+	if sortBy := c.Query("sort_by"); sortBy != "" {
+		switch sortBy {
+		case "created_asc":
+			orderBy = "created_at ASC"
+		case "created_desc":
+			orderBy = "created_at DESC"
+		case "updated_asc":
+			orderBy = "updated_at ASC"
+		case "updated_desc":
+			orderBy = "updated_at DESC"
+		case "rarity_asc":
+			orderBy = "rarity ASC"
+		case "rarity_desc":
+			orderBy = "rarity DESC"
+		case "price_asc":
+			orderBy = "price ASC"
+		case "price_desc":
+			orderBy = "price DESC"
+		}
+	}
+
+	if err := query.Offset(offset).Limit(limit).Order(orderBy).Find(&cards).Error; err != nil {
 		log.Printf("Ошибка получения карточек: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
@@ -161,6 +194,8 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
+		Tags:                         card.Tags,
+		IsTemplate:                   card.IsTemplate,
 		Slot:                         card.Slot,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,

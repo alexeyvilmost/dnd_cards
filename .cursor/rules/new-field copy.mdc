@@ -1,0 +1,4 @@
+---
+description: После внесения изменений в проект (бекенд или фронтенд) проверять работоспособность сервиса: python scripts/test_full_stack.py 
+alwaysApply: false
+---

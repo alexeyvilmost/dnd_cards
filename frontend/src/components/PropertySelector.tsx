@@ -21,7 +21,11 @@ const getPropertyIcon = (property: string) => {
     'reach': '/icons/reach.png',
     'ammunition': '/icons/ammunition.png',
     'loading': '/icons/loading.png',
-    'special': '/icons/special.png'
+    'special': '/icons/special.png',
+    'shield': '/icons/shield.png',
+    'ring': '/icons/ring.png',
+    'necklace': '/icons/necklace.png',
+    'cloak': '/icons/cloak.png'
   };
   
   return iconMap[property] || '/icons/special.png';

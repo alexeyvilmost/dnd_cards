@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Grid3X3, List } from 'lucide-react';
+import { Grid3X3, List, Edit, Trash2 } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { Card } from '../types';
 import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
@@ -62,6 +62,23 @@ const WeaponTemplates: React.FC = () => {
   const handleTemplateSelect = (template: Card) => {
     // Передаем только ID шаблона, остальную информацию загрузим с бэкенда
     navigate(`/card-creator?template_id=${template.id}`);
+  };
+
+  const handleTemplateEdit = (template: Card) => {
+    navigate(`/edit/${template.id}`);
+  };
+
+  const handleTemplateDelete = async (template: Card) => {
+    if (window.confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"?`)) {
+      try {
+        await cardsApi.deleteCard(template.id);
+        // Перезагружаем список шаблонов
+        loadTemplates();
+      } catch (error) {
+        console.error('Ошибка удаления шаблона:', error);
+        alert('Ошибка при удалении шаблона');
+      }
+    }
   };
 
   // Функция для получения цвета полоски редкости
@@ -173,21 +190,46 @@ const WeaponTemplates: React.FC = () => {
           /* Сетка шаблонов */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-2">
             {filteredTemplates.map((template) => (
-              <CardPreview
-                key={template.id}
-                card={template}
-                onClick={() => handleTemplateSelect(template)}
-              />
+              <div key={template.id} className="relative group">
+                <CardPreview
+                  card={template}
+                  onClick={() => handleTemplateSelect(template)}
+                />
+                
+                {/* Кнопки редактирования и удаления шаблона */}
+                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTemplateEdit(template);
+                    }}
+                    className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
+                    title="Редактировать шаблон"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTemplateDelete(template);
+                    }}
+                    className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                    title="Удалить шаблон"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
           /* Список названий в три колонки */
           <div className="relative">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
               {filteredTemplates.map((template) => (
                 <div
                   key={template.id}
-                  className="relative"
+                  className="relative group"
                   onMouseEnter={() => setHoveredTemplate(template)}
                   onMouseLeave={() => setHoveredTemplate(null)}
                 >
@@ -260,6 +302,30 @@ const WeaponTemplates: React.FC = () => {
                       </div>
                     </div>
                   </button>
+                  
+                  {/* Кнопки редактирования и удаления шаблона */}
+                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTemplateEdit(template);
+                      }}
+                      className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
+                      title="Редактировать шаблон"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTemplateDelete(template);
+                      }}
+                      className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                      title="Удалить шаблон"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

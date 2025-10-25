@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { CreateCardRequest, Properties } from '../../types';
 import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../../types';
@@ -14,7 +14,9 @@ interface EquipmentSectionProps {
 }
 
 export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, errors, setValue, watch }) => {
-  const memoizedWatchedValues = useMemo(() => watch(), [watch]);
+  const properties = watch('properties');
+  const tags = watch('tags');
+  const bonus_type = watch('bonus_type');
 
   return (
     <div className="space-y-6">
@@ -63,7 +65,7 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
           Теги
         </label>
         <TagsInput
-          value={memoizedWatchedValues.tags || []}
+          value={tags || []}
           onChange={(tags) => setValue('tags', tags)}
           placeholder="Короткий меч, Магическое, Одноручное"
         />
@@ -88,7 +90,7 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
           Свойства
         </label>
         <PropertySelector
-          value={memoizedWatchedValues.properties || []}
+          value={properties || []}
           onChange={(properties) => setValue('properties', properties)}
         />
       </div>
@@ -124,7 +126,7 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
       </div>
 
       {/* Тип урона - показывается только если выбран тип бонуса "Урон" */}
-      {memoizedWatchedValues.bonus_type === 'damage' && (
+      {bonus_type === 'damage' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Тип урона
@@ -142,7 +144,7 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
       )}
 
       {/* Тип брони - показывается только если выбран тип бонуса "Защита" */}
-      {memoizedWatchedValues.bonus_type === 'defense' && (
+      {bonus_type === 'defense' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Тип брони

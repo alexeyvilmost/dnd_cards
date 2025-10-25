@@ -16,6 +16,10 @@ const CardLibrary = () => {
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<string>('');
   const [propertiesFilter, setPropertiesFilter] = useState<string>('');
+  const [templateTypeFilter, setTemplateTypeFilter] = useState<string>('cards'); // 'all', 'cards', 'mixed', 'templates'
+  const [slotFilter, setSlotFilter] = useState<string>('');
+  const [armorTypeFilter, setArmorTypeFilter] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('created_desc'); // 'rarity_asc', 'rarity_desc', 'price_asc', 'price_desc', 'created_asc', 'created_desc', 'updated_asc', 'updated_desc'
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +28,7 @@ const CardLibrary = () => {
   const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Загрузка карточек
   const loadCards = async (page = 1, append = false) => {
@@ -36,14 +41,31 @@ const CardLibrary = () => {
       
       const params: any = {
         page,
-        limit: 50,
-        // Показываем только карты, которые не являются только шаблонами
-        exclude_template_only: true
+        limit: 50
       };
       
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       if (propertiesFilter) params.properties = propertiesFilter;
+      if (slotFilter) params.slot = slotFilter;
+      if (armorTypeFilter) params.armor_type = armorTypeFilter;
+      if (sortBy) params.sort_by = sortBy;
+      
+      // Фильтр по типу шаблона
+      switch (templateTypeFilter) {
+        case 'cards':
+          params.exclude_template_only = true;
+          break;
+        case 'templates':
+          params.template_only = true;
+          break;
+        case 'mixed':
+          // Показываем и карты, и шаблоны
+          break;
+        case 'all':
+          // Показываем всё
+          break;
+      }
       
       const response = await cardsApi.getCards(params);
       
@@ -69,7 +91,25 @@ const CardLibrary = () => {
     setCurrentPage(1);
     setCards([]);
     loadCards(1, false);
-  }, [search, rarityFilter, propertiesFilter]);
+  }, [search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
+
+  // Автоматическая подгрузка при прокрутке
+  useEffect(() => {
+    const handleScroll = () => {
+      // Проверяем, когда пользователь прокрутил до конца страницы (с запасом в 1000px)
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
+        if (hasMore && !loadingMore && !loading) {
+          loadMoreCards();
+        }
+      }
+    };
+
+    // Добавляем обработчик прокрутки
+    window.addEventListener('scroll', handleScroll);
+    
+    // Очищаем обработчик при размонтировании компонента
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadingMore, loading, currentPage]);
 
   // Функция для загрузки следующей страницы
   const loadMoreCards = () => {
@@ -273,7 +313,7 @@ const CardLibrary = () => {
 
         {/* Панель фильтров */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Фильтр по редкости */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -309,6 +349,87 @@ const CardLibrary = () => {
                     {option.label}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            {/* Фильтр по типу шаблона */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип шаблона
+              </label>
+              <select
+                value={templateTypeFilter}
+                onChange={(e) => setTemplateTypeFilter(e.target.value)}
+                className="input-field"
+              >
+                <option value="cards">Обычные карты</option>
+                <option value="templates">Только шаблоны</option>
+                <option value="mixed">Шаблоны и обычные</option>
+                <option value="all">Все</option>
+              </select>
+            </div>
+
+            {/* Фильтр по слоту экипировки */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Слот экипировки
+              </label>
+              <select
+                value={slotFilter}
+                onChange={(e) => setSlotFilter(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Все слоты</option>
+                <option value="none">Не экипируется</option>
+                <option value="head">Голова</option>
+                <option value="body">Тело</option>
+                <option value="arms">Наручи</option>
+                <option value="feet">Обувь</option>
+                <option value="cloak">Плащ</option>
+                <option value="one_hand">Одна рука</option>
+                <option value="versatile">Универсальное</option>
+                <option value="two_hands">Две руки</option>
+                <option value="necklace">Ожерелье</option>
+                <option value="ring">Кольцо</option>
+              </select>
+            </div>
+
+            {/* Фильтр по типу брони */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип брони
+              </label>
+              <select
+                value={armorTypeFilter}
+                onChange={(e) => setArmorTypeFilter(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Все типы</option>
+                <option value="light">Лёгкая</option>
+                <option value="medium">Средняя</option>
+                <option value="heavy">Тяжелая</option>
+                <option value="cloth">Ткань</option>
+              </select>
+            </div>
+
+            {/* Сортировка */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Сортировка
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="input-field"
+              >
+                <option value="created_desc">По дате добавления (новые)</option>
+                <option value="created_asc">По дате добавления (старые)</option>
+                <option value="updated_desc">По дате изменения (новые)</option>
+                <option value="updated_asc">По дате изменения (старые)</option>
+                <option value="rarity_asc">По редкости (обычные)</option>
+                <option value="rarity_desc">По редкости (артефакты)</option>
+                <option value="price_asc">По стоимости (дешевые)</option>
+                <option value="price_desc">По стоимости (дорогие)</option>
               </select>
             </div>
           </div>
@@ -368,13 +489,16 @@ const CardLibrary = () => {
           ) : (
             /* Список названий */
             <div className="relative">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                 {cards.map((card) => (
                   <div
                     key={card.id}
                     className="relative"
                     onMouseEnter={() => setHoveredCard(card)}
                     onMouseLeave={() => setHoveredCard(null)}
+                    onMouseMove={(e) => {
+                      setMousePosition({ x: e.clientX, y: e.clientY });
+                    }}
                   >
                     <button
                       onClick={() => handleCardClick(card)}
@@ -452,9 +576,26 @@ const CardLibrary = () => {
                 ))}
               </div>
               
+              {/* Индикатор загрузки при автоматической подгрузке */}
+              {loadingMore && (
+                <div className="mt-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Загрузка карт...
+                  </div>
+                </div>
+              )}
+              
               {/* Показ карточки при наведении */}
               {hoveredCard && (
-                <div className="fixed top-4 right-4 z-50 pointer-events-none">
+                <div 
+                  className="fixed z-50 pointer-events-none"
+                  style={{
+                    left: Math.min(mousePosition.x + 10, window.innerWidth - 220),
+                    top: Math.max(mousePosition.y - 10, 10),
+                    transform: mousePosition.y < 300 ? 'translateY(0)' : 'translateY(-100%)'
+                  }}
+                >
                   <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
                     <CardPreview card={hoveredCard} />
                   </div>
@@ -463,25 +604,6 @@ const CardLibrary = () => {
             </div>
           )}
           
-          {/* Кнопка "Загрузить еще" */}
-          {hasMore && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={loadMoreCards}
-                disabled={loadingMore}
-                className="btn-primary px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loadingMore ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Загрузка...
-                  </div>
-                ) : (
-                  'Загрузить еще'
-                )}
-              </button>
-            </div>
-          )}
         </>
       )}
 

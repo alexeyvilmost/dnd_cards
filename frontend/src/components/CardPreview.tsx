@@ -27,9 +27,10 @@ interface CardPreviewProps {
   card: Card;
   className?: string;
   disableHover?: boolean;
+  onClick?: () => void;
 }
 
-const CardPreview = ({ card, className = '', disableHover = false }: CardPreviewProps) => {
+const CardPreview = ({ card, className = '', disableHover = false, onClick }: CardPreviewProps) => {
   const rarityOption = RARITY_OPTIONS.find(option => option.value === card.rarity);
   // Для совместимости с одним свойством и массивом свойств
   const propertiesArray = Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []);
@@ -194,9 +195,10 @@ const CardPreview = ({ card, className = '', disableHover = false }: CardPreview
   return (
     <div 
       ref={cardRef}
-      className={`card-preview relative bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col`}
+      className={`card-preview relative bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={onClick}
       style={tiltStyle}
     >
       {/* Метка редкости для слабовидящих */}
