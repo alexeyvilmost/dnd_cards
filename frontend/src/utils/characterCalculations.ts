@@ -98,7 +98,7 @@ export const getFullStatName = (stat: string): string => {
 export const getSkillName = (skill: string): string => {
   const names: { [key: string]: string } = {
     'acrobatics': 'Акробатика',
-    'animal_handling': 'Обращение с животными',
+    'animal_handling': 'Дрессировка',
     'arcana': 'Магия',
     'athletics': 'Атлетика',
     'deception': 'Обман',

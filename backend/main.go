@@ -182,7 +182,9 @@ func main() {
 			protected.DELETE("/characters-v2/:id", characterV2Controller.DeleteCharacterV2)
 			protected.PATCH("/characters-v2/:id/stats/:statName", characterV2Controller.UpdateCharacterV2Stat)
 			protected.GET("/characters-v2/:id/inventories", inventoryController.GetCharacterInventories)
+			protected.GET("/characters-v2/:id/armor", characterV2Controller.GetCharacterArmor)
 			protected.POST("/characters-v2/:id/inventories/items", characterV2Controller.AddItemsToCharacterInventory)
+			protected.POST("/characters-v2/:id/equip", characterV2Controller.EquipItem)
 
 			// Изображения
 			protected.POST("/images/upload", imageController.UploadImage)

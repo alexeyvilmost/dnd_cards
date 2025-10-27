@@ -2,7 +2,6 @@ import React from 'react';
 import { WeaponTemplate } from '../types';
 import { getPropertyLabel, getWeaponCategoryLabel, getDamageTypeLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
-import { useCardTilt } from '../hooks/useCardTilt';
 
 interface WeaponTemplateCardProps {
   template: WeaponTemplate;
@@ -11,7 +10,6 @@ interface WeaponTemplateCardProps {
 }
 
 const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onClick, className = '' }) => {
-  const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt();
   // Функция для определения размера шрифта заголовка
   const getTitleFontSize = (title: string) => {
     if (title.length > 20) return 'text-xs';
@@ -108,12 +106,8 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
 
   return (
     <div 
-      ref={cardRef}
       className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor()} border-4 ${className} cursor-pointer transition-all duration-300 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl group ${getRarityGlowColor()} flex flex-col`}
       onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={tiltStyle}
     >
       {/* Заголовок */}
       <div className="px-1 py-0.5 text-center">

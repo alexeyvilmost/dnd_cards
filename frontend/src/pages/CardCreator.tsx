@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Save, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
-import type { CreateCardRequest, UpdateCardRequest, Properties } from '../types';
+import type { CreateCardRequest, UpdateCardRequest, Properties, Effect } from '../types';
 import CardPreview from '../components/CardPreview';
 import ImageLibraryModal from '../components/ImageLibraryModal';
 import { CardCreatorNavigation } from '../components/CardCreatorNavigation';
@@ -12,6 +12,7 @@ import { MainSection } from '../components/cardCreator/MainSection';
 import { ImageSection } from '../components/cardCreator/ImageSection';
 import { TextSection } from '../components/cardCreator/TextSection';
 import { EquipmentSection } from '../components/cardCreator/EquipmentSection';
+import EffectsSection from '../components/cardCreator/EffectsSection';
 import { PrivacySection } from '../components/cardCreator/PrivacySection';
 import type { ImageLibraryItem } from '../api/imageLibraryApi';
 
@@ -30,6 +31,7 @@ const CardCreator = () => {
   const [createdCardId, setCreatedCardId] = useState<string | null>(null); // ID карты, созданной при генерации изображения
   const [isPollingImage, setIsPollingImage] = useState(false); // Флаг активного polling'а
   const [activeSection, setActiveSection] = useState('main'); // Активная секция навигации
+  const [effects, setEffects] = useState<Effect[]>([]); // Эффекты предмета
 
   // Определяем, находимся ли мы в режиме редактирования
   const isEditMode = !!id;
@@ -63,7 +65,8 @@ const CardCreator = () => {
       attunement: null,
       tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : [],
       slot: null,
-      is_template: 'false'
+      is_template: 'false',
+      effects: []
     }
   });
 
@@ -85,6 +88,13 @@ const CardCreator = () => {
         setLoading(true);
           const card = await cardsApi.getCard(id);
           setOriginalCard(card);
+          
+          // Загружаем эффекты карты
+          if (card.effects && card.effects.length > 0) {
+            setEffects(card.effects);
+          } else {
+            setEffects([]);
+          }
           
           // Заполняем форму данными карты через reset для полной синхронизации
           reset({
@@ -129,7 +139,7 @@ const CardCreator = () => {
 
       loadCard();
     }
-  }, [id, isEditMode, reset]);
+  }, [id, isEditMode]);
 
   // Загружаем данные шаблона для создания карты
   useEffect(() => {
@@ -263,8 +273,15 @@ const CardCreator = () => {
         tags: data.tags && data.tags.length > 0 ? data.tags : null,
         slot: data.slot || null,
         is_template: data.is_template || 'false',
-        image_prompt_extra: data.image_prompt_extra || null
+        image_prompt_extra: data.image_prompt_extra || null,
+        effects: effects.length > 0 ? effects.filter(effect => 
+          effect.targetType && 
+          effect.targetSpecific && 
+          effect.modifier && 
+          effect.value > 0
+        ) : null
       };
+
 
       let cardId: string;
 
@@ -470,7 +487,9 @@ const CardCreator = () => {
         <div className="lg:col-span-1">
           <CardCreatorNavigation 
             activeSection={activeSection}
-            onSectionChange={setActiveSection}
+            onSectionChange={(section) => {
+              setActiveSection(section);
+            }}
           />
         </div>
 
@@ -518,6 +537,17 @@ const CardCreator = () => {
                   setValue={setValue}
                   watch={watch}
                 />
+              )}
+              
+              {activeSection === 'effects' && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Секция эффектов</h2>
+                  <EffectsSection 
+                    effects={effects}
+                    onEffectsChange={setEffects}
+                    description={watchedValues.description}
+                  />
+                </div>
               )}
               
               {activeSection === 'privacy' && (

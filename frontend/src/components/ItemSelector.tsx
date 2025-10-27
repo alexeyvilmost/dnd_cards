@@ -3,6 +3,7 @@ import { X, Eye, Check } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { Card } from '../types';
 import CardPreview from './CardPreview';
+import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 interface ItemSelectorProps {
   isOpen: boolean;
@@ -236,8 +237,15 @@ const ItemSelector: React.FC<ItemSelectorProps> = ({ isOpen, onClose, onAddItems
                             
                             {/* Текст справа */}
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate text-gray-900">
-                                {card.name}
+                              <div className="font-medium truncate text-gray-900 flex items-center gap-1">
+                                <span 
+                                  className="text-lg" 
+                                  title={getRaritySymbolDescription(card.rarity)}
+                                  aria-label={getRaritySymbolDescription(card.rarity)}
+                                >
+                                  {getRaritySymbol(card.rarity)}
+                                </span>
+                                <span>{card.name}</span>
                               </div>
                               
                               {/* Нижняя панель с весом, ценой, номером карты */}

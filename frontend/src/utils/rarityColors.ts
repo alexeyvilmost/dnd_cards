@@ -56,6 +56,35 @@ export const getRarityBgColor = (rarity: string): string => {
   }
 };
 
+// Цвета для левой границы редкости (для инвентаря)
+export const getRarityBorderColor = (rarity: string): string => {
+  switch (rarity?.toLowerCase()) {
+    case 'common':
+    case 'обычное':
+      return 'border-l-4 border-l-gray-400'; // Серая левая граница
+    case 'uncommon':
+    case 'необычное':
+      return 'border-l-4 border-l-green-500'; // Зеленая левая граница
+    case 'rare':
+    case 'редкое':
+      return 'border-l-4 border-l-blue-500'; // Синяя левая граница
+    case 'very_rare':
+    case 'очень редкое':
+      return 'border-l-4 border-l-purple-500'; // Фиолетовая левая граница
+    case 'epic':
+    case 'эпическое':
+      return 'border-l-4 border-l-purple-500'; // Фиолетовая левая граница
+    case 'legendary':
+    case 'легендарное':
+      return 'border-l-4 border-l-orange-500'; // Оранжевая левая граница
+    case 'artifact':
+    case 'артефакт':
+      return 'border-l-4 border-l-orange-500'; // Оранжевая левая граница
+    default:
+      return 'border-l-4 border-l-gray-400'; // По умолчанию серая
+  }
+};
+
 // Цвета для бейджей редкости
 export const getRarityBadgeColor = (rarity: string): string => {
   switch (rarity?.toLowerCase()) {

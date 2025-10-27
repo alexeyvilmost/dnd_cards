@@ -13,21 +13,15 @@ export const useCardTilt = ({ maxTilt = 10, perspective = 1000, isLarge = false 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
 
-    const card = cardRef.current;
-    const rect = card.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const mouseX = e.clientX - centerX;
-    const mouseY = e.clientY - centerY;
-    
-    const rotateX = (mouseY / (rect.height / 2)) * -maxTilt;
-    const rotateY = (mouseX / (rect.width / 2)) * maxTilt;
+    // Фиксированный наклон карточки относительно центра
+    // Небольшой наклон для создания 3D эффекта
+    const rotateX = -5; // Небольшой наклон по X
+    const rotateY = 5;  // Небольшой наклон по Y
 
     setTiltStyle({
       transform: `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)${isLarge ? ' scale(1.5)' : ''}`,
     });
-  }, [maxTilt, perspective]);
+  }, [maxTilt, perspective, isLarge]);
 
   const handleMouseLeave = useCallback(() => {
     setTiltStyle({

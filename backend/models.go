@@ -159,6 +159,59 @@ const (
 	TemplateOnly  TemplateType = "only_template" // Только шаблон
 )
 
+// EffectTargetType - тип цели эффекта
+type EffectTargetType string
+
+const (
+	EffectTargetCharacteristic EffectTargetType = "characteristic" // Характеристика
+	EffectTargetSkill          EffectTargetType = "skill"          // Навык
+	EffectTargetSavingThrow    EffectTargetType = "saving_throw"   // Спасбросок
+)
+
+// EffectModifier - модификатор эффекта
+type EffectModifier string
+
+const (
+	EffectModifierPlus  EffectModifier = "+" // Увеличение
+	EffectModifierMinus EffectModifier = "-" // Уменьшение
+)
+
+// Effect - структура эффекта предмета
+type Effect struct {
+	TargetType     EffectTargetType `json:"targetType"`     // Тип цели (характеристика/навык/спасбросок)
+	TargetSpecific string           `json:"targetSpecific"` // Конкретная цель или "all"
+	Modifier       EffectModifier   `json:"modifier"`       // Модификатор (+ или -)
+	Value          int              `json:"value"`          // Значение эффекта
+}
+
+// Effects - массив эффектов
+type Effects []Effect
+
+// Scan - кастомный сканер для Effects
+func (e *Effects) Scan(value interface{}) error {
+	if value == nil {
+		*e = nil
+		return nil
+	}
+
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), e)
+	case []byte:
+		return json.Unmarshal(v, e)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для Effects: %T", value)
+	}
+}
+
+// Value - кастомный value для Effects
+func (e Effects) Value() (driver.Value, error) {
+	if e == nil {
+		return nil, nil
+	}
+	return json.Marshal(e)
+}
+
 // EquipmentSlot - слот экипировки
 type EquipmentSlot string
 
@@ -212,6 +265,7 @@ type Card struct {
 	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`                             // Массив тегов
 	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
+	Effects                      *Effects       `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -248,6 +302,7 @@ type CreateCardRequest struct {
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
+	Effects                      *Effects       `json:"effects"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -281,6 +336,7 @@ type UpdateCardRequest struct {
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
+	Effects                      *Effects       `json:"effects"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -321,6 +377,7 @@ type CardResponse struct {
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
+	Effects                      *Effects       `json:"effects"`
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 }
@@ -643,15 +700,16 @@ type Inventory struct {
 
 // InventoryItem - предмет в инвентаре
 type InventoryItem struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	InventoryID uuid.UUID      `json:"inventory_id" gorm:"not null"`
-	CardID      uuid.UUID      `json:"card_id" gorm:"not null"`
-	Quantity    int            `json:"quantity" gorm:"not null;default:1"`
-	Notes       string         `json:"notes" gorm:"type:text"`           // Заметки игрока
-	IsEquipped  bool           `json:"is_equipped" gorm:"default:false"` // Надет ли предмет
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	InventoryID  uuid.UUID      `json:"inventory_id" gorm:"not null"`
+	CardID       uuid.UUID      `json:"card_id" gorm:"not null"`
+	Quantity     int            `json:"quantity" gorm:"not null;default:1"`
+	Notes        string         `json:"notes" gorm:"type:text"`                // Заметки игрока
+	IsEquipped   bool           `json:"is_equipped" gorm:"default:false"`      // Надет ли предмет
+	EquippedSlot *string        `json:"equipped_slot" gorm:"type:varchar(50)"` // Слот экипировки
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// Связи
 	Inventory Inventory `json:"inventory" gorm:"foreignKey:InventoryID"`

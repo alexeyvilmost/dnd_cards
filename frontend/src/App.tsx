@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import CardLibrary from './pages/CardLibrary';
@@ -33,7 +34,8 @@ import TrinketSelection from './pages/TrinketSelection';
 function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <ToastProvider>
+        <Routes>
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -239,6 +241,7 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
+      </ToastProvider>
     </AuthProvider>
   );
 }

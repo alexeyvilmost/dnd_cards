@@ -35,9 +35,6 @@ export const getPropertyIcon = (property: string): string => {
 
 // Функция для отображения свойств с иконками (VERSION 7)
 export const renderProperties = (properties: string[], isExtended: boolean = false): JSX.Element => {
-  console.log('renderProperties VERSION 7 called with:', properties, 'length:', properties.length, 'isExtended:', isExtended);
-  console.log('Properties type:', typeof properties, 'isArray:', Array.isArray(properties));
-  console.log('Properties content:', JSON.stringify(properties));
   
   // Если свойств нет или они пустые, показываем пустую строку
   if (!properties || properties.length === 0) {

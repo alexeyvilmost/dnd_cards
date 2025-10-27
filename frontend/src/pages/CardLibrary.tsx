@@ -7,6 +7,7 @@ import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import CardDetailModal from '../components/CardDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
+import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 const CardLibrary = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -17,6 +18,12 @@ const CardLibrary = () => {
   const [rarityFilter, setRarityFilter] = useState<string>('');
   const [propertiesFilter, setPropertiesFilter] = useState<string>('');
   const [templateTypeFilter, setTemplateTypeFilter] = useState<string>('cards'); // 'all', 'cards', 'mixed', 'templates'
+
+  // Функция для получения цвета номера карты в зависимости от наличия эффектов
+  const getCardNumberColor = (card: Card) => {
+    const hasEffects = card.effects && Array.isArray(card.effects) && card.effects.length > 0;
+    return hasEffects ? 'text-gray-900' : 'text-gray-400';
+  };
   const [slotFilter, setSlotFilter] = useState<string>('');
   const [armorTypeFilter, setArmorTypeFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('created_desc'); // 'rarity_asc', 'rarity_desc', 'price_asc', 'price_desc', 'created_asc', 'created_desc', 'updated_asc', 'updated_desc'
@@ -33,6 +40,8 @@ const CardLibrary = () => {
   // Загрузка карточек
   const loadCards = async (page = 1, append = false) => {
     try {
+      console.log(`📥 [CARD LIBRARY] Загружаем карты: страница ${page}, append: ${append}`);
+      
       if (page === 1) {
         setLoading(true);
       } else {
@@ -70,14 +79,25 @@ const CardLibrary = () => {
       const response = await cardsApi.getCards(params);
       
       if (append) {
-        setCards(prev => [...prev, ...response.cards]);
+        setCards(prev => {
+          // Фильтруем дубликаты по ID
+          const existingIds = new Set(prev.map(card => card.id));
+          const newCards = response.cards.filter(card => !existingIds.has(card.id));
+          const combinedCards = [...prev, ...newCards];
+          
+          console.log(`📊 [CARD LIBRARY] Добавляем карты: получено ${response.cards.length}, новых ${newCards.length}, всего ${combinedCards.length}`);
+          
+          setHasMore(response.cards.length === 50 && combinedCards.length < response.total);
+          return combinedCards;
+        });
       } else {
         setCards(response.cards);
+        setHasMore(response.cards.length === 50 && response.cards.length < response.total);
+        console.log(`📊 [CARD LIBRARY] Загружено карт: ${response.cards.length}, всего в базе: ${response.total}`);
       }
       
       setTotalCards(response.total);
       setCurrentPage(page);
-      setHasMore(response.cards.length === 50 && cards.length + response.cards.length < response.total);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки карточек');
@@ -95,25 +115,37 @@ const CardLibrary = () => {
 
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const handleScroll = () => {
-      // Проверяем, когда пользователь прокрутил до конца страницы (с запасом в 1000px)
-      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
-        if (hasMore && !loadingMore && !loading) {
-          loadMoreCards();
+      // Очищаем предыдущий таймер
+      clearTimeout(timeoutId);
+      
+      // Устанавливаем новый таймер с задержкой 100ms
+      timeoutId = setTimeout(() => {
+        // Проверяем, когда пользователь прокрутил до конца страницы (с запасом в 1000px)
+        if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
+          if (hasMore && !loadingMore && !loading) {
+            loadMoreCards();
+          }
         }
-      }
+      }, 100);
     };
 
     // Добавляем обработчик прокрутки
     window.addEventListener('scroll', handleScroll);
     
     // Очищаем обработчик при размонтировании компонента
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
   }, [hasMore, loadingMore, loading, currentPage]);
 
   // Функция для загрузки следующей страницы
   const loadMoreCards = () => {
-    if (!loadingMore && hasMore) {
+    if (!loadingMore && hasMore && !loading) {
+      console.log(`🔄 [CARD LIBRARY] Загружаем страницу ${currentPage + 1}`);
       loadCards(currentPage + 1, true);
     }
   };
@@ -528,8 +560,15 @@ const CardLibrary = () => {
                         
                         {/* Текст справа */}
                         <div className="flex-1 min-w-0">
-                          <div className={`font-medium truncate ${getRarityColor(card.rarity)}`}>
-                            {card.name}
+                          <div className={`font-medium truncate ${getRarityColor(card.rarity)} flex items-center gap-1`}>
+                            <span 
+                              className="text-lg" 
+                              title={getRaritySymbolDescription(card.rarity)}
+                              aria-label={getRaritySymbolDescription(card.rarity)}
+                            >
+                              {getRaritySymbol(card.rarity)}
+                            </span>
+                            <span>{card.name}</span>
                           </div>
                           
                           {/* Нижняя панель с весом, ценой, номером карты */}
@@ -565,7 +604,7 @@ const CardLibrary = () => {
                                 </div>
                               )}
                             </div>
-                            <span className="text-gray-400 font-mono">
+                            <span className={`font-mono ${getCardNumberColor(card)}`}>
                               {card.card_number}
                             </span>
                           </div>

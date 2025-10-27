@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -644,4 +646,290 @@ func (cc *CharacterV2Controller) AddItemsToCharacterInventory(c *gin.Context) {
 		"message": "предметы успешно добавлены в инвентарь",
 		"items":   addedItems,
 	})
+}
+
+// EquipItem экипирует предмет персонажа
+func (controller *CharacterV2Controller) EquipItem(c *gin.Context) {
+	startTime := time.Now()
+	log.Printf("🎯 [PERF] Начало экипировки предмета")
+
+	characterID := c.Param("id")
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		log.Printf("❌ [PERF] Ошибка получения user_id: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := controller.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		log.Printf("❌ [PERF] Персонаж не найден: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	var request struct {
+		ItemID   string `json:"item_id"`
+		SlotType string `json:"slot_type"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Printf("❌ [PERF] Ошибка парсинга запроса: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат запроса"})
+		return
+	}
+
+	log.Printf("🎯 [PERF] Экипировка предмета %s в слот %s", request.ItemID, request.SlotType)
+
+	// Находим предмет в инвентаре персонажа
+	var inventoryItem InventoryItem
+	if err := controller.db.Preload("Card").Where("id = ? AND inventory_id IN (SELECT id FROM inventories WHERE character_id = ?)", request.ItemID, characterID).First(&inventoryItem).Error; err != nil {
+		log.Printf("❌ [PERF] Предмет не найден в инвентаре: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "предмет не найден в инвентаре"})
+		return
+	}
+
+	// Проверяем, что предмет подходит для этого слота (только при экипировке, не при снятии)
+	if request.SlotType != "" && request.SlotType != "null" && !isItemCompatibleWithSlot(&inventoryItem.Card, request.SlotType) {
+		log.Printf("❌ [PERF] Предмет не подходит для слота: %s", request.SlotType)
+		log.Printf("❌ [PERF] Предмет: %s, слот предмета: %v", inventoryItem.Card.Name, inventoryItem.Card.Slot)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "предмет не подходит для этого слота экипировки"})
+		return
+	}
+
+	// Если снимаем предмет (slot_type пустой или null)
+	if request.SlotType == "" || request.SlotType == "null" {
+		// Просто снимаем предмет
+		if err := controller.db.Model(&inventoryItem).Updates(map[string]interface{}{"is_equipped": false, "equipped_slot": nil}).Error; err != nil {
+			log.Printf("❌ [PERF] Ошибка снятия предмета: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка снятия предмета"})
+			return
+		}
+		log.Printf("✅ [PERF] Предмет %s снят с экипировки", inventoryItem.ID)
+	} else {
+		// Экипируем предмет - сначала снимаем существующий предмет в этом слоте
+		var existingEquippedItem InventoryItem
+		if err := controller.db.Where("inventory_id IN (SELECT id FROM inventories WHERE character_id = ?) AND equipped_slot = ?", characterID, request.SlotType).First(&existingEquippedItem).Error; err == nil {
+			// Если предмет найден, снимаем его
+			if err := controller.db.Model(&existingEquippedItem).Updates(map[string]interface{}{"is_equipped": false, "equipped_slot": nil}).Error; err != nil {
+				log.Printf("❌ [PERF] Ошибка снятия существующего предмета с экипировки: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка снятия существующего предмета с экипировки"})
+				return
+			}
+			log.Printf("✅ [PERF] Предмет %s снят со слота %s", existingEquippedItem.ID, request.SlotType)
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("❌ [PERF] Ошибка при поиске существующего предмета в слоте: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка при поиске существующего предмета в слоте"})
+			return
+		}
+
+		// Экипируем новый предмет
+		if err := controller.db.Model(&inventoryItem).Updates(map[string]interface{}{"is_equipped": true, "equipped_slot": request.SlotType}).Error; err != nil {
+			log.Printf("❌ [PERF] Ошибка экипировки: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка экипировки предмета"})
+			return
+		}
+	}
+
+	log.Printf("✅ [PERF] Экипировка завершена за %v", time.Since(startTime))
+	c.JSON(http.StatusOK, gin.H{
+		"message": "предмет успешно экипирован",
+		"item":    inventoryItem,
+	})
+}
+
+// isItemCompatibleWithSlot проверяет совместимость предмета со слотом
+func isItemCompatibleWithSlot(card *Card, slotType string) bool {
+	if card == nil {
+		log.Printf("🔍 [COMPAT] Предмет nil")
+		return false
+	}
+
+	if card.Slot == nil {
+		log.Printf("🔍 [COMPAT] У предмета '%s' нет слота экипировки", card.Name)
+		return false
+	}
+
+	log.Printf("🔍 [COMPAT] Проверка совместимости: предмет '%s', слот предмета '%s', целевой слот '%s'", card.Name, *card.Slot, slotType)
+
+	// Проверяем, что слот предмета соответствует целевому слоту
+	result := string(*card.Slot) == slotType
+	log.Printf("🔍 [COMPAT] Совместимость: %v", result)
+	return result
+}
+
+// contains проверяет наличие элемента в слайсе
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+// ArmorCalculationResult - результат расчета защиты
+type ArmorCalculationResult struct {
+	BaseAC    int                     `json:"base_ac"`    // Базовая защита (10 + модификатор ЛВК)
+	ArmorAC   int                     `json:"armor_ac"`   // Защита от брони
+	FinalAC   int                     `json:"final_ac"`   // Итоговая защита
+	ArmorType string                  `json:"armor_type"` // Тип брони
+	ArmorName string                  `json:"armor_name"` // Название брони
+	Details   ArmorCalculationDetails `json:"details"`    // Детали расчета
+}
+
+// ArmorCalculationDetails - детали расчета защиты
+type ArmorCalculationDetails struct {
+	BaseFormula  string `json:"base_formula"`  // Формула базовой защиты
+	ArmorFormula string `json:"armor_formula"` // Формула защиты от брони
+	DexterityMod int    `json:"dexterity_mod"` // Модификатор ловкости
+	ArmorBonus   int    `json:"armor_bonus"`   // Бонус от брони
+	MaxDexBonus  *int   `json:"max_dex_bonus"` // Максимальный бонус от ловкости (для средней брони)
+}
+
+// CalculateArmorClass рассчитывает защиту персонажа с учетом экипированной брони
+func (controller *CharacterV2Controller) CalculateArmorClass(character *CharacterV2, inventories []Inventory) ArmorCalculationResult {
+	result := ArmorCalculationResult{
+		BaseAC: 10 + (character.Dexterity-10)/2, // Базовая защита = 10 + модификатор ЛВК
+		Details: ArmorCalculationDetails{
+			BaseFormula:  "10 + модификатор ЛВК",
+			DexterityMod: (character.Dexterity - 10) / 2,
+		},
+	}
+
+	// Ищем экипированную броню в слоте "body"
+	var equippedArmor *InventoryItem
+	for _, inv := range inventories {
+		for _, item := range inv.Items {
+			if item.IsEquipped && item.EquippedSlot != nil && *item.EquippedSlot == "body" {
+				equippedArmor = &item
+				break
+			}
+		}
+		if equippedArmor != nil {
+			break
+		}
+	}
+
+	if equippedArmor == nil {
+		// Нет брони - используем базовую защиту
+		result.FinalAC = result.BaseAC
+		result.ArmorType = "Без брони"
+		result.ArmorName = ""
+		result.Details.ArmorFormula = "Без брони"
+		return result
+	}
+
+	// Определяем тип брони по свойствам
+	armorType := "Неизвестно"
+	armorBonus := 0
+	maxDexBonus := (*int)(nil)
+
+	if equippedArmor.Card.Properties != nil {
+		properties := *equippedArmor.Card.Properties
+		for _, prop := range properties {
+			switch prop {
+			case PropertyCloth:
+				armorType = "Ткань"
+				armorBonus = 0
+				// Ткань работает как легкая броня
+				result.Details.ArmorFormula = "Значение защиты + модификатор ЛВК"
+			case PropertyLightArmor:
+				armorType = "Легкая броня"
+				armorBonus = 0
+				result.Details.ArmorFormula = "Значение защиты + модификатор ЛВК"
+			case PropertyMediumArmor:
+				armorType = "Средняя броня"
+				armorBonus = 0
+				maxDexBonus = new(int)
+				*maxDexBonus = 2
+				result.Details.ArmorFormula = "Значение защиты + модификатор ЛВК (до +2)"
+			case PropertyHeavyArmor:
+				armorType = "Тяжелая броня"
+				armorBonus = 0
+				result.Details.ArmorFormula = "Значение защиты"
+			}
+		}
+	}
+
+	// Получаем бонус защиты от предмета
+	if equippedArmor.Card.BonusType != nil && *equippedArmor.Card.BonusType == BonusDefense {
+		if equippedArmor.Card.BonusValue != nil {
+			// Парсим бонус (может быть "+1", "1", "+2" и т.д.)
+			bonusStr := *equippedArmor.Card.BonusValue
+			if len(bonusStr) > 0 && bonusStr[0] == '+' {
+				bonusStr = bonusStr[1:]
+			}
+			if bonus, err := strconv.Atoi(bonusStr); err == nil {
+				armorBonus = bonus
+			}
+		}
+	}
+
+	result.ArmorType = armorType
+	result.ArmorName = equippedArmor.Card.Name
+	result.ArmorAC = armorBonus
+	result.Details.ArmorBonus = armorBonus
+	result.Details.MaxDexBonus = maxDexBonus
+
+	// Рассчитываем итоговую защиту по правилам D&D
+	switch armorType {
+	case "Ткань", "Легкая броня":
+		// Легкая броня: Значение защиты + модификатор ЛВК
+		result.FinalAC = armorBonus + result.Details.DexterityMod
+	case "Средняя броня":
+		// Средняя броня: Значение защиты + модификатор ЛВК (до +2)
+		dexBonus := result.Details.DexterityMod
+		if maxDexBonus != nil && dexBonus > *maxDexBonus {
+			dexBonus = *maxDexBonus
+		}
+		result.FinalAC = armorBonus + dexBonus
+	case "Тяжелая броня":
+		// Тяжелая броня: Значение защиты (без модификатора ЛВК)
+		result.FinalAC = armorBonus
+	default:
+		// Неизвестный тип брони - используем базовую защиту
+		result.FinalAC = result.BaseAC
+	}
+
+	return result
+}
+
+// GetCharacterArmor возвращает информацию о защите персонажа
+func (controller *CharacterV2Controller) GetCharacterArmor(c *gin.Context) {
+	startTime := time.Now()
+	log.Printf("🛡️ [ARMOR] Начало расчета защиты персонажа")
+
+	characterID := c.Param("id")
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		log.Printf("❌ [ARMOR] Ошибка получения user_id: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := controller.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		log.Printf("❌ [ARMOR] Персонаж не найден: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	// Получаем инвентари персонажа
+	var inventories []Inventory
+	if err := controller.db.Preload("Items.Card").Where("character_id = ?", characterID).Find(&inventories).Error; err != nil {
+		log.Printf("❌ [ARMOR] Ошибка получения инвентарей: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения инвентарей"})
+		return
+	}
+
+	// Рассчитываем защиту
+	armorResult := controller.CalculateArmorClass(&character, inventories)
+
+	log.Printf("✅ [ARMOR] Расчет защиты завершен за %v", time.Since(startTime))
+	log.Printf("🛡️ [ARMOR] Итоговая защита: %d (тип: %s)", armorResult.FinalAC, armorResult.ArmorType)
+
+	c.JSON(http.StatusOK, armorResult)
 }

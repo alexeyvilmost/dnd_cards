@@ -86,6 +86,18 @@ func GetAllMigrations() []Migration {
 			Up:          addPerformanceIndexes,
 			Down:        removePerformanceIndexes,
 		},
+		{
+			Version:     "014_add_equipped_slot",
+			Description: "Add equipped_slot field to inventory_items table",
+			Up:          addEquippedSlotField,
+			Down:        removeEquippedSlotField,
+		},
+		{
+			Version:     "015_add_effects",
+			Description: "Add effects field to cards table",
+			Up:          addEffectsField,
+			Down:        removeEffectsField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -775,5 +787,69 @@ func removePerformanceIndexes(db *sql.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// addEquippedSlotField добавляет поле equipped_slot в таблицу inventory_items
+func addEquippedSlotField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS equipped_slot VARCHAR(50)",
+		"CREATE INDEX IF NOT EXISTS idx_inventory_items_equipped_slot ON inventory_items(equipped_slot)",
+		"COMMENT ON COLUMN inventory_items.equipped_slot IS 'Слот экипировки предмета (head, body, arms, feet, ring, necklace, cloak, one_hand, versatile)'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// removeEquippedSlotField удаляет поле equipped_slot из таблицы inventory_items
+func removeEquippedSlotField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_inventory_items_equipped_slot",
+		"ALTER TABLE inventory_items DROP COLUMN IF EXISTS equipped_slot",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+// addEffectsField добавляет поле effects в таблицу cards
+func addEffectsField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS effects JSONB",
+		"COMMENT ON COLUMN cards.effects IS 'Эффекты предмета в формате JSON: массив объектов с полями target_type, target_specific, modifier, value'",
+		"CREATE INDEX IF NOT EXISTS idx_cards_effects ON cards USING GIN (effects)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeEffectsField удаляет поле effects из таблицы cards
+func removeEffectsField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_cards_effects",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS effects",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
 	return nil
 }

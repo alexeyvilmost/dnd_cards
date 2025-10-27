@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Eye, Plus, X } from 'lucide-react';
+import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Plus, X, Dices } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import ItemSelector from '../components/ItemSelector';
+import CardPreview from '../components/CardPreview';
 import { Card } from '../types';
+import { useToast } from '../contexts/ToastContext';
+import { getRussianName } from '../utils/russianTranslations';
+import { getRarityBorderColor } from '../utils/rarityColors';
 import { 
   CharacterV2, 
   calculateDerivedStats, 
@@ -20,7 +24,8 @@ import {
 const CharacterDetailV2: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { showToast } = useToast();
+  // const { } = useAuth(); // User context not needed in this component
   const [character, setCharacter] = useState<CharacterV2 | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +51,39 @@ const CharacterDetailV2: React.FC = () => {
   const [showDerivedStatModal, setShowDerivedStatModal] = useState(false);
   const [modifiedDerivedStats, setModifiedDerivedStats] = useState<{ [key: string]: number }>({});
 
+  // Кэш для эффектов экипированных предметов
+  const [equippedEffectsCache, setEquippedEffectsCache] = useState<{
+    characteristicBonuses: { [key: string]: number };
+    skillBonuses: { [key: string]: number };
+    savingThrowBonuses: { [key: string]: number };
+  }>({
+    characteristicBonuses: {},
+    skillBonuses: {},
+    savingThrowBonuses: {}
+  });
+
+  // Флаг для отслеживания изменений экипировки
+  const [equipmentChanged, setEquipmentChanged] = useState(false);
+
   useEffect(() => {
     if (id) {
       loadCharacter();
     }
   }, [id]);
+
+  // Обновляем кэш эффектов только при изменении экипировки
+  useEffect(() => {
+    if (equipmentChanged && characterInventories.length > 0) {
+      console.log('🔄 [EFFECTS] Обновляем кэш эффектов экипировки');
+      const newEffects = getEquippedItemEffects();
+      setEquippedEffectsCache(newEffects);
+      
+      // Обновляем информацию о защите локально (без API вызова)
+      updateArmorInfoFromInventories();
+      
+      setEquipmentChanged(false);
+    }
+  }, [equipmentChanged, characterInventories]);
 
   const loadCharacter = async () => {
     if (!id) return;
@@ -69,11 +102,20 @@ const CharacterDetailV2: React.FC = () => {
       
       setCharacter(response.data);
       
-      // Загружаем инвентари персонажа
+      // Загружаем инвентари персонажа (передаем ID напрямую)
       const inventoriesStartTime = performance.now();
-      await loadCharacterInventories();
+      await loadCharacterInventoriesById(response.data.id);
       const inventoriesEndTime = performance.now();
       console.log(`⏱️ [PERF] Загрузка инвентарей: ${(inventoriesEndTime - inventoriesStartTime).toFixed(2)}ms`);
+      
+      // Обновляем информацию о защите на основе инвентарей
+      updateArmorInfoFromInventories();
+      
+      // Загружаем информацию о защите (для совместимости)
+      const armorStartTime = performance.now();
+      await loadArmorInfo(response.data.id);
+      const armorEndTime = performance.now();
+      console.log(`⏱️ [PERF] Загрузка информации о защите: ${(armorEndTime - armorStartTime).toFixed(2)}ms`);
       
       const totalTime = performance.now() - startTime;
       console.log(`✅ [PERF] Общее время загрузки: ${totalTime.toFixed(2)}ms`);
@@ -87,13 +129,16 @@ const CharacterDetailV2: React.FC = () => {
 
   const loadCharacterInventories = async () => {
     if (!character) return;
+    return loadCharacterInventoriesById(character.id);
+  };
 
+  const loadCharacterInventoriesById = async (characterId: string) => {
     const startTime = performance.now();
     console.log('📦 [PERF] Начало загрузки инвентарей');
 
     try {
       const apiStartTime = performance.now();
-      const response = await apiClient.get(`/api/characters-v2/${character.id}/inventories`);
+      const response = await apiClient.get(`/api/characters-v2/${characterId}/inventories`);
       const apiEndTime = performance.now();
       console.log(`🌐 [PERF] API запрос инвентарей: ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
       
@@ -101,6 +146,7 @@ const CharacterDetailV2: React.FC = () => {
       
       const stateStartTime = performance.now();
       setCharacterInventories(response.data || []);
+      setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки при первой загрузке
       const stateEndTime = performance.now();
       console.log(`🔄 [PERF] Обновление состояния: ${(stateEndTime - stateStartTime).toFixed(2)}ms`);
       
@@ -126,6 +172,699 @@ const CharacterDetailV2: React.FC = () => {
   };
 
   const [isAddingItems, setIsAddingItems] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const [hoveredSlotRef, setHoveredSlotRef] = useState<HTMLDivElement | null>(null);
+  
+  // Состояние для информации о защите
+  const [armorInfo, setArmorInfo] = useState<any>(null);
+
+  // Вспомогательная функция для получения информации о броне из инвентарей
+  const getSimulatedArmorInfo = (inventories: any[]) => {
+    let simulatedEquippedArmorType: string | null = null;
+    let simulatedEquippedShield = false;
+
+    inventories.forEach(inv => {
+      if (inv.items && inv.items.length > 0) {
+        inv.items.forEach((item: any) => {
+          // Ищем только предметы в слоте "body"
+          if (item.equipped_slot === 'body') {
+            // Проверяем, является ли предмет бронёй (по типу или наличию properties с armor)
+            if (item.card?.type === 'armor' || (item.card?.properties && item.card.properties.some((prop: string) => prop.includes('armor')))) {
+              // Определяем тип брони из properties
+              if (item.card.properties.includes('light_armor')) {
+                simulatedEquippedArmorType = 'Легкая броня';
+              } else if (item.card.properties.includes('medium_armor')) {
+                simulatedEquippedArmorType = 'Средняя броня';
+              } else if (item.card.properties.includes('heavy_armor')) {
+                simulatedEquippedArmorType = 'Тяжелая броня';
+              } else if (item.card.properties.includes('cloth')) {
+                simulatedEquippedArmorType = 'Ткань';
+              }
+            }
+          }
+        });
+      }
+    });
+    return { simulatedEquippedArmorType, simulatedEquippedShield };
+  };
+
+  // Функция для обновления информации о защите из инвентарей (без API)
+  const updateArmorInfoFromInventories = () => {
+    console.log('🛡️ [ARMOR] Updating armor info from inventories');
+    if (!characterInventories || characterInventories.length === 0) {
+      console.log('🛡️ [ARMOR] No inventories available');
+      return;
+    }
+    
+    let equippedArmorType: string | null = null;
+    let armorBonus = 0;
+    
+    characterInventories.forEach(inv => {
+      if (inv.items) {
+        inv.items.forEach((item: any) => {
+          // Ищем только предметы в слоте "body"
+          if (item.equipped_slot === 'body') {
+            console.log('🛡️ [ARMOR] Found item in body slot:', item.card?.name);
+            console.log('🛡️ [ARMOR] Full card structure:', item.card);
+            console.log('🛡️ [ARMOR] Card properties:', item.card?.properties);
+            console.log('🛡️ [ARMOR] Card armor_type:', item.card?.armor_type);
+            console.log('🛡️ [ARMOR] Card armor_bonus:', item.card?.armor_bonus);
+            
+            // Проверяем, является ли предмет бронёй (по типу или наличию properties с armor)
+            if (item.card?.type === 'armor' || (item.card?.properties && item.card.properties.some((prop: string) => prop.includes('armor')))) {
+              // Определяем тип брони из properties
+              if (item.card.properties.includes('light_armor')) {
+                equippedArmorType = 'Легкая броня';
+              } else if (item.card.properties.includes('medium_armor')) {
+                equippedArmorType = 'Средняя броня';
+              } else if (item.card.properties.includes('heavy_armor')) {
+                equippedArmorType = 'Тяжелая броня';
+              } else if (item.card.properties.includes('cloth')) {
+                equippedArmorType = 'Ткань';
+              }
+              
+              // Получаем бонус брони из bonus_value
+              armorBonus = parseInt(item.card.bonus_value) || 0;
+              console.log('🛡️ [ARMOR] Armor found in body slot:', equippedArmorType, 'bonus:', armorBonus);
+            }
+          }
+        });
+      }
+    });
+    
+    // Обновляем armorInfo локально
+    const newArmorInfo = {
+      armor_type: equippedArmorType || 'Без брони',
+      details: {
+        armor_bonus: armorBonus,
+        max_dex_bonus: equippedArmorType === 'Средняя броня' ? 2 : undefined
+      }
+    };
+    
+    console.log('🛡️ [ARMOR] Setting new armorInfo:', newArmorInfo);
+    setArmorInfo(newArmorInfo);
+    
+    console.log('🛡️ [ARMOR] Обновлена информация о защите локально:', {
+      armor_type: equippedArmorType || 'Без брони',
+      armor_bonus: armorBonus
+    });
+  };
+
+  // Функция для расчета изменений характеристик при экипировке/снятии предмета
+  const calculateStatChanges = (item: any, isEquipping: boolean) => {
+    console.log('📊 [CHANGES] Calculating changes for:', item.card?.name, 'isEquipping:', isEquipping);
+    console.log('📊 [CHANGES] Item effects:', item.card?.effects);
+    
+    const changes: string[] = [];
+    
+    // Обрабатываем эффекты предмета (если есть)
+    if (item.card?.effects && Array.isArray(item.card.effects) && item.card.effects.length > 0) {
+      item.card.effects.forEach((effect: any) => {
+      const bonus = effect.modifier === '+' ? effect.value : -effect.value;
+      const multiplier = isEquipping ? 1 : -1;
+      const actualBonus = bonus * multiplier;
+      
+      if (effect.targetType === 'characteristic') {
+        if (effect.targetSpecific === 'all') {
+          ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+            const currentValue = getActualStatValue(stat);
+            const newValue = currentValue + actualBonus;
+            changes.push(`${getRussianName('characteristic', stat)} ${currentValue} → ${newValue}`);
+          });
+        } else {
+          const currentValue = getActualStatValue(effect.targetSpecific);
+          const newValue = currentValue + actualBonus;
+          changes.push(`${getRussianName('characteristic', effect.targetSpecific)} ${currentValue} → ${newValue}`);
+        }
+      } else if (effect.targetType === 'skill') {
+        if (effect.targetSpecific === 'all') {
+          const allSkills = [
+            'athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 
+            'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 
+            'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'
+          ];
+          allSkills.forEach(skill => {
+            const currentValue = getActualSkillValue(skill);
+            const newValue = currentValue + actualBonus;
+            const currentSign = currentValue >= 0 ? '+' : '';
+            const newSign = newValue >= 0 ? '+' : '';
+            changes.push(`${getRussianName('skill', skill)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+          });
+        } else {
+          const currentValue = getActualSkillValue(effect.targetSpecific);
+          const newValue = currentValue + actualBonus;
+          const currentSign = currentValue >= 0 ? '+' : '';
+          const newSign = newValue >= 0 ? '+' : '';
+          changes.push(`${getRussianName('skill', effect.targetSpecific)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+        }
+      } else if (effect.targetType === 'saving_throw') {
+        if (effect.targetSpecific === 'all') {
+          ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+            const currentSavingThrow = getSavingThrowBonus(stat);
+            const currentValue = parseInt(currentSavingThrow.bonus.replace('+', '')) || 0;
+            const newValue = currentValue + actualBonus;
+            const currentSign = currentValue >= 0 ? '+' : '';
+            const newSign = newValue >= 0 ? '+' : '';
+            changes.push(`Спасбросок ${getRussianName('characteristic', stat)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+          });
+        } else {
+          const currentSavingThrow = getSavingThrowBonus(effect.targetSpecific);
+          const currentValue = parseInt(currentSavingThrow.bonus.replace('+', '')) || 0;
+          const newValue = currentValue + actualBonus;
+          const currentSign = currentValue >= 0 ? '+' : '';
+          const newSign = newValue >= 0 ? '+' : '';
+          changes.push(`Спасбросок ${getRussianName('characteristic', effect.targetSpecific)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+        }
+      }
+      });
+    }
+
+    // Добавляем изменения защиты, если предмет влияет на броню
+    console.log('🛡️ [DEFENSE] Item analysis:', {
+      hasSlot: !!item.card?.slot,
+      slot: item.card?.slot,
+      type: item.card?.type,
+      isArmorSlot: item.card?.slot && ['head', 'chest', 'legs', 'feet', 'hands', 'body', 'armor'].includes(item.card.slot),
+      isArmorType: item.card?.type === 'armor' || item.card?.type === 'shield'
+    });
+    
+    // Проверяем, что предмет влияет на защиту (предметы брони в слоте "body")
+    const affectsDefense = item.card?.slot === 'body' && (
+      item.card?.type === 'armor' || 
+      item.card?.armor_type ||
+      (item.card?.properties && item.card.properties.some((prop: string) => 
+        prop.includes('armor') || prop.includes('cloth')
+      ))
+    );
+    
+    console.log('🛡️ [DEFENSE] Affects defense check:', {
+      slot: item.card?.slot,
+      type: item.card?.type,
+      properties: item.card?.properties,
+      affectsDefense
+    });
+    
+    if (affectsDefense) {
+      console.log('🛡️ [DEFENSE] Checking defense changes for slot:', item.card.slot);
+      
+      // 1. Рассчитываем защиту ДО экипировки/снятия (используем текущее состояние)
+      const currentDefense = getActualDerivedStatValue('ac');
+      console.log('🛡️ [DEFENSE] Current defense:', currentDefense);
+
+      // 2. Создаем временные инвентари для симуляции нового состояния
+      let tempInventories = JSON.parse(JSON.stringify(characterInventories)); // Deep copy
+
+      if (isEquipping) {
+        // Симулируем экипировку предмета
+        tempInventories = tempInventories.map((inv: any) => {
+          if (inv.type === 'equipment') {
+            return {
+              ...inv,
+              items: inv.items.map((i: any) => {
+                // Если это экипируемый предмет, устанавливаем его слот
+                if (i.id === item.id) {
+                  return { ...i, equipped_slot: item.card.slot };
+                }
+                // Если другой предмет в том же слоте, снимаем его
+                if (i.equipped_slot === item.card.slot && i.id !== item.id) {
+                  return { ...i, equipped_slot: null };
+                }
+                return i;
+              })
+            };
+          }
+          return inv;
+        });
+      } else { // isUnequipping
+        // Симулируем снятие предмета
+        tempInventories = tempInventories.map((inv: any) => {
+          if (inv.type === 'equipment') {
+            return {
+              ...inv,
+              items: inv.items.map((i: any) => {
+                if (i.id === item.id) {
+                  return { ...i, equipped_slot: null };
+                }
+                return i;
+              })
+            };
+          }
+          return inv;
+        });
+      }
+
+      // 3. Рассчитываем эффекты для симулированных инвентарей
+      const simulatedEffectsCache = getEquippedItemEffects(tempInventories);
+
+      // 4. Рассчитываем симулированное значение ловкости
+      // Базовое значение ловкости (без эффектов)
+      const baseDexValue = modifiedStats['dexterity'] !== undefined ? modifiedStats['dexterity'] : getStatValue(character, 'dexterity');
+      // Добавляем бонусы ловкости из симулированных эффектов
+      const simulatedDexterityValue = baseDexValue + (simulatedEffectsCache.characteristicBonuses['dexterity'] || 0);
+
+      // 5. Определяем симулированный тип брони и щита
+      const { simulatedEquippedArmorType, simulatedEquippedShield } = getSimulatedArmorInfo(tempInventories);
+
+      // 6. Рассчитываем новую защиту с симулированными значениями
+      // Локальная функция для расчета защиты
+      const calculateDefense = (dexValue: number, armorType: string | null, armorBonus: number) => {
+        const dexMod = Math.floor((dexValue - 10) / 2);
+        
+        // Если нет брони, используем базовую формулу
+        if (!armorType || armorType === 'Без брони') {
+          return 10 + dexMod;
+        }
+        
+        // Рассчитываем с учетом типа брони
+        let finalAC = armorBonus; // armorBonus уже содержит базовое значение брони
+        
+        switch (armorType) {
+          case 'Ткань':
+          case 'Легкая броня':
+            finalAC += dexMod; // Полный бонус от ловкости
+            break;
+          case 'Средняя броня':
+            finalAC += Math.min(dexMod, 2); // Максимум +2 от ловкости
+            break;
+          case 'Тяжелая броня':
+            // Тяжелая броня не получает бонус от ловкости
+            break;
+        }
+        
+        return finalAC;
+      };
+      
+      // Находим информацию о броне из симулированных инвентарей
+      let simulatedArmorType = null;
+      let simulatedArmorBonus = 0;
+      
+      tempInventories.forEach(inv => {
+        if (inv.items) {
+          inv.items.forEach((item: any) => {
+            // Ищем только предметы в слоте "body"
+            if (item.equipped_slot === 'body' && (item.card?.type === 'armor' || (item.card?.properties && item.card.properties.some((prop: string) => prop.includes('armor'))))) {
+              // Определяем тип брони из properties
+              if (item.card.properties.includes('light_armor')) {
+                simulatedArmorType = 'Легкая броня';
+              } else if (item.card.properties.includes('medium_armor')) {
+                simulatedArmorType = 'Средняя броня';
+              } else if (item.card.properties.includes('heavy_armor')) {
+                simulatedArmorType = 'Тяжелая броня';
+              } else if (item.card.properties.includes('cloth')) {
+                simulatedArmorType = 'Ткань';
+              }
+              
+              // Получаем бонус брони из bonus_value
+              simulatedArmorBonus = parseInt(item.card.bonus_value) || 0;
+            }
+          });
+        }
+      });
+      
+      const newDefense = calculateDefense(simulatedDexterityValue, simulatedArmorType, simulatedArmorBonus);
+      console.log('🛡️ [DEFENSE] New defense:', newDefense);
+
+      // 7. Если защита изменилась, добавляем в список изменений
+      if (currentDefense !== newDefense) {
+        console.log('🛡️ [DEFENSE] Defense changed, adding to changes');
+        changes.push(`Защита ${currentDefense} → ${newDefense}`);
+      } else {
+        console.log('🛡️ [DEFENSE] No defense change');
+      }
+    }
+
+    console.log('📊 [CHANGES] Calculated changes:', changes);
+    return changes;
+  };
+
+  // Функция для оптимистичного обновления инвентаря при экипировке
+  const optimisticallyEquipItem = (item: any, slotType: string) => {
+    if (!characterInventories || characterInventories.length === 0) return;
+    
+    setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки
+    setCharacterInventories(prevInventories => {
+      return prevInventories.map(inventory => {
+        if (inventory.character_id === character?.id) {
+          return {
+            ...inventory,
+            items: inventory.items.map(invItem => {
+              if (invItem.id === item.id) {
+                return {
+                  ...invItem,
+                  equipped_slot: slotType
+                };
+              }
+              return invItem;
+            })
+          };
+        }
+        return inventory;
+      });
+    });
+  };
+
+  // Функция для оптимистичного обновления инвентаря при снятии
+  const optimisticallyUnequipItem = (item: any) => {
+    if (!characterInventories || characterInventories.length === 0) return;
+    
+    setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки
+    setCharacterInventories(prevInventories => {
+      return prevInventories.map(inventory => {
+        if (inventory.character_id === character?.id) {
+          return {
+            ...inventory,
+            items: inventory.items.map(invItem => {
+              if (invItem.id === item.id) {
+                return {
+                  ...invItem,
+                  equipped_slot: null
+                };
+              }
+              return invItem;
+            })
+          };
+        }
+        return inventory;
+      });
+    });
+  };
+
+  // Функция для отката изменений при ошибке
+  const rollbackInventoryChanges = (item: any, wasEquipping: boolean) => {
+    if (!characterInventories || characterInventories.length === 0) return;
+    
+    setCharacterInventories(prevInventories => {
+      return prevInventories.map(inventory => {
+        if (inventory.character_id === character?.id) {
+          return {
+            ...inventory,
+            items: inventory.items.map(invItem => {
+              if (invItem.id === item.id) {
+                return {
+                  ...invItem,
+                  equipped_slot: wasEquipping ? null : item.equipped_slot
+                };
+              }
+              return invItem;
+            })
+          };
+        }
+        return inventory;
+      });
+    });
+  };
+
+  // Функция для анализа эффектов экипированных предметов
+  const getEquippedItemEffects = (inventoriesToAnalyze?: any[]) => {
+    const inventories = inventoriesToAnalyze || characterInventories;
+    if (!inventories || inventories.length === 0) {
+      console.log('🔍 [EFFECTS] Нет инвентарей персонажа');
+      return {
+        characteristicBonuses: {},
+        skillBonuses: {},
+        savingThrowBonuses: {}
+      };
+    }
+
+    const characteristicBonuses: { [key: string]: number } = {};
+    const skillBonuses: { [key: string]: number } = {};
+    const savingThrowBonuses: { [key: string]: number } = {};
+
+    console.log('🔍 [EFFECTS] Анализируем инвентари:', inventories);
+
+    // Проходим по всем инвентарям персонажа
+    inventories.forEach((inventory, inventoryIndex) => {
+      console.log(`🔍 [EFFECTS] Инвентарь ${inventoryIndex}:`, inventory);
+      if (inventory.items && inventory.items.length > 0) {
+        inventory.items.forEach((item: any, itemIndex: number) => {
+          console.log(`🔍 [EFFECTS] Предмет ${itemIndex}:`, {
+            name: item.card?.name,
+            equipped_slot: item.equipped_slot,
+            effects: item.card?.effects
+          });
+          
+          // Проверяем, экипирован ли предмет
+          if (item.equipped_slot && item.equipped_slot !== 'null' && item.equipped_slot !== '') {
+            console.log(`✅ [EFFECTS] Предмет "${item.card?.name}" экипирован в слот "${item.equipped_slot}"`);
+            
+            // Анализируем эффекты предмета
+            if (item.card?.effects && Array.isArray(item.card.effects) && item.card.effects.length > 0) {
+              console.log(`✨ [EFFECTS] У предмета "${item.card?.name}" есть эффекты:`, item.card.effects);
+              
+              item.card.effects.forEach((effect: any, effectIndex: number) => {
+                console.log(`🎯 [EFFECTS] Эффект ${effectIndex}:`, effect);
+                const bonus = effect.modifier === '+' ? effect.value : -effect.value;
+                
+                if (effect.targetType === 'characteristic') {
+                  if (effect.targetSpecific === 'all') {
+                    // Применяем ко всем характеристикам
+                    ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+                      characteristicBonuses[stat] = (characteristicBonuses[stat] || 0) + bonus;
+                    });
+                  } else {
+                    // Применяем к конкретной характеристике
+                    characteristicBonuses[effect.targetSpecific] = (characteristicBonuses[effect.targetSpecific] || 0) + bonus;
+                  }
+                } else if (effect.targetType === 'skill') {
+                  if (effect.targetSpecific === 'all') {
+                    // Применяем ко всем навыкам
+                    const allSkills = [
+                      'athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 
+                      'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 
+                      'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'
+                    ];
+                    allSkills.forEach(skill => {
+                      skillBonuses[skill] = (skillBonuses[skill] || 0) + bonus;
+                    });
+                  } else {
+                    // Применяем к конкретному навыку
+                    console.log(`🎯 [EFFECTS] Применяем бонус ${bonus} к навыку "${effect.targetSpecific}"`);
+                    skillBonuses[effect.targetSpecific] = (skillBonuses[effect.targetSpecific] || 0) + bonus;
+                  }
+                } else if (effect.targetType === 'saving_throw') {
+                  if (effect.targetSpecific === 'all') {
+                    // Применяем ко всем спасброскам
+                    ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+                      savingThrowBonuses[stat] = (savingThrowBonuses[stat] || 0) + bonus;
+                    });
+                  } else {
+                    // Применяем к конкретному спасброску
+                    savingThrowBonuses[effect.targetSpecific] = (savingThrowBonuses[effect.targetSpecific] || 0) + bonus;
+                  }
+                }
+              });
+            }
+          }
+        });
+      }
+    });
+
+    console.log('🎯 [EFFECTS] Итоговые бонусы:', {
+      characteristicBonuses,
+      skillBonuses,
+      savingThrowBonuses
+    });
+
+    return {
+      characteristicBonuses,
+      skillBonuses,
+      savingThrowBonuses
+    };
+  };
+  
+  // Состояние для модального окна кубика
+  const [showDiceModal, setShowDiceModal] = useState(false);
+  const [diceResult, setDiceResult] = useState<{
+    skillName: string;
+    skillBonus: number;
+    diceRoll: number;
+    finalResult: number;
+    isRolling: boolean;
+    rollType: 'normal' | 'advantage' | 'disadvantage';
+    secondDice?: number;
+    selectedDice?: number;
+  } | null>(null);
+
+  // Функция для загрузки информации о защите
+  const loadArmorInfo = async (characterId: string) => {
+    try {
+      const response = await apiClient.get(`/api/characters-v2/${characterId}/armor`);
+      setArmorInfo(response.data);
+      console.log('🛡️ [ARMOR] Загружена информация о защите:', response.data);
+    } catch (error) {
+      console.error('❌ [ARMOR] Ошибка загрузки информации о защите:', error);
+      // В случае ошибки используем базовую защиту
+      setArmorInfo(null);
+    }
+  };
+
+  // Функция для броска кубика навыка
+  const rollSkillDice = (skillName: string, rollType: 'normal' | 'advantage' | 'disadvantage' = 'normal', shouldRoll: boolean = true) => {
+    if (!character) return;
+    
+    const skillBonus = getActualSkillValue(skillName);
+    
+    if (!shouldRoll) {
+      // При первом открытии показываем "?" вместо броска
+      setDiceResult({
+        skillName,
+        skillBonus,
+        diceRoll: 0, // 0 будет означать "?"
+        finalResult: 0, // 0 будет означать "?"
+        isRolling: false,
+        rollType,
+        secondDice: rollType !== 'normal' ? 0 : undefined,
+        selectedDice: 0
+      });
+      setShowDiceModal(true);
+      return;
+    }
+    
+    const firstDice = Math.floor(Math.random() * 20) + 1;
+    const secondDice = rollType !== 'normal' ? Math.floor(Math.random() * 20) + 1 : undefined;
+    
+    let selectedDice: number;
+    if (rollType === 'advantage') {
+      selectedDice = Math.max(firstDice, secondDice!);
+    } else if (rollType === 'disadvantage') {
+      selectedDice = Math.min(firstDice, secondDice!);
+    } else {
+      selectedDice = firstDice;
+    }
+    
+    const finalResult = selectedDice + skillBonus;
+    
+    setDiceResult({
+      skillName,
+      skillBonus,
+      diceRoll: firstDice,
+      finalResult,
+      isRolling: true,
+      rollType,
+      secondDice,
+      selectedDice
+    });
+    
+    setShowDiceModal(true);
+    
+    // Останавливаем анимацию через 1 секунду
+    setTimeout(() => {
+      setDiceResult(prev => prev ? { ...prev, isRolling: false } : null);
+    }, 1000);
+  };
+
+  // Компонент анимированного кубика
+  const AnimatedDice = ({ 
+    isRolling, 
+    finalValue, 
+    isSelected = false, 
+    isAdvantage = false, 
+    isDisadvantage = false 
+  }: { 
+    isRolling: boolean; 
+    finalValue: number; 
+    isSelected?: boolean;
+    isAdvantage?: boolean;
+    isDisadvantage?: boolean;
+  }) => {
+    const [displayValue, setDisplayValue] = useState(1);
+    
+    useEffect(() => {
+      if (isRolling) {
+        const interval = setInterval(() => {
+          setDisplayValue(Math.floor(Math.random() * 20) + 1);
+        }, 100); // Меняем число каждые 100мс
+        
+        return () => clearInterval(interval);
+      } else {
+        setDisplayValue(finalValue);
+      }
+    }, [isRolling, finalValue]);
+    
+    
+    return (
+      <div className="relative w-20 h-16 flex items-center justify-center">
+        <svg width="80" height="64" viewBox="0 0 80 64" className="absolute inset-0">
+          <defs>
+            <filter id="hexagon-shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.1)"/>
+            </filter>
+          </defs>
+          <polygon
+            points="40,4 65,16 65,48 40,60 15,48 15,16"
+            fill={
+              isRolling
+                ? "#f3f4f6"
+                : displayValue === 1
+                  ? "#7f1d1d"
+                  : displayValue === 20
+                    ? "#166534"
+                    : "#f3f4f6"
+            }
+            stroke={
+              isSelected && !isRolling
+                ? isAdvantage
+                  ? "#10b981"
+                  : isDisadvantage
+                    ? "#ef4444"
+                    : "#9ca3af"
+                : isRolling
+                  ? "#9ca3af"
+                  : displayValue === 1
+                    ? "#991b1b"
+                    : displayValue === 20
+                      ? "#15803d"
+                      : "#9ca3af"
+            }
+            strokeWidth={isSelected && !isRolling ? "4" : "2"}
+            filter="url(#hexagon-shadow)"
+          />
+        </svg>
+        <div className={`relative z-10 text-2xl font-bold ${
+          isRolling
+            ? "text-gray-800"
+            : displayValue === 0
+              ? "text-gray-600"
+              : displayValue === 1
+                ? "text-red-100"
+                : displayValue === 20
+                  ? "text-green-100"
+                  : "text-gray-800"
+        }`}>
+          <span className={isRolling ? 'animate-pulse' : ''}>
+            {displayValue === 0 ? '?' : displayValue}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // Компонент анимированного финального результата
+  const AnimatedFinalResult = ({ isRolling, finalValue, skillBonus }: { isRolling: boolean; finalValue: number; skillBonus: number }) => {
+    const [displayValue, setDisplayValue] = useState(1 + skillBonus);
+    
+    useEffect(() => {
+      if (isRolling) {
+        const interval = setInterval(() => {
+          const randomDice = Math.floor(Math.random() * 20) + 1;
+          setDisplayValue(randomDice + skillBonus);
+        }, 100); // Меняем число каждые 100мс
+        
+        return () => clearInterval(interval);
+      } else {
+        setDisplayValue(finalValue);
+      }
+    }, [isRolling, finalValue, skillBonus]);
+    
+    return (
+      <span className="inline-block w-12 text-center">
+        <span className={isRolling ? 'animate-pulse' : ''}>
+          {displayValue === 0 ? '?' : displayValue}
+        </span>
+      </span>
+    );
+  };
+
 
   const handleAddItems = async (items: Card[]) => {
     if (isAddingItems) return; // Защита от двойного нажатия
@@ -180,10 +919,17 @@ const CharacterDetailV2: React.FC = () => {
     setSelectedStat(null);
   };
 
-  // Получить актуальное значение характеристики (с учетом модификаций)
+  // Получить актуальное значение характеристики (с учетом модификаций и эффектов)
   const getActualStatValue = (statKey: string): number => {
     if (!character) return 0;
-    return modifiedStats[statKey] !== undefined ? modifiedStats[statKey] : getStatValue(character, statKey);
+    
+    // Базовое значение характеристики
+    const baseValue = modifiedStats[statKey] !== undefined ? modifiedStats[statKey] : getStatValue(character, statKey);
+    
+    // Получаем бонусы от эффектов экипированных предметов из кэша
+    const effectBonus = equippedEffectsCache.characteristicBonuses[statKey] || 0;
+    
+    return baseValue + effectBonus;
   };
 
   // Изменить значение характеристики
@@ -214,10 +960,31 @@ const CharacterDetailV2: React.FC = () => {
     setSelectedSkill(null);
   };
 
-  // Получить актуальное значение навыка (с учетом модификаций)
+
+  // Получить актуальное значение навыка (с учетом модификаций и эффектов)
   const getActualSkillValue = (skillKey: string): number => {
     if (!character) return 0;
-    return modifiedSkills[skillKey] !== undefined ? modifiedSkills[skillKey] : parseInt(getSkillBonus(skillKey).replace('+', '').replace('-', '')) || 0;
+    
+    // Базовое значение навыка
+    let baseBonus = 0;
+    if (modifiedSkills[skillKey] !== undefined) {
+      baseBonus = modifiedSkills[skillKey];
+    } else {
+      // Правильно парсим бонус навыка, сохраняя знак
+      const bonusStr = getSkillBonus(skillKey);
+      if (bonusStr.startsWith('+')) {
+        baseBonus = parseInt(bonusStr.substring(1)) || 0;
+      } else if (bonusStr.startsWith('-')) {
+        baseBonus = parseInt(bonusStr) || 0;
+      } else {
+        baseBonus = parseInt(bonusStr) || 0;
+      }
+    }
+    
+    // Получаем бонусы от эффектов экипированных предметов из кэша
+    const effectBonus = equippedEffectsCache.skillBonuses[skillKey] || 0;
+    
+    return baseBonus + effectBonus;
   };
 
   // Изменить значение навыка
@@ -294,7 +1061,58 @@ const CharacterDetailV2: React.FC = () => {
       case 'proficiency':
         return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : Math.floor((character.level - 1) / 4) + 2;
       case 'ac':
-        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : 10 + Math.floor((getActualStatValue('dexterity') - 10) / 2);
+      case 'armor_class':
+        if (modifiedDerivedStats[statKey] !== undefined) {
+          console.log('🛡️ [AC] Using modified value:', modifiedDerivedStats[statKey]);
+          return modifiedDerivedStats[statKey];
+        }
+        // Рассчитываем защиту с учетом актуальных характеристик и данных о броне
+        console.log('🛡️ [AC] Calculating defense, armorInfo:', armorInfo);
+        if (armorInfo) {
+          const actualDexMod = Math.floor((getActualStatValue('dexterity') - 10) / 2);
+          console.log('🛡️ [AC] Dexterity modifier:', actualDexMod, 'from dexterity:', getActualStatValue('dexterity'));
+          
+          // Если нет брони, используем базовую формулу
+          if (armorInfo.armor_type === 'Без брони') {
+            const result = 10 + actualDexMod;
+            console.log('🛡️ [AC] No armor, result:', result);
+            return result;
+          }
+          
+          // Рассчитываем с учетом типа брони согласно правилам D&D 5e
+          let finalAC = armorInfo.details.armor_bonus;
+          console.log('🛡️ [AC] Armor type:', armorInfo.armor_type, 'base bonus:', armorInfo.details.armor_bonus);
+          
+          switch (armorInfo.armor_type) {
+            case 'Ткань':
+            case 'Легкая броня':
+              // Легкая броня = Броня доспеха + модификатор Ловкости
+              finalAC += actualDexMod;
+              console.log('🛡️ [AC] Light armor, finalAC:', finalAC);
+              break;
+            case 'Средняя броня':
+              // Средняя броня = Броня доспеха + модификатор Ловкости (но не больше двух)
+              finalAC += Math.min(actualDexMod, 2);
+              console.log('🛡️ [AC] Medium armor, finalAC:', finalAC);
+              break;
+            case 'Тяжелая броня':
+              // Тяжелая броня = Броня доспеха (Ловкость не участвует в расчёте)
+              console.log('🛡️ [AC] Heavy armor, finalAC:', finalAC);
+              break;
+            default:
+              // Fallback к базовой защите
+              const fallbackResult = 10 + actualDexMod;
+              console.log('🛡️ [AC] Fallback, result:', fallbackResult);
+              return fallbackResult;
+          }
+          
+          console.log('🛡️ [AC] Final result:', finalAC);
+          return finalAC;
+        }
+        // Fallback к базовому расчету
+        const fallbackResult = 10 + Math.floor((getActualStatValue('dexterity') - 10) / 2);
+        console.log('🛡️ [AC] No armorInfo, fallback result:', fallbackResult);
+        return fallbackResult;
       case 'speed':
         return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.speed;
       case 'max_hp':
@@ -348,6 +1166,84 @@ const CharacterDetailV2: React.FC = () => {
     return statNames[statKey.toLowerCase()] || statKey.toUpperCase();
   };
 
+  // Функция для получения цвета линии характеристики
+  const getStatBorderColor = (statKey: string): string => {
+    const statColors: { [key: string]: string } = {
+      'strength': 'border-l-4 border-l-red-500', // Сила - красная
+      'dexterity': 'border-l-4 border-l-green-500', // Ловкость - зеленая
+      'constitution': 'border-l-4 border-l-gray-500', // Телосложение - серая
+      'intelligence': 'border-l-4 border-l-blue-500', // Интеллект - синяя
+      'wisdom': 'border-l-4 border-l-yellow-500', // Мудрость - желтая
+      'charisma': 'border-l-4 border-l-purple-500' // Харизма - фиолетовая
+    };
+    return statColors[statKey.toLowerCase()] || 'border-l-4 border-l-gray-500';
+  };
+
+  // Функция для получения цвета линии навыка на основе связанной характеристики
+  const getSkillBorderColor = (skillName: string): string => {
+    const skillToStatMap: { [key: string]: string } = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom'
+    };
+    
+    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
+    return getStatBorderColor(statKey);
+  };
+
+  // Функция для получения порядка характеристики для сортировки навыков
+  const getStatOrder = (statKey: string): number => {
+    const statOrder: { [key: string]: number } = {
+      'strength': 1,     // Сила
+      'dexterity': 2,    // Ловкость
+      'constitution': 3, // Телосложение
+      'intelligence': 4, // Интеллект
+      'wisdom': 5,       // Мудрость
+      'charisma': 6      // Харизма
+    };
+    return statOrder[statKey.toLowerCase()] || 7;
+  };
+
+  // Функция для получения связанной характеристики навыка
+  const getSkillStat = (skillName: string): string => {
+    const skillToStatMap: { [key: string]: string } = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom'
+    };
+    return skillToStatMap[skillName.toLowerCase()] || 'strength';
+  };
+
   // Функция для получения названия навыка на русском
   const getSkillNameInRussian = (skillName: string): string => {
     return getSkillName(skillName);
@@ -364,7 +1260,11 @@ const CharacterDetailV2: React.FC = () => {
     const isProficient = hasSavingThrowProficiency(character, statKey) || customSavingThrowProficiencies[statKey];
     
     const baseModifier = Math.floor((statValue - 10) / 2);
-    const totalBonus = baseModifier + (isProficient ? proficiencyBonus : 0);
+    
+    // Получаем бонусы от эффектов экипированных предметов из кэша
+    const effectBonus = equippedEffectsCache.savingThrowBonuses[statKey] || 0;
+    
+    const totalBonus = baseModifier + (isProficient ? proficiencyBonus : 0) + effectBonus;
     
     return {
       bonus: totalBonus >= 0 ? `+${totalBonus}` : `${totalBonus}`,
@@ -467,9 +1367,143 @@ const CharacterDetailV2: React.FC = () => {
   };
 
   // Компонент сетки инвентаря (упрощенная версия для V2)
-  const InventoryGrid: React.FC<{ character: CharacterV2 | null; inventories: any[] }> = ({ character, inventories }) => {
-    const renderStartTime = performance.now();
-    console.log('🎨 [PERF] Начало рендеринга InventoryGrid');
+  const InventoryGrid: React.FC<{ inventories: any[] }> = ({ inventories }) => {
+
+    const handleItemMouseEnter = (item: any, event: React.MouseEvent) => {
+      setHoveredItem(item);
+      // Сохраняем ссылку на слот для позиционирования карточки
+      setHoveredSlotRef(event.currentTarget as HTMLDivElement);
+    };
+
+    const handleItemMouseLeave = () => {
+      setHoveredItem(null);
+      setHoveredSlotRef(null);
+    };
+
+    // Обработчики двойного клика для экипировки/снятия
+    const handleEquipItem = async (item: any) => {
+      if (!character || !item.card?.slot) return;
+      
+      console.log('🎯 [EQUIP] Equipping item:', item.card?.name, 'to slot:', item.card.slot);
+      
+      // Рассчитываем изменения характеристик ДО оптимистичного обновления
+      const changes = calculateStatChanges(item, true);
+      
+      // Сохраняем предыдущее состояние для возможного отката
+      const previousEquippedSlot = item.equipped_slot;
+      
+      // Оптимистично обновляем UI
+      optimisticallyEquipItem(item, item.card.slot);
+      
+      // Показываем Toast-уведомление с изменениями
+      console.log('🍞 [TOAST] Showing equip toast, changes:', changes);
+      if (changes.length > 0) {
+        showToast({
+          type: 'success',
+          title: `Экипирован: ${item.card?.name}`,
+          message: `Изменения характеристик:\n${changes.join('\n')}`
+        });
+      } else {
+        console.log('🍞 [TOAST] No changes, skipping toast');
+      }
+      
+      try {
+        // Отправляем запрос на бекенд (не ждем ответа)
+        apiClient.post(`/api/characters-v2/${character.id}/equip`, {
+          item_id: item.id,
+          slot_type: item.card.slot
+        }).then(response => {
+          console.log('🎯 [EQUIP] Equip response:', response.data);
+        }).catch(error => {
+          console.error('🎯 [EQUIP] Error equipping item:', error);
+          
+          // Откатываем изменения при ошибке
+          rollbackInventoryChanges(item, true);
+          
+          // Показываем уведомление об ошибке
+          showToast({
+            type: 'error',
+            title: `Ошибка экипировки: ${item.card?.name}`,
+            message: 'Изменения отменены'
+          });
+        });
+        
+      } catch (error) {
+        console.error('🎯 [EQUIP] Error equipping item:', error);
+        
+        // Откатываем изменения при ошибке
+        rollbackInventoryChanges(item, true);
+        
+        // Показываем уведомление об ошибке
+        showToast({
+          type: 'error',
+          title: `Ошибка экипировки: ${item.card?.name}`,
+          message: 'Изменения отменены'
+        });
+      }
+    };
+
+    const handleUnequipItem = async (item: any) => {
+      if (!character) return;
+      
+      console.log('🎯 [UNEQUIP] Unequipping item:', item.card?.name);
+      
+      // Рассчитываем изменения характеристик ДО оптимистичного обновления
+      const changes = calculateStatChanges(item, false);
+      
+      // Сохраняем предыдущее состояние для возможного отката
+      const previousEquippedSlot = item.equipped_slot;
+      
+      // Оптимистично обновляем UI
+      optimisticallyUnequipItem(item);
+      
+      // Показываем Toast-уведомление с изменениями
+      console.log('🍞 [TOAST] Showing unequip toast, changes:', changes);
+      if (changes.length > 0) {
+        showToast({
+          type: 'info',
+          title: `Снят: ${item.card?.name}`,
+          message: `Изменения характеристик:\n${changes.join('\n')}`
+        });
+      } else {
+        console.log('🍞 [TOAST] No changes, skipping toast');
+      }
+      
+      try {
+        // Отправляем запрос на бекенд (не ждем ответа)
+        apiClient.post(`/api/characters-v2/${character.id}/equip`, {
+          item_id: item.id,
+          slot_type: null
+        }).then(response => {
+          console.log('🎯 [UNEQUIP] Unequip response:', response.data);
+        }).catch(error => {
+          console.error('🎯 [UNEQUIP] Error unequipping item:', error);
+          
+          // Откатываем изменения при ошибке
+          rollbackInventoryChanges(item, false);
+          
+          // Показываем уведомление об ошибке
+          showToast({
+            type: 'error',
+            title: `Ошибка снятия: ${item.card?.name}`,
+            message: 'Изменения отменены'
+          });
+        });
+        
+      } catch (error) {
+        console.error('🎯 [UNEQUIP] Error unequipping item:', error);
+        
+        // Откатываем изменения при ошибке
+        rollbackInventoryChanges(item, false);
+        
+        // Показываем уведомление об ошибке
+        showToast({
+          type: 'error',
+          title: `Ошибка снятия: ${item.card?.name}`,
+          message: 'Изменения отменены'
+        });
+      }
+    };
     
     const equipmentSlots = 16; // 2 строки по 8 слотов для экипировки
     const inventorySlots = 48; // 6 строк по 8 слотов для обычного инвентаря
@@ -505,28 +1539,60 @@ const CharacterDetailV2: React.FC = () => {
     };
 
     return (
-      <div className="relative">
+      <div 
+        className="relative"
+        onMouseEnter={() => setHoveredItem(null)}
+      >
         {/* Секция экипировки */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Экипировка</h3>
-          <div className="grid grid-cols-8 gap-1">
+          <div
+            className="grid grid-cols-8 gap-1"
+            onMouseEnter={() => setHoveredItem(null)}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
             {Array.from({ length: equipmentSlots }, (_, index) => {
               const row = Math.floor(index / 8);
               const col = index % 8;
               const slotType = equipmentSlotTypes[row][col];
               const iconPath = getSlotIcon(slotType);
               
+              // Ищем предмет, экипированный в этот конкретный слот
+              const equippedItem = inventories
+                .flatMap(inv => inv.items || [])
+                .find(item => item.equipped_slot === slotType);
+              
               return (
                 <div
                   key={index}
-                  className="w-16 h-16 border border-gray-300 rounded flex items-center justify-center bg-gray-100 relative"
-                  title={`Слот: ${slotType}`}
+                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center bg-gray-100 relative cursor-pointer ${
+                    equippedItem ? getRarityBorderColor(equippedItem.card?.rarity) : ''
+                  }`}
+                  title={equippedItem ? `${equippedItem.card?.name || 'Предмет'} (экипирован) - клик для снятия` : `Слот: ${slotType}`}
+                  onMouseEnter={equippedItem ? (e) => {
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    handleItemMouseEnter(equippedItem, e);
+                  } : undefined}
+                  onMouseLeave={equippedItem ? handleItemMouseLeave : undefined}
+                  onClick={equippedItem ? () => handleUnequipItem(equippedItem) : undefined}
                 >
-                  <img 
-                    src={iconPath} 
-                    alt={slotType}
-                    className="w-8 h-8 opacity-40"
-                  />
+                  {equippedItem ? (
+                    <img 
+                      src={equippedItem.card?.image_url || '/default_image.png'} 
+                      alt={equippedItem.card?.name || 'Предмет'}
+                      className="w-16 h-16 object-contain rounded"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/default_image.png';
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={iconPath} 
+                      alt={slotType}
+                      className="w-8 h-8 opacity-40"
+                    />
+                  )}
                 </div>
               );
             })}
@@ -536,33 +1602,43 @@ const CharacterDetailV2: React.FC = () => {
         {/* Секция рюкзака */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-3">Рюкзак</h3>
-          <div className="grid grid-cols-8 gap-1">
+          <div
+            className="grid grid-cols-8 gap-1"
+            onMouseEnter={() => setHoveredItem(null)}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
             {Array.from({ length: inventorySlots }, (_, index) => {
               const isLastSlot = index === inventorySlots - 1;
               
               // Находим предмет в этом слоте
-              // Пока что просто берем первые предметы из инвентарей
-              const allItems = inventories.flatMap(inv => inv.items || []);
+              // Пока что просто берем первые предметы из инвентарей, исключая экипированные
+              const allItems = characterInventories.flatMap(inv => inv.items || []).filter(item => !item.equipped_slot);
               const inventoryItem = allItems[index];
               
               return (
                 <div
                   key={index}
                   className={`w-16 h-16 border rounded flex items-center justify-center relative ${
-                    isLastSlot 
-                      ? 'bg-blue-50 border-blue-300 cursor-pointer hover:bg-blue-100 transition-colors' 
+                    isLastSlot
+                      ? 'bg-blue-50 border-blue-300 cursor-pointer hover:bg-blue-100 transition-colors'
                       : inventoryItem
-                        ? 'border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors'
+                        ? `border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors ${getRarityBorderColor(inventoryItem.card?.rarity)}`
                         : 'border-dashed border-gray-300 bg-gray-50'
                   }`}
                   title={
-                    isLastSlot 
-                      ? 'Добавить предмет' 
-                      : inventoryItem 
-                        ? `${inventoryItem.card?.name || 'Предмет'} (${inventoryItem.quantity || 1})`
+                    isLastSlot
+                      ? 'Добавить предмет'
+                      : inventoryItem
+                        ? `${inventoryItem.card?.name || 'Предмет'} (${inventoryItem.quantity || 1}) - клик для экипировки`
                         : `Слот рюкзака ${index + 1}`
                   }
-                  onClick={isLastSlot ? handleAddItemClick : undefined}
+                  data-inventory-item={inventoryItem ? 'true' : undefined}
+                  onClick={isLastSlot ? handleAddItemClick : (inventoryItem ? () => handleEquipItem(inventoryItem) : undefined)}
+                  onMouseEnter={inventoryItem ? (e) => {
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    handleItemMouseEnter(inventoryItem, e);
+                  } : undefined}
+                  onMouseLeave={inventoryItem ? handleItemMouseLeave : undefined}
                 >
                   {isLastSlot ? (
                     <Plus className="w-6 h-6 text-blue-600" />
@@ -572,14 +1648,14 @@ const CharacterDetailV2: React.FC = () => {
                         <img 
                           src={inventoryItem.card.image_url} 
                           alt={inventoryItem.card.name}
-                          className="w-12 h-12 object-contain rounded"
+                          className="w-16 h-16 object-contain rounded"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.src = '/default_image.png';
                           }}
                         />
                       ) : (
-                        <Package className="w-6 h-6 text-gray-600" />
+                        <Package className="w-8 h-8 text-gray-600" />
                       )}
                       {inventoryItem.quantity > 1 && (
                         <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -595,6 +1671,7 @@ const CharacterDetailV2: React.FC = () => {
             })}
           </div>
         </div>
+        
       </div>
     );
   };
@@ -617,7 +1694,6 @@ const CharacterDetailV2: React.FC = () => {
       speed: getActualDerivedStatValue('speed')
     };
 
-    const derivedStats = calculateDerivedStats(characterWithActualStats);
     const stats = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
 
     return (
@@ -635,25 +1711,27 @@ const CharacterDetailV2: React.FC = () => {
                   const statNameInRussian = getStatNameInRussian(statKey);
                   const isModified = modifiedStats[statKey] !== undefined;
                   
+                  const statBorderColor = getStatBorderColor(statKey);
+                  
                   return (
-                    <div key={statKey} className="flex cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => openStatModal(statKey)}>
+                    <div key={statKey} className={`flex cursor-pointer hover:bg-gray-50 transition-colors bg-white border border-gray-200 rounded-lg ${statBorderColor}`} onClick={() => openStatModal(statKey)}>
                       {/* Название характеристики - 25% */}
-                      <div className="flex items-center justify-center p-2 bg-gray-50 rounded-l-lg w-1/4">
-                        <div className="text-xs text-gray-600 uppercase">{statNameInRussian}</div>
+                      <div className="flex items-center justify-center p-2 rounded-l-lg w-1/4">
+                        <div className="text-xs text-gray-600 uppercase font-medium">{statNameInRussian}</div>
                       </div>
                       
                       {/* Значение характеристики - 25% */}
-                      <div className="flex items-center justify-center p-2 bg-gray-50 w-1/4">
+                      <div className="flex items-center justify-center p-2 w-1/4">
                         <div className={`text-xs ${isModified ? 'text-purple-600 font-semibold' : 'text-gray-500'}`}>{statValue}</div>
                       </div>
                       
                       {/* Модификатор характеристики - 25% */}
-                      <div className="flex items-center justify-center p-2 bg-gray-50 w-1/4">
+                      <div className="flex items-center justify-center p-2 w-1/4">
                         <div className={`text-sm font-bold ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>{getModifier(statValue)}</div>
                       </div>
                       
                       {/* Спасбросок - 25% */}
-                      <div className="flex items-center justify-center p-2 bg-gray-50 rounded-r-lg w-1/4">
+                      <div className="flex items-center justify-center p-2 rounded-r-lg w-1/4">
                         <div 
                           className={`text-sm ${savingThrow.isProficient ? 'font-bold' : 'font-normal'} ${isModified ? 'text-purple-600' : 'text-gray-900'} cursor-help relative z-10`}
                           title={`Спасбросок ${statNameInRussian} ${savingThrow.bonus}`}
@@ -739,17 +1817,33 @@ const CharacterDetailV2: React.FC = () => {
                   'history', 'insight', 'intimidation', 'investigation', 'medicine',
                   'nature', 'perception', 'performance', 'persuasion', 'religion',
                   'sleight_of_hand', 'stealth', 'survival'
-                ].map((skillName) => {
+                ]
+                .sort((a, b) => {
+                  const statA = getSkillStat(a);
+                  const statB = getSkillStat(b);
+                  const orderA = getStatOrder(statA);
+                  const orderB = getStatOrder(statB);
+                  
+                  // Если характеристики одинаковые, сортируем по алфавиту
+                  if (orderA === orderB) {
+                    return getSkillNameInRussian(a).localeCompare(getSkillNameInRussian(b), 'ru');
+                  }
+                  
+                  return orderA - orderB;
+                })
+                .map((skillName) => {
                   const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
                   const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
                   const isModified = modifiedSkills[skillName.toLowerCase()] !== undefined;
-                  const currentBonus = getSkillBonus(skillName);
+                  const currentBonus = getActualSkillValue(skillName);
+                  
+                  const skillBorderColor = getSkillBorderColor(skillName);
                   
                   return (
                     <div 
                       key={skillName} 
-                      className={`flex items-center justify-between p-1.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${
-                        isProficient || isCompetent ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                      className={`group relative flex items-center justify-between p-1.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors bg-white border border-gray-200 ${skillBorderColor} ${
+                        isProficient || isCompetent ? 'border-green-200' : ''
                       }`}
                       onClick={() => openSkillModal(skillName)}
                     >
@@ -760,8 +1854,21 @@ const CharacterDetailV2: React.FC = () => {
                         {isProficient && <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">М</span>}
                         {isCompetent && <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">К</span>}
                       </div>
+                      <div className="flex items-center space-x-1">
                       <div className={`text-xs font-bold ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>
-                        {currentBonus}
+                          {currentBonus >= 0 ? `+${currentBonus}` : currentBonus}
+                        </div>
+                        {/* Кнопка кубика - появляется при наведении */}
+                        <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 rollSkillDice(skillName, 'normal', false);
+               }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-blue-100 rounded-full"
+                          title="Бросить кубик"
+                        >
+                          <Dices className="w-3 h-3 text-blue-600" />
+                        </button>
                       </div>
                     </div>
                   );
@@ -773,7 +1880,7 @@ const CharacterDetailV2: React.FC = () => {
             <div className="w-3/5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Инвентарь</h2>
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <InventoryGrid character={character} inventories={characterInventories} />
+                <InventoryGrid inventories={characterInventories} />
               </div>
             </div>
           </div>
@@ -816,7 +1923,7 @@ const CharacterDetailV2: React.FC = () => {
       <div className="space-y-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Инвентарь</h2>
-          <InventoryGrid character={character} inventories={characterInventories} />
+          <InventoryGrid inventories={characterInventories} />
         </div>
       </div>
     );
@@ -960,7 +2067,7 @@ const CharacterDetailV2: React.FC = () => {
       {/* Модальное окно характеристик */}
       {showStatModal && selectedStat && character && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+          <div className={`bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto ${getStatBorderColor(selectedStat)}`}>
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <h3 className="text-xl font-semibold text-gray-900">
@@ -1027,6 +2134,27 @@ const CharacterDetailV2: React.FC = () => {
                         ({getActualStatValue(selectedStat)} - 10) ÷ 2 = {getModifier(getActualStatValue(selectedStat))}
                       </div>
                     </div>
+                    
+                    {/* Бонусы от эффектов экипированных предметов */}
+                    {(() => {
+                      const effectBonus = equippedEffectsCache.characteristicBonuses[selectedStat] || 0;
+                      if (effectBonus !== 0) {
+                        return (
+                          <div className="bg-purple-50 p-3 rounded-md mt-2">
+                            <div className="text-sm font-medium text-purple-900 mb-1">
+                              Бонус от экипированных предметов:
+                            </div>
+                            <div className="text-lg font-bold text-purple-900">
+                              {effectBonus > 0 ? `+${effectBonus}` : `${effectBonus}`}
+                            </div>
+                            <div className="text-xs text-purple-700">
+                              Влияние эффектов предметов на характеристику
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   <div className="mb-4">
@@ -1053,6 +2181,27 @@ const CharacterDetailV2: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                    
+                    {/* Бонусы от эффектов экипированных предметов для спасбросков */}
+                    {(() => {
+                      const effectBonus = equippedEffectsCache.savingThrowBonuses[selectedStat] || 0;
+                      if (effectBonus !== 0) {
+                        return (
+                          <div className="bg-purple-50 p-3 rounded-md mt-2">
+                            <div className="text-sm font-medium text-purple-900 mb-1">
+                              Бонус от экипированных предметов:
+                            </div>
+                            <div className="text-lg font-bold text-purple-900">
+                              {effectBonus > 0 ? `+${effectBonus}` : `${effectBonus}`}
+                            </div>
+                            <div className="text-xs text-purple-700">
+                              Влияние эффектов предметов на спасбросок
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   <div>
@@ -1102,7 +2251,7 @@ const CharacterDetailV2: React.FC = () => {
       {/* Модальное окно навыков */}
       {showSkillModal && selectedSkill && character && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+          <div className={`bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto ${getSkillBorderColor(selectedSkill)}`}>
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <h3 className="text-xl font-semibold text-gray-900">
@@ -1143,6 +2292,27 @@ const CharacterDetailV2: React.FC = () => {
                         )}
                       </div>
                     </div>
+                    
+                    {/* Бонусы от эффектов экипированных предметов */}
+                    {(() => {
+                      const effectBonus = equippedEffectsCache.skillBonuses[selectedSkill.toLowerCase()] || 0;
+                      if (effectBonus !== 0) {
+                        return (
+                          <div className="bg-purple-50 p-3 rounded-md mt-2">
+                            <div className="text-sm font-medium text-purple-900 mb-1">
+                              Бонус от экипированных предметов:
+                            </div>
+                            <div className="text-lg font-bold text-purple-900">
+                              {effectBonus > 0 ? `+${effectBonus}` : `${effectBonus}`}
+                            </div>
+                            <div className="text-xs text-purple-700">
+                              Влияние эффектов предметов на навык
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
@@ -1214,6 +2384,16 @@ const CharacterDetailV2: React.FC = () => {
                         <div className="flex justify-between text-blue-700">
                           <span>Компетенция:</span>
                           <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
+                        </div>
+                      )}
+                      {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                        <div className="flex justify-between text-purple-700">
+                          <span>Ручная модификация:</span>
+                          <span className="font-medium">
+                            {modifiedSkills[selectedSkill.toLowerCase()] >= 0 
+                              ? `+${modifiedSkills[selectedSkill.toLowerCase()]}` 
+                              : modifiedSkills[selectedSkill.toLowerCase()]}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1325,11 +2505,50 @@ const CharacterDetailV2: React.FC = () => {
                         )}
                         {selectedDerivedStat === 'ac' && (
                           <>
+                            {armorInfo ? (
+                              <>
+                                <div className="space-y-2">
+                                  <div>
+                                    <strong>Базовая защита:</strong> {armorInfo.base_ac} ({armorInfo.details.base_formula})
+                                  </div>
+                                  {armorInfo.armor_name && (
+                                    <div>
+                                      <strong>Экипированная броня:</strong> {armorInfo.armor_name} ({armorInfo.armor_type})
+                                    </div>
+                                  )}
+                                  <div>
+                                    <strong>Формула брони:</strong> {armorInfo.details.armor_formula}
+                                  </div>
+                                  <div>
+                                    <strong>Модификатор ЛВК:</strong> {Math.floor((getActualStatValue('dexterity') - 10) / 2) > 0 ? '+' : ''}{Math.floor((getActualStatValue('dexterity') - 10) / 2)}
+                                    {armorInfo.details.max_dex_bonus && (
+                                      <span className="text-sm text-gray-600"> (макс. +{armorInfo.details.max_dex_bonus})</span>
+                                    )}
+                                  </div>
+                                  {armorInfo.details.armor_bonus > 0 && (
+                                    <div>
+                                      <strong>Бонус брони:</strong> +{armorInfo.details.armor_bonus}
+                                    </div>
+                                  )}
+                                  <div className="font-bold text-lg">
+                                    <strong>Итоговая защита:</strong> {getActualDerivedStatValue('ac')}
+                                  </div>
+                                </div>
+                                {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                                  <div className="mt-2 text-purple-600 font-medium">
+                                    → {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                          <>
                             10 + {Math.floor((getActualStatValue('dexterity') - 10) / 2)}(Модификатор ЛВК) = {10 + Math.floor((getActualStatValue('dexterity') - 10) / 2)} (Базовая защита)
                             {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
                               <span className="text-purple-600 font-medium">
                                 {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
                               </span>
+                                )}
+                              </>
                             )}
                           </>
                         )}
@@ -1500,6 +2719,116 @@ const CharacterDetailV2: React.FC = () => {
         onAddItems={handleAddItems}
         characterId={character?.id || ''}
       />
+
+      {/* Модальное окно кубика */}
+      {showDiceModal && diceResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 ${getSkillBorderColor(diceResult.skillName)}`}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Бросок: {getSkillNameInRussian(diceResult.skillName)}
+              </h3>
+              <button
+                onClick={() => setShowDiceModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Обычный режим - полная формула */}
+            <div className="flex items-center justify-center space-x-4">
+              {/* Кубики */}
+              <div className="flex items-center space-x-2">
+                {/* Первый кубик */}
+                <AnimatedDice
+                  isRolling={diceResult.isRolling}
+                  finalValue={diceResult.diceRoll}
+                  isSelected={diceResult.rollType === 'normal' || (diceResult.rollType === 'advantage' && diceResult.diceRoll === diceResult.selectedDice) || (diceResult.rollType === 'disadvantage' && diceResult.diceRoll === diceResult.selectedDice)}
+                  isAdvantage={diceResult.rollType === 'advantage' && diceResult.diceRoll === diceResult.selectedDice}
+                  isDisadvantage={diceResult.rollType === 'disadvantage' && diceResult.diceRoll === diceResult.selectedDice}
+                />
+                
+                {/* Второй кубик (только для преимущества/помехи) */}
+                {diceResult.rollType !== 'normal' && diceResult.secondDice && (
+                  <AnimatedDice
+                    isRolling={diceResult.isRolling}
+                    finalValue={diceResult.secondDice}
+                    isSelected={(diceResult.rollType === 'advantage' && diceResult.secondDice === diceResult.selectedDice) || (diceResult.rollType === 'disadvantage' && diceResult.secondDice === diceResult.selectedDice)}
+                    isAdvantage={diceResult.rollType === 'advantage' && diceResult.secondDice === diceResult.selectedDice}
+                    isDisadvantage={diceResult.rollType === 'disadvantage' && diceResult.secondDice === diceResult.selectedDice}
+                  />
+                )}
+              </div>
+              
+              {/* Плюс */}
+              <div className="text-2xl font-bold text-gray-600">+</div>
+              
+              {/* Бонус навыка */}
+              <div className="text-2xl font-bold text-blue-600 w-8 text-center">
+                {diceResult.skillBonus}
+              </div>
+              
+              {/* Равно */}
+              <div className="text-2xl font-bold text-gray-600">=</div>
+              
+              {/* Финальный результат - анимированный */}
+              <div className="text-3xl font-bold text-green-600">
+                {diceResult.isRolling ? (
+                  <AnimatedFinalResult 
+                    isRolling={diceResult.isRolling} 
+                    finalValue={diceResult.finalResult}
+                    skillBonus={diceResult.skillBonus}
+                  />
+                ) : (
+                  diceResult.finalResult
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-center space-x-3">
+              <button
+                onClick={() => rollSkillDice(diceResult.skillName, 'disadvantage')}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                title="Помеха - бросается два кубика, выбирается наименьший"
+              >
+                Помеха
+              </button>
+              <button
+                onClick={() => rollSkillDice(diceResult.skillName)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Бросить
+              </button>
+              <button
+                onClick={() => rollSkillDice(diceResult.skillName, 'advantage')}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                title="Преимущество - бросается два кубика, выбирается наибольший"
+              >
+                Преимущество
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Карточка при наведении - привязана к слоту */}
+      {hoveredItem && hoveredItem.card && hoveredSlotRef && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: hoveredSlotRef.getBoundingClientRect().right + 10,
+            top: hoveredSlotRef.getBoundingClientRect().top - 10,
+            width: '200px'
+          }}
+        >
+          <CardPreview 
+            card={hoveredItem.card}
+            showQuantity={true}
+            quantity={hoveredItem.quantity}
+          />
+        </div>
+      )}
     </div>
   );
 };

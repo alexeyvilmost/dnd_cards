@@ -6,6 +6,14 @@ export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cl
 export type TemplateType = 'false' | 'template' | 'only_template';
 export type EquipmentSlot = 'head' | 'body' | 'arms' | 'feet' | 'cloak' | 'one_hand' | 'versatile' | 'two_hands' | 'necklace' | 'ring';
 
+// Эффекты предметов
+export interface Effect {
+  targetType: 'characteristic' | 'skill' | 'saving_throw';
+  targetSpecific: string | 'all';
+  modifier: '+' | '-';
+  value: number;
+}
+
 export interface Card {
   id: string;
   name: string;
@@ -39,6 +47,7 @@ export interface Card {
   is_template: TemplateType;
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
+  effects?: Effect[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -73,6 +82,7 @@ export interface CreateCardRequest {
   is_template?: TemplateType;
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
+  effects?: Effect[] | null;
 }
 
 export interface UpdateCardRequest {
@@ -106,6 +116,7 @@ export interface UpdateCardRequest {
   is_template?: TemplateType;
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
+  effects?: Effect[] | null;
 }
 
 export interface CardsResponse {

@@ -9,6 +9,7 @@ import ExportCardPreview from './ExportCardPreview';
 import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
 import html2canvas from 'html2canvas';
+import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -227,7 +228,21 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         {/* Правая часть: Детальная информация */}
         <div className={`flex-grow p-3 sm:p-4 md:p-6 overflow-y-auto space-y-3 sm:space-y-4 flex flex-col justify-center ${card.is_extended ? 'lg:w-1/3' : 'lg:w-1/2'}`}>
           <div className="flex justify-between items-start">
-            <h2 className="font-bold text-xl sm:text-2xl md:text-3xl font-fantasy">{card.name}</h2>
+            <div className="flex items-center gap-2">
+              <span 
+                className="text-3xl sm:text-4xl md:text-5xl font-bold text-orange-500" 
+                title={getRaritySymbolDescription(card.rarity)}
+                aria-label={getRaritySymbolDescription(card.rarity)}
+                style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
+              >
+                {(() => {
+                  const symbol = getRaritySymbol(card.rarity);
+                  console.log(`🎯 [CARD DETAIL] Символ редкости для "${card.name}" (${card.rarity}): "${symbol}"`);
+                  return symbol;
+                })()}
+              </span>
+              <h2 className="font-bold text-xl sm:text-2xl md:text-3xl font-fantasy">{card.name}</h2>
+            </div>
             <button onClick={onClose} className="text-gray-400 hover:text-white flex-shrink-0 ml-2">
               <X size={20} className="sm:w-6 sm:h-6" />
             </button>

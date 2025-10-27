@@ -140,6 +140,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			Tags:                         card.Tags,
 			IsTemplate:                   card.IsTemplate,
 			Slot:                         card.Slot,
+			Effects:                      card.Effects,
 			CreatedAt:                    card.CreatedAt,
 			UpdatedAt:                    card.UpdatedAt,
 		})
@@ -197,6 +198,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		Tags:                         card.Tags,
 		IsTemplate:                   card.IsTemplate,
 		Slot:                         card.Slot,
+		Effects:                      card.Effects,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}
@@ -243,6 +245,17 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
+	// Валидация эффектов
+	if req.Effects != nil {
+		fmt.Printf("🔍 [CREATE CARD] Валидируем эффекты: %+v\n", req.Effects)
+		if err := ValidateEffects(req.Effects); err != nil {
+			fmt.Printf("❌ [CREATE CARD] Ошибка валидации эффектов: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Ошибка валидации эффектов: %v", err)})
+			return
+		}
+		fmt.Printf("✅ [CREATE CARD] Эффекты прошли валидацию\n")
+	}
+
 	// Генерация уникального номера карточки
 	cardNumber := generateCardNumber(cc.db)
 
@@ -276,6 +289,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Tags:                         req.Tags,
 		IsTemplate:                   req.IsTemplate,
 		Slot:                         req.Slot,
+		Effects:                      req.Effects,
 		CardNumber:                   cardNumber,
 	}
 
@@ -308,6 +322,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
 		Slot:                         card.Slot,
+		Effects:                      card.Effects,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}
@@ -458,6 +473,17 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Slot != nil {
 		card.Slot = req.Slot
 	}
+	if req.Effects != nil {
+		// Валидируем эффекты перед сохранением
+		fmt.Printf("🔍 [UPDATE CARD] Валидируем эффекты: %+v\n", req.Effects)
+		if err := ValidateEffects(req.Effects); err != nil {
+			fmt.Printf("❌ [UPDATE CARD] Ошибка валидации эффектов: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Ошибка валидации эффектов: %v", err)})
+			return
+		}
+		fmt.Printf("✅ [UPDATE CARD] Эффекты прошли валидацию\n")
+		card.Effects = req.Effects
+	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
@@ -488,6 +514,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
 		Slot:                         card.Slot,
+		Effects:                      card.Effects,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}
@@ -604,6 +631,7 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			BonusType:           card.BonusType,
 			BonusValue:          card.BonusValue,
 			Slot:                card.Slot,
+			Effects:             card.Effects,
 			CreatedAt:           card.CreatedAt,
 			UpdatedAt:           card.UpdatedAt,
 		})

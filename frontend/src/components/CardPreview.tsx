@@ -2,8 +2,8 @@ import type { Card } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
-import { useCardTilt } from '../hooks/useCardTilt';
 import { getRarityColor } from '../utils/rarityColors';
+import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 // Функция для получения значения цвета редкости для inline стилей
 const getRarityColorValue = (rarity: string) => {
@@ -40,7 +40,6 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
   }).join(', ');
   const isLarge = className.includes('card-preview-large');
   const isExtended = Boolean(card.is_extended);
-  const { cardRef, tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt({ isLarge });
 
   // Функция для определения размера шрифта заголовка
   const getTitleFontSize = (title: string) => {
@@ -100,6 +99,12 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
       case 'artifact': return `${baseClass} title-gradient-artifact`;
       default: return `${baseClass} ${rarityColor}`;
     }
+  };
+
+  // Функция для получения цвета номера карты в зависимости от наличия эффектов
+  const getCardNumberColor = (card: Card) => {
+    const hasEffects = card.effects && Array.isArray(card.effects) && card.effects.length > 0;
+    return hasEffects ? 'text-gray-900' : 'text-gray-400';
   };
 
   // Функция для получения класса усиленного свечения
@@ -194,26 +199,18 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
 
   return (
     <div 
-      ref={cardRef}
       className={`card-preview relative bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      style={tiltStyle}
     >
       {/* Метка редкости для слабовидящих */}
-      <div className="absolute top-0.5 left-1 text-xs opacity-80 select-none">
-        <span>
-          {(() => {
-            switch (card.rarity) {
-              case 'common': return '•';
-              case 'uncommon': return ':';
-              case 'rare': return '✦';
-              case 'very_rare': return '✧';
-              case 'artifact': return '★';
-              default: return '•';
-            }
-          })()}
+      <div className="absolute top-0.5 left-1 text-sm font-bold select-none">
+        <span 
+          title={getRaritySymbolDescription(card.rarity)}
+          aria-label={getRaritySymbolDescription(card.rarity)}
+          className={`${getRarityColor(card.rarity)} drop-shadow-lg`}
+          style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+        >
+          {getRaritySymbol(card.rarity)}
         </span>
       </div>
       {isExtended ? (
@@ -335,7 +332,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-[10px] text-gray-400 font-mono">
+              <span className={`text-[10px] ${getCardNumberColor(card)} font-mono`}>
                 {card.card_number}
               </span>
             </div>
@@ -430,7 +427,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-gray-400 font-mono">
+            <span className={`text-[10px] ${getCardNumberColor(card)} font-mono`}>
               {card.card_number}
             </span>
           </div>
