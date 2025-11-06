@@ -23,6 +23,7 @@ const Layout = ({ children }: LayoutProps) => {
         { path: '/export', label: 'Экспорт' }
       ]
     },
+    { path: '/shop/new', label: 'Магазин', icon: BookOpen },
     { 
       label: 'Аккаунт', 
       icon: User,

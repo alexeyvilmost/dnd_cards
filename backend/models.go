@@ -903,6 +903,398 @@ func (CharacterV2) TableName() string {
 	return "characters_v2"
 }
 
+// ActionResource - ресурс действия
+type ActionResource string
+
+const (
+	ResourceAction      ActionResource = "action"       // Основное действие
+	ResourceBonusAction ActionResource = "bonus_action" // Бонусное действие
+	ResourceReaction    ActionResource = "reaction"      // Ответное действие
+	ResourceFreeAction  ActionResource = "free_action"   // Свободное действие
+)
+
+// ActionRecharge - перезарядка действия
+type ActionRecharge string
+
+const (
+	RechargeCustom    ActionRecharge = "custom"     // Произвольная (Текст)
+	RechargePerTurn   ActionRecharge = "per_turn"   // За ход
+	RechargePerBattle ActionRecharge = "per_battle"  // За битву
+	RechargeShortRest ActionRecharge = "short_rest" // За короткий отдых
+	RechargeLongRest  ActionRecharge = "long_rest"  // За длинный отдых
+)
+
+// ActionType - тип действия
+type ActionType string
+
+const (
+	ActionTypeBaseAction  ActionType = "base_action"   // Базовое действие
+	ActionTypeClassFeature ActionType = "class_feature" // Умение класса
+	ActionTypeItemProperty ActionType = "item_property" // Свойство предмета
+)
+
+// Script - JSON скрипт для действий
+type Script map[string]interface{}
+
+// Scan - кастомный сканер для Script
+func (s *Script) Scan(value interface{}) error {
+	if value == nil {
+		*s = nil
+		return nil
+	}
+
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), s)
+	case []byte:
+		return json.Unmarshal(v, s)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для Script: %T", value)
+	}
+}
+
+// Value - кастомный value для Script
+func (s Script) Value() (driver.Value, error) {
+	if s == nil {
+		return nil, nil
+	}
+	return json.Marshal(s)
+}
+
+// Action - модель действия D&D
+type Action struct {
+	ID                           uuid.UUID       `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                         string          `json:"name" gorm:"not null"`
+	Description                  string          `json:"description" gorm:"type:text;not null"`
+	DetailedDescription          *string         `json:"detailed_description" gorm:"type:text"`
+	ImageURL                     string          `json:"image_url" gorm:"type:text"`
+	ImageCloudinaryID            string          `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL           string          `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated               bool            `json:"image_generated" gorm:"type:boolean;default:false"`
+	ImageGenerationPrompt        string          `json:"image_generation_prompt" gorm:"type:text"`
+	Rarity                       Rarity          `json:"rarity" gorm:"not null"`
+	CardNumber                   string          `json:"card_number" gorm:"uniqueIndex;not null"`
+	Resource                     ActionResource  `json:"resource" gorm:"not null"`
+	Recharge                     *ActionRecharge `json:"recharge" gorm:"type:varchar(50)"`
+	RechargeCustom               *string         `json:"recharge_custom" gorm:"type:text"`
+	Script                       *Script         `json:"script" gorm:"type:jsonb"`
+	ActionType                   ActionType      `json:"action_type" gorm:"not null"`
+	Type                         *string         `json:"type" gorm:"type:varchar(50)"`
+	Author                       string          `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source                       *string         `json:"source" gorm:"type:varchar(255)"`
+	Tags                         *Properties     `json:"tags" gorm:"type:text[]"`
+	Price                        *int            `json:"price" gorm:"type:int"`
+	Weight                       *float64        `json:"weight" gorm:"type:decimal(5,2)"`
+	Properties                   *Properties     `json:"properties" gorm:"type:text[]"`
+	RelatedCards                 *Properties     `json:"related_cards" gorm:"type:text[]"`
+	RelatedActions               *Properties     `json:"related_actions" gorm:"type:text[]"`
+	IsExtended                   *bool           `json:"is_extended" gorm:"type:boolean;default:null"`
+	DescriptionFontSize          *int            `json:"description_font_size" gorm:"type:int"`
+	TextAlignment                *string         `json:"text_alignment" gorm:"type:varchar(20)"`
+	TextFontSize                 *int            `json:"text_font_size" gorm:"type:int"`
+	ShowDetailedDescription      *bool           `json:"show_detailed_description" gorm:"type:boolean;default:false"`
+	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment" gorm:"type:varchar(20)"`
+	DetailedDescriptionFontSize *int            `json:"detailed_description_font_size" gorm:"type:int"`
+	CreatedAt                    time.Time       `json:"created_at"`
+	UpdatedAt                    time.Time       `json:"updated_at"`
+	DeletedAt                    gorm.DeletedAt  `json:"-" gorm:"index"`
+}
+
+// TableName указывает имя таблицы для GORM
+func (Action) TableName() string {
+	return "actions"
+}
+
+// CreateActionRequest - запрос на создание действия
+type CreateActionRequest struct {
+	Name                         string          `json:"name" binding:"required"`
+	Description                  string          `json:"description" binding:"required"`
+	DetailedDescription          *string         `json:"detailed_description"`
+	ImageURL                     string          `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity" binding:"required"`
+	Resource                     ActionResource  `json:"resource" binding:"required"`
+	Recharge                     *ActionRecharge `json:"recharge"`
+	RechargeCustom               *string         `json:"recharge_custom"`
+	Script                       *Script         `json:"script"`
+	ActionType                   ActionType      `json:"action_type" binding:"required"`
+	Type                         *string         `json:"type"`
+	Author                       string          `json:"author"`
+	Source                       *string         `json:"source"`
+	Tags                         *Properties     `json:"tags"`
+	Price                        *int            `json:"price"`
+	Weight                       *float64        `json:"weight"`
+	Properties                   *Properties     `json:"properties"`
+	RelatedCards                 *Properties     `json:"related_cards"`
+	RelatedActions               *Properties     `json:"related_actions"`
+	IsExtended                   *bool           `json:"is_extended"`
+	DescriptionFontSize          *int            `json:"description_font_size"`
+	TextAlignment                *string         `json:"text_alignment"`
+	TextFontSize                 *int            `json:"text_font_size"`
+	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+}
+
+// UpdateActionRequest - запрос на обновление действия
+type UpdateActionRequest struct {
+	Name                         string          `json:"name"`
+	Description                  string          `json:"description"`
+	DetailedDescription          *string         `json:"detailed_description"`
+	ImageURL                     string          `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity"`
+	Resource                     ActionResource  `json:"resource"`
+	Recharge                     *ActionRecharge `json:"recharge"`
+	RechargeCustom               *string         `json:"recharge_custom"`
+	Script                       *Script         `json:"script"`
+	ActionType                   ActionType      `json:"action_type"`
+	Type                         *string         `json:"type"`
+	Author                       string          `json:"author"`
+	Source                       *string         `json:"source"`
+	Tags                         *Properties     `json:"tags"`
+	Price                        *int            `json:"price"`
+	Weight                       *float64        `json:"weight"`
+	Properties                   *Properties     `json:"properties"`
+	RelatedCards                 *Properties     `json:"related_cards"`
+	RelatedActions               *Properties     `json:"related_actions"`
+	IsExtended                   *bool           `json:"is_extended"`
+	DescriptionFontSize          *int            `json:"description_font_size"`
+	TextAlignment                *string         `json:"text_alignment"`
+	TextFontSize                 *int            `json:"text_font_size"`
+	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+}
+
+// ActionResponse - ответ с действием
+type ActionResponse struct {
+	ID                           uuid.UUID      `json:"id"`
+	Name                         string         `json:"name"`
+	Description                  string         `json:"description"`
+	DetailedDescription          *string        `json:"detailed_description"`
+	ImageURL                     string         `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity"`
+	CardNumber                   string         `json:"card_number"`
+	Resource                     ActionResource `json:"resource"`
+	Recharge                     *ActionRecharge `json:"recharge"`
+	RechargeCustom               *string         `json:"recharge_custom"`
+	Script                       *Script        `json:"script"`
+	ActionType                   ActionType     `json:"action_type"`
+	Type                         *string        `json:"type"`
+	Tags                         *Properties    `json:"tags"`
+	Price                        *int           `json:"price"`
+	Weight                       *float64       `json:"weight"`
+	Properties                   *Properties    `json:"properties"`
+	IsExtended                   *bool          `json:"is_extended"`
+	DescriptionFontSize          *int           `json:"description_font_size"`
+	TextAlignment                *string        `json:"text_alignment"`
+	TextFontSize                 *int           `json:"text_font_size"`
+	ShowDetailedDescription      *bool          `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+	CreatedAt                    time.Time      `json:"created_at"`
+	UpdatedAt                    time.Time      `json:"updated_at"`
+}
+
+// GetLocalizedName - получение локализованного названия ресурса действия
+func (ar ActionResource) GetLocalizedName() string {
+	switch ar {
+	case ResourceAction:
+		return "Основное действие"
+	case ResourceBonusAction:
+		return "Бонусное действие"
+	case ResourceReaction:
+		return "Ответное действие"
+	case ResourceFreeAction:
+		return "Свободное действие"
+	default:
+		return string(ar)
+	}
+}
+
+// GetLocalizedName - получение локализованного названия перезарядки
+func (ar ActionRecharge) GetLocalizedName() string {
+	switch ar {
+	case RechargeCustom:
+		return "Произвольная"
+	case RechargePerTurn:
+		return "За ход"
+	case RechargePerBattle:
+		return "За битву"
+	case RechargeShortRest:
+		return "За короткий отдых"
+	case RechargeLongRest:
+		return "За длинный отдых"
+	default:
+		return string(ar)
+	}
+}
+
+// GetLocalizedName - получение локализованного названия типа действия
+func (at ActionType) GetLocalizedName() string {
+	switch at {
+	case ActionTypeBaseAction:
+		return "Базовое действие"
+	case ActionTypeClassFeature:
+		return "Умение класса"
+	case ActionTypeItemProperty:
+		return "Свойство предмета"
+	default:
+		return string(at)
+	}
+}
+
+// EffectType - тип пассивного эффекта
+type EffectType string
+
+const (
+	EffectTypePassive    EffectType = "passive"    // Пассивный (всегда активен)
+	EffectTypeConditional EffectType = "conditional" // Условный (активен при условиях)
+	EffectTypeTriggered  EffectType = "triggered"  // Срабатывающий (активируется при событиях)
+)
+
+// Effect - модель пассивного эффекта D&D
+type Effect struct {
+	ID                           uuid.UUID       `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                         string          `json:"name" gorm:"not null"`
+	Description                  string          `json:"description" gorm:"type:text;not null"`
+	DetailedDescription          *string         `json:"detailed_description" gorm:"type:text"`
+	ImageURL                     string          `json:"image_url" gorm:"type:text"`
+	ImageCloudinaryID            string          `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL           string          `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated               bool            `json:"image_generated" gorm:"type:boolean;default:false"`
+	ImageGenerationPrompt        string          `json:"image_generation_prompt" gorm:"type:text"`
+	Rarity                       Rarity          `json:"rarity" gorm:"not null"`
+	CardNumber                   string          `json:"card_number" gorm:"uniqueIndex;not null"`
+	EffectType                   EffectType      `json:"effect_type" gorm:"not null"`
+	ConditionDescription         *string         `json:"condition_description" gorm:"type:text"`
+	Script                       *Script         `json:"script" gorm:"type:jsonb"`
+	Type                         *string         `json:"type" gorm:"type:varchar(50)"`
+	Author                       string          `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source                       *string         `json:"source" gorm:"type:varchar(255)"`
+	Tags                         *Properties     `json:"tags" gorm:"type:text[]"`
+	Price                        *int            `json:"price" gorm:"type:int"`
+	Weight                       *float64        `json:"weight" gorm:"type:decimal(5,2)"`
+	Properties                   *Properties     `json:"properties" gorm:"type:text[]"`
+	RelatedCards                 *Properties     `json:"related_cards" gorm:"type:text[]"`
+	RelatedActions               *Properties     `json:"related_actions" gorm:"type:text[]"`
+	RelatedEffects               *Properties     `json:"related_effects" gorm:"type:text[]"`
+	IsExtended                   *bool           `json:"is_extended" gorm:"type:boolean;default:null"`
+	DescriptionFontSize          *int            `json:"description_font_size" gorm:"type:int"`
+	TextAlignment                *string         `json:"text_alignment" gorm:"type:varchar(20)"`
+	TextFontSize                 *int            `json:"text_font_size" gorm:"type:int"`
+	ShowDetailedDescription      *bool           `json:"show_detailed_description" gorm:"type:boolean;default:false"`
+	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment" gorm:"type:varchar(20)"`
+	DetailedDescriptionFontSize *int            `json:"detailed_description_font_size" gorm:"type:int"`
+	CreatedAt                    time.Time       `json:"created_at"`
+	UpdatedAt                    time.Time       `json:"updated_at"`
+	DeletedAt                    gorm.DeletedAt  `json:"-" gorm:"index"`
+}
+
+// TableName указывает имя таблицы для GORM
+func (Effect) TableName() string {
+	return "effects"
+}
+
+// CreateEffectRequest - запрос на создание эффекта
+type CreateEffectRequest struct {
+	Name                         string          `json:"name" binding:"required"`
+	Description                  string          `json:"description" binding:"required"`
+	DetailedDescription          *string         `json:"detailed_description"`
+	ImageURL                     string          `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity" binding:"required"`
+	EffectType                   EffectType      `json:"effect_type" binding:"required"`
+	ConditionDescription         *string         `json:"condition_description"`
+	Script                       *Script         `json:"script"`
+	Type                         *string         `json:"type"`
+	Author                       string          `json:"author"`
+	Source                       *string         `json:"source"`
+	Tags                         *Properties     `json:"tags"`
+	Price                        *int            `json:"price"`
+	Weight                       *float64        `json:"weight"`
+	Properties                   *Properties     `json:"properties"`
+	RelatedCards                 *Properties     `json:"related_cards"`
+	RelatedActions               *Properties     `json:"related_actions"`
+	RelatedEffects               *Properties     `json:"related_effects"`
+	IsExtended                   *bool           `json:"is_extended"`
+	DescriptionFontSize          *int            `json:"description_font_size"`
+	TextAlignment                *string         `json:"text_alignment"`
+	TextFontSize                 *int            `json:"text_font_size"`
+	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+}
+
+// UpdateEffectRequest - запрос на обновление эффекта
+type UpdateEffectRequest struct {
+	Name                         string          `json:"name"`
+	Description                  string          `json:"description"`
+	DetailedDescription          *string         `json:"detailed_description"`
+	ImageURL                     string          `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity"`
+	EffectType                   EffectType      `json:"effect_type"`
+	ConditionDescription         *string         `json:"condition_description"`
+	Script                       *Script         `json:"script"`
+	Type                         *string         `json:"type"`
+	Author                       string          `json:"author"`
+	Source                       *string         `json:"source"`
+	Tags                         *Properties     `json:"tags"`
+	Price                        *int            `json:"price"`
+	Weight                       *float64        `json:"weight"`
+	Properties                   *Properties     `json:"properties"`
+	RelatedCards                 *Properties     `json:"related_cards"`
+	RelatedActions               *Properties     `json:"related_actions"`
+	RelatedEffects               *Properties     `json:"related_effects"`
+	IsExtended                   *bool           `json:"is_extended"`
+	DescriptionFontSize          *int            `json:"description_font_size"`
+	TextAlignment                *string         `json:"text_alignment"`
+	TextFontSize                 *int            `json:"text_font_size"`
+	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+}
+
+// EffectResponse - ответ с эффектом
+type EffectResponse struct {
+	ID                           uuid.UUID      `json:"id"`
+	Name                         string         `json:"name"`
+	Description                  string         `json:"description"`
+	DetailedDescription          *string        `json:"detailed_description"`
+	ImageURL                     string         `json:"image_url"`
+	Rarity                       Rarity         `json:"rarity"`
+	CardNumber                   string         `json:"card_number"`
+	EffectType                   EffectType     `json:"effect_type"`
+	ConditionDescription         *string        `json:"condition_description"`
+	Script                       *Script        `json:"script"`
+	Type                         *string        `json:"type"`
+	Tags                         *Properties    `json:"tags"`
+	Price                        *int           `json:"price"`
+	Weight                       *float64       `json:"weight"`
+	Properties                   *Properties    `json:"properties"`
+	IsExtended                   *bool          `json:"is_extended"`
+	DescriptionFontSize          *int           `json:"description_font_size"`
+	TextAlignment                *string        `json:"text_alignment"`
+	TextFontSize                 *int           `json:"text_font_size"`
+	ShowDetailedDescription      *bool          `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+	CreatedAt                    time.Time      `json:"created_at"`
+	UpdatedAt                    time.Time      `json:"updated_at"`
+}
+
+// GetLocalizedName - получение локализованного названия типа эффекта
+func (et EffectType) GetLocalizedName() string {
+	switch et {
+	case EffectTypePassive:
+		return "Пассивный"
+	case EffectTypeConditional:
+		return "Условный"
+	case EffectTypeTriggered:
+		return "Срабатывающий"
+	default:
+		return string(et)
+	}
+}
+
 // CreateCharacterV2Request - запрос на создание персонажа V2
 type CreateCharacterV2Request struct {
 	Name                     string   `json:"name" binding:"required"`

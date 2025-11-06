@@ -45,6 +45,18 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       name: '🔧 Свой предмет',
       description: 'Создать уникальный предмет',
       color: 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+    },
+    {
+      id: 'action',
+      name: '⚡ Действия',
+      description: 'Базовые действия, умения класса, свойства предметов',
+      color: 'bg-orange-50 border-orange-200 hover:bg-orange-100'
+    },
+    {
+      id: 'effect',
+      name: '✨ Эффекты',
+      description: 'Пассивные эффекты, которые получают персонажи',
+      color: 'bg-pink-50 border-pink-200 hover:bg-pink-100'
     }
   ];
 
@@ -61,6 +73,10 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       navigate('/card-creator?template_id=740161b8-1870-4a8d-8810-5c1a3f0c660c');
     } else if (typeId === 'custom') {
       navigate('/card-creator');
+    } else if (typeId === 'action') {
+      navigate('/action-creator');
+    } else if (typeId === 'effect') {
+      navigate('/effect-creator');
     }
   };
 

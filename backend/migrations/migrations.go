@@ -98,6 +98,24 @@ func GetAllMigrations() []Migration {
 			Up:          addEffectsField,
 			Down:        removeEffectsField,
 		},
+		{
+			Version:     "016_create_shops",
+			Description: "Create shops table to persist generated shop assortments",
+			Up:          createShopsTable,
+			Down:        dropShopsTable,
+		},
+		{
+			Version:     "017_create_actions",
+			Description: "Create actions table for D&D actions",
+			Up:          createActionsTable,
+			Down:        dropActionsTable,
+		},
+		{
+			Version:     "018_create_effects",
+			Description: "Create effects table for D&D passive effects",
+			Up:          createEffectsTable,
+			Down:        dropEffectsTable,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -852,4 +870,204 @@ func removeEffectsField(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+// createShopsTable создает таблицу магазинов для хранения ассортиментов
+func createShopsTable(db *sql.DB) error {
+	query := `
+        CREATE TABLE IF NOT EXISTS shops (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            slug VARCHAR(64) UNIQUE NOT NULL,
+            data JSONB NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+    `
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create shops table: %w", err)
+	}
+
+	// Индексы
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_shops_created_at ON shops(created_at DESC)",
+	}
+	for _, q := range indexes {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("failed to create index for shops: %w", err)
+		}
+	}
+	return nil
+}
+
+// dropShopsTable удаляет таблицу магазинов
+func dropShopsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS shops CASCADE")
+	return err
+}
+
+// createActionsTable создает таблицу действий
+func createActionsTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS actions (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			resource VARCHAR(50) NOT NULL CHECK (resource IN ('action', 'bonus_action', 'reaction', 'free_action')),
+			recharge VARCHAR(50) CHECK (recharge IN ('custom', 'per_turn', 'per_battle', 'short_rest', 'long_rest')),
+			recharge_custom TEXT,
+			script JSONB,
+			action_type VARCHAR(50) NOT NULL CHECK (action_type IN ('base_action', 'class_feature', 'item_property')),
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags TEXT[],
+			price INTEGER,
+			weight DECIMAL(5,2),
+			properties TEXT[],
+			related_cards TEXT[],
+			related_actions TEXT[],
+			is_extended BOOLEAN DEFAULT false,
+			description_font_size INTEGER,
+			text_alignment VARCHAR(20),
+			text_font_size INTEGER,
+			show_detailed_description BOOLEAN DEFAULT false,
+			detailed_description_alignment VARCHAR(20),
+			detailed_description_font_size INTEGER,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)
+	`
+
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create actions table: %w", err)
+	}
+
+	// Создаем индексы
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_actions_rarity ON actions(rarity)",
+		"CREATE INDEX IF NOT EXISTS idx_actions_name ON actions USING gin(to_tsvector('russian', name))",
+		"CREATE INDEX IF NOT EXISTS idx_actions_resource ON actions(resource)",
+		"CREATE INDEX IF NOT EXISTS idx_actions_action_type ON actions(action_type)",
+		"CREATE INDEX IF NOT EXISTS idx_actions_card_number ON actions(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_actions_created_at ON actions(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_actions_deleted_at ON actions(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+
+	for _, indexQuery := range indexes {
+		if _, err := db.Exec(indexQuery); err != nil {
+			return fmt.Errorf("failed to create index for actions: %w", err)
+		}
+	}
+
+	// Создаем триггер для автоматического обновления updated_at
+	triggerQuery := `
+		DROP TRIGGER IF EXISTS update_actions_updated_at ON actions;
+		CREATE TRIGGER update_actions_updated_at 
+			BEFORE UPDATE ON actions 
+			FOR EACH ROW 
+			EXECUTE FUNCTION update_updated_at_column();
+	`
+
+	if _, err := db.Exec(triggerQuery); err != nil {
+		return fmt.Errorf("failed to create trigger for actions: %w", err)
+	}
+
+	return nil
+}
+
+// dropActionsTable удаляет таблицу действий
+func dropActionsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS actions CASCADE")
+	return err
+}
+
+// createEffectsTable создает таблицу пассивных эффектов
+func createEffectsTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS effects (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			effect_type VARCHAR(50) NOT NULL CHECK (effect_type IN ('passive', 'conditional', 'triggered')),
+			condition_description TEXT,
+			script JSONB,
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags TEXT[],
+			price INTEGER,
+			weight DECIMAL(5,2),
+			properties TEXT[],
+			related_cards TEXT[],
+			related_actions TEXT[],
+			related_effects TEXT[],
+			is_extended BOOLEAN DEFAULT false,
+			description_font_size INTEGER,
+			text_alignment VARCHAR(20),
+			text_font_size INTEGER,
+			show_detailed_description BOOLEAN DEFAULT false,
+			detailed_description_alignment VARCHAR(20),
+			detailed_description_font_size INTEGER,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)
+	`
+
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create effects table: %w", err)
+	}
+
+	// Создаем индексы
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_effects_rarity ON effects(rarity)",
+		"CREATE INDEX IF NOT EXISTS idx_effects_name ON effects USING gin(to_tsvector('russian', name))",
+		"CREATE INDEX IF NOT EXISTS idx_effects_effect_type ON effects(effect_type)",
+		"CREATE INDEX IF NOT EXISTS idx_effects_card_number ON effects(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_effects_created_at ON effects(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_effects_deleted_at ON effects(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+
+	for _, indexQuery := range indexes {
+		if _, err := db.Exec(indexQuery); err != nil {
+			return fmt.Errorf("failed to create index for effects: %w", err)
+		}
+	}
+
+	// Создаем триггер для автоматического обновления updated_at
+	triggerQuery := `
+		DROP TRIGGER IF EXISTS update_effects_updated_at ON effects;
+		CREATE TRIGGER update_effects_updated_at 
+			BEFORE UPDATE ON effects 
+			FOR EACH ROW 
+			EXECUTE FUNCTION update_updated_at_column();
+	`
+
+	if _, err := db.Exec(triggerQuery); err != nil {
+		return fmt.Errorf("failed to create trigger for effects: %w", err)
+	}
+
+	return nil
+}
+
+// dropEffectsTable удаляет таблицу пассивных эффектов
+func dropEffectsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS effects CASCADE")
+	return err
 }

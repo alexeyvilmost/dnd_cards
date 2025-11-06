@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Plus, X, Dices } from 'lucide-react';
+import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Plus, X, Dices, Eye } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import ItemSelector from '../components/ItemSelector';
 import CardPreview from '../components/CardPreview';
+import CardDetailModal from '../components/CardDetailModal';
 import { Card } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { getRussianName } from '../utils/russianTranslations';
@@ -177,6 +178,34 @@ const CharacterDetailV2: React.FC = () => {
   
   // Состояние для информации о защите
   const [armorInfo, setArmorInfo] = useState<any>(null);
+
+  // Модал подробного просмотра карты
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [showCardDetailModal, setShowCardDetailModal] = useState(false);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<any | null>(null);
+
+  const openCardDetail = (item: any) => {
+    if (!item || !item.card) return;
+    setSelectedCard(item.card as Card);
+    setSelectedInventoryItem(item);
+    setShowCardDetailModal(true);
+  };
+
+  const closeCardDetail = () => {
+    setShowCardDetailModal(false);
+    setSelectedCard(null);
+    setSelectedInventoryItem(null);
+  };
+
+  const handleEditCardFromModal = (cardId: string) => {
+    setShowCardDetailModal(false);
+    window.location.href = `/edit/${cardId}`;
+  };
+
+  const handleDeleteCardFromModal = (_cardId: string) => {
+    // Удаление карт из инвентаря персонажа V2 не поддерживается из этого модала
+    closeCardDetail();
+  };
 
   // Вспомогательная функция для получения информации о броне из инвентарей
   const getSimulatedArmorInfo = (inventories: any[]) => {
@@ -1063,55 +1092,44 @@ const CharacterDetailV2: React.FC = () => {
       case 'ac':
       case 'armor_class':
         if (modifiedDerivedStats[statKey] !== undefined) {
-          console.log('🛡️ [AC] Using modified value:', modifiedDerivedStats[statKey]);
           return modifiedDerivedStats[statKey];
         }
         // Рассчитываем защиту с учетом актуальных характеристик и данных о броне
-        console.log('🛡️ [AC] Calculating defense, armorInfo:', armorInfo);
         if (armorInfo) {
           const actualDexMod = Math.floor((getActualStatValue('dexterity') - 10) / 2);
-          console.log('🛡️ [AC] Dexterity modifier:', actualDexMod, 'from dexterity:', getActualStatValue('dexterity'));
           
           // Если нет брони, используем базовую формулу
           if (armorInfo.armor_type === 'Без брони') {
             const result = 10 + actualDexMod;
-            console.log('🛡️ [AC] No armor, result:', result);
             return result;
           }
           
           // Рассчитываем с учетом типа брони согласно правилам D&D 5e
           let finalAC = armorInfo.details.armor_bonus;
-          console.log('🛡️ [AC] Armor type:', armorInfo.armor_type, 'base bonus:', armorInfo.details.armor_bonus);
           
           switch (armorInfo.armor_type) {
             case 'Ткань':
             case 'Легкая броня':
               // Легкая броня = Броня доспеха + модификатор Ловкости
               finalAC += actualDexMod;
-              console.log('🛡️ [AC] Light armor, finalAC:', finalAC);
               break;
             case 'Средняя броня':
               // Средняя броня = Броня доспеха + модификатор Ловкости (но не больше двух)
               finalAC += Math.min(actualDexMod, 2);
-              console.log('🛡️ [AC] Medium armor, finalAC:', finalAC);
               break;
             case 'Тяжелая броня':
               // Тяжелая броня = Броня доспеха (Ловкость не участвует в расчёте)
-              console.log('🛡️ [AC] Heavy armor, finalAC:', finalAC);
               break;
             default:
               // Fallback к базовой защите
               const fallbackResult = 10 + actualDexMod;
-              console.log('🛡️ [AC] Fallback, result:', fallbackResult);
               return fallbackResult;
           }
           
-          console.log('🛡️ [AC] Final result:', finalAC);
           return finalAC;
         }
         // Fallback к базовому расчету
         const fallbackResult = 10 + Math.floor((getActualStatValue('dexterity') - 10) / 2);
-        console.log('🛡️ [AC] No armorInfo, fallback result:', fallbackResult);
         return fallbackResult;
       case 'speed':
         return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.speed;
@@ -1489,8 +1507,8 @@ const CharacterDetailV2: React.FC = () => {
             message: 'Изменения отменены'
           });
         });
-        
-      } catch (error) {
+          
+        } catch (error) {
         console.error('🎯 [UNEQUIP] Error unequipping item:', error);
         
         // Откатываем изменения при ошибке
@@ -1517,17 +1535,32 @@ const CharacterDetailV2: React.FC = () => {
     ];
 
     // Функция для получения иконки слота
-    const getSlotIcon = (slotType: string) => {
+    const getSlotIcon = (slotType: string, row: number, col: number) => {
+      // Специальная логика для слотов рук в зависимости от позиции
+      if (slotType === 'one_hand') {
+        if (row === 0 && (col === 0 || col === 1)) {
+          // Верхние две руки (слева) - оружие ближнего боя
+          return '/icons/melee-hand.png';
+        } else if (row === 1 && (col === 0 || col === 1)) {
+          // Нижние две руки (слева) - оружие дальнего боя
+          return '/icons/bow-hand.png';
+        }
+      }
+      
+      if (slotType === 'versatile') {
+        // Четыре руки справа - свободные слоты (пояс)
+        return '/icons/belt.png';
+      }
+      
+      // Обычные иконки для остальных слотов
       const iconMap: { [key: string]: string } = {
-        'one_hand': 'hand.png',
         'ring': 'ring.png',
         'head': 'helm.png',
         'arms': 'gloves.png',
         'cloak': 'cloak.png',
         'body': 'armor.png',
         'feet': 'boots.png',
-        'necklace': 'necklace.png',
-        'versatile': 'hand.png'
+        'necklace': 'necklace.png'
       };
       
       const iconPath = iconMap[slotType] || 'hand.png';
@@ -1555,7 +1588,7 @@ const CharacterDetailV2: React.FC = () => {
               const row = Math.floor(index / 8);
               const col = index % 8;
               const slotType = equipmentSlotTypes[row][col];
-              const iconPath = getSlotIcon(slotType);
+              const iconPath = getSlotIcon(slotType, row, col);
               
               // Ищем предмет, экипированный в этот конкретный слот
               const equippedItem = inventories
@@ -1565,7 +1598,7 @@ const CharacterDetailV2: React.FC = () => {
               return (
                 <div
                   key={index}
-                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center bg-gray-100 relative cursor-pointer ${
+                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center bg-gray-100 relative cursor-pointer group ${
                     equippedItem ? getRarityBorderColor(equippedItem.card?.rarity) : ''
                   }`}
                   title={equippedItem ? `${equippedItem.card?.name || 'Предмет'} (экипирован) - клик для снятия` : `Слот: ${slotType}`}
@@ -1577,6 +1610,7 @@ const CharacterDetailV2: React.FC = () => {
                   onClick={equippedItem ? () => handleUnequipItem(equippedItem) : undefined}
                 >
                   {equippedItem ? (
+                    <>
                     <img 
                       src={equippedItem.card?.image_url || '/default_image.png'} 
                       alt={equippedItem.card?.name || 'Предмет'}
@@ -1586,6 +1620,16 @@ const CharacterDetailV2: React.FC = () => {
                         target.src = '/default_image.png';
                       }}
                     />
+                    {/* Кнопка просмотра (глаз) при hover */}
+                    <button
+                      type="button"
+                      className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-6 h-6 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-sm border border-gray-200"
+                      onClick={(e) => { e.stopPropagation(); openCardDetail(equippedItem); }}
+                      title="Просмотр"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    </>
                   ) : (
                     <img 
                       src={iconPath} 
@@ -1622,7 +1666,7 @@ const CharacterDetailV2: React.FC = () => {
                     isLastSlot
                       ? 'bg-blue-50 border-blue-300 cursor-pointer hover:bg-blue-100 transition-colors'
                       : inventoryItem
-                        ? `border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors ${getRarityBorderColor(inventoryItem.card?.rarity)}`
+                        ? `border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors group ${getRarityBorderColor(inventoryItem.card?.rarity)}`
                         : 'border-dashed border-gray-300 bg-gray-50'
                   }`}
                   title={
@@ -1657,6 +1701,15 @@ const CharacterDetailV2: React.FC = () => {
                       ) : (
                         <Package className="w-8 h-8 text-gray-600" />
                       )}
+                      {/* Кнопка просмотра (глаз) при hover */}
+                      <button
+                        type="button"
+                        className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-6 h-6 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-sm border border-gray-200"
+                        onClick={(e) => { e.stopPropagation(); openCardDetail(inventoryItem); }}
+                        title="Просмотр"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       {inventoryItem.quantity > 1 && (
                         <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                           {inventoryItem.quantity}
@@ -2829,6 +2882,16 @@ const CharacterDetailV2: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Модал подробного просмотра карты (как в библиотеке) */}
+      <CardDetailModal
+        card={selectedCard}
+        isOpen={showCardDetailModal}
+        onClose={closeCardDetail}
+        onEdit={handleEditCardFromModal}
+        onDelete={handleDeleteCardFromModal}
+        inventoryItem={selectedInventoryItem}
+      />
     </div>
   );
 };

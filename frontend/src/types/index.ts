@@ -554,3 +554,231 @@ export const getEquipmentSlotLabel = (slot: EquipmentSlot): string => {
   const slotConfig = EQUIPMENT_SLOTS.find(s => s.value === slot);
   return slotConfig ? slotConfig.label : slot;
 };
+
+// Типы для действий
+export type ActionResource = 'action' | 'bonus_action' | 'reaction' | 'free_action';
+export type ActionRecharge = 'custom' | 'per_turn' | 'per_battle' | 'short_rest' | 'long_rest';
+export type ActionType = 'base_action' | 'class_feature' | 'item_property';
+
+export interface Action {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  resource: ActionResource;
+  recharge?: ActionRecharge | null;
+  recharge_custom?: string | null;
+  script?: Record<string, any> | null;
+  action_type: ActionType;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: Properties | null;
+  price?: number | null;
+  weight?: number | null;
+  properties?: Properties | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  is_extended?: boolean | null;
+  description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateActionRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  resource: ActionResource;
+  recharge?: ActionRecharge | null;
+  recharge_custom?: string | null;
+  script?: Record<string, any> | null;
+  action_type: ActionType;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: Properties | null;
+  price?: number | null;
+  weight?: number | null;
+  properties?: Properties | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  is_extended?: boolean | null;
+  description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
+}
+
+export interface UpdateActionRequest {
+  name?: string;
+  description?: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  resource?: ActionResource;
+  recharge?: ActionRecharge | null;
+  recharge_custom?: string | null;
+  script?: Record<string, any> | null;
+  action_type?: ActionType;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: Properties | null;
+  price?: number | null;
+  weight?: number | null;
+  properties?: Properties | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  is_extended?: boolean | null;
+  description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
+}
+
+export interface ActionsResponse {
+  actions: Action[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const ACTION_RESOURCE_OPTIONS = [
+  { value: 'action', label: 'Основное действие' },
+  { value: 'bonus_action', label: 'Бонусное действие' },
+  { value: 'reaction', label: 'Ответное действие' },
+  { value: 'free_action', label: 'Свободное действие' },
+] as const;
+
+export const ACTION_RECHARGE_OPTIONS = [
+  { value: 'custom', label: 'Произвольная' },
+  { value: 'per_turn', label: 'За ход' },
+  { value: 'per_battle', label: 'За битву' },
+  { value: 'short_rest', label: 'За короткий отдых' },
+  { value: 'long_rest', label: 'За длинный отдых' },
+] as const;
+
+export const ACTION_TYPE_OPTIONS = [
+  { value: 'base_action', label: 'Базовое действие' },
+  { value: 'class_feature', label: 'Умение класса' },
+  { value: 'item_property', label: 'Свойство предмета' },
+] as const;
+
+// Типы для пассивных эффектов
+export type PassiveEffectType = 'passive' | 'conditional' | 'triggered';
+
+export interface PassiveEffect {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  effect_type: PassiveEffectType;
+  condition_description?: string | null;
+  script?: Record<string, any> | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: Properties | null;
+  price?: number | null;
+  weight?: number | null;
+  properties?: Properties | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  related_effects?: Properties | null;
+  is_extended?: boolean | null;
+  description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePassiveEffectRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  effect_type: PassiveEffectType;
+  condition_description?: string | null;
+  script?: Record<string, any> | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: Properties | null;
+  price?: number | null;
+  weight?: number | null;
+  properties?: Properties | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  related_effects?: Properties | null;
+  is_extended?: boolean | null;
+  description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
+}
+
+export interface UpdatePassiveEffectRequest {
+  name?: string;
+  description?: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  effect_type?: PassiveEffectType;
+  condition_description?: string | null;
+  script?: Record<string, any> | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: Properties | null;
+  price?: number | null;
+  weight?: number | null;
+  properties?: Properties | null;
+  related_cards?: Properties | null;
+  related_actions?: Properties | null;
+  related_effects?: Properties | null;
+  is_extended?: boolean | null;
+  description_font_size?: number | null;
+  text_alignment?: string | null;
+  text_font_size?: number | null;
+  show_detailed_description?: boolean | null;
+  detailed_description_alignment?: string | null;
+  detailed_description_font_size?: number | null;
+}
+
+export interface PassiveEffectsResponse {
+  effects: PassiveEffect[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const PASSIVE_EFFECT_TYPE_OPTIONS = [
+  { value: 'passive', label: 'Пассивный' },
+  { value: 'conditional', label: 'Условный' },
+  { value: 'triggered', label: 'Срабатывающий' },
+] as const;

@@ -508,12 +508,16 @@ const CardLibrary = () => {
                 return (
                   <div 
                     key={card.id} 
-                    className={`relative group flex justify-center cursor-pointer ${isExtended ? 'col-span-2 sm:col-span-2' : ''}`}
+                    className={`relative group flex justify-center cursor-pointer ${isExtended ? 'col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
                     onClick={() => handleCardClick(card)}
                   >
-                    <div className="w-full max-w-[198px] mx-auto">
+                    {isExtended ? (
                       <CardPreview card={card} />
-                    </div>
+                    ) : (
+                      <div className="w-full max-w-[198px]">
+                        <CardPreview card={card} />
+                      </div>
+                    )}
                   </div>
               );
               })}

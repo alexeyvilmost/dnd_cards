@@ -84,6 +84,9 @@ func main() {
 	characterController := NewCharacterController(db)
 	characterV2Controller := NewCharacterV2Controller(db)
 	imageLibraryController := NewImageLibraryController(db)
+	shopController := NewShopController(db)
+	actionController := NewActionController(db)
+	effectController := NewEffectController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -129,6 +132,9 @@ func main() {
 		api.POST("/auth/register", authController.Register)
 		api.POST("/auth/login", authController.Login)
 
+		// Магазины (публичные ссылки на просмотр, создание за авторизацией)
+		api.GET("/shops/:slug", shopController.GetShop)
+
 		// Карточки (публичные, но с опциональной авторизацией)
 		api.GET("/cards", OptionalAuthMiddleware(authService), cardController.GetCards)
 		api.GET("/cards/:id", OptionalAuthMiddleware(authService), cardController.GetCard)
@@ -138,10 +144,26 @@ func main() {
 		api.POST("/cards/generate-image", AuthMiddleware(authService), cardController.GenerateImage)
 		api.POST("/cards/export", AuthMiddleware(authService), cardController.ExportCards)
 
+		// Действия (публичные, но с опциональной авторизацией)
+		api.GET("/actions", OptionalAuthMiddleware(authService), actionController.GetActions)
+		api.GET("/actions/:id", OptionalAuthMiddleware(authService), actionController.GetAction)
+		api.POST("/actions", AuthMiddleware(authService), actionController.CreateAction)
+		api.PUT("/actions/:id", AuthMiddleware(authService), actionController.UpdateAction)
+		api.DELETE("/actions/:id", AuthMiddleware(authService), actionController.DeleteAction)
+
+		// Эффекты (публичные, но с опциональной авторизацией)
+		api.GET("/effects", OptionalAuthMiddleware(authService), effectController.GetEffects)
+		api.GET("/effects/:id", OptionalAuthMiddleware(authService), effectController.GetEffect)
+		api.POST("/effects", AuthMiddleware(authService), effectController.CreateEffect)
+		api.PUT("/effects/:id", AuthMiddleware(authService), effectController.UpdateEffect)
+		api.DELETE("/effects/:id", AuthMiddleware(authService), effectController.DeleteEffect)
+
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")
 		protected.Use(AuthMiddleware(authService))
 		{
+			// Магазины
+			protected.POST("/shops", shopController.CreateShop)
 			// Авторизация
 			protected.GET("/auth/profile", authController.GetProfile)
 			protected.POST("/auth/logout", authController.Logout)

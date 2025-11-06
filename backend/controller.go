@@ -662,3 +662,854 @@ func generateCardNumber(db *gorm.DB) string {
 
 	return fmt.Sprintf("CARD-%04d", nextNum)
 }
+
+// ActionController - контроллер для работы с действиями
+type ActionController struct {
+	db            *gorm.DB
+	openaiService *OpenAIService
+}
+
+// NewActionController - создание нового контроллера действий
+func NewActionController(db *gorm.DB) *ActionController {
+	return &ActionController{
+		db:            db,
+		openaiService: NewOpenAIService(),
+	}
+}
+
+// GetActions - получение списка действий с фильтрацией
+func (ac *ActionController) GetActions(c *gin.Context) {
+	var actions []Action
+
+	query := ac.db.Model(&Action{})
+
+	// Фильтрация по редкости
+	if rarity := c.Query("rarity"); rarity != "" {
+		query = query.Where("rarity = ?", rarity)
+	}
+
+	// Фильтрация по ресурсу
+	if resource := c.Query("resource"); resource != "" {
+		query = query.Where("resource = ?", resource)
+	}
+
+	// Фильтрация по типу действия
+	if actionType := c.Query("action_type"); actionType != "" {
+		query = query.Where("action_type = ?", actionType)
+	}
+
+	// Поиск по названию
+	if search := c.Query("search"); search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	// Пагинация
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	offset := (page - 1) * limit
+
+	// Подсчет общего количества
+	var total int64
+	query.Count(&total)
+
+	// Получение действий
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&actions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действий"})
+		return
+	}
+
+	// Преобразование в ответы
+	responses := make([]ActionResponse, 0)
+	for _, action := range actions {
+		responses = append(responses, ActionResponse{
+			ID:                           action.ID,
+			Name:                         action.Name,
+			Description:                  action.Description,
+			DetailedDescription:          action.DetailedDescription,
+			ImageURL:                     action.ImageURL,
+			Rarity:                       action.Rarity,
+			CardNumber:                   action.CardNumber,
+			Resource:                     action.Resource,
+			Recharge:                     action.Recharge,
+			RechargeCustom:               action.RechargeCustom,
+			Script:                       action.Script,
+			ActionType:                   action.ActionType,
+			Type:                         action.Type,
+			Tags:                         action.Tags,
+			Price:                        action.Price,
+			Weight:                       action.Weight,
+			Properties:                   action.Properties,
+			IsExtended:                   action.IsExtended,
+			DescriptionFontSize:          action.DescriptionFontSize,
+			TextAlignment:                action.TextAlignment,
+			TextFontSize:                 action.TextFontSize,
+			ShowDetailedDescription:      action.ShowDetailedDescription,
+			DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
+			DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
+			CreatedAt:                    action.CreatedAt,
+			UpdatedAt:                    action.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"actions": responses,
+		"total":   total,
+		"page":    page,
+		"limit":   limit,
+	})
+}
+
+// GetAction - получение действия по ID
+func (ac *ActionController) GetAction(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID действия"})
+		return
+	}
+
+	var action Action
+	if err := ac.db.Where("id = ?", id).First(&action).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Действие не найдено"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действия"})
+		return
+	}
+
+	response := ActionResponse{
+		ID:                           action.ID,
+		Name:                         action.Name,
+		Description:                  action.Description,
+		DetailedDescription:          action.DetailedDescription,
+		ImageURL:                     action.ImageURL,
+		Rarity:                       action.Rarity,
+		CardNumber:                   action.CardNumber,
+		Resource:                     action.Resource,
+		Recharge:                     action.Recharge,
+		RechargeCustom:               action.RechargeCustom,
+		Script:                       action.Script,
+		ActionType:                   action.ActionType,
+		Type:                         action.Type,
+		Tags:                         action.Tags,
+		Price:                        action.Price,
+		Weight:                       action.Weight,
+		Properties:                   action.Properties,
+		IsExtended:                   action.IsExtended,
+		DescriptionFontSize:          action.DescriptionFontSize,
+		TextAlignment:                action.TextAlignment,
+		TextFontSize:                 action.TextFontSize,
+		ShowDetailedDescription:      action.ShowDetailedDescription,
+		DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
+		CreatedAt:                    action.CreatedAt,
+		UpdatedAt:                    action.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// CreateAction - создание нового действия
+func (ac *ActionController) CreateAction(c *gin.Context) {
+	var req CreateActionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		return
+	}
+
+	// Валидация данных
+	if !IsValidRarity(req.Rarity) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость"})
+		return
+	}
+
+	if !ValidateProperties(req.Properties) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
+		return
+	}
+
+	if !ValidatePrice(req.Price) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+		return
+	}
+
+	if !ValidateWeight(req.Weight) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		return
+	}
+
+	// Генерация номера карты
+	cardNumber := ac.generateActionNumber()
+
+	// Создание действия
+	action := Action{
+		Name:                         req.Name,
+		Description:                  req.Description,
+		DetailedDescription:          req.DetailedDescription,
+		ImageURL:                     req.ImageURL,
+		Rarity:                       req.Rarity,
+		CardNumber:                   cardNumber,
+		Resource:                     req.Resource,
+		Recharge:                     req.Recharge,
+		RechargeCustom:               req.RechargeCustom,
+		Script:                       req.Script,
+		ActionType:                   req.ActionType,
+		Type:                         req.Type,
+		Author:                       req.Author,
+		Source:                       req.Source,
+		Tags:                         req.Tags,
+		Price:                        req.Price,
+		Weight:                       req.Weight,
+		Properties:                   req.Properties,
+		RelatedCards:                 req.RelatedCards,
+		RelatedActions:               req.RelatedActions,
+		IsExtended:                   req.IsExtended,
+		DescriptionFontSize:          req.DescriptionFontSize,
+		TextAlignment:                req.TextAlignment,
+		TextFontSize:                 req.TextFontSize,
+		ShowDetailedDescription:      req.ShowDetailedDescription,
+		DetailedDescriptionAlignment: req.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  req.DetailedDescriptionFontSize,
+	}
+
+	if req.Author == "" {
+		action.Author = "Admin"
+	}
+
+	if err := ac.db.Create(&action).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания действия"})
+		return
+	}
+
+	response := ActionResponse{
+		ID:                           action.ID,
+		Name:                         action.Name,
+		Description:                  action.Description,
+		DetailedDescription:          action.DetailedDescription,
+		ImageURL:                     action.ImageURL,
+		Rarity:                       action.Rarity,
+		CardNumber:                   action.CardNumber,
+		Resource:                     action.Resource,
+		Recharge:                     action.Recharge,
+		RechargeCustom:               action.RechargeCustom,
+		Script:                       action.Script,
+		ActionType:                   action.ActionType,
+		Type:                         action.Type,
+		Tags:                         action.Tags,
+		Price:                        action.Price,
+		Weight:                       action.Weight,
+		Properties:                   action.Properties,
+		IsExtended:                   action.IsExtended,
+		DescriptionFontSize:          action.DescriptionFontSize,
+		TextAlignment:                action.TextAlignment,
+		TextFontSize:                 action.TextFontSize,
+		ShowDetailedDescription:      action.ShowDetailedDescription,
+		DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
+		CreatedAt:                    action.CreatedAt,
+		UpdatedAt:                    action.UpdatedAt,
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+
+// UpdateAction - обновление действия
+func (ac *ActionController) UpdateAction(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID действия"})
+		return
+	}
+
+	var req UpdateActionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		return
+	}
+
+	var action Action
+	if err := ac.db.Where("id = ?", id).First(&action).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Действие не найдено"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действия"})
+		return
+	}
+
+	// Обновление полей
+	if req.Name != "" {
+		action.Name = req.Name
+	}
+	if req.Description != "" {
+		action.Description = req.Description
+	}
+	if req.DetailedDescription != nil {
+		action.DetailedDescription = req.DetailedDescription
+	}
+	if req.ImageURL != "" {
+		action.ImageURL = req.ImageURL
+	}
+	if req.Rarity != "" && IsValidRarity(req.Rarity) {
+		action.Rarity = req.Rarity
+	}
+	if req.Resource != "" {
+		action.Resource = req.Resource
+	}
+	if req.Recharge != nil {
+		action.Recharge = req.Recharge
+	}
+	if req.RechargeCustom != nil {
+		action.RechargeCustom = req.RechargeCustom
+	}
+	if req.Script != nil {
+		action.Script = req.Script
+	}
+	if req.ActionType != "" {
+		action.ActionType = req.ActionType
+	}
+	if req.Type != nil {
+		action.Type = req.Type
+	}
+	if req.Author != "" {
+		action.Author = req.Author
+	}
+	if req.Source != nil {
+		action.Source = req.Source
+	}
+	if req.Tags != nil {
+		if ValidateProperties(req.Tags) {
+			action.Tags = req.Tags
+		}
+	}
+	if req.Price != nil {
+		if ValidatePrice(req.Price) {
+			action.Price = req.Price
+		}
+	}
+	if req.Weight != nil {
+		if ValidateWeight(req.Weight) {
+			action.Weight = req.Weight
+		}
+	}
+	if req.Properties != nil {
+		if ValidateProperties(req.Properties) {
+			action.Properties = req.Properties
+		}
+	}
+	if req.RelatedCards != nil {
+		action.RelatedCards = req.RelatedCards
+	}
+	if req.RelatedActions != nil {
+		action.RelatedActions = req.RelatedActions
+	}
+	if req.IsExtended != nil {
+		action.IsExtended = req.IsExtended
+	}
+	if req.DescriptionFontSize != nil {
+		action.DescriptionFontSize = req.DescriptionFontSize
+	}
+	if req.TextAlignment != nil {
+		action.TextAlignment = req.TextAlignment
+	}
+	if req.TextFontSize != nil {
+		action.TextFontSize = req.TextFontSize
+	}
+	if req.ShowDetailedDescription != nil {
+		action.ShowDetailedDescription = req.ShowDetailedDescription
+	}
+	if req.DetailedDescriptionAlignment != nil {
+		action.DetailedDescriptionAlignment = req.DetailedDescriptionAlignment
+	}
+	if req.DetailedDescriptionFontSize != nil {
+		action.DetailedDescriptionFontSize = req.DetailedDescriptionFontSize
+	}
+
+	if err := ac.db.Save(&action).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления действия"})
+		return
+	}
+
+	response := ActionResponse{
+		ID:                           action.ID,
+		Name:                         action.Name,
+		Description:                  action.Description,
+		DetailedDescription:          action.DetailedDescription,
+		ImageURL:                     action.ImageURL,
+		Rarity:                       action.Rarity,
+		CardNumber:                   action.CardNumber,
+		Resource:                     action.Resource,
+		Recharge:                     action.Recharge,
+		RechargeCustom:               action.RechargeCustom,
+		Script:                       action.Script,
+		ActionType:                   action.ActionType,
+		Type:                         action.Type,
+		Tags:                         action.Tags,
+		Price:                        action.Price,
+		Weight:                       action.Weight,
+		Properties:                   action.Properties,
+		IsExtended:                   action.IsExtended,
+		DescriptionFontSize:          action.DescriptionFontSize,
+		TextAlignment:                action.TextAlignment,
+		TextFontSize:                 action.TextFontSize,
+		ShowDetailedDescription:      action.ShowDetailedDescription,
+		DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
+		CreatedAt:                    action.CreatedAt,
+		UpdatedAt:                    action.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// DeleteAction - удаление действия
+func (ac *ActionController) DeleteAction(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID действия"})
+		return
+	}
+
+	if err := ac.db.Delete(&Action{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления действия"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Действие удалено"})
+}
+
+// generateActionNumber - генерация номера действия
+func (ac *ActionController) generateActionNumber() string {
+	var maxAction Action
+	ac.db.Unscoped().Order("card_number DESC").First(&maxAction)
+
+	// Извлекаем номер из строки ACTION-XXXX
+	var nextNum int = 1
+	if maxAction.CardNumber != "" {
+		if len(maxAction.CardNumber) >= 11 { // ACTION-XXXX
+			numStr := maxAction.CardNumber[7:11]
+			if num, err := strconv.Atoi(numStr); err == nil {
+				nextNum = num + 1
+			}
+		}
+	}
+
+	return fmt.Sprintf("ACTION-%04d", nextNum)
+}
+
+// EffectController - контроллер для работы с эффектами
+type EffectController struct {
+	db            *gorm.DB
+	openaiService *OpenAIService
+}
+
+// NewEffectController - создание нового контроллера эффектов
+func NewEffectController(db *gorm.DB) *EffectController {
+	return &EffectController{
+		db:            db,
+		openaiService: NewOpenAIService(),
+	}
+}
+
+// GetEffects - получение списка эффектов с фильтрацией
+func (ec *EffectController) GetEffects(c *gin.Context) {
+	var effects []Effect
+
+	query := ec.db.Model(&Effect{})
+
+	// Фильтрация по редкости
+	if rarity := c.Query("rarity"); rarity != "" {
+		query = query.Where("rarity = ?", rarity)
+	}
+
+	// Фильтрация по типу эффекта
+	if effectType := c.Query("effect_type"); effectType != "" {
+		query = query.Where("effect_type = ?", effectType)
+	}
+
+	// Поиск по названию
+	if search := c.Query("search"); search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	// Пагинация
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	offset := (page - 1) * limit
+
+	// Подсчет общего количества
+	var total int64
+	query.Count(&total)
+
+	// Получение эффектов
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&effects).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
+		return
+	}
+
+	// Преобразование в ответы
+	responses := make([]EffectResponse, 0)
+	for _, effect := range effects {
+		responses = append(responses, EffectResponse{
+			ID:                           effect.ID,
+			Name:                         effect.Name,
+			Description:                  effect.Description,
+			DetailedDescription:          effect.DetailedDescription,
+			ImageURL:                     effect.ImageURL,
+			Rarity:                       effect.Rarity,
+			CardNumber:                   effect.CardNumber,
+			EffectType:                   effect.EffectType,
+			ConditionDescription:         effect.ConditionDescription,
+			Script:                       effect.Script,
+			Type:                         effect.Type,
+			Tags:                         effect.Tags,
+			Price:                        effect.Price,
+			Weight:                       effect.Weight,
+			Properties:                   effect.Properties,
+			IsExtended:                   effect.IsExtended,
+			DescriptionFontSize:          effect.DescriptionFontSize,
+			TextAlignment:                effect.TextAlignment,
+			TextFontSize:                 effect.TextFontSize,
+			ShowDetailedDescription:      effect.ShowDetailedDescription,
+			DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
+			DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
+			CreatedAt:                    effect.CreatedAt,
+			UpdatedAt:                    effect.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"effects": responses,
+		"total":   total,
+		"page":    page,
+		"limit":   limit,
+	})
+}
+
+// GetEffect - получение эффекта по ID
+func (ec *EffectController) GetEffect(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID эффекта"})
+		return
+	}
+
+	var effect Effect
+	if err := ec.db.Where("id = ?", id).First(&effect).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Эффект не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффекта"})
+		return
+	}
+
+	response := EffectResponse{
+		ID:                           effect.ID,
+		Name:                         effect.Name,
+		Description:                  effect.Description,
+		DetailedDescription:          effect.DetailedDescription,
+		ImageURL:                     effect.ImageURL,
+		Rarity:                       effect.Rarity,
+		CardNumber:                   effect.CardNumber,
+		EffectType:                   effect.EffectType,
+		ConditionDescription:         effect.ConditionDescription,
+		Script:                       effect.Script,
+		Type:                         effect.Type,
+		Tags:                         effect.Tags,
+		Price:                        effect.Price,
+		Weight:                       effect.Weight,
+		Properties:                   effect.Properties,
+		IsExtended:                   effect.IsExtended,
+		DescriptionFontSize:          effect.DescriptionFontSize,
+		TextAlignment:                effect.TextAlignment,
+		TextFontSize:                 effect.TextFontSize,
+		ShowDetailedDescription:      effect.ShowDetailedDescription,
+		DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
+		CreatedAt:                    effect.CreatedAt,
+		UpdatedAt:                    effect.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// CreateEffect - создание нового эффекта
+func (ec *EffectController) CreateEffect(c *gin.Context) {
+	var req CreateEffectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		return
+	}
+
+	// Валидация данных
+	if !IsValidRarity(req.Rarity) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость"})
+		return
+	}
+
+	if !ValidateProperties(req.Properties) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
+		return
+	}
+
+	if !ValidatePrice(req.Price) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+		return
+	}
+
+	if !ValidateWeight(req.Weight) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		return
+	}
+
+	// Генерация номера карты
+	cardNumber := ec.generateEffectNumber()
+
+	// Создание эффекта
+	effect := Effect{
+		Name:                         req.Name,
+		Description:                  req.Description,
+		DetailedDescription:          req.DetailedDescription,
+		ImageURL:                     req.ImageURL,
+		Rarity:                       req.Rarity,
+		CardNumber:                   cardNumber,
+		EffectType:                   req.EffectType,
+		ConditionDescription:         req.ConditionDescription,
+		Script:                       req.Script,
+		Type:                         req.Type,
+		Author:                       req.Author,
+		Source:                       req.Source,
+		Tags:                         req.Tags,
+		Price:                        req.Price,
+		Weight:                       req.Weight,
+		Properties:                   req.Properties,
+		RelatedCards:                 req.RelatedCards,
+		RelatedActions:               req.RelatedActions,
+		RelatedEffects:               req.RelatedEffects,
+		IsExtended:                   req.IsExtended,
+		DescriptionFontSize:          req.DescriptionFontSize,
+		TextAlignment:                req.TextAlignment,
+		TextFontSize:                 req.TextFontSize,
+		ShowDetailedDescription:      req.ShowDetailedDescription,
+		DetailedDescriptionAlignment: req.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  req.DetailedDescriptionFontSize,
+	}
+
+	if req.Author == "" {
+		effect.Author = "Admin"
+	}
+
+	if err := ec.db.Create(&effect).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания эффекта"})
+		return
+	}
+
+	response := EffectResponse{
+		ID:                           effect.ID,
+		Name:                         effect.Name,
+		Description:                  effect.Description,
+		DetailedDescription:          effect.DetailedDescription,
+		ImageURL:                     effect.ImageURL,
+		Rarity:                       effect.Rarity,
+		CardNumber:                   effect.CardNumber,
+		EffectType:                   effect.EffectType,
+		ConditionDescription:         effect.ConditionDescription,
+		Script:                       effect.Script,
+		Type:                         effect.Type,
+		Tags:                         effect.Tags,
+		Price:                        effect.Price,
+		Weight:                       effect.Weight,
+		Properties:                   effect.Properties,
+		IsExtended:                   effect.IsExtended,
+		DescriptionFontSize:          effect.DescriptionFontSize,
+		TextAlignment:                effect.TextAlignment,
+		TextFontSize:                 effect.TextFontSize,
+		ShowDetailedDescription:      effect.ShowDetailedDescription,
+		DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
+		CreatedAt:                    effect.CreatedAt,
+		UpdatedAt:                    effect.UpdatedAt,
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+
+// UpdateEffect - обновление эффекта
+func (ec *EffectController) UpdateEffect(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID эффекта"})
+		return
+	}
+
+	var req UpdateEffectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		return
+	}
+
+	var effect Effect
+	if err := ec.db.Where("id = ?", id).First(&effect).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Эффект не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффекта"})
+		return
+	}
+
+	// Обновление полей
+	if req.Name != "" {
+		effect.Name = req.Name
+	}
+	if req.Description != "" {
+		effect.Description = req.Description
+	}
+	if req.DetailedDescription != nil {
+		effect.DetailedDescription = req.DetailedDescription
+	}
+	if req.ImageURL != "" {
+		effect.ImageURL = req.ImageURL
+	}
+	if req.Rarity != "" && IsValidRarity(req.Rarity) {
+		effect.Rarity = req.Rarity
+	}
+	if req.EffectType != "" {
+		effect.EffectType = req.EffectType
+	}
+	if req.ConditionDescription != nil {
+		effect.ConditionDescription = req.ConditionDescription
+	}
+	if req.Script != nil {
+		effect.Script = req.Script
+	}
+	if req.Type != nil {
+		effect.Type = req.Type
+	}
+	if req.Author != "" {
+		effect.Author = req.Author
+	}
+	if req.Source != nil {
+		effect.Source = req.Source
+	}
+	if req.Tags != nil {
+		if ValidateProperties(req.Tags) {
+			effect.Tags = req.Tags
+		}
+	}
+	if req.Price != nil {
+		if ValidatePrice(req.Price) {
+			effect.Price = req.Price
+		}
+	}
+	if req.Weight != nil {
+		if ValidateWeight(req.Weight) {
+			effect.Weight = req.Weight
+		}
+	}
+	if req.Properties != nil {
+		if ValidateProperties(req.Properties) {
+			effect.Properties = req.Properties
+		}
+	}
+	if req.RelatedCards != nil {
+		effect.RelatedCards = req.RelatedCards
+	}
+	if req.RelatedActions != nil {
+		effect.RelatedActions = req.RelatedActions
+	}
+	if req.RelatedEffects != nil {
+		effect.RelatedEffects = req.RelatedEffects
+	}
+	if req.IsExtended != nil {
+		effect.IsExtended = req.IsExtended
+	}
+	if req.DescriptionFontSize != nil {
+		effect.DescriptionFontSize = req.DescriptionFontSize
+	}
+	if req.TextAlignment != nil {
+		effect.TextAlignment = req.TextAlignment
+	}
+	if req.TextFontSize != nil {
+		effect.TextFontSize = req.TextFontSize
+	}
+	if req.ShowDetailedDescription != nil {
+		effect.ShowDetailedDescription = req.ShowDetailedDescription
+	}
+	if req.DetailedDescriptionAlignment != nil {
+		effect.DetailedDescriptionAlignment = req.DetailedDescriptionAlignment
+	}
+	if req.DetailedDescriptionFontSize != nil {
+		effect.DetailedDescriptionFontSize = req.DetailedDescriptionFontSize
+	}
+
+	if err := ec.db.Save(&effect).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления эффекта"})
+		return
+	}
+
+	response := EffectResponse{
+		ID:                           effect.ID,
+		Name:                         effect.Name,
+		Description:                  effect.Description,
+		DetailedDescription:          effect.DetailedDescription,
+		ImageURL:                     effect.ImageURL,
+		Rarity:                       effect.Rarity,
+		CardNumber:                   effect.CardNumber,
+		EffectType:                   effect.EffectType,
+		ConditionDescription:         effect.ConditionDescription,
+		Script:                       effect.Script,
+		Type:                         effect.Type,
+		Tags:                         effect.Tags,
+		Price:                        effect.Price,
+		Weight:                       effect.Weight,
+		Properties:                   effect.Properties,
+		IsExtended:                   effect.IsExtended,
+		DescriptionFontSize:          effect.DescriptionFontSize,
+		TextAlignment:                effect.TextAlignment,
+		TextFontSize:                 effect.TextFontSize,
+		ShowDetailedDescription:      effect.ShowDetailedDescription,
+		DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
+		CreatedAt:                    effect.CreatedAt,
+		UpdatedAt:                    effect.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// DeleteEffect - удаление эффекта
+func (ec *EffectController) DeleteEffect(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID эффекта"})
+		return
+	}
+
+	if err := ec.db.Delete(&Effect{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления эффекта"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Эффект удален"})
+}
+
+// generateEffectNumber - генерация номера эффекта
+func (ec *EffectController) generateEffectNumber() string {
+	var maxEffect Effect
+	ec.db.Unscoped().Order("card_number DESC").First(&maxEffect)
+
+	// Извлекаем номер из строки EFFECT-XXXX
+	var nextNum int = 1
+	if maxEffect.CardNumber != "" {
+		if len(maxEffect.CardNumber) >= 11 { // EFFECT-XXXX
+			numStr := maxEffect.CardNumber[7:11]
+			if num, err := strconv.Atoi(numStr); err == nil {
+				nextNum = num + 1
+			}
+		}
+	}
+
+	return fmt.Sprintf("EFFECT-%04d", nextNum)
+}

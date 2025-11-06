@@ -6,6 +6,14 @@ import type {
   CardsResponse,
   GenerateImageRequest,
   ExportCardsRequest,
+  Action,
+  CreateActionRequest,
+  UpdateActionRequest,
+  ActionsResponse,
+  PassiveEffect,
+  CreatePassiveEffectRequest,
+  UpdatePassiveEffectRequest,
+  PassiveEffectsResponse,
   ApiError 
 } from '../types';
 
@@ -98,6 +106,92 @@ export const cardsApi = {
     const response = await apiClient.post<{ cards: Card[]; message: string }>('/api/cards/export', data);
     return response.data;
   },
+};
+
+export const actionsApi = {
+  // Получение списка действий
+  getActions: async (params?: {
+    page?: number;
+    limit?: number;
+    rarity?: string;
+    resource?: string;
+    action_type?: string;
+    search?: string;
+  }): Promise<ActionsResponse> => {
+    const response = await apiClient.get<ActionsResponse>('/api/actions', { params });
+    return response.data;
+  },
+
+  // Получение действия по ID
+  getAction: async (id: string): Promise<Action> => {
+    const response = await apiClient.get<Action>(`/api/actions/${id}`);
+    return response.data;
+  },
+
+  // Создание нового действия
+  createAction: async (data: CreateActionRequest): Promise<Action> => {
+    const response = await apiClient.post<Action>('/api/actions', data);
+    return response.data;
+  },
+
+  // Обновление действия
+  updateAction: async (id: string, data: UpdateActionRequest): Promise<Action> => {
+    const response = await apiClient.put<Action>(`/api/actions/${id}`, data);
+    return response.data;
+  },
+
+  // Удаление действия
+  deleteAction: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/actions/${id}`);
+  },
+};
+
+export const effectsApi = {
+  // Получение списка эффектов
+  getEffects: async (params?: {
+    page?: number;
+    limit?: number;
+    rarity?: string;
+    effect_type?: string;
+    search?: string;
+  }): Promise<PassiveEffectsResponse> => {
+    const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', { params });
+    return response.data;
+  },
+
+  // Получение эффекта по ID
+  getEffect: async (id: string): Promise<PassiveEffect> => {
+    const response = await apiClient.get<PassiveEffect>(`/api/effects/${id}`);
+    return response.data;
+  },
+
+  // Создание нового эффекта
+  createEffect: async (data: CreatePassiveEffectRequest): Promise<PassiveEffect> => {
+    const response = await apiClient.post<PassiveEffect>('/api/effects', data);
+    return response.data;
+  },
+
+  // Обновление эффекта
+  updateEffect: async (id: string, data: UpdatePassiveEffectRequest): Promise<PassiveEffect> => {
+    const response = await apiClient.put<PassiveEffect>(`/api/effects/${id}`, data);
+    return response.data;
+  },
+
+  // Удаление эффекта
+  deleteEffect: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/effects/${id}`);
+  },
+};
+
+export const shopsApi = {
+  createShop: async (): Promise<{ slug: string; vendors: Record<string, Card[]>; created: string }> => {
+    const response = await apiClient.post('/api/shops');
+    return response.data;
+  },
+  getShop: async (slug: string): Promise<{ slug: string; vendors: Record<string, Card[]>; created: string }> => {
+    const response = await apiClient.get(`/api/shops/${slug}`);
+    return response.data;
+  }
 };
 
 export default apiClient;

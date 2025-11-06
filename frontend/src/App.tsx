@@ -30,6 +30,10 @@ import EquipmentSelection from './pages/EquipmentSelection';
 import PotionSelection from './pages/PotionSelection';
 import IngredientSelection from './pages/IngredientSelection';
 import TrinketSelection from './pages/TrinketSelection';
+import ShopNew from './pages/ShopNew';
+import ShopDetail from './pages/ShopDetail';
+import ActionCreator from './pages/ActionCreator';
+import EffectCreator from './pages/EffectCreator';
 
 function App() {
   return (
@@ -237,6 +241,40 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <DiceRoller />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Shop routes */}
+        <Route path="/shop/new" element={
+          <ProtectedRoute>
+            <Layout>
+              <ShopNew />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/shop/:slug" element={
+          <ProtectedRoute>
+            <Layout>
+              <ShopDetail />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Action routes */}
+        <Route path="/action-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <ActionCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Effect routes */}
+        <Route path="/effect-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <EffectCreator />
             </Layout>
           </ProtectedRoute>
         } />
