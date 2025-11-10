@@ -1,0 +1,25 @@
+{
+  "name": "intimidation",
+  "russian_name": "Запугивание",
+  "type": "skill",
+  "dependencies": [
+    "charisma",
+    "proficiency_bonus",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "proficiency": "none",
+      "formula": "{CHARISMA_MOD} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "proficient",
+      "formula": "{CHARISMA_MOD} + {PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "expert",
+      "formula": "{CHARISMA_MOD} + 2*{PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    }
+  ]
+}
+

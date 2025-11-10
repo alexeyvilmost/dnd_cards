@@ -1,0 +1,11 @@
+{
+  "name": "constitution",
+  "russian_name": "Телосложение",
+  "type": "stat",
+  "dependencies": [],
+  "influence": [
+    "max_hp",
+    "current_hp"
+  ]
+}
+

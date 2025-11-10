@@ -1,0 +1,25 @@
+{
+  "name": "medicine",
+  "russian_name": "Медицина",
+  "type": "skill",
+  "dependencies": [
+    "wisdom",
+    "proficiency_bonus",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "proficiency": "none",
+      "formula": "{WISDOM_MOD} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "proficient",
+      "formula": "{WISDOM_MOD} + {PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "expert",
+      "formula": "{WISDOM_MOD} + 2*{PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    }
+  ]
+}
+

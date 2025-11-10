@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Plus, X, Dices, Eye } from 'lucide-react';
 import { apiClient } from '../api/client';
@@ -21,6 +21,21 @@ import {
   hasSavingThrowProficiency,
   getStatValue,
 } from '../utils/characterCalculationsV3';
+import {
+  getAllSkillNames,
+  getDependentNames,
+  getRule,
+  getPrimaryStatForSkill,
+  getRuleDependencyNames,
+  getRuleFormulas,
+  getRuleRussianName,
+  normalizeRuleIdentifier,
+} from '../utils/characterRules';
+import {
+  evaluateCharacterFormula,
+  formatSignedValue,
+  selectRuleFormula,
+} from '../utils/characterFormulaEvaluator';
 
 const CharacterDetailV3: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,6 +80,11 @@ const CharacterDetailV3: React.FC = () => {
 
   // Флаг для отслеживания изменений экипировки
   const [equipmentChanged, setEquipmentChanged] = useState(false);
+  const allSkillNames = useMemo(() => getAllSkillNames(), []);
+  const skillDependencies = useMemo(
+    () => (selectedSkill ? getRuleDependencyNames(selectedSkill) : []),
+    [selectedSkill]
+  );
 
   useEffect(() => {
     if (id) {
@@ -327,11 +347,7 @@ const CharacterDetailV3: React.FC = () => {
         }
       } else if (effect.targetType === 'skill') {
         if (effect.targetSpecific === 'all') {
-          const allSkills = [
-            'athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 
-            'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 
-            'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'
-          ];
+          const allSkills = allSkillNames;
           allSkills.forEach(skill => {
             const currentValue = getActualSkillValue(skill);
             const newValue = currentValue + actualBonus;
@@ -657,11 +673,7 @@ const CharacterDetailV3: React.FC = () => {
                 } else if (effect.targetType === 'skill') {
                   if (effect.targetSpecific === 'all') {
                     // Применяем ко всем навыкам
-                    const allSkills = [
-                      'athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 
-                      'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 
-                      'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'
-                    ];
+                    const allSkills = allSkillNames;
                     allSkills.forEach(skill => {
                       skillBonuses[skill] = (skillBonuses[skill] || 0) + bonus;
                     });
@@ -978,6 +990,237 @@ const CharacterDetailV3: React.FC = () => {
     });
   };
 
+  const abilityKeys: Array<'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma'> = [
+    'strength',
+    'dexterity',
+    'constitution',
+    'intelligence',
+    'wisdom',
+    'charisma',
+  ];
+
+  const normalizeFormulaKey = (rawKey: string): string =>
+    rawKey.trim().toUpperCase().replace(/[\s-]+/g, '_');
+
+  const formatSignedWithParens = (value: number): string =>
+    `(${formatSignedValue(Number.isFinite(value) ? Math.round(value * 1000) / 1000 : 0)})`;
+
+  const getNormalizedSkillKey = (skillName: string): string => normalizeRuleIdentifier(skillName);
+
+  type SkillFormulaResult = {
+    value: number;
+    expression: string;
+  };
+
+  const buildCommonFormulaContext = (extraValues: Record<string, number> = {}): Record<string, number> => {
+    const context: Record<string, number> = {};
+
+    abilityKeys.forEach((ability) => {
+      const abilityValue = getActualStatValue(ability);
+      context[`${ability.toUpperCase()}_VALUE`] = abilityValue;
+      context[`${ability.toUpperCase()}_MOD`] = Math.floor((abilityValue - 10) / 2);
+    });
+
+    const levelValue =
+      modifiedDerivedStats['level'] !== undefined ? modifiedDerivedStats['level'] : character?.level ?? 1;
+    const proficiencyValue =
+      modifiedDerivedStats['proficiency'] !== undefined
+        ? modifiedDerivedStats['proficiency']
+        : Math.floor((levelValue - 1) / 4) + 2;
+
+    context.LEVEL = levelValue;
+    context.PROFICIENCY_BONUS = proficiencyValue;
+    context.EQUIPMENT_EFFECTS = 0;
+
+    Object.entries(extraValues).forEach(([key, value]) => {
+      context[normalizeFormulaKey(key)] = Number.isFinite(value) ? Number(value) : 0;
+    });
+
+    return context;
+  };
+
+  const computeSkillRuleResult = (skillName: string): SkillFormulaResult | null => {
+    if (!character) {
+      return null;
+    }
+
+    const normalizedSkillKey = getNormalizedSkillKey(skillName);
+    const statKey = getSkillStat(skillName);
+    const isProficient =
+      hasSkillProficiency(character, skillName) || customSkillProficiencies[normalizedSkillKey];
+    const isCompetent = skillCompetencies[normalizedSkillKey] || false;
+    const proficiencyLevel = isCompetent ? 'expert' : isProficient ? 'proficient' : 'none';
+
+    const formulas = getRuleFormulas(skillName);
+    const equipmentEffect = equippedEffectsCache.skillBonuses[normalizedSkillKey] || 0;
+
+    const context = buildCommonFormulaContext({
+      EQUIPMENT_EFFECTS: equipmentEffect,
+    });
+
+    const selectedFormula = selectRuleFormula(formulas, { proficiency: proficiencyLevel });
+
+    if (selectedFormula) {
+      const evaluation = evaluateCharacterFormula(selectedFormula.formula, context);
+      const normalizedValue = Math.round(evaluation.value);
+      const expression = `${evaluation.displayExpression} = ${formatSignedValue(normalizedValue)}`;
+
+      return {
+        value: normalizedValue,
+        expression,
+      };
+    }
+
+    const statModifier = context[`${statKey.toUpperCase()}_MOD`] ?? 0;
+    const proficiencyBonus = context.PROFICIENCY_BONUS ?? 0;
+
+    let computedValue = statModifier;
+    const parts: string[] = [
+      `${formatSignedWithParens(statModifier)} (мод ${getStatNameInRussian(statKey)})`,
+    ];
+
+    if (isProficient) {
+      computedValue += proficiencyBonus;
+      parts.push(`${formatSignedWithParens(proficiencyBonus)} (бонус мастерства)`);
+    }
+
+    if (isCompetent) {
+      computedValue += proficiencyBonus;
+      parts.push(`${formatSignedWithParens(proficiencyBonus)} (компетенция)`);
+    }
+
+    if (equipmentEffect) {
+      computedValue += equipmentEffect;
+      parts.push(`${formatSignedWithParens(equipmentEffect)} (эффекты предметов)`);
+    }
+
+    return {
+      value: computedValue,
+      expression: `${parts.join(' + ')} = ${formatSignedValue(computedValue)}`,
+    };
+  };
+
+  const normalizeArmorTypeForRules = (armorType?: string | null): string => {
+    if (!armorType) {
+      return 'none';
+    }
+
+    const lower = armorType.toLowerCase();
+
+    if (lower.includes('без')) return 'none';
+    if (lower.includes('cloth') || lower.includes('ткан')) return 'cloth';
+    if (lower.includes('лег')) return 'light';
+    if (lower.includes('сред')) return 'medium';
+    if (lower.includes('тяж')) return 'heavy';
+
+    return normalizeRuleIdentifier(armorType);
+  };
+
+  type ArmorFormulaResult = {
+    value: number;
+    expression: string;
+  };
+
+  const computeArmorClassFromRules = (): ArmorFormulaResult | null => {
+    if (!character) {
+      return null;
+    }
+
+    const formulas = getRuleFormulas('armor_class');
+    if (!formulas.length) {
+      return null;
+    }
+
+    const armorTypeNormalized = normalizeArmorTypeForRules(armorInfo?.armor_type);
+    const armorBonus =
+      armorInfo?.details?.armor_bonus !== undefined ? armorInfo.details.armor_bonus : 0;
+    const equipmentBonus =
+      (equippedEffectsCache.characteristicBonuses['ac'] || 0) +
+      (equippedEffectsCache.characteristicBonuses['armor_class'] || 0);
+
+    const context = buildCommonFormulaContext({
+      ARMOR_BONUS: armorBonus,
+      EQUIPMENT_EFFECTS: equipmentBonus,
+      BASE_AC: 10,
+    });
+
+    const selectedFormula = selectRuleFormula(formulas, { armor_type: armorTypeNormalized });
+    if (!selectedFormula) {
+      return null;
+    }
+
+    const evaluation = evaluateCharacterFormula(selectedFormula.formula, context);
+    const normalizedValue = Math.round(evaluation.value);
+    const expression = `${evaluation.displayExpression} = ${formatSignedValue(normalizedValue)}`;
+
+    return {
+      value: normalizedValue,
+      expression,
+    };
+  };
+
+  const getArmorClassCalculation = (): string => {
+    const formulaResult = computeArmorClassFromRules();
+    if (formulaResult) {
+      return formulaResult.expression;
+    }
+
+    const dexMod = Math.floor((getActualStatValue('dexterity') - 10) / 2);
+    const equipmentBonus =
+      (equippedEffectsCache.characteristicBonuses['ac'] || 0) +
+      (equippedEffectsCache.characteristicBonuses['armor_class'] || 0);
+
+    if (armorInfo) {
+      const armorTypeNormalized = normalizeArmorTypeForRules(armorInfo.armor_type);
+      const armorBonusValue = armorInfo.details?.armor_bonus ?? 0;
+      let finalAC = 0;
+      const parts: string[] = [];
+
+      if (armorTypeNormalized === 'none') {
+        finalAC = 10 + dexMod;
+        parts.push('(10)', `${formatSignedWithParens(dexMod)} (мод ЛОВ)`);
+      } else {
+        finalAC = armorBonusValue;
+        parts.push(`${formatSignedWithParens(armorBonusValue)} (база брони)`);
+
+        switch (armorTypeNormalized) {
+          case 'light':
+          case 'cloth':
+            finalAC += dexMod;
+            parts.push(`${formatSignedWithParens(dexMod)} (мод ЛОВ)`);
+            break;
+          case 'medium': {
+            const cappedDex = Math.min(dexMod, 2);
+            finalAC += cappedDex;
+            parts.push(`${formatSignedWithParens(cappedDex)} (лимит ЛОВ +2)`);
+            break;
+          }
+          case 'heavy':
+            break;
+          default:
+            finalAC = 10 + dexMod;
+            parts.length = 0;
+            parts.push('(10)', `${formatSignedWithParens(dexMod)} (мод ЛОВ)`);
+            break;
+        }
+      }
+
+      if (equipmentBonus) {
+        finalAC += equipmentBonus;
+        parts.push(`${formatSignedWithParens(equipmentBonus)} (эффекты предметов)`);
+      }
+
+      return `${parts.join(' + ')} = ${formatSignedValue(finalAC)}`;
+    }
+
+    const baseAC = 10 + dexMod + equipmentBonus;
+    const parts = ['(10)', `${formatSignedWithParens(dexMod)} (мод ЛОВ)`];
+    if (equipmentBonus) {
+      parts.push(`${formatSignedWithParens(equipmentBonus)} (эффекты предметов)`);
+    }
+    return `${parts.join(' + ')} = ${formatSignedValue(baseAC)}`;
+  };
+
   // Функции для работы с модальным окном навыков
   const openSkillModal = (skillKey: string) => {
     setSelectedSkill(skillKey);
@@ -993,42 +1236,32 @@ const CharacterDetailV3: React.FC = () => {
   // Получить актуальное значение навыка (с учетом модификаций и эффектов)
   const getActualSkillValue = (skillKey: string): number => {
     if (!character) return 0;
-    
-    // Базовое значение навыка
-    let baseBonus = 0;
-    if (modifiedSkills[skillKey] !== undefined) {
-      baseBonus = modifiedSkills[skillKey];
-    } else {
-      // Правильно парсим бонус навыка, сохраняя знак
-      const bonusStr = getSkillBonus(skillKey);
-      if (bonusStr.startsWith('+')) {
-        baseBonus = parseInt(bonusStr.substring(1)) || 0;
-      } else if (bonusStr.startsWith('-')) {
-        baseBonus = parseInt(bonusStr) || 0;
-      } else {
-        baseBonus = parseInt(bonusStr) || 0;
-      }
+
+    const normalizedKey = getNormalizedSkillKey(skillKey);
+
+    if (modifiedSkills[normalizedKey] !== undefined) {
+      return modifiedSkills[normalizedKey];
     }
-    
-    // Получаем бонусы от эффектов экипированных предметов из кэша
-    const effectBonus = equippedEffectsCache.skillBonuses[skillKey] || 0;
-    
-    return baseBonus + effectBonus;
+
+    const result = computeSkillRuleResult(skillKey);
+    return result ? Math.round(result.value) : 0;
   };
 
   // Изменить значение навыка
   const updateSkillValue = (skillKey: string, newValue: number) => {
+    const normalizedKey = getNormalizedSkillKey(skillKey);
     setModifiedSkills(prev => ({
       ...prev,
-      [skillKey]: newValue
+      [normalizedKey]: newValue
     }));
   };
 
   // Вернуться к обычному расчету навыка
   const resetSkillValue = (skillKey: string) => {
+    const normalizedKey = getNormalizedSkillKey(skillKey);
     setModifiedSkills(prev => {
       const newSkills = { ...prev };
-      delete newSkills[skillKey];
+      delete newSkills[normalizedKey];
       return newSkills;
     });
   };
@@ -1036,12 +1269,14 @@ const CharacterDetailV3: React.FC = () => {
   // Переключить компетенцию навыка
   const toggleSkillCompetency = (skillKey: string) => {
     // Компетенцию можно получить только если есть владение навыком
-    const hasProficiency = hasSkillProficiency(character, skillKey) || customSkillProficiencies[skillKey.toLowerCase()];
+    const normalizedKey = getNormalizedSkillKey(skillKey);
+    const hasProficiency =
+      hasSkillProficiency(character, skillKey) || customSkillProficiencies[normalizedKey];
     if (!hasProficiency) return;
     
     setSkillCompetencies(prev => ({
       ...prev,
-      [skillKey]: !prev[skillKey]
+      [normalizedKey]: !prev[normalizedKey]
     }));
   };
 
@@ -1055,16 +1290,19 @@ const CharacterDetailV3: React.FC = () => {
 
   // Переключить владение навыком
   const toggleSkillProficiency = (skillKey: string) => {
+    const normalizedKey = getNormalizedSkillKey(skillKey);
+    const currentlyProficient = customSkillProficiencies[normalizedKey] ?? false;
+
     setCustomSkillProficiencies(prev => ({
       ...prev,
-      [skillKey]: !prev[skillKey]
+      [normalizedKey]: !prev[normalizedKey]
     }));
     
     // Если убираем владение навыком, убираем и компетенцию
-    if (customSkillProficiencies[skillKey.toLowerCase()]) {
+    if (currentlyProficient) {
       setSkillCompetencies(prev => ({
         ...prev,
-        [skillKey]: false
+        [normalizedKey]: false
       }));
     }
   };
@@ -1094,43 +1332,42 @@ const CharacterDetailV3: React.FC = () => {
         if (modifiedDerivedStats[statKey] !== undefined) {
           return modifiedDerivedStats[statKey];
         }
-        // Рассчитываем защиту с учетом актуальных характеристик и данных о броне
-        if (armorInfo) {
-          const actualDexMod = Math.floor((getActualStatValue('dexterity') - 10) / 2);
-          
-          // Если нет брони, используем базовую формулу
-          if (armorInfo.armor_type === 'Без брони') {
-            const result = 10 + actualDexMod;
-            return result;
+        // Пытаемся вычислить защиту по декларативным формулам
+        try {
+          const formulaResult = computeArmorClassFromRules();
+          if (formulaResult) {
+            return formulaResult.value;
           }
-          
-          // Рассчитываем с учетом типа брони согласно правилам D&D 5e
-          let finalAC = armorInfo.details.armor_bonus;
-          
-          switch (armorInfo.armor_type) {
-            case 'Ткань':
-            case 'Легкая броня':
-              // Легкая броня = Броня доспеха + модификатор Ловкости
-              finalAC += actualDexMod;
-              break;
-            case 'Средняя броня':
-              // Средняя броня = Броня доспеха + модификатор Ловкости (но не больше двух)
-              finalAC += Math.min(actualDexMod, 2);
-              break;
-            case 'Тяжелая броня':
-              // Тяжелая броня = Броня доспеха (Ловкость не участвует в расчёте)
-              break;
-            default:
-              // Fallback к базовой защите
-              const fallbackResult = 10 + actualDexMod;
-              return fallbackResult;
-          }
-          
-          return finalAC;
+        } catch (error) {
+          console.error('[ARMOR] Ошибка вычисления формулы защиты:', error);
         }
-        // Fallback к базовому расчету
-        const fallbackResult = 10 + Math.floor((getActualStatValue('dexterity') - 10) / 2);
-        return fallbackResult;
+
+        // Fallback к базовому расчету при отсутствии декларативной формулы
+        const dexModifier = Math.floor((getActualStatValue('dexterity') - 10) / 2);
+        const equipmentBonus =
+          (equippedEffectsCache.characteristicBonuses['ac'] || 0) +
+          (equippedEffectsCache.characteristicBonuses['armor_class'] || 0);
+
+        if (armorInfo) {
+          const armorTypeNormalized = normalizeArmorTypeForRules(armorInfo.armor_type);
+          const armorBonusValue = armorInfo.details?.armor_bonus ?? 0;
+
+          switch (armorTypeNormalized) {
+            case 'none':
+              return 10 + dexModifier + equipmentBonus;
+            case 'cloth':
+            case 'light':
+              return armorBonusValue + dexModifier + equipmentBonus;
+            case 'medium':
+              return armorBonusValue + Math.min(dexModifier, 2) + equipmentBonus;
+            case 'heavy':
+              return armorBonusValue + equipmentBonus;
+            default:
+              return 10 + dexModifier + equipmentBonus;
+          }
+        }
+
+        return 10 + dexModifier + equipmentBonus;
       case 'speed':
         return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.speed;
       case 'max_hp':
@@ -1181,7 +1418,12 @@ const CharacterDetailV3: React.FC = () => {
       'wisdom': 'МУД',
       'charisma': 'ХАР'
     };
-    return statNames[statKey.toLowerCase()] || statKey.toUpperCase();
+    const normalizedStat = statKey.toLowerCase();
+    if (statNames[normalizedStat]) {
+      return statNames[normalizedStat];
+    }
+    const russianName = getRuleRussianName(statKey);
+    return russianName ? russianName.toUpperCase() : statKey.toUpperCase();
   };
 
   // Функция для получения цвета линии характеристики
@@ -1199,29 +1441,22 @@ const CharacterDetailV3: React.FC = () => {
 
   // Функция для получения цвета линии навыка на основе связанной характеристики
   const getSkillBorderColor = (skillName: string): string => {
-    const skillToStatMap: { [key: string]: string } = {
-      'acrobatics': 'dexterity',
-      'animal_handling': 'wisdom',
-      'arcana': 'intelligence',
-      'athletics': 'strength',
-      'deception': 'charisma',
-      'history': 'intelligence',
-      'insight': 'wisdom',
-      'intimidation': 'charisma',
-      'investigation': 'intelligence',
-      'medicine': 'wisdom',
-      'nature': 'intelligence',
-      'perception': 'wisdom',
-      'performance': 'charisma',
-      'persuasion': 'charisma',
-      'religion': 'intelligence',
-      'sleight_of_hand': 'dexterity',
-      'stealth': 'dexterity',
-      'survival': 'wisdom'
-    };
-    
-    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
+    const statKey = getSkillStat(skillName);
     return getStatBorderColor(statKey);
+  };
+
+  const getRuleTypeLabel = (type?: string): string => {
+    const labels: Record<string, string> = {
+      stat: 'Характеристика',
+      skill: 'Навык',
+      derived: 'Производная',
+      base: 'Базовый параметр',
+      context: 'Контекст',
+    };
+    if (!type) {
+      return 'Неизвестно';
+    }
+    return labels[type] ?? type;
   };
 
   // Функция для получения порядка характеристики для сортировки навыков
@@ -1239,32 +1474,12 @@ const CharacterDetailV3: React.FC = () => {
 
   // Функция для получения связанной характеристики навыка
   const getSkillStat = (skillName: string): string => {
-    const skillToStatMap: { [key: string]: string } = {
-      'acrobatics': 'dexterity',
-      'animal_handling': 'wisdom',
-      'arcana': 'intelligence',
-      'athletics': 'strength',
-      'deception': 'charisma',
-      'history': 'intelligence',
-      'insight': 'wisdom',
-      'intimidation': 'charisma',
-      'investigation': 'intelligence',
-      'medicine': 'wisdom',
-      'nature': 'intelligence',
-      'perception': 'wisdom',
-      'performance': 'charisma',
-      'persuasion': 'charisma',
-      'religion': 'intelligence',
-      'sleight_of_hand': 'dexterity',
-      'stealth': 'dexterity',
-      'survival': 'wisdom'
-    };
-    return skillToStatMap[skillName.toLowerCase()] || 'strength';
+    return getPrimaryStatForSkill(skillName) || 'strength';
   };
 
   // Функция для получения названия навыка на русском
   const getSkillNameInRussian = (skillName: string): string => {
-    return getSkillName(skillName);
+    return getRuleRussianName(skillName) || getSkillName(skillName);
   };
 
   // Функция для получения бонуса спасброска
@@ -1293,95 +1508,21 @@ const CharacterDetailV3: React.FC = () => {
   // Функция для получения бонуса навыка
   const getSkillBonus = (skillName: string): string => {
     if (!character) return '+0';
-    
-    const skillToStatMap: { [key: string]: string } = {
-      'acrobatics': 'dexterity',
-      'animal_handling': 'wisdom',
-      'arcana': 'intelligence',
-      'athletics': 'strength',
-      'deception': 'charisma',
-      'history': 'intelligence',
-      'insight': 'wisdom',
-      'intimidation': 'charisma',
-      'investigation': 'intelligence',
-      'medicine': 'wisdom',
-      'nature': 'intelligence',
-      'perception': 'wisdom',
-      'performance': 'charisma',
-      'persuasion': 'charisma',
-      'religion': 'intelligence',
-      'sleight_of_hand': 'dexterity',
-      'stealth': 'dexterity',
-      'survival': 'wisdom'
-    };
 
-    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
-    const statValue = getActualStatValue(statKey);
-    const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
-    const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
-    const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
-    
-    const baseModifier = Math.floor((statValue - 10) / 2);
-    let totalBonus = baseModifier;
-    
-    if (isProficient) {
-      totalBonus += proficiencyBonus;
+    const normalizedKey = getNormalizedSkillKey(skillName);
+
+    if (modifiedSkills[normalizedKey] !== undefined) {
+      return formatSignedValue(modifiedSkills[normalizedKey]);
     }
-    
-    // Компетенция добавляет бонус мастерства еще раз
-    if (isCompetent) {
-      totalBonus += proficiencyBonus;
-    }
-    
-    return totalBonus >= 0 ? `+${totalBonus}` : `${totalBonus}`;
+
+    const result = computeSkillRuleResult(skillName);
+    return result ? formatSignedValue(Math.round(result.value)) : '+0';
   };
 
   // Функция для получения детального расчета навыка
   const getSkillCalculation = (skillName: string): string => {
-    if (!character) return '';
-    
-    const skillToStatMap: { [key: string]: string } = {
-      'acrobatics': 'dexterity',
-      'animal_handling': 'wisdom',
-      'arcana': 'intelligence',
-      'athletics': 'strength',
-      'deception': 'charisma',
-      'history': 'intelligence',
-      'insight': 'wisdom',
-      'intimidation': 'charisma',
-      'investigation': 'intelligence',
-      'medicine': 'wisdom',
-      'nature': 'intelligence',
-      'perception': 'wisdom',
-      'performance': 'charisma',
-      'persuasion': 'charisma',
-      'religion': 'intelligence',
-      'sleight_of_hand': 'dexterity',
-      'stealth': 'dexterity',
-      'survival': 'wisdom'
-    };
-
-    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
-    const statValue = getActualStatValue(statKey);
-    const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
-    const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
-    const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
-    
-    const baseModifier = Math.floor((statValue - 10) / 2);
-    let calculation = `${baseModifier}(Модификатор ${getStatNameInRussian(statKey)})`;
-    
-    if (isProficient) {
-      calculation += ` + ${proficiencyBonus}(Бонус мастерства)`;
-    }
-    
-    if (isCompetent) {
-      calculation += ` + ${proficiencyBonus}(Компетенция)`;
-    }
-    
-    const totalBonus = baseModifier + (isProficient ? proficiencyBonus : 0) + (isCompetent ? proficiencyBonus : 0);
-    calculation += ` = ${totalBonus >= 0 ? '+' : ''}${totalBonus}`;
-    
-    return calculation;
+    const result = computeSkillRuleResult(skillName);
+    return result?.expression ?? '';
   };
 
   // Компонент сетки инвентаря (копия упрощенной версии для V2)
@@ -1865,34 +2006,33 @@ const CharacterDetailV3: React.FC = () => {
             <div className="w-1/5">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Навыки</h2>
               <div className="grid grid-cols-1 gap-1">
-                {[
-                  'acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception',
-                  'history', 'insight', 'intimidation', 'investigation', 'medicine',
-                  'nature', 'perception', 'performance', 'persuasion', 'religion',
-                  'sleight_of_hand', 'stealth', 'survival'
-                ]
-                .sort((a, b) => {
-                  const statA = getSkillStat(a);
-                  const statB = getSkillStat(b);
-                  const orderA = getStatOrder(statA);
-                  const orderB = getStatOrder(statB);
-                  
-                  // Если характеристики одинаковые, сортируем по алфавиту
-                  if (orderA === orderB) {
-                    return getSkillNameInRussian(a).localeCompare(getSkillNameInRussian(b), 'ru');
-                  }
-                  
-                  return orderA - orderB;
-                })
-                .map((skillName) => {
-                  const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
-                  const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
-                  const isModified = modifiedSkills[skillName.toLowerCase()] !== undefined;
-                  const currentBonus = getActualSkillValue(skillName);
-                  
-                  const skillBorderColor = getSkillBorderColor(skillName);
-                  
-                  return (
+                {allSkillNames
+                  .slice()
+                  .sort((a, b) => {
+                    const statA = getSkillStat(a);
+                    const statB = getSkillStat(b);
+                    const orderA = getStatOrder(statA);
+                    const orderB = getStatOrder(statB);
+
+                    // Если характеристики одинаковые, сортируем по алфавиту
+                    if (orderA === orderB) {
+                      return getSkillNameInRussian(a).localeCompare(getSkillNameInRussian(b), 'ru');
+                    }
+
+                    return orderA - orderB;
+                  })
+                  .map((skillName) => {
+                    const normalizedSkillKey = getNormalizedSkillKey(skillName);
+                    const isProficient =
+                      hasSkillProficiency(character, skillName) ||
+                      customSkillProficiencies[normalizedSkillKey];
+                    const isCompetent = skillCompetencies[normalizedSkillKey] || false;
+                    const isModified = modifiedSkills[normalizedSkillKey] !== undefined;
+                    const currentBonus = getActualSkillValue(skillName);
+
+                    const skillBorderColor = getSkillBorderColor(skillName);
+
+                    return (
                     <div 
                       key={skillName} 
                       className={`group relative flex items-center justify-between p-1.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors bg-white border border-gray-200 ${skillBorderColor} ${
@@ -1908,15 +2048,15 @@ const CharacterDetailV3: React.FC = () => {
                         {isCompetent && <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">К</span>}
                       </div>
                       <div className="flex items-center space-x-1">
-                      <div className={`text-xs font-bold ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>
+                        <div className={`text-xs font-bold ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>
                           {currentBonus >= 0 ? `+${currentBonus}` : currentBonus}
                         </div>
                         {/* Кнопка кубика - появляется при наведении */}
                         <button
-               onClick={(e) => {
-                 e.stopPropagation();
-                 rollSkillDice(skillName, 'normal', false);
-               }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            rollSkillDice(skillName, 'normal', false);
+                          }}
                           className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-blue-100 rounded-full"
                           title="Бросить кубик"
                         >
@@ -2260,38 +2400,29 @@ const CharacterDetailV3: React.FC = () => {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Связанные навыки:</h4>
                     <div className="space-y-1">
-                      {[
-                        { skill: 'acrobatics', stat: 'dexterity' },
-                        { skill: 'animal_handling', stat: 'wisdom' },
-                        { skill: 'arcana', stat: 'intelligence' },
-                        { skill: 'athletics', stat: 'strength' },
-                        { skill: 'deception', stat: 'charisma' },
-                        { skill: 'history', stat: 'intelligence' },
-                        { skill: 'insight', stat: 'wisdom' },
-                        { skill: 'intimidation', stat: 'charisma' },
-                        { skill: 'investigation', stat: 'intelligence' },
-                        { skill: 'medicine', stat: 'wisdom' },
-                        { skill: 'nature', stat: 'intelligence' },
-                        { skill: 'perception', stat: 'wisdom' },
-                        { skill: 'performance', stat: 'charisma' },
-                        { skill: 'persuasion', stat: 'charisma' },
-                        { skill: 'religion', stat: 'intelligence' },
-                        { skill: 'sleight_of_hand', stat: 'dexterity' },
-                        { skill: 'stealth', stat: 'dexterity' },
-                        { skill: 'survival', stat: 'wisdom' }
-                      ].filter(item => item.stat === selectedStat).map(({ skill }) => {
-                        const isProficient = hasSkillProficiency(character, skill) || customSkillProficiencies[skill.toLowerCase()];
-                        return (
-                          <div key={skill} className={`flex items-center justify-between p-2 rounded ${isProficient ? 'bg-green-50' : 'bg-gray-50'}`}>
-                            <span className={`text-sm ${isProficient ? 'text-green-800 font-medium' : 'text-gray-700'}`}>
-                              {getSkillNameInRussian(skill)}
-                            </span>
-                            <span className={`text-sm font-bold ${isProficient ? 'text-green-800' : 'text-gray-700'}`}>
-                              {getSkillBonus(skill)}
-                            </span>
-                          </div>
-                        );
-                      })}
+                      {getDependentNames(selectedStat, 'skill')
+                        .sort((a, b) => getSkillNameInRussian(a).localeCompare(getSkillNameInRussian(b), 'ru'))
+                        .map((skill) => {
+                          const normalizedSkillKey = getNormalizedSkillKey(skill);
+                          const isProficient =
+                            hasSkillProficiency(character, skill) ||
+                            customSkillProficiencies[normalizedSkillKey];
+                          return (
+                            <div
+                              key={skill}
+                              className={`flex items-center justify-between p-2 rounded ${
+                                isProficient ? 'bg-green-50' : 'bg-gray-50'
+                              }`}
+                            >
+                              <span className={`text-sm ${isProficient ? 'text-green-800 font-medium' : 'text-gray-700'}`}>
+                                {getSkillNameInRussian(skill)}
+                              </span>
+                              <span className={`text-sm font-bold ${isProficient ? 'text-green-800' : 'text-gray-700'}`}>
+                                {getSkillBonus(skill)}
+                              </span>
+                            </div>
+                          );
+                        })}
                     </div>
                   </div>
                 </div>
@@ -2338,9 +2469,9 @@ const CharacterDetailV3: React.FC = () => {
                     <div className="bg-gray-50 p-3 rounded-md">
                       <div className="text-sm text-gray-600">
                         {getSkillCalculation(selectedSkill)}
-                        {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                        {modifiedSkills[getNormalizedSkillKey(selectedSkill)] !== undefined && (
                           <span className="text-purple-600 font-medium block mt-1">
-                            → {modifiedSkills[selectedSkill.toLowerCase()]} (Изменено игроком)
+                            → {modifiedSkills[getNormalizedSkillKey(selectedSkill)]} (Изменено игроком)
                           </span>
                         )}
                       </div>
@@ -2348,7 +2479,8 @@ const CharacterDetailV3: React.FC = () => {
                     
                     {/* Бонусы от эффектов экипированных предметов */}
                     {(() => {
-                      const effectBonus = equippedEffectsCache.skillBonuses[selectedSkill.toLowerCase()] || 0;
+                      const effectBonus =
+                        equippedEffectsCache.skillBonuses[getNormalizedSkillKey(selectedSkill)] || 0;
                       if (effectBonus !== 0) {
                         return (
                           <div className="bg-purple-50 p-3 rounded-md mt-2">
@@ -2368,7 +2500,7 @@ const CharacterDetailV3: React.FC = () => {
                     })()}
                   </div>
 
-                  {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                  {modifiedSkills[getNormalizedSkillKey(selectedSkill)] !== undefined && (
                     <button
                       onClick={() => resetSkillValue(selectedSkill)}
                       className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
@@ -2388,35 +2520,70 @@ const CharacterDetailV3: React.FC = () => {
                         <button
                           onClick={() => toggleSkillProficiency(selectedSkill)}
                           className={`text-sm font-medium px-3 py-1 rounded transition-colors ${
-                            hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]
+                            hasSkillProficiency(character, selectedSkill) ||
+                            customSkillProficiencies[getNormalizedSkillKey(selectedSkill)]
                               ? 'bg-green-600 text-white' 
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
-                          {(hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]) ? '✓ Да' : '✗ Нет'}
+                          {(hasSkillProficiency(character, selectedSkill) ||
+                            customSkillProficiencies[getNormalizedSkillKey(selectedSkill)])
+                            ? '✓ Да'
+                            : '✗ Нет'}
                         </button>
                       </div>
                       
                       <div className={`flex items-center justify-between p-3 rounded-md ${
-                        (hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]) 
+                        (hasSkillProficiency(character, selectedSkill) ||
+                          customSkillProficiencies[getNormalizedSkillKey(selectedSkill)])
                           ? 'bg-blue-50' 
                           : 'bg-gray-100'
                       }`}>
                         <span className="text-sm text-gray-700">Компетентен</span>
                         <button
                           onClick={() => toggleSkillCompetency(selectedSkill)}
-                          disabled={!(hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()])}
+                          disabled={
+                            !(
+                              hasSkillProficiency(character, selectedSkill) ||
+                              customSkillProficiencies[getNormalizedSkillKey(selectedSkill)]
+                            )
+                          }
                           className={`text-sm font-medium px-3 py-1 rounded transition-colors ${
-                            skillCompetencies[selectedSkill.toLowerCase()] 
+                            skillCompetencies[getNormalizedSkillKey(selectedSkill)] 
                               ? 'bg-blue-600 text-white' 
-                              : (hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()])
+                              : hasSkillProficiency(character, selectedSkill) ||
+                                customSkillProficiencies[getNormalizedSkillKey(selectedSkill)]
                                 ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           }`}
                         >
-                          {skillCompetencies[selectedSkill.toLowerCase()] ? '✓ Да' : '✗ Нет'}
+                          {skillCompetencies[getNormalizedSkillKey(selectedSkill)] ? '✓ Да' : '✗ Нет'}
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Декларативные зависимости:</h4>
+                    <div className="bg-gray-50 p-3 rounded-md space-y-1">
+                      {skillDependencies.length === 0 ? (
+                        <p className="text-xs text-gray-500">Для этого навыка пока не задано правил зависимостей.</p>
+                      ) : (
+                        skillDependencies.map((dependencyName) => {
+                          const dependencyRule = getRule(dependencyName);
+                          const dependencyLabel = getRuleRussianName(dependencyName) || dependencyName;
+                          const dependencyTypeLabel = getRuleTypeLabel(dependencyRule?.type);
+                          return (
+                            <div
+                              key={dependencyName}
+                              className="flex items-center justify-between text-xs text-gray-600"
+                            >
+                              <span>{dependencyLabel}</span>
+                              <span className="text-gray-400 font-semibold">{dependencyTypeLabel}</span>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
 
@@ -2427,25 +2594,26 @@ const CharacterDetailV3: React.FC = () => {
                         <span className="text-gray-600">Базовый модификатор:</span>
                         <span className="font-medium">{getSkillBonus(selectedSkill)}</span>
                       </div>
-                      {(hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]) && (
+                      {(hasSkillProficiency(character, selectedSkill) ||
+                        customSkillProficiencies[getNormalizedSkillKey(selectedSkill)]) && (
                         <div className="flex justify-between text-green-700">
                           <span>Бонус мастерства:</span>
                           <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
                         </div>
                       )}
-                      {skillCompetencies[selectedSkill.toLowerCase()] && (
+                      {skillCompetencies[getNormalizedSkillKey(selectedSkill)] && (
                         <div className="flex justify-between text-blue-700">
                           <span>Компетенция:</span>
                           <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
                         </div>
                       )}
-                      {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                      {modifiedSkills[getNormalizedSkillKey(selectedSkill)] !== undefined && (
                         <div className="flex justify-between text-purple-700">
                           <span>Ручная модификация:</span>
                           <span className="font-medium">
-                            {modifiedSkills[selectedSkill.toLowerCase()] >= 0 
-                              ? `+${modifiedSkills[selectedSkill.toLowerCase()]}` 
-                              : modifiedSkills[selectedSkill.toLowerCase()]}
+                            {modifiedSkills[getNormalizedSkillKey(selectedSkill)] >= 0 
+                              ? `+${modifiedSkills[getNormalizedSkillKey(selectedSkill)]}`
+                              : modifiedSkills[getNormalizedSkillKey(selectedSkill)]}
                           </span>
                         </div>
                       )}
@@ -2558,50 +2726,31 @@ const CharacterDetailV3: React.FC = () => {
                         )}
                         {selectedDerivedStat === 'ac' && (
                           <>
-                            {armorInfo ? (
-                              <>
-                                <div className="space-y-2">
-                                  <div>
-                                    <strong>Базовая защита:</strong> {armorInfo.base_ac} ({armorInfo.details.base_formula})
-                                  </div>
-                                  {armorInfo.armor_name && (
-                                    <div>
-                                      <strong>Экипированная броня:</strong> {armorInfo.armor_name} ({armorInfo.armor_type})
-                                    </div>
+                            {armorInfo && (
+                              <div className="space-y-2">
+                                <div>
+                                  <strong>Базовая защита:</strong> {armorInfo.base_ac}{' '}
+                                  {armorInfo.details?.base_formula && (
+                                    <span>({armorInfo.details.base_formula})</span>
                                   )}
-                                  <div>
-                                    <strong>Формула брони:</strong> {armorInfo.details.armor_formula}
-                                  </div>
-                                  <div>
-                                    <strong>Модификатор ЛВК:</strong> {Math.floor((getActualStatValue('dexterity') - 10) / 2) > 0 ? '+' : ''}{Math.floor((getActualStatValue('dexterity') - 10) / 2)}
-                                    {armorInfo.details.max_dex_bonus && (
-                                      <span className="text-sm text-gray-600"> (макс. +{armorInfo.details.max_dex_bonus})</span>
-                                    )}
-                                  </div>
-                                  {armorInfo.details.armor_bonus > 0 && (
-                                    <div>
-                                      <strong>Бонус брони:</strong> +{armorInfo.details.armor_bonus}
-                                    </div>
-                                  )}
-                                  <div className="font-bold text-lg">
-                                    <strong>Итоговая защита:</strong> {getActualDerivedStatValue('ac')}
-                                  </div>
                                 </div>
-                                {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
-                                  <div className="mt-2 text-purple-600 font-medium">
-                                    → {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                                {armorInfo.armor_name && (
+                                  <div>
+                                    <strong>Экипированная броня:</strong> {armorInfo.armor_name} ({armorInfo.armor_type})
                                   </div>
                                 )}
-                              </>
-                            ) : (
-                          <>
-                            10 + {Math.floor((getActualStatValue('dexterity') - 10) / 2)}(Модификатор ЛВК) = {10 + Math.floor((getActualStatValue('dexterity') - 10) / 2)} (Базовая защита)
+                              </div>
+                            )}
+                            <div className="mt-2">
+                              <strong>Расчет по правилам:</strong> {getArmorClassCalculation()}
+                            </div>
+                            <div className="font-bold text-lg mt-2">
+                              <strong>Итоговая защита:</strong> {getActualDerivedStatValue('ac')}
+                            </div>
                             {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
-                              <span className="text-purple-600 font-medium">
-                                {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
-                              </span>
-                                )}
-                              </>
+                              <div className="mt-2 text-purple-600 font-medium">
+                                → {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                              </div>
                             )}
                           </>
                         )}

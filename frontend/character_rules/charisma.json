@@ -1,0 +1,13 @@
+{
+  "name": "charisma",
+  "russian_name": "Харизма",
+  "type": "stat",
+  "dependencies": [],
+  "influence": [
+    "deception",
+    "intimidation",
+    "performance",
+    "persuasion"
+  ]
+}
+

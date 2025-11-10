@@ -1,0 +1,10 @@
+{
+  "name": "strength",
+  "russian_name": "Сила",
+  "type": "stat",
+  "dependencies": [],
+  "influence": [
+    "athletics"
+  ]
+}
+

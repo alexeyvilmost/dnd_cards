@@ -1,0 +1,25 @@
+{
+  "name": "athletics",
+  "russian_name": "Атлетика",
+  "type": "skill",
+  "dependencies": [
+    "strength",
+    "proficiency_bonus",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "proficiency": "none",
+      "formula": "{STRENGTH_MOD} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "proficient",
+      "formula": "{STRENGTH_MOD} + {PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "expert",
+      "formula": "{STRENGTH_MOD} + 2*{PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    }
+  ]
+}
+

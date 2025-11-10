@@ -1,0 +1,14 @@
+{
+  "name": "intelligence",
+  "russian_name": "Интеллект",
+  "type": "stat",
+  "dependencies": [],
+  "influence": [
+    "arcana",
+    "history",
+    "investigation",
+    "nature",
+    "religion"
+  ]
+}
+

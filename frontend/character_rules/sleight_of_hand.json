@@ -1,0 +1,25 @@
+{
+  "name": "sleight_of_hand",
+  "russian_name": "Ловкость рук",
+  "type": "skill",
+  "dependencies": [
+    "dexterity",
+    "proficiency_bonus",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "proficiency": "none",
+      "formula": "{DEXTERITY_MOD} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "proficient",
+      "formula": "{DEXTERITY_MOD} + {PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "expert",
+      "formula": "{DEXTERITY_MOD} + 2*{PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    }
+  ]
+}
+

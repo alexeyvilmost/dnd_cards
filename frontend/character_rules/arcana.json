@@ -1,0 +1,24 @@
+{
+  "name": "arcana",
+  "russian_name": "Магия",
+  "type": "skill",
+  "dependencies": [
+    "intelligence",
+    "proficiency_bonus",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "proficiency": "none",
+      "formula": "{INTELLIGENCE_MOD} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "proficient",
+      "formula": "{INTELLIGENCE_MOD} + {PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    },
+    {
+      "proficiency": "expert",
+      "formula": "{INTELLIGENCE_MOD} + 2*{PROFICIENCY_BONUS} + {EQUIPMENT_EFFECTS}"
+    }
+  ]
+}

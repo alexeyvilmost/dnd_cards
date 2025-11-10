@@ -1,0 +1,9 @@
+{
+  "name": "proficiency_bonus",
+  "russian_name": "Бонус мастерства",
+  "type": "derived",
+  "dependencies": [
+    "level"
+  ]
+}
+

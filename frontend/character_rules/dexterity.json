@@ -1,0 +1,13 @@
+{
+  "name": "dexterity",
+  "russian_name": "Ловкость",
+  "type": "stat",
+  "dependencies": [],
+  "influence": [
+    "acrobatics",
+    "sleight_of_hand",
+    "stealth",
+    "initiative",
+    "armor_class"
+  ]
+}

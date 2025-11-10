@@ -1,0 +1,15 @@
+{
+  "name": "wisdom",
+  "russian_name": "Мудрость",
+  "type": "stat",
+  "dependencies": [],
+  "influence": [
+    "animal_handling",
+    "insight",
+    "medicine",
+    "perception",
+    "survival",
+    "passive_perception"
+  ]
+}
+

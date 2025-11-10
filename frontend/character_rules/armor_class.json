@@ -1,0 +1,32 @@
+{
+  "name": "armor_class",
+  "russian_name": "Класс брони",
+  "type": "stat",
+  "dependencies": [
+    "dexterity",
+    "proficiency_bonus",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "armor_type": "none",
+      "formula": "10 + {DEXTERITY_MOD}"
+    },
+    {
+      "armor_type": "cloth",
+      "formula": "{ARMOR_BONUS} + {DEXTERITY_MOD}"
+    },
+    {
+      "armor_type": "light",
+      "formula": "{ARMOR_BONUS} + {DEXTERITY_MOD}"
+    },
+    {
+      "armor_type": "medium",
+      "formula": "{ARMOR_BONUS} + min(2, {DEXTERITY_MOD})"
+    },
+    {
+      "armor_type": "heavy",
+      "formula": "{ARMOR_BONUS}"
+    }
+  ]
+}
