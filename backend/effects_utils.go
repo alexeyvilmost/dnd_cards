@@ -13,7 +13,7 @@ type EffectAnalysisResult struct {
 }
 
 // AnalyzeCardEffects анализирует эффекты карты и возвращает структурированные бонусы
-func AnalyzeCardEffects(effects *Effects) *EffectAnalysisResult {
+func AnalyzeCardEffects(effects *CardEffects) *EffectAnalysisResult {
 	result := &EffectAnalysisResult{
 		CharacteristicBonuses: make(map[string]int),
 		SkillBonuses:          make(map[string]int),
@@ -78,7 +78,7 @@ func AnalyzeCardEffects(effects *Effects) *EffectAnalysisResult {
 }
 
 // GetEffectDescription возвращает человекочитаемое описание эффекта
-func GetEffectDescription(effect Effect) string {
+func GetEffectDescription(effect CardEffect) string {
 	targetTypeName := getTargetTypeName(effect.TargetType)
 	targetSpecificName := getTargetSpecificName(effect.TargetType, effect.TargetSpecific)
 
@@ -196,7 +196,7 @@ func getSavingThrowName(st string) string {
 }
 
 // ValidateEffect проверяет корректность эффекта
-func ValidateEffect(effect Effect) error {
+func ValidateEffect(effect CardEffect) error {
 	// Проверяем тип цели
 	switch effect.TargetType {
 	case EffectTargetCharacteristic, EffectTargetSkill, EffectTargetSavingThrow:
@@ -253,7 +253,7 @@ func ValidateEffect(effect Effect) error {
 }
 
 // ValidateEffects проверяет корректность массива эффектов
-func ValidateEffects(effects *Effects) error {
+func ValidateEffects(effects *CardEffects) error {
 	if effects == nil {
 		return nil
 	}
@@ -278,7 +278,7 @@ func containsString(slice []string, item string) bool {
 }
 
 // GetEffectsSummary возвращает краткое описание всех эффектов карты
-func GetEffectsSummary(effects *Effects) string {
+func GetEffectsSummary(effects *CardEffects) string {
 	if effects == nil || len(*effects) == 0 {
 		return "Эффекты отсутствуют"
 	}

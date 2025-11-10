@@ -1,0 +1,2899 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Edit, Package, Weight, Coins, Shield, Heart, Zap, User, Sword, Star, Plus, X, Dices, Eye } from 'lucide-react';
+import { apiClient } from '../api/client';
+import { useAuth } from '../contexts/AuthContext';
+import ItemSelector from '../components/ItemSelector';
+import CardPreview from '../components/CardPreview';
+import CardDetailModal from '../components/CardDetailModal';
+import { Card } from '../types';
+import { useToast } from '../contexts/ToastContext';
+import { getRussianName } from '../utils/russianTranslations';
+import { getRarityBorderColor } from '../utils/rarityColors';
+import {
+  CharacterV3,
+  calculateDerivedStats,
+  getStatName,
+  getFullStatName,
+  getSkillName,
+  getSavingThrowName,
+  hasSkillProficiency,
+  hasSavingThrowProficiency,
+  getStatValue,
+} from '../utils/characterCalculationsV3';
+
+const CharacterDetailV3: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  // const { } = useAuth(); // User context not needed in this component
+  const [character, setCharacter] = useState<CharacterV3 | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [selectedStat, setSelectedStat] = useState<string | null>(null);
+  const [showStatModal, setShowStatModal] = useState(false);
+  const [modifiedStats, setModifiedStats] = useState<{ [key: string]: number }>({});
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [showSkillModal, setShowSkillModal] = useState(false);
+  const [modifiedSkills, setModifiedSkills] = useState<{ [key: string]: number }>({});
+  const [skillCompetencies, setSkillCompetencies] = useState<{ [key: string]: boolean }>({});
+  const [customSavingThrowProficiencies, setCustomSavingThrowProficiencies] = useState<{ [key: string]: boolean }>({});
+  const [customSkillProficiencies, setCustomSkillProficiencies] = useState<{ [key: string]: boolean }>({});
+  
+  // Состояние для модального окна выбора предметов
+  const [showItemSelector, setShowItemSelector] = useState(false);
+  
+  // Состояние для инвентарей персонажа
+  const [characterInventories, setCharacterInventories] = useState<any[]>([]);
+  
+  // Состояния для модальных окон производных характеристик
+  const [selectedDerivedStat, setSelectedDerivedStat] = useState<string | null>(null);
+  const [showDerivedStatModal, setShowDerivedStatModal] = useState(false);
+  const [modifiedDerivedStats, setModifiedDerivedStats] = useState<{ [key: string]: number }>({});
+
+  // Кэш для эффектов экипированных предметов
+  const [equippedEffectsCache, setEquippedEffectsCache] = useState<{
+    characteristicBonuses: { [key: string]: number };
+    skillBonuses: { [key: string]: number };
+    savingThrowBonuses: { [key: string]: number };
+  }>({
+    characteristicBonuses: {},
+    skillBonuses: {},
+    savingThrowBonuses: {}
+  });
+
+  // Флаг для отслеживания изменений экипировки
+  const [equipmentChanged, setEquipmentChanged] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      loadCharacter();
+    }
+  }, [id]);
+
+  // Обновляем кэш эффектов только при изменении экипировки
+  useEffect(() => {
+    if (equipmentChanged && characterInventories.length > 0) {
+      console.log('🔄 [EFFECTS] Обновляем кэш эффектов экипировки');
+      const newEffects = getEquippedItemEffects();
+      setEquippedEffectsCache(newEffects);
+      
+      // Обновляем информацию о защите локально (без API вызова)
+      updateArmorInfoFromInventories();
+      
+      setEquipmentChanged(false);
+    }
+  }, [equipmentChanged, characterInventories]);
+
+  const loadCharacter = async () => {
+    if (!id) return;
+
+    const startTime = performance.now();
+    console.log('🚀 [PERF] Начало загрузки персонажа');
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const characterStartTime = performance.now();
+      const response = await apiClient.get<CharacterV3>(`/api/characters-v2/${id}`);
+      const characterEndTime = performance.now();
+      console.log(`⏱️ [PERF] Загрузка персонажа: ${(characterEndTime - characterStartTime).toFixed(2)}ms`);
+      
+      setCharacter(response.data);
+      
+      // Загружаем инвентари персонажа (передаем ID напрямую)
+      const inventoriesStartTime = performance.now();
+      await loadCharacterInventoriesById(response.data.id);
+      const inventoriesEndTime = performance.now();
+      console.log(`⏱️ [PERF] Загрузка инвентарей: ${(inventoriesEndTime - inventoriesStartTime).toFixed(2)}ms`);
+      
+      // Обновляем информацию о защите на основе инвентарей
+      updateArmorInfoFromInventories();
+      
+      // Загружаем информацию о защите (для совместимости)
+      const armorStartTime = performance.now();
+      await loadArmorInfo(response.data.id);
+      const armorEndTime = performance.now();
+      console.log(`⏱️ [PERF] Загрузка информации о защите: ${(armorEndTime - armorStartTime).toFixed(2)}ms`);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`✅ [PERF] Общее время загрузки: ${totalTime.toFixed(2)}ms`);
+    } catch (err) {
+      setError('Ошибка загрузки персонажа');
+      console.error('Error loading character:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCharacterInventories = async () => {
+    if (!character) return;
+    return loadCharacterInventoriesById(character.id);
+  };
+
+  const loadCharacterInventoriesById = async (characterId: string) => {
+    const startTime = performance.now();
+    console.log('📦 [PERF] Начало загрузки инвентарей');
+
+    try {
+      const apiStartTime = performance.now();
+      const response = await apiClient.get(`/api/characters-v2/${characterId}/inventories`);
+      const apiEndTime = performance.now();
+      console.log(`🌐 [PERF] API запрос инвентарей: ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
+      
+      console.log('Инвентари персонажа:', response.data);
+      
+      const stateStartTime = performance.now();
+      setCharacterInventories(response.data || []);
+      setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки при первой загрузке
+      const stateEndTime = performance.now();
+      console.log(`🔄 [PERF] Обновление состояния: ${(stateEndTime - stateStartTime).toFixed(2)}ms`);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`✅ [PERF] Общее время загрузки инвентарей: ${totalTime.toFixed(2)}ms`);
+    } catch (err) {
+      console.error('Ошибка загрузки инвентарей персонажа:', err);
+    }
+  };
+
+  const handleDeleteCharacter = async () => {
+    if (!character || !window.confirm('Вы уверены, что хотите удалить этого персонажа?')) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/api/characters-v2/${character.id}`);
+      navigate('/characters-v3');
+    } catch (err) {
+      setError('Ошибка удаления персонажа');
+      console.error('Error deleting character:', err);
+    }
+  };
+
+  const [isAddingItems, setIsAddingItems] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const [hoveredSlotRef, setHoveredSlotRef] = useState<HTMLDivElement | null>(null);
+  
+  // Состояние для информации о защите
+  const [armorInfo, setArmorInfo] = useState<any>(null);
+
+  // Модал подробного просмотра карты
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [showCardDetailModal, setShowCardDetailModal] = useState(false);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<any | null>(null);
+
+  const openCardDetail = (item: any) => {
+    if (!item || !item.card) return;
+    setSelectedCard(item.card as Card);
+    setSelectedInventoryItem(item);
+    setShowCardDetailModal(true);
+  };
+
+  const closeCardDetail = () => {
+    setShowCardDetailModal(false);
+    setSelectedCard(null);
+    setSelectedInventoryItem(null);
+  };
+
+  const handleEditCardFromModal = (cardId: string) => {
+    setShowCardDetailModal(false);
+    window.location.href = `/edit/${cardId}`;
+  };
+
+  const handleDeleteCardFromModal = (_cardId: string) => {
+    // Удаление карт из инвентаря персонажа V3 (API V2) не поддерживается из этого модала
+    closeCardDetail();
+  };
+
+  // Вспомогательная функция для получения информации о броне из инвентарей
+  const getSimulatedArmorInfo = (inventories: any[]) => {
+    let simulatedEquippedArmorType: string | null = null;
+    let simulatedEquippedShield = false;
+
+    inventories.forEach(inv => {
+      if (inv.items && inv.items.length > 0) {
+        inv.items.forEach((item: any) => {
+          // Ищем только предметы в слоте "body"
+          if (item.equipped_slot === 'body') {
+            // Проверяем, является ли предмет бронёй (по типу или наличию properties с armor)
+            if (item.card?.type === 'armor' || (item.card?.properties && item.card.properties.some((prop: string) => prop.includes('armor')))) {
+              // Определяем тип брони из properties
+              if (item.card.properties.includes('light_armor')) {
+                simulatedEquippedArmorType = 'Легкая броня';
+              } else if (item.card.properties.includes('medium_armor')) {
+                simulatedEquippedArmorType = 'Средняя броня';
+              } else if (item.card.properties.includes('heavy_armor')) {
+                simulatedEquippedArmorType = 'Тяжелая броня';
+              } else if (item.card.properties.includes('cloth')) {
+                simulatedEquippedArmorType = 'Ткань';
+              }
+            }
+          }
+        });
+      }
+    });
+    return { simulatedEquippedArmorType, simulatedEquippedShield };
+  };
+
+  // Функция для обновления информации о защите из инвентарей (без API)
+  const updateArmorInfoFromInventories = () => {
+    console.log('🛡️ [ARMOR] Updating armor info from inventories');
+    if (!characterInventories || characterInventories.length === 0) {
+      console.log('🛡️ [ARMOR] No inventories available');
+      return;
+    }
+    
+    let equippedArmorType: string | null = null;
+    let armorBonus = 0;
+    
+    characterInventories.forEach(inv => {
+      if (inv.items) {
+        inv.items.forEach((item: any) => {
+          // Ищем только предметы в слоте "body"
+          if (item.equipped_slot === 'body') {
+            console.log('🛡️ [ARMOR] Found item in body slot:', item.card?.name);
+            console.log('🛡️ [ARMOR] Full card structure:', item.card);
+            console.log('🛡️ [ARMOR] Card properties:', item.card?.properties);
+            console.log('🛡️ [ARMOR] Card armor_type:', item.card?.armor_type);
+            console.log('🛡️ [ARMOR] Card armor_bonus:', item.card?.armor_bonus);
+            
+            // Проверяем, является ли предмет бронёй (по типу или наличию properties с armor)
+            if (item.card?.type === 'armor' || (item.card?.properties && item.card.properties.some((prop: string) => prop.includes('armor')))) {
+              // Определяем тип брони из properties
+              if (item.card.properties.includes('light_armor')) {
+                equippedArmorType = 'Легкая броня';
+              } else if (item.card.properties.includes('medium_armor')) {
+                equippedArmorType = 'Средняя броня';
+              } else if (item.card.properties.includes('heavy_armor')) {
+                equippedArmorType = 'Тяжелая броня';
+              } else if (item.card.properties.includes('cloth')) {
+                equippedArmorType = 'Ткань';
+              }
+              
+              // Получаем бонус брони из bonus_value
+              armorBonus = parseInt(item.card.bonus_value) || 0;
+              console.log('🛡️ [ARMOR] Armor found in body slot:', equippedArmorType, 'bonus:', armorBonus);
+            }
+          }
+        });
+      }
+    });
+    
+    // Обновляем armorInfo локально
+    const newArmorInfo = {
+      armor_type: equippedArmorType || 'Без брони',
+      details: {
+        armor_bonus: armorBonus,
+        max_dex_bonus: equippedArmorType === 'Средняя броня' ? 2 : undefined
+      }
+    };
+    
+    console.log('🛡️ [ARMOR] Setting new armorInfo:', newArmorInfo);
+    setArmorInfo(newArmorInfo);
+    
+    console.log('🛡️ [ARMOR] Обновлена информация о защите локально:', {
+      armor_type: equippedArmorType || 'Без брони',
+      armor_bonus: armorBonus
+    });
+  };
+
+  // Функция для расчета изменений характеристик при экипировке/снятии предмета
+  const calculateStatChanges = (item: any, isEquipping: boolean) => {
+    console.log('📊 [CHANGES] Calculating changes for:', item.card?.name, 'isEquipping:', isEquipping);
+    console.log('📊 [CHANGES] Item effects:', item.card?.effects);
+    
+    const changes: string[] = [];
+    
+    // Обрабатываем эффекты предмета (если есть)
+    if (item.card?.effects && Array.isArray(item.card.effects) && item.card.effects.length > 0) {
+      item.card.effects.forEach((effect: any) => {
+      const bonus = effect.modifier === '+' ? effect.value : -effect.value;
+      const multiplier = isEquipping ? 1 : -1;
+      const actualBonus = bonus * multiplier;
+      
+      if (effect.targetType === 'characteristic') {
+        if (effect.targetSpecific === 'all') {
+          ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+            const currentValue = getActualStatValue(stat);
+            const newValue = currentValue + actualBonus;
+            changes.push(`${getRussianName('characteristic', stat)} ${currentValue} → ${newValue}`);
+          });
+        } else {
+          const currentValue = getActualStatValue(effect.targetSpecific);
+          const newValue = currentValue + actualBonus;
+          changes.push(`${getRussianName('characteristic', effect.targetSpecific)} ${currentValue} → ${newValue}`);
+        }
+      } else if (effect.targetType === 'skill') {
+        if (effect.targetSpecific === 'all') {
+          const allSkills = [
+            'athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 
+            'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 
+            'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'
+          ];
+          allSkills.forEach(skill => {
+            const currentValue = getActualSkillValue(skill);
+            const newValue = currentValue + actualBonus;
+            const currentSign = currentValue >= 0 ? '+' : '';
+            const newSign = newValue >= 0 ? '+' : '';
+            changes.push(`${getRussianName('skill', skill)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+          });
+        } else {
+          const currentValue = getActualSkillValue(effect.targetSpecific);
+          const newValue = currentValue + actualBonus;
+          const currentSign = currentValue >= 0 ? '+' : '';
+          const newSign = newValue >= 0 ? '+' : '';
+          changes.push(`${getRussianName('skill', effect.targetSpecific)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+        }
+      } else if (effect.targetType === 'saving_throw') {
+        if (effect.targetSpecific === 'all') {
+          ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+            const currentSavingThrow = getSavingThrowBonus(stat);
+            const currentValue = parseInt(currentSavingThrow.bonus.replace('+', '')) || 0;
+            const newValue = currentValue + actualBonus;
+            const currentSign = currentValue >= 0 ? '+' : '';
+            const newSign = newValue >= 0 ? '+' : '';
+            changes.push(`Спасбросок ${getRussianName('characteristic', stat)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+          });
+        } else {
+          const currentSavingThrow = getSavingThrowBonus(effect.targetSpecific);
+          const currentValue = parseInt(currentSavingThrow.bonus.replace('+', '')) || 0;
+          const newValue = currentValue + actualBonus;
+          const currentSign = currentValue >= 0 ? '+' : '';
+          const newSign = newValue >= 0 ? '+' : '';
+          changes.push(`Спасбросок ${getRussianName('characteristic', effect.targetSpecific)} ${currentSign}${currentValue} → ${newSign}${newValue}`);
+        }
+      }
+      });
+    }
+
+    // Добавляем изменения защиты, если предмет влияет на броню
+    console.log('🛡️ [DEFENSE] Item analysis:', {
+      hasSlot: !!item.card?.slot,
+      slot: item.card?.slot,
+      type: item.card?.type,
+      isArmorSlot: item.card?.slot && ['head', 'chest', 'legs', 'feet', 'hands', 'body', 'armor'].includes(item.card.slot),
+      isArmorType: item.card?.type === 'armor' || item.card?.type === 'shield'
+    });
+    
+    // Проверяем, что предмет влияет на защиту (предметы брони в слоте "body")
+    const affectsDefense = item.card?.slot === 'body' && (
+      item.card?.type === 'armor' || 
+      item.card?.armor_type ||
+      (item.card?.properties && item.card.properties.some((prop: string) => 
+        prop.includes('armor') || prop.includes('cloth')
+      ))
+    );
+    
+    console.log('🛡️ [DEFENSE] Affects defense check:', {
+      slot: item.card?.slot,
+      type: item.card?.type,
+      properties: item.card?.properties,
+      affectsDefense
+    });
+    
+    if (affectsDefense) {
+      console.log('🛡️ [DEFENSE] Checking defense changes for slot:', item.card.slot);
+      
+      // 1. Рассчитываем защиту ДО экипировки/снятия (используем текущее состояние)
+      const currentDefense = getActualDerivedStatValue('ac');
+      console.log('🛡️ [DEFENSE] Current defense:', currentDefense);
+
+      // 2. Создаем временные инвентари для симуляции нового состояния
+      let tempInventories = JSON.parse(JSON.stringify(characterInventories)); // Deep copy
+
+      if (isEquipping) {
+        // Симулируем экипировку предмета
+        tempInventories = tempInventories.map((inv: any) => {
+          if (inv.type === 'equipment') {
+            return {
+              ...inv,
+              items: inv.items.map((i: any) => {
+                // Если это экипируемый предмет, устанавливаем его слот
+                if (i.id === item.id) {
+                  return { ...i, equipped_slot: item.card.slot };
+                }
+                // Если другой предмет в том же слоте, снимаем его
+                if (i.equipped_slot === item.card.slot && i.id !== item.id) {
+                  return { ...i, equipped_slot: null };
+                }
+                return i;
+              })
+            };
+          }
+          return inv;
+        });
+      } else { // isUnequipping
+        // Симулируем снятие предмета
+        tempInventories = tempInventories.map((inv: any) => {
+          if (inv.type === 'equipment') {
+            return {
+              ...inv,
+              items: inv.items.map((i: any) => {
+                if (i.id === item.id) {
+                  return { ...i, equipped_slot: null };
+                }
+                return i;
+              })
+            };
+          }
+          return inv;
+        });
+      }
+
+      // 3. Рассчитываем эффекты для симулированных инвентарей
+      const simulatedEffectsCache = getEquippedItemEffects(tempInventories);
+
+      // 4. Рассчитываем симулированное значение ловкости
+      // Базовое значение ловкости (без эффектов)
+      const baseDexValue = modifiedStats['dexterity'] !== undefined ? modifiedStats['dexterity'] : getStatValue(character, 'dexterity');
+      // Добавляем бонусы ловкости из симулированных эффектов
+      const simulatedDexterityValue = baseDexValue + (simulatedEffectsCache.characteristicBonuses['dexterity'] || 0);
+
+      // 5. Определяем симулированный тип брони и щита
+      const { simulatedEquippedArmorType, simulatedEquippedShield } = getSimulatedArmorInfo(tempInventories);
+
+      // 6. Рассчитываем новую защиту с симулированными значениями
+      // Локальная функция для расчета защиты
+      const calculateDefense = (dexValue: number, armorType: string | null, armorBonus: number) => {
+        const dexMod = Math.floor((dexValue - 10) / 2);
+        
+        // Если нет брони, используем базовую формулу
+        if (!armorType || armorType === 'Без брони') {
+          return 10 + dexMod;
+        }
+        
+        // Рассчитываем с учетом типа брони
+        let finalAC = armorBonus; // armorBonus уже содержит базовое значение брони
+        
+        switch (armorType) {
+          case 'Ткань':
+          case 'Легкая броня':
+            finalAC += dexMod; // Полный бонус от ловкости
+            break;
+          case 'Средняя броня':
+            finalAC += Math.min(dexMod, 2); // Максимум +2 от ловкости
+            break;
+          case 'Тяжелая броня':
+            // Тяжелая броня не получает бонус от ловкости
+            break;
+        }
+        
+        return finalAC;
+      };
+      
+      // Находим информацию о броне из симулированных инвентарей
+      let simulatedArmorType = null;
+      let simulatedArmorBonus = 0;
+      
+      tempInventories.forEach(inv => {
+        if (inv.items) {
+          inv.items.forEach((item: any) => {
+            // Ищем только предметы в слоте "body"
+            if (item.equipped_slot === 'body' && (item.card?.type === 'armor' || (item.card?.properties && item.card.properties.some((prop: string) => prop.includes('armor'))))) {
+              // Определяем тип брони из properties
+              if (item.card.properties.includes('light_armor')) {
+                simulatedArmorType = 'Легкая броня';
+              } else if (item.card.properties.includes('medium_armor')) {
+                simulatedArmorType = 'Средняя броня';
+              } else if (item.card.properties.includes('heavy_armor')) {
+                simulatedArmorType = 'Тяжелая броня';
+              } else if (item.card.properties.includes('cloth')) {
+                simulatedArmorType = 'Ткань';
+              }
+              
+              // Получаем бонус брони из bonus_value
+              simulatedArmorBonus = parseInt(item.card.bonus_value) || 0;
+            }
+          });
+        }
+      });
+      
+      const newDefense = calculateDefense(simulatedDexterityValue, simulatedArmorType, simulatedArmorBonus);
+      console.log('🛡️ [DEFENSE] New defense:', newDefense);
+
+      // 7. Если защита изменилась, добавляем в список изменений
+      if (currentDefense !== newDefense) {
+        console.log('🛡️ [DEFENSE] Defense changed, adding to changes');
+        changes.push(`Защита ${currentDefense} → ${newDefense}`);
+      } else {
+        console.log('🛡️ [DEFENSE] No defense change');
+      }
+    }
+
+    console.log('📊 [CHANGES] Calculated changes:', changes);
+    return changes;
+  };
+
+  // Функция для оптимистичного обновления инвентаря при экипировке
+  const optimisticallyEquipItem = (item: any, slotType: string) => {
+    if (!characterInventories || characterInventories.length === 0) return;
+    
+    setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки
+    setCharacterInventories(prevInventories => {
+      return prevInventories.map(inventory => {
+        if (inventory.character_id === character?.id) {
+          return {
+            ...inventory,
+            items: inventory.items.map(invItem => {
+              if (invItem.id === item.id) {
+                return {
+                  ...invItem,
+                  equipped_slot: slotType
+                };
+              }
+              return invItem;
+            })
+          };
+        }
+        return inventory;
+      });
+    });
+  };
+
+  // Функция для оптимистичного обновления инвентаря при снятии
+  const optimisticallyUnequipItem = (item: any) => {
+    if (!characterInventories || characterInventories.length === 0) return;
+    
+    setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки
+    setCharacterInventories(prevInventories => {
+      return prevInventories.map(inventory => {
+        if (inventory.character_id === character?.id) {
+          return {
+            ...inventory,
+            items: inventory.items.map(invItem => {
+              if (invItem.id === item.id) {
+                return {
+                  ...invItem,
+                  equipped_slot: null
+                };
+              }
+              return invItem;
+            })
+          };
+        }
+        return inventory;
+      });
+    });
+  };
+
+  // Функция для отката изменений при ошибке
+  const rollbackInventoryChanges = (item: any, wasEquipping: boolean) => {
+    if (!characterInventories || characterInventories.length === 0) return;
+    
+    setCharacterInventories(prevInventories => {
+      return prevInventories.map(inventory => {
+        if (inventory.character_id === character?.id) {
+          return {
+            ...inventory,
+            items: inventory.items.map(invItem => {
+              if (invItem.id === item.id) {
+                return {
+                  ...invItem,
+                  equipped_slot: wasEquipping ? null : item.equipped_slot
+                };
+              }
+              return invItem;
+            })
+          };
+        }
+        return inventory;
+      });
+    });
+  };
+
+  // Функция для анализа эффектов экипированных предметов
+  const getEquippedItemEffects = (inventoriesToAnalyze?: any[]) => {
+    const inventories = inventoriesToAnalyze || characterInventories;
+    if (!inventories || inventories.length === 0) {
+      console.log('🔍 [EFFECTS] Нет инвентарей персонажа');
+      return {
+        characteristicBonuses: {},
+        skillBonuses: {},
+        savingThrowBonuses: {}
+      };
+    }
+
+    const characteristicBonuses: { [key: string]: number } = {};
+    const skillBonuses: { [key: string]: number } = {};
+    const savingThrowBonuses: { [key: string]: number } = {};
+
+    console.log('🔍 [EFFECTS] Анализируем инвентари:', inventories);
+
+    // Проходим по всем инвентарям персонажа
+    inventories.forEach((inventory, inventoryIndex) => {
+      console.log(`🔍 [EFFECTS] Инвентарь ${inventoryIndex}:`, inventory);
+      if (inventory.items && inventory.items.length > 0) {
+        inventory.items.forEach((item: any, itemIndex: number) => {
+          console.log(`🔍 [EFFECTS] Предмет ${itemIndex}:`, {
+            name: item.card?.name,
+            equipped_slot: item.equipped_slot,
+            effects: item.card?.effects
+          });
+          
+          // Проверяем, экипирован ли предмет
+          if (item.equipped_slot && item.equipped_slot !== 'null' && item.equipped_slot !== '') {
+            console.log(`✅ [EFFECTS] Предмет "${item.card?.name}" экипирован в слот "${item.equipped_slot}"`);
+            
+            // Анализируем эффекты предмета
+            if (item.card?.effects && Array.isArray(item.card.effects) && item.card.effects.length > 0) {
+              console.log(`✨ [EFFECTS] У предмета "${item.card?.name}" есть эффекты:`, item.card.effects);
+              
+              item.card.effects.forEach((effect: any, effectIndex: number) => {
+                console.log(`🎯 [EFFECTS] Эффект ${effectIndex}:`, effect);
+                const bonus = effect.modifier === '+' ? effect.value : -effect.value;
+                
+                if (effect.targetType === 'characteristic') {
+                  if (effect.targetSpecific === 'all') {
+                    // Применяем ко всем характеристикам
+                    ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+                      characteristicBonuses[stat] = (characteristicBonuses[stat] || 0) + bonus;
+                    });
+                  } else {
+                    // Применяем к конкретной характеристике
+                    characteristicBonuses[effect.targetSpecific] = (characteristicBonuses[effect.targetSpecific] || 0) + bonus;
+                  }
+                } else if (effect.targetType === 'skill') {
+                  if (effect.targetSpecific === 'all') {
+                    // Применяем ко всем навыкам
+                    const allSkills = [
+                      'athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 
+                      'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 
+                      'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'
+                    ];
+                    allSkills.forEach(skill => {
+                      skillBonuses[skill] = (skillBonuses[skill] || 0) + bonus;
+                    });
+                  } else {
+                    // Применяем к конкретному навыку
+                    console.log(`🎯 [EFFECTS] Применяем бонус ${bonus} к навыку "${effect.targetSpecific}"`);
+                    skillBonuses[effect.targetSpecific] = (skillBonuses[effect.targetSpecific] || 0) + bonus;
+                  }
+                } else if (effect.targetType === 'saving_throw') {
+                  if (effect.targetSpecific === 'all') {
+                    // Применяем ко всем спасброскам
+                    ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(stat => {
+                      savingThrowBonuses[stat] = (savingThrowBonuses[stat] || 0) + bonus;
+                    });
+                  } else {
+                    // Применяем к конкретному спасброску
+                    savingThrowBonuses[effect.targetSpecific] = (savingThrowBonuses[effect.targetSpecific] || 0) + bonus;
+                  }
+                }
+              });
+            }
+          }
+        });
+      }
+    });
+
+    console.log('🎯 [EFFECTS] Итоговые бонусы:', {
+      characteristicBonuses,
+      skillBonuses,
+      savingThrowBonuses
+    });
+
+    return {
+      characteristicBonuses,
+      skillBonuses,
+      savingThrowBonuses
+    };
+  };
+  
+  // Состояние для модального окна кубика
+  const [showDiceModal, setShowDiceModal] = useState(false);
+  const [diceResult, setDiceResult] = useState<{
+    skillName: string;
+    skillBonus: number;
+    diceRoll: number;
+    finalResult: number;
+    isRolling: boolean;
+    rollType: 'normal' | 'advantage' | 'disadvantage';
+    secondDice?: number;
+    selectedDice?: number;
+  } | null>(null);
+
+  // Функция для загрузки информации о защите
+  const loadArmorInfo = async (characterId: string) => {
+    try {
+      const response = await apiClient.get(`/api/characters-v2/${characterId}/armor`);
+      setArmorInfo(response.data);
+      console.log('🛡️ [ARMOR] Загружена информация о защите:', response.data);
+    } catch (error) {
+      console.error('❌ [ARMOR] Ошибка загрузки информации о защите:', error);
+      // В случае ошибки используем базовую защиту
+      setArmorInfo(null);
+    }
+  };
+
+  // Функция для броска кубика навыка
+  const rollSkillDice = (skillName: string, rollType: 'normal' | 'advantage' | 'disadvantage' = 'normal', shouldRoll: boolean = true) => {
+    if (!character) return;
+    
+    const skillBonus = getActualSkillValue(skillName);
+    
+    if (!shouldRoll) {
+      // При первом открытии показываем "?" вместо броска
+      setDiceResult({
+        skillName,
+        skillBonus,
+        diceRoll: 0, // 0 будет означать "?"
+        finalResult: 0, // 0 будет означать "?"
+        isRolling: false,
+        rollType,
+        secondDice: rollType !== 'normal' ? 0 : undefined,
+        selectedDice: 0
+      });
+      setShowDiceModal(true);
+      return;
+    }
+    
+    const firstDice = Math.floor(Math.random() * 20) + 1;
+    const secondDice = rollType !== 'normal' ? Math.floor(Math.random() * 20) + 1 : undefined;
+    
+    let selectedDice: number;
+    if (rollType === 'advantage') {
+      selectedDice = Math.max(firstDice, secondDice!);
+    } else if (rollType === 'disadvantage') {
+      selectedDice = Math.min(firstDice, secondDice!);
+    } else {
+      selectedDice = firstDice;
+    }
+    
+    const finalResult = selectedDice + skillBonus;
+    
+    setDiceResult({
+      skillName,
+      skillBonus,
+      diceRoll: firstDice,
+      finalResult,
+      isRolling: true,
+      rollType,
+      secondDice,
+      selectedDice
+    });
+    
+    setShowDiceModal(true);
+    
+    // Останавливаем анимацию через 1 секунду
+    setTimeout(() => {
+      setDiceResult(prev => prev ? { ...prev, isRolling: false } : null);
+    }, 1000);
+  };
+
+  // Компонент анимированного кубика
+  const AnimatedDice = ({ 
+    isRolling, 
+    finalValue, 
+    isSelected = false, 
+    isAdvantage = false, 
+    isDisadvantage = false 
+  }: { 
+    isRolling: boolean; 
+    finalValue: number; 
+    isSelected?: boolean;
+    isAdvantage?: boolean;
+    isDisadvantage?: boolean;
+  }) => {
+    const [displayValue, setDisplayValue] = useState(1);
+    
+    useEffect(() => {
+      if (isRolling) {
+        const interval = setInterval(() => {
+          setDisplayValue(Math.floor(Math.random() * 20) + 1);
+        }, 100); // Меняем число каждые 100мс
+        
+        return () => clearInterval(interval);
+      } else {
+        setDisplayValue(finalValue);
+      }
+    }, [isRolling, finalValue]);
+    
+    
+    return (
+      <div className="relative w-20 h-16 flex items-center justify-center">
+        <svg width="80" height="64" viewBox="0 0 80 64" className="absolute inset-0">
+          <defs>
+            <filter id="hexagon-shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.1)"/>
+            </filter>
+          </defs>
+          <polygon
+            points="40,4 65,16 65,48 40,60 15,48 15,16"
+            fill={
+              isRolling
+                ? "#f3f4f6"
+                : displayValue === 1
+                  ? "#7f1d1d"
+                  : displayValue === 20
+                    ? "#166534"
+                    : "#f3f4f6"
+            }
+            stroke={
+              isSelected && !isRolling
+                ? isAdvantage
+                  ? "#10b981"
+                  : isDisadvantage
+                    ? "#ef4444"
+                    : "#9ca3af"
+                : isRolling
+                  ? "#9ca3af"
+                  : displayValue === 1
+                    ? "#991b1b"
+                    : displayValue === 20
+                      ? "#15803d"
+                      : "#9ca3af"
+            }
+            strokeWidth={isSelected && !isRolling ? "4" : "2"}
+            filter="url(#hexagon-shadow)"
+          />
+        </svg>
+        <div className={`relative z-10 text-2xl font-bold ${
+          isRolling
+            ? "text-gray-800"
+            : displayValue === 0
+              ? "text-gray-600"
+              : displayValue === 1
+                ? "text-red-100"
+                : displayValue === 20
+                  ? "text-green-100"
+                  : "text-gray-800"
+        }`}>
+          <span className={isRolling ? 'animate-pulse' : ''}>
+            {displayValue === 0 ? '?' : displayValue}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // Компонент анимированного финального результата
+  const AnimatedFinalResult = ({ isRolling, finalValue, skillBonus }: { isRolling: boolean; finalValue: number; skillBonus: number }) => {
+    const [displayValue, setDisplayValue] = useState(1 + skillBonus);
+    
+    useEffect(() => {
+      if (isRolling) {
+        const interval = setInterval(() => {
+          const randomDice = Math.floor(Math.random() * 20) + 1;
+          setDisplayValue(randomDice + skillBonus);
+        }, 100); // Меняем число каждые 100мс
+        
+        return () => clearInterval(interval);
+      } else {
+        setDisplayValue(finalValue);
+      }
+    }, [isRolling, finalValue, skillBonus]);
+    
+    return (
+      <span className="inline-block w-12 text-center">
+        <span className={isRolling ? 'animate-pulse' : ''}>
+          {displayValue === 0 ? '?' : displayValue}
+        </span>
+      </span>
+    );
+  };
+
+
+  const handleAddItems = async (items: Card[]) => {
+    if (isAddingItems) return; // Защита от двойного нажатия
+    
+    const startTime = performance.now();
+    console.log('➕ [PERF] Начало добавления предметов');
+
+    setIsAddingItems(true);
+    try {
+      if (!character) {
+        console.error('Персонаж не найден');
+        return;
+      }
+
+      const cardIds = items.map(item => item.id);
+      
+      const apiStartTime = performance.now();
+      const response = await apiClient.post(`/api/characters-v2/${character.id}/inventories/items`, {
+        card_ids: cardIds
+      });
+      const apiEndTime = performance.now();
+      console.log(`🌐 [PERF] API запрос добавления предметов: ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
+
+      console.log('Предметы добавлены в инвентарь:', response.data);
+      
+      // Обновляем инвентари персонажа
+      const reloadStartTime = performance.now();
+      await loadCharacterInventories();
+      const reloadEndTime = performance.now();
+      console.log(`🔄 [PERF] Перезагрузка инвентарей: ${(reloadEndTime - reloadStartTime).toFixed(2)}ms`);
+      
+      setShowItemSelector(false);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`✅ [PERF] Общее время добавления предметов: ${totalTime.toFixed(2)}ms`);
+    } catch (error) {
+      console.error('Ошибка добавления предметов:', error);
+      // TODO: Показать уведомление об ошибке пользователю
+    } finally {
+      setIsAddingItems(false);
+    }
+  };
+
+  // Функции для работы с модальным окном характеристик
+  const openStatModal = (statKey: string) => {
+    setSelectedStat(statKey);
+    setShowStatModal(true);
+  };
+
+  const closeStatModal = () => {
+    setShowStatModal(false);
+    setSelectedStat(null);
+  };
+
+  // Получить актуальное значение характеристики (с учетом модификаций и эффектов)
+  const getActualStatValue = (statKey: string): number => {
+    if (!character) return 0;
+    
+    // Базовое значение характеристики
+    const baseValue = modifiedStats[statKey] !== undefined ? modifiedStats[statKey] : getStatValue(character, statKey);
+    
+    // Получаем бонусы от эффектов экипированных предметов из кэша
+    const effectBonus = equippedEffectsCache.characteristicBonuses[statKey] || 0;
+    
+    return baseValue + effectBonus;
+  };
+
+  // Изменить значение характеристики
+  const updateStatValue = (statKey: string, newValue: number) => {
+    setModifiedStats(prev => ({
+      ...prev,
+      [statKey]: newValue
+    }));
+  };
+
+  // Вернуться к обычному расчету
+  const resetStatValue = (statKey: string) => {
+    setModifiedStats(prev => {
+      const newStats = { ...prev };
+      delete newStats[statKey];
+      return newStats;
+    });
+  };
+
+  // Функции для работы с модальным окном навыков
+  const openSkillModal = (skillKey: string) => {
+    setSelectedSkill(skillKey);
+    setShowSkillModal(true);
+  };
+
+  const closeSkillModal = () => {
+    setShowSkillModal(false);
+    setSelectedSkill(null);
+  };
+
+
+  // Получить актуальное значение навыка (с учетом модификаций и эффектов)
+  const getActualSkillValue = (skillKey: string): number => {
+    if (!character) return 0;
+    
+    // Базовое значение навыка
+    let baseBonus = 0;
+    if (modifiedSkills[skillKey] !== undefined) {
+      baseBonus = modifiedSkills[skillKey];
+    } else {
+      // Правильно парсим бонус навыка, сохраняя знак
+      const bonusStr = getSkillBonus(skillKey);
+      if (bonusStr.startsWith('+')) {
+        baseBonus = parseInt(bonusStr.substring(1)) || 0;
+      } else if (bonusStr.startsWith('-')) {
+        baseBonus = parseInt(bonusStr) || 0;
+      } else {
+        baseBonus = parseInt(bonusStr) || 0;
+      }
+    }
+    
+    // Получаем бонусы от эффектов экипированных предметов из кэша
+    const effectBonus = equippedEffectsCache.skillBonuses[skillKey] || 0;
+    
+    return baseBonus + effectBonus;
+  };
+
+  // Изменить значение навыка
+  const updateSkillValue = (skillKey: string, newValue: number) => {
+    setModifiedSkills(prev => ({
+      ...prev,
+      [skillKey]: newValue
+    }));
+  };
+
+  // Вернуться к обычному расчету навыка
+  const resetSkillValue = (skillKey: string) => {
+    setModifiedSkills(prev => {
+      const newSkills = { ...prev };
+      delete newSkills[skillKey];
+      return newSkills;
+    });
+  };
+
+  // Переключить компетенцию навыка
+  const toggleSkillCompetency = (skillKey: string) => {
+    // Компетенцию можно получить только если есть владение навыком
+    const hasProficiency = hasSkillProficiency(character, skillKey) || customSkillProficiencies[skillKey.toLowerCase()];
+    if (!hasProficiency) return;
+    
+    setSkillCompetencies(prev => ({
+      ...prev,
+      [skillKey]: !prev[skillKey]
+    }));
+  };
+
+  // Переключить владение спасброском
+  const toggleSavingThrowProficiency = (statKey: string) => {
+    setCustomSavingThrowProficiencies(prev => ({
+      ...prev,
+      [statKey]: !prev[statKey]
+    }));
+  };
+
+  // Переключить владение навыком
+  const toggleSkillProficiency = (skillKey: string) => {
+    setCustomSkillProficiencies(prev => ({
+      ...prev,
+      [skillKey]: !prev[skillKey]
+    }));
+    
+    // Если убираем владение навыком, убираем и компетенцию
+    if (customSkillProficiencies[skillKey.toLowerCase()]) {
+      setSkillCompetencies(prev => ({
+        ...prev,
+        [skillKey]: false
+      }));
+    }
+  };
+
+  // Функции для работы с модальными окнами производных характеристик
+  const openDerivedStatModal = (statKey: string) => {
+    setSelectedDerivedStat(statKey);
+    setShowDerivedStatModal(true);
+  };
+
+  const closeDerivedStatModal = () => {
+    setShowDerivedStatModal(false);
+    setSelectedDerivedStat(null);
+  };
+
+  // Получить актуальное значение производной характеристики
+  const getActualDerivedStatValue = (statKey: string): number => {
+    if (!character) return 0;
+    
+    switch (statKey) {
+      case 'level':
+        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.level;
+      case 'proficiency':
+        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : Math.floor((character.level - 1) / 4) + 2;
+      case 'ac':
+      case 'armor_class':
+        if (modifiedDerivedStats[statKey] !== undefined) {
+          return modifiedDerivedStats[statKey];
+        }
+        // Рассчитываем защиту с учетом актуальных характеристик и данных о броне
+        if (armorInfo) {
+          const actualDexMod = Math.floor((getActualStatValue('dexterity') - 10) / 2);
+          
+          // Если нет брони, используем базовую формулу
+          if (armorInfo.armor_type === 'Без брони') {
+            const result = 10 + actualDexMod;
+            return result;
+          }
+          
+          // Рассчитываем с учетом типа брони согласно правилам D&D 5e
+          let finalAC = armorInfo.details.armor_bonus;
+          
+          switch (armorInfo.armor_type) {
+            case 'Ткань':
+            case 'Легкая броня':
+              // Легкая броня = Броня доспеха + модификатор Ловкости
+              finalAC += actualDexMod;
+              break;
+            case 'Средняя броня':
+              // Средняя броня = Броня доспеха + модификатор Ловкости (но не больше двух)
+              finalAC += Math.min(actualDexMod, 2);
+              break;
+            case 'Тяжелая броня':
+              // Тяжелая броня = Броня доспеха (Ловкость не участвует в расчёте)
+              break;
+            default:
+              // Fallback к базовой защите
+              const fallbackResult = 10 + actualDexMod;
+              return fallbackResult;
+          }
+          
+          return finalAC;
+        }
+        // Fallback к базовому расчету
+        const fallbackResult = 10 + Math.floor((getActualStatValue('dexterity') - 10) / 2);
+        return fallbackResult;
+      case 'speed':
+        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.speed;
+      case 'max_hp':
+        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.max_hp;
+      case 'current_hp':
+        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.current_hp;
+      case 'passive_perception':
+        const wisModifier = Math.floor((getActualStatValue('wisdom') - 10) / 2);
+        const perceptionProficient = hasSkillProficiency(character, 'perception') || customSkillProficiencies['perception'];
+        const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
+        const basePerception = 10 + wisModifier + (perceptionProficient ? proficiencyBonus : 0);
+        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : basePerception;
+      default:
+        return 0;
+    }
+  };
+
+  // Изменить значение производной характеристики
+  const updateDerivedStatValue = (statKey: string, newValue: number) => {
+    setModifiedDerivedStats(prev => ({
+      ...prev,
+      [statKey]: newValue
+    }));
+  };
+
+  // Вернуться к обычному расчету производной характеристики
+  const resetDerivedStatValue = (statKey: string) => {
+    setModifiedDerivedStats(prev => {
+      const newStats = { ...prev };
+      delete newStats[statKey];
+      return newStats;
+    });
+  };
+
+  // Функция для получения модификатора с знаком
+  const getModifier = (score: number): string => {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  };
+
+  // Функция для получения названия характеристики на русском
+  const getStatNameInRussian = (statKey: string): string => {
+    const statNames: { [key: string]: string } = {
+      'strength': 'СИЛ',
+      'dexterity': 'ЛОВ',
+      'constitution': 'ТЕЛ',
+      'intelligence': 'ИНТ',
+      'wisdom': 'МУД',
+      'charisma': 'ХАР'
+    };
+    return statNames[statKey.toLowerCase()] || statKey.toUpperCase();
+  };
+
+  // Функция для получения цвета линии характеристики
+  const getStatBorderColor = (statKey: string): string => {
+    const statColors: { [key: string]: string } = {
+      'strength': 'border-l-4 border-l-red-500', // Сила - красная
+      'dexterity': 'border-l-4 border-l-green-500', // Ловкость - зеленая
+      'constitution': 'border-l-4 border-l-gray-500', // Телосложение - серая
+      'intelligence': 'border-l-4 border-l-blue-500', // Интеллект - синяя
+      'wisdom': 'border-l-4 border-l-yellow-500', // Мудрость - желтая
+      'charisma': 'border-l-4 border-l-purple-500' // Харизма - фиолетовая
+    };
+    return statColors[statKey.toLowerCase()] || 'border-l-4 border-l-gray-500';
+  };
+
+  // Функция для получения цвета линии навыка на основе связанной характеристики
+  const getSkillBorderColor = (skillName: string): string => {
+    const skillToStatMap: { [key: string]: string } = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom'
+    };
+    
+    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
+    return getStatBorderColor(statKey);
+  };
+
+  // Функция для получения порядка характеристики для сортировки навыков
+  const getStatOrder = (statKey: string): number => {
+    const statOrder: { [key: string]: number } = {
+      'strength': 1,     // Сила
+      'dexterity': 2,    // Ловкость
+      'constitution': 3, // Телосложение
+      'intelligence': 4, // Интеллект
+      'wisdom': 5,       // Мудрость
+      'charisma': 6      // Харизма
+    };
+    return statOrder[statKey.toLowerCase()] || 7;
+  };
+
+  // Функция для получения связанной характеристики навыка
+  const getSkillStat = (skillName: string): string => {
+    const skillToStatMap: { [key: string]: string } = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom'
+    };
+    return skillToStatMap[skillName.toLowerCase()] || 'strength';
+  };
+
+  // Функция для получения названия навыка на русском
+  const getSkillNameInRussian = (skillName: string): string => {
+    return getSkillName(skillName);
+  };
+
+  // Функция для получения бонуса спасброска
+  const getSavingThrowBonus = (statKey: string): { bonus: string; isProficient: boolean } => {
+    if (!character) {
+      return { bonus: '+0', isProficient: false };
+    }
+    
+    const statValue = getActualStatValue(statKey);
+    const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
+    const isProficient = hasSavingThrowProficiency(character, statKey) || customSavingThrowProficiencies[statKey];
+    
+    const baseModifier = Math.floor((statValue - 10) / 2);
+    
+    // Получаем бонусы от эффектов экипированных предметов из кэша
+    const effectBonus = equippedEffectsCache.savingThrowBonuses[statKey] || 0;
+    
+    const totalBonus = baseModifier + (isProficient ? proficiencyBonus : 0) + effectBonus;
+    
+    return {
+      bonus: totalBonus >= 0 ? `+${totalBonus}` : `${totalBonus}`,
+      isProficient
+    };
+  };
+
+  // Функция для получения бонуса навыка
+  const getSkillBonus = (skillName: string): string => {
+    if (!character) return '+0';
+    
+    const skillToStatMap: { [key: string]: string } = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom'
+    };
+
+    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
+    const statValue = getActualStatValue(statKey);
+    const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
+    const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
+    const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
+    
+    const baseModifier = Math.floor((statValue - 10) / 2);
+    let totalBonus = baseModifier;
+    
+    if (isProficient) {
+      totalBonus += proficiencyBonus;
+    }
+    
+    // Компетенция добавляет бонус мастерства еще раз
+    if (isCompetent) {
+      totalBonus += proficiencyBonus;
+    }
+    
+    return totalBonus >= 0 ? `+${totalBonus}` : `${totalBonus}`;
+  };
+
+  // Функция для получения детального расчета навыка
+  const getSkillCalculation = (skillName: string): string => {
+    if (!character) return '';
+    
+    const skillToStatMap: { [key: string]: string } = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom'
+    };
+
+    const statKey = skillToStatMap[skillName.toLowerCase()] || 'strength';
+    const statValue = getActualStatValue(statKey);
+    const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
+    const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
+    const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
+    
+    const baseModifier = Math.floor((statValue - 10) / 2);
+    let calculation = `${baseModifier}(Модификатор ${getStatNameInRussian(statKey)})`;
+    
+    if (isProficient) {
+      calculation += ` + ${proficiencyBonus}(Бонус мастерства)`;
+    }
+    
+    if (isCompetent) {
+      calculation += ` + ${proficiencyBonus}(Компетенция)`;
+    }
+    
+    const totalBonus = baseModifier + (isProficient ? proficiencyBonus : 0) + (isCompetent ? proficiencyBonus : 0);
+    calculation += ` = ${totalBonus >= 0 ? '+' : ''}${totalBonus}`;
+    
+    return calculation;
+  };
+
+  // Компонент сетки инвентаря (копия упрощенной версии для V2)
+  const InventoryGrid: React.FC<{ inventories: any[] }> = ({ inventories }) => {
+
+    const handleItemMouseEnter = (item: any, event: React.MouseEvent) => {
+      setHoveredItem(item);
+      // Сохраняем ссылку на слот для позиционирования карточки
+      setHoveredSlotRef(event.currentTarget as HTMLDivElement);
+    };
+
+    const handleItemMouseLeave = () => {
+      setHoveredItem(null);
+      setHoveredSlotRef(null);
+    };
+
+    // Обработчики двойного клика для экипировки/снятия
+    const handleEquipItem = async (item: any) => {
+      if (!character || !item.card?.slot) return;
+      
+      console.log('🎯 [EQUIP] Equipping item:', item.card?.name, 'to slot:', item.card.slot);
+      
+      // Рассчитываем изменения характеристик ДО оптимистичного обновления
+      const changes = calculateStatChanges(item, true);
+      
+      // Сохраняем предыдущее состояние для возможного отката
+      const previousEquippedSlot = item.equipped_slot;
+      
+      // Оптимистично обновляем UI
+      optimisticallyEquipItem(item, item.card.slot);
+      
+      // Показываем Toast-уведомление с изменениями
+      console.log('🍞 [TOAST] Showing equip toast, changes:', changes);
+      if (changes.length > 0) {
+        showToast({
+          type: 'success',
+          title: `Экипирован: ${item.card?.name}`,
+          message: `Изменения характеристик:\n${changes.join('\n')}`
+        });
+      } else {
+        console.log('🍞 [TOAST] No changes, skipping toast');
+      }
+      
+      try {
+        // Отправляем запрос на бекенд (не ждем ответа)
+        apiClient.post(`/api/characters-v2/${character.id}/equip`, {
+          item_id: item.id,
+          slot_type: item.card.slot
+        }).then(response => {
+          console.log('🎯 [EQUIP] Equip response:', response.data);
+        }).catch(error => {
+          console.error('🎯 [EQUIP] Error equipping item:', error);
+          
+          // Откатываем изменения при ошибке
+          rollbackInventoryChanges(item, true);
+          
+          // Показываем уведомление об ошибке
+          showToast({
+            type: 'error',
+            title: `Ошибка экипировки: ${item.card?.name}`,
+            message: 'Изменения отменены'
+          });
+        });
+        
+      } catch (error) {
+        console.error('🎯 [EQUIP] Error equipping item:', error);
+        
+        // Откатываем изменения при ошибке
+        rollbackInventoryChanges(item, true);
+        
+        // Показываем уведомление об ошибке
+        showToast({
+          type: 'error',
+          title: `Ошибка экипировки: ${item.card?.name}`,
+          message: 'Изменения отменены'
+        });
+      }
+    };
+
+    const handleUnequipItem = async (item: any) => {
+      if (!character) return;
+      
+      console.log('🎯 [UNEQUIP] Unequipping item:', item.card?.name);
+      
+      // Рассчитываем изменения характеристик ДО оптимистичного обновления
+      const changes = calculateStatChanges(item, false);
+      
+      // Сохраняем предыдущее состояние для возможного отката
+      const previousEquippedSlot = item.equipped_slot;
+      
+      // Оптимистично обновляем UI
+      optimisticallyUnequipItem(item);
+      
+      // Показываем Toast-уведомление с изменениями
+      console.log('🍞 [TOAST] Showing unequip toast, changes:', changes);
+      if (changes.length > 0) {
+        showToast({
+          type: 'info',
+          title: `Снят: ${item.card?.name}`,
+          message: `Изменения характеристик:\n${changes.join('\n')}`
+        });
+      } else {
+        console.log('🍞 [TOAST] No changes, skipping toast');
+      }
+      
+      try {
+        // Отправляем запрос на бекенд (не ждем ответа)
+        apiClient.post(`/api/characters-v2/${character.id}/equip`, {
+          item_id: item.id,
+          slot_type: null
+        }).then(response => {
+          console.log('🎯 [UNEQUIP] Unequip response:', response.data);
+        }).catch(error => {
+          console.error('🎯 [UNEQUIP] Error unequipping item:', error);
+          
+          // Откатываем изменения при ошибке
+          rollbackInventoryChanges(item, false);
+          
+          // Показываем уведомление об ошибке
+          showToast({
+            type: 'error',
+            title: `Ошибка снятия: ${item.card?.name}`,
+            message: 'Изменения отменены'
+          });
+        });
+          
+        } catch (error) {
+        console.error('🎯 [UNEQUIP] Error unequipping item:', error);
+        
+        // Откатываем изменения при ошибке
+        rollbackInventoryChanges(item, false);
+        
+        // Показываем уведомление об ошибке
+        showToast({
+          type: 'error',
+          title: `Ошибка снятия: ${item.card?.name}`,
+          message: 'Изменения отменены'
+        });
+      }
+    };
+    
+    const equipmentSlots = 16; // 2 строки по 8 слотов для экипировки
+    const inventorySlots = 48; // 6 строк по 8 слотов для обычного инвентаря
+    
+    // Определяем слоты экипировки
+    const equipmentSlotTypes = [
+      // Первая строка: Правая рука, правая рука, кольцо, шлем, перчатки, плащ, *, *
+      ['one_hand', 'one_hand', 'ring', 'head', 'arms', 'cloak', 'versatile', 'versatile'],
+      // Вторая строка: Левая рука, левая рука, кольцо, торс, сапоги, ожерелье, *, *
+      ['one_hand', 'one_hand', 'ring', 'body', 'feet', 'necklace', 'versatile', 'versatile']
+    ];
+
+    // Функция для получения иконки слота
+    const getSlotIcon = (slotType: string, row: number, col: number) => {
+      // Специальная логика для слотов рук в зависимости от позиции
+      if (slotType === 'one_hand') {
+        if (row === 0 && (col === 0 || col === 1)) {
+          // Верхние две руки (слева) - оружие ближнего боя
+          return '/icons/melee-hand.png';
+        } else if (row === 1 && (col === 0 || col === 1)) {
+          // Нижние две руки (слева) - оружие дальнего боя
+          return '/icons/bow-hand.png';
+        }
+      }
+      
+      if (slotType === 'versatile') {
+        // Четыре руки справа - свободные слоты (пояс)
+        return '/icons/belt.png';
+      }
+      
+      // Обычные иконки для остальных слотов
+      const iconMap: { [key: string]: string } = {
+        'ring': 'ring.png',
+        'head': 'helm.png',
+        'arms': 'gloves.png',
+        'cloak': 'cloak.png',
+        'body': 'armor.png',
+        'feet': 'boots.png',
+        'necklace': 'necklace.png'
+      };
+      
+      const iconPath = iconMap[slotType] || 'hand.png';
+      return `/icons/slots/${iconPath}`;
+    };
+
+    const handleAddItemClick = () => {
+      setShowItemSelector(true);
+    };
+
+    return (
+      <div 
+        className="relative"
+        onMouseEnter={() => setHoveredItem(null)}
+      >
+        {/* Секция экипировки */}
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Экипировка</h3>
+          <div
+            className="grid grid-cols-8 gap-1"
+            onMouseEnter={() => setHoveredItem(null)}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
+            {Array.from({ length: equipmentSlots }, (_, index) => {
+              const row = Math.floor(index / 8);
+              const col = index % 8;
+              const slotType = equipmentSlotTypes[row][col];
+              const iconPath = getSlotIcon(slotType, row, col);
+              
+              // Ищем предмет, экипированный в этот конкретный слот
+              const equippedItem = inventories
+                .flatMap(inv => inv.items || [])
+                .find(item => item.equipped_slot === slotType);
+              
+              return (
+                <div
+                  key={index}
+                  className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center bg-gray-100 relative cursor-pointer group ${
+                    equippedItem ? getRarityBorderColor(equippedItem.card?.rarity) : ''
+                  }`}
+                  title={equippedItem ? `${equippedItem.card?.name || 'Предмет'} (экипирован) - клик для снятия` : `Слот: ${slotType}`}
+                  onMouseEnter={equippedItem ? (e) => {
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    handleItemMouseEnter(equippedItem, e);
+                  } : undefined}
+                  onMouseLeave={equippedItem ? handleItemMouseLeave : undefined}
+                  onClick={equippedItem ? () => handleUnequipItem(equippedItem) : undefined}
+                >
+                  {equippedItem ? (
+                    <>
+                    <img 
+                      src={equippedItem.card?.image_url || '/default_image.png'} 
+                      alt={equippedItem.card?.name || 'Предмет'}
+                      className="w-16 h-16 object-contain rounded"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/default_image.png';
+                      }}
+                    />
+                    {/* Кнопка просмотра (глаз) при hover */}
+                    <button
+                      type="button"
+                      className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-6 h-6 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-sm border border-gray-200"
+                      onClick={(e) => { e.stopPropagation(); openCardDetail(equippedItem); }}
+                      title="Просмотр"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    </>
+                  ) : (
+                    <img 
+                      src={iconPath} 
+                      alt={slotType}
+                      className="w-8 h-8 opacity-40"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Секция рюкзака */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Рюкзак</h3>
+          <div
+            className="grid grid-cols-8 gap-1"
+            onMouseEnter={() => setHoveredItem(null)}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
+            {Array.from({ length: inventorySlots }, (_, index) => {
+              const isLastSlot = index === inventorySlots - 1;
+              
+              // Находим предмет в этом слоте
+              // Пока что просто берем первые предметы из инвентарей, исключая экипированные
+              const allItems = characterInventories.flatMap(inv => inv.items || []).filter(item => !item.equipped_slot);
+              const inventoryItem = allItems[index];
+              
+              return (
+                <div
+                  key={index}
+                  className={`w-16 h-16 border rounded flex items-center justify-center relative ${
+                    isLastSlot
+                      ? 'bg-blue-50 border-blue-300 cursor-pointer hover:bg-blue-100 transition-colors'
+                      : inventoryItem
+                        ? `border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors group ${getRarityBorderColor(inventoryItem.card?.rarity)}`
+                        : 'border-dashed border-gray-300 bg-gray-50'
+                  }`}
+                  title={
+                    isLastSlot
+                      ? 'Добавить предмет'
+                      : inventoryItem
+                        ? `${inventoryItem.card?.name || 'Предмет'} (${inventoryItem.quantity || 1}) - клик для экипировки`
+                        : `Слот рюкзака ${index + 1}`
+                  }
+                  data-inventory-item={inventoryItem ? 'true' : undefined}
+                  onClick={isLastSlot ? handleAddItemClick : (inventoryItem ? () => handleEquipItem(inventoryItem) : undefined)}
+                  onMouseEnter={inventoryItem ? (e) => {
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    handleItemMouseEnter(inventoryItem, e);
+                  } : undefined}
+                  onMouseLeave={inventoryItem ? handleItemMouseLeave : undefined}
+                >
+                  {isLastSlot ? (
+                    <Plus className="w-6 h-6 text-blue-600" />
+                  ) : inventoryItem ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      {inventoryItem.card?.image_url ? (
+                        <img 
+                          src={inventoryItem.card.image_url} 
+                          alt={inventoryItem.card.name}
+                          className="w-16 h-16 object-contain rounded"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/default_image.png';
+                          }}
+                        />
+                      ) : (
+                        <Package className="w-8 h-8 text-gray-600" />
+                      )}
+                      {/* Кнопка просмотра (глаз) при hover */}
+                      <button
+                        type="button"
+                        className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-6 h-6 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-sm border border-gray-200"
+                        onClick={(e) => { e.stopPropagation(); openCardDetail(inventoryItem); }}
+                        title="Просмотр"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      {inventoryItem.quantity > 1 && (
+                        <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {inventoryItem.quantity}
+                        </div>
+                      )}
+                    </div>
+                  ) : index < 6 ? (
+                    <Package className="w-4 h-4 text-gray-300" />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+      </div>
+    );
+  };
+
+  const renderBasicTab = () => {
+    if (!character) return null;
+
+    // Создаем временный объект персонажа с актуальными значениями характеристик
+    const characterWithActualStats = {
+      ...character,
+      strength: getActualStatValue('strength'),
+      dexterity: getActualStatValue('dexterity'),
+      constitution: getActualStatValue('constitution'),
+      intelligence: getActualStatValue('intelligence'),
+      wisdom: getActualStatValue('wisdom'),
+      charisma: getActualStatValue('charisma'),
+      level: getActualDerivedStatValue('level'),
+      max_hp: getActualDerivedStatValue('max_hp'),
+      current_hp: getActualDerivedStatValue('current_hp'),
+      speed: getActualDerivedStatValue('speed')
+    };
+
+    const stats = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+
+    return (
+      <div className="space-y-6">
+        {/* Характеристики и Навыки */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex gap-6">
+            {/* Характеристики - узкий столбец */}
+            <div className="w-1/5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Характеристики</h2>
+              <div className="space-y-1">
+                {stats.map((statKey) => {
+                  const statValue = getActualStatValue(statKey);
+                  const savingThrow = getSavingThrowBonus(statKey);
+                  const statNameInRussian = getStatNameInRussian(statKey);
+                  const isModified = modifiedStats[statKey] !== undefined;
+                  
+                  const statBorderColor = getStatBorderColor(statKey);
+                  
+                  return (
+                    <div key={statKey} className={`flex cursor-pointer hover:bg-gray-50 transition-colors bg-white border border-gray-200 rounded-lg ${statBorderColor}`} onClick={() => openStatModal(statKey)}>
+                      {/* Название характеристики - 25% */}
+                      <div className="flex items-center justify-center p-2 rounded-l-lg w-1/4">
+                        <div className="text-xs text-gray-600 uppercase font-medium">{statNameInRussian}</div>
+                      </div>
+                      
+                      {/* Значение характеристики - 25% */}
+                      <div className="flex items-center justify-center p-2 w-1/4">
+                        <div className={`text-xs ${isModified ? 'text-purple-600 font-semibold' : 'text-gray-500'}`}>{statValue}</div>
+                      </div>
+                      
+                      {/* Модификатор характеристики - 25% */}
+                      <div className="flex items-center justify-center p-2 w-1/4">
+                        <div className={`text-sm font-bold ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>{getModifier(statValue)}</div>
+                      </div>
+                      
+                      {/* Спасбросок - 25% */}
+                      <div className="flex items-center justify-center p-2 rounded-r-lg w-1/4">
+                        <div 
+                          className={`text-sm ${savingThrow.isProficient ? 'font-bold' : 'font-normal'} ${isModified ? 'text-purple-600' : 'text-gray-900'} cursor-help relative z-10`}
+                          title={`Спасбросок ${statNameInRussian} ${savingThrow.bonus}`}
+                          style={{ zIndex: 10 }}
+                        >
+                          {savingThrow.bonus}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Блок уровня и мастерства - 2x2 */}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div 
+                  className="bg-blue-50 rounded-lg p-3 text-center cursor-pointer hover:bg-blue-100 transition-colors"
+                  onClick={() => openDerivedStatModal('level')}
+                >
+                  <div className="text-xs text-blue-600 font-medium mb-1">Уровень</div>
+                  <div className={`text-lg font-bold ${modifiedDerivedStats['level'] !== undefined ? 'text-purple-600' : 'text-blue-900'}`}>
+                    {getActualDerivedStatValue('level')}
+                  </div>
+                </div>
+                <div 
+                  className="bg-purple-50 rounded-lg p-3 text-center cursor-pointer hover:bg-purple-100 transition-colors"
+                  onClick={() => openDerivedStatModal('proficiency')}
+                >
+                  <div className="text-xs text-purple-600 font-medium mb-1">Мастерство</div>
+                  <div className={`text-lg font-bold ${modifiedDerivedStats['proficiency'] !== undefined ? 'text-purple-600' : 'text-purple-900'}`}>
+                    +{getActualDerivedStatValue('proficiency')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Блок защиты, скорости, здоровья и пассивного восприятия - 2x2 */}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <div 
+                  className="bg-green-50 rounded-lg p-3 text-center cursor-pointer hover:bg-green-100 transition-colors"
+                  onClick={() => openDerivedStatModal('ac')}
+                >
+                  <div className="text-xs text-green-600 font-medium mb-1">Защита</div>
+                  <div className={`text-lg font-bold ${modifiedDerivedStats['ac'] !== undefined ? 'text-purple-600' : 'text-green-900'}`}>
+                    {getActualDerivedStatValue('ac')}
+                  </div>
+                </div>
+                <div 
+                  className="bg-orange-50 rounded-lg p-3 text-center cursor-pointer hover:bg-orange-100 transition-colors"
+                  onClick={() => openDerivedStatModal('speed')}
+                >
+                  <div className="text-xs text-orange-600 font-medium mb-1">Скорость</div>
+                  <div className={`text-lg font-bold ${modifiedDerivedStats['speed'] !== undefined ? 'text-purple-600' : 'text-orange-900'}`}>
+                    {getActualDerivedStatValue('speed')}
+                  </div>
+                </div>
+                <div 
+                  className="bg-red-50 rounded-lg p-3 text-center cursor-pointer hover:bg-red-100 transition-colors"
+                  onClick={() => openDerivedStatModal('hp')}
+                >
+                  <div className="text-xs text-red-600 font-medium mb-1">Хиты</div>
+                  <div className={`text-lg font-bold ${modifiedDerivedStats['current_hp'] !== undefined || modifiedDerivedStats['max_hp'] !== undefined ? 'text-purple-600' : 'text-red-900'}`}>
+                    {getActualDerivedStatValue('current_hp')}/{getActualDerivedStatValue('max_hp')}
+                  </div>
+                </div>
+                <div 
+                  className="bg-indigo-50 rounded-lg p-3 text-center cursor-pointer hover:bg-indigo-100 transition-colors"
+                  onClick={() => openDerivedStatModal('passive_perception')}
+                >
+                  <div className="text-xs text-indigo-600 font-medium mb-1">Восприятие</div>
+                  <div className={`text-lg font-bold ${modifiedDerivedStats['passive_perception'] !== undefined ? 'text-purple-600' : 'text-indigo-900'}`}>
+                    {getActualDerivedStatValue('passive_perception')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Навыки - уменьшенный столбец */}
+            <div className="w-1/5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Навыки</h2>
+              <div className="grid grid-cols-1 gap-1">
+                {[
+                  'acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception',
+                  'history', 'insight', 'intimidation', 'investigation', 'medicine',
+                  'nature', 'perception', 'performance', 'persuasion', 'religion',
+                  'sleight_of_hand', 'stealth', 'survival'
+                ]
+                .sort((a, b) => {
+                  const statA = getSkillStat(a);
+                  const statB = getSkillStat(b);
+                  const orderA = getStatOrder(statA);
+                  const orderB = getStatOrder(statB);
+                  
+                  // Если характеристики одинаковые, сортируем по алфавиту
+                  if (orderA === orderB) {
+                    return getSkillNameInRussian(a).localeCompare(getSkillNameInRussian(b), 'ru');
+                  }
+                  
+                  return orderA - orderB;
+                })
+                .map((skillName) => {
+                  const isProficient = hasSkillProficiency(character, skillName) || customSkillProficiencies[skillName.toLowerCase()];
+                  const isCompetent = skillCompetencies[skillName.toLowerCase()] || false;
+                  const isModified = modifiedSkills[skillName.toLowerCase()] !== undefined;
+                  const currentBonus = getActualSkillValue(skillName);
+                  
+                  const skillBorderColor = getSkillBorderColor(skillName);
+                  
+                  return (
+                    <div 
+                      key={skillName} 
+                      className={`group relative flex items-center justify-between p-1.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors bg-white border border-gray-200 ${skillBorderColor} ${
+                        isProficient || isCompetent ? 'border-green-200' : ''
+                      }`}
+                      onClick={() => openSkillModal(skillName)}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span className={`text-xs font-medium ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>
+                          {getSkillNameInRussian(skillName)}
+                        </span>
+                        {isProficient && <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">М</span>}
+                        {isCompetent && <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">К</span>}
+                      </div>
+                      <div className="flex items-center space-x-1">
+                      <div className={`text-xs font-bold ${isModified ? 'text-purple-600' : 'text-gray-900'}`}>
+                          {currentBonus >= 0 ? `+${currentBonus}` : currentBonus}
+                        </div>
+                        {/* Кнопка кубика - появляется при наведении */}
+                        <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 rollSkillDice(skillName, 'normal', false);
+               }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-blue-100 rounded-full"
+                          title="Бросить кубик"
+                        >
+                          <Dices className="w-3 h-3 text-blue-600" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Инвентарь */}
+            <div className="w-3/5">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Инвентарь</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <InventoryGrid inventories={characterInventories} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderClassRaceTab = () => {
+    if (!character) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Информация о классе и расе */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Класс и Раса</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">Раса</h3>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="font-medium text-blue-900">{character.race}</div>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">Класс</h3>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="font-medium text-green-900">{character.class}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderInventoryTab = () => {
+    if (!character) return null;
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Инвентарь</h2>
+          <InventoryGrid inventories={characterInventories} />
+        </div>
+      </div>
+    );
+  };
+
+  const renderActionsTab = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Действия</h2>
+          <div className="text-center py-8">
+            <Sword className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <p className="text-gray-500">Действия персонажа будут реализованы позже</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderPassivesTab = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Пассивы</h2>
+          <div className="text-center py-8">
+            <Star className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <p className="text-gray-500">Пассивные способности персонажа будут реализованы позже</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Загрузка персонажа...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !character) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">❌</div>
+          <p className="text-gray-600">{error || 'Персонаж не найден'}</p>
+          <Link
+            to="/characters-v3"
+            className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Вернуться к списку
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'basic', name: 'Основное', icon: User },
+    { id: 'class-race', name: 'Класс и Раса', icon: Star },
+    { id: 'inventory', name: 'Инвентарь', icon: Package },
+    { id: 'actions', name: 'Действия', icon: Sword },
+    { id: 'passives', name: 'Пассивы', icon: Star }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/characters-v3"
+                className="flex items-center text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Назад
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{character.name}</h1>
+                <p className="text-gray-600">
+                  {character.race} • {character.class} {character.level} ур.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Link
+                to={`/characters-v3/${character.id}/edit`}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Редактировать
+              </Link>
+              <button
+                onClick={handleDeleteCharacter}
+                className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span>{tab.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Содержимое вкладок */}
+        {activeTab === 'basic' && renderBasicTab()}
+        {activeTab === 'class-race' && renderClassRaceTab()}
+        {activeTab === 'inventory' && renderInventoryTab()}
+        {activeTab === 'actions' && renderActionsTab()}
+        {activeTab === 'passives' && renderPassivesTab()}
+      </div>
+
+      {/* Модальное окно характеристик */}
+      {showStatModal && selectedStat && character && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto ${getStatBorderColor(selectedStat)}`}>
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {getStatNameInRussian(selectedStat)} - {getFullStatName(selectedStat)}
+                </h3>
+                <button
+                  onClick={closeStatModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Левая половина - Финальное значение и расчеты */}
+                <div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Финальное значение
+                    </label>
+                    <input
+                      type="number"
+                      value={getActualStatValue(selectedStat)}
+                      onChange={(e) => updateStatValue(selectedStat, parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="1"
+                      max="30"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Расчет характеристики:</h4>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-600">
+                        {getStatValue(character, selectedStat)} (Изначальная {getFullStatName(selectedStat).toLowerCase()})
+                        {modifiedStats[selectedStat] !== undefined && (
+                          <span className="text-purple-600 font-medium">
+                            {' '}→ {modifiedStats[selectedStat]} (Изменено игроком)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {modifiedStats[selectedStat] !== undefined && (
+                    <button
+                      onClick={() => resetStatValue(selectedStat)}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      Вернуться к обычному расчету
+                    </button>
+                  )}
+                </div>
+
+                {/* Правая половина - Модификаторы и навыки */}
+                <div>
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Модификатор характеристики:</h4>
+                    <div className="bg-blue-50 p-3 rounded-md mb-2">
+                      <div className="text-lg font-bold text-blue-900">
+                        {getModifier(getActualStatValue(selectedStat))}
+                      </div>
+                      <div className="text-xs text-blue-700">
+                        ({getActualStatValue(selectedStat)} - 10) ÷ 2 = {getModifier(getActualStatValue(selectedStat))}
+                      </div>
+                    </div>
+                    
+                    {/* Бонусы от эффектов экипированных предметов */}
+                    {(() => {
+                      const effectBonus = equippedEffectsCache.characteristicBonuses[selectedStat] || 0;
+                      if (effectBonus !== 0) {
+                        return (
+                          <div className="bg-purple-50 p-3 rounded-md mt-2">
+                            <div className="text-sm font-medium text-purple-900 mb-1">
+                              Бонус от экипированных предметов:
+                            </div>
+                            <div className="text-lg font-bold text-purple-900">
+                              {effectBonus > 0 ? `+${effectBonus}` : `${effectBonus}`}
+                            </div>
+                            <div className="text-xs text-purple-700">
+                              Влияние эффектов предметов на характеристику
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Бонус к спасброскам:</h4>
+                    <div className="bg-green-50 p-3 rounded-md">
+                      <div className="text-lg font-bold text-green-900">
+                        {getSavingThrowBonus(selectedStat).bonus}
+                      </div>
+                      <div className="text-xs text-green-700">
+                        {Math.floor((getActualStatValue(selectedStat) - 10) / 2)} + {getSavingThrowBonus(selectedStat).isProficient ? Math.floor((character.level - 1) / 4) + 2 : 0}(Бонус владения) = {getSavingThrowBonus(selectedStat).bonus}
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3 p-2 bg-white rounded border">
+                        <span className="text-sm text-gray-700">Владеет спасброском</span>
+                        <button
+                          onClick={() => toggleSavingThrowProficiency(selectedStat)}
+                          className={`text-sm font-medium px-3 py-1 rounded transition-colors ${
+                            getSavingThrowBonus(selectedStat).isProficient
+                              ? 'bg-green-600 text-white' 
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {getSavingThrowBonus(selectedStat).isProficient ? '✓ Да' : '✗ Нет'}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Бонусы от эффектов экипированных предметов для спасбросков */}
+                    {(() => {
+                      const effectBonus = equippedEffectsCache.savingThrowBonuses[selectedStat] || 0;
+                      if (effectBonus !== 0) {
+                        return (
+                          <div className="bg-purple-50 p-3 rounded-md mt-2">
+                            <div className="text-sm font-medium text-purple-900 mb-1">
+                              Бонус от экипированных предметов:
+                            </div>
+                            <div className="text-lg font-bold text-purple-900">
+                              {effectBonus > 0 ? `+${effectBonus}` : `${effectBonus}`}
+                            </div>
+                            <div className="text-xs text-purple-700">
+                              Влияние эффектов предметов на спасбросок
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Связанные навыки:</h4>
+                    <div className="space-y-1">
+                      {[
+                        { skill: 'acrobatics', stat: 'dexterity' },
+                        { skill: 'animal_handling', stat: 'wisdom' },
+                        { skill: 'arcana', stat: 'intelligence' },
+                        { skill: 'athletics', stat: 'strength' },
+                        { skill: 'deception', stat: 'charisma' },
+                        { skill: 'history', stat: 'intelligence' },
+                        { skill: 'insight', stat: 'wisdom' },
+                        { skill: 'intimidation', stat: 'charisma' },
+                        { skill: 'investigation', stat: 'intelligence' },
+                        { skill: 'medicine', stat: 'wisdom' },
+                        { skill: 'nature', stat: 'intelligence' },
+                        { skill: 'perception', stat: 'wisdom' },
+                        { skill: 'performance', stat: 'charisma' },
+                        { skill: 'persuasion', stat: 'charisma' },
+                        { skill: 'religion', stat: 'intelligence' },
+                        { skill: 'sleight_of_hand', stat: 'dexterity' },
+                        { skill: 'stealth', stat: 'dexterity' },
+                        { skill: 'survival', stat: 'wisdom' }
+                      ].filter(item => item.stat === selectedStat).map(({ skill }) => {
+                        const isProficient = hasSkillProficiency(character, skill) || customSkillProficiencies[skill.toLowerCase()];
+                        return (
+                          <div key={skill} className={`flex items-center justify-between p-2 rounded ${isProficient ? 'bg-green-50' : 'bg-gray-50'}`}>
+                            <span className={`text-sm ${isProficient ? 'text-green-800 font-medium' : 'text-gray-700'}`}>
+                              {getSkillNameInRussian(skill)}
+                            </span>
+                            <span className={`text-sm font-bold ${isProficient ? 'text-green-800' : 'text-gray-700'}`}>
+                              {getSkillBonus(skill)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно навыков */}
+      {showSkillModal && selectedSkill && character && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto ${getSkillBorderColor(selectedSkill)}`}>
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {getSkillNameInRussian(selectedSkill)}
+                </h3>
+                <button
+                  onClick={closeSkillModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Левая половина - Финальное значение и расчеты */}
+                <div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Финальное значение
+                    </label>
+                    <input
+                      type="number"
+                      value={getActualSkillValue(selectedSkill)}
+                      onChange={(e) => updateSkillValue(selectedSkill, parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Расчет навыка:</h4>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-600">
+                        {getSkillCalculation(selectedSkill)}
+                        {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                          <span className="text-purple-600 font-medium block mt-1">
+                            → {modifiedSkills[selectedSkill.toLowerCase()]} (Изменено игроком)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Бонусы от эффектов экипированных предметов */}
+                    {(() => {
+                      const effectBonus = equippedEffectsCache.skillBonuses[selectedSkill.toLowerCase()] || 0;
+                      if (effectBonus !== 0) {
+                        return (
+                          <div className="bg-purple-50 p-3 rounded-md mt-2">
+                            <div className="text-sm font-medium text-purple-900 mb-1">
+                              Бонус от экипированных предметов:
+                            </div>
+                            <div className="text-lg font-bold text-purple-900">
+                              {effectBonus > 0 ? `+${effectBonus}` : `${effectBonus}`}
+                            </div>
+                            <div className="text-xs text-purple-700">
+                              Влияние эффектов предметов на навык
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+
+                  {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                    <button
+                      onClick={() => resetSkillValue(selectedSkill)}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      Вернуться к обычному расчету
+                    </button>
+                  )}
+                </div>
+
+                {/* Правая половина - Владения и компетенция */}
+                <div>
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Владения:</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-md">
+                        <span className="text-sm text-gray-700">Владеет навыком</span>
+                        <button
+                          onClick={() => toggleSkillProficiency(selectedSkill)}
+                          className={`text-sm font-medium px-3 py-1 rounded transition-colors ${
+                            hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]
+                              ? 'bg-green-600 text-white' 
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {(hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]) ? '✓ Да' : '✗ Нет'}
+                        </button>
+                      </div>
+                      
+                      <div className={`flex items-center justify-between p-3 rounded-md ${
+                        (hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]) 
+                          ? 'bg-blue-50' 
+                          : 'bg-gray-100'
+                      }`}>
+                        <span className="text-sm text-gray-700">Компетентен</span>
+                        <button
+                          onClick={() => toggleSkillCompetency(selectedSkill)}
+                          disabled={!(hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()])}
+                          className={`text-sm font-medium px-3 py-1 rounded transition-colors ${
+                            skillCompetencies[selectedSkill.toLowerCase()] 
+                              ? 'bg-blue-600 text-white' 
+                              : (hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()])
+                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {skillCompetencies[selectedSkill.toLowerCase()] ? '✓ Да' : '✗ Нет'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Детализация бонусов:</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Базовый модификатор:</span>
+                        <span className="font-medium">{getSkillBonus(selectedSkill)}</span>
+                      </div>
+                      {(hasSkillProficiency(character, selectedSkill) || customSkillProficiencies[selectedSkill.toLowerCase()]) && (
+                        <div className="flex justify-between text-green-700">
+                          <span>Бонус мастерства:</span>
+                          <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
+                        </div>
+                      )}
+                      {skillCompetencies[selectedSkill.toLowerCase()] && (
+                        <div className="flex justify-between text-blue-700">
+                          <span>Компетенция:</span>
+                          <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
+                        </div>
+                      )}
+                      {modifiedSkills[selectedSkill.toLowerCase()] !== undefined && (
+                        <div className="flex justify-between text-purple-700">
+                          <span>Ручная модификация:</span>
+                          <span className="font-medium">
+                            {modifiedSkills[selectedSkill.toLowerCase()] >= 0 
+                              ? `+${modifiedSkills[selectedSkill.toLowerCase()]}` 
+                              : modifiedSkills[selectedSkill.toLowerCase()]}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Объяснение:</h4>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <p>• <strong>Владение</strong> - персонаж знает этот навык и получает бонус мастерства</p>
+                      <p>• <strong>Компетенция</strong> - персонаж особенно хорош в этом навыке и получает двойной бонус мастерства</p>
+                      <p>• Изменение значения навыка перезаписывает автоматический расчет</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно производных характеристик */}
+      {showDerivedStatModal && selectedDerivedStat && character && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selectedDerivedStat === 'level' && 'Уровень'}
+                  {selectedDerivedStat === 'proficiency' && 'Мастерство'}
+                  {selectedDerivedStat === 'ac' && 'Защита'}
+                  {selectedDerivedStat === 'speed' && 'Скорость'}
+                  {selectedDerivedStat === 'hp' && 'Хиты'}
+                  {selectedDerivedStat === 'passive_perception' && 'Пассивное восприятие'}
+                </h3>
+                <button
+                  onClick={closeDerivedStatModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Левая половина - Финальное значение и расчеты */}
+                <div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Финальное значение
+                    </label>
+                    {selectedDerivedStat === 'hp' ? (
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Максимальные хиты</label>
+                          <input
+                            type="number"
+                            value={getActualDerivedStatValue('max_hp')}
+                            onChange={(e) => updateDerivedStatValue('max_hp', parseInt(e.target.value) || 0)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="1"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Текущие хиты</label>
+                          <input
+                            type="number"
+                            value={getActualDerivedStatValue('current_hp')}
+                            onChange={(e) => updateDerivedStatValue('current_hp', parseInt(e.target.value) || 0)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="0"
+                            max={getActualDerivedStatValue('max_hp')}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        value={getActualDerivedStatValue(selectedDerivedStat)}
+                        onChange={(e) => updateDerivedStatValue(selectedDerivedStat, parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        min="1"
+                        max={selectedDerivedStat === 'level' ? 20 : undefined}
+                      />
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Расчет:</h4>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-600">
+                        {selectedDerivedStat === 'level' && (
+                          <>
+                            {character.level} (Изначальный уровень)
+                            {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                              <span className="text-purple-600 font-medium">
+                                {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {selectedDerivedStat === 'proficiency' && (
+                          <>
+                            ({character.level} - 1) ÷ 4 + 2 = {Math.floor((character.level - 1) / 4) + 2} (Базовый расчет)
+                            {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                              <span className="text-purple-600 font-medium">
+                                {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {selectedDerivedStat === 'ac' && (
+                          <>
+                            {armorInfo ? (
+                              <>
+                                <div className="space-y-2">
+                                  <div>
+                                    <strong>Базовая защита:</strong> {armorInfo.base_ac} ({armorInfo.details.base_formula})
+                                  </div>
+                                  {armorInfo.armor_name && (
+                                    <div>
+                                      <strong>Экипированная броня:</strong> {armorInfo.armor_name} ({armorInfo.armor_type})
+                                    </div>
+                                  )}
+                                  <div>
+                                    <strong>Формула брони:</strong> {armorInfo.details.armor_formula}
+                                  </div>
+                                  <div>
+                                    <strong>Модификатор ЛВК:</strong> {Math.floor((getActualStatValue('dexterity') - 10) / 2) > 0 ? '+' : ''}{Math.floor((getActualStatValue('dexterity') - 10) / 2)}
+                                    {armorInfo.details.max_dex_bonus && (
+                                      <span className="text-sm text-gray-600"> (макс. +{armorInfo.details.max_dex_bonus})</span>
+                                    )}
+                                  </div>
+                                  {armorInfo.details.armor_bonus > 0 && (
+                                    <div>
+                                      <strong>Бонус брони:</strong> +{armorInfo.details.armor_bonus}
+                                    </div>
+                                  )}
+                                  <div className="font-bold text-lg">
+                                    <strong>Итоговая защита:</strong> {getActualDerivedStatValue('ac')}
+                                  </div>
+                                </div>
+                                {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                                  <div className="mt-2 text-purple-600 font-medium">
+                                    → {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                          <>
+                            10 + {Math.floor((getActualStatValue('dexterity') - 10) / 2)}(Модификатор ЛВК) = {10 + Math.floor((getActualStatValue('dexterity') - 10) / 2)} (Базовая защита)
+                            {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                              <span className="text-purple-600 font-medium">
+                                {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                              </span>
+                                )}
+                              </>
+                            )}
+                          </>
+                        )}
+                        {selectedDerivedStat === 'speed' && (
+                          <>
+                            {character.speed} (Изначальная скорость)
+                            {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                              <span className="text-purple-600 font-medium">
+                                {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {selectedDerivedStat === 'hp' && (
+                          <>
+                            {character.max_hp}/{character.current_hp} (Изначальные хиты)
+                            {(modifiedDerivedStats['max_hp'] !== undefined || modifiedDerivedStats['current_hp'] !== undefined) && (
+                              <span className="text-purple-600 font-medium">
+                                {' '}→ {getActualDerivedStatValue('max_hp')}/{getActualDerivedStatValue('current_hp')} (Изменено игроком)
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {selectedDerivedStat === 'passive_perception' && (
+                          <>
+                            10 + {Math.floor((getActualStatValue('wisdom') - 10) / 2)}(Модификатор МДР) + {(hasSkillProficiency(character, 'perception') || customSkillProficiencies['perception']) ? Math.floor((character.level - 1) / 4) + 2 : 0}(Бонус владения восприятием) = {10 + Math.floor((getActualStatValue('wisdom') - 10) / 2) + ((hasSkillProficiency(character, 'perception') || customSkillProficiencies['perception']) ? Math.floor((character.level - 1) / 4) + 2 : 0)}
+                            {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
+                              <span className="text-purple-600 font-medium">
+                                {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {(modifiedDerivedStats[selectedDerivedStat] !== undefined || 
+                    (selectedDerivedStat === 'hp' && (modifiedDerivedStats['max_hp'] !== undefined || modifiedDerivedStats['current_hp'] !== undefined))) && (
+                    <button
+                      onClick={() => {
+                        if (selectedDerivedStat === 'hp') {
+                          resetDerivedStatValue('max_hp');
+                          resetDerivedStatValue('current_hp');
+                        } else {
+                          resetDerivedStatValue(selectedDerivedStat);
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      Вернуться к обычному расчету
+                    </button>
+                  )}
+                </div>
+
+                {/* Правая половина - Дополнительная информация */}
+                <div>
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Информация:</h4>
+                    <div className="bg-blue-50 p-3 rounded-md">
+                      <div className="text-sm text-blue-800">
+                        {selectedDerivedStat === 'level' && (
+                          <>
+                            <p className="font-medium mb-1">Уровень персонажа:</p>
+                            <p>• Определяет бонус мастерства</p>
+                            <p>• Влияет на количество заклинаний</p>
+                            <p>• Максимум: 20 уровней</p>
+                          </>
+                        )}
+                        {selectedDerivedStat === 'proficiency' && (
+                          <>
+                            <p className="font-medium mb-1">Бонус мастерства:</p>
+                            <p>• Добавляется к владениям</p>
+                            <p>• Рассчитывается от уровня</p>
+                            <p>• Влияет на спасброски и навыки</p>
+                          </>
+                        )}
+                        {selectedDerivedStat === 'ac' && (
+                          <>
+                            <p className="font-medium mb-1">Класс защиты:</p>
+                            <p>• Базовая защита без брони</p>
+                            <p>• 10 + модификатор ЛВК</p>
+                            <p>• Броня может изменять формулу</p>
+                          </>
+                        )}
+                        {selectedDerivedStat === 'speed' && (
+                          <>
+                            <p className="font-medium mb-1">Скорость:</p>
+                            <p>• Расстояние за ход</p>
+                            <p>• Зависит от расы</p>
+                            <p>• Может изменяться эффектами</p>
+                          </>
+                        )}
+                        {selectedDerivedStat === 'hp' && (
+                          <>
+                            <p className="font-medium mb-1">Хиты:</p>
+                            <p>• Максимальные - полное здоровье</p>
+                            <p>• Текущие - актуальное состояние</p>
+                            <p>• При 0 - персонаж теряет сознание</p>
+                          </>
+                        )}
+                        {selectedDerivedStat === 'passive_perception' && (
+                          <>
+                            <p className="font-medium mb-1">Пассивное восприятие:</p>
+                            <p>• 10 + модификатор МДР</p>
+                            <p>• + бонус владения восприятием</p>
+                            <p>• Используется для обнаружения скрытых существ</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Влияние на другие характеристики:</h4>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      {selectedDerivedStat === 'level' && (
+                        <>
+                          <p>• <strong>Мастерство:</strong> ({character.level} - 1) ÷ 4 + 2</p>
+                          <p>• <strong>Заклинания:</strong> количество зависит от уровня</p>
+                          <p>• <strong>Умения класса:</strong> получаются на определенных уровнях</p>
+                        </>
+                      )}
+                      {selectedDerivedStat === 'proficiency' && (
+                        <>
+                          <p>• <strong>Спасброски:</strong> +{getActualDerivedStatValue('proficiency')} при владении</p>
+                          <p>• <strong>Навыки:</strong> +{getActualDerivedStatValue('proficiency')} при владении</p>
+                          <p>• <strong>Атаки:</strong> +{getActualDerivedStatValue('proficiency')} к броску атаки</p>
+                        </>
+                      )}
+                      {selectedDerivedStat === 'ac' && (
+                        <>
+                          <p>• <strong>Сложность попадания:</strong> противник должен выбросить ≥ {getActualDerivedStatValue('ac')}</p>
+                          <p>• <strong>Уклонение:</strong> защита от атак ближнего и дальнего боя</p>
+                        </>
+                      )}
+                      {selectedDerivedStat === 'speed' && (
+                        <>
+                          <p>• <strong>Движение:</strong> {getActualDerivedStatValue('speed')} футов за ход</p>
+                          <p>• <strong>Бег:</strong> ×2 ({getActualDerivedStatValue('speed') * 2} футов)</p>
+                        </>
+                      )}
+                      {selectedDerivedStat === 'hp' && (
+                        <>
+                          <p>• <strong>Смерть:</strong> при достижении -{getActualDerivedStatValue('max_hp')} хитов</p>
+                          <p>• <strong>Спасброски смерти:</strong> при 0 хитах</p>
+                        </>
+                      )}
+                      {selectedDerivedStat === 'passive_perception' && (
+                        <>
+                          <p>• <strong>Обнаружение:</strong> скрытые существа с проверкой &lt; {getActualDerivedStatValue('passive_perception')}</p>
+                          <p>• <strong>Скрытность:</strong> противник должен превзойти это значение</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно выбора предметов */}
+      <ItemSelector
+        isOpen={showItemSelector}
+        onClose={() => setShowItemSelector(false)}
+        onAddItems={handleAddItems}
+        characterId={character?.id || ''}
+      />
+
+      {/* Модальное окно кубика */}
+      {showDiceModal && diceResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 ${getSkillBorderColor(diceResult.skillName)}`}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Бросок: {getSkillNameInRussian(diceResult.skillName)}
+              </h3>
+              <button
+                onClick={() => setShowDiceModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Обычный режим - полная формула */}
+            <div className="flex items-center justify-center space-x-4">
+              {/* Кубики */}
+              <div className="flex items-center space-x-2">
+                {/* Первый кубик */}
+                <AnimatedDice
+                  isRolling={diceResult.isRolling}
+                  finalValue={diceResult.diceRoll}
+                  isSelected={diceResult.rollType === 'normal' || (diceResult.rollType === 'advantage' && diceResult.diceRoll === diceResult.selectedDice) || (diceResult.rollType === 'disadvantage' && diceResult.diceRoll === diceResult.selectedDice)}
+                  isAdvantage={diceResult.rollType === 'advantage' && diceResult.diceRoll === diceResult.selectedDice}
+                  isDisadvantage={diceResult.rollType === 'disadvantage' && diceResult.diceRoll === diceResult.selectedDice}
+                />
+                
+                {/* Второй кубик (только для преимущества/помехи) */}
+                {diceResult.rollType !== 'normal' && diceResult.secondDice && (
+                  <AnimatedDice
+                    isRolling={diceResult.isRolling}
+                    finalValue={diceResult.secondDice}
+                    isSelected={(diceResult.rollType === 'advantage' && diceResult.secondDice === diceResult.selectedDice) || (diceResult.rollType === 'disadvantage' && diceResult.secondDice === diceResult.selectedDice)}
+                    isAdvantage={diceResult.rollType === 'advantage' && diceResult.secondDice === diceResult.selectedDice}
+                    isDisadvantage={diceResult.rollType === 'disadvantage' && diceResult.secondDice === diceResult.selectedDice}
+                  />
+                )}
+              </div>
+              
+              {/* Плюс */}
+              <div className="text-2xl font-bold text-gray-600">+</div>
+              
+              {/* Бонус навыка */}
+              <div className="text-2xl font-bold text-blue-600 w-8 text-center">
+                {diceResult.skillBonus}
+              </div>
+              
+              {/* Равно */}
+              <div className="text-2xl font-bold text-gray-600">=</div>
+              
+              {/* Финальный результат - анимированный */}
+              <div className="text-3xl font-bold text-green-600">
+                {diceResult.isRolling ? (
+                  <AnimatedFinalResult 
+                    isRolling={diceResult.isRolling} 
+                    finalValue={diceResult.finalResult}
+                    skillBonus={diceResult.skillBonus}
+                  />
+                ) : (
+                  diceResult.finalResult
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-center space-x-3">
+              <button
+                onClick={() => rollSkillDice(diceResult.skillName, 'disadvantage')}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                title="Помеха - бросается два кубика, выбирается наименьший"
+              >
+                Помеха
+              </button>
+              <button
+                onClick={() => rollSkillDice(diceResult.skillName)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Бросить
+              </button>
+              <button
+                onClick={() => rollSkillDice(diceResult.skillName, 'advantage')}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                title="Преимущество - бросается два кубика, выбирается наибольший"
+              >
+                Преимущество
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Карточка при наведении - привязана к слоту */}
+      {hoveredItem && hoveredItem.card && hoveredSlotRef && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: hoveredSlotRef.getBoundingClientRect().right + 10,
+            top: hoveredSlotRef.getBoundingClientRect().top - 10,
+            width: '200px'
+          }}
+        >
+          <CardPreview 
+            card={hoveredItem.card}
+            showQuantity={true}
+            quantity={hoveredItem.quantity}
+          />
+        </div>
+      )}
+
+      {/* Модал подробного просмотра карты (как в библиотеке) */}
+      <CardDetailModal
+        card={selectedCard}
+        isOpen={showCardDetailModal}
+        onClose={closeCardDetail}
+        onEdit={handleEditCardFromModal}
+        onDelete={handleDeleteCardFromModal}
+        inventoryItem={selectedInventoryItem}
+      />
+    </div>
+  );
+};
+
+export default CharacterDetailV3;

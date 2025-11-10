@@ -23,6 +23,8 @@ import CharacterEdit from './pages/CharacterEdit';
 import CreateCharacter from './pages/CreateCharacter';
 import CharactersV2 from './pages/CharactersV2';
 import CharacterDetailV2 from './pages/CharacterDetailV2';
+import CharactersV3 from './pages/CharactersV3';
+import CharacterDetailV3 from './pages/CharacterDetailV3';
 import DiceRoller from './pages/DiceRoller';
 import CardTypeSelection from './pages/CardTypeSelection';
 import WeaponSelection from './pages/WeaponSelection';
@@ -211,6 +213,27 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <CharacterDetailV2 />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/characters-v3" element={
+          <ProtectedRoute>
+            <Layout>
+              <CharactersV3 />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/characters-v3/:id" element={
+          <ProtectedRoute>
+            <Layout>
+              <CharacterDetailV3 />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/characters-v3/:id/edit" element={
+          <ProtectedRoute>
+            <Layout>
+              <CharacterDetailV3 />
             </Layout>
           </ProtectedRoute>
         } />

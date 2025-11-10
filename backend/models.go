@@ -176,19 +176,19 @@ const (
 	EffectModifierMinus EffectModifier = "-" // Уменьшение
 )
 
-// Effect - структура эффекта предмета
-type Effect struct {
+// CardEffect - структура эффекта предмета
+type CardEffect struct {
 	TargetType     EffectTargetType `json:"targetType"`     // Тип цели (характеристика/навык/спасбросок)
 	TargetSpecific string           `json:"targetSpecific"` // Конкретная цель или "all"
 	Modifier       EffectModifier   `json:"modifier"`       // Модификатор (+ или -)
 	Value          int              `json:"value"`          // Значение эффекта
 }
 
-// Effects - массив эффектов
-type Effects []Effect
+// CardEffects - массив эффектов
+type CardEffects []CardEffect
 
-// Scan - кастомный сканер для Effects
-func (e *Effects) Scan(value interface{}) error {
+// Scan - кастомный сканер для CardEffects
+func (e *CardEffects) Scan(value interface{}) error {
 	if value == nil {
 		*e = nil
 		return nil
@@ -200,12 +200,12 @@ func (e *Effects) Scan(value interface{}) error {
 	case []byte:
 		return json.Unmarshal(v, e)
 	default:
-		return fmt.Errorf("неподдерживаемый тип для Effects: %T", value)
+		return fmt.Errorf("неподдерживаемый тип для CardEffects: %T", value)
 	}
 }
 
-// Value - кастомный value для Effects
-func (e Effects) Value() (driver.Value, error) {
+// Value - кастомный value для CardEffects
+func (e CardEffects) Value() (driver.Value, error) {
 	if e == nil {
 		return nil, nil
 	}
@@ -265,7 +265,7 @@ type Card struct {
 	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`                             // Массив тегов
 	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
-	Effects                      *Effects       `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
+	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -302,7 +302,7 @@ type CreateCardRequest struct {
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
-	Effects                      *Effects       `json:"effects"`
+	Effects                      *CardEffects   `json:"effects"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -336,7 +336,7 @@ type UpdateCardRequest struct {
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
-	Effects                      *Effects       `json:"effects"`
+	Effects                      *CardEffects   `json:"effects"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -377,7 +377,7 @@ type CardResponse struct {
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
-	Effects                      *Effects       `json:"effects"`
+	Effects                      *CardEffects   `json:"effects"`
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 }
