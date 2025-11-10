@@ -55,6 +55,7 @@ func main() {
 		"http://localhost:3000",
 		"http://localhost:5173",
 		"https://frontend-production-550b.up.railway.app", // Ваш конкретный frontend URL
+		"bagofholding.up.railway.app",                     // Домен на Railway
 		"https://*.vercel.app",
 		"https://*.netlify.app",
 		"https://*.render.com",
