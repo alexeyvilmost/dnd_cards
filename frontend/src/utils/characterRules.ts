@@ -24,6 +24,27 @@ const normalizeName = (name: string): string =>
 
 export const normalizeRuleIdentifier = (name: string): string => normalizeName(name);
 
+const DEFAULT_SKILL_NAMES = [
+  'acrobatics',
+  'animal_handling',
+  'arcana',
+  'athletics',
+  'deception',
+  'history',
+  'insight',
+  'intimidation',
+  'investigation',
+  'medicine',
+  'nature',
+  'perception',
+  'performance',
+  'persuasion',
+  'religion',
+  'sleight_of_hand',
+  'stealth',
+  'survival',
+];
+
 const ruleModules = import.meta.glob('../character_rules/*.json', {
   eager: true,
 }) as Record<string, { default: CharacterRule } | CharacterRule>;
@@ -151,10 +172,19 @@ export const getPrimaryStatForSkill = (skillName: string): string | undefined =>
 };
 
 export const getAllSkillNames = (): string[] => {
-  return Object.values(rulesMap)
+  const skills = Object.values(rulesMap)
     .filter((rule) => rule.type === 'skill')
     .map((rule) => rule.name)
     .sort();
+
+  if (skills.length === 0) {
+    console.warn(
+      '[characterRules] Не удалось загрузить ни одного правила навыков. Используем дефолтный список.'
+    );
+    return [...DEFAULT_SKILL_NAMES];
+  }
+
+  return skills;
 };
 
 export const getRulesByType = (type: CharacterRuleType): CharacterRule[] => {

@@ -17,3 +17,4 @@ COMMENT ON COLUMN inventory_items.equipped_slot IS 'Слот экипировк�
 
 
 
+
