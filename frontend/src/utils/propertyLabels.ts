@@ -22,7 +22,12 @@ export const getPropertyLabel = (property: string): string => {
     'shield': 'щит',
     'ring': 'кольцо',
     'necklace': 'ожерелье',
-    'cloak': 'плащ'
+    'cloak': 'плащ',
+    // Еще новые свойства
+    'potion': 'зелье',
+    'tool': 'инструмент',
+    'projectile': 'снаряд',
+    'explosive': 'взрывчатка'
   };
   return propertyLabels[property] || property;
 };

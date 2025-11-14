@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../api/client';
-import { Plus, User, Sword, Shield, Heart, Zap, Eye, Edit, Trash2, Package } from 'lucide-react';
+import { Plus, User, Eye, Edit, Trash2, Package } from 'lucide-react';
 
 interface CharacterV3 {
   id: string;
@@ -27,6 +27,7 @@ interface CharacterV3 {
 }
 
 const CharactersV3: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [characters, setCharacters] = useState<CharacterV3[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,34 +77,8 @@ const CharactersV3: React.FC = () => {
     }
   };
 
-  const handleCreate = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const payload = {
-        name: 'Тест',
-        race: 'Эльф',
-        class: 'Колдун',
-        level: 5,
-        speed: 30,
-        strength: 8,
-        dexterity: 15,
-        constitution: 17,
-        intelligence: 12,
-        wisdom: 14,
-        charisma: 21,
-        max_hp: 45,
-        current_hp: 40,
-        saving_throw_proficiencies: ['charisma', 'dexterity'],
-        skill_proficiencies: [],
-      };
-      await apiClient.post('/api/characters-v2', payload);
-      await fetchCharacters();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось создать персонажа');
-    } finally {
-      setLoading(false);
-    }
+  const handleCreate = () => {
+    navigate('/characters-v3/create');
   };
 
   const handleDeleteCharacter = async (id: string) => {

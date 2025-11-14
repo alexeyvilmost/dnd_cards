@@ -1,0 +1,20 @@
+{
+    "name": "urchin",
+    "russian_name": "Беспризорник",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "sleight_of_hand",
+        "stealth"
+    ],
+    "tool_proficiencies": [
+        "disguise_kit",
+        "thieves_tools"
+    ],
+    "equipment": [
+        "9c413434-ea10-4bc3-851f-1c9852bf57b9",
+        "7fa5f1c4-072f-4342-8a64-1ad2d8d87385",
+        "e90c3bed-f69b-4770-b056-718252b9b240",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910"
+    ],
+    "gold": 10
+}

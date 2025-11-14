@@ -185,7 +185,19 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       'reach': 'Досягаемости',
       'ammunition': 'Требует боеприпасы',
       'loading': 'Зарядка',
-      'special': 'Особое'
+      'special': 'Особое',
+      'cloth': 'Ткань',
+      'light_armor': 'Легкая броня',
+      'medium_armor': 'Средняя броня',
+      'heavy_armor': 'Тяжелая броня',
+      'shield': 'Щит',
+      'ring': 'Кольцо',
+      'necklace': 'Ожерелье',
+      'cloak': 'Плащ',
+      'potion': 'Зелье',
+      'tool': 'Инструмент',
+      'projectile': 'Снаряд',
+      'explosive': 'Взрывчатка'
     };
     return properties.map(p => labels[p] || p);
   };
@@ -277,6 +289,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
           <div className="text-sm space-y-1">
             <p><strong>Редкость:</strong> {getRarityLabel(card.rarity)}</p>
             <p><strong>Номер:</strong> {card.card_number}</p>
+            <p><strong>ID:</strong> <span className="font-mono text-xs">{card.id}</span></p>
             {card.author && <p><strong>Автор:</strong> {card.author}</p>}
             {card.source && <p><strong>Источник:</strong> {card.source}</p>}
             {card.type && <p><strong>Тип:</strong> {getItemTypeLabel(card.type)}</p>}

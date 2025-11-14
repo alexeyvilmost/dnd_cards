@@ -1,0 +1,21 @@
+{
+    "name": "noble",
+    "russian_name": "Благородный",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "history",
+        "persuasion"
+    ],
+    "tool_proficiencies": [
+        "gaming_set"
+    ],
+    "language_proficiencies": [
+        "basic"
+    ],
+    "equipment": [
+        "d4d1f3a5-0280-4771-be02-44111209c48f",
+        "efaa1bac-7805-4caf-aa7f-e8121b3fae07",
+        "b49579df-45e6-4f71-b5c8-edc08624b07f"
+    ],
+    "gold": 25
+}

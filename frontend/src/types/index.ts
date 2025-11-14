@@ -1,5 +1,5 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact';
-export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak';
+export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
 export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'none';
@@ -184,6 +184,11 @@ export const PROPERTIES_OPTIONS = [
   { value: 'ring', label: 'Кольцо' },
   { value: 'necklace', label: 'Ожерелье' },
   { value: 'cloak', label: 'Плащ' },
+  // Еще новые свойства
+  { value: 'potion', label: 'Зелье' },
+  { value: 'tool', label: 'Инструмент' },
+  { value: 'projectile', label: 'Снаряд' },
+  { value: 'explosive', label: 'Взрывчатка' },
 ] as const;
 
 export const BONUS_TYPE_OPTIONS = [

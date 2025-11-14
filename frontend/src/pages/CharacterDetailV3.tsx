@@ -1023,10 +1023,32 @@ const CharacterDetailV3: React.FC = () => {
 
     const levelValue =
       modifiedDerivedStats['level'] !== undefined ? modifiedDerivedStats['level'] : character?.level ?? 1;
-    const proficiencyValue =
-      modifiedDerivedStats['proficiency'] !== undefined
-        ? modifiedDerivedStats['proficiency']
-        : Math.floor((levelValue - 1) / 4) + 2;
+    
+    // Вычисляем бонус мастерства по формуле из правил (без циклической зависимости)
+    let proficiencyValue = 0;
+    if (modifiedDerivedStats['proficiency'] !== undefined || modifiedDerivedStats['proficiency_bonus'] !== undefined) {
+      proficiencyValue = modifiedDerivedStats['proficiency'] ?? modifiedDerivedStats['proficiency_bonus'] ?? 0;
+    } else {
+      // Используем формулу напрямую, чтобы избежать циклической зависимости
+      try {
+        const formulas = getRuleFormulas('proficiency_bonus');
+        if (formulas.length > 0) {
+          const selectedFormula = selectRuleFormula(formulas, {});
+          if (selectedFormula) {
+            const tempContext: Record<string, number> = { LEVEL: levelValue };
+            const evaluation = evaluateCharacterFormula(selectedFormula.formula, tempContext);
+            proficiencyValue = Math.round(evaluation.value);
+          } else {
+            proficiencyValue = Math.floor((levelValue - 1) / 4) + 2;
+          }
+        } else {
+          proficiencyValue = Math.floor((levelValue - 1) / 4) + 2;
+        }
+      } catch (error) {
+        console.error('[PROFICIENCY] Ошибка вычисления бонуса мастерства в контексте:', error);
+        proficiencyValue = Math.floor((levelValue - 1) / 4) + 2;
+      }
+    }
 
     context.LEVEL = levelValue;
     context.PROFICIENCY_BONUS = proficiencyValue;
@@ -1121,6 +1143,38 @@ const CharacterDetailV3: React.FC = () => {
     expression: string;
   };
 
+  const computeProficiencyBonusFromRules = (): ArmorFormulaResult | null => {
+    if (!character) {
+      return null;
+    }
+
+    const formulas = getRuleFormulas('proficiency_bonus');
+    if (!formulas.length) {
+      return null;
+    }
+
+    const levelValue =
+      modifiedDerivedStats['level'] !== undefined ? modifiedDerivedStats['level'] : character.level;
+
+    const context = buildCommonFormulaContext({
+      LEVEL: levelValue,
+    });
+
+    const selectedFormula = selectRuleFormula(formulas, {});
+    if (!selectedFormula) {
+      return null;
+    }
+
+    const evaluation = evaluateCharacterFormula(selectedFormula.formula, context);
+    const normalizedValue = Math.round(evaluation.value);
+    const expression = `${evaluation.displayExpression} = ${formatSignedValue(normalizedValue)}`;
+
+    return {
+      value: normalizedValue,
+      expression,
+    };
+  };
+
   const computeArmorClassFromRules = (): ArmorFormulaResult | null => {
     if (!character) {
       return null;
@@ -1157,6 +1211,69 @@ const CharacterDetailV3: React.FC = () => {
       value: normalizedValue,
       expression,
     };
+  };
+
+  const getProficiencyBonusCalculation = (): string => {
+    const formulaResult = computeProficiencyBonusFromRules();
+    if (formulaResult) {
+      return formulaResult.expression;
+    }
+    // Fallback к базовому расчету
+    const levelValue = modifiedDerivedStats['level'] !== undefined ? modifiedDerivedStats['level'] : character?.level ?? 1;
+    const value = Math.floor((levelValue - 1) / 4) + 2;
+    return `(${levelValue} - 1) ÷ 4 + 2 = ${value}`;
+  };
+
+  const computePassivePerceptionFromRules = (): ArmorFormulaResult | null => {
+    if (!character) {
+      return null;
+    }
+
+    const formulas = getRuleFormulas('passive_perception');
+    if (!formulas.length) {
+      return null;
+    }
+
+    // Получаем фактическое значение навыка perception (с учетом ручных модификаций)
+    const perceptionValue = getActualSkillValue('perception');
+
+    // Получаем эффекты предметов для passive_perception
+    const equipmentEffect =
+      (equippedEffectsCache.characteristicBonuses['passive_perception'] || 0) +
+      (equippedEffectsCache.characteristicBonuses['passive perception'] || 0);
+
+    const context = buildCommonFormulaContext({
+      PERCEPTION_SKILL_VALUE: perceptionValue,
+      EQUIPMENT_EFFECTS: equipmentEffect,
+    });
+
+    const selectedFormula = selectRuleFormula(formulas, {});
+    if (!selectedFormula) {
+      return null;
+    }
+
+    const evaluation = evaluateCharacterFormula(selectedFormula.formula, context);
+    const normalizedValue = Math.round(evaluation.value);
+    const expression = `${evaluation.displayExpression} = ${formatSignedValue(normalizedValue)}`;
+
+    return {
+      value: normalizedValue,
+      expression,
+    };
+  };
+
+  const getPassivePerceptionCalculation = (): string => {
+    const formulaResult = computePassivePerceptionFromRules();
+    if (formulaResult) {
+      return formulaResult.expression;
+    }
+    // Fallback к базовому расчету (с учетом ручных модификаций)
+    const perceptionValue = getActualSkillValue('perception');
+    const equipmentEffect =
+      (equippedEffectsCache.characteristicBonuses['passive_perception'] || 0) +
+      (equippedEffectsCache.characteristicBonuses['passive perception'] || 0);
+    const value = 10 + perceptionValue + equipmentEffect;
+    return `10 + ${perceptionValue}(Восприятие)${equipmentEffect ? ` + ${equipmentEffect}(Эффекты предметов)` : ''} = ${value}`;
   };
 
   const getArmorClassCalculation = (): string => {
@@ -1326,7 +1443,22 @@ const CharacterDetailV3: React.FC = () => {
       case 'level':
         return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.level;
       case 'proficiency':
-        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : Math.floor((character.level - 1) / 4) + 2;
+      case 'proficiency_bonus':
+        if (modifiedDerivedStats[statKey] !== undefined) {
+          return modifiedDerivedStats[statKey];
+        }
+        // Пытаемся вычислить бонус мастерства по декларативным формулам
+        try {
+          const formulaResult = computeProficiencyBonusFromRules();
+          if (formulaResult) {
+            return formulaResult.value;
+          }
+        } catch (error) {
+          console.error('[PROFICIENCY] Ошибка вычисления формулы бонуса мастерства:', error);
+        }
+        // Fallback к базовому расчету при отсутствии декларативной формулы
+        const levelValue = modifiedDerivedStats['level'] !== undefined ? modifiedDerivedStats['level'] : character.level;
+        return Math.floor((levelValue - 1) / 4) + 2;
       case 'ac':
       case 'armor_class':
         if (modifiedDerivedStats[statKey] !== undefined) {
@@ -1375,11 +1507,24 @@ const CharacterDetailV3: React.FC = () => {
       case 'current_hp':
         return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : character.current_hp;
       case 'passive_perception':
-        const wisModifier = Math.floor((getActualStatValue('wisdom') - 10) / 2);
-        const perceptionProficient = hasSkillProficiency(character, 'perception') || customSkillProficiencies['perception'];
-        const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
-        const basePerception = 10 + wisModifier + (perceptionProficient ? proficiencyBonus : 0);
-        return modifiedDerivedStats[statKey] !== undefined ? modifiedDerivedStats[statKey] : basePerception;
+        if (modifiedDerivedStats[statKey] !== undefined) {
+          return modifiedDerivedStats[statKey];
+        }
+        // Пытаемся вычислить пассивное восприятие по декларативным формулам
+        try {
+          const formulaResult = computePassivePerceptionFromRules();
+          if (formulaResult) {
+            return formulaResult.value;
+          }
+        } catch (error) {
+          console.error('[PASSIVE_PERCEPTION] Ошибка вычисления формулы пассивного восприятия:', error);
+        }
+        // Fallback к базовому расчету при отсутствии декларативной формулы (с учетом ручных модификаций)
+        const perceptionValue = getActualSkillValue('perception');
+        const equipmentEffect =
+          (equippedEffectsCache.characteristicBonuses['passive_perception'] || 0) +
+          (equippedEffectsCache.characteristicBonuses['passive perception'] || 0);
+        return 10 + perceptionValue + equipmentEffect;
       default:
         return 0;
     }
@@ -1489,7 +1634,7 @@ const CharacterDetailV3: React.FC = () => {
     }
     
     const statValue = getActualStatValue(statKey);
-    const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
+    const proficiencyBonus = getActualDerivedStatValue('proficiency');
     const isProficient = hasSavingThrowProficiency(character, statKey) || customSavingThrowProficiencies[statKey];
     
     const baseModifier = Math.floor((statValue - 10) / 2);
@@ -2357,7 +2502,7 @@ const CharacterDetailV3: React.FC = () => {
                         {getSavingThrowBonus(selectedStat).bonus}
                       </div>
                       <div className="text-xs text-green-700">
-                        {Math.floor((getActualStatValue(selectedStat) - 10) / 2)} + {getSavingThrowBonus(selectedStat).isProficient ? Math.floor((character.level - 1) / 4) + 2 : 0}(Бонус владения) = {getSavingThrowBonus(selectedStat).bonus}
+                        {Math.floor((getActualStatValue(selectedStat) - 10) / 2)} + {getSavingThrowBonus(selectedStat).isProficient ? getActualDerivedStatValue('proficiency') : 0}(Бонус владения) = {getSavingThrowBonus(selectedStat).bonus}
                       </div>
                       
                       <div className="flex items-center justify-between mt-3 p-2 bg-white rounded border">
@@ -2598,13 +2743,13 @@ const CharacterDetailV3: React.FC = () => {
                         customSkillProficiencies[getNormalizedSkillKey(selectedSkill)]) && (
                         <div className="flex justify-between text-green-700">
                           <span>Бонус мастерства:</span>
-                          <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
+                          <span className="font-medium">+{getActualDerivedStatValue('proficiency')}</span>
                         </div>
                       )}
                       {skillCompetencies[getNormalizedSkillKey(selectedSkill)] && (
                         <div className="flex justify-between text-blue-700">
                           <span>Компетенция:</span>
-                          <span className="font-medium">+{Math.floor((character.level - 1) / 4) + 2}</span>
+                          <span className="font-medium">+{getActualDerivedStatValue('proficiency')}</span>
                         </div>
                       )}
                       {modifiedSkills[getNormalizedSkillKey(selectedSkill)] !== undefined && (
@@ -2716,7 +2861,7 @@ const CharacterDetailV3: React.FC = () => {
                         )}
                         {selectedDerivedStat === 'proficiency' && (
                           <>
-                            ({character.level} - 1) ÷ 4 + 2 = {Math.floor((character.level - 1) / 4) + 2} (Базовый расчет)
+                            {getProficiencyBonusCalculation()}
                             {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
                               <span className="text-purple-600 font-medium">
                                 {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)
@@ -2776,7 +2921,7 @@ const CharacterDetailV3: React.FC = () => {
                         )}
                         {selectedDerivedStat === 'passive_perception' && (
                           <>
-                            10 + {Math.floor((getActualStatValue('wisdom') - 10) / 2)}(Модификатор МДР) + {(hasSkillProficiency(character, 'perception') || customSkillProficiencies['perception']) ? Math.floor((character.level - 1) / 4) + 2 : 0}(Бонус владения восприятием) = {10 + Math.floor((getActualStatValue('wisdom') - 10) / 2) + ((hasSkillProficiency(character, 'perception') || customSkillProficiencies['perception']) ? Math.floor((character.level - 1) / 4) + 2 : 0)}
+                            {getPassivePerceptionCalculation()}
                             {modifiedDerivedStats[selectedDerivedStat] !== undefined && (
                               <span className="text-purple-600 font-medium">
                                 {' '}→ {modifiedDerivedStats[selectedDerivedStat]} (Изменено игроком)

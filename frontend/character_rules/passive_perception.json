@@ -1,0 +1,15 @@
+{
+  "name": "passive_perception",
+  "russian_name": "Пассивное восприятие",
+  "type": "derived",
+  "dependencies": [
+    "perception",
+    "equipment_effects"
+  ],
+  "calculate_formulas": [
+    {
+      "formula": "10 + {PERCEPTION_SKILL_VALUE} + {EQUIPMENT_EFFECTS}"
+    }
+  ]
+}
+

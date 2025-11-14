@@ -45,7 +45,7 @@ const DEFAULT_SKILL_NAMES = [
   'survival',
 ];
 
-const ruleModules = import.meta.glob('../character_rules/*.json', {
+const ruleModules = import.meta.glob('../../character_rules/*.json', {
   eager: true,
 }) as Record<string, { default: CharacterRule } | CharacterRule>;
 
@@ -118,7 +118,13 @@ export const getRule = (name: string): CharacterRule | undefined => {
 };
 
 export const getRuleRussianName = (name: string): string | undefined => {
-  return getRule(name)?.russian_name;
+  const normalized = normalizeName(name);
+  const rule = rulesMap[normalized];
+  if (!rule) {
+    console.warn(`[characterRules] Правило не найдено: "${name}" (нормализовано: "${normalized}")`);
+    return undefined;
+  }
+  return rule.russian_name;
 };
 
 export const getRuleDependencies = (name: string): CharacterRule[] => {
@@ -158,9 +164,32 @@ export const getDependentNames = (targetName: string, typeFilter?: CharacterRule
 export const getPrimaryStatForSkill = (skillName: string): string | undefined => {
   const rule = getRule(skillName);
   if (!rule) {
-    return undefined;
+    // Fallback: проверяем известные соответствия навыков и характеристик
+    const skillToStatMap: Record<string, string> = {
+      'acrobatics': 'dexterity',
+      'animal_handling': 'wisdom',
+      'arcana': 'intelligence',
+      'athletics': 'strength',
+      'deception': 'charisma',
+      'history': 'intelligence',
+      'insight': 'wisdom',
+      'intimidation': 'charisma',
+      'investigation': 'intelligence',
+      'medicine': 'wisdom',
+      'nature': 'intelligence',
+      'perception': 'wisdom',
+      'performance': 'charisma',
+      'persuasion': 'charisma',
+      'religion': 'intelligence',
+      'sleight_of_hand': 'dexterity',
+      'stealth': 'dexterity',
+      'survival': 'wisdom',
+    };
+    const normalizedSkill = normalizeName(skillName);
+    return skillToStatMap[normalizedSkill];
   }
 
+  // Ищем первую зависимость типа 'stat'
   for (const dependency of rule.dependencies ?? []) {
     const dependencyRule = getRule(dependency);
     if (dependencyRule?.type === 'stat') {
@@ -168,7 +197,29 @@ export const getPrimaryStatForSkill = (skillName: string): string | undefined =>
     }
   }
 
-  return undefined;
+  // Fallback: проверяем известные соответствия навыков и характеристик
+  const skillToStatMap: Record<string, string> = {
+    'acrobatics': 'dexterity',
+    'animal_handling': 'wisdom',
+    'arcana': 'intelligence',
+    'athletics': 'strength',
+    'deception': 'charisma',
+    'history': 'intelligence',
+    'insight': 'wisdom',
+    'intimidation': 'charisma',
+    'investigation': 'intelligence',
+    'medicine': 'wisdom',
+    'nature': 'intelligence',
+    'perception': 'wisdom',
+    'performance': 'charisma',
+    'persuasion': 'charisma',
+    'religion': 'intelligence',
+    'sleight_of_hand': 'dexterity',
+    'stealth': 'dexterity',
+    'survival': 'wisdom',
+  };
+  const normalizedSkill = normalizeName(skillName);
+  return skillToStatMap[normalizedSkill];
 };
 
 export const getAllSkillNames = (): string[] => {

@@ -1,0 +1,36 @@
+{
+    "name": "dwarf",
+    "russian_name": "Дварф",
+    "type": "race",
+    "ability_scores": {
+        "constitution": 2,
+        "strength": 2
+    },
+    "tool_proficiencies": [
+        "craft_tools"
+    ],
+    "language_proficiencies": [
+        "dwarvish",
+        "common"
+    ],
+    "weapon_proficiencies": [
+        "battleaxe",
+        "handaxe",
+        "throwing_hammer",
+        "warhammer"
+    ],
+    "armor_proficiencies": [
+        "light_armor",
+        "medium_armor"
+    ],
+    "damage_resistance": [
+        "poison"
+    ],
+    "features": [
+        "darkvision",
+        "poison_resistance",
+        "stonecunning"
+    ],
+    "size": "medium",
+    "speed": 25
+}

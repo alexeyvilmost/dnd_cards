@@ -25,6 +25,7 @@ import CharactersV2 from './pages/CharactersV2';
 import CharacterDetailV2 from './pages/CharacterDetailV2';
 import CharactersV3 from './pages/CharactersV3';
 import CharacterDetailV3 from './pages/CharacterDetailV3';
+import CreateCharacterV3 from './pages/CreateCharacterV3';
 import DiceRoller from './pages/DiceRoller';
 import CardTypeSelection from './pages/CardTypeSelection';
 import WeaponSelection from './pages/WeaponSelection';
@@ -220,6 +221,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <CharactersV3 />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/characters-v3/create" element={
+          <ProtectedRoute>
+            <Layout>
+              <CreateCharacterV3 />
             </Layout>
           </ProtectedRoute>
         } />

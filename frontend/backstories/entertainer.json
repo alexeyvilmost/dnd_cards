@@ -1,0 +1,19 @@
+{
+    "name": "Entertainer",
+    "russian_name": "Артист",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "acrobatics",
+        "performance"
+    ],
+    "tool_proficiencies": [
+        "disguise_kit",
+        "musical_instrument"
+    ],
+    "equipment": [
+        "22542ad6-4f5b-4ef0-a386-b5c9bade4484",
+        "6c0a019b-a864-4371-acac-cbbcc391af1e",
+        "19a77e19-b830-498e-9d69-f3678c0fb9a4"
+    ],
+    "gold": 15
+}
