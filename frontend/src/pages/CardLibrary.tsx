@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cardsApi } from '../api/client';
-import type { Card } from '../types';
+import { cardsApi, effectsApi } from '../api/client';
+import type { Card, PassiveEffect } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
+import EffectPreview from '../components/EffectPreview';
 import CardDetailModal from '../components/CardDetailModal';
+import EffectDetailModal from '../components/EffectDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 const CardLibrary = () => {
+  const [contentType, setContentType] = useState<'cards' | 'effects'>('cards');
   const [cards, setCards] = useState<Card[]>([]);
+  const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +33,9 @@ const CardLibrary = () => {
   const [sortBy, setSortBy] = useState<string>('created_desc'); // 'rarity_asc', 'rarity_desc', 'price_asc', 'price_desc', 'created_asc', 'created_desc', 'updated_asc', 'updated_desc'
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -107,11 +113,66 @@ const CardLibrary = () => {
     }
   };
 
+  // Загрузка эффектов
+  const loadEffects = async (page = 1, append = false) => {
+    try {
+      console.log(`📥 [CARD LIBRARY] Загружаем эффекты: страница ${page}, append: ${append}`);
+      
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const params: any = {
+        page,
+        limit: 50
+      };
+      
+      if (search) params.search = search;
+      if (rarityFilter) params.rarity = rarityFilter;
+      
+      const response = await effectsApi.getEffects(params);
+      
+      if (append) {
+        setEffects(prev => {
+          // Фильтруем дубликаты по ID
+          const existingIds = new Set(prev.map(effect => effect.id));
+          const newEffects = response.effects.filter(effect => !existingIds.has(effect.id));
+          const combinedEffects = [...prev, ...newEffects];
+          
+          console.log(`📊 [CARD LIBRARY] Добавляем эффекты: получено ${response.effects.length}, новых ${newEffects.length}, всего ${combinedEffects.length}`);
+          
+          setHasMore(response.effects.length === 50 && combinedEffects.length < response.total);
+          return combinedEffects;
+        });
+      } else {
+        setEffects(response.effects);
+        setHasMore(response.effects.length === 50 && response.effects.length < response.total);
+        console.log(`📊 [CARD LIBRARY] Загружено эффектов: ${response.effects.length}, всего в базе: ${response.total}`);
+      }
+      
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки эффектов');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
     setCards([]);
-    loadCards(1, false);
-  }, [search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
+    setEffects([]);
+    if (contentType === 'cards') {
+      loadCards(1, false);
+    } else {
+      loadEffects(1, false);
+    }
+  }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
 
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
@@ -146,7 +207,11 @@ const CardLibrary = () => {
   const loadMoreCards = () => {
     if (!loadingMore && hasMore && !loading) {
       console.log(`🔄 [CARD LIBRARY] Загружаем страницу ${currentPage + 1}`);
-      loadCards(currentPage + 1, true);
+      if (contentType === 'cards') {
+        loadCards(currentPage + 1, true);
+      } else {
+        loadEffects(currentPage + 1, true);
+      }
     }
   };
 
@@ -190,6 +255,50 @@ const CardLibrary = () => {
     setIsModalOpen(false);
     // Здесь можно добавить навигацию к редактированию
     window.location.href = `/edit/${cardId}`;
+  };
+
+  // Обработчики для эффектов
+  const handleEffectClick = (effect: PassiveEffect) => {
+    setSelectedEffect(effect);
+    setIsEffectModalOpen(true);
+  };
+
+  const handleCloseEffectModal = () => {
+    setIsEffectModalOpen(false);
+    setSelectedEffect(null);
+  };
+
+  const handleEditEffect = (effectId: string) => {
+    setIsEffectModalOpen(false);
+    window.location.href = `/effect-creator?edit=${effectId}`;
+  };
+
+  const handleDeleteEffect = async (effectId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот эффект?')) return;
+    
+    try {
+      await effectsApi.deleteEffect(effectId);
+      if (contentType === 'effects') {
+        loadEffects(1, false);
+      }
+      setIsEffectModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления эффекта');
+    }
+  };
+
+  // Получение типа эффекта для отображения
+  const getEffectTypeLabel = (effectType: string) => {
+    switch (effectType) {
+      case 'passive':
+        return 'Пассивное';
+      case 'conditional':
+        return 'Условное';
+      case 'triggered':
+        return 'Срабатывающее';
+      default:
+        return effectType;
+    }
   };
 
   // Функция для получения цвета полоски редкости
@@ -237,62 +346,33 @@ const CardLibrary = () => {
         </Link>
       </div>
 
-      {/* Быстрые действия */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Быстрые действия</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
-          <Link
-            to="/inventory"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-          >
-            <Package className="h-8 w-8 text-blue-600 group-hover:text-blue-700 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Инвентарь</span>
-            <span className="text-xs text-gray-500 text-center">Управление предметами</span>
-          </Link>
-          
-          <Link
-            to="/groups"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
-          >
-            <Users className="h-8 w-8 text-green-600 group-hover:text-green-700 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Группы</span>
-            <span className="text-xs text-gray-500 text-center">Игровые группы</span>
-          </Link>
-          
-          <Link
-            to="/templates"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors group"
-          >
-            <Sword className="h-8 w-8 text-purple-600 group-hover:text-purple-700 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Шаблоны</span>
-            <span className="text-xs text-gray-500 text-center">Оружие и предметы</span>
-          </Link>
-          
-          <Link
-            to="/export"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors group"
-          >
-            <svg className="h-8 w-8 text-orange-600 group-hover:text-orange-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="text-sm font-medium text-gray-900">Экспорт</span>
-            <span className="text-xs text-gray-500 text-center">Скачать карточки</span>
-          </Link>
-          
-          <Link
-            to="/inventory/create"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
-          >
-            <Plus className="h-8 w-8 text-indigo-600 group-hover:text-indigo-700 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Создать инвентарь</span>
-            <span className="text-xs text-gray-500 text-center">Новый инвентарь</span>
-          </Link>
-        </div>
-      </div>
-
       {/* Поиск и фильтры */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          {/* Переключатель предметы/эффекты */}
+          <div className="flex items-center space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
+            <button
+              onClick={() => setContentType('cards')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                contentType === 'cards'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Предметы
+            </button>
+            <button
+              onClick={() => setContentType('effects')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                contentType === 'effects'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Эффекты
+            </button>
+          </div>
+
           {/* Поиск */}
           <div className="flex-1">
             <div className="relative">
@@ -365,84 +445,92 @@ const CardLibrary = () => {
               </select>
             </div>
 
-            {/* Фильтр по свойствам */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Свойства
-              </label>
-              <select
-                value={propertiesFilter}
-                onChange={(e) => setPropertiesFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Все свойства</option>
-                {PROPERTIES_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Фильтр по свойствам - только для карт */}
+            {contentType === 'cards' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Свойства
+                </label>
+                <select
+                  value={propertiesFilter}
+                  onChange={(e) => setPropertiesFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Все свойства</option>
+                  {PROPERTIES_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            {/* Фильтр по типу шаблона */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тип шаблона
-              </label>
-              <select
-                value={templateTypeFilter}
-                onChange={(e) => setTemplateTypeFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="cards">Обычные карты</option>
-                <option value="templates">Только шаблоны</option>
-                <option value="mixed">Шаблоны и обычные</option>
-                <option value="all">Все</option>
-              </select>
-            </div>
+            {/* Фильтр по типу шаблона - только для карт */}
+            {contentType === 'cards' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Тип шаблона
+                </label>
+                <select
+                  value={templateTypeFilter}
+                  onChange={(e) => setTemplateTypeFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="cards">Обычные карты</option>
+                  <option value="templates">Только шаблоны</option>
+                  <option value="mixed">Шаблоны и обычные</option>
+                  <option value="all">Все</option>
+                </select>
+              </div>
+            )}
 
-            {/* Фильтр по слоту экипировки */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Слот экипировки
-              </label>
-              <select
-                value={slotFilter}
-                onChange={(e) => setSlotFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Все слоты</option>
-                <option value="none">Не экипируется</option>
-                <option value="head">Голова</option>
-                <option value="body">Тело</option>
-                <option value="arms">Наручи</option>
-                <option value="feet">Обувь</option>
-                <option value="cloak">Плащ</option>
-                <option value="one_hand">Одна рука</option>
-                <option value="versatile">Универсальное</option>
-                <option value="two_hands">Две руки</option>
-                <option value="necklace">Ожерелье</option>
-                <option value="ring">Кольцо</option>
-              </select>
-            </div>
+            {/* Фильтр по слоту экипировки - только для карт */}
+            {contentType === 'cards' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Слот экипировки
+                </label>
+                <select
+                  value={slotFilter}
+                  onChange={(e) => setSlotFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Все слоты</option>
+                  <option value="none">Не экипируется</option>
+                  <option value="head">Голова</option>
+                  <option value="body">Тело</option>
+                  <option value="arms">Наручи</option>
+                  <option value="feet">Обувь</option>
+                  <option value="cloak">Плащ</option>
+                  <option value="one_hand">Одна рука</option>
+                  <option value="versatile">Универсальное</option>
+                  <option value="two_hands">Две руки</option>
+                  <option value="necklace">Ожерелье</option>
+                  <option value="ring">Кольцо</option>
+                </select>
+              </div>
+            )}
 
-            {/* Фильтр по типу брони */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тип брони
-              </label>
-              <select
-                value={armorTypeFilter}
-                onChange={(e) => setArmorTypeFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Все типы</option>
-                <option value="light">Лёгкая</option>
-                <option value="medium">Средняя</option>
-                <option value="heavy">Тяжелая</option>
-                <option value="cloth">Ткань</option>
-              </select>
-            </div>
+            {/* Фильтр по типу брони - только для карт */}
+            {contentType === 'cards' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Тип брони
+                </label>
+                <select
+                  value={armorTypeFilter}
+                  onChange={(e) => setArmorTypeFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Все типы</option>
+                  <option value="light">Лёгкая</option>
+                  <option value="medium">Средняя</option>
+                  <option value="heavy">Тяжелая</option>
+                  <option value="cloth">Ткань</option>
+                </select>
+              </div>
+            )}
 
             {/* Сортировка */}
             <div>
@@ -482,8 +570,8 @@ const CardLibrary = () => {
         </div>
       )}
 
-      {/* Список карточек */}
-      {!loading && cards.length === 0 && (
+      {/* Список карточек или эффектов */}
+      {!loading && contentType === 'cards' && cards.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Карточки не найдены</p>
           <Link to="/create" className="btn-primary mt-4 inline-block">
@@ -492,7 +580,16 @@ const CardLibrary = () => {
         </div>
       )}
 
-      {!loading && cards.length > 0 && (
+      {!loading && contentType === 'effects' && effects.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Эффекты не найдены</p>
+          <Link to="/effect-creator" className="btn-primary mt-4 inline-block">
+            Создать первый эффект
+          </Link>
+        </div>
+      )}
+
+      {!loading && contentType === 'cards' && cards.length > 0 && (
         <>
           {/* Счетчик карт */}
           <div className="mb-4 text-sm text-gray-600">
@@ -650,13 +747,104 @@ const CardLibrary = () => {
         </>
       )}
 
-      {/* Модальное окно с детальной информацией */}
+      {/* Отображение эффектов */}
+      {!loading && contentType === 'effects' && effects.length > 0 && (
+        <>
+          {/* Счетчик эффектов */}
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {effects.length} из {totalCards} эффектов
+          </div>
+          
+          {/* Отображение в зависимости от режима */}
+          {viewMode === 'grid' ? (
+            /* Сетка эффектов */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {effects.map((effect) => (
+                <div key={effect.id} className="flex justify-center">
+                  <EffectPreview effect={effect} onClick={() => handleEffectClick(effect)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Список эффектов */
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {effects.map((effect) => (
+                  <button
+                    key={effect.id}
+                    onClick={() => handleEffectClick(effect)}
+                    className="w-full text-left p-3 rounded-lg border-2 border-black bg-slate-800 text-white transition-all duration-200 hover:shadow-md hover:bg-slate-700"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* Маленькая картинка слева */}
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        {effect.image_url && effect.image_url.trim() !== '' ? (
+                          <img
+                            src={effect.image_url}
+                            alt={effect.name}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/default_image.png';
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src="/default_image.png"
+                            alt="Default D&D"
+                            className="w-full h-full object-contain opacity-50"
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Текст справа */}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate text-white">
+                          {effect.name}
+                        </div>
+                        
+                        {/* Нижняя панель с типом эффекта */}
+                        <div className="flex items-center mt-1 text-xs">
+                          <div className="text-gray-300">
+                            {getEffectTypeLabel(effect.effect_type)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Индикатор загрузки при автоматической подгрузке */}
+              {loadingMore && (
+                <div className="mt-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Загрузка эффектов...
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Модальное окно с детальной информацией о карте */}
       <CardDetailModal
         card={selectedCard}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onEdit={handleEditCard}
         onDelete={handleDeleteCard}
+      />
+
+      {/* Модальное окно с детальной информацией об эффекте */}
+      <EffectDetailModal
+        effect={selectedEffect}
+        isOpen={isEffectModalOpen}
+        onClose={handleCloseEffectModal}
+        onEdit={handleEditEffect}
+        onDelete={handleDeleteEffect}
       />
     </div>
   );

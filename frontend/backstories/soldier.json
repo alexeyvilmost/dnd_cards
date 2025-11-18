@@ -1,0 +1,18 @@
+{
+    "name": "Soldier",
+    "russian_name": "Солдат",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "athletics",
+        "intimidation"
+    ],
+    "tool_proficiencies": [
+        "gaming_set",
+        "ground_transport"
+    ],
+    "equipment": [
+        "c82ec3e7-d2b7-4115-b035-deba0cd4332b",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910"
+    ],
+    "gold": 10
+}

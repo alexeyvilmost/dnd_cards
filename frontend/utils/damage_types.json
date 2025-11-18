@@ -1,0 +1,58 @@
+{
+    "name": "damage_types",
+    "russian_name": "Типы повреждений",
+    "type": "damage_type",
+    "basic": [
+        {
+            "name": "piercing",
+            "russian_name": "Колющий",
+            "type": "physical"
+        },
+        {
+            "name": "bludgeoning",
+            "russian_name": "Дробящий",
+            "type": "physical"
+        },
+        {
+            "name": "slashing",
+            "russian_name": "Рубящий",
+            "type": "physical"
+        },
+        {
+            "name": "acid",
+            "russian_name": "Кислотный"
+        },
+        {
+            "name": "cold",
+            "russian_name": "Холодный"
+        },
+        {
+            "name": "fire",
+            "russian_name": "Огонь"
+        },
+        {
+            "name": "lightning",
+            "russian_name": "Молниеный"
+        },
+        {
+            "name": "poison",
+            "russian_name": "Ядовитый"
+        },
+        {
+            "name": "radiant",
+            "russian_name": "Светящийся"
+        },
+        {
+            "name": "thunder",
+            "russian_name": "Громовой"
+        },
+        {
+            "name": "force",
+            "russian_name": "Силовый"
+        },
+        {
+            "name": "psychic",
+            "russian_name": "Психический"
+        }
+    ]
+}

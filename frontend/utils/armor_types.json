@@ -1,0 +1,23 @@
+{
+    "name": "armor_types",
+    "russian_name": "Типы брони",
+    "type": "armor_type",
+    "basic": [
+        {
+            "name": "cloth",
+            "russian_name": "Ткань"
+        },
+        {
+            "name": "light",
+            "russian_name": "Легкая"
+        },
+        {
+            "name": "medium",
+            "russian_name": "Средняя"
+        },
+        {
+            "name": "heavy",
+            "russian_name": "Тяжелая"
+        }
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "name": "Hermit",
+    "russian_name": "Отшельник",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "medicine",
+        "religion"
+    ],
+    "tool_proficiencies": [
+        "herbalism_kit"
+    ],
+    "language_proficiencies": [
+        "basic"
+    ],
+    "equipment": [
+        "d6db75e8-a9dc-42b5-a93c-4eec974edb8e",
+        "20687ca8-bd76-4430-89fb-d28a78f55a4a",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910"
+    ],
+    "gold": 5
+}

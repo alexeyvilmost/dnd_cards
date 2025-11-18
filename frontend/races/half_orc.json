@@ -1,0 +1,22 @@
+{
+    "name": "half_orc",
+    "russian_name": "Полуорк",
+    "type": "race",
+    "ability_scores": {
+        "strength": 2,
+        "constitution": 1
+    },
+    "language_proficiencies": [
+        "common",
+        "orc"
+    ],
+    "features": [
+        "effect_darkvision_60",
+        "menacing",
+        "relentless_endurance",
+        "savage_attacks"
+    ],
+    "size": "medium",
+    "speed": 30
+}
+

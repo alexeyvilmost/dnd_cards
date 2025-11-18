@@ -1,0 +1,73 @@
+{
+    "name": "language",
+    "russian_name": "Языки",
+    "type": "language",
+    "basic": [
+        {
+            "name": "common",
+            "russian_name": "Общий"
+        },
+        {
+            "name": "dwarvish",
+            "russian_name": "Дварфский"
+        },
+        {
+            "name": "elvish",
+            "russian_name": "Эльфийский"
+        },
+        {
+            "name": "giant",
+            "russian_name": "Великаний"
+        },
+        {
+            "name": "gnomish",
+            "russian_name": "Гномий"
+        },
+        {
+            "name": "goblin",
+            "russian_name": "Гоблинский"
+        },
+        {
+            "name": "halfling",
+            "russian_name": "Полуросликовый"
+        },  
+        {
+            "name": "orc",
+            "russian_name": "Орочий"
+        }
+    ],
+    "exotic": [
+        {
+            "name": "abyssal",
+            "russian_name": "Абиссальный"
+        },
+        {
+            "name": "deep_speech",
+            "russian_name": "Глубинный"
+        },
+        {
+            "name": "draconic",
+            "russian_name": "Драконий"
+        },
+        {
+            "name": "infernal",
+            "russian_name": "Инфернальный"
+        },
+        {
+            "name": "celestial",
+            "russian_name": "Небесный"
+        },
+        {
+            "name": "primordial",
+            "russian_name": "Первичный"
+        },
+        {
+            "name": "undercommon",
+            "russian_name": "Подземный"
+        },
+        {
+            "name": "sylvan",
+            "russian_name": "Сильван"
+        }
+    ]
+}

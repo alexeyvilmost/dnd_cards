@@ -1,0 +1,20 @@
+{
+    "name": "half_elf",
+    "russian_name": "Полуэльф",
+    "type": "race",
+    "ability_scores": {
+        "charisma": 2
+    },
+    "language_proficiencies": [
+        "common",
+        "elvish"
+    ],
+    "features": [
+        "effect_darkvision_60",
+        "fey_ancestry",
+        "skill_versatility"
+    ],
+    "size": "medium",
+    "speed": 30
+}
+

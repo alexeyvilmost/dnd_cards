@@ -1216,6 +1216,7 @@ type CreateEffectRequest struct {
 	DetailedDescription          *string         `json:"detailed_description"`
 	ImageURL                     string          `json:"image_url"`
 	Rarity                       Rarity         `json:"rarity" binding:"required"`
+	CardNumber                   string          `json:"card_number"` // ID эффекта, введенный пользователем
 	EffectType                   EffectType      `json:"effect_type" binding:"required"`
 	ConditionDescription         *string         `json:"condition_description"`
 	Script                       *Script         `json:"script"`

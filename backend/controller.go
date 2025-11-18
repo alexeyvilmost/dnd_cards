@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -1263,8 +1264,25 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 		return
 	}
 
-	// Генерация номера карты
-	cardNumber := ec.generateEffectNumber()
+	// Проверка уникальности card_number (ID эффекта)
+	cardNumber := req.CardNumber
+	if cardNumber == "" {
+		// Если ID не указан, генерируем автоматически
+		cardNumber = ec.generateEffectNumber()
+	} else {
+		// Проверяем уникальность указанного ID
+		var existingEffect Effect
+		if err := ec.db.Where("card_number = ?", cardNumber).First(&existingEffect).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Эффект с таким ID уже существует"})
+			return
+		}
+		// Проверяем формат ID (латинские буквы, цифры, дефисы и подчеркивания, до 30 символов)
+		matched, _ := regexp.MatchString("^[a-zA-Z0-9_-]{1,30}$", cardNumber)
+		if !matched {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов"})
+			return
+		}
+	}
 
 	// Создание эффекта
 	effect := Effect{
@@ -1301,7 +1319,13 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 	}
 
 	if err := ec.db.Create(&effect).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания эффекта"})
+		// Проверяем, является ли ошибка нарушением уникальности
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Эффект с таким ID уже существует"})
+			return
+		}
+		log.Printf("Ошибка создания эффекта: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания эффекта: %v", err)})
 		return
 	}
 

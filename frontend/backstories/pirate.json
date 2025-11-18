@@ -1,0 +1,23 @@
+{
+    "name": "Pirate",
+    "russian_name": "Пират",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "athletics",
+        "persuasion"
+    ],
+    "tool_proficiencies": [
+        "water_transport",
+        "navigation_tools"
+    ],
+    "language_proficiencies": [
+        "basic"
+    ],
+    "equipment": [
+        "1125c1c8-f8e5-46d1-b61a-5d2b94918b7e",
+        "d0e01e98-eca6-4ce4-a960-9aba8dc833a5",
+        "c1d07845-8b1e-4ea5-b96b-df447c821c79",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910"
+    ],
+    "gold": 10
+}

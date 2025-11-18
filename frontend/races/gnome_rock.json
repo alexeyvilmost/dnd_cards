@@ -1,0 +1,25 @@
+{
+    "name": "gnome_rock",
+    "russian_name": "Скальный гном",
+    "type": "race",
+    "ability_scores": {
+        "intelligence": 2,
+        "constitution": 1
+    },
+    "tool_proficiencies": [
+        "tinker_tools"
+    ],
+    "language_proficiencies": [
+        "common",
+        "gnomish"
+    ],
+    "features": [
+        "effect_darkvision_60",
+        "gnome_cunning",
+        "artificers_lore",
+        "tinker"
+    ],
+    "size": "small",
+    "speed": 25
+}
+

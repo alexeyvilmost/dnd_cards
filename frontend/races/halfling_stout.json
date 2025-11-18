@@ -1,0 +1,25 @@
+{
+    "name": "halfling_stout",
+    "russian_name": "Коренастый полурослик",
+    "type": "race",
+    "ability_scores": {
+        "dexterity": 2,
+        "constitution": 1
+    },
+    "language_proficiencies": [
+        "common",
+        "halfling"
+    ],
+    "damage_resistance": [
+        "poison"
+    ],
+    "features": [
+        "lucky",
+        "brave",
+        "halfling_nimbleness",
+        "stout_resilience"
+    ],
+    "size": "small",
+    "speed": 25
+}
+

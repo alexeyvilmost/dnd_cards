@@ -1,0 +1,23 @@
+{
+    "name": "Folk Hero",
+    "russian_name": "Народный герой",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "survival",
+        "animal_handling"
+    ],
+    "tool_proficiencies": [
+        "craft_tools",
+        "ground_transport"
+    ],
+    "language_proficiencies": [
+        "basic"
+    ],
+    "equipment": [
+        "fcd8d11a-2cab-4c13-85f8-84e06f93e9af",
+        "8a84417a-3d89-46b4-9744-df4b3eaea38c",
+        "e469b9fa-5453-435e-b178-6d3fdfdbc8fb",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910"
+    ],
+    "gold": 10
+}

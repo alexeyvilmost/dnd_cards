@@ -1,0 +1,30 @@
+{
+    "name": "elf_high",
+    "russian_name": "Высший эльф",
+    "type": "race",
+    "ability_scores": {
+        "dexterity": 2,
+        "intelligence": 1
+    },
+    "weapon_proficiencies": [
+        "longsword",
+        "shortsword",
+        "shortbow",
+        "longbow"
+    ],
+    "language_proficiencies": [
+        "common",
+        "elvish"
+    ],
+    "features": [
+        "effect_darkvision_60",
+        "keen_senses",
+        "fey_ancestry",
+        "trance",
+        "elf_weapon_training",
+        "cantrip"
+    ],
+    "size": "medium",
+    "speed": 30
+}
+

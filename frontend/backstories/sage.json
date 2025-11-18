@@ -1,0 +1,23 @@
+{
+    "name": "Sage",
+    "russian_name": "Мудрец",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "history",
+        "arcana"
+    ],
+    "tool_proficiencies": [
+        "gaming_set"
+    ],
+    "language_proficiencies": [
+        "basic",
+        "basic"
+    ],
+    "equipment": [
+        "94cb76bf-2d78-49f2-a7f4-a23135ba712e",
+        "4f08a7ac-a876-449e-bff8-bd5d821c0f4b",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910",
+        "9c413434-ea10-4bc3-851f-1c9852bf57b9"
+    ],
+    "gold": 10
+}

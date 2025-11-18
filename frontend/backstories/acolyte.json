@@ -1,0 +1,18 @@
+{
+    "name": "Acolyte",
+    "russian_name": "Прислужник",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "religion",
+        "perception"
+    ],
+    "language_proficiencies": [
+        "basic",
+        "basic"
+    ],
+    "equipment": [
+        "2962d201-e449-4b4c-bfee-6e91b7c36e94",
+        "324f1fc9-1d2d-491e-a81b-6af6f8c6a910"
+    ],
+    "gold": 10
+}

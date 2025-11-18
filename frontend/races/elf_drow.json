@@ -1,0 +1,30 @@
+{
+    "name": "elf_drow",
+    "russian_name": "Тёмный эльф (Дроу)",
+    "type": "race",
+    "ability_scores": {
+        "dexterity": 2,
+        "charisma": 1
+    },
+    "weapon_proficiencies": [
+        "rapier",
+        "shortsword",
+        "hand_crossbow"
+    ],
+    "language_proficiencies": [
+        "common",
+        "elvish"
+    ],
+    "features": [
+        "superior_darkvision",
+        "keen_senses",
+        "fey_ancestry",
+        "trance",
+        "sunlight_sensitivity",
+        "drow_magic",
+        "drow_weapon_training"
+    ],
+    "size": "medium",
+    "speed": 30
+}
+

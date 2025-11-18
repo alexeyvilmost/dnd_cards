@@ -1,0 +1,22 @@
+{
+    "name": "halfling_lightfoot",
+    "russian_name": "Легконогий полурослик",
+    "type": "race",
+    "ability_scores": {
+        "dexterity": 2,
+        "charisma": 1
+    },
+    "language_proficiencies": [
+        "common",
+        "halfling"
+    ],
+    "features": [
+        "lucky",
+        "brave",
+        "halfling_nimbleness",
+        "naturally_stealthy"
+    ],
+    "size": "small",
+    "speed": 25
+}
+

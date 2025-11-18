@@ -1,0 +1,22 @@
+{
+    "name": "Charlatan",
+    "russian_name": "Шарлатан",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "deception",
+        "sleight_of_hand"
+    ],
+    "tool_proficiencies": [
+        "disguise_kit",
+        "forgery_kit"
+    ],
+    "language_proficiencies": [
+        "basic"
+    ],
+    "equipment": [
+        "cacddbeb-5190-483a-8de2-6d3afe2905e8",
+        "d4d1f3a5-0280-4771-be02-44111209c48f",
+        "5ae611c0-bf15-4e7c-bc06-3b18163d06c0"
+    ],
+    "gold": 15
+}

@@ -1,0 +1,21 @@
+{
+    "name": "Outlander",
+    "russian_name": "Чужеземец",
+    "type": "backstory",
+    "skill_proficiencies": [
+        "survival",
+        "athletics"
+    ],
+    "tool_proficiencies": [
+        "musical_instrument"
+    ],
+    "language_proficiencies": [
+        "basic"
+    ],
+    "equipment": [
+        "cb25b9ad-efa0-47c2-b25e-82e45f711f2e",
+        "bbc804a1-3a7e-4b09-88c7-21d863ea2d85",
+        "0a210d5a-f77f-4f14-a12b-1f31fc5f8c2a"
+    ],
+    "gold": 10
+}

@@ -1,0 +1,15 @@
+{
+    "name": "weapon_types",
+    "russian_name": "Типы оружия",
+    "type": "weapon_type",
+    "basic": [
+        {
+            "name": "simple_melee",
+            "russian_name": "Простое рукопашное"
+        },
+        {
+            "name": "martial_melee",
+            "russian_name": "Воинское рукопашное"
+        }
+    ]
+}

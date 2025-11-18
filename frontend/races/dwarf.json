@@ -14,6 +14,9 @@
         "common"
     ],
     "weapon_proficiencies": [
+        "simple_melee"
+    ],
+    "weapon_proficiencies_unused": [
         "battleaxe",
         "handaxe",
         "throwing_hammer",
@@ -27,7 +30,7 @@
         "poison"
     ],
     "features": [
-        "darkvision",
+        "effect_darkvision_60",
         "poison_resistance",
         "stonecunning"
     ],

@@ -1,6 +1,6 @@
 {
     "name": "Guild Artisan",
-    "russian_name": "Гильдейски ремесленник",
+    "russian_name": "Гильдейский ремесленник",
     "type": "backstory",
     "skill_proficiencies": [
         "perception",
@@ -13,6 +13,9 @@
         "basic"
     ],
     "equipment": [
-        
-    ]
+        "bbc804a1-3a7e-4b09-88c7-21d863ea2d85",
+        "e469b9fa-5453-435e-b178-6d3fdfdbc8fb",
+        "addcbe0f-f0e6-43b0-af30-770bd44b628f"
+    ],
+    "gold": 15
 }

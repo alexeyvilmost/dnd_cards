@@ -1,0 +1,21 @@
+{
+    "name": "dragonborn",
+    "russian_name": "Драконорожденный",
+    "type": "race",
+    "ability_scores": {
+        "strength": 2,
+        "charisma": 1
+    },
+    "language_proficiencies": [
+        "common",
+        "draconic"
+    ],
+    "features": [
+        "draconic_ancestry",
+        "breath_weapon",
+        "damage_resistance"
+    ],
+    "size": "medium",
+    "speed": 30
+}
+

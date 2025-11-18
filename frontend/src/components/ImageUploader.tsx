@@ -92,18 +92,22 @@ const ImageUploader = ({
         canvas.width = width;
         canvas.height = height;
         
-        // Заполняем белым фоном
+        // Для прозрачных изображений не нужно заполнять фон
+        // Canvas по умолчанию прозрачный, просто рисуем изображение
         if (ctx) {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, width, height);
+          // Рисуем изображение с сохранением прозрачности
+          ctx.drawImage(img, 0, 0, width, height);
         }
         
-        // Рисуем изображение с обрезкой
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        // Конвертируем в base64
-        const imageUrl = canvas.toDataURL('image/jpeg', 0.8);
+        // Конвертируем в base64 с прозрачностью (PNG)
+        const imageUrl = canvas.toDataURL('image/png');
         onImageUpload(imageUrl);
+        setIsLoading(false);
+      };
+      
+      // Обрабатываем ошибки загрузки изображения
+      img.onerror = () => {
+        console.error('Ошибка загрузки изображения');
         setIsLoading(false);
       };
       
@@ -227,17 +231,28 @@ const ImageUploader = ({
             
             <button
               type="button"
-              onClick={() => navigator.clipboard.read().then(async (items) => {
-                for (const item of items) {
-                  if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
-                    const file = await item.getType('image/png') || await item.getType('image/jpeg');
-                    if (file) {
-                      await processImageFile(new File([file], 'clipboard-image.png'));
+              onClick={async () => {
+                try {
+                  const items = await navigator.clipboard.read();
+                  for (const item of items) {
+                    if (item.types.includes('image/png')) {
+                      const blob = await item.getType('image/png');
+                      if (blob) {
+                        await processImageFile(new File([blob], 'clipboard-image.png', { type: 'image/png' }));
+                        break;
+                      }
+                    } else if (item.types.includes('image/jpeg') || item.types.includes('image/jpg')) {
+                      const blob = await item.getType('image/jpeg');
+                      if (blob) {
+                        await processImageFile(new File([blob], 'clipboard-image.jpg', { type: 'image/jpeg' }));
+                        break;
+                      }
                     }
-                    break;
                   }
+                } catch (error) {
+                  console.error('Ошибка чтения из буфера обмена:', error);
                 }
-              })}
+              }}
               disabled={isLoading}
               className="btn-secondary flex items-center space-x-2 disabled:opacity-50"
             >

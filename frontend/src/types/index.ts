@@ -725,6 +725,7 @@ export interface CreatePassiveEffectRequest {
   detailed_description?: string | null;
   image_url?: string;
   rarity: Rarity;
+  card_number?: string; // ID эффекта, введенный пользователем
   effect_type: PassiveEffectType;
   condition_description?: string | null;
   script?: Record<string, any> | null;

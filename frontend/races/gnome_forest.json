@@ -1,0 +1,22 @@
+{
+    "name": "gnome_forest",
+    "russian_name": "Лесной гном",
+    "type": "race",
+    "ability_scores": {
+        "intelligence": 2,
+        "dexterity": 1
+    },
+    "language_proficiencies": [
+        "common",
+        "gnomish"
+    ],
+    "features": [
+        "darkvision",
+        "gnome_cunning",
+        "natural_illusionist",
+        "speak_with_small_beasts"
+    ],
+    "size": "small",
+    "speed": 25
+}
+
