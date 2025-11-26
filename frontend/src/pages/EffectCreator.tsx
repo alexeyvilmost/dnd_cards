@@ -38,6 +38,9 @@ const EffectCreator = () => {
           const effect = await effectsApi.getEffect(editId);
           
           // Заполняем форму данными эффекта
+          console.log('[EffectCreator] Загружен эффект с бэкенда:', effect);
+          console.log('[EffectCreator] Script из эффекта:', effect.script);
+          
           reset({
             name: effect.name,
             description: effect.description,
@@ -57,6 +60,8 @@ const EffectCreator = () => {
             script: effect.script || null,
             properties: effect.properties || null,
           });
+          
+          console.log('[EffectCreator] Форма заполнена, script установлен:', effect.script);
         } catch (err) {
           setError('Ошибка загрузки эффекта');
           console.error('Error loading effect:', err);
@@ -139,6 +144,9 @@ const EffectCreator = () => {
     try {
       if (isEditMode && editId) {
         // Обновление существующего эффекта
+        console.log('[EffectCreator] Отправляем данные на обновление:', data);
+        console.log('[EffectCreator] Script в данных:', data.script);
+        
         const updateData: UpdatePassiveEffectRequest = {
           name: data.name,
           description: data.description,
@@ -147,6 +155,7 @@ const EffectCreator = () => {
           rarity: 'common', // Всегда common для эффектов
           effect_type: data.effect_type,
           condition_description: data.condition_description,
+          script: data.script || null, // Добавляем script
           is_extended: data.is_extended,
           description_font_size: data.description_font_size,
           text_alignment: data.text_alignment,
@@ -156,13 +165,21 @@ const EffectCreator = () => {
           detailed_description_font_size: data.detailed_description_font_size,
           properties: data.properties,
         };
+        
+        console.log('[EffectCreator] Данные для обновления:', updateData);
         await effectsApi.updateEffect(editId, updateData);
       } else {
         // Создание нового эффекта
-        await effectsApi.createEffect({
+        console.log('[EffectCreator] Отправляем данные на создание:', data);
+        console.log('[EffectCreator] Script в данных:', data.script);
+        
+        const createData: CreatePassiveEffectRequest = {
           ...data,
           rarity: 'common', // Всегда common для эффектов
-        });
+        };
+        
+        console.log('[EffectCreator] Данные для создания:', createData);
+        await effectsApi.createEffect(createData);
       }
       // Перенаправляем на библиотеку карт
       navigate('/');

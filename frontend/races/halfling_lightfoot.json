@@ -10,10 +10,12 @@
         "common",
         "halfling"
     ],
+    "effects": [
+        "effect_halfling_1"
+    ],
     "features": [
         "lucky",
         "brave",
-        "halfling_nimbleness",
         "naturally_stealthy"
     ],
     "size": "small",

@@ -39,6 +39,7 @@ export interface Card {
   author?: string;
   source?: string | null;
   type?: ItemType | null;
+  weapon_type?: string | null;
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
@@ -74,6 +75,7 @@ export interface CreateCardRequest {
   author?: string;
   source?: string | null;
   type?: ItemType | null;
+  weapon_type?: string | null;
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
@@ -108,6 +110,7 @@ export interface UpdateCardRequest {
   author?: string;
   source?: string | null;
   type?: ItemType | null;
+  weapon_type?: string | null;
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
@@ -345,6 +348,10 @@ export interface Character {
   group_id?: string;
   name: string;
   data: string; // JSON строка с данными персонажа
+  weapon_proficiencies?: string[] | null; // Владения оружием (категории или конкретные типы)
+  damage_resistances?: Record<string, 'resistance' | 'immune' | 'vulnerability'> | null; // Сопротивления/иммунитеты/уязвимости
+  language_proficiencies?: string[] | null; // Владения языками
+  armor_proficiencies?: string[] | null; // Владения доспехами и щитами
   created_at: string;
   updated_at: string;
   
@@ -359,6 +366,10 @@ export interface CreateCharacterRequest {
   name: string;
   group_id?: string;
   data: string; // JSON строка с данными персонажа
+  weapon_proficiencies?: string[] | null; // Владения оружием (категории или конкретные типы)
+  damage_resistances?: Record<string, 'resistance' | 'immune' | 'vulnerability'> | null; // Сопротивления/иммунитеты/уязвимости
+  language_proficiencies?: string[] | null; // Владения языками
+  armor_proficiencies?: string[] | null; // Владения доспехами и щитами
 }
 
 // UpdateCharacterRequest - запрос на обновление персонажа
@@ -366,6 +377,10 @@ export interface UpdateCharacterRequest {
   name?: string;
   group_id?: string;
   data?: string;
+  weapon_proficiencies?: string[] | null; // Владения оружием (категории или конкретные типы)
+  damage_resistances?: Record<string, 'resistance' | 'immune' | 'vulnerability'> | null; // Сопротивления/иммунитеты/уязвимости
+  language_proficiencies?: string[] | null; // Владения языками
+  armor_proficiencies?: string[] | null; // Владения доспехами и щитами
 }
 
 // ImportCharacterRequest - запрос на импорт персонажа из JSON

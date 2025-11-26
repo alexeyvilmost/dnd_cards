@@ -5,11 +5,175 @@
     "basic": [
         {
             "name": "simple_melee",
-            "russian_name": "Простое рукопашное"
+            "russian_name": "Простое рукопашное",
+            "weapons": [
+                {
+                    "name": "quarterstaff",
+                    "russian_name": "Боевой посох"
+                },
+                {
+                    "name": "mace",
+                    "russian_name": "Булава"
+                },
+                {
+                    "name": "club",
+                    "russian_name": "Дубинка"
+                },
+                {
+                    "name": "dagger",
+                    "russian_name": "Кинжал"
+                },
+                {
+                    "name": "spear",
+                    "russian_name": "Копьё"
+                },
+                {
+                    "name": "light_hammer",
+                    "russian_name": "Лёгкий молот"
+                },
+                {
+                    "name": "javelin",
+                    "russian_name": "Метательное копьё"
+                },
+                {
+                    "name": "greatclub",
+                    "russian_name": "Палица"
+                },
+                {
+                    "name": "handaxe",
+                    "russian_name": "Ручной топор"
+                },
+                {
+                    "name": "sickle",
+                    "russian_name": "Серп"
+                }
+            ]
+        },
+        {
+            "name": "simple_ranged",
+            "russian_name": "Простое дальнобойное",
+            "weapons": [
+                {
+                    "name": "light_crossbow",
+                    "russian_name": "Арбалет, лёгкий"
+                },
+                {
+                    "name": "dart",
+                    "russian_name": "Дротик"
+                },
+                {
+                    "name": "shortbow",
+                    "russian_name": "Короткий лук"
+                },
+                {
+                    "name": "sling",
+                    "russian_name": "Праща"
+                }
+            ]
         },
         {
             "name": "martial_melee",
-            "russian_name": "Воинское рукопашное"
+            "russian_name": "Воинское рукопашное",
+            "weapons": [
+                {
+                    "name": "halberd",
+                    "russian_name": "Алебарда"
+                },
+                {
+                    "name": "war_pick",
+                    "russian_name": "Боевая кирка"
+                },
+                {
+                    "name": "warhammer",
+                    "russian_name": "Боевой молот"
+                },
+                {
+                    "name": "battleaxe",
+                    "russian_name": "Боевой топор"
+                },
+                {
+                    "name": "glaive",
+                    "russian_name": "Глефа"
+                },
+                {
+                    "name": "greatsword",
+                    "russian_name": "Двуручный меч"
+                },
+                {
+                    "name": "lance",
+                    "russian_name": "Длинное копьё"
+                },
+                {
+                    "name": "longsword",
+                    "russian_name": "Длинный меч"
+                },
+                {
+                    "name": "whip",
+                    "russian_name": "Кнут"
+                },
+                {
+                    "name": "shortsword",
+                    "russian_name": "Короткий меч"
+                },
+                {
+                    "name": "maul",
+                    "russian_name": "Молот"
+                },
+                {
+                    "name": "morningstar",
+                    "russian_name": "Моргенштерн"
+                },
+                {
+                    "name": "pike",
+                    "russian_name": "Пика"
+                },
+                {
+                    "name": "rapier",
+                    "russian_name": "Рапира"
+                },
+                {
+                    "name": "greataxe",
+                    "russian_name": "Секира"
+                },
+                {
+                    "name": "scimitar",
+                    "russian_name": "Скимитар"
+                },
+                {
+                    "name": "trident",
+                    "russian_name": "Трезубец"
+                },
+                {
+                    "name": "flail",
+                    "russian_name": "Цеп"
+                }
+            ]
+        },
+        {
+            "name": "martial_ranged",
+            "russian_name": "Воинское дальнобойное",
+            "weapons": [
+                {
+                    "name": "hand_crossbow",
+                    "russian_name": "Арбалет, ручной"
+                },
+                {
+                    "name": "heavy_crossbow",
+                    "russian_name": "Арбалет, тяжёлый"
+                },
+                {
+                    "name": "longbow",
+                    "russian_name": "Длинный лук"
+                },
+                {
+                    "name": "blowgun",
+                    "russian_name": "Духовая трубка"
+                },
+                {
+                    "name": "net",
+                    "russian_name": "Сеть"
+                }
+            ]
         }
     ]
 }

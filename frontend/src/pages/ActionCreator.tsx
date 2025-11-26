@@ -5,12 +5,14 @@ import { actionsApi } from '../api/client';
 import type { CreateActionRequest } from '../types';
 import { RARITY_OPTIONS, ACTION_RESOURCE_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import ActionPreview from '../components/ActionPreview';
+import ImageUploader from '../components/ImageUploader';
 
 const ActionCreator = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateActionRequest>();
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateActionRequest>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [idError, setIdError] = useState<string | null>(null);
 
   const formData = watch();
   const previewAction = {
@@ -20,7 +22,7 @@ const ActionCreator = () => {
     detailed_description: formData.detailed_description || null,
     image_url: formData.image_url || '',
     rarity: formData.rarity || 'common',
-    card_number: 'ACTION-0000',
+    card_number: formData.card_number || '',
     resource: formData.resource || 'action',
     recharge: formData.recharge || null,
     recharge_custom: formData.recharge_custom || null,
@@ -44,9 +46,43 @@ const ActionCreator = () => {
     updated_at: '',
   };
 
+  // Проверка уникальности ID (проверяем по card_number через API)
+  const checkIdUniqueness = async (id: string): Promise<boolean> => {
+    if (!id || id.trim() === '') return true; // Пустой ID допустим
+    try {
+      // Проверяем через список действий с фильтром по card_number
+      const response = await actionsApi.getActions({ search: id, limit: 100 });
+      // Ищем точное совпадение card_number
+      const exists = response.actions.some(action => action.card_number === id);
+      return !exists; // Возвращаем true если не найден
+    } catch (error: any) {
+      console.error('Ошибка проверки уникальности ID:', error);
+      return false; // Ошибка при проверке
+    }
+  };
+
   const onSubmit = async (data: CreateActionRequest) => {
     setLoading(true);
     setError(null);
+    setIdError(null);
+
+    // Проверка уникальности ID, если он указан
+    if (data.card_number && data.card_number.trim() !== '') {
+      const idRegex = /^[a-zA-Z0-9_-]{1,30}$/;
+      if (!idRegex.test(data.card_number)) {
+        setIdError('ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов');
+        setLoading(false);
+        return;
+      }
+
+      const isUnique = await checkIdUniqueness(data.card_number);
+      if (!isUnique) {
+        setIdError('Действие с таким ID уже существует');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const created = await actionsApi.createAction(data);
       navigate(`/action/${created.id}`);
@@ -174,13 +210,30 @@ const ActionCreator = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL изображения
+                  ID действия
                 </label>
                 <input
-                  {...register('image_url')}
-                  type="url"
+                  {...register('card_number')}
+                  type="text"
+                  placeholder="action_id_123"
+                  maxLength={30}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://example.com/image.png"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Уникальный идентификатор действия (латинские буквы, цифры, дефисы и подчеркивания, до 30 символов). Если не указан, будет сгенерирован автоматически.
+                </p>
+                {idError && <p className="text-red-500 text-sm mt-1">{idError}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Изображение
+                </label>
+                <ImageUploader
+                  onImageUpload={(imageUrl) => setValue('image_url', imageUrl)}
+                  currentImageUrl={watch('image_url') || ''}
+                  entityType="action"
+                  entityId={watch('card_number') || 'new'}
                 />
               </div>
             </div>
@@ -209,6 +262,12 @@ const ActionCreator = () => {
               <p className="text-red-700">{error}</p>
             </div>
           )}
+          
+          {idError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700">{idError}</p>
+            </div>
+          )}
         </div>
 
         {/* Правая колонка - превью */}
@@ -226,6 +285,7 @@ const ActionCreator = () => {
 };
 
 export default ActionCreator;
+
 
 
 

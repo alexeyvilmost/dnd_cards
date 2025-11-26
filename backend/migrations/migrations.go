@@ -116,6 +116,18 @@ func GetAllMigrations() []Migration {
 			Up:          createEffectsTable,
 			Down:        dropEffectsTable,
 		},
+		{
+			Version:     "019_add_weapon_type",
+			Description: "Add weapon_type field to cards table",
+			Up:          addWeaponTypeField,
+			Down:        removeWeaponTypeField,
+		},
+		{
+			Version:     "020_add_character_v3_proficiencies",
+			Description: "Add weapon_proficiencies, damage_resistances, language_proficiencies, armor_proficiencies fields to characters table",
+			Up:          addCharacterV3ProficienciesFields,
+			Down:        removeCharacterV3ProficienciesFields,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1070,4 +1082,76 @@ func createEffectsTable(db *sql.DB) error {
 func dropEffectsTable(db *sql.DB) error {
 	_, err := db.Exec("DROP TABLE IF EXISTS effects CASCADE")
 	return err
+}
+
+// addWeaponTypeField добавляет поле weapon_type в таблицу cards
+func addWeaponTypeField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS weapon_type VARCHAR(50)",
+		"CREATE INDEX IF NOT EXISTS idx_cards_weapon_type ON cards(weapon_type)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeWeaponTypeField удаляет поле weapon_type из таблицы cards
+func removeWeaponTypeField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_cards_weapon_type",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS weapon_type",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// addCharacterV3ProficienciesFields добавляет поля для владений персонажа V3 в таблицу characters
+func addCharacterV3ProficienciesFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE characters ADD COLUMN IF NOT EXISTS weapon_proficiencies JSONB",
+		"ALTER TABLE characters ADD COLUMN IF NOT EXISTS damage_resistances JSONB",
+		"ALTER TABLE characters ADD COLUMN IF NOT EXISTS language_proficiencies JSONB",
+		"ALTER TABLE characters ADD COLUMN IF NOT EXISTS armor_proficiencies JSONB",
+		"CREATE INDEX IF NOT EXISTS idx_characters_weapon_proficiencies ON characters USING GIN (weapon_proficiencies)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_damage_resistances ON characters USING GIN (damage_resistances)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_language_proficiencies ON characters USING GIN (language_proficiencies)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_armor_proficiencies ON characters USING GIN (armor_proficiencies)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeCharacterV3ProficienciesFields удаляет поля владений персонажа V3 из таблицы characters
+func removeCharacterV3ProficienciesFields(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_characters_armor_proficiencies",
+		"DROP INDEX IF EXISTS idx_characters_language_proficiencies",
+		"DROP INDEX IF EXISTS idx_characters_damage_resistances",
+		"DROP INDEX IF EXISTS idx_characters_weapon_proficiencies",
+		"ALTER TABLE characters DROP COLUMN IF EXISTS armor_proficiencies",
+		"ALTER TABLE characters DROP COLUMN IF EXISTS language_proficiencies",
+		"ALTER TABLE characters DROP COLUMN IF EXISTS damage_resistances",
+		"ALTER TABLE characters DROP COLUMN IF EXISTS weapon_proficiencies",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
 }

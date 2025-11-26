@@ -1,0 +1,59 @@
+{
+    "name": "Barbarian",
+    "russian_name": "Варвар",
+    "description": "Варвары - это сильные и бешеные воины, которые не боятся ничего и всегда готовы к бою. Они используют свою ярость и силу, чтобы победить врагов.",
+    "hit_dice": "1d12",
+    "armor_proficiencies": [
+        "light_armor",
+        "medium_armor"
+    ],
+    "weapon_proficiencies": [
+        "simple_melee",
+        "simple_ranged",
+        "martial_melee",
+        "martial_ranged"
+    ],
+    "saving_throws": [
+        "strength",
+        "constitution"
+    ],
+    "skills": {
+        "count": 2,
+        "variants": [
+            "athletics",
+            "intimidation",
+            "survival",
+            "nature",
+            "animal_handling",
+            "perception"
+        ]
+    },
+    "equipment": [
+        "c830dce3-33d3-4514-8bf5-670fa0e299f2",
+        "9515fd6f-7478-4363-affa-14bc0e3a4e36",
+        "012ed1f7-3a48-4772-853d-a69cca6d0060",
+        "012ed1f7-3a48-4772-853d-a69cca6d0060",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673"
+    ],
+    "level_progression": {
+        "1": {
+            "effects": [
+                "effect_barbarian_defense"
+            ],
+            "actions": [
+                "action_barbarian_rage_2"
+            ]
+        }
+    },
+    "recommended_attributes": {
+        "strength": 15,
+        "constitution": 14,
+        "dexterity": 13,
+        "intelligence": 8,
+        "wisdom": 12,
+        "charisma": 10
+    }
+}

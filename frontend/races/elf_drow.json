@@ -6,20 +6,18 @@
         "dexterity": 2,
         "charisma": 1
     },
-    "weapon_proficiencies": [
-        "rapier",
-        "shortsword",
-        "hand_crossbow"
-    ],
     "language_proficiencies": [
         "common",
         "elvish"
     ],
+    "effects": [
+        "effect_darkvision_120",
+        "effect_drow_training",
+        "effect_fey_ancestry",
+        "effect_trance"
+    ],
     "features": [
-        "superior_darkvision",
         "keen_senses",
-        "fey_ancestry",
-        "trance",
         "sunlight_sensitivity",
         "drow_magic",
         "drow_weapon_training"

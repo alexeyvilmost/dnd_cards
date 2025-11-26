@@ -263,6 +263,7 @@ type Card struct {
 	Author                       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
+	WeaponType                   *string        `json:"weapon_type" gorm:"type:varchar(50)"` // Тип оружия (например, longsword, scimitar)
 	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:text[]"`   // JSON массив ID
 	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
 	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text[]"` // JSON массив ID (плейсхолдер)
@@ -300,6 +301,7 @@ type CreateCardRequest struct {
 	Author                       string         `json:"author"`
 	Source                       *string        `json:"source"`
 	Type                         *string        `json:"type"`
+	WeaponType                   *string        `json:"weapon_type"` // Тип оружия (например, longsword, scimitar)
 	RelatedCards                 *Properties    `json:"related_cards"`
 	RelatedActions               *Properties    `json:"related_actions"`
 	RelatedEffects               *Properties    `json:"related_effects"`
@@ -334,6 +336,7 @@ type UpdateCardRequest struct {
 	Author                       string         `json:"author"`
 	Source                       *string        `json:"source"`
 	Type                         *string        `json:"type"`
+	WeaponType                   *string        `json:"weapon_type"` // Тип оружия (например, longsword, scimitar)
 	RelatedCards                 *Properties    `json:"related_cards"`
 	RelatedActions               *Properties    `json:"related_actions"`
 	RelatedEffects               *Properties    `json:"related_effects"`
@@ -372,6 +375,7 @@ type CardResponse struct {
 	DamageType                   *string        `json:"damage_type"`
 	DefenseType                  *string        `json:"defense_type"`
 	Type                         *string        `json:"type"`
+	WeaponType                   *string        `json:"weapon_type"`
 	DescriptionFontSize          *int           `json:"description_font_size"`
 	TextAlignment                *string        `json:"text_alignment"`
 	TextFontSize                 *int           `json:"text_font_size"`
@@ -782,6 +786,118 @@ type UpdateInventoryItemRequest struct {
 	IsEquipped *bool  `json:"is_equipped"` // Указатель для опциональности
 }
 
+// WeaponProficiencies - владения оружием (JSONB)
+// Может содержать категории: "simple_melee", "simple_ranged", "martial_melee", "martial_ranged"
+// Или конкретные типы оружия: ["longsword", "scimitar", ...]
+type WeaponProficiencies []string
+
+// Scan - кастомный сканер для WeaponProficiencies
+func (w *WeaponProficiencies) Scan(value interface{}) error {
+	if value == nil {
+		*w = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), w)
+	case []byte:
+		return json.Unmarshal(v, w)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для WeaponProficiencies: %T", value)
+	}
+}
+
+// Value - кастомный value для WeaponProficiencies
+func (w WeaponProficiencies) Value() (driver.Value, error) {
+	if w == nil {
+		return nil, nil
+	}
+	return json.Marshal(w)
+}
+
+// DamageResistances - сопротивления, иммунитеты и уязвимости к типам урона (JSONB)
+// Формат: {"fire": "resistance", "cold": "immune", "poison": "vulnerability"}
+type DamageResistances map[string]string
+
+// Scan - кастомный сканер для DamageResistances
+func (d *DamageResistances) Scan(value interface{}) error {
+	if value == nil {
+		*d = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), d)
+	case []byte:
+		return json.Unmarshal(v, d)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для DamageResistances: %T", value)
+	}
+}
+
+// Value - кастомный value для DamageResistances
+func (d DamageResistances) Value() (driver.Value, error) {
+	if d == nil {
+		return nil, nil
+	}
+	return json.Marshal(d)
+}
+
+// LanguageProficiencies - владения языками (JSONB массив строк)
+type LanguageProficiencies []string
+
+// Scan - кастомный сканер для LanguageProficiencies
+func (l *LanguageProficiencies) Scan(value interface{}) error {
+	if value == nil {
+		*l = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), l)
+	case []byte:
+		return json.Unmarshal(v, l)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для LanguageProficiencies: %T", value)
+	}
+}
+
+// Value - кастомный value для LanguageProficiencies
+func (l LanguageProficiencies) Value() (driver.Value, error) {
+	if l == nil {
+		return nil, nil
+	}
+	return json.Marshal(l)
+}
+
+// ArmorProficiencies - владения доспехами и щитами (JSONB массив строк)
+// Может содержать: "cloth", "light", "medium", "heavy", "shield"
+type ArmorProficiencies []string
+
+// Scan - кастомный сканер для ArmorProficiencies
+func (a *ArmorProficiencies) Scan(value interface{}) error {
+	if value == nil {
+		*a = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), a)
+	case []byte:
+		return json.Unmarshal(v, a)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для ArmorProficiencies: %T", value)
+	}
+}
+
+// Value - кастомный value для ArmorProficiencies
+func (a ArmorProficiencies) Value() (driver.Value, error) {
+	if a == nil {
+		return nil, nil
+	}
+	return json.Marshal(a)
+}
+
 // Character - модель персонажа D&D
 type Character struct {
 	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
@@ -789,6 +905,13 @@ type Character struct {
 	GroupID   *uuid.UUID     `json:"group_id" gorm:"type:uuid"` // Может быть null для персонажей без группы
 	Name      string         `json:"name" gorm:"not null"`
 	Data      string         `json:"data" gorm:"type:text;not null"` // JSON строка с данными персонажа
+	
+	// Новые поля для V3
+	WeaponProficiencies *WeaponProficiencies `json:"weapon_proficiencies" gorm:"type:jsonb"` // Владения оружием
+	DamageResistances   *DamageResistances    `json:"damage_resistances" gorm:"type:jsonb"`     // Сопротивления/иммунитеты/уязвимости
+	LanguageProficiencies *LanguageProficiencies `json:"language_proficiencies" gorm:"type:jsonb"` // Владения языками
+	ArmorProficiencies  *ArmorProficiencies  `json:"armor_proficiencies" gorm:"type:jsonb"`   // Владения доспехами и щитами
+	
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
@@ -801,27 +924,39 @@ type Character struct {
 
 // CreateCharacterRequest - запрос на создание персонажа
 type CreateCharacterRequest struct {
-	Name    string     `json:"name" binding:"required,min=1,max=100"`
-	GroupID *uuid.UUID `json:"group_id"`                // Может быть null
-	Data    string     `json:"data" binding:"required"` // JSON строка с данными персонажа
+	Name                  string                `json:"name" binding:"required,min=1,max=100"`
+	GroupID               *uuid.UUID            `json:"group_id"`                // Может быть null
+	Data                  string                `json:"data" binding:"required"` // JSON строка с данными персонажа
+	WeaponProficiencies   *WeaponProficiencies  `json:"weapon_proficiencies"`    // Владения оружием
+	DamageResistances     *DamageResistances    `json:"damage_resistances"`      // Сопротивления/иммунитеты/уязвимости
+	LanguageProficiencies *LanguageProficiencies `json:"language_proficiencies"` // Владения языками
+	ArmorProficiencies    *ArmorProficiencies  `json:"armor_proficiencies"`    // Владения доспехами и щитами
 }
 
 // UpdateCharacterRequest - запрос на обновление персонажа
 type UpdateCharacterRequest struct {
-	Name    string     `json:"name"`
-	GroupID *uuid.UUID `json:"group_id"`
-	Data    string     `json:"data"`
+	Name                  string                `json:"name"`
+	GroupID               *uuid.UUID            `json:"group_id"`
+	Data                  string                `json:"data"`
+	WeaponProficiencies   *WeaponProficiencies  `json:"weapon_proficiencies"`    // Владения оружием
+	DamageResistances     *DamageResistances    `json:"damage_resistances"`      // Сопротивления/иммунитеты/уязвимости
+	LanguageProficiencies *LanguageProficiencies `json:"language_proficiencies"` // Владения языками
+	ArmorProficiencies    *ArmorProficiencies  `json:"armor_proficiencies"`    // Владения доспехами и щитами
 }
 
 // CharacterResponse - ответ с персонажем
 type CharacterResponse struct {
-	ID        uuid.UUID  `json:"id"`
-	UserID    uuid.UUID  `json:"user_id"`
-	GroupID   *uuid.UUID `json:"group_id"`
-	Name      string     `json:"name"`
-	Data      string     `json:"data"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID                    uuid.UUID             `json:"id"`
+	UserID                uuid.UUID             `json:"user_id"`
+	GroupID               *uuid.UUID            `json:"group_id"`
+	Name                  string                `json:"name"`
+	Data                  string                `json:"data"`
+	WeaponProficiencies   *WeaponProficiencies  `json:"weapon_proficiencies"`    // Владения оружием
+	DamageResistances     *DamageResistances    `json:"damage_resistances"`      // Сопротивления/иммунитеты/уязвимости
+	LanguageProficiencies *LanguageProficiencies `json:"language_proficiencies"` // Владения языками
+	ArmorProficiencies    *ArmorProficiencies  `json:"armor_proficiencies"`    // Владения доспехами и щитами
+	CreatedAt             time.Time             `json:"created_at"`
+	UpdatedAt             time.Time             `json:"updated_at"`
 
 	// Связанные данные
 	User        *User       `json:"user,omitempty"`
@@ -1026,6 +1161,7 @@ type CreateActionRequest struct {
 	DetailedDescription          *string         `json:"detailed_description"`
 	ImageURL                     string          `json:"image_url"`
 	Rarity                       Rarity         `json:"rarity" binding:"required"`
+	CardNumber                   string          `json:"card_number"` // ID действия, введенный пользователем
 	Resource                     ActionResource  `json:"resource" binding:"required"`
 	Recharge                     *ActionRecharge `json:"recharge"`
 	RechargeCustom               *string         `json:"recharge_custom"`

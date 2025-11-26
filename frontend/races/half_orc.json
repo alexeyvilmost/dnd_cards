@@ -10,8 +10,10 @@
         "common",
         "orc"
     ],
+    "effects": [
+        "effect_darkvision_60"
+    ],
     "features": [
-        "effect_darkvision_60",
         "menacing",
         "relentless_endurance",
         "savage_attacks"

@@ -2,29 +2,18 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../api/client';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { getAllBackstories, getBackstoryByRussianName, type Backstory } from '../utils/backstories';
 import { getAllRaces, getRaceByRussianName, type Race } from '../utils/races';
+import { getAllClasses, getClass, getClassByRussianName, type Class } from '../utils/classes';
 import { getRuleRussianName } from '../utils/characterRules';
 import { getToolRussianName } from '../utils/tools';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import CardPreview from '../components/CardPreview';
-
-const CLASSES = [
-  { id: 'barbarian', name: 'Варвар', description: 'Яростный воин первобытных инстинктов' },
-  { id: 'bard', name: 'Бард', description: 'Вдохновляющий музыкант, чья сила исходит от искусства' },
-  { id: 'cleric', name: 'Жрец', description: 'Божественный посредник, наделенный магией богов' },
-  { id: 'druid', name: 'Друид', description: 'Жрец древних сил природы' },
-  { id: 'fighter', name: 'Воин', description: 'Мастер боевых искусств' },
-  { id: 'monk', name: 'Монах', description: 'Мастер боевых искусств, использующий силу тела' },
-  { id: 'paladin', name: 'Паладин', description: 'Святой воин, связанный священной клятвой' },
-  { id: 'ranger', name: 'Следопыт', description: 'Воин, использующий превосходство природы' },
-  { id: 'rogue', name: 'Плут', description: 'Хитрый и находчивый искатель приключений' },
-  { id: 'sorcerer', name: 'Чародей', description: 'Заклинатель, черпающий магию из внутренней силы' },
-  { id: 'warlock', name: 'Колдун', description: 'Искатель знаний, заключивший сделку с потусторонней сущностью' },
-  { id: 'wizard', name: 'Маг', description: 'Ученый-заклинатель, способный манипулировать структурой реальности' },
-];
+import { EffectIcons } from '../components/EffectIcons';
+import { ActionIcons } from '../components/ActionIcons';
+import languagesData from '../../utils/languages.json';
 
 const getStatName = (stat: string): string => {
   const names: { [key: string]: string } = {
@@ -36,6 +25,42 @@ const getStatName = (stat: string): string => {
     'charisma': 'ХАР'
   };
   return names[stat] || stat.toUpperCase();
+};
+
+// Функция для расчета стоимости значения характеристики в системе Point Buy
+const getPointBuyCost = (value: number): number => {
+  const costMap: { [key: number]: number } = {
+    8: 0,
+    9: 1,
+    10: 2,
+    11: 3,
+    12: 4,
+    13: 5,
+    14: 7,
+    15: 9
+  };
+  return costMap[value] || 0;
+};
+
+// Функция для расчета общего количества потраченных очков
+const calculateTotalPointsSpent = (stats: { [key: string]: number }): number => {
+  return Object.values(stats).reduce((total, value) => {
+    return total + getPointBuyCost(value || 8);
+  }, 0);
+};
+
+// Функция для получения русского названия языка
+const getLanguageRussianName = (langName: string): string => {
+  // Ищем в обычных языках
+  const basicLang = languagesData.basic?.find((l: any) => l.name === langName);
+  if (basicLang) return basicLang.russian_name;
+  
+  // Ищем в экзотических языках
+  const exoticLang = languagesData.exotic?.find((l: any) => l.name === langName);
+  if (exoticLang) return exoticLang.russian_name;
+  
+  // Если не найдено, возвращаем оригинальное название
+  return langName;
 };
 
 const CreateCharacterV3: React.FC = () => {
@@ -50,7 +75,18 @@ const CreateCharacterV3: React.FC = () => {
   const [selectedBackground, setSelectedBackground] = useState<string | null>(null);
   const [selectedRace, setSelectedRace] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [selectedStats, setSelectedStats] = useState<{ [key: string]: number }>({});
+  const [selectedClassData, setSelectedClassData] = useState<Class | null>(null);
+  const [selectedClassSkills, setSelectedClassSkills] = useState<string[]>([]);
+  const [selectedStats, setSelectedStats] = useState<{ [key: string]: number }>({
+    strength: 8,
+    dexterity: 8,
+    constitution: 8,
+    intelligence: 8,
+    wisdom: 8,
+    charisma: 8
+  });
+
+  const POINT_BUY_TOTAL = 27;
 
   // Загружаем предыстории из JSON файлов
   const backgrounds = useMemo(() => {
@@ -78,16 +114,146 @@ const CreateCharacterV3: React.FC = () => {
     return getRaceByRussianName(selectedRace) || null;
   }, [selectedRace]);
 
+  // Инициализация характеристик при выборе класса
+  useEffect(() => {
+    if (selectedClassData?.recommended_attributes) {
+      setSelectedStats(selectedClassData.recommended_attributes);
+    } else {
+      // Изначально заполняем восьмерками
+      setSelectedStats({
+        strength: 8,
+        dexterity: 8,
+        constitution: 8,
+        intelligence: 8,
+        wisdom: 8,
+        charisma: 8
+      });
+    }
+    // Сбрасываем выбранные навыки класса при смене класса
+    setSelectedClassSkills([]);
+  }, [selectedClassData]);
+
+  // Расчет потраченных очков
+  const pointsSpent = useMemo(() => {
+    return calculateTotalPointsSpent(selectedStats);
+  }, [selectedStats]);
+
+  const pointsRemaining = POINT_BUY_TOTAL - pointsSpent;
+
+  // Функция для изменения значения характеристики
+  const changeStatValue = (stat: string, delta: number) => {
+    const currentValue = selectedStats[stat] || 8;
+    const newValue = currentValue + delta;
+    
+    // Проверяем границы: минимум 8, максимум 15
+    if (newValue < 8 || newValue > 15) {
+      return;
+    }
+    
+    // Проверяем, хватит ли очков для увеличения
+    if (delta > 0) {
+      const newCost = getPointBuyCost(newValue);
+      const currentCost = getPointBuyCost(currentValue);
+      const costDifference = newCost - currentCost;
+      
+      if (pointsRemaining < costDifference) {
+        return;
+      }
+    }
+    
+    setSelectedStats({ ...selectedStats, [stat]: newValue });
+  };
+
+  // Получение бонуса расы для характеристики
+  const getRaceBonus = (stat: string): number => {
+    if (!selectedRaceData?.ability_scores) return 0;
+    return selectedRaceData.ability_scores[stat] || 0;
+  };
+
+  // Получение итогового значения характеристики (базовое + бонус расы)
+  const getFinalStatValue = (stat: string): number => {
+    const baseValue = selectedStats[stat] || 8;
+    return baseValue + getRaceBonus(stat);
+  };
+
+  // Получение навыков предыстории
+  const getBackstorySkills = (): string[] => {
+    return selectedBackstoryData?.skill_proficiencies || [];
+  };
+
+  // Проверка, есть ли навык в предыстории
+  const isSkillFromBackstory = (skill: string): boolean => {
+    return getBackstorySkills().includes(skill);
+  };
+
+  // Переключение выбора навыка класса
+  const toggleClassSkill = (skill: string) => {
+    if (selectedClassSkills.includes(skill)) {
+      // Убираем навык
+      setSelectedClassSkills(selectedClassSkills.filter(s => s !== skill));
+    } else {
+      // Добавляем навык, если не превышен лимит
+      const maxSkills = selectedClassData?.skills?.count || 0;
+      if (selectedClassSkills.length < maxSkills) {
+        setSelectedClassSkills([...selectedClassSkills, skill]);
+      }
+    }
+  };
+
   // Состояние для загруженных карт экипировки
   const [equipmentCards, setEquipmentCards] = useState<Record<string, Card>>({});
   const [loadingCards, setLoadingCards] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Загружаем карты экипировки при изменении выбранной предыстории
+  // Снаряжение от предыстории
+  const backstoryEquipment = useMemo(() => {
+    return selectedBackstoryData?.equipment || [];
+  }, [selectedBackstoryData?.equipment]);
+
+  // Подсчитываем количество каждого предмета предыстории
+  const backstoryEquipmentCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    backstoryEquipment.forEach((cardId) => {
+      counts[cardId] = (counts[cardId] || 0) + 1;
+    });
+    return counts;
+  }, [backstoryEquipment]);
+
+  // Уникальные ID предметов предыстории (без дубликатов)
+  const uniqueBackstoryEquipmentIds = useMemo(() => {
+    return Array.from(new Set(backstoryEquipment));
+  }, [backstoryEquipment]);
+
+  // Снаряжение от класса
+  const classEquipment = useMemo(() => {
+    return selectedClassData?.equipment || [];
+  }, [selectedClassData?.equipment]);
+
+  // Подсчитываем количество каждого предмета класса
+  const classEquipmentCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    classEquipment.forEach((cardId) => {
+      counts[cardId] = (counts[cardId] || 0) + 1;
+    });
+    return counts;
+  }, [classEquipment]);
+
+  // Уникальные ID предметов класса (без дубликатов)
+  const uniqueClassEquipmentIds = useMemo(() => {
+    return Array.from(new Set(classEquipment));
+  }, [classEquipment]);
+
+  // Объединяем все уникальные ID для загрузки карт
+  const allUniqueEquipmentIds = useMemo(() => {
+    return Array.from(new Set([...uniqueBackstoryEquipmentIds, ...uniqueClassEquipmentIds]));
+  }, [uniqueBackstoryEquipmentIds, uniqueClassEquipmentIds]);
+
+  // Загружаем карты экипировки при изменении выбранной предыстории или класса
   useEffect(() => {
     const loadEquipmentCards = async () => {
-      if (!selectedBackstoryData?.equipment || selectedBackstoryData.equipment.length === 0) {
+      if (allUniqueEquipmentIds.length === 0) {
         setEquipmentCards({});
         return;
       }
@@ -97,7 +263,7 @@ const CreateCharacterV3: React.FC = () => {
 
       try {
         await Promise.all(
-          selectedBackstoryData.equipment.map(async (cardId) => {
+          allUniqueEquipmentIds.map(async (cardId) => {
             try {
               const card = await cardsApi.getCard(cardId);
               cards[cardId] = card;
@@ -115,7 +281,7 @@ const CreateCharacterV3: React.FC = () => {
     };
 
     loadEquipmentCards();
-  }, [selectedBackstoryData]);
+  }, [allUniqueEquipmentIds.join(',')]);
 
   // Функция для получения цвета границы характеристики
   const getStatBorderColor = (statKey: string): string => {
@@ -159,6 +325,16 @@ const CreateCharacterV3: React.FC = () => {
 
   // Базовые значения HP для классов (DnD 5e)
   const getClassHitDie = (classId: string): number => {
+    // Пытаемся получить класс из JSON файлов
+    const classData = getClass(classId);
+    if (classData?.hit_dice) {
+      // Извлекаем число из строки типа "1d12"
+      const match = classData.hit_dice.match(/d(\d+)/);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+    }
+    // Fallback на старые значения
     const hitDieMap: { [key: string]: number } = {
       'barbarian': 12,
       'fighter': 10,
@@ -183,42 +359,72 @@ const CreateCharacterV3: React.FC = () => {
     return hitDie + constitutionModifier;
   };
 
-  const handleCreateCharacter = async () => {
-    // Сбрасываем ошибку перед проверками
-    setError(null);
-
+  // Проверка валидности формы
+  const validateForm = (): string | null => {
     if (!characterName.trim()) {
-      setError('Введите имя персонажа');
-      return;
+      return 'Введите имя персонажа';
     }
 
     if (!selectedBackground || !selectedRace || !selectedClass) {
-      setError('Выберите предысторию, расу и класс');
-      return;
+      return 'Выберите предысторию, расу и класс';
     }
 
     // Проверяем, что все характеристики заполнены
     const requiredStats = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
     const missingStats = requiredStats.filter(stat => !selectedStats[stat] || selectedStats[stat] < 1);
     if (missingStats.length > 0) {
-      setError('Заполните все характеристики');
+      return 'Заполните все характеристики';
+    }
+
+    // Проверяем, что все очки Point Buy потрачены
+    const totalSpent = calculateTotalPointsSpent(selectedStats);
+    if (totalSpent !== POINT_BUY_TOTAL) {
+      return `Необходимо потратить все ${POINT_BUY_TOTAL} очков Point Buy. Потрачено: ${totalSpent}`;
+    }
+
+    // Проверяем, что выбрано нужное количество навыков класса
+    if (selectedClassData?.skills && selectedClassData.skills.count > 0) {
+      const requiredSkillsCount = selectedClassData.skills.count;
+      if (selectedClassSkills.length !== requiredSkillsCount) {
+        return `Необходимо выбрать ${requiredSkillsCount} навык${requiredSkillsCount > 1 ? (requiredSkillsCount < 5 ? 'а' : 'ов') : ''} из класса. Выбрано: ${selectedClassSkills.length}`;
+      }
+    }
+
+    return null;
+  };
+
+  // Открытие модального окна подтверждения
+  const handleCreateCharacter = () => {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
+    setError(null);
+    setShowConfirmModal(true);
+  };
+
+  // Реальное создание персонажа
+  const handleConfirmCreateCharacter = async () => {
     try {
       setLoading(true);
       setError(null);
 
       // Получаем русские названия для расы и класса
       const raceName = selectedRaceData?.russian_name || selectedRace;
-      const className = CLASSES.find(c => c.id === selectedClass)?.name || selectedClass;
+      const className = selectedClassData?.russian_name || selectedClass;
       
       // Получаем данные предыстории для сохранения навыков и инструментов
       const backstoryData = selectedBackground ? getBackstoryByRussianName(selectedBackground) : null;
 
-      // Рассчитываем начальные HP
-      const constitution = selectedStats['constitution'] || 10;
-      const maxHP = calculateMaxHP(selectedClass, constitution, 1);
+      // Используем итоговые значения характеристик (базовое + бонус расы)
+      const finalStrength = getFinalStatValue('strength');
+      const finalDexterity = getFinalStatValue('dexterity');
+      const finalConstitution = getFinalStatValue('constitution');
+      const finalIntelligence = getFinalStatValue('intelligence');
+      const finalWisdom = getFinalStatValue('wisdom');
+      const finalCharisma = getFinalStatValue('charisma');
 
       const payload = {
         name: characterName.trim(),
@@ -226,24 +432,55 @@ const CreateCharacterV3: React.FC = () => {
         class: className,
         level: 1,
         speed: 30, // Базовое значение скорости
-        strength: selectedStats['strength'] || 10,
-        dexterity: selectedStats['dexterity'] || 10,
-        constitution: constitution,
-        intelligence: selectedStats['intelligence'] || 10,
-        wisdom: selectedStats['wisdom'] || 10,
-        charisma: selectedStats['charisma'] || 10,
-        max_hp: maxHP,
-        current_hp: maxHP,
-        saving_throw_proficiencies: [], // TODO: Добавить на основе класса
-        skill_proficiencies: backstoryData?.skill_proficiencies || [], // Навыки из предыстории
+        strength: finalStrength,
+        dexterity: finalDexterity,
+        constitution: finalConstitution,
+        intelligence: finalIntelligence,
+        wisdom: finalWisdom,
+        charisma: finalCharisma,
+        max_hp: calculateMaxHP(selectedClass, finalConstitution, 1),
+        current_hp: calculateMaxHP(selectedClass, finalConstitution, 1),
+        saving_throw_proficiencies: selectedClassData?.saving_throws || [], // Спасброски из класса
+        skill_proficiencies: [
+          ...(backstoryData?.skill_proficiencies || []),
+          ...selectedClassSkills
+        ].filter((skill, index, self) => self.indexOf(skill) === index), // Навыки из предыстории и класса (без дубликатов)
       };
 
-      await apiClient.post('/api/characters-v2', payload);
+      // Создаем персонажа
+      const characterResponse = await apiClient.post('/api/characters-v2', payload);
+      const characterId = characterResponse.data.id;
+
+      // Собираем все предметы от предыстории и класса для добавления в инвентарь
+      const allEquipmentIds: string[] = [];
+      
+      // Добавляем предметы от предыстории (с учетом количества)
+      if (backstoryEquipment && backstoryEquipment.length > 0) {
+        allEquipmentIds.push(...backstoryEquipment);
+      }
+      
+      // Добавляем предметы от класса (с учетом количества)
+      if (classEquipment && classEquipment.length > 0) {
+        allEquipmentIds.push(...classEquipment);
+      }
+
+      // Добавляем предметы в инвентарь персонажа, если они есть
+      if (allEquipmentIds.length > 0) {
+        try {
+          await apiClient.post(`/api/characters-v2/${characterId}/inventories/items`, {
+            card_ids: allEquipmentIds
+          });
+        } catch (inventoryError) {
+          console.error('Ошибка добавления предметов в инвентарь:', inventoryError);
+          // Не прерываем создание персонажа, если не удалось добавить предметы
+        }
+      }
+
       navigate('/characters-v3');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось создать персонажа');
-    } finally {
       setLoading(false);
+      setShowConfirmModal(false);
     }
   };
 
@@ -420,18 +657,23 @@ const CreateCharacterV3: React.FC = () => {
                 {activeTab === 'class' && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Выберите класс</h3>
-                    {CLASSES.map((cls) => (
+                    {getAllClasses().map((cls) => (
                       <div
-                        key={cls.id}
-                        onClick={() => setSelectedClass(cls.id)}
+                        key={cls.name}
+                        onClick={() => {
+                          setSelectedClass(cls.name);
+                          setSelectedClassData(cls);
+                        }}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedClass === cls.id
+                          selectedClass === cls.name
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <h4 className="font-semibold text-gray-900">{cls.name}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{cls.description}</p>
+                        <h4 className="font-semibold text-gray-900">{cls.russian_name}</h4>
+                        {cls.description && (
+                          <p className="text-sm text-gray-600 mt-1">{cls.description}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -440,24 +682,91 @@ const CreateCharacterV3: React.FC = () => {
                 {activeTab === 'stats' && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Распределите характеристики</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Стандартный массив: 15, 14, 13, 12, 10, 8
-                    </p>
-                    {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map((stat) => (
-                      <div key={stat} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <label className="font-medium text-gray-700 capitalize">
-                          {getStatName(stat)}
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="20"
-                          value={selectedStats[stat] || ''}
-                          onChange={(e) => setSelectedStats({ ...selectedStats, [stat]: parseInt(e.target.value) || 0 })}
-                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                        />
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-gray-700 mb-2">
+                        <span className="font-semibold">Система Point Buy:</span> У вас есть 27 очков для распределения
+                      </p>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Потрачено очков:</span>
+                        <span className={`font-semibold ${pointsSpent === POINT_BUY_TOTAL ? 'text-green-600' : 'text-red-600'}`}>
+                          {pointsSpent} / {POINT_BUY_TOTAL}
+                        </span>
                       </div>
-                    ))}
+                      <div className="flex items-center justify-between text-sm mt-1">
+                        <span className="text-gray-600">Осталось очков:</span>
+                        <span className={`font-semibold ${pointsRemaining === 0 ? 'text-green-600' : pointsRemaining < 0 ? 'text-red-600' : 'text-gray-700'}`}>
+                          {pointsRemaining}
+                        </span>
+                      </div>
+                      {pointsSpent !== POINT_BUY_TOTAL && (
+                        <p className="text-xs text-red-600 mt-2">
+                          ⚠️ Необходимо потратить все {POINT_BUY_TOTAL} очков для сохранения персонажа
+                        </p>
+                      )}
+                    </div>
+                    {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map((stat) => {
+                      const baseValue = selectedStats[stat] || 8;
+                      const raceBonus = getRaceBonus(stat);
+                      const finalValue = getFinalStatValue(stat);
+                      const modifier = Math.floor((finalValue - 10) / 2);
+                      const statCost = getPointBuyCost(baseValue);
+                      const canIncrease = baseValue < 15 && pointsRemaining >= (getPointBuyCost(baseValue + 1) - statCost);
+                      const canDecrease = baseValue > 8;
+                      
+                      return (
+                        <div 
+                          key={stat} 
+                          className={`flex items-center justify-between p-4 border border-gray-200 rounded-lg ${getStatBorderColor(stat)} bg-white`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <label className="font-medium text-gray-900">
+                                {getStatName(stat)}
+                              </label>
+                              {raceBonus > 0 && (
+                                <span className="text-xs text-green-600 font-semibold">
+                                  +{raceBonus} (раса)
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Стоимость: {statCost} очков
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={() => changeStatValue(stat, 1)}
+                                disabled={!canIncrease}
+                                className={`p-1 rounded ${canIncrease ? 'hover:bg-gray-100 text-gray-700' : 'text-gray-300 cursor-not-allowed'}`}
+                                title="Увеличить"
+                              >
+                                <ChevronUp size={20} />
+                              </button>
+                              <div className="text-center min-w-[60px]">
+                                <div className="text-lg font-bold text-gray-900">{baseValue}</div>
+                                {raceBonus > 0 && (
+                                  <div className="text-xs text-green-600">
+                                    = {finalValue}
+                                  </div>
+                                )}
+                                <div className="text-xs text-gray-500">
+                                  {modifier >= 0 ? '+' : ''}{modifier}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => changeStatValue(stat, -1)}
+                                disabled={!canDecrease}
+                                className={`p-1 rounded ${canDecrease ? 'hover:bg-gray-100 text-gray-700' : 'text-gray-300 cursor-not-allowed'}`}
+                                title="Уменьшить"
+                              >
+                                <ChevronDown size={20} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -514,18 +823,19 @@ const CreateCharacterV3: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Снаряжение */}
-                    {selectedBackstoryData.equipment && selectedBackstoryData.equipment.length > 0 && (
+                    {/* Снаряжение от предыстории */}
+                    {uniqueBackstoryEquipmentIds.length > 0 && (
                       <div className="mb-4">
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Стартовое снаряжение:</h5>
                         <div className="grid grid-cols-4 gap-0">
-                          {selectedBackstoryData.equipment.map((cardId) => {
+                          {uniqueBackstoryEquipmentIds.map((cardId) => {
                             const card = equipmentCards[cardId];
+                            const count = backstoryEquipmentCounts[cardId] || 1;
                             return (
                               <div
                                 key={cardId}
                                 className="w-16 h-16 border rounded flex items-center justify-center relative border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors group border-l-4 border-l-gray-400"
-                                title={card ? `${card.name} (1) - клик для просмотра` : 'Загрузка...'}
+                                title={card ? `${card.name}${count > 1 ? ` (${count})` : ''} - клик для просмотра` : 'Загрузка...'}
                                 data-inventory-item="true"
                                 onMouseEnter={(e) => {
                                   if (card) {
@@ -545,19 +855,26 @@ const CreateCharacterV3: React.FC = () => {
                                 {loadingCards ? (
                                   <div className="text-xs text-gray-400">...</div>
                                 ) : card ? (
-                                  card.image_url ? (
-                                    <img
-                                      src={card.image_url}
-                                      alt={card.name}
-                                      className="w-full h-full object-contain rounded"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = '/default_image.png';
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="text-xs text-gray-400 text-center px-1 truncate">{card.name}</div>
-                                  )
+                                  <>
+                                    {card.image_url ? (
+                                      <img
+                                        src={card.image_url}
+                                        alt={card.name}
+                                        className="w-full h-full object-contain rounded"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.src = '/default_image.png';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="text-xs text-gray-400 text-center px-1 truncate">{card.name}</div>
+                                    )}
+                                    {count > 1 && (
+                                      <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                                        {count}
+                                      </div>
+                                    )}
+                                  </>
                                 ) : (
                                   <div className="text-xs text-gray-400">?</div>
                                 )}
@@ -644,7 +961,7 @@ const CreateCharacterV3: React.FC = () => {
                               className={`group relative flex items-center justify-between p-1.5 rounded-lg bg-white border border-gray-200 border-l-4 border-l-blue-500 hover:bg-gray-100 transition-colors`}
                             >
                               <span className="text-xs font-medium text-gray-900">
-                                {lang}
+                                {getLanguageRussianName(lang)}
                               </span>
                             </div>
                           ))}
@@ -709,6 +1026,15 @@ const CreateCharacterV3: React.FC = () => {
                       </div>
                     )}
 
+                    {/* Эффекты */}
+                    {selectedRaceData.effects && selectedRaceData.effects.length > 0 && (
+                      <div className="mb-3 bg-slate-800 rounded-lg p-3">
+                        <h5 className="text-sm font-medium text-white mb-2">Эффекты:</h5>
+                        <EffectIcons effectIds={selectedRaceData.effects} />
+                      </div>
+                    )}
+
+
                     {/* Размер */}
                     {selectedRaceData.size && (
                       <div className="mb-3">
@@ -728,15 +1054,215 @@ const CreateCharacterV3: React.FC = () => {
                 )}
 
                 {/* Выбранный класс */}
-                {selectedClass && (
+                {selectedClassData && (
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-2">Класс</h4>
-                    <p className="text-sm text-gray-600">
-                      {CLASSES.find(c => c.id === selectedClass)?.name}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {CLASSES.find(c => c.id === selectedClass)?.description}
-                    </p>
+                    <h4 className="font-semibold text-gray-900 mb-3">Класс: {selectedClassData.russian_name}</h4>
+                    
+                    {selectedClassData.description && (
+                      <p className="text-sm text-gray-600 mb-3">{selectedClassData.description}</p>
+                    )}
+
+                    {selectedClassData.hit_dice && (
+                      <div className="mb-3">
+                        <h5 className="text-sm font-medium text-gray-700 mb-1">Кость хитов:</h5>
+                        <p className="text-sm text-gray-600">{selectedClassData.hit_dice}</p>
+                      </div>
+                    )}
+
+                    {/* Владение навыками класса */}
+                    {selectedClassSkills.length > 0 && (
+                      <div className="mb-3">
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">Владение навыками:</h5>
+                        <div className="space-y-1">
+                          {selectedClassSkills.map((skill) => {
+                            const skillRussianName = getRuleRussianName(skill);
+                            return (
+                              <div
+                                key={skill}
+                                className={`group relative flex items-center justify-between p-1.5 rounded-lg bg-white border border-gray-200 ${getSkillBorderColor(skill)} hover:bg-gray-100 transition-colors`}
+                              >
+                                <span className="text-xs font-medium text-gray-900">
+                                  {skillRussianName || skill}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Выбор навыков класса */}
+                    {selectedClassData.skills && selectedClassData.skills.variants && selectedClassData.skills.variants.length > 0 && (
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">
+                          Выберите {selectedClassData.skills.count} навык{selectedClassData.skills.count > 1 ? (selectedClassData.skills.count < 5 ? 'а' : 'ов') : ''}:
+                          {selectedClassSkills.length > 0 && (
+                            <span className="ml-2 text-blue-600">
+                              ({selectedClassSkills.length} / {selectedClassData.skills.count})
+                            </span>
+                          )}
+                        </h5>
+                        <div className="space-y-1">
+                          {selectedClassData.skills.variants.map((skill) => {
+                            const skillRussianName = getRuleRussianName(skill) || skill;
+                            const isSelected = selectedClassSkills.includes(skill);
+                            const isFromBackstory = isSkillFromBackstory(skill);
+                            const canSelect = !isSelected && selectedClassSkills.length < (selectedClassData.skills?.count || 0);
+                            
+                            return (
+                              <button
+                                key={skill}
+                                onClick={() => toggleClassSkill(skill)}
+                                disabled={!canSelect && !isSelected}
+                                className={`
+                                  w-full text-left p-2 rounded-lg border transition-all
+                                  ${isSelected 
+                                    ? 'bg-blue-100 border-blue-300 text-blue-900' 
+                                    : isFromBackstory
+                                    ? 'bg-green-50 border-green-200 text-gray-500 cursor-not-allowed opacity-60'
+                                    : canSelect
+                                    ? 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'
+                                    : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                                  }
+                                `}
+                                title={
+                                  isFromBackstory 
+                                    ? 'Этот навык уже дает предыстория (двойное владение не дает эффекта)' 
+                                    : isSelected 
+                                    ? 'Нажмите, чтобы убрать навык' 
+                                    : canSelect 
+                                    ? 'Нажмите, чтобы выбрать навык' 
+                                    : 'Достигнут лимит выбора навыков'
+                                }
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-medium">
+                                    {skillRussianName}
+                                  </span>
+                                  {isFromBackstory && (
+                                    <span className="text-xs text-green-600 ml-2">
+                                      (из предыстории)
+                                    </span>
+                                  )}
+                                  {isSelected && (
+                                    <span className="text-xs text-blue-600 ml-2">
+                                      ✓
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedClassSkills.length > 0 && (
+                          <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                            <p className="text-xs text-blue-700 font-medium mb-1">Выбранные навыки:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedClassSkills.map((skill) => {
+                                const skillRussianName = getRuleRussianName(skill) || skill;
+                                return (
+                                  <span
+                                    key={skill}
+                                    className="px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs"
+                                  >
+                                    {skillRussianName}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Снаряжение класса */}
+                    {uniqueClassEquipmentIds.length > 0 && (
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">Стартовое снаряжение:</h5>
+                        <div className="grid grid-cols-4 gap-0">
+                          {uniqueClassEquipmentIds.map((cardId) => {
+                            const card = equipmentCards[cardId];
+                            const count = classEquipmentCounts[cardId] || 1;
+                            return (
+                              <div
+                                key={cardId}
+                                className="w-16 h-16 border rounded flex items-center justify-center relative border-gray-400 bg-white cursor-pointer hover:bg-gray-50 transition-colors group border-l-4 border-l-gray-400"
+                                title={card ? `${card.name}${count > 1 ? ` (${count})` : ''} - клик для просмотра` : 'Загрузка...'}
+                                data-inventory-item="true"
+                                onMouseEnter={(e) => {
+                                  if (card) {
+                                    setHoveredCard(card);
+                                    setMousePosition({ x: e.clientX, y: e.clientY });
+                                  }
+                                }}
+                                onMouseMove={(e) => {
+                                  if (card) {
+                                    setMousePosition({ x: e.clientX, y: e.clientY });
+                                  }
+                                }}
+                                onMouseLeave={() => {
+                                  setHoveredCard(null);
+                                }}
+                              >
+                                {loadingCards ? (
+                                  <div className="text-xs text-gray-400">...</div>
+                                ) : card ? (
+                                  <>
+                                    {card.image_url ? (
+                                      <img
+                                        src={card.image_url}
+                                        alt={card.name}
+                                        className="w-full h-full object-contain rounded"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.src = '/default_image.png';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="text-xs text-gray-400 text-center px-1 truncate">{card.name}</div>
+                                    )}
+                                    {count > 1 && (
+                                      <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                                        {count}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="text-xs text-gray-400">?</div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Прогрессия по уровням */}
+                    {selectedClassData.level_progression && Object.keys(selectedClassData.level_progression).length > 0 && (
+                      <div className="space-y-4">
+                        {Object.entries(selectedClassData.level_progression).map(([level, progression]) => (
+                          <div key={level} className="border-t border-gray-200 pt-3">
+                            <h5 className="text-sm font-medium text-gray-700 mb-2">Уровень {level}</h5>
+                            
+                            {/* Эффекты уровня */}
+                            {progression.effects && progression.effects.length > 0 && (
+                              <div className="mb-3 bg-slate-800 rounded-lg p-3">
+                                <h6 className="text-sm font-medium text-white mb-2">Эффекты:</h6>
+                                <EffectIcons effectIds={progression.effects} />
+                              </div>
+                            )}
+
+                            {/* Действия уровня */}
+                            {progression.actions && progression.actions.length > 0 && (
+                              <div className="mb-3 bg-amber-900 rounded-lg p-3">
+                                <h6 className="text-sm font-medium text-white mb-2">Действия:</h6>
+                                <ActionIcons actionIds={progression.actions} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -788,7 +1314,9 @@ const CreateCharacterV3: React.FC = () => {
                   loading ||
                   !['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].every(
                     stat => selectedStats[stat] && selectedStats[stat] >= 1
-                  )
+                  ) ||
+                  pointsSpent !== POINT_BUY_TOTAL ||
+                  (selectedClassData?.skills && selectedClassData.skills.count > 0 && selectedClassSkills.length !== selectedClassData.skills.count)
                 }
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
@@ -811,6 +1339,290 @@ const CreateCharacterV3: React.FC = () => {
         >
           <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
             <CardPreview card={hoveredCard} />
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно подтверждения создания персонажа */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Заголовок */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">Подтверждение создания персонажа</h2>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Контент - сводка */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-6">
+                {/* Основная информация */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Основная информация</h3>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Имя:</span>
+                      <span className="font-medium text-gray-900">{characterName}</span>
+                    </div>
+                    {selectedRaceData && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Раса:</span>
+                        <span className="font-medium text-gray-900">{selectedRaceData.russian_name}</span>
+                      </div>
+                    )}
+                    {selectedClassData && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Класс:</span>
+                        <span className="font-medium text-gray-900">{selectedClassData.russian_name}</span>
+                      </div>
+                    )}
+                    {selectedBackstoryData && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Предыстория:</span>
+                        <span className="font-medium text-gray-900">{selectedBackstoryData.russian_name}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Уровень:</span>
+                      <span className="font-medium text-gray-900">1</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Максимальные HP:</span>
+                      <span className="font-medium text-gray-900">
+                        {calculateMaxHP(selectedClass || '', getFinalStatValue('constitution'), 1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Характеристики */}
+                {Object.keys(selectedStats).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Характеристики</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      {Object.entries(selectedStats).map(([stat, baseValue]) => {
+                        const finalValue = getFinalStatValue(stat);
+                        const modifier = Math.floor((finalValue - 10) / 2);
+                        const raceBonus = getRaceBonus(stat);
+                        return (
+                          <div key={stat} className="bg-gray-50 rounded-lg p-3">
+                            <div className="text-sm text-gray-600">{getStatName(stat)}</div>
+                            <div className="text-xl font-bold text-gray-900">
+                              {finalValue}
+                              {raceBonus > 0 && (
+                                <span className="text-sm text-green-600 ml-1">
+                                  ({baseValue} + {raceBonus})
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Модификатор: {modifier >= 0 ? '+' : ''}{modifier}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Снаряжение */}
+                {(uniqueBackstoryEquipmentIds.length > 0 || uniqueClassEquipmentIds.length > 0) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Стартовое снаряжение</h3>
+                    <div className="grid grid-cols-6 gap-2">
+                      {uniqueBackstoryEquipmentIds.map((cardId) => {
+                        const card = equipmentCards[cardId];
+                        const count = backstoryEquipmentCounts[cardId] || 1;
+                        return card ? (
+                          <div
+                            key={`backstory-${cardId}`}
+                            className="w-16 h-16 border rounded flex items-center justify-center relative border-gray-400 bg-white border-l-4 border-l-gray-400"
+                            title={`${card.name}${count > 1 ? ` (${count})` : ''}`}
+                          >
+                            {card.image_url ? (
+                              <img
+                                src={card.image_url}
+                                alt={card.name}
+                                className="w-full h-full object-contain rounded"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/default_image.png';
+                                }}
+                              />
+                            ) : (
+                              <div className="text-xs text-gray-400 text-center px-1 truncate">{card.name}</div>
+                            )}
+                            {count > 1 && (
+                              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                                {count}
+                              </div>
+                            )}
+                          </div>
+                        ) : null;
+                      })}
+                      {uniqueClassEquipmentIds.map((cardId) => {
+                        const card = equipmentCards[cardId];
+                        const count = classEquipmentCounts[cardId] || 1;
+                        return card ? (
+                          <div
+                            key={`class-${cardId}`}
+                            className="w-16 h-16 border rounded flex items-center justify-center relative border-gray-400 bg-white border-l-4 border-l-gray-400"
+                            title={`${card.name}${count > 1 ? ` (${count})` : ''}`}
+                          >
+                            {card.image_url ? (
+                              <img
+                                src={card.image_url}
+                                alt={card.name}
+                                className="w-full h-full object-contain rounded"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/default_image.png';
+                                }}
+                              />
+                            ) : (
+                              <div className="text-xs text-gray-400 text-center px-1 truncate">{card.name}</div>
+                            )}
+                            {count > 1 && (
+                              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                                {count}
+                              </div>
+                            )}
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Эффекты расы */}
+                {selectedRaceData?.effects && selectedRaceData.effects.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Эффекты расы</h3>
+                    <div className="bg-slate-800 rounded-lg p-3">
+                      <EffectIcons effectIds={selectedRaceData.effects} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Эффекты и действия класса */}
+                {selectedClassData?.level_progression && Object.keys(selectedClassData.level_progression).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Эффекты и действия класса</h3>
+                    <div className="space-y-3">
+                      {Object.entries(selectedClassData.level_progression).map(([level, progression]) => (
+                        <div key={level} className="border border-gray-200 rounded-lg p-3">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Уровень {level}</h4>
+                          {progression.effects && progression.effects.length > 0 && (
+                            <div className="mb-2 bg-slate-800 rounded-lg p-2">
+                              <div className="text-xs text-white mb-1">Эффекты:</div>
+                              <EffectIcons effectIds={progression.effects} />
+                            </div>
+                          )}
+                          {progression.actions && progression.actions.length > 0 && (
+                            <div className="bg-amber-900 rounded-lg p-2">
+                              <div className="text-xs text-white mb-1">Действия:</div>
+                              <ActionIcons actionIds={progression.actions} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Навыки предыстории */}
+                {selectedBackstoryData?.skill_proficiencies && selectedBackstoryData.skill_proficiencies.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Навыки предыстории</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedBackstoryData.skill_proficiencies.map((skill) => (
+                        <span
+                          key={skill}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {getRuleRussianName(skill)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Навыки класса */}
+                {selectedClassSkills.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Навыки класса</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedClassSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm"
+                        >
+                          {getRuleRussianName(skill)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Владения расы */}
+                {(selectedRaceData?.weapon_proficiencies?.length || 
+                  selectedRaceData?.armor_proficiencies?.length || 
+                  selectedRaceData?.language_proficiencies?.length) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Владения расы</h3>
+                    <div className="space-y-2">
+                      {selectedRaceData.weapon_proficiencies && selectedRaceData.weapon_proficiencies.length > 0 && (
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">Оружие: </span>
+                          <span className="text-sm text-gray-600">
+                            {selectedRaceData.weapon_proficiencies.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                      {selectedRaceData.armor_proficiencies && selectedRaceData.armor_proficiencies.length > 0 && (
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">Доспехи: </span>
+                          <span className="text-sm text-gray-600">
+                            {selectedRaceData.armor_proficiencies.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                      {selectedRaceData.language_proficiencies && selectedRaceData.language_proficiencies.length > 0 && (
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">Языки: </span>
+                          <span className="text-sm text-gray-600">
+                            {selectedRaceData.language_proficiencies.map(lang => getLanguageRussianName(lang)).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Футер с кнопками */}
+            <div className="flex items-center justify-end gap-4 p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                Отменить
+              </button>
+              <button
+                onClick={handleConfirmCreateCharacter}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? 'Создание...' : 'Начать приключение'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -13,24 +13,12 @@
         "dwarvish",
         "common"
     ],
-    "weapon_proficiencies": [
-        "simple_melee"
-    ],
-    "weapon_proficiencies_unused": [
-        "battleaxe",
-        "handaxe",
-        "throwing_hammer",
-        "warhammer"
-    ],
-    "armor_proficiencies": [
-        "light_armor",
-        "medium_armor"
-    ],
-    "damage_resistance": [
-        "poison"
+    "effects": [
+        "effect_darkvision_60",
+        "effect_dwarven_resistance",
+        "effect_dwarven_training"
     ],
     "features": [
-        "effect_darkvision_60",
         "poison_resistance",
         "stonecunning"
     ],

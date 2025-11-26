@@ -13,8 +13,10 @@
         "common",
         "gnomish"
     ],
+    "effects": [
+        "effect_darkvision_60"
+    ],
     "features": [
-        "effect_darkvision_60",
         "gnome_cunning",
         "artificers_lore",
         "tinker"

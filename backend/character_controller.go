@@ -76,15 +76,19 @@ func (cc *CharacterController) GetCharacters(c *gin.Context) {
 	characterResponses := make([]CharacterResponse, 0, len(characters))
 	for _, char := range characters {
 		characterResponses = append(characterResponses, CharacterResponse{
-			ID:          char.ID,
-			UserID:      char.UserID,
-			GroupID:     char.GroupID,
-			Name:        char.Name,
-			Data:        char.Data,
-			CreatedAt:   char.CreatedAt,
-			UpdatedAt:   char.UpdatedAt,
-			Group:       char.Group,
-			Inventories: char.Inventories,
+			ID:                    char.ID,
+			UserID:                char.UserID,
+			GroupID:               char.GroupID,
+			Name:                  char.Name,
+			Data:                  char.Data,
+			WeaponProficiencies:   char.WeaponProficiencies,
+			DamageResistances:     char.DamageResistances,
+			LanguageProficiencies: char.LanguageProficiencies,
+			ArmorProficiencies:    char.ArmorProficiencies,
+			CreatedAt:             char.CreatedAt,
+			UpdatedAt:             char.UpdatedAt,
+			Group:                 char.Group,
+			Inventories:           char.Inventories,
 		})
 	}
 
@@ -125,15 +129,19 @@ func (cc *CharacterController) GetCharacter(c *gin.Context) {
 	}
 
 	characterResponse := CharacterResponse{
-		ID:          character.ID,
-		UserID:      character.UserID,
-		GroupID:     character.GroupID,
-		Name:        character.Name,
-		Data:        character.Data,
-		CreatedAt:   character.CreatedAt,
-		UpdatedAt:   character.UpdatedAt,
-		Group:       character.Group,
-		Inventories: character.Inventories,
+		ID:                    character.ID,
+		UserID:                character.UserID,
+		GroupID:               character.GroupID,
+		Name:                  character.Name,
+		Data:                  character.Data,
+		WeaponProficiencies:   character.WeaponProficiencies,
+		DamageResistances:     character.DamageResistances,
+		LanguageProficiencies: character.LanguageProficiencies,
+		ArmorProficiencies:    character.ArmorProficiencies,
+		CreatedAt:             character.CreatedAt,
+		UpdatedAt:             character.UpdatedAt,
+		Group:                 character.Group,
+		Inventories:           character.Inventories,
 	}
 
 	c.JSON(http.StatusOK, characterResponse)
@@ -171,10 +179,14 @@ func (cc *CharacterController) CreateCharacter(c *gin.Context) {
 	}
 
 	character := Character{
-		UserID:  userID.(uuid.UUID),
-		GroupID: req.GroupID,
-		Name:    req.Name,
-		Data:    req.Data,
+		UserID:                userID.(uuid.UUID),
+		GroupID:               req.GroupID,
+		Name:                  req.Name,
+		Data:                  req.Data,
+		WeaponProficiencies:   req.WeaponProficiencies,
+		DamageResistances:     req.DamageResistances,
+		LanguageProficiencies: req.LanguageProficiencies,
+		ArmorProficiencies:    req.ArmorProficiencies,
 	}
 
 	result := cc.db.Create(&character)
@@ -199,15 +211,19 @@ func (cc *CharacterController) CreateCharacter(c *gin.Context) {
 	cc.db.Preload("Group").Preload("Inventories").First(&character, character.ID)
 
 	characterResponse := CharacterResponse{
-		ID:          character.ID,
-		UserID:      character.UserID,
-		GroupID:     character.GroupID,
-		Name:        character.Name,
-		Data:        character.Data,
-		CreatedAt:   character.CreatedAt,
-		UpdatedAt:   character.UpdatedAt,
-		Group:       character.Group,
-		Inventories: character.Inventories,
+		ID:                    character.ID,
+		UserID:                character.UserID,
+		GroupID:               character.GroupID,
+		Name:                  character.Name,
+		Data:                  character.Data,
+		WeaponProficiencies:   character.WeaponProficiencies,
+		DamageResistances:     character.DamageResistances,
+		LanguageProficiencies: character.LanguageProficiencies,
+		ArmorProficiencies:    character.ArmorProficiencies,
+		CreatedAt:             character.CreatedAt,
+		UpdatedAt:             character.UpdatedAt,
+		Group:                 character.Group,
+		Inventories:           character.Inventories,
 	}
 
 	c.JSON(http.StatusCreated, characterResponse)
@@ -271,6 +287,18 @@ func (cc *CharacterController) UpdateCharacter(c *gin.Context) {
 	if req.Name != "" {
 		character.Name = req.Name
 	}
+	if req.WeaponProficiencies != nil {
+		character.WeaponProficiencies = req.WeaponProficiencies
+	}
+	if req.DamageResistances != nil {
+		character.DamageResistances = req.DamageResistances
+	}
+	if req.LanguageProficiencies != nil {
+		character.LanguageProficiencies = req.LanguageProficiencies
+	}
+	if req.ArmorProficiencies != nil {
+		character.ArmorProficiencies = req.ArmorProficiencies
+	}
 
 	result = cc.db.Save(&character)
 	if result.Error != nil {
@@ -282,15 +310,19 @@ func (cc *CharacterController) UpdateCharacter(c *gin.Context) {
 	cc.db.Preload("Group").Preload("Inventories").First(&character, character.ID)
 
 	characterResponse := CharacterResponse{
-		ID:          character.ID,
-		UserID:      character.UserID,
-		GroupID:     character.GroupID,
-		Name:        character.Name,
-		Data:        character.Data,
-		CreatedAt:   character.CreatedAt,
-		UpdatedAt:   character.UpdatedAt,
-		Group:       character.Group,
-		Inventories: character.Inventories,
+		ID:                    character.ID,
+		UserID:                character.UserID,
+		GroupID:               character.GroupID,
+		Name:                  character.Name,
+		Data:                  character.Data,
+		WeaponProficiencies:   character.WeaponProficiencies,
+		DamageResistances:     character.DamageResistances,
+		LanguageProficiencies: character.LanguageProficiencies,
+		ArmorProficiencies:    character.ArmorProficiencies,
+		CreatedAt:             character.CreatedAt,
+		UpdatedAt:             character.UpdatedAt,
+		Group:                 character.Group,
+		Inventories:           character.Inventories,
 	}
 
 	c.JSON(http.StatusOK, characterResponse)
@@ -456,10 +488,14 @@ func (cc *CharacterController) ImportCharacter(c *gin.Context) {
 	}
 
 	character := Character{
-		UserID:  userID.(uuid.UUID),
-		GroupID: req.GroupID,
-		Name:    characterName,
-		Data:    actualData,
+		UserID:                userID.(uuid.UUID),
+		GroupID:               req.GroupID,
+		Name:                  characterName,
+		Data:                  actualData,
+		WeaponProficiencies:   nil, // Можно добавить парсинг из JSON данных если нужно
+		DamageResistances:     nil, // Можно добавить парсинг из JSON данных если нужно
+		LanguageProficiencies: nil, // Можно добавить парсинг из JSON данных если нужно
+		ArmorProficiencies:    nil, // Можно добавить парсинг из JSON данных если нужно
 	}
 
 	log.Printf("Создаем персонажа в БД:")
@@ -495,15 +531,19 @@ func (cc *CharacterController) ImportCharacter(c *gin.Context) {
 	cc.db.Preload("Group").Preload("Inventories").First(&character, character.ID)
 
 	characterResponse := CharacterResponse{
-		ID:          character.ID,
-		UserID:      character.UserID,
-		GroupID:     character.GroupID,
-		Name:        character.Name,
-		Data:        character.Data,
-		CreatedAt:   character.CreatedAt,
-		UpdatedAt:   character.UpdatedAt,
-		Group:       character.Group,
-		Inventories: character.Inventories,
+		ID:                    character.ID,
+		UserID:                character.UserID,
+		GroupID:               character.GroupID,
+		Name:                  character.Name,
+		Data:                  character.Data,
+		WeaponProficiencies:   character.WeaponProficiencies,
+		DamageResistances:     character.DamageResistances,
+		LanguageProficiencies: character.LanguageProficiencies,
+		ArmorProficiencies:    character.ArmorProficiencies,
+		CreatedAt:             character.CreatedAt,
+		UpdatedAt:             character.UpdatedAt,
+		Group:                 character.Group,
+		Inventories:           character.Inventories,
 	}
 
 	log.Printf("=== ИМПОРТ ЗАВЕРШЕН ===")
@@ -621,15 +661,19 @@ func (cc *CharacterController) UpdateCharacterStat(c *gin.Context) {
 
 	// Возвращаем обновленного персонажа
 	characterResponse := CharacterResponse{
-		ID:          character.ID,
-		UserID:      character.UserID,
-		GroupID:     character.GroupID,
-		Name:        character.Name,
-		Data:        character.Data,
-		CreatedAt:   character.CreatedAt,
-		UpdatedAt:   character.UpdatedAt,
-		Group:       character.Group,
-		Inventories: character.Inventories,
+		ID:                    character.ID,
+		UserID:                character.UserID,
+		GroupID:               character.GroupID,
+		Name:                  character.Name,
+		Data:                  character.Data,
+		WeaponProficiencies:   character.WeaponProficiencies,
+		DamageResistances:     character.DamageResistances,
+		LanguageProficiencies: character.LanguageProficiencies,
+		ArmorProficiencies:    character.ArmorProficiencies,
+		CreatedAt:             character.CreatedAt,
+		UpdatedAt:             character.UpdatedAt,
+		Group:                 character.Group,
+		Inventories:           character.Inventories,
 	}
 
 	c.JSON(http.StatusOK, characterResponse)

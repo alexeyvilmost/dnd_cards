@@ -131,6 +131,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			DamageType:                   card.DamageType,
 			DefenseType:                  card.DefenseType,
 			Type:                         card.Type,
+			WeaponType:                   card.WeaponType,
 			DescriptionFontSize:          card.DescriptionFontSize,
 			TextAlignment:                card.TextAlignment,
 			TextFontSize:                 card.TextFontSize,
@@ -189,6 +190,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		DamageType:                   card.DamageType,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
+		WeaponType:                   card.WeaponType,
 		DescriptionFontSize:          card.DescriptionFontSize,
 		TextAlignment:                card.TextAlignment,
 		TextFontSize:                 card.TextFontSize,
@@ -283,6 +285,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Author:                       req.Author,
 		Source:                       req.Source,
 		Type:                         req.Type,
+		WeaponType:                   req.WeaponType,
 		RelatedCards:                 req.RelatedCards,
 		RelatedActions:               req.RelatedActions,
 		RelatedEffects:               req.RelatedEffects,
@@ -315,6 +318,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DamageType:                   card.DamageType,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
+		WeaponType:                   card.WeaponType,
 		DescriptionFontSize:          card.DescriptionFontSize,
 		TextAlignment:                card.TextAlignment,
 		TextFontSize:                 card.TextFontSize,
@@ -453,6 +457,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Type != nil {
 		card.Type = req.Type
 	}
+	if req.WeaponType != nil {
+		card.WeaponType = req.WeaponType
+	}
 	if req.RelatedCards != nil {
 		card.RelatedCards = req.RelatedCards
 	}
@@ -507,6 +514,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		DamageType:                   card.DamageType,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
+		WeaponType:                   card.WeaponType,
 		DescriptionFontSize:          card.DescriptionFontSize,
 		TextAlignment:                card.TextAlignment,
 		TextFontSize:                 card.TextFontSize,
@@ -631,6 +639,8 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			Weight:              card.Weight,
 			BonusType:           card.BonusType,
 			BonusValue:          card.BonusValue,
+			Type:                card.Type,
+			WeaponType:          card.WeaponType,
 			Slot:                card.Slot,
 			Effects:             card.Effects,
 			CreatedAt:           card.CreatedAt,
@@ -699,9 +709,9 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 		query = query.Where("action_type = ?", actionType)
 	}
 
-	// Поиск по названию
+	// Поиск по названию или card_number
 	if search := c.Query("search"); search != "" {
-		query = query.Where("name ILIKE ?", "%"+search+"%")
+		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
 
 	// Пагинация
@@ -760,16 +770,22 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	})
 }
 
-// GetAction - получение действия по ID
+// GetAction - получение действия по ID (UUID) или card_number
 func (ac *ActionController) GetAction(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID действия"})
-		return
-	}
-
+	idParam := c.Param("id")
+	
 	var action Action
-	if err := ac.db.Where("id = ?", id).First(&action).Error; err != nil {
+	var err error
+	
+	// Пытаемся сначала найти по UUID
+	if id, uuidErr := uuid.Parse(idParam); uuidErr == nil {
+		err = ac.db.Where("id = ?", id).First(&action).Error
+	} else {
+		// Если не UUID, ищем по card_number
+		err = ac.db.Where("card_number = ?", idParam).First(&action).Error
+	}
+	
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Действие не найдено"})
 			return
@@ -839,8 +855,25 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 		return
 	}
 
-	// Генерация номера карты
-	cardNumber := ac.generateActionNumber()
+	// Проверка уникальности card_number (ID действия)
+	cardNumber := req.CardNumber
+	if cardNumber == "" {
+		// Если ID не указан, генерируем автоматически
+		cardNumber = ac.generateActionNumber()
+	} else {
+		// Проверяем уникальность указанного ID
+		var existingAction Action
+		if err := ac.db.Where("card_number = ?", cardNumber).First(&existingAction).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Действие с таким ID уже существует"})
+			return
+		}
+		// Проверяем формат ID (латинские буквы, цифры, дефисы и подчеркивания, до 30 символов)
+		matched, _ := regexp.MatchString("^[a-zA-Z0-9_-]{1,30}$", cardNumber)
+		if !matched {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов"})
+			return
+		}
+	}
 
 	// Создание действия
 	action := Action{
@@ -1128,9 +1161,9 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 		query = query.Where("effect_type = ?", effectType)
 	}
 
-	// Поиск по названию
+	// Поиск по названию или card_number
 	if search := c.Query("search"); search != "" {
-		query = query.Where("name ILIKE ?", "%"+search+"%")
+		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
 
 	// Пагинация

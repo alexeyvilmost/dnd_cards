@@ -6,22 +6,18 @@
         "dexterity": 2,
         "wisdom": 1
     },
-    "weapon_proficiencies": [
-        "longsword",
-        "shortsword",
-        "shortbow",
-        "longbow"
-    ],
     "language_proficiencies": [
         "common",
         "elvish"
     ],
-    "features": [
+    "effects": [
         "effect_darkvision_60",
+        "effect_fey_ancestry",
+        "effect_trance",
+        "effect_elven_training"
+    ],
+    "features": [
         "keen_senses",
-        "fey_ancestry",
-        "trance",
-        "elf_weapon_training",
         "fleet_of_foot",
         "mask_of_the_wild"
     ],

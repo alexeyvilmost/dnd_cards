@@ -13,10 +13,12 @@
     "damage_resistance": [
         "poison"
     ],
+    "effects": [
+        "effect_halfling_1"
+    ],
     "features": [
         "lucky",
         "brave",
-        "halfling_nimbleness",
         "stout_resilience"
     ],
     "size": "small",

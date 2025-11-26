@@ -165,6 +165,21 @@ export const effectsApi = {
     return response.data;
   },
 
+  // Получение эффекта по card_number
+  getEffectByCardNumber: async (cardNumber: string): Promise<PassiveEffect | null> => {
+    try {
+      // Используем прямой вызов API, чтобы избежать циклической зависимости
+      const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', { 
+        params: { search: cardNumber, limit: 100 } 
+      });
+      const effect = response.data.effects.find(e => e.card_number === cardNumber);
+      return effect || null;
+    } catch (error) {
+      console.error(`Ошибка поиска эффекта по card_number ${cardNumber}:`, error);
+      return null;
+    }
+  },
+
   // Создание нового эффекта
   createEffect: async (data: CreatePassiveEffectRequest): Promise<PassiveEffect> => {
     const response = await apiClient.post<PassiveEffect>('/api/effects', data);

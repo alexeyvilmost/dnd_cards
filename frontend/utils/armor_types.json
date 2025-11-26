@@ -18,6 +18,10 @@
         {
             "name": "heavy",
             "russian_name": "Тяжелая"
+        },
+        {
+            "name": "shield",
+            "russian_name": "Щит"
         }
     ]
 }

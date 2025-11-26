@@ -13,9 +13,11 @@
     "damage_resistance": [
         "fire"
     ],
-    "features": [
+    "effects": [
         "effect_darkvision_60",
-        "hellish_resistance",
+        "effect_hellish_resistance"
+    ],
+    "features": [
         "infernal_legacy"
     ],
     "size": "medium",

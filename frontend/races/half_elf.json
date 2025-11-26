@@ -9,9 +9,11 @@
         "common",
         "elvish"
     ],
-    "features": [
+    "effects": [
         "effect_darkvision_60",
-        "fey_ancestry",
+        "effect_fey_ancestry"
+    ],
+    "features": [
         "skill_versatility"
     ],
     "size": "medium",

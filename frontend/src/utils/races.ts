@@ -10,6 +10,7 @@ export interface Race {
   weapon_proficiencies?: string[];
   armor_proficiencies?: string[];
   damage_resistance?: string[];
+  effects?: string[]; // ID эффектов (например, "effect_darkvision_60")
   features?: string[];
   size?: string;
   speed?: number;
