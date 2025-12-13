@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cardsApi, effectsApi } from '../api/client';
-import type { Card, PassiveEffect } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
+import { cardsApi, effectsApi, actionsApi } from '../api/client';
+import type { Card, PassiveEffect, Action } from '../types';
+import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
+import ActionPreview from '../components/ActionPreview';
 import CardDetailModal from '../components/CardDetailModal';
 import EffectDetailModal from '../components/EffectDetailModal';
+import ActionDetailModal from '../components/ActionDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 const CardLibrary = () => {
-  const [contentType, setContentType] = useState<'cards' | 'effects'>('cards');
+  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions'>('cards');
   const [cards, setCards] = useState<Card[]>([]);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
+  const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +37,10 @@ const CardLibrary = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -113,6 +118,56 @@ const CardLibrary = () => {
     }
   };
 
+  // Загрузка действий
+  const loadActions = async (page = 1, append = false) => {
+    try {
+      console.log(`📥 [CARD LIBRARY] Загружаем действия: страница ${page}, append: ${append}`);
+      
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const params: any = {
+        page,
+        limit: 50
+      };
+      
+      if (search) params.search = search;
+      if (rarityFilter) params.rarity = rarityFilter;
+      
+      const response = await actionsApi.getActions(params);
+      
+      if (append) {
+        setActions(prev => {
+          // Фильтруем дубликаты по ID
+          const existingIds = new Set(prev.map(action => action.id));
+          const newActions = response.actions.filter(action => !existingIds.has(action.id));
+          const combinedActions = [...prev, ...newActions];
+          
+          console.log(`📊 [CARD LIBRARY] Добавляем действия: получено ${response.actions.length}, новых ${newActions.length}, всего ${combinedActions.length}`);
+          
+          setHasMore(response.actions.length === 50 && combinedActions.length < response.total);
+          return combinedActions;
+        });
+      } else {
+        setActions(response.actions);
+        setHasMore(response.actions.length === 50 && response.actions.length < response.total);
+        console.log(`📊 [CARD LIBRARY] Загружено действий: ${response.actions.length}, всего в базе: ${response.total}`);
+      }
+      
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки действий');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   // Загрузка эффектов
   const loadEffects = async (page = 1, append = false) => {
     try {
@@ -167,10 +222,13 @@ const CardLibrary = () => {
     setCurrentPage(1);
     setCards([]);
     setEffects([]);
+    setActions([]);
     if (contentType === 'cards') {
       loadCards(1, false);
-    } else {
+    } else if (contentType === 'effects') {
       loadEffects(1, false);
+    } else if (contentType === 'actions') {
+      loadActions(1, false);
     }
   }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
 
@@ -209,8 +267,10 @@ const CardLibrary = () => {
       console.log(`🔄 [CARD LIBRARY] Загружаем страницу ${currentPage + 1}`);
       if (contentType === 'cards') {
         loadCards(currentPage + 1, true);
-      } else {
+      } else if (contentType === 'effects') {
         loadEffects(currentPage + 1, true);
+      } else if (contentType === 'actions') {
+        loadActions(currentPage + 1, true);
       }
     }
   };
@@ -287,6 +347,36 @@ const CardLibrary = () => {
     }
   };
 
+  // Обработчики для действий
+  const handleActionClick = (action: Action) => {
+    setSelectedAction(action);
+    setIsActionModalOpen(true);
+  };
+
+  const handleCloseActionModal = () => {
+    setIsActionModalOpen(false);
+    setSelectedAction(null);
+  };
+
+  const handleEditAction = (actionId: string) => {
+    setIsActionModalOpen(false);
+    window.location.href = `/action-creator?edit=${actionId}`;
+  };
+
+  const handleDeleteAction = async (actionId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить это действие?')) return;
+    
+    try {
+      await actionsApi.deleteAction(actionId);
+      if (contentType === 'actions') {
+        loadActions(1, false);
+      }
+      setIsActionModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления действия');
+    }
+  };
+
   // Получение типа эффекта для отображения
   const getEffectTypeLabel = (effectType: string) => {
     switch (effectType) {
@@ -299,6 +389,12 @@ const CardLibrary = () => {
       default:
         return effectType;
     }
+  };
+
+  // Получение метки ресурса действия для отображения
+  const getActionResourceLabel = (resource: string) => {
+    const option = ACTION_RESOURCE_OPTIONS.find(opt => opt.value === resource);
+    return option?.label || resource;
   };
 
   // Функция для получения цвета полоски редкости
@@ -349,7 +445,7 @@ const CardLibrary = () => {
       {/* Поиск и фильтры */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          {/* Переключатель предметы/эффекты */}
+          {/* Переключатель предметы/эффекты/действия */}
           <div className="flex items-center space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
             <button
               onClick={() => setContentType('cards')}
@@ -370,6 +466,16 @@ const CardLibrary = () => {
               }`}
             >
               Эффекты
+            </button>
+            <button
+              onClick={() => setContentType('actions')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                contentType === 'actions'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Действия
             </button>
           </div>
 
@@ -585,6 +691,15 @@ const CardLibrary = () => {
           <p className="text-gray-500 text-lg">Эффекты не найдены</p>
           <Link to="/effect-creator" className="btn-primary mt-4 inline-block">
             Создать первый эффект
+          </Link>
+        </div>
+      )}
+
+      {!loading && contentType === 'actions' && actions.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Действия не найдены</p>
+          <Link to="/action-creator" className="btn-primary mt-4 inline-block">
+            Создать первое действие
           </Link>
         </div>
       )}
@@ -829,6 +944,88 @@ const CardLibrary = () => {
         </>
       )}
 
+      {/* Отображение действий */}
+      {!loading && contentType === 'actions' && actions.length > 0 && (
+        <>
+          {/* Счетчик действий */}
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {actions.length} из {totalCards} действий
+          </div>
+          
+          {/* Отображение в зависимости от режима */}
+          {viewMode === 'grid' ? (
+            /* Сетка действий */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {actions.map((action) => (
+                <div key={action.id} className="flex justify-center">
+                  <ActionPreview action={action} onClick={() => handleActionClick(action)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Список действий */
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {actions.map((action) => (
+                  <button
+                    key={action.id}
+                    onClick={() => handleActionClick(action)}
+                    className="w-full text-left p-3 rounded-lg border-2 border-black bg-amber-900 text-white transition-all duration-200 hover:shadow-md hover:bg-amber-800"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* Маленькая картинка слева */}
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        {action.image_url && action.image_url.trim() !== '' ? (
+                          <img
+                            src={action.image_url}
+                            alt={action.name}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/default_image.png';
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src="/default_image.png"
+                            alt="Default D&D"
+                            className="w-full h-full object-contain opacity-50"
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Текст справа */}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate text-white">
+                          {action.name}
+                        </div>
+                        
+                        {/* Нижняя панель с ресурсом действия */}
+                        <div className="flex items-center mt-1 text-xs">
+                          <div className="text-amber-200">
+                            {getActionResourceLabel(action.resource)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Индикатор загрузки при автоматической подгрузке */}
+              {loadingMore && (
+                <div className="mt-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Загрузка действий...
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
       {/* Модальное окно с детальной информацией о карте */}
       <CardDetailModal
         card={selectedCard}
@@ -845,6 +1042,15 @@ const CardLibrary = () => {
         onClose={handleCloseEffectModal}
         onEdit={handleEditEffect}
         onDelete={handleDeleteEffect}
+      />
+
+      {/* Модальное окно с детальной информацией о действии */}
+      <ActionDetailModal
+        action={selectedAction}
+        isOpen={isActionModalOpen}
+        onClose={handleCloseActionModal}
+        onEdit={handleEditAction}
+        onDelete={handleDeleteAction}
       />
     </div>
   );

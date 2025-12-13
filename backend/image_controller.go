@@ -163,7 +163,7 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 
 	// Логируем генерацию изображения
 	ic.logImageGeneration(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
-	
+
 	// Автоматически добавляем в библиотеку изображений (для всех сгенерированных изображений)
 	ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
 
@@ -442,12 +442,45 @@ func (ic *ImageController) addToImageLibrary(entityType, entityID, cloudinaryID,
 	}
 
 	// Извлекаем данные для тегов
-	var cardName, cardRarity *string
+	var cardName, cardRarity, itemType, weaponType, armorType *string
+	var slot *EquipmentSlot
 	if nameVal, ok := entityInfo["name"].(string); ok && nameVal != "" {
 		cardName = &nameVal
 	}
 	if rarityVal, ok := entityInfo["rarity"].(string); ok && rarityVal != "" {
 		cardRarity = &rarityVal
+	}
+	if typeVal, ok := entityInfo["type"].(string); ok && typeVal != "" {
+		itemType = &typeVal
+	}
+	if weaponTypeVal, ok := entityInfo["weapon_type"].(string); ok && weaponTypeVal != "" {
+		weaponType = &weaponTypeVal
+	}
+	if slotVal, ok := entityInfo["slot"].(string); ok && slotVal != "" {
+		slotPtr := EquipmentSlot(slotVal)
+		slot = &slotPtr
+	}
+
+	// Определяем armor_type из properties
+	if propertiesVal, ok := entityInfo["properties"].([]interface{}); ok {
+		for _, prop := range propertiesVal {
+			if propStr, ok := prop.(string); ok {
+				switch propStr {
+				case "cloth":
+					armorTypeVal := "cloth"
+					armorType = &armorTypeVal
+				case "light_armor":
+					armorTypeVal := "light_armor"
+					armorType = &armorTypeVal
+				case "medium_armor":
+					armorTypeVal := "medium_armor"
+					armorType = &armorTypeVal
+				case "heavy_armor":
+					armorTypeVal := "heavy_armor"
+					armorType = &armorTypeVal
+				}
+			}
+		}
 	}
 
 	// Создаем запись для библиотеки
@@ -458,6 +491,10 @@ func (ic *ImageController) addToImageLibrary(entityType, entityID, cloudinaryID,
 		FileSize:         nil, // Размер файла не известен
 		CardName:         cardName,
 		CardRarity:       cardRarity,
+		ItemType:         itemType,
+		WeaponType:       weaponType,
+		ArmorType:        armorType,
+		Slot:             slot,
 		GenerationPrompt: &prompt,
 		GenerationModel:  &model,
 		GenerationTimeMs: &generationTime,
@@ -492,12 +529,45 @@ func (ic *ImageController) addUploadedImageToLibrary(entityType, entityID, cloud
 	}
 
 	// Извлекаем данные для тегов
-	var cardName, cardRarity *string
+	var cardName, cardRarity, itemType, weaponType, armorType *string
+	var slot *EquipmentSlot
 	if nameVal, ok := entityInfo["name"].(string); ok && nameVal != "" {
 		cardName = &nameVal
 	}
 	if rarityVal, ok := entityInfo["rarity"].(string); ok && rarityVal != "" {
 		cardRarity = &rarityVal
+	}
+	if typeVal, ok := entityInfo["type"].(string); ok && typeVal != "" {
+		itemType = &typeVal
+	}
+	if weaponTypeVal, ok := entityInfo["weapon_type"].(string); ok && weaponTypeVal != "" {
+		weaponType = &weaponTypeVal
+	}
+	if slotVal, ok := entityInfo["slot"].(string); ok && slotVal != "" {
+		slotPtr := EquipmentSlot(slotVal)
+		slot = &slotPtr
+	}
+
+	// Определяем armor_type из properties
+	if propertiesVal, ok := entityInfo["properties"].([]interface{}); ok {
+		for _, prop := range propertiesVal {
+			if propStr, ok := prop.(string); ok {
+				switch propStr {
+				case "cloth":
+					armorTypeVal := "cloth"
+					armorType = &armorTypeVal
+				case "light_armor":
+					armorTypeVal := "light_armor"
+					armorType = &armorTypeVal
+				case "medium_armor":
+					armorTypeVal := "medium_armor"
+					armorType = &armorTypeVal
+				case "heavy_armor":
+					armorTypeVal := "heavy_armor"
+					armorType = &armorTypeVal
+				}
+			}
+		}
 	}
 
 	// Создаем запись для библиотеки
@@ -509,6 +579,10 @@ func (ic *ImageController) addUploadedImageToLibrary(entityType, entityID, cloud
 		FileSize:         &fileSizeInt,
 		CardName:         cardName,
 		CardRarity:       cardRarity,
+		ItemType:         itemType,
+		WeaponType:       weaponType,
+		ArmorType:        armorType,
+		Slot:             slot,
 		GenerationPrompt: nil, // Для загруженных изображений
 		GenerationModel:  nil, // Для загруженных изображений
 		GenerationTimeMs: nil, // Для загруженных изображений

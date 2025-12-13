@@ -1,5 +1,6 @@
 import type { Action } from '../types';
 import { ACTION_RESOURCE_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { getAllCharges, getChargeById, getChargeImagePath } from '../utils/charges';
 
 interface ActionPreviewProps {
   action: Action;
@@ -20,6 +21,18 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick }
 
   const getActionTypeLabel = (actionType: string) => {
     return ACTION_TYPE_OPTIONS.find(opt => opt.value === actionType)?.label || actionType;
+  };
+
+  // Получаем ресурсы для отображения (используем resources если есть, иначе resource)
+  const getResourcesToDisplay = (): string[] => {
+    if (action.resources && action.resources.length > 0) {
+      return action.resources;
+    }
+    // Для обратной совместимости используем resource
+    if (action.resource) {
+      return [action.resource];
+    }
+    return [];
   };
 
   return (
@@ -54,12 +67,10 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick }
           </h3>
         </div>
 
-        {/* Тип действия и ресурс */}
+        {/* Тип действия */}
         <div className="mb-3">
           <span className="text-sm text-amber-200">
             {getActionTypeLabel(action.action_type)}
-            {action.resource && ` • ${getResourceLabel(action.resource)}`}
-            {action.recharge && ` • ${getRechargeLabel(action.recharge)}${action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : ''}`}
           </span>
         </div>
 
@@ -74,6 +85,76 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick }
           >
             {action.description || 'Нет описания'}
           </p>
+        </div>
+
+        {/* Разделительная линия */}
+        {(action.recharge || action.distance || getResourcesToDisplay().length > 0) && (
+          <div className="border-t border-white border-opacity-30 my-3"></div>
+        )}
+
+        {/* Дополнительная информация: перезарядка, дальность, ресурсы */}
+        <div className="space-y-1.5">
+          {/* Перезарядка */}
+          {action.recharge && (
+            <div className="flex items-center gap-2 text-white text-sm">
+              <img 
+                src="/charges/reload.png" 
+                alt="Перезарядка" 
+                className="w-4 h-4 object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+              <span>
+                {getRechargeLabel(action.recharge)}
+                {action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : ''}
+              </span>
+            </div>
+          )}
+
+          {/* Дальность */}
+          {action.distance && (
+            <div className="flex items-center gap-2 text-white text-sm">
+              <img 
+                src="/charges/distance.png" 
+                alt="Дальность" 
+                className="w-4 h-4 object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+              <span>{action.distance}</span>
+            </div>
+          )}
+
+          {/* Ресурсы */}
+          {getResourcesToDisplay().map((resourceId, index) => {
+            const charge = getChargeById(resourceId);
+            if (!charge) {
+              // Fallback для старых ресурсов
+              return (
+                <div key={index} className="flex items-center gap-2 text-white text-sm">
+                  <span>{getResourceLabel(resourceId)}</span>
+                </div>
+              );
+            }
+            return (
+              <div key={resourceId} className="flex items-center gap-2 text-white text-sm">
+                <img 
+                  src={getChargeImagePath(charge.image)} 
+                  alt={charge.russian_name} 
+                  className="w-4 h-4 object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                <span>{charge.russian_name}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Дополнительное описание, если включено */}

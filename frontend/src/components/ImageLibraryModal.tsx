@@ -1,18 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Filter, Trash2, Edit3, Check, X as XIcon } from 'lucide-react';
 import { getImageLibrary, deleteFromLibrary, updateImageLibrary, getRarities, ImageLibraryItem, ImageLibraryFilters } from '../api/imageLibraryApi';
+import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
+import { EQUIPMENT_SLOTS } from '../types';
 
 interface ImageLibraryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectImage: (image: ImageLibraryItem) => void;
+  // Опциональные фильтры для автоматического применения при открытии
+  initialFilters?: {
+    item_type?: string;
+    weapon_type?: string;
+    armor_type?: string;
+    slot?: string;
+    rarity?: string;
+  };
 }
 
-const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, onSelectImage }) => {
+const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, onSelectImage, initialFilters }) => {
   const [images, setImages] = useState<ImageLibraryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRarity, setSelectedRarity] = useState('');
+  const [selectedRarity, setSelectedRarity] = useState(initialFilters?.rarity || '');
+  const [selectedItemType, setSelectedItemType] = useState(initialFilters?.item_type || '');
+  const [selectedWeaponType, setSelectedWeaponType] = useState(initialFilters?.weapon_type || '');
+  const [selectedArmorType, setSelectedArmorType] = useState(initialFilters?.armor_type || '');
+  const [selectedSlot, setSelectedSlot] = useState(initialFilters?.slot || '');
   const [rarities, setRarities] = useState<string[]>([]);
   const [editingImage, setEditingImage] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ card_name: '', card_rarity: '' });
@@ -35,6 +49,10 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
         limit: filters.limit || pagination.limit,
         search: filters.search !== undefined ? filters.search : searchTerm,
         rarity: filters.rarity !== undefined ? filters.rarity : selectedRarity,
+        item_type: filters.item_type !== undefined ? filters.item_type : selectedItemType,
+        weapon_type: filters.weapon_type !== undefined ? filters.weapon_type : selectedWeaponType,
+        armor_type: filters.armor_type !== undefined ? filters.armor_type : selectedArmorType,
+        slot: filters.slot !== undefined ? filters.slot : selectedSlot,
       });
       
       if (append) {
@@ -78,7 +96,21 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   // Инициализация
   useEffect(() => {
     if (isOpen) {
-      loadImages();
+      // Применяем начальные фильтры при открытии
+      if (initialFilters) {
+        if (initialFilters.rarity) setSelectedRarity(initialFilters.rarity);
+        if (initialFilters.item_type) setSelectedItemType(initialFilters.item_type);
+        if (initialFilters.weapon_type) setSelectedWeaponType(initialFilters.weapon_type);
+        if (initialFilters.armor_type) setSelectedArmorType(initialFilters.armor_type);
+        if (initialFilters.slot) setSelectedSlot(initialFilters.slot);
+      }
+      loadImages({
+        rarity: initialFilters?.rarity,
+        item_type: initialFilters?.item_type,
+        weapon_type: initialFilters?.weapon_type,
+        armor_type: initialFilters?.armor_type,
+        slot: initialFilters?.slot,
+      });
       loadRarities();
     }
   }, [isOpen]);
@@ -110,15 +142,35 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   // Поиск
   const handleSearch = () => {
     setHasMore(true);
-    loadImages({ page: 1, search: searchTerm, rarity: selectedRarity });
+    loadImages({ 
+      page: 1, 
+      search: searchTerm, 
+      rarity: selectedRarity,
+      item_type: selectedItemType,
+      weapon_type: selectedWeaponType,
+      armor_type: selectedArmorType,
+      slot: selectedSlot,
+    });
   };
 
   // Сброс фильтров
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedRarity('');
+    setSelectedItemType('');
+    setSelectedWeaponType('');
+    setSelectedArmorType('');
+    setSelectedSlot('');
     setHasMore(true);
-    loadImages({ page: 1, search: '', rarity: '' });
+    loadImages({ 
+      page: 1, 
+      search: '', 
+      rarity: '',
+      item_type: '',
+      weapon_type: '',
+      armor_type: '',
+      slot: '',
+    });
   };
 
   // Удаление изображения
@@ -224,6 +276,59 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
                 {rarities.map((rarity) => (
                   <option key={rarity} value={rarity}>
                     {rarity}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="min-w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип предмета
+              </label>
+              <select
+                value={selectedItemType}
+                onChange={(e) => setSelectedItemType(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Все типы</option>
+                {ITEM_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="min-w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип брони
+              </label>
+              <select
+                value={selectedArmorType}
+                onChange={(e) => setSelectedArmorType(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Все типы</option>
+                <option value="cloth">Ткань</option>
+                <option value="light_armor">Легкая броня</option>
+                <option value="medium_armor">Средняя броня</option>
+                <option value="heavy_armor">Тяжелая броня</option>
+              </select>
+            </div>
+
+            <div className="min-w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Слот экипировки
+              </label>
+              <select
+                value={selectedSlot}
+                onChange={(e) => setSelectedSlot(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Все слоты</option>
+                {EQUIPMENT_SLOTS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>

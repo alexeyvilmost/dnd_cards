@@ -27,6 +27,7 @@ import CharactersV3 from './pages/CharactersV3';
 import CharacterDetailV3 from './pages/CharacterDetailV3';
 import CreateCharacterV3 from './pages/CreateCharacterV3';
 import DiceRoller from './pages/DiceRoller';
+import DiceTest from './pages/DiceTest';
 import CardTypeSelection from './pages/CardTypeSelection';
 import WeaponSelection from './pages/WeaponSelection';
 import EquipmentSelection from './pages/EquipmentSelection';
@@ -272,6 +273,15 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <DiceRoller />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        
+        {/* Dice Test route */}
+        <Route path="/dice-test" element={
+          <ProtectedRoute>
+            <Layout>
+              <DiceTest />
             </Layout>
           </ProtectedRoute>
         } />

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -27,6 +28,10 @@ func (c *ImageLibraryController) GetImageLibrary(ctx *gin.Context) {
 	// Параметры фильтрации
 	search := ctx.Query("search")
 	rarity := ctx.Query("rarity")
+	itemType := ctx.Query("item_type")
+	weaponType := ctx.Query("weapon_type")
+	armorType := ctx.Query("armor_type")
+	slot := ctx.Query("slot")
 
 	// Строим запрос
 	query := c.db.Model(&ImageLibrary{}).Where("deleted_at IS NULL")
@@ -39,6 +44,26 @@ func (c *ImageLibraryController) GetImageLibrary(ctx *gin.Context) {
 	// Фильтр по редкости
 	if rarity != "" {
 		query = query.Where("card_rarity = ?", rarity)
+	}
+
+	// Фильтр по типу предмета
+	if itemType != "" {
+		query = query.Where("item_type = ?", itemType)
+	}
+
+	// Фильтр по типу оружия
+	if weaponType != "" {
+		query = query.Where("weapon_type = ?", weaponType)
+	}
+
+	// Фильтр по типу брони
+	if armorType != "" {
+		query = query.Where("armor_type = ?", armorType)
+	}
+
+	// Фильтр по слоту экипировки
+	if slot != "" {
+		query = query.Where("slot = ?", slot)
 	}
 
 	// Получаем общее количество
@@ -65,15 +90,19 @@ func (c *ImageLibraryController) GetImageLibrary(ctx *gin.Context) {
 // AddToLibrary добавляет изображение в библиотеку
 func (c *ImageLibraryController) AddToLibrary(ctx *gin.Context) {
 	var req struct {
-		CloudinaryID     string  `json:"cloudinary_id" binding:"required"`
-		CloudinaryURL    string  `json:"cloudinary_url" binding:"required"`
-		OriginalName     *string `json:"original_name"`
-		FileSize         *int    `json:"file_size"`
-		CardName         *string `json:"card_name"`
-		CardRarity       *string `json:"card_rarity"`
-		GenerationPrompt *string `json:"generation_prompt"`
-		GenerationModel  *string `json:"generation_model"`
-		GenerationTimeMs *int    `json:"generation_time_ms"`
+		CloudinaryID     string         `json:"cloudinary_id" binding:"required"`
+		CloudinaryURL    string         `json:"cloudinary_url" binding:"required"`
+		OriginalName     *string        `json:"original_name"`
+		FileSize         *int           `json:"file_size"`
+		CardName         *string        `json:"card_name"`
+		CardRarity       *string        `json:"card_rarity"`
+		ItemType         *string        `json:"item_type"`
+		WeaponType       *string        `json:"weapon_type"`
+		ArmorType        *string        `json:"armor_type"`
+		Slot             *EquipmentSlot `json:"slot"`
+		GenerationPrompt *string        `json:"generation_prompt"`
+		GenerationModel  *string        `json:"generation_model"`
+		GenerationTimeMs *int           `json:"generation_time_ms"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -96,6 +125,10 @@ func (c *ImageLibraryController) AddToLibrary(ctx *gin.Context) {
 		FileSize:         req.FileSize,
 		CardName:         req.CardName,
 		CardRarity:       req.CardRarity,
+		ItemType:         req.ItemType,
+		WeaponType:       req.WeaponType,
+		ArmorType:        req.ArmorType,
+		Slot:             req.Slot,
 		GenerationPrompt: req.GenerationPrompt,
 		GenerationModel:  req.GenerationModel,
 		GenerationTimeMs: req.GenerationTimeMs,
@@ -195,4 +228,71 @@ func (c *ImageLibraryController) GetRarities(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"rarities": rarities})
+}
+
+// UpdateImageLibraryFromCards обновляет записи в библиотеке изображений на основе данных из таблицы cards
+func (c *ImageLibraryController) UpdateImageLibraryFromCards(ctx *gin.Context) {
+	// Обновляем item_type, weapon_type, slot из карт
+	if err := c.db.Exec(`
+		UPDATE image_library il
+		SET 
+			item_type = c.type,
+			weapon_type = c.weapon_type,
+			slot = c.slot,
+			updated_at = CURRENT_TIMESTAMP
+		FROM cards c
+		WHERE il.cloudinary_id = c.image_cloudinary_id
+		  AND c.deleted_at IS NULL
+		  AND il.deleted_at IS NULL
+		  AND (
+			c.type IS NOT NULL 
+			OR c.weapon_type IS NOT NULL 
+			OR c.slot IS NOT NULL
+		  )
+	`).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка обновления типов: %v", err)})
+		return
+	}
+
+	// Обновляем armor_type из properties карт
+	// Используем функцию check_property_contains для безопасной проверки
+	armorTypes := []struct {
+		prop      string
+		armorType string
+	}{
+		{"cloth", "cloth"},
+		{"light_armor", "light_armor"},
+		{"medium_armor", "medium_armor"},
+		{"heavy_armor", "heavy_armor"},
+	}
+
+	for _, at := range armorTypes {
+		// Используем безопасный подход с проверкой JSON и массива
+		if err := c.db.Exec(fmt.Sprintf(`
+			UPDATE image_library il
+			SET 
+				armor_type = '%s',
+				updated_at = CURRENT_TIMESTAMP
+			FROM cards c
+			WHERE il.cloudinary_id = c.image_cloudinary_id
+			  AND c.deleted_at IS NULL
+			  AND il.deleted_at IS NULL
+			  AND c.properties IS NOT NULL
+			  AND (
+				(c.properties::text LIKE '[%%' AND c.properties::jsonb @> '["%s"]'::jsonb)
+				OR
+				(c.properties::text LIKE '{%%' AND ARRAY['%s']::text[] <@ c.properties::text[])
+				OR
+				(c.properties::text LIKE '%%"%s"%%')
+			  )
+		`, at.armorType, at.prop, at.prop, at.prop)).Error; err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка обновления типа брони %s: %v", at.armorType, err)})
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Библиотека изображений успешно обновлена",
+		"updated": true,
+	})
 }

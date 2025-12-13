@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { actionsApi } from '../api/client';
 import type { CreateActionRequest } from '../types';
-import { RARITY_OPTIONS, ACTION_RESOURCE_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { RARITY_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { getAllCharges } from '../utils/charges';
 import ActionPreview from '../components/ActionPreview';
 import ImageUploader from '../components/ImageUploader';
 
@@ -13,8 +14,18 @@ const ActionCreator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
 
+  const charges = getAllCharges();
   const formData = watch();
+
+  // Обновляем selectedResources при изменении formData.resources
+  useEffect(() => {
+    if (formData.resources && Array.isArray(formData.resources)) {
+      setSelectedResources(formData.resources);
+    }
+  }, [formData.resources]);
+
   const previewAction = {
     id: '',
     name: formData.name || 'Название действия',
@@ -24,6 +35,8 @@ const ActionCreator = () => {
     rarity: formData.rarity || 'common',
     card_number: formData.card_number || '',
     resource: formData.resource || 'action',
+    resources: selectedResources.length > 0 ? selectedResources : null,
+    distance: formData.distance || null,
     recharge: formData.recharge || null,
     recharge_custom: formData.recharge_custom || null,
     script: formData.script || null,
@@ -46,6 +59,14 @@ const ActionCreator = () => {
     updated_at: '',
   };
 
+  const toggleResource = (resourceId: string) => {
+    const newResources = selectedResources.includes(resourceId)
+      ? selectedResources.filter(id => id !== resourceId)
+      : [...selectedResources, resourceId];
+    setSelectedResources(newResources);
+    setValue('resources', newResources.length > 0 ? newResources : null);
+  };
+
   // Проверка уникальности ID (проверяем по card_number через API)
   const checkIdUniqueness = async (id: string): Promise<boolean> => {
     if (!id || id.trim() === '') return true; // Пустой ID допустим
@@ -66,6 +87,13 @@ const ActionCreator = () => {
     setError(null);
     setIdError(null);
 
+    // Проверка выбора ресурсов
+    if (selectedResources.length === 0) {
+      setError('Выберите хотя бы один ресурс');
+      setLoading(false);
+      return;
+    }
+
     // Проверка уникальности ID, если он указан
     if (data.card_number && data.card_number.trim() !== '') {
       const idRegex = /^[a-zA-Z0-9_-]{1,30}$/;
@@ -84,7 +112,12 @@ const ActionCreator = () => {
     }
 
     try {
-      const created = await actionsApi.createAction(data);
+      // Добавляем resources в данные перед отправкой
+      const submitData = {
+        ...data,
+        resources: selectedResources.length > 0 ? selectedResources : null,
+      };
+      const created = await actionsApi.createAction(submitData);
       navigate(`/action/${created.id}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка создания действия');
@@ -148,18 +181,56 @@ const ActionCreator = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ресурс *
+                  Ресурсы (можно выбрать несколько) *
                 </label>
-                <select
-                  {...register('resource', { required: 'Ресурс обязателен' })}
+                <div className="space-y-2 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  {charges.map((charge) => {
+                    const isSelected = selectedResources.includes(charge.id);
+                    return (
+                      <label
+                        key={charge.id}
+                        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleResource(charge.id)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <div className="flex items-center space-x-2 flex-1">
+                          <img 
+                            src={`/charges/${charge.image}`} 
+                            alt={charge.russian_name}
+                            className="w-6 h-6 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{charge.russian_name}</div>
+                            <div className="text-xs text-gray-500">{charge.description}</div>
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                {selectedResources.length === 0 && (
+                  <p className="text-red-500 text-sm mt-1">Выберите хотя бы один ресурс</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дальность
+                </label>
+                <input
+                  {...register('distance')}
+                  type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {ACTION_RESOURCE_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Например: 30 фт., касание, 60 фт."
+                />
               </div>
 
               <div>

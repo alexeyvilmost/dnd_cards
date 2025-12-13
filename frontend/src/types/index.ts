@@ -589,6 +589,8 @@ export interface Action {
   rarity: Rarity;
   card_number: string;
   resource: ActionResource;
+  resources?: string[] | null; // Массив ID ресурсов из charges.json
+  distance?: string | null; // Дальность действия
   recharge?: ActionRecharge | null;
   recharge_custom?: string | null;
   script?: Record<string, any> | null;
@@ -619,7 +621,9 @@ export interface CreateActionRequest {
   detailed_description?: string | null;
   image_url?: string;
   rarity: Rarity;
-  resource: ActionResource;
+  resource?: ActionResource; // Оставляем для обратной совместимости
+  resources?: string[] | null; // Массив ID ресурсов из charges.json
+  distance?: string | null; // Дальность действия
   recharge?: ActionRecharge | null;
   recharge_custom?: string | null;
   script?: Record<string, any> | null;
@@ -649,6 +653,8 @@ export interface UpdateActionRequest {
   image_url?: string;
   rarity?: Rarity;
   resource?: ActionResource;
+  resources?: string[] | null; // Массив ID ресурсов из charges.json
+  distance?: string | null; // Дальность действия
   recharge?: ActionRecharge | null;
   recharge_custom?: string | null;
   script?: Record<string, any> | null;

@@ -14,7 +14,8 @@ RUN npm config set cache /tmp/.npm && \
     npm config set fetch-retries 3
 
 # Устанавливаем зависимости с кэшированием
-RUN npm ci --only=production --no-audit --no-fund || npm install --no-audit --no-fund
+# Используем npm ci если есть package-lock.json, иначе npm install
+RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 
 # Копируем исходный код
 COPY . .
@@ -24,4 +25,3 @@ EXPOSE 3000
 
 # Запускаем приложение в режиме разработки
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
-

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../api/client';
-import { ArrowLeft, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, X, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { getAllBackstories, getBackstoryByRussianName, type Backstory } from '../utils/backstories';
 import { getAllRaces, getRaceByRussianName, type Race } from '../utils/races';
 import { getAllClasses, getClass, getClassByRussianName, type Class } from '../utils/classes';
@@ -85,6 +85,9 @@ const CreateCharacterV3: React.FC = () => {
     wisdom: 8,
     charisma: 8
   });
+  
+  // Состояние для отслеживания развернутых блоков (только один может быть открыт)
+  const [expandedSection, setExpandedSection] = useState<'background' | 'race' | 'class' | null>(null);
 
   const POINT_BUY_TOTAL = 27;
 
@@ -113,6 +116,7 @@ const CreateCharacterV3: React.FC = () => {
     if (!selectedRace) return null;
     return getRaceByRussianName(selectedRace) || null;
   }, [selectedRace]);
+
 
   // Инициализация характеристик при выборе класса
   useEffect(() => {
@@ -610,7 +614,10 @@ const CreateCharacterV3: React.FC = () => {
                     {backgrounds.map((bg) => (
                       <div
                         key={bg.name}
-                        onClick={() => setSelectedBackground(bg.russian_name)}
+                        onClick={() => {
+                          setSelectedBackground(bg.russian_name);
+                          setExpandedSection('background');
+                        }}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                           selectedBackground === bg.russian_name
                             ? 'border-blue-600 bg-blue-50'
@@ -634,7 +641,10 @@ const CreateCharacterV3: React.FC = () => {
                     {races.map((race) => (
                       <div
                         key={race.name}
-                        onClick={() => setSelectedRace(race.russian_name)}
+                        onClick={() => {
+                          setSelectedRace(race.russian_name);
+                          setExpandedSection('race');
+                        }}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                           selectedRace === race.russian_name
                             ? 'border-blue-600 bg-blue-50'
@@ -663,6 +673,7 @@ const CreateCharacterV3: React.FC = () => {
                         onClick={() => {
                           setSelectedClass(cls.name);
                           setSelectedClassData(cls);
+                          setExpandedSection('class');
                         }}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                           selectedClass === cls.name
@@ -779,8 +790,21 @@ const CreateCharacterV3: React.FC = () => {
               <div className="space-y-6">
                 {/* Выбранная предыстория */}
                 {selectedBackstoryData && (
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-3">Предыстория: {selectedBackstoryData.russian_name}</h4>
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSection(expandedSection === 'background' ? null : 'background')}
+                      className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
+                    >
+                      <h4 className="font-semibold text-gray-900">Предыстория: {selectedBackstoryData.russian_name}</h4>
+                      {expandedSection === 'background' ? (
+                        <ChevronDown size={20} className="text-gray-500" />
+                      ) : (
+                        <ChevronRight size={20} className="text-gray-500" />
+                      )}
+                    </button>
+                    {expandedSection === 'background' && (
+                      <div className="p-4 border-t border-gray-200">
                     
                     {/* Навыки */}
                     {selectedBackstoryData.skill_proficiencies && selectedBackstoryData.skill_proficiencies.length > 0 && (
@@ -904,13 +928,28 @@ const CreateCharacterV3: React.FC = () => {
                         </div>
                       </div>
                     )}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Выбранная раса */}
                 {selectedRaceData && (
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-3">Раса: {selectedRaceData.russian_name}</h4>
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSection(expandedSection === 'race' ? null : 'race')}
+                      className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
+                    >
+                      <h4 className="font-semibold text-gray-900">Раса: {selectedRaceData.russian_name}</h4>
+                      {expandedSection === 'race' ? (
+                        <ChevronDown size={20} className="text-gray-500" />
+                      ) : (
+                        <ChevronRight size={20} className="text-gray-500" />
+                      )}
+                    </button>
+                    {expandedSection === 'race' && (
+                      <div className="p-4 border-t border-gray-200">
                     
                     {/* Бонусы характеристик */}
                     {selectedRaceData.ability_scores && Object.keys(selectedRaceData.ability_scores).length > 0 && (
@@ -1050,13 +1089,28 @@ const CreateCharacterV3: React.FC = () => {
                         <p className="text-sm text-gray-600">{selectedRaceData.speed} фт.</p>
                       </div>
                     )}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Выбранный класс */}
                 {selectedClassData && (
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-3">Класс: {selectedClassData.russian_name}</h4>
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSection(expandedSection === 'class' ? null : 'class')}
+                      className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
+                    >
+                      <h4 className="font-semibold text-gray-900">Класс: {selectedClassData.russian_name}</h4>
+                      {expandedSection === 'class' ? (
+                        <ChevronDown size={20} className="text-gray-500" />
+                      ) : (
+                        <ChevronRight size={20} className="text-gray-500" />
+                      )}
+                    </button>
+                    {expandedSection === 'class' && (
+                      <div className="p-4 border-t border-gray-200">
                     
                     {selectedClassData.description && (
                       <p className="text-sm text-gray-600 mb-3">{selectedClassData.description}</p>
@@ -1261,6 +1315,8 @@ const CreateCharacterV3: React.FC = () => {
                             )}
                           </div>
                         ))}
+                      </div>
+                    )}
                       </div>
                     )}
                   </div>

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ItemSelector from '../components/ItemSelector';
 import CardPreview from '../components/CardPreview';
 import CardDetailModal from '../components/CardDetailModal';
+import Dice3D from '../components/Dice3D';
 import { Card } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { getRussianName } from '../utils/russianTranslations';
@@ -795,90 +796,6 @@ const CharacterDetailV3: React.FC = () => {
   };
 
   // Компонент анимированного кубика
-  const AnimatedDice = ({ 
-    isRolling, 
-    finalValue, 
-    isSelected = false, 
-    isAdvantage = false, 
-    isDisadvantage = false 
-  }: { 
-    isRolling: boolean; 
-    finalValue: number; 
-    isSelected?: boolean;
-    isAdvantage?: boolean;
-    isDisadvantage?: boolean;
-  }) => {
-    const [displayValue, setDisplayValue] = useState(1);
-    
-    useEffect(() => {
-      if (isRolling) {
-        const interval = setInterval(() => {
-          setDisplayValue(Math.floor(Math.random() * 20) + 1);
-        }, 100); // Меняем число каждые 100мс
-        
-        return () => clearInterval(interval);
-      } else {
-        setDisplayValue(finalValue);
-      }
-    }, [isRolling, finalValue]);
-    
-    
-    return (
-      <div className="relative w-20 h-16 flex items-center justify-center">
-        <svg width="80" height="64" viewBox="0 0 80 64" className="absolute inset-0">
-          <defs>
-            <filter id="hexagon-shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.1)"/>
-            </filter>
-          </defs>
-          <polygon
-            points="40,4 65,16 65,48 40,60 15,48 15,16"
-            fill={
-              isRolling
-                ? "#f3f4f6"
-                : displayValue === 1
-                  ? "#7f1d1d"
-                  : displayValue === 20
-                    ? "#166534"
-                    : "#f3f4f6"
-            }
-            stroke={
-              isSelected && !isRolling
-                ? isAdvantage
-                  ? "#10b981"
-                  : isDisadvantage
-                    ? "#ef4444"
-                    : "#9ca3af"
-                : isRolling
-                  ? "#9ca3af"
-                  : displayValue === 1
-                    ? "#991b1b"
-                    : displayValue === 20
-                      ? "#15803d"
-                      : "#9ca3af"
-            }
-            strokeWidth={isSelected && !isRolling ? "4" : "2"}
-            filter="url(#hexagon-shadow)"
-          />
-        </svg>
-        <div className={`relative z-10 text-2xl font-bold ${
-          isRolling
-            ? "text-gray-800"
-            : displayValue === 0
-              ? "text-gray-600"
-              : displayValue === 1
-                ? "text-red-100"
-                : displayValue === 20
-                  ? "text-green-100"
-                  : "text-gray-800"
-        }`}>
-          <span className={isRolling ? 'animate-pulse' : ''}>
-            {displayValue === 0 ? '?' : displayValue}
-          </span>
-        </div>
-      </div>
-    );
-  };
 
   // Компонент анимированного финального результата
   const AnimatedFinalResult = ({ isRolling, finalValue, skillBonus }: { isRolling: boolean; finalValue: number; skillBonus: number }) => {
@@ -3088,23 +3005,11 @@ const CharacterDetailV3: React.FC = () => {
               {/* Кубики */}
               <div className="flex items-center space-x-2">
                 {/* Первый кубик */}
-                <AnimatedDice
-                  isRolling={diceResult.isRolling}
-                  finalValue={diceResult.diceRoll}
-                  isSelected={diceResult.rollType === 'normal' || (diceResult.rollType === 'advantage' && diceResult.diceRoll === diceResult.selectedDice) || (diceResult.rollType === 'disadvantage' && diceResult.diceRoll === diceResult.selectedDice)}
-                  isAdvantage={diceResult.rollType === 'advantage' && diceResult.diceRoll === diceResult.selectedDice}
-                  isDisadvantage={diceResult.rollType === 'disadvantage' && diceResult.diceRoll === diceResult.selectedDice}
-                />
+                <Dice3D />
                 
                 {/* Второй кубик (только для преимущества/помехи) */}
                 {diceResult.rollType !== 'normal' && diceResult.secondDice && (
-                  <AnimatedDice
-                    isRolling={diceResult.isRolling}
-                    finalValue={diceResult.secondDice}
-                    isSelected={(diceResult.rollType === 'advantage' && diceResult.secondDice === diceResult.selectedDice) || (diceResult.rollType === 'disadvantage' && diceResult.secondDice === diceResult.selectedDice)}
-                    isAdvantage={diceResult.rollType === 'advantage' && diceResult.secondDice === diceResult.selectedDice}
-                    isDisadvantage={diceResult.rollType === 'disadvantage' && diceResult.secondDice === diceResult.selectedDice}
-                  />
+                  <Dice3D />
                 )}
               </div>
               

@@ -222,6 +222,7 @@ func main() {
 			protected.PUT("/image-library/:id", imageLibraryController.UpdateImageLibrary)
 			protected.DELETE("/image-library/:id", imageLibraryController.DeleteFromLibrary)
 			protected.GET("/image-library/rarities", imageLibraryController.GetRarities)
+			protected.POST("/image-library/update-from-cards", imageLibraryController.UpdateImageLibraryFromCards)
 		}
 	}
 

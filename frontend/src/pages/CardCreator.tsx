@@ -407,13 +407,7 @@ const CardCreator = () => {
   // Функция для выбора изображения из библиотеки
   const handleSelectFromLibrary = (image: ImageLibraryItem) => {
     setCardImage(image.cloudinary_url);
-    // Автоматически заполняем название и редкость, если они пустые
-    if (!memoizedWatchedValues.name && image.card_name) {
-      setValue('name', image.card_name);
-    }
-    if (!memoizedWatchedValues.rarity && image.card_rarity) {
-      setValue('rarity', image.card_rarity);
-    }
+    // Не заполняем название и редкость автоматически
   };
 
   // Загружаем изображение из шаблона, если оно есть
@@ -607,6 +601,20 @@ const CardCreator = () => {
         isOpen={showImageLibrary}
         onClose={() => setShowImageLibrary(false)}
         onSelectImage={handleSelectFromLibrary}
+        initialFilters={{
+          item_type: watchedValues.type || undefined,
+          weapon_type: watchedValues.weapon_type || undefined,
+          slot: watchedValues.slot || undefined,
+          armor_type: (() => {
+            // Определяем armor_type из properties
+            const properties = watchedValues.properties || [];
+            if (properties.includes('cloth')) return 'cloth';
+            if (properties.includes('light_armor')) return 'light_armor';
+            if (properties.includes('medium_armor')) return 'medium_armor';
+            if (properties.includes('heavy_armor')) return 'heavy_armor';
+            return undefined;
+          })(),
+        }}
       />
       </div>
     </div>

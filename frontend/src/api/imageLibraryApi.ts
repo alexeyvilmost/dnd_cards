@@ -61,6 +61,10 @@ export interface ImageLibraryFilters {
   limit?: number;
   search?: string;
   rarity?: string;
+  item_type?: string;
+  weapon_type?: string;
+  armor_type?: string;
+  slot?: string;
 }
 
 export interface AddToLibraryRequest {
@@ -92,6 +96,10 @@ export const getImageLibrary = async (filters: ImageLibraryFilters = {}): Promis
   if (filters.limit) params.append('limit', filters.limit.toString());
   if (filters.search) params.append('search', filters.search);
   if (filters.rarity) params.append('rarity', filters.rarity);
+  if (filters.item_type) params.append('item_type', filters.item_type);
+  if (filters.weapon_type) params.append('weapon_type', filters.weapon_type);
+  if (filters.armor_type) params.append('armor_type', filters.armor_type);
+  if (filters.slot) params.append('slot', filters.slot);
 
   const response = await api.get(`/api/image-library?${params.toString()}`);
   return response.data;

@@ -128,6 +128,12 @@ func GetAllMigrations() []Migration {
 			Up:          addCharacterV3ProficienciesFields,
 			Down:        removeCharacterV3ProficienciesFields,
 		},
+		{
+			Version:     "021_add_image_library_item_fields",
+			Description: "Add item_type, weapon_type, armor_type, slot fields to image_library table",
+			Up:          addImageLibraryItemFields,
+			Down:        removeImageLibraryItemFields,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1146,6 +1152,48 @@ func removeCharacterV3ProficienciesFields(db *sql.DB) error {
 		"ALTER TABLE characters DROP COLUMN IF EXISTS language_proficiencies",
 		"ALTER TABLE characters DROP COLUMN IF EXISTS damage_resistances",
 		"ALTER TABLE characters DROP COLUMN IF EXISTS weapon_proficiencies",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// addImageLibraryItemFields добавляет поля item_type, weapon_type, armor_type, slot в таблицу image_library
+func addImageLibraryItemFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE image_library ADD COLUMN IF NOT EXISTS item_type VARCHAR(50)",
+		"ALTER TABLE image_library ADD COLUMN IF NOT EXISTS weapon_type VARCHAR(50)",
+		"ALTER TABLE image_library ADD COLUMN IF NOT EXISTS armor_type VARCHAR(50)",
+		"ALTER TABLE image_library ADD COLUMN IF NOT EXISTS slot VARCHAR(20)",
+		"CREATE INDEX IF NOT EXISTS idx_image_library_item_type ON image_library(item_type)",
+		"CREATE INDEX IF NOT EXISTS idx_image_library_weapon_type ON image_library(weapon_type)",
+		"CREATE INDEX IF NOT EXISTS idx_image_library_armor_type ON image_library(armor_type)",
+		"CREATE INDEX IF NOT EXISTS idx_image_library_slot ON image_library(slot)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeImageLibraryItemFields удаляет поля item_type, weapon_type, armor_type, slot из таблицы image_library
+func removeImageLibraryItemFields(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_image_library_slot",
+		"DROP INDEX IF EXISTS idx_image_library_armor_type",
+		"DROP INDEX IF EXISTS idx_image_library_weapon_type",
+		"DROP INDEX IF EXISTS idx_image_library_item_type",
+		"ALTER TABLE image_library DROP COLUMN IF EXISTS slot",
+		"ALTER TABLE image_library DROP COLUMN IF EXISTS armor_type",
+		"ALTER TABLE image_library DROP COLUMN IF EXISTS weapon_type",
+		"ALTER TABLE image_library DROP COLUMN IF EXISTS item_type",
 	}
 
 	for _, query := range queries {

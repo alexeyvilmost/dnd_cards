@@ -1,0 +1,44 @@
+{
+    "charges": [
+        {
+            "id": "main_action",
+            "name": "Main Action",
+            "russian_name": "Основное действие",
+            "description": "Вы можете использовать это действие раз в ход.",
+            "cooldown": "per_turn",
+            "image": "main_action.png"
+        },
+        {
+            "id": "free_action",
+            "name": "Free Action",
+            "russian_name": "Свободное действие",
+            "description": "Вы можете использовать это действие раз в ход.",
+            "cooldown": "per_turn",
+            "image": "free_action.png"
+        },
+        {
+            "id": "bonus_action",
+            "name": "Bonus Action",
+            "russian_name": "Бонусное действие",
+            "description": "Вы можете использовать это действие раз в ход.",
+            "cooldown": "per_turn",
+            "image": "bonus_action.png"
+        },
+        {
+            "id": "reaction",
+            "name": "Reaction Action",
+            "russian_name": "Ответное действие",
+            "description": "Вы можете использовать это действие в ответ на действие другого персонажа.",
+            "cooldown": "per_turn",
+            "image": "reaction_action.png"
+        },
+        {
+            "id": "rage_charge",
+            "name": "Rage Charge",
+            "russian_name": "Заряд ярости",
+            "description": "Ресурс для использования Ярости",
+            "cooldown": "per_long_rest",
+            "image": "rage_charge.png"
+        }
+    ]
+}
