@@ -19,11 +19,19 @@ yarn install
 
 ### 2. Настройка переменных окружения
 
-Создайте файл `.env` в корне frontend папки:
+По умолчанию фронтенд использует Railway production backend: `https://backend-production-41c3.up.railway.app`
+
+Для локальной разработки создайте файл `.env` в корне frontend папки:
 
 ```env
 VITE_API_URL=http://localhost:8080
 ```
+
+**Быстрое переключение:**
+- **Production (Railway)**: удалите или закомментируйте `VITE_API_URL` в `.env`
+- **Localhost**: установите `VITE_API_URL=http://localhost:8080` в `.env`
+
+Также можно изменить прокси в `vite.config.ts` для dev-сервера (см. комментарии в файле).
 
 ### 3. Запуск в режиме разработки
 

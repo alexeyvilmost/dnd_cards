@@ -14,8 +14,11 @@ export default defineConfig({
     ],
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // Railway production URL по умолчанию
+        // Для локальной разработки замените на: target: 'http://localhost:8080'
+        target: 'https://backend-production-41c3.up.railway.app',
         changeOrigin: true,
+        secure: true, // Для HTTPS
       },
     },
   },

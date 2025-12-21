@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+// Railway production URL по умолчанию, можно переопределить через VITE_API_URL
+// Для локальной разработки установите: VITE_API_URL=http://localhost:8080
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-production-41c3.up.railway.app';
 
 // Создаем экземпляр axios с базовой конфигурацией
 const api = axios.create({
