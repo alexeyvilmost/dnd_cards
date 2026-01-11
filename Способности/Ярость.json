@@ -1,0 +1,53 @@
+{
+    "name": "Ярость",
+    "type": "ability",
+    "is_active": true,
+    "charges": 2,
+    "reload": "long_rest",
+    "cost": "bonus_action",
+    "duration": "10_rounds",
+    "description": "Вы можете использовать эту способность 2 раза в длинный отдых. Вы получаете +1 к урону за каждый заряд ярости.",
+    "rage_damage_modifier": 2,
+    "effects": [
+        {
+            "target": "self",
+            "type": "roll_modifier",
+            "roll_type": "skill_check",
+            "skills": [
+                "athletics"
+            ],
+            "modifier": "advantage"
+        },
+        {
+            "target": "self",
+            "type": "roll_modifier",
+            "roll_type": "saving_throw",
+            "saving_throws": [
+                "strength"
+            ],
+            "modifier": "advantage"
+        },
+        {
+            "target": "self",
+            "type": "roll_modifier",
+            "roll_type": "damage",
+            "modifier": "+{rage_damage_modifier}",
+            "limits": {
+                "weapon_properties": {
+                    "finesse": false,
+                    "thrown": false,
+                    "long_range": false
+                }
+            }
+        },
+        {
+            "target": "self",
+            "type": "resistance",
+            "resistance_types": [
+                "bludgeoning",
+                "piercing",
+                "slashing"
+            ]
+        }
+    ]
+}

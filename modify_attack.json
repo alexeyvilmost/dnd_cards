@@ -1,0 +1,32 @@
+[
+    {
+        "type": "attack_modifier",
+        "attack_range": "melee",
+        "attack_type": "weapon",
+        "modifies": "damage_dices",
+        "modifier_type": "replace",
+        "replace_priority": 1,
+        "damage_dices": [
+            {
+                "dices": "1d8",
+                "type": "bludgeoning"
+            }
+        ]
+    },
+    {
+        "type": "attack_modifier",
+        "attack_range": "melee",
+        "attack_type": "weapon",
+        "modifies": "attack_roll",
+        "modifier_type": "add",
+        "modifier": "+2"
+    },
+    {
+        "type": "attack_modifier",
+        "attack_range": "melee",
+        "attack_type": "weapon",
+        "modifies": "damage_roll",
+        "modifier_type": "add",
+        "modifier": "+2"
+    }
+]

@@ -1,0 +1,41 @@
+[
+    {
+        "name": "rage_damage_modifier",
+        "type": "attack_modifier",
+        "attack_range": "melee",
+        "attack_type": "weapon",
+        "modifies": "damage_roll",
+        "modifier_type": "add",
+        "modifier": "+2",
+        "conditions": {
+            "attack_attribute": "strength"
+        }
+    },
+    {
+        "type": "resistance",
+        "resistances": [
+            {
+                "damage_type": "bludgeoning",
+                "resistance_type": "resistance"
+            },
+            {
+                "damage_type": "piercing",
+                "resistance_type": "resistance"
+            },
+            {
+                "damage_type": "slashing",
+                "resistance_type": "resistance"
+            }
+        ]
+    },
+    {
+        "type": "ability_check_modifier",
+        "ability_check": "athletics",
+        "modifier": "advantage"
+    },
+    {
+        "type": "saving_throw_modifier",
+        "saving_throw": "strength",
+        "modifier": "advantage"
+    }
+]

@@ -1061,10 +1061,65 @@ type ActionResource string
 
 const (
 	ResourceAction      ActionResource = "action"       // Основное действие
+	ResourceMainAction  ActionResource = "main_action"  // Основное действие (альтернативное название)
 	ResourceBonusAction ActionResource = "bonus_action" // Бонусное действие
 	ResourceReaction    ActionResource = "reaction"     // Ответное действие
 	ResourceFreeAction  ActionResource = "free_action"  // Свободное действие
 )
+
+// ActionResources - слайс ресурсов действия (хранится в БД как строка через запятую)
+type ActionResources []ActionResource
+
+// Scan - кастомный сканер для ActionResources
+func (ar *ActionResources) Scan(value interface{}) error {
+	if value == nil {
+		*ar = nil
+		return nil
+	}
+
+	var str string
+	switch v := value.(type) {
+	case string:
+		str = v
+	case []byte:
+		str = string(v)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для ActionResources: %T", value)
+	}
+
+	// Если строка пустая, возвращаем пустой слайс
+	if str == "" {
+		*ar = ActionResources{}
+		return nil
+	}
+
+	// Разбиваем строку по запятым
+	parts := strings.Split(str, ",")
+	resources := make(ActionResources, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			resources = append(resources, ActionResource(part))
+		}
+	}
+
+	*ar = resources
+	return nil
+}
+
+// Value - кастомный value для ActionResources
+func (ar ActionResources) Value() (driver.Value, error) {
+	if ar == nil || len(ar) == 0 {
+		return "", nil
+	}
+
+	// Преобразуем слайс в строку через запятую
+	parts := make([]string, len(ar))
+	for i, resource := range ar {
+		parts[i] = string(resource)
+	}
+	return strings.Join(parts, ","), nil
+}
 
 // ActionRecharge - перезарядка действия
 type ActionRecharge string
@@ -1127,7 +1182,8 @@ type Action struct {
 	ImageGenerationPrompt        string          `json:"image_generation_prompt" gorm:"type:text"`
 	Rarity                       Rarity          `json:"rarity" gorm:"not null"`
 	CardNumber                   string          `json:"card_number" gorm:"uniqueIndex;not null"`
-	Resource                     ActionResource  `json:"resource" gorm:"not null"`
+	Resource                     ActionResources `json:"resources" gorm:"column:resource;type:text"`
+	Distance                     *string         `json:"distance" gorm:"type:varchar(100)"`
 	Recharge                     *ActionRecharge `json:"recharge" gorm:"type:varchar(50)"`
 	RechargeCustom               *string         `json:"recharge_custom" gorm:"type:text"`
 	Script                       *Script         `json:"script" gorm:"type:jsonb"`
@@ -1160,99 +1216,102 @@ func (Action) TableName() string {
 
 // CreateActionRequest - запрос на создание действия
 type CreateActionRequest struct {
-	Name                         string          `json:"name" binding:"required"`
-	Description                  string          `json:"description" binding:"required"`
-	DetailedDescription          *string         `json:"detailed_description"`
-	ImageURL                     string          `json:"image_url"`
-	Rarity                       Rarity          `json:"rarity" binding:"required"`
-	CardNumber                   string          `json:"card_number"` // ID действия, введенный пользователем
-	Resource                     ActionResource  `json:"resource" binding:"required"`
-	Recharge                     *ActionRecharge `json:"recharge"`
-	RechargeCustom               *string         `json:"recharge_custom"`
-	Script                       *Script         `json:"script"`
-	ActionType                   ActionType      `json:"action_type" binding:"required"`
-	Type                         *string         `json:"type"`
-	Author                       string          `json:"author"`
-	Source                       *string         `json:"source"`
-	Tags                         *Properties     `json:"tags"`
-	Price                        *int            `json:"price"`
-	Weight                       *float64        `json:"weight"`
-	Properties                   *Properties     `json:"properties"`
-	RelatedCards                 *Properties     `json:"related_cards"`
-	RelatedActions               *Properties     `json:"related_actions"`
-	IsExtended                   *bool           `json:"is_extended"`
-	DescriptionFontSize          *int            `json:"description_font_size"`
-	TextAlignment                *string         `json:"text_alignment"`
-	TextFontSize                 *int            `json:"text_font_size"`
-	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
-	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
-	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+	Name                         string           `json:"name" binding:"required"`
+	Description                  string           `json:"description" binding:"required"`
+	DetailedDescription          *string          `json:"detailed_description"`
+	ImageURL                     string           `json:"image_url"`
+	Rarity                       Rarity           `json:"rarity" binding:"required"`
+	CardNumber                   string           `json:"card_number"` // ID действия, введенный пользователем
+	Resources                    []ActionResource `json:"resources" binding:"required"`
+	Distance                     *string          `json:"distance"`
+	Recharge                     *ActionRecharge  `json:"recharge"`
+	RechargeCustom               *string          `json:"recharge_custom"`
+	Script                       *Script          `json:"script"`
+	ActionType                   ActionType       `json:"action_type" binding:"required"`
+	Type                         *string          `json:"type"`
+	Author                       string           `json:"author"`
+	Source                       *string          `json:"source"`
+	Tags                         *Properties      `json:"tags"`
+	Price                        *int             `json:"price"`
+	Weight                       *float64         `json:"weight"`
+	Properties                   *Properties      `json:"properties"`
+	RelatedCards                 *Properties      `json:"related_cards"`
+	RelatedActions               *Properties      `json:"related_actions"`
+	IsExtended                   *bool            `json:"is_extended"`
+	DescriptionFontSize          *int             `json:"description_font_size"`
+	TextAlignment                *string          `json:"text_alignment"`
+	TextFontSize                 *int             `json:"text_font_size"`
+	ShowDetailedDescription      *bool            `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string          `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int             `json:"detailed_description_font_size"`
 }
 
 // UpdateActionRequest - запрос на обновление действия
 type UpdateActionRequest struct {
-	Name                         string          `json:"name"`
-	Description                  string          `json:"description"`
-	DetailedDescription          *string         `json:"detailed_description"`
-	ImageURL                     string          `json:"image_url"`
-	Rarity                       Rarity          `json:"rarity"`
-	Resource                     ActionResource  `json:"resource"`
-	Recharge                     *ActionRecharge `json:"recharge"`
-	RechargeCustom               *string         `json:"recharge_custom"`
-	Script                       *Script         `json:"script"`
-	ActionType                   ActionType      `json:"action_type"`
-	Type                         *string         `json:"type"`
-	Author                       string          `json:"author"`
-	Source                       *string         `json:"source"`
-	Tags                         *Properties     `json:"tags"`
-	Price                        *int            `json:"price"`
-	Weight                       *float64        `json:"weight"`
-	Properties                   *Properties     `json:"properties"`
-	RelatedCards                 *Properties     `json:"related_cards"`
-	RelatedActions               *Properties     `json:"related_actions"`
-	IsExtended                   *bool           `json:"is_extended"`
-	DescriptionFontSize          *int            `json:"description_font_size"`
-	TextAlignment                *string         `json:"text_alignment"`
-	TextFontSize                 *int            `json:"text_font_size"`
-	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
-	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
-	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
+	Name                         string           `json:"name"`
+	Description                  string           `json:"description"`
+	DetailedDescription          *string          `json:"detailed_description"`
+	ImageURL                     string           `json:"image_url"`
+	Rarity                       Rarity           `json:"rarity"`
+	Resources                    []ActionResource `json:"resources"`
+	Distance                     *string          `json:"distance"`
+	Recharge                     *ActionRecharge  `json:"recharge"`
+	RechargeCustom               *string          `json:"recharge_custom"`
+	Script                       *Script          `json:"script"`
+	ActionType                   ActionType       `json:"action_type"`
+	Type                         *string          `json:"type"`
+	Author                       string           `json:"author"`
+	Source                       *string          `json:"source"`
+	Tags                         *Properties      `json:"tags"`
+	Price                        *int             `json:"price"`
+	Weight                       *float64         `json:"weight"`
+	Properties                   *Properties      `json:"properties"`
+	RelatedCards                 *Properties      `json:"related_cards"`
+	RelatedActions               *Properties      `json:"related_actions"`
+	IsExtended                   *bool            `json:"is_extended"`
+	DescriptionFontSize          *int             `json:"description_font_size"`
+	TextAlignment                *string          `json:"text_alignment"`
+	TextFontSize                 *int             `json:"text_font_size"`
+	ShowDetailedDescription      *bool            `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string          `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int             `json:"detailed_description_font_size"`
 }
 
 // ActionResponse - ответ с действием
 type ActionResponse struct {
-	ID                           uuid.UUID       `json:"id"`
-	Name                         string          `json:"name"`
-	Description                  string          `json:"description"`
-	DetailedDescription          *string         `json:"detailed_description"`
-	ImageURL                     string          `json:"image_url"`
-	Rarity                       Rarity          `json:"rarity"`
-	CardNumber                   string          `json:"card_number"`
-	Resource                     ActionResource  `json:"resource"`
-	Recharge                     *ActionRecharge `json:"recharge"`
-	RechargeCustom               *string         `json:"recharge_custom"`
-	Script                       *Script         `json:"script"`
-	ActionType                   ActionType      `json:"action_type"`
-	Type                         *string         `json:"type"`
-	Tags                         *Properties     `json:"tags"`
-	Price                        *int            `json:"price"`
-	Weight                       *float64        `json:"weight"`
-	Properties                   *Properties     `json:"properties"`
-	IsExtended                   *bool           `json:"is_extended"`
-	DescriptionFontSize          *int            `json:"description_font_size"`
-	TextAlignment                *string         `json:"text_alignment"`
-	TextFontSize                 *int            `json:"text_font_size"`
-	ShowDetailedDescription      *bool           `json:"show_detailed_description"`
-	DetailedDescriptionAlignment *string         `json:"detailed_description_alignment"`
-	DetailedDescriptionFontSize  *int            `json:"detailed_description_font_size"`
-	CreatedAt                    time.Time       `json:"created_at"`
-	UpdatedAt                    time.Time       `json:"updated_at"`
+	ID                           uuid.UUID        `json:"id"`
+	Name                         string           `json:"name"`
+	Description                  string           `json:"description"`
+	DetailedDescription          *string          `json:"detailed_description"`
+	ImageURL                     string           `json:"image_url"`
+	Rarity                       Rarity           `json:"rarity"`
+	CardNumber                   string           `json:"card_number"`
+	Resources                    []ActionResource `json:"resources"`
+	Distance                     *string          `json:"distance"`
+	Recharge                     *ActionRecharge  `json:"recharge"`
+	RechargeCustom               *string          `json:"recharge_custom"`
+	Script                       *Script          `json:"script"`
+	ActionType                   ActionType       `json:"action_type"`
+	Type                         *string          `json:"type"`
+	Tags                         *Properties      `json:"tags"`
+	Price                        *int             `json:"price"`
+	Weight                       *float64         `json:"weight"`
+	Properties                   *Properties      `json:"properties"`
+	IsExtended                   *bool            `json:"is_extended"`
+	DescriptionFontSize          *int             `json:"description_font_size"`
+	TextAlignment                *string          `json:"text_alignment"`
+	TextFontSize                 *int             `json:"text_font_size"`
+	ShowDetailedDescription      *bool            `json:"show_detailed_description"`
+	DetailedDescriptionAlignment *string          `json:"detailed_description_alignment"`
+	DetailedDescriptionFontSize  *int             `json:"detailed_description_font_size"`
+	CreatedAt                    time.Time        `json:"created_at"`
+	UpdatedAt                    time.Time        `json:"updated_at"`
 }
 
 // GetLocalizedName - получение локализованного названия ресурса действия
 func (ar ActionResource) GetLocalizedName() string {
 	switch ar {
-	case ResourceAction:
+	case ResourceAction, ResourceMainAction:
 		return "Основное действие"
 	case ResourceBonusAction:
 		return "Бонусное действие"

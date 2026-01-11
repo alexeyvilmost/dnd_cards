@@ -6,8 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
 import ItemSelector from '../components/ItemSelector';
 import CardPreview from '../components/CardPreview';
 import CardDetailModal from '../components/CardDetailModal';
-import Dice3D from '../components/Dice3D';
-import { Card } from '../types';
+import ActionAttackModal from '../components/ActionAttackModal';
+import { Card, Action } from '../types';
+import { actionsApi } from '../api/client';
 import { useToast } from '../contexts/ToastContext';
 import { getRussianName } from '../utils/russianTranslations';
 import { getRarityBorderColor } from '../utils/rarityColors';
@@ -81,6 +82,13 @@ const CharacterDetailV3: React.FC = () => {
 
   // Флаг для отслеживания изменений экипировки
   const [equipmentChanged, setEquipmentChanged] = useState(false);
+  
+  // Состояние для действий
+  const [actions, setActions] = useState<{ [key: string]: Action }>({});
+  const [loadingActions, setLoadingActions] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
+  const [showActionModal, setShowActionModal] = useState(false);
+  
   const allSkillNames = useMemo(() => getAllSkillNames(), []);
   const skillDependencies = useMemo(
     () => (selectedSkill ? getRuleDependencyNames(selectedSkill) : []),
@@ -92,6 +100,40 @@ const CharacterDetailV3: React.FC = () => {
       loadCharacter();
     }
   }, [id]);
+
+  // Загружаем действия персонажа
+  useEffect(() => {
+    const loadActions = async () => {
+      try {
+        setLoadingActions(true);
+        const actionIds = ['action_unarmed_strike', 'action_melee_attack'];
+        const loadedActions: { [key: string]: Action } = {};
+
+        await Promise.all(
+          actionIds.map(async (actionId) => {
+            try {
+              // Пытаемся найти по card_number через поиск
+              const response = await actionsApi.getActions({ search: actionId, limit: 100 });
+              const action = response.actions.find(a => a.card_number === actionId);
+              if (action) {
+                loadedActions[actionId] = action;
+              }
+            } catch (error) {
+              console.warn(`Ошибка загрузки действия ${actionId}:`, error);
+            }
+          })
+        );
+
+        setActions(loadedActions);
+      } catch (error) {
+        console.error('Ошибка загрузки действий:', error);
+      } finally {
+        setLoadingActions(false);
+      }
+    };
+
+    loadActions();
+  }, []);
 
   // Обновляем кэш эффектов только при изменении экипировки
   useEffect(() => {
@@ -321,6 +363,24 @@ const CharacterDetailV3: React.FC = () => {
   };
 
   // Функция для расчета изменений характеристик при экипировке/снятии предмета
+  // Функция для определения типа оружия (ближний/дальний бой) по тегам
+  const getWeaponType = (card: any): 'melee' | 'ranged' | null => {
+    if (!card || card.type !== 'weapon') return null;
+    
+    const tags = card.tags || [];
+    const hasMelee = tags.some((tag: string) => tag === 'Ближнее');
+    const hasRanged = tags.some((tag: string) => tag === 'Дальнобойное');
+    
+    if (hasRanged) return 'ranged';
+    if (hasMelee) return 'melee';
+    
+    // Если тегов нет, проверяем свойства
+    const properties = card.properties || [];
+    const hasAmmunition = properties.some((prop: string) => prop === 'ammunition' || prop === 'loading');
+    
+    return hasAmmunition ? 'ranged' : 'melee'; // По умолчанию считаем ближним, если нет дальнобойных свойств
+  };
+
   const calculateStatChanges = (item: any, isEquipping: boolean) => {
     console.log('📊 [CHANGES] Calculating changes for:', item.card?.name, 'isEquipping:', isEquipping);
     console.log('📊 [CHANGES] Item effects:', item.card?.effects);
@@ -544,20 +604,176 @@ const CharacterDetailV3: React.FC = () => {
   };
 
   // Функция для оптимистичного обновления инвентаря при экипировке
+  // Функция для определения, какие слоты нужно освободить при экипировке оружия
+  const getSlotsToUnequip = (slotType: string, card: any): string[] => {
+    console.log('🔍 [FRONTEND_SLOTS] Определение слотов для освобождения:', { slotType, cardName: card?.name, cardType: card?.type });
+    
+    if (!card || card.type !== 'weapon') {
+      console.log('🔍 [FRONTEND_SLOTS] Предмет не является оружием, освобождаем только слот', slotType);
+      // Для не-оружия просто освобождаем тот же слот
+      return [slotType];
+    }
+
+    const weaponType = getWeaponType(card);
+    console.log('🔍 [FRONTEND_SLOTS] Тип оружия:', weaponType);
+
+    const slotsToUnequip: string[] = [];
+    
+    // Определяем, какие слоты нужно освободить в зависимости от типа экипируемого оружия
+    if (slotType === 'melee_two_hands' || slotType === 'ranged_two_hands') {
+      // Двуручное оружие освобождает все слоты соответствующего ряда
+      if (slotType === 'melee_two_hands') {
+        // Освобождаем все слоты ближнего боя (верхний ряд)
+        slotsToUnequip.push('melee_one_hand', 'melee_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Двуручное оружие ближнего боя - освобождаем слоты:', slotsToUnequip);
+      } else {
+        // Освобождаем все слоты дальнего боя (нижний ряд)
+        slotsToUnequip.push('ranged_one_hand', 'ranged_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Двуручное оружие дальнего боя - освобождаем слоты:', slotsToUnequip);
+      }
+    } else if (slotType === 'melee_one_hand' || slotType === 'ranged_one_hand') {
+      // Одноручное оружие освобождает все слоты соответствующего ряда
+      if (slotType === 'melee_one_hand') {
+        // Освобождаем все слоты ближнего боя (верхний ряд)
+        slotsToUnequip.push('melee_one_hand', 'melee_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Одноручное оружие ближнего боя - освобождаем слоты:', slotsToUnequip);
+      } else {
+        // Освобождаем все слоты дальнего боя (нижний ряд)
+        slotsToUnequip.push('ranged_one_hand', 'ranged_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Одноручное оружие дальнего боя - освобождаем слоты:', slotsToUnequip);
+      }
+    } else if (slotType === 'two_hands') {
+      // Старый формат двуручного оружия - определяем тип по оружию
+      if (weaponType === 'melee') {
+        slotsToUnequip.push('melee_one_hand', 'melee_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Двуручное оружие ближнего боя (старый формат) - освобождаем слоты:', slotsToUnequip);
+      } else {
+        slotsToUnequip.push('ranged_one_hand', 'ranged_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Двуручное оружие дальнего боя (старый формат) - освобождаем слоты:', slotsToUnequip);
+      }
+    } else if (slotType === 'one_hand') {
+      // Старый формат одноручного оружия - определяем тип по оружию
+      if (weaponType === 'melee') {
+        slotsToUnequip.push('melee_one_hand', 'melee_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Одноручное оружие ближнего боя (старый формат) - освобождаем слоты:', slotsToUnequip);
+      } else {
+        slotsToUnequip.push('ranged_one_hand', 'ranged_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Одноручное оружие дальнего боя (старый формат) - освобождаем слоты:', slotsToUnequip);
+      }
+    } else if (slotType === 'versatile') {
+      // Универсальное оружие - определяем тип по оружию
+      if (weaponType === 'melee') {
+        slotsToUnequip.push('melee_one_hand', 'melee_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Универсальное оружие ближнего боя - освобождаем слоты:', slotsToUnequip);
+      } else {
+        slotsToUnequip.push('ranged_one_hand', 'ranged_two_hands', 'one_hand', 'versatile', 'two_hands');
+        console.log('🔍 [FRONTEND_SLOTS] Универсальное оружие дальнего боя - освобождаем слоты:', slotsToUnequip);
+      }
+    } else {
+      // Для других типов слотов просто освобождаем тот же слот
+      slotsToUnequip.push(slotType);
+      console.log('🔍 [FRONTEND_SLOTS] Другой тип слота - освобождаем только слот', slotType);
+    }
+
+    console.log('🔍 [FRONTEND_SLOTS] Итоговый список слотов для освобождения:', slotsToUnequip);
+    return slotsToUnequip;
+  };
+
+  // Функция для проверки, нужно ли снимать предмет при экипировке нового оружия
+  const shouldUnequipItem = (item: any, slotsToUnequip: string[], newItemCard: any): boolean => {
+    console.log('🔍 [FRONTEND_UNEQUIP] Проверка предмета:', { 
+      itemId: item.id, 
+      itemName: item.card?.name, 
+      equippedSlot: item.equipped_slot,
+      slotsToUnequip 
+    });
+    
+    if (!item.equipped_slot || !item.card) {
+      console.log('🔍 [FRONTEND_UNEQUIP] Предмет не экипирован или нет карты');
+      return false;
+    }
+    
+    const equippedSlot = item.equipped_slot;
+    
+    // Если слот точно совпадает с одним из слотов для освобождения
+    if (slotsToUnequip.includes(equippedSlot)) {
+      console.log('✅ [FRONTEND_UNEQUIP] Слот точно совпадает:', equippedSlot, '-> СНИМАТЬ');
+      return true;
+    }
+    
+    // Специальная логика для оружия: проверяем, находится ли оно в соответствующем ряду
+    if (item.card.type === 'weapon') {
+      const weaponType = getWeaponType(item.card);
+      const newWeaponType = getWeaponType(newItemCard);
+      console.log('🔍 [FRONTEND_UNEQUIP] Тип текущего оружия:', weaponType, 'Тип нового оружия:', newWeaponType);
+      
+      // Определяем, какие типы слотов нужно освободить
+      const hasMeleeSlots = slotsToUnequip.some(slot => 
+        slot === 'melee_one_hand' || slot === 'melee_two_hands' || 
+        (slot === 'one_hand' && newWeaponType === 'melee') ||
+        (slot === 'versatile' && newWeaponType === 'melee')
+      );
+      const hasRangedSlots = slotsToUnequip.some(slot => 
+        slot === 'ranged_one_hand' || slot === 'ranged_two_hands' || 
+        (slot === 'one_hand' && newWeaponType === 'ranged') ||
+        (slot === 'versatile' && newWeaponType === 'ranged')
+      );
+      
+      console.log('🔍 [FRONTEND_UNEQUIP] hasMeleeSlots:', hasMeleeSlots, 'hasRangedSlots:', hasRangedSlots);
+      
+      // Если экипируем оружие ближнего боя, снимаем все оружие ближнего боя
+      if (weaponType === 'melee' && hasMeleeSlots) {
+        console.log('✅ [FRONTEND_UNEQUIP] Оружие ближнего боя и есть слоты для ближнего боя -> СНИМАТЬ');
+        return true;
+      }
+      // Если экипируем оружие дальнего боя, снимаем все оружие дальнего боя
+      if (weaponType === 'ranged' && hasRangedSlots) {
+        console.log('✅ [FRONTEND_UNEQUIP] Оружие дальнего боя и есть слоты для дальнего боя -> СНИМАТЬ');
+        return true;
+      }
+    } else {
+      console.log('🔍 [FRONTEND_UNEQUIP] Предмет не является оружием (type:', item.card.type, ')');
+    }
+    
+    console.log('❌ [FRONTEND_UNEQUIP] Предмет НЕ нужно снимать');
+    return false;
+  };
+
   const optimisticallyEquipItem = (item: any, slotType: string) => {
-    if (!characterInventories || characterInventories.length === 0) return;
+    console.log('🎯 [FRONTEND_EQUIP] Экипируем предмет:', { itemId: item.id, itemName: item.card?.name, slotType });
+    
+    if (!characterInventories || characterInventories.length === 0) {
+      console.log('⚠️ [FRONTEND_EQUIP] Нет инвентарей');
+      return;
+    }
+    
+    // Определяем, какие слоты нужно освободить
+    const slotsToUnequip = getSlotsToUnequip(slotType, item.card);
+    console.log('🎯 [FRONTEND_EQUIP] Слоты для освобождения:', slotsToUnequip);
     
     setEquipmentChanged(true); // Устанавливаем флаг изменения экипировки
     setCharacterInventories(prevInventories => {
-      return prevInventories.map(inventory => {
+      let unequippedCount = 0;
+      const updated = prevInventories.map(inventory => {
         if (inventory.character_id === character?.id) {
           return {
             ...inventory,
             items: inventory.items.map(invItem => {
+              // Экипируем новый предмет
               if (invItem.id === item.id) {
+                console.log('🎯 [FRONTEND_EQUIP] Экипируем новый предмет:', invItem.card?.name);
                 return {
                   ...invItem,
                   equipped_slot: slotType
+                };
+              }
+              // Снимаем предметы из слотов, которые нужно освободить
+              if (shouldUnequipItem(invItem, slotsToUnequip, item.card)) {
+                unequippedCount++;
+                console.log('🎯 [FRONTEND_EQUIP] Снимаем предмет:', invItem.card?.name);
+                return {
+                  ...invItem,
+                  equipped_slot: null
                 };
               }
               return invItem;
@@ -566,6 +782,8 @@ const CharacterDetailV3: React.FC = () => {
         }
         return inventory;
       });
+      console.log('🎯 [FRONTEND_EQUIP] Всего снято предметов:', unequippedCount);
+      return updated;
     });
   };
 
@@ -762,6 +980,7 @@ const CharacterDetailV3: React.FC = () => {
       return;
     }
     
+    // Генерируем случайные значения сразу, без задержки
     const firstDice = Math.floor(Math.random() * 20) + 1;
     const secondDice = rollType !== 'normal' ? Math.floor(Math.random() * 20) + 1 : undefined;
     
@@ -781,18 +1000,13 @@ const CharacterDetailV3: React.FC = () => {
       skillBonus,
       diceRoll: firstDice,
       finalResult,
-      isRolling: true,
+      isRolling: false,
       rollType,
       secondDice,
       selectedDice
     });
     
     setShowDiceModal(true);
-    
-    // Останавливаем анимацию через 1 секунду
-    setTimeout(() => {
-      setDiceResult(prev => prev ? { ...prev, isRolling: false } : null);
-    }, 1000);
   };
 
   // Компонент анимированного кубика
@@ -1601,11 +1815,135 @@ const CharacterDetailV3: React.FC = () => {
       setHoveredSlotRef(null);
     };
 
+
+    // Функция для определения правильного слота экипировки на основе типа оружия и позиции
+    const getEquipSlotForWeapon = (card: any, slotType: string, row: number, col: number): string => {
+      // Если это не оружие или не one_hand слот, возвращаем исходный тип слота
+      if (!card || card.type !== 'weapon' || slotType !== 'one_hand') {
+        return slotType;
+      }
+
+      const weaponType = getWeaponType(card);
+      const properties = card.properties || [];
+      const isTwoHanded = properties.some((prop: string) => prop === 'two-handed');
+      const isVersatile = properties.some((prop: string) => prop === 'versatile');
+
+      // Двуручное оружие занимает два слота в одном ряду
+      if (isTwoHanded) {
+        if (weaponType === 'ranged') {
+          return row === 1 && (col === 0 || col === 1) ? 'ranged_two_hands' : slotType;
+        } else {
+          return row === 0 && (col === 0 || col === 1) ? 'melee_two_hands' : slotType;
+        }
+      }
+
+      // Универсальное оружие может быть в любом ряду, но только в одном слоте
+      if (isVersatile) {
+        if (row === 0 && (col === 0 || col === 1)) {
+          return 'melee_one_hand';
+        } else if (row === 1 && (col === 0 || col === 1)) {
+          return 'ranged_one_hand';
+        }
+        return slotType;
+      }
+
+      // Одноручное оружие: ближний бой - верхний ряд, дальний бой - нижний ряд
+      if (weaponType === 'ranged') {
+        return row === 1 && (col === 0 || col === 1) ? 'ranged_one_hand' : slotType;
+      } else if (weaponType === 'melee') {
+        return row === 0 && (col === 0 || col === 1) ? 'melee_one_hand' : slotType;
+      }
+
+      return slotType;
+    };
+
+    // Функция для проверки, может ли предмет быть экипирован в этот слот
+    const canEquipInSlot = (item: any, slotType: string, row: number, col: number): boolean => {
+      if (!item.card) return false;
+      
+      const card = item.card;
+      
+      // Если это не оружие или не one_hand слот, используем стандартную проверку
+      if (card.type !== 'weapon' || slotType !== 'one_hand') {
+        return card.slot === slotType;
+      }
+
+      const weaponType = getWeaponType(card);
+      const properties = card.properties || [];
+      const isTwoHanded = properties.some((prop: string) => prop === 'two-handed');
+      const isVersatile = properties.some((prop: string) => prop === 'versatile');
+
+      // Двуручное оружие может быть только в первом слоте своего ряда
+      if (isTwoHanded) {
+        if (weaponType === 'ranged') {
+          return row === 1 && col === 0;
+        } else {
+          return row === 0 && col === 0;
+        }
+      }
+
+      // Универсальное оружие может быть в любом слоте one_hand
+      if (isVersatile) {
+        return (row === 0 || row === 1) && (col === 0 || col === 1);
+      }
+
+      // Одноручное оружие: ближний бой - верхний ряд, дальний бой - нижний ряд
+      if (weaponType === 'ranged') {
+        return row === 1 && (col === 0 || col === 1);
+      } else if (weaponType === 'melee') {
+        return row === 0 && (col === 0 || col === 1);
+      }
+
+      return false;
+    };
+
+    // Функция для определения правильного слота для экипировки оружия
+    const determineEquipSlot = (item: any): string => {
+      if (!item.card) return item.card?.slot || '';
+      
+      const card = item.card;
+      const baseSlot = card.slot || '';
+      
+      // Если это не оружие или не one_hand слот, возвращаем базовый слот
+      if (card.type !== 'weapon' || baseSlot !== 'one_hand') {
+        return baseSlot;
+      }
+
+      const weaponType = getWeaponType(card);
+      const properties = card.properties || [];
+      const isTwoHanded = properties.some((prop: string) => prop === 'two-handed');
+      const isVersatile = properties.some((prop: string) => prop === 'versatile');
+
+      // Используем специфичные типы слотов для различения ближнего и дальнего боя
+      if (isTwoHanded) {
+        return weaponType === 'ranged' ? 'ranged_two_hands' : 'melee_two_hands';
+      }
+
+      if (isVersatile) {
+        // Универсальное оружие по умолчанию экипируется как ближний бой
+        // Пользователь может перетащить его в другой слот, если нужно
+        return 'melee_one_hand';
+      }
+
+      // Одноручное оружие: ближний бой - melee_one_hand, дальний бой - ranged_one_hand
+      if (weaponType === 'ranged') {
+        return 'ranged_one_hand';
+      } else if (weaponType === 'melee') {
+        return 'melee_one_hand';
+      }
+
+      // По умолчанию считаем ближним боем
+      return 'melee_one_hand';
+    };
+
     // Обработчики двойного клика для экипировки/снятия
     const handleEquipItem = async (item: any) => {
       if (!character || !item.card?.slot) return;
       
-      console.log('🎯 [EQUIP] Equipping item:', item.card?.name, 'to slot:', item.card.slot);
+      // Определяем правильный слот для экипировки
+      const equipSlot = determineEquipSlot(item);
+      
+      console.log('🎯 [EQUIP] Equipping item:', item.card?.name, 'to slot:', equipSlot);
       
       // Рассчитываем изменения характеристик ДО оптимистичного обновления
       const changes = calculateStatChanges(item, true);
@@ -1614,7 +1952,7 @@ const CharacterDetailV3: React.FC = () => {
       const previousEquippedSlot = item.equipped_slot;
       
       // Оптимистично обновляем UI
-      optimisticallyEquipItem(item, item.card.slot);
+      optimisticallyEquipItem(item, equipSlot);
       
       // Показываем Toast-уведомление с изменениями
       console.log('🍞 [TOAST] Showing equip toast, changes:', changes);
@@ -1632,7 +1970,7 @@ const CharacterDetailV3: React.FC = () => {
         // Отправляем запрос на бекенд (не ждем ответа)
         apiClient.post(`/api/characters-v2/${character.id}/equip`, {
           item_id: item.id,
-          slot_type: item.card.slot
+          slot_type: equipSlot
         }).then(response => {
           console.log('🎯 [EQUIP] Equip response:', response.data);
         }).catch(error => {
@@ -1794,9 +2132,63 @@ const CharacterDetailV3: React.FC = () => {
               const iconPath = getSlotIcon(slotType, row, col);
               
               // Ищем предмет, экипированный в этот конкретный слот
+              // Для оружия учитываем позицию и тип оружия
               const equippedItem = inventories
                 .flatMap(inv => inv.items || [])
-                .find(item => item.equipped_slot === slotType);
+                .find(item => {
+                  if (!item.equipped_slot) return false;
+                  
+                  // Если это слот one_hand для оружия, используем специальную логику
+                  if (slotType === 'one_hand' && item.card?.type === 'weapon') {
+                    const equippedSlot = item.equipped_slot;
+                    const properties = item.card.properties || [];
+                    const isTwoHanded = properties.some((prop: string) => prop === 'two-handed');
+                    
+                    // Проверяем новые специфичные типы слотов
+                    if (equippedSlot === 'melee_one_hand') {
+                      // Одноручное оружие ближнего боя отображается только в первом слоте верхнего ряда
+                      return row === 0 && col === 0;
+                    }
+                    if (equippedSlot === 'ranged_one_hand') {
+                      // Одноручное оружие дальнего боя отображается только в первом слоте нижнего ряда
+                      return row === 1 && col === 0;
+                    }
+                    if (equippedSlot === 'melee_two_hands') {
+                      // Двуручное оружие ближнего боя занимает два слота в верхнем ряду
+                      return row === 0 && (col === 0 || col === 1);
+                    }
+                    if (equippedSlot === 'ranged_two_hands') {
+                      // Двуручное оружие дальнего боя занимает два слота в нижнем ряду
+                      return row === 1 && (col === 0 || col === 1);
+                    }
+                    
+                    // Обратная совместимость: если используется старый формат 'one_hand'
+                    // Определяем тип оружия и позицию
+                    const weaponType = getWeaponType(item.card);
+                    
+                    if (isTwoHanded) {
+                      // Двуручное оружие занимает два слота
+                      if (weaponType === 'ranged') {
+                        return row === 1 && (col === 0 || col === 1);
+                      } else {
+                        return row === 0 && (col === 0 || col === 1);
+                      }
+                    }
+                    
+                    // Одноручное оружие отображается только в первом слоте соответствующего ряда
+                    if (weaponType === 'ranged') {
+                      return row === 1 && col === 0;
+                    } else if (weaponType === 'melee') {
+                      return row === 0 && col === 0;
+                    }
+                    
+                    // Если тип оружия не определен, показываем только в первом подходящем слоте
+                    return row === 0 && col === 0;
+                  }
+                  
+                  // Для остальных предметов используем стандартную проверку
+                  return item.equipped_slot === slotType;
+                });
               
               return (
                 <div
@@ -2184,15 +2576,150 @@ const CharacterDetailV3: React.FC = () => {
     );
   };
 
+  // Проверяем наличие оружия в слотах ближнего боя
+  const hasMeleeWeapon = () => {
+    if (!characterInventories || characterInventories.length === 0) return false;
+    
+    const allItems = characterInventories.flatMap(inv => inv.items || []);
+    return allItems.some(item => {
+      if (!item.equipped_slot || !item.card) return false;
+      const slot = item.equipped_slot;
+      const isMeleeSlot = slot === 'melee_one_hand' || slot === 'melee_two_hands' || 
+                         slot === 'one_hand' || slot === 'versatile' || slot === 'two_hands';
+      
+      if (!isMeleeSlot) return false;
+      
+      // Проверяем, что это оружие ближнего боя
+      const weaponType = getWeaponType(item.card);
+      return weaponType === 'melee';
+    });
+  };
+
+  const handleActionClick = (action: Action) => {
+    if (action.card_number === 'action_melee_attack' && !hasMeleeWeapon()) {
+      return; // Не открываем модальное окно, если нет оружия
+    }
+    
+    setSelectedAction(action);
+    setShowActionModal(true);
+  };
+
+  const getEquippedMeleeWeapon = (): Card | null => {
+    if (!characterInventories || characterInventories.length === 0) return null;
+    
+    const allItems = characterInventories.flatMap(inv => inv.items || []);
+    const meleeWeapon = allItems.find(item => {
+      if (!item.equipped_slot || !item.card) return false;
+      const slot = item.equipped_slot;
+      const isMeleeSlot = slot === 'melee_one_hand' || slot === 'melee_two_hands' || 
+                         slot === 'one_hand' || slot === 'versatile' || slot === 'two_hands';
+      
+      if (!isMeleeSlot) return false;
+      
+      const weaponType = getWeaponType(item.card);
+      return weaponType === 'melee';
+    });
+    
+    return meleeWeapon?.card || null;
+  };
+
   const renderActionsTab = () => {
+    const unarmedStrike = actions['action_unarmed_strike'];
+    const meleeAttack = actions['action_melee_attack'];
+    const meleeWeaponEquipped = hasMeleeWeapon();
+    const equippedWeapon = getEquippedMeleeWeapon();
+    
+    // Отладочная информация
+    if (unarmedStrike) {
+      console.log('[Actions] Безоружный удар:', {
+        name: unarmedStrike.name,
+        image_url: unarmedStrike.image_url,
+        hasImage: !!(unarmedStrike.image_url && unarmedStrike.image_url.trim() !== '')
+      });
+    }
+    if (meleeAttack) {
+      console.log('[Actions] Удар в ближнем бою:', {
+        name: meleeAttack.name,
+        image_url: meleeAttack.image_url,
+        hasImage: !!(meleeAttack.image_url && meleeAttack.image_url.trim() !== '')
+      });
+    }
+
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Действия</h2>
-          <div className="text-center py-8">
-            <Sword className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-500">Действия персонажа будут реализованы позже</p>
-          </div>
+          
+          {loadingActions ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-gray-500 mt-4">Загрузка действий...</p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-4">
+              {/* Безоружный удар - всегда доступен */}
+              {unarmedStrike && (
+                <button
+                  onClick={() => handleActionClick(unarmedStrike)}
+                  className="flex items-center space-x-3 bg-amber-900 hover:bg-amber-800 text-white px-6 py-4 rounded-lg border-2 border-black transition-all hover:scale-105 shadow-lg"
+                >
+                  {unarmedStrike.image_url && unarmedStrike.image_url.trim() !== '' && (
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                      <img
+                        src={unarmedStrike.image_url}
+                        alt={unarmedStrike.name}
+                        className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <span className="text-lg font-semibold">Безоружный удар</span>
+                </button>
+              )}
+
+              {/* Удар в ближнем бою - доступен только с оружием */}
+              {meleeAttack && (
+                <button
+                  onClick={() => handleActionClick(meleeAttack)}
+                  disabled={!meleeWeaponEquipped}
+                  className={`flex items-center space-x-3 px-6 py-4 rounded-lg border-2 border-black transition-all shadow-lg ${
+                    meleeWeaponEquipped
+                      ? 'bg-amber-900 hover:bg-amber-800 text-white hover:scale-105 cursor-pointer'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60'
+                  }`}
+                  title={!meleeWeaponEquipped ? 'Доступно только при экипированном оружии ближнего боя' : ''}
+                >
+                  {meleeAttack.image_url && meleeAttack.image_url.trim() !== '' && (
+                    <div className={`w-12 h-12 flex items-center justify-center flex-shrink-0 ${
+                      !meleeWeaponEquipped ? 'opacity-50' : ''
+                    }`}>
+                      <img
+                        src={meleeAttack.image_url}
+                        alt={meleeAttack.name}
+                        className={`w-full h-full object-contain ${
+                          meleeWeaponEquipped ? 'filter drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]' : ''
+                        }`}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <span className="text-lg font-semibold">Удар в ближнем бою</span>
+                </button>
+              )}
+
+              {!unarmedStrike && !meleeAttack && (
+                <div className="text-center py-8 w-full">
+                  <p className="text-gray-500">Действия не найдены</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -3000,16 +3527,25 @@ const CharacterDetailV3: React.FC = () => {
               </button>
             </div>
             
-            {/* Обычный режим - полная формула */}
-            <div className="flex items-center justify-center space-x-4">
-              {/* Кубики */}
+            {/* Результат броска */}
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              {/* Результат кубика(ов) */}
               <div className="flex items-center space-x-2">
-                {/* Первый кубик */}
-                <Dice3D />
-                
-                {/* Второй кубик (только для преимущества/помехи) */}
-                {diceResult.rollType !== 'normal' && diceResult.secondDice && (
-                  <Dice3D />
+                <div className="text-3xl font-bold text-blue-600">
+                  {diceResult.diceRoll > 0 ? diceResult.diceRoll : '?'}
+                </div>
+                {diceResult.rollType !== 'normal' && diceResult.secondDice !== undefined && diceResult.secondDice > 0 && (
+                  <>
+                    <span className="text-xl text-gray-400">и</span>
+                    <div className="text-3xl font-bold text-blue-600">
+                      {diceResult.secondDice}
+                    </div>
+                    <span className="text-lg text-gray-500">
+                      (выбрано {diceResult.rollType === 'advantage' 
+                        ? Math.max(diceResult.diceRoll, diceResult.secondDice)
+                        : Math.min(diceResult.diceRoll, diceResult.secondDice)})
+                    </span>
+                  </>
                 )}
               </div>
               
@@ -3024,17 +3560,9 @@ const CharacterDetailV3: React.FC = () => {
               {/* Равно */}
               <div className="text-2xl font-bold text-gray-600">=</div>
               
-              {/* Финальный результат - анимированный */}
+              {/* Финальный результат */}
               <div className="text-3xl font-bold text-green-600">
-                {diceResult.isRolling ? (
-                  <AnimatedFinalResult 
-                    isRolling={diceResult.isRolling} 
-                    finalValue={diceResult.finalResult}
-                    skillBonus={diceResult.skillBonus}
-                  />
-                ) : (
-                  diceResult.finalResult
-                )}
+                {diceResult.finalResult > 0 ? diceResult.finalResult : '?'}
               </div>
             </div>
             
@@ -3080,6 +3608,19 @@ const CharacterDetailV3: React.FC = () => {
             quantity={hoveredItem.quantity}
           />
         </div>
+      )}
+
+      {/* Модал броска атаки */}
+      {showActionModal && selectedAction && character && (
+        <ActionAttackModal
+          action={selectedAction}
+          character={character}
+          weapon={selectedAction.card_number === 'action_melee_attack' ? getEquippedMeleeWeapon() : null}
+          onClose={() => {
+            setShowActionModal(false);
+            setSelectedAction(null);
+          }}
+        />
       )}
 
       {/* Модал подробного просмотра карты (как в библиотеке) */}

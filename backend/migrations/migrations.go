@@ -134,6 +134,18 @@ func GetAllMigrations() []Migration {
 			Up:          addImageLibraryItemFields,
 			Down:        removeImageLibraryItemFields,
 		},
+		{
+			Version:     "022_remove_actions_resource_check",
+			Description: "Remove CHECK constraint from actions.resource column to support multiple resources",
+			Up:          removeActionsResourceCheck,
+			Down:        restoreActionsResourceCheck,
+		},
+		{
+			Version:     "023_add_action_distance",
+			Description: "Add distance field to actions table",
+			Up:          addActionDistanceField,
+			Down:        removeActionDistanceField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -937,7 +949,7 @@ func createActionsTable(db *sql.DB) error {
 			image_generation_prompt TEXT,
 			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
 			card_number VARCHAR(50) UNIQUE NOT NULL,
-			resource VARCHAR(50) NOT NULL CHECK (resource IN ('action', 'bonus_action', 'reaction', 'free_action')),
+			resource TEXT,
 			recharge VARCHAR(50) CHECK (recharge IN ('custom', 'per_turn', 'per_battle', 'short_rest', 'long_rest')),
 			recharge_custom TEXT,
 			script JSONB,
@@ -1200,6 +1212,64 @@ func removeImageLibraryItemFields(db *sql.DB) error {
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to execute query '%s': %w", query, err)
 		}
+	}
+	return nil
+}
+
+// removeActionsResourceCheck удаляет CHECK constraint из колонки resource в таблице actions
+func removeActionsResourceCheck(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE actions DROP CONSTRAINT IF EXISTS actions_resource_check",
+		"ALTER TABLE actions ALTER COLUMN resource TYPE TEXT",
+		"ALTER TABLE actions ALTER COLUMN resource DROP NOT NULL",
+		"COMMENT ON COLUMN actions.resource IS 'Ресурсы действия через запятую (action, bonus_action, reaction, free_action)'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// restoreActionsResourceCheck восстанавливает CHECK constraint для колонки resource в таблице actions
+func restoreActionsResourceCheck(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE actions ALTER COLUMN resource TYPE VARCHAR(50)",
+		"ALTER TABLE actions ALTER COLUMN resource SET NOT NULL",
+		"ALTER TABLE actions ADD CONSTRAINT actions_resource_check CHECK (resource IN ('action', 'bonus_action', 'reaction', 'free_action'))",
+		"COMMENT ON COLUMN actions.resource IS 'Ресурс действия (action, bonus_action, reaction, free_action)'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// addActionDistanceField добавляет поле distance в таблицу actions
+func addActionDistanceField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE actions ADD COLUMN IF NOT EXISTS distance VARCHAR(100)",
+		"COMMENT ON COLUMN actions.distance IS 'Дальность действия (например, \"5 футов\", \"30 футов\", \"На себя\")'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeActionDistanceField удаляет поле distance из таблицы actions
+func removeActionDistanceField(db *sql.DB) error {
+	query := "ALTER TABLE actions DROP COLUMN IF EXISTS distance"
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to execute query '%s': %w", query, err)
 	}
 	return nil
 }

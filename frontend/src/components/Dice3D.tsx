@@ -72,9 +72,9 @@ const DiceWithPhysics: React.FC<DiceWithPhysicsProps> = ({ isRolling = false, fi
 
     // Стены убраны для проверки видимости кубика
 
-    // Создаем d20 кубик увеличенного размера
+    // Создаем d20 кубик
     // create() вызывается в конструкторе, но только после setWorld()
-    const dice = new DiceD20({ size: 4.8 }); // Увеличен размер кубика в 1.5 раза (3.2 * 1.5)
+    const dice = new DiceD20({ size: 3.2 });
     diceRef.current = dice;
     
     // Получаем объект кубика
@@ -90,7 +90,7 @@ const DiceWithPhysics: React.FC<DiceWithPhysicsProps> = ({ isRolling = false, fi
     scene.add(diceObject);
     
     // Начальная позиция кубика (в центре видимой области)
-    // Камера смотрит на (0, 0, 0), пол на y=-6, поэтому кубик должен быть выше пола
+    // Камера смотрит на (0, 0, 0), пол на y=-12, поэтому кубик должен быть выше пола
     // Устанавливаем позицию в центре видимой области камеры
     diceObject.position.set(0, 2, 0); // Позиция в центре видимой области
     diceObject.visible = true; // Убеждаемся, что кубик видим
@@ -103,18 +103,10 @@ const DiceWithPhysics: React.FC<DiceWithPhysicsProps> = ({ isRolling = false, fi
       position: diceObject.position,
       visible: diceObject.visible,
       scale: diceObject.scale,
-      size: 4.8,
+      size: 3.2,
       geometry: diceObject.geometry ? 'exists' : 'null',
       material: diceObject.material ? 'exists' : 'null',
       children: diceObject.children.length
-    });
-    
-    // Отладочная информация
-    console.log('Dice created:', {
-      position: diceObject.position,
-      visible: diceObject.visible,
-      scale: diceObject.scale,
-      size: 4.8
     });
 
     return () => {
@@ -184,17 +176,16 @@ const DiceWithPhysics: React.FC<DiceWithPhysicsProps> = ({ isRolling = false, fi
     dice.updateBodyFromMesh();
     
     // Придаём случайную скорость и угловую скорость для эффекта броска
-    // Увеличены значения для большего вращения и отскока
-    const rand = Math.random() * 2; // Увеличена случайная компонента
-    const yRand = Math.random() * 6; // Увеличена вертикальная случайная компонента
+    const rand = Math.random() * 2;
+    const yRand = Math.random() * 6;
     if (dice.getObject().body) {
       dice.getObject().body.velocity.set(
-        3 + rand,       // Увеличена горизонтальная скорость для большего отскока
-        10 + yRand,     // Увеличена вертикальная скорость для большего отскока
-        2 + rand        // Увеличена глубина
+        3 + rand,
+        10 + yRand,
+        2 + rand
       );
       dice.getObject().body.angularVelocity.set(
-        (15 * Math.random() - 7.5),  // Увеличена угловая скорость для большего вращения
+        (15 * Math.random() - 7.5),
         (15 * Math.random() - 7.5),
         (15 * Math.random() - 7.5)
       );

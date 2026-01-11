@@ -699,9 +699,9 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 		query = query.Where("rarity = ?", rarity)
 	}
 
-	// Фильтрация по ресурсу
+	// Фильтрация по ресурсу (ищем в строке через запятую)
 	if resource := c.Query("resource"); resource != "" {
-		query = query.Where("resource = ?", resource)
+		query = query.Where("resource LIKE ? OR resource = ?", "%"+resource+"%", resource)
 	}
 
 	// Фильтрация по типу действия
@@ -732,6 +732,15 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	// Преобразование в ответы
 	responses := make([]ActionResponse, 0)
 	for _, action := range actions {
+		// Конвертируем ActionResources в []ActionResource для ответа
+		resources := make([]ActionResource, 0)
+		if action.Resource != nil && len(action.Resource) > 0 {
+			resources = make([]ActionResource, len(action.Resource))
+			for i, r := range action.Resource {
+				resources[i] = r
+			}
+		}
+
 		responses = append(responses, ActionResponse{
 			ID:                           action.ID,
 			Name:                         action.Name,
@@ -740,7 +749,8 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 			ImageURL:                     action.ImageURL,
 			Rarity:                       action.Rarity,
 			CardNumber:                   action.CardNumber,
-			Resource:                     action.Resource,
+			Resources:                    resources,
+			Distance:                     action.Distance,
 			Recharge:                     action.Recharge,
 			RechargeCustom:               action.RechargeCustom,
 			Script:                       action.Script,
@@ -773,10 +783,10 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 // GetAction - получение действия по ID (UUID) или card_number
 func (ac *ActionController) GetAction(c *gin.Context) {
 	idParam := c.Param("id")
-	
+
 	var action Action
 	var err error
-	
+
 	// Пытаемся сначала найти по UUID
 	if id, uuidErr := uuid.Parse(idParam); uuidErr == nil {
 		err = ac.db.Where("id = ?", id).First(&action).Error
@@ -784,7 +794,7 @@ func (ac *ActionController) GetAction(c *gin.Context) {
 		// Если не UUID, ищем по card_number
 		err = ac.db.Where("card_number = ?", idParam).First(&action).Error
 	}
-	
+
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Действие не найдено"})
@@ -792,6 +802,15 @@ func (ac *ActionController) GetAction(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действия"})
 		return
+	}
+
+	// Конвертируем ActionResources в []ActionResource для ответа
+	resources := make([]ActionResource, 0)
+	if action.Resource != nil && len(action.Resource) > 0 {
+		resources = make([]ActionResource, len(action.Resource))
+		for i, r := range action.Resource {
+			resources[i] = r
+		}
 	}
 
 	response := ActionResponse{
@@ -802,7 +821,8 @@ func (ac *ActionController) GetAction(c *gin.Context) {
 		ImageURL:                     action.ImageURL,
 		Rarity:                       action.Rarity,
 		CardNumber:                   action.CardNumber,
-		Resource:                     action.Resource,
+		Resources:                    resources,
+		Distance:                     action.Distance,
 		Recharge:                     action.Recharge,
 		RechargeCustom:               action.RechargeCustom,
 		Script:                       action.Script,
@@ -828,54 +848,115 @@ func (ac *ActionController) GetAction(c *gin.Context) {
 
 // CreateAction - создание нового действия
 func (ac *ActionController) CreateAction(c *gin.Context) {
+	log.Printf("🎯 [CREATE_ACTION] Начало создания действия")
+
 	var req CreateActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		log.Printf("❌ [CREATE_ACTION] Ошибка парсинга JSON: %v", err)
+		log.Printf("❌ [CREATE_ACTION] Тело запроса: %s", c.GetString("request_body"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
 		return
 	}
+
+	log.Printf("🔍 [CREATE_ACTION] Получен запрос: Name=%s, Rarity=%s, ActionType=%s, Resources=%v",
+		req.Name, req.Rarity, req.ActionType, req.Resources)
+	log.Printf("🔍 [CREATE_ACTION] Детали запроса: CardNumber=%s, Price=%v, Weight=%v, Properties=%v",
+		req.CardNumber, req.Price, req.Weight, req.Properties)
 
 	// Валидация данных
+	log.Printf("🔍 [CREATE_ACTION] Проверка редкости: %s", req.Rarity)
 	if !IsValidRarity(req.Rarity) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость"})
+		log.Printf("❌ [CREATE_ACTION] Недопустимая редкость: %s", req.Rarity)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость", "rarity": req.Rarity})
 		return
 	}
+	log.Printf("✅ [CREATE_ACTION] Редкость валидна: %s", req.Rarity)
 
+	log.Printf("🔍 [CREATE_ACTION] Проверка свойств: %v", req.Properties)
 	if !ValidateProperties(req.Properties) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
+		log.Printf("❌ [CREATE_ACTION] Недопустимые свойства: %v", req.Properties)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства", "properties": req.Properties})
 		return
 	}
+	log.Printf("✅ [CREATE_ACTION] Свойства валидны")
 
+	log.Printf("🔍 [CREATE_ACTION] Проверка цены: %v", req.Price)
 	if !ValidatePrice(req.Price) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+		log.Printf("❌ [CREATE_ACTION] Недопустимая цена: %v", req.Price)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)", "price": req.Price})
 		return
 	}
+	log.Printf("✅ [CREATE_ACTION] Цена валидна: %v", req.Price)
 
+	log.Printf("🔍 [CREATE_ACTION] Проверка веса: %v", req.Weight)
 	if !ValidateWeight(req.Weight) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		log.Printf("❌ [CREATE_ACTION] Недопустимый вес: %v", req.Weight)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)", "weight": req.Weight})
 		return
 	}
+	log.Printf("✅ [CREATE_ACTION] Вес валиден: %v", req.Weight)
 
 	// Проверка уникальности card_number (ID действия)
+	log.Printf("🔍 [CREATE_ACTION] Проверка card_number: %s", req.CardNumber)
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
 		// Если ID не указан, генерируем автоматически
 		cardNumber = ac.generateActionNumber()
+		log.Printf("🔍 [CREATE_ACTION] CardNumber не указан, сгенерирован автоматически: %s", cardNumber)
 	} else {
+		log.Printf("🔍 [CREATE_ACTION] Проверка уникальности card_number: %s", cardNumber)
 		// Проверяем уникальность указанного ID
 		var existingAction Action
 		if err := ac.db.Where("card_number = ?", cardNumber).First(&existingAction).Error; err == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Действие с таким ID уже существует"})
+			log.Printf("❌ [CREATE_ACTION] Действие с таким ID уже существует: %s", cardNumber)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Действие с таким ID уже существует", "card_number": cardNumber})
 			return
 		}
+		log.Printf("✅ [CREATE_ACTION] CardNumber уникален")
+
 		// Проверяем формат ID (латинские буквы, цифры, дефисы и подчеркивания, до 30 символов)
+		log.Printf("🔍 [CREATE_ACTION] Проверка формата card_number: %s", cardNumber)
 		matched, _ := regexp.MatchString("^[a-zA-Z0-9_-]{1,30}$", cardNumber)
 		if !matched {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов"})
+			log.Printf("❌ [CREATE_ACTION] Неверный формат card_number: %s (длина: %d)", cardNumber, len(cardNumber))
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов", "card_number": cardNumber})
 			return
 		}
+		log.Printf("✅ [CREATE_ACTION] Формат card_number валиден")
+	}
+
+	// Проверка обязательных полей
+	log.Printf("🔍 [CREATE_ACTION] Проверка обязательных полей")
+	if req.Name == "" {
+		log.Printf("❌ [CREATE_ACTION] Отсутствует обязательное поле: Name")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Поле 'name' обязательно для заполнения"})
+		return
+	}
+	if req.Description == "" {
+		log.Printf("❌ [CREATE_ACTION] Отсутствует обязательное поле: Description")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Поле 'description' обязательно для заполнения"})
+		return
+	}
+	if len(req.Resources) == 0 {
+		log.Printf("❌ [CREATE_ACTION] Отсутствует обязательное поле: Resources")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Поле 'resources' обязательно для заполнения (должен содержать хотя бы один ресурс)"})
+		return
+	}
+	if req.ActionType == "" {
+		log.Printf("❌ [CREATE_ACTION] Отсутствует обязательное поле: ActionType")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Поле 'action_type' обязательно для заполнения"})
+		return
+	}
+	log.Printf("✅ [CREATE_ACTION] Все обязательные поля присутствуют")
+
+	// Конвертируем []ActionResource в ActionResources для сохранения в БД
+	resources := make(ActionResources, len(req.Resources))
+	for i, r := range req.Resources {
+		resources[i] = r
 	}
 
 	// Создание действия
+	log.Printf("🔍 [CREATE_ACTION] Создание объекта Action")
 	action := Action{
 		Name:                         req.Name,
 		Description:                  req.Description,
@@ -883,7 +964,8 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 		ImageURL:                     req.ImageURL,
 		Rarity:                       req.Rarity,
 		CardNumber:                   cardNumber,
-		Resource:                     req.Resource,
+		Resource:                     resources,
+		Distance:                     req.Distance,
 		Recharge:                     req.Recharge,
 		RechargeCustom:               req.RechargeCustom,
 		Script:                       req.Script,
@@ -908,12 +990,16 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 
 	if req.Author == "" {
 		action.Author = "Admin"
+		log.Printf("🔍 [CREATE_ACTION] Author не указан, установлен по умолчанию: Admin")
 	}
 
+	log.Printf("🔍 [CREATE_ACTION] Сохранение действия в БД: Name=%s, CardNumber=%s", action.Name, action.CardNumber)
 	if err := ac.db.Create(&action).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания действия"})
+		log.Printf("❌ [CREATE_ACTION] Ошибка создания действия в БД: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания действия", "details": err.Error()})
 		return
 	}
+	log.Printf("✅ [CREATE_ACTION] Действие успешно создано: ID=%s, CardNumber=%s", action.ID, action.CardNumber)
 
 	response := ActionResponse{
 		ID:                           action.ID,
@@ -923,7 +1009,8 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 		ImageURL:                     action.ImageURL,
 		Rarity:                       action.Rarity,
 		CardNumber:                   action.CardNumber,
-		Resource:                     action.Resource,
+		Resources:                    resources,
+		Distance:                     action.Distance,
 		Recharge:                     action.Recharge,
 		RechargeCustom:               action.RechargeCustom,
 		Script:                       action.Script,
@@ -987,8 +1074,15 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 	if req.Rarity != "" && IsValidRarity(req.Rarity) {
 		action.Rarity = req.Rarity
 	}
-	if req.Resource != "" {
-		action.Resource = req.Resource
+	if len(req.Resources) > 0 {
+		resources := make(ActionResources, len(req.Resources))
+		for i, r := range req.Resources {
+			resources[i] = r
+		}
+		action.Resource = resources
+	}
+	if req.Distance != nil {
+		action.Distance = req.Distance
 	}
 	if req.Recharge != nil {
 		action.Recharge = req.Recharge
@@ -1064,6 +1158,12 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		return
 	}
 
+	// Конвертируем ActionResources в []ActionResource для ответа
+	responseResources := make([]ActionResource, len(action.Resource))
+	for i, r := range action.Resource {
+		responseResources[i] = r
+	}
+
 	response := ActionResponse{
 		ID:                           action.ID,
 		Name:                         action.Name,
@@ -1072,7 +1172,8 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		ImageURL:                     action.ImageURL,
 		Rarity:                       action.Rarity,
 		CardNumber:                   action.CardNumber,
-		Resource:                     action.Resource,
+		Resources:                    responseResources,
+		Distance:                     action.Distance,
 		Recharge:                     action.Recharge,
 		RechargeCustom:               action.RechargeCustom,
 		Script:                       action.Script,

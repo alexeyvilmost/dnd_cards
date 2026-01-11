@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { actionsApi } from '../api/client';
-import type { CreateActionRequest } from '../types';
+import type { CreateActionRequest, UpdateActionRequest } from '../types';
 import { RARITY_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { getAllCharges } from '../utils/charges';
 import ActionPreview from '../components/ActionPreview';
@@ -10,8 +10,18 @@ import ImageUploader from '../components/ImageUploader';
 
 const ActionCreator = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateActionRequest>();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const isEditMode = Boolean(editId);
+  
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<CreateActionRequest>({
+    defaultValues: {
+      rarity: 'common',
+      is_extended: false,
+    }
+  });
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
@@ -25,6 +35,66 @@ const ActionCreator = () => {
       setSelectedResources(formData.resources);
     }
   }, [formData.resources]);
+
+  // Загрузка действия для редактирования
+  useEffect(() => {
+    if (isEditMode && editId) {
+      const loadAction = async () => {
+        try {
+          setLoadingAction(true);
+          const action = await actionsApi.getAction(editId);
+          
+          // Заполняем форму данными действия
+          console.log('[ActionCreator] Загружено действие с бэкенда:', action);
+          
+          // Преобразуем resources из массива в массив строк для selectedResources
+          const resourcesArray = action.resources && Array.isArray(action.resources) 
+            ? action.resources 
+            : [];
+          
+          setSelectedResources(resourcesArray);
+          
+          reset({
+            name: action.name,
+            description: action.description,
+            detailed_description: action.detailed_description || null,
+            image_url: action.image_url || '',
+            rarity: action.rarity || 'common',
+            card_number: action.card_number || '',
+            resources: resourcesArray,
+            distance: action.distance || null,
+            recharge: action.recharge || null,
+            recharge_custom: action.recharge_custom || null,
+            script: action.script || null,
+            action_type: action.action_type || 'base_action',
+            type: action.type || null,
+            author: action.author || 'Admin',
+            source: action.source || null,
+            tags: action.tags || null,
+            price: action.price || null,
+            weight: action.weight || null,
+            properties: action.properties || null,
+            is_extended: action.is_extended || false,
+            description_font_size: action.description_font_size || null,
+            text_alignment: action.text_alignment || null,
+            text_font_size: action.text_font_size || null,
+            show_detailed_description: action.show_detailed_description || false,
+            detailed_description_alignment: action.detailed_description_alignment || null,
+            detailed_description_font_size: action.detailed_description_font_size || null,
+          });
+          
+          console.log('[ActionCreator] Форма заполнена, resources установлены:', resourcesArray);
+        } catch (err) {
+          setError('Ошибка загрузки действия');
+          console.error('Error loading action:', err);
+        } finally {
+          setLoadingAction(false);
+        }
+      };
+      
+      loadAction();
+    }
+  }, [isEditMode, editId, reset]);
 
   const previewAction = {
     id: '',
@@ -94,8 +164,8 @@ const ActionCreator = () => {
       return;
     }
 
-    // Проверка уникальности ID, если он указан
-    if (data.card_number && data.card_number.trim() !== '') {
+    // Проверка уникальности ID, если он указан (только при создании)
+    if (!isEditMode && data.card_number && data.card_number.trim() !== '') {
       const idRegex = /^[a-zA-Z0-9_-]{1,30}$/;
       if (!idRegex.test(data.card_number)) {
         setIdError('ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов');
@@ -112,23 +182,76 @@ const ActionCreator = () => {
     }
 
     try {
-      // Добавляем resources в данные перед отправкой
-      const submitData = {
-        ...data,
-        resources: selectedResources.length > 0 ? selectedResources : null,
-      };
-      const created = await actionsApi.createAction(submitData);
-      navigate(`/action/${created.id}`);
+      if (isEditMode && editId) {
+        // Обновление существующего действия
+        console.log('[ActionCreator] Отправляем данные на обновление:', data);
+        
+        const updateData: UpdateActionRequest = {
+          name: data.name,
+          description: data.description,
+          detailed_description: data.detailed_description,
+          image_url: data.image_url,
+          rarity: data.rarity,
+          resources: selectedResources.length > 0 ? selectedResources : null,
+          distance: data.distance || null,
+          recharge: data.recharge || null,
+          recharge_custom: data.recharge_custom || null,
+          script: data.script || null,
+          action_type: data.action_type,
+          type: data.type || null,
+          author: data.author || 'Admin',
+          source: data.source || null,
+          tags: data.tags || null,
+          price: data.price || null,
+          weight: data.weight || null,
+          properties: data.properties || null,
+          is_extended: data.is_extended || false,
+          description_font_size: data.description_font_size || null,
+          text_alignment: data.text_alignment || null,
+          text_font_size: data.text_font_size || null,
+          show_detailed_description: data.show_detailed_description || false,
+          detailed_description_alignment: data.detailed_description_alignment || null,
+          detailed_description_font_size: data.detailed_description_font_size || null,
+        };
+        
+        console.log('[ActionCreator] Данные для обновления:', updateData);
+        await actionsApi.updateAction(editId, updateData);
+        navigate('/');
+      } else {
+        // Создание нового действия
+        console.log('[ActionCreator] Отправляем данные на создание:', data);
+        
+        // Добавляем resources в данные перед отправкой
+        const submitData = {
+          ...data,
+          resources: selectedResources.length > 0 ? selectedResources : null,
+        };
+        await actionsApi.createAction(submitData);
+        navigate('/');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка создания действия');
+      const errorMessage = err.response?.data?.error || err.message || (isEditMode ? 'Ошибка обновления действия' : 'Ошибка создания действия');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  if (loadingAction) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Создание действия</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        {isEditMode ? 'Редактирование действия' : 'Создание действия'}
+      </h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Левая колонка - форма */}
@@ -288,10 +411,11 @@ const ActionCreator = () => {
                   type="text"
                   placeholder="action_id_123"
                   maxLength={30}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isEditMode}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Уникальный идентификатор действия (латинские буквы, цифры, дефисы и подчеркивания, до 30 символов). Если не указан, будет сгенерирован автоматически.
+                  {isEditMode ? 'ID действия нельзя изменить' : 'Уникальный идентификатор действия (латинские буквы, цифры, дефисы и подчеркивания, до 30 символов). Если не указан, будет сгенерирован автоматически.'}
                 </p>
                 {idError && <p className="text-red-500 text-sm mt-1">{idError}</p>}
               </div>
@@ -304,7 +428,7 @@ const ActionCreator = () => {
                   onImageUpload={(imageUrl) => setValue('image_url', imageUrl)}
                   currentImageUrl={watch('image_url') || ''}
                   entityType="action"
-                  entityId={watch('card_number') || 'new'}
+                  entityId={isEditMode && editId ? editId : (watch('card_number') || 'new')}
                 />
               </div>
             </div>
@@ -317,7 +441,7 @@ const ActionCreator = () => {
               disabled={loading}
               className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
             >
-              {loading ? 'Создание...' : 'Создать действие'}
+              {loading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить изменения' : 'Создать действие')}
             </button>
             <button
               type="button"

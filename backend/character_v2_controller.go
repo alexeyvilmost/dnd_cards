@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -708,28 +707,44 @@ func (controller *CharacterV2Controller) EquipItem(c *gin.Context) {
 		}
 		log.Printf("✅ [PERF] Предмет %s снят с экипировки", inventoryItem.ID)
 	} else {
-		// Экипируем предмет - сначала снимаем существующий предмет в этом слоте
-		var existingEquippedItem InventoryItem
-		if err := controller.db.Where("inventory_id IN (SELECT id FROM inventories WHERE character_id = ?) AND equipped_slot = ?", characterID, request.SlotType).First(&existingEquippedItem).Error; err == nil {
-			// Если предмет найден, снимаем его
-			if err := controller.db.Model(&existingEquippedItem).Updates(map[string]interface{}{"is_equipped": false, "equipped_slot": nil}).Error; err != nil {
-				log.Printf("❌ [PERF] Ошибка снятия существующего предмета с экипировки: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка снятия существующего предмета с экипировки"})
-				return
+		log.Printf("🎯 [EQUIP] Экипируем предмет: %s (%s) в слот: %s", inventoryItem.ID, inventoryItem.Card.Name, request.SlotType)
+
+		// Определяем, какие слоты нужно освободить при экипировке оружия
+		slotsToUnequip := getSlotsToUnequipForWeapon(request.SlotType, &inventoryItem.Card)
+		log.Printf("🎯 [EQUIP] Слоты для освобождения: %v", slotsToUnequip)
+
+		// Получаем все экипированные предметы персонажа
+		var allEquippedItems []InventoryItem
+		if err := controller.db.Preload("Card").Where("inventory_id IN (SELECT id FROM inventories WHERE character_id = ?) AND is_equipped = true AND id != ?", characterID, inventoryItem.ID).Find(&allEquippedItems).Error; err != nil {
+			log.Printf("⚠️ [EQUIP] Ошибка при поиске экипированных предметов: %v", err)
+		} else {
+			log.Printf("🎯 [EQUIP] Найдено экипированных предметов: %d", len(allEquippedItems))
+			// Снимаем предметы, которые нужно освободить
+			unequippedCount := 0
+			for _, existingItem := range allEquippedItems {
+				log.Printf("🎯 [EQUIP] Проверяем предмет: %s (%s), слот: %v", existingItem.ID, existingItem.Card.Name, existingItem.EquippedSlot)
+				if shouldUnequipItem(&existingItem, slotsToUnequip, &inventoryItem.Card) {
+					log.Printf("🎯 [EQUIP] Решено снять предмет: %s (%s)", existingItem.ID, existingItem.Card.Name)
+					if err := controller.db.Model(&existingItem).Updates(map[string]interface{}{"is_equipped": false, "equipped_slot": nil}).Error; err != nil {
+						log.Printf("❌ [EQUIP] Ошибка снятия предмета %s: %v", existingItem.ID, err)
+					} else {
+						unequippedCount++
+						log.Printf("✅ [EQUIP] Предмет %s (%s) снят при экипировке нового оружия", existingItem.ID, existingItem.Card.Name)
+					}
+				} else {
+					log.Printf("🎯 [EQUIP] Предмет %s (%s) НЕ нужно снимать", existingItem.ID, existingItem.Card.Name)
+				}
 			}
-			log.Printf("✅ [PERF] Предмет %s снят со слота %s", existingEquippedItem.ID, request.SlotType)
-		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Printf("❌ [PERF] Ошибка при поиске существующего предмета в слоте: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка при поиске существующего предмета в слоте"})
-			return
+			log.Printf("🎯 [EQUIP] Всего снято предметов: %d", unequippedCount)
 		}
 
 		// Экипируем новый предмет
 		if err := controller.db.Model(&inventoryItem).Updates(map[string]interface{}{"is_equipped": true, "equipped_slot": request.SlotType}).Error; err != nil {
-			log.Printf("❌ [PERF] Ошибка экипировки: %v", err)
+			log.Printf("❌ [EQUIP] Ошибка экипировки: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка экипировки предмета"})
 			return
 		}
+		log.Printf("✅ [EQUIP] Предмет %s успешно экипирован в слот %s", inventoryItem.ID, request.SlotType)
 	}
 
 	log.Printf("✅ [PERF] Экипировка завершена за %v", time.Since(startTime))
@@ -737,6 +752,196 @@ func (controller *CharacterV2Controller) EquipItem(c *gin.Context) {
 		"message": "предмет успешно экипирован",
 		"item":    inventoryItem,
 	})
+}
+
+// getWeaponType определяет тип оружия (ближний/дальний бой) по тегам
+func getWeaponType(card *Card) string {
+	if card == nil || card.Type == nil || *card.Type != "weapon" {
+		return ""
+	}
+
+	// Проверяем теги
+	if card.Tags != nil {
+		tags := *card.Tags
+		for _, tag := range tags {
+			if tag == "Дальнобойное" {
+				return "ranged"
+			}
+			if tag == "Ближнее" {
+				return "melee"
+			}
+		}
+	}
+
+	// Если тегов нет, проверяем свойства
+	if card.Properties != nil {
+		properties := *card.Properties
+		for _, prop := range properties {
+			if prop == "ammunition" || prop == "loading" {
+				return "ranged"
+			}
+		}
+	}
+
+	// По умолчанию считаем ближним боем
+	return "melee"
+}
+
+// getSlotsToUnequipForWeapon определяет, какие слоты нужно освободить при экипировке оружия
+func getSlotsToUnequipForWeapon(slotType string, card *Card) []string {
+	log.Printf("🔍 [SLOTS] Определение слотов для освобождения: slotType=%s, card=%v", slotType, card)
+
+	if card == nil || card.Type == nil || *card.Type != "weapon" {
+		log.Printf("🔍 [SLOTS] Предмет не является оружием, освобождаем только слот %s", slotType)
+		// Для не-оружия просто освобождаем тот же слот
+		return []string{slotType}
+	}
+
+	weaponType := getWeaponType(card)
+	log.Printf("🔍 [SLOTS] Тип оружия: %s", weaponType)
+
+	slotsToUnequip := []string{}
+
+	// Определяем, какие слоты нужно освободить в зависимости от типа экипируемого оружия
+	if slotType == "melee_two_hands" || slotType == "ranged_two_hands" {
+		// Двуручное оружие освобождает все слоты соответствующего ряда
+		if slotType == "melee_two_hands" {
+			// Освобождаем все слоты ближнего боя (верхний ряд)
+			slotsToUnequip = append(slotsToUnequip, "melee_one_hand", "melee_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Двуручное оружие ближнего боя - освобождаем слоты: %v", slotsToUnequip)
+		} else {
+			// Освобождаем все слоты дальнего боя (нижний ряд)
+			slotsToUnequip = append(slotsToUnequip, "ranged_one_hand", "ranged_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Двуручное оружие дальнего боя - освобождаем слоты: %v", slotsToUnequip)
+		}
+	} else if slotType == "melee_one_hand" || slotType == "ranged_one_hand" {
+		// Одноручное оружие освобождает все слоты соответствующего ряда
+		if slotType == "melee_one_hand" {
+			// Освобождаем все слоты ближнего боя (верхний ряд)
+			slotsToUnequip = append(slotsToUnequip, "melee_one_hand", "melee_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Одноручное оружие ближнего боя - освобождаем слоты: %v", slotsToUnequip)
+		} else {
+			// Освобождаем все слоты дальнего боя (нижний ряд)
+			slotsToUnequip = append(slotsToUnequip, "ranged_one_hand", "ranged_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Одноручное оружие дальнего боя - освобождаем слоты: %v", slotsToUnequip)
+		}
+	} else if slotType == "two_hands" {
+		// Старый формат двуручного оружия - определяем тип по оружию
+		if weaponType == "melee" {
+			// Освобождаем все слоты ближнего боя
+			slotsToUnequip = append(slotsToUnequip, "melee_one_hand", "melee_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Двуручное оружие ближнего боя (старый формат) - освобождаем слоты: %v", slotsToUnequip)
+		} else {
+			// Освобождаем все слоты дальнего боя
+			slotsToUnequip = append(slotsToUnequip, "ranged_one_hand", "ranged_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Двуручное оружие дальнего боя (старый формат) - освобождаем слоты: %v", slotsToUnequip)
+		}
+	} else if slotType == "one_hand" {
+		// Старый формат одноручного оружия - определяем тип по оружию
+		if weaponType == "melee" {
+			// Освобождаем все слоты ближнего боя
+			slotsToUnequip = append(slotsToUnequip, "melee_one_hand", "melee_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Одноручное оружие ближнего боя (старый формат) - освобождаем слоты: %v", slotsToUnequip)
+		} else {
+			// Освобождаем все слоты дальнего боя
+			slotsToUnequip = append(slotsToUnequip, "ranged_one_hand", "ranged_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Одноручное оружие дальнего боя (старый формат) - освобождаем слоты: %v", slotsToUnequip)
+		}
+	} else if slotType == "versatile" {
+		// Универсальное оружие - определяем тип по оружию
+		if weaponType == "melee" {
+			// Освобождаем все слоты ближнего боя
+			slotsToUnequip = append(slotsToUnequip, "melee_one_hand", "melee_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Универсальное оружие ближнего боя - освобождаем слоты: %v", slotsToUnequip)
+		} else {
+			// Освобождаем все слоты дальнего боя
+			slotsToUnequip = append(slotsToUnequip, "ranged_one_hand", "ranged_two_hands", "one_hand", "versatile", "two_hands")
+			log.Printf("🔍 [SLOTS] Универсальное оружие дальнего боя - освобождаем слоты: %v", slotsToUnequip)
+		}
+	} else {
+		// Для других типов слотов просто освобождаем тот же слот
+		slotsToUnequip = append(slotsToUnequip, slotType)
+		log.Printf("🔍 [SLOTS] Другой тип слота - освобождаем только слот %s", slotType)
+	}
+
+	log.Printf("🔍 [SLOTS] Итоговый список слотов для освобождения: %v", slotsToUnequip)
+	return slotsToUnequip
+}
+
+// shouldUnequipItem проверяет, нужно ли снимать предмет при экипировке нового оружия
+func shouldUnequipItem(item *InventoryItem, slotsToUnequip []string, newItemCard *Card) bool {
+	log.Printf("🔍 [UNEQUIP_CHECK] Проверка предмета: ID=%s, Name=%s", item.ID, item.Card.Name)
+
+	if item.EquippedSlot == nil {
+		log.Printf("🔍 [UNEQUIP_CHECK] Предмет не экипирован (equipped_slot = nil)")
+		return false
+	}
+
+	// Проверяем, что карта загружена
+	if item.Card.ID == uuid.Nil {
+		log.Printf("🔍 [UNEQUIP_CHECK] Карта не загружена")
+		return false
+	}
+
+	equippedSlot := *item.EquippedSlot
+	log.Printf("🔍 [UNEQUIP_CHECK] Слот предмета: %s, Слоты для освобождения: %v", equippedSlot, slotsToUnequip)
+
+	// Если слот точно совпадает с одним из слотов для освобождения
+	for _, slot := range slotsToUnequip {
+		if equippedSlot == slot {
+			log.Printf("✅ [UNEQUIP_CHECK] Слот точно совпадает: %s == %s -> СНИМАТЬ", equippedSlot, slot)
+			return true
+		}
+	}
+
+	// Специальная логика для оружия: проверяем, находится ли оно в соответствующем ряду
+	if item.Card.Type != nil && *item.Card.Type == "weapon" {
+		weaponType := getWeaponType(&item.Card)
+		newWeaponType := getWeaponType(newItemCard)
+		log.Printf("🔍 [UNEQUIP_CHECK] Тип текущего оружия: %s, Тип нового оружия: %s", weaponType, newWeaponType)
+
+		// Если это оружие того же типа (ближний/дальний бой), снимаем его
+		// Проверяем, есть ли в списке слотов для освобождения слоты соответствующего типа
+		hasMeleeSlots := false
+		hasRangedSlots := false
+		for _, slot := range slotsToUnequip {
+			if slot == "melee_one_hand" || slot == "melee_two_hands" {
+				hasMeleeSlots = true
+			}
+			if slot == "ranged_one_hand" || slot == "ranged_two_hands" {
+				hasRangedSlots = true
+			}
+			// Также учитываем старый формат "one_hand" и "versatile"
+			if slot == "one_hand" || slot == "versatile" {
+				// Если экипируем двуручное оружие ближнего боя, снимаем все оружие ближнего боя
+				if newWeaponType == "melee" {
+					hasMeleeSlots = true
+				}
+				// Если экипируем двуручное оружие дальнего боя, снимаем все оружие дальнего боя
+				if newWeaponType == "ranged" {
+					hasRangedSlots = true
+				}
+			}
+		}
+
+		log.Printf("🔍 [UNEQUIP_CHECK] hasMeleeSlots=%v, hasRangedSlots=%v", hasMeleeSlots, hasRangedSlots)
+
+		// Если экипируем оружие ближнего боя, снимаем все оружие ближнего боя
+		if weaponType == "melee" && hasMeleeSlots {
+			log.Printf("✅ [UNEQUIP_CHECK] Оружие ближнего боя и есть слоты для ближнего боя -> СНИМАТЬ")
+			return true
+		}
+		// Если экипируем оружие дальнего боя, снимаем все оружие дальнего боя
+		if weaponType == "ranged" && hasRangedSlots {
+			log.Printf("✅ [UNEQUIP_CHECK] Оружие дальнего боя и есть слоты для дальнего боя -> СНИМАТЬ")
+			return true
+		}
+	} else {
+		log.Printf("🔍 [UNEQUIP_CHECK] Предмет не является оружием (type=%v)", item.Card.Type)
+	}
+
+	log.Printf("❌ [UNEQUIP_CHECK] Предмет НЕ нужно снимать")
+	return false
 }
 
 // isItemCompatibleWithSlot проверяет совместимость предмета со слотом
@@ -753,10 +958,54 @@ func isItemCompatibleWithSlot(card *Card, slotType string) bool {
 
 	log.Printf("🔍 [COMPAT] Проверка совместимости: предмет '%s', слот предмета '%s', целевой слот '%s'", card.Name, *card.Slot, slotType)
 
-	// Проверяем, что слот предмета соответствует целевому слоту
-	result := string(*card.Slot) == slotType
-	log.Printf("🔍 [COMPAT] Совместимость: %v", result)
-	return result
+	cardSlot := string(*card.Slot)
+
+	// Точное совпадение
+	if cardSlot == slotType {
+		log.Printf("🔍 [COMPAT] Совместимость: точное совпадение")
+		return true
+	}
+
+	// Поддержка новых специфичных типов слотов для оружия
+	// melee_one_hand и ranged_one_hand совместимы с базовым one_hand
+	if cardSlot == "one_hand" {
+		if slotType == "melee_one_hand" || slotType == "ranged_one_hand" ||
+			slotType == "melee_two_hands" || slotType == "ranged_two_hands" {
+			log.Printf("🔍 [COMPAT] Совместимость: базовый one_hand совместим с %s", slotType)
+			return true
+		}
+	}
+
+	// Обратная совместимость: новые типы слотов совместимы с базовым one_hand
+	if (cardSlot == "melee_one_hand" || cardSlot == "ranged_one_hand" ||
+		cardSlot == "melee_two_hands" || cardSlot == "ranged_two_hands") && slotType == "one_hand" {
+		log.Printf("🔍 [COMPAT] Совместимость: специфичный слот %s совместим с базовым one_hand", cardSlot)
+		return true
+	}
+
+	// Двуручное оружие совместимо с two_hands
+	if cardSlot == "two_hands" {
+		if slotType == "melee_two_hands" || slotType == "ranged_two_hands" {
+			log.Printf("🔍 [COMPAT] Совместимость: базовый two_hands совместим с %s", slotType)
+			return true
+		}
+	}
+
+	if (cardSlot == "melee_two_hands" || cardSlot == "ranged_two_hands") && slotType == "two_hands" {
+		log.Printf("🔍 [COMPAT] Совместимость: специфичный слот %s совместим с базовым two_hands", cardSlot)
+		return true
+	}
+
+	// Универсальное оружие совместимо с melee_one_hand и ranged_one_hand
+	if cardSlot == "versatile" {
+		if slotType == "melee_one_hand" || slotType == "ranged_one_hand" || slotType == "one_hand" {
+			log.Printf("🔍 [COMPAT] Совместимость: универсальное оружие совместимо с %s", slotType)
+			return true
+		}
+	}
+
+	log.Printf("🔍 [COMPAT] Совместимость: несовместимо")
+	return false
 }
 
 // contains проверяет наличие элемента в слайсе
