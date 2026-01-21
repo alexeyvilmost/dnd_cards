@@ -1,0 +1,15 @@
+{
+	"name": "effect_unarmored_defense",
+	"russian_name": "Защита без брони (Варвар)",
+	"description": "Пока вы не носите брони, ваш Класс Доспеха равен 10 + Мод ЛВК + Мод ТЕЛ",
+	"effect_duration": "pure",
+	"effect_activeness": "one-time",
+    "effect_source": "class",
+    "effect_source_id": "{MOUNTAIN_DWARF_UUID}",
+	"effect_target": "self",
+	"effect_type": "add_defense_calculation_variant",
+	"defense_allowed": [
+        "none"
+    ],
+    "new_calculation_variant": "10 + {DEX_MODIFIER} + {CON_MODIFIER}"
+}

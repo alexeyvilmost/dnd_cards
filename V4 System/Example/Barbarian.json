@@ -1,0 +1,67 @@
+{
+	"name": "Barbarian",
+	"russian_name": "Варвар",
+	"description": "...",
+	"class_id": "{BARBARIAN_UUID}",
+	"proficiencies": {
+		"armor": [
+			"light_armor",
+			"medium_armor",
+			"shields"
+		],
+		"weapons": [
+			"simple",
+			"martial"
+		],
+		"saving_throws": [
+			"strength",
+			"constitution"
+		],
+		"skills_choice": {
+			"count": 2,
+			"variants": [
+				"athletics",
+				"intimidation",
+				"survival",
+				"nature",
+				"animal_handling",
+				"perception"
+			]
+		}
+    },
+	"equipment": [
+        "c830dce3-33d3-4514-8bf5-670fa0e299f2",
+        "9515fd6f-7478-4363-affa-14bc0e3a4e36",
+        "012ed1f7-3a48-4772-853d-a69cca6d0060",
+        "012ed1f7-3a48-4772-853d-a69cca6d0060",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+        "3ea27d6c-5a12-48f2-953a-0b955de6e673"
+    ],
+	"effects": [
+		"effect_unarmored_defense"
+	],
+	"actions": [
+		"action_barbarian_rage_2"
+	],
+	"recommended_attributes": {
+		"strength": 15,
+		"constitution": 14,
+		"dexterity": 13,
+		"intelligence": 8,
+		"wisdom": 12,
+		"charisma": 10
+	},
+    "variables": {
+        "RAGE_DAMAGE_MODIFIER": "+2",
+        "RAGE_CHARGE_COUNT": 2
+    },
+	"resources": {
+		"rage_charges": {
+            "current": "{RAGE_CHARGE_COUNT}",
+            "max": "{RAGE_CHARGE_COUNT}",
+            "reload": "per_long_rest"
+        }
+	}
+}

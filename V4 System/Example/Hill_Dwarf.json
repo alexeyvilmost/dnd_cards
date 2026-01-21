@@ -1,0 +1,34 @@
+{
+	"race_name": "dwarf",
+	"subrace_name": "hill_dwarf",
+	"russian_name": "Холмовой дварф",
+	"description": "...",
+	"race_id": "{DWARF_UUID}",
+	"subrace_id": "{DWARF_HILL_UUID}",
+	"proficiencies": {
+		"languages": [
+			"common",
+			"dwarvish"
+		]
+    },
+	"speed": 25,
+	"age": {
+		"adult": 50,
+		"elder": 150,
+		"max": 360
+	},
+	"size": "medium",
+	"effects": [
+		"effect_darkvision_60",
+		"effect_dwarven_poison_resistance",
+        "effect_dwarven_poison_saving_throws",
+		"effect_dwarven_tools",
+        "effect_dwarven_training",
+		"effect_dwarven_stonecunning",
+		"effect_dwarven_toughness"
+	],
+	"attributes_increase": {
+		"constitution": 2,
+		"wisdom": 1
+    }
+}

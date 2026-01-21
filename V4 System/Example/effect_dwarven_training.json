@@ -1,0 +1,13 @@
+{
+    "name": "effect_dwarven_training",
+    "effect_duration": "one-time",
+    "effect_type": "proficiency",
+    "proficiencies": {
+        "weapons": [
+            "hand_axe",
+            "battleaxe",
+            "light_hammer",
+            "battlehammer"
+        ]
+    }
+}

@@ -14,8 +14,10 @@ import type {
   CreatePassiveEffectRequest,
   UpdatePassiveEffectRequest,
   PassiveEffectsResponse,
+  ActiveEffect,
   ApiError 
 } from '../types';
+import type { CharacterV3 } from '../utils/characterCalculationsV3';
 
 // Railway production URL по умолчанию, можно переопределить через VITE_API_URL
 // Для локальной разработки установите: VITE_API_URL=http://localhost:8080
@@ -209,6 +211,38 @@ export const shopsApi = {
     const response = await apiClient.get(`/api/shops/${slug}`);
     return response.data;
   }
+};
+
+export const charactersV2Api = {
+  // Использование действия
+  useAction: async (characterId: string, actionId: string): Promise<CharacterV3> => {
+    const response = await apiClient.post<CharacterV3>(`/api/characters-v2/${characterId}/actions/${actionId}/use`);
+    return response.data;
+  },
+  
+  // Завершение эффекта
+  endEffect: async (characterId: string, effectId: string): Promise<CharacterV3> => {
+    const response = await apiClient.post<CharacterV3>(`/api/characters-v2/${characterId}/effects/${effectId}/end`);
+    return response.data;
+  },
+  
+  // Конец хода
+  processTurnEnd: async (characterId: string): Promise<CharacterV3> => {
+    const response = await apiClient.post<CharacterV3>(`/api/characters-v2/${characterId}/turn-end`);
+    return response.data;
+  },
+  
+  // Длинный отдых
+  processLongRest: async (characterId: string): Promise<CharacterV3> => {
+    const response = await apiClient.post<CharacterV3>(`/api/characters-v2/${characterId}/long-rest`);
+    return response.data;
+  },
+  
+  // Получение активных эффектов
+  getActiveEffects: async (characterId: string): Promise<{ active_effects: ActiveEffect[] }> => {
+    const response = await apiClient.get<{ active_effects: ActiveEffect[] }>(`/api/characters-v2/${characterId}/active-effects`);
+    return response.data;
+  },
 };
 
 export default apiClient;

@@ -14,6 +14,17 @@ export interface Effect {
   value: number;
 }
 
+// Активный эффект на персонаже
+export interface ActiveEffect {
+  effect_id: string;
+  action_id: string;
+  name: string;
+  duration_remaining: number;
+  duration_type: 'rounds' | 'minutes' | 'hours' | 'until_dispelled';
+  applied_at: string;
+  script?: Record<string, any> | null;
+}
+
 export interface Card {
   id: string;
   name: string;

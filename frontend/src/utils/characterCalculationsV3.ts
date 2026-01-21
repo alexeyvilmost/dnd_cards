@@ -1,5 +1,7 @@
 // Утилиты для расчетов характеристик персонажа V3
 
+import { ActiveEffect } from '../types';
+
 export interface CharacterV3 {
   id: string;
   name: string;
@@ -17,6 +19,9 @@ export interface CharacterV3 {
   current_hp: number;
   saving_throw_proficiencies: string[];
   skill_proficiencies: string[];
+  active_effects?: ActiveEffect[] | null;
+  resources?: Record<string, number> | null;
+  max_resources?: Record<string, number> | null;
   created_at: string;
   updated_at: string;
 }

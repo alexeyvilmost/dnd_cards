@@ -7,7 +7,7 @@ export interface ToastProps {
   id: string;
   type: 'success' | 'info' | 'warning' | 'error';
   title: string;
-  message: string;
+  message?: string;
   duration?: number;
   onClose: (id: string) => void;
   onUndo?: () => void;
@@ -117,11 +117,13 @@ const Toast: React.FC<ToastProps> = ({
             {title}
           </div>
           
-          <div className={`text-sm mt-1 ${getTextColor()} opacity-90`}>
-            {message.split('\n').map((line, index) => (
-              <div key={index}>{line}</div>
-            ))}
-          </div>
+          {message && (
+            <div className={`text-sm mt-1 ${getTextColor()} opacity-90`}>
+              {message.split('\n').map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
           
           {/* Список эффектов */}
           {effects && effects.length > 0 && (

@@ -1,0 +1,9 @@
+{
+    "name": "effect_dwarven_poison_saving_throws",
+    "effect_duration": "pure",
+    "effect_type": "narrative",
+    "narrative_type": "saving_throw_roll_modifier",
+    "check": "saving_throw",
+    "modifier_type": "advantage",
+    "hint": "Вы можете воспользоваться преимуществом, если совершаете спасбросок от яда"
+}

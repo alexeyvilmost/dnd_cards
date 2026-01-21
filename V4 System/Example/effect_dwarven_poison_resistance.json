@@ -1,0 +1,10 @@
+{
+    "name": "effect_barbarian_rage_resistance_modifier",
+    "effect_duration": "one-time",
+    "effect_type": "resistance",
+    "resistances": {
+        "resistance": [
+            "poison"
+        ]
+    }
+}

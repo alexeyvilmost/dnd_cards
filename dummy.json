@@ -1,0 +1,91 @@
+GET api/v4/characters/get?id=3b352707-d200-4bd7-927c-ef449c725fa8&type=pure&inventories=full
+
+{
+    "id": "3b352707-d200-4bd7-927c-ef449c725fa8", // id персонажа
+    "user_id": "a029c4a8-ff3b-4fbb-9a5e-f6f6b2fc1c0a", // id пользователя
+    "group_id": null, // id группы персонажа
+    "name": "Люцис", // имя персонажа
+    "race": "half-orc", // раса персонажа
+	"race_id": {HALF_ORC_UUID}, // идентификатор расы персонажа
+	"backstory": "artist", // предыстория персонажа
+	"backstory_id": {ARTIST_UUID} // id предыстории персонажа
+	"levels": { // все уровни персонажа
+		"level": 1, // общий уровень персонажа
+		"xp": 0, // очки опыта персонажа
+		"classes": [ // список классов персонажа
+			{
+				"class_name": "barbarian", // название класса
+				"class_id": {BARBARIAN_UUID} // идентификатор класса
+				"subclass_name": "fanatic", // название подкласса (необязательно)
+				"subclass_id": {BARBARIAN_FANATIC_UUID}, // идентификатор подкласса
+				"class_level": 1 // общий уровень данного класса
+			}
+		]
+	},
+	"proficiency_bonus": 2, // бонус мастерства
+	"armor_class": 11, // класс доспеха
+	"resistances": { // устойчивости и уязвимости
+		"resist": [], // устойчивости
+		"immune": [], // иммунитеты
+		"vulnerable": [] // уязвимость
+	},
+    "abilities": { // базовые характеристики персонажа
+		"strength": 17,
+		"dexterity": 13,
+		"constitution": 15,
+		"intelligence": 8,
+		"wisdom": 12,
+		"charisma": 10
+	},
+	"hits": { // информация о здоровье (хитах) персонажа
+		"max_hp": 14, // максимальное здоровье
+		"current_hp": 14, // текущее здоровье
+		"temporary_hp": 0, // временное здоровье
+		"hit_dices": { // кости хитов персонажа
+			"1d12": 1
+		}
+	},
+	"proficiencies": { // владения
+		"saving_throws": [ // спасброски
+    		"strength",
+    		"constitution"
+		],
+		"skills": [ // навыки
+        	"athletics",
+			"intimidation",
+			"survival",
+			"nature"
+		],
+		"armor": [ // доспехи
+			"light",
+			"shields"
+		],
+		"weapon": [ // оружие
+			"simple",
+			"battleaxe"
+		],
+		"languages": [ // языки
+			"common",
+			"orc"
+		],
+		"tools": [] // инструменты
+	},
+	"inventories": { // инвентари персонажа
+		"items_inventory": [
+		
+		], // инвентарь предметов
+		"actions": "{ACTION_INVENTORY_UUID}", // инвентарь действий
+		"effects": "{EFFECT_INVENTORY_UUID}", // инвентарь эффектов
+		"resources": "{RESOURCE_INVENTORY_UUID}", // инвентарь ресурсов
+	},
+    "created_at": "2025-11-24T23:22:51.055976Z", // дата создания персонажа
+    "updated_at": "2025-11-24T23:22:51.055976Z", // дата обновления персонажа
+    "user": { // информация о пользователе
+        "id": "a029c4a8-ff3b-4fbb-9a5e-f6f6b2fc1c0a",
+        "username": "testuser",
+        "email": "test@example.com",
+        "display_name": "Тестовый пользователь",
+        "created_at": "2025-09-06T10:02:18.901474Z",
+        "updated_at": "2025-09-06T10:02:18.901474Z"
+    },
+}

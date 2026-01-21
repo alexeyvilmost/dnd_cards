@@ -1,0 +1,9 @@
+{
+    "name": "effect_dwarven_toughness",
+    "effect_duration": "pure",
+    "check": "on_level_change",
+    "effect_type": "max_hit_points_modifier",
+    "modifier_type": "add",
+    "modifier": "{FULL_LEVEL}",
+    "hint": "Вы добавляете {FULL_LEVEL} к максимальному количеству хитов"
+}

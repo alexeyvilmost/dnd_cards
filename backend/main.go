@@ -208,6 +208,11 @@ func main() {
 			protected.GET("/characters-v2/:id/armor", characterV2Controller.GetCharacterArmor)
 			protected.POST("/characters-v2/:id/inventories/items", characterV2Controller.AddItemsToCharacterInventory)
 			protected.POST("/characters-v2/:id/equip", characterV2Controller.EquipItem)
+			protected.POST("/characters-v2/:id/actions/:action_id/use", characterV2Controller.UseAction)
+			protected.POST("/characters-v2/:id/effects/:effect_id/end", characterV2Controller.EndEffect)
+			protected.POST("/characters-v2/:id/turn-end", characterV2Controller.ProcessTurnEnd)
+			protected.POST("/characters-v2/:id/long-rest", characterV2Controller.ProcessLongRest)
+			protected.GET("/characters-v2/:id/active-effects", characterV2Controller.GetActiveEffects)
 
 			// Изображения
 			protected.POST("/images/upload", imageController.UploadImage)

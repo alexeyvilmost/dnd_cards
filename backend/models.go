@@ -1043,6 +1043,11 @@ type CharacterV2 struct {
 	// Владения навыками (JSON массив строк)
 	SkillProficiencies string `json:"skill_proficiencies" gorm:"type:text"`
 
+	// Активные эффекты и ресурсы
+	ActiveEffects *ActiveEffects       `json:"active_effects" gorm:"type:jsonb;default:'[]'::jsonb"`
+	Resources     *CharacterResources  `json:"resources" gorm:"type:jsonb;default:'{}'::jsonb"`
+	MaxResources  *CharacterResources  `json:"max_resources" gorm:"type:jsonb;default:'{}'::jsonb"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
@@ -1167,6 +1172,73 @@ func (s Script) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return json.Marshal(s)
+}
+
+// ActiveEffect - активный эффект на персонаже
+type ActiveEffect struct {
+	EffectID         string    `json:"effect_id"`          // UUID эффекта
+	ActionID         string    `json:"action_id"`         // ID действия, которое создало эффект
+	Name             string    `json:"name"`               // Название эффекта
+	DurationRemaining int      `json:"duration_remaining"` // Осталось ходов
+	DurationType     string    `json:"duration_type"`     // "rounds" | "minutes" | "hours" | "until_dispelled"
+	AppliedAt        time.Time `json:"applied_at"`         // Время применения
+	Script           *Script   `json:"script"`            // Скрипт эффекта из Action
+}
+
+// ActiveEffects - массив активных эффектов
+type ActiveEffects []ActiveEffect
+
+// Scan - кастомный сканер для ActiveEffects
+func (ae *ActiveEffects) Scan(value interface{}) error {
+	if value == nil {
+		*ae = nil
+		return nil
+	}
+
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), ae)
+	case []byte:
+		return json.Unmarshal(v, ae)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для ActiveEffects: %T", value)
+	}
+}
+
+// Value - кастомный value для ActiveEffects
+func (ae ActiveEffects) Value() (driver.Value, error) {
+	if ae == nil {
+		return nil, nil
+	}
+	return json.Marshal(ae)
+}
+
+// CharacterResources - ресурсы персонажа (текущие и максимальные значения)
+type CharacterResources map[string]int
+
+// Scan - кастомный сканер для CharacterResources
+func (cr *CharacterResources) Scan(value interface{}) error {
+	if value == nil {
+		*cr = nil
+		return nil
+	}
+
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), cr)
+	case []byte:
+		return json.Unmarshal(v, cr)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для CharacterResources: %T", value)
+	}
+}
+
+// Value - кастомный value для CharacterResources
+func (cr CharacterResources) Value() (driver.Value, error) {
+	if cr == nil {
+		return nil, nil
+	}
+	return json.Marshal(cr)
 }
 
 // Action - модель действия D&D
@@ -1549,26 +1621,29 @@ type UpdateCharacterV2Request struct {
 
 // CharacterV2Response - ответ с данными персонажа V2
 type CharacterV2Response struct {
-	ID                       uuid.UUID  `json:"id"`
-	UserID                   uuid.UUID  `json:"user_id"`
-	GroupID                  *uuid.UUID `json:"group_id"`
-	Name                     string     `json:"name"`
-	Race                     string     `json:"race"`
-	Class                    string     `json:"class"`
-	Level                    int        `json:"level"`
-	Speed                    int        `json:"speed"`
-	Strength                 int        `json:"strength"`
-	Dexterity                int        `json:"dexterity"`
-	Constitution             int        `json:"constitution"`
-	Intelligence             int        `json:"intelligence"`
-	Wisdom                   int        `json:"wisdom"`
-	Charisma                 int        `json:"charisma"`
-	MaxHP                    int        `json:"max_hp"`
-	CurrentHP                int        `json:"current_hp"`
-	SavingThrowProficiencies []string   `json:"saving_throw_proficiencies"`
-	SkillProficiencies       []string   `json:"skill_proficiencies"`
-	CreatedAt                time.Time  `json:"created_at"`
-	UpdatedAt                time.Time  `json:"updated_at"`
-	User                     User       `json:"user"`
-	Group                    *Group     `json:"group"`
+	ID                       uuid.UUID         `json:"id"`
+	UserID                   uuid.UUID         `json:"user_id"`
+	GroupID                  *uuid.UUID        `json:"group_id"`
+	Name                     string            `json:"name"`
+	Race                     string            `json:"race"`
+	Class                    string            `json:"class"`
+	Level                    int               `json:"level"`
+	Speed                    int               `json:"speed"`
+	Strength                 int               `json:"strength"`
+	Dexterity                int               `json:"dexterity"`
+	Constitution             int               `json:"constitution"`
+	Intelligence             int               `json:"intelligence"`
+	Wisdom                   int               `json:"wisdom"`
+	Charisma                 int               `json:"charisma"`
+	MaxHP                    int               `json:"max_hp"`
+	CurrentHP                int               `json:"current_hp"`
+	SavingThrowProficiencies []string          `json:"saving_throw_proficiencies"`
+	SkillProficiencies       []string          `json:"skill_proficiencies"`
+	ActiveEffects            *ActiveEffects    `json:"active_effects"`
+	Resources                *CharacterResources `json:"resources"`
+	MaxResources             *CharacterResources `json:"max_resources"`
+	CreatedAt                time.Time         `json:"created_at"`
+	UpdatedAt                time.Time         `json:"updated_at"`
+	User                     User              `json:"user"`
+	Group                    *Group            `json:"group"`
 }

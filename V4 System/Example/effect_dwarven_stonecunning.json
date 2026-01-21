@@ -1,0 +1,10 @@
+{
+    "name": "effect_dwarven_stonecunning",
+    "effect_duration": "pure",
+    "effect_type": "narrative",
+    "narrative_type": "skill_roll_modifier",
+    "check": "skill_check",
+    "allowed_skill_checks": ["history"],
+    "modifier_type": "{PROFICIENCY_BONUS}",
+    "hint": "Вы добавляете {PROFICIENCY_BONUS} к проверке истории, если совершаете проверку связанную с происхождением работы по камню"
+}

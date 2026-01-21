@@ -146,6 +146,18 @@ func GetAllMigrations() []Migration {
 			Up:          addActionDistanceField,
 			Down:        removeActionDistanceField,
 		},
+		{
+			Version:     "024_add_effects_resources_to_characters_v2",
+			Description: "Add active_effects, resources, max_resources fields to characters_v2 table",
+			Up:          addEffectsResourcesToCharactersV2,
+			Down:        removeEffectsResourcesFromCharactersV2,
+		},
+		{
+			Version:     "025_update_rage_action",
+			Description: "Update action_barbarian_rage_2 with script and resources",
+			Up:          updateRageAction,
+			Down:        rollbackRageAction,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1270,6 +1282,80 @@ func removeActionDistanceField(db *sql.DB) error {
 	query := "ALTER TABLE actions DROP COLUMN IF EXISTS distance"
 	if _, err := db.Exec(query); err != nil {
 		return fmt.Errorf("failed to execute query '%s': %w", query, err)
+	}
+	return nil
+}
+
+// addEffectsResourcesToCharactersV2 добавляет поля для эффектов и ресурсов в characters_v2
+func addEffectsResourcesToCharactersV2(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE characters_v2 ADD COLUMN IF NOT EXISTS active_effects JSONB DEFAULT '[]'::jsonb",
+		"ALTER TABLE characters_v2 ADD COLUMN IF NOT EXISTS resources JSONB DEFAULT '{}'::jsonb",
+		"ALTER TABLE characters_v2 ADD COLUMN IF NOT EXISTS max_resources JSONB DEFAULT '{}'::jsonb",
+		"COMMENT ON COLUMN characters_v2.active_effects IS 'Массив активных эффектов с метаданными (duration, script и т.д.)'",
+		"COMMENT ON COLUMN characters_v2.resources IS 'Текущие значения ресурсов (заряды ярости, ячейки заклинаний и т.д.)'",
+		"COMMENT ON COLUMN characters_v2.max_resources IS 'Максимальные значения ресурсов для восстановления'",
+		"CREATE INDEX IF NOT EXISTS idx_characters_v2_active_effects ON characters_v2 USING GIN (active_effects)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_v2_resources ON characters_v2 USING GIN (resources)",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeEffectsResourcesFromCharactersV2 удаляет поля эффектов и ресурсов из characters_v2
+func removeEffectsResourcesFromCharactersV2(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_characters_v2_resources",
+		"DROP INDEX IF EXISTS idx_characters_v2_active_effects",
+		"ALTER TABLE characters_v2 DROP COLUMN IF EXISTS max_resources",
+		"ALTER TABLE characters_v2 DROP COLUMN IF EXISTS resources",
+		"ALTER TABLE characters_v2 DROP COLUMN IF EXISTS active_effects",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// updateRageAction обновляет действие Ярость с скриптом и ресурсами
+func updateRageAction(db *sql.DB) error {
+	// Обновляем ресурсы действия
+	updateResourceQuery := "UPDATE actions SET resource = 'bonus_action,rage_charge' WHERE card_number = 'action_barbarian_rage_2'"
+	if _, err := db.Exec(updateResourceQuery); err != nil {
+		return fmt.Errorf("failed to update action resources: %w", err)
+	}
+
+	// Обновляем скрипт действия (используем правильное экранирование для PostgreSQL)
+	scriptJSON := `{"resource_cost":["bonus_action","rage_charge"],"duration":"10 rounds","effects":[{"name":"rage_damage_modifier","type":"attack_modifier","attack_range":"melee","attack_type":"weapon","modifies":"damage_roll","modifier_type":"add","modifier":"+2","conditions":{"attack_attribute":"strength"}},{"type":"resistance","resistances":[{"damage_type":"bludgeoning","resistance_type":"resistance"},{"damage_type":"piercing","resistance_type":"resistance"},{"damage_type":"slashing","resistance_type":"resistance"}]},{"type":"ability_check_modifier","ability_checks":["athletics"],"modifier":"advantage"},{"type":"saving_throw_modifier","saving_throws":["strength"],"modifier":"advantage"},{"type":"spell_restriction","restriction":"cannot_cast_or_concentrate"}],"end_action":{"name":"Выйти из Ярости","resource_cost":["bonus_action"],"ends_effect":true}}`
+
+	updateScriptQuery := fmt.Sprintf("UPDATE actions SET script = '%s'::jsonb WHERE card_number = 'action_barbarian_rage_2'", scriptJSON)
+	if _, err := db.Exec(updateScriptQuery); err != nil {
+		return fmt.Errorf("failed to update action script: %w", err)
+	}
+
+	return nil
+}
+
+// rollbackRageAction откатывает изменения действия Ярость
+func rollbackRageAction(db *sql.DB) error {
+	// Очищаем скрипт и ресурсы (можно оставить пустыми или вернуть к предыдущему состоянию)
+	queries := []string{
+		"UPDATE actions SET script = NULL WHERE card_number = 'action_barbarian_rage_2'",
+		"UPDATE actions SET resource = '' WHERE card_number = 'action_barbarian_rage_2'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
 	}
 	return nil
 }

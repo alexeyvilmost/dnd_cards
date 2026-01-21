@@ -33,7 +33,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     const id = Math.random().toString(36).substr(2, 9);
     
     // Создаем ключ для идентификации похожих уведомлений
-    const toastKey = `${toast.title}|${toast.message}|${toast.type}`;
+    const toastKey = `${toast.title}|${toast.message || ''}|${toast.type}`;
     const now = Date.now();
     const cooldownTime = 5000; // 5 секунд кулдауна
     

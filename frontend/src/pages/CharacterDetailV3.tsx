@@ -7,8 +7,11 @@ import ItemSelector from '../components/ItemSelector';
 import CardPreview from '../components/CardPreview';
 import CardDetailModal from '../components/CardDetailModal';
 import ActionAttackModal from '../components/ActionAttackModal';
-import { Card, Action } from '../types';
-import { actionsApi } from '../api/client';
+import { ActiveEffectsList } from '../components/ActiveEffectsList';
+import { ResourcesDisplay } from '../components/ResourcesDisplay';
+import { TurnControls } from '../components/TurnControls';
+import { Card, Action, ActiveEffect } from '../types';
+import { actionsApi, charactersV2Api } from '../api/client';
 import { useToast } from '../contexts/ToastContext';
 import { getRussianName } from '../utils/russianTranslations';
 import { getRarityBorderColor } from '../utils/rarityColors';
@@ -38,6 +41,8 @@ import {
   formatSignedValue,
   selectRuleFormula,
 } from '../utils/characterFormulaEvaluator';
+import { getClassActions } from '../utils/classActions';
+import { getChargeIcon, getChargeRussianName } from '../utils/chargeIcons';
 
 const CharacterDetailV3: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -89,6 +94,19 @@ const CharacterDetailV3: React.FC = () => {
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   
+  // Состояние для отслеживания использованных действий в текущем ходу
+  const [turnActions, setTurnActions] = useState({
+    action: false,
+    bonus_action: false,
+    reaction: false
+  });
+  
+  // Состояние для активных эффектов
+  const [activeEffects, setActiveEffects] = useState<any[]>([]);
+  
+  // Состояние для ресурсов персонажа
+  const [resources, setResources] = useState<Record<string, number>>({});
+  
   const allSkillNames = useMemo(() => getAllSkillNames(), []);
   const skillDependencies = useMemo(
     () => (selectedSkill ? getRuleDependencyNames(selectedSkill) : []),
@@ -104,9 +122,18 @@ const CharacterDetailV3: React.FC = () => {
   // Загружаем действия персонажа
   useEffect(() => {
     const loadActions = async () => {
+      if (!character) return;
+      
       try {
         setLoadingActions(true);
-        const actionIds = ['action_unarmed_strike', 'action_melee_attack'];
+        const actionIds: string[] = ['action_unarmed_strike', 'action_melee_attack'];
+        
+        // Загружаем действия класса на основе класса и уровня персонажа
+        console.log(`[loadActions] Загрузка действий для класса: "${character.class}", уровень: ${character.level}`);
+        const classActions = getClassActions(character.class, character.level);
+        console.log(`[loadActions] Найдено действий класса: ${classActions.length}`, classActions);
+        actionIds.push(...classActions);
+        
         const loadedActions: { [key: string]: Action } = {};
 
         await Promise.all(
@@ -117,12 +144,17 @@ const CharacterDetailV3: React.FC = () => {
               const action = response.actions.find(a => a.card_number === actionId);
               if (action) {
                 loadedActions[actionId] = action;
+                console.log(`[loadActions] Загружено действие: ${actionId} - ${action.name}`);
+              } else {
+                console.warn(`[loadActions] Действие ${actionId} не найдено в ответе API. Найдено действий: ${response.actions.length}`);
               }
             } catch (error) {
-              console.warn(`Ошибка загрузки действия ${actionId}:`, error);
+              console.error(`[loadActions] Ошибка загрузки действия ${actionId}:`, error);
             }
           })
         );
+        
+        console.log(`[loadActions] Всего загружено действий: ${Object.keys(loadedActions).length}`, Object.keys(loadedActions));
 
         setActions(loadedActions);
       } catch (error) {
@@ -133,7 +165,7 @@ const CharacterDetailV3: React.FC = () => {
     };
 
     loadActions();
-  }, []);
+  }, [character]);
 
   // Обновляем кэш эффектов только при изменении экипировки
   useEffect(() => {
@@ -165,6 +197,42 @@ const CharacterDetailV3: React.FC = () => {
       console.log(`⏱️ [PERF] Загрузка персонажа: ${(characterEndTime - characterStartTime).toFixed(2)}ms`);
       
       setCharacter(response.data);
+      
+      // Загружаем активные эффекты и ресурсы из ответа
+      if (response.data.active_effects) {
+        setActiveEffects(response.data.active_effects);
+      } else {
+        setActiveEffects([]);
+      }
+      
+      // Инициализируем ресурсы
+      let initialResources: Record<string, number> = {};
+      if (response.data.resources) {
+        initialResources = { ...response.data.resources };
+      }
+      
+      // Инициализируем ресурсы класса, если их нет
+      const className = response.data.class?.toLowerCase() || '';
+      if (className === 'barbarian' || className === 'варвар' || className.includes('варвар')) {
+        // Для варвара устанавливаем начальное количество зарядов ярости (2 для уровня 1-2)
+        if (initialResources['rage_charges'] === undefined && initialResources['rage_charge'] === undefined) {
+          const rageCharges = response.data.level >= 20 ? 6 : 
+                             response.data.level >= 17 ? 6 :
+                             response.data.level >= 15 ? 5 :
+                             response.data.level >= 12 ? 5 :
+                             response.data.level >= 9 ? 4 :
+                             response.data.level >= 6 ? 4 :
+                             response.data.level >= 3 ? 3 : 2;
+          initialResources['rage_charges'] = rageCharges;
+          
+          // Сохраняем максимальные ресурсы
+          if (!response.data.max_resources) {
+            // Можно обновить через API, но пока просто устанавливаем локально
+          }
+        }
+      }
+      
+      setResources(initialResources);
       
       // Загружаем инвентари персонажа (передаем ID напрямую)
       const inventoriesStartTime = performance.now();
@@ -2623,30 +2691,346 @@ const CharacterDetailV3: React.FC = () => {
     return meleeWeapon?.card || null;
   };
 
+  // Функция для получения всех ресурсов действия
+  const getActionResources = (action: Action): string[] => {
+    const resources: string[] = [];
+    
+    // Ресурсы из поля resource (строка через запятую)
+    if (action.resource) {
+      const resourceParts = String(action.resource).split(',').map(r => r.trim());
+      resources.push(...resourceParts);
+      console.log(`[getActionResources] Действие ${action.card_number}: ресурсы из поля resource:`, resourceParts);
+    }
+    
+    // Ресурсы из поля resources (массив)
+    if (action.resources && Array.isArray(action.resources)) {
+      resources.push(...action.resources);
+      console.log(`[getActionResources] Действие ${action.card_number}: ресурсы из поля resources:`, action.resources);
+    }
+    
+    // Ресурсы из script.resource_cost (массив)
+    if (action.script?.resource_cost) {
+      if (Array.isArray(action.script.resource_cost)) {
+        resources.push(...action.script.resource_cost);
+        console.log(`[getActionResources] Действие ${action.card_number}: ресурсы из script.resource_cost:`, action.script.resource_cost);
+      } else {
+        console.warn(`[getActionResources] Действие ${action.card_number}: script.resource_cost не является массивом:`, action.script.resource_cost);
+      }
+    }
+    
+    // Убираем дубликаты
+    const uniqueResources = [...new Set(resources)];
+    console.log(`[getActionResources] Действие ${action.card_number}: итоговые ресурсы:`, uniqueResources);
+    return uniqueResources;
+  };
+
+  // Функция для использования действия
+  const handleUseAction = async (action: Action) => {
+    if (!character || !id) return;
+    
+    // Получаем все ресурсы действия
+    const allResources = getActionResources(action);
+    
+    // Проверяем использованные действия в ходу
+    for (const resource of allResources) {
+      if (resource === 'action' || resource === 'main_action') {
+        if (turnActions.action) {
+          showToast('Вы уже использовали основное действие в этом ходу', 'error');
+          return;
+        }
+      }
+      if (resource === 'bonus_action') {
+        if (turnActions.bonus_action) {
+          showToast('Вы уже использовали бонусное действие в этом ходу', 'error');
+          return;
+        }
+      }
+      if (resource === 'reaction') {
+        if (turnActions.reaction) {
+          showToast('Вы уже использовали ответное действие в этом ходу', 'error');
+          return;
+        }
+      }
+      // Проверяем специальные ресурсы (заряды ярости и т.д.)
+      if (resource === 'rage_charge') {
+        // Проверяем оба варианта ключа (rage_charges и rage_charge)
+        const charges = resources['rage_charges'] ?? resources['rage_charge'] ?? 0;
+        if (charges <= 0) {
+          showToast('Недостаточно зарядов ярости', 'error');
+          return;
+        }
+      }
+    }
+    
+    try {
+      const updatedCharacter = await charactersV2Api.useAction(id, action.id);
+      setCharacter(updatedCharacter);
+      
+      // Обновляем состояние использованных действий
+      for (const resource of allResources) {
+        if (resource === 'action' || resource === 'main_action') {
+          setTurnActions(prev => ({ ...prev, action: true }));
+        }
+        if (resource === 'bonus_action') {
+          setTurnActions(prev => ({ ...prev, bonus_action: true }));
+        }
+        if (resource === 'reaction') {
+          setTurnActions(prev => ({ ...prev, reaction: true }));
+        }
+      }
+      
+      // Обновляем активные эффекты и ресурсы
+      if (updatedCharacter.active_effects) {
+        setActiveEffects(updatedCharacter.active_effects);
+      }
+      if (updatedCharacter.resources) {
+        setResources(updatedCharacter.resources);
+      }
+      
+      showToast(`Действие "${action.name}" использовано`, 'success');
+    } catch (error: any) {
+      console.error('Ошибка использования действия:', error);
+      showToast(error.response?.data?.error || 'Ошибка использования действия', 'error');
+    }
+  };
+
+  // Функция для завершения эффекта
+  const handleEndEffect = async (effectId: string) => {
+    if (!character || !id) return;
+    
+    try {
+      const updatedCharacter = await charactersV2Api.endEffect(id, effectId);
+      setCharacter(updatedCharacter);
+      
+      if (updatedCharacter.active_effects) {
+        setActiveEffects(updatedCharacter.active_effects);
+      }
+      
+      showToast('Эффект завершен', 'success');
+    } catch (error: any) {
+      console.error('Ошибка завершения эффекта:', error);
+      showToast(error.response?.data?.error || 'Ошибка завершения эффекта', 'error');
+    }
+  };
+
+  // Функция для обработки конца хода
+  const handleTurnEnd = async () => {
+    if (!character || !id) return;
+    
+    try {
+      const updatedCharacter = await charactersV2Api.processTurnEnd(id);
+      setCharacter(updatedCharacter);
+      
+      // Сбрасываем использованные действия
+      setTurnActions({
+        action: false,
+        bonus_action: false,
+        reaction: false
+      });
+      
+      // Обновляем активные эффекты
+      if (updatedCharacter.active_effects) {
+        setActiveEffects(updatedCharacter.active_effects);
+      }
+      
+      showToast('Ход завершен', 'success');
+    } catch (error: any) {
+      console.error('Ошибка обработки конца хода:', error);
+      showToast(error.response?.data?.error || 'Ошибка обработки конца хода', 'error');
+    }
+  };
+
+  // Функция для обработки длинного отдыха
+  const handleLongRest = async () => {
+    if (!character || !id) return;
+    
+    if (!confirm('Вы уверены, что хотите совершить длинный отдых? Это восстановит здоровье и ресурсы до максимума.')) {
+      return;
+    }
+    
+    try {
+      const updatedCharacter = await charactersV2Api.processLongRest(id);
+      setCharacter(updatedCharacter);
+      
+      // Сбрасываем использованные действия
+      setTurnActions({
+        action: false,
+        bonus_action: false,
+        reaction: false
+      });
+      
+      // Обновляем активные эффекты и ресурсы
+      if (updatedCharacter.active_effects) {
+        setActiveEffects(updatedCharacter.active_effects);
+      }
+      if (updatedCharacter.resources) {
+        setResources(updatedCharacter.resources);
+      }
+      
+      showToast('Длинный отдых завершен', 'success');
+    } catch (error: any) {
+      console.error('Ошибка обработки длинного отдыха:', error);
+      showToast(error.response?.data?.error || 'Ошибка обработки длинного отдыха', 'error');
+    }
+  };
+
   const renderActionsTab = () => {
     const unarmedStrike = actions['action_unarmed_strike'];
     const meleeAttack = actions['action_melee_attack'];
     const meleeWeaponEquipped = hasMeleeWeapon();
-    const equippedWeapon = getEquippedMeleeWeapon();
     
-    // Отладочная информация
-    if (unarmedStrike) {
-      console.log('[Actions] Безоружный удар:', {
-        name: unarmedStrike.name,
-        image_url: unarmedStrike.image_url,
-        hasImage: !!(unarmedStrike.image_url && unarmedStrike.image_url.trim() !== '')
-      });
-    }
-    if (meleeAttack) {
-      console.log('[Actions] Удар в ближнем бою:', {
-        name: meleeAttack.name,
-        image_url: meleeAttack.image_url,
-        hasImage: !!(meleeAttack.image_url && meleeAttack.image_url.trim() !== '')
-      });
-    }
+    // Разделяем действия по категориям
+    const mainActions: Action[] = [];
+    const bonusActions: Action[] = [];
+    const reactionActions: Action[] = [];
+    
+    Object.values(actions).forEach(action => {
+      const allResources = getActionResources(action);
+      console.log(`[renderActionsTab] Действие "${action.name}" (${action.card_number}): ресурсы =`, allResources);
+      
+      if (allResources.includes('action') || allResources.includes('main_action')) {
+        mainActions.push(action);
+      } else if (allResources.includes('bonus_action')) {
+        bonusActions.push(action);
+      } else if (allResources.includes('reaction')) {
+        reactionActions.push(action);
+      } else {
+        // Если действие не имеет явных ресурсов, добавляем в основные действия
+        console.warn(`[renderActionsTab] Действие "${action.name}" не имеет определенных ресурсов, добавляем в основные действия`);
+        mainActions.push(action);
+      }
+    });
+    
+    console.log(`[renderActionsTab] Категории действий: основные=${mainActions.length}, бонусные=${bonusActions.length}, ответные=${reactionActions.length}`);
+
+    // Функция для проверки доступности действия
+    const isActionAvailable = (action: Action): boolean => {
+      const allResources = getActionResources(action);
+      
+      for (const resource of allResources) {
+        if (resource === 'action' || resource === 'main_action') {
+          if (turnActions.action) return false;
+        }
+        if (resource === 'bonus_action') {
+          if (turnActions.bonus_action) return false;
+        }
+        if (resource === 'reaction') {
+          if (turnActions.reaction) return false;
+        }
+        if (resource === 'rage_charge') {
+          // Проверяем оба варианта ключа (rage_charges и rage_charge)
+          const charges = resources['rage_charges'] ?? resources['rage_charge'] ?? 0;
+          if (charges <= 0) return false;
+        }
+      }
+      
+      // Специальная проверка для удара ближнего боя
+      if (action.card_number === 'action_melee_attack' && !meleeWeaponEquipped) {
+        return false;
+      }
+      
+      return true;
+    };
+
+    // Функция для рендеринга кнопки действия
+    const renderActionButton = (action: Action, isAvailable: boolean) => {
+      const allResources = getActionResources(action);
+      
+      return (
+        <button
+          key={action.id}
+          onClick={() => isAvailable ? handleUseAction(action) : handleActionClick(action)}
+          disabled={!isAvailable && action.card_number !== 'action_melee_attack'}
+          className={`flex items-center space-x-3 px-6 py-4 rounded-lg border-2 border-black transition-all shadow-lg ${
+            isAvailable
+              ? 'bg-amber-900 hover:bg-amber-800 text-white hover:scale-105 cursor-pointer'
+              : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60'
+          }`}
+          title={!isAvailable ? 'Действие недоступно' : ''}
+        >
+          {/* Иконка ресурса */}
+          <div className="flex items-center space-x-2">
+            {allResources.map((resource, idx) => {
+              const iconPath = getChargeIcon(resource);
+              if (iconPath) {
+                return (
+                  <img
+                    key={idx}
+                    src={iconPath}
+                    alt={getChargeRussianName(resource)}
+                    className="w-6 h-6"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                );
+              }
+              return null;
+            })}
+          </div>
+          
+          {/* Иконка действия */}
+          {action.image_url && action.image_url.trim() !== '' && (
+            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+              <img
+                src={action.image_url}
+                alt={action.name}
+                className={`w-full h-full object-contain ${
+                  isAvailable ? 'filter drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]' : ''
+                }`}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          <span className="text-lg font-semibold">{action.name}</span>
+          
+          {/* Показываем количество зарядов для Ярости */}
+          {action.card_number === 'action_barbarian_rage_2' && resources['rage_charges'] !== undefined && (
+            <span className="text-sm opacity-75">({resources['rage_charges']})</span>
+          )}
+        </button>
+      );
+    };
 
     return (
       <div className="space-y-6">
+        {/* Управление ходом */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <TurnControls
+            onTurnEnd={handleTurnEnd}
+            onLongRest={handleLongRest}
+            disabled={!character}
+          />
+        </div>
+        
+        {/* Ресурсы */}
+        {(resources && Object.keys(resources).length > 0) && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ресурсы</h2>
+            <ResourcesDisplay
+              resources={resources}
+              maxResources={character?.max_resources || {}}
+            />
+          </div>
+        )}
+        
+        {/* Активные эффекты */}
+        {activeEffects.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Активные эффекты</h2>
+            <ActiveEffectsList
+              effects={activeEffects}
+              onEndEffect={handleEndEffect}
+            />
+          </div>
+        )}
+        
+        {/* Действия */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Действия</h2>
           
@@ -2656,64 +3040,47 @@ const CharacterDetailV3: React.FC = () => {
               <p className="text-gray-500 mt-4">Загрузка действий...</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-4">
-              {/* Безоружный удар - всегда доступен */}
-              {unarmedStrike && (
-                <button
-                  onClick={() => handleActionClick(unarmedStrike)}
-                  className="flex items-center space-x-3 bg-amber-900 hover:bg-amber-800 text-white px-6 py-4 rounded-lg border-2 border-black transition-all hover:scale-105 shadow-lg"
-                >
-                  {unarmedStrike.image_url && unarmedStrike.image_url.trim() !== '' && (
-                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                      <img
-                        src={unarmedStrike.image_url}
-                        alt={unarmedStrike.name}
-                        className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <span className="text-lg font-semibold">Безоружный удар</span>
-                </button>
+            <div className="space-y-6">
+              {/* Основные действия */}
+              {mainActions.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center space-x-2">
+                    <img src={getChargeIcon('main_action')} alt="Основное действие" className="w-5 h-5" />
+                    <span>Основные действия</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
+                    {mainActions.map(action => renderActionButton(action, isActionAvailable(action)))}
+                  </div>
+                </div>
               )}
-
-              {/* Удар в ближнем бою - доступен только с оружием */}
-              {meleeAttack && (
-                <button
-                  onClick={() => handleActionClick(meleeAttack)}
-                  disabled={!meleeWeaponEquipped}
-                  className={`flex items-center space-x-3 px-6 py-4 rounded-lg border-2 border-black transition-all shadow-lg ${
-                    meleeWeaponEquipped
-                      ? 'bg-amber-900 hover:bg-amber-800 text-white hover:scale-105 cursor-pointer'
-                      : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60'
-                  }`}
-                  title={!meleeWeaponEquipped ? 'Доступно только при экипированном оружии ближнего боя' : ''}
-                >
-                  {meleeAttack.image_url && meleeAttack.image_url.trim() !== '' && (
-                    <div className={`w-12 h-12 flex items-center justify-center flex-shrink-0 ${
-                      !meleeWeaponEquipped ? 'opacity-50' : ''
-                    }`}>
-                      <img
-                        src={meleeAttack.image_url}
-                        alt={meleeAttack.name}
-                        className={`w-full h-full object-contain ${
-                          meleeWeaponEquipped ? 'filter drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]' : ''
-                        }`}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <span className="text-lg font-semibold">Удар в ближнем бою</span>
-                </button>
+              
+              {/* Бонусные действия */}
+              {bonusActions.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center space-x-2">
+                    <img src={getChargeIcon('bonus_action')} alt="Бонусное действие" className="w-5 h-5" />
+                    <span>Бонусные действия</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
+                    {bonusActions.map(action => renderActionButton(action, isActionAvailable(action)))}
+                  </div>
+                </div>
               )}
-
-              {!unarmedStrike && !meleeAttack && (
+              
+              {/* Ответные действия */}
+              {reactionActions.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center space-x-2">
+                    <img src={getChargeIcon('reaction')} alt="Ответное действие" className="w-5 h-5" />
+                    <span>Ответные действия</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
+                    {reactionActions.map(action => renderActionButton(action, isActionAvailable(action)))}
+                  </div>
+                </div>
+              )}
+              
+              {mainActions.length === 0 && bonusActions.length === 0 && reactionActions.length === 0 && (
                 <div className="text-center py-8 w-full">
                   <p className="text-gray-500">Действия не найдены</p>
                 </div>

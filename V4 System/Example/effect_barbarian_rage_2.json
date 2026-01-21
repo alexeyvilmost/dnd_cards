@@ -1,0 +1,59 @@
+{
+	"name": "effect_barbarian_rage",
+	"russian_name": "Ярость",
+	"description": "Вы получаете преимущества ярости.",
+	"effect_duration": "temp",
+	"duration_type": "time",
+	"duration_time": {
+		"value": 10,
+		"measure": "turns"
+	},
+	"effect_activeness": "active",
+    "effect_source": "class",
+    "effect_source_id": "{BARBARIAN_UUID}",
+	"effect_target": "self",
+	"effect_type": "effect_list",
+	"effects": [
+        {
+            "name": "effect_barbarian_rage_damage_modifier",
+            "effect_type": "damage_roll_modifier",
+            "check": "before_damage_roll",
+            "allowed_attack_ranges": [ "melee" ],
+            "allowed_attack_types": [ "weapon" ],
+            "allowed_attack_attributes": [ "strength" ],
+            "modifier_type": "add",
+            "modifier": "{RAGE_DAMAGE_MODIFIER}"
+        },
+        {
+            "name": "effect_barbarian_rage_resistance_modifier",
+            "effect_type": "resistance",
+            "resistances": {
+                "resistance": [
+                    "bludgeoning",
+                    "piercing",
+                    "slashing"
+                ]
+            }
+        },
+        {
+            "name": "effect_barbarian_rage_ability_check_modifier",
+            "effect_type": "skill_roll_modifier",
+            "check": "before_skill_roll",
+            "allowed_skills": [ "athletics" ],
+            "modifier_type": "advantage"
+        },
+        {
+            "name": "effect_barbarian_rage_saving_throw_modifier",
+            "effect_type": "saving_throw_modifier",
+            "check": "before_saving_throw",
+            "allowed_saving_throws": [ "strength" ],
+            "modifier_type": "advantage"
+        },
+        {
+            "name": "effect_barbarian_rage_spell_restriction",
+            "effect_type": "spell_restriction",
+            "check": "spell_cast",
+            "restriction": "cannot_cast_or_concentrate"
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+{
+    "name": "effect_darkvision_60",
+    "russian_name": "Тёмное зрение (60 футов)",
+    "description": "Вы обладаете тёмным зрением в радиусе 60 футов",
+    "effect_duration": "pure",
+    "effect_type": "narrative"
+}

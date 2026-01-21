@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +50,34 @@ func (cc *CharacterV2Controller) CreateCharacterV2(c *gin.Context) {
 		return
 	}
 
+	// Инициализируем ресурсы в зависимости от класса
+	resources := CharacterResources{}
+	maxResources := CharacterResources{}
+	
+	// Для варвара устанавливаем начальное количество зарядов ярости
+	if strings.ToLower(req.Class) == "barbarian" || strings.ToLower(req.Class) == "варвар" {
+		var rageCharges int
+		if req.Level >= 20 {
+			rageCharges = 6
+		} else if req.Level >= 17 {
+			rageCharges = 6
+		} else if req.Level >= 15 {
+			rageCharges = 5
+		} else if req.Level >= 12 {
+			rageCharges = 5
+		} else if req.Level >= 9 {
+			rageCharges = 4
+		} else if req.Level >= 6 {
+			rageCharges = 4
+		} else if req.Level >= 3 {
+			rageCharges = 3
+		} else {
+			rageCharges = 2
+		}
+		resources["rage_charges"] = rageCharges
+		maxResources["rage_charges"] = rageCharges
+	}
+
 	character := CharacterV2{
 		UserID:                   userID.(uuid.UUID),
 		GroupID:                  nil, // Пока не поддерживаем группы
@@ -67,6 +96,9 @@ func (cc *CharacterV2Controller) CreateCharacterV2(c *gin.Context) {
 		CurrentHP:                req.CurrentHP,
 		SavingThrowProficiencies: string(savingThrowJSON),
 		SkillProficiencies:       string(skillJSON),
+		Resources:                &resources,
+		MaxResources:             &maxResources,
+		ActiveEffects:            &ActiveEffects{},
 	}
 
 	if err := cc.db.Create(&character).Error; err != nil {
@@ -164,6 +196,9 @@ func (cc *CharacterV2Controller) GetCharacterV2(c *gin.Context) {
 		CurrentHP:                character.CurrentHP,
 		SavingThrowProficiencies: savingThrows,
 		SkillProficiencies:       skills,
+		ActiveEffects:            character.ActiveEffects,
+		Resources:                character.Resources,
+		MaxResources:             character.MaxResources,
 		CreatedAt:                character.CreatedAt,
 		UpdatedAt:                character.UpdatedAt,
 		User:                     character.User,
@@ -213,6 +248,9 @@ func (cc *CharacterV2Controller) GetCharactersV2(c *gin.Context) {
 			CurrentHP:                character.CurrentHP,
 			SavingThrowProficiencies: savingThrows,
 			SkillProficiencies:       skills,
+			ActiveEffects:            character.ActiveEffects,
+			Resources:                character.Resources,
+			MaxResources:             character.MaxResources,
 			CreatedAt:                character.CreatedAt,
 			UpdatedAt:                character.UpdatedAt,
 			User:                     character.User,
@@ -1181,4 +1219,303 @@ func (controller *CharacterV2Controller) GetCharacterArmor(c *gin.Context) {
 	log.Printf("🛡️ [ARMOR] Итоговая защита: %d (тип: %s)", armorResult.FinalAC, armorResult.ArmorType)
 
 	c.JSON(http.StatusOK, armorResult)
+}
+
+// UseAction использует действие на персонаже
+func (cc *CharacterV2Controller) UseAction(c *gin.Context) {
+	characterID := c.Param("id")
+	actionID := c.Param("action_id")
+
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	// Получаем действие
+	var action Action
+	if err := cc.db.Where("id = ? OR card_number = ?", actionID, actionID).First(&action).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "действие не найдено"})
+		return
+	}
+
+	// Применяем действие
+	if err := ApplyAction(cc.db, &character, &action); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Получаем обновленного персонажа
+	var updatedCharacter CharacterV2
+	if err := cc.db.Preload("User").Preload("Group").First(&updatedCharacter, character.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения данных персонажа"})
+		return
+	}
+
+	// Конвертируем JSON строки обратно в массивы для ответа
+	var savingThrows, skills []string
+	json.Unmarshal([]byte(updatedCharacter.SavingThrowProficiencies), &savingThrows)
+	json.Unmarshal([]byte(updatedCharacter.SkillProficiencies), &skills)
+
+	response := CharacterV2Response{
+		ID:                       updatedCharacter.ID,
+		UserID:                   updatedCharacter.UserID,
+		GroupID:                  updatedCharacter.GroupID,
+		Name:                     updatedCharacter.Name,
+		Race:                     updatedCharacter.Race,
+		Class:                    updatedCharacter.Class,
+		Level:                    updatedCharacter.Level,
+		Speed:                    updatedCharacter.Speed,
+		Strength:                 updatedCharacter.Strength,
+		Dexterity:                updatedCharacter.Dexterity,
+		Constitution:             updatedCharacter.Constitution,
+		Intelligence:             updatedCharacter.Intelligence,
+		Wisdom:                   updatedCharacter.Wisdom,
+		Charisma:                 updatedCharacter.Charisma,
+		MaxHP:                    updatedCharacter.MaxHP,
+		CurrentHP:                updatedCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		ActiveEffects:            updatedCharacter.ActiveEffects,
+		Resources:                updatedCharacter.Resources,
+		MaxResources:             updatedCharacter.MaxResources,
+		CreatedAt:                updatedCharacter.CreatedAt,
+		UpdatedAt:                updatedCharacter.UpdatedAt,
+		User:                     updatedCharacter.User,
+		Group:                    updatedCharacter.Group,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// EndEffect завершает эффект на персонаже
+func (cc *CharacterV2Controller) EndEffect(c *gin.Context) {
+	characterID := c.Param("id")
+	effectID := c.Param("effect_id")
+
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	// Завершаем эффект
+	if err := EndEffect(cc.db, &character, effectID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Получаем обновленного персонажа
+	var updatedCharacter CharacterV2
+	if err := cc.db.Preload("User").Preload("Group").First(&updatedCharacter, character.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения данных персонажа"})
+		return
+	}
+
+	// Конвертируем JSON строки обратно в массивы для ответа
+	var savingThrows, skills []string
+	json.Unmarshal([]byte(updatedCharacter.SavingThrowProficiencies), &savingThrows)
+	json.Unmarshal([]byte(updatedCharacter.SkillProficiencies), &skills)
+
+	response := CharacterV2Response{
+		ID:                       updatedCharacter.ID,
+		UserID:                   updatedCharacter.UserID,
+		GroupID:                  updatedCharacter.GroupID,
+		Name:                     updatedCharacter.Name,
+		Race:                     updatedCharacter.Race,
+		Class:                    updatedCharacter.Class,
+		Level:                    updatedCharacter.Level,
+		Speed:                    updatedCharacter.Speed,
+		Strength:                 updatedCharacter.Strength,
+		Dexterity:                updatedCharacter.Dexterity,
+		Constitution:             updatedCharacter.Constitution,
+		Intelligence:             updatedCharacter.Intelligence,
+		Wisdom:                   updatedCharacter.Wisdom,
+		Charisma:                 updatedCharacter.Charisma,
+		MaxHP:                    updatedCharacter.MaxHP,
+		CurrentHP:                updatedCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		ActiveEffects:            updatedCharacter.ActiveEffects,
+		Resources:                updatedCharacter.Resources,
+		MaxResources:             updatedCharacter.MaxResources,
+		CreatedAt:                updatedCharacter.CreatedAt,
+		UpdatedAt:                updatedCharacter.UpdatedAt,
+		User:                     updatedCharacter.User,
+		Group:                    updatedCharacter.Group,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// ProcessTurnEnd обрабатывает конец хода
+func (cc *CharacterV2Controller) ProcessTurnEnd(c *gin.Context) {
+	characterID := c.Param("id")
+
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	// Обрабатываем конец хода
+	if err := ProcessTurnEnd(cc.db, &character); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Получаем обновленного персонажа
+	var updatedCharacter CharacterV2
+	if err := cc.db.Preload("User").Preload("Group").First(&updatedCharacter, character.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения данных персонажа"})
+		return
+	}
+
+	// Конвертируем JSON строки обратно в массивы для ответа
+	var savingThrows, skills []string
+	json.Unmarshal([]byte(updatedCharacter.SavingThrowProficiencies), &savingThrows)
+	json.Unmarshal([]byte(updatedCharacter.SkillProficiencies), &skills)
+
+	response := CharacterV2Response{
+		ID:                       updatedCharacter.ID,
+		UserID:                   updatedCharacter.UserID,
+		GroupID:                  updatedCharacter.GroupID,
+		Name:                     updatedCharacter.Name,
+		Race:                     updatedCharacter.Race,
+		Class:                    updatedCharacter.Class,
+		Level:                    updatedCharacter.Level,
+		Speed:                    updatedCharacter.Speed,
+		Strength:                 updatedCharacter.Strength,
+		Dexterity:                updatedCharacter.Dexterity,
+		Constitution:             updatedCharacter.Constitution,
+		Intelligence:             updatedCharacter.Intelligence,
+		Wisdom:                   updatedCharacter.Wisdom,
+		Charisma:                 updatedCharacter.Charisma,
+		MaxHP:                    updatedCharacter.MaxHP,
+		CurrentHP:                updatedCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		ActiveEffects:            updatedCharacter.ActiveEffects,
+		Resources:                updatedCharacter.Resources,
+		MaxResources:             updatedCharacter.MaxResources,
+		CreatedAt:                updatedCharacter.CreatedAt,
+		UpdatedAt:                updatedCharacter.UpdatedAt,
+		User:                     updatedCharacter.User,
+		Group:                    updatedCharacter.Group,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// ProcessLongRest обрабатывает длинный отдых
+func (cc *CharacterV2Controller) ProcessLongRest(c *gin.Context) {
+	characterID := c.Param("id")
+
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	// Обрабатываем длинный отдых
+	if err := ProcessLongRest(cc.db, &character); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Получаем обновленного персонажа
+	var updatedCharacter CharacterV2
+	if err := cc.db.Preload("User").Preload("Group").First(&updatedCharacter, character.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения данных персонажа"})
+		return
+	}
+
+	// Конвертируем JSON строки обратно в массивы для ответа
+	var savingThrows, skills []string
+	json.Unmarshal([]byte(updatedCharacter.SavingThrowProficiencies), &savingThrows)
+	json.Unmarshal([]byte(updatedCharacter.SkillProficiencies), &skills)
+
+	response := CharacterV2Response{
+		ID:                       updatedCharacter.ID,
+		UserID:                   updatedCharacter.UserID,
+		GroupID:                  updatedCharacter.GroupID,
+		Name:                     updatedCharacter.Name,
+		Race:                     updatedCharacter.Race,
+		Class:                    updatedCharacter.Class,
+		Level:                    updatedCharacter.Level,
+		Speed:                    updatedCharacter.Speed,
+		Strength:                 updatedCharacter.Strength,
+		Dexterity:                updatedCharacter.Dexterity,
+		Constitution:             updatedCharacter.Constitution,
+		Intelligence:             updatedCharacter.Intelligence,
+		Wisdom:                   updatedCharacter.Wisdom,
+		Charisma:                 updatedCharacter.Charisma,
+		MaxHP:                    updatedCharacter.MaxHP,
+		CurrentHP:                updatedCharacter.CurrentHP,
+		SavingThrowProficiencies: savingThrows,
+		SkillProficiencies:       skills,
+		ActiveEffects:            updatedCharacter.ActiveEffects,
+		Resources:                updatedCharacter.Resources,
+		MaxResources:             updatedCharacter.MaxResources,
+		CreatedAt:                updatedCharacter.CreatedAt,
+		UpdatedAt:                updatedCharacter.UpdatedAt,
+		User:                     updatedCharacter.User,
+		Group:                    updatedCharacter.Group,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// GetActiveEffects получает активные эффекты персонажа
+func (cc *CharacterV2Controller) GetActiveEffects(c *gin.Context) {
+	characterID := c.Param("id")
+
+	userID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+		return
+	}
+
+	// Проверяем, что персонаж принадлежит пользователю
+	var character CharacterV2
+	if err := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	// Возвращаем активные эффекты
+	activeEffects := character.ActiveEffects
+	if activeEffects == nil {
+		activeEffects = &ActiveEffects{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"active_effects": activeEffects})
 }
