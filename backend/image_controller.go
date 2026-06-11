@@ -118,12 +118,12 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	}
 
 	// Создаем промпт для генерации изображения
-	prompt := ic.createImagePrompt(req.Prompt, entityInfo)
+	prompt := ic.createImagePrompt(req.Prompt, req.Style, entityInfo)
 
 	// Генерируем изображение с помощью OpenAI
 	log.Printf("Отправляем промпт в OpenAI DALL-E: %s", prompt)
 	startTime := time.Now()
-	generatedImageURL, err := ic.openAIService.GenerateImage(prompt)
+	generatedImageURL, err := ic.openAIService.GenerateImage(prompt, req.Quality)
 	if err != nil {
 		log.Printf("Ошибка генерации изображения: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
@@ -332,7 +332,7 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 }
 
 // createImagePrompt создает промпт для генерации изображения
-func (ic *ImageController) createImagePrompt(userPrompt string, entityInfo map[string]interface{}) string {
+func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInfo map[string]interface{}) string {
 	if userPrompt != "" {
 		return userPrompt
 	}
@@ -353,8 +353,8 @@ func (ic *ImageController) createImagePrompt(userPrompt string, entityInfo map[s
 	}
 
 	// Используем новую функцию генерации промпта
-	prompt := GenerateImagePrompt(name, description, rarity)
-	log.Printf("Сгенерированный промпт: %s", prompt)
+	prompt := GenerateImagePrompt(name, description, rarity, style)
+	log.Printf("Сгенерированный промпт (стиль %q): %s", style, prompt)
 	return prompt
 }
 

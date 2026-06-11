@@ -25,8 +25,18 @@ func NewOpenAIService() *OpenAIService {
 	return &OpenAIService{client: client}
 }
 
-// GenerateImage - генерация изображения через OpenAI DALL-E
-func (s *OpenAIService) GenerateImage(prompt string) (string, error) {
+// normalizeImageQuality - приводит качество к допустимому значению gpt-image-1
+func normalizeImageQuality(quality string) string {
+	switch quality {
+	case "low", "medium", "high":
+		return quality
+	default:
+		return "high"
+	}
+}
+
+// GenerateImage - генерация изображения через OpenAI
+func (s *OpenAIService) GenerateImage(prompt, quality string) (string, error) {
 	if s.client == nil {
 		return "", fmt.Errorf("OpenAI API не настроен")
 	}
@@ -36,7 +46,7 @@ func (s *OpenAIService) GenerateImage(prompt string) (string, error) {
 		Prompt:  prompt,
 		Model:   "gpt-image-1",
 		Size:    openai.CreateImageSize1024x1024,
-		Quality: "low",
+		Quality: normalizeImageQuality(quality),
 		N:       1,
 	})
 
@@ -62,8 +72,22 @@ func (s *OpenAIService) GenerateImage(prompt string) (string, error) {
 	return "", fmt.Errorf("не получены данные изображения")
 }
 
+// Стили генерации изображений
+const (
+	ImageStyleGame    = "game"    // видеоигровая иконка
+	ImageStyleFantasy = "fantasy" // официальный арт D&D: акварельная книжная иллюстрация (по умолчанию)
+)
+
 // GenerateImagePrompt - генерация промпта для изображения на основе карточки
-func GenerateImagePrompt(cardName, description, rarity string) string {
+func GenerateImagePrompt(cardName, description, rarity, style string) string {
+	if style == ImageStyleGame {
+		return generateGamePrompt(cardName, description, rarity)
+	}
+	return generateFantasyPrompt(cardName, description, rarity)
+}
+
+// generateGamePrompt - промпт в стиле видеоигровой иконки
+func generateGamePrompt(cardName, description, rarity string) string {
 	// Определяем цвет редкости
 	rarityColor := getRarityColor(rarity)
 
@@ -82,6 +106,29 @@ func GenerateImagePrompt(cardName, description, rarity string) string {
 
 	// Добавляем стиль
 	prompt += "\nБез дополнительных элементов, рамок и прочего. Самое главное - предмет. Фон — прозрачный, без лишних деталей. Стиль — реалистичная отрисовка, мягкое освещение, лёгкое свечение по контуру, яркие акценты на металле, дереве или камне. Качество — детализированное, но с упрощённым прозрачным фоном, чтобы предмет выделялся.\nОбязательно на прозрачном однотонном фоне. Никаких надписей, текста, букв или цифр на изображении."
+
+	return prompt
+}
+
+// generateFantasyPrompt - промпт в стиле официальных иллюстраций D&D:
+// реалистично нарисованный предмет на белом фоне с мягким акварельным пятном позади
+func generateFantasyPrompt(cardName, description, rarity string) string {
+	rarityColor := getRarityColor(rarity)
+
+	prompt := fmt.Sprintf("Иллюстрация фэнтезийного предмета в стиле официальных артов настольной игры Dungeons & Dragons (книга игрока, пятая редакция).\nОбъект: %s", cardName)
+
+	if description != "" {
+		prompt += fmt.Sprintf(" %s", description)
+	}
+
+	if rarity != "common" {
+		prompt += fmt.Sprintf("\nДобавь сдержанные магические акценты %s цвета (свечение рун, камней или лезвия).", rarityColor)
+	}
+
+	prompt += "\nСтиль: традиционная книжная иллюстрация, реалистичная ручная отрисовка красками, естественная приглушённая палитра, проработанные текстуры металла, дерева, кожи и камня, мягкие тени." +
+		"\nКомпозиция: предмет целиком, крупно, под лёгким диагональным наклоном, по центру." +
+		"\nФон: чисто белый, позади предмета — только мягкое размытое акварельное пятно нейтрального серого или пастельного оттенка, как клякса на бумаге. Никаких других объектов, сцен или окружения." +
+		"\nНикаких надписей, текста, букв, цифр, рамок и водяных знаков на изображении."
 
 	return prompt
 }

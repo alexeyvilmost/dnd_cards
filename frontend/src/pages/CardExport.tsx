@@ -1,14 +1,144 @@
 import { useState, useEffect } from 'react';
 import { Check, Download, Printer } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { createRoot } from 'react-dom/client';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import CardPreview from '../components/CardPreview';
+import ExportCardPreview from '../components/ExportCardPreview';
 
 const CardExport = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const waitForImages = async (container: HTMLElement): Promise<void> => {
+    const images = Array.from(container.querySelectorAll('img'));
+    if (images.length === 0) {
+      return;
+    }
+
+    await Promise.all(
+      images.map((img) => {
+        if (img.complete) {
+          return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve) => {
+          const done = () => {
+            img.removeEventListener('load', done);
+            img.removeEventListener('error', done);
+            resolve();
+          };
+          img.addEventListener('load', done);
+          img.addEventListener('error', done);
+        });
+      })
+    );
+  };
+
+  const generatePdf = async (cardsForExport: Card[]) => {
+    const cardsPerPage = 16;
+    const pageWidthMm = 210;
+    const pageHeightMm = 297;
+    const cardWidthMm = 52.5;
+    const cardHeightMm = 74.25;
+
+    const pages: Card[][] = [];
+    for (let i = 0; i < cardsForExport.length; i += cardsPerPage) {
+      pages.push(cardsForExport.slice(i, i + cardsPerPage));
+    }
+
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-10000px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = `${pageWidthMm}mm`;
+    tempContainer.style.background = '#ffffff';
+    tempContainer.style.zIndex = '-1';
+    document.body.appendChild(tempContainer);
+
+    const root = createRoot(tempContainer);
+
+    try {
+      root.render(
+        <div style={{ width: `${pageWidthMm}mm` }}>
+          {pages.map((pageCards, pageIndex) => (
+            <div
+              key={`page-${pageIndex}`}
+              data-export-page="true"
+              style={{
+                width: `${pageWidthMm}mm`,
+                height: `${pageHeightMm}mm`,
+                backgroundColor: '#ffffff',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 52.5mm)',
+                gridTemplateRows: 'repeat(4, 74.25mm)',
+              }}
+            >
+              {pageCards.map((card) => (
+                <div
+                  key={card.id}
+                  style={{
+                    width: `${cardWidthMm}mm`,
+                    height: `${cardHeightMm}mm`,
+                    overflow: 'hidden',
+                    boxSizing: 'border-box',
+                    border: '0.1mm dashed rgba(107, 114, 128, 0.35)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      transformOrigin: 'top left',
+                      transform: 'scale(0.265)',
+                    }}
+                  >
+                    <ExportCardPreview card={card} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await waitForImages(tempContainer);
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageNodes = Array.from(tempContainer.querySelectorAll('[data-export-page="true"]'));
+      for (let index = 0; index < pageNodes.length; index += 1) {
+        const pageNode = pageNodes[index] as HTMLElement;
+        const canvas = await html2canvas(pageNode, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+        });
+
+        const imageData = canvas.toDataURL('image/png');
+        if (index > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imageData, 'PNG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
+      }
+
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      pdf.save(`dnd-cards-export-${dateStamp}.pdf`);
+    } finally {
+      root.unmount();
+      document.body.removeChild(tempContainer);
+    }
+  };
 
   // Загрузка всех карточек
   useEffect(() => {
@@ -55,10 +185,7 @@ const CardExport = () => {
     try {
       setLoading(true);
       const response = await cardsApi.exportCards({ card_ids: selectedCards });
-      
-      // TODO: Генерация PDF для печати
-      // Пока просто показываем сообщение
-      alert(`Готово к экспорту ${response.cards.length} карточек`);
+      await generatePdf(response.cards);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка экспорта');
     } finally {

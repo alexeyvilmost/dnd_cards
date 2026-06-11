@@ -5,10 +5,9 @@ import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
-import ExportCardPreview from './ExportCardPreview';
 import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
-import html2canvas from 'html2canvas';
+import { toBlob } from 'html-to-image';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 
 interface CardDetailModalProps {
@@ -35,8 +34,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  // Отдельный ref для экспорта — рендерим карту без масштабирования и эффектов
-  const exportRef = useRef<HTMLDivElement>(null);
 
   // Обработчик для закрытия по Esc
   useEffect(() => {
@@ -102,47 +99,52 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
     }
   };
 
-  // Функция скачивания карты как PNG
+  // Скачивание карты как PNG.
+  // Снимаем ровно тот DOM-узел, который пользователь видит в модалке:
+  // html-to-image сериализует его в SVG (вместе со шрифтами и CSS-фильтрами)
+  // и растеризует средствами самого браузера, поэтому результат
+  // совпадает с тем, что на экране.
   const handleDownloadCard = async () => {
-    if (!exportRef.current || !card) return;
-    
+    if (!cardRef.current || !card) return;
+
     try {
       setIsDownloading(true);
-      
-      // Конвертируем элемент карты в canvas
-      // Экспортируем скрытый элемент без визуального масштабирования
-      const isExtended = Boolean(card.is_extended);
-      const exportWidth = isExtended ? 397 : 198;
-      const exportHeight = 280;
+      setGenerateError(null);
 
-      const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: 'white',
-        scale: 3, // Большее разрешение для четкости при печати
-        logging: false,
-        useCORS: true, // Для корректной загрузки внешних изображений
-        width: exportWidth,
-        height: exportHeight,
-        allowTaint: false,
-        foreignObjectRendering: false,
+      const visibleCard = cardRef.current.querySelector('.card-preview') as HTMLElement | null;
+      if (!visibleCard) {
+        throw new Error('Не удалось найти карточку для экспорта');
+      }
+
+      // Дожидаемся шрифтов и картинок, чтобы снимок не делался с незагруженным контентом
+      await document.fonts.ready;
+      await Promise.all(
+        Array.from(visibleCard.querySelectorAll('img')).map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((resolve) => {
+                img.addEventListener('load', () => resolve(), { once: true });
+                img.addEventListener('error', () => resolve(), { once: true });
+              })
+        )
+      );
+
+      const blob = await toBlob(visibleCard, {
+        pixelRatio: 3, // высокое разрешение для печати
+        backgroundColor: '#ffffff',
+        cacheBust: true, // повторная загрузка внешних изображений с CORS-заголовками
       });
-      
-      // Конвертируем canvas в blob
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          setGenerateError('Не удалось создать изображение');
-          return;
-        }
-        
-        // Создаем ссылку для скачивания
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${card.name.replace(/[^a-zа-яё0-9]/gi, '_')}_${card.card_number}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 'image/png', 0.95);
+
+      if (!blob) {
+        throw new Error('Не удалось создать изображение');
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${card.name.replace(/[^a-zа-яё0-9]/gi, '_')}_${card.card_number}.png`;
+      link.click();
+      URL.revokeObjectURL(url);
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : 'Ошибка при скачивании карты');
     } finally {
@@ -400,15 +402,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         </div>
       </div>
 
-      {/* Скрытый блок для корректного экспорта PNG без масштабирования */}
-      <div
-        aria-hidden
-        style={{ position: 'absolute', left: -10000, top: 0, width: 'auto', height: 'auto' }}
-      >
-        <div ref={exportRef}>
-          <ExportCardPreview card={{...card, image_url: cardImage}} />
-        </div>
-      </div>
     </div>
   );
 };

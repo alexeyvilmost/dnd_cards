@@ -576,13 +576,13 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 	// Генерация промпта для ИИ
 	prompt := req.Prompt
 	if prompt == "" {
-		prompt = GenerateImagePrompt(card.Name, card.Description, string(card.Rarity))
+		prompt = GenerateImagePrompt(card.Name, card.Description, string(card.Rarity), ImageStyleFantasy)
 	}
 
 	// Генерация изображения через OpenAI API
 	var imageURL string
 	if cc.openaiService != nil {
-		generatedURL, err := cc.openaiService.GenerateImage(prompt)
+		generatedURL, err := cc.openaiService.GenerateImage(prompt, "high")
 		if err != nil {
 			// Если OpenAI недоступен, используем заглушку
 			imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")

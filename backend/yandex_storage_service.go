@@ -218,6 +218,8 @@ type ImageGenerationRequest struct {
 	EntityType string                 `json:"entity_type" binding:"required"` // "card" или "weapon_template"
 	EntityID   string                 `json:"entity_id"`                      // ID карты или шаблона оружия (может быть пустым для новых карт)
 	Prompt     string                 `json:"prompt"`                         // Промпт для генерации (опционально)
+	Style      string                 `json:"style"`                          // Стиль генерации: "fantasy" (по умолчанию) или "game"
+	Quality    string                 `json:"quality"`                        // Качество генерации: "low", "medium", "high" (по умолчанию)
 	EntityData map[string]interface{} `json:"entity_data"`                    // Данные сущности (название, описание, редкость)
 }
 

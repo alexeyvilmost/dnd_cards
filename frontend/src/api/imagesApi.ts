@@ -39,6 +39,13 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Стиль генерации изображения:
+// fantasy — официальный D&D-арт с акварельным фоном (по умолчанию), game — видеоигровая иконка
+export type ImageGenerationStyle = 'game' | 'fantasy';
+
+// Качество генерации изображения (gpt-image-1)
+export type ImageGenerationQuality = 'low' | 'medium' | 'high';
+
 export interface ImageUploadResponse {
   success: boolean;
   image_url: string;
@@ -91,12 +98,16 @@ export const imagesApi = {
       description?: string;
       rarity?: string;
       image_prompt_extra?: string;
-    }
+    },
+    style: ImageGenerationStyle = 'fantasy',
+    quality: ImageGenerationQuality = 'high'
   ): Promise<ImageGenerationResponse> => {
     const response = await apiClient.post<ImageGenerationResponse>('/api/images/generate', {
       entity_type: entityType,
       entity_id: entityId,
       prompt: prompt || '',
+      style,
+      quality,
       entity_data: entityData,
     });
     return response.data;

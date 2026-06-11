@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Wand2, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import { imagesApi } from '../api/imagesApi';
+import { Wand2, Loader2, AlertCircle, CheckCircle, Gamepad2, BookOpen } from 'lucide-react';
+import { imagesApi, type ImageGenerationStyle, type ImageGenerationQuality } from '../api/imagesApi';
 
 interface ImageGeneratorProps {
   entityType: 'card' | 'weapon_template';
@@ -31,6 +31,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [style, setStyle] = useState<ImageGenerationStyle>('fantasy');
+  const [quality, setQuality] = useState<ImageGenerationQuality>('high');
 
 
   const handleGenerate = async () => {
@@ -69,7 +71,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         description: entityDescription || '',
         rarity: entityRarity,
         image_prompt_extra: entityPromptExtra,
-      });
+      }, style, quality);
       
       if (response.success) {
         onImageGenerated(response.image_url);
@@ -139,6 +141,73 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Переключатель стиля */}
+      <div>
+        <div className="text-xs font-medium text-gray-700 mb-1">Стиль</div>
+        <div className="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setStyle('fantasy')}
+            disabled={isGenerating}
+            className={`flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              style === 'fantasy'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <BookOpen size={14} />
+            <span>Фэнтези</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStyle('game')}
+            disabled={isGenerating}
+            className={`flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              style === 'game'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Gamepad2 size={14} />
+            <span>Видеоигровой</span>
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-gray-500">
+          {style === 'fantasy'
+            ? 'Книжная иллюстрация в стиле официальных артов D&D'
+            : 'Яркая видеоигровая иконка предмета'}
+        </p>
+      </div>
+
+      {/* Переключатель качества */}
+      <div>
+        <div className="text-xs font-medium text-gray-700 mb-1">Качество</div>
+        <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-lg">
+          {([
+            { value: 'low', label: 'Низкое' },
+            { value: 'medium', label: 'Среднее' },
+            { value: 'high', label: 'Высокое' },
+          ] as { value: ImageGenerationQuality; label: string }[]).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setQuality(option.value)}
+              disabled={isGenerating}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                quality === option.value
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-gray-500">
+          Чем выше качество, тем дольше и дороже генерация
+        </p>
       </div>
 
       <button

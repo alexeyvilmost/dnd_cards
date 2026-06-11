@@ -174,22 +174,22 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
   const renderDefenseIcons = (defenseType: string) => {
     switch (defenseType) {
       case 'cloth':
-        return <img src="/icons/cloth.png" alt="Тканевая броня" className="w-3 h-3" />;
+        return <img src="/icons/cloth.png" alt="Тканевая броня" className="w-2.5 h-2.5" />;
       case 'light':
-        return <img src="/icons/defense.png" alt="Легкая броня" className="w-3 h-3" />;
+        return <img src="/icons/defense.png" alt="Легкая броня" className="w-2.5 h-2.5" />;
       case 'medium':
         return (
           <div className="flex space-x-0">
-            <img src="/icons/defense.png" alt="Средняя броня" className="w-3 h-3" />
-            <img src="/icons/defense.png" alt="Средняя броня" className="w-3 h-3" />
+            <img src="/icons/defense.png" alt="Средняя броня" className="w-2.5 h-2.5" />
+            <img src="/icons/defense.png" alt="Средняя броня" className="w-2.5 h-2.5" />
           </div>
         );
       case 'heavy':
         return (
           <div className="flex space-x-0">
-            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-3 h-3" />
-            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-3 h-3" />
-            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-3 h-3" />
+            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-2.5 h-2.5" />
+            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-2.5 h-2.5" />
+            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-2.5 h-2.5" />
           </div>
         );
       default:
@@ -300,39 +300,39 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             <div className="flex items-center space-x-2">
               {card.weight && (
                 <div className="flex items-center space-x-1">
-                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
                     {formatWeight(card.weight)}
                   </span>
-                  <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
+                  <img src="/icons/weight.png" alt="Вес" className="w-2.5 h-2.5" />
                 </div>
               )}
               {card.price && (
                 <div className="flex items-center space-x-1">
-                  <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+                  <span className="text-[8.5px] text-yellow-600 font-fantasy font-bold">
                     {formatPrice(card.price)}
                   </span>
-                  <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+                  <img src="/icons/coin.png" alt="Монеты" className="w-2.5 h-2.5" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
                 </div>
               )}
               {card.bonus_type && card.bonus_value && (
                 <div className="flex items-center space-x-0.5">
-                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
                     {getBonusShortValue(card.bonus_value)}
                   </span>
                   {card.bonus_type === 'damage' && card.damage_type && (
-                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-3 h-3" />
+                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-2.5 h-2.5" />
                   )}
                   {card.bonus_type === 'defense' && card.defense_type && (
                     renderDefenseIcons(card.defense_type)
                   )}
                   {card.bonus_type === 'defense' && card.type === 'щит' && (
-                    <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
+                    <img src="/icons/defense.png" alt="Защита" className="w-2.5 h-2.5" />
                   )}
                 </div>
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <span className={`text-[10px] ${getCardNumberColor(card)} font-mono`}>
+              <span className={`text-[8.5px] ${getCardNumberColor(card)} font-mono whitespace-nowrap`}>
                 {card.card_number}
               </span>
             </div>
@@ -396,38 +396,38 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             <div className="flex items-center space-x-2">
               {card.weight && (
                 <div className="flex items-center space-x-1">
-                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
                     {formatWeight(card.weight)}
                   </span>
-                  <img src="/icons/weight.png" alt="Вес" className="w-3 h-3" />
+                  <img src="/icons/weight.png" alt="Вес" className="w-2.5 h-2.5" />
                 </div>
               )}
               {card.price && (
                 <div className="flex items-center space-x-1">
-                  <span className="text-[10px] text-yellow-600 font-fantasy font-bold">
+                  <span className="text-[8.5px] text-yellow-600 font-fantasy font-bold">
                     {formatPrice(card.price)}
                   </span>
-                  <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+                  <img src="/icons/coin.png" alt="Монеты" className="w-2.5 h-2.5" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
                 </div>
               )}
               {card.bonus_type && card.bonus_value && (
                 <div className="flex items-center space-x-0.5">
-                  <span className="text-[10px] text-gray-900 font-fantasy font-medium">
+                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
                     {getBonusShortValue(card.bonus_value)}
                   </span>
                   {card.bonus_type === 'damage' && card.damage_type && (
-                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-3 h-3" />
+                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-2.5 h-2.5" />
                   )}
                   {card.bonus_type === 'defense' && card.defense_type && (
                     renderDefenseIcons(card.defense_type)
                   )}
                   {card.bonus_type === 'defense' && card.type === 'щит' && (
-                    <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
+                    <img src="/icons/defense.png" alt="Защита" className="w-2.5 h-2.5" />
                   )}
                 </div>
               )}
             </div>
-            <span className={`text-[10px] ${getCardNumberColor(card)} font-mono`}>
+            <span className={`text-[8.5px] ${getCardNumberColor(card)} font-mono whitespace-nowrap`}>
               {card.card_number}
             </span>
           </div>
