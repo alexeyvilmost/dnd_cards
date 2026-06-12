@@ -595,6 +595,7 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 
 	// Генерация промпта для ИИ
 	prompt := req.Prompt
+	imageSize := "" // пустой размер → квадрат по умолчанию (для ручного промпта)
 	if prompt == "" {
 		itemType := ""
 		if card.Type != nil {
@@ -603,12 +604,13 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 		prompt = GenerateImagePrompt(card.Name, card.Description, string(card.Rarity), ImageStyleFantasy, ImagePromptOptions{
 			ItemType: itemType,
 		})
+		imageSize = GenerateImageSize(itemType, card.Name, card.Description)
 	}
 
 	// Генерация изображения через OpenAI API
 	var imageURL string
 	if cc.openaiService != nil {
-		generatedURL, err := cc.openaiService.GenerateImage(prompt, "high")
+		generatedURL, err := cc.openaiService.GenerateImage(prompt, "high", imageSize)
 		if err != nil {
 			// Если OpenAI недоступен, используем заглушку
 			imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")

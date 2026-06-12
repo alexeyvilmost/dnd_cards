@@ -35,8 +35,33 @@ func normalizeImageQuality(quality string) string {
 	}
 }
 
-// GenerateImage - генерация изображения через OpenAI
-func (s *OpenAIService) GenerateImage(prompt, quality string) (string, error) {
+// normalizeImageSize - приводит размер к допустимому значению gpt-image-1.
+// Пустое или неизвестное значение трактуется как квадрат по умолчанию.
+func normalizeImageSize(size string) string {
+	switch size {
+	case openai.CreateImageSize1024x1024,
+		openai.CreateImageSize1024x1536,
+		openai.CreateImageSize1536x1024:
+		return size
+	default:
+		return openai.CreateImageSize1024x1024
+	}
+}
+
+// GenerateImageSize выбирает размер холста для генерации:
+// портрет (1024x1536) для вытянутых по вертикали предметов (посох, копьё, лук и т.п.),
+// иначе квадрат (1024x1024). Портретный холст резко снижает обрезание длинных предметов.
+func GenerateImageSize(itemType, cardName, description string) string {
+	resolvedType := inferItemType(itemType, cardName, description)
+	if isTallItem(resolvedType, cardName) {
+		return openai.CreateImageSize1024x1536
+	}
+	return openai.CreateImageSize1024x1024
+}
+
+// GenerateImage - генерация изображения через OpenAI.
+// size может быть пустым — тогда используется квадрат 1024x1024.
+func (s *OpenAIService) GenerateImage(prompt, quality, size string) (string, error) {
 	if s.client == nil {
 		return "", fmt.Errorf("OpenAI API не настроен")
 	}
@@ -45,7 +70,7 @@ func (s *OpenAIService) GenerateImage(prompt, quality string) (string, error) {
 	resp, err := s.client.CreateImage(ctx, openai.ImageRequest{
 		Prompt:     prompt,
 		Model:      "gpt-image-1",
-		Size:       openai.CreateImageSize1024x1024,
+		Size:       normalizeImageSize(size),
 		Quality:    normalizeImageQuality(quality),
 		Background: openai.CreateImageBackgroundTransparent,
 		N:          1,
@@ -146,11 +171,11 @@ func generateFantasyPrompt(cardName, description, rarity, itemType, imagePromptE
 
 	blobColor := getRarityBlobColor(rarity)
 
-	backgroundPart := fmt.Sprintf("\nФон: полностью прозрачный. Позади предмета — только очень лёгкое, полупрозрачное акварельное пятно %s: сильно разбавленная водой краска, бледная и воздушная, сквозь неё просвечивает фон. Пятно занимает лишь центральную часть, плавно растворяется к краям и не доходит до границ изображения.", blobColor)
+	backgroundPart := fmt.Sprintf("\nПозади предмета обязательно присутствует мягкое акварельное пятно-ореол %s. Это всегда видимая акварельная заливка умеренной насыщенности с размытыми, растушёванными краями: она расположена строго за предметом по центру, по размеру немного больше предмета, плавно растворяется к краям и не доходит до границ холста. Такое пятно должно быть на каждом изображении и не должно полностью исчезать или становиться невидимым.", blobColor)
+	backgroundPart += " Вся остальная площадь холста за пределами этого пятна — полностью прозрачная, без других объектов, сцен и окружения."
 	if rarity != "common" {
-		backgroundPart += " Пятно не должно быть серым, тёмным или плотным."
+		backgroundPart += " Пятно не серое, не тёмное и не плотное, но отчётливо передаёт указанный цветной оттенок."
 	}
-	backgroundPart += " Никаких других объектов, сцен или окружения."
 
 	prompt += "\nСтиль: традиционная книжная иллюстрация, реалистичная ручная отрисовка красками, естественная приглушённая палитра, проработанные текстуры металла, дерева, кожи, ткани, стекла и камня, мягкие тени."
 	prompt += "\n" + getFramingRequirements(itemType, cardName)
@@ -251,13 +276,13 @@ func isTallItem(itemType, cardName string) bool {
 }
 
 func getFramingRequirements(itemType, cardName string) string {
-	hint := "КРИТИЧНО — кадрирование: один предмет строго по центру, занимает не более 50% площади холста. " +
-		"Прозрачные пустые поля не менее 25% высоты и ширины с каждой стороны. " +
-		"Весь предмет целиком внутри кадра: ни один край, кончик, навершие, остриё или рукоять не обрезаны и не касаются границ изображения. " +
-		"Запрещено обрезание (no crop, no clipping, full object in frame)."
+	hint := "Композиция: один предмет целиком, по центру, небольшого размера — занимает примерно 45–55% площади холста. " +
+		"Вокруг предмета со всех сторон широкие пустые поля, не менее 25% ширины и высоты с каждого края. " +
+		"Между любой точкой предмета (включая навершие, остриё, рукоять и кончики) и краем холста всегда остаётся свободное пространство. " +
+		"Весь предмет помещается в кадр целиком, с заметным запасом воздуха по периметру."
 
 	if isTallItem(itemType, cardName) {
-		hint += " Предмет вытянут по вертикали — увеличь отступы сверху и снизу: оба конца (навершие и наконечник/рукоять) полностью видны с большим запасом пустого пространства вокруг."
+		hint += " Предмет вытянут по вертикали — оставь особенно большой запас пустого пространства сверху и снизу, чтобы оба конца предмета свободно помещались в кадр с воздухом вокруг."
 	}
 
 	return hint
@@ -292,11 +317,10 @@ func getItemCompositionHint(itemType, cardName string) string {
 }
 
 func getItemNegativeHint(itemType string) string {
-	noCrop := "Запрещено обрезать предмет у краёв изображения. "
 	if itemType == "weapon" {
-		return noCrop + "Не добавляй посторонние предметы, персонажей и фоновые сцены."
+		return "В кадре только один этот предмет — без посторонних предметов, персонажей и фоновых сцен."
 	}
-	return noCrop + "Запрещено: рукояти мечей, рукоятки, древки посохов, навершия, острия, клинки и любые детали оружия — если предмет не является оружием. Не добавляй посторонние предметы, персонажей и фоновые сцены."
+	return "В кадре только один этот предмет. Не добавляй детали оружия (рукояти, рукоятки, древки, навершия, острия, клинки), если сам предмет не является оружием. Без посторонних предметов, персонажей и фоновых сцен."
 }
 
 // getRarityBlobColor - цвет акварельного пятна на фоне в зависимости от редкости карты

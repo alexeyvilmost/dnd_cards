@@ -117,13 +117,13 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 		log.Printf("Получены данные сущности из базы: %+v", entityInfo)
 	}
 
-	// Создаем промпт для генерации изображения
-	prompt := ic.createImagePrompt(req.Prompt, req.Style, entityInfo)
+	// Создаем промпт и подбираем размер холста для генерации
+	prompt, imageSize := ic.createImagePrompt(req.Prompt, req.Style, entityInfo)
 
 	// Генерируем изображение с помощью OpenAI
-	log.Printf("Отправляем промпт в OpenAI DALL-E: %s", prompt)
+	log.Printf("Отправляем промпт в OpenAI DALL-E (size=%s): %s", imageSize, prompt)
 	startTime := time.Now()
-	generatedImageURL, err := ic.openAIService.GenerateImage(prompt, req.Quality)
+	generatedImageURL, err := ic.openAIService.GenerateImage(prompt, req.Quality, imageSize)
 	if err != nil {
 		log.Printf("Ошибка генерации изображения: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
@@ -332,10 +332,12 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 	}
 }
 
-// createImagePrompt создает промпт для генерации изображения
-func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInfo map[string]interface{}) string {
+// createImagePrompt создаёт промпт для генерации изображения и возвращает
+// его вместе с подобранным размером холста (size).
+// Для ручного промпта размер не подбирается (пустая строка → квадрат по умолчанию).
+func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInfo map[string]interface{}) (string, string) {
 	if userPrompt != "" {
-		return userPrompt
+		return userPrompt, ""
 	}
 
 	// Извлекаем данные о сущности
@@ -365,8 +367,9 @@ func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInf
 		ItemType:         itemType,
 		ImagePromptExtra: imagePromptExtra,
 	})
-	log.Printf("Сгенерированный промпт (стиль %q): %s", style, prompt)
-	return prompt
+	size := GenerateImageSize(itemType, name, description)
+	log.Printf("Сгенерированный промпт (стиль %q, size %s): %s", style, size, prompt)
+	return prompt, size
 }
 
 // logImageGeneration логирует генерацию изображения
