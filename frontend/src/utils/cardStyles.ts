@@ -1,0 +1,30 @@
+export const CARD_BORDER_WIDTH_PX = 6;
+export const CARD_BORDER_WIDTH_CLASS = 'border-[6px]';
+
+const CARD_BORDER_GRADIENT_COLORS: Record<string, { top: string; bottom: string }> = {
+  common: { top: '#9ca3af', bottom: '#1f2937' },
+  uncommon: { top: '#22c55e', bottom: '#052e16' },
+  rare: { top: '#3b82f6', bottom: '#0c1a3a' },
+  very_rare: { top: '#a855f7', bottom: '#1e1033' },
+  artifact: { top: '#f59e0b', bottom: '#3b1a05' },
+};
+
+const CARD_BORDER_GRADIENTS: Record<string, string> = Object.fromEntries(
+  Object.entries(CARD_BORDER_GRADIENT_COLORS).map(([rarity, colors]) => [
+    rarity,
+    `linear-gradient(to bottom, ${colors.top} 0%, ${colors.bottom} 100%)`,
+  ])
+);
+
+export const getCardBorderGradient = (rarity: string): string => {
+  return CARD_BORDER_GRADIENTS[rarity] ?? CARD_BORDER_GRADIENTS.common;
+};
+
+export const getCardBorderWrapperStyle = (rarity: string) => ({
+  padding: CARD_BORDER_WIDTH_PX,
+  background: getCardBorderGradient(rarity),
+});
+
+export const getCardBorderGradientColors = (rarity: string) => {
+  return CARD_BORDER_GRADIENT_COLORS[rarity] ?? CARD_BORDER_GRADIENT_COLORS.common;
+};

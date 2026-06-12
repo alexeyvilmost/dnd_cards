@@ -1,4 +1,5 @@
 import type { Card } from '../types';
+import { CARD_BORDER_WIDTH_PX, getCardBorderGradientColors } from '../utils/cardStyles';
 
 interface SVGCardPreviewProps {
   card: Card;
@@ -20,17 +21,6 @@ const SVGCardPreview = ({ card, width = 397, height = 280 }: SVGCardPreviewProps
       case 'epic': return '#8b5cf6';
       case 'legendary': return '#f59e0b';
       default: return '#6b7280';
-    }
-  };
-
-  const getBorderColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return '#9ca3af';
-      case 'uncommon': return '#10b981';
-      case 'rare': return '#3b82f6';
-      case 'very_rare': return '#8b5cf6';
-      case 'artifact': return '#f59e0b';
-      default: return '#d1d5db';
     }
   };
 
@@ -59,7 +49,8 @@ const SVGCardPreview = ({ card, width = 397, height = 280 }: SVGCardPreviewProps
   };
 
   const rarityColor = getRarityColor(card.rarity);
-  const borderColor = getBorderColor(card.rarity);
+  const borderGradient = getCardBorderGradientColors(card.rarity);
+  const innerRadius = 8 - CARD_BORDER_WIDTH_PX / 2;
 
   // Размеры шрифта для заголовка
   const getTitleFontSize = () => {
@@ -88,20 +79,33 @@ const SVGCardPreview = ({ card, width = 397, height = 280 }: SVGCardPreviewProps
         <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.1)"/>
         </filter>
+        <linearGradient id="cardBorderGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={borderGradient.top} />
+          <stop offset="100%" stopColor={borderGradient.bottom} />
+        </linearGradient>
       </defs>
 
-      {/* Фон карты */}
-      <rect 
-        x="0" 
-        y="0" 
-        width={cardWidth} 
-        height={cardHeight} 
-        fill="white" 
-        stroke={borderColor} 
-        strokeWidth="4" 
-        rx="8" 
+      {/* Градиентная рамка */}
+      <rect
+        x="0"
+        y="0"
+        width={cardWidth}
+        height={cardHeight}
+        fill="url(#cardBorderGradient)"
+        rx="8"
         ry="8"
         filter="url(#shadow)"
+      />
+
+      {/* Фон карты */}
+      <rect
+        x={CARD_BORDER_WIDTH_PX}
+        y={CARD_BORDER_WIDTH_PX}
+        width={cardWidth - CARD_BORDER_WIDTH_PX * 2}
+        height={cardHeight - CARD_BORDER_WIDTH_PX * 2}
+        fill="white"
+        rx={innerRadius}
+        ry={innerRadius}
       />
 
       {/* Маркер редкости */}
@@ -201,7 +205,7 @@ const SVGCardPreview = ({ card, width = 397, height = 280 }: SVGCardPreviewProps
           <text 
             x={cardWidth * 3 / 4} 
             y="60" 
-            fontSize={card.text_font_size || 14} 
+            fontSize={card.text_font_size || 13} 
             fill="#374151"
             fontFamily="fantasy"
             textAnchor="middle"
@@ -274,7 +278,7 @@ const SVGCardPreview = ({ card, width = 397, height = 280 }: SVGCardPreviewProps
           <text 
             x={cardWidth / 2} 
             y="226" 
-            fontSize={card.text_font_size || 14} 
+            fontSize={card.text_font_size || 13} 
             fill="#374151"
             fontFamily="fantasy"
             textAnchor="middle"

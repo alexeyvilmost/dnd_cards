@@ -8,7 +8,7 @@ interface ImageLibraryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectImage: (image: ImageLibraryItem) => void;
-  // Опциональные фильтры для автоматического применения при открытии
+  // Подсказки для фильтров (заполняют выпадающие списки, но не скрывают остальные изображения)
   initialFilters?: {
     item_type?: string;
     weapon_type?: string;
@@ -62,7 +62,9 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
       }
       
       setPagination(response.pagination);
-      setHasMore(response.images.length === (filters.limit || pagination.limit));
+      const limit = filters.limit || pagination.limit;
+      const page = response.pagination.page;
+      setHasMore(page * limit < response.pagination.total);
       
       // Автоматически выбираем первое изображение, если ничего не выбрано
       if (response.images.length > 0 && !selectedImage) {
@@ -96,21 +98,24 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   // Инициализация
   useEffect(() => {
     if (isOpen) {
-      // Применяем начальные фильтры при открытии
+      setSearchTerm('');
+      setSelectedImage(null);
+      setHasMore(true);
       if (initialFilters) {
-        if (initialFilters.rarity) setSelectedRarity(initialFilters.rarity);
-        if (initialFilters.item_type) setSelectedItemType(initialFilters.item_type);
-        if (initialFilters.weapon_type) setSelectedWeaponType(initialFilters.weapon_type);
-        if (initialFilters.armor_type) setSelectedArmorType(initialFilters.armor_type);
-        if (initialFilters.slot) setSelectedSlot(initialFilters.slot);
+        setSelectedRarity(initialFilters.rarity || '');
+        setSelectedItemType(initialFilters.item_type || '');
+        setSelectedWeaponType(initialFilters.weapon_type || '');
+        setSelectedArmorType(initialFilters.armor_type || '');
+        setSelectedSlot(initialFilters.slot || '');
+      } else {
+        setSelectedRarity('');
+        setSelectedItemType('');
+        setSelectedWeaponType('');
+        setSelectedArmorType('');
+        setSelectedSlot('');
       }
-      loadImages({
-        rarity: initialFilters?.rarity,
-        item_type: initialFilters?.item_type,
-        weapon_type: initialFilters?.weapon_type,
-        armor_type: initialFilters?.armor_type,
-        slot: initialFilters?.slot,
-      });
+      // Показываем все изображения; фильтры применяются только по кнопке «Найти»
+      loadImages({ page: 1, search: '', rarity: '', item_type: '', weapon_type: '', armor_type: '', slot: '' });
       loadRarities();
     }
   }, [isOpen]);

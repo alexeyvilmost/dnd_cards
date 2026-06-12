@@ -1,5 +1,9 @@
 import type { Card } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
+import { FormattedText } from '../utils/formattedText';
+import CardBottomPanel from './CardBottomPanel';
+import { getCardDescriptionFontSize } from '../utils/cardTextStyles';
+import { CARD_BORDER_WIDTH_PX, getCardBorderWrapperStyle } from '../utils/cardStyles';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
 import { getRarityColor } from '../utils/rarityColors';
@@ -52,17 +56,6 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
     }
   };
 
-  const getBorderColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return '#9ca3af';
-      case 'uncommon': return '#10b981';
-      case 'rare': return '#3b82f6';
-      case 'very_rare': return '#8b5cf6';
-      case 'artifact': return '#f59e0b';
-      default: return '#d1d5db';
-    }
-  };
-
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case 'common': return '#4b5563';
@@ -92,94 +85,24 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
     return baseStyle;
   };
 
-  // Функция форматирования цены
-  const formatPrice = (price: number): string => {
-    if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K`;
-    }
-    return `${price}`;
-  };
-
-  // Функция форматирования веса
-  const formatWeight = (weight: number): string => {
-    return `${weight}`;
-  };
-
-  // Функция для получения сокращенного названия бонуса
-  const getBonusShortName = (bonusType: string): string => {
-    switch (bonusType) {
-      case 'damage': return 'УРОН';
-      case 'defense': return 'ЗАЩ';
-      default: return bonusType.toUpperCase();
-    }
-  };
-
-  // Функция для получения сокращенного значения бонуса
-  const getBonusShortValue = (bonusValue: string): string => {
-    if (bonusValue.toLowerCase() === 'advantage') return 'ADV';
-    return bonusValue;
-  };
-
-  // Функция для получения типа урона из поля damage_type
-  const getDamageTypeLabel = (damageType: string): string => {
-    switch (damageType) {
-      case 'piercing': return 'колющий';
-      case 'slashing': return 'рубящий';
-      case 'bludgeoning': return 'дробящий';
-      default: return '';
-    }
-  };
-
-  // Функция для получения типа защиты из поля defense_type
-  const getDefenseTypeLabel = (defenseType: string): string => {
-    switch (defenseType) {
-      case 'cloth': return 'тканевая';
-      case 'light': return 'легкая';
-      case 'medium': return 'средняя';
-      case 'heavy': return 'тяжелая';
-      default: return '';
-    }
-  };
-
-  // Функция для отображения иконок защиты
-  const renderDefenseIcons = (defenseType: string) => {
-    switch (defenseType) {
-      case 'cloth':
-        return <img src="/icons/cloth.png" alt="Тканевая броня" style={{ width: '12px', height: '12px' }} />;
-      case 'light':
-        return <img src="/icons/defense.png" alt="Легкая броня" style={{ width: '12px', height: '12px' }} />;
-      case 'medium':
-        return (
-          <div style={{ display: 'flex', gap: '0px' }}>
-            <img src="/icons/defense.png" alt="Средняя броня" style={{ width: '12px', height: '12px' }} />
-            <img src="/icons/defense.png" alt="Средняя броня" style={{ width: '12px', height: '12px' }} />
-          </div>
-        );
-      case 'heavy':
-        return (
-          <div style={{ display: 'flex', gap: '0px' }}>
-            <img src="/icons/defense.png" alt="Тяжелая броня" style={{ width: '12px', height: '12px' }} />
-            <img src="/icons/defense.png" alt="Тяжелая броня" style={{ width: '12px', height: '12px' }} />
-            <img src="/icons/defense.png" alt="Тяжелая броня" style={{ width: '12px', height: '12px' }} />
-          </div>
-        );
-      default:
-        return null;
-    }
+  const wrapperStyle = {
+    ...getCardBorderWrapperStyle(card.rarity),
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    width: isExtended ? '397px' : '198px',
+    height: '280px',
   };
 
   const cardStyle = {
     position: 'relative' as const,
     backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    borderRadius: '6px',
     overflow: 'hidden',
-    border: `4px solid ${getBorderColor(card.rarity)}`,
-    width: isExtended ? '397px' : '198px',
-    height: '280px',
+    width: '100%',
+    height: '100%',
     display: 'flex',
     flexDirection: 'column' as const,
-    fontFamily: 'Arial, sans-serif'
+    fontFamily: 'Arial, sans-serif',
   };
 
   const rarityMarkerStyle = {
@@ -204,7 +127,8 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
   };
 
   return (
-    <div style={cardStyle} className={className}>
+    <div style={wrapperStyle} className={className}>
+      <div style={cardStyle}>
       {/* Метка редкости */}
       <div style={rarityMarkerStyle}>
         {getRarityMarker()}
@@ -322,87 +246,17 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
                     lineHeight: '1.4',
                     fontFamily: 'fantasy',
                     whiteSpace: 'pre-wrap' as const,
-                    fontSize: card.text_font_size ? `${card.text_font_size}px` : 
-                              card.description_font_size ? `${card.description_font_size}px` : '14px',
+                    fontSize: getCardDescriptionFontSize(card),
                     textAlign: (card.text_alignment || 'center') as 'left' | 'center' | 'right'
                   }}
                 >
-                  {card.description || 'Нет описания'}
+                  <FormattedText text={card.description || ''} useInlineStyles />
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Вес, цена, бонусы и номер карточки */}
-          <div style={{
-            position: 'absolute',
-            bottom: '2px',
-            left: '2px',
-            right: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            pointerEvents: 'none',
-            zIndex: 10,
-            backgroundColor: 'white',
-            borderTop: '1px solid #e5e7eb'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {card.weight && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500' }}>
-                    {formatWeight(card.weight)}
-                  </span>
-                  <img src="/icons/weight.png" alt="Вес" style={{ width: '12px', height: '12px' }} />
-                </div>
-              )}
-              {card.price && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#d97706', fontFamily: 'fantasy', fontWeight: 'bold' }}>
-                    {formatPrice(card.price)}
-                  </span>
-                  <img 
-                    src="/icons/coin.png" 
-                    alt="Монеты" 
-                    style={{ 
-                      width: '12px', 
-                      height: '12px',
-                      filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)'
-                    }} 
-                  />
-                </div>
-              )}
-              {card.bonus_type && card.bonus_value && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500' }}>
-                    {getBonusShortValue(card.bonus_value)}
-                  </span>
-                  {card.bonus_type === 'damage' && card.damage_type && (
-                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} style={{ width: '12px', height: '12px' }} />
-                  )}
-                  {card.bonus_type === 'defense' && card.defense_type && (
-                    renderDefenseIcons(card.defense_type)
-                  )}
-                  {card.bonus_type === 'defense' && card.type === 'щит' && (
-                    <img src="/icons/defense.png" alt="Защита" style={{ width: '12px', height: '12px' }} />
-                  )}
-                </div>
-              )}
-              {card.range && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500', whiteSpace: 'nowrap' as const }}>
-                    {card.range}
-                  </span>
-                  <img src="/icons/range.png" alt="Дальность" style={{ width: '12px', height: '12px' }} />
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '10px', color: '#9ca3af', fontFamily: 'monospace' }}>
-                {card.card_number}
-              </span>
-            </div>
-          </div>
+          <CardBottomPanel card={card} variant="absolute" />
         </>
       ) : (
         // Стандартный формат
@@ -464,82 +318,18 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
                 lineHeight: '1.4',
                 fontFamily: 'fantasy',
                 whiteSpace: 'pre-wrap' as const,
-                fontSize: card.text_font_size ? `${card.text_font_size}px` : 
-                          card.description_font_size ? `${card.description_font_size}px` : '14px',
+                fontSize: getCardDescriptionFontSize(card),
                 textAlign: (card.text_alignment || 'center') as 'left' | 'center' | 'right'
               }}
             >
-              {card.description || 'Нет описания'}
+              <FormattedText text={card.description || ''} useInlineStyles />
             </p>
           </div>
 
-          {/* Вес, цена, бонусы и номер карточки */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            pointerEvents: 'none',
-            zIndex: 10,
-            backgroundColor: 'white',
-            borderTop: '1px solid #e5e7eb',
-            padding: '4px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {card.weight && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500' }}>
-                    {formatWeight(card.weight)}
-                  </span>
-                  <img src="/icons/weight.png" alt="Вес" style={{ width: '12px', height: '12px' }} />
-                </div>
-              )}
-              {card.price && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#d97706', fontFamily: 'fantasy', fontWeight: 'bold' }}>
-                    {formatPrice(card.price)}
-                  </span>
-                  <img 
-                    src="/icons/coin.png" 
-                    alt="Монеты" 
-                    style={{ 
-                      width: '12px', 
-                      height: '12px',
-                      filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)'
-                    }} 
-                  />
-                </div>
-              )}
-              {card.bonus_type && card.bonus_value && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500' }}>
-                    {getBonusShortValue(card.bonus_value)}
-                  </span>
-                  {card.bonus_type === 'damage' && card.damage_type && (
-                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} style={{ width: '12px', height: '12px' }} />
-                  )}
-                  {card.bonus_type === 'defense' && card.defense_type && (
-                    renderDefenseIcons(card.defense_type)
-                  )}
-                  {card.bonus_type === 'defense' && card.type === 'щит' && (
-                    <img src="/icons/defense.png" alt="Защита" style={{ width: '12px', height: '12px' }} />
-                  )}
-                </div>
-              )}
-              {card.range && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500', whiteSpace: 'nowrap' as const }}>
-                    {card.range}
-                  </span>
-                  <img src="/icons/range.png" alt="Дальность" style={{ width: '12px', height: '12px' }} />
-                </div>
-              )}
-            </div>
-            <span style={{ fontSize: '10px', color: '#9ca3af', fontFamily: 'monospace' }}>
-              {card.card_number}
-            </span>
-          </div>
+          <CardBottomPanel card={card} variant="flow" />
         </>
       )}
+      </div>
     </div>
   );
 };

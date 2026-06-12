@@ -296,3 +296,96 @@ func (c *ImageLibraryController) UpdateImageLibraryFromCards(ctx *gin.Context) {
 		"updated": true,
 	})
 }
+
+// SyncMissingImages добавляет в библиотеку изображения из логов генерации и карт, которых там нет.
+func (c *ImageLibraryController) SyncMissingImages(ctx *gin.Context) {
+	added := 0
+
+	var logs []ImageGenerationLog
+	if err := c.db.Order("created_at ASC").Find(&logs).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка чтения логов генерации"})
+		return
+	}
+
+	for _, genLog := range logs {
+		if genLog.CloudinaryID == "" {
+			continue
+		}
+		var activeCount int64
+		c.db.Model(&ImageLibrary{}).Where("cloudinary_id = ? AND deleted_at IS NULL", genLog.CloudinaryID).Count(&activeCount)
+		if activeCount > 0 {
+			continue
+		}
+
+		entityInfo := map[string]interface{}{}
+		if genLog.EntityType == "card" {
+			var card Card
+			if err := c.db.Where("id = ?", genLog.EntityID).First(&card).Error; err == nil {
+				entityInfo = cardToEntityInfo(card)
+			}
+		}
+
+		tags := extractLibraryTags(entityInfo)
+		prompt := genLog.GenerationPrompt
+		model := genLog.GenerationModel
+		genTime := genLog.GenerationTimeMs
+		image := ImageLibrary{
+			CloudinaryID:     genLog.CloudinaryID,
+			CloudinaryURL:    genLog.CloudinaryURL,
+			CardName:         tags.CardName,
+			CardRarity:       tags.CardRarity,
+			ItemType:         tags.ItemType,
+			WeaponType:       tags.WeaponType,
+			ArmorType:        tags.ArmorType,
+			Slot:             tags.Slot,
+			GenerationPrompt: &prompt,
+			GenerationModel:  &model,
+			GenerationTimeMs: &genTime,
+		}
+		if upsertImageLibraryEntryToDB(c.db, image) {
+			added++
+		}
+	}
+
+	var cards []Card
+	if err := c.db.Where("image_cloudinary_id != '' AND deleted_at IS NULL").Find(&cards).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка чтения карт"})
+		return
+	}
+
+	for _, card := range cards {
+		var activeCount int64
+		c.db.Model(&ImageLibrary{}).Where("cloudinary_id = ? AND deleted_at IS NULL", card.ImageCloudinaryID).Count(&activeCount)
+		if activeCount > 0 {
+			continue
+		}
+
+		tags := extractLibraryTags(cardToEntityInfo(card))
+		imageURL := card.ImageURL
+		if imageURL == "" {
+			imageURL = card.ImageCloudinaryURL
+		}
+		image := ImageLibrary{
+			CloudinaryID:  card.ImageCloudinaryID,
+			CloudinaryURL: imageURL,
+			CardName:      tags.CardName,
+			CardRarity:    tags.CardRarity,
+			ItemType:      tags.ItemType,
+			WeaponType:    tags.WeaponType,
+			ArmorType:     tags.ArmorType,
+			Slot:          tags.Slot,
+		}
+		if card.ImageGenerated && card.ImageGenerationPrompt != "" {
+			prompt := card.ImageGenerationPrompt
+			image.GenerationPrompt = &prompt
+		}
+		if upsertImageLibraryEntryToDB(c.db, image) {
+			added++
+		}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Синхронизация завершена",
+		"added":   added,
+	})
+}

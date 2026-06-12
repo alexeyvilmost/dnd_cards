@@ -596,7 +596,13 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 	// Генерация промпта для ИИ
 	prompt := req.Prompt
 	if prompt == "" {
-		prompt = GenerateImagePrompt(card.Name, card.Description, string(card.Rarity), ImageStyleFantasy)
+		itemType := ""
+		if card.Type != nil {
+			itemType = *card.Type
+		}
+		prompt = GenerateImagePrompt(card.Name, card.Description, string(card.Rarity), ImageStyleFantasy, ImagePromptOptions{
+			ItemType: itemType,
+		})
 	}
 
 	// Генерация изображения через OpenAI API

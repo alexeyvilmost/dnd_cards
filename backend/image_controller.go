@@ -165,7 +165,13 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	ic.logImageGeneration(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
 
 	// Автоматически добавляем в библиотеку изображений (для всех сгенерированных изображений)
-	ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
+	libraryEntityInfo := entityInfo
+	if req.EntityID != "" && !isTemporaryID(req.EntityID) {
+		if dbInfo, err := ic.getEntityInfo(req.EntityType, req.EntityID); err == nil {
+			libraryEntityInfo = mergeEntityInfo(dbInfo, entityInfo)
+		}
+	}
+	ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime, libraryEntityInfo)
 
 	c.JSON(http.StatusOK, ImageGenerationResponse{
 		Success:        true,
@@ -319,12 +325,7 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 			return nil, err
 		}
 
-		return map[string]interface{}{
-			"name":        card.Name,
-			"description": card.Description,
-			"rarity":      string(card.Rarity),
-			"properties":  card.Properties,
-		}, nil
+		return cardToEntityInfo(card), nil
 
 	default:
 		return nil, fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
@@ -338,7 +339,7 @@ func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInf
 	}
 
 	// Извлекаем данные о сущности
-	var name, description, rarity string
+	var name, description, rarity, itemType, imagePromptExtra string
 
 	if nameVal, ok := entityInfo["name"].(string); ok {
 		name = nameVal
@@ -352,8 +353,18 @@ func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInf
 		rarity = rarityVal
 	}
 
-	// Используем новую функцию генерации промпта
-	prompt := GenerateImagePrompt(name, description, rarity, style)
+	if typeVal, ok := entityInfo["type"].(string); ok {
+		itemType = typeVal
+	}
+
+	if extraVal, ok := entityInfo["image_prompt_extra"].(string); ok {
+		imagePromptExtra = extraVal
+	}
+
+	prompt := GenerateImagePrompt(name, description, rarity, style, ImagePromptOptions{
+		ItemType:         itemType,
+		ImagePromptExtra: imagePromptExtra,
+	})
 	log.Printf("Сгенерированный промпт (стиль %q): %s", style, prompt)
 	return prompt
 }
@@ -433,178 +444,74 @@ func (ic *ImageController) downloadImage(url string) ([]byte, error) {
 }
 
 // addToImageLibrary автоматически добавляет изображение в библиотеку
-func (ic *ImageController) addToImageLibrary(entityType, entityID, cloudinaryID, imageURL, prompt, model string, generationTime int) {
-	// Получаем информацию о сущности для тегов
-	entityInfo, err := ic.getEntityInfo(entityType, entityID)
-	if err != nil {
-		log.Printf("Ошибка получения информации о сущности для библиотеки: %v", err)
-		return
-	}
-
-	// Извлекаем данные для тегов
-	var cardName, cardRarity, itemType, weaponType, armorType *string
-	var slot *EquipmentSlot
-	if nameVal, ok := entityInfo["name"].(string); ok && nameVal != "" {
-		cardName = &nameVal
-	}
-	if rarityVal, ok := entityInfo["rarity"].(string); ok && rarityVal != "" {
-		cardRarity = &rarityVal
-	}
-	if typeVal, ok := entityInfo["type"].(string); ok && typeVal != "" {
-		itemType = &typeVal
-	}
-	if weaponTypeVal, ok := entityInfo["weapon_type"].(string); ok && weaponTypeVal != "" {
-		weaponType = &weaponTypeVal
-	}
-	if slotVal, ok := entityInfo["slot"].(string); ok && slotVal != "" {
-		slotPtr := EquipmentSlot(slotVal)
-		slot = &slotPtr
-	}
-
-	// Определяем armor_type из properties
-	if propertiesVal, ok := entityInfo["properties"].([]interface{}); ok {
-		for _, prop := range propertiesVal {
-			if propStr, ok := prop.(string); ok {
-				switch propStr {
-				case "cloth":
-					armorTypeVal := "cloth"
-					armorType = &armorTypeVal
-				case "light_armor":
-					armorTypeVal := "light_armor"
-					armorType = &armorTypeVal
-				case "medium_armor":
-					armorTypeVal := "medium_armor"
-					armorType = &armorTypeVal
-				case "heavy_armor":
-					armorTypeVal := "heavy_armor"
-					armorType = &armorTypeVal
-				}
-			}
+func (ic *ImageController) addToImageLibrary(entityType, entityID, cloudinaryID, imageURL, prompt, model string, generationTime int, entityInfo map[string]interface{}) {
+	if entityInfo == nil {
+		var err error
+		entityInfo, err = ic.getEntityInfo(entityType, entityID)
+		if err != nil {
+			log.Printf("Предупреждение: не удалось получить данные сущности для библиотеки: %v", err)
+			entityInfo = map[string]interface{}{}
 		}
 	}
 
-	// Создаем запись для библиотеки
+	tags := extractLibraryTags(entityInfo)
 	image := ImageLibrary{
 		CloudinaryID:     cloudinaryID,
 		CloudinaryURL:    imageURL,
-		OriginalName:     nil, // Для сгенерированных изображений
-		FileSize:         nil, // Размер файла не известен
-		CardName:         cardName,
-		CardRarity:       cardRarity,
-		ItemType:         itemType,
-		WeaponType:       weaponType,
-		ArmorType:        armorType,
-		Slot:             slot,
+		OriginalName:     nil,
+		FileSize:         nil,
+		CardName:         tags.CardName,
+		CardRarity:       tags.CardRarity,
+		ItemType:         tags.ItemType,
+		WeaponType:       tags.WeaponType,
+		ArmorType:        tags.ArmorType,
+		Slot:             tags.Slot,
 		GenerationPrompt: &prompt,
 		GenerationModel:  &model,
 		GenerationTimeMs: &generationTime,
 	}
 
-	// Проверяем, не существует ли уже такое изображение
-	var existing ImageLibrary
-	if err := ic.db.Where("cloudinary_id = ?", cloudinaryID).First(&existing).Error; err == nil {
-		log.Printf("Изображение %s уже существует в библиотеке", cloudinaryID)
-		return
+	if upsertImageLibraryEntryToDB(ic.db, image) {
+		log.Printf("Изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s, type=%s",
+			cloudinaryID,
+			getStringValue(tags.CardName),
+			getStringValue(tags.CardRarity),
+			getStringValue(tags.ItemType))
 	}
-
-	// Добавляем в библиотеку
-	if err := ic.db.Create(&image).Error; err != nil {
-		log.Printf("Ошибка добавления изображения в библиотеку: %v", err)
-		return
-	}
-
-	log.Printf("Изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s",
-		cloudinaryID,
-		getStringValue(cardName),
-		getStringValue(cardRarity))
 }
 
 // addUploadedImageToLibrary автоматически добавляет загруженное изображение в библиотеку
 func (ic *ImageController) addUploadedImageToLibrary(entityType, entityID, cloudinaryID, imageURL, filename string, fileSize int64) {
-	// Получаем информацию о сущности для тегов
 	entityInfo, err := ic.getEntityInfo(entityType, entityID)
 	if err != nil {
-		log.Printf("Ошибка получения информации о сущности для библиотеки: %v", err)
-		return
+		log.Printf("Предупреждение: не удалось получить данные сущности для библиотеки: %v", err)
+		entityInfo = map[string]interface{}{}
 	}
 
-	// Извлекаем данные для тегов
-	var cardName, cardRarity, itemType, weaponType, armorType *string
-	var slot *EquipmentSlot
-	if nameVal, ok := entityInfo["name"].(string); ok && nameVal != "" {
-		cardName = &nameVal
-	}
-	if rarityVal, ok := entityInfo["rarity"].(string); ok && rarityVal != "" {
-		cardRarity = &rarityVal
-	}
-	if typeVal, ok := entityInfo["type"].(string); ok && typeVal != "" {
-		itemType = &typeVal
-	}
-	if weaponTypeVal, ok := entityInfo["weapon_type"].(string); ok && weaponTypeVal != "" {
-		weaponType = &weaponTypeVal
-	}
-	if slotVal, ok := entityInfo["slot"].(string); ok && slotVal != "" {
-		slotPtr := EquipmentSlot(slotVal)
-		slot = &slotPtr
-	}
-
-	// Определяем armor_type из properties
-	if propertiesVal, ok := entityInfo["properties"].([]interface{}); ok {
-		for _, prop := range propertiesVal {
-			if propStr, ok := prop.(string); ok {
-				switch propStr {
-				case "cloth":
-					armorTypeVal := "cloth"
-					armorType = &armorTypeVal
-				case "light_armor":
-					armorTypeVal := "light_armor"
-					armorType = &armorTypeVal
-				case "medium_armor":
-					armorTypeVal := "medium_armor"
-					armorType = &armorTypeVal
-				case "heavy_armor":
-					armorTypeVal := "heavy_armor"
-					armorType = &armorTypeVal
-				}
-			}
-		}
-	}
-
-	// Создаем запись для библиотеки
+	tags := extractLibraryTags(entityInfo)
 	fileSizeInt := int(fileSize)
 	image := ImageLibrary{
 		CloudinaryID:     cloudinaryID,
 		CloudinaryURL:    imageURL,
 		OriginalName:     &filename,
 		FileSize:         &fileSizeInt,
-		CardName:         cardName,
-		CardRarity:       cardRarity,
-		ItemType:         itemType,
-		WeaponType:       weaponType,
-		ArmorType:        armorType,
-		Slot:             slot,
-		GenerationPrompt: nil, // Для загруженных изображений
-		GenerationModel:  nil, // Для загруженных изображений
-		GenerationTimeMs: nil, // Для загруженных изображений
+		CardName:         tags.CardName,
+		CardRarity:       tags.CardRarity,
+		ItemType:         tags.ItemType,
+		WeaponType:       tags.WeaponType,
+		ArmorType:        tags.ArmorType,
+		Slot:             tags.Slot,
+		GenerationPrompt: nil,
+		GenerationModel:  nil,
+		GenerationTimeMs: nil,
 	}
 
-	// Проверяем, не существует ли уже такое изображение
-	var existing ImageLibrary
-	if err := ic.db.Where("cloudinary_id = ?", cloudinaryID).First(&existing).Error; err == nil {
-		log.Printf("Изображение %s уже существует в библиотеке", cloudinaryID)
-		return
+	if upsertImageLibraryEntryToDB(ic.db, image) {
+		log.Printf("Загруженное изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s",
+			cloudinaryID,
+			getStringValue(tags.CardName),
+			getStringValue(tags.CardRarity))
 	}
-
-	// Добавляем в библиотеку
-	if err := ic.db.Create(&image).Error; err != nil {
-		log.Printf("Ошибка добавления загруженного изображения в библиотеку: %v", err)
-		return
-	}
-
-	log.Printf("Загруженное изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s",
-		cloudinaryID,
-		getStringValue(cardName),
-		getStringValue(cardRarity))
 }
 
 // getStringValue безопасно получает строку из указателя

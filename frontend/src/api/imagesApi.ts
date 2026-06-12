@@ -98,6 +98,10 @@ export const imagesApi = {
       description?: string;
       rarity?: string;
       image_prompt_extra?: string;
+      type?: string;
+      weapon_type?: string;
+      slot?: string;
+      properties?: string[];
     },
     style: ImageGenerationStyle = 'fantasy',
     quality: ImageGenerationQuality = 'high'

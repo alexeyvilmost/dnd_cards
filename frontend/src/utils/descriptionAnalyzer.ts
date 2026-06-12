@@ -1,4 +1,5 @@
 import type { Effect } from '../types';
+import { stripFormattingMarkers } from './formattedText';
 
 // Мапа характеристик для быстрого поиска
 const CHARACTERISTIC_MAP = new Map([
@@ -90,7 +91,7 @@ export const analyzeDescriptionForEffects = (description: string): Effect[] => {
   }
 
   const effects: Effect[] = [];
-  const normalizedDescription = normalizeText(description);
+  const normalizedDescription = normalizeText(stripFormattingMarkers(description));
   const words = normalizedDescription.split(' ');
 
   for (let i = 0; i < words.length - 1; i++) {

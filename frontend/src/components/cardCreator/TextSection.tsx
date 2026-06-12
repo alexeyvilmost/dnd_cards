@@ -1,15 +1,18 @@
 import React, { useMemo } from 'react';
-import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { Control, Controller, FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { CreateCardRequest } from '../../types';
+import { FormattedTextarea } from '../FormattedTextarea';
+import { DEFAULT_DESCRIPTION_FONT_SIZE } from '../../utils/cardTextStyles';
 
 interface TextSectionProps {
   register: UseFormRegister<CreateCardRequest>;
+  control: Control<CreateCardRequest>;
   errors: FieldErrors<CreateCardRequest>;
   setValue: UseFormSetValue<CreateCardRequest>;
   watch: UseFormWatch<CreateCardRequest>;
 }
 
-export const TextSection: React.FC<TextSectionProps> = ({ register, errors, setValue, watch }) => {
+export const TextSection: React.FC<TextSectionProps> = ({ register, control, errors, setValue, watch }) => {
   const memoizedWatchedValues = useMemo(() => watch(), [watch]);
 
   return (
@@ -40,15 +43,21 @@ export const TextSection: React.FC<TextSectionProps> = ({ register, errors, setV
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Описание
           </label>
-          <textarea
-            {...register('description', { required: 'Описание обязательно' })}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Введите описание эффекта"
+          <Controller
+            name="description"
+            control={control}
+            rules={{ required: 'Описание обязательно' }}
+            render={({ field, fieldState }) => (
+              <FormattedTextarea
+                value={field.value || ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                rows={4}
+                placeholder="Введите описание эффекта"
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-          )}
         </div>
         
         {/* Выравнивание текста и размер шрифта */}
@@ -78,7 +87,7 @@ export const TextSection: React.FC<TextSectionProps> = ({ register, errors, setV
               max="24"
               {...register('text_font_size', { valueAsNumber: true })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="14 (по умолчанию)"
+              placeholder={`${DEFAULT_DESCRIPTION_FONT_SIZE} (по умолчанию)`}
             />
             <p className="text-xs text-gray-500 mt-1">
               Пустое = авторазмер

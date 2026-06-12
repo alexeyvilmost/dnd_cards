@@ -38,6 +38,7 @@ const CardCreator = () => {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     setValue,
@@ -509,6 +510,7 @@ const CardCreator = () => {
               {activeSection === 'main' && (
                 <MainSection 
                   register={register}
+                  control={control}
                   errors={errors}
                   setValue={setValue}
                   watch={watch}
@@ -532,6 +534,7 @@ const CardCreator = () => {
               {activeSection === 'text' && (
                 <TextSection 
                   register={register}
+                  control={control}
                   errors={errors}
                   setValue={setValue}
                   watch={watch}

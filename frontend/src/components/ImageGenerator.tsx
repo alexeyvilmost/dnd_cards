@@ -9,6 +9,10 @@ interface ImageGeneratorProps {
   entityRarity: string;
   entityDescription?: string;
   entityPromptExtra?: string;
+  entityItemType?: string;
+  entityWeaponType?: string;
+  entitySlot?: string;
+  entityProperties?: string[];
   onImageGenerated: (imageUrl: string) => void;
   disabled?: boolean;
   className?: string;
@@ -23,6 +27,10 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   entityRarity,
   entityDescription,
   entityPromptExtra,
+  entityItemType,
+  entityWeaponType,
+  entitySlot,
+  entityProperties,
   onImageGenerated,
   disabled = false,
   className = '',
@@ -71,6 +79,10 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         description: entityDescription || '',
         rarity: entityRarity,
         image_prompt_extra: entityPromptExtra,
+        type: entityItemType,
+        weapon_type: entityWeaponType,
+        slot: entitySlot,
+        properties: entityProperties,
       }, style, quality);
       
       if (response.success) {

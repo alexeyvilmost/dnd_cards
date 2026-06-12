@@ -79,51 +79,68 @@ const (
 	ImageStyleFantasy = "fantasy" // официальный арт D&D: акварельная книжная иллюстрация (по умолчанию)
 )
 
+// ImagePromptOptions — дополнительные параметры для генерации промпта
+type ImagePromptOptions struct {
+	ItemType         string
+	ImagePromptExtra string
+}
+
 // GenerateImagePrompt - генерация промпта для изображения на основе карточки
-func GenerateImagePrompt(cardName, description, rarity, style string) string {
-	if style == ImageStyleGame {
-		return generateGamePrompt(cardName, description, rarity)
+func GenerateImagePrompt(cardName, description, rarity, style string, opts ...ImagePromptOptions) string {
+	var options ImagePromptOptions
+	if len(opts) > 0 {
+		options = opts[0]
 	}
-	return generateFantasyPrompt(cardName, description, rarity)
+	itemType := inferItemType(options.ItemType, cardName, description)
+	if style == ImageStyleGame {
+		return generateGamePrompt(cardName, description, rarity, itemType, options.ImagePromptExtra)
+	}
+	return generateFantasyPrompt(cardName, description, rarity, itemType, options.ImagePromptExtra)
 }
 
 // generateGamePrompt - промпт в стиле видеоигровой иконки
-func generateGamePrompt(cardName, description, rarity string) string {
-	// Определяем цвет редкости
+func generateGamePrompt(cardName, description, rarity, itemType, imagePromptExtra string) string {
 	rarityColor := getRarityColor(rarity)
 
-	// Базовый промпт
-	prompt := fmt.Sprintf("Фэнтезийный предмет, выполненный в стиле видеоигровой иконки.\nОбъект: %s", cardName)
+	prompt := fmt.Sprintf("Фэнтезийный предмет, выполненный в стиле видеоигровой иконки.\nТип предмета: %s.\nОбъект: %s", getItemTypeLabel(itemType), cardName)
 
-	// Добавляем описание предмета из базы данных
 	if description != "" {
 		prompt += fmt.Sprintf(" %s", description)
 	}
 
-	// Добавляем акцентные цвета и свечение только для необычных предметов
+	if imagePromptExtra != "" {
+		prompt += fmt.Sprintf(" %s", imagePromptExtra)
+	}
+
 	if rarity != "common" {
 		prompt += fmt.Sprintf(" с акцентным %s цветом и %s свечением", rarityColor, rarityColor)
 	}
 
-	// Добавляем стиль
-	prompt += "\nБез дополнительных элементов, рамок и прочего. Самое главное - предмет. Фон — прозрачный, без лишних деталей. Стиль — реалистичная отрисовка, мягкое освещение, лёгкое свечение по контуру, яркие акценты на металле, дереве или камне. Качество — детализированное, но с упрощённым прозрачным фоном, чтобы предмет выделялся.\nКомпозиция: предмет строго целиком в кадре, ничего не обрезано краями изображения, с отступом от краёв не менее 10%.\nОбязательно на прозрачном однотонном фоне. Никаких надписей, текста, букв или цифр на изображении."
+	prompt += "\nБез дополнительных элементов, рамок и прочего. Самое главное — один предмет. Фон — прозрачный, без лишних деталей. Стиль — реалистичная отрисовка, мягкое освещение, лёгкое свечение по контуру, яркие акценты на металле, дереве, камне, стекле или ткани. Качество — детализированное, но с упрощённым прозрачным фоном, чтобы предмет выделялся."
+	prompt += "\n" + getItemCompositionHint(itemType)
+	prompt += "\n" + getItemNegativeHint(itemType)
+	prompt += "\nОбязательно на прозрачном однотонном фоне. Никаких надписей, текста, букв или цифр на изображении."
 
 	return prompt
 }
 
 // generateFantasyPrompt - промпт в стиле официальных иллюстраций D&D:
 // реалистично нарисованный предмет на белом фоне с мягким акварельным пятном позади
-func generateFantasyPrompt(cardName, description, rarity string) string {
+func generateFantasyPrompt(cardName, description, rarity, itemType, imagePromptExtra string) string {
 	rarityColor := getRarityColor(rarity)
 
-	prompt := fmt.Sprintf("Иллюстрация фэнтезийного предмета в стиле официальных артов настольной игры Dungeons & Dragons (книга игрока, пятая редакция).\nОбъект: %s", cardName)
+	prompt := fmt.Sprintf("Иллюстрация фэнтезийного предмета в стиле официальных артов настольной игры Dungeons & Dragons (книга игрока, пятая редакция).\nТип предмета: %s.\nОбъект: %s", getItemTypeLabel(itemType), cardName)
 
 	if description != "" {
 		prompt += fmt.Sprintf(" %s", description)
 	}
 
+	if imagePromptExtra != "" {
+		prompt += fmt.Sprintf(" %s", imagePromptExtra)
+	}
+
 	if rarity != "common" {
-		prompt += fmt.Sprintf("\nДобавь сдержанные магические акценты %s цвета (свечение рун, камней или лезвия).", rarityColor)
+		prompt += fmt.Sprintf("\nДобавь сдержанные магические акценты %s цвета (свечение рун, камней или металла).", rarityColor)
 	}
 
 	blobColor := getRarityBlobColor(rarity)
@@ -134,12 +151,116 @@ func generateFantasyPrompt(cardName, description, rarity string) string {
 	}
 	backgroundPart += " Никаких других объектов, сцен или окружения."
 
-	prompt += "\nСтиль: традиционная книжная иллюстрация, реалистичная ручная отрисовка красками, естественная приглушённая палитра, проработанные текстуры металла, дерева, кожи и камня, мягкие тени." +
-		"\nКомпозиция: предмет занимает около 70% площади кадра, по центру, под лёгким диагональным наклоном. Предмет ОБЯЗАТЕЛЬНО виден полностью, включая оба конца, навершия, острия и рукояти. Со всех четырёх сторон вокруг предмета остаётся пустое поле не менее 15% размера изображения. Ни одна часть предмета не касается краёв изображения и не обрезается ими." +
-		backgroundPart +
-		"\nНикаких надписей, текста, букв, цифр, рамок и водяных знаков на изображении."
+	prompt += "\nСтиль: традиционная книжная иллюстрация, реалистичная ручная отрисовка красками, естественная приглушённая палитра, проработанные текстуры металла, дерева, кожи, ткани, стекла и камня, мягкие тени."
+	prompt += "\nКомпозиция: предмет занимает около 70% площади кадра, по центру. Со всех четырёх сторон вокруг предмета остаётся пустое поле не менее 15% размера изображения. Ни одна часть предмета не касается краёв изображения и не обрезается ими."
+	prompt += "\n" + getItemCompositionHint(itemType)
+	prompt += "\n" + getItemNegativeHint(itemType)
+	prompt += backgroundPart
+	prompt += "\nНикаких надписей, текста, букв, цифр, рамок и водяных знаков на изображении."
 
 	return prompt
+}
+
+// inferItemType определяет тип предмета по полю type или ключевым словам в названии/описании
+func inferItemType(itemType, cardName, description string) string {
+	if itemType != "" && itemType != "none" && itemType != "equipment" {
+		return itemType
+	}
+
+	text := strings.ToLower(cardName + " " + description)
+
+	keywordTypes := []struct {
+		itemType string
+		keywords []string
+	}{
+		{"weapon", []string{"меч", "клинок", "кинжал", "топор", "булава", "копь", "копьё", "копье", "лук", "арбалет", "посох", "жезл", "кистень", "секира", "рапира", "сабля", "sword", "dagger", "axe", "bow", "staff", "wand"}},
+		{"shield", []string{"щит", "shield"}},
+		{"ring", []string{"кольцо", "перстень", "ring"}},
+		{"necklace", []string{"ожерелье", "амулет", "кулон", "подвеск", "necklace", "amulet"}},
+		{"potion", []string{"зелье", "эликсир", "настой", "potion", "elixir"}},
+		{"scroll", []string{"свиток", "scroll"}},
+		{"cloak", []string{"плащ", "мантия", "накидк", "cloak", "mantle", "robe", "роба", "халат"}},
+		{"chest", []string{"доспех", "кольчуг", "латы", "кираса", "нагрудник", "броня", "armor", "breastplate", "chainmail"}},
+		{"helmet", []string{"шлем", "каска", "капюшон", "корона", "helmet", "hood", "crown"}},
+		{"gloves", []string{"перчатк", "рукавиц", "наруч", "gauntlet", "glove", "bracer"}},
+		{"boots", []string{"сапог", "ботинк", "обув", "boot"}},
+		{"ammunition", []string{"стрел", "болт", "снаряд", "arrow", "bolt"}},
+		{"food", []string{"хлеб", "сыр", "мясо", "пирог", "food", "bread"}},
+		{"ingredient", []string{"ингредиент", "трава", "корень", "гриб", "ingredient", "herb"}},
+		{"tool", []string{"инструмент", "молоток", "кирка", "отмычк", "tool", "pickaxe"}},
+	}
+
+	for _, entry := range keywordTypes {
+		for _, kw := range entry.keywords {
+			if strings.Contains(text, kw) {
+				return entry.itemType
+			}
+		}
+	}
+
+	if itemType != "" {
+		return itemType
+	}
+	return "item"
+}
+
+func getItemTypeLabel(itemType string) string {
+	labels := map[string]string{
+		"weapon":     "оружие",
+		"shield":     "щит",
+		"ring":       "кольцо",
+		"necklace":   "ожерелье или амулет",
+		"potion":     "зелье или флакон",
+		"scroll":     "свиток",
+		"cloak":      "плащ, мантия или одежда",
+		"chest":      "доспех или нагрудник",
+		"helmet":     "шлем или головной убор",
+		"gloves":     "перчатки или наручи",
+		"boots":      "обувь или сапоги",
+		"ammunition": "боеприпасы",
+		"food":       "еда",
+		"ingredient": "алхимический ингредиент",
+		"tool":       "инструмент",
+		"armor":      "доспех",
+		"trinket":    "безделушка",
+		"item":       "фэнтезийный предмет",
+	}
+	if label, ok := labels[itemType]; ok {
+		return label
+	}
+	return labels["item"]
+}
+
+func getItemCompositionHint(itemType string) string {
+	switch itemType {
+	case "weapon":
+		return "Предмет целиком в кадре, под лёгким диагональным наклоном. Если это оружие с лезвием и рукоятью — оба конца видны полностью."
+	case "shield":
+		return "Щит показан анфас, целиком в кадре. Только щит — без меча, копья или другого оружия рядом."
+	case "cloak", "chest", "helmet", "gloves", "boots", "armor":
+		return "Одежда или доспех: аккуратно сложена или на невидимом манекене, целиком в кадре. Показать только ткань, кожу и металл доспеха."
+	case "ring", "necklace":
+		return "Украшение крупным планом по центру: кольцо, перстень или подвеска целиком в кадре."
+	case "potion":
+		return "Стеклянный флакон или бутыль с пробкой, целиком в кадре. Только сосуд с жидкостью."
+	case "scroll":
+		return "Свиток пергамента, целиком в кадре."
+	case "ammunition":
+		return "Стрелы, болты или снаряды, аккуратно сгруппированы, целиком в кадре."
+	case "food", "ingredient":
+		return "Съедобный предмет или алхимический компонент, целиком в кадре."
+	case "tool":
+		return "Инструмент целиком в кадре."
+	default:
+		return "Один предмет целиком в кадре, без посторонних объектов."
+	}
+}
+
+func getItemNegativeHint(itemType string) string {
+	if itemType == "weapon" {
+		return "Не добавляй посторонние предметы, персонажей и фоновые сцены."
+	}
+	return "Запрещено: рукояти мечей, рукоятки, древки посохов, навершия, острия, клинки и любые детали оружия — если предмет не является оружием. Не добавляй посторонние предметы, персонажей и фоновые сцены."
 }
 
 // getRarityBlobColor - цвет акварельного пятна на фоне в зависимости от редкости карты

@@ -59,6 +59,10 @@ export const ImageSection: React.FC<ImageSectionProps> = ({
         entityRarity={memoizedWatchedValues.rarity}
         entityDescription={memoizedWatchedValues.description}
         entityPromptExtra={memoizedWatchedValues.image_prompt_extra}
+        entityItemType={memoizedWatchedValues.type || undefined}
+        entityWeaponType={memoizedWatchedValues.weapon_type || undefined}
+        entitySlot={memoizedWatchedValues.slot || undefined}
+        entityProperties={memoizedWatchedValues.properties || undefined}
         onImageGenerated={onImageGenerated}
         onCreateEntity={onCreateEntity}
         disabled={!memoizedWatchedValues.name || memoizedWatchedValues.name === 'Название карты'}

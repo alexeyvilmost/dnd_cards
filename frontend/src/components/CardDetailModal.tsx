@@ -9,6 +9,7 @@ import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
 import { toBlob } from 'html-to-image';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
+import { FormattedText } from '../utils/formattedText';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -99,11 +100,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
     }
   };
 
-  // Скачивание карты как PNG.
-  // Снимаем ровно тот DOM-узел, который пользователь видит в модалке:
-  // html-to-image сериализует его в SVG (вместе со шрифтами и CSS-фильтрами)
-  // и растеризует средствами самого браузера, поэтому результат
-  // совпадает с тем, что на экране.
+  // Скачивание карты как PNG — снимаем тот же узел, что видит пользователь в модалке.
   const handleDownloadCard = async () => {
     if (!cardRef.current || !card) return;
 
@@ -111,15 +108,15 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       setIsDownloading(true);
       setGenerateError(null);
 
-      const visibleCard = cardRef.current.querySelector('.card-preview') as HTMLElement | null;
-      if (!visibleCard) {
+      const exportCard = cardRef.current.querySelector('.card-preview') as HTMLElement | null;
+      if (!exportCard) {
         throw new Error('Не удалось найти карточку для экспорта');
       }
 
       // Дожидаемся шрифтов и картинок, чтобы снимок не делался с незагруженным контентом
       await document.fonts.ready;
       await Promise.all(
-        Array.from(visibleCard.querySelectorAll('img')).map((img) =>
+        Array.from(exportCard.querySelectorAll('img')).map((img) =>
           img.complete
             ? Promise.resolve()
             : new Promise<void>((resolve) => {
@@ -129,10 +126,10 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         )
       );
 
-      const blob = await toBlob(visibleCard, {
-        pixelRatio: 3, // высокое разрешение для печати
+      const blob = await toBlob(exportCard, {
+        pixelRatio: 3,
         backgroundColor: '#ffffff',
-        cacheBust: true, // повторная загрузка внешних изображений с CORS-заголовками
+        cacheBust: true,
       });
 
       if (!blob) {
@@ -263,7 +260,9 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
           </div>
 
           {card.description && (
-            <p className="text-sm sm:text-base md:text-lg whitespace-pre-wrap">{card.description}</p>
+            <p className="text-sm sm:text-base md:text-lg whitespace-pre-wrap">
+              <FormattedText text={card.description} />
+            </p>
           )}
 
           {card.detailed_description && (

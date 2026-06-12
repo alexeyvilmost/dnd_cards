@@ -1,9 +1,13 @@
 import type { Card } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
+import { FormattedText } from '../utils/formattedText';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
+import CardBottomPanel from './CardBottomPanel';
+import { getCardBorderWrapperStyle } from '../utils/cardStyles';
+import { getCardDescriptionFontSize } from '../utils/cardTextStyles';
 
 // Функция для получения значения цвета редкости для inline стилей
 const getRarityColorValue = (rarity: string) => {
@@ -56,17 +60,6 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
     }
   };
 
-  const getBorderColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'border-gray-400';
-      case 'uncommon': return 'border-green-500';
-      case 'rare': return 'border-blue-500';
-      case 'very_rare': return 'border-purple-500';
-      case 'artifact': return 'border-orange-500';
-      default: return 'border-gray-300';
-    }
-  };
-
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case 'common': return 'text-gray-600';
@@ -101,12 +94,6 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
     }
   };
 
-  // Функция для получения цвета номера карты в зависимости от наличия эффектов
-  const getCardNumberColor = (card: Card) => {
-    const hasEffects = card.effects && Array.isArray(card.effects) && card.effects.length > 0;
-    return hasEffects ? 'text-gray-900' : 'text-gray-400';
-  };
-
   // Функция для получения класса усиленного свечения
   const getEnhancedGlowClass = (rarity: string) => {
     switch (rarity) {
@@ -116,92 +103,13 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
     }
   };
 
-  // Функция форматирования цены
-  const formatPrice = (price: number): string => {
-    if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K`;
-    }
-    return `${price}`;
-  };
-
-  // Функция форматирования веса
-  const formatWeight = (weight: number): string => {
-    return `${weight}`;
-  };
-
-  // Функция для определения размера шрифта описания
-  const getDescriptionFontSize = (description: string): string => {
-    return 'text-sm';
-  };
-
-  // Функция для получения сокращенного названия бонуса
-  const getBonusShortName = (bonusType: string): string => {
-    switch (bonusType) {
-      case 'damage': return 'УРОН';
-      case 'defense': return 'ЗАЩ';
-      default: return bonusType.toUpperCase();
-    }
-  };
-
-  // Функция для получения сокращенного значения бонуса
-  const getBonusShortValue = (bonusValue: string): string => {
-    if (bonusValue.toLowerCase() === 'advantage') return 'ADV';
-    return bonusValue;
-  };
-
-  // Функция для получения типа урона из поля damage_type
-  const getDamageTypeLabel = (damageType: string): string => {
-    switch (damageType) {
-      case 'piercing': return 'колющий';
-      case 'slashing': return 'рубящий';
-      case 'bludgeoning': return 'дробящий';
-      default: return '';
-    }
-  };
-
-  // Функция для получения типа защиты из поля defense_type
-  const getDefenseTypeLabel = (defenseType: string): string => {
-    switch (defenseType) {
-      case 'cloth': return 'тканевая';
-      case 'light': return 'легкая';
-      case 'medium': return 'средняя';
-      case 'heavy': return 'тяжелая';
-      default: return '';
-    }
-  };
-
-  // Функция для отображения иконок защиты
-  const renderDefenseIcons = (defenseType: string) => {
-    switch (defenseType) {
-      case 'cloth':
-        return <img src="/icons/cloth.png" alt="Тканевая броня" className="w-2.5 h-2.5" />;
-      case 'light':
-        return <img src="/icons/defense.png" alt="Легкая броня" className="w-2.5 h-2.5" />;
-      case 'medium':
-        return (
-          <div className="flex space-x-0">
-            <img src="/icons/defense.png" alt="Средняя броня" className="w-2.5 h-2.5" />
-            <img src="/icons/defense.png" alt="Средняя броня" className="w-2.5 h-2.5" />
-          </div>
-        );
-      case 'heavy':
-        return (
-          <div className="flex space-x-0">
-            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-2.5 h-2.5" />
-            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-2.5 h-2.5" />
-            <img src="/icons/defense.png" alt="Тяжелая броня" className="w-2.5 h-2.5" />
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div 
-      className={`card-preview relative bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor(card.rarity)} border-4 ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
+    <div
+      className={`card-preview rounded-lg shadow-md ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} ${onClick ? 'cursor-pointer' : ''}`}
+      style={getCardBorderWrapperStyle(card.rarity)}
       onClick={onClick}
     >
+      <div className="relative bg-white rounded-[6px] overflow-hidden flex flex-col h-full w-full">
       {/* Метка редкости для слабовидящих */}
       <div className="absolute top-0.5 left-1 text-sm font-bold select-none">
         <span 
@@ -292,70 +200,18 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                 <p 
                   className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`} 
                   style={{ 
-                    fontSize: card.text_font_size ? `${card.text_font_size}px` : 
-                            card.description_font_size ? `${card.description_font_size}px` : 
-                            getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
-                            getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px'),
+                    fontSize: getCardDescriptionFontSize(card),
                     textAlign: card.text_alignment || 'center'
                   }}
                 >
-                  {card.description || 'Нет описания'}
+                  <FormattedText text={card.description || ''} />
                 </p>
                 
               </div>
             </div>
           </div>
 
-          {/* Вес, цена, бонусы и номер карточки - абсолютно позиционированные */}
-          <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200">
-            <div className="flex items-center space-x-2">
-              {card.weight && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
-                    {formatWeight(card.weight)}
-                  </span>
-                  <img src="/icons/weight.png" alt="Вес" className="w-2.5 h-2.5" />
-                </div>
-              )}
-              {card.price && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-[8.5px] text-yellow-600 font-fantasy font-bold">
-                    {formatPrice(card.price)}
-                  </span>
-                  <img src="/icons/coin.png" alt="Монеты" className="w-2.5 h-2.5" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
-                </div>
-              )}
-              {card.bonus_type && card.bonus_value && (
-                <div className="flex items-center space-x-0.5">
-                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
-                    {getBonusShortValue(card.bonus_value)}
-                  </span>
-                  {card.bonus_type === 'damage' && card.damage_type && (
-                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-2.5 h-2.5" />
-                  )}
-                  {card.bonus_type === 'defense' && card.defense_type && (
-                    renderDefenseIcons(card.defense_type)
-                  )}
-                  {card.bonus_type === 'defense' && card.type === 'щит' && (
-                    <img src="/icons/defense.png" alt="Защита" className="w-2.5 h-2.5" />
-                  )}
-                </div>
-              )}
-              {card.range && (
-                <div className="flex items-center space-x-0.5">
-                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium whitespace-nowrap">
-                    {card.range}
-                  </span>
-                  <img src="/icons/range.png" alt="Дальность" className="w-2.5 h-2.5" />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className={`text-[8.5px] ${getCardNumberColor(card)} font-mono whitespace-nowrap`}>
-                {card.card_number}
-              </span>
-            </div>
-          </div>
+          <CardBottomPanel card={card} variant="absolute" />
         </>
       ) : (
         // Стандартный формат
@@ -399,67 +255,18 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             <p 
               className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`}
               style={{ 
-                fontSize: card.text_font_size ? `${card.text_font_size}px` : 
-                        card.description_font_size ? `${card.description_font_size}px` : 
-                        getDescriptionFontSize(card.description || '') === 'text-sm' ? '14px' : 
-                        getDescriptionFontSize(card.description || '').replace('text-[', '').replace('px]', 'px'),
+                fontSize: getCardDescriptionFontSize(card),
                 textAlign: card.text_alignment || 'center'
               }}
             >
-              {card.description || 'Нет описания'}
+              <FormattedText text={card.description || ''} />
             </p>
           </div>
 
-          {/* Вес, цена, бонусы и номер карточки - приклеены к низу */}
-          <div className="flex items-center justify-between pointer-events-none z-10 bg-white border-t border-gray-200 p-1">
-            <div className="flex items-center space-x-2">
-              {card.weight && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
-                    {formatWeight(card.weight)}
-                  </span>
-                  <img src="/icons/weight.png" alt="Вес" className="w-2.5 h-2.5" />
-                </div>
-              )}
-              {card.price && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-[8.5px] text-yellow-600 font-fantasy font-bold">
-                    {formatPrice(card.price)}
-                  </span>
-                  <img src="/icons/coin.png" alt="Монеты" className="w-2.5 h-2.5" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
-                </div>
-              )}
-              {card.bonus_type && card.bonus_value && (
-                <div className="flex items-center space-x-0.5">
-                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium">
-                    {getBonusShortValue(card.bonus_value)}
-                  </span>
-                  {card.bonus_type === 'damage' && card.damage_type && (
-                    <img src={`/icons/${card.damage_type}.png`} alt={getDamageTypeLabel(card.damage_type)} className="w-2.5 h-2.5" />
-                  )}
-                  {card.bonus_type === 'defense' && card.defense_type && (
-                    renderDefenseIcons(card.defense_type)
-                  )}
-                  {card.bonus_type === 'defense' && card.type === 'щит' && (
-                    <img src="/icons/defense.png" alt="Защита" className="w-2.5 h-2.5" />
-                  )}
-                </div>
-              )}
-              {card.range && (
-                <div className="flex items-center space-x-0.5">
-                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium whitespace-nowrap">
-                    {card.range}
-                  </span>
-                  <img src="/icons/range.png" alt="Дальность" className="w-2.5 h-2.5" />
-                </div>
-              )}
-            </div>
-            <span className={`text-[8.5px] ${getCardNumberColor(card)} font-mono whitespace-nowrap`}>
-              {card.card_number}
-            </span>
-          </div>
+          <CardBottomPanel card={card} variant="flow" />
         </>
       )}
+      </div>
     </div>
   );
 };

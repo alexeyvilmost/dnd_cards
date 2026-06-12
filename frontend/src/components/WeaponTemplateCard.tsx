@@ -1,5 +1,6 @@
 import React from 'react';
 import { WeaponTemplate } from '../types';
+import { getCardBorderWrapperStyle } from '../utils/cardStyles';
 import { getPropertyLabel, getWeaponCategoryLabel, getDamageTypeLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
 
@@ -27,8 +28,6 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
   };
 
   // Функция для получения цвета обводки (все шаблоны - обычные)
-  const getBorderColor = () => 'border-gray-400';
-
   // Функция для получения цвета редкости
   const getRarityColor = () => 'text-gray-600';
 
@@ -105,10 +104,12 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
   const description = generateDescription(template);
 
   return (
-    <div 
-      className={`card-preview bg-white rounded-lg shadow-md overflow-hidden ${getBorderColor()} border-4 ${className} cursor-pointer transition-all duration-300 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl group ${getRarityGlowColor()} flex flex-col`}
+    <div
+      className={`card-preview rounded-lg shadow-md ${className} cursor-pointer transition-all duration-300 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl group ${getRarityGlowColor()}`}
+      style={getCardBorderWrapperStyle('common')}
       onClick={onClick}
     >
+      <div className="relative bg-white rounded-[6px] overflow-hidden flex flex-col h-full w-full">
       {/* Заголовок */}
       <div className="px-1 py-0.5 text-center">
         <h3 className={getTitleClass()}>
@@ -174,6 +175,7 @@ const WeaponTemplateCard: React.FC<WeaponTemplateCardProps> = ({ template, onCli
         <span className="text-[10px] text-gray-400 font-mono">
           TEMPLATE
         </span>
+      </div>
       </div>
     </div>
   );

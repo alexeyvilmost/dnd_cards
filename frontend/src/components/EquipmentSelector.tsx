@@ -5,6 +5,17 @@ import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import TemplateViewer from './TemplateViewer';
 
+const SHIELD_TEMPLATE_ID = 'db34e692-5d67-4afc-99ca-b42ce6f0dc28';
+
+interface EquipmentSlotOption {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isArmor?: boolean;
+  directTemplateId?: string;
+}
+
 interface EquipmentSelectorProps {
   onClose?: () => void;
 }
@@ -26,6 +37,7 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ onClose }) => {
       const equipmentTemplates = response.cards.filter(card => 
         card.type === 'armor' || 
         card.type === 'equipment' ||
+        card.type === 'shield' ||
         card.type === 'ring' ||
         card.type === 'necklace' ||
         card.type === 'cloak' ||
@@ -42,7 +54,14 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ onClose }) => {
     }
   };
 
-  const equipmentSlots = [
+  const equipmentSlots: EquipmentSlotOption[] = [
+    {
+      id: 'shield',
+      name: '🛡️ Щит',
+      description: 'Щиты для защиты',
+      color: 'bg-teal-50 border-teal-200 hover:bg-teal-100',
+      directTemplateId: SHIELD_TEMPLATE_ID,
+    },
     {
       id: 'body',
       name: '👕 Одежда/Доспех',
@@ -99,14 +118,19 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ onClose }) => {
     return templates.filter(template => template.slot === slotId);
   };
 
-  const handleSlotSelect = (slotId: string) => {
-    const filteredTemplates = getFilteredTemplates(slotId);
-    
+  const handleSlotSelect = (slot: EquipmentSlotOption) => {
+    if (slot.directTemplateId) {
+      navigate(`/card-creator?template_id=${slot.directTemplateId}`);
+      return;
+    }
+
+    const filteredTemplates = getFilteredTemplates(slot.id);
+
     // Если в слоте только один шаблон, сразу переходим к созданию
     if (filteredTemplates.length === 1) {
       handleTemplateSelect(filteredTemplates[0]);
     } else {
-      setSelectedSlot(slotId);
+      setSelectedSlot(slot.id);
     }
   };
 
@@ -177,12 +201,14 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ onClose }) => {
         {!selectedSlot ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {equipmentSlots.map((slot) => {
-              const templateCount = getFilteredTemplates(slot.id).length;
+              const templateCount = slot.directTemplateId
+                ? 1
+                : getFilteredTemplates(slot.id).length;
               
               return (
                 <button
                   key={slot.id}
-                  onClick={() => handleSlotSelect(slot.id)}
+                  onClick={() => handleSlotSelect(slot)}
                   className={`
                     ${slot.color}
                     border-2 rounded-xl p-6 text-left transition-all duration-200

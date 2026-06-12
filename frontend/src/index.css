@@ -18,23 +18,23 @@
   }
   
   .card-border-uncommon {
-    @apply border-2 border-green-500 rounded-lg;
+    @apply rounded-lg p-[6px];
+    background: linear-gradient(to bottom, #22c55e 0%, #052e16 100%);
   }
   
   .card-border-rare {
-    @apply border-2 border-blue-500 rounded-lg;
+    @apply rounded-lg p-[6px];
+    background: linear-gradient(to bottom, #3b82f6 0%, #0c1a3a 100%);
   }
   
   .card-border-very-rare {
-    @apply border-4 rounded-lg;
-    border-image: linear-gradient(45deg, #8B5CF6, #EC4899) 1;
-    border-style: solid;
+    @apply rounded-lg p-[6px];
+    background: linear-gradient(to bottom, #a855f7 0%, #1e1033 100%);
   }
   
   .card-border-artifact {
-    @apply border-6 rounded-lg;
-    border-image: linear-gradient(45deg, #F59E0B, #EF4444) 1;
-    border-style: solid;
+    @apply rounded-lg p-[6px];
+    background: linear-gradient(to bottom, #f59e0b 0%, #3b1a05 100%);
   }
   
   .btn-primary {
