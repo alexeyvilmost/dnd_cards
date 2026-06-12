@@ -71,6 +71,11 @@ export const cardsApi = {
     rarity?: string;
     properties?: string;
     search?: string;
+    slot?: string;
+    armor_type?: string;
+    sort_by?: string;
+    template_only?: boolean;
+    exclude_template_only?: boolean;
   }): Promise<CardsResponse> => {
     const response = await apiClient.get<CardsResponse>('/api/cards', { params });
     return response.data;
