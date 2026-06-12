@@ -210,6 +210,13 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
         {getRarityMarker()}
       </div>
 
+      {/* Значок необходимости настройки */}
+      {card.requires_attunement && (
+        <div style={{ position: 'absolute' as const, top: '4px', right: '4px', userSelect: 'none' as const, zIndex: 10 }}>
+          <img src="/icons/attunement.png" alt="Требуется настройка" style={{ width: '16px', height: '16px' }} />
+        </div>
+      )}
+
       {isExtended ? (
         // Расширенный формат для карт с большим описанием
         <>
@@ -381,6 +388,14 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
                   )}
                 </div>
               )}
+              {card.range && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500', whiteSpace: 'nowrap' as const }}>
+                    {card.range}
+                  </span>
+                  <img src="/icons/range.png" alt="Дальность" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '10px', color: '#9ca3af', fontFamily: 'monospace' }}>
@@ -508,6 +523,14 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
                   {card.bonus_type === 'defense' && card.type === 'щит' && (
                     <img src="/icons/defense.png" alt="Защита" style={{ width: '12px', height: '12px' }} />
                   )}
+                </div>
+              )}
+              {card.range && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <span style={{ fontSize: '10px', color: '#111827', fontFamily: 'fantasy', fontWeight: '500', whiteSpace: 'nowrap' as const }}>
+                    {card.range}
+                  </span>
+                  <img src="/icons/range.png" alt="Дальность" style={{ width: '12px', height: '12px' }} />
                 </div>
               )}
             </div>

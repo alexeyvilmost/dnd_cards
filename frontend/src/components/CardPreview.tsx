@@ -213,6 +213,17 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           {getRaritySymbol(card.rarity)}
         </span>
       </div>
+      {/* Значок необходимости настройки */}
+      {card.requires_attunement && (
+        <div className="absolute top-1 right-1 select-none z-10">
+          <img
+            src="/icons/attunement.png"
+            alt="Требуется настройка"
+            title="Требуется настройка"
+            className="w-4 h-4"
+          />
+        </div>
+      )}
       {isExtended ? (
         // Расширенный формат для карт с большим описанием
         <>
@@ -330,6 +341,14 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                   )}
                 </div>
               )}
+              {card.range && (
+                <div className="flex items-center space-x-0.5">
+                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium whitespace-nowrap">
+                    {card.range}
+                  </span>
+                  <img src="/icons/range.png" alt="Дальность" className="w-2.5 h-2.5" />
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <span className={`text-[8.5px] ${getCardNumberColor(card)} font-mono whitespace-nowrap`}>
@@ -424,6 +443,14 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                   {card.bonus_type === 'defense' && card.type === 'щит' && (
                     <img src="/icons/defense.png" alt="Защита" className="w-2.5 h-2.5" />
                   )}
+                </div>
+              )}
+              {card.range && (
+                <div className="flex items-center space-x-0.5">
+                  <span className="text-[8.5px] text-gray-900 font-fantasy font-medium whitespace-nowrap">
+                    {card.range}
+                  </span>
+                  <img src="/icons/range.png" alt="Дальность" className="w-2.5 h-2.5" />
                 </div>
               )}
             </div>

@@ -132,6 +132,36 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
         />
       </div>
 
+      {/* Требуется настройка */}
+      <div>
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            {...register('requires_attunement')}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+          />
+          <span className="text-sm font-medium text-gray-700">Требуется настройка</span>
+        </label>
+        <p className="text-xs text-gray-500 mt-1">
+          На карте появится значок настройки в правом верхнем углу
+        </p>
+      </div>
+
+      {/* Дальность */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Дальность
+        </label>
+        <input
+          {...register('range')}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="30/120"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Отображается в нижней панели карты
+        </p>
+      </div>
+
       {/* Настройка */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">

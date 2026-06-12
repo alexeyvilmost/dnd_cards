@@ -63,6 +63,8 @@ const CardCreator = () => {
       related_actions: [],
       related_effects: [],
       attunement: null,
+      requires_attunement: false,
+      range: null,
       tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : [],
       slot: null,
       is_template: 'false',
@@ -123,6 +125,8 @@ const CardCreator = () => {
             related_actions: card.related_actions || [],
             related_effects: card.related_effects || [],
             attunement: card.attunement,
+            requires_attunement: card.requires_attunement === true,
+            range: card.range || null,
             tags: card.tags || [],
             slot: card.slot,
             is_template: card.is_template || 'false'
@@ -176,6 +180,8 @@ const CardCreator = () => {
           setValue('related_actions', template.related_actions || []);
           setValue('related_effects', template.related_effects || []);
           setValue('attunement', template.attunement);
+          setValue('requires_attunement', template.requires_attunement === true);
+          setValue('range', template.range || null);
           setValue('tags', template.tags || []);
           setValue('slot', template.slot);
           setValue('is_template', 'false'); // Новая карта не является шаблоном
@@ -220,6 +226,8 @@ const CardCreator = () => {
     watchedValues.related_actions,
     watchedValues.related_effects,
     watchedValues.attunement,
+    watchedValues.requires_attunement,
+    watchedValues.range,
     watchedValues.tags,
     watchedValues.slot,
     watchedValues.is_template
@@ -272,6 +280,8 @@ const CardCreator = () => {
         related_actions: data.related_actions || null,
         related_effects: data.related_effects || null,
         attunement: data.attunement || null,
+        requires_attunement: data.requires_attunement === true,
+        range: data.range || null,
         tags: data.tags && data.tags.length > 0 ? data.tags : null,
         slot: data.slot || null,
         is_template: data.is_template || 'false',
@@ -359,6 +369,8 @@ const CardCreator = () => {
       related_actions: formData.related_actions || null,
       related_effects: formData.related_effects || null,
       attunement: formData.attunement || null,
+      requires_attunement: formData.requires_attunement === true,
+      range: formData.range || null,
       tags: formData.tags && formData.tags.length > 0 ? formData.tags : null,
       slot: formData.slot || null,
       is_template: formData.is_template || 'false',

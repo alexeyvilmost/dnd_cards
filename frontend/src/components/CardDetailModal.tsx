@@ -301,6 +301,12 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             {card.bonus_type && card.bonus_value && (
               <p><strong>Бонус:</strong> {card.bonus_value} ({card.bonus_type === 'damage' ? 'Урон' : 'Защита'})</p>
             )}
+            {card.range && (
+              <p><strong>Дальность:</strong> {card.range}</p>
+            )}
+            {card.requires_attunement && (
+              <p><strong>Требуется настройка:</strong> Да</p>
+            )}
             {card.properties && card.properties.length > 0 && (
               <p><strong>Свойства:</strong> {getPropertyLabels(card.properties).join(', ')}</p>
             )}

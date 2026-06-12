@@ -158,6 +158,12 @@ func GetAllMigrations() []Migration {
 			Up:          updateRageAction,
 			Down:        rollbackRageAction,
 		},
+		{
+			Version:     "026_add_attunement_range_fields",
+			Description: "Add requires_attunement and range fields to cards table",
+			Up:          addAttunementRangeFields,
+			Down:        removeAttunementRangeFields,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1315,6 +1321,38 @@ func removeEffectsResourcesFromCharactersV2(db *sql.DB) error {
 		"ALTER TABLE characters_v2 DROP COLUMN IF EXISTS max_resources",
 		"ALTER TABLE characters_v2 DROP COLUMN IF EXISTS resources",
 		"ALTER TABLE characters_v2 DROP COLUMN IF EXISTS active_effects",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// addAttunementRangeFields добавляет поля requires_attunement и range в таблицу cards
+func addAttunementRangeFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS requires_attunement BOOLEAN DEFAULT FALSE",
+		`ALTER TABLE cards ADD COLUMN IF NOT EXISTS "range" VARCHAR(50)`,
+		"COMMENT ON COLUMN cards.requires_attunement IS 'Требуется ли настройка на предмет'",
+		`COMMENT ON COLUMN cards."range" IS 'Дальность предмета (например, "30/120")'`,
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeAttunementRangeFields удаляет поля requires_attunement и range из таблицы cards
+func removeAttunementRangeFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP COLUMN IF EXISTS requires_attunement",
+		`ALTER TABLE cards DROP COLUMN IF EXISTS "range"`,
 	}
 
 	for _, query := range queries {

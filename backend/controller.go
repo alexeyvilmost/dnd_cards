@@ -139,6 +139,9 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
 			DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 			IsExtended:                   card.IsExtended,
+			Attunement:                   card.Attunement,
+			RequiresAttunement:           card.RequiresAttunement,
+			Range:                        card.Range,
 			Tags:                         card.Tags,
 			IsTemplate:                   card.IsTemplate,
 			Slot:                         card.Slot,
@@ -198,6 +201,9 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
+		Attunement:                   card.Attunement,
+		RequiresAttunement:           card.RequiresAttunement,
+		Range:                        card.Range,
 		Tags:                         card.Tags,
 		IsTemplate:                   card.IsTemplate,
 		Slot:                         card.Slot,
@@ -290,6 +296,8 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		RelatedActions:               req.RelatedActions,
 		RelatedEffects:               req.RelatedEffects,
 		Attunement:                   req.Attunement,
+		RequiresAttunement:           req.RequiresAttunement,
+		Range:                        req.Range,
 		Tags:                         req.Tags,
 		IsTemplate:                   req.IsTemplate,
 		Slot:                         req.Slot,
@@ -326,6 +334,9 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
+		Attunement:                   card.Attunement,
+		RequiresAttunement:           card.RequiresAttunement,
+		Range:                        card.Range,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
 		CreatedAt:                    card.CreatedAt,
@@ -472,6 +483,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Attunement != nil {
 		card.Attunement = req.Attunement
 	}
+	if req.RequiresAttunement != nil {
+		card.RequiresAttunement = req.RequiresAttunement
+	}
+	if req.Range != nil {
+		card.Range = req.Range
+	}
 	if req.Tags != nil {
 		card.Tags = req.Tags
 	}
@@ -522,6 +539,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
+		Attunement:                   card.Attunement,
+		RequiresAttunement:           card.RequiresAttunement,
+		Range:                        card.Range,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
 		CreatedAt:                    card.CreatedAt,
@@ -641,6 +661,8 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			BonusValue:          card.BonusValue,
 			Type:                card.Type,
 			WeaponType:          card.WeaponType,
+			RequiresAttunement:  card.RequiresAttunement,
+			Range:               card.Range,
 			Slot:                card.Slot,
 			Effects:             card.Effects,
 			CreatedAt:           card.CreatedAt,

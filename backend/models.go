@@ -268,10 +268,12 @@ type Card struct {
 	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text[]"`  // JSON массив ID (плейсхолдер)
 	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text[]"`  // JSON массив ID (плейсхолдер)
 	Attunement                   *string        `json:"attunement" gorm:"type:text"`
-	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`                             // Массив тегов
-	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
-	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
-	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
+	RequiresAttunement           *bool          `json:"requires_attunement" gorm:"type:boolean;default:false"` // Требуется ли настройка
+	Range                        *string        `json:"range" gorm:"column:range;type:varchar(50)"`            // Дальность (например, "30/120")
+	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`                               // Массив тегов
+	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"`   // Тип шаблона
+	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
+	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -306,6 +308,8 @@ type CreateCardRequest struct {
 	RelatedActions               *Properties    `json:"related_actions"`
 	RelatedEffects               *Properties    `json:"related_effects"`
 	Attunement                   *string        `json:"attunement"`
+	RequiresAttunement           *bool          `json:"requires_attunement"`
+	Range                        *string        `json:"range"`
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
@@ -341,6 +345,8 @@ type UpdateCardRequest struct {
 	RelatedActions               *Properties    `json:"related_actions"`
 	RelatedEffects               *Properties    `json:"related_effects"`
 	Attunement                   *string        `json:"attunement"`
+	RequiresAttunement           *bool          `json:"requires_attunement"`
+	Range                        *string        `json:"range"`
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
@@ -383,6 +389,9 @@ type CardResponse struct {
 	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
 	DetailedDescriptionFontSize  *int           `json:"detailed_description_font_size"`
 	IsExtended                   *bool          `json:"is_extended"`
+	Attunement                   *string        `json:"attunement"`
+	RequiresAttunement           *bool          `json:"requires_attunement"`
+	Range                        *string        `json:"range"`
 	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`

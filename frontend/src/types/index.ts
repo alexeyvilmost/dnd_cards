@@ -55,6 +55,8 @@ export interface Card {
   related_actions?: Properties | null;
   related_effects?: Properties | null;
   attunement?: string | null;
+  requires_attunement?: boolean | null;
+  range?: string | null;
   tags?: Properties | null;
   is_template: TemplateType;
   slot?: EquipmentSlot | null;
@@ -91,6 +93,8 @@ export interface CreateCardRequest {
   related_actions?: Properties | null;
   related_effects?: Properties | null;
   attunement?: string | null;
+  requires_attunement?: boolean | null;
+  range?: string | null;
   tags?: Properties | null;
   is_template?: TemplateType;
   slot?: EquipmentSlot | null;
@@ -126,6 +130,8 @@ export interface UpdateCardRequest {
   related_actions?: Properties | null;
   related_effects?: Properties | null;
   attunement?: string | null;
+  requires_attunement?: boolean | null;
+  range?: string | null;
   tags?: Properties | null;
   is_template?: TemplateType;
   slot?: EquipmentSlot | null;
