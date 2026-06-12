@@ -117,7 +117,8 @@ func generateGamePrompt(cardName, description, rarity, itemType, imagePromptExtr
 	}
 
 	prompt += "\nБез дополнительных элементов, рамок и прочего. Самое главное — один предмет. Фон — прозрачный, без лишних деталей. Стиль — реалистичная отрисовка, мягкое освещение, лёгкое свечение по контуру, яркие акценты на металле, дереве, камне, стекле или ткани. Качество — детализированное, но с упрощённым прозрачным фоном, чтобы предмет выделялся."
-	prompt += "\n" + getItemCompositionHint(itemType)
+	prompt += "\n" + getFramingRequirements(itemType, cardName)
+	prompt += "\n" + getItemCompositionHint(itemType, cardName)
 	prompt += "\n" + getItemNegativeHint(itemType)
 	prompt += "\nОбязательно на прозрачном однотонном фоне. Никаких надписей, текста, букв или цифр на изображении."
 
@@ -152,8 +153,8 @@ func generateFantasyPrompt(cardName, description, rarity, itemType, imagePromptE
 	backgroundPart += " Никаких других объектов, сцен или окружения."
 
 	prompt += "\nСтиль: традиционная книжная иллюстрация, реалистичная ручная отрисовка красками, естественная приглушённая палитра, проработанные текстуры металла, дерева, кожи, ткани, стекла и камня, мягкие тени."
-	prompt += "\nКомпозиция: предмет занимает около 70% площади кадра, по центру. Со всех четырёх сторон вокруг предмета остаётся пустое поле не менее 15% размера изображения. Ни одна часть предмета не касается краёв изображения и не обрезается ими."
-	prompt += "\n" + getItemCompositionHint(itemType)
+	prompt += "\n" + getFramingRequirements(itemType, cardName)
+	prompt += "\n" + getItemCompositionHint(itemType, cardName)
 	prompt += "\n" + getItemNegativeHint(itemType)
 	prompt += backgroundPart
 	prompt += "\nНикаких надписей, текста, букв, цифр, рамок и водяных знаков на изображении."
@@ -231,10 +232,44 @@ func getItemTypeLabel(itemType string) string {
 	return labels["item"]
 }
 
-func getItemCompositionHint(itemType string) string {
+func isTallItem(itemType, cardName string) bool {
+	if itemType != "weapon" {
+		return false
+	}
+	text := strings.ToLower(cardName)
+	tallKeywords := []string{
+		"посох", "staff", "копь", "spear", "копьё", "копье",
+		"лук", "bow", "арбалет", "crossbow", "жезл", "wand",
+		"секир", "axe", "трезуб", "trident", "булава", "mace",
+	}
+	for _, kw := range tallKeywords {
+		if strings.Contains(text, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+func getFramingRequirements(itemType, cardName string) string {
+	hint := "КРИТИЧНО — кадрирование: один предмет строго по центру, занимает не более 50% площади холста. " +
+		"Прозрачные пустые поля не менее 25% высоты и ширины с каждой стороны. " +
+		"Весь предмет целиком внутри кадра: ни один край, кончик, навершие, остриё или рукоять не обрезаны и не касаются границ изображения. " +
+		"Запрещено обрезание (no crop, no clipping, full object in frame)."
+
+	if isTallItem(itemType, cardName) {
+		hint += " Предмет вытянут по вертикали — увеличь отступы сверху и снизу: оба конца (навершие и наконечник/рукоять) полностью видны с большим запасом пустого пространства вокруг."
+	}
+
+	return hint
+}
+
+func getItemCompositionHint(itemType, cardName string) string {
 	switch itemType {
 	case "weapon":
-		return "Предмет целиком в кадре, под лёгким диагональным наклоном. Если это оружие с лезвием и рукоятью — оба конца видны полностью."
+		if isTallItem(itemType, cardName) {
+			return "Длинное оружие или посох: вертикальная ориентация, лёгкий наклон. Оба конца — навершие и нижний конец древка — полностью в кадре с отступом от краёв."
+		}
+		return "Оружие целиком в кадре, под лёгким диагональным наклоном. Если есть лезвие и рукоять — оба конца видны полностью с отступом от краёв."
 	case "shield":
 		return "Щит показан анфас, целиком в кадре. Только щит — без меча, копья или другого оружия рядом."
 	case "cloak", "chest", "helmet", "gloves", "boots", "armor":
@@ -257,10 +292,11 @@ func getItemCompositionHint(itemType string) string {
 }
 
 func getItemNegativeHint(itemType string) string {
+	noCrop := "Запрещено обрезать предмет у краёв изображения. "
 	if itemType == "weapon" {
-		return "Не добавляй посторонние предметы, персонажей и фоновые сцены."
+		return noCrop + "Не добавляй посторонние предметы, персонажей и фоновые сцены."
 	}
-	return "Запрещено: рукояти мечей, рукоятки, древки посохов, навершия, острия, клинки и любые детали оружия — если предмет не является оружием. Не добавляй посторонние предметы, персонажей и фоновые сцены."
+	return noCrop + "Запрещено: рукояти мечей, рукоятки, древки посохов, навершия, острия, клинки и любые детали оружия — если предмет не является оружием. Не добавляй посторонние предметы, персонажей и фоновые сцены."
 }
 
 // getRarityBlobColor - цвет акварельного пятна на фоне в зависимости от редкости карты
