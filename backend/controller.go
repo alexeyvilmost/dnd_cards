@@ -535,6 +535,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
+		log.Printf("Ошибка обновления карточки %s: %v", id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
 		return
 	}

@@ -164,6 +164,12 @@ func GetAllMigrations() []Migration {
 			Up:          addAttunementRangeFields,
 			Down:        removeAttunementRangeFields,
 		},
+		{
+			Version:     "027_add_elemental_damage_fields",
+			Description: "Add elemental_damage_value and elemental_damage_type fields to cards table",
+			Up:          addElementalDamageFields,
+			Down:        removeElementalDamageFields,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1388,6 +1394,38 @@ func rollbackRageAction(db *sql.DB) error {
 	queries := []string{
 		"UPDATE actions SET script = NULL WHERE card_number = 'action_barbarian_rage_2'",
 		"UPDATE actions SET resource = '' WHERE card_number = 'action_barbarian_rage_2'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// addElementalDamageFields добавляет поля стихийного урона в таблицу cards
+func addElementalDamageFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS elemental_damage_value VARCHAR(20)",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS elemental_damage_type VARCHAR(20)",
+		"COMMENT ON COLUMN cards.elemental_damage_value IS 'Дополнительный стихийный урон (например, 1d4)'",
+		"COMMENT ON COLUMN cards.elemental_damage_type IS 'Тип стихийного урона (fire, cold, acid, poison, necrotic, lightning, psychic, radiant, thunder, force)'",
+	}
+
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeElementalDamageFields удаляет поля стихийного урона из таблицы cards
+func removeElementalDamageFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP COLUMN IF EXISTS elemental_damage_value",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS elemental_damage_type",
 	}
 
 	for _, query := range queries {
