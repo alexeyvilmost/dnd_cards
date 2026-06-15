@@ -1,0 +1,30 @@
+{
+  "name": "Архимаг Велиор",
+  "class_name": "Wizard",
+  "level": 4,
+  "preset": "longsword_shield",
+  "ability_scores": {
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 14,
+    "intelligence": 17,
+    "wisdom": 12,
+    "charisma": 10
+  },
+  "cantrips": [
+    "Fire Bolt",
+    "Ray of Frost",
+    "Mind Sliver"
+  ],
+  "spells": [
+    "Magic Missile",
+    "Shield",
+    "Mage Armor",
+    "Burning Hands",
+    "Scorching Ray"
+  ],
+  "portrait": "🧙",
+  "id": "1db9e5a4",
+  "created_at": "2026-06-15T04:15:17.564600+00:00",
+  "updated_at": "2026-06-15T04:15:17.564600+00:00"
+}

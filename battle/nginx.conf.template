@@ -1,0 +1,28 @@
+# battle_frontend nginx — serves the static UI and proxies API calls to the backend.
+# ${PORT} and ${BACKEND_URL} are substituted at container start (see Dockerfile.frontend).
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+
+    # ── UI pages (mirror the FastAPI routes) ──
+    location = /          { try_files /static/index.html      =404; }
+    location = /characters { try_files /static/characters.html =404; }
+    location = /spellbook  { try_files /static/spellbook.html  =404; }
+
+    # ── Static assets (JS data, spell icons, …) ──
+    location /static/ {
+        try_files $uri =404;
+        expires 1h;
+    }
+
+    # ── API → battle_backend ──
+    # Same-origin API_BASE in the UI means these paths are proxied transparently.
+    location ~ ^/(api|rooms|spells|quickstart|saved-characters|docs|openapi\.json) {
+        proxy_pass ${BACKEND_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Справочник заклинаний — D&D 2024</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--panel:#ffffff;--ink:#1f2733;--dim:#6b7689;--line:#e4e8f0;
+  --blue:#3b82f6;--green:#22a06b;--red:#e0556a;--amber:#d9930b;--purple:#8b5cf6;--slate:#64748b;
+  --shadow:0 1px 3px rgba(20,30,60,.06),0 8px 24px rgba(20,30,60,.05);
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);
+  font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column;min-height:100vh}
+a{color:inherit;text-decoration:none}
+
+.topbar{height:60px;background:var(--panel);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:0 26px;position:sticky;top:0;z-index:20}
+.brand{font-size:17px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.brand .swords{color:var(--amber)}
+.topnav{display:flex;gap:6px;margin-left:8px}
+.topnav a{padding:8px 14px;border-radius:9px;color:var(--dim);font-weight:600;font-size:13px}
+.topnav a.on,.topnav a:hover{background:#eef3ff;color:var(--blue)}
+.spacer{flex:1}
+.search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);
+  border-radius:10px;padding:7px 12px;width:240px}
+.search input{border:none;background:none;outline:none;font:inherit;width:100%;color:var(--ink)}
+
+.wrap{max-width:1320px;margin:0 auto;width:100%;padding:26px;flex:1}
+.head h1{font-size:24px;font-weight:800}
+.head .sub{color:var(--dim);font-size:13px;margin:3px 0 20px}
+
+.section-lbl{font-size:13px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;
+  margin:8px 0 12px;display:flex;align-items:center;gap:10px}
+.section-lbl::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:10px}
+.cell{position:relative;aspect-ratio:1;border-radius:11px;border:1px solid #3d3324;
+  background:linear-gradient(180deg,#2b241c,#1a1712);
+  box-shadow:var(--shadow);cursor:pointer;overflow:hidden;transition:transform .1s,border-color .12s,box-shadow .12s;outline:none}
+.cell:hover,.cell:focus{transform:translateY(-2px);border-color:#8a703f;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:5}
+.cell img{width:100%;height:100%;object-fit:cover;display:block}
+.cell .lvl{position:absolute;right:4px;bottom:2px;font-size:10px;font-weight:800;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);letter-spacing:.5px}
+.cell .roll-dot{position:absolute;left:5px;top:5px;width:8px;height:8px;border-radius:50%;
+  box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+.cell.miss{display:flex;align-items:center;justify-content:center;color:#cdbf9d;font-size:11px;text-align:center;padding:4px}
+
+/* ── BG3-style tooltip ── */
+#tip{position:fixed;z-index:100;width:360px;max-width:92vw;pointer-events:none;opacity:0;
+  transition:opacity .1s;font-family:Georgia,'Times New Roman',serif}
+#tip.show{opacity:1}
+.tip-card{position:relative;background:linear-gradient(180deg,#2b241c,#1a1712);border:1px solid #6b5836;border-radius:10px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);overflow:hidden;color:#e8ddc8}
+.tip-art{position:absolute;top:-6px;right:-6px;width:118px;height:118px;object-fit:contain;
+  pointer-events:none;opacity:.96;
+  -webkit-mask-image:linear-gradient(245deg,#000 55%,transparent 92%);
+  mask-image:linear-gradient(245deg,#000 55%,transparent 92%)}
+.tip-head{padding:14px 16px 10px;padding-right:112px}
+.tip-name{font-size:21px;font-weight:700;color:#f3ead4;letter-spacing:.3px;line-height:1.1}
+.tip-sub{font-size:12.5px;color:#b6a583;margin-top:3px;font-style:italic}
+.tip-dmg{display:flex;align-items:center;gap:10px;padding:0 16px 8px}
+.tip-dmg .die{width:30px;height:30px;flex-shrink:0;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#0d0b08;font-family:Inter,sans-serif}
+.tip-dmg .dval{font-size:17px;font-weight:700}
+.tip-dmg .dval .t{font-weight:600}
+.tip-desc{padding:4px 16px 12px;font-size:14px;line-height:1.5;color:#cabfa6}
+.tip-scale{padding:0 16px 12px;font-size:12.5px;color:#9c8e6e}
+.tip-scale b{color:#c9b98f;font-weight:700}
+.tip-meta{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 16px;border-top:1px solid #463a26;
+  background:rgba(0,0,0,.18);font-family:Inter,sans-serif;font-size:12px;color:#bdae8c}
+.tip-meta .m{display:flex;align-items:center;gap:6px}
+.tip-meta .m b{color:#e3d6b6;font-weight:600}
+.tip-bar{display:flex;align-items:center;gap:14px;padding:9px 16px;background:#171310;
+  border-top:1px solid #463a26;font-family:Inter,sans-serif;font-size:12.5px;color:#cdbf9d}
+.tip-bar .pip{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.tip-bar .sq{width:11px;height:11px;border-radius:3px;display:inline-block}
+.tip-bar .tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #e0863a}
+.tip-bar .cir{width:11px;height:11px;border-radius:50%;background:#3fb950;display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="swords">⚔</span> D&D 2024</div>
+  <nav class="topnav">
+    <a href="/">Бой</a>
+    <a href="/characters">Персонажи</a>
+    <a href="/spellbook" class="on">Заклинания</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="search">🔍<input id="q" placeholder="Поиск заклинания…" oninput="render()"></div>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Справочник заклинаний</h1>
+    <div class="sub">Все заклинания D&D 2024 с иконками. Наведите на ячейку, чтобы увидеть подробности.</div>
+  </div>
+  <div id="book"></div>
+</div>
+
+<div id="tip"><div class="tip-card" id="tip-card"></div></div>
+
+<script>
+/* spell data inlined for robustness (no external fetch dependency) */
+/* Russian spell data for cantrips that have icons (icons/spells/cantrips/<key>.png).
+   Names/descriptions adapted from dnd.su (D&D 2024). Keyed by icon filename (no .png).
+   Fields:
+     name  — Russian name           en   — English name
+     level — spell level (0=заговор) school — school of magic (RU)
+     cast  — casting time label      range — range
+     comp  — components (В/С/М)       dur  — duration
+     conc  — concentration?          roll — null | 'attack' | 'save:<ABBR>'
+     dmg   — damage dice or null      dtype — damage type (RU) or null
+     scale — высокоуровневое масштабирование (text) or null
+     desc  — short Russian description
+*/
+const SPELL_ICONS = {
+  acid_splash: { name:'Брызги кислоты', en:'Acid Splash', level:0, school:'Воплощение',
+    cast:'Действие', range:'60 фт', comp:'В, С', dur:'Мгновенная', roll:'save:ЛОВ',
+    dmg:'1к6', dtype:'кислота', scale:'2к6 (5), 3к6 (11), 4к6 (17)',
+    desc:'Выберите одно или два существа в пределах 5 футов друг от друга. Каждая цель совершает спасбросок Ловкости, получая урон кислотой при провале.' },
+
+  blade_ward: { name:'Защита от оружия', en:'Blade Ward', level:0, school:'Ограждение',
+    cast:'Действие', range:'На себя', comp:'В, С', dur:'1 раунд', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Вы выставляете магическую завесу. До конца вашего следующего хода вы получаете сопротивление к дробящему, колющему и рубящему урону.' },
+
+  bone_chill: { name:'Леденящее прикосновение', en:'Chill Touch', level:0, school:'Некромантия',
+    cast:'Действие', range:'Касание', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к10', dtype:'некротический', scale:'2к10 (5), 3к10 (11), 4к10 (17)',
+    desc:'Атака ближнего боя заклинанием призрачной рукой. При попадании цель получает некротический урон и не может восстанавливать хиты до начала вашего следующего хода.' },
+
+  dancing_lights: { name:'Пляшущие огоньки', en:'Dancing Lights', level:0, school:'Иллюзия',
+    cast:'Действие', range:'120 фт', comp:'В, С, М', dur:'до 1 минуты', conc:true, roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Создаёте до четырёх парящих огоньков, светящих как факелы, или объединяете их в смутную светящуюся фигуру. Бонусным действием перемещаете их до 60 футов.' },
+
+  druidcraft: { name:'Искусство друидов', en:'Druidcraft', level:0, school:'Преобразование',
+    cast:'Действие', range:'30 фт', comp:'В, С', dur:'Мгновенная', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Шепчете духам природы: предсказываете погоду, заставляете цветок распуститься, создаёте безвредный сенсорный эффект или зажигаете/тушите огонёк.' },
+
+  eldritch_blast: { name:'Мистический заряд', en:'Eldritch Blast', level:0, school:'Воплощение',
+    cast:'Действие', range:'120 фт', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к10', dtype:'силовое поле', scale:'2 луча (5), 3 (11), 4 (17)',
+    desc:'Луч потрескивающей энергии. Дальнобойная атака заклинанием наносит урон силовым полем. На высоких уровнях создаёте несколько лучей, распределяя их по целям.' },
+
+  elementalism: { name:'Элементализм', en:'Elementalism', level:0, school:'Преобразование',
+    cast:'Действие', range:'30 фт', comp:'В, С', dur:'Мгновенная', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Творите небольшой стихийный эффект — порыв ветра, облачко пыли, искры или брызги: гасите пламя, поднимаете пыль, мочите или сушите предмет, слегка сдвигаете лёгкие объекты.' },
+
+  fire_bolt: { name:'Огненный снаряд', en:'Fire Bolt', level:0, school:'Воплощение',
+    cast:'Действие', range:'120 фт', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к10', dtype:'огонь', scale:'2к10 (5), 3к10 (11), 4к10 (17)',
+    desc:'Метаете сгусток огня в существо или предмет. Дальнобойная атака заклинанием наносит урон огнём. Незащищённые горючие предметы загораются.' },
+
+  friends: { name:'Друзья', en:'Friends', level:0, school:'Очарование',
+    cast:'Действие', range:'На себя', comp:'С, М', dur:'до 1 минуты', conc:true, roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Получаете преимущество на проверки Харизмы против одного существа, не враждебного к вам. Когда эффект кончается, существо понимает, что вы им манипулировали, и может разозлиться.' },
+
+  guidance: { name:'Указание', en:'Guidance', level:0, school:'Прорицание',
+    cast:'Действие', range:'Касание', comp:'В, С', dur:'до 1 минуты', conc:true, roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Касаетесь согласного существа. Один раз до окончания заклинания оно бросает 1к4 и прибавляет к одной проверке характеристики по своему выбору.' },
+
+  light: { name:'Свет', en:'Light', level:0, school:'Воплощение',
+    cast:'Действие', range:'Касание', comp:'В, М', dur:'1 час', roll:'save:ЛОВ',
+    dmg:null, dtype:null, scale:null,
+    desc:'Предмет начинает испускать яркий свет в радиусе 20 футов и тусклый ещё на 20. Цвет любой. Если цель — существо, оно может избежать эффекта спасброском Ловкости.' },
+
+  mage_hand: { name:'Рука мага', en:'Mage Hand', level:0, school:'Вызов',
+    cast:'Действие', range:'30 фт', comp:'В, С', dur:'1 минута', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Создаёте призрачную руку. Действием управляете ей: переместить, открыть, взять или использовать предмет до 4,5 кг. Не может атаковать или владеть оружием.' },
+
+  mending: { name:'Починка', en:'Mending', level:0, school:'Преобразование',
+    cast:'1 минута', range:'Касание', comp:'В, С, М', dur:'Мгновенная', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Чините небольшой разрыв или брешь в предмете — порванный плащ, сломанное звено цепи. Не восстанавливает магические свойства.' },
+
+  message: { name:'Послание', en:'Message', level:0, school:'Преобразование',
+    cast:'Действие', range:'120 фт', comp:'В, С, М', dur:'1 раунд', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Указываете на существо и шепчете сообщение. Только оно слышит вас и может ответить шёпотом. Звук огибает препятствия, но не проходит сквозь сплошную преграду.' },
+
+  mind_sliver: { name:'Осколок разума', en:'Mind Sliver', level:0, school:'Прорицание',
+    cast:'Действие', range:'60 фт', comp:'В', dur:'Мгновенная', roll:'save:ИНТ',
+    dmg:'1к6', dtype:'психический', scale:'2к6 (5), 3к6 (11), 4к6 (17)',
+    desc:'Вонзаете осколок дезориентирующей энергии. При провале спасброска Интеллекта цель получает психический урон и вычитает 1к4 из своего следующего спасброска до конца вашего следующего хода.' },
+
+  minor_illusion: { name:'Малая иллюзия', en:'Minor Illusion', level:0, school:'Иллюзия',
+    cast:'Действие', range:'30 фт', comp:'С, М', dur:'1 минута', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Создаёте звук или образ предмета (не больше куба 5 футов). Существо действием и проверкой Интеллекта (Расследование) может распознать иллюзию.' },
+
+  poison_spray: { name:'Ядовитые брызги', en:'Poison Spray', level:0, school:'Некромантия',
+    cast:'Действие', range:'30 фт', comp:'В, С', dur:'Мгновенная', roll:'save:ТЕЛ',
+    dmg:'1к12', dtype:'яд', scale:'2к12 (5), 3к12 (11), 4к12 (17)',
+    desc:'Выбрасываете облачко ядовитого тумана в цель. При провале спасброска Телосложения цель получает урон ядом.' },
+
+  prestidigitation: { name:'Фокусы', en:'Prestidigitation', level:0, school:'Преобразование',
+    cast:'Действие', range:'10 фт', comp:'В, С', dur:'до 1 часа', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Мелкие магические трюки: безвредный сенсорный эффект, зажечь/потушить свечу, почистить или испачкать предмет, охладить или нагреть, создать запах или безделушку.' },
+
+  produce_flame: { name:'Сотворение пламени', en:'Produce Flame', level:0, school:'Вызов',
+    cast:'Действие', range:'Касание / 30 фт', comp:'В, С', dur:'10 минут', roll:'attack',
+    dmg:'1к8', dtype:'огонь', scale:'2к8 (5), 3к8 (11), 4к8 (17)',
+    desc:'В ладони появляется мерцающее пламя, освещая 10 футов. Можете метнуть его: дальнобойная атака заклинанием наносит урон огнём.' },
+
+  ray_of_frost: { name:'Луч холода', en:'Ray of Frost', level:0, school:'Воплощение',
+    cast:'Действие', range:'60 фт', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к8', dtype:'холод', scale:'2к8 (5), 3к8 (11), 4к8 (17)',
+    desc:'Ледяной луч. Дальнобойная атака заклинанием наносит урон холодом, а скорость цели снижается на 10 футов до начала вашего следующего хода.' },
+
+  resistance: { name:'Сопротивление', en:'Resistance', level:0, school:'Ограждение',
+    cast:'Действие', range:'Касание', comp:'В, С', dur:'до 1 минуты', conc:true, roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Касаетесь согласного существа. Один раз до окончания заклинания оно бросает 1к4 и прибавляет к одному спасброску по своему выбору.' },
+
+  sacred_flame: { name:'Священное пламя', en:'Sacred Flame', level:0, school:'Воплощение',
+    cast:'Действие', range:'60 фт', comp:'В, С', dur:'Мгновенная', roll:'save:ЛОВ',
+    dmg:'1к8', dtype:'излучение', scale:'2к8 (5), 3к8 (11), 4к8 (17)',
+    desc:'Пламенное сияние нисходит на цель. Спасбросок Ловкости совершается без учёта укрытия; при провале цель получает урон излучением.' },
+
+  shillelagh: { name:'Дубинка (Шилейла)', en:'Shillelagh', level:0, school:'Преобразование',
+    cast:'Бонусное действие', range:'Касание', comp:'В, С, М', dur:'1 минута', roll:null,
+    dmg:'1к8', dtype:'силовое поле', scale:null,
+    desc:'Дубинка или посох наполняется силой природы. На время действия урон оружия становится 1к8 силовым, для атак используется ваша заклинательная характеристика, оружие считается магическим.' },
+
+  shocking_grasp: { name:'Шокирующее прикосновение', en:'Shocking Grasp', level:0, school:'Воплощение',
+    cast:'Действие', range:'Касание', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к8', dtype:'электричество', scale:'2к8 (5), 3к8 (11), 4к8 (17)',
+    desc:'Молния скачет от вашей руки. Атака ближнего боя заклинанием (с преимуществом, если цель в металлической броне). Цель не может совершать реакции до начала своего следующего хода.' },
+
+  sorcerous_burst: { name:'Чародейская вспышка', en:'Sorcerous Burst', level:0, school:'Воплощение',
+    cast:'Действие', range:'120 фт', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к8', dtype:'на выбор', scale:'2к8 (5), 3к8 (11), 4к8 (17)',
+    desc:'Метаете сгусток магии (кислота, холод, огонь, молния, яд, психика или гром — на выбор). При выпадении максимума на кости урона добавляете ещё 1к8 (не больше вашего модификатора заклинаний).' },
+
+  spare_the_dying: { name:'Уход за умирающим', en:'Spare the Dying', level:0, school:'Некромантия',
+    cast:'Действие', range:'15 фт', comp:'В, С', dur:'Мгновенная', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Указываете на живое существо с 0 хитов — оно становится стабильным. Не действует на нежить и конструктов.' },
+
+  starry_wisp: { name:'Звёздный проблеск', en:'Starry Wisp', level:0, school:'Воплощение',
+    cast:'Действие', range:'60 фт', comp:'В, С', dur:'Мгновенная', roll:'attack',
+    dmg:'1к8', dtype:'излучение', scale:'2к8 (5), 3к8 (11), 4к8 (17)',
+    desc:'Метаете крупицу звёздного света. При попадании цель получает урон излучением и до конца вашего следующего хода испускает тусклый свет в радиусе 10 футов и не может стать невидимой.' },
+
+  thaumaturgy: { name:'Чудотворство', en:'Thaumaturgy', level:0, school:'Преобразование',
+    cast:'Действие', range:'30 фт', comp:'В', dur:'до 1 минуты', roll:null,
+    dmg:null, dtype:null, scale:null,
+    desc:'Являете малое чудо: утраиваете громкость голоса, заставляете пламя мерцать, вызываете дрожь земли, безвредный звук или распахиваете/захлопываете двери. До трёх эффектов сразу.' },
+
+  thunderclap: { name:'Удар грома', en:'Thunderclap', level:0, school:'Воплощение',
+    cast:'Действие', range:'На себя (5 фт)', comp:'С', dur:'Мгновенная', roll:'save:ТЕЛ',
+    dmg:'1к6', dtype:'звук', scale:'2к6 (5), 3к6 (11), 4к6 (17)',
+    desc:'Издаёте раскат грома, слышимый за 100 футов. Каждое существо в пределах 5 футов (кроме вас) при провале спасброска Телосложения получает урон звуком.' },
+
+  toll_the_dead: { name:'Погребальный звон', en:'Toll the Dead', level:0, school:'Некромантия',
+    cast:'Действие', range:'60 фт', comp:'В, С', dur:'Мгновенная', roll:'save:МДР',
+    dmg:'1к8 / 1к12', dtype:'некротический', scale:'кости растут на 5, 11, 17',
+    desc:'Скорбный звон поражает цель. При провале спасброска Мудрости — урон некротической энергией: 1к8, а если у цели не все хиты — 1к12.' },
+
+  true_strike: { name:'Меткий удар', en:'True Strike', level:0, school:'Прорицание',
+    cast:'Действие', range:'На себя', comp:'С, М', dur:'Мгновенная', roll:'attack',
+    dmg:'оружие', dtype:'излучение (опц.)', scale:'+1к6 излучения (5, 11, 17)',
+    desc:'Совершаете атаку оружием в руках, используя для броска свою заклинательную характеристику. При попадании можно нанести урон излучением вместо обычного; на высоких уровнях добавляется дополнительный урон излучением.' },
+
+  vicious_mockery: { name:'Злая насмешка', en:'Vicious Mockery', level:0, school:'Очарование',
+    cast:'Действие', range:'60 фт', comp:'В', dur:'Мгновенная', roll:'save:МДР',
+    dmg:'1к6', dtype:'психический', scale:'2к6 (5), 3к6 (11), 4к6 (17)',
+    desc:'Осыпаете цель колкостями, наполненными магией. При провале спасброска Мудрости цель получает психический урон и помеху на свой следующий бросок атаки до конца своего следующего хода.' },
+
+  word_of_radiance: { name:'Сияющее слово', en:'Word of Radiance', level:0, school:'Воплощение',
+    cast:'Действие', range:'5 фт', comp:'В, М', dur:'Мгновенная', roll:'save:ТЕЛ',
+    dmg:'1к6', dtype:'излучение', scale:'2к6 (5), 3к6 (11), 4к6 (17)',
+    desc:'Произносите божественное слово, и обжигающее сияние вспыхивает вокруг вас. Каждый враг в пределах 5 футов при провале спасброска Телосложения получает урон излучением.' },
+};
+
+// Order to display in the grid (cantrips alphabetical by RU name handled in render).
+const SPELL_ICON_KEYS = Object.keys(SPELL_ICONS);
+
+</script>
+<script>
+const ICON_BASE = '/static/icons/spells/cantrips/';
+const ROMAN = ['','I','II','III','IV','V','VI','VII','VIII','IX'];
+const DMG_COLOR = {
+  'огонь':'#f08a3c','холод':'#5cc6e8','электричество':'#e8c63c','молния':'#e8c63c',
+  'некротический':'#9a86b8','излучение':'#f0d04c','психический':'#c77dff','кислота':'#7cc83c',
+  'яд':'#7cc83c','силовое поле':'#7aa0ff','звук':'#7aa0ff','гром':'#7aa0ff','на выбор':'#d8c8a0',
+  'излучение (опц.)':'#f0d04c'
+};
+function dcolor(t){ return DMG_COLOR[t] || '#cdbf9d'; }
+function rollDot(roll){
+  if(!roll) return '';
+  const c = roll==='attack' ? '#e05c5c' : '#5aa9ff';
+  return `<span class="roll-dot" style="background:${c}"></span>`;
+}
+function castPip(cast){
+  if(cast==='Бонусное действие') return '<span class="tri"></span>';
+  if(cast==='Реакция') return '<span class="sq" style="background:#5aa9ff"></span>';
+  return '<span class="cir"></span>';
+}
+
+function render(){
+  const q = (document.getElementById('q').value||'').toLowerCase().trim();
+  // group by level
+  const byLevel = {};
+  for (const key of SPELL_ICON_KEYS){
+    const s = SPELL_ICONS[key];
+    if (q && !(s.name.toLowerCase().includes(q) || s.en.toLowerCase().includes(q) || (s.school||'').toLowerCase().includes(q))) continue;
+    (byLevel[s.level] ||= []).push(key);
+  }
+  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
+  const book = document.getElementById('book');
+  if (!levels.length){ book.innerHTML = '<div style="color:var(--dim);padding:30px;text-align:center">Ничего не найдено.</div>'; return; }
+  book.innerHTML = levels.map(lv=>{
+    const title = lv===0 ? 'Заговоры' : `Заклинания ${lv} круга`;
+    const cells = byLevel[lv]
+      .sort((a,b)=>SPELL_ICONS[a].name.localeCompare(SPELL_ICONS[b].name,'ru'))
+      .map(key=>{
+        const s = SPELL_ICONS[key];
+        return `<div class="cell" tabindex="0" data-key="${key}"
+          onmouseenter="showTip(event,'${key}')" onmousemove="moveTip(event)" onmouseleave="hideTip()"
+          onfocus="showTip(event,'${key}')" onblur="hideTip()">
+          <img src="${ICON_BASE}${key}.png" alt="${s.name}" loading="lazy"
+               onerror="this.parentElement.classList.add('miss');this.remove();this.parentElement.textContent='${s.name}'">
+          ${rollDot(s.roll)}
+          ${lv>0?`<span class="lvl">${ROMAN[lv]}</span>`:''}
+        </div>`;
+      }).join('');
+    return `<div class="section-lbl">${title} <span style="color:#9aa6b8;font-weight:600">${byLevel[lv].length}</span></div>
+      <div class="grid" style="margin-bottom:24px">${cells}</div>`;
+  }).join('');
+}
+
+// ── Tooltip ──
+const tip = document.getElementById('tip');
+const tipCard = document.getElementById('tip-card');
+function rollLabel(roll){
+  if(!roll) return null;
+  if(roll==='attack') return {icon:'🎯', text:'Атака заклинанием'};
+  const ab = roll.split(':')[1];
+  return {icon:'🛡', text:'Спасбросок · '+ab};
+}
+function buildTip(key){
+  const s = SPELL_ICONS[key];
+  const sub = (s.level===0 ? 'Заговор' : `Заклинание ${s.level} круга`) + ' · ' + s.school;
+  let dmg = '';
+  if (s.dmg){
+    const col = dcolor(s.dtype);
+    dmg = `<div class="tip-dmg">
+      <div class="die" style="background:${col}">d</div>
+      <div class="dval" style="color:${col}">${s.dmg}<span class="t" style="color:#cdbf9d"> ${s.dtype||''}</span></div>
+    </div>`;
+  }
+  const scale = s.scale ? `<div class="tip-scale"><b>По уровню:</b> ${s.scale}</div>` : '';
+  const r = rollLabel(s.roll);
+  const meta = [
+    `<div class="m">📏 <b>${s.range}</b></div>`,
+    r ? `<div class="m">${r.icon} <b>${r.text}</b></div>` : '',
+    `<div class="m">✋ <b>${s.comp}</b></div>`,
+    `<div class="m">⏱ <b>${s.dur}</b></div>`,
+    s.conc ? `<div class="m">👁 <b>Концентрация</b></div>` : '',
+  ].filter(Boolean).join('');
+  const slot = s.level===0 ? 'Заговор' : `Ячейка ${s.level} круга`;
+  const art = `<img class="tip-art" src="${ICON_BASE}${key}.png" alt="" onerror="this.remove()">`;
+  return `
+    ${art}
+    <div class="tip-head"><div class="tip-name">${s.name}</div><div class="tip-sub">${sub} · ${s.en}</div></div>
+    ${dmg}
+    <div class="tip-desc">${s.desc}</div>
+    ${scale}
+    <div class="tip-meta">${meta}</div>
+    <div class="tip-bar"><span class="pip">${castPip(s.cast)} ${s.cast}</span>
+      <span class="pip"><span class="sq" style="background:#5aa9ff"></span> ${slot}</span></div>`;
+}
+let tipVisible = false;
+function showTip(e, key){ tipCard.innerHTML = buildTip(key); tip.classList.add('show'); tipVisible=true; positionTip(e); }
+function moveTip(e){ if(tipVisible) positionTip(e); }
+function hideTip(){ tip.classList.remove('show'); tipVisible=false; }
+function positionTip(e){
+  const pad = 16, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = e.clientX + 20, y = e.clientY - 10;
+  if (x + tw + pad > window.innerWidth) x = e.clientX - tw - 20;
+  if (x < pad) x = pad;
+  if (y + th + pad > window.innerHeight) y = window.innerHeight - th - pad;
+  if (y < pad) y = pad;
+  tip.style.left = x+'px'; tip.style.top = y+'px';
+}
+
+render();
+</script>
+</body>
+</html>

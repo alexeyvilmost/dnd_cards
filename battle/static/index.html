@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D 2024 Combat Engine</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--panel:#161b22;--panel2:#0d1117;
+  --border:#30363d;--border2:#21262d;
+  --gold:#c9a227;--red:#e05c5c;--blue:#58a6ff;--green:#3fb950;--purple:#a371f7;
+  --text:#e6edf3;--dim:#8b949e;
+  --hp-hi:#3fb950;--hp-mid:#d29922;--hp-lo:#f85149;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px}
+
+/* ── Header ── */
+header{
+  height:48px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;padding:0 16px;flex-shrink:0;
+}
+header h1{font-size:16px;font-weight:800;color:var(--gold);letter-spacing:2px;white-space:nowrap}
+.badge{padding:2px 10px;border-radius:20px;font-size:11px;background:var(--bg);border:1px solid var(--border);color:var(--dim)}
+.badge.on{border-color:var(--gold);color:var(--gold)}
+.spacer{flex:1}
+
+/* ── Buttons ── */
+.btn{
+  padding:5px 14px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-weight:500;
+  transition:border-color .12s,background .12s,color .12s;white-space:nowrap;
+}
+.btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+.btn-gold:hover:not(:disabled){background:#d4a830;border-color:#d4a830;color:#000}
+.btn-red{border-color:var(--red);color:var(--red)}
+.btn-red:hover:not(:disabled){background:rgba(224,92,92,.12)}
+.btn-green{border-color:var(--green);color:var(--green)}
+.btn-green:hover:not(:disabled){background:rgba(63,185,80,.12)}
+.btn-active{background:rgba(201,162,39,.18);border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:3px 8px;font-size:11px}
+.btn-full{width:100%}
+
+/* ── Layout ── */
+.layout{display:flex;height:calc(100vh - 48px);overflow:hidden}
+.col-left{width:185px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.col-center{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;background:#0a0e14;position:relative;overflow:hidden}
+.col-right{width:235px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+
+.col-head{padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase;flex-shrink:0}
+
+/* ── Characters panel ── */
+.chars-list{flex:1;overflow-y:auto;padding:10px}
+
+.char-card{
+  border:1px solid var(--border2);border-radius:8px;padding:10px;margin-bottom:8px;
+  cursor:pointer;transition:border-color .12s,background .12s;background:var(--panel);
+}
+.char-card:hover{border-color:var(--dim)}
+.char-card.is-turn{border-color:var(--gold);background:rgba(201,162,39,.06)}
+.char-card.is-target{border-color:var(--red);background:rgba(224,92,92,.06)}
+.char-card.is-dead{opacity:.4;pointer-events:none}
+
+.char-header{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.char-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.char-name{font-weight:700;font-size:14px;flex:1}
+.char-class{font-size:10px;color:var(--dim)}
+
+.hp-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.hp-lbl{font-size:10px;color:var(--dim);width:16px}
+.hp-track{flex:1;height:6px;background:var(--border2);border-radius:3px;overflow:hidden}
+.hp-fill{height:100%;border-radius:3px;transition:width .4s}
+.hp-num{font-size:11px;font-weight:600;min-width:40px;text-align:right}
+
+.char-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px;color:var(--dim);margin-bottom:5px}
+.char-stats span{color:var(--text)}
+
+.conds{display:flex;flex-wrap:wrap;gap:3px;min-height:18px}
+.cond{padding:1px 5px;border-radius:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;background:var(--border2);color:var(--dim)}
+.cond-prone{background:#3d2b00;color:#d29922}
+.cond-dodging{background:#001e3d;color:#58a6ff}
+.cond-disengaging{background:#001a0e;color:#3fb950}
+.cond-hidden{background:#1a1228;color:#a371f7}
+.cond-restrained{background:#3d0000;color:#f85149}
+.cond-unconscious,.cond-dead{background:#21262d;color:#6e7681}
+
+.res-row{display:flex;gap:4px;margin-top:5px}
+.res-pip{
+  flex:1;padding:2px 0;border-radius:4px;font-size:9px;text-align:center;
+  border:1px solid var(--border2);color:var(--dim);letter-spacing:.3px;
+  text-transform:uppercase;
+}
+.res-pip.ok{border-color:var(--gold);color:var(--gold);background:rgba(201,162,39,.08)}
+.res-pip.used{opacity:.25}
+
+.char-pos{font-size:10px;color:var(--dim);text-align:right;margin-top:3px}
+
+/* ── Grid ── */
+canvas{display:block;cursor:crosshair;image-rendering:pixelated}
+.grid-hint{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  background:rgba(13,17,23,.9);border:1px solid var(--border);border-radius:6px;
+  padding:4px 12px;font-size:11px;color:var(--dim);pointer-events:none;white-space:nowrap;
+}
+.grid-hint.move{color:var(--green);border-color:var(--green)}
+.grid-hint.target{color:var(--red);border-color:var(--red)}
+
+/* ── Actions panel ── */
+.turn-banner{
+  margin:8px;padding:7px 10px;border-radius:6px;border:1px solid var(--gold);
+  background:rgba(201,162,39,.1);color:var(--gold);font-size:12px;font-weight:700;
+  text-align:center;display:none;
+}
+.move-meter{margin:0 8px 8px;font-size:11px;display:none;text-align:center;color:var(--dim)}
+.move-meter span{color:var(--green);font-weight:700}
+
+.actions-body{flex:1;overflow-y:auto;padding:0 8px 8px}
+.ag-lbl{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase;padding:6px 2px 3px;display:block}
+.ag-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:2px}
+.ag-grid .btn-full{grid-column:span 2}
+.divider{height:1px;background:var(--border2);margin:8px 0}
+
+/* ── Spells ── */
+.spell-list{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.spell-list .none{color:var(--dim);font-size:11px;padding:2px}
+.btn-spell{border-color:var(--purple);color:var(--purple);font-size:11px;padding:3px 8px}
+.btn-spell:hover:not(:disabled){background:rgba(163,113,247,.14);border-color:var(--purple)}
+.btn-spell.btn-active{background:rgba(163,113,247,.25);border-color:var(--purple);color:#fff}
+.slot-bar{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 5px}
+.slot-grp{display:flex;align-items:center;gap:3px}
+.slot-lv{font-size:10px;color:var(--dim);font-weight:700;margin-right:1px}
+.slot-pip{width:9px;height:9px;border-radius:50%;border:1px solid var(--purple);display:inline-block}
+.slot-pip.on{background:var(--purple)}
+.conc-badge{margin-top:6px;padding:3px 8px;border-radius:5px;font-size:10px;
+  background:rgba(163,113,247,.12);border:1px solid var(--purple);color:var(--purple);text-align:center}
+.card-slots{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+.card-slots .slot-pip{width:8px;height:8px}
+
+/* ── Builder modal (BG3) ── */
+.modal-bg{position:fixed;inset:0;background:rgba(8,10,15,.9);z-index:150;
+  display:none;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.field input,.field select{width:100%;padding:7px 9px;background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:13px;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.spellpick{display:flex;flex-wrap:wrap;gap:5px;max-height:150px;overflow-y:auto;
+  border:1px solid var(--border2);border-radius:6px;padding:7px;background:var(--bg)}
+.spellpick .chip{padding:3px 9px;border-radius:14px;border:1px solid var(--border);
+  font-size:11px;cursor:pointer;color:var(--dim);user-select:none}
+.spellpick .chip.on{border-color:var(--purple);background:rgba(163,113,247,.18);color:var(--purple)}
+.spellpick .chip.cantrip.on{border-color:var(--blue);background:rgba(88,166,255,.18);color:var(--blue)}
+.cnt{font-weight:700}.cnt.blue{color:var(--blue)}.cnt.purple{color:var(--purple)}
+
+/* layout: rail + stage */
+.modal-bg3{display:flex;width:920px;max-width:97vw;height:640px;max-height:92vh;
+  background:linear-gradient(160deg,#15110c,#0d1117 60%);border:1px solid #3a2f1a;
+  border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.bg3-rail{width:240px;flex-shrink:0;background:rgba(0,0,0,.35);border-right:1px solid #2a2418;
+  display:flex;flex-direction:column;padding:16px 14px}
+.bg3-title{font-size:16px;font-weight:800;color:var(--gold);letter-spacing:1px;margin-bottom:12px}
+.bg3-tabs{display:flex;gap:6px;margin-bottom:14px}
+.bg3-tab{flex:1;padding:7px;border:1px solid var(--border);background:var(--bg);color:var(--dim);
+  border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+.bg3-tab.on{border-color:var(--gold);background:rgba(201,162,39,.14);color:var(--gold)}
+.bg3-steps{list-style:none;display:flex;flex-direction:column;gap:3px;flex:1}
+.bg3-steps li{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;
+  font-size:13px;color:var(--dim);cursor:pointer;border:1px solid transparent}
+.bg3-steps li .num{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.bg3-steps li.on{color:var(--gold);border-color:#3a2f1a;background:rgba(201,162,39,.08)}
+.bg3-steps li.on .num{border-color:var(--gold);background:var(--gold);color:#000;font-weight:700}
+.bg3-steps li.done .num{border-color:var(--green);color:var(--green)}
+.bg3-steps li.done{color:var(--text)}
+.bg3-rail-foot{border-top:1px solid #2a2418;padding-top:12px;margin-top:8px}
+.bg3-roster-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+
+.bg3-stage{flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 26px;overflow:hidden}
+#pane-create{display:flex;flex-direction:column;height:100%}
+.bg3-step{flex:1;overflow-y:auto;min-height:0}
+.bg3-h{color:var(--gold);font-size:22px;letter-spacing:1px;margin-bottom:4px;font-weight:800}
+.bg3-sub{color:var(--dim);font-size:12px;margin-bottom:14px;line-height:1.6}
+
+/* class cards */
+.class-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.class-card{border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;
+  background:rgba(255,255,255,.02);transition:border-color .15s,transform .1s,background .15s;text-align:center}
+.class-card:hover{transform:translateY(-2px);border-color:var(--dim)}
+.class-card.on{border-color:var(--gold);background:rgba(201,162,39,.1);box-shadow:0 0 0 1px var(--gold) inset}
+.class-card .emoji{font-size:46px;line-height:1;margin-bottom:8px}
+.class-card .cname{font-size:18px;font-weight:800;margin-bottom:6px}
+.class-card .cdesc{font-size:11px;color:var(--dim);line-height:1.6;margin-bottom:10px}
+.class-card .ctag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;
+  border:1px solid var(--border2);color:var(--dim);margin:2px}
+
+/* abilities */
+.ability-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.ab-card{border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;background:rgba(255,255,255,.02)}
+.ab-card .abname{font-size:11px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.ab-card .abval{font-size:30px;font-weight:800;line-height:1}
+.ab-card .abval .bon{font-size:13px;color:var(--green);vertical-align:super;margin-left:2px}
+.ab-card .abmod{font-size:12px;color:var(--gold);margin:2px 0 8px}
+.ab-steppers{display:flex;gap:6px;justify-content:center}
+.ab-steppers button{width:30px;height:28px;border:1px solid var(--border);background:var(--bg);
+  color:var(--text);border-radius:6px;cursor:pointer;font-size:16px;font-weight:700}
+.ab-steppers button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.ab-steppers button:disabled{opacity:.25;cursor:not-allowed}
+.ability-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;gap:16px;flex-wrap:wrap}
+.bonus-pick{display:grid;grid-template-columns:auto 1fr;gap:5px 8px;align-items:center}
+.bonus-pick label{font-size:11px;color:var(--dim)}
+.bonus-pick select{padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px}
+.points-pool{font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px}
+.points-pool #pts-left{color:var(--gold);font-weight:800;font-size:16px}
+
+/* gear cards */
+.gear-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gear-card{border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;background:rgba(255,255,255,.02);transition:border-color .15s}
+.gear-card:hover{border-color:var(--dim)}
+.gear-card.on{border-color:var(--gold);background:rgba(201,162,39,.1)}
+.gear-card .gname{font-size:15px;font-weight:700;margin-bottom:6px}
+.gear-card .gdesc{font-size:11px;color:var(--dim);line-height:1.7}
+
+/* summary */
+.summary-wrap{display:grid;grid-template-columns:1fr 1.1fr;gap:20px}
+.portrait-pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.portrait-pick span{font-size:24px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg)}
+.portrait-pick span.on{border-color:var(--gold);background:rgba(201,162,39,.14)}
+.summary-right{border:1px solid var(--border);border-radius:10px;padding:16px;background:rgba(255,255,255,.02)}
+.sheet-name{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.sheet-sub{font-size:12px;color:var(--dim);margin-bottom:12px}
+.sheet-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-size:12px}
+.sheet-stats .k{color:var(--dim)}.sheet-stats .v{color:var(--text);font-weight:700;float:right}
+.sheet-abilities{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.sheet-ab{flex:1;min-width:48px;text-align:center;border:1px solid var(--border2);border-radius:6px;padding:5px 2px}
+.sheet-ab .saname{font-size:9px;color:var(--dim);letter-spacing:1px}
+.sheet-ab .saval{font-size:15px;font-weight:800}
+.sheet-ab .samod{font-size:10px;color:var(--gold)}
+.summary-actions{display:flex;gap:10px;margin-top:16px}
+
+/* nav */
+.bg3-nav{display:flex;align-items:center;justify-content:space-between;padding-top:14px;margin-top:8px;border-top:1px solid #2a2418}
+.bg3-dots{display:flex;gap:6px}
+.bg3-dots span{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.bg3-dots span.on{background:var(--gold)}
+
+/* roster */
+.roster{display:flex;flex-direction:column;gap:5px;margin:0 0 10px;max-height:180px;overflow-y:auto}
+.roster-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border2);
+  border-radius:6px;font-size:11px;background:var(--bg)}
+.roster-item .x{margin-left:auto;cursor:pointer;color:var(--red);font-weight:700;padding:0 4px}
+
+/* library grid */
+.lib-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;overflow-y:auto}
+.lib-card{border:1px solid var(--border);border-radius:10px;padding:14px;background:rgba(255,255,255,.02)}
+.lib-card .lhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lib-card .lemoji{font-size:30px}
+.lib-card .lname{font-size:15px;font-weight:800}
+.lib-card .lmeta{font-size:11px;color:var(--dim)}
+.lib-card .lstats{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:10px}
+.lib-card .lactions{display:flex;gap:8px}
+.lib-empty{color:var(--dim);font-size:13px;grid-column:span 2;text-align:center;padding:30px}
+
+/* ── Log ── */
+.log-wrap{flex:1;overflow-y:auto;padding:0 8px 8px;display:flex;flex-direction:column-reverse}
+.log-entry{font-size:11px;padding:4px 0;border-bottom:1px solid var(--border2);line-height:1.5;color:var(--dim)}
+.log-entry:last-child{border-bottom:none}
+.log-r{color:var(--gold);font-size:9px;font-weight:700;margin-right:4px}
+.log-entry.ev-hit{color:#f85149}
+.log-entry.ev-sys{color:var(--gold)}
+.log-entry.ev-heal{color:var(--green)}
+.log-entry.ev-miss{color:var(--dim)}
+.log-entry.ev-magic{color:var(--purple)}
+
+/* ── Welcome overlay ── */
+#welcome{
+  position:fixed;inset:0;background:rgba(13,17,23,.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100;
+}
+#welcome h2{font-size:36px;color:var(--gold);letter-spacing:4px;font-weight:900}
+#welcome p{color:var(--dim);max-width:380px;text-align:center;line-height:1.7}
+#welcome .fighters{display:flex;gap:16px;margin-top:8px}
+.fighter-card{
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 20px;
+  width:180px;text-align:center;
+}
+.fighter-card .name{font-size:16px;font-weight:800;margin-bottom:6px}
+.fighter-card .detail{font-size:11px;color:var(--dim);line-height:1.7}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:20px;right:20px;max-width:320px;z-index:200;
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;font-size:12px;animation:toastin .2s ease;
+}
+.toast.err{border-color:var(--red);color:var(--red)}
+@keyframes toastin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- Welcome overlay -->
+<div id="welcome">
+  <h2>⚔ D&D 2024</h2>
+  <p>Пошаговый боевой движок. Два воина первого уровня выходят на арену.</p>
+  <div class="fighters">
+    <div class="fighter-card">
+      <div class="name" style="color:#58a6ff">Aldric</div>
+      <div class="detail">
+        Longsword + Shield<br>
+        AC 18 · HP 12<br>
+        Dueling Style<br>
+        <span style="color:#58a6ff">SAP · TOPPLE</span>
+      </div>
+    </div>
+    <div class="fighter-card">
+      <div class="name" style="color:#e05c5c">Bren</div>
+      <div class="detail">
+        Greatsword<br>
+        AC 16 · HP 12<br>
+        Great Weapon<br>
+        <span style="color:#e05c5c">GRAZE · CLEAVE</span>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:8px">
+    <button class="btn btn-gold" style="font-size:15px;padding:10px 28px" onclick="quickstart()">
+      ⚔ Быстрый бой
+    </button>
+    <button class="btn" style="font-size:15px;padding:10px 28px;border-color:var(--purple);color:var(--purple)" onclick="openBuilder()">
+      ⚒ Создать бой
+    </button>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:4px">
+    <a class="btn" href="/characters" style="text-decoration:none;font-size:14px;padding:9px 24px">📖 Каталог персонажей</a>
+    <a class="btn" href="/spellbook" style="text-decoration:none;font-size:14px;padding:9px 24px">✦ Справочник заклинаний</a>
+  </div>
+</div>
+
+<!-- Character builder modal (BG3-style) -->
+<div class="modal-bg" id="builder">
+  <div class="modal modal-bg3">
+    <!-- Left rail: steps + roster -->
+    <aside class="bg3-rail">
+      <div class="bg3-title">⚔ Создание боя</div>
+      <div class="bg3-tabs">
+        <button id="tab-create" class="bg3-tab on" onclick="switchTab('create')">⚒ Создать</button>
+        <button id="tab-lib" class="bg3-tab" onclick="switchTab('lib')">📁 Библиотека</button>
+      </div>
+      <ol class="bg3-steps" id="bg3-steps"></ol>
+      <div class="bg3-rail-foot">
+        <div class="bg3-roster-lbl">Отряд боя</div>
+        <div class="roster" id="b-roster"></div>
+        <button class="btn btn-gold btn-full" id="b-start" onclick="startBuilderBattle()" disabled>▶ Начать бой</button>
+        <button class="btn btn-full" onclick="closeBuilder()">Закрыть</button>
+      </div>
+    </aside>
+
+    <!-- Main stage -->
+    <section class="bg3-stage">
+      <!-- CREATE TAB -->
+      <div id="pane-create">
+        <!-- Step 1: Class -->
+        <div class="bg3-step" data-step="0">
+          <h3 class="bg3-h">Выберите класс</h3>
+          <div class="class-cards" id="class-cards"></div>
+        </div>
+
+        <!-- Step 2: Abilities (point-buy) -->
+        <div class="bg3-step" data-step="1" style="display:none">
+          <h3 class="bg3-h">Характеристики</h3>
+          <div class="bg3-sub">Покупка по очкам (27). База 8–15, затем бонусы происхождения +2 / +1.</div>
+          <div class="ability-grid" id="ability-grid"></div>
+          <div class="ability-foot">
+            <div class="bonus-pick">
+              <label>Бонус +2</label><select id="bonus2" onchange="onBonusChange()"></select>
+              <label>Бонус +1</label><select id="bonus1" onchange="onBonusChange()"></select>
+            </div>
+            <div class="points-pool">Очки: <span id="pts-left">27</span> / 27
+              <button class="btn btn-sm" onclick="recommendAbilities()">★ Рекомендуемые</button>
+              <button class="btn btn-sm" onclick="resetAbilities()">↺ Сброс</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Equipment / Spells -->
+        <div class="bg3-step" data-step="2" style="display:none">
+          <h3 class="bg3-h" id="step3-title">Снаряжение</h3>
+          <div id="fighter-gear">
+            <div class="bg3-sub">Выберите боевой стиль и оружие.</div>
+            <div class="gear-cards" id="gear-cards"></div>
+          </div>
+          <div id="wizard-spells" style="display:none">
+            <div class="bg3-sub">Заговоры <span id="b-cantrip-count" class="cnt blue"></span></div>
+            <div class="spellpick" id="b-cantrip-pick"></div>
+            <div class="bg3-sub" style="margin-top:10px">Заклинания <span id="b-spell-count" class="cnt purple"></span></div>
+            <div class="spellpick" id="b-spell-pick"></div>
+          </div>
+        </div>
+
+        <!-- Step 4: Summary -->
+        <div class="bg3-step" data-step="3" style="display:none">
+          <h3 class="bg3-h">Завершение</h3>
+          <div class="summary-wrap">
+            <div class="summary-left">
+              <div class="portrait-pick" id="portrait-pick"></div>
+              <div class="field"><label>Имя</label><input id="b-name" placeholder="Имя героя" maxlength="20"></div>
+              <div class="field"><label>Происхождение</label>
+                <select id="b-bg">
+                  <option value="">— нет —</option>
+                  <option>Солдат</option><option>Мудрец</option><option>Преступник</option>
+                  <option>Отшельник</option><option>Благородный</option><option>Чужеземец</option>
+                </select>
+              </div>
+              <div class="field"><label>Уровень</label>
+                <select id="b-level" onchange="onLevelChange()">
+                  <option>1</option><option>2</option><option>3</option><option>4</option>
+                </select>
+              </div>
+              <div class="row3">
+                <div class="field"><label>X (0–19)</label><input id="b-x" type="number" min="0" max="19" value="5"></div>
+                <div class="field"><label>Y (0–19)</label><input id="b-y" type="number" min="0" max="19" value="10"></div>
+                <div class="field"><label>&nbsp;</label><button class="btn btn-full" onclick="randomPos()">🎲</button></div>
+              </div>
+            </div>
+            <div class="summary-right" id="summary-sheet"></div>
+          </div>
+          <div class="summary-actions">
+            <button class="btn" style="border-color:var(--blue);color:var(--blue)" onclick="saveToLibrary()">💾 Сохранить в библиотеку</button>
+            <button class="btn" style="border-color:var(--green);color:var(--green)" onclick="addBuilderChar()">＋ Добавить в бой</button>
+          </div>
+        </div>
+
+        <!-- Wizard nav -->
+        <div class="bg3-nav">
+          <button class="btn" id="nav-back" onclick="stepBack()">‹ Назад</button>
+          <div class="bg3-dots" id="bg3-dots"></div>
+          <button class="btn btn-gold" id="nav-next" onclick="stepNext()">Далее ›</button>
+        </div>
+      </div>
+
+      <!-- LIBRARY TAB -->
+      <div id="pane-lib" style="display:none">
+        <h3 class="bg3-h">Сохранённые герои</h3>
+        <div class="bg3-sub">Нажмите «В бой», чтобы добавить героя в отряд.</div>
+        <div class="lib-grid" id="lib-grid"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Main UI -->
+<header>
+  <h1>⚔ D&D 2024</h1>
+  <span class="badge" id="badge-room">Нет комнаты</span>
+  <span class="badge" id="badge-round">—</span>
+  <div class="spacer"></div>
+  <button class="btn" id="btn-start" onclick="startCombat()" style="display:none">▶ Начать бой</button>
+  <a class="btn" href="/characters" style="text-decoration:none">📖 Персонажи</a>
+  <a class="btn" href="/spellbook" style="text-decoration:none">✦ Заклинания</a>
+  <button class="btn btn-gold" onclick="quickstart()">↺ Новая игра</button>
+</header>
+
+<div class="layout">
+  <!-- Left: Characters -->
+  <div class="col-left">
+    <div class="col-head">Персонажи</div>
+    <div class="chars-list" id="chars-list"></div>
+  </div>
+
+  <!-- Center: Grid -->
+  <div class="col-center">
+    <canvas id="grid"></canvas>
+    <div class="grid-hint" id="grid-hint">Сетка 20×20 · 5 футов/клетка</div>
+  </div>
+
+  <!-- Right: Actions + Log -->
+  <div class="col-right">
+    <div class="col-head">Действия</div>
+    <div class="turn-banner" id="turn-banner"></div>
+    <div class="move-meter" id="move-meter"></div>
+
+    <div class="actions-body" id="actions-body">
+      <div style="color:var(--dim);font-size:12px;padding:12px 4px;text-align:center">
+        Начните бой для доступа к действиям
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="col-head">Журнал боя</div>
+    <div class="log-wrap" id="log-wrap"></div>
+  </div>
+</div>
+
+<script>
+const COLS = 20, ROWS = 20;
+const CHAR_COLORS = [
+  { dot:'#58a6ff', fill:'#1c2d45', stroke:'#58a6ff', text:'#58a6ff' },
+  { dot:'#e05c5c', fill:'#3d1515', stroke:'#e05c5c', text:'#e05c5c' },
+  { dot:'#a371f7', fill:'#2a1f45', stroke:'#a371f7', text:'#a371f7' },
+  { dot:'#3fb950', fill:'#152d18', stroke:'#3fb950', text:'#3fb950' },
+  { dot:'#d29922', fill:'#3d3000', stroke:'#d29922', text:'#d29922' },
+  { dot:'#ff7b72', fill:'#451818', stroke:'#ff7b72', text:'#ff7b72' },
+];
+
+const state = {
+  roomId: null,
+  characters: {},
+  charOrder: [],
+  charColors: {},
+  combat: null,
+  mode: 'idle',          // idle | move | target:* | cast:NAME | castpoint:NAME
+  targetId: null,
+  castSpell: null,       // spell name pending a target/point
+  localLog: [],
+  spellCatalog: {},      // name -> spell meta
+  builderChars: [],      // characters added in setup
+};
+
+// Spell catalog (loaded once)
+async function loadSpells() {
+  if (Object.keys(state.spellCatalog).length) return;
+  try {
+    const list = await req('GET', '/spells');
+    list.forEach(s => { state.spellCatalog[s.name] = s; });
+  } catch (e) { /* non-fatal */ }
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+// When the page is served over http(s) we use relative URLs (same origin).
+// If it's opened from disk (file://) or an opaque origin, fall back to the
+// local dev server so fetch can still resolve the URL.
+const API_BASE = (location.origin && location.origin.startsWith('http'))
+  ? location.origin
+  : 'http://localhost:8765';
+
+async function req(method, path, body) {
+  const url = path.startsWith('http') ? path : API_BASE + path;
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+  return data;
+}
+
+// ─── State refresh ────────────────────────────────────────────────────────────
+async function refresh() {
+  if (!state.roomId) return;
+  try {
+    const [room, combat] = await Promise.all([
+      req('GET', `/rooms/${state.roomId}`),
+      req('GET', `/rooms/${state.roomId}/combat`).catch(() => ({ active: false })),
+    ]);
+    state.characters = room.characters || {};
+    if (!state.charOrder.length) {
+      state.charOrder = Object.keys(state.characters);
+      state.charOrder.forEach((id, i) => { state.charColors[id] = CHAR_COLORS[i % CHAR_COLORS.length]; });
+    }
+    state.combat = combat;
+    renderAll();
+  } catch (e) { toast(e.message, true); }
+}
+
+// ─── Quick start ──────────────────────────────────────────────────────────────
+async function quickstart() {
+  try {
+    await loadSpells();
+    const data = await req('POST', '/quickstart');
+    state.roomId = data.room_id;
+    state.charOrder = Object.keys(data.fighters);
+    state.charColors = {};
+    state.charOrder.forEach((id, i) => { state.charColors[id] = CHAR_COLORS[i % CHAR_COLORS.length]; });
+    state.mode = 'idle'; state.targetId = null; state.localLog = [];
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('badge-room').textContent = `Room ${state.roomId}`;
+    document.getElementById('btn-start').style.display = '';
+    addLog({ round: 0, turn_char: 'Система', message: 'Комната создана. Два воина 1-го уровня готовы к бою.' }, 'ev-sys');
+    await refresh();
+    toast('Комната создана! Нажмите «Начать бой»');
+  } catch (e) { toast(e.message, true); }
+}
+
+async function startCombat() {
+  try {
+    const data = await req('POST', `/rooms/${state.roomId}/combat/start`);
+    data.logs.forEach(msg => addLog({ round: 0, turn_char: 'Инициатива', message: msg }, 'ev-sys'));
+    document.getElementById('btn-start').style.display = 'none';
+    await refresh();
+    toast('Бой начат!');
+  } catch (e) { toast(e.message, true); }
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function currentId() { return state.combat?.current_turn?.character_id; }
+function currentChar() { return state.characters[currentId()]; }
+
+function setMode(mode) {
+  state.mode = mode;
+  state.targetId = null;
+  if (!mode.startsWith('cast')) state.castSpell = null;
+  renderHint();
+  renderChars();
+  drawGrid();
+}
+
+async function doAction(type, extra = {}) {
+  const cid = currentId();
+  if (!cid) return;
+  const body = { character_id: cid, ...extra };
+  try {
+    let result;
+    switch (type) {
+      case 'move':     result = await req('POST', `/rooms/${state.roomId}/actions/move`, body); break;
+      case 'attack':   result = await req('POST', `/rooms/${state.roomId}/actions/attack`, body); break;
+      case 'dash':     result = await req('POST', `/rooms/${state.roomId}/actions/dash`, body); break;
+      case 'disengage':result = await req('POST', `/rooms/${state.roomId}/actions/disengage`, body); break;
+      case 'dodge':    result = await req('POST', `/rooms/${state.roomId}/actions/dodge`, body); break;
+      case 'hide':     result = await req('POST', `/rooms/${state.roomId}/actions/hide`, body); break;
+      case 'search':   result = await req('POST', `/rooms/${state.roomId}/actions/search`, body); break;
+      case 'help':     result = await req('POST', `/rooms/${state.roomId}/actions/help`, body); break;
+      case 'shove':    result = await req('POST', `/rooms/${state.roomId}/actions/shove`, body); break;
+      case 'grapple':  result = await req('POST', `/rooms/${state.roomId}/actions/grapple`, body); break;
+      case 'second-wind': result = await req('POST', `/rooms/${state.roomId}/actions/second-wind`, body); break;
+      case 'action-surge': result = await req('POST', `/rooms/${state.roomId}/actions/action-surge`, body); break;
+      case 'end-turn': result = await req('POST', `/rooms/${state.roomId}/combat/end-turn`, body); break;
+    }
+
+    // Log everything
+    const msg = result.message || result.msg || JSON.stringify(result);
+    const isHit = msg.includes('hits') || msg.includes('CRIT');
+    const isMiss = msg.includes('misses') || msg.includes('fails');
+    const isHeal = msg.includes('Wind') || msg.includes('HP');
+    const cls = isHit ? 'ev-hit' : isMiss ? 'ev-miss' : isHeal ? 'ev-heal' : '';
+    addLog({ round: state.combat?.round || 0, turn_char: currentChar()?.name || '', message: msg }, cls);
+
+    // Log sub-messages (opportunity attacks, effects)
+    if (result.opportunity_attacks?.length) {
+      result.opportunity_attacks.forEach(oa => addLog({ round: state.combat?.round || 0, turn_char: oa.attacker, message: `⚡ Атака возможности: ${oa.message}` }, oa.hit ? 'ev-hit' : 'ev-miss'));
+    }
+    if (result.attacks) {
+      result.attacks.forEach(a => {
+        (a.effects || []).forEach(e => addLog({ round: state.combat?.round || 0, turn_char: '', message: `  ↳ ${e}` }, 'ev-sys'));
+      });
+    } else if (result.effects?.length) {
+      result.effects.forEach(e => addLog({ round: state.combat?.round || 0, turn_char: '', message: e }, 'ev-sys'));
+    }
+
+    if (result.combat_over) {
+      addLog({ round: state.combat?.round || 0, turn_char: 'Конец боя', message: `🏆 Победитель: ${result.winner}!` }, 'ev-sys');
+    }
+
+    state.mode = 'idle'; state.targetId = null;
+    await refresh();
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+function clickTarget(charId) {
+  if (state.mode === 'idle') return;
+
+  // Spell that targets a creature
+  if (state.mode.startsWith('cast:')) {
+    castAtTarget(charId);
+    return;
+  }
+  if (charId === currentId()) return;
+
+  const type = state.mode.replace('target:', '');
+  state.targetId = charId;
+
+  if (type === 'attack')   doAction('attack', { target_id: charId });
+  else if (type === 'help')    doAction('help',   { target_id: charId });
+  else if (type === 'shove-prone') doAction('shove', { target_id: charId, mode: 'prone' });
+  else if (type === 'shove-push')  doAction('shove', { target_id: charId, mode: 'push' });
+  else if (type === 'grapple')     doAction('grapple', { target_id: charId });
+  else setMode('idle');
+}
+
+// ─── Spellcasting ───────────────────────────────────────────────────────────
+function chooseSlotLevel(ch, spell) {
+  if (spell.level === 0) return null;
+  const slots = ch.spell_slots || {};
+  for (let lv = spell.level; lv <= 9; lv++) {
+    if ((slots[lv] || slots[String(lv)] || 0) > 0) return lv;
+  }
+  return null;
+}
+
+function beginCast(spellName) {
+  const spell = state.spellCatalog[spellName];
+  const ch = currentChar();
+  if (!spell || !ch) return;
+
+  // Slot availability check up front
+  if (spell.level > 0 && chooseSlotLevel(ch, spell) === null) {
+    toast(`Нет ячеек ${spell.level} уровня`, true);
+    return;
+  }
+
+  // Self-only buffs / heals / utility → cast immediately on self
+  const selfImmediate = (
+    (spell.effect === 'buff' && spell.targeting === 'self') ||
+    spell.effect === 'heal' ||
+    (spell.effect === 'utility' && spell.targeting === 'self')
+  );
+  if (spell.name === 'Misty Step' || spell.area_shape && spell.targeting === 'area' && spell.range_ft === 0) {
+    // Misty Step / self-origin area handled by point
+    state.castSpell = spellName;
+    setMode(`castpoint:${spellName}`);
+    return;
+  }
+  if (selfImmediate) {
+    castFinish(spellName, { target_ids: [currentId()] });
+    return;
+  }
+  // Area spell with a range → pick a point on the grid
+  if (spell.targeting === 'area') {
+    state.castSpell = spellName;
+    setMode(`castpoint:${spellName}`);
+    return;
+  }
+  // Single/multi target → pick a creature
+  state.castSpell = spellName;
+  setMode(`cast:${spellName}`);
+}
+
+function castAtTarget(charId) {
+  const name = state.castSpell;
+  if (!name) return;
+  castFinish(name, { target_ids: [charId] });
+}
+
+function castAtPoint(col, row) {
+  const name = state.castSpell;
+  if (!name) return;
+  castFinish(name, { point: { x: col, y: row } });
+}
+
+async function castFinish(spellName, extra) {
+  const ch = currentChar();
+  const spell = state.spellCatalog[spellName];
+  const slot = chooseSlotLevel(ch, spell);
+  const body = { character_id: currentId(), spell: spellName, ...extra };
+  if (slot) body.slot_level = slot;
+  try {
+    const result = await req('POST', `/rooms/${state.roomId}/actions/cast`, body);
+    (result.effects || []).forEach((e, i) => {
+      const cls = i === 0 ? 'ev-magic' : (e.includes('hits') || e.includes('CRIT')) ? 'ev-hit'
+        : e.includes('misses') || e.includes('saves') ? 'ev-miss' : 'ev-sys';
+      addLog({ round: state.combat?.round || 0, turn_char: i === 0 ? ch.name : '', message: i === 0 ? e : `  ↳ ${e}` }, cls);
+    });
+    state.mode = 'idle'; state.targetId = null; state.castSpell = null;
+    await refresh();
+  } catch (e) { toast(e.message, true); }
+}
+
+// ─── Character builder (BG3-style stepper) ──────────────────────────────────
+const ABILITIES = ['strength','dexterity','constitution','intelligence','wisdom','charisma'];
+const AB_LABEL = { strength:'СИЛ', dexterity:'ЛОВ', constitution:'ТЕЛ', intelligence:'ИНТ', wisdom:'МДР', charisma:'ХАР' };
+const POINT_COST = { 8:0, 9:1, 10:2, 11:3, 12:4, 13:5, 14:7, 15:9 };
+const POINT_POOL = 27;
+const PORTRAITS = ['⚔','🛡','🏹','🗡','🪓','🧙','🔮','✦','👑','🐉','💀','🦅'];
+const STEP_NAMES = ['Класс','Характеристики','Снаряжение','Завершение'];
+
+const CLASS_INFO = {
+  Fighter: { emoji:'⚔', name:'Воин', desc:'Мастер оружия и брони. Высокая живучесть, Второе дыхание и Всплеск действия.',
+    tags:['Кость HP d10','Сила/Ловкость','Боевой стиль'] },
+  Wizard:  { emoji:'🧙', name:'Волшебник', desc:'Учёный тайной магии. Заговоры и заклинания 1–2 круга, концентрация.',
+    tags:['Кость HP d6','Интеллект','Книга заклинаний'] },
+};
+const GEAR_INFO = {
+  longsword_shield: { gname:'⚔ Длинный меч + щит', gdesc:'AC 18 · Стиль Дуэлянт (+2 урон) · Мастерство SAP, TOPPLE. Надёжный «танк».' },
+  greatsword:       { gname:'🗡 Двуручный меч', gdesc:'AC 16 · Стиль Великое оружие (переброс 1–2) · Мастерство GRAZE, CLEAVE. Урон по площади.' },
+};
+const RECOMMEND_CANTRIPS = ['Fire Bolt','Ray of Frost','Mind Sliver','Shocking Grasp'];
+const RECOMMEND_SPELLS = ['Magic Missile','Shield','Mage Armor','Burning Hands','Scorching Ray','Misty Step','Hold Person'];
+
+// recommended point-buy bases (sum to 27) + origin bonus assignment
+const REC_ARRAYS = {
+  Fighter: { base:{strength:15,dexterity:13,constitution:14,intelligence:8,wisdom:12,charisma:10}, b2:'strength', b1:'constitution' },
+  Wizard:  { base:{strength:8,dexterity:14,constitution:13,intelligence:15,wisdom:12,charisma:10}, b2:'intelligence', b1:'constitution' },
+};
+
+const builder = {
+  tab:'create', step:0, class:null, level:1, preset:'longsword_shield',
+  portrait:'⚔', base:{}, bonus2:'strength', bonus1:'dexterity',
+  cantrips:new Set(), spells:new Set(),
+};
+
+function abMod(score){ return Math.floor((score - 10) / 2); }
+function fmtMod(m){ return (m>=0?'+':'') + m; }
+function finalScore(ab){
+  let s = builder.base[ab] || 8;
+  if (builder.bonus2 === ab) s += 2;
+  if (builder.bonus1 === ab) s += 1;
+  return s;
+}
+function pointsUsed(){ return ABILITIES.reduce((t,ab)=> t + (POINT_COST[builder.base[ab]||8]||0), 0); }
+
+async function openBuilder() {
+  await loadSpells();
+  builder.tab='create'; builder.step=0; builder.class=null; builder.level=1;
+  builder.preset='longsword_shield'; builder.portrait='⚔';
+  builder.base = Object.fromEntries(ABILITIES.map(a=>[a,8]));
+  builder.bonus2='strength'; builder.bonus1='dexterity';
+  builder.cantrips = new Set(); builder.spells = new Set();
+  state.builderChars = [];
+  renderRoster();
+  switchTab('create');
+  goStep(0);
+  loadLibrary();
+  document.getElementById('builder').classList.add('show');
+}
+function closeBuilder(){ document.getElementById('builder').classList.remove('show'); }
+
+function switchTab(tab){
+  builder.tab = tab;
+  document.getElementById('tab-create').classList.toggle('on', tab==='create');
+  document.getElementById('tab-lib').classList.toggle('on', tab==='lib');
+  document.getElementById('pane-create').style.display = tab==='create' ? 'flex' : 'none';
+  document.getElementById('pane-lib').style.display = tab==='lib' ? 'block' : 'none';
+  document.getElementById('bg3-steps').style.display = tab==='create' ? 'flex' : 'none';
+  if (tab==='lib') loadLibrary();
+}
+
+// ── Step navigation ──
+function goStep(i){
+  builder.step = i;
+  document.querySelectorAll('#pane-create .bg3-step').forEach(el =>
+    el.style.display = Number(el.dataset.step)===i ? 'block' : 'none');
+  // nav buttons
+  document.getElementById('nav-back').style.visibility = i===0 ? 'hidden' : 'visible';
+  document.getElementById('nav-next').style.display = i===3 ? 'none' : 'inline-block';
+  renderSteps(); renderDots();
+  if (i===0) renderClassCards();
+  if (i===1) renderAbilities();
+  if (i===2) renderStep3();
+  if (i===3) renderSummary();
+}
+function stepNext(){
+  if (builder.step===0 && !builder.class){ toast('Выберите класс', true); return; }
+  if (builder.step < 3) goStep(builder.step+1);
+}
+function stepBack(){ if (builder.step>0) goStep(builder.step-1); }
+
+function renderSteps(){
+  const ol = document.getElementById('bg3-steps');
+  ol.innerHTML = STEP_NAMES.map((n,i)=>{
+    const cls = i===builder.step ? 'on' : (i<builder.step ? 'done' : '');
+    return `<li class="${cls}" onclick="jumpStep(${i})"><span class="num">${i<builder.step?'✓':i+1}</span>${n}</li>`;
+  }).join('');
+}
+function jumpStep(i){ if (i<=builder.step || builder.class) goStep(i); }
+function renderDots(){
+  document.getElementById('bg3-dots').innerHTML =
+    STEP_NAMES.map((_,i)=>`<span class="${i===builder.step?'on':''}"></span>`).join('');
+}
+
+// ── Step 1: class ──
+function renderClassCards(){
+  document.getElementById('class-cards').innerHTML = Object.entries(CLASS_INFO).map(([k,c])=>`
+    <div class="class-card ${builder.class===k?'on':''}" onclick="selectClass('${k}')">
+      <div class="emoji">${c.emoji}</div>
+      <div class="cname">${c.name}</div>
+      <div class="cdesc">${c.desc}</div>
+      <div>${c.tags.map(t=>`<span class="ctag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+function selectClass(cls){
+  const changed = builder.class !== cls;
+  builder.class = cls;
+  builder.preset = cls==='Fighter' ? 'longsword_shield' : 'longsword_shield';
+  if (changed){
+    const rec = REC_ARRAYS[cls];
+    builder.base = {...rec.base}; builder.bonus2 = rec.b2; builder.bonus1 = rec.b1;
+    builder.portrait = cls==='Wizard' ? '🧙' : '⚔';
+    if (cls==='Wizard'){
+      builder.cantrips = new Set(RECOMMEND_CANTRIPS.slice(0, maxCantrips()));
+      builder.spells = new Set(RECOMMEND_SPELLS.slice(0, maxPrepared()));
+    }
+  }
+  renderClassCards();
+}
+
+// Keep selections within the caps for the current level (e.g. after lowering level)
+function trimSpellSelections(){
+  const trim = (set, max) => { while (set.size > max){ set.delete([...set].pop()); } };
+  trim(builder.cantrips, maxCantrips());
+  trim(builder.spells, maxPrepared());
+}
+
+// ── Step 2: abilities (point-buy) ──
+function renderAbilities(){
+  const grid = document.getElementById('ability-grid');
+  grid.innerHTML = ABILITIES.map(ab=>{
+    const base = builder.base[ab]||8;
+    const fin = finalScore(ab);
+    const bonus = fin - base;
+    const used = pointsUsed();
+    const canInc = base < 15 && (used + ((POINT_COST[base+1]||0)-(POINT_COST[base]||0))) <= POINT_POOL;
+    const canDec = base > 8;
+    return `<div class="ab-card">
+      <div class="abname">${AB_LABEL[ab]}</div>
+      <div class="abval">${fin}${bonus?`<span class="bon">+${bonus}</span>`:''}</div>
+      <div class="abmod">мод ${fmtMod(abMod(fin))}</div>
+      <div class="ab-steppers">
+        <button onclick="abStep('${ab}',-1)" ${canDec?'':'disabled'}>−</button>
+        <button onclick="abStep('${ab}',1)" ${canInc?'':'disabled'}>+</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('pts-left').textContent = POINT_POOL - pointsUsed();
+  // bonus selectors
+  for (const [id,key] of [['bonus2','bonus2'],['bonus1','bonus1']]){
+    const sel = document.getElementById(id);
+    sel.innerHTML = ABILITIES.map(ab=>`<option value="${ab}" ${builder[key]===ab?'selected':''}>${AB_LABEL[ab]}</option>`).join('');
+  }
+}
+function abStep(ab, d){
+  const cur = builder.base[ab]||8;
+  const next = cur + d;
+  if (next<8 || next>15) return;
+  const delta = (POINT_COST[next]||0) - (POINT_COST[cur]||0);
+  if (d>0 && pointsUsed()+delta > POINT_POOL){ toast('Недостаточно очков', true); return; }
+  builder.base[ab] = next;
+  renderAbilities();
+}
+function onBonusChange(){
+  let b2 = document.getElementById('bonus2').value;
+  let b1 = document.getElementById('bonus1').value;
+  if (b2===b1){ toast('Бонусы должны быть на разные характеристики', true); renderAbilities(); return; }
+  builder.bonus2 = b2; builder.bonus1 = b1;
+  renderAbilities();
+}
+function recommendAbilities(){
+  const rec = REC_ARRAYS[builder.class || 'Fighter'];
+  builder.base = {...rec.base}; builder.bonus2 = rec.b2; builder.bonus1 = rec.b1;
+  renderAbilities();
+}
+function resetAbilities(){ builder.base = Object.fromEntries(ABILITIES.map(a=>[a,8])); renderAbilities(); }
+
+// ── Step 3: gear / spells ──
+function renderStep3(){
+  const isW = builder.class==='Wizard';
+  document.getElementById('step3-title').textContent = isW ? 'Заклинания' : 'Снаряжение и стиль';
+  document.getElementById('fighter-gear').style.display = isW ? 'none' : 'block';
+  document.getElementById('wizard-spells').style.display = isW ? 'block' : 'none';
+  if (isW) renderSpellPicker();
+  else {
+    document.getElementById('gear-cards').innerHTML = Object.entries(GEAR_INFO).map(([k,g])=>`
+      <div class="gear-card ${builder.preset===k?'on':''}" onclick="selectGear('${k}')">
+        <div class="gname">${g.gname}</div><div class="gdesc">${g.gdesc}</div>
+      </div>`).join('');
+  }
+}
+function selectGear(k){ builder.preset = k; renderStep3(); }
+
+function maxSpellLevel(){ return builder.level >= 3 ? 2 : 1; }
+function maxCantrips(){ return builder.level >= 4 ? 4 : 3; }
+function maxPrepared(){ return builder.level + 3; }
+
+async function renderSpellPicker(){
+  // Catalog may have failed to load on first try (e.g. transient fetch error)
+  if (!Object.keys(state.spellCatalog).length){
+    await loadSpells();
+  }
+  trimSpellSelections();
+  const all = Object.values(state.spellCatalog);
+  const maxLv = maxSpellLevel();
+  document.getElementById('b-cantrip-pick').innerHTML = all.filter(s=>s.level===0)
+    .map(s=>`<span class="chip cantrip ${builder.cantrips.has(s.name)?'on':''}"
+      onclick="togglePick('cantrip','${s.name.replace(/'/g,"\\'")}')" title="${s.description.replace(/"/g,'&quot;')}">${s.name}</span>`).join('');
+  document.getElementById('b-spell-pick').innerHTML = all.filter(s=>s.level>=1 && s.level<=maxLv)
+    .map(s=>`<span class="chip ${builder.spells.has(s.name)?'on':''}"
+      onclick="togglePick('spell','${s.name.replace(/'/g,"\\'")}')" title="${s.description.replace(/"/g,'&quot;')}">L${s.level} ${s.name}</span>`).join('');
+  document.getElementById('b-cantrip-count').textContent = `(${builder.cantrips.size}/${maxCantrips()})`;
+  document.getElementById('b-spell-count').textContent = `(${builder.spells.size}/${maxPrepared()})`;
+}
+function togglePick(kind, name){
+  const set = kind==='cantrip' ? builder.cantrips : builder.spells;
+  const max = kind==='cantrip' ? maxCantrips() : maxPrepared();
+  if (set.has(name)) set.delete(name);
+  else { if (set.size>=max){ toast(`Максимум ${max}`, true); return; } set.add(name); }
+  renderSpellPicker();
+}
+
+// ── Step 4: summary ──
+function computeDerived(){
+  const lvl = builder.level;
+  const hitDie = builder.class==='Wizard' ? 6 : 10;
+  const con = abMod(finalScore('constitution'));
+  const dex = abMod(finalScore('dexterity'));
+  const avg = Math.floor(hitDie/2)+1;
+  const hp = (hitDie+con) + (lvl-1)*(avg+con);
+  let ac;
+  if (builder.class==='Wizard') ac = 10+dex;
+  else ac = builder.preset==='greatsword' ? 16 : 18;
+  const prof = 2;
+  const out = { hp, ac, init: dex, prof };
+  if (builder.class==='Wizard'){
+    const intMod = abMod(finalScore('intelligence'));
+    out.dc = 8+prof+intMod; out.atk = prof+intMod;
+  }
+  return out;
+}
+function renderSummary(){
+  document.getElementById('portrait-pick').innerHTML = PORTRAITS.map(p=>
+    `<span class="${builder.portrait===p?'on':''}" onclick="pickPortrait('${p}')">${p}</span>`).join('');
+  document.getElementById('b-level').value = String(builder.level);
+  const d = computeDerived();
+  const cn = CLASS_INFO[builder.class]?.name || builder.class;
+  const sheet = document.getElementById('summary-sheet');
+  const nm = document.getElementById('b-name')?.value || 'Безымянный';
+  const spellLine = builder.class==='Wizard'
+    ? `<div><span class="k">Спас. DC</span><span class="v">${d.dc}</span></div>
+       <div><span class="k">Атака закл.</span><span class="v">${fmtMod(d.atk)}</span></div>`
+    : `<div><span class="k">Стиль</span><span class="v">${builder.preset==='greatsword'?'GWF':'Дуэлянт'}</span></div>
+       <div><span class="k">Всплеск</span><span class="v">${builder.level>=2?'1':'—'}</span></div>`;
+  sheet.innerHTML = `
+    <div class="sheet-name">${builder.portrait} <span id="sheet-name-text">${nm}</span></div>
+    <div class="sheet-sub">${cn} · уровень ${builder.level}</div>
+    <div class="sheet-stats">
+      <div><span class="k">Хиты</span><span class="v">${d.hp}</span></div>
+      <div><span class="k">КД (AC)</span><span class="v">${d.ac}</span></div>
+      <div><span class="k">Инициатива</span><span class="v">${fmtMod(d.init)}</span></div>
+      <div><span class="k">Бонус маст.</span><span class="v">+${d.prof}</span></div>
+      ${spellLine}
+    </div>
+    <div class="sheet-abilities">
+      ${ABILITIES.map(ab=>`<div class="sheet-ab"><div class="saname">${AB_LABEL[ab]}</div>
+        <div class="saval">${finalScore(ab)}</div><div class="samod">${fmtMod(abMod(finalScore(ab)))}</div></div>`).join('')}
+    </div>`;
+  const nameInput = document.getElementById('b-name');
+  if (nameInput && !nameInput._wired){
+    nameInput._wired = true;
+    nameInput.addEventListener('input', ()=>{ const t=document.getElementById('sheet-name-text'); if(t) t.textContent = nameInput.value||'Безымянный'; });
+  }
+}
+function pickPortrait(p){ builder.portrait = p; renderSummary(); }
+function onLevelChange(){ builder.level = Number(document.getElementById('b-level').value); trimSpellSelections(); renderSummary(); }
+function randomPos(){
+  document.getElementById('b-x').value = Math.floor(Math.random()*20);
+  document.getElementById('b-y').value = Math.floor(Math.random()*20);
+}
+
+// ── Build payload / roster ──
+function buildPayload(){
+  const name = (document.getElementById('b-name')?.value || '').trim();
+  const x = Math.max(0, Math.min(19, Number(document.getElementById('b-x').value)));
+  const y = Math.max(0, Math.min(19, Number(document.getElementById('b-y').value)));
+  const bg = document.getElementById('b-bg').value || null;
+  const scores = Object.fromEntries(ABILITIES.map(ab=>[ab, finalScore(ab)]));
+  const p = { name, class_name: builder.class, level: builder.level, x, y,
+    ability_scores: scores, background: bg, portrait: builder.portrait };
+  if (builder.class==='Fighter') p.preset = builder.preset;
+  else { p.cantrips = [...builder.cantrips]; p.spells = [...builder.spells]; }
+  return p;
+}
+
+function freePos(){
+  for (let tries=0; tries<200; tries++){
+    const x=Math.floor(Math.random()*20), y=Math.floor(Math.random()*20);
+    if (!state.builderChars.some(c=>c.x===x&&c.y===y)) return {x,y};
+  }
+  return {x:0,y:0};
+}
+
+function addBuilderChar(){
+  if (!builder.class){ toast('Выберите класс', true); switchTab('create'); goStep(0); return; }
+  const p = buildPayload();
+  if (!p.name){ toast('Введите имя', true); return; }
+  if (state.builderChars.some(c=>c.x===p.x && c.y===p.y)){ toast('Клетка занята — измените позицию', true); return; }
+  state.builderChars.push(p);
+  renderRoster();
+  toast(`${p.name} добавлен в отряд`);
+}
+
+function removeBuilderChar(i){ state.builderChars.splice(i,1); renderRoster(); }
+
+function renderRoster(){
+  const el = document.getElementById('b-roster');
+  el.innerHTML = state.builderChars.map((c,i)=>{
+    const icon = c.portrait || (c.class_name==='Wizard'?'🧙':'⚔');
+    return `<div class="roster-item"><span>${icon}</span>
+      <strong>${c.name}</strong>&nbsp;<span style="color:var(--dim)">${c.class_name==='Wizard'?'Волш.':'Воин'} ${c.level} (${c.x},${c.y})</span>
+      <span class="x" onclick="removeBuilderChar(${i})">✕</span></div>`;
+  }).join('') || '<div style="color:var(--dim);font-size:11px;text-align:center;padding:6px">пусто</div>';
+  document.getElementById('b-start').disabled = state.builderChars.length < 2;
+}
+
+// ── Library (saved characters) ──
+async function saveToLibrary(){
+  if (!builder.class){ toast('Выберите класс', true); return; }
+  const p = buildPayload();
+  if (!p.name){ toast('Введите имя', true); return; }
+  const tpl = { name:p.name, class_name:p.class_name, level:p.level, ability_scores:p.ability_scores,
+    background:p.background, portrait:p.portrait };
+  if (builder.class==='Fighter') tpl.preset = p.preset;
+  else { tpl.cantrips = p.cantrips; tpl.spells = p.spells; }
+  try { await req('POST','/saved-characters', tpl); toast(`${p.name} сохранён в библиотеку`); loadLibrary(); }
+  catch(e){ toast(e.message, true); }
+}
+
+async function loadLibrary(){
+  try { state.library = await req('GET','/saved-characters'); }
+  catch(e){ state.library = []; }
+  renderLibrary();
+}
+function renderLibrary(){
+  const grid = document.getElementById('lib-grid');
+  document.getElementById('tab-lib').textContent = `📁 Библиотека (${state.library?.length||0})`;
+  if (!state.library || !state.library.length){
+    grid.innerHTML = '<div class="lib-empty">Пока нет сохранённых героев.<br>Создайте героя и нажмите «Сохранить в библиотеку».</div>';
+    return;
+  }
+  grid.innerHTML = state.library.map(c=>{
+    const cn = c.class_name==='Wizard'?'Волшебник':'Воин';
+    const stat = c.class_name==='Wizard'
+      ? `${(c.cantrips||[]).length} заговоров · ${(c.spells||[]).length} заклинаний`
+      : (c.preset==='greatsword'?'Двуручный меч':'Меч + щит');
+    return `<div class="lib-card">
+      <div class="lhead"><span class="lemoji">${c.portrait||'⚔'}</span>
+        <div><div class="lname">${c.name}</div><div class="lmeta">${cn} · ур.${c.level}${c.background?' · '+c.background:''}</div></div></div>
+      <div class="lstats">${stat}</div>
+      <div class="lactions">
+        <button class="btn btn-sm" style="border-color:var(--green);color:var(--green)" onclick="addFromLibrary('${c.id}')">＋ В бой</button>
+        <button class="btn btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteSaved('${c.id}')">🗑</button>
+      </div></div>`;
+  }).join('');
+}
+function addFromLibrary(id){
+  const c = (state.library||[]).find(x=>x.id===id);
+  if (!c) return;
+  const pos = freePos();
+  const p = { name:c.name, class_name:c.class_name, level:c.level, x:pos.x, y:pos.y,
+    ability_scores:c.ability_scores, background:c.background, portrait:c.portrait };
+  if (c.class_name==='Fighter') p.preset = c.preset || 'longsword_shield';
+  else { p.cantrips = c.cantrips||[]; p.spells = c.spells||[]; }
+  state.builderChars.push(p);
+  renderRoster();
+  toast(`${c.name} добавлен в отряд`);
+}
+async function deleteSaved(id){
+  try { await req('DELETE', `/saved-characters/${id}`); loadLibrary(); toast('Удалено'); }
+  catch(e){ toast(e.message, true); }
+}
+
+async function startBuilderBattle(){
+  if (state.builderChars.length < 2) return;
+  try {
+    const room = await req('POST','/rooms',{ name:'Своя битва' });
+    state.roomId = room.room_id;
+    const ids = [];
+    for (const c of state.builderChars){
+      const ch = await req('POST', `/rooms/${state.roomId}/characters`, c);
+      ids.push(ch.id);
+    }
+    state.charOrder = ids;
+    state.charColors = {};
+    ids.forEach((id,i)=>{ state.charColors[id] = CHAR_COLORS[i % CHAR_COLORS.length]; });
+    state.mode='idle'; state.targetId=null; state.castSpell=null; state.localLog=[];
+    closeBuilder();
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('badge-room').textContent = `Room ${state.roomId}`;
+    document.getElementById('btn-start').style.display = '';
+    addLog({ round:0, turn_char:'Система', message:`Комната создана: ${ids.length} бойцов. Нажмите «Начать бой».` }, 'ev-sys');
+    await refresh();
+    toast('Комната готова! Нажмите «Начать бой»');
+  } catch(e){ toast(e.message, true); }
+}
+
+// ─── Canvas grid ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('grid');
+const ctx = canvas.getContext('2d');
+let CELL = 22;
+
+function resizeCanvas() {
+  const container = canvas.parentElement;
+  const maxW = container.clientWidth - 16;
+  const maxH = container.clientHeight - 36;
+  CELL = Math.max(6, Math.floor(Math.min(maxW / COLS, maxH / ROWS)));
+  canvas.width = CELL * COLS;
+  canvas.height = CELL * ROWS;
+  drawGrid();
+}
+
+function drawGrid() {
+  const c = ctx;
+  c.clearRect(0, 0, canvas.width, canvas.height);
+
+  const combat = state.combat;
+  const chars = state.characters;
+  const curId = currentId();
+  const curChar = chars[curId];
+
+  // Movement range
+  let moveRange = 0;
+  if (state.mode === 'move' && curChar) {
+    moveRange = Math.floor((combat.current_turn?.movement_remaining_ft || 0) / 5);
+  }
+
+  // Attack range (enemy positions)
+  const attackTargets = new Set();
+  if ((state.mode.startsWith('target:attack') || state.mode.startsWith('cast:')) && curChar) {
+    for (const [id, ch] of Object.entries(chars)) {
+      if (id !== curId && ch.position) attackTargets.add(`${ch.position.x},${ch.position.y}`);
+    }
+  }
+
+  // Draw cells
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const x = col * CELL, y = row * CELL;
+
+      // Base cell
+      c.fillStyle = '#0a0e14';
+      c.fillRect(x, y, CELL, CELL);
+
+      // Grid lines
+      c.strokeStyle = '#1a2030';
+      c.lineWidth = 1;
+      c.strokeRect(x + 0.5, y + 0.5, CELL - 1, CELL - 1);
+
+      // Move range highlight
+      if (state.mode === 'move' && curChar) {
+        const dx = Math.abs(col - curChar.position.x);
+        const dy = Math.abs(row - curChar.position.y);
+        const dist = Math.max(dx, dy);
+        if (dist > 0 && dist <= moveRange) {
+          c.fillStyle = 'rgba(63,185,80,0.12)';
+          c.fillRect(x, y, CELL, CELL);
+        }
+      }
+
+      // Attack target highlight
+      if (attackTargets.has(`${col},${row}`)) {
+        c.fillStyle = 'rgba(224,92,92,0.15)';
+        c.fillRect(x, y, CELL, CELL);
+      }
+    }
+  }
+
+  // Draw character tokens
+  for (const [id, char] of Object.entries(chars)) {
+    if (!char.position) continue;
+    const col = char.position.x;
+    const row = char.position.y;
+    const cx = col * CELL + CELL / 2;
+    const cy = row * CELL + CELL / 2;
+    const r = CELL / 2 - 2;
+    const color = state.charColors[id] || CHAR_COLORS[0];
+    const isCur = id === curId;
+    const isDead = char.conditions?.includes('dead') || char.conditions?.includes('unconscious');
+    const isTarget = id === state.targetId;
+
+    // Shadow glow for current turn
+    if (isCur) {
+      c.shadowColor = color.stroke;
+      c.shadowBlur = 10;
+    }
+
+    // Fill
+    c.beginPath();
+    c.arc(cx, cy, r, 0, Math.PI * 2);
+    c.fillStyle = isDead ? '#1a1a1a' : color.fill;
+    c.fill();
+
+    // Stroke
+    c.lineWidth = isCur ? 2.5 : isTarget ? 2 : 1.5;
+    c.strokeStyle = isTarget ? '#fff' : color.stroke;
+    c.stroke();
+    c.shadowBlur = 0;
+
+    // Letter
+    const name = char.name || '?';
+    c.fillStyle = isDead ? '#444' : color.dot;
+    c.font = `bold ${Math.max(9, CELL * 0.42)}px "Segoe UI", sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(name[0].toUpperCase(), cx, cy);
+
+    // Prone indicator
+    if (char.conditions?.includes('prone')) {
+      c.fillStyle = '#d29922';
+      c.font = `${Math.max(7, CELL * 0.32)}px sans-serif`;
+      c.fillText('↓', cx + r * 0.55, cy - r * 0.55);
+    }
+
+    // HP micro-bar below token (only if combat active)
+    if (char.hp !== undefined && char.max_hp) {
+      const hpPct = char.hp / char.max_hp;
+      const bw = CELL - 4, bh = 3;
+      const bx = col * CELL + 2, by = (row + 1) * CELL - 4;
+      c.fillStyle = '#111';
+      c.fillRect(bx, by, bw, bh);
+      c.fillStyle = hpPct > 0.5 ? '#3fb950' : hpPct > 0.25 ? '#d29922' : '#f85149';
+      c.fillRect(bx, by, Math.round(bw * hpPct), bh);
+    }
+  }
+
+  // Hover cursor for target mode
+  if (state.mode.startsWith('target:') || state.mode.startsWith('cast:')) {
+    for (const [id, char] of Object.entries(chars)) {
+      if (id === curId || !char.position) continue;
+      const col = char.position.x;
+      const row = char.position.y;
+      const x = col * CELL, y = row * CELL;
+      c.fillStyle = 'rgba(224,92,92,0.08)';
+      c.fillRect(x, y, CELL, CELL);
+      c.strokeStyle = 'rgba(224,92,92,0.4)';
+      c.lineWidth = 1.5;
+      c.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
+    }
+  }
+}
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const col = Math.floor((e.clientX - rect.left) * scaleX / CELL);
+  const row = Math.floor((e.clientY - rect.top) * scaleY / CELL);
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+
+  if (state.mode === 'move') {
+    doAction('move', { x: col, y: row });
+    return;
+  }
+
+  if (state.mode.startsWith('castpoint:')) {
+    castAtPoint(col, row);
+    return;
+  }
+
+  // Check if clicked on a character
+  for (const [id, char] of Object.entries(state.characters)) {
+    if (char.position?.x === col && char.position?.y === row) {
+      if (state.mode.startsWith('target:') || state.mode.startsWith('cast:')) {
+        clickTarget(id);
+      }
+      return;
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (state.mode !== 'move') return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const col = Math.floor((e.clientX - rect.left) * scaleX / CELL);
+  const row = Math.floor((e.clientY - rect.top) * scaleY / CELL);
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+  drawGrid();
+
+  // Preview cost
+  const curChar = currentChar();
+  if (!curChar) return;
+  const dx = Math.abs(col - curChar.position.x);
+  const dy = Math.abs(row - curChar.position.y);
+  const cost = Math.max(dx, dy) * 5;
+  const rem = state.combat?.current_turn?.movement_remaining_ft || 0;
+  const canReach = cost <= rem && cost > 0;
+
+  // Highlight hovered cell
+  const cx = col * CELL, cy = row * CELL;
+  ctx.fillStyle = canReach ? 'rgba(63,185,80,0.25)' : 'rgba(248,81,73,0.15)';
+  ctx.fillRect(cx, cy, CELL, CELL);
+  ctx.strokeStyle = canReach ? '#3fb950' : '#f85149';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx + 1, cy + 1, CELL - 2, CELL - 2);
+  if (cost > 0) {
+    ctx.fillStyle = canReach ? '#3fb950' : '#f85149';
+    ctx.font = `bold 9px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${cost}ft`, cx + CELL/2, cy + CELL/2);
+  }
+});
+
+canvas.addEventListener('mouseleave', () => { if (state.mode === 'move') drawGrid(); });
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderBadges();
+  renderChars();
+  renderActions();
+  renderHint();
+  drawGrid();
+}
+
+function renderBadges() {
+  const c = state.combat;
+  const rBadge = document.getElementById('badge-round');
+  if (c?.active) {
+    rBadge.textContent = `Раунд ${c.round}`;
+    rBadge.className = 'badge on';
+  } else if (state.roomId) {
+    rBadge.textContent = 'Нет боя';
+    rBadge.className = 'badge';
+  }
+}
+
+function renderChars() {
+  const list = document.getElementById('chars-list');
+  const curId = currentId();
+  list.innerHTML = '';
+
+  for (const id of state.charOrder) {
+    const ch = state.characters[id];
+    if (!ch) continue;
+    const color = state.charColors[id] || CHAR_COLORS[0];
+    const isDead = ch.conditions?.includes('dead');
+    const isUncon = ch.conditions?.includes('unconscious');
+    const isTurn = id === curId;
+    const isTarget = id === state.targetId;
+
+    const hpPct = ch.hp / ch.max_hp;
+    const hpColor = hpPct > 0.5 ? 'var(--hp-hi)' : hpPct > 0.25 ? 'var(--hp-mid)' : 'var(--hp-lo)';
+
+    const conds = (ch.conditions || []).map(c =>
+      `<span class="cond cond-${c}">${condLabel(c)}</span>`
+    ).join('');
+
+    // Action resources (from combat state if it's their turn)
+    const res = isTurn && state.combat?.current_turn?.resources;
+    const isFighter = ch.class_name === 'Fighter';
+    const resPips = res ? `
+      <div class="res-row">
+        <div class="res-pip ${res.action ? 'ok' : 'used'}" title="Действие">Д</div>
+        <div class="res-pip ${res.bonus_action ? 'ok' : 'used'}" title="Бонус">БД</div>
+        <div class="res-pip ${res.reaction ? 'ok' : 'used'}" title="Реакция">Р</div>
+        ${isFighter ? `<div class="res-pip ${res.second_wind ? 'ok' : 'used'}" title="Второе Дыхание">2В</div>` : ''}
+      </div>` : '';
+
+    // Wizard spell slots + concentration (always shown)
+    let casterInfo = '';
+    if (Object.keys(ch.spell_slots_max || {}).length) {
+      const levels = Object.keys(ch.spell_slots_max).map(Number).sort();
+      const slots = levels.map(lv => {
+        const c = ch.spell_slots[lv] ?? ch.spell_slots[String(lv)] ?? 0;
+        const m = ch.spell_slots_max[lv] ?? ch.spell_slots_max[String(lv)] ?? 0;
+        let p = `<span class="slot-lv">${lv}</span>`;
+        for (let i = 0; i < m; i++) p += `<span class="slot-pip ${i < c ? 'on' : ''}"></span>`;
+        return `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:5px">${p}</span>`;
+      }).join('');
+      const conc = ch.concentrating_on ? `<div class="conc-badge" style="margin-top:4px">🌀 ${ch.concentrating_on}</div>` : '';
+      casterInfo = `<div class="card-slots">${slots}</div>${conc}`;
+    }
+
+    const card = document.createElement('div');
+    card.className = `char-card${isTurn ? ' is-turn' : ''}${isTarget ? ' is-target' : ''}${isDead || isUncon ? ' is-dead' : ''}`;
+    card.dataset.id = id;
+    card.innerHTML = `
+      <div class="char-header">
+        <div class="char-dot" style="background:${color.dot}"></div>
+        ${ch.portrait ? `<span style="font-size:15px">${ch.portrait}</span>` : ''}
+        <div class="char-name">${ch.name}</div>
+        <div class="char-class">${ch.class_name} ${ch.level}</div>
+      </div>
+      <div class="hp-row">
+        <div class="hp-lbl">HP</div>
+        <div class="hp-track"><div class="hp-fill" style="width:${hpPct*100}%;background:${hpColor}"></div></div>
+        <div class="hp-num" style="color:${hpColor}">${ch.hp}/${ch.max_hp}</div>
+      </div>
+      <div class="char-stats">
+        <div>AC: <span>${ch.ac}</span></div>
+        <div>Поз: <span>(${ch.position?.x},${ch.position?.y})</span></div>
+      </div>
+      <div class="conds">${conds || '<span style="color:var(--dim);font-size:10px">нет состояний</span>'}</div>
+      ${casterInfo}
+      ${resPips}
+    `;
+    card.addEventListener('click', () => {
+      if (state.mode.startsWith('cast:')) {
+        clickTarget(id);            // spells may target self or others
+      } else if (state.mode.startsWith('target:') && id !== curId) {
+        clickTarget(id);
+      }
+    });
+    list.appendChild(card);
+  }
+}
+
+function condLabel(c) {
+  const map = { prone:'лежит', dodging:'уклон', disengaging:'отход', hidden:'скрыт',
+    restrained:'захват', unconscious:'без сознания', dead:'мёртв', blinded:'ослеплён',
+    stunned:'оглушён', poisoned:'отравлен', frightened:'напуган', paralyzed:'парализован',
+    invisible:'невидим', incapacitated:'недееспособен', charmed:'очарован', deafened:'оглох' };
+  return map[c] || c;
+}
+
+function renderActions() {
+  const banner = document.getElementById('turn-banner');
+  const meter = document.getElementById('move-meter');
+  const body = document.getElementById('actions-body');
+  const c = state.combat;
+
+  if (!c?.active) {
+    banner.style.display = 'none';
+    meter.style.display = 'none';
+    body.innerHTML = `<div style="color:var(--dim);font-size:12px;padding:12px 4px;text-align:center">Начните бой для доступа к действиям</div>`;
+    return;
+  }
+
+  const curId = currentId();
+  const cur = state.characters[curId];
+  if (!cur) return;
+  const res = c.current_turn?.resources || {};
+  const moveFt = c.current_turn?.movement_remaining_ft ?? 0;
+
+  banner.style.display = 'block';
+  banner.textContent = `⚡ Ход: ${cur.name}`;
+  meter.style.display = 'block';
+  meter.innerHTML = `Движение: <span>${moveFt} фут.</span>`;
+
+  const hasA = res.action;
+  const hasBA = res.bonus_action;
+  const inMove = state.mode === 'move';
+  const inTarget = state.mode.startsWith('target:');
+  const isWizard = cur.class_name === 'Wizard';
+  const isFighter = cur.class_name === 'Fighter';
+
+  body.innerHTML = `
+    <span class="ag-lbl">Движение</span>
+    <div class="ag-grid">
+      <button class="btn btn-green btn-full ${inMove ? 'btn-active' : ''}" onclick="toggleMove()" ${moveFt <= 0 ? 'disabled' : ''}>
+        ${inMove ? '✕ Отмена' : '⬡ Двигаться'} ${moveFt > 0 ? `(${moveFt}ft)` : ''}
+      </button>
+    </div>
+
+    <span class="ag-lbl">Действие</span>
+    <div class="ag-grid">
+      <button class="btn ${inTarget && state.mode==='target:attack' ? 'btn-active btn-red' : 'btn-red'}"
+        onclick="enterTarget('attack')" ${!hasA ? 'disabled' : ''}>⚔ Атака</button>
+      <button class="btn" onclick="doAction('dash')" ${!hasA ? 'disabled' : ''}>💨 Рывок</button>
+      <button class="btn" onclick="doAction('disengage')" ${!hasA ? 'disabled' : ''}>↩ Отход</button>
+      <button class="btn" onclick="doAction('dodge')" ${!hasA ? 'disabled' : ''}>🛡 Уклон</button>
+      <button class="btn" onclick="doAction('hide')" ${!hasA ? 'disabled' : ''}>👁 Скрыться</button>
+      <button class="btn" onclick="doAction('search')" ${!hasA ? 'disabled' : ''}>🔍 Поиск</button>
+      <button class="btn ${inTarget && state.mode==='target:help' ? 'btn-active' : ''}"
+        onclick="enterTarget('help')" ${!hasA ? 'disabled' : ''}>🤝 Помощь</button>
+      <button class="btn ${inTarget && state.mode==='target:shove-prone' ? 'btn-active btn-red' : ''}"
+        onclick="enterTarget('shove-prone')" ${!hasA ? 'disabled' : ''}>↓ Сбить</button>
+      <button class="btn ${inTarget && state.mode==='target:shove-push' ? 'btn-active' : ''}"
+        onclick="enterTarget('shove-push')" ${!hasA ? 'disabled' : ''}>↔ Толчок</button>
+      <button class="btn ${inTarget && state.mode==='target:grapple' ? 'btn-active btn-red' : ''}"
+        onclick="enterTarget('grapple')" ${!hasA ? 'disabled' : ''}>✊ Захват</button>
+    </div>
+
+    ${isWizard ? renderSpellSection(cur, res) : ''}
+
+    <span class="ag-lbl">Бонусное действие</span>
+    <div class="ag-grid">
+      ${isFighter ? `
+      <button class="btn btn-full" onclick="doAction('second-wind')" ${!hasBA || !res.second_wind ? 'disabled' : ''}>
+        💚 Второе Дыхание ${!res.second_wind ? '(исп.)' : '(1d10+1)'}
+      </button>` : ''}
+      ${isFighter && cur.action_surge_max > 0 ? `
+      <button class="btn btn-full" onclick="doAction('action-surge')"
+        ${cur.action_surge_used >= cur.action_surge_max ? 'disabled' : ''}>
+        ⚡ Всплеск Действия ${cur.action_surge_used >= cur.action_surge_max ? '(исп.)' : `(${cur.action_surge_max - cur.action_surge_used})`}
+      </button>` : ''}
+      ${!isFighter ? `<div style="color:var(--dim);font-size:11px;padding:4px 2px;grid-column:span 2;text-align:center">
+        Бонусные заклинания — в списке выше</div>` : ''}
+    </div>
+
+    <div class="divider"></div>
+    <div class="ag-grid">
+      <button class="btn btn-gold btn-full" onclick="doAction('end-turn')">⏭ Закончить ход</button>
+    </div>
+  `;
+}
+
+function renderSpellSection(cur, res) {
+  const cantrips = cur.cantrips || [];
+  const prepared = cur.spells_prepared || [];
+  const slots = cur.spell_slots || {};
+  const slotsMax = cur.spell_slots_max || {};
+  const conc = cur.concentrating_on;
+
+  // Slot pips display
+  const slotLevels = Object.keys(slotsMax).map(Number).sort();
+  const slotBar = slotLevels.map(lv => {
+    const cur_ = slots[lv] ?? slots[String(lv)] ?? 0;
+    const max_ = slotsMax[lv] ?? slotsMax[String(lv)] ?? 0;
+    let pips = '';
+    for (let i = 0; i < max_; i++) pips += `<span class="slot-pip ${i < cur_ ? 'on' : ''}"></span>`;
+    return `<div class="slot-grp"><span class="slot-lv">${lv}</span>${pips}</div>`;
+  }).join('');
+
+  const concBadge = conc ? `<div class="conc-badge">🌀 Концентрация: ${conc}</div>` : '';
+
+  const spellBtn = (name) => {
+    const sp = state.spellCatalog[name];
+    if (!sp) return '';
+    const active = (state.mode === `cast:${name}` || state.mode === `castpoint:${name}`);
+    let avail = true;
+    if (sp.level > 0) avail = chooseSlotLevel(cur, sp) !== null;
+    const bonus = sp.casting_time === 'bonus' ? ' ⚡' : sp.casting_time === 'reaction' ? ' ↩' : '';
+    const tip = `${sp.school} · ${sp.range_ft ? sp.range_ft+'ft' : 'self'}${sp.concentration ? ' · конц.' : ''}\n${sp.description}`;
+    return `<button class="btn btn-spell ${active ? 'btn-active' : ''}" title="${tip.replace(/"/g,'&quot;')}"
+      onclick="beginCast('${name.replace(/'/g,"\\'")}')" ${avail ? '' : 'disabled'}>${name}${bonus}</button>`;
+  };
+
+  return `
+    <span class="ag-lbl">Заговоры</span>
+    <div class="spell-list">${cantrips.map(spellBtn).join('') || '<span class="none">нет</span>'}</div>
+    <span class="ag-lbl">Заклинания · ячейки ${slotBar ? '' : ''}</span>
+    <div class="slot-bar">${slotBar}</div>
+    <div class="spell-list">${prepared.map(spellBtn).join('') || '<span class="none">нет</span>'}</div>
+    ${concBadge}
+  `;
+}
+
+function toggleMove() {
+  if (state.mode === 'move') setMode('idle');
+  else setMode('move');
+}
+
+function enterTarget(type) {
+  const modeKey = `target:${type}`;
+  if (state.mode === modeKey) { setMode('idle'); return; }
+  setMode(modeKey);
+}
+
+function renderHint() {
+  const hint = document.getElementById('grid-hint');
+  if (state.mode === 'move') {
+    hint.textContent = 'Кликните на клетку для перемещения · Esc — отмена';
+    hint.className = 'grid-hint move';
+  } else if (state.mode.startsWith('cast:')) {
+    hint.textContent = `✦ ${state.castSpell}: выберите цель · Esc — отмена`;
+    hint.className = 'grid-hint target';
+  } else if (state.mode.startsWith('castpoint:')) {
+    hint.textContent = `✦ ${state.castSpell}: кликните клетку (центр) · Esc — отмена`;
+    hint.className = 'grid-hint target';
+  } else if (state.mode.startsWith('target:')) {
+    const labels = { 'target:attack':'Выберите цель для атаки',
+      'target:help':'Выберите союзника', 'target:shove-prone':'Выберите цель для броска',
+      'target:shove-push':'Выберите цель для толчка', 'target:grapple':'Выберите цель для захвата' };
+    hint.textContent = (labels[state.mode] || 'Выберите цель') + ' · Esc — отмена';
+    hint.className = 'grid-hint target';
+  } else {
+    hint.textContent = 'Сетка 20×20 · 5 футов/клетка · Диагональ = 5ft (Чебышёв)';
+    hint.className = 'grid-hint';
+  }
+}
+
+// ─── Log ──────────────────────────────────────────────────────────────────────
+function addLog(entry, cls = '') {
+  state.localLog.unshift({ ...entry, cls });
+  if (state.localLog.length > 120) state.localLog.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const wrap = document.getElementById('log-wrap');
+  wrap.innerHTML = state.localLog.map(e => `
+    <div class="log-entry ${e.cls || ''}">
+      ${e.round > 0 ? `<span class="log-r">Р${e.round}</span>` : ''}
+      ${e.turn_char ? `<strong>${e.turn_char}</strong>: ` : ''}${e.message}
+    </div>
+  `).join('');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, err = false) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (err ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), err ? 4000 : 2500);
+}
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { setMode('idle'); renderActions(); }
+  if (e.key === 'm' && state.combat?.active) toggleMove();
+  if (e.key === 'a' && state.combat?.active && state.combat?.current_turn?.resources?.action) enterTarget('attack');
+  if (e.key === 'Enter' && state.combat?.active) doAction('end-turn');
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { resizeCanvas(); });
+loadSpells();
+resizeCanvas();
+drawGrid();
+// Deep-link: /?create=1 opens the character builder straight away (from the catalog page)
+if (new URLSearchParams(location.search).get('create') === '1') {
+  openBuilder();
+}
+</script>
+</body>
+</html>
