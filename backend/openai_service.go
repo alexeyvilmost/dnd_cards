@@ -153,8 +153,6 @@ func generateGamePrompt(cardName, description, rarity, itemType, imagePromptExtr
 // generateFantasyPrompt - промпт в стиле официальных иллюстраций D&D:
 // реалистично нарисованный предмет на белом фоне с мягким акварельным пятном позади
 func generateFantasyPrompt(cardName, description, rarity, itemType, imagePromptExtra string) string {
-	rarityColor := getRarityColor(rarity)
-
 	prompt := fmt.Sprintf("Иллюстрация фэнтезийного предмета в стиле официальных артов настольной игры Dungeons & Dragons (книга игрока, пятая редакция).\nТип предмета: %s.\nОбъект: %s", getItemTypeLabel(itemType), cardName)
 
 	if description != "" {
@@ -166,7 +164,7 @@ func generateFantasyPrompt(cardName, description, rarity, itemType, imagePromptE
 	}
 
 	if rarity != "common" {
-		prompt += fmt.Sprintf("\nДобавь сдержанные магические акценты %s цвета (свечение рун, камней или металла).", rarityColor)
+		prompt += getMagicalAccentHint(rarity, itemType, cardName, description)
 	}
 
 	blobColor := getRarityBlobColor(rarity)
@@ -228,6 +226,39 @@ func inferItemType(itemType, cardName, description string) string {
 		return itemType
 	}
 	return "item"
+}
+
+func getMagicalAccentHint(rarity, itemType, cardName, description string) string {
+	rarityColor := getRarityColor(rarity)
+	hint := fmt.Sprintf("\nДобавь сдержанные магические акценты %s цвета — мягкое свечение металла, камней или кристаллов.", rarityColor)
+
+	if shouldSuggestRunes(itemType, cardName, description, rarity) {
+		return hint + " Добавь руны или магические узоры, если они уместны для этого предмета."
+	} else {
+		return hint + " Допустимы едва заметные руны или магические узоры, если они уместны для этого предмета."
+	}
+}
+
+// shouldSuggestRunes — руны только для особо редких предметов, где они логичны
+func shouldSuggestRunes(itemType, cardName, description, rarity string) bool {
+	if rarity != "very_rare" && rarity != "artifact" {
+		return false
+	}
+
+	text := strings.ToLower(cardName + " " + description)
+	if strings.Contains(text, "рун") || strings.Contains(text, "rune") || strings.Contains(text, "глиф") {
+		return true
+	}
+
+	switch itemType {
+	case "scroll", "ring", "necklace":
+		return true
+	case "weapon":
+		return strings.Contains(text, "посох") || strings.Contains(text, "жезл") ||
+			strings.Contains(text, "staff") || strings.Contains(text, "wand")
+	default:
+		return false
+	}
 }
 
 func getItemTypeLabel(itemType string) string {
