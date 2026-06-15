@@ -129,6 +129,8 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			BonusType:                    card.BonusType,
 			BonusValue:                   card.BonusValue,
 			DamageType:                   card.DamageType,
+			ElementalDamageValue:         card.ElementalDamageValue,
+			ElementalDamageType:          card.ElementalDamageType,
 			DefenseType:                  card.DefenseType,
 			Type:                         card.Type,
 			WeaponType:                   card.WeaponType,
@@ -191,6 +193,8 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		BonusType:                    card.BonusType,
 		BonusValue:                   card.BonusValue,
 		DamageType:                   card.DamageType,
+		ElementalDamageValue:         card.ElementalDamageValue,
+		ElementalDamageType:          card.ElementalDamageType,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
 		WeaponType:                   card.WeaponType,
@@ -231,6 +235,11 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 
 	if req.BonusType != nil && !IsValidBonusType(*req.BonusType) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип бонуса"})
+		return
+	}
+
+	if req.ElementalDamageType != nil && *req.ElementalDamageType != "" && !IsValidElementalDamageType(*req.ElementalDamageType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип стихийного урона"})
 		return
 	}
 
@@ -280,6 +289,8 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		BonusType:                    req.BonusType,
 		BonusValue:                   req.BonusValue,
 		DamageType:                   req.DamageType,
+		ElementalDamageValue:         req.ElementalDamageValue,
+		ElementalDamageType:          req.ElementalDamageType,
 		DefenseType:                  req.DefenseType,
 		DescriptionFontSize:          req.DescriptionFontSize,
 		TextAlignment:                req.TextAlignment,
@@ -324,6 +335,8 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		BonusType:                    card.BonusType,
 		BonusValue:                   card.BonusValue,
 		DamageType:                   card.DamageType,
+		ElementalDamageValue:         card.ElementalDamageValue,
+		ElementalDamageType:          card.ElementalDamageType,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
 		WeaponType:                   card.WeaponType,
@@ -368,6 +381,11 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 
 	if req.BonusType != nil && !IsValidBonusType(*req.BonusType) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип бонуса"})
+		return
+	}
+
+	if req.ElementalDamageType != nil && *req.ElementalDamageType != "" && !IsValidElementalDamageType(*req.ElementalDamageType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип стихийного урона"})
 		return
 	}
 
@@ -434,6 +452,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.DamageType != nil {
 		card.DamageType = req.DamageType
+	}
+	if req.ElementalDamageValue != nil {
+		card.ElementalDamageValue = req.ElementalDamageValue
+	}
+	if req.ElementalDamageType != nil {
+		card.ElementalDamageType = req.ElementalDamageType
 	}
 	if req.DefenseType != nil {
 		card.DefenseType = req.DefenseType
@@ -529,6 +553,8 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		BonusType:                    card.BonusType,
 		BonusValue:                   card.BonusValue,
 		DamageType:                   card.DamageType,
+		ElementalDamageValue:         card.ElementalDamageValue,
+		ElementalDamageType:          card.ElementalDamageType,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
 		WeaponType:                   card.WeaponType,
@@ -667,6 +693,9 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 			Weight:              card.Weight,
 			BonusType:           card.BonusType,
 			BonusValue:          card.BonusValue,
+			DamageType:          card.DamageType,
+			ElementalDamageValue: card.ElementalDamageValue,
+			ElementalDamageType:  card.ElementalDamageType,
 			Type:                card.Type,
 			WeaponType:          card.WeaponType,
 			RequiresAttunement:  card.RequiresAttunement,

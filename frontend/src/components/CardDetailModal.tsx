@@ -9,6 +9,8 @@ import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
 import { toBlob } from 'html-to-image';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
+import { getElementalDamageLabel, hasElementalDamage } from '../utils/elementalDamage';
+import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { FormattedText } from '../utils/formattedText';
 
 interface CardDetailModalProps {
@@ -299,6 +301,19 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             {card.weight && <p><strong>Вес:</strong> {formatWeight(card.weight)}</p>}
             {card.bonus_type && card.bonus_value && (
               <p><strong>Бонус:</strong> {card.bonus_value} ({card.bonus_type === 'damage' ? 'Урон' : 'Защита'})</p>
+            )}
+            {hasElementalDamage(card) && card.elemental_damage_value && card.elemental_damage_type && (
+              <p className="flex items-center gap-1">
+                <strong>Стихийный урон:</strong>
+                <ElementalDamageDisplay
+                  value={card.elemental_damage_value}
+                  type={card.elemental_damage_type}
+                  iconSize={14}
+                />
+                <span className="text-gray-400 text-xs">
+                  ({getElementalDamageLabel(card.elemental_damage_type)})
+                </span>
+              </p>
             )}
             {card.range && (
               <p><strong>Дальность:</strong> {card.range}</p>

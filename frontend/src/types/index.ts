@@ -39,6 +39,8 @@ export interface Card {
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
   damage_type?: string | null;
+  elemental_damage_value?: string | null;
+  elemental_damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
   text_alignment?: string | null;
@@ -77,6 +79,8 @@ export interface CreateCardRequest {
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
   damage_type?: string | null;
+  elemental_damage_value?: string | null;
+  elemental_damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
   text_alignment?: string | null;
@@ -114,6 +118,8 @@ export interface UpdateCardRequest {
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
   damage_type?: string | null;
+  elemental_damage_value?: string | null;
+  elemental_damage_type?: string | null;
   defense_type?: string | null;
   description_font_size?: number | null;
   text_alignment?: string | null;

@@ -3,6 +3,7 @@ import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'rea
 import { CreateCardRequest, Properties } from '../../types';
 import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../../types';
 import { ITEM_TYPE_OPTIONS } from '../../constants/itemTypes';
+import { ELEMENTAL_DAMAGE_OPTIONS } from '../../utils/elementalDamage';
 import PropertySelector from '../PropertySelector';
 import TagsInput from '../TagsInput';
 import weaponTypesData from '../../../utils/weapon_types.json';
@@ -255,6 +256,40 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
                 )
               ))}
             </select>
+          </div>
+
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">
+              Дополнительный стихийный урон
+              <span className="text-gray-400 font-normal ml-1">(необязательно)</span>
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Кубы урона</label>
+                <input
+                  {...register('elemental_damage_value')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="1d4"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Тип урона</label>
+                <select
+                  {...register('elemental_damage_type')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Не указан</option>
+                  {ELEMENTAL_DAMAGE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Отображается в нижней панели рядом с основным уроном
+            </p>
           </div>
         </>
       )}

@@ -5,6 +5,8 @@ import {
   bottomPanelPriceInlineStyle,
   bottomPanelValueInlineStyle,
 } from '../utils/cardBottomPanelStyles';
+import ElementalDamageDisplay from './ElementalDamageDisplay';
+import { hasElementalDamage } from '../utils/elementalDamage';
 
 const ICON_SIZE = 10;
 const COIN_FILTER =
@@ -161,6 +163,17 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
               style={iconStyle}
             />
           )}
+          {card.bonus_type === 'damage' &&
+            hasElementalDamage(card) &&
+            card.elemental_damage_value &&
+            card.elemental_damage_type && (
+              <ElementalDamageDisplay
+                value={card.elemental_damage_value}
+                type={card.elemental_damage_type}
+                iconSize={ICON_SIZE}
+                fontStyle={bottomPanelValueInlineStyle}
+              />
+            )}
           {card.bonus_type === 'defense' && card.defense_type && renderDefenseIcons(card.defense_type)}
           {card.bonus_type === 'defense' && card.type === 'щит' && (
             <img src="/icons/defense.png" alt="Защита" style={iconStyle} />

@@ -252,6 +252,8 @@ type Card struct {
 	BonusType                    *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
 	BonusValue                   *string        `json:"bonus_value" gorm:"type:varchar(20)"`
 	DamageType                   *string        `json:"damage_type" gorm:"type:varchar(20)"`
+	ElementalDamageValue         *string        `json:"elemental_damage_value" gorm:"type:varchar(20)"`
+	ElementalDamageType          *string        `json:"elemental_damage_type" gorm:"type:varchar(20)"`
 	DefenseType                  *string        `json:"defense_type" gorm:"type:varchar(20)"`
 	DescriptionFontSize          *int           `json:"description_font_size" gorm:"type:int"`
 	TextAlignment                *string        `json:"text_alignment" gorm:"type:varchar(20)"`
@@ -292,6 +294,8 @@ type CreateCardRequest struct {
 	BonusType                    *BonusType     `json:"bonus_type"`
 	BonusValue                   *string        `json:"bonus_value"`
 	DamageType                   *string        `json:"damage_type"`
+	ElementalDamageValue         *string        `json:"elemental_damage_value"`
+	ElementalDamageType          *string        `json:"elemental_damage_type"`
 	DefenseType                  *string        `json:"defense_type"`
 	DescriptionFontSize          *int           `json:"description_font_size"`
 	TextAlignment                *string        `json:"text_alignment"`
@@ -329,6 +333,8 @@ type UpdateCardRequest struct {
 	BonusType                    *BonusType     `json:"bonus_type"`
 	BonusValue                   *string        `json:"bonus_value"`
 	DamageType                   *string        `json:"damage_type"`
+	ElementalDamageValue         *string        `json:"elemental_damage_value"`
+	ElementalDamageType          *string        `json:"elemental_damage_type"`
 	DefenseType                  *string        `json:"defense_type"`
 	DescriptionFontSize          *int           `json:"description_font_size"`
 	TextAlignment                *string        `json:"text_alignment"`
@@ -379,6 +385,8 @@ type CardResponse struct {
 	BonusType                    *BonusType     `json:"bonus_type"`
 	BonusValue                   *string        `json:"bonus_value"`
 	DamageType                   *string        `json:"damage_type"`
+	ElementalDamageValue         *string        `json:"elemental_damage_value"`
+	ElementalDamageType          *string        `json:"elemental_damage_type"`
 	DefenseType                  *string        `json:"defense_type"`
 	Type                         *string        `json:"type"`
 	WeaponType                   *string        `json:"weapon_type"`
@@ -596,6 +604,16 @@ func IsValidRarityString(rarity string) bool {
 func IsValidBonusType(bonusType BonusType) bool {
 	switch bonusType {
 	case BonusDamage, BonusDefense:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsValidElementalDamageType - проверяет тип стихийного урона
+func IsValidElementalDamageType(damageType string) bool {
+	switch damageType {
+	case "fire", "cold", "acid", "poison", "necrotic", "lightning", "psychic", "radiant", "thunder", "force":
 		return true
 	default:
 		return false

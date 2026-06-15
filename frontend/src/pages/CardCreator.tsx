@@ -55,6 +55,8 @@ const CardCreator = () => {
       bonus_type: searchParams.get('bonus_type') || null,
       bonus_value: searchParams.get('bonus_value') || null,
       damage_type: searchParams.get('damage_type') || null,
+      elemental_damage_value: null,
+      elemental_damage_type: null,
       defense_type: null,
       is_extended: false,
       author: searchParams.get('author') || 'Admin',
@@ -111,6 +113,8 @@ const CardCreator = () => {
             bonus_type: card.bonus_type,
             bonus_value: card.bonus_value,
             damage_type: card.damage_type,
+            elemental_damage_value: card.elemental_damage_value || null,
+            elemental_damage_type: card.elemental_damage_type || null,
             defense_type: card.defense_type,
             text_alignment: card.text_alignment || null,
             text_font_size: card.text_font_size || null,
@@ -167,6 +171,8 @@ const CardCreator = () => {
           setValue('bonus_type', template.bonus_type);
           setValue('bonus_value', template.bonus_value);
           setValue('damage_type', template.damage_type);
+          setValue('elemental_damage_value', template.elemental_damage_value || null);
+          setValue('elemental_damage_type', template.elemental_damage_type || null);
           setValue('defense_type', template.defense_type);
           setValue('text_alignment', template.text_alignment || null);
           setValue('text_font_size', template.text_font_size || null);
@@ -213,6 +219,8 @@ const CardCreator = () => {
     watchedValues.bonus_type,
     watchedValues.bonus_value,
     watchedValues.damage_type,
+    watchedValues.elemental_damage_value,
+    watchedValues.elemental_damage_type,
     watchedValues.defense_type,
     watchedValues.is_extended,
     watchedValues.text_alignment,
@@ -265,6 +273,8 @@ const CardCreator = () => {
         bonus_type: data.bonus_type || null,
         bonus_value: data.bonus_value || null,
         damage_type: data.damage_type || null,
+        elemental_damage_value: data.elemental_damage_value?.trim() || null,
+        elemental_damage_type: data.elemental_damage_type || null,
         defense_type: data.defense_type || null,
         description_font_size: null,
         text_alignment: data.text_alignment || null,

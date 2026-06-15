@@ -12,6 +12,8 @@ import EffectDetailModal from '../components/EffectDetailModal';
 import ActionDetailModal from '../components/ActionDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
+import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
+import { hasElementalDamage } from '../utils/elementalDamage';
 
 const CardLibrary = () => {
   const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions'>('cards');
@@ -814,6 +816,17 @@ const CardLibrary = () => {
                                   {card.bonus_type === 'damage' && card.damage_type && (
                                     <img src={`/icons/${card.damage_type}.png`} alt={card.damage_type} className="w-3 h-3" />
                                   )}
+                                  {card.bonus_type === 'damage' &&
+                                    hasElementalDamage(card) &&
+                                    card.elemental_damage_value &&
+                                    card.elemental_damage_type && (
+                                      <ElementalDamageDisplay
+                                        value={card.elemental_damage_value}
+                                        type={card.elemental_damage_type}
+                                        iconSize={12}
+                                        fontStyle={{ fontSize: '12px', fontWeight: 500 }}
+                                      />
+                                    )}
                                   {card.bonus_type === 'defense' && card.defense_type && (
                                     <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
                                   )}
