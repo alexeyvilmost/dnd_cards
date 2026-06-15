@@ -5,7 +5,7 @@
     "dockerfilePath": "battle/Dockerfile.frontend"
   },
   "deploy": {
-    "healthcheckPath": "/",
+    "healthcheckPath": "/battle/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
