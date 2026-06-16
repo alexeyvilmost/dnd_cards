@@ -1,5 +1,5 @@
 # battle_frontend nginx — serves the static UI and proxies API calls to the backend.
-# ${PORT} and ${BACKEND_URL} are substituted at container start (see Dockerfile.frontend).
+# ${PORT} and ${BACKEND_URL} are substituted at container start (see this folder's Dockerfile).
 server {
     listen ${PORT};
     server_name _;

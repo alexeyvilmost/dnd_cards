@@ -39,8 +39,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static assets (JS data, spell icons, …) under /static/*
-app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+# Serve static assets (JS data, spell icons, …) under /static/*.
+# After the backend/frontend split the UI lives in battle/frontend (served by
+# nginx), so the static dir is usually absent here — mount only if present, so
+# the backend still works all-in-one when static/ is bundled alongside it.
+_HAS_STATIC = os.path.isdir(_STATIC_DIR)
+if _HAS_STATIC:
+    app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -159,21 +164,23 @@ class ShoveRequest(BaseModel):
 # ─── Room endpoints ───────────────────────────────────────────────────────────
 
 
-@app.get("/", include_in_schema=False)
-def serve_ui():
-    return FileResponse(_static("index.html"))
+# UI page routes — only registered in all-in-one mode (static/ bundled here).
+# In the split deployment nginx (battle/frontend) serves these pages.
+if _HAS_STATIC:
 
+    @app.get("/", include_in_schema=False)
+    def serve_ui():
+        return FileResponse(_static("index.html"))
 
-@app.get("/characters", include_in_schema=False)
-def serve_catalog():
-    """Character catalog + detailed character sheet (separate from the battle UI)."""
-    return FileResponse(_static("characters.html"))
+    @app.get("/characters", include_in_schema=False)
+    def serve_catalog():
+        """Character catalog + detailed character sheet (separate from the battle UI)."""
+        return FileResponse(_static("characters.html"))
 
-
-@app.get("/spellbook", include_in_schema=False)
-def serve_spellbook():
-    """Spell reference (справочник) — all spells that have icons."""
-    return FileResponse(_static("spellbook.html"))
+    @app.get("/spellbook", include_in_schema=False)
+    def serve_spellbook():
+        """Spell reference (справочник) — all spells that have icons."""
+        return FileResponse(_static("spellbook.html"))
 
 
 @app.get("/api", tags=["meta"])

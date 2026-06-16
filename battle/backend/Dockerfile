@@ -1,4 +1,4 @@
-# battle_backend — FastAPI combat engine (serves the API and, all-in-one, the UI)
+# battle_backend — FastAPI combat engine (API only; UI is served by battle/frontend).
 FROM python:3.12-slim
 
 WORKDIR /app

@@ -5,24 +5,34 @@
 
 ## Состав
 
+Папка разделена на два деплой-юнита — `backend/` (Python API) и `frontend/`
+(статика + nginx), у каждого свой `Dockerfile`.
+
 | Файл / папка        | Назначение |
 |---------------------|-----------|
-| `main.py`           | FastAPI: REST API боя + отдача UI |
-| `engine.py`         | Боевой движок (атаки, заклинания, ходы) |
-| `models.py`, `spells.py`, `dice.py`, `store.py`, `char_storage.py` | Доменные модели, каталог заклинаний, утилиты, хранилища |
-| `static/`           | UI: `index.html` (бой), `characters.html` (каталог), `spellbook.html` (справочник), `spell_data.js`, `icons/` |
-| `saved_characters/` | Сохранённые персонажи (файловое хранилище-заглушка под будущую БД) |
+| `backend/main.py`           | FastAPI: REST API боя (+ отдача UI в all-in-one режиме, если рядом есть `static/`) |
+| `backend/engine.py`         | Боевой движок (атаки, заклинания, ходы) |
+| `backend/models.py`, `spells.py`, `dice.py`, `store.py`, `char_storage.py`, `db.py` | Доменные модели, каталог заклинаний, утилиты, хранилища |
+| `backend/saved_characters/` | Сохранённые персонажи (файловое хранилище-заглушка под будущую БД) |
+| `backend/Dockerfile`        | Образ API (python + uvicorn) |
+| `frontend/static/`          | UI: `index.html` (бой), `characters.html` (каталог), `spellbook.html` (справочник), `spell_data.js`, `icons/` |
+| `frontend/nginx.conf.template` | nginx: отдаёт статику и проксирует API на бэкенд |
+| `frontend/Dockerfile`       | Образ UI (nginx) |
 
-## Локальный запуск (монолит)
+## Локальный запуск
+
+API (из папки `backend/`):
 
 ```bash
+cd backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/uvicorn main:app --reload --port 8765
-# открыть http://localhost:8765
 ```
 
-Бэкенд отдаёт и API, и UI — отдельный фронтенд для локальной разработки не нужен.
+UI обслуживается отдельным nginx-образом (`frontend/`). Для быстрой локальной
+разработки можно положить `static/` рядом с `backend/main.py` — тогда бэкенд сам
+отдаст и UI (роуты `/`, `/characters`, `/spellbook` включаются автоматически).
 
 ## Деплой в Railway
 
@@ -30,10 +40,10 @@ python3 -m venv .venv
 **Root Directory = `battle`** и свой конфиг-файл (Settings → Config-as-code):
 
 ### `battle_backend`
-- Config file: `railway-backend.json` → собирает `Dockerfile.backend` (Python + uvicorn).
+- Config file: `railway-battle-backend.json` → собирает `battle/backend/Dockerfile` (Python + uvicorn).
 - Healthcheck: `/api/health` (возвращает и активный бэкенд хранилища: `postgres` / `files`).
 - Слушает `$PORT` (Railway задаёт автоматически).
-- Самодостаточен: отдаёт и API, и UI.
+- Отдаёт только API (UI обслуживает `battle_frontend`).
 - **База данных:** сохранённые персонажи пишутся в PostgreSQL, если задан
   `DATABASE_URL` (Railway Postgres-плагин предоставляет её автоматически —
   привяжите переменную через reference на сервис Postgres). Поддерживается и
@@ -45,7 +55,7 @@ python3 -m venv .venv
   основного сервиса не трогает.
 
 ### `battle_frontend`
-- Config file: `railway-frontend.json` → собирает `Dockerfile.frontend` (nginx).
+- Config file: `railway-battle-frontend.json` → собирает `battle/frontend/Dockerfile` (nginx).
 - Отдаёт статику UI и **проксирует** запросы API на бэкенд.
 - Переменные окружения:
   - `PORT` — задаёт Railway.
@@ -57,8 +67,8 @@ UI обращается к API по тому же origin (`location.origin`), п
 прокси менять код не нужно — nginx сам перенаправит `/api`, `/rooms`, `/spells`,
 `/quickstart`, `/saved-characters` на `BACKEND_URL`.
 
-> Локальный Docker-прогон фронтенда:
-> `docker build -f Dockerfile.frontend -t battle-frontend . && docker run -p 8080:8080 -e BACKEND_URL=http://host.docker.internal:8765 battle-frontend`
+> Локальный Docker-прогон фронтенда (из папки `battle/frontend`):
+> `docker build -t battle-frontend . && docker run -p 8080:8080 -e BACKEND_URL=http://host.docker.internal:8765 battle-frontend`
 
 ## Дальнейшие шаги интеграции (TODO)
 - Общая БД вместо файлового `saved_characters/` и in-memory комнат.
