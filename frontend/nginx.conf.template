@@ -1,9 +1,13 @@
-# SPA: статика + fallback на index.html. ${PORT} подставляется при старте контейнера.
+# SPA: статика + fallback на index.html. ${PORT} подставляется в start.sh
 server {
-    listen ${PORT};
+    listen 0.0.0.0:${PORT};
+    listen [::]:${PORT};
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
+
+    access_log /dev/stdout;
+    error_log /dev/stderr warn;
 
     location /health {
         access_log off;
