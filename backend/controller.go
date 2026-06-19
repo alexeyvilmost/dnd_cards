@@ -148,6 +148,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 			IsTemplate:                   card.IsTemplate,
 			Slot:                         card.Slot,
 			Effects:                      card.Effects,
+			BattleProfile:                card.BattleProfile,
 			CreatedAt:                    card.CreatedAt,
 			UpdatedAt:                    card.UpdatedAt,
 		})
@@ -212,11 +213,180 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		IsTemplate:                   card.IsTemplate,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
+		BattleProfile:                card.BattleProfile,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// GetCardBattleStats - нормализация карточки к боевому профилю для сервиса battle
+func (cc *CardController) GetCardBattleStats(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID карточки"})
+		return
+	}
+
+	var card Card
+	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Карточка не найдена"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточки"})
+		return
+	}
+
+	c.JSON(http.StatusOK, cc.buildBattleStats(card))
+}
+
+type BatchBattleStatsRequest struct {
+	CardIDs []uuid.UUID `json:"card_ids" binding:"required"`
+}
+
+// GetBatchCardBattleStats - батч нормализация карточек в боевые профили
+func (cc *CardController) GetBatchCardBattleStats(c *gin.Context) {
+	var req BatchBattleStatsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		return
+	}
+	var cards []Card
+	if err := cc.db.Where("id IN ?", req.CardIDs).Find(&cards).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
+		return
+	}
+	stats := make([]gin.H, 0, len(cards))
+	for _, card := range cards {
+		stats = append(stats, cc.buildBattleStats(card))
+	}
+	c.JSON(http.StatusOK, gin.H{"items": stats, "count": len(stats)})
+}
+
+func (cc *CardController) buildBattleStats(card Card) gin.H {
+	profile := map[string]interface{}{}
+	if card.BattleProfile != nil {
+		for k, v := range *card.BattleProfile {
+			profile[k] = v
+		}
+	}
+
+	kind := getString(profile, "kind")
+	if kind == "" {
+		kind = cc.deriveBattleKind(card)
+	}
+	ready := getBool(profile, "ready")
+	if _, ok := profile["ready"]; !ok {
+		ready = kind != "none"
+	}
+	damageDice := getString(profile, "damage_dice")
+	if damageDice == "" && card.BonusType != nil && *card.BonusType == BonusDamage && card.BonusValue != nil {
+		damageDice = *card.BonusValue
+	}
+	damageType := getString(profile, "damage_type")
+	if damageType == "" && card.DamageType != nil {
+		damageType = *card.DamageType
+	}
+	acBonus := getIntPtr(profile, "ac_bonus")
+	if acBonus == nil && card.BonusType != nil && *card.BonusType == BonusDefense && card.BonusValue != nil {
+		if parsed, ok := parseSignedInt(*card.BonusValue); ok {
+			acBonus = &parsed
+		}
+	}
+	toHitBonus := getIntPtr(profile, "to_hit_bonus")
+	if toHitBonus == nil && card.BonusType != nil && *card.BonusType == BonusDamage && card.BonusValue != nil {
+		if parsed, ok := parseSignedInt(*card.BonusValue); ok {
+			toHitBonus = &parsed
+		}
+	}
+
+	return gin.H{
+		"card_id":        card.ID,
+		"name":           card.Name,
+		"ready":          ready,
+		"kind":           kind,
+		"slot":           card.Slot,
+		"weapon_type":    card.WeaponType,
+		"damage_dice":    emptyToNil(damageDice),
+		"damage_type":    emptyToNil(damageType),
+		"to_hit_bonus":   toHitBonus,
+		"ac_bonus":       acBonus,
+		"effects":        card.Effects,
+		"battle_profile": profile,
+	}
+}
+
+func (cc *CardController) deriveBattleKind(card Card) string {
+	if card.BonusType != nil {
+		if *card.BonusType == BonusDamage {
+			return "weapon"
+		}
+		if *card.BonusType == BonusDefense {
+			return "armor"
+		}
+	}
+	if card.Type != nil {
+		switch *card.Type {
+		case "weapon", "ammunition":
+			return "weapon"
+		case "shield", "helmet", "chest", "gloves", "cloak", "boots", "ring", "necklace":
+			return "armor"
+		case "potion", "scroll":
+			return "consumable"
+		}
+	}
+	return "none"
+}
+
+func getString(m map[string]interface{}, key string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+func getBool(m map[string]interface{}, key string) bool {
+	if v, ok := m[key]; ok {
+		if b, ok := v.(bool); ok {
+			return b
+		}
+	}
+	return false
+}
+
+func getIntPtr(m map[string]interface{}, key string) *int {
+	if v, ok := m[key]; ok {
+		switch n := v.(type) {
+		case float64:
+			x := int(n)
+			return &x
+		case int:
+			x := n
+			return &x
+		case string:
+			if parsed, ok := parseSignedInt(n); ok {
+				return &parsed
+			}
+		}
+	}
+	return nil
+}
+
+func parseSignedInt(s string) (int, bool) {
+	trimmed := strings.TrimSpace(strings.TrimPrefix(s, "+"))
+	n, err := strconv.Atoi(trimmed)
+	return n, err == nil
+}
+
+func emptyToNil(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
 }
 
 // CreateCard - создание новой карточки
@@ -313,6 +483,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		IsTemplate:                   req.IsTemplate,
 		Slot:                         req.Slot,
 		Effects:                      req.Effects,
+		BattleProfile:                req.BattleProfile,
 		CardNumber:                   cardNumber,
 	}
 
@@ -352,6 +523,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Range:                        card.Range,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
+		BattleProfile:                card.BattleProfile,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}
@@ -533,6 +705,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		fmt.Printf("✅ [UPDATE CARD] Эффекты прошли валидацию\n")
 		card.Effects = req.Effects
 	}
+	if req.BattleProfile != nil {
+		card.BattleProfile = req.BattleProfile
+	}
 
 	if err := cc.db.Save(&card).Error; err != nil {
 		log.Printf("Ошибка обновления карточки %s: %v", id, err)
@@ -571,6 +746,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		Range:                        card.Range,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
+		BattleProfile:                card.BattleProfile,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}
@@ -682,29 +858,30 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 	var responses []CardResponse
 	for _, card := range cards {
 		responses = append(responses, CardResponse{
-			ID:                  card.ID,
-			Name:                card.Name,
-			Properties:          card.Properties,
-			Description:         card.Description,
-			DetailedDescription: card.DetailedDescription,
-			ImageURL:            card.ImageURL,
-			Rarity:              card.Rarity,
-			CardNumber:          card.CardNumber,
-			Price:               card.Price,
-			Weight:              card.Weight,
-			BonusType:           card.BonusType,
-			BonusValue:          card.BonusValue,
-			DamageType:          card.DamageType,
+			ID:                   card.ID,
+			Name:                 card.Name,
+			Properties:           card.Properties,
+			Description:          card.Description,
+			DetailedDescription:  card.DetailedDescription,
+			ImageURL:             card.ImageURL,
+			Rarity:               card.Rarity,
+			CardNumber:           card.CardNumber,
+			Price:                card.Price,
+			Weight:               card.Weight,
+			BonusType:            card.BonusType,
+			BonusValue:           card.BonusValue,
+			DamageType:           card.DamageType,
 			ElementalDamageValue: card.ElementalDamageValue,
 			ElementalDamageType:  card.ElementalDamageType,
-			Type:                card.Type,
-			WeaponType:          card.WeaponType,
-			RequiresAttunement:  card.RequiresAttunement,
-			Range:               card.Range,
-			Slot:                card.Slot,
-			Effects:             card.Effects,
-			CreatedAt:           card.CreatedAt,
-			UpdatedAt:           card.UpdatedAt,
+			Type:                 card.Type,
+			WeaponType:           card.WeaponType,
+			RequiresAttunement:   card.RequiresAttunement,
+			Range:                card.Range,
+			Slot:                 card.Slot,
+			Effects:              card.Effects,
+			BattleProfile:        card.BattleProfile,
+			CreatedAt:            card.CreatedAt,
+			UpdatedAt:            card.UpdatedAt,
 		})
 	}
 

@@ -139,6 +139,8 @@ func main() {
 		// Карточки (публичные, но с опциональной авторизацией)
 		api.GET("/cards", OptionalAuthMiddleware(authService), cardController.GetCards)
 		api.GET("/cards/:id", OptionalAuthMiddleware(authService), cardController.GetCard)
+		api.GET("/cards/:id/battle-stats", OptionalAuthMiddleware(authService), cardController.GetCardBattleStats)
+		api.POST("/cards/battle-stats", OptionalAuthMiddleware(authService), cardController.GetBatchCardBattleStats)
 		api.POST("/cards", AuthMiddleware(authService), cardController.CreateCard)
 		api.PUT("/cards/:id", AuthMiddleware(authService), cardController.UpdateCard)
 		api.DELETE("/cards/:id", AuthMiddleware(authService), cardController.DeleteCard)

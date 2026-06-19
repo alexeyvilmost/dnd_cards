@@ -1,0 +1,7 @@
+# Local dev artifacts
+backend/.venv/
+backend/__pycache__/
+backend/data/
+backend/.env
+frontend/node_modules/
+frontend/dist/

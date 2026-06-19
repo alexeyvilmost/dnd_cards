@@ -1,8 +1,17 @@
-# battle_frontend — static UI served by nginx, proxying API calls to battle_backend.
-FROM nginx:alpine
+# battle_frontend — React (Vite) SPA built and served by nginx, proxying API
+# calls to battle_backend.
 
-# UI assets (index/characters/spellbook + spell_data.js + icons) under /static/
-COPY static/ /usr/share/nginx/html/static/
+# ── Build stage ──
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# ── Runtime stage ──
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Config template — rendered at startup with $PORT and $BACKEND_URL (envsubst,
 # restricted var list so nginx's own $uri/$host are left intact).

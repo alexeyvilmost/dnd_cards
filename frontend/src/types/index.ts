@@ -64,6 +64,7 @@ export interface Card {
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
+  battle_profile?: Record<string, any> | null;
   created_at: string;
   updated_at: string;
 }
@@ -104,6 +105,7 @@ export interface CreateCardRequest {
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
+  battle_profile?: Record<string, any> | null;
 }
 
 export interface UpdateCardRequest {
@@ -143,6 +145,7 @@ export interface UpdateCardRequest {
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
+  battle_profile?: Record<string, any> | null;
 }
 
 export interface CardsResponse {

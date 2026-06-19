@@ -333,6 +333,14 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
                 <p className="text-xs text-gray-300 mt-1">{card.attunement}</p>
               </div>
             )}
+            {card.battle_profile && (
+              <div>
+                <p><strong>Боевой профиль:</strong></p>
+                <pre className="text-xs text-gray-300 mt-1 whitespace-pre-wrap bg-gray-900 rounded p-2 border border-gray-700">
+{JSON.stringify(card.battle_profile, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
 
           {/* Кнопки действий */}

@@ -1,9 +1,11 @@
 import os
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
+import hashlib
+
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -25,12 +27,34 @@ def _static(path: str) -> str:
     return os.path.join(_STATIC_DIR, path)
 
 import char_storage
+import characters_repo
+import dbcore
+import images_repo
 import engine
+import item_bridge
+import monsters
+import monsters_repo
+import progression
+import runs_repo
+import spell_catalog
 import spells as spellbook
 import store
+import dungeon
 from models import EventLog, Position, Room
 
-app = FastAPI(title="D&D 2024 Combat Engine", version="0.1.0-mvp")
+app = FastAPI(title="D&D 2024 Combat Engine", version="1.0.0")
+
+
+@app.on_event("startup")
+def _startup() -> None:
+    """Apply battle_ migrations when a database is configured (no-op locally
+    without a DB, where the file fallback is used)."""
+    try:
+        applied = dbcore.run_migrations()
+        if applied:
+            print(f"[battle] applied migrations: {', '.join(applied)}")
+    except Exception as exc:  # never block startup on migration issues
+        print(f"[battle] migration warning: {exc}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -78,6 +102,39 @@ def _log(room: Room, char_name: str, message: str, rolls: Dict = {}) -> None:
     room.log.append(
         EventLog(round=room.combat.round, turn_char=char_name, message=message, rolls=rolls)
     )
+
+
+def _award_xp_after_combat(room: Room) -> Dict[str, int]:
+    """Award XP from defeated monsters to party sheets after a victorious combat.
+    Returns {sheet_id: xp_awarded}."""
+    party_alive = [
+        c for c in room.characters.values()
+        if not c.is_monster and c.is_conscious()
+    ]
+    monsters_total = [c for c in room.characters.values() if c.is_monster]
+    monsters_alive = [c for c in monsters_total if c.is_conscious()]
+    if not monsters_total or monsters_alive or not party_alive:
+        return {}
+
+    recipients = [c for c in room.characters.values() if not c.is_monster and c.sheet_id]
+    if not recipients:
+        return {}
+
+    total_xp = sum(max(0, int(getattr(m, "monster_xp", 0) or 0)) for m in monsters_total)
+    if total_xp <= 0:
+        return {}
+    base = total_xp // len(recipients)
+    rem = total_xp % len(recipients)
+    awards: Dict[str, int] = {}
+    for i, c in enumerate(recipients):
+        gain = base + (1 if i < rem else 0)
+        sheet = characters_repo.characters.get(c.sheet_id)
+        if not sheet:
+            continue
+        sheet["xp"] = max(0, sheet.get("xp", 0) + gain)
+        characters_repo.characters.save(sheet)
+        awards[c.sheet_id] = gain
+    return awards
 
 
 # ─── Request models ───────────────────────────────────────────────────────────
@@ -130,6 +187,7 @@ class CastSpellRequest(BaseModel):
     target_ids: List[str] = []
     slot_level: Optional[int] = None
     point: Optional[Dict[str, int]] = None  # {"x":..,"y":..} for area/teleport
+    effect_choice: Optional[str] = None
 
 
 class CharacterRequest(BaseModel):
@@ -159,6 +217,14 @@ class ShoveRequest(BaseModel):
     character_id: str
     target_id: str
     mode: str = "prone"  # "prone" | "push"
+
+
+class StartRunRequest(BaseModel):
+    sheet_id: str
+
+
+class BuyOfferRequest(BaseModel):
+    offer_id: str
 
 
 # ─── Room endpoints ───────────────────────────────────────────────────────────
@@ -197,6 +263,49 @@ def root():
 def health():
     """Health check for Railway / load balancers."""
     return {"status": "ok", "service": "battle_backend", "storage": char_storage.backend()}
+
+
+# ─── Images ───────────────────────────────────────────────────────────────────
+# Binary images (spell icons, …) served from the DB/file store. Entities store an
+# opaque image key in their ``image`` field and reference it as GET /images/{key}.
+
+def _etag(version: str) -> str:
+    return '"' + hashlib.md5(version.encode()).hexdigest() + '"'
+
+
+@app.get("/images/{key}", tags=["images"])
+def get_image(key: str, request: Request):
+    res = images_repo.get(key)
+    if not res:
+        raise HTTPException(status_code=404, detail="Изображение не найдено")
+    data, mime, version = res
+    etag = _etag(version)
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=300"})
+    return Response(
+        content=data,
+        media_type=mime,
+        headers={"ETag": etag, "Cache-Control": "public, max-age=300"},
+    )
+
+
+@app.post("/images", tags=["images"])
+async def upload_image(file: UploadFile = File(...), key: Optional[str] = Form(None)):
+    """Create or replace an image. Pass ``key`` to overwrite an existing one,
+    omit it to mint a new key. Returns ``{"id": key}``."""
+    data = await file.read()
+    if len(data) > images_repo.MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Файл слишком большой (максимум 4 МБ)")
+    if not (file.content_type or "").startswith("image/"):
+        raise HTTPException(status_code=415, detail="Допустимы только изображения")
+    return images_repo.put(key or images_repo.gen_key(), data, file.content_type or "image/png")
+
+
+@app.delete("/images/{key}", tags=["images"])
+def delete_image(key: str):
+    if not images_repo.delete(key):
+        raise HTTPException(status_code=404, detail="Изображение не найдено")
+    return {"deleted": key}
 
 
 @app.post("/rooms", tags=["rooms"])
@@ -280,6 +389,49 @@ def add_character_from_saved(room_id: str, req: AddFromSavedRequest):
     return char
 
 
+class AddFromSheetRequest(BaseModel):
+    sheet_id: str
+    x: int = 0
+    y: int = 0
+    team: str = "party"
+
+
+class AddMonsterRequest(BaseModel):
+    monster_id: str
+    x: int = 0
+    y: int = 0
+
+
+@app.post("/rooms/{room_id}/characters/from-sheet", tags=["characters"])
+def add_character_from_sheet(room_id: str, req: AddFromSheetRequest):
+    room = _room_or_404(room_id)
+    if room.combat.active:
+        raise HTTPException(400, "Cannot add characters while combat is active.")
+    sheet = characters_repo.characters.get(req.sheet_id)
+    if not sheet:
+        raise HTTPException(404, f"Character sheet '{req.sheet_id}' not found.")
+    char = progression.build_combat_character(
+        sheet, position=Position(x=req.x, y=req.y), team=req.team
+    )
+    room.characters[char.id] = char
+    store.save_room(room)
+    return char
+
+
+@app.post("/rooms/{room_id}/monsters", tags=["characters"])
+def add_monster_to_room(room_id: str, req: AddMonsterRequest):
+    room = _room_or_404(room_id)
+    if room.combat.active:
+        raise HTTPException(400, "Cannot add monsters while combat is active.")
+    mon = monsters_repo.monsters.get(req.monster_id)
+    if not mon:
+        raise HTTPException(404, f"Monster '{req.monster_id}' not found.")
+    char = monsters.to_combat_character(mon, position=Position(x=req.x, y=req.y))
+    room.characters[char.id] = char
+    store.save_room(room)
+    return char
+
+
 # ─── Saved character library (file-backed) ────────────────────────────────────
 
 
@@ -309,10 +461,337 @@ def delete_saved_character(char_id: str):
     return {"message": "Deleted."}
 
 
-@app.get("/spells", tags=["meta"])
+# ─── Character sheets (persistent, with progression) ──────────────────────────
+
+
+class AwardXpRequest(BaseModel):
+    amount: int
+
+
+class ImportCardRequest(BaseModel):
+    card_id: str
+
+
+def _char_or_404(char_id: str) -> Dict:
+    sheet = characters_repo.characters.get(char_id)
+    if not sheet:
+        raise HTTPException(404, "Character not found.")
+    return sheet
+
+
+def _run_or_404(run_id: str) -> Dict:
+    run = runs_repo.runs.get(run_id)
+    if not run:
+        raise HTTPException(404, "Run not found.")
+    return run
+
+
+def _char_view(sheet: Dict) -> Dict:
+    """Augment a sheet with computed progression info for the UI."""
+    out = dict(sheet)
+    out["level_progress"] = {
+        "xp": sheet.get("xp", 0),
+        "level": sheet.get("level", 1),
+        "xp_to_next": progression.xp_to_next(sheet.get("xp", 0), sheet.get("level", 1)),
+        "can_level_up": progression.level_up_options(sheet).get("can_level_up", False),
+    }
+    return out
+
+
+@app.get("/characters-api", tags=["sheets"])
+def list_sheets():
+    return [_char_view(s) for s in characters_repo.characters.list()]
+
+
+@app.get("/characters-api/meta/create-options", tags=["sheets"])
+def character_create_options():
+    return progression.create_options()
+
+
+@app.post("/characters-api", tags=["sheets"])
+def create_sheet(payload: Dict[str, Any]):
+    try:
+        sheet = progression.new_sheet(payload)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    saved = characters_repo.characters.save(sheet)
+    return _char_view(saved)
+
+
+@app.get("/characters-api/{char_id}", tags=["sheets"])
+def get_sheet(char_id: str):
+    return _char_view(_char_or_404(char_id))
+
+
+@app.put("/characters-api/{char_id}", tags=["sheets"])
+def update_sheet(char_id: str, payload: Dict[str, Any]):
+    sheet = _char_or_404(char_id)
+    editable = [
+        "name", "portrait", "background", "skill_proficiencies",
+        "fighting_style", "weapon_masteries", "weapon_choice",
+        "cantrips", "spells_prepared", "gold", "equipment",
+    ]
+    for k in editable:
+        if k in payload:
+            sheet[k] = payload[k]
+    # Ability scores only editable at level 1 (validate point-buy).
+    if "ability_scores" in payload and sheet.get("level", 1) == 1:
+        err = progression.validate_point_buy(payload["ability_scores"])
+        if err:
+            raise HTTPException(400, err)
+        sheet["ability_scores"] = payload["ability_scores"]
+    saved = characters_repo.characters.save(sheet)
+    return _char_view(saved)
+
+
+@app.delete("/characters-api/{char_id}", tags=["sheets"])
+def delete_sheet(char_id: str):
+    if not characters_repo.characters.delete(char_id):
+        raise HTTPException(404, "Character not found.")
+    return {"message": "Deleted."}
+
+
+@app.get("/characters-api/{char_id}/level-up/options", tags=["sheets"])
+def get_level_up_options(char_id: str):
+    return progression.level_up_options(_char_or_404(char_id))
+
+
+@app.post("/characters-api/{char_id}/level-up", tags=["sheets"])
+def do_level_up(char_id: str, choices: Dict[str, Any]):
+    sheet = _char_or_404(char_id)
+    try:
+        sheet = progression.apply_level_up(sheet, choices or {})
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    saved = characters_repo.characters.save(sheet)
+    return _char_view(saved)
+
+
+@app.post("/characters-api/{char_id}/award-xp", tags=["sheets"])
+def award_xp(char_id: str, req: AwardXpRequest):
+    sheet = _char_or_404(char_id)
+    sheet["xp"] = max(0, sheet.get("xp", 0) + req.amount)
+    saved = characters_repo.characters.save(sheet)
+    view = _char_view(saved)
+    view["awarded"] = req.amount
+    return view
+
+
+@app.post("/characters-api/{char_id}/equipment/import-card", tags=["sheets"])
+def import_equipment_card(char_id: str, req: ImportCardRequest):
+    sheet = _char_or_404(char_id)
+    try:
+        stats = item_bridge.fetch_battle_stats(req.card_id)
+    except item_bridge.ItemBridgeError as e:
+        raise HTTPException(502, f"Не удалось получить данные предмета: {e}")
+
+    equipment = sheet.setdefault("equipment", [])
+    # replace existing entry for this card
+    equipment = [e for e in equipment if e.get("card_id") != req.card_id]
+    equipment.append(stats)
+    sheet["equipment"] = equipment
+    saved = characters_repo.characters.save(sheet)
+    out = _char_view(saved)
+    out["imported_item"] = stats
+    return out
+
+
+@app.delete("/characters-api/{char_id}/equipment/{card_id}", tags=["sheets"])
+def remove_equipment_card(char_id: str, card_id: str):
+    sheet = _char_or_404(char_id)
+    equipment = sheet.setdefault("equipment", [])
+    before = len(equipment)
+    sheet["equipment"] = [e for e in equipment if e.get("card_id") != card_id]
+    if len(sheet["equipment"]) == before:
+        raise HTTPException(404, "Item not equipped.")
+    saved = characters_repo.characters.save(sheet)
+    return _char_view(saved)
+
+
+# ─── Dungeon Crawl runs ───────────────────────────────────────────────────────
+
+
+@app.get("/runs", tags=["runs"])
+def list_runs():
+    return runs_repo.runs.list()
+
+
+@app.post("/runs/start", tags=["runs"])
+def start_run(req: StartRunRequest):
+    sheet = _char_or_404(req.sheet_id)
+    run = dungeon.new_run(sheet)
+    run["shop_offers"] = dungeon.build_shop_offers()
+    saved = runs_repo.runs.save(run)
+    return saved
+
+
+@app.get("/runs/{run_id}", tags=["runs"])
+def get_run(run_id: str):
+    return _run_or_404(run_id)
+
+
+@app.post("/runs/{run_id}/next-room", tags=["runs"])
+def run_next_room(run_id: str):
+    run = _run_or_404(run_id)
+    if run.get("status") not in ("between_rooms",):
+        raise HTTPException(400, f"Run status must be 'between_rooms', got {run.get('status')}")
+    sheet = _char_or_404(run["sheet_id"])
+    room = dungeon.create_next_room(run, sheet)
+    logs = engine.start_combat(room)
+    for log in logs:
+        room.log.append(log)
+    store.save_room(room)
+    run["status"] = "in_combat"
+    run["current_room_id"] = room.id
+    run["room_start_xp"] = int(sheet.get("xp", 0))
+    saved = runs_repo.runs.save(run)
+    return {"run": saved, "room_id": room.id}
+
+
+@app.post("/runs/{run_id}/resolve", tags=["runs"])
+def resolve_run_room(run_id: str):
+    run = _run_or_404(run_id)
+    if run.get("status") != "in_combat" or not run.get("current_room_id"):
+        raise HTTPException(400, "Run is not in combat.")
+    room = _room_or_404(run["current_room_id"])
+    if room.combat.active:
+        raise HTTPException(400, "Combat still active.")
+    sheet = _char_or_404(run["sheet_id"])
+    result = dungeon.resolve_room(
+        run,
+        room,
+        xp_before=int(run.get("room_start_xp", 0)),
+        xp_after=int(sheet.get("xp", 0)),
+    )
+    saved = runs_repo.runs.save(run)
+    return {"run": saved, "result": result}
+
+
+@app.get("/runs/{run_id}/shop", tags=["runs"])
+def get_run_shop(run_id: str):
+    run = _run_or_404(run_id)
+    if run.get("status") not in ("between_rooms",):
+        raise HTTPException(400, "Shop available only between rooms.")
+    return {"gold": run.get("gold", 0), "offers": run.get("shop_offers", [])}
+
+
+@app.post("/runs/{run_id}/shop/buy", tags=["runs"])
+def buy_shop_item(run_id: str, req: BuyOfferRequest):
+    run = _run_or_404(run_id)
+    if run.get("status") not in ("between_rooms",):
+        raise HTTPException(400, "Shop available only between rooms.")
+    offers = run.get("shop_offers", [])
+    offer = next((o for o in offers if o.get("offer_id") == req.offer_id), None)
+    if not offer:
+        raise HTTPException(404, "Offer not found.")
+    cost = int(offer.get("cost", 0))
+    if int(run.get("gold", 0)) < cost:
+        raise HTTPException(400, "Not enough gold.")
+    run["gold"] = int(run.get("gold", 0)) - cost
+    # Equip purchased item to sheet if it is a card offer.
+    card_id = offer.get("card_id")
+    if card_id:
+        sheet = _char_or_404(run["sheet_id"])
+        stats = item_bridge.fetch_battle_stats(card_id)
+        equipment = sheet.setdefault("equipment", [])
+        equipment = [e for e in equipment if e.get("card_id") != card_id]
+        equipment.append(stats)
+        sheet["equipment"] = equipment
+        characters_repo.characters.save(sheet)
+    run["shop_offers"] = [o for o in offers if o.get("offer_id") != req.offer_id]
+    saved = runs_repo.runs.save(run)
+    return {"run": saved, "purchased": offer}
+
+
+@app.get("/spells", tags=["spells"])
 def list_spells():
-    """Full catalog of cantrips and level 1–2 spells for character creation/UI."""
-    return spellbook.catalog()
+    """Spell catalog from the store (seeded from the in-code catalog on first run)."""
+    return spell_catalog.list_spells()
+
+
+@app.get("/spells/{spell_id}", tags=["spells"])
+def get_spell_doc(spell_id: str):
+    doc = spell_catalog.get_doc(spell_id)
+    if not doc:
+        raise HTTPException(404, "Spell not found.")
+    return doc
+
+
+@app.post("/spells", tags=["spells"])
+def create_spell(payload: Dict[str, Any]):
+    try:
+        return spell_catalog.create_spell(payload)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.put("/spells/{spell_id}", tags=["spells"])
+def update_spell(spell_id: str, payload: Dict[str, Any]):
+    try:
+        return spell_catalog.update_spell(spell_id, payload)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.delete("/spells/{spell_id}", tags=["spells"])
+def delete_spell(spell_id: str):
+    if not spell_catalog.delete_spell(spell_id):
+        raise HTTPException(404, "Spell not found.")
+    return {"message": "Deleted."}
+
+
+# ─── Monsters / bestiary ─────────────────────────────────────────────────────
+
+
+def _monster_or_404(monster_id: str) -> Dict:
+    m = monsters_repo.monsters.get(monster_id)
+    if not m:
+        raise HTTPException(404, "Monster not found.")
+    return m
+
+
+@app.get("/monsters", tags=["monsters"])
+def list_monsters():
+    return monsters_repo.monsters.list()
+
+
+@app.get("/monsters/default", tags=["monsters"])
+def default_monster():
+    return monsters.default_monster_doc()
+
+
+@app.get("/monsters/{monster_id}", tags=["monsters"])
+def get_monster(monster_id: str):
+    return _monster_or_404(monster_id)
+
+
+@app.post("/monsters", tags=["monsters"])
+def create_monster(payload: Dict[str, Any]):
+    ok, err = monsters.validate_monster(payload)
+    if not ok:
+        raise HTTPException(400, err)
+    payload = dict(payload)
+    payload.setdefault("xp", monsters.xp_for_cr(float(payload.get("cr", 0))))
+    return monsters_repo.monsters.save(payload)
+
+
+@app.put("/monsters/{monster_id}", tags=["monsters"])
+def update_monster(monster_id: str, payload: Dict[str, Any]):
+    existing = _monster_or_404(monster_id)
+    merged = {**existing, **payload}
+    ok, err = monsters.validate_monster(merged)
+    if not ok:
+        raise HTTPException(400, err)
+    merged["id"] = monster_id
+    merged.setdefault("xp", monsters.xp_for_cr(float(merged.get("cr", 0))))
+    return monsters_repo.monsters.save(merged)
+
+
+@app.delete("/monsters/{monster_id}", tags=["monsters"])
+def delete_monster(monster_id: str):
+    if not monsters_repo.monsters.delete(monster_id):
+        raise HTTPException(404, "Monster not found.")
+    return {"message": "Deleted."}
 
 
 @app.get("/rooms/{room_id}/characters/{char_id}", tags=["characters"])
@@ -408,9 +887,34 @@ def end_turn(room_id: str, req: CharacterRequest):
         raise HTTPException(404, "Character not found.")
 
     result = engine.end_turn(room, req.character_id)
+    if result.get("combat_over"):
+        awards = _award_xp_after_combat(room)
+        if awards:
+            result["xp_awards"] = awards
     _log(room, char.name, result["message"])
     store.save_room(room)
     return result
+
+
+@app.post("/rooms/{room_id}/combat/auto-turn", tags=["combat"])
+def auto_turn(room_id: str):
+    """Auto-play one or more monster turns (for PvE)."""
+    room = _room_or_404(room_id)
+    _require_active_combat(room)
+    cid = room.combat.current_character_id()
+    cur = room.characters.get(cid) if cid else None
+    if not cur or not cur.is_monster:
+        return {"acted": False, "message": "Current turn is not a monster."}
+
+    res = monsters.auto_turn(room, cid)
+    _log(room, cur.name, res.get("message", "Monster acted."))
+    # If combat ended during auto-turn, apply XP.
+    if not room.combat.active:
+        awards = _award_xp_after_combat(room)
+        if awards:
+            res["xp_awards"] = awards
+    store.save_room(room)
+    return res
 
 
 # ─── Action endpoints ─────────────────────────────────────────────────────────
@@ -583,6 +1087,7 @@ def cast_spell(room_id: str, req: CastSpellRequest):
         target_ids=req.target_ids,
         slot_level=req.slot_level,
         point=req.point,
+        effect_choice=req.effect_choice,
     )
     char = room.characters[req.character_id]
     # Misty Step teleport: move the caster to the chosen point

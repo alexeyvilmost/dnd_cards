@@ -1,0 +1,59 @@
+# Local full-stack for the battle service: Postgres + FastAPI backend + React (nginx) frontend.
+# Brings the whole service up locally for acceptance testing — mirrors the Railway
+# split deployment (separate backend/frontend) but with a local database.
+#
+#   docker compose -f docker-compose.battle.yml up --build
+#
+# Frontend:  http://localhost:8080
+# Backend:   http://localhost:8765  (also proxied through the frontend)
+# Postgres:  localhost:5433  (battle_* tables created via migrations on startup)
+
+services:
+  battle-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: battle
+    ports:
+      - "5433:5432"
+    volumes:
+      - battle_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d battle"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  battle-backend:
+    build:
+      context: ./backend
+    environment:
+      PORT: "8000"
+      DB_HOST: battle-db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: battle
+      DB_SSLMODE: disable
+      # Optional: point at the main dnd_cards backend for item integration (phase 4)
+      ITEMS_API_URL: ${ITEMS_API_URL:-}
+    ports:
+      - "8765:8000"
+    depends_on:
+      battle-db:
+        condition: service_healthy
+
+  battle-frontend:
+    build:
+      context: ./frontend
+    environment:
+      PORT: "8080"
+      BACKEND_URL: http://battle-backend:8000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - battle-backend
+
+volumes:
+  battle_pgdata:

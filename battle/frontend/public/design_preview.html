@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Battle UI — концепт дизайна</title>
+<style>
+  :root{
+    --bg:#14110f; --bg-2:#1d1916; --panel:#26201b; --panel-2:#2f2722;
+    --border:#4a3f35; --gold:#c9a227; --gold-dim:#8a7320; --text:#ece3d4;
+    --text-dim:#a59886; --red:#b3402f; --green:#4f7d3a; --blue:#4a6fa5;
+    /* damage type colors */
+    --dt-necrotic:#7bc98a; --dt-fire:#ef9f4a; --dt-cold:#6fb6e8; --dt-acid:#a8d84a;
+    --dt-radiant:#f0d268; --dt-psychic:#c98ad8; --dt-force:#9aa6e8; --dt-physical:#cbb89a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    background:radial-gradient(circle at top,#221c17,var(--bg)); color:var(--text);
+    min-height:100vh; padding:2rem 1.5rem 6rem;
+  }
+  h1{font-family:"Georgia",serif; color:var(--gold); font-size:1.5rem; margin:0 0 .3rem;}
+  .lead{color:var(--text-dim); max-width:760px; line-height:1.5; margin:0 0 2rem;}
+  .section-title{font-family:"Georgia",serif; color:var(--gold); font-size:1.05rem;
+    margin:2.4rem 0 .9rem; border-bottom:1px solid var(--border); padding-bottom:.4rem;}
+  .hint{color:var(--text-dim); font-size:.85rem; margin:.2rem 0 1.2rem;}
+
+  /* ─── Hotbar ─── */
+  .hotbar{
+    display:flex; gap:1.6rem; flex-wrap:wrap; align-items:flex-start;
+    background:linear-gradient(#221c17,#1a1511); border:1px solid var(--border);
+    border-radius:12px; padding:1.1rem 1.3rem;
+  }
+  .group{display:flex; flex-direction:column; gap:.5rem;}
+  .group-label{display:flex; align-items:center; gap:.4rem; font-size:.72rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim);}
+  .group-label .dot{width:8px; height:8px; border-radius:50%;}
+  .dot.main{background:#d8b24a;} .dot.bonus{background:#d88a4a;}
+  .dot.reaction{background:#6fb6e8;} .dot.spell{background:#9a7ad8;}
+  .slots{display:flex; gap:.55rem; flex-wrap:wrap;}
+
+  /* ─── Action button (BG3 square) ─── */
+  .ab{
+    position:relative; width:58px; height:58px; border-radius:10px; cursor:pointer;
+    background:radial-gradient(circle at 50% 38%,#3a3027,#221a14);
+    border:1px solid #5a4a38; padding:6px; transition:transform .12s, box-shadow .15s, border-color .15s;
+  }
+  .ab img{width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 1px 2px #000);}
+  .ab .frame{position:absolute; inset:0; border-radius:10px; pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(201,162,39,.0);}
+  /* available: gold rim + soft glow */
+  .ab.ready{border-color:var(--gold-dim);}
+  .ab.ready:hover{transform:translateY(-3px); border-color:var(--gold);
+    box-shadow:0 0 14px rgba(201,162,39,.45), inset 0 0 12px rgba(201,162,39,.15);}
+  .ab.ready:hover img{filter:drop-shadow(0 0 6px rgba(255,200,80,.7));}
+  /* selected */
+  .ab.selected{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 0 14px rgba(201,162,39,.5);}
+  /* disabled */
+  .ab.disabled{opacity:.5; cursor:not-allowed; filter:grayscale(.7);}
+  .ab.disabled img{filter:grayscale(1) brightness(.8);}
+  /* cost / charge badge */
+  .ab .badge{position:absolute; bottom:-5px; right:-5px; min-width:18px; height:18px;
+    padding:0 4px; border-radius:9px; background:#1a1410; border:1px solid var(--gold-dim);
+    color:var(--gold); font-size:.68rem; font-weight:700; display:flex; align-items:center;
+    justify-content:center; line-height:1;}
+  .ab .corner{position:absolute; top:-4px; left:-4px; width:14px; height:14px; border-radius:4px;
+    border:1px solid #000;}
+  .corner.bonus{background:#d88a4a;} .corner.reaction{background:#6fb6e8;}
+
+  /* ─── Inspect tooltip ─── */
+  .tip{
+    position:relative; width:340px; border-radius:12px; color:var(--text);
+    background:linear-gradient(160deg,#2b2520,#191410);
+    border:1px solid var(--gold-dim);
+    box-shadow:0 12px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(201,162,39,.08);
+    padding:18px 18px 0; overflow:visible;
+  }
+  .tip .bigicon{
+    position:absolute; top:-26px; right:-18px; width:104px; height:104px;
+    filter:drop-shadow(0 0 18px rgba(201,162,39,.55)); pointer-events:none;
+    transition:transform .25s ease, opacity .25s ease;
+  }
+  .tip h3{margin:0; font-family:"Georgia",serif; font-size:1.35rem; color:#f3ead4;
+    padding-right:80px; line-height:1.15;}
+  .tip .subtype{color:var(--text-dim); font-size:.9rem; margin:.15rem 0 .8rem; font-style:italic;}
+  .tip .stats{display:flex; flex-direction:column; gap:.42rem; margin:.5rem 0 .9rem;}
+  .srow{display:flex; align-items:center; gap:.55rem;}
+  .srow .lbl{color:var(--text-dim); font-size:.82rem; min-width:96px; flex:0 0 auto;}
+  .die{width:30px; height:30px; flex:0 0 auto; border-radius:6px;
+    background:radial-gradient(circle at 50% 40%,#3a5f3a,#1d331d); border:1px solid #4f7d3a;
+    display:flex; align-items:center; justify-content:center; font-weight:700; color:#cfeac0; font-size:.72rem;}
+  .srow .bonus{font-weight:700; font-size:1.05rem; color:#f3ead4;}
+  .dmgval{display:inline-flex; align-items:center; gap:.32rem; font-weight:700; font-size:1.02rem;}
+  .dmgval .ic{font-size:.95rem;}
+  .tip .desc{font-size:.92rem; line-height:1.5; color:#d8cdb9; margin:.2rem 0 .9rem;}
+  .tip .desc b{color:#f0d98a; font-weight:600;}
+  .tip .saveline{font-size:.88rem; color:#e7cf9a; margin:0 0 .9rem; font-weight:600;}
+  .tip .meta{display:flex; gap:1.1rem; flex-wrap:wrap; padding:.7rem 0;
+    border-top:1px solid #3a312733; color:var(--text-dim); font-size:.84rem;}
+  .tip .meta span{display:inline-flex; align-items:center; gap:.35rem;}
+  .tip .meta i{opacity:.8;}
+  .tip .costbar{display:flex; gap:.6rem; margin:0 -18px; padding:.6rem 18px;
+    background:linear-gradient(#221b15,#1a140f); border-top:1px solid var(--border);
+    border-radius:0 0 12px 12px;}
+  .cost{display:inline-flex; align-items:center; gap:.35rem; font-size:.84rem; color:var(--text);}
+  .cost .sq{width:11px; height:11px; border-radius:3px;}
+  .cost .cir{width:11px; height:11px; border-radius:50%;}
+
+  /* live tooltip layer */
+  #live{position:fixed; z-index:999; pointer-events:none; opacity:0;
+    transform:translateY(8px); transition:opacity .16s ease, transform .16s ease;}
+  #live.show{opacity:1; transform:translateY(0);}
+  #live .bigicon{top:-26px; right:-18px;}
+
+  .static-grid{display:flex; gap:2rem; flex-wrap:wrap; padding-top:1.6rem;}
+  .legend{display:flex; gap:1.1rem; flex-wrap:wrap; margin-top:.6rem; font-size:.8rem; color:var(--text-dim);}
+  .legend b{color:var(--gold); font-weight:600;}
+</style>
+</head>
+<body>
+  <h1>⚔️ Боевой интерфейс — концепт в стиле Baldur's Gate 3</h1>
+  <p class="lead">
+    Действия и заклинания превращаются в квадратные иконки-кнопки («хотбар»). Доступная кнопка
+    светится золотом, недоступная — обесцвечена, выбранная — в золотом кольце. При наведении
+    всплывает «инспектор» с выезжающей большой иконкой и подробным описанием.
+    <b style="color:#f0d98a">Наведи мышь на любую кнопку ниже.</b>
+  </p>
+
+  <div class="section-title">Хотбар персонажа</div>
+  <div class="hint">Группы: основные действия · бонусные · реакции · заклинания. Бейдж = заряды/слот. Уголок = тип действия.</div>
+
+  <div class="hotbar" id="hotbar"></div>
+
+  <div class="legend">
+    <span><b>Золотое свечение</b> — доступно сейчас</span>
+    <span><b>Обесцвечено</b> — нет ресурса/условия</span>
+    <span><b>Золотое кольцо</b> — выбрано (ждёт цель)</span>
+    <span><b>Бейдж</b> — заряды или круг слота</span>
+  </div>
+
+  <div class="section-title">Тултипы крупным планом (3 типа)</div>
+  <div class="hint">Слева направо: способность/пассивка · заговор с атакой · заклинание со спасброском. То же окно всплывает по ховеру в хотбаре.</div>
+  <div class="static-grid" id="staticTips"></div>
+
+  <div id="live"></div>
+
+<script>
+  const dtColor = {
+    'некротический':'var(--dt-necrotic)','огонь':'var(--dt-fire)','холод':'var(--dt-cold)',
+    'кислота':'var(--dt-acid)','излучение':'var(--dt-radiant)','психический':'var(--dt-psychic)',
+    'силовое поле':'var(--dt-force)','дробящий':'var(--dt-physical)'
+  };
+  const dtIcon = {
+    'некротический':'☠','огонь':'🔥','холод':'❄','кислота':'🧪','излучение':'☀',
+    'психический':'🧠','силовое поле':'✷','дробящий':'🔨'
+  };
+
+  // data — mirrors spell_data.js + action/ability metadata
+  const DB = {
+    main_attack:{kind:'action', icon:'icons/actions/base/main_attack.png', name:'Атака оружием',
+      subtype:'Действие · ближний бой', roll:'atk', atkBonus:'+ 5', desc:'Совершаете атаку рукопашным оружием, что держите в руках. При попадании наносите урон костью оружия плюс модификатор характеристики.',
+      dmg:'1к8 + 3', dtype:'дробящий', meta:[['🎯','Касание'],['⚔','Оружие']], cost:[['cir','#d8b24a','Действие']]},
+    unarmed:{kind:'action', icon:'icons/actions/base/unarmed_strike.png', name:'Безоружный удар',
+      subtype:'Действие · ближний бой', roll:'atk', atkBonus:'+ 5', desc:'Бьёте цель кулаком, ногой или иной частью тела. При попадании наносите дробящий урон, равный 1 + модификатор Силы.',
+      dmg:'1 + 3', dtype:'дробящий', meta:[['🎯','5 фт']], cost:[['cir','#d8b24a','Действие']]},
+    dash:{kind:'action', icon:'icons/actions/base/dash.png', name:'Рывок',
+      subtype:'Действие', desc:'Получаете дополнительное перемещение, равное вашей скорости, до конца текущего хода.',
+      meta:[['👣','+Скорость']], cost:[['cir','#d8b24a','Действие']]},
+    disengage:{kind:'action', icon:'icons/actions/base/disengage.png', name:'Отход',
+      subtype:'Действие', desc:'До конца хода ваше перемещение не провоцирует атак при покидании досягаемости врагов.',
+      meta:[['👣','Без провокаций']], cost:[['cir','#d8b24a','Действие']]},
+    dodge:{kind:'action', icon:'icons/default.png', name:'Уклонение',
+      subtype:'Действие', desc:'Сосредотачиваетесь на уклонении. Атаки по вам совершаются с помехой, а спасброски Ловкости — с преимуществом, пока действует эффект.',
+      meta:[['🛡','Помеха по вам']], cost:[['cir','#d8b24a','Действие']]},
+    second_wind:{kind:'bonus', icon:'icons/default.png', name:'Второе дыхание',
+      subtype:'Бонусное действие · Воин', desc:'Черпаете запас сил и восстанавливаете <b>1к10 + уровень воина</b> хитов. Можно использовать ограниченное число раз между отдыхами.',
+      heal:'1к10+ур', meta:[['❤','Лечение'],['🔄','2 заряда']], badge:'2', cost:[['sq','#d88a4a','Бонусное действие']]},
+
+    bone_chill:{kind:'spell', icon:'icons/spells/cantrips/bone_chill.png', name:'Леденящее прикосновение',
+      subtype:'Заговор · Некромантия', roll:'atk', atkBonus:'+ 5', desc:'Атака ближнего боя заклинанием призрачной рукой. При попадании цель получает урон и <b>не может восстанавливать хиты</b> до начала вашего следующего хода.',
+      dmg:'1к10', dtype:'некротический', meta:[['🎯','Касание'],['⏱','1 раунд']], cost:[['cir','#d8b24a','Действие']]},
+    fire_bolt:{kind:'spell', icon:'icons/spells/cantrips/fire_bolt.png', name:'Огненный снаряд',
+      subtype:'Заговор · Воплощение', roll:'atk', atkBonus:'+ 5', desc:'Метаете в цель сгусток пламени. При попадании наносите урон огнём; горючие предметы, которые никто не несёт, воспламеняются.',
+      dmg:'1к10', dtype:'огонь', meta:[['🎯','120 фт'],['⚡','Мгновенная']], cost:[['cir','#d8b24a','Действие']]},
+    ray_of_frost:{kind:'spell', icon:'icons/spells/cantrips/ray_of_frost.png', name:'Луч холода',
+      subtype:'Заговор · Воплощение', roll:'atk', atkBonus:'+ 5', desc:'Ледяной луч устремляется к цели. При попадании наносит урон холодом, а скорость цели <b>уменьшается на 10 футов</b> до начала вашего следующего хода.',
+      dmg:'1к8', dtype:'холод', meta:[['🎯','60 фт']], cost:[['cir','#d8b24a','Действие']]},
+    acid_splash:{kind:'spell', icon:'icons/spells/cantrips/acid_splash.png', name:'Брызги кислоты',
+      subtype:'Заговор · Воплощение', roll:'save:ЛОВ', saveAbility:'Ловкость', saveDC:13, desc:'Выберите одно-два существа в пределах 5 футов друг от друга. Каждая цель совершает спасбросок Ловкости, получая урон кислотой при провале.',
+      dmg:'1к6', dtype:'кислота', save:'При провале спасброска — полный урон', meta:[['🎯','60 фт'],['⊙','5 фт']], cost:[['cir','#d8b24a','Действие']]},
+    vicious_mockery:{kind:'spell', icon:'icons/spells/cantrips/vicious_mockery.png', name:'Злая насмешка',
+      subtype:'Заговор · Очарование', roll:'save:МДР', saveAbility:'Мудрость', saveDC:13, desc:'Осыпаете цель колкостями с магией. При провале спасброска цель получает урон и <b>помеху на следующую атаку</b>.',
+      dmg:'1к6', dtype:'психический', save:'При провале спасброска — урон и помеха', meta:[['🎯','60 фт']], cost:[['cir','#d8b24a','Действие']]},
+
+    unarmored:{kind:'ability', icon:'icons/default.png', name:'Защита без доспехов',
+      subtype:'Пассивный', desc:'Если вы не носите броню, ваш базовый <b>КЗ равен 10 + модификатор ЛВК + модификатор ТЕЛ</b>.\n\nВы можете носить щит, не теряя этого преимущества.',
+      meta:[['🛡','Пассивно']]},
+  };
+
+  function srow(lbl, val){ return `<div class="srow"><span class="lbl">${lbl}</span>${val}</div>`; }
+
+  function tipHTML(d){
+    let rows = '';
+    if(d.roll==='atk'){
+      rows += srow('Атака:', `<div class="die">к20</div>${d.atkBonus?`<span class="bonus">${d.atkBonus}</span>`:''}`);
+    } else if(d.roll && d.roll.indexOf('save')===0){
+      rows += srow('Спасбросок:', `<div class="die">СБ</div><span class="bonus">${d.saveAbility||''}${d.saveDC?` Сл ${d.saveDC}`:''}</span>`);
+    }
+    if(d.dmg){
+      rows += srow('Урон:', `<span class="dmgval" style="color:${dtColor[d.dtype]||'#f3ead4'}"><span class="ic">${dtIcon[d.dtype]||''}</span>${d.dmg}${d.dtype?' · '+d.dtype:''}</span>`);
+    }
+    if(d.heal){
+      rows += srow('Лечение:', `<span class="dmgval" style="color:var(--dt-radiant)"><span class="ic">❤</span>${d.heal}</span>`);
+    }
+    let rollrow = rows ? `<div class="stats">${rows}</div>` : '';
+    let save = d.save ? `<div class="saveline">${d.save}</div>` : '';
+    let meta = (d.meta||[]).map(m=>`<span><i>${m[0]}</i>${m[1]}</span>`).join('');
+    let cost = (d.cost||[]).map(c=>`<span class="cost"><span class="${c[0]}" style="background:${c[1]}"></span>${c[2]}</span>`).join('');
+    let costbar = cost ? `<div class="costbar">${cost}</div>` : '<div style="height:14px"></div>';
+    return `
+      <img class="bigicon" src="${d.icon}" alt="" onerror="this.src='icons/default.png'"/>
+      <h3>${d.name}</h3>
+      <div class="subtype">${d.subtype}</div>
+      ${rollrow}
+      <div class="desc">${d.desc.replace(/\n/g,'<br>')}</div>
+      ${save}
+      <div class="meta">${meta}</div>
+      ${costbar}`;
+  }
+
+  // Build hotbar
+  const groups = [
+    {label:'Основные действия', cls:'main', keys:['main_attack','unarmed','dash','disengage','dodge'], states:['ready','ready','ready','ready','disabled']},
+    {label:'Бонусные', cls:'bonus', keys:['second_wind'], states:['ready']},
+    {label:'Заговоры', cls:'spell', keys:['fire_bolt','ray_of_frost','bone_chill','acid_splash','vicious_mockery'], states:['ready','ready','selected','ready','disabled']},
+    {label:'Пассивные', cls:'reaction', keys:['unarmored'], states:['ready']},
+  ];
+  const hb = document.getElementById('hotbar');
+  groups.forEach(g=>{
+    const col = document.createElement('div'); col.className='group';
+    col.innerHTML = `<div class="group-label"><span class="dot ${g.cls}"></span>${g.label}</div>`;
+    const slots = document.createElement('div'); slots.className='slots';
+    g.keys.forEach((k,i)=>{
+      const d = DB[k]; const st = g.states[i]||'ready';
+      const b = document.createElement('div');
+      b.className = `ab ${st}`;
+      b.innerHTML = `<img src="${d.icon}" alt="${d.name}" onerror="this.src='icons/default.png'"/>
+        ${d.badge?`<span class="badge">${d.badge}</span>`:''}
+        ${d.kind==='bonus'?'<span class="corner bonus"></span>':''}`;
+      b.addEventListener('mouseenter',e=>showLive(k,b));
+      b.addEventListener('mouseleave',hideLive);
+      slots.appendChild(b);
+    });
+    col.appendChild(slots); hb.appendChild(col);
+  });
+
+  // Live tooltip
+  const live = document.getElementById('live');
+  function showLive(key,el){
+    const d = DB[key];
+    live.className='tip'; live.innerHTML = tipHTML(d);
+    const r = el.getBoundingClientRect();
+    live.style.left = '0px'; live.style.top='0px';
+    requestAnimationFrame(()=>{
+      const tw = live.offsetWidth, th = live.offsetHeight;
+      let left = r.left + r.width/2 - tw/2;
+      left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
+      let top = r.top - th - 14;
+      if(top < 12) top = r.bottom + 14;
+      live.style.left = left+'px'; live.style.top = top+'px';
+      live.classList.add('show');
+    });
+  }
+  function hideLive(){ live.classList.remove('show'); }
+
+  // Static showcase
+  const sg = document.getElementById('staticTips');
+  ['main_attack','acid_splash','unarmored'].forEach(k=>{
+    const t = document.createElement('div'); t.className='tip'; t.style.position='relative';
+    t.innerHTML = tipHTML(DB[k]); sg.appendChild(t);
+  });
+</script>
+</body>
+</html>

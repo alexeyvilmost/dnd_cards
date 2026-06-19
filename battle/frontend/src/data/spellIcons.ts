@@ -1,113 +1,8 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Справочник заклинаний — D&D 2024</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f4f6fb;--panel:#ffffff;--ink:#1f2733;--dim:#6b7689;--line:#e4e8f0;
-  --blue:#3b82f6;--green:#22a06b;--red:#e0556a;--amber:#d9930b;--purple:#8b5cf6;--slate:#64748b;
-  --shadow:0 1px 3px rgba(20,30,60,.06),0 8px 24px rgba(20,30,60,.05);
-}
-html,body{height:100%;background:var(--bg);color:var(--ink);
-  font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
-body{display:flex;flex-direction:column;min-height:100vh}
-a{color:inherit;text-decoration:none}
-
-.topbar{height:60px;background:var(--panel);border-bottom:1px solid var(--line);
-  display:flex;align-items:center;gap:18px;padding:0 26px;position:sticky;top:0;z-index:20}
-.brand{font-size:17px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
-.brand .swords{color:var(--amber)}
-.topnav{display:flex;gap:6px;margin-left:8px}
-.topnav a{padding:8px 14px;border-radius:9px;color:var(--dim);font-weight:600;font-size:13px}
-.topnav a.on,.topnav a:hover{background:#eef3ff;color:var(--blue)}
-.spacer{flex:1}
-.search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);
-  border-radius:10px;padding:7px 12px;width:240px}
-.search input{border:none;background:none;outline:none;font:inherit;width:100%;color:var(--ink)}
-
-.wrap{max-width:1320px;margin:0 auto;width:100%;padding:26px;flex:1}
-.head h1{font-size:24px;font-weight:800}
-.head .sub{color:var(--dim);font-size:13px;margin:3px 0 20px}
-
-.section-lbl{font-size:13px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;
-  margin:8px 0 12px;display:flex;align-items:center;gap:10px}
-.section-lbl::after{content:'';flex:1;height:1px;background:var(--line)}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:10px}
-.cell{position:relative;aspect-ratio:1;border-radius:11px;border:1px solid #3d3324;
-  background:linear-gradient(180deg,#2b241c,#1a1712);
-  box-shadow:var(--shadow);cursor:pointer;overflow:hidden;transition:transform .1s,border-color .12s,box-shadow .12s;outline:none}
-.cell:hover,.cell:focus{transform:translateY(-2px);border-color:#8a703f;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:5}
-.cell img{width:100%;height:100%;object-fit:cover;display:block}
-.cell .lvl{position:absolute;right:4px;bottom:2px;font-size:10px;font-weight:800;color:#fff;
-  text-shadow:0 1px 2px rgba(0,0,0,.9);letter-spacing:.5px}
-.cell .roll-dot{position:absolute;left:5px;top:5px;width:8px;height:8px;border-radius:50%;
-  box-shadow:0 0 0 2px rgba(255,255,255,.85)}
-.cell.miss{display:flex;align-items:center;justify-content:center;color:#cdbf9d;font-size:11px;text-align:center;padding:4px}
-
-/* ── BG3-style tooltip ── */
-#tip{position:fixed;z-index:100;width:360px;max-width:92vw;pointer-events:none;opacity:0;
-  transition:opacity .1s;font-family:Georgia,'Times New Roman',serif}
-#tip.show{opacity:1}
-.tip-card{position:relative;background:linear-gradient(180deg,#2b241c,#1a1712);border:1px solid #6b5836;border-radius:10px;
-  box-shadow:0 18px 50px rgba(0,0,0,.55);overflow:hidden;color:#e8ddc8}
-.tip-art{position:absolute;top:-6px;right:-6px;width:118px;height:118px;object-fit:contain;
-  pointer-events:none;opacity:.96;
-  -webkit-mask-image:linear-gradient(245deg,#000 55%,transparent 92%);
-  mask-image:linear-gradient(245deg,#000 55%,transparent 92%)}
-.tip-head{padding:14px 16px 10px;padding-right:112px}
-.tip-name{font-size:21px;font-weight:700;color:#f3ead4;letter-spacing:.3px;line-height:1.1}
-.tip-sub{font-size:12.5px;color:#b6a583;margin-top:3px;font-style:italic}
-.tip-dmg{display:flex;align-items:center;gap:10px;padding:0 16px 8px}
-.tip-dmg .die{width:30px;height:30px;flex-shrink:0;border-radius:6px;display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;color:#0d0b08;font-family:Inter,sans-serif}
-.tip-dmg .dval{font-size:17px;font-weight:700}
-.tip-dmg .dval .t{font-weight:600}
-.tip-desc{padding:4px 16px 12px;font-size:14px;line-height:1.5;color:#cabfa6}
-.tip-scale{padding:0 16px 12px;font-size:12.5px;color:#9c8e6e}
-.tip-scale b{color:#c9b98f;font-weight:700}
-.tip-meta{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 16px;border-top:1px solid #463a26;
-  background:rgba(0,0,0,.18);font-family:Inter,sans-serif;font-size:12px;color:#bdae8c}
-.tip-meta .m{display:flex;align-items:center;gap:6px}
-.tip-meta .m b{color:#e3d6b6;font-weight:600}
-.tip-bar{display:flex;align-items:center;gap:14px;padding:9px 16px;background:#171310;
-  border-top:1px solid #463a26;font-family:Inter,sans-serif;font-size:12.5px;color:#cdbf9d}
-.tip-bar .pip{display:inline-flex;align-items:center;gap:6px;font-weight:600}
-.tip-bar .sq{width:11px;height:11px;border-radius:3px;display:inline-block}
-.tip-bar .tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #e0863a}
-.tip-bar .cir{width:11px;height:11px;border-radius:50%;background:#3fb950;display:inline-block}
-</style>
-</head>
-<body>
-
-<div class="topbar">
-  <div class="brand"><span class="swords">⚔</span> D&D 2024</div>
-  <nav class="topnav">
-    <a href="/">Бой</a>
-    <a href="/characters">Персонажи</a>
-    <a href="/spellbook" class="on">Заклинания</a>
-  </nav>
-  <div class="spacer"></div>
-  <div class="search">🔍<input id="q" placeholder="Поиск заклинания…" oninput="render()"></div>
-</div>
-
-<div class="wrap">
-  <div class="head">
-    <h1>Справочник заклинаний</h1>
-    <div class="sub">Все заклинания D&D 2024 с иконками. Наведите на ячейку, чтобы увидеть подробности.</div>
-  </div>
-  <div id="book"></div>
-</div>
-
-<div id="tip"><div class="tip-card" id="tip-card"></div></div>
-
-<script>
-/* spell data inlined for robustness (no external fetch dependency) */
-/* Russian spell data for cantrips that have icons (icons/spells/cantrips/<key>.png).
-   Names/descriptions adapted from dnd.su (D&D 2024). Keyed by icon filename (no .png).
+/* Curated Russian spell metadata (names, school, roll, damage, descriptions) used
+   to enrich tooltips. Adapted from dnd.su (D&D 2024). Keyed by the original icon
+   filename slug; matched to backend spells via the `en` field.
+   NB: spell icon IMAGES now live in the backend image store (images_repo.py), not
+   as static files — this table is text metadata only.
    Fields:
      name  — Russian name           en   — English name
      level — spell level (0=заговор) school — school of magic (RU)
@@ -118,7 +13,24 @@ a{color:inherit;text-decoration:none}
      scale — высокоуровневое масштабирование (text) or null
      desc  — short Russian description
 */
-const SPELL_ICONS = {
+export interface SpellIcon {
+  name: string;
+  en: string;
+  level: number;
+  school: string;
+  cast: string;
+  range: string;
+  comp: string;
+  dur: string;
+  conc?: boolean;
+  roll: string | null;
+  dmg: string | null;
+  dtype: string | null;
+  scale: string | null;
+  desc: string;
+}
+
+export const SPELL_ICONS: Record<string, SpellIcon> = {
   acid_splash: { name:'Брызги кислоты', en:'Acid Splash', level:0, school:'Воплощение',
     cast:'Действие', range:'60 фт', comp:'В, С', dur:'Мгновенная', roll:'save:ЛОВ',
     dmg:'1к6', dtype:'кислота', scale:'2к6 (5), 3к6 (11), 4к6 (17)',
@@ -286,118 +198,21 @@ const SPELL_ICONS = {
 };
 
 // Order to display in the grid (cantrips alphabetical by RU name handled in render).
-const SPELL_ICON_KEYS = Object.keys(SPELL_ICONS);
+export const SPELL_ICON_KEYS = Object.keys(SPELL_ICONS);
 
-</script>
-<script>
-const ICON_BASE = '/static/icons/spells/cantrips/';
-const ROMAN = ['','I','II','III','IV','V','VI','VII','VIII','IX'];
-const DMG_COLOR = {
-  'огонь':'#f08a3c','холод':'#5cc6e8','электричество':'#e8c63c','молния':'#e8c63c',
-  'некротический':'#9a86b8','излучение':'#f0d04c','психический':'#c77dff','кислота':'#7cc83c',
-  'яд':'#7cc83c','силовое поле':'#7aa0ff','звук':'#7aa0ff','гром':'#7aa0ff','на выбор':'#d8c8a0',
-  'излучение (опц.)':'#f0d04c'
-};
-function dcolor(t){ return DMG_COLOR[t] || '#cdbf9d'; }
-function rollDot(roll){
-  if(!roll) return '';
-  const c = roll==='attack' ? '#e05c5c' : '#5aa9ff';
-  return `<span class="roll-dot" style="background:${c}"></span>`;
-}
-function castPip(cast){
-  if(cast==='Бонусное действие') return '<span class="tri"></span>';
-  if(cast==='Реакция') return '<span class="sq" style="background:#5aa9ff"></span>';
-  return '<span class="cir"></span>';
+// Lookup by English spell name (as stored on the backend Spell.name).
+const BY_EN: Record<string, string> = {};
+for (const key of SPELL_ICON_KEYS) {
+  BY_EN[SPELL_ICONS[key].en.toLowerCase()] = key;
 }
 
-function render(){
-  const q = (document.getElementById('q').value||'').toLowerCase().trim();
-  // group by level
-  const byLevel = {};
-  for (const key of SPELL_ICON_KEYS){
-    const s = SPELL_ICONS[key];
-    if (q && !(s.name.toLowerCase().includes(q) || s.en.toLowerCase().includes(q) || (s.school||'').toLowerCase().includes(q))) continue;
-    (byLevel[s.level] ||= []).push(key);
-  }
-  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
-  const book = document.getElementById('book');
-  if (!levels.length){ book.innerHTML = '<div style="color:var(--dim);padding:30px;text-align:center">Ничего не найдено.</div>'; return; }
-  book.innerHTML = levels.map(lv=>{
-    const title = lv===0 ? 'Заговоры' : `Заклинания ${lv} круга`;
-    const cells = byLevel[lv]
-      .sort((a,b)=>SPELL_ICONS[a].name.localeCompare(SPELL_ICONS[b].name,'ru'))
-      .map(key=>{
-        const s = SPELL_ICONS[key];
-        return `<div class="cell" tabindex="0" data-key="${key}"
-          onmouseenter="showTip(event,'${key}')" onmousemove="moveTip(event)" onmouseleave="hideTip()"
-          onfocus="showTip(event,'${key}')" onblur="hideTip()">
-          <img src="${ICON_BASE}${key}.png" alt="${s.name}" loading="lazy"
-               onerror="this.parentElement.classList.add('miss');this.remove();this.parentElement.textContent='${s.name}'">
-          ${rollDot(s.roll)}
-          ${lv>0?`<span class="lvl">${ROMAN[lv]}</span>`:''}
-        </div>`;
-      }).join('');
-    return `<div class="section-lbl">${title} <span style="color:#9aa6b8;font-weight:600">${byLevel[lv].length}</span></div>
-      <div class="grid" style="margin-bottom:24px">${cells}</div>`;
-  }).join('');
+/** Returns the icon key for an English spell name, or undefined. */
+export function spellIconKey(englishName: string): string | undefined {
+  return BY_EN[englishName.trim().toLowerCase()];
 }
 
-// ── Tooltip ──
-const tip = document.getElementById('tip');
-const tipCard = document.getElementById('tip-card');
-function rollLabel(roll){
-  if(!roll) return null;
-  if(roll==='attack') return {icon:'🎯', text:'Атака заклинанием'};
-  const ab = roll.split(':')[1];
-  return {icon:'🛡', text:'Спасбросок · '+ab};
+/** Returns the Russian spell metadata for an English spell name, or undefined. */
+export function spellIconByEn(englishName: string): SpellIcon | undefined {
+  const key = spellIconKey(englishName);
+  return key ? SPELL_ICONS[key] : undefined;
 }
-function buildTip(key){
-  const s = SPELL_ICONS[key];
-  const sub = (s.level===0 ? 'Заговор' : `Заклинание ${s.level} круга`) + ' · ' + s.school;
-  let dmg = '';
-  if (s.dmg){
-    const col = dcolor(s.dtype);
-    dmg = `<div class="tip-dmg">
-      <div class="die" style="background:${col}">d</div>
-      <div class="dval" style="color:${col}">${s.dmg}<span class="t" style="color:#cdbf9d"> ${s.dtype||''}</span></div>
-    </div>`;
-  }
-  const scale = s.scale ? `<div class="tip-scale"><b>По уровню:</b> ${s.scale}</div>` : '';
-  const r = rollLabel(s.roll);
-  const meta = [
-    `<div class="m">📏 <b>${s.range}</b></div>`,
-    r ? `<div class="m">${r.icon} <b>${r.text}</b></div>` : '',
-    `<div class="m">✋ <b>${s.comp}</b></div>`,
-    `<div class="m">⏱ <b>${s.dur}</b></div>`,
-    s.conc ? `<div class="m">👁 <b>Концентрация</b></div>` : '',
-  ].filter(Boolean).join('');
-  const slot = s.level===0 ? 'Заговор' : `Ячейка ${s.level} круга`;
-  const art = `<img class="tip-art" src="${ICON_BASE}${key}.png" alt="" onerror="this.remove()">`;
-  return `
-    ${art}
-    <div class="tip-head"><div class="tip-name">${s.name}</div><div class="tip-sub">${sub} · ${s.en}</div></div>
-    ${dmg}
-    <div class="tip-desc">${s.desc}</div>
-    ${scale}
-    <div class="tip-meta">${meta}</div>
-    <div class="tip-bar"><span class="pip">${castPip(s.cast)} ${s.cast}</span>
-      <span class="pip"><span class="sq" style="background:#5aa9ff"></span> ${slot}</span></div>`;
-}
-let tipVisible = false;
-function showTip(e, key){ tipCard.innerHTML = buildTip(key); tip.classList.add('show'); tipVisible=true; positionTip(e); }
-function moveTip(e){ if(tipVisible) positionTip(e); }
-function hideTip(){ tip.classList.remove('show'); tipVisible=false; }
-function positionTip(e){
-  const pad = 16, tw = tip.offsetWidth, th = tip.offsetHeight;
-  let x = e.clientX + 20, y = e.clientY - 10;
-  if (x + tw + pad > window.innerWidth) x = e.clientX - tw - 20;
-  if (x < pad) x = pad;
-  if (y + th + pad > window.innerHeight) y = window.innerHeight - th - pad;
-  if (y < pad) y = pad;
-  tip.style.left = x+'px'; tip.style.top = y+'px';
-}
-
-render();
-</script>
-</body>
-</html>

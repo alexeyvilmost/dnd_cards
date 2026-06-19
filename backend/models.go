@@ -217,6 +217,33 @@ func (e CardEffects) Value() (driver.Value, error) {
 	return json.Marshal(e)
 }
 
+// JSONMap - универсальный JSON-объект для расширяемых полей
+type JSONMap map[string]interface{}
+
+// Scan - кастомный сканер для JSONMap
+func (m *JSONMap) Scan(value interface{}) error {
+	if value == nil {
+		*m = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), m)
+	case []byte:
+		return json.Unmarshal(v, m)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для JSONMap: %T", value)
+	}
+}
+
+// Value - кастомный value для JSONMap
+func (m JSONMap) Value() (driver.Value, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return json.Marshal(m)
+}
+
 // EquipmentSlot - слот экипировки
 type EquipmentSlot string
 
@@ -276,6 +303,7 @@ type Card struct {
 	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"`   // Тип шаблона
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
 	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
+	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                      // Боевой профиль предмета для сервиса battle
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -318,6 +346,7 @@ type CreateCardRequest struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
+	BattleProfile                *JSONMap       `json:"battle_profile"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -357,6 +386,7 @@ type UpdateCardRequest struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
+	BattleProfile                *JSONMap       `json:"battle_profile"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -404,6 +434,7 @@ type CardResponse struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
+	BattleProfile                *JSONMap       `json:"battle_profile"`
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 }
@@ -1071,9 +1102,9 @@ type CharacterV2 struct {
 	SkillProficiencies string `json:"skill_proficiencies" gorm:"type:text"`
 
 	// Активные эффекты и ресурсы
-	ActiveEffects *ActiveEffects       `json:"active_effects" gorm:"type:jsonb;default:'[]'::jsonb"`
-	Resources     *CharacterResources  `json:"resources" gorm:"type:jsonb;default:'{}'::jsonb"`
-	MaxResources  *CharacterResources  `json:"max_resources" gorm:"type:jsonb;default:'{}'::jsonb"`
+	ActiveEffects *ActiveEffects      `json:"active_effects" gorm:"type:jsonb;default:'[]'::jsonb"`
+	Resources     *CharacterResources `json:"resources" gorm:"type:jsonb;default:'{}'::jsonb"`
+	MaxResources  *CharacterResources `json:"max_resources" gorm:"type:jsonb;default:'{}'::jsonb"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -1203,13 +1234,13 @@ func (s Script) Value() (driver.Value, error) {
 
 // ActiveEffect - активный эффект на персонаже
 type ActiveEffect struct {
-	EffectID         string    `json:"effect_id"`          // UUID эффекта
-	ActionID         string    `json:"action_id"`         // ID действия, которое создало эффект
-	Name             string    `json:"name"`               // Название эффекта
-	DurationRemaining int      `json:"duration_remaining"` // Осталось ходов
-	DurationType     string    `json:"duration_type"`     // "rounds" | "minutes" | "hours" | "until_dispelled"
-	AppliedAt        time.Time `json:"applied_at"`         // Время применения
-	Script           *Script   `json:"script"`            // Скрипт эффекта из Action
+	EffectID          string    `json:"effect_id"`          // UUID эффекта
+	ActionID          string    `json:"action_id"`          // ID действия, которое создало эффект
+	Name              string    `json:"name"`               // Название эффекта
+	DurationRemaining int       `json:"duration_remaining"` // Осталось ходов
+	DurationType      string    `json:"duration_type"`      // "rounds" | "minutes" | "hours" | "until_dispelled"
+	AppliedAt         time.Time `json:"applied_at"`         // Время применения
+	Script            *Script   `json:"script"`             // Скрипт эффекта из Action
 }
 
 // ActiveEffects - массив активных эффектов
@@ -1648,29 +1679,29 @@ type UpdateCharacterV2Request struct {
 
 // CharacterV2Response - ответ с данными персонажа V2
 type CharacterV2Response struct {
-	ID                       uuid.UUID         `json:"id"`
-	UserID                   uuid.UUID         `json:"user_id"`
-	GroupID                  *uuid.UUID        `json:"group_id"`
-	Name                     string            `json:"name"`
-	Race                     string            `json:"race"`
-	Class                    string            `json:"class"`
-	Level                    int               `json:"level"`
-	Speed                    int               `json:"speed"`
-	Strength                 int               `json:"strength"`
-	Dexterity                int               `json:"dexterity"`
-	Constitution             int               `json:"constitution"`
-	Intelligence             int               `json:"intelligence"`
-	Wisdom                   int               `json:"wisdom"`
-	Charisma                 int               `json:"charisma"`
-	MaxHP                    int               `json:"max_hp"`
-	CurrentHP                int               `json:"current_hp"`
-	SavingThrowProficiencies []string          `json:"saving_throw_proficiencies"`
-	SkillProficiencies       []string          `json:"skill_proficiencies"`
-	ActiveEffects            *ActiveEffects    `json:"active_effects"`
+	ID                       uuid.UUID           `json:"id"`
+	UserID                   uuid.UUID           `json:"user_id"`
+	GroupID                  *uuid.UUID          `json:"group_id"`
+	Name                     string              `json:"name"`
+	Race                     string              `json:"race"`
+	Class                    string              `json:"class"`
+	Level                    int                 `json:"level"`
+	Speed                    int                 `json:"speed"`
+	Strength                 int                 `json:"strength"`
+	Dexterity                int                 `json:"dexterity"`
+	Constitution             int                 `json:"constitution"`
+	Intelligence             int                 `json:"intelligence"`
+	Wisdom                   int                 `json:"wisdom"`
+	Charisma                 int                 `json:"charisma"`
+	MaxHP                    int                 `json:"max_hp"`
+	CurrentHP                int                 `json:"current_hp"`
+	SavingThrowProficiencies []string            `json:"saving_throw_proficiencies"`
+	SkillProficiencies       []string            `json:"skill_proficiencies"`
+	ActiveEffects            *ActiveEffects      `json:"active_effects"`
 	Resources                *CharacterResources `json:"resources"`
 	MaxResources             *CharacterResources `json:"max_resources"`
-	CreatedAt                time.Time         `json:"created_at"`
-	UpdatedAt                time.Time         `json:"updated_at"`
-	User                     User              `json:"user"`
-	Group                    *Group            `json:"group"`
+	CreatedAt                time.Time           `json:"created_at"`
+	UpdatedAt                time.Time           `json:"updated_at"`
+	User                     User                `json:"user"`
+	Group                    *Group              `json:"group"`
 }

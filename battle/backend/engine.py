@@ -23,7 +23,11 @@ from models import (
     Weapon,
     WeaponMastery,
 )
-from spells import get_spell
+import spell_catalog
+
+
+def get_spell(name):
+    return spell_catalog.get_spell(name)
 
 
 # ─── Geometry ─────────────────────────────────────────────────────────────────
@@ -141,7 +145,7 @@ def resolve_single_attack(
     result["rolls"]["total"] = total
     result["rolls"]["target_ac"] = tgt_ac
 
-    is_crit = natural == 20
+    is_crit = natural >= getattr(attacker, "crit_threshold", 20)
     is_fumble = natural == 1
     hit = is_crit or (not is_fumble and total >= tgt_ac)
     result["hit"] = hit
@@ -747,6 +751,7 @@ def cast_spell(
     target_ids: Optional[List[str]] = None,
     slot_level: Optional[int] = None,
     point: Optional[Dict[str, int]] = None,
+    effect_choice: Optional[str] = None,
 ) -> Dict[str, Any]:
     caster = room.characters[caster_id]
     target_ids = target_ids or []
@@ -756,6 +761,20 @@ def cast_spell(
     if spell is None:
         result["message"] = f"Unknown spell '{spell_name}'."
         return result
+
+    # "Spell with a choice of effect": apply the chosen variant to a copy so the
+    # cached catalog entry isn't mutated.
+    if spell.effect_options:
+        chosen = None
+        if effect_choice:
+            chosen = next((o for o in spell.effect_options if o.key == effect_choice), None)
+        chosen = chosen or spell.effect_options[0]
+        spell = spell.model_copy(deep=True)
+        if chosen.damage_type:
+            spell.damage_type = chosen.damage_type
+        if chosen.condition:
+            spell.condition = chosen.condition
+        result["effects"].append(f"Вариант эффекта: {chosen.label}")
 
     # Knows the spell?
     known = spell.name in caster.cantrips or spell.name in caster.spells_prepared

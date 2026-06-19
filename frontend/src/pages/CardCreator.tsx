@@ -71,7 +71,8 @@ const CardCreator = () => {
       tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : [],
       slot: null,
       is_template: 'false',
-      effects: []
+      effects: [],
+      battle_profile: null,
     }
   });
 
@@ -134,7 +135,8 @@ const CardCreator = () => {
             range: card.range || null,
             tags: card.tags || [],
             slot: card.slot,
-            is_template: card.is_template || 'false'
+            is_template: card.is_template || 'false',
+            battle_profile: card.battle_profile || null,
           });
           
           if (card.image_url) {
@@ -192,6 +194,7 @@ const CardCreator = () => {
           setValue('tags', template.tags || []);
           setValue('slot', template.slot);
           setValue('is_template', 'false'); // Новая карта не является шаблоном
+          setValue('battle_profile', template.battle_profile || null);
           
           if (template.image_url) {
             setCardImage(template.image_url);
@@ -239,7 +242,8 @@ const CardCreator = () => {
     watchedValues.range,
     watchedValues.tags,
     watchedValues.slot,
-    watchedValues.is_template
+    watchedValues.is_template,
+    watchedValues.battle_profile
   ]);
 
   // Обновляем превью при изменении данных
@@ -297,6 +301,7 @@ const CardCreator = () => {
         slot: data.slot || null,
         is_template: data.is_template || 'false',
         image_prompt_extra: data.image_prompt_extra || null,
+        battle_profile: data.battle_profile || null,
         effects: effects.length > 0 ? effects.filter(effect => 
           effect.targetType && 
           effect.targetSpecific && 
@@ -385,7 +390,8 @@ const CardCreator = () => {
       tags: formData.tags && formData.tags.length > 0 ? formData.tags : null,
       slot: formData.slot || null,
       is_template: formData.is_template || 'false',
-      image_prompt_extra: formData.image_prompt_extra || null
+      image_prompt_extra: formData.image_prompt_extra || null,
+      battle_profile: formData.battle_profile || null
     };
 
     // Создаем карту

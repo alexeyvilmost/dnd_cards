@@ -170,6 +170,12 @@ func GetAllMigrations() []Migration {
 			Up:          addElementalDamageFields,
 			Down:        removeElementalDamageFields,
 		},
+		{
+			Version:     "028_add_battle_profile_field",
+			Description: "Add battle_profile jsonb field to cards table",
+			Up:          addBattleProfileField,
+			Down:        removeBattleProfileField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1428,6 +1434,35 @@ func removeElementalDamageFields(db *sql.DB) error {
 		"ALTER TABLE cards DROP COLUMN IF EXISTS elemental_damage_type",
 	}
 
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// addBattleProfileField добавляет поле battle_profile в таблицу cards
+func addBattleProfileField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS battle_profile JSONB",
+		"COMMENT ON COLUMN cards.battle_profile IS 'Боевой профиль предмета для сервиса battle'",
+		"CREATE INDEX IF NOT EXISTS idx_cards_battle_profile ON cards USING GIN (battle_profile)",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeBattleProfileField удаляет поле battle_profile из таблицы cards
+func removeBattleProfileField(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_cards_battle_profile",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS battle_profile",
+	}
 	for _, query := range queries {
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to execute query '%s': %w", query, err)

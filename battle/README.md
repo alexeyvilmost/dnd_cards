@@ -1,25 +1,41 @@
-# battle — D&D 2024 пошаговый боевой движок
+# battle — D&D 2024 боевой движок и Dungeon Crawl
 
-Подмодуль монорепозитория `dnd_cards`. Пока **проектно, без интеграций** с основным
-сервисом (общая БД / авторизация / контракты появятся позже).
+Подмодуль монорепозитория `dnd_cards`. План развития до версии 1 — в
+[`ROADMAP.md`](ROADMAP.md).
 
 ## Состав
 
 Папка разделена на два деплой-юнита — `backend/` (Python API) и `frontend/`
-(статика + nginx), у каждого свой `Dockerfile`.
+(React SPA + nginx), у каждого свой `Dockerfile`.
 
 | Файл / папка        | Назначение |
 |---------------------|-----------|
-| `backend/main.py`           | FastAPI: REST API боя (+ отдача UI в all-in-one режиме, если рядом есть `static/`) |
-| `backend/engine.py`         | Боевой движок (атаки, заклинания, ходы) |
+| `backend/main.py`           | FastAPI: REST API боя, персонажей, заклинаний, монстров, подземелья |
+| `backend/engine.py`         | Боевой движок (атаки, заклинания, ходы, авто-ход монстров) |
+| `backend/dbcore.py`         | Подключение к PostgreSQL + раннер миграций (таблицы `battle_*`) |
+| `backend/repo.py`           | Обобщённый репозиторий (PG + файловый fallback) |
 | `backend/models.py`, `spells.py`, `dice.py`, `store.py`, `char_storage.py`, `db.py` | Доменные модели, каталог заклинаний, утилиты, хранилища |
-| `backend/saved_characters/` | Сохранённые персонажи (файловое хранилище-заглушка под будущую БД) |
 | `backend/Dockerfile`        | Образ API (python + uvicorn) |
-| `frontend/static/`          | UI: `index.html` (бой), `characters.html` (каталог), `spellbook.html` (справочник), `spell_data.js`, `icons/` |
-| `frontend/nginx.conf.template` | nginx: отдаёт статику и проксирует API на бэкенд |
-| `frontend/Dockerfile`       | Образ UI (nginx) |
+| `frontend/src/`             | React+TS приложение: бой, персонажи, заклинания, бестиарий, подземелье |
+| `frontend/public/`          | Статика (иконки заклинаний, `spell_data.js`) |
+| `frontend/nginx.conf.template` | nginx: отдаёт SPA и проксирует API на бэкенд |
+| `frontend/Dockerfile`       | Образ UI (сборка Vite → nginx) |
+| `docker-compose.battle.yml` | Локальный полный стек: Postgres + backend + frontend |
+| `scripts/test_battle_stack.py` | Приёмочный smoke-тест стека |
 
 ## Локальный запуск
+
+### Вариант A — полный стек в Docker (как при деплое)
+
+```bash
+docker compose -f docker-compose.battle.yml up --build
+# Frontend: http://localhost:8080   Backend: http://localhost:8765
+```
+
+Локальный Postgres поднимается автоматически, таблицы `battle_*` создаются
+миграциями при старте бэкенда.
+
+### Вариант B — dev без БД (файловое хранилище)
 
 API (из папки `backend/`):
 
@@ -30,9 +46,23 @@ python3 -m venv .venv
 .venv/bin/uvicorn main:app --reload --port 8765
 ```
 
-UI обслуживается отдельным nginx-образом (`frontend/`). Для быстрой локальной
-разработки можно положить `static/` рядом с `backend/main.py` — тогда бэкенд сам
-отдаст и UI (роуты `/`, `/characters`, `/spellbook` включаются автоматически).
+Фронтенд (из папки `frontend/`):
+
+```bash
+cd frontend
+npm install
+npm run dev   # http://localhost:3001, API проксируется на :8765
+```
+
+Без переменных БД бэкенд использует файловое хранилище (`backend/data/`,
+`backend/saved_characters/`) — удобно для разработки и приёмки без БД.
+
+## Приёмка
+
+```bash
+python3 scripts/test_battle_stack.py            # backend :8765 + frontend :8080
+python3 scripts/test_battle_stack.py --no-frontend
+```
 
 ## Деплой в Railway
 

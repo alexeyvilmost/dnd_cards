@@ -82,6 +82,15 @@ class Armor(BaseModel):
 # ─── Spells ───────────────────────────────────────────────────────────────────
 
 
+class EffectOption(BaseModel):
+    """A selectable variant for a "spell with a choice of effect" (e.g. choose
+    the damage type, or which condition to apply). Chosen at cast time."""
+    key: str
+    label: str
+    damage_type: Optional[str] = None
+    condition: Optional[str] = None
+
+
 class Spell(BaseModel):
     name: str
     level: int                       # 0 = cantrip
@@ -111,6 +120,10 @@ class Spell(BaseModel):
     upcast_targets: int = 0                    # extra darts/rays per slot above base
     damage_dice_wounded: Optional[str] = None  # alt dice if target is below max HP (Toll the Dead)
     cantrip_scale: bool = False                # damage dice scale with caster level (5/11/17)
+    # "Spell with a choice of effect": if present, the caster picks one variant
+    # at cast time (overrides damage_type / condition for that casting).
+    effect_options: List[EffectOption] = []
+    battle_ready: bool = True                   # validated mechanics; usable in combat
     description: str = ""
 
 
@@ -175,6 +188,16 @@ class Character(BaseModel):
     background: Optional[str] = None   # cosmetic (Soldier, Sage, ...)
     portrait: Optional[str] = None     # cosmetic emoji/icon
     saved_id: Optional[str] = None     # source template id, if created from a saved character
+    sheet_id: Optional[str] = None     # persistent battle_characters id, if materialized from a sheet
+
+    # Team / NPC flags (PvE). Default party member; monsters set is_monster=True.
+    team: str = "party"                # "party" | "monsters"
+    is_monster: bool = False
+    subclass: Optional[str] = None     # chosen subclass key (level 3)
+    crit_threshold: int = 20           # natural roll >= this is a critical hit (Champion: 19)
+    monster_xp: int = 0                # XP granted when this monster is defeated (PvE)
+    item_attack_bonus: int = 0         # from equipped imported items
+    item_damage_bonus: int = 0         # from equipped imported items
 
     ability_scores: AbilityScores = Field(default_factory=AbilityScores)
 
@@ -271,9 +294,9 @@ class Character(BaseModel):
     def attack_bonus(self, weapon: Optional[Weapon] = None) -> int:
         w = weapon or self.main_hand
         if w is None:
-            return self.proficiency_bonus + self.ability_scores.mod("strength")
+            return self.proficiency_bonus + self.ability_scores.mod("strength") + self.item_attack_bonus
         ability = self._weapon_ability(w)
-        return self.proficiency_bonus + self.ability_scores.mod(ability)
+        return self.proficiency_bonus + self.ability_scores.mod(ability) + self.item_attack_bonus
 
     def damage_bonus(self, weapon: Optional[Weapon] = None, off_hand: bool = False) -> int:
         w = weapon or self.main_hand
@@ -292,7 +315,7 @@ class Character(BaseModel):
             and self.off_hand is None
         ):
             bonus += 2
-        return bonus
+        return bonus + self.item_damage_bonus
 
     def _weapon_ability(self, weapon: Weapon) -> str:
         if weapon.finesse:
