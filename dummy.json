@@ -1,5 +1,6 @@
 GET api/v4/characters/get?id=3b352707-d200-4bd7-927c-ef449c725fa8&type=pure&inventories=full
 
+
 {
     "id": "3b352707-d200-4bd7-927c-ef449c725fa8", // id персонажа
     "user_id": "a029c4a8-ff3b-4fbb-9a5e-f6f6b2fc1c0a", // id пользователя
