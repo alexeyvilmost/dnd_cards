@@ -79,7 +79,7 @@ const SVGCardPreview = ({ card, width = 397, height = 280 }: SVGCardPreviewProps
         <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.1)"/>
         </filter>
-        <linearGradient id="cardBorderGradient" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="cardBorderGradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor={borderGradient.top} />
           <stop offset="100%" stopColor={borderGradient.bottom} />
         </linearGradient>

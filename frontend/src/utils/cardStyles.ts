@@ -1,6 +1,8 @@
 export const CARD_BORDER_WIDTH_PX = 6;
 export const CARD_BORDER_WIDTH_CLASS = 'border-[6px]';
 
+const CARD_BORDER_GRADIENT_ANGLE = '135deg';
+
 const CARD_BORDER_GRADIENT_COLORS: Record<string, { top: string; bottom: string }> = {
   common: { top: '#9ca3af', bottom: '#1f2937' },
   uncommon: { top: '#22c55e', bottom: '#052e16' },
@@ -12,7 +14,7 @@ const CARD_BORDER_GRADIENT_COLORS: Record<string, { top: string; bottom: string 
 const CARD_BORDER_GRADIENTS: Record<string, string> = Object.fromEntries(
   Object.entries(CARD_BORDER_GRADIENT_COLORS).map(([rarity, colors]) => [
     rarity,
-    `linear-gradient(to bottom, ${colors.top} 0%, ${colors.bottom} 100%)`,
+    `linear-gradient(${CARD_BORDER_GRADIENT_ANGLE}, ${colors.top} 0%, ${colors.bottom} 100%)`,
   ])
 );
 

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi } from '../api/client';
 import type { Card, PassiveEffect, Action } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS } from '../types';
@@ -14,28 +14,38 @@ import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
 import { hasElementalDamage } from '../utils/elementalDamage';
+import {
+  buildLibrarySearchParams,
+  parseLibrarySearchParams,
+} from '../utils/libraryUrlParams';
 
 const CardLibrary = () => {
-  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions'>('cards');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
+  const urlInitialized = useRef(false);
+  const skipFilterUrlSync = useRef(false);
+  const openingCardFromUrl = useRef(false);
+
+  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions'>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [rarityFilter, setRarityFilter] = useState<string>('');
-  const [propertiesFilter, setPropertiesFilter] = useState<string>('');
-  const [templateTypeFilter, setTemplateTypeFilter] = useState<string>('cards'); // 'all', 'cards', 'mixed', 'templates'
+  const [search, setSearch] = useState(initialFilters.search);
+  const [rarityFilter, setRarityFilter] = useState<string>(initialFilters.rarity);
+  const [propertiesFilter, setPropertiesFilter] = useState<string>(initialFilters.properties);
+  const [templateTypeFilter, setTemplateTypeFilter] = useState<string>(initialFilters.templateType);
 
   // Функция для получения цвета номера карты в зависимости от наличия эффектов
   const getCardNumberColor = (card: Card) => {
     const hasEffects = card.effects && Array.isArray(card.effects) && card.effects.length > 0;
     return hasEffects ? 'text-gray-900' : 'text-gray-400';
   };
-  const [slotFilter, setSlotFilter] = useState<string>('');
-  const [armorTypeFilter, setArmorTypeFilter] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('created_desc'); // 'rarity_asc', 'rarity_desc', 'price_asc', 'price_desc', 'created_asc', 'created_desc', 'updated_asc', 'updated_desc'
+  const [slotFilter, setSlotFilter] = useState<string>(initialFilters.slot);
+  const [armorTypeFilter, setArmorTypeFilter] = useState<string>(initialFilters.armorType);
+  const [sortBy, setSortBy] = useState<string>(initialFilters.sortBy);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
@@ -46,7 +56,7 @@ const CardLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialFilters.viewMode);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -234,6 +244,125 @@ const CardLibrary = () => {
     }
   }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
 
+  const currentFilters = useMemo(
+    () => ({
+      contentType,
+      search,
+      rarity: rarityFilter,
+      properties: propertiesFilter,
+      templateType: templateTypeFilter,
+      slot: slotFilter,
+      armorType: armorTypeFilter,
+      sortBy,
+      viewMode,
+    }),
+    [
+      contentType,
+      search,
+      rarityFilter,
+      propertiesFilter,
+      templateTypeFilter,
+      slotFilter,
+      armorTypeFilter,
+      sortBy,
+      viewMode,
+    ]
+  );
+
+  const lastWrittenParamsRef = useRef(searchParams.toString());
+
+  // Синхронизация фильтров → URL (можно скопировать ссылку и вернуться к тому же набору)
+  useEffect(() => {
+    if (!urlInitialized.current) {
+      urlInitialized.current = true;
+      lastWrittenParamsRef.current = searchParams.toString();
+      return;
+    }
+    if (skipFilterUrlSync.current) {
+      skipFilterUrlSync.current = false;
+      return;
+    }
+
+    const built = buildLibrarySearchParams(currentFilters, searchParams);
+    const cardId = searchParams.get('card');
+    if (cardId) {
+      built.set('card', cardId);
+    }
+
+    const nextStr = built.toString();
+    if (nextStr !== searchParams.toString()) {
+      lastWrittenParamsRef.current = nextStr;
+      setSearchParams(built, { replace: true });
+    }
+  }, [currentFilters, searchParams, setSearchParams]);
+
+  // Синхронизация URL → фильтры (кнопка «Назад» / прямой переход по ссылке)
+  useEffect(() => {
+    if (!urlInitialized.current) return;
+
+    const currentStr = searchParams.toString();
+    if (currentStr === lastWrittenParamsRef.current) return;
+
+    const parsed = parseLibrarySearchParams(searchParams);
+    skipFilterUrlSync.current = true;
+    setContentType(parsed.contentType);
+    setSearch(parsed.search);
+    setRarityFilter(parsed.rarity);
+    setPropertiesFilter(parsed.properties);
+    setTemplateTypeFilter(parsed.templateType);
+    setSlotFilter(parsed.slot);
+    setArmorTypeFilter(parsed.armorType);
+    setSortBy(parsed.sortBy);
+    setViewMode(parsed.viewMode);
+    lastWrittenParamsRef.current = currentStr;
+  }, [searchParams]);
+
+  // Открытие / закрытие карты по параметру ?card=
+  useEffect(() => {
+    const cardId = searchParams.get('card');
+
+    if (!cardId) {
+      if (isModalOpen) {
+        setIsModalOpen(false);
+        setSelectedCard(null);
+      }
+      return;
+    }
+
+    if (selectedCard?.id === cardId && isModalOpen) {
+      return;
+    }
+
+    const found = cards.find((c) => c.id === cardId);
+    if (found) {
+      setSelectedCard(found);
+      setIsModalOpen(true);
+      return;
+    }
+
+    if (openingCardFromUrl.current) {
+      return;
+    }
+
+    openingCardFromUrl.current = true;
+    cardsApi
+      .getCard(cardId)
+      .then((card) => {
+        setSelectedCard(card);
+        setIsModalOpen(true);
+      })
+      .catch(() => {
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('card');
+          return next;
+        }, { replace: true });
+      })
+      .finally(() => {
+        openingCardFromUrl.current = false;
+      });
+  }, [searchParams, cards, selectedCard?.id, setSearchParams]);
+
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -304,19 +433,24 @@ const CardLibrary = () => {
   const handleCardClick = (card: Card) => {
     setSelectedCard(card);
     setIsModalOpen(true);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('card', card.id);
+      lastWrittenParamsRef.current = next.toString();
+      return next;
+    }, { replace: false });
   };
 
   // Закрытие модального окна
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCard(null);
-  };
-
-  // Редактирование карточки
-  const handleEditCard = (cardId: string) => {
-    setIsModalOpen(false);
-    // Здесь можно добавить навигацию к редактированию
-    window.location.href = `/edit/${cardId}`;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('card');
+      lastWrittenParamsRef.current = next.toString();
+      return next;
+    }, { replace: true });
   };
 
   // Обработчики для эффектов
@@ -1044,7 +1178,6 @@ const CardLibrary = () => {
         card={selectedCard}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onEdit={handleEditCard}
         onDelete={handleDeleteCard}
       />
 

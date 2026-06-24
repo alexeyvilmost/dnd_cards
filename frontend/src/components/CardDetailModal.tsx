@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
@@ -8,19 +9,22 @@ import CardPreview from './CardPreview';
 import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
 import { toBlob } from 'html-to-image';
+import { getCardCaptureOptions } from '../utils/exportFonts';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import { getElementalDamageLabel, hasElementalDamage } from '../utils/elementalDamage';
 import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { FormattedText } from '../utils/formattedText';
+import { useCardTilt } from '../hooks/useCardTilt';
+import { getRarityGlowColor, getRarityGlowSettings } from '../utils/rarityGlow';
 
 interface CardDetailModalProps {
   card: Card | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (cardId: string) => void;
+  onEdit?: (cardId: string) => void;
   onDelete: (cardId: string) => void;
-  inventoryItem?: InventoryItem | null; // Информация о предмете в инвентаре
-  onEquip?: (itemId: string, isEquipped: boolean) => void; // Функция экипировки
+  inventoryItem?: InventoryItem | null;
+  onEquip?: (itemId: string, isEquipped: boolean) => void;
 }
 
 const CardDetailModal: React.FC<CardDetailModalProps> = ({
@@ -37,8 +41,27 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const {
+    cardRef: tiltRef,
+    tiltStyle,
+    isHovered: isCardHovered,
+    handleMouseMove,
+    handleMouseEnter,
+    handleMouseLeave,
+  } = useCardTilt({ maxTilt: 16, liftPx: 32, hoverScale: 1.04 });
 
-  // Обработчик для закрытия по Esc
+  const glowSettings = card ? getRarityGlowSettings(card.rarity) : null;
+  const glowColor = card ? getRarityGlowColor(card.rarity) : '#9ca3af';
+
+  // Блокируем прокрутку страницы под модалкой
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
   useEffect(() => {
     if (!isOpen) return;
     
@@ -115,24 +138,8 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         throw new Error('Не удалось найти карточку для экспорта');
       }
 
-      // Дожидаемся шрифтов и картинок, чтобы снимок не делался с незагруженным контентом
-      await document.fonts.ready;
-      await Promise.all(
-        Array.from(exportCard.querySelectorAll('img')).map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise<void>((resolve) => {
-                img.addEventListener('load', () => resolve(), { once: true });
-                img.addEventListener('error', () => resolve(), { once: true });
-              })
-        )
-      );
-
-      const blob = await toBlob(exportCard, {
-        pixelRatio: 3,
-        backgroundColor: '#ffffff',
-        cacheBust: true,
-      });
+      const captureOptions = await getCardCaptureOptions(exportCard);
+      const blob = await toBlob(exportCard, captureOptions);
 
       if (!blob) {
         throw new Error('Не удалось создать изображение');
@@ -222,19 +229,58 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
     }
   };
 
-  return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 sm:p-4"
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4"
+      style={{
+        width: '100vw',
+        height: '100dvh',
+        minHeight: '100vh',
+        top: 0,
+        left: 0,
+        margin: 0,
+      }}
       onClick={onClose}
     >
+      {/* Затемнение на весь viewport */}
       <div
-        className={`relative flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl w-full h-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden ${card.is_extended ? 'max-w-7xl' : 'max-w-6xl'}`}
+        className="absolute inset-0 bg-black/75"
+        aria-hidden
+        style={{ width: '100vw', height: '100dvh', minHeight: '100vh' }}
+      />
+
+      <div
+        className={`relative z-10 flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl w-full h-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden ${card.is_extended ? 'max-w-7xl' : 'max-w-6xl'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Левая часть: Увеличенная карточка */}
+        {/* Левая часть: карточка с 3D-наклоном и свечением */}
         <div className={`flex-shrink-0 flex items-center justify-center p-2 sm:p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
-          <div ref={cardRef} className="transform scale-100 sm:scale-110 md:scale-125 lg:scale-150 origin-center">
-            <CardPreview card={{...card, image_url: cardImage}} disableHover={true} />
+          <div
+            ref={cardRef}
+            className="relative flex items-center justify-center origin-center scale-100 sm:scale-110 md:scale-125 lg:scale-150"
+            style={{ perspective: '1200px' }}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {glowSettings && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 -translate-x-1/2 transition-all duration-300 ease-out"
+                style={{
+                  bottom: '-8%',
+                  width: `${100 * glowSettings.spread}%`,
+                  height: '45%',
+                  background: `radial-gradient(ellipse at center, ${glowColor} 0%, transparent 72%)`,
+                  opacity: isCardHovered ? glowSettings.hoverOpacity : glowSettings.idleOpacity,
+                  filter: `blur(${glowSettings.blur}px)`,
+                  transform: `translateX(-50%) scale(${isCardHovered ? 1.08 : 1})`,
+                }}
+              />
+            )}
+            <div ref={tiltRef} style={tiltStyle} className="relative z-10">
+              <CardPreview card={{ ...card, image_url: cardImage }} disableHover={true} />
+            </div>
           </div>
         </div>
 
@@ -248,11 +294,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
                 aria-label={getRaritySymbolDescription(card.rarity)}
                 style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
               >
-                {(() => {
-                  const symbol = getRaritySymbol(card.rarity);
-                  console.log(`🎯 [CARD DETAIL] Символ редкости для "${card.name}" (${card.rarity}): "${symbol}"`);
-                  return symbol;
-                })()}
+                {getRaritySymbol(card.rarity)}
               </span>
               <h2 className="font-bold text-xl sm:text-2xl md:text-3xl font-fantasy">{card.name}</h2>
             </div>
@@ -357,13 +399,14 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               )}
               <span>{isDownloading ? 'Скачивание...' : 'Скачать карту'}</span>
             </button>
-            <button
-              onClick={() => onEdit(card.id)}
+            <Link
+              to={`/edit/${card.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
+              onClick={() => onEdit?.(card.id)}
             >
               <Edit size={18} />
               <span>Изменить</span>
-            </button>
+            </Link>
             <button
               onClick={() => onDelete(card.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2"
@@ -429,8 +472,8 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
           )}
         </div>
       </div>
-
-    </div>
+    </div>,
+    document.body
   );
 };
 

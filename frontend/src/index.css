@@ -19,22 +19,22 @@
   
   .card-border-uncommon {
     @apply rounded-lg p-[6px];
-    background: linear-gradient(to bottom, #22c55e 0%, #052e16 100%);
+    background: linear-gradient(135deg, #22c55e 0%, #052e16 100%);
   }
   
   .card-border-rare {
     @apply rounded-lg p-[6px];
-    background: linear-gradient(to bottom, #3b82f6 0%, #0c1a3a 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #0c1a3a 100%);
   }
   
   .card-border-very-rare {
     @apply rounded-lg p-[6px];
-    background: linear-gradient(to bottom, #a855f7 0%, #1e1033 100%);
+    background: linear-gradient(135deg, #a855f7 0%, #1e1033 100%);
   }
   
   .card-border-artifact {
     @apply rounded-lg p-[6px];
-    background: linear-gradient(to bottom, #f59e0b 0%, #3b1a05 100%);
+    background: linear-gradient(135deg, #f59e0b 0%, #3b1a05 100%);
   }
   
   .btn-primary {

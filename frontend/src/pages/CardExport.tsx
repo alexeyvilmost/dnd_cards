@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Download, Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toPng } from 'html-to-image';
+import { getCardCaptureOptions } from '../utils/exportFonts';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
@@ -207,19 +208,6 @@ const CardExport = () => {
 
   // --- Экспорт в PDF ---
 
-  const waitForImages = async (container: HTMLElement): Promise<void> => {
-    await Promise.all(
-      Array.from(container.querySelectorAll('img')).map((img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => {
-              img.addEventListener('load', () => resolve(), { once: true });
-              img.addEventListener('error', () => resolve(), { once: true });
-            })
-      )
-    );
-  };
-
   // Рендерим карту тем же компонентом, что и превью, и снимаем её в PNG
   const renderAndCapture = async (card: Card): Promise<string> => {
     setCaptureCard(card);
@@ -231,14 +219,8 @@ const CardExport = () => {
       throw new Error('Не удалось отрендерить карту для экспорта');
     }
 
-    await document.fonts.ready;
-    await waitForImages(node);
-
-    return toPng(node, {
-      pixelRatio: 3,
-      backgroundColor: '#ffffff',
-      cacheBust: true,
-    });
+    const captureOptions = await getCardCaptureOptions(node);
+    return toPng(node, captureOptions);
   };
 
   const handleExport = async () => {
