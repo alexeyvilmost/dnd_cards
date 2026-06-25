@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +21,8 @@ const (
 	RarityRare     Rarity = "rare"      // Редкое (синий)
 	RarityVeryRare Rarity = "very_rare" // Очень редкое (фиолетовый)
 	RarityArtifact Rarity = "artifact"  // Артефакт (оранжевый)
+	RarityRelic    Rarity = "relic"     // Реликвия (красный)
+	RarityCustom   Rarity = "custom"    // Кастомная (цвет задаётся в custom_rarity_color)
 )
 
 // ItemType - тип предмета
@@ -273,6 +276,7 @@ type Card struct {
 	ImageGenerated               bool           `json:"image_generated" gorm:"type:boolean;default:false"`
 	ImageGenerationPrompt        string         `json:"image_generation_prompt" gorm:"type:text"`
 	Rarity                       Rarity         `json:"rarity" gorm:"not null"`
+	CustomRarityColor            *string        `json:"custom_rarity_color" gorm:"type:varchar(7)"`
 	CardNumber                   string         `json:"card_number" gorm:"uniqueIndex;not null"`
 	Price                        *int           `json:"price" gorm:"type:int"`
 	Weight                       *float64       `json:"weight" gorm:"type:decimal(5,2)"`
@@ -316,6 +320,7 @@ type CreateCardRequest struct {
 	Description                  string         `json:"description" binding:"required"`
 	DetailedDescription          *string        `json:"detailed_description"`
 	Rarity                       Rarity         `json:"rarity" binding:"required"`
+	CustomRarityColor            *string        `json:"custom_rarity_color"`
 	ImageURL                     string         `json:"image_url"`
 	Price                        *int           `json:"price"`
 	Weight                       *float64       `json:"weight"`
@@ -356,6 +361,7 @@ type UpdateCardRequest struct {
 	Description                  string         `json:"description"`
 	DetailedDescription          *string        `json:"detailed_description"`
 	Rarity                       Rarity         `json:"rarity"`
+	CustomRarityColor            *string        `json:"custom_rarity_color"`
 	ImageURL                     string         `json:"image_url"`
 	Price                        *int           `json:"price"`
 	Weight                       *float64       `json:"weight"`
@@ -409,6 +415,7 @@ type CardResponse struct {
 	DetailedDescription          *string        `json:"detailed_description"`
 	ImageURL                     string         `json:"image_url"`
 	Rarity                       Rarity         `json:"rarity"`
+	CustomRarityColor            *string        `json:"custom_rarity_color"`
 	CardNumber                   string         `json:"card_number"`
 	Price                        *int           `json:"price"`
 	Weight                       *float64       `json:"weight"`
@@ -452,6 +459,10 @@ func (r Rarity) GetColor() string {
 		return "#8000FF" // Фиолетовый
 	case RarityArtifact:
 		return "#FF8000" // Оранжевый
+	case RarityRelic:
+		return "#FF0000" // Красный
+	case RarityCustom:
+		return "#FF00FF" // Плейсхолдер для кастомной
 	default:
 		return "#FFFFFF"
 	}
@@ -470,6 +481,10 @@ func (r Rarity) GetRarityName() string {
 		return "Очень редкое"
 	case RarityArtifact:
 		return "Артефакт"
+	case RarityRelic:
+		return "Реликвия"
+	case RarityCustom:
+		return "Кастомная"
 	default:
 		return "Неизвестно"
 	}
@@ -614,7 +629,7 @@ func IsValidEquipmentSlot(slot EquipmentSlot) bool {
 // IsValidRarity - проверяет, является ли редкость допустимой
 func IsValidRarity(rarity Rarity) bool {
 	switch rarity {
-	case RarityCommon, RarityUncommon, RarityRare, RarityVeryRare, RarityArtifact:
+	case RarityCommon, RarityUncommon, RarityRare, RarityVeryRare, RarityArtifact, RarityRelic, RarityCustom:
 		return true
 	default:
 		return false
@@ -624,10 +639,77 @@ func IsValidRarity(rarity Rarity) bool {
 // IsValidRarityString - проверяет строку редкости
 func IsValidRarityString(rarity string) bool {
 	switch Rarity(rarity) {
-	case RarityCommon, RarityUncommon, RarityRare, RarityVeryRare, RarityArtifact:
+	case RarityCommon, RarityUncommon, RarityRare, RarityVeryRare, RarityArtifact, RarityRelic, RarityCustom:
 		return true
 	default:
 		return false
+	}
+}
+
+var hexColorRegex = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+
+// IsValidHexColor проверяет формат HEX-цвета (#RRGGBB).
+func IsValidHexColor(color string) bool {
+	return hexColorRegex.MatchString(strings.TrimSpace(color))
+}
+
+// ResolveCustomRarityColor определяет цвет для кастомной редкости при создании/обновлении.
+func ResolveCustomRarityColor(rarity Rarity, requested *string, existing *string) (*string, error) {
+	if rarity != RarityCustom {
+		return nil, nil
+	}
+	if requested != nil && strings.TrimSpace(*requested) != "" {
+		if !IsValidHexColor(*requested) {
+			return nil, fmt.Errorf("недопустимый формат цвета (ожидается #RRGGBB)")
+		}
+		normalized := strings.ToLower(strings.TrimSpace(*requested))
+		return &normalized, nil
+	}
+	if existing != nil && strings.TrimSpace(*existing) != "" {
+		return existing, nil
+	}
+	return nil, fmt.Errorf("для кастомной редкости необходимо указать custom_rarity_color")
+}
+
+// ToCardResponse преобразует модель карты в API-ответ.
+func (card Card) ToCardResponse() CardResponse {
+	return CardResponse{
+		ID:                           card.ID,
+		Name:                         card.Name,
+		Properties:                   card.Properties,
+		Description:                  card.Description,
+		DetailedDescription:          card.DetailedDescription,
+		ImageURL:                     card.ImageURL,
+		Rarity:                       card.Rarity,
+		CustomRarityColor:            card.CustomRarityColor,
+		CardNumber:                   card.CardNumber,
+		Price:                        card.Price,
+		Weight:                       card.Weight,
+		BonusType:                    card.BonusType,
+		BonusValue:                   card.BonusValue,
+		DamageType:                   card.DamageType,
+		ElementalDamageValue:         card.ElementalDamageValue,
+		ElementalDamageType:          card.ElementalDamageType,
+		DefenseType:                  card.DefenseType,
+		Type:                         card.Type,
+		WeaponType:                   card.WeaponType,
+		DescriptionFontSize:          card.DescriptionFontSize,
+		TextAlignment:                card.TextAlignment,
+		TextFontSize:                 card.TextFontSize,
+		ShowDetailedDescription:      card.ShowDetailedDescription,
+		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
+		IsExtended:                   card.IsExtended,
+		Attunement:                   card.Attunement,
+		RequiresAttunement:           card.RequiresAttunement,
+		Range:                        card.Range,
+		Tags:                         card.Tags,
+		IsTemplate:                   card.IsTemplate,
+		Slot:                         card.Slot,
+		Effects:                      card.Effects,
+		BattleProfile:                card.BattleProfile,
+		CreatedAt:                    card.CreatedAt,
+		UpdatedAt:                    card.UpdatedAt,
 	}
 }
 

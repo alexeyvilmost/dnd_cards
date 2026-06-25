@@ -67,6 +67,8 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
       case 'rare': return 'text-blue-600';
       case 'very_rare': return 'text-purple-600';
       case 'artifact': return 'text-orange-600';
+      case 'relic': return 'text-red-600';
+      case 'custom': return '';
       default: return 'text-gray-600';
     }
   };
@@ -78,6 +80,8 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
       case 'rare': return 'group-hover:shadow-blue-400/50';
       case 'very_rare': return 'group-hover:shadow-purple-400/50';
       case 'artifact': return 'group-hover:shadow-orange-400/50';
+      case 'relic': return 'group-hover:shadow-red-400/50';
+      case 'custom': return 'group-hover:shadow-red-400/40';
       default: return 'group-hover:shadow-gray-400/50';
     }
   };
@@ -90,6 +94,8 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
     switch (rarity) {
       case 'very_rare': return `${baseClass} title-gradient-very-rare`;
       case 'artifact': return `${baseClass} title-gradient-artifact`;
+      case 'relic': return `${baseClass} ${rarityColor}`;
+      case 'custom': return `${baseClass}`;
       default: return `${baseClass} ${rarityColor}`;
     }
   };
@@ -99,14 +105,22 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
     switch (rarity) {
       case 'very_rare': return 'hover:glow-very-rare';
       case 'artifact': return 'hover:glow-artifact';
+      case 'relic': return 'hover:glow-relic';
       default: return '';
     }
+  };
+
+  const getTitleStyle = (rarity: string): React.CSSProperties | undefined => {
+    if (rarity === 'custom' && card.custom_rarity_color) {
+      return { color: card.custom_rarity_color };
+    }
+    return undefined;
   };
 
   return (
     <div
       className={`card-preview rounded-lg shadow-md ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} ${onClick ? 'cursor-pointer' : ''}`}
-      style={getCardBorderWrapperStyle(card.rarity)}
+      style={getCardBorderWrapperStyle(card.rarity, card.custom_rarity_color)}
       onClick={onClick}
     >
       <div className="relative bg-white rounded-[6px] overflow-hidden flex flex-col h-full w-full">
@@ -116,7 +130,10 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           title={getRaritySymbolDescription(card.rarity)}
           aria-label={getRaritySymbolDescription(card.rarity)}
           className={`${getRarityColor(card.rarity)} drop-shadow-lg`}
-          style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+          style={{
+            textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+            ...(card.rarity === 'custom' && card.custom_rarity_color ? { color: card.custom_rarity_color } : {}),
+          }}
         >
           {getRaritySymbol(card.rarity)}
         </span>
@@ -141,7 +158,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             <div className="w-1/2 flex flex-col">
               {/* Заголовок только над левой половиной */}
               <div className="px-1 py-0.5 text-center">
-                <h3 className={getTitleClass(card.rarity, card.name)}>
+                <h3 className={getTitleClass(card.rarity, card.name)} style={getTitleStyle(card.rarity)}>
                   {card.name}
                 </h3>
               </div>
@@ -218,7 +235,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
         <>
           {/* Заголовок */}
           <div className="px-1 py-0.5 text-center">
-            <h3 className={getTitleClass(card.rarity, card.name)}>
+            <h3 className={getTitleClass(card.rarity, card.name)} style={getTitleStyle(card.rarity)}>
               {card.name}
             </h3>
             <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>

@@ -2,25 +2,28 @@
 export const getRaritySymbol = (rarity: string): string => {
   switch (rarity) {
     case 'common':
-      return '•'; // Точка
+      return '•';
     case 'uncommon':
-      return ':'; // Двоеточие
+      return ':';
     case 'rare':
-      return '✦'; // Звезда
+      return '✦';
     case 'epic':
-      return '✧'; // Пустая звезда
+      return '✧';
     case 'legendary':
-      return '✩'; // Звезда с тенью
+      return '✩';
     case 'very_rare':
-      return '✪'; // Звезда в круге
+      return '✪';
     case 'artifact':
-      return '✫'; // Звезда с лучами
+      return '✫';
+    case 'relic':
+      return '✬';
+    case 'custom':
+      return '◇';
     default:
-      return '•'; // По умолчанию точка
+      return '•';
   }
 };
 
-// Функция для получения описания символа редкости для screen readers
 export const getRaritySymbolDescription = (rarity: string): string => {
   switch (rarity) {
     case 'common':
@@ -37,6 +40,10 @@ export const getRaritySymbolDescription = (rarity: string): string => {
       return 'Очень редкая редкость';
     case 'artifact':
       return 'Артефакт';
+    case 'relic':
+      return 'Реликвия';
+    case 'custom':
+      return 'Кастомная редкость';
     default:
       return 'Неизвестная редкость';
   }

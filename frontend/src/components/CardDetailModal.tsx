@@ -51,7 +51,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   } = useCardTilt({ maxTilt: 16, liftPx: 32, hoverScale: 1.04 });
 
   const glowSettings = card ? getRarityGlowSettings(card.rarity) : null;
-  const glowColor = card ? getRarityGlowColor(card.rarity) : '#9ca3af';
+  const glowColor = card ? getRarityGlowColor(card.rarity, card.custom_rarity_color) : '#9ca3af';
 
   // Блокируем прокрутку страницы под модалкой
   useEffect(() => {
@@ -165,6 +165,10 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       case 'rare': return 'Редкая';
       case 'very_rare': return 'Очень редкая';
       case 'artifact': return 'Артефакт';
+      case 'relic': return 'Реликвия';
+      case 'custom': return card.custom_rarity_color
+        ? `Кастомная (${card.custom_rarity_color})`
+        : 'Кастомная';
       default: return rarity;
     }
   };

@@ -22,6 +22,12 @@ export const getRarityColor = (rarity: string): string => {
     case 'artifact':
     case 'артефакт':
       return 'text-orange-600'; // Оранжевый
+    case 'relic':
+    case 'реликвия':
+      return 'text-red-600';
+    case 'custom':
+    case 'кастомная':
+      return 'text-gray-700';
     default:
       return 'text-gray-900'; // По умолчанию черный
   }
@@ -51,6 +57,12 @@ export const getRarityBgColor = (rarity: string): string => {
     case 'artifact':
     case 'артефакт':
       return 'bg-orange-50 border-orange-200';
+    case 'relic':
+    case 'реликвия':
+      return 'bg-red-50 border-red-200';
+    case 'custom':
+    case 'кастомная':
+      return 'bg-gray-50 border-gray-300';
     default:
       return 'bg-gray-50 border-gray-200';
   }
@@ -80,6 +92,12 @@ export const getRarityBorderColor = (rarity: string): string => {
     case 'artifact':
     case 'артефакт':
       return 'border-l-4 border-l-orange-500'; // Оранжевая левая граница
+    case 'relic':
+    case 'реликвия':
+      return 'border-l-4 border-l-red-500';
+    case 'custom':
+    case 'кастомная':
+      return 'border-l-4 border-l-gray-500';
     default:
       return 'border-l-4 border-l-gray-400'; // По умолчанию серая
   }
@@ -109,6 +127,12 @@ export const getRarityBadgeColor = (rarity: string): string => {
     case 'artifact':
     case 'артефакт':
       return 'bg-orange-100 text-orange-800';
+    case 'relic':
+    case 'реликвия':
+      return 'bg-red-100 text-red-800';
+    case 'custom':
+    case 'кастомная':
+      return 'bg-gray-100 text-gray-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }

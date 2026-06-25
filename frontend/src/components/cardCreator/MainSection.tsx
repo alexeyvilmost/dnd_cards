@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Control, Controller, FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { CreateCardRequest } from '../../types';
+import { CreateCardRequest, DEFAULT_CUSTOM_RARITY_COLOR, type Rarity } from '../../types';
 import RaritySelector from '../RaritySelector';
 import { FormattedTextarea } from '../FormattedTextarea';
 
@@ -42,7 +42,16 @@ export const MainSection: React.FC<MainSectionProps> = ({ register, control, err
         </label>
         <RaritySelector
           value={memoizedWatchedValues.rarity}
-          onChange={(rarity) => setValue('rarity', rarity)}
+          customColor={memoizedWatchedValues.custom_rarity_color}
+          onChange={(rarity) => {
+            setValue('rarity', rarity);
+            if (rarity !== 'custom') {
+              setValue('custom_rarity_color', null);
+            } else if (!memoizedWatchedValues.custom_rarity_color) {
+              setValue('custom_rarity_color', DEFAULT_CUSTOM_RARITY_COLOR);
+            }
+          }}
+          onCustomColorChange={(color) => setValue('custom_rarity_color', color)}
         />
       </div>
 

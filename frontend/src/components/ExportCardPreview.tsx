@@ -86,7 +86,7 @@ const ExportCardPreview = ({ card, className = '' }: ExportCardPreviewProps) => 
   };
 
   const wrapperStyle = {
-    ...getCardBorderWrapperStyle(card.rarity),
+    ...getCardBorderWrapperStyle(card.rarity, card.custom_rarity_color),
     borderRadius: '8px',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     width: isExtended ? '397px' : '198px',

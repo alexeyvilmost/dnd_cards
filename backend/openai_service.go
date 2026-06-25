@@ -241,7 +241,7 @@ func getMagicalAccentHint(rarity, itemType, cardName, description string) string
 
 // shouldSuggestRunes — руны только для особо редких предметов, где они логичны
 func shouldSuggestRunes(itemType, cardName, description, rarity string) bool {
-	if rarity != "very_rare" && rarity != "artifact" {
+	if rarity != "very_rare" && rarity != "artifact" && rarity != "relic" {
 		return false
 	}
 
@@ -365,6 +365,10 @@ func getRarityBlobColor(rarity string) string {
 		return "бледно-сиреневого (лавандового) оттенка"
 	case "artifact":
 		return "бледно-золотистого (янтарного) оттенка"
+	case "relic":
+		return "бледно-красного оттенка"
+	case "custom":
+		return "нейтрального приглушённого оттенка"
 	default:
 		return "нейтрального серого или тёплого бежевого оттенка"
 	}
@@ -381,6 +385,10 @@ func getRarityColor(rarity string) string {
 		return "фиолетовый"
 	case "artifact":
 		return "золотой"
+	case "relic":
+		return "красный"
+	case "custom":
+		return "акцентный"
 	default:
 		return "белый"
 	}

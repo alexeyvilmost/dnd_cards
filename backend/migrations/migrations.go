@@ -176,6 +176,12 @@ func GetAllMigrations() []Migration {
 			Up:          addBattleProfileField,
 			Down:        removeBattleProfileField,
 		},
+		{
+			Version:     "029_add_custom_rarity_color",
+			Description: "Add custom_rarity_color field to cards table for custom rarity",
+			Up:          addCustomRarityColorField,
+			Down:        removeCustomRarityColorField,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1467,6 +1473,28 @@ func removeBattleProfileField(db *sql.DB) error {
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to execute query '%s': %w", query, err)
 		}
+	}
+	return nil
+}
+
+// addCustomRarityColorField добавляет поле custom_rarity_color в таблицу cards
+func addCustomRarityColorField(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS custom_rarity_color VARCHAR(7)",
+		"COMMENT ON COLUMN cards.custom_rarity_color IS 'HEX-цвет (#RRGGBB) для редкости custom'",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// removeCustomRarityColorField удаляет поле custom_rarity_color из таблицы cards
+func removeCustomRarityColorField(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE cards DROP COLUMN IF EXISTS custom_rarity_color"); err != nil {
+		return fmt.Errorf("failed to drop custom_rarity_color: %w", err)
 	}
 	return nil
 }

@@ -113,45 +113,9 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	log.Printf("Загружено карточек: %d", len(cards))
 
 	// Преобразование в ответы
-	responses := make([]CardResponse, 0)
+	responses := make([]CardResponse, 0, len(cards))
 	for _, card := range cards {
-		responses = append(responses, CardResponse{
-			ID:                           card.ID,
-			Name:                         card.Name,
-			Properties:                   card.Properties,
-			Description:                  card.Description,
-			DetailedDescription:          card.DetailedDescription,
-			ImageURL:                     card.ImageURL,
-			Rarity:                       card.Rarity,
-			CardNumber:                   card.CardNumber,
-			Price:                        card.Price,
-			Weight:                       card.Weight,
-			BonusType:                    card.BonusType,
-			BonusValue:                   card.BonusValue,
-			DamageType:                   card.DamageType,
-			ElementalDamageValue:         card.ElementalDamageValue,
-			ElementalDamageType:          card.ElementalDamageType,
-			DefenseType:                  card.DefenseType,
-			Type:                         card.Type,
-			WeaponType:                   card.WeaponType,
-			DescriptionFontSize:          card.DescriptionFontSize,
-			TextAlignment:                card.TextAlignment,
-			TextFontSize:                 card.TextFontSize,
-			ShowDetailedDescription:      card.ShowDetailedDescription,
-			DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
-			DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
-			IsExtended:                   card.IsExtended,
-			Attunement:                   card.Attunement,
-			RequiresAttunement:           card.RequiresAttunement,
-			Range:                        card.Range,
-			Tags:                         card.Tags,
-			IsTemplate:                   card.IsTemplate,
-			Slot:                         card.Slot,
-			Effects:                      card.Effects,
-			BattleProfile:                card.BattleProfile,
-			CreatedAt:                    card.CreatedAt,
-			UpdatedAt:                    card.UpdatedAt,
-		})
+		responses = append(responses, card.ToCardResponse())
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -180,45 +144,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 		return
 	}
 
-	response := CardResponse{
-		ID:                           card.ID,
-		Name:                         card.Name,
-		Properties:                   card.Properties,
-		Description:                  card.Description,
-		DetailedDescription:          card.DetailedDescription,
-		ImageURL:                     card.ImageURL,
-		Rarity:                       card.Rarity,
-		CardNumber:                   card.CardNumber,
-		Price:                        card.Price,
-		Weight:                       card.Weight,
-		BonusType:                    card.BonusType,
-		BonusValue:                   card.BonusValue,
-		DamageType:                   card.DamageType,
-		ElementalDamageValue:         card.ElementalDamageValue,
-		ElementalDamageType:          card.ElementalDamageType,
-		DefenseType:                  card.DefenseType,
-		Type:                         card.Type,
-		WeaponType:                   card.WeaponType,
-		DescriptionFontSize:          card.DescriptionFontSize,
-		TextAlignment:                card.TextAlignment,
-		TextFontSize:                 card.TextFontSize,
-		ShowDetailedDescription:      card.ShowDetailedDescription,
-		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
-		IsExtended:                   card.IsExtended,
-		Attunement:                   card.Attunement,
-		RequiresAttunement:           card.RequiresAttunement,
-		Range:                        card.Range,
-		Tags:                         card.Tags,
-		IsTemplate:                   card.IsTemplate,
-		Slot:                         card.Slot,
-		Effects:                      card.Effects,
-		BattleProfile:                card.BattleProfile,
-		CreatedAt:                    card.CreatedAt,
-		UpdatedAt:                    card.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, card.ToCardResponse())
 }
 
 // GetCardBattleStats - нормализация карточки к боевому профилю для сервиса battle
@@ -403,6 +329,12 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
+	customRarityColor, colorErr := ResolveCustomRarityColor(req.Rarity, req.CustomRarityColor, nil)
+	if colorErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": colorErr.Error()})
+		return
+	}
+
 	if req.BonusType != nil && !IsValidBonusType(*req.BonusType) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип бонуса"})
 		return
@@ -453,6 +385,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Description:                  req.Description,
 		DetailedDescription:          req.DetailedDescription,
 		Rarity:                       req.Rarity,
+		CustomRarityColor:            customRarityColor,
 		ImageURL:                     req.ImageURL,
 		Price:                        req.Price,
 		Weight:                       req.Weight,
@@ -492,43 +425,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
-	response := CardResponse{
-		ID:                           card.ID,
-		Name:                         card.Name,
-		Properties:                   card.Properties,
-		Description:                  card.Description,
-		DetailedDescription:          card.DetailedDescription,
-		ImageURL:                     card.ImageURL,
-		Rarity:                       card.Rarity,
-		CardNumber:                   card.CardNumber,
-		Price:                        card.Price,
-		Weight:                       card.Weight,
-		BonusType:                    card.BonusType,
-		BonusValue:                   card.BonusValue,
-		DamageType:                   card.DamageType,
-		ElementalDamageValue:         card.ElementalDamageValue,
-		ElementalDamageType:          card.ElementalDamageType,
-		DefenseType:                  card.DefenseType,
-		Type:                         card.Type,
-		WeaponType:                   card.WeaponType,
-		DescriptionFontSize:          card.DescriptionFontSize,
-		TextAlignment:                card.TextAlignment,
-		TextFontSize:                 card.TextFontSize,
-		ShowDetailedDescription:      card.ShowDetailedDescription,
-		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
-		IsExtended:                   card.IsExtended,
-		Attunement:                   card.Attunement,
-		RequiresAttunement:           card.RequiresAttunement,
-		Range:                        card.Range,
-		Slot:                         card.Slot,
-		Effects:                      card.Effects,
-		BattleProfile:                card.BattleProfile,
-		CreatedAt:                    card.CreatedAt,
-		UpdatedAt:                    card.UpdatedAt,
-	}
-
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, card.ToCardResponse())
 }
 
 // UpdateCard - обновление карточки
@@ -709,49 +606,20 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		card.BattleProfile = req.BattleProfile
 	}
 
+	customRarityColor, colorErr := ResolveCustomRarityColor(card.Rarity, req.CustomRarityColor, card.CustomRarityColor)
+	if colorErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": colorErr.Error()})
+		return
+	}
+	card.CustomRarityColor = customRarityColor
+
 	if err := cc.db.Save(&card).Error; err != nil {
 		log.Printf("Ошибка обновления карточки %s: %v", id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
 		return
 	}
 
-	response := CardResponse{
-		ID:                           card.ID,
-		Name:                         card.Name,
-		Properties:                   card.Properties,
-		Description:                  card.Description,
-		DetailedDescription:          card.DetailedDescription,
-		ImageURL:                     card.ImageURL,
-		Rarity:                       card.Rarity,
-		CardNumber:                   card.CardNumber,
-		Price:                        card.Price,
-		Weight:                       card.Weight,
-		BonusType:                    card.BonusType,
-		BonusValue:                   card.BonusValue,
-		DamageType:                   card.DamageType,
-		ElementalDamageValue:         card.ElementalDamageValue,
-		ElementalDamageType:          card.ElementalDamageType,
-		DefenseType:                  card.DefenseType,
-		Type:                         card.Type,
-		WeaponType:                   card.WeaponType,
-		DescriptionFontSize:          card.DescriptionFontSize,
-		TextAlignment:                card.TextAlignment,
-		TextFontSize:                 card.TextFontSize,
-		ShowDetailedDescription:      card.ShowDetailedDescription,
-		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
-		IsExtended:                   card.IsExtended,
-		Attunement:                   card.Attunement,
-		RequiresAttunement:           card.RequiresAttunement,
-		Range:                        card.Range,
-		Slot:                         card.Slot,
-		Effects:                      card.Effects,
-		BattleProfile:                card.BattleProfile,
-		CreatedAt:                    card.CreatedAt,
-		UpdatedAt:                    card.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, card.ToCardResponse())
 }
 
 // DeleteCard - удаление карточки
@@ -857,32 +725,7 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 
 	var responses []CardResponse
 	for _, card := range cards {
-		responses = append(responses, CardResponse{
-			ID:                   card.ID,
-			Name:                 card.Name,
-			Properties:           card.Properties,
-			Description:          card.Description,
-			DetailedDescription:  card.DetailedDescription,
-			ImageURL:             card.ImageURL,
-			Rarity:               card.Rarity,
-			CardNumber:           card.CardNumber,
-			Price:                card.Price,
-			Weight:               card.Weight,
-			BonusType:            card.BonusType,
-			BonusValue:           card.BonusValue,
-			DamageType:           card.DamageType,
-			ElementalDamageValue: card.ElementalDamageValue,
-			ElementalDamageType:  card.ElementalDamageType,
-			Type:                 card.Type,
-			WeaponType:           card.WeaponType,
-			RequiresAttunement:   card.RequiresAttunement,
-			Range:                card.Range,
-			Slot:                 card.Slot,
-			Effects:              card.Effects,
-			BattleProfile:        card.BattleProfile,
-			CreatedAt:            card.CreatedAt,
-			UpdatedAt:            card.UpdatedAt,
-		})
+		responses = append(responses, card.ToCardResponse())
 	}
 
 	c.JSON(http.StatusOK, gin.H{

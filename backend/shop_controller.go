@@ -103,7 +103,7 @@ func hasTag(card *Card, tag string) bool {
 
 func rarityGEUncommon(r Rarity) bool {
 	switch r {
-	case RarityUncommon, RarityRare, RarityVeryRare, RarityArtifact:
+	case RarityUncommon, RarityRare, RarityVeryRare, RarityArtifact, RarityRelic, RarityCustom:
 		return true
 	default:
 		return false
@@ -290,37 +290,5 @@ func (sc *ShopController) GetShop(c *gin.Context) {
 }
 
 func toCardResponse(card Card) CardResponse {
-	return CardResponse{
-		ID:                           card.ID,
-		Name:                         card.Name,
-		Properties:                   card.Properties,
-		Description:                  card.Description,
-		DetailedDescription:          card.DetailedDescription,
-		ImageURL:                     card.ImageURL,
-		Rarity:                       card.Rarity,
-		CardNumber:                   card.CardNumber,
-		Price:                        card.Price,
-		Weight:                       card.Weight,
-		BonusType:                    card.BonusType,
-		BonusValue:                   card.BonusValue,
-		DamageType:                   card.DamageType,
-		DefenseType:                  card.DefenseType,
-		Type:                         card.Type,
-		DescriptionFontSize:          card.DescriptionFontSize,
-		TextAlignment:                card.TextAlignment,
-		TextFontSize:                 card.TextFontSize,
-		ShowDetailedDescription:      card.ShowDetailedDescription,
-		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
-		IsExtended:                   card.IsExtended,
-		Attunement:                   card.Attunement,
-		RequiresAttunement:           card.RequiresAttunement,
-		Range:                        card.Range,
-		Tags:                         card.Tags,
-		IsTemplate:                   card.IsTemplate,
-		Slot:                         card.Slot,
-		Effects:                      card.Effects,
-		CreatedAt:                    card.CreatedAt,
-		UpdatedAt:                    card.UpdatedAt,
-	}
+	return card.ToCardResponse()
 }

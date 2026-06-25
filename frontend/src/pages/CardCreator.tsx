@@ -48,6 +48,7 @@ const CardCreator = () => {
     defaultValues: {
       name: searchParams.get('name') || 'Название карты',
       rarity: 'common',
+      custom_rarity_color: null,
       properties: searchParams.get('properties') ? searchParams.get('properties')!.split(',') as Properties : [],
       description: searchParams.get('description') || 'Описание эффекта',
       price: searchParams.get('price') ? parseInt(searchParams.get('price')!) : null,
@@ -106,6 +107,7 @@ const CardCreator = () => {
           reset({
             name: card.name,
             rarity: card.rarity,
+            custom_rarity_color: card.custom_rarity_color || null,
             properties: card.properties || [],
             description: card.description,
             detailed_description: card.detailed_description || null,
@@ -271,6 +273,7 @@ const CardCreator = () => {
         description: data.description || 'Описание эффекта',
         detailed_description: data.detailed_description || null,
         rarity: data.rarity || 'common',
+        custom_rarity_color: data.rarity === 'custom' ? (data.custom_rarity_color || null) : null,
         properties: data.properties && data.properties.length > 0 ? data.properties : null,
         price: data.price || null,
         weight: data.weight || null,
@@ -364,6 +367,7 @@ const CardCreator = () => {
       description: formData.description || 'Описание эффекта',
       detailed_description: formData.detailed_description || null,
       rarity: formData.rarity || 'common',
+      custom_rarity_color: formData.rarity === 'custom' ? (formData.custom_rarity_color || null) : null,
       properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
       price: formData.price || null,
       weight: formData.weight || null,

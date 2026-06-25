@@ -557,6 +557,12 @@ const CardLibrary = () => {
       case 'artifact':
       case 'артефакт':
         return 'border-l-orange-500';
+      case 'relic':
+      case 'реликвия':
+        return 'border-l-red-500';
+      case 'custom':
+      case 'кастомная':
+        return 'border-l-gray-500';
       default:
         return 'border-l-gray-400'; // По умолчанию серая
     }

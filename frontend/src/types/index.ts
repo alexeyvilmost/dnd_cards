@@ -1,4 +1,4 @@
-export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact';
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact' | 'relic' | 'custom';
 export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
@@ -33,6 +33,7 @@ export interface Card {
   detailed_description?: string | null;
   image_url?: string;
   rarity: Rarity;
+  custom_rarity_color?: string | null;
   card_number: string;
   price?: number | null;
   weight?: number | null;
@@ -75,6 +76,7 @@ export interface CreateCardRequest {
   description: string;
   detailed_description?: string | null;
   rarity: Rarity;
+  custom_rarity_color?: string | null;
   price?: number | null;
   weight?: number | null;
   bonus_type?: BonusType | null;
@@ -115,6 +117,7 @@ export interface UpdateCardRequest {
   detailed_description?: string | null;
   image_url?: string;
   rarity?: Rarity;
+  custom_rarity_color?: string | null;
   price?: number | null;
   weight?: number | null;
   bonus_type?: BonusType | null;
@@ -188,7 +191,11 @@ export const RARITY_OPTIONS = [
   { value: 'rare', label: 'Редкое', color: '#0080FF' },
   { value: 'very_rare', label: 'Очень редкое', color: '#8000FF' },
   { value: 'artifact', label: 'Артефакт', color: '#FF8000' },
+  { value: 'relic', label: 'Реликвия', color: '#FF0000' },
+  { value: 'custom', label: 'Кастомная', color: '#FF00FF' },
 ] as const;
+
+export const DEFAULT_CUSTOM_RARITY_COLOR = '#e11d48';
 
 export const PROPERTIES_OPTIONS = [
   { value: 'consumable', label: 'Расходуемое' },
