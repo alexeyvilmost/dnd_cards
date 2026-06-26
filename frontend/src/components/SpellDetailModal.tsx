@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { Spell } from '../types';
 import {
@@ -13,7 +14,6 @@ interface SpellDetailModalProps {
   spell: Spell | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (spellId: string) => void;
   onDelete: (spellId: string) => void;
 }
 
@@ -26,7 +26,6 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   spell,
   isOpen,
   onClose,
-  onEdit,
   onDelete,
 }) => {
   useEffect(() => {
@@ -167,13 +166,13 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-200">
-            <button
-              onClick={() => onEdit(spell.id)}
+            <Link
+              to={`/spell-creator?edit=${spell.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
             >
               <Edit size={18} />
               <span>Редактировать</span>
-            </button>
+            </Link>
             <button
               onClick={() => onDelete(spell.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2"

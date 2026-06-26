@@ -586,11 +586,6 @@ const CardLibrary = () => {
     setSelectedSpell(null);
   };
 
-  const handleEditSpell = (spellId: string) => {
-    setIsSpellModalOpen(false);
-    window.location.href = `/spell-creator?edit=${spellId}`;
-  };
-
   const handleDeleteSpell = async (spellId: string) => {
     if (!confirm('Вы уверены, что хотите удалить это заклинание?')) return;
 
@@ -1469,7 +1464,6 @@ const CardLibrary = () => {
         spell={selectedSpell}
         isOpen={isSpellModalOpen}
         onClose={handleCloseSpellModal}
-        onEdit={handleEditSpell}
         onDelete={handleDeleteSpell}
       />
     </div>

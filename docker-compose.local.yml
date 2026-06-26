@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: dnd_cards_db_local
+    environment:
+      POSTGRES_DB: dnd_cards
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - dnd_cards_pg_local:/var/lib/postgresql/data
+    networks:
+      - dnd_cards_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dnd_cards"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dnd_cards_backend_local
+    environment:
+      PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: dnd_cards
+      DB_SSLMODE: disable
+      JWT_SECRET: local_dev_secret_change_me
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dnd_cards_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080
+    container_name: dnd_cards_frontend_local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - dnd_cards_network
+    restart: unless-stopped
+
+volumes:
+  dnd_cards_pg_local:
+
+networks:
+  dnd_cards_network:
+    driver: bridge
