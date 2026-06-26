@@ -52,14 +52,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Токен недействителен, удаляем его из localStorage
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-      // Перенаправляем на страницу входа
-      window.location.href = '/login';
-    }
-    
+    // ВНИМАНИЕ: авторизация временно отключена — не выкидываем на /login при 401.
     if (error.response?.data?.error) {
       throw new Error(error.response.data.error);
     }
@@ -220,6 +213,9 @@ export const spellsApi = {
     level?: number;
     school?: string;
     class?: string;
+    subclass?: string;
+    concentration?: string;
+    ritual?: string;
     search?: string;
     sort_by?: string;
   }): Promise<SpellsResponse> => {

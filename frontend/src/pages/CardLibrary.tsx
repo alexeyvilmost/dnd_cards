@@ -3,7 +3,7 @@ import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from
 import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi, spellsApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel } from '../types';
+import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
@@ -49,6 +49,13 @@ const CardLibrary = () => {
   const [slotFilter, setSlotFilter] = useState<string>(initialFilters.slot);
   const [armorTypeFilter, setArmorTypeFilter] = useState<string>(initialFilters.armorType);
   const [sortBy, setSortBy] = useState<string>(initialFilters.sortBy);
+  // Фильтры заклинаний
+  const [spellLevel, setSpellLevel] = useState<string>('');
+  const [spellClass, setSpellClass] = useState<string>('');
+  const [spellSubclass, setSpellSubclass] = useState<string>('');
+  const [spellSchool, setSpellSchool] = useState<string>('');
+  const [spellConcentration, setSpellConcentration] = useState<string>('');
+  const [spellRitual, setSpellRitual] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
@@ -63,6 +70,7 @@ const CardLibrary = () => {
   const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialFilters.viewMode);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+  const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Загрузка карточек
@@ -246,7 +254,12 @@ const CardLibrary = () => {
 
       const params: any = { page, limit: 50 };
       if (search) params.search = search;
-      if (rarityFilter) params.rarity = rarityFilter;
+      if (spellLevel !== '') params.level = Number(spellLevel);
+      if (spellClass) params.class = spellClass;
+      if (spellSubclass) params.subclass = spellSubclass;
+      if (spellSchool) params.school = spellSchool;
+      if (spellConcentration) params.concentration = spellConcentration;
+      if (spellRitual) params.ritual = spellRitual;
 
       const response = await spellsApi.getSpells(params);
 
@@ -289,7 +302,7 @@ const CardLibrary = () => {
     } else if (contentType === 'spells') {
       loadSpells(1, false);
     }
-  }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
+  }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual]);
 
   const currentFilters = useMemo(
     () => ({
@@ -763,24 +776,91 @@ const CardLibrary = () => {
         {/* Панель фильтров */}
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Фильтр по редкости */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Редкость
-              </label>
-              <select
-                value={rarityFilter}
-                onChange={(e) => setRarityFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Все редкости</option>
-                {RARITY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Фильтр по редкости - не для заклинаний */}
+            {contentType !== 'spells' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Редкость
+                </label>
+                <select
+                  value={rarityFilter}
+                  onChange={(e) => setRarityFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Все редкости</option>
+                  {RARITY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* ── Фильтры заклинаний ── */}
+            {contentType === 'spells' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Уровень</label>
+                  <select value={spellLevel} onChange={(e) => setSpellLevel(e.target.value)} className="input-field">
+                    <option value="">Все уровни</option>
+                    <option value="0">Заговор</option>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((lvl) => (
+                      <option key={lvl} value={String(lvl)}>{lvl} уровень</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Класс</label>
+                  <select value={spellClass} onChange={(e) => setSpellClass(e.target.value)} className="input-field">
+                    <option value="">Все классы</option>
+                    {SPELL_CLASS_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Подкласс</label>
+                  <input
+                    type="text"
+                    value={spellSubclass}
+                    onChange={(e) => setSpellSubclass(e.target.value)}
+                    placeholder="Например: Магия войны"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Школа</label>
+                  <select value={spellSchool} onChange={(e) => setSpellSchool(e.target.value)} className="input-field">
+                    <option value="">Все школы</option>
+                    {SPELL_SCHOOL_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Концентрация</label>
+                  <select value={spellConcentration} onChange={(e) => setSpellConcentration(e.target.value)} className="input-field">
+                    <option value="">Не важно</option>
+                    <option value="true">Да</option>
+                    <option value="false">Нет</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ритуал</label>
+                  <select value={spellRitual} onChange={(e) => setSpellRitual(e.target.value)} className="input-field">
+                    <option value="">Не важно</option>
+                    <option value="true">Да</option>
+                    <option value="false">Нет</option>
+                  </select>
+                </div>
+              </>
+            )}
 
             {/* Фильтр по свойствам - только для карт */}
             {contentType === 'cards' && (
@@ -1302,6 +1382,9 @@ const CardLibrary = () => {
                   <button
                     key={spell.id}
                     onClick={() => handleSpellClick(spell)}
+                    onMouseEnter={() => setHoveredSpell(spell)}
+                    onMouseLeave={() => setHoveredSpell(null)}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -1334,6 +1417,20 @@ const CardLibrary = () => {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                     Загрузка заклинаний...
                   </div>
+                </div>
+              )}
+
+              {/* Детальная карточка при наведении (как в design_preview) */}
+              {hoveredSpell && (
+                <div
+                  className="fixed z-50 pointer-events-none"
+                  style={{
+                    left: Math.min(mousePosition.x + 16, window.innerWidth - 360),
+                    top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20),
+                    transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+                  }}
+                >
+                  <SpellPreview spell={hoveredSpell} disableHover={true} />
                 </div>
               )}
             </div>
