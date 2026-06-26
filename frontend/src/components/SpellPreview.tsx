@@ -3,10 +3,11 @@ import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
   SPELL_SAVE_TYPE_OPTIONS,
-  SPELL_DAMAGE_TYPE_OPTIONS,
   SPELL_CLASS_OPTIONS,
   getSpellLevelLabel,
 } from '../types';
+import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
+import { FormattedText } from '../utils/formattedText';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -26,23 +27,8 @@ const schoolLabel = (school?: string | null) =>
 const saveLabel = (v: string) =>
   SPELL_SAVE_TYPE_OPTIONS.find((s) => s.value === v)?.label || v;
 
-const dmgMeta = (type: string) =>
-  SPELL_DAMAGE_TYPE_OPTIONS.find((d) => d.value === type);
-
 // "2d8" → "2к8" (для русского BG3-тултипа, как в design_preview)
 const diceRu = (dice: string) => dice.replace(/(\d)[dд](\d)/gi, '$1к$2');
-
-// Рендер текста с поддержкой **жирных** сегментов и переносов строк
-const renderFormatted = (text: string): React.ReactNode => {
-  return text.split('\n').map((line, li) => (
-    <React.Fragment key={li}>
-      {li > 0 && <br />}
-      {line.split('**').map((seg, si) =>
-        si % 2 === 1 ? <b key={si}>{seg}</b> : <React.Fragment key={si}>{seg}</React.Fragment>
-      )}
-    </React.Fragment>
-  ));
-};
 
 const SpellPreview: React.FC<SpellPreviewProps> = ({
   spell,
@@ -126,11 +112,12 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         .sp-die.sp-save{background:radial-gradient(circle at 50% 40%,#5a4a7a,#2a2140); border-color:#6a5a9a; color:#d8c8f0;}
         .sp-srow .sp-bonus{font-weight:700; font-size:1.02rem; color:#f3ead4;}
         .sp-dmgval{display:inline-flex; align-items:center; gap:.32rem; font-weight:700; font-size:1.02rem; flex-wrap:wrap;}
-        .sp-dmgval .sp-ic{font-size:.95rem;}
+        .sp-dmgval .sp-dmgicon{height:1.05em; width:1.05em; object-fit:contain; vertical-align:-0.15em; margin-right:.15em;}
         .sp-dmgsep{color:#a59886; font-weight:400; margin:0 .15rem;}
         .sp-tip .sp-desc{font-size:.92rem; line-height:1.5; color:#d8cdb9; margin:.2rem 0 .9rem; white-space:pre-wrap;}
-        .sp-tip .sp-desc b{color:#f0d98a; font-weight:600;}
+        .sp-tip .sp-desc b, .sp-tip .sp-desc .font-bold{color:#f0d98a; font-weight:600;}
         .sp-tip .sp-upcast{font-size:.88rem; line-height:1.45; color:#cdbf9a; margin:0 0 .9rem;}
+        .sp-tip .sp-upcast .font-bold{color:#e7cf9a; font-weight:600;}
         .sp-tip .sp-upcast .sp-uplbl{color:#e7cf9a; font-weight:600;}
         .sp-tip .sp-saveline{font-size:.88rem; color:#e7cf9a; margin:0 0 .9rem; font-weight:600;}
         .sp-tip .sp-classes{font-size:.82rem; color:#a59886; margin:0 0 .7rem;}
@@ -181,18 +168,15 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
             <div className="sp-srow">
               <span className="sp-lbl">Урон:</span>
               <span className="sp-dmgval">
-                {spell.damage.map((d, i) => {
-                  const m = dmgMeta(d.damage_type);
-                  return (
-                    <React.Fragment key={i}>
-                      {i > 0 && <span className="sp-dmgsep">+</span>}
-                      <span style={{ color: m?.color || '#f3ead4' }}>
-                        <span className="sp-ic">{m?.glyph || ''}</span> {diceRu(d.dice)}
-                        {m?.label ? ` · ${m.label.toLowerCase()}` : ''}
-                      </span>
-                    </React.Fragment>
-                  );
-                })}
+                {spell.damage.map((d, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && <span className="sp-dmgsep">+</span>}
+                    <span style={{ color: getDamageColor(d.damage_type) }}>
+                      <img className="sp-dmgicon" src={getDamageIconPath(d.damage_type)} alt="" />
+                      {diceRu(d.dice)} · {getDamageLabel(d.damage_type).toLowerCase()}
+                    </span>
+                  </React.Fragment>
+                ))}
               </span>
             </div>
           )}
@@ -207,17 +191,21 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         </div>
       )}
 
-      <div className="sp-desc">{renderFormatted(spell.description || 'Описание заклинания')}</div>
+      <div className="sp-desc">
+        <FormattedText text={spell.description || 'Описание заклинания'} emptyText="Описание заклинания" />
+      </div>
 
       {spell.upcast_description && (
         <div className="sp-upcast">
           <span className="sp-uplbl">{spell.level === 0 ? 'Усиление заговора. ' : 'Повышение уровня. '}</span>
-          {renderFormatted(spell.upcast_description)}
+          <FormattedText text={spell.upcast_description} emptyText="" />
         </div>
       )}
 
       {spell.detailed_description && (
-        <div className="sp-upcast">{renderFormatted(spell.detailed_description)}</div>
+        <div className="sp-upcast">
+          <FormattedText text={spell.detailed_description} emptyText="" />
+        </div>
       )}
 
       {spell.save_outcome && <div className="sp-saveline">{spell.save_outcome}</div>}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { DAMAGE_TYPES, getDamageColor, getDamageIconPath, getDamageLabel } from './damageTypes';
 
 type FormatType = 'bold' | 'italic' | 'underline';
 
@@ -18,13 +19,31 @@ interface ParsedFormatNode {
   children: ParsedNode[];
 }
 
-type ParsedNode = ParsedTextNode | ParsedFormatNode;
+interface ParsedColorNode {
+  type: 'color';
+  dmg: string; // тип урона (для цвета)
+  children: ParsedNode[];
+}
+
+interface ParsedIconNode {
+  type: 'icon';
+  dmg: string; // тип урона (для иконки)
+}
+
+type ParsedNode = ParsedTextNode | ParsedFormatNode | ParsedColorNode | ParsedIconNode;
 
 const FORMAT_DELIMITERS: FormatDelimiter[] = [
   { type: 'bold', open: '**', close: '**' },
   { type: 'underline', open: '__', close: '__' },
   { type: 'italic', open: '*', close: '*' },
 ];
+
+const DAMAGE_VALUES = DAMAGE_TYPES.map((d) => d.value);
+// :fire:  — вставка иконки урона
+const ICON_RE = new RegExp(`:(${DAMAGE_VALUES.join('|')}):`);
+// [fire]...[/fire] — окраска фрагмента в цвет типа урона
+const COLOR_OPEN_RE = new RegExp(`\\[(${DAMAGE_VALUES.join('|')})\\]`);
+const colorClose = (dmg: string) => `[/${dmg}]`;
 
 const findItalicIndex = (text: string, from: number): number => {
   for (let i = from; i < text.length; i++) {
@@ -56,19 +75,31 @@ const findCloseDelimiter = (text: string, delimiter: FormatDelimiter, from: numb
   return text.indexOf(delimiter.close, from);
 };
 
-const findEarliestDelimiter = (text: string, from: number): { index: number; delimiter: FormatDelimiter } | null => {
-  let earliest: { index: number; delimiter: FormatDelimiter } | null = null;
+type Special =
+  | { kind: 'format'; index: number; delimiter: FormatDelimiter }
+  | { kind: 'color'; index: number; dmg: string; openLen: number }
+  | { kind: 'icon'; index: number; dmg: string; tokenLen: number };
+
+// Найти ближайшую «спец-конструкцию» начиная с from
+const findEarliestSpecial = (text: string, from: number): Special | null => {
+  let earliest: Special | null = null;
+  const consider = (cand: Special | null) => {
+    if (!cand) return;
+    if (!earliest || cand.index < earliest.index) earliest = cand;
+  };
 
   for (const delimiter of FORMAT_DELIMITERS) {
     const index = delimiter.type === 'italic'
       ? findItalicIndex(text, from)
       : text.indexOf(delimiter.open, from);
-
-    if (index === -1) continue;
-    if (!earliest || index < earliest.index) {
-      earliest = { index, delimiter };
-    }
+    if (index !== -1) consider({ kind: 'format', index, delimiter });
   }
+
+  const icon = ICON_RE.exec(text.slice(from));
+  if (icon) consider({ kind: 'icon', index: from + icon.index, dmg: icon[1], tokenLen: icon[0].length });
+
+  const color = COLOR_OPEN_RE.exec(text.slice(from));
+  if (color) consider({ kind: 'color', index: from + color.index, dmg: color[1], openLen: color[0].length });
 
   return earliest;
 };
@@ -78,7 +109,7 @@ export const parseFormattedText = (text: string): ParsedNode[] => {
   let position = 0;
 
   while (position < text.length) {
-    const match = findEarliestDelimiter(text, position);
+    const match = findEarliestSpecial(text, position);
 
     if (!match) {
       nodes.push({ type: 'text', content: text.slice(position) });
@@ -89,21 +120,44 @@ export const parseFormattedText = (text: string): ParsedNode[] => {
       nodes.push({ type: 'text', content: text.slice(position, match.index) });
     }
 
-    const contentStart = match.index + match.delimiter.open.length;
-    const closeIndex = findCloseDelimiter(text, match.delimiter, contentStart);
+    if (match.kind === 'icon') {
+      nodes.push({ type: 'icon', dmg: match.dmg });
+      position = match.index + match.tokenLen;
+      continue;
+    }
+
+    if (match.kind === 'color') {
+      const contentStart = match.index + match.openLen;
+      const close = colorClose(match.dmg);
+      const closeIndex = text.indexOf(close, contentStart);
+      if (closeIndex === -1) {
+        nodes.push({ type: 'text', content: text.slice(match.index) });
+        break;
+      }
+      nodes.push({
+        type: 'color',
+        dmg: match.dmg,
+        children: parseFormattedText(text.slice(contentStart, closeIndex)),
+      });
+      position = closeIndex + close.length;
+      continue;
+    }
+
+    // format
+    const { delimiter } = match;
+    const contentStart = match.index + delimiter.open.length;
+    const closeIndex = findCloseDelimiter(text, delimiter, contentStart);
 
     if (closeIndex === -1) {
       nodes.push({ type: 'text', content: text.slice(match.index) });
       break;
     }
 
-    const innerText = text.slice(contentStart, closeIndex);
     nodes.push({
-      type: match.delimiter.type,
-      children: parseFormattedText(innerText),
+      type: delimiter.type,
+      children: parseFormattedText(text.slice(contentStart, closeIndex)),
     });
-
-    position = closeIndex + match.delimiter.close.length;
+    position = closeIndex + delimiter.close.length;
   }
 
   return nodes;
@@ -112,9 +166,8 @@ export const parseFormattedText = (text: string): ParsedNode[] => {
 const extractPlainText = (nodes: ParsedNode[]): string => {
   return nodes
     .map((node) => {
-      if (node.type === 'text') {
-        return node.content;
-      }
+      if (node.type === 'text') return node.content;
+      if (node.type === 'icon') return '';
       return extractPlainText(node.children);
     })
     .join('');
@@ -156,6 +209,33 @@ const renderParsedNodes = (
 
     if (node.type === 'text') {
       return <React.Fragment key={key}>{node.content}</React.Fragment>;
+    }
+
+    if (node.type === 'icon') {
+      return (
+        <img
+          key={key}
+          src={getDamageIconPath(node.dmg)}
+          alt={getDamageLabel(node.dmg)}
+          title={getDamageLabel(node.dmg)}
+          style={{
+            display: 'inline-block',
+            height: '1em',
+            width: '1em',
+            verticalAlign: '-0.15em',
+            objectFit: 'contain',
+            margin: '0 0.05em',
+          }}
+        />
+      );
+    }
+
+    if (node.type === 'color') {
+      return (
+        <span key={key} style={{ color: getDamageColor(node.dmg) }}>
+          {renderParsedNodes(node.children, key, useInlineStyles)}
+        </span>
+      );
     }
 
     const styleProps = useInlineStyles

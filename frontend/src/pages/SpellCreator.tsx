@@ -14,10 +14,11 @@ import {
   SPELL_CLASS_OPTIONS,
   SPELL_SAVE_TYPE_OPTIONS,
   SPELL_CASTING_TIME_OPTIONS,
-  SPELL_DAMAGE_TYPE_OPTIONS,
 } from '../types';
+import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../utils/damageTypes';
 import SpellPreview from '../components/SpellPreview';
 import ImageUploader from '../components/ImageUploader';
+import { FormattedTextarea } from '../components/FormattedTextarea';
 
 type ScalarForm = {
   name: string;
@@ -522,9 +523,16 @@ const SpellCreator = () => {
                               className={`${inputCls} flex-1`}
                             >
                               <option value="">тип урона</option>
-                              {SPELL_DAMAGE_TYPE_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                              ))}
+                              <optgroup label="Физический">
+                                {PHYSICAL_DAMAGE_TYPES.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Стихийный">
+                                {ELEMENTAL_DAMAGE_TYPES.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </optgroup>
                             </select>
                             <button
                               type="button"
@@ -564,12 +572,23 @@ const SpellCreator = () => {
                     <h2 className="text-lg font-medium text-gray-900">Описание</h2>
                     <div>
                       <label className={labelCls}>Описание *</label>
-                      <textarea {...register('description', { required: 'Описание обязательно' })} rows={5} className={inputCls} placeholder="Что делает заклинание. **жирный** для выделения." />
+                      <FormattedTextarea
+                        value={fd.description || ''}
+                        onChange={(v) => setValue('description', v)}
+                        rows={5}
+                        placeholder="Что делает заклинание. **жирный** для выделения."
+                      />
+                      <input type="hidden" {...register('description', { required: 'Описание обязательно' })} />
                       {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
                     </div>
                     <div>
                       <label className={labelCls}>Повышение уровня / Усиление заговора</label>
-                      <textarea {...register('upcast_description')} rows={3} className={inputCls} placeholder="Урон увеличивается на 1d6 за каждый уровень слота выше первого." />
+                      <FormattedTextarea
+                        value={fd.upcast_description || ''}
+                        onChange={(v) => setValue('upcast_description', v)}
+                        rows={3}
+                        placeholder="Урон увеличивается на 1d6 за каждый уровень слота выше первого."
+                      />
                     </div>
                     <div>
                       <label className={labelCls}>Дополнительное описание</label>

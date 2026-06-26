@@ -3,7 +3,7 @@ import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'rea
 import { CreateCardRequest, Properties } from '../../types';
 import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../../types';
 import { ITEM_TYPE_OPTIONS } from '../../constants/itemTypes';
-import { ELEMENTAL_DAMAGE_OPTIONS } from '../../utils/elementalDamage';
+import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../../utils/damageTypes';
 import PropertySelector from '../PropertySelector';
 import TagsInput from '../TagsInput';
 import weaponTypesData from '../../../utils/weapon_types.json';
@@ -261,9 +261,16 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Выберите тип урона</option>
-              <option value="slashing">Рубящий</option>
-              <option value="piercing">Колющий</option>
-              <option value="bludgeoning">Дробящий</option>
+              <optgroup label="Физический">
+                {PHYSICAL_DAMAGE_TYPES.map((d) => (
+                  <option key={d.value} value={d.value}>{d.label}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Стихийный">
+                {ELEMENTAL_DAMAGE_TYPES.map((d) => (
+                  <option key={d.value} value={d.value}>{d.label}</option>
+                ))}
+              </optgroup>
             </select>
           </div>
           
@@ -292,7 +299,7 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
 
           <div className="border-t border-gray-200 pt-4">
             <p className="text-sm font-medium text-gray-700 mb-3">
-              Дополнительный стихийный урон
+              Дополнительный урон
               <span className="text-gray-400 font-normal ml-1">(необязательно)</span>
             </p>
             <div className="grid grid-cols-2 gap-4">
@@ -311,11 +318,16 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Не указан</option>
-                  {ELEMENTAL_DAMAGE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <optgroup label="Физический">
+                    {PHYSICAL_DAMAGE_TYPES.map((d) => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Стихийный">
+                    {ELEMENTAL_DAMAGE_TYPES.map((d) => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
             </div>

@@ -40,22 +40,16 @@ const ElementalDamageDisplay = ({
       >
         {value}
       </span>
-      <span
+      <img
+        src={iconPath}
+        alt={type}
         aria-hidden
         style={{
           display: 'inline-block',
           width: iconSize,
           height: iconSize,
           flexShrink: 0,
-          backgroundColor: color,
-          WebkitMaskImage: `url(${iconPath})`,
-          WebkitMaskSize: 'contain',
-          WebkitMaskRepeat: 'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskImage: `url(${iconPath})`,
-          maskSize: 'contain',
-          maskRepeat: 'no-repeat',
-          maskPosition: 'center',
+          objectFit: 'contain',
         }}
       />
     </>

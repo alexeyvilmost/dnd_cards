@@ -1,49 +1,26 @@
-export type ElementalDamageType =
-  | 'fire'
-  | 'cold'
-  | 'acid'
-  | 'poison'
-  | 'necrotic'
-  | 'lightning'
-  | 'psychic'
-  | 'radiant'
-  | 'thunder'
-  | 'force';
+// Стихийный урон — тонкая обёртка над единым манифестом damageTypes.ts.
+// Оставлено для обратной совместимости существующих импортов.
+import {
+  ELEMENTAL_DAMAGE_TYPES,
+  getDamageColor,
+  getDamageLabel,
+  getDamageIconPath,
+  type DamageType,
+} from './damageTypes';
 
-export const ELEMENTAL_DAMAGE_OPTIONS: { value: ElementalDamageType; label: string }[] = [
-  { value: 'fire', label: 'Огонь' },
-  { value: 'cold', label: 'Холод' },
-  { value: 'acid', label: 'Кислота' },
-  { value: 'poison', label: 'Яд' },
-  { value: 'necrotic', label: 'Некротический' },
-  { value: 'lightning', label: 'Молния' },
-  { value: 'psychic', label: 'Психический' },
-  { value: 'radiant', label: 'Излучение' },
-  { value: 'thunder', label: 'Гром' },
-  { value: 'force', label: 'Сила' },
-];
+export type ElementalDamageType = Extract<
+  DamageType,
+  'fire' | 'cold' | 'acid' | 'poison' | 'necrotic' | 'lightning' | 'psychic' | 'radiant' | 'thunder' | 'force'
+>;
 
-const ELEMENTAL_DAMAGE_COLORS: Record<ElementalDamageType, string> = {
-  fire: '#E25822',
-  cold: '#2563EB',
-  acid: '#65A30D',
-  poison: '#22C55E',
-  necrotic: '#166534',
-  lightning: '#06B6D4',
-  psychic: '#C026D3',
-  radiant: '#EAB308',
-  thunder: '#5B21B6',
-  force: '#800020',
-};
+export const ELEMENTAL_DAMAGE_OPTIONS: { value: ElementalDamageType; label: string }[] =
+  ELEMENTAL_DAMAGE_TYPES.map((d) => ({ value: d.value as ElementalDamageType, label: d.label }));
 
-export const getElementalDamageColor = (type: string): string =>
-  ELEMENTAL_DAMAGE_COLORS[type as ElementalDamageType] ?? '#374151';
+export const getElementalDamageColor = (type: string): string => getDamageColor(type);
 
-export const getElementalDamageLabel = (type: string): string =>
-  ELEMENTAL_DAMAGE_OPTIONS.find((option) => option.value === type)?.label ?? type;
+export const getElementalDamageLabel = (type: string): string => getDamageLabel(type);
 
-export const getElementalDamageIconPath = (type: string): string =>
-  `/icons/damage_types/${type}.png`;
+export const getElementalDamageIconPath = (type: string): string => getDamageIconPath(type);
 
 export const hasElementalDamage = (card: {
   elemental_damage_value?: string | null;

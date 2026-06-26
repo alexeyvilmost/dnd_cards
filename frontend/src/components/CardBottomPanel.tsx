@@ -7,6 +7,7 @@ import {
 } from '../utils/cardBottomPanelStyles';
 import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { hasElementalDamage } from '../utils/elementalDamage';
+import { getDamageColor, getDamageIconPath, getDamageLabel } from '../utils/damageTypes';
 
 const ICON_SIZE = 10;
 const COIN_FILTER =
@@ -155,11 +156,20 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
       key: 'bonus',
       node: (
         <>
-          <span style={valueStyle(true)}>{getBonusShortValue(card.bonus_value)}</span>
+          <span
+            style={{
+              ...valueStyle(true),
+              ...(card.bonus_type === 'damage' && card.damage_type
+                ? { color: getDamageColor(card.damage_type) }
+                : {}),
+            }}
+          >
+            {getBonusShortValue(card.bonus_value)}
+          </span>
           {card.bonus_type === 'damage' && card.damage_type && (
             <img
-              src={`/icons/${card.damage_type}.png`}
-              alt={getDamageTypeLabel(card.damage_type)}
+              src={getDamageIconPath(card.damage_type)}
+              alt={getDamageLabel(card.damage_type)}
               style={iconStyle}
             />
           )}
