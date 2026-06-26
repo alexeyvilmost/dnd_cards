@@ -38,6 +38,7 @@ import ShopNew from './pages/ShopNew';
 import ShopDetail from './pages/ShopDetail';
 import ActionCreator from './pages/ActionCreator';
 import EffectCreator from './pages/EffectCreator';
+import SpellCreator from './pages/SpellCreator';
 
 function App() {
   return (
@@ -316,6 +317,15 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <EffectCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Spell routes */}
+        <Route path="/spell-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <SpellCreator />
             </Layout>
           </ProtectedRoute>
         } />

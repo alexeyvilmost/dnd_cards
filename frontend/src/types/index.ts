@@ -842,3 +842,193 @@ export const PASSIVE_EFFECT_TYPE_OPTIONS = [
   { value: 'conditional', label: 'Условный' },
   { value: 'triggered', label: 'Срабатывающий' },
 ] as const;
+
+// ─── Заклинания ───────────────────────────────────────────────────────────────
+
+export interface SpellDamageEntry {
+  dice: string;        // Кубы урона, например "2d8"
+  damage_type: string; // Тип урона, например "cold"
+}
+
+export interface Spell {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  level: number; // 0 = заговор (cantrip)
+  school?: string | null;
+  casting_time?: string | null;
+  range?: string | null;
+  component_verbal: boolean;
+  component_somatic: boolean;
+  component_material: boolean;
+  material_text?: string | null;
+  duration?: string | null;
+  classes?: string[] | null;
+  subclasses?: string[] | null;
+  attack_roll: boolean;
+  saving_throw: boolean;
+  concentration: boolean;
+  ritual: boolean;
+  save_types?: string[] | null;
+  damage?: SpellDamageEntry[] | null;
+  area?: string | null;
+  is_healing: boolean;
+  heal_dice?: string | null;
+  save_outcome?: string | null;
+  upcast_description?: string | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSpellRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  card_number?: string;
+  level: number;
+  school?: string | null;
+  casting_time?: string | null;
+  range?: string | null;
+  component_verbal?: boolean;
+  component_somatic?: boolean;
+  component_material?: boolean;
+  material_text?: string | null;
+  duration?: string | null;
+  classes?: string[] | null;
+  subclasses?: string[] | null;
+  attack_roll?: boolean;
+  saving_throw?: boolean;
+  concentration?: boolean;
+  ritual?: boolean;
+  save_types?: string[] | null;
+  damage?: SpellDamageEntry[] | null;
+  area?: string | null;
+  is_healing?: boolean;
+  heal_dice?: string | null;
+  save_outcome?: string | null;
+  upcast_description?: string | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+}
+
+export interface UpdateSpellRequest {
+  name?: string;
+  description?: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  level?: number;
+  school?: string | null;
+  casting_time?: string | null;
+  range?: string | null;
+  component_verbal?: boolean;
+  component_somatic?: boolean;
+  component_material?: boolean;
+  material_text?: string | null;
+  duration?: string | null;
+  classes?: string[] | null;
+  subclasses?: string[] | null;
+  attack_roll?: boolean;
+  saving_throw?: boolean;
+  concentration?: boolean;
+  ritual?: boolean;
+  save_types?: string[] | null;
+  damage?: SpellDamageEntry[] | null;
+  area?: string | null;
+  is_healing?: boolean;
+  heal_dice?: string | null;
+  save_outcome?: string | null;
+  upcast_description?: string | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+}
+
+export interface SpellsResponse {
+  spells: Spell[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// Школы магии
+export const SPELL_SCHOOL_OPTIONS = [
+  { value: 'abjuration', label: 'Ограждение' },
+  { value: 'conjuration', label: 'Вызов' },
+  { value: 'divination', label: 'Прорицание' },
+  { value: 'enchantment', label: 'Очарование' },
+  { value: 'evocation', label: 'Воплощение' },
+  { value: 'illusion', label: 'Иллюзия' },
+  { value: 'necromancy', label: 'Некромантия' },
+  { value: 'transmutation', label: 'Преобразование' },
+] as const;
+
+// Классы заклинателей
+export const SPELL_CLASS_OPTIONS = [
+  { value: 'bard', label: 'Бард' },
+  { value: 'cleric', label: 'Жрец' },
+  { value: 'druid', label: 'Друид' },
+  { value: 'paladin', label: 'Паладин' },
+  { value: 'ranger', label: 'Следопыт' },
+  { value: 'sorcerer', label: 'Чародей' },
+  { value: 'warlock', label: 'Колдун' },
+  { value: 'wizard', label: 'Волшебник' },
+  { value: 'artificer', label: 'Изобретатель' },
+] as const;
+
+// Типы спасбросков (характеристики)
+export const SPELL_SAVE_TYPE_OPTIONS = [
+  { value: 'str', label: 'Сила' },
+  { value: 'dex', label: 'Ловкость' },
+  { value: 'con', label: 'Телосложение' },
+  { value: 'int', label: 'Интеллект' },
+  { value: 'wis', label: 'Мудрость' },
+  { value: 'cha', label: 'Харизма' },
+] as const;
+
+// Время сотворения (частые варианты)
+export const SPELL_CASTING_TIME_OPTIONS = [
+  { value: 'Действие', label: 'Действие' },
+  { value: 'Бонусное действие', label: 'Бонусное действие' },
+  { value: 'Реакция', label: 'Реакция' },
+  { value: '1 минута', label: '1 минута' },
+  { value: '10 минут', label: '10 минут' },
+  { value: '1 час', label: '1 час' },
+] as const;
+
+// Типы урона заклинаний (значение + русская подпись + цвет + глиф для BG3-тултипа)
+export const SPELL_DAMAGE_TYPE_OPTIONS = [
+  { value: 'fire', label: 'Огонь', color: '#ef9f4a', glyph: '🔥' },
+  { value: 'cold', label: 'Холод', color: '#6fb6e8', glyph: '❄' },
+  { value: 'lightning', label: 'Электричество', color: '#9ad8e8', glyph: '⚡' },
+  { value: 'thunder', label: 'Звук', color: '#b8a6e8', glyph: '🔊' },
+  { value: 'acid', label: 'Кислота', color: '#a8d84a', glyph: '🧪' },
+  { value: 'poison', label: 'Яд', color: '#7bc98a', glyph: '☠' },
+  { value: 'necrotic', label: 'Некротический', color: '#7bc98a', glyph: '☠' },
+  { value: 'radiant', label: 'Излучение', color: '#f0d268', glyph: '☀' },
+  { value: 'psychic', label: 'Психический', color: '#c98ad8', glyph: '🧠' },
+  { value: 'force', label: 'Силовое поле', color: '#9aa6e8', glyph: '✷' },
+  { value: 'bludgeoning', label: 'Дробящий', color: '#cbb89a', glyph: '🔨' },
+  { value: 'piercing', label: 'Колющий', color: '#cbb89a', glyph: '🗡' },
+  { value: 'slashing', label: 'Рубящий', color: '#cbb89a', glyph: '⚔' },
+] as const;
+
+export const getSpellLevelLabel = (level: number): string => {
+  return level === 0 ? 'Заговор' : `${level} уровень`;
+};

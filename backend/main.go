@@ -88,6 +88,7 @@ func main() {
 	shopController := NewShopController(db)
 	actionController := NewActionController(db)
 	effectController := NewEffectController(db)
+	spellController := NewSpellController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -160,6 +161,13 @@ func main() {
 		api.POST("/effects", AuthMiddleware(authService), effectController.CreateEffect)
 		api.PUT("/effects/:id", AuthMiddleware(authService), effectController.UpdateEffect)
 		api.DELETE("/effects/:id", AuthMiddleware(authService), effectController.DeleteEffect)
+
+		// Заклинания (публичные, но с опциональной авторизацией)
+		api.GET("/spells", OptionalAuthMiddleware(authService), spellController.GetSpells)
+		api.GET("/spells/:id", OptionalAuthMiddleware(authService), spellController.GetSpell)
+		api.POST("/spells", AuthMiddleware(authService), spellController.CreateSpell)
+		api.PUT("/spells/:id", AuthMiddleware(authService), spellController.UpdateSpell)
+		api.DELETE("/spells/:id", AuthMiddleware(authService), spellController.DeleteSpell)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

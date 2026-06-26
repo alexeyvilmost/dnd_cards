@@ -1787,3 +1787,241 @@ type CharacterV2Response struct {
 	User                     User                `json:"user"`
 	Group                    *Group              `json:"group"`
 }
+
+// SpellDamageEntry - одна составляющая урона заклинания (кубы + тип)
+type SpellDamageEntry struct {
+	Dice       string `json:"dice"`        // Кубы урона, например "2d8"
+	DamageType string `json:"damage_type"` // Тип урона, например "cold"
+}
+
+// SpellDamage - массив составляющих урона (рендерится через "+")
+type SpellDamage []SpellDamageEntry
+
+// Scan - кастомный сканер для SpellDamage
+func (sd *SpellDamage) Scan(value interface{}) error {
+	if value == nil {
+		*sd = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), sd)
+	case []byte:
+		return json.Unmarshal(v, sd)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для SpellDamage: %T", value)
+	}
+}
+
+// Value - кастомный value для SpellDamage
+func (sd SpellDamage) Value() (driver.Value, error) {
+	if sd == nil {
+		return nil, nil
+	}
+	return json.Marshal(sd)
+}
+
+// Spell - модель заклинания D&D
+type Spell struct {
+	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                  string         `json:"name" gorm:"not null"`
+	Description           string         `json:"description" gorm:"type:text;not null"`
+	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
+	ImageURL              string         `json:"image_url" gorm:"type:text"`
+	ImageCloudinaryID     string         `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL    string         `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated        bool           `json:"image_generated" gorm:"type:boolean;default:false"`
+	ImageGenerationPrompt string         `json:"image_generation_prompt" gorm:"type:text"`
+	Rarity                Rarity         `json:"rarity" gorm:"not null;default:'common'"`
+	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
+	Level                 int            `json:"level" gorm:"type:int;not null;default:0"` // 0 = заговор (cantrip)
+	School                *string        `json:"school" gorm:"type:varchar(100)"`
+	CastingTime           *string        `json:"casting_time" gorm:"type:varchar(100)"`
+	Range                 *string        `json:"range" gorm:"column:range;type:varchar(100)"`
+	ComponentVerbal       bool           `json:"component_verbal" gorm:"type:boolean;default:false"`
+	ComponentSomatic      bool           `json:"component_somatic" gorm:"type:boolean;default:false"`
+	ComponentMaterial     bool           `json:"component_material" gorm:"type:boolean;default:false"`
+	MaterialText          *string        `json:"material_text" gorm:"type:text"`
+	Duration              *string        `json:"duration" gorm:"type:varchar(100)"`
+	Classes               *Properties    `json:"classes" gorm:"type:text[]"`
+	Subclasses            *Properties    `json:"subclasses" gorm:"type:text[]"`
+	AttackRoll            bool           `json:"attack_roll" gorm:"type:boolean;default:false"`
+	SavingThrow           bool           `json:"saving_throw" gorm:"type:boolean;default:false"`
+	Concentration         bool           `json:"concentration" gorm:"type:boolean;default:false"`
+	Ritual                bool           `json:"ritual" gorm:"type:boolean;default:false"`
+	SaveTypes             *Properties    `json:"save_types" gorm:"type:text[]"` // Типы спасброска (str, dex, ...)
+	Damage                *SpellDamage   `json:"damage" gorm:"type:jsonb"`
+	Area                  *string        `json:"area" gorm:"type:varchar(100)"`        // Область, например "20 фт"
+	IsHealing             bool           `json:"is_healing" gorm:"type:boolean;default:false"`
+	HealDice              *string        `json:"heal_dice" gorm:"type:varchar(50)"`    // Кубы лечения
+	SaveOutcome           *string        `json:"save_outcome" gorm:"type:text"`        // Результат при спасброске
+	UpcastDescription     *string        `json:"upcast_description" gorm:"type:text"`  // Повышение уровня / Cantrip Upgrade
+	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
+	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source                *string        `json:"source" gorm:"type:varchar(255)"`
+	Tags                  *Properties    `json:"tags" gorm:"type:text[]"`
+	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
+	CreatedAt             time.Time      `json:"created_at"`
+	UpdatedAt             time.Time      `json:"updated_at"`
+	DeletedAt             gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// TableName указывает имя таблицы для GORM
+func (Spell) TableName() string {
+	return "spells"
+}
+
+// CreateSpellRequest - запрос на создание заклинания
+type CreateSpellRequest struct {
+	Name                string       `json:"name" binding:"required"`
+	Description         string       `json:"description" binding:"required"`
+	DetailedDescription *string      `json:"detailed_description"`
+	ImageURL            string       `json:"image_url"`
+	Rarity              Rarity       `json:"rarity"`
+	CardNumber          string       `json:"card_number"`
+	Level               int          `json:"level"`
+	School              *string      `json:"school"`
+	CastingTime         *string      `json:"casting_time"`
+	Range               *string      `json:"range"`
+	ComponentVerbal     bool         `json:"component_verbal"`
+	ComponentSomatic    bool         `json:"component_somatic"`
+	ComponentMaterial   bool         `json:"component_material"`
+	MaterialText        *string      `json:"material_text"`
+	Duration            *string      `json:"duration"`
+	Classes             *Properties  `json:"classes"`
+	Subclasses          *Properties  `json:"subclasses"`
+	AttackRoll          bool         `json:"attack_roll"`
+	SavingThrow         bool         `json:"saving_throw"`
+	Concentration       bool         `json:"concentration"`
+	Ritual              bool         `json:"ritual"`
+	SaveTypes           *Properties  `json:"save_types"`
+	Damage              *SpellDamage `json:"damage"`
+	Area                *string      `json:"area"`
+	IsHealing           bool         `json:"is_healing"`
+	HealDice            *string      `json:"heal_dice"`
+	SaveOutcome         *string      `json:"save_outcome"`
+	UpcastDescription   *string      `json:"upcast_description"`
+	Type                *string      `json:"type"`
+	Author              string       `json:"author"`
+	Source              *string      `json:"source"`
+	Tags                *Properties  `json:"tags"`
+	IsExtended          *bool        `json:"is_extended"`
+}
+
+// UpdateSpellRequest - запрос на обновление заклинания
+type UpdateSpellRequest struct {
+	Name                string       `json:"name"`
+	Description         string       `json:"description"`
+	DetailedDescription *string      `json:"detailed_description"`
+	ImageURL            string       `json:"image_url"`
+	Rarity              Rarity       `json:"rarity"`
+	Level               *int         `json:"level"`
+	School              *string      `json:"school"`
+	CastingTime         *string      `json:"casting_time"`
+	Range               *string      `json:"range"`
+	ComponentVerbal     *bool        `json:"component_verbal"`
+	ComponentSomatic    *bool        `json:"component_somatic"`
+	ComponentMaterial   *bool        `json:"component_material"`
+	MaterialText        *string      `json:"material_text"`
+	Duration            *string      `json:"duration"`
+	Classes             *Properties  `json:"classes"`
+	Subclasses          *Properties  `json:"subclasses"`
+	AttackRoll          *bool        `json:"attack_roll"`
+	SavingThrow         *bool        `json:"saving_throw"`
+	Concentration       *bool        `json:"concentration"`
+	Ritual              *bool        `json:"ritual"`
+	SaveTypes           *Properties  `json:"save_types"`
+	Damage              *SpellDamage `json:"damage"`
+	Area                *string      `json:"area"`
+	IsHealing           *bool        `json:"is_healing"`
+	HealDice            *string      `json:"heal_dice"`
+	SaveOutcome         *string      `json:"save_outcome"`
+	UpcastDescription   *string      `json:"upcast_description"`
+	Type                *string      `json:"type"`
+	Author              string       `json:"author"`
+	Source              *string      `json:"source"`
+	Tags                *Properties  `json:"tags"`
+	IsExtended          *bool        `json:"is_extended"`
+}
+
+// SpellResponse - ответ с заклинанием
+type SpellResponse struct {
+	ID                  uuid.UUID    `json:"id"`
+	Name                string       `json:"name"`
+	Description         string       `json:"description"`
+	DetailedDescription *string      `json:"detailed_description"`
+	ImageURL            string       `json:"image_url"`
+	Rarity              Rarity       `json:"rarity"`
+	CardNumber          string       `json:"card_number"`
+	Level               int          `json:"level"`
+	School              *string      `json:"school"`
+	CastingTime         *string      `json:"casting_time"`
+	Range               *string      `json:"range"`
+	ComponentVerbal     bool         `json:"component_verbal"`
+	ComponentSomatic    bool         `json:"component_somatic"`
+	ComponentMaterial   bool         `json:"component_material"`
+	MaterialText        *string      `json:"material_text"`
+	Duration            *string      `json:"duration"`
+	Classes             *Properties  `json:"classes"`
+	Subclasses          *Properties  `json:"subclasses"`
+	AttackRoll          bool         `json:"attack_roll"`
+	SavingThrow         bool         `json:"saving_throw"`
+	Concentration       bool         `json:"concentration"`
+	Ritual              bool         `json:"ritual"`
+	SaveTypes           *Properties  `json:"save_types"`
+	Damage              *SpellDamage `json:"damage"`
+	Area                *string      `json:"area"`
+	IsHealing           bool         `json:"is_healing"`
+	HealDice            *string      `json:"heal_dice"`
+	SaveOutcome         *string      `json:"save_outcome"`
+	UpcastDescription   *string      `json:"upcast_description"`
+	Type                *string      `json:"type"`
+	Author              string       `json:"author"`
+	Source              *string      `json:"source"`
+	Tags                *Properties  `json:"tags"`
+	IsExtended          *bool        `json:"is_extended"`
+	CreatedAt           time.Time    `json:"created_at"`
+	UpdatedAt           time.Time    `json:"updated_at"`
+}
+
+// ToSpellResponse преобразует модель заклинания в API-ответ.
+func (spell Spell) ToSpellResponse() SpellResponse {
+	return SpellResponse{
+		ID:                  spell.ID,
+		Name:                spell.Name,
+		Description:         spell.Description,
+		DetailedDescription: spell.DetailedDescription,
+		ImageURL:            spell.ImageURL,
+		Rarity:              spell.Rarity,
+		CardNumber:          spell.CardNumber,
+		Level:               spell.Level,
+		School:              spell.School,
+		CastingTime:         spell.CastingTime,
+		Range:               spell.Range,
+		ComponentVerbal:     spell.ComponentVerbal,
+		ComponentSomatic:    spell.ComponentSomatic,
+		ComponentMaterial:   spell.ComponentMaterial,
+		MaterialText:        spell.MaterialText,
+		Duration:            spell.Duration,
+		Classes:             spell.Classes,
+		Subclasses:          spell.Subclasses,
+		AttackRoll:          spell.AttackRoll,
+		SavingThrow:         spell.SavingThrow,
+		Concentration:       spell.Concentration,
+		Ritual:              spell.Ritual,
+		SaveTypes:           spell.SaveTypes,
+		Damage:              spell.Damage,
+		Area:                spell.Area,
+		IsHealing:           spell.IsHealing,
+		HealDice:            spell.HealDice,
+		SaveOutcome:         spell.SaveOutcome,
+		UpcastDescription:   spell.UpcastDescription,
+		Type:                spell.Type,
+		Author:              spell.Author,
+		Source:              spell.Source,
+		Tags:                spell.Tags,
+		IsExtended:          spell.IsExtended,
+		CreatedAt:           spell.CreatedAt,
+		UpdatedAt:           spell.UpdatedAt,
+	}
+}

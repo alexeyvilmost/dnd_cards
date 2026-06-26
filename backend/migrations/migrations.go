@@ -182,6 +182,12 @@ func GetAllMigrations() []Migration {
 			Up:          addCustomRarityColorField,
 			Down:        removeCustomRarityColorField,
 		},
+		{
+			Version:     "030_create_spells",
+			Description: "Create spells table for D&D spells",
+			Up:          createSpellsTable,
+			Down:        dropSpellsTable,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1497,4 +1503,93 @@ func removeCustomRarityColorField(db *sql.DB) error {
 		return fmt.Errorf("failed to drop custom_rarity_color: %w", err)
 	}
 	return nil
+}
+
+// createSpellsTable создает таблицу заклинаний
+func createSpellsTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS spells (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			level INTEGER NOT NULL DEFAULT 0,
+			school VARCHAR(100),
+			casting_time VARCHAR(100),
+			range VARCHAR(100),
+			component_verbal BOOLEAN DEFAULT false,
+			component_somatic BOOLEAN DEFAULT false,
+			component_material BOOLEAN DEFAULT false,
+			material_text TEXT,
+			duration VARCHAR(100),
+			classes TEXT[],
+			subclasses TEXT[],
+			attack_roll BOOLEAN DEFAULT false,
+			saving_throw BOOLEAN DEFAULT false,
+			concentration BOOLEAN DEFAULT false,
+			ritual BOOLEAN DEFAULT false,
+			save_types TEXT[],
+			damage JSONB,
+			area VARCHAR(100),
+			is_healing BOOLEAN DEFAULT false,
+			heal_dice VARCHAR(50),
+			save_outcome TEXT,
+			upcast_description TEXT,
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags TEXT[],
+			is_extended BOOLEAN DEFAULT false,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)
+	`
+
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create spells table: %w", err)
+	}
+
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_spells_rarity ON spells(rarity)",
+		"CREATE INDEX IF NOT EXISTS idx_spells_name ON spells USING gin(to_tsvector('russian', name))",
+		"CREATE INDEX IF NOT EXISTS idx_spells_level ON spells(level)",
+		"CREATE INDEX IF NOT EXISTS idx_spells_school ON spells(school)",
+		"CREATE INDEX IF NOT EXISTS idx_spells_card_number ON spells(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_spells_created_at ON spells(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_spells_deleted_at ON spells(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+
+	for _, indexQuery := range indexes {
+		if _, err := db.Exec(indexQuery); err != nil {
+			return fmt.Errorf("failed to create index for spells: %w", err)
+		}
+	}
+
+	triggerQuery := `
+		DROP TRIGGER IF EXISTS update_spells_updated_at ON spells;
+		CREATE TRIGGER update_spells_updated_at
+			BEFORE UPDATE ON spells
+			FOR EACH ROW
+			EXECUTE FUNCTION update_updated_at_column();
+	`
+
+	if _, err := db.Exec(triggerQuery); err != nil {
+		return fmt.Errorf("failed to create trigger for spells: %w", err)
+	}
+
+	return nil
+}
+
+// dropSpellsTable удаляет таблицу заклинаний
+func dropSpellsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS spells CASCADE")
+	return err
 }

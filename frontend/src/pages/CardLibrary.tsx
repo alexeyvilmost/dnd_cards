@@ -1,15 +1,17 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { cardsApi, effectsApi, actionsApi } from '../api/client';
-import type { Card, PassiveEffect, Action } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS } from '../types';
+import { cardsApi, effectsApi, actionsApi, spellsApi } from '../api/client';
+import type { Card, PassiveEffect, Action, Spell } from '../types';
+import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
+import SpellPreview from '../components/SpellPreview';
 import CardDetailModal from '../components/CardDetailModal';
 import EffectDetailModal from '../components/EffectDetailModal';
 import ActionDetailModal from '../components/ActionDetailModal';
+import SpellDetailModal from '../components/SpellDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
@@ -26,10 +28,11 @@ const CardLibrary = () => {
   const skipFilterUrlSync = useRef(false);
   const openingCardFromUrl = useRef(false);
 
-  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions'>(initialFilters.contentType);
+  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions' | 'spells'>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
+  const [spells, setSpells] = useState<Spell[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +53,11 @@ const CardLibrary = () => {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
+  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [isSpellModalOpen, setIsSpellModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -230,17 +235,59 @@ const CardLibrary = () => {
     }
   };
 
+  // Загрузка заклинаний
+  const loadSpells = async (page = 1, append = false) => {
+    try {
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const params: any = { page, limit: 50 };
+      if (search) params.search = search;
+      if (rarityFilter) params.rarity = rarityFilter;
+
+      const response = await spellsApi.getSpells(params);
+
+      if (append) {
+        setSpells(prev => {
+          const existingIds = new Set(prev.map(spell => spell.id));
+          const newSpells = response.spells.filter(spell => !existingIds.has(spell.id));
+          const combinedSpells = [...prev, ...newSpells];
+          setHasMore(response.spells.length === 50 && combinedSpells.length < response.total);
+          return combinedSpells;
+        });
+      } else {
+        setSpells(response.spells);
+        setHasMore(response.spells.length === 50 && response.spells.length < response.total);
+      }
+
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки заклинаний');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
     setCards([]);
     setEffects([]);
     setActions([]);
+    setSpells([]);
     if (contentType === 'cards') {
       loadCards(1, false);
     } else if (contentType === 'effects') {
       loadEffects(1, false);
     } else if (contentType === 'actions') {
       loadActions(1, false);
+    } else if (contentType === 'spells') {
+      loadSpells(1, false);
     }
   }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
 
@@ -402,6 +449,8 @@ const CardLibrary = () => {
         loadEffects(currentPage + 1, true);
       } else if (contentType === 'actions') {
         loadActions(currentPage + 1, true);
+      } else if (contentType === 'spells') {
+        loadSpells(currentPage + 1, true);
       }
     }
   };
@@ -513,6 +562,36 @@ const CardLibrary = () => {
     }
   };
 
+  // Обработчики для заклинаний
+  const handleSpellClick = (spell: Spell) => {
+    setSelectedSpell(spell);
+    setIsSpellModalOpen(true);
+  };
+
+  const handleCloseSpellModal = () => {
+    setIsSpellModalOpen(false);
+    setSelectedSpell(null);
+  };
+
+  const handleEditSpell = (spellId: string) => {
+    setIsSpellModalOpen(false);
+    window.location.href = `/spell-creator?edit=${spellId}`;
+  };
+
+  const handleDeleteSpell = async (spellId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить это заклинание?')) return;
+
+    try {
+      await spellsApi.deleteSpell(spellId);
+      if (contentType === 'spells') {
+        loadSpells(1, false);
+      }
+      setIsSpellModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления заклинания');
+    }
+  };
+
   // Получение типа эффекта для отображения
   const getEffectTypeLabel = (effectType: string) => {
     switch (effectType) {
@@ -618,6 +697,16 @@ const CardLibrary = () => {
               }`}
             >
               Действия
+            </button>
+            <button
+              onClick={() => setContentType('spells')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                contentType === 'spells'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Заклинания
             </button>
           </div>
 
@@ -842,6 +931,15 @@ const CardLibrary = () => {
           <p className="text-gray-500 text-lg">Действия не найдены</p>
           <Link to="/action-creator" className="btn-primary mt-4 inline-block">
             Создать первое действие
+          </Link>
+        </div>
+      )}
+
+      {!loading && contentType === 'spells' && spells.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Заклинания не найдены</p>
+          <Link to="/spell-creator" className="btn-primary mt-4 inline-block">
+            Создать первое заклинание
           </Link>
         </div>
       )}
@@ -1179,6 +1277,70 @@ const CardLibrary = () => {
         </>
       )}
 
+      {/* Отображение заклинаний */}
+      {!loading && contentType === 'spells' && spells.length > 0 && (
+        <>
+          {/* Счетчик заклинаний */}
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {spells.length} из {totalCards} заклинаний
+          </div>
+
+          {viewMode === 'grid' ? (
+            /* Сетка заклинаний */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+              {spells.map((spell) => (
+                <div key={spell.id} className="flex justify-center">
+                  <SpellPreview spell={spell} onClick={() => handleSpellClick(spell)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Список заклинаний */
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {spells.map((spell) => (
+                  <button
+                    key={spell.id}
+                    onClick={() => handleSpellClick(spell)}
+                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        <img
+                          src={spell.image_url && spell.image_url.trim() !== '' ? spell.image_url : '/default_image.png'}
+                          alt={spell.name}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/default_image.png';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>
+                          {spell.name}
+                        </div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">
+                          {getSpellLevelLabel(spell.level)}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {loadingMore && (
+                <div className="mt-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Загрузка заклинаний...
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
       {/* Модальное окно с детальной информацией о карте */}
       <CardDetailModal
         card={selectedCard}
@@ -1203,6 +1365,15 @@ const CardLibrary = () => {
         onClose={handleCloseActionModal}
         onEdit={handleEditAction}
         onDelete={handleDeleteAction}
+      />
+
+      {/* Модальное окно с детальной информацией о заклинании */}
+      <SpellDetailModal
+        spell={selectedSpell}
+        isOpen={isSpellModalOpen}
+        onClose={handleCloseSpellModal}
+        onEdit={handleEditSpell}
+        onDelete={handleDeleteSpell}
       />
     </div>
   );

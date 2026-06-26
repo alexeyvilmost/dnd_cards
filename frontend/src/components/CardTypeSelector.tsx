@@ -57,6 +57,12 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       name: '✨ Эффекты',
       description: 'Пассивные эффекты, которые получают персонажи',
       color: 'bg-pink-50 border-pink-200 hover:bg-pink-100'
+    },
+    {
+      id: 'spell',
+      name: '🔮 Заклинание',
+      description: 'Заговоры и заклинания с уровнями, школами и уроном',
+      color: 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
     }
   ];
 
@@ -77,6 +83,8 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       navigate('/action-creator');
     } else if (typeId === 'effect') {
       navigate('/effect-creator');
+    } else if (typeId === 'spell') {
+      navigate('/spell-creator');
     }
   };
 

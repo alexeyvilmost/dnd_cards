@@ -14,8 +14,12 @@ import type {
   CreatePassiveEffectRequest,
   UpdatePassiveEffectRequest,
   PassiveEffectsResponse,
+  Spell,
+  CreateSpellRequest,
+  UpdateSpellRequest,
+  SpellsResponse,
   ActiveEffect,
-  ApiError 
+  ApiError
 } from '../types';
 import type { CharacterV3 } from '../utils/characterCalculationsV3';
 
@@ -204,6 +208,46 @@ export const effectsApi = {
   // Удаление эффекта
   deleteEffect: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/effects/${id}`);
+  },
+};
+
+export const spellsApi = {
+  // Получение списка заклинаний
+  getSpells: async (params?: {
+    page?: number;
+    limit?: number;
+    rarity?: string;
+    level?: number;
+    school?: string;
+    class?: string;
+    search?: string;
+    sort_by?: string;
+  }): Promise<SpellsResponse> => {
+    const response = await apiClient.get<SpellsResponse>('/api/spells', { params });
+    return response.data;
+  },
+
+  // Получение заклинания по ID
+  getSpell: async (id: string): Promise<Spell> => {
+    const response = await apiClient.get<Spell>(`/api/spells/${id}`);
+    return response.data;
+  },
+
+  // Создание нового заклинания
+  createSpell: async (data: CreateSpellRequest): Promise<Spell> => {
+    const response = await apiClient.post<Spell>('/api/spells', data);
+    return response.data;
+  },
+
+  // Обновление заклинания
+  updateSpell: async (id: string, data: UpdateSpellRequest): Promise<Spell> => {
+    const response = await apiClient.put<Spell>(`/api/spells/${id}`, data);
+    return response.data;
+  },
+
+  // Удаление заклинания
+  deleteSpell: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/spells/${id}`);
   },
 };
 
