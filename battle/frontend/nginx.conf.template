@@ -7,7 +7,7 @@ server {
 
     # ── API → battle_backend ──
     # The SPA uses a same-origin baseURL, so these prefixes are proxied transparently.
-    location ~ ^/(api|images|rooms|spells|quickstart|saved-characters|characters-api|monsters|runs|docs|openapi\.json) {
+    location ~ ^/(api|images|definitions|rooms|spells|quickstart|saved-characters|characters-api|monsters|runs|docs|openapi\.json) {
         proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;
         proxy_set_header Host $host;

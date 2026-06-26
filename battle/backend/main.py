@@ -29,6 +29,8 @@ def _static(path: str) -> str:
 import char_storage
 import characters_repo
 import dbcore
+import definitions_repo
+import effects
 import images_repo
 import engine
 import item_bridge
@@ -308,6 +310,61 @@ def delete_image(key: str):
     return {"deleted": key}
 
 
+# ─── Definitions (universal constructor: backgrounds, feats, fighting styles) ──
+
+@app.get("/definitions/meta/schema", tags=["definitions"])
+def definitions_schema():
+    """Effect-type schema + enums for the builder UI."""
+    return effects.schema()
+
+
+@app.get("/definitions", tags=["definitions"])
+def list_definitions(kind: Optional[str] = None):
+    if kind and kind not in effects.KINDS:
+        raise HTTPException(status_code=400, detail=f"Неизвестный kind '{kind}'")
+    return definitions_repo.list_kind(kind)
+
+
+@app.get("/definitions/{def_id}", tags=["definitions"])
+def get_definition(def_id: str):
+    doc = definitions_repo.get(def_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Определение не найдено")
+    return doc
+
+
+@app.post("/definitions", tags=["definitions"])
+def create_definition(doc: Dict[str, Any]):
+    """Universal constructor: validate a definition of any kind and persist it."""
+    doc = dict(doc)
+    doc.setdefault("source", "custom")
+    err = effects.validate_definition(doc)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    return definitions_repo.definitions.save(doc)
+
+
+@app.put("/definitions/{def_id}", tags=["definitions"])
+def update_definition(def_id: str, doc: Dict[str, Any]):
+    existing = definitions_repo.get(def_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Определение не найдено")
+    doc = dict(doc)
+    doc["id"] = def_id
+    doc.setdefault("source", existing.get("source", "custom"))
+    err = effects.validate_definition(doc)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    return definitions_repo.definitions.save(doc)
+
+
+@app.delete("/definitions/{def_id}", tags=["definitions"])
+def delete_definition(def_id: str):
+    if not definitions_repo.definitions.delete(def_id):
+        raise HTTPException(status_code=404, detail="Определение не найдено")
+    return {"deleted": def_id}
+
+
 @app.post("/rooms", tags=["rooms"])
 def create_room(req: CreateRoomRequest):
     room = Room(name=req.name)
@@ -575,6 +632,34 @@ def award_xp(char_id: str, req: AwardXpRequest):
     view = _char_view(saved)
     view["awarded"] = req.amount
     return view
+
+
+@app.post("/characters-api/{char_id}/feats", tags=["sheets"])
+def add_feat(char_id: str, body: Dict[str, Any]):
+    """Add a feat (origin or general) to a character, applying its one-time
+    grants (ability scores, proficiencies). Combat effects apply in battle."""
+    sheet = _char_or_404(char_id)
+    feat_id = body.get("feat_id")
+    feat = definitions_repo.get(feat_id) if feat_id else None
+    if not feat or feat.get("kind") not in ("origin_feat", "general_feat"):
+        raise HTTPException(status_code=400, detail="Неизвестная черта")
+    prereq = (feat.get("prerequisites") or {}).get("min_level")
+    if prereq and sheet.get("level", 1) < prereq:
+        raise HTTPException(status_code=400, detail=f"Требуется уровень {prereq}")
+    if feat_id in (sheet.get("feats") or []) and not feat.get("repeatable"):
+        raise HTTPException(status_code=400, detail="Черта уже есть")
+    effects.apply_feat_grants(sheet, feat, sign=1)
+    return _char_view(characters_repo.characters.save(sheet))
+
+
+@app.delete("/characters-api/{char_id}/feats/{feat_id}", tags=["sheets"])
+def remove_feat(char_id: str, feat_id: str):
+    sheet = _char_or_404(char_id)
+    feat = definitions_repo.get(feat_id)
+    if not feat or feat_id not in (sheet.get("feats") or []):
+        raise HTTPException(status_code=404, detail="Черта не найдена у персонажа")
+    effects.apply_feat_grants(sheet, feat, sign=-1)
+    return _char_view(characters_repo.characters.save(sheet))
 
 
 @app.post("/characters-api/{char_id}/equipment/import-card", tags=["sheets"])

@@ -198,6 +198,9 @@ class Character(BaseModel):
     monster_xp: int = 0                # XP granted when this monster is defeated (PvE)
     item_attack_bonus: int = 0         # from equipped imported items
     item_damage_bonus: int = 0         # from equipped imported items
+    melee_attack_bonus: int = 0        # from definitions/feats (e.g. melee-only bonuses)
+    ranged_attack_bonus: int = 0       # from definitions/feats (e.g. Archery style)
+    initiative_bonus: int = 0          # from definitions/feats (e.g. Alert)
 
     ability_scores: AbilityScores = Field(default_factory=AbilityScores)
 
@@ -294,9 +297,15 @@ class Character(BaseModel):
     def attack_bonus(self, weapon: Optional[Weapon] = None) -> int:
         w = weapon or self.main_hand
         if w is None:
-            return self.proficiency_bonus + self.ability_scores.mod("strength") + self.item_attack_bonus
+            return (
+                self.proficiency_bonus
+                + self.ability_scores.mod("strength")
+                + self.item_attack_bonus
+                + self.melee_attack_bonus
+            )
         ability = self._weapon_ability(w)
-        return self.proficiency_bonus + self.ability_scores.mod(ability) + self.item_attack_bonus
+        style = self.ranged_attack_bonus if w.ranged else self.melee_attack_bonus
+        return self.proficiency_bonus + self.ability_scores.mod(ability) + self.item_attack_bonus + style
 
     def damage_bonus(self, weapon: Optional[Weapon] = None, off_hand: bool = False) -> int:
         w = weapon or self.main_hand

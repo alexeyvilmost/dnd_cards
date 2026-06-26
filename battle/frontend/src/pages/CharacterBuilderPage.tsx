@@ -38,6 +38,12 @@ export default function CharacterBuilderPage() {
   const [prepared, setPrepared] = useState<string[]>([]);
   const [catalog, setCatalog] = useState<Record<string, Spell>>({});
 
+  // Background (definition-driven): selection + ability bonus distribution.
+  const [bgId, setBgId] = useState<string>("");
+  const [bgMode, setBgMode] = useState<"2/1" | "1/1/1">("2/1");
+  const [bgPlus2, setBgPlus2] = useState<string>("");
+  const [bgPlus1, setBgPlus1] = useState<string>("");
+
   useEffect(() => {
     charactersApi.createOptions().then(setOpts);
     spellsApi
@@ -68,6 +74,37 @@ export default function CharacterBuilderPage() {
     setScores({ ...scores, [ab]: v });
   }
 
+  const selectedBg: any = (opts?.backgrounds || []).find((b: any) => b.id === bgId);
+
+  function bgAbilityChoice(): Record<string, number> {
+    if (!selectedBg) return {};
+    const o: string[] = selectedBg.ability_options || [];
+    if (bgMode === "1/1/1") return Object.fromEntries(o.map((a) => [a, 1]));
+    const out: Record<string, number> = {};
+    if (bgPlus2) out[bgPlus2] = 2;
+    if (bgPlus1) out[bgPlus1] = 1;
+    return out;
+  }
+
+  function bgValid(): boolean {
+    if (!selectedBg) return false;
+    if (bgMode === "1/1/1") return true;
+    return !!bgPlus2 && !!bgPlus1 && bgPlus2 !== bgPlus1;
+  }
+
+  function effectInfo(bg: any): { skills: string[]; feat: string | null } {
+    const skills: string[] = [];
+    let feat: string | null = null;
+    for (const e of bg?.effects || []) {
+      if (e.type === "skill_proficiency") skills.push(...(e.fixed || []));
+      if (e.type === "grant_origin_feat") {
+        const f = (opts?.origin_feats || []).find((x: any) => x.id === e.feat);
+        feat = f ? f.name_ru || f.name : e.feat;
+      }
+    }
+    return { skills, feat };
+  }
+
   function toggle(list: string[], setList: (l: string[]) => void, key: string, max: number) {
     if (list.includes(key)) setList(list.filter((k) => k !== key));
     else if (list.length < max) setList([...list, key]);
@@ -91,6 +128,10 @@ export default function CharacterBuilderPage() {
     } else {
       payload.cantrips = cantrips;
       payload.spells_prepared = prepared;
+    }
+    if (bgId && bgValid()) {
+      payload.background = bgId;
+      payload.background_ability_choice = bgAbilityChoice();
     }
     try {
       const c = await charactersApi.create(payload);
@@ -181,9 +222,78 @@ export default function CharacterBuilderPage() {
               </div>
             ))}
           </div>
+
+          {/* Background (definition-driven): grants ability bonuses, skills, an origin feat. */}
+          <div className="field" style={{ marginTop: "1.2rem" }}>
+            <label>Предыстория</label>
+            <div className="chip-select">
+              {(opts.backgrounds || []).map((b: any) => (
+                <div
+                  key={b.id}
+                  className={`chip ${bgId === b.id ? "sel" : ""}`}
+                  title={b.description}
+                  onClick={() => {
+                    setBgId(b.id);
+                    setBgPlus2("");
+                    setBgPlus1("");
+                    setBgMode("2/1");
+                  }}
+                >
+                  {b.name_ru || b.name}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {selectedBg && (
+            <div className="panel" style={{ marginTop: 8 }}>
+              <p className="muted" style={{ marginTop: 0 }}>{selectedBg.description}</p>
+              <div className="muted" style={{ marginBottom: 8 }}>
+                Навыки: {effectInfo(selectedBg).skills.map((s) => s).join(", ") || "—"}
+                {effectInfo(selectedBg).feat ? ` · Черта: ${effectInfo(selectedBg).feat}` : ""}
+              </div>
+              <label>Бонусы характеристик</label>
+              <div className="chip-select" style={{ marginBottom: 8 }}>
+                <div className={`chip ${bgMode === "2/1" ? "sel" : ""}`} onClick={() => setBgMode("2/1")}>+2 / +1</div>
+                <div className={`chip ${bgMode === "1/1/1" ? "sel" : ""}`} onClick={() => setBgMode("1/1/1")}>+1 / +1 / +1</div>
+              </div>
+              {bgMode === "2/1" ? (
+                <div className="row">
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label>+2 к</label>
+                    <select value={bgPlus2} onChange={(e) => setBgPlus2(e.target.value)}>
+                      <option value="">—</option>
+                      {(selectedBg.ability_options || []).map((a: string) => (
+                        <option key={a} value={a}>{ABILITY_LABELS[a]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label>+1 к</label>
+                    <select value={bgPlus1} onChange={(e) => setBgPlus1(e.target.value)}>
+                      <option value="">—</option>
+                      {(selectedBg.ability_options || []).filter((a: string) => a !== bgPlus2).map((a: string) => (
+                        <option key={a} value={a}>{ABILITY_LABELS[a]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="muted">
+                  +1 к: {(selectedBg.ability_options || []).map((a: string) => ABILITY_LABELS[a]).join(", ")}
+                </div>
+              )}
+              {bgId && !bgValid() && (
+                <div className="muted" style={{ color: "#e08a7a", marginTop: 6 }}>
+                  Выберите распределение (+2 и +1 к разным характеристикам).
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="btn-row" style={{ marginTop: "1rem" }}>
             <button onClick={() => setStep(0)}>← Назад</button>
-            <button className="primary" onClick={() => setStep(2)}>
+            <button className="primary" disabled={!!bgId && !bgValid()} onClick={() => setStep(2)}>
               Далее →
             </button>
           </div>

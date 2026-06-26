@@ -11,6 +11,7 @@ import SpellEditorPage from "./pages/SpellEditorPage";
 import BestiaryPage from "./pages/BestiaryPage";
 import MonsterEditorPage from "./pages/MonsterEditorPage";
 import DungeonPage from "./pages/DungeonPage";
+import AdminDefinitionsPage from "./pages/AdminDefinitionsPage";
 
 function Nav() {
   const [storage, setStorage] = useState<string>("");
@@ -39,6 +40,9 @@ function Nav() {
       <NavLink to="/spellbook" className={link}>
         Заклинания
       </NavLink>
+      <NavLink to="/admin" className={link}>
+        Конструктор
+      </NavLink>
       <span className="spacer" />
       <span className="badge">storage: {storage || "…"}</span>
     </nav>
@@ -63,6 +67,7 @@ export default function App() {
         <Route path="/bestiary" element={<BestiaryPage />} />
         <Route path="/bestiary/new" element={<MonsterEditorPage />} />
         <Route path="/bestiary/:id/edit" element={<MonsterEditorPage />} />
+        <Route path="/admin" element={<AdminDefinitionsPage />} />
         <Route path="*" element={<div className="panel">Страница не найдена.</div>} />
       </Routes>
     </div>

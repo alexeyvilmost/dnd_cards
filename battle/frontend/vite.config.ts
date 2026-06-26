@@ -7,6 +7,7 @@ const BACKEND = process.env.VITE_BACKEND_URL || "http://localhost:8765";
 const API_PREFIXES = [
   "/api",
   "/images",
+  "/definitions",
   "/rooms",
   "/spells",
   "/quickstart",

@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+import definitions_repo
+import effects
 import engine
 import spell_catalog
 from models import AbilityScores, Character, FightingStyle, Position, WeaponMastery
@@ -22,7 +24,7 @@ from models import AbilityScores, Character, FightingStyle, Position, WeaponMast
 # ─── XP / levels ────────────────────────────────────────────────────────────
 
 XP_THRESHOLDS = {1: 0, 2: 300, 3: 900, 4: 2700}
-MAX_LEVEL = 3  # v1 cap
+MAX_LEVEL = 4  # level 4 unlocks the first feat / ability score improvement
 
 POINT_BUY_COST = {8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9}
 POINT_BUY_TOTAL = 27
@@ -65,9 +67,9 @@ WIZARD_SUBCLASSES = [
     {"key": "abjurer", "label": "Абьюратор (защита)"},
 ]
 
-# Prepared-spell counts for the Wizard at levels 1-3 (2024 table).
-WIZARD_PREPARED = {1: 4, 2: 5, 3: 6}
-WIZARD_CANTRIPS_KNOWN = {1: 3, 2: 3, 3: 3}
+# Prepared-spell / cantrip counts for the Wizard at levels 1-4 (2024 table).
+WIZARD_PREPARED = {1: 4, 2: 5, 3: 6, 4: 7}
+WIZARD_CANTRIPS_KNOWN = {1: 3, 2: 3, 3: 3, 4: 4}
 
 
 # ─── helpers ────────────────────────────────────────────────────────────────
@@ -118,6 +120,25 @@ def max_spell_level(char_level: int) -> int:
 
 # ─── create options (for the builder UI) ────────────────────────────────────
 
+def _def_brief(d: Dict[str, Any]) -> Dict[str, Any]:
+    """Compact view of a definition for the builder UI."""
+    return {
+        "id": d.get("id"),
+        "kind": d.get("kind"),
+        "name": d.get("name"),
+        "name_ru": d.get("name_ru") or d.get("name"),
+        "description": d.get("description", ""),
+        "ability_options": d.get("ability_options"),
+        "effects": d.get("effects", []),
+        "prerequisites": d.get("prerequisites"),
+        "source": d.get("source"),
+    }
+
+
+def definitions_by_kind(kind: str) -> List[Dict[str, Any]]:
+    return [_def_brief(d) for d in definitions_repo.list_kind(kind)]
+
+
 def create_options() -> Dict[str, Any]:
     return {
         "classes": CLASSES,
@@ -136,6 +157,11 @@ def create_options() -> Dict[str, Any]:
             "spells": spell_options(1),
             "spells_to_pick": WIZARD_PREPARED[1],
         },
+        # Definition-driven entities (universal constructor)
+        "backgrounds": definitions_by_kind("background"),
+        "fighting_styles": definitions_by_kind("fighting_style"),
+        "origin_feats": definitions_by_kind("origin_feat"),
+        "general_feats": definitions_by_kind("general_feat"),
     }
 
 
@@ -207,6 +233,17 @@ def new_sheet(payload: Dict[str, Any]) -> Dict[str, Any]:
         )
         sheet["features"] = ["arcane_recovery", "ritual_adept"]
 
+    # Definition-driven extras (universal constructor entities)
+    sheet.setdefault("feats", [])
+    sheet.setdefault("tool_proficiencies", [])
+    sheet.setdefault("fighting_styles", [])
+
+    bg_id = payload.get("background")
+    if bg_id:
+        bg = definitions_repo.get(bg_id)
+        if bg and bg.get("kind") == "background":
+            effects.apply_background(sheet, bg, payload.get("background_ability_choice") or {})
+
     return sheet
 
 
@@ -277,7 +314,54 @@ def level_up_options(sheet: Dict[str, Any]) -> Dict[str, Any]:
                     ],
                 }
             )
+
+    # Level 4: first feat / ability score improvement for every class.
+    if target == 4:
+        out.setdefault("grants", []).append("Черта или повышение характеристик")
+        out["choices"].append(
+            {
+                "id": "feat",
+                "label": "Черта (общая) или повышение характеристик",
+                "type": "single",
+                "options": _feat_options(sheet),
+            }
+        )
+        if sheet["class_name"] == "Wizard":
+            out["choices"].append(
+                {
+                    "id": "new_cantrip",
+                    "label": f"Новый заговор (до {WIZARD_CANTRIPS_KNOWN[4]})",
+                    "type": "single",
+                    "options": [
+                        {"key": c, "label": c}
+                        for c in cantrip_options()
+                        if c not in sheet.get("cantrips", [])
+                    ],
+                }
+            )
+            out["choices"].append(
+                {
+                    "id": "new_spell",
+                    "label": f"Подготовить ещё заклинание (до {WIZARD_PREPARED[4]})",
+                    "type": "single",
+                    "options": [
+                        {"key": s, "label": s}
+                        for s in spell_options(max_spell_level(4))
+                        if s not in sheet.get("spells_prepared", [])
+                    ],
+                }
+            )
     return out
+
+
+def _feat_options(sheet: Dict[str, Any]) -> List[Dict[str, str]]:
+    """General feats selectable at level-up (excludes already-taken non-repeatables)."""
+    owned = set(sheet.get("feats", []) or [])
+    out: List[Dict[str, str]] = []
+    for d in definitions_repo.list_kind("general_feat"):
+        if d.get("repeatable") or d["id"] not in owned:
+            out.append({"key": d["id"], "label": d.get("name_ru") or d.get("name")})
+    return sorted(out, key=lambda o: o["label"])
 
 
 def apply_level_up(sheet: Dict[str, Any], choices: Dict[str, Any]) -> Dict[str, Any]:
@@ -309,6 +393,26 @@ def apply_level_up(sheet: Dict[str, Any], choices: Dict[str, Any]) -> Dict[str, 
         if target == 3 and "subclass" in choices:
             sheet["subclass"] = choices["subclass"]
             _add_feature(sheet, f"subclass:{choices['subclass']}")
+        if target == 4 and choices.get("new_cantrip"):
+            cants = sheet.setdefault("cantrips", [])
+            if choices["new_cantrip"] not in cants:
+                cants.append(choices["new_cantrip"])
+
+    # Level 4 feat / ASI (all classes).
+    if target == 4:
+        feat_id = choices.get("feat")
+        feat = definitions_repo.get(feat_id) if feat_id else None
+        if not feat or feat.get("kind") != "general_feat":
+            raise ValueError("Выберите общую черту для 4 уровня")
+        if feat_id == "feat_ability_score_improvement":
+            ab = choices.get("asi_ability")
+            if ab not in ABILITIES:
+                raise ValueError("Для повышения характеристик укажите asi_ability")
+            scores = sheet.setdefault("ability_scores", {})
+            scores[ab] = min(20, int(scores.get(ab, 10)) + 2)
+            sheet.setdefault("feats", [])
+        else:
+            effects.apply_feat_grants(sheet, feat, sign=1)
     return sheet
 
 
@@ -371,10 +475,25 @@ def build_combat_character(
     if sheet.get("subclass") == "champion":
         char.crit_threshold = 19
 
+    # Definition-driven combat effects: background + feats (origin & general).
+    _apply_definition_effects(char, sheet)
+
     # Apply imported equipment bonuses from main dnd_cards item API.
     _apply_equipment(char, sheet.get("equipment") or [])
 
     return char
+
+
+def _apply_definition_effects(char: Character, sheet: Dict[str, Any]) -> None:
+    """Gather the sheet's background + feat definitions and apply their numeric
+    combat effects (HP, AC, attack, speed, …) onto the combat Character."""
+    ids: List[str] = []
+    if sheet.get("background"):
+        ids.append(sheet["background"])
+    ids += sheet.get("feats", []) or []
+    ids += sheet.get("fighting_styles", []) or []
+    defs = [definitions_repo.get(i) for i in ids]
+    effects.apply_definitions_to_combat(char, [d for d in defs if d])
 
 
 def _apply_equipment(char: Character, equipment: List[Dict[str, Any]]) -> None:

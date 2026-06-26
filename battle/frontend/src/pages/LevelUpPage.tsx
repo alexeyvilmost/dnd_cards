@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { charactersApi } from "../api/client";
 
+const ABILITY_LABELS: Record<string, string> = {
+  strength: "СИЛ", dexterity: "ЛОВ", constitution: "ТЕЛ",
+  intelligence: "ИНТ", wisdom: "МДР", charisma: "ХАР",
+};
+const ASI_FEAT = "feat_ability_score_improvement";
+
 export default function LevelUpPage() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -59,6 +65,20 @@ export default function LevelUpPage() {
               </div>
             ))}
           </div>
+          {ch.id === "feat" && choices.feat === ASI_FEAT && (
+            <div className="field" style={{ marginTop: 8 }}>
+              <label>+2 к характеристике</label>
+              <select
+                value={choices.asi_ability || ""}
+                onChange={(e) => setChoices({ ...choices, asi_ability: e.target.value })}
+              >
+                <option value="">—</option>
+                {Object.keys(ABILITY_LABELS).map((a) => (
+                  <option key={a} value={a}>{ABILITY_LABELS[a]}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       ))}
 

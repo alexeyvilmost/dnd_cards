@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { charactersApi } from "../api/client";
+import { charactersApi, definitionsApi, featsApi, Definition } from "../api/client";
 
 const ABILITY_LABELS: Record<string, string> = {
   strength: "СИЛ",
@@ -18,6 +18,8 @@ export default function CharacterSheetPage() {
   const [error, setError] = useState("");
   const [xpAmount, setXpAmount] = useState(300);
   const [cardId, setCardId] = useState("");
+  const [defs, setDefs] = useState<Record<string, Definition>>({});
+  const [newFeat, setNewFeat] = useState("");
 
   function load() {
     charactersApi
@@ -26,6 +28,31 @@ export default function CharacterSheetPage() {
       .catch(() => setError("Персонаж не найден"));
   }
   useEffect(load, [id]);
+
+  useEffect(() => {
+    definitionsApi
+      .list()
+      .then((list) => setDefs(Object.fromEntries(list.map((d) => [d.id, d]))))
+      .catch(() => {});
+  }, []);
+
+  const defName = (defId: string) => defs[defId]?.name_ru || defs[defId]?.name || defId;
+
+  async function addFeat() {
+    if (!newFeat) return;
+    try {
+      await featsApi.add(id!, newFeat);
+      setNewFeat("");
+      load();
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || "Не удалось добавить черту");
+    }
+  }
+
+  async function dropFeat(featId: string) {
+    await featsApi.remove(id!, featId);
+    load();
+  }
 
   async function award() {
     await charactersApi.awardXp(id!, xpAmount);
@@ -151,6 +178,46 @@ export default function CharacterSheetPage() {
             {f}
           </span>
         ))}
+      </div>
+
+      <div className="panel">
+        <h3>Предыстория и черты</h3>
+        <div className="muted" style={{ marginBottom: 8 }}>
+          Предыстория: <b style={{ color: "var(--gold)" }}>{c.background ? defName(c.background) : "—"}</b>
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          {(c.feats || []).length === 0 && <span className="muted">Черт нет</span>}
+          {(c.feats || []).map((f: string) => (
+            <span key={f} className="pill" title={defs[f]?.description || ""}>
+              {defName(f)}
+              <button
+                className="ghost"
+                style={{ padding: "0 6px" }}
+                onClick={() => dropFeat(f)}
+                title="Убрать"
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+        {c.level >= 4 && (
+          <div className="row" style={{ alignItems: "flex-end" }}>
+            <div className="field" style={{ marginBottom: 0, minWidth: 220 }}>
+              <label>Добавить общую черту</label>
+              <select value={newFeat} onChange={(e) => setNewFeat(e.target.value)}>
+                <option value="">— выбрать —</option>
+                {Object.values(defs)
+                  .filter((d) => d.kind === "general_feat" && !(c.feats || []).includes(d.id))
+                  .sort((a, b) => (a.name_ru || a.name).localeCompare(b.name_ru || b.name))
+                  .map((d) => (
+                    <option key={d.id} value={d.id}>{d.name_ru || d.name}</option>
+                  ))}
+              </select>
+            </div>
+            <button onClick={addFeat} disabled={!newFeat}>+ Черта</button>
+          </div>
+        )}
       </div>
 
       <div className="panel">

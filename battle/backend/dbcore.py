@@ -150,6 +150,29 @@ MIGRATIONS: List[Tuple[str, str]] = [
         );
         """,
     ),
+    (
+        "007_definitions",
+        """
+        CREATE TABLE IF NOT EXISTS battle_definitions (
+            id          TEXT PRIMARY KEY,
+            kind        TEXT NOT NULL,
+            name        TEXT NOT NULL,
+            source      TEXT NOT NULL DEFAULT 'custom',
+            data        JSONB NOT NULL,
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+        CREATE INDEX IF NOT EXISTS battle_definitions_kind_idx ON battle_definitions (kind);
+        """,
+    ),
+    (
+        # battle_runs predates the runs_repo `owner` column mapping; add it so
+        # INSERTs on Postgres don't fail (file backend was unaffected).
+        "008_runs_owner",
+        """
+        ALTER TABLE battle_runs ADD COLUMN IF NOT EXISTS owner TEXT;
+        """,
+    ),
 ]
 
 

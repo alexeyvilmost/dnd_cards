@@ -191,6 +191,44 @@ export const combatApi = {
     api.get(`/rooms/${roomId}/log?limit=${limit}`).then((r) => r.data),
 };
 
+// ─── Definitions (backgrounds / feats / fighting styles) ──────────────────────
+
+export interface Effect {
+  type: string;
+  [key: string]: any;
+}
+
+export interface Definition {
+  id: string;
+  kind: "background" | "origin_feat" | "general_feat" | "fighting_style";
+  name: string;
+  name_ru?: string;
+  description?: string;
+  source?: string;
+  effects?: Effect[];
+  ability_options?: string[];
+  prerequisites?: { min_level?: number; [k: string]: any };
+  repeatable?: boolean;
+}
+
+export const definitionsApi = {
+  list: (kind?: string) =>
+    api.get<Definition[]>("/definitions", { params: kind ? { kind } : {} }).then((r) => r.data),
+  get: (id: string) => api.get<Definition>(`/definitions/${id}`).then((r) => r.data),
+  schema: () => api.get("/definitions/meta/schema").then((r) => r.data),
+  create: (d: Partial<Definition>) => api.post<Definition>("/definitions", d).then((r) => r.data),
+  update: (id: string, d: Partial<Definition>) =>
+    api.put<Definition>(`/definitions/${id}`, d).then((r) => r.data),
+  remove: (id: string) => api.delete(`/definitions/${id}`).then((r) => r.data),
+};
+
+export const featsApi = {
+  add: (charId: string, featId: string) =>
+    api.post(`/characters-api/${charId}/feats`, { feat_id: featId }).then((r) => r.data),
+  remove: (charId: string, featId: string) =>
+    api.delete(`/characters-api/${charId}/feats/${featId}`).then((r) => r.data),
+};
+
 export const runsApi = {
   list: () => api.get("/runs").then((r) => r.data),
   start: (sheetId: string) => api.post("/runs/start", { sheet_id: sheetId }).then((r) => r.data),
