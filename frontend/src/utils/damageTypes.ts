@@ -44,8 +44,20 @@ export const DAMAGE_TYPES: DamageTypeInfo[] = [
   { value: 'thunder', label: 'Гром', color: '#8844b9', group: 'elemental' },
 ];
 
+// Лечение — отдельная «метка» (не тип урона, не участвует в выборе урона предмета),
+// но имеет цвет, иконку и доступно в шорткатах описаний.
+export const HEALING: DamageTypeInfo = {
+  value: 'healing' as DamageType,
+  label: 'Лечение',
+  color: '#30bbbb',
+  group: 'elemental',
+};
+
+// Цветные метки = типы урона + лечение (используются для окраски текста).
+export const COLOR_TOKENS: DamageTypeInfo[] = [...DAMAGE_TYPES, HEALING];
+
 export const DAMAGE_TYPE_MAP: Record<string, DamageTypeInfo> = Object.fromEntries(
-  DAMAGE_TYPES.map((d) => [d.value, d])
+  COLOR_TOKENS.map((d) => [d.value, d])
 );
 
 export const PHYSICAL_DAMAGE_TYPES = DAMAGE_TYPES.filter((d) => d.group === 'physical');
@@ -61,3 +73,46 @@ export const getDamageLabel = (type: string): string =>
 
 export const getDamageIconPath = (type: string): string =>
   `/icons/damage_types/${type}.png`;
+
+// ─── Ресурсы (действия, бонусные, реакции, ячейки) ────────────────────────────
+// Только иконки, без привязанного цвета.
+export interface ResourceInfo {
+  value: string;
+  label: string;
+}
+
+export const RESOURCE_ICONS: ResourceInfo[] = [
+  { value: 'action', label: 'Действие' },
+  { value: 'bonus_action', label: 'Бонусное действие' },
+  { value: 'reaction', label: 'Реакция' },
+  { value: 'spell_slot', label: 'Ячейка заклинания' },
+  { value: 'warlock_spell_slot', label: 'Ячейка колдуна' },
+  { value: 'ritual', label: 'Ритуал' },
+];
+
+export const getResourceIconPath = (value: string): string =>
+  `/icons/resources/${value}.png`;
+
+// ─── Реестр вставляемых иконок (для шорткатов :token: в описаниях) ────────────
+export type IconGroup = 'damage' | 'heal' | 'resource';
+
+export interface IconToken {
+  token: string;
+  label: string;
+  path: string;
+  group: IconGroup;
+}
+
+export const ICON_TOKENS: IconToken[] = [
+  ...DAMAGE_TYPES.map((d): IconToken => ({
+    token: d.value, label: d.label, path: getDamageIconPath(d.value), group: 'damage',
+  })),
+  { token: 'healing', label: 'Лечение', path: getDamageIconPath('healing'), group: 'heal' },
+  ...RESOURCE_ICONS.map((r): IconToken => ({
+    token: r.value, label: r.label, path: getResourceIconPath(r.value), group: 'resource',
+  })),
+];
+
+export const ICON_TOKEN_MAP: Record<string, IconToken> = Object.fromEntries(
+  ICON_TOKENS.map((t) => [t.token, t])
+);

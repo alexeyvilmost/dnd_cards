@@ -58,18 +58,24 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   if (spell.ritual) meta.push(['📖', 'Ритуал']);
   if (components.length) meta.push(['✦', components.join(', ')]);
 
-  // Плашка стоимости: тип действия (по времени сотворения) + слот заклинания
+  // Плашка стоимости: тип действия (по времени сотворения) + слот заклинания.
+  // Иконки ресурсов: /icons/resources/<icon>.png
   const ct = (spell.casting_time || '').toLowerCase();
-  const costs: Array<{ shape: 'cir' | 'sq' | 'dia'; color: string; label: string }> = [];
+  const costs: Array<{ icon: string; label: string }> = [];
   if (ct.includes('бонус')) {
-    costs.push({ shape: 'sq', color: '#d88a4a', label: spell.casting_time! });
+    costs.push({ icon: 'bonus_action', label: spell.casting_time! });
   } else if (ct.includes('реакц')) {
-    costs.push({ shape: 'dia', color: '#6fb6e8', label: spell.casting_time! });
+    costs.push({ icon: 'reaction', label: spell.casting_time! });
+  } else if (ct.includes('ритуал') && !spell.casting_time?.trim()) {
+    costs.push({ icon: 'ritual', label: 'Ритуал' });
   } else if (spell.casting_time) {
-    costs.push({ shape: 'cir', color: '#d8b24a', label: spell.casting_time });
+    costs.push({ icon: 'action', label: spell.casting_time });
+  }
+  if (spell.ritual) {
+    costs.push({ icon: 'ritual', label: 'Ритуал' });
   }
   if (spell.level > 0) {
-    costs.push({ shape: 'sq', color: '#9a7ad8', label: `Слот ${spell.level} круга` });
+    costs.push({ icon: 'spell_slot', label: `Слот ${spell.level} круга` });
   }
 
   const hasStats =
@@ -112,7 +118,8 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         .sp-die.sp-save{background:radial-gradient(circle at 50% 40%,#5a4a7a,#2a2140); border-color:#6a5a9a; color:#d8c8f0;}
         .sp-srow .sp-bonus{font-weight:700; font-size:1.02rem; color:#f3ead4;}
         .sp-dmgval{display:inline-flex; align-items:center; gap:.32rem; font-weight:700; font-size:1.02rem; flex-wrap:wrap;}
-        .sp-dmgval .sp-dmgicon{height:1.05em; width:1.05em; object-fit:contain; vertical-align:-0.15em; margin-right:.15em;}
+        .sp-dmgitem{display:inline-flex; align-items:center; gap:.28em; white-space:nowrap;}
+        .sp-dmgval .sp-dmgicon{height:1.15em; width:1.15em; object-fit:contain; flex:0 0 auto;}
         .sp-dmgsep{color:#a59886; font-weight:400; margin:0 .15rem;}
         .sp-tip .sp-desc{font-size:.92rem; line-height:1.5; color:#d8cdb9; margin:.2rem 0 .9rem; white-space:pre-wrap;}
         .sp-tip .sp-desc b, .sp-tip .sp-desc .font-bold{color:#f0d98a; font-weight:600;}
@@ -129,9 +136,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         .sp-tip .sp-costbar{display:flex; gap:.6rem; flex-wrap:wrap; margin:0 -18px; padding:.6rem 18px;
           background:linear-gradient(#221b15,#1a140f); border-top:1px solid #4a3f35; border-radius:0 0 12px 12px;}
         .sp-cost{display:inline-flex; align-items:center; gap:.35rem; font-size:.84rem; color:#ece3d4;}
-        .sp-cost .sp-sq{width:11px; height:11px; border-radius:3px;}
-        .sp-cost .sp-cir{width:11px; height:11px; border-radius:50%;}
-        .sp-cost .sp-dia{width:11px; height:11px; transform:rotate(45deg);}
+        .sp-cost .sp-costicon{width:16px; height:16px; object-fit:contain; flex:0 0 auto;}
         .sp-spacer{height:14px;}
       `}</style>
 
@@ -171,9 +176,10 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
                 {spell.damage.map((d, i) => (
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
-                    <span style={{ color: getDamageColor(d.damage_type) }}>
+                    <span className="sp-dmgitem" style={{ color: getDamageColor(d.damage_type) }}>
+                      {diceRu(d.dice)}
                       <img className="sp-dmgicon" src={getDamageIconPath(d.damage_type)} alt="" />
-                      {diceRu(d.dice)} · {getDamageLabel(d.damage_type).toLowerCase()}
+                      {getDamageLabel(d.damage_type).toLowerCase()}
                     </span>
                   </React.Fragment>
                 ))}
@@ -183,8 +189,12 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
           {spell.is_healing && spell.heal_dice && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
-              <span className="sp-dmgval" style={{ color: '#f0d268' }}>
-                <span className="sp-ic">❤</span> {diceRu(spell.heal_dice)}
+              <span className="sp-dmgval">
+                <span className="sp-dmgitem" style={{ color: getDamageColor('healing') }}>
+                  {diceRu(spell.heal_dice)}
+                  <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
+                  лечение
+                </span>
               </span>
             </div>
           )}
@@ -234,7 +244,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         <div className="sp-costbar">
           {costs.map((c, i) => (
             <span className="sp-cost" key={i}>
-              <span className={`sp-${c.shape}`} style={{ background: c.color }} />
+              <img className="sp-costicon" src={`/icons/resources/${c.icon}.png`} alt="" />
               {c.label}
             </span>
           ))}

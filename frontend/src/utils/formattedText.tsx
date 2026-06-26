@@ -1,5 +1,5 @@
 import React from 'react';
-import { DAMAGE_TYPES, getDamageColor, getDamageIconPath, getDamageLabel } from './damageTypes';
+import { COLOR_TOKENS, ICON_TOKENS, ICON_TOKEN_MAP, getDamageColor } from './damageTypes';
 
 type FormatType = 'bold' | 'italic' | 'underline';
 
@@ -38,11 +38,13 @@ const FORMAT_DELIMITERS: FormatDelimiter[] = [
   { type: 'italic', open: '*', close: '*' },
 ];
 
-const DAMAGE_VALUES = DAMAGE_TYPES.map((d) => d.value);
-// :fire:  — вставка иконки урона
-const ICON_RE = new RegExp(`:(${DAMAGE_VALUES.join('|')}):`);
-// [fire]...[/fire] — окраска фрагмента в цвет типа урона
-const COLOR_OPEN_RE = new RegExp(`\\[(${DAMAGE_VALUES.join('|')})\\]`);
+// токены сортируем по длине убыв., чтобы длинные (warlock_spell_slot) матчились раньше
+const ICON_TOKEN_NAMES = ICON_TOKENS.map((t) => t.token).sort((a, b) => b.length - a.length);
+const COLOR_TOKEN_NAMES = COLOR_TOKENS.map((d) => d.value).sort((a, b) => b.length - a.length);
+// :fire: / :action: — вставка иконки урона/лечения/ресурса
+const ICON_RE = new RegExp(`:(${ICON_TOKEN_NAMES.join('|')}):`);
+// [fire]...[/fire] — окраска фрагмента в цвет типа урона / лечения
+const COLOR_OPEN_RE = new RegExp(`\\[(${COLOR_TOKEN_NAMES.join('|')})\\]`);
 const colorClose = (dmg: string) => `[/${dmg}]`;
 
 const findItalicIndex = (text: string, from: number): number => {
@@ -212,12 +214,13 @@ const renderParsedNodes = (
     }
 
     if (node.type === 'icon') {
+      const info = ICON_TOKEN_MAP[node.dmg];
       return (
         <img
           key={key}
-          src={getDamageIconPath(node.dmg)}
-          alt={getDamageLabel(node.dmg)}
-          title={getDamageLabel(node.dmg)}
+          src={info?.path ?? ''}
+          alt={info?.label ?? node.dmg}
+          title={info?.label ?? node.dmg}
           style={{
             display: 'inline-block',
             height: '1em',

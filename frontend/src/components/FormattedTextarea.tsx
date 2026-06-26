@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Bold, Italic, Underline, Palette, Sparkles } from 'lucide-react';
-import { DAMAGE_TYPES, getDamageIconPath } from '../utils/damageTypes';
+import { COLOR_TOKENS, ICON_TOKENS } from '../utils/damageTypes';
 
 interface FormattedTextareaProps {
   value: string;
@@ -96,7 +96,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
           </button>
           {menu === 'color' && (
             <div className="absolute z-20 mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 grid grid-cols-2 gap-1 w-56">
-              {DAMAGE_TYPES.map((d) => (
+              {COLOR_TOKENS.map((d) => (
                 <button
                   key={d.value}
                   type="button"
@@ -122,18 +122,30 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
             <Sparkles size={16} />
           </button>
           {menu === 'icon' && (
-            <div className="absolute z-20 mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 grid grid-cols-2 gap-1 w-56">
-              {DAMAGE_TYPES.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() => { insert(`:${d.value}:`); setMenu(null); }}
-                  className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 text-sm"
-                >
-                  <img src={getDamageIconPath(d.value)} alt="" className="w-4 h-4 object-contain" />
-                  {d.label}
-                </button>
-              ))}
+            <div className="absolute z-20 mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-64 max-h-80 overflow-y-auto">
+              {(['damage', 'heal', 'resource'] as const).map((grp) => {
+                const items = ICON_TOKENS.filter((t) => t.group === grp);
+                if (!items.length) return null;
+                const title = grp === 'damage' ? 'Урон' : grp === 'heal' ? 'Лечение' : 'Ресурсы';
+                return (
+                  <div key={grp} className="mb-1">
+                    <div className="text-[11px] uppercase tracking-wide text-gray-400 px-2 py-1">{title}</div>
+                    <div className="grid grid-cols-2 gap-1">
+                      {items.map((t) => (
+                        <button
+                          key={t.token}
+                          type="button"
+                          onClick={() => { insert(`:${t.token}:`); setMenu(null); }}
+                          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 text-sm"
+                        >
+                          <img src={t.path} alt="" className="w-4 h-4 object-contain" />
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
