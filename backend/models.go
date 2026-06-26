@@ -1836,13 +1836,13 @@ type Spell struct {
 	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
 	Level                 int            `json:"level" gorm:"type:int;not null;default:0"` // 0 = заговор (cantrip)
 	School                *string        `json:"school" gorm:"type:varchar(100)"`
-	CastingTime           *string        `json:"casting_time" gorm:"type:varchar(100)"`
-	Range                 *string        `json:"range" gorm:"column:range;type:varchar(100)"`
+	CastingTime           *string        `json:"casting_time" gorm:"type:text"`
+	Range                 *string        `json:"range" gorm:"column:range;type:text"`
 	ComponentVerbal       bool           `json:"component_verbal" gorm:"type:boolean;default:false"`
 	ComponentSomatic      bool           `json:"component_somatic" gorm:"type:boolean;default:false"`
 	ComponentMaterial     bool           `json:"component_material" gorm:"type:boolean;default:false"`
 	MaterialText          *string        `json:"material_text" gorm:"type:text"`
-	Duration              *string        `json:"duration" gorm:"type:varchar(100)"`
+	Duration              *string        `json:"duration" gorm:"type:text"`
 	Classes               *Properties    `json:"classes" gorm:"type:jsonb"`
 	Subclasses            *Properties    `json:"subclasses" gorm:"type:jsonb"`
 	AttackRoll            bool           `json:"attack_roll" gorm:"type:boolean;default:false"`
@@ -1851,7 +1851,7 @@ type Spell struct {
 	Ritual                bool           `json:"ritual" gorm:"type:boolean;default:false"`
 	SaveTypes             *Properties    `json:"save_types" gorm:"type:jsonb"` // Типы спасброска (str, dex, ...)
 	Damage                *SpellDamage   `json:"damage" gorm:"type:jsonb"`
-	Area                  *string        `json:"area" gorm:"type:varchar(100)"`        // Область, например "20 фт"
+	Area                  *string        `json:"area" gorm:"type:text"`                // Область, например "20 фт"
 	IsHealing             bool           `json:"is_healing" gorm:"type:boolean;default:false"`
 	HealDice              *string        `json:"heal_dice" gorm:"type:varchar(50)"`    // Кубы лечения
 	SaveOutcome           *string        `json:"save_outcome" gorm:"type:text"`        // Результат при спасброске

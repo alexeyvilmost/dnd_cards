@@ -194,6 +194,12 @@ func GetAllMigrations() []Migration {
 			Up:          convertSpellArraysToJsonb,
 			Down:        revertSpellArraysToTextArray,
 		},
+		{
+			Version:     "032_spells_widen_text_columns",
+			Description: "Widen spells casting_time/range/duration/area to TEXT (long reaction triggers)",
+			Up:          widenSpellTextColumns,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1528,13 +1534,13 @@ func createSpellsTable(db *sql.DB) error {
 			card_number VARCHAR(50) UNIQUE NOT NULL,
 			level INTEGER NOT NULL DEFAULT 0,
 			school VARCHAR(100),
-			casting_time VARCHAR(100),
-			range VARCHAR(100),
+			casting_time TEXT,
+			range TEXT,
 			component_verbal BOOLEAN DEFAULT false,
 			component_somatic BOOLEAN DEFAULT false,
 			component_material BOOLEAN DEFAULT false,
 			material_text TEXT,
-			duration VARCHAR(100),
+			duration TEXT,
 			classes JSONB,
 			subclasses JSONB,
 			attack_roll BOOLEAN DEFAULT false,
@@ -1543,7 +1549,7 @@ func createSpellsTable(db *sql.DB) error {
 			ritual BOOLEAN DEFAULT false,
 			save_types JSONB,
 			damage JSONB,
-			area VARCHAR(100),
+			area TEXT,
 			is_healing BOOLEAN DEFAULT false,
 			heal_dice VARCHAR(50),
 			save_outcome TEXT,
@@ -1610,6 +1616,17 @@ func convertSpellArraysToJsonb(db *sql.DB) error {
 			"ALTER TABLE spells ALTER COLUMN %s TYPE JSONB USING to_jsonb(%s)", col, col)
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to convert spells.%s to jsonb: %w", col, err)
+		}
+	}
+	return nil
+}
+
+// widenSpellTextColumns расширяет текстовые колонки заклинаний до TEXT.
+func widenSpellTextColumns(db *sql.DB) error {
+	cols := []string{"casting_time", "range", "duration", "area"}
+	for _, col := range cols {
+		if _, err := db.Exec(fmt.Sprintf("ALTER TABLE spells ALTER COLUMN %s TYPE TEXT", col)); err != nil {
+			return fmt.Errorf("failed to widen spells.%s: %w", col, err)
 		}
 	}
 	return nil
