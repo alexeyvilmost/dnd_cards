@@ -188,6 +188,12 @@ func GetAllMigrations() []Migration {
 			Up:          createSpellsTable,
 			Down:        dropSpellsTable,
 		},
+		{
+			Version:     "031_spells_arrays_to_jsonb",
+			Description: "Convert spells array columns (classes/subclasses/save_types/tags) from text[] to jsonb",
+			Up:          convertSpellArraysToJsonb,
+			Down:        revertSpellArraysToTextArray,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1529,13 +1535,13 @@ func createSpellsTable(db *sql.DB) error {
 			component_material BOOLEAN DEFAULT false,
 			material_text TEXT,
 			duration VARCHAR(100),
-			classes TEXT[],
-			subclasses TEXT[],
+			classes JSONB,
+			subclasses JSONB,
 			attack_roll BOOLEAN DEFAULT false,
 			saving_throw BOOLEAN DEFAULT false,
 			concentration BOOLEAN DEFAULT false,
 			ritual BOOLEAN DEFAULT false,
-			save_types TEXT[],
+			save_types JSONB,
 			damage JSONB,
 			area VARCHAR(100),
 			is_healing BOOLEAN DEFAULT false,
@@ -1592,4 +1598,32 @@ func createSpellsTable(db *sql.DB) error {
 func dropSpellsTable(db *sql.DB) error {
 	_, err := db.Exec("DROP TABLE IF EXISTS spells CASCADE")
 	return err
+}
+
+// convertSpellArraysToJsonb переводит колонки-массивы заклинаний в jsonb.
+// Тип Properties сериализуется в JSON (["a","b"]), что несовместимо с text[],
+// но идеально ложится на jsonb. Идемпотентно: jsonb->jsonb через to_jsonb тоже валиден.
+func convertSpellArraysToJsonb(db *sql.DB) error {
+	cols := []string{"classes", "subclasses", "save_types", "tags"}
+	for _, col := range cols {
+		query := fmt.Sprintf(
+			"ALTER TABLE spells ALTER COLUMN %s TYPE JSONB USING to_jsonb(%s)", col, col)
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to convert spells.%s to jsonb: %w", col, err)
+		}
+	}
+	return nil
+}
+
+// revertSpellArraysToTextArray возвращает колонки в text[] (откат).
+func revertSpellArraysToTextArray(db *sql.DB) error {
+	cols := []string{"classes", "subclasses", "save_types", "tags"}
+	for _, col := range cols {
+		query := fmt.Sprintf(
+			"ALTER TABLE spells ALTER COLUMN %s TYPE TEXT[] USING ARRAY(SELECT jsonb_array_elements_text(%s))", col, col)
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to revert spells.%s to text[]: %w", col, err)
+		}
+	}
+	return nil
 }

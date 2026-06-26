@@ -1843,13 +1843,13 @@ type Spell struct {
 	ComponentMaterial     bool           `json:"component_material" gorm:"type:boolean;default:false"`
 	MaterialText          *string        `json:"material_text" gorm:"type:text"`
 	Duration              *string        `json:"duration" gorm:"type:varchar(100)"`
-	Classes               *Properties    `json:"classes" gorm:"type:text[]"`
-	Subclasses            *Properties    `json:"subclasses" gorm:"type:text[]"`
+	Classes               *Properties    `json:"classes" gorm:"type:jsonb"`
+	Subclasses            *Properties    `json:"subclasses" gorm:"type:jsonb"`
 	AttackRoll            bool           `json:"attack_roll" gorm:"type:boolean;default:false"`
 	SavingThrow           bool           `json:"saving_throw" gorm:"type:boolean;default:false"`
 	Concentration         bool           `json:"concentration" gorm:"type:boolean;default:false"`
 	Ritual                bool           `json:"ritual" gorm:"type:boolean;default:false"`
-	SaveTypes             *Properties    `json:"save_types" gorm:"type:text[]"` // Типы спасброска (str, dex, ...)
+	SaveTypes             *Properties    `json:"save_types" gorm:"type:jsonb"` // Типы спасброска (str, dex, ...)
 	Damage                *SpellDamage   `json:"damage" gorm:"type:jsonb"`
 	Area                  *string        `json:"area" gorm:"type:varchar(100)"`        // Область, например "20 фт"
 	IsHealing             bool           `json:"is_healing" gorm:"type:boolean;default:false"`
@@ -1859,7 +1859,7 @@ type Spell struct {
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                  *Properties    `json:"tags" gorm:"type:text[]"`
+	Tags                  *Properties    `json:"tags" gorm:"type:jsonb"`
 	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
