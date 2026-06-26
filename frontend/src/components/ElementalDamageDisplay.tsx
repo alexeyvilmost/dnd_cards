@@ -21,21 +21,21 @@ const ElementalDamageDisplay = ({
     <>
       <span
         style={{
+          ...fontStyle,
           color,
           lineHeight: 1,
           marginLeft: '2px',
           marginRight: '2px',
-          ...fontStyle,
         }}
       >
         +
       </span>
       <span
         style={{
+          ...fontStyle,
           color,
           lineHeight: 1,
           marginRight: '2px',
-          ...fontStyle,
         }}
       >
         {value}

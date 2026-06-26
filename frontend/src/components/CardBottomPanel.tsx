@@ -9,7 +9,7 @@ import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import { getDamageColor, getDamageIconPath, getDamageLabel } from '../utils/damageTypes';
 
-const ICON_SIZE = 10;
+const ICON_SIZE = 12;
 const COIN_FILTER =
   'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)';
 
