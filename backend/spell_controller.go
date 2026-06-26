@@ -53,6 +53,21 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		query = query.Where("classes::text ILIKE ?", "%"+class+"%")
 	}
 
+	// Фильтрация по подклассу
+	if subclass := c.Query("subclass"); subclass != "" {
+		query = query.Where("subclasses::text ILIKE ?", "%"+subclass+"%")
+	}
+
+	// Фильтрация по концентрации
+	if conc := c.Query("concentration"); conc == "true" || conc == "false" {
+		query = query.Where("concentration = ?", conc == "true")
+	}
+
+	// Фильтрация по ритуалу
+	if ritual := c.Query("ritual"); ritual == "true" || ritual == "false" {
+		query = query.Where("ritual = ?", ritual == "true")
+	}
+
 	// Поиск по названию или card_number
 	if search := c.Query("search"); search != "" {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
