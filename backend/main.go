@@ -89,6 +89,8 @@ func main() {
 	actionController := NewActionController(db)
 	effectController := NewEffectController(db)
 	spellController := NewSpellController(db)
+	featController := NewFeatController(db)
+	backgroundController := NewBackgroundController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -168,6 +170,20 @@ func main() {
 		api.POST("/spells", AuthMiddleware(authService), spellController.CreateSpell)
 		api.PUT("/spells/:id", AuthMiddleware(authService), spellController.UpdateSpell)
 		api.DELETE("/spells/:id", AuthMiddleware(authService), spellController.DeleteSpell)
+
+		// Черты (публичные, но с опциональной авторизацией)
+		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
+		api.GET("/feats/:id", OptionalAuthMiddleware(authService), featController.GetFeat)
+		api.POST("/feats", AuthMiddleware(authService), featController.CreateFeat)
+		api.PUT("/feats/:id", AuthMiddleware(authService), featController.UpdateFeat)
+		api.DELETE("/feats/:id", AuthMiddleware(authService), featController.DeleteFeat)
+
+		// Предыстории (публичные, но с опциональной авторизацией)
+		api.GET("/backgrounds", OptionalAuthMiddleware(authService), backgroundController.GetBackgrounds)
+		api.GET("/backgrounds/:id", OptionalAuthMiddleware(authService), backgroundController.GetBackground)
+		api.POST("/backgrounds", AuthMiddleware(authService), backgroundController.CreateBackground)
+		api.PUT("/backgrounds/:id", AuthMiddleware(authService), backgroundController.UpdateBackground)
+		api.DELETE("/backgrounds/:id", AuthMiddleware(authService), backgroundController.DeleteBackground)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

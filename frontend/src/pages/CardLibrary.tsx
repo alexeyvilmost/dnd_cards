@@ -1,17 +1,21 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { cardsApi, effectsApi, actionsApi, spellsApi } from '../api/client';
-import type { Card, PassiveEffect, Action, Spell } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS } from '../types';
+import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi } from '../api/client';
+import type { Card, PassiveEffect, Action, Spell, Feat, Background } from '../types';
+import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
 import SpellPreview from '../components/SpellPreview';
+import FeatPreview from '../components/FeatPreview';
+import BackgroundPreview from '../components/BackgroundPreview';
 import CardDetailModal from '../components/CardDetailModal';
 import EffectDetailModal from '../components/EffectDetailModal';
 import ActionDetailModal from '../components/ActionDetailModal';
 import SpellDetailModal from '../components/SpellDetailModal';
+import FeatDetailModal from '../components/FeatDetailModal';
+import BackgroundDetailModal from '../components/BackgroundDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
@@ -28,11 +32,13 @@ const CardLibrary = () => {
   const skipFilterUrlSync = useRef(false);
   const openingCardFromUrl = useRef(false);
 
-  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions' | 'spells'>(initialFilters.contentType);
+  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds'>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
+  const [feats, setFeats] = useState<Feat[]>([]);
+  const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,21 +62,34 @@ const CardLibrary = () => {
   const [spellSchool, setSpellSchool] = useState<string>('');
   const [spellConcentration, setSpellConcentration] = useState<string>('');
   const [spellRitual, setSpellRitual] = useState<string>('');
+  // Фильтры черт
+  const [featCategory, setFeatCategory] = useState<string>('');
+  const [featRepeatable, setFeatRepeatable] = useState<string>('');
+  const [featAbility, setFeatAbility] = useState<string>('');
+  // Фильтры предысторий
+  const [bgAbility, setBgAbility] = useState<string>('');
+  const [bgSkill, setBgSkill] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
+  const [selectedFeat, setSelectedFeat] = useState<Feat | null>(null);
+  const [selectedBackground, setSelectedBackground] = useState<Background | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [isSpellModalOpen, setIsSpellModalOpen] = useState(false);
+  const [isFeatModalOpen, setIsFeatModalOpen] = useState(false);
+  const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialFilters.viewMode);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
+  const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
+  const [hoveredBackground, setHoveredBackground] = useState<Background | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Загрузка карточек
@@ -287,12 +306,77 @@ const CardLibrary = () => {
     }
   };
 
+  // Загрузка черт
+  const loadFeats = async (page = 1, append = false) => {
+    try {
+      if (page === 1) setLoading(true); else setLoadingMore(true);
+      const params: any = { page, limit: 50 };
+      if (search) params.search = search;
+      if (featCategory) params.category = featCategory;
+      if (featRepeatable) params.repeatable = featRepeatable;
+      if (featAbility) params.ability = featAbility;
+      const response = await featsApi.getFeats(params);
+      if (append) {
+        setFeats(prev => {
+          const existing = new Set(prev.map(f => f.id));
+          const combined = [...prev, ...response.feats.filter(f => !existing.has(f.id))];
+          setHasMore(response.feats.length === 50 && combined.length < response.total);
+          return combined;
+        });
+      } else {
+        setFeats(response.feats);
+        setHasMore(response.feats.length === 50 && response.feats.length < response.total);
+      }
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки черт');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Загрузка предысторий
+  const loadBackgrounds = async (page = 1, append = false) => {
+    try {
+      if (page === 1) setLoading(true); else setLoadingMore(true);
+      const params: any = { page, limit: 50 };
+      if (search) params.search = search;
+      if (bgAbility) params.ability = bgAbility;
+      if (bgSkill) params.skill = bgSkill;
+      const response = await backgroundsApi.getBackgrounds(params);
+      if (append) {
+        setBackgrounds(prev => {
+          const existing = new Set(prev.map(b => b.id));
+          const combined = [...prev, ...response.backgrounds.filter(b => !existing.has(b.id))];
+          setHasMore(response.backgrounds.length === 50 && combined.length < response.total);
+          return combined;
+        });
+      } else {
+        setBackgrounds(response.backgrounds);
+        setHasMore(response.backgrounds.length === 50 && response.backgrounds.length < response.total);
+      }
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки предысторий');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
     setCards([]);
     setEffects([]);
     setActions([]);
     setSpells([]);
+    setFeats([]);
+    setBackgrounds([]);
     if (contentType === 'cards') {
       loadCards(1, false);
     } else if (contentType === 'effects') {
@@ -301,8 +385,12 @@ const CardLibrary = () => {
       loadActions(1, false);
     } else if (contentType === 'spells') {
       loadSpells(1, false);
+    } else if (contentType === 'feats') {
+      loadFeats(1, false);
+    } else if (contentType === 'backgrounds') {
+      loadBackgrounds(1, false);
     }
-  }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual]);
+  }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
@@ -464,6 +552,10 @@ const CardLibrary = () => {
         loadActions(currentPage + 1, true);
       } else if (contentType === 'spells') {
         loadSpells(currentPage + 1, true);
+      } else if (contentType === 'feats') {
+        loadFeats(currentPage + 1, true);
+      } else if (contentType === 'backgrounds') {
+        loadBackgrounds(currentPage + 1, true);
       }
     }
   };
@@ -584,6 +676,38 @@ const CardLibrary = () => {
   const handleCloseSpellModal = () => {
     setIsSpellModalOpen(false);
     setSelectedSpell(null);
+  };
+
+  // Обработчики для черт
+  const handleFeatClick = (feat: Feat) => {
+    setSelectedFeat(feat);
+    setIsFeatModalOpen(true);
+  };
+  const handleDeleteFeat = async (featId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить эту черту?')) return;
+    try {
+      await featsApi.deleteFeat(featId);
+      if (contentType === 'feats') loadFeats(1, false);
+      setIsFeatModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления черты');
+    }
+  };
+
+  // Обработчики для предысторий
+  const handleBackgroundClick = (bg: Background) => {
+    setSelectedBackground(bg);
+    setIsBackgroundModalOpen(true);
+  };
+  const handleDeleteBackground = async (bgId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить эту предысторию?')) return;
+    try {
+      await backgroundsApi.deleteBackground(bgId);
+      if (contentType === 'backgrounds') loadBackgrounds(1, false);
+      setIsBackgroundModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления предыстории');
+    }
   };
 
   const handleDeleteSpell = async (spellId: string) => {
@@ -715,6 +839,26 @@ const CardLibrary = () => {
               }`}
             >
               Заклинания
+            </button>
+            <button
+              onClick={() => setContentType('feats')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                contentType === 'feats'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Черты
+            </button>
+            <button
+              onClick={() => setContentType('backgrounds')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                contentType === 'backgrounds'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Предыстории
             </button>
           </div>
 
@@ -853,6 +997,61 @@ const CardLibrary = () => {
                     <option value="true">Да</option>
                     <option value="false">Нет</option>
                   </select>
+                </div>
+              </>
+            )}
+
+            {contentType === 'feats' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
+                  <select value={featCategory} onChange={(e) => setFeatCategory(e.target.value)} className="input-field">
+                    <option value="">Все категории</option>
+                    {FEAT_CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Повышает характеристику</label>
+                  <select value={featAbility} onChange={(e) => setFeatAbility(e.target.value)} className="input-field">
+                    <option value="">Не важно</option>
+                    {ABILITY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Повторяемая</label>
+                  <select value={featRepeatable} onChange={(e) => setFeatRepeatable(e.target.value)} className="input-field">
+                    <option value="">Не важно</option>
+                    <option value="true">Да</option>
+                    <option value="false">Нет</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {contentType === 'backgrounds' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Характеристика</label>
+                  <select value={bgAbility} onChange={(e) => setBgAbility(e.target.value)} className="input-field">
+                    <option value="">Не важно</option>
+                    {ABILITY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Навык</label>
+                  <input
+                    type="text"
+                    value={bgSkill}
+                    onChange={(e) => setBgSkill(e.target.value)}
+                    placeholder="Например: Скрытность"
+                    className="input-field"
+                  />
                 </div>
               </>
             )}
@@ -1433,6 +1632,104 @@ const CardLibrary = () => {
         </>
       )}
 
+      {/* ── Черты ── */}
+      {!loading && contentType === 'feats' && feats.length === 0 && (
+        <div className="text-center py-12 text-gray-500">Черты не найдены</div>
+      )}
+      {!loading && contentType === 'feats' && feats.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-gray-600">Показано: {feats.length} из {totalCards} черт</div>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+              {feats.map((feat) => (
+                <div key={feat.id} className="flex justify-center">
+                  <FeatPreview feat={feat} onClick={() => handleFeatClick(feat)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {feats.map((feat) => (
+                  <button
+                    key={feat.id}
+                    onClick={() => handleFeatClick(feat)}
+                    onMouseEnter={() => setHoveredFeat(feat)}
+                    onMouseLeave={() => setHoveredFeat(null)}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        <img src={feat.image_url && feat.image_url.trim() !== '' ? feat.image_url : '/default_image.png'} alt={feat.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{feat.name}</div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">{FEAT_CATEGORY_OPTIONS.find(o => o.value === feat.category)?.label || feat.category}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {hoveredFeat && (
+                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                  <FeatPreview feat={hoveredFeat} disableHover={true} />
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Предыстории ── */}
+      {!loading && contentType === 'backgrounds' && backgrounds.length === 0 && (
+        <div className="text-center py-12 text-gray-500">Предыстории не найдены</div>
+      )}
+      {!loading && contentType === 'backgrounds' && backgrounds.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-gray-600">Показано: {backgrounds.length} из {totalCards} предысторий</div>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+              {backgrounds.map((bg) => (
+                <div key={bg.id} className="flex justify-center">
+                  <BackgroundPreview background={bg} onClick={() => handleBackgroundClick(bg)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {backgrounds.map((bg) => (
+                  <button
+                    key={bg.id}
+                    onClick={() => handleBackgroundClick(bg)}
+                    onMouseEnter={() => setHoveredBackground(bg)}
+                    onMouseLeave={() => setHoveredBackground(null)}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        <img src={bg.image_url && bg.image_url.trim() !== '' ? bg.image_url : '/default_image.png'} alt={bg.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{bg.name}</div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">Предыстория</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {hoveredBackground && (
+                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                  <BackgroundPreview background={hoveredBackground} disableHover={true} />
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
       {/* Модальное окно с детальной информацией о карте */}
       <CardDetailModal
         card={selectedCard}
@@ -1465,6 +1762,20 @@ const CardLibrary = () => {
         isOpen={isSpellModalOpen}
         onClose={handleCloseSpellModal}
         onDelete={handleDeleteSpell}
+      />
+
+      <FeatDetailModal
+        feat={selectedFeat}
+        isOpen={isFeatModalOpen}
+        onClose={() => { setIsFeatModalOpen(false); setSelectedFeat(null); }}
+        onDelete={handleDeleteFeat}
+      />
+
+      <BackgroundDetailModal
+        background={selectedBackground}
+        isOpen={isBackgroundModalOpen}
+        onClose={() => { setIsBackgroundModalOpen(false); setSelectedBackground(null); }}
+        onDelete={handleDeleteBackground}
       />
     </div>
   );

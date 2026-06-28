@@ -18,6 +18,14 @@ import type {
   CreateSpellRequest,
   UpdateSpellRequest,
   SpellsResponse,
+  Feat,
+  CreateFeatRequest,
+  UpdateFeatRequest,
+  FeatsResponse,
+  Background,
+  CreateBackgroundRequest,
+  UpdateBackgroundRequest,
+  BackgroundsResponse,
   ActiveEffect,
   ApiError
 } from '../types';
@@ -244,6 +252,56 @@ export const spellsApi = {
   // Удаление заклинания
   deleteSpell: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/spells/${id}`);
+  },
+};
+
+export const featsApi = {
+  getFeats: async (params?: {
+    page?: number; limit?: number; category?: string; repeatable?: string;
+    ability?: string; search?: string; sort_by?: string;
+  }): Promise<FeatsResponse> => {
+    const response = await apiClient.get<FeatsResponse>('/api/feats', { params });
+    return response.data;
+  },
+  getFeat: async (id: string): Promise<Feat> => {
+    const response = await apiClient.get<Feat>(`/api/feats/${id}`);
+    return response.data;
+  },
+  createFeat: async (data: CreateFeatRequest): Promise<Feat> => {
+    const response = await apiClient.post<Feat>('/api/feats', data);
+    return response.data;
+  },
+  updateFeat: async (id: string, data: UpdateFeatRequest): Promise<Feat> => {
+    const response = await apiClient.put<Feat>(`/api/feats/${id}`, data);
+    return response.data;
+  },
+  deleteFeat: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/feats/${id}`);
+  },
+};
+
+export const backgroundsApi = {
+  getBackgrounds: async (params?: {
+    page?: number; limit?: number; ability?: string; skill?: string;
+    feat?: string; search?: string; sort_by?: string;
+  }): Promise<BackgroundsResponse> => {
+    const response = await apiClient.get<BackgroundsResponse>('/api/backgrounds', { params });
+    return response.data;
+  },
+  getBackground: async (id: string): Promise<Background> => {
+    const response = await apiClient.get<Background>(`/api/backgrounds/${id}`);
+    return response.data;
+  },
+  createBackground: async (data: CreateBackgroundRequest): Promise<Background> => {
+    const response = await apiClient.post<Background>('/api/backgrounds', data);
+    return response.data;
+  },
+  updateBackground: async (id: string, data: UpdateBackgroundRequest): Promise<Background> => {
+    const response = await apiClient.put<Background>(`/api/backgrounds/${id}`, data);
+    return response.data;
+  },
+  deleteBackground: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/backgrounds/${id}`);
   },
 };
 

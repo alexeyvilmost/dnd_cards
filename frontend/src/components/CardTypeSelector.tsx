@@ -63,6 +63,18 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       name: '🔮 Заклинание',
       description: 'Заговоры и заклинания с уровнями, школами и уроном',
       color: 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
+    },
+    {
+      id: 'feat',
+      name: '🏅 Черта',
+      description: 'Черты происхождения, универсальные, боевые стили, эпические дары',
+      color: 'bg-amber-50 border-amber-200 hover:bg-amber-100'
+    },
+    {
+      id: 'background',
+      name: '📜 Предыстория',
+      description: 'Предыстории: характеристики, черта, навыки, снаряжение',
+      color: 'bg-teal-50 border-teal-200 hover:bg-teal-100'
     }
   ];
 
@@ -85,6 +97,10 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       navigate('/effect-creator');
     } else if (typeId === 'spell') {
       navigate('/spell-creator');
+    } else if (typeId === 'feat') {
+      navigate('/feat-creator');
+    } else if (typeId === 'background') {
+      navigate('/background-creator');
     }
   };
 

@@ -39,6 +39,8 @@ import ShopDetail from './pages/ShopDetail';
 import ActionCreator from './pages/ActionCreator';
 import EffectCreator from './pages/EffectCreator';
 import SpellCreator from './pages/SpellCreator';
+import FeatCreator from './pages/FeatCreator';
+import BackgroundCreator from './pages/BackgroundCreator';
 
 function App() {
   return (
@@ -326,6 +328,24 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <SpellCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Feat routes */}
+        <Route path="/feat-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <FeatCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Background routes */}
+        <Route path="/background-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <BackgroundCreator />
             </Layout>
           </ProtectedRoute>
         } />

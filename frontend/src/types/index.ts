@@ -1032,3 +1032,138 @@ export const SPELL_DAMAGE_TYPE_OPTIONS = [
 export const getSpellLevelLabel = (level: number): string => {
   return level === 0 ? 'Заговор' : `${level} уровень`;
 };
+
+// ─── Характеристики и навыки (общие для черт/предысторий) ──────────────────────
+
+export const ABILITY_OPTIONS = [
+  { value: 'str', label: 'Сила' },
+  { value: 'dex', label: 'Ловкость' },
+  { value: 'con', label: 'Телосложение' },
+  { value: 'int', label: 'Интеллект' },
+  { value: 'wis', label: 'Мудрость' },
+  { value: 'cha', label: 'Харизма' },
+] as const;
+
+export const getAbilityLabel = (v: string): string =>
+  ABILITY_OPTIONS.find((a) => a.value === v)?.label || v;
+
+// Навыки D&D 2024 (русские названия — храним как есть)
+export const SKILL_OPTIONS = [
+  'Акробатика', 'Анализ', 'Атлетика', 'Внимательность', 'Выживание', 'Выступление',
+  'Запугивание', 'История', 'Ловкость рук', 'Магия', 'Медицина', 'Обман',
+  'Природа', 'Проницательность', 'Религия', 'Скрытность', 'Убеждение', 'Уход за животными',
+] as const;
+
+// ─── Черты (Feat) ──────────────────────────────────────────────────────────────
+
+export type FeatCategory = 'origin' | 'general' | 'fighting_style' | 'epic_boon';
+
+export interface Feat {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  category: FeatCategory;
+  prerequisite?: string | null;
+  ability_increase?: string[] | null;
+  repeatable: boolean;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateFeatRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  card_number?: string;
+  category: FeatCategory;
+  prerequisite?: string | null;
+  ability_increase?: string[] | null;
+  repeatable?: boolean;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+}
+
+export type UpdateFeatRequest = Partial<CreateFeatRequest>;
+
+export interface FeatsResponse {
+  feats: Feat[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const FEAT_CATEGORY_OPTIONS = [
+  { value: 'origin', label: 'Черта происхождения' },
+  { value: 'general', label: 'Универсальная черта' },
+  { value: 'fighting_style', label: 'Боевой стиль' },
+  { value: 'epic_boon', label: 'Эпический дар' },
+] as const;
+
+export const getFeatCategoryLabel = (v: string): string =>
+  FEAT_CATEGORY_OPTIONS.find((c) => c.value === v)?.label || v;
+
+// ─── Предыстории (Background) ────────────────────────────────────────────────
+
+export interface Background {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  ability_scores?: string[] | null;
+  origin_feat?: string | null;
+  skill_proficiencies?: string[] | null;
+  tool_proficiency?: string | null;
+  equipment?: string | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBackgroundRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  card_number?: string;
+  ability_scores?: string[] | null;
+  origin_feat?: string | null;
+  skill_proficiencies?: string[] | null;
+  tool_proficiency?: string | null;
+  equipment?: string | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+}
+
+export type UpdateBackgroundRequest = Partial<CreateBackgroundRequest>;
+
+export interface BackgroundsResponse {
+  backgrounds: Background[];
+  total: number;
+  page: number;
+  limit: number;
+}

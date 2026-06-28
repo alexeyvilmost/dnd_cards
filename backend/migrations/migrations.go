@@ -200,8 +200,124 @@ func GetAllMigrations() []Migration {
 			Up:          widenSpellTextColumns,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "033_create_feats",
+			Description: "Create feats table for D&D feats",
+			Up:          createFeatsTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS feats CASCADE"); return err },
+		},
+		{
+			Version:     "034_create_backgrounds",
+			Description: "Create backgrounds table for D&D backgrounds",
+			Up:          createBackgroundsTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS backgrounds CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// createFeatsTable создает таблицу черт
+func createFeatsTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS feats (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			category VARCHAR(50) NOT NULL DEFAULT 'general',
+			prerequisite TEXT,
+			ability_increase JSONB,
+			repeatable BOOLEAN DEFAULT false,
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags JSONB,
+			is_extended BOOLEAN DEFAULT false,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create feats table: %w", err)
+	}
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_feats_category ON feats(category)",
+		"CREATE INDEX IF NOT EXISTS idx_feats_card_number ON feats(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_feats_created_at ON feats(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_feats_deleted_at ON feats(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+	for _, q := range indexes {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("failed to create index for feats: %w", err)
+		}
+	}
+	trigger := `
+		DROP TRIGGER IF EXISTS update_feats_updated_at ON feats;
+		CREATE TRIGGER update_feats_updated_at BEFORE UPDATE ON feats
+			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();`
+	if _, err := db.Exec(trigger); err != nil {
+		return fmt.Errorf("failed to create trigger for feats: %w", err)
+	}
+	return nil
+}
+
+// createBackgroundsTable создает таблицу предысторий
+func createBackgroundsTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS backgrounds (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			ability_scores JSONB,
+			origin_feat VARCHAR(255),
+			skill_proficiencies JSONB,
+			tool_proficiency TEXT,
+			equipment TEXT,
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags JSONB,
+			is_extended BOOLEAN DEFAULT false,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create backgrounds table: %w", err)
+	}
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_backgrounds_card_number ON backgrounds(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_backgrounds_created_at ON backgrounds(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_backgrounds_deleted_at ON backgrounds(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+	for _, q := range indexes {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("failed to create index for backgrounds: %w", err)
+		}
+	}
+	trigger := `
+		DROP TRIGGER IF EXISTS update_backgrounds_updated_at ON backgrounds;
+		CREATE TRIGGER update_backgrounds_updated_at BEFORE UPDATE ON backgrounds
+			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();`
+	if _, err := db.Exec(trigger); err != nil {
+		return fmt.Errorf("failed to create trigger for backgrounds: %w", err)
+	}
+	return nil
 }
 
 // createImageLibraryTable создает таблицу библиотеки изображений
