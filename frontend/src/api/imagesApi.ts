@@ -68,7 +68,33 @@ export interface ImageStatusResponse {
   message: string;
 }
 
+export interface StandaloneImageRequest {
+  subject?: string;
+  element?: string;
+  extra?: string;
+  prompt?: string;
+  style?: string;
+  quality?: ImageGenerationQuality;
+}
+
+export interface StandaloneImageResponse {
+  success: boolean;
+  image_url: string;
+  prompt: string;
+  generation_time_ms: number;
+}
+
 export const imagesApi = {
+  // Standalone-генерация изображения (без привязки к сущности) — вкладка «Генерация»
+  generateStandalone: async (req: StandaloneImageRequest): Promise<StandaloneImageResponse> => {
+    const response = await apiClient.post<StandaloneImageResponse>(
+      '/api/images/generate-standalone',
+      req,
+      { timeout: 180000 }
+    );
+    return response.data;
+  },
+
   // Загрузка изображения
   uploadImage: async (
     entityType: 'card' | 'weapon_template',

@@ -41,6 +41,7 @@ import EffectCreator from './pages/EffectCreator';
 import SpellCreator from './pages/SpellCreator';
 import FeatCreator from './pages/FeatCreator';
 import BackgroundCreator from './pages/BackgroundCreator';
+import ImageStudio from './pages/ImageStudio';
 
 function App() {
   return (
@@ -319,6 +320,15 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <EffectCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Image generation studio */}
+        <Route path="/image-generator" element={
+          <ProtectedRoute>
+            <Layout>
+              <ImageStudio />
             </Layout>
           </ProtectedRoute>
         } />
