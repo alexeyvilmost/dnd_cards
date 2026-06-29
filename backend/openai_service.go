@@ -100,9 +100,60 @@ func (s *OpenAIService) GenerateImage(prompt, quality, size string) (string, err
 
 // Стили генерации изображений
 const (
-	ImageStyleGame    = "game"    // видеоигровая иконка
-	ImageStyleFantasy = "fantasy" // официальный арт D&D: акварельная книжная иллюстрация (по умолчанию)
+	ImageStyleGame      = "game"       // видеоигровая иконка
+	ImageStyleFantasy   = "fantasy"    // официальный арт D&D: акварельная книжная иллюстрация (по умолчанию)
+	ImageStyleSpellIcon = "spell_icon" // иконка заклинания в стиле BG3: светящийся энергетический глиф
 )
+
+// spellEnergyColors — словарь "тип энергии" -> описание цвета для иконок заклинаний.
+// Ключи совпадают с типами урона на фронте (damageTypes.ts).
+var spellEnergyColors = map[string]string{
+	"fire":        "fiery orange, amber and golden-yellow",
+	"cold":        "icy pale blue and cyan with white highlights",
+	"lightning":   "vivid violet and magenta",
+	"thunder":     "deep purple and lavender",
+	"acid":        "toxic lime green and yellow-green",
+	"poison":      "sickly emerald and venom green",
+	"necrotic":    "pale sickly green and ghostly white-green",
+	"psychic":     "bright magenta-pink and orchid",
+	"radiant":     "warm golden-yellow and white",
+	"force":       "pink-violet and rose",
+	"bludgeoning": "pale silver-grey and white",
+	"piercing":    "pale silver-grey and white",
+	"slashing":    "pale silver-grey and white",
+	"healing":     "soft turquoise and teal",
+}
+
+// generateSpellIconPrompt строит максимально предсказуемый промпт для иконки
+// заклинания в стиле Baldur's Gate 3: абстрактный светящийся глиф из энергии
+// выбранного цвета на чистом белом (прозрачном) фоне.
+func generateSpellIconPrompt(subject, element, extra string) string {
+	color := spellEnergyColors[element]
+	if color == "" {
+		color = "glowing arcane"
+	}
+	if subject == "" {
+		subject = "an arcane spell"
+	}
+
+	prompt := fmt.Sprintf(
+		"A single magic spell icon in the painterly style of Baldur's Gate 3 and Dungeons & Dragons spell icons. "+
+			"The icon is an abstract arcane symbol made ENTIRELY of glowing %s energy: hand-painted luminous brushstrokes "+
+			"and wisps of light floating in mid-air, evoking the essence of \"%s\". "+
+			"Painterly digital art, soft airbrushed outer glow and halo, a bright glowing core with a luminous outline, "+
+			"a few small floating sparks and glowing dots of light scattered around the symbol. "+
+			"Single centered emblem with a dynamic diagonal flowing composition that fills most of the frame. "+
+			"Pure flat white background, fully transparent, no scene, no ground, no objects, no weapon, no creatures, "+
+			"no hands, no characters, no text, no letters, no numbers, no border and no frame. "+
+			"Only the abstract %s glowing energy of the spell.",
+		color, subject, color,
+	)
+
+	if strings.TrimSpace(extra) != "" {
+		prompt += " " + strings.TrimSpace(extra)
+	}
+	return prompt
+}
 
 // ImagePromptOptions — дополнительные параметры для генерации промпта
 type ImagePromptOptions struct {

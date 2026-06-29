@@ -182,6 +182,83 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	})
 }
 
+// StandaloneImageRequest — запрос на генерацию изображения без привязки к сущности
+type StandaloneImageRequest struct {
+	Subject string `json:"subject"` // Концепт/название заклинания
+	Element string `json:"element"` // Тип энергии (fire/cold/...) для цвета
+	Extra   string `json:"extra"`   // Доп. детали к промпту
+	Prompt  string `json:"prompt"`  // Готовый промпт (перебивает остальное)
+	Style   string `json:"style"`   // spell_icon (по умолчанию) / fantasy / game
+	Quality string `json:"quality"` // low/medium/high
+}
+
+// StandaloneImageResponse — ответ standalone-генерации
+type StandaloneImageResponse struct {
+	Success        bool   `json:"success"`
+	ImageURL       string `json:"image_url"`
+	Prompt         string `json:"prompt"`
+	GenerationTime int    `json:"generation_time_ms"`
+}
+
+// GenerateStandaloneImage генерирует изображение без привязки к карточке/заклинанию.
+// Используется вкладкой «Генерация изображений» для подбора иконок заклинаний.
+func (ic *ImageController) GenerateStandaloneImage(c *gin.Context) {
+	var req StandaloneImageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат запроса"})
+		return
+	}
+
+	// Строим промпт
+	var prompt string
+	if strings.TrimSpace(req.Prompt) != "" {
+		prompt = req.Prompt
+	} else if req.Style == ImageStyleFantasy || req.Style == ImageStyleGame {
+		prompt = GenerateImagePrompt(req.Subject, req.Extra, "", req.Style)
+	} else {
+		prompt = generateSpellIconPrompt(req.Subject, req.Element, req.Extra)
+	}
+
+	log.Printf("Standalone-генерация (style=%s): %s", req.Style, prompt)
+	startTime := time.Now()
+	generatedImageURL, err := ic.openAIService.GenerateImage(prompt, req.Quality, "1024x1024")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
+		return
+	}
+	generationTime := int(time.Since(startTime).Milliseconds())
+
+	// Если Yandex Storage недоступен — отдаём data URL напрямую
+	if ic.yandexStorage == nil {
+		c.JSON(http.StatusOK, StandaloneImageResponse{
+			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
+		})
+		return
+	}
+
+	// Иначе загружаем в хранилище и возвращаем постоянную ссылку
+	ctx := context.Background()
+	imageData, err := ic.downloadImage(generatedImageURL)
+	if err != nil {
+		// fallback: вернуть data URL
+		c.JSON(http.StatusOK, StandaloneImageResponse{
+			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
+		})
+		return
+	}
+	imageURL, _, err := ic.yandexStorage.UploadImageFromBytes(ctx, imageData, "spell_icon.png", "image/png", "spell_icons")
+	if err != nil {
+		c.JSON(http.StatusOK, StandaloneImageResponse{
+			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, StandaloneImageResponse{
+		Success: true, ImageURL: imageURL, Prompt: prompt, GenerationTime: generationTime,
+	})
+}
+
 // DeleteImage удаляет изображение
 func (ic *ImageController) DeleteImage(c *gin.Context) {
 	entityType := c.Param("entity_type")

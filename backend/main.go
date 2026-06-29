@@ -171,6 +171,9 @@ func main() {
 		api.PUT("/spells/:id", AuthMiddleware(authService), spellController.UpdateSpell)
 		api.DELETE("/spells/:id", AuthMiddleware(authService), spellController.DeleteSpell)
 
+		// Standalone-генерация изображений (вкладка «Генерация изображений»)
+		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageController.GenerateStandaloneImage)
+
 		// Черты (публичные, но с опциональной авторизацией)
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
 		api.GET("/feats/:id", OptionalAuthMiddleware(authService), featController.GetFeat)
