@@ -25,7 +25,7 @@ export const getCurrencyIconPath = (currency?: string | null): string =>
   getCurrencyInfo(currency).icon;
 
 /** В PNG монет много прозрачного поля снизу — чуть поднимаем относительно текста */
-export const currencyIconStyle = { transform: 'translateY(-1px)' } as const;
+export const currencyIconStyle = { transform: 'translateY(-0.5px)' } as const;
 
 export const formatPriceAmount = (amount: number, abbreviate = true): string => {
   if (abbreviate && Math.abs(amount) >= 1000) {
