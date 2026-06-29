@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
-import type { Background } from '../types';
+import type { Background, CardRef } from '../types';
 import { getAbilityLabel } from '../types';
 import BackgroundPreview from './BackgroundPreview';
+import { RelatedCardsList } from './RelatedItems';
 
 interface BackgroundDetailModalProps {
   background: Background | null;
@@ -67,6 +68,20 @@ const BackgroundDetailModal: React.FC<BackgroundDetailModalProps> = ({ backgroun
                   <p className="text-gray-900 whitespace-pre-wrap">{b.equipment}</p>
                 </div>
               )}
+              {b.equipment_options && (
+                <div className="space-y-1 text-sm text-gray-700">
+                  <div>Вариант А: предметы ниже + <span className="text-yellow-600 font-medium">{b.equipment_options.option_a?.gold || 0} ЗМ</span></div>
+                  <div>Вариант Б: <span className="text-yellow-600 font-medium">{b.equipment_options.option_b?.gold || 0} ЗМ</span>{(b.equipment_options.option_b?.items?.length || 0) > 0 ? ' + предметы' : ''}</div>
+                </div>
+              )}
+              {(() => {
+                const opts = b.equipment_options;
+                if (!opts) return null;
+                const seen = new Set<string>();
+                const refs: CardRef[] = [...(opts.option_a?.items || []), ...(opts.option_b?.items || [])]
+                  .filter((r) => (seen.has(r.card_id) ? false : (seen.add(r.card_id), true)));
+                return <RelatedCardsList refs={refs} />;
+              })()}
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Описание</h3>
                 <p className="text-gray-900 whitespace-pre-wrap">{b.description}</p>

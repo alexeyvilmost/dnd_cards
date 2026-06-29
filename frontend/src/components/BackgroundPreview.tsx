@@ -3,6 +3,8 @@ import type { Background } from '../types';
 import { getAbilityLabel } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import Bg3Card from './Bg3Card';
+import { ItemIconRow } from './RelatedItems';
+import type { CardRef } from '../types';
 
 interface BackgroundPreviewProps {
   background: Background;
@@ -74,6 +76,20 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
           <FormattedText text={background.detailed_description} emptyText="" />
         </div>
       )}
+
+      {(() => {
+        const opts = background.equipment_options;
+        if (!opts) return null;
+        const seen = new Set<string>();
+        const refs: CardRef[] = [...(opts.option_a?.items || []), ...(opts.option_b?.items || [])]
+          .filter((r) => (seen.has(r.card_id) ? false : (seen.add(r.card_id), true)));
+        if (refs.length === 0) return null;
+        return (
+          <div className="bg3-items" style={{ marginTop: 'auto', paddingTop: 8 }}>
+            <ItemIconRow refs={refs} />
+          </div>
+        );
+      })()}
     </Bg3Card>
   );
 };

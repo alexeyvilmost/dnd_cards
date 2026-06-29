@@ -2,7 +2,24 @@ export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact' |
 export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
-export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'none';
+export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'container' | 'none';
+
+// Ссылка на карту (предмет) с количеством — для контейнеров и снаряжения предысторий
+export interface CardRef {
+  card_id: string;
+  quantity: number;
+}
+export type ContainerMode = 'all' | 'choice';
+
+// Вариант снаряжения предыстории
+export interface EquipmentOption {
+  items: CardRef[];
+  gold: number;
+}
+export interface BackgroundEquipmentOptions {
+  option_a: EquipmentOption;
+  option_b: EquipmentOption;
+}
 export type TemplateType = 'false' | 'template' | 'only_template';
 export type EquipmentSlot = 'head' | 'body' | 'arms' | 'feet' | 'cloak' | 'one_hand' | 'versatile' | 'two_hands' | 'necklace' | 'ring';
 
@@ -66,6 +83,8 @@ export interface Card {
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
   battle_profile?: Record<string, any> | null;
+  container_mode?: ContainerMode | null;
+  contents?: CardRef[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -108,6 +127,8 @@ export interface CreateCardRequest {
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
   battle_profile?: Record<string, any> | null;
+  container_mode?: ContainerMode | null;
+  contents?: CardRef[] | null;
 }
 
 export interface UpdateCardRequest {
@@ -149,6 +170,8 @@ export interface UpdateCardRequest {
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
   battle_profile?: Record<string, any> | null;
+  container_mode?: ContainerMode | null;
+  contents?: CardRef[] | null;
 }
 
 export interface CardsResponse {
@@ -1131,6 +1154,7 @@ export interface Background {
   skill_proficiencies?: string[] | null;
   tool_proficiency?: string | null;
   equipment?: string | null;
+  equipment_options?: BackgroundEquipmentOptions | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1152,6 +1176,7 @@ export interface CreateBackgroundRequest {
   skill_proficiencies?: string[] | null;
   tool_proficiency?: string | null;
   equipment?: string | null;
+  equipment_options?: BackgroundEquipmentOptions | null;
   type?: string | null;
   author?: string;
   source?: string | null;

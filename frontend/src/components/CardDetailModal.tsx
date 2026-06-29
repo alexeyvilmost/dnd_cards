@@ -4,6 +4,7 @@ import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download } from 'lu
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
+import { RelatedCardsList } from './RelatedItems';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
 import { imagesApi } from '../api/imagesApi';
@@ -319,6 +320,18 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <p className="text-xs sm:text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">
                 {card.detailed_description}
               </p>
+            </div>
+          )}
+
+          {/* Содержимое контейнера — Связанные карты */}
+          {card.type === 'container' && card.contents && card.contents.length > 0 && (
+            <div className="mt-2 p-3 sm:p-4 bg-gray-800 rounded-lg border border-gray-600">
+              <p className="text-xs text-gray-400 mb-2">
+                {card.container_mode === 'choice' ? 'Выдаёт одно на выбор:' : 'Выдаёт всё содержимое:'}
+              </p>
+              <div className="text-gray-100">
+                <RelatedCardsList refs={card.contents} />
+              </div>
             </div>
           )}
 

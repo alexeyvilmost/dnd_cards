@@ -139,8 +139,10 @@ const CardCreator = () => {
             slot: card.slot,
             is_template: card.is_template || 'false',
             battle_profile: card.battle_profile || null,
+            container_mode: card.container_mode || null,
+            contents: card.contents || [],
           });
-          
+
           if (card.image_url) {
             setCardImage(card.image_url);
           }
@@ -305,7 +307,9 @@ const CardCreator = () => {
         is_template: data.is_template || 'false',
         image_prompt_extra: data.image_prompt_extra || null,
         battle_profile: data.battle_profile || null,
-        effects: effects.length > 0 ? effects.filter(effect => 
+        container_mode: data.type === 'container' ? (data.container_mode || null) : null,
+        contents: data.type === 'container' ? (data.contents || null) : null,
+        effects: effects.length > 0 ? effects.filter(effect =>
           effect.targetType && 
           effect.targetSpecific && 
           effect.modifier && 

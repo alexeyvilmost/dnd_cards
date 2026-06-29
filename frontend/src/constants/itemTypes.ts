@@ -16,7 +16,13 @@ export const ITEM_TYPE_OPTIONS = [
   { value: 'food', label: 'Еда' },
   { value: 'tool', label: 'Инструмент' },
   { value: 'ingredient', label: 'Ингредиент' },
+  { value: 'container', label: 'Контейнер' },
   { value: 'none', label: 'Без типа' },
+] as const;
+
+export const CONTAINER_MODE_OPTIONS = [
+  { value: 'all', label: 'Выдаёт всё содержимое' },
+  { value: 'choice', label: 'Выдаёт одно на выбор' },
 ] as const;
 
 export const getItemTypeLabel = (type: ItemType): string => {

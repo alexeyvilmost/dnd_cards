@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { backgroundsApi } from '../api/client';
-import type { CreateBackgroundRequest, UpdateBackgroundRequest, Background } from '../types';
+import type { CreateBackgroundRequest, UpdateBackgroundRequest, Background, BackgroundEquipmentOptions } from '../types';
 import { ABILITY_OPTIONS, SKILL_OPTIONS } from '../types';
+import ItemRefSelector from '../components/ItemRefSelector';
 import BackgroundPreview from '../components/BackgroundPreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
@@ -31,6 +32,11 @@ const BackgroundCreator = () => {
 
   const [abilityScores, setAbilityScores] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
+  const defaultEquipmentOptions: BackgroundEquipmentOptions = {
+    option_a: { items: [], gold: 0 },
+    option_b: { items: [], gold: 50 },
+  };
+  const [equipmentOptions, setEquipmentOptions] = useState<BackgroundEquipmentOptions>(defaultEquipmentOptions);
   const [loading, setLoading] = useState(false);
   const [loadingBg, setLoadingBg] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +61,12 @@ const BackgroundCreator = () => {
           });
           setAbilityScores(bg.ability_scores || []);
           setSkills(bg.skill_proficiencies || []);
+          if (bg.equipment_options) {
+            setEquipmentOptions({
+              option_a: bg.equipment_options.option_a || { items: [], gold: 0 },
+              option_b: bg.equipment_options.option_b || { items: [], gold: 50 },
+            });
+          }
         } catch (err) {
           setError('Ошибка загрузки предыстории');
           console.error(err);
@@ -81,12 +93,16 @@ const BackgroundCreator = () => {
     skill_proficiencies: skills,
     tool_proficiency: fd.tool_proficiency || null,
     equipment: fd.equipment || null,
+    equipment_options: equipmentOptions,
     created_at: '',
     updated_at: '',
   };
 
   const toggle = (v: string, list: string[], setter: (x: string[]) => void) =>
     setter(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+  const setOpt = (key: 'option_a' | 'option_b', patch: Partial<{ items: any[]; gold: number }>) =>
+    setEquipmentOptions((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
 
   const onSubmit = async (data: ScalarForm) => {
     setLoading(true);
@@ -101,6 +117,7 @@ const BackgroundCreator = () => {
       skill_proficiencies: skills,
       tool_proficiency: data.tool_proficiency || null,
       equipment: data.equipment || null,
+      equipment_options: equipmentOptions,
       source: data.source || null,
     };
     try {
@@ -207,8 +224,50 @@ const BackgroundCreator = () => {
                 </div>
 
                 <div>
-                  <label className={labelCls}>Снаряжение</label>
-                  <textarea {...register('equipment')} rows={3} className={inputCls} placeholder="Выберите вариант А или Б: (А) ...; или (Б) 50 ЗМ" />
+                  <label className={labelCls}>Снаряжение (текстом, опционально)</label>
+                  <textarea {...register('equipment')} rows={2} className={inputCls} placeholder="Свободное описание снаряжения" />
+                </div>
+
+                {/* Варианты снаряжения А/Б с предметами и золотом */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-800">Вариант А</span>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number" min={0}
+                          value={equipmentOptions.option_a.gold}
+                          onChange={(e) => setOpt('option_a', { gold: parseInt(e.target.value || '0', 10) })}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                        <span className="text-sm text-yellow-600">ЗМ</span>
+                      </div>
+                    </div>
+                    <ItemRefSelector
+                      value={equipmentOptions.option_a.items}
+                      onChange={(items) => setOpt('option_a', { items })}
+                    />
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-800">Вариант Б</span>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number" min={0}
+                          value={equipmentOptions.option_b.gold}
+                          onChange={(e) => setOpt('option_b', { gold: parseInt(e.target.value || '0', 10) })}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                        <span className="text-sm text-yellow-600">ЗМ</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-2">Обычно только золото, но можно добавить предметы.</p>
+                    <ItemRefSelector
+                      value={equipmentOptions.option_b.items}
+                      onChange={(items) => setOpt('option_b', { items })}
+                    />
+                  </div>
                 </div>
 
                 <div>

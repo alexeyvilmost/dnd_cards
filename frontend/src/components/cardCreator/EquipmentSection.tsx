@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { CreateCardRequest, Properties } from '../../types';
+import { CreateCardRequest, Properties, CardRef } from '../../types';
 import { PROPERTIES_OPTIONS, BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../../types';
-import { ITEM_TYPE_OPTIONS } from '../../constants/itemTypes';
+import { ITEM_TYPE_OPTIONS, CONTAINER_MODE_OPTIONS } from '../../constants/itemTypes';
+import ItemRefSelector from '../ItemRefSelector';
 import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../../utils/damageTypes';
 import PropertySelector from '../PropertySelector';
 import TagsInput from '../TagsInput';
@@ -152,6 +153,32 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, er
           </select>
         </div>
       </div>
+
+      {/* Контейнер — показывается только для типа "Контейнер" */}
+      {watch('type') === 'container' && (
+        <div className="border-t border-gray-200 pt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Тип контейнера</label>
+            <select
+              {...register('container_mode')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Выберите тип</option>
+              {CONTAINER_MODE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              «Всё» — при использовании выдаёт весь список; «На выбор» — одно из содержимого.
+            </p>
+          </div>
+          <ItemRefSelector
+            label="Содержимое контейнера"
+            value={(watch('contents') as CardRef[]) || []}
+            onChange={(refs) => setValue('contents', refs)}
+          />
+        </div>
+      )}
 
       {/* Теги */}
       <div>
