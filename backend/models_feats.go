@@ -138,7 +138,8 @@ type Background struct {
 	OriginFeat            *string        `json:"origin_feat" gorm:"type:varchar(255)"`  // Черта происхождения (название)
 	SkillProficiencies    *Properties    `json:"skill_proficiencies" gorm:"type:jsonb"` // Владение навыками
 	ToolProficiency       *string        `json:"tool_proficiency" gorm:"type:text"`     // Владение инструментами
-	Equipment             *string        `json:"equipment" gorm:"type:text"`            // Снаряжение
+	Equipment             *string        `json:"equipment" gorm:"type:text"`            // Снаряжение (текст, legacy)
+	EquipmentOptions      *BackgroundEquipmentOptions `json:"equipment_options" gorm:"type:jsonb"` // Варианты А/Б (предметы + золото)
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -165,6 +166,7 @@ type CreateBackgroundRequest struct {
 	SkillProficiencies  *Properties `json:"skill_proficiencies"`
 	ToolProficiency     *string     `json:"tool_proficiency"`
 	Equipment           *string     `json:"equipment"`
+	EquipmentOptions    *BackgroundEquipmentOptions `json:"equipment_options"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -184,6 +186,7 @@ type UpdateBackgroundRequest struct {
 	SkillProficiencies  *Properties `json:"skill_proficiencies"`
 	ToolProficiency     *string     `json:"tool_proficiency"`
 	Equipment           *string     `json:"equipment"`
+	EquipmentOptions    *BackgroundEquipmentOptions `json:"equipment_options"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -205,6 +208,7 @@ type BackgroundResponse struct {
 	SkillProficiencies  *Properties `json:"skill_proficiencies"`
 	ToolProficiency     *string     `json:"tool_proficiency"`
 	Equipment           *string     `json:"equipment"`
+	EquipmentOptions    *BackgroundEquipmentOptions `json:"equipment_options"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -220,7 +224,7 @@ func (b Background) ToBackgroundResponse() BackgroundResponse {
 		ID: b.ID, Name: b.Name, Description: b.Description, DetailedDescription: b.DetailedDescription,
 		ImageURL: b.ImageURL, Rarity: b.Rarity, CardNumber: b.CardNumber, AbilityScores: b.AbilityScores,
 		OriginFeat: b.OriginFeat, SkillProficiencies: b.SkillProficiencies, ToolProficiency: b.ToolProficiency,
-		Equipment: b.Equipment, Type: b.Type, Author: b.Author, Source: b.Source, Tags: b.Tags,
+		Equipment: b.Equipment, EquipmentOptions: b.EquipmentOptions, Type: b.Type, Author: b.Author, Source: b.Source, Tags: b.Tags,
 		IsExtended: b.IsExtended, CreatedAt: b.CreatedAt, UpdatedAt: b.UpdatedAt,
 	}
 }

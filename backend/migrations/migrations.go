@@ -212,8 +212,29 @@ func GetAllMigrations() []Migration {
 			Up:          createBackgroundsTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS backgrounds CASCADE"); return err },
 		},
+		{
+			Version:     "035_containers_and_bg_equipment",
+			Description: "Add container fields to cards and equipment_options to backgrounds",
+			Up:          addContainersAndBgEquipment,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addContainersAndBgEquipment добавляет поля контейнеров и варианты снаряжения предысторий
+func addContainersAndBgEquipment(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS container_mode VARCHAR(20)",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS contents JSONB",
+		"ALTER TABLE backgrounds ADD COLUMN IF NOT EXISTS equipment_options JSONB",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("failed to execute '%s': %w", q, err)
+		}
+	}
+	return nil
 }
 
 // createFeatsTable создает таблицу черт

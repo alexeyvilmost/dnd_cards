@@ -417,6 +417,8 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Slot:                         req.Slot,
 		Effects:                      req.Effects,
 		BattleProfile:                req.BattleProfile,
+		ContainerMode:                req.ContainerMode,
+		Contents:                     req.Contents,
 		CardNumber:                   cardNumber,
 	}
 
@@ -604,6 +606,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.BattleProfile != nil {
 		card.BattleProfile = req.BattleProfile
+	}
+	if req.ContainerMode != nil {
+		card.ContainerMode = req.ContainerMode
+	}
+	if req.Contents != nil {
+		card.Contents = req.Contents
 	}
 
 	customRarityColor, colorErr := ResolveCustomRarityColor(card.Rarity, req.CustomRarityColor, card.CustomRarityColor)

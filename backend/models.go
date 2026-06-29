@@ -247,6 +247,80 @@ func (m JSONMap) Value() (driver.Value, error) {
 	return json.Marshal(m)
 }
 
+// CardRef - ссылка на карту (предмет) с количеством. Используется в контейнерах
+// и в вариантах снаряжения предысторий.
+type CardRef struct {
+	CardID   string `json:"card_id"`
+	Quantity int    `json:"quantity"`
+}
+
+// CardRefList - список ссылок на карты (jsonb)
+type CardRefList []CardRef
+
+// Scan - кастомный сканер для CardRefList
+func (l *CardRefList) Scan(value interface{}) error {
+	if value == nil {
+		*l = nil
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), l)
+	case []byte:
+		return json.Unmarshal(v, l)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для CardRefList: %T", value)
+	}
+}
+
+// Value - кастомный value для CardRefList
+func (l CardRefList) Value() (driver.Value, error) {
+	if l == nil {
+		return nil, nil
+	}
+	return json.Marshal(l)
+}
+
+// EquipmentOption - вариант снаряжения предыстории (предметы + золото)
+type EquipmentOption struct {
+	Items CardRefList `json:"items"`
+	Gold  int         `json:"gold"`
+}
+
+// BackgroundEquipmentOptions - варианты А/Б снаряжения предыстории (jsonb)
+type BackgroundEquipmentOptions struct {
+	OptionA EquipmentOption `json:"option_a"`
+	OptionB EquipmentOption `json:"option_b"`
+}
+
+// Scan - кастомный сканер для BackgroundEquipmentOptions
+func (o *BackgroundEquipmentOptions) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), o)
+	case []byte:
+		return json.Unmarshal(v, o)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для BackgroundEquipmentOptions: %T", value)
+	}
+}
+
+// Value - кастомный value для BackgroundEquipmentOptions
+func (o BackgroundEquipmentOptions) Value() (driver.Value, error) {
+	return json.Marshal(o)
+}
+
+// ContainerMode - режим выдачи контейнера
+type ContainerMode string
+
+const (
+	ContainerModeAll    ContainerMode = "all"    // выдаёт всё содержимое
+	ContainerModeChoice ContainerMode = "choice" // выдаёт одно из содержимого на выбор
+)
+
 // EquipmentSlot - слот экипировки
 type EquipmentSlot string
 
@@ -308,6 +382,8 @@ type Card struct {
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
 	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
 	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                      // Боевой профиль предмета для сервиса battle
+	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`               // Режим контейнера: all | choice
+	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                           // Содержимое контейнера
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -352,6 +428,8 @@ type CreateCardRequest struct {
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
+	ContainerMode                *string        `json:"container_mode"`
+	Contents                     *CardRefList   `json:"contents"`
 }
 
 // UpdateCardRequest - запрос на обновление карточки
@@ -393,6 +471,8 @@ type UpdateCardRequest struct {
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
+	ContainerMode                *string        `json:"container_mode"`
+	Contents                     *CardRefList   `json:"contents"`
 }
 
 // GenerateImageRequest - запрос на генерацию изображения
@@ -442,6 +522,8 @@ type CardResponse struct {
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
+	ContainerMode                *string        `json:"container_mode"`
+	Contents                     *CardRefList   `json:"contents"`
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 }
@@ -708,6 +790,8 @@ func (card Card) ToCardResponse() CardResponse {
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
 		BattleProfile:                card.BattleProfile,
+		ContainerMode:                card.ContainerMode,
+		Contents:                     card.Contents,
 		CreatedAt:                    card.CreatedAt,
 		UpdatedAt:                    card.UpdatedAt,
 	}

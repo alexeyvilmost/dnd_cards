@@ -307,7 +307,7 @@ func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 		Name: req.Name, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, AbilityScores: req.AbilityScores,
 		OriginFeat: req.OriginFeat, SkillProficiencies: req.SkillProficiencies, ToolProficiency: req.ToolProficiency,
-		Equipment: req.Equipment, Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags,
+		Equipment: req.Equipment, EquipmentOptions: req.EquipmentOptions, Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags,
 		IsExtended: req.IsExtended,
 	}
 	if b.Author == "" {
@@ -374,6 +374,9 @@ func (bc *BackgroundController) UpdateBackground(c *gin.Context) {
 	}
 	if req.Equipment != nil {
 		b.Equipment = req.Equipment
+	}
+	if req.EquipmentOptions != nil {
+		b.EquipmentOptions = req.EquipmentOptions
 	}
 	if req.Type != nil {
 		b.Type = req.Type
