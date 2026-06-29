@@ -1,4 +1,4 @@
-import { getCurrencyInfo, formatPriceAmount } from '../utils/currencies';
+import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/currencies';
 
 interface CurrencyPriceInlineProps {
   price: number;
@@ -23,7 +23,7 @@ const CurrencyPriceInline = ({
       <span className={textClassName} style={{ color: cur.color }}>
         {formatPriceAmount(price, showAbbreviated)}
       </span>
-      <img src={cur.icon} alt={cur.label} className={iconClassName} />
+      <img src={cur.icon} alt={cur.label} className={iconClassName} style={currencyIconStyle} />
     </>
   );
 };

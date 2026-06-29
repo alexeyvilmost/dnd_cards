@@ -17,7 +17,7 @@ import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { FormattedText } from '../utils/formattedText';
 import { useCardTilt } from '../hooks/useCardTilt';
 import { getRarityGlowColor, getRarityGlowSettings } from '../utils/rarityGlow';
-import { getCurrencyInfo, formatPriceAmount } from '../utils/currencies';
+import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/currencies';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -358,7 +358,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
                   <span style={{ color: cur.color }}>
                     {formatPriceAmount(card.price, card.price_abbreviated !== false)}
                   </span>
-                  <img src={cur.icon} alt={cur.label} className="w-4 h-4" />
+                  <img src={cur.icon} alt={cur.label} className="w-4 h-4" style={currencyIconStyle} />
                   <span className="text-gray-500">({cur.short})</span>
                 </p>
               );

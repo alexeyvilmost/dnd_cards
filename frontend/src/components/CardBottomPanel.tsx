@@ -8,7 +8,7 @@ import {
 import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import { getDamageColor, getDamageIconPath, getDamageLabel } from '../utils/damageTypes';
-import { getCurrencyInfo, formatPriceAmount } from '../utils/currencies';
+import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/currencies';
 
 const ICON_SIZE = 12;
 
@@ -141,7 +141,7 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
           <span style={{ ...bottomPanelPriceInlineStyle, color: cur.color, lineHeight: 1, marginRight: '4px' }}>
             {formatPriceAmount(card.price, abbreviate)}
           </span>
-          <img src={cur.icon} alt={cur.label} style={iconStyle} />
+          <img src={cur.icon} alt={cur.label} style={{ ...iconStyle, ...currencyIconStyle }} />
         </>
       ),
     });
