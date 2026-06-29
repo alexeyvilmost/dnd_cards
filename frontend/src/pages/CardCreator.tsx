@@ -226,6 +226,8 @@ const CardCreator = () => {
     watchedValues.detailed_description,
     watchedValues.properties,
     watchedValues.price,
+    watchedValues.price_currency,
+    watchedValues.price_abbreviated,
     watchedValues.weight,
     watchedValues.bonus_type,
     watchedValues.bonus_value,

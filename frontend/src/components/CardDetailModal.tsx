@@ -17,6 +17,7 @@ import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { FormattedText } from '../utils/formattedText';
 import { useCardTilt } from '../hooks/useCardTilt';
 import { getRarityGlowColor, getRarityGlowSettings } from '../utils/rarityGlow';
+import { getCurrencyInfo, formatPriceAmount } from '../utils/currencies';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -85,13 +86,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   }, [card?.image_url]);
 
   if (!isOpen || !card) return null;
-
-  const formatPrice = (price: number): string => {
-    if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K`;
-    }
-    return `${price}`;
-  };
 
   const formatWeight = (weight: number): string => {
     return `${weight} фнт.`;
@@ -356,7 +350,19 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             {card.source && <p><strong>Источник:</strong> {card.source}</p>}
             {card.type && <p><strong>Тип:</strong> {getItemTypeLabel(card.type)}</p>}
             {card.slot && <p><strong>Слот:</strong> {getEquipmentSlotLabel(card.slot)}</p>}
-            {card.price && <p><strong>Цена:</strong> {formatPrice(card.price)} золота</p>}
+            {card.price && (() => {
+              const cur = getCurrencyInfo(card.price_currency);
+              return (
+                <p className="flex items-center gap-1">
+                  <strong>Цена:</strong>
+                  <span style={{ color: cur.color }}>
+                    {formatPriceAmount(card.price, card.price_abbreviated !== false)}
+                  </span>
+                  <img src={cur.icon} alt={cur.label} className="w-4 h-4" />
+                  <span className="text-gray-500">({cur.short})</span>
+                </p>
+              );
+            })()}
             {card.weight && <p><strong>Вес:</strong> {formatWeight(card.weight)}</p>}
             {card.bonus_type && card.bonus_value && (
               <p><strong>Бонус:</strong> {card.bonus_value} ({card.bonus_type === 'damage' ? 'Урон' : 'Защита'})</p>

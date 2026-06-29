@@ -19,6 +19,7 @@ import BackgroundDetailModal from '../components/BackgroundDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
+import CurrencyPriceInline from '../components/CurrencyPriceInline';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import {
   buildLibrarySearchParams,
@@ -1314,10 +1315,11 @@ const CardLibrary = () => {
                               )}
                               {card.price && (
                                 <div className="flex items-center space-x-1">
-                                  <span className="text-yellow-600 font-bold">
-                                    {card.price >= 1000 ? `${(card.price / 1000).toFixed(1)}K` : card.price}
-                                  </span>
-                                  <img src="/icons/coin.png" alt="Монеты" className="w-3 h-3" style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)' }} />
+                                  <CurrencyPriceInline
+                                    price={card.price}
+                                    currency={card.price_currency}
+                                    abbreviate={card.price_abbreviated}
+                                  />
                                 </div>
                               )}
                               {card.bonus_type && card.bonus_value && (

@@ -141,7 +141,7 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
           <span style={{ ...bottomPanelPriceInlineStyle, color: cur.color, lineHeight: 1, marginRight: '4px' }}>
             {formatPriceAmount(card.price, abbreviate)}
           </span>
-          <img src="/icons/coin.png" alt={cur.label} style={{ ...iconStyle, filter: cur.filter }} />
+          <img src={cur.icon} alt={cur.label} style={iconStyle} />
         </>
       ),
     });
