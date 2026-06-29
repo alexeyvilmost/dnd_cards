@@ -74,6 +74,8 @@ const CardCreator = () => {
       is_template: 'false',
       effects: [],
       battle_profile: null,
+      price_currency: 'gold',
+      price_abbreviated: true,
     }
   });
 
@@ -112,6 +114,8 @@ const CardCreator = () => {
             description: card.description,
             detailed_description: card.detailed_description || null,
             price: card.price,
+            price_currency: card.price_currency || 'gold',
+            price_abbreviated: card.price_abbreviated !== false,
             weight: card.weight,
             bonus_type: card.bonus_type,
             bonus_value: card.bonus_value,
@@ -278,6 +282,8 @@ const CardCreator = () => {
         custom_rarity_color: data.rarity === 'custom' ? (data.custom_rarity_color || null) : null,
         properties: data.properties && data.properties.length > 0 ? data.properties : null,
         price: data.price || null,
+        price_currency: data.price_currency || 'gold',
+        price_abbreviated: data.price_abbreviated !== false,
         weight: data.weight || null,
         bonus_type: data.bonus_type || null,
         bonus_value: data.bonus_value || null,

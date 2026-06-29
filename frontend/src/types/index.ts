@@ -1,5 +1,6 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact' | 'relic' | 'custom';
-export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive';
+export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive' | 'set' | 'choice';
+export type Currency = 'gold' | 'silver' | 'copper';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
 export type ItemType = 'weapon' | 'shield' | 'helmet' | 'chest' | 'gloves' | 'cloak' | 'boots' | 'ring' | 'necklace' | 'potion' | 'scroll' | 'ammunition' | 'food' | 'tool' | 'ingredient' | 'container' | 'none';
@@ -53,6 +54,8 @@ export interface Card {
   custom_rarity_color?: string | null;
   card_number: string;
   price?: number | null;
+  price_currency?: Currency | null;
+  price_abbreviated?: boolean | null;
   weight?: number | null;
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
@@ -97,6 +100,8 @@ export interface CreateCardRequest {
   rarity: Rarity;
   custom_rarity_color?: string | null;
   price?: number | null;
+  price_currency?: Currency | null;
+  price_abbreviated?: boolean | null;
   weight?: number | null;
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
@@ -140,6 +145,8 @@ export interface UpdateCardRequest {
   rarity?: Rarity;
   custom_rarity_color?: string | null;
   price?: number | null;
+  price_currency?: Currency | null;
+  price_abbreviated?: boolean | null;
   weight?: number | null;
   bonus_type?: BonusType | null;
   bonus_value?: string | null;
@@ -248,6 +255,8 @@ export const PROPERTIES_OPTIONS = [
   { value: 'tool', label: 'Инструмент' },
   { value: 'projectile', label: 'Снаряд' },
   { value: 'explosive', label: 'Взрывчатка' },
+  { value: 'set', label: 'Набор' },
+  { value: 'choice', label: 'Выбор' },
 ] as const;
 
 export const BONUS_TYPE_OPTIONS = [

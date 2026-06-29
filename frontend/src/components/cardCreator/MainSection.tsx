@@ -3,6 +3,7 @@ import { Control, Controller, FieldErrors, UseFormRegister, UseFormSetValue, Use
 import { CreateCardRequest, DEFAULT_CUSTOM_RARITY_COLOR, type Rarity } from '../../types';
 import RaritySelector from '../RaritySelector';
 import { FormattedTextarea } from '../FormattedTextarea';
+import { CURRENCIES } from '../../utils/currencies';
 
 interface MainSectionProps {
   register: UseFormRegister<CreateCardRequest>;
@@ -77,23 +78,31 @@ export const MainSection: React.FC<MainSectionProps> = ({ register, control, err
         />
       </div>
 
-      {/* Цена и вес */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Цена, валюта и вес */}
+      <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Цена (золото)
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Цена</label>
           <input
             type="number"
+            step="0.01"
             {...register('price', { valueAsNumber: true })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Вес (фунты)
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Валюта</label>
+          <select
+            {...register('price_currency')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Вес (фунты)</label>
           <input
             type="number"
             step="0.1"
@@ -103,6 +112,11 @@ export const MainSection: React.FC<MainSectionProps> = ({ register, control, err
           />
         </div>
       </div>
+
+      <label className="flex items-center gap-2 mt-2">
+        <input type="checkbox" {...register('price_abbreviated')} className="w-4 h-4" />
+        <span className="text-sm text-gray-700">Сокращать цену (1200 → 1.2K)</span>
+      </label>
     </div>
   );
 };

@@ -8,10 +8,9 @@ import {
 import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import { getDamageColor, getDamageIconPath, getDamageLabel } from '../utils/damageTypes';
+import { getCurrencyInfo, formatPriceAmount } from '../utils/currencies';
 
 const ICON_SIZE = 12;
-const COIN_FILTER =
-  'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(118%) contrast(119%)';
 
 const iconStyle = {
   width: `${ICON_SIZE}px`,
@@ -50,13 +49,6 @@ const valueStyle = (tight = false) => ({
   lineHeight: 1,
   marginRight: tight ? '2px' : '4px',
 });
-
-const formatPrice = (price: number): string => {
-  if (price >= 1000) {
-    return `${(price / 1000).toFixed(1)}K`;
-  }
-  return `${price}`;
-};
 
 const formatWeight = (weight: number): string => `${weight}`;
 
@@ -140,12 +132,16 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
   }
 
   if (card.price) {
+    const cur = getCurrencyInfo(card.price_currency);
+    const abbreviate = card.price_abbreviated !== false; // по умолчанию включено
     items.push({
       key: 'price',
       node: (
         <>
-          <span style={{ ...bottomPanelPriceInlineStyle, lineHeight: 1, marginRight: '4px' }}>{formatPrice(card.price)}</span>
-          <img src="/icons/coin.png" alt="Монеты" style={{ ...iconStyle, filter: COIN_FILTER }} />
+          <span style={{ ...bottomPanelPriceInlineStyle, color: cur.color, lineHeight: 1, marginRight: '4px' }}>
+            {formatPriceAmount(card.price, abbreviate)}
+          </span>
+          <img src="/icons/coin.png" alt={cur.label} style={{ ...iconStyle, filter: cur.filter }} />
         </>
       ),
     });

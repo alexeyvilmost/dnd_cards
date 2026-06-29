@@ -27,7 +27,9 @@ export const getPropertyLabel = (property: string): string => {
     'potion': 'зелье',
     'tool': 'инструмент',
     'projectile': 'снаряд',
-    'explosive': 'взрывчатка'
+    'explosive': 'взрывчатка',
+    'set': 'набор',
+    'choice': 'выбор'
   };
   return propertyLabels[property] || property;
 };

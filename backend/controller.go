@@ -350,8 +350,12 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
-	if !ValidatePrice(req.Price) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+	if !ValidateCardPrice(req.Price) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена"})
+		return
+	}
+	if !ValidateCurrency(req.PriceCurrency) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая валюта"})
 		return
 	}
 
@@ -388,6 +392,8 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		CustomRarityColor:            customRarityColor,
 		ImageURL:                     req.ImageURL,
 		Price:                        req.Price,
+		PriceCurrency:                req.PriceCurrency,
+		PriceAbbreviated:             req.PriceAbbreviated,
 		Weight:                       req.Weight,
 		BonusType:                    req.BonusType,
 		BonusValue:                   req.BonusValue,
@@ -465,8 +471,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		return
 	}
 
-	if req.Price != nil && !ValidatePrice(req.Price) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена (должна быть от 1 до 50000)"})
+	if req.Price != nil && !ValidateCardPrice(req.Price) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена"})
+		return
+	}
+	if !ValidateCurrency(req.PriceCurrency) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая валюта"})
 		return
 	}
 
@@ -511,6 +521,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.Price != nil {
 		card.Price = req.Price
+	}
+	if req.PriceCurrency != nil {
+		card.PriceCurrency = req.PriceCurrency
+	}
+	if req.PriceAbbreviated != nil {
+		card.PriceAbbreviated = req.PriceAbbreviated
 	}
 	if req.Weight != nil {
 		card.Weight = req.Weight

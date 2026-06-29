@@ -218,8 +218,31 @@ func GetAllMigrations() []Migration {
 			Up:          addContainersAndBgEquipment,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "036_card_price_currency",
+			Description: "Make cards.price numeric, add price_currency and price_abbreviated",
+			Up:          addCardPriceCurrency,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addCardPriceCurrency делает цену предмета дробной и добавляет валюту + флаг сокращения.
+// Обратно совместимо: существующие int-цены конвертируются в numeric, валюта = NULL (трактуется как золото),
+// price_abbreviated по умолчанию true (как было раньше).
+func addCardPriceCurrency(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ALTER COLUMN price TYPE NUMERIC USING price::numeric",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS price_currency VARCHAR(20)",
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS price_abbreviated BOOLEAN DEFAULT true",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("failed to execute '%s': %w", q, err)
+		}
+	}
+	return nil
 }
 
 // addContainersAndBgEquipment добавляет поля контейнеров и варианты снаряжения предысторий

@@ -148,6 +148,8 @@ const (
 	PropertyTool       = "tool"       // Инструмент
 	PropertyProjectile = "projectile" // Снаряд
 	PropertyExplosive  = "explosive"  // Взрывчатка
+	PropertySet        = "set"        // Набор
+	PropertyChoice     = "choice"     // Выбор
 )
 
 // BonusType - тип бонуса
@@ -352,7 +354,9 @@ type Card struct {
 	Rarity                       Rarity         `json:"rarity" gorm:"not null"`
 	CustomRarityColor            *string        `json:"custom_rarity_color" gorm:"type:varchar(7)"`
 	CardNumber                   string         `json:"card_number" gorm:"uniqueIndex;not null"`
-	Price                        *int           `json:"price" gorm:"type:int"`
+	Price                        *float64       `json:"price" gorm:"type:numeric"`
+	PriceCurrency                *string        `json:"price_currency" gorm:"type:varchar(20)"`      // gold | silver | copper (расширяемо)
+	PriceAbbreviated             *bool          `json:"price_abbreviated" gorm:"type:boolean;default:true"`
 	Weight                       *float64       `json:"weight" gorm:"type:decimal(5,2)"`
 	BonusType                    *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
 	BonusValue                   *string        `json:"bonus_value" gorm:"type:varchar(20)"`
@@ -398,7 +402,9 @@ type CreateCardRequest struct {
 	Rarity                       Rarity         `json:"rarity" binding:"required"`
 	CustomRarityColor            *string        `json:"custom_rarity_color"`
 	ImageURL                     string         `json:"image_url"`
-	Price                        *int           `json:"price"`
+	Price                        *float64       `json:"price"`
+	PriceCurrency                *string        `json:"price_currency"`
+	PriceAbbreviated             *bool          `json:"price_abbreviated"`
 	Weight                       *float64       `json:"weight"`
 	BonusType                    *BonusType     `json:"bonus_type"`
 	BonusValue                   *string        `json:"bonus_value"`
@@ -441,7 +447,9 @@ type UpdateCardRequest struct {
 	Rarity                       Rarity         `json:"rarity"`
 	CustomRarityColor            *string        `json:"custom_rarity_color"`
 	ImageURL                     string         `json:"image_url"`
-	Price                        *int           `json:"price"`
+	Price                        *float64       `json:"price"`
+	PriceCurrency                *string        `json:"price_currency"`
+	PriceAbbreviated             *bool          `json:"price_abbreviated"`
 	Weight                       *float64       `json:"weight"`
 	BonusType                    *BonusType     `json:"bonus_type"`
 	BonusValue                   *string        `json:"bonus_value"`
@@ -497,7 +505,9 @@ type CardResponse struct {
 	Rarity                       Rarity         `json:"rarity"`
 	CustomRarityColor            *string        `json:"custom_rarity_color"`
 	CardNumber                   string         `json:"card_number"`
-	Price                        *int           `json:"price"`
+	Price                        *float64       `json:"price"`
+	PriceCurrency                *string        `json:"price_currency"`
+	PriceAbbreviated             *bool          `json:"price_abbreviated"`
 	Weight                       *float64       `json:"weight"`
 	BonusType                    *BonusType     `json:"bonus_type"`
 	BonusValue                   *string        `json:"bonus_value"`
@@ -628,6 +638,10 @@ func (p Properties) GetPropertiesName() string {
 		return "Снаряд"
 	case PropertyExplosive:
 		return "Взрывчатка"
+	case PropertySet:
+		return "Набор"
+	case PropertyChoice:
+		return "Выбор"
 	default:
 		return "Неизвестно"
 	}
@@ -766,6 +780,8 @@ func (card Card) ToCardResponse() CardResponse {
 		CustomRarityColor:            card.CustomRarityColor,
 		CardNumber:                   card.CardNumber,
 		Price:                        card.Price,
+		PriceCurrency:                card.PriceCurrency,
+		PriceAbbreviated:             card.PriceAbbreviated,
 		Weight:                       card.Weight,
 		BonusType:                    card.BonusType,
 		BonusValue:                   card.BonusValue,
@@ -825,7 +841,8 @@ func IsValidProperty(property string) bool {
 		PropertyReach, PropertyAmmunition, PropertyLoading, PropertySpecial,
 		PropertyCloth, PropertyLightArmor, PropertyMediumArmor, PropertyHeavyArmor,
 		PropertyShield, PropertyRing, PropertyNecklace, PropertyCloak,
-		PropertyPotion, PropertyTool, PropertyProjectile, PropertyExplosive:
+		PropertyPotion, PropertyTool, PropertyProjectile, PropertyExplosive,
+		PropertySet, PropertyChoice:
 		return true
 	default:
 		return false
@@ -845,12 +862,31 @@ func ValidateProperties(properties *Properties) bool {
 	return true
 }
 
-// ValidatePrice - проверяет цену
+// ValidatePrice - проверяет цену (целочисленная, для действий/эффектов)
 func ValidatePrice(price *int) bool {
 	if price == nil {
 		return true
 	}
 	return *price >= 1 && *price <= 50000
+}
+
+// ValidateCardPrice - проверяет цену предмета (float, поддерживает дробные значения)
+func ValidateCardPrice(price *float64) bool {
+	if price == nil {
+		return true
+	}
+	return *price > 0 && *price <= 1000000
+}
+
+// ValidCurrencies - допустимые валюты (расширяемо)
+var ValidCurrencies = map[string]bool{"gold": true, "silver": true, "copper": true}
+
+// ValidateCurrency - проверяет валюту цены (пустое значение = золото по умолчанию)
+func ValidateCurrency(currency *string) bool {
+	if currency == nil || *currency == "" {
+		return true
+	}
+	return ValidCurrencies[*currency]
 }
 
 // ValidateWeight - проверяет вес
