@@ -150,6 +150,7 @@ const (
 	PropertyExplosive  = "explosive"  // Взрывчатка
 	PropertySet        = "set"        // Набор
 	PropertyChoice     = "choice"     // Выбор
+	PropertyEquipment  = "equipment"  // Снаряжение
 )
 
 // BonusType - тип бонуса
@@ -642,6 +643,8 @@ func (p Properties) GetPropertiesName() string {
 		return "Набор"
 	case PropertyChoice:
 		return "Выбор"
+	case PropertyEquipment:
+		return "Снаряжение"
 	default:
 		return "Неизвестно"
 	}
@@ -842,7 +845,7 @@ func IsValidProperty(property string) bool {
 		PropertyCloth, PropertyLightArmor, PropertyMediumArmor, PropertyHeavyArmor,
 		PropertyShield, PropertyRing, PropertyNecklace, PropertyCloak,
 		PropertyPotion, PropertyTool, PropertyProjectile, PropertyExplosive,
-		PropertySet, PropertyChoice:
+		PropertySet, PropertyChoice, PropertyEquipment:
 		return true
 	default:
 		return false

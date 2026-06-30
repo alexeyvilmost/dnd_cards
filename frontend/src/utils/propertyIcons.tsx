@@ -18,6 +18,7 @@ export const PROPERTY_ICONS: Record<string, string> = {
   'ring': '/icons/ring.png?v=1',
   'necklace': '/icons/necklace.png?v=1',
   'cloak': '/icons/cloak.png?v=1',
+  'equipment': '/icons/belt.png?v=1',
 };
 
 // Функция для определения, когда показывать иконки вместо текста

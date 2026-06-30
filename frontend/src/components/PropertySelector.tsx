@@ -25,7 +25,8 @@ const getPropertyIcon = (property: string) => {
     'shield': '/icons/shield.png',
     'ring': '/icons/ring.png',
     'necklace': '/icons/necklace.png',
-    'cloak': '/icons/cloak.png'
+    'cloak': '/icons/cloak.png',
+    'equipment': '/icons/belt.png',
   };
   
   return iconMap[property] || '/icons/special.png';

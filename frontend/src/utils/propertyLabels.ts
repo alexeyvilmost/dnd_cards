@@ -29,7 +29,8 @@ export const getPropertyLabel = (property: string): string => {
     'projectile': 'снаряд',
     'explosive': 'взрывчатка',
     'set': 'набор',
-    'choice': 'выбор'
+    'choice': 'выбор',
+    'equipment': 'снаряжение',
   };
   return propertyLabels[property] || property;
 };
