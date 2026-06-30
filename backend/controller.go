@@ -1183,16 +1183,13 @@ func (ac *ActionController) DeleteAction(c *gin.Context) {
 // generateActionNumber - генерация номера действия
 func (ac *ActionController) generateActionNumber() string {
 	var maxAction Action
-	ac.db.Unscoped().Order("card_number DESC").First(&maxAction)
+	// Фильтруем по префиксу, иначе чужой card_number (без ACTION-) ломает счётчик и даёт коллизию.
+	ac.db.Unscoped().Where("card_number LIKE ?", "ACTION-%").Order("card_number DESC").First(&maxAction)
 
-	// Извлекаем номер из строки ACTION-XXXX
-	var nextNum int = 1
-	if maxAction.CardNumber != "" {
-		if len(maxAction.CardNumber) >= 11 { // ACTION-XXXX
-			numStr := maxAction.CardNumber[7:11]
-			if num, err := strconv.Atoi(numStr); err == nil {
-				nextNum = num + 1
-			}
+	nextNum := 1
+	if strings.HasPrefix(maxAction.CardNumber, "ACTION-") {
+		if num, err := strconv.Atoi(strings.TrimPrefix(maxAction.CardNumber, "ACTION-")); err == nil {
+			nextNum = num + 1
 		}
 	}
 
@@ -1521,16 +1518,13 @@ func (ec *EffectController) DeleteEffect(c *gin.Context) {
 // generateEffectNumber - генерация номера эффекта
 func (ec *EffectController) generateEffectNumber() string {
 	var maxEffect Effect
-	ec.db.Unscoped().Order("card_number DESC").First(&maxEffect)
+	// Фильтруем по префиксу, иначе чужой card_number (без EFFECT-) ломает счётчик и даёт коллизию.
+	ec.db.Unscoped().Where("card_number LIKE ?", "EFFECT-%").Order("card_number DESC").First(&maxEffect)
 
-	// Извлекаем номер из строки EFFECT-XXXX
-	var nextNum int = 1
-	if maxEffect.CardNumber != "" {
-		if len(maxEffect.CardNumber) >= 11 { // EFFECT-XXXX
-			numStr := maxEffect.CardNumber[7:11]
-			if num, err := strconv.Atoi(numStr); err == nil {
-				nextNum = num + 1
-			}
+	nextNum := 1
+	if strings.HasPrefix(maxEffect.CardNumber, "EFFECT-") {
+		if num, err := strconv.Atoi(strings.TrimPrefix(maxEffect.CardNumber, "EFFECT-")); err == nil {
+			nextNum = num + 1
 		}
 	}
 
