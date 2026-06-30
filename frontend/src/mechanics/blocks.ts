@@ -491,6 +491,127 @@ export function defaultValuesForBlock(blockId: string): Record<string, unknown> 
   return vals;
 }
 
+// ─── Десериализация: mechanics-JSON -> состояние блоков (для редактирования) ───
+
+type Dict = Record<string, unknown>;
+
+// Восстановить форму выбора из payload.choice (обратно к ChoiceEditor)
+export function optionsToChoiceForm(choice: Dict): Dict {
+  const opts = (choice.options || {}) as Dict;
+  const items = (opts.items as Array<Dict>) || [];
+  return {
+    id: choice.id,
+    prompt: choice.prompt,
+    count: choice.count ?? 1,
+    source: opts.source || 'skill',
+    filter: opts.filter ?? 'all',
+    recommended: choice.recommended,
+    resolution: choice.resolution || 'on_acquire',
+    items: items.map((it) => ({ id: it.id, name: it.name, grantsJson: JSON.stringify(it.grants ?? []) })),
+    options: opts, // сохраняем исходные options для точной пересборки
+    grant: choice.grant, // сохраняем grant
+  };
+}
+
+// Один payload -> блок-эффект. Если блок не может точно представить payload — eff_raw_json.
+function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
+  const raw = (): { blockId: string; values: Dict } => ({ blockId: 'eff_raw_json', values: { json: JSON.stringify(p) } });
+  switch (p?.kind) {
+    case 'resource': return { blockId: 'eff_grant_resource', values: { id: p.id, amount: p.amount ?? 1 } };
+    case 'grant_proficiency': return { blockId: 'eff_grant_prof', values: { prof: p.prof, value: p.value } };
+    case 'grant_feat': return { blockId: 'eff_grant_feat', values: { value: p.value } };
+    case 'grant_spell': return { blockId: 'eff_grant_spell', values: { value: p.value, ability: p.ability, level_gate: p.level_gate ?? 1 } };
+    case 'grant_sense': return { blockId: 'eff_grant_sense', values: { sense: p.sense, range: p.range ?? 60 } };
+    case 'grant_speed': return { blockId: 'eff_grant_speed', values: { mode: p.mode, value: p.value } };
+    case 'grant_ability_score': return { blockId: 'eff_grant_ability', values: { ability: p.ability, amount: p.amount ?? 1 } };
+    case 'resistance': return { blockId: 'eff_resistance', values: { damage_type: p.damage_type, value: p.value ?? 'resistance' } };
+    case 'temp_hp': return { blockId: 'eff_temp_hp', values: { amount: p.amount } };
+    case 'healing': return { blockId: 'eff_heal', values: { amount: p.amount } };
+    case 'reroll': return { blockId: 'eff_reroll', values: { which: p.which ?? 'd20', keep: p.keep ?? 'either' } };
+    case 'set_value': return { blockId: 'eff_set_value', values: { target: p.target, formula: p.formula } };
+    case 'narrative': return { blockId: 'eff_narrative', values: { description: p.description } };
+    case 'grant_action': {
+      const opts = p.options as unknown[];
+      return Array.isArray(opts) && opts.length === 1 && opts[0] === 'dash'
+        ? { blockId: 'eff_dash', values: {} } : raw();
+    }
+    case 'modifier': {
+      const at = (p.applies_to || {}) as Dict;
+      const hasFilter = !!at.filter && Object.keys(at.filter as Dict).length > 0;
+      const when = Array.isArray(p.when) ? (p.when as Dict[]) : [];
+      if (p.op === 'advantage' || p.op === 'disadvantage') {
+        const cond = when.length === 1 && when[0]?.kind === 'condition' ? (when[0].id as string) : undefined;
+        const faithful = !hasFilter && (when.length === 0 || (when.length === 1 && cond !== undefined));
+        return faithful ? { blockId: 'eff_adv', values: { roll: at.roll, op: p.op, condition: cond } } : raw();
+      }
+      if (p.op === 'add' && !hasFilter && when.length === 0) {
+        return { blockId: 'eff_bonus', values: { roll: at.roll, value: p.value } };
+      }
+      return raw();
+    }
+    case 'choice': return { blockId: 'eff_choice', values: { choice: optionsToChoiceForm(p) } };
+    default: return raw();
+  }
+}
+
+export type DeserializedMechanics = {
+  triggerId: string;
+  triggerValues: Dict;
+  minLevel: number | '';
+  effectEntries: Array<{ id: string; blockId: string; values: Dict }>;
+};
+
+// mechanics-объект -> состояние конструктора. Неузнанное падает в eff_raw_json (сырой JSON).
+export function deserializeMechanics(m: Dict | null | undefined): DeserializedMechanics | null {
+  if (!m || typeof m !== 'object') return null;
+  const act = (m.activation || {}) as Dict;
+  const uses = (m.uses || {}) as Dict;
+  let triggerId = 'trg_passive';
+  const tv: Dict = {};
+  if (act.mode === 'active') {
+    triggerId = 'trg_active';
+    tv.resource = ((act.cost as Dict[])?.[0]?.resource) ?? 'action';
+    tv.uses_count = uses.count ?? 'prof_bonus';
+    tv.uses_per = uses.per ?? 'long_rest';
+  } else if (act.mode === 'triggered') {
+    const tr = (act.trigger || {}) as Dict;
+    const ev = tr.event;
+    if (ev === 'on_acquire') triggerId = 'trg_on_acquire';
+    else if (ev === 'long_rest') triggerId = 'trg_long_rest';
+    else if (ev === 'short_rest') triggerId = 'trg_short_rest';
+    else if (ev === 'reduced_to_0_hp') {
+      triggerId = 'trg_zero_hp';
+      tv.uses_count = uses.count ?? 1;
+      tv.uses_per = uses.per ?? 'long_rest';
+    } else if (tr.timing === 'replaces') {
+      triggerId = 'trg_d20_one';
+      tv.event = ev;
+    }
+  }
+
+  let minLevel: number | '' = '';
+  const reqs = (act.requirements as Dict[]) || [];
+  const lr = reqs.find((r) => r.type === 'level');
+  if (lr?.min_level) minLevel = lr.min_level as number;
+
+  const entries: DeserializedMechanics['effectEntries'] = [];
+  let c = 0;
+  for (const it of ((m.effects as Dict[]) || [])) {
+    if (it?.resolution === 'save') {
+      const dmg = ((it.on_fail as Dict[]) || []).find((p) => p.kind === 'damage') || {};
+      entries.push({ id: `d_${++c}`, blockId: 'eff_save_damage', values: { ability: it.ability, dc: it.dc, dice: dmg.dice ?? '1d10', damage_type: dmg.type ?? 'fire' } });
+    } else if (it?.resolution === 'auto') {
+      for (const p of ((it.result as Dict[]) || [])) {
+        const e = payloadToEntry(p);
+        entries.push({ id: `d_${++c}`, ...e });
+      }
+    } else {
+      entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
+    }
+  }
+  return { triggerId, triggerValues: tv, minLevel, effectEntries: entries };
+}
+
 // Опции для multiselect по source выбора
 export function optionsForChoiceSource(source: string): RegistryItem[] {
   switch (source) {

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Mechanics } from '../../mechanics/types';
 import {
   TRIGGER_BLOCKS,
@@ -8,6 +8,7 @@ import {
   buildMechanics,
   summarizeMechanics,
   defaultValuesForBlock,
+  deserializeMechanics,
   type Field,
 } from '../../mechanics/blocks';
 import { DAMAGE_TYPE_OPTIONS } from '../../mechanics/registries';
@@ -28,13 +29,39 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
   const [triggerValues, setTriggerValues] = useState<Record<string, unknown>>({});
   const [effectEntries, setEffectEntries] = useState<EffectEntry[]>([]);
   const [minLevel, setMinLevel] = useState<number | ''>('');
-  const [showJson, setShowJson] = useState(false);
+  const [mode, setMode] = useState<'blocks' | 'json'>('blocks');
+  const [jsonText, setJsonText] = useState('');
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  // dirty=true только после правки пользователя — чтобы открытие эффекта не перезаписывало механику
+  const dirty = useRef(false);
+  const markDirty = () => { dirty.current = true; };
 
+  // Применить десериализованное значение к блокам
+  const applyDeserialized = (m: Record<string, unknown> | null) => {
+    const d = deserializeMechanics(m);
+    if (!d) {
+      setTriggerId('trg_passive');
+      setTriggerValues({});
+      setEffectEntries([]);
+      setMinLevel('');
+      return;
+    }
+    setTriggerId(d.triggerId);
+    setTriggerValues(d.triggerValues);
+    setMinLevel(d.minLevel);
+    setEffectEntries(d.effectEntries.map((e) => ({ id: newEntryId(), blockId: e.blockId, values: e.values })));
+  };
+
+  // Гидрация из сохранённого значения (один раз): блоки восстанавливаются из JSON.
   useEffect(() => {
-    if (hydrated || !value) return;
-    // Best-effort: показываем сохранённую механику, блоки не восстанавливаем автоматически
+    if (hydrated) return;
+    if (value) {
+      applyDeserialized(value as Record<string, unknown>);
+      setJsonText(JSON.stringify(value, null, 2));
+    }
     setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, hydrated]);
 
   const built = useMemo(() => {
@@ -64,10 +91,48 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
     onChange(next);
   };
 
+  // В режиме блоков отдаём собранную механику — только после правок пользователя,
+  // чтобы открытие существующего эффекта не перезаписывало его механику.
   useEffect(() => {
+    if (!hydrated || !dirty.current || mode !== 'blocks') return;
     emit(built);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [built]);
+  }, [built, hydrated, mode]);
+
+  const switchToJson = () => {
+    setJsonText(JSON.stringify(built ?? value ?? null, null, 2));
+    setJsonError(null);
+    setMode('json');
+  };
+
+  const switchToBlocks = () => {
+    // Разбираем текущий JSON обратно в блоки
+    try {
+      const parsed = jsonText.trim() ? JSON.parse(jsonText) : null;
+      applyDeserialized(parsed);
+      setJsonError(null);
+    } catch {
+      // Если JSON не разобрался — оставляем блоки как есть
+    }
+    setMode('blocks');
+  };
+
+  const onJsonChange = (text: string) => {
+    setJsonText(text);
+    markDirty();
+    if (!text.trim()) {
+      setJsonError(null);
+      onChange(null);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(text);
+      setJsonError(null);
+      onChange(parsed);
+    } catch (e) {
+      setJsonError(e instanceof Error ? e.message : 'Некорректный JSON');
+    }
+  };
 
   const renderField = (
     field: Field,
@@ -152,6 +217,7 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
   };
 
   const addEffect = (blockId: string) => {
+    markDirty();
     setEffectEntries((prev) => [
       ...prev,
       { id: newEntryId(), blockId, values: defaultValuesForBlock(blockId) },
@@ -160,12 +226,50 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+        <button
+          type="button"
+          className={`px-3 py-1 text-sm rounded-md ${mode === 'blocks' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
+          onClick={() => mode !== 'blocks' && switchToBlocks()}
+        >
+          Блоки
+        </button>
+        <button
+          type="button"
+          className={`px-3 py-1 text-sm rounded-md ${mode === 'json' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
+          onClick={() => mode !== 'json' && switchToJson()}
+        >
+          Сырой JSON
+        </button>
+      </div>
+
+      {mode === 'json' ? (
+        <div>
+          <p className="text-xs text-gray-500 mb-2">
+            Прямое редактирование унифицированной механики. Переключитесь на «Блоки», чтобы собрать обратно.
+          </p>
+          <textarea
+            className="w-full h-80 p-3 border rounded-lg font-mono text-xs"
+            spellCheck={false}
+            value={jsonText}
+            onChange={(e) => onJsonChange(e.target.value)}
+            placeholder='{"activation":{"mode":"passive"},"effects":[]}'
+          />
+          {jsonError ? (
+            <p className="text-xs text-red-600 mt-1">Ошибка JSON: {jsonError}</p>
+          ) : (
+            <p className="text-xs text-green-600 mt-1">JSON корректен</p>
+          )}
+        </div>
+      ) : (
+      <>
       <div>
         <h3 className="text-sm font-semibold text-gray-800 mb-2">Триггер / активация</h3>
         <select
           className="w-full px-3 py-2 border rounded-lg text-sm mb-3"
           value={triggerId}
           onChange={(e) => {
+            markDirty();
             const id = e.target.value;
             setTriggerId(id);
             setTriggerValues(defaultValuesForBlock(id));
@@ -180,9 +284,10 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
             {BLOCK_MAP[triggerId].fields.map((f) => (
               <div key={f.key}>
                 <label className="block text-xs text-gray-600 mb-1">{f.label}</label>
-                {renderField(f, triggerValues, (k, v) =>
-                  setTriggerValues((prev) => ({ ...prev, [k]: v }))
-                )}
+                {renderField(f, triggerValues, (k, v) => {
+                  markDirty();
+                  setTriggerValues((prev) => ({ ...prev, [k]: v }));
+                })}
               </div>
             ))}
           </div>
@@ -194,7 +299,10 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
             min={1}
             className="w-32 px-2 py-1 border rounded text-sm"
             value={minLevel}
-            onChange={(e) => setMinLevel(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+            onChange={(e) => {
+              markDirty();
+              setMinLevel(e.target.value === '' ? '' : parseInt(e.target.value, 10));
+            }}
             placeholder="—"
           />
         </div>
@@ -230,24 +338,24 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
                   <div className="flex gap-1">
                     <button type="button" title="Выше" className="p-1 text-gray-400 hover:text-gray-700"
                       disabled={idx === 0}
-                      onClick={() => setEffectEntries((prev) => {
+                      onClick={() => { markDirty(); setEffectEntries((prev) => {
                         const n = [...prev];
                         [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]];
                         return n;
-                      })}>
+                      }); }}>
                       <ChevronUp size={16} />
                     </button>
                     <button type="button" title="Ниже" className="p-1 text-gray-400 hover:text-gray-700"
                       disabled={idx === effectEntries.length - 1}
-                      onClick={() => setEffectEntries((prev) => {
+                      onClick={() => { markDirty(); setEffectEntries((prev) => {
                         const n = [...prev];
                         [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]];
                         return n;
-                      })}>
+                      }); }}>
                       <ChevronDown size={16} />
                     </button>
                     <button type="button" className="p-1 text-red-400 hover:text-red-600"
-                      onClick={() => setEffectEntries((prev) => prev.filter((x) => x.id !== entry.id))}>
+                      onClick={() => { markDirty(); setEffectEntries((prev) => prev.filter((x) => x.id !== entry.id)); }}>
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -258,11 +366,12 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
                       {f.type !== 'choice-source' && (
                         <label className="block text-xs text-gray-600 mb-1">{f.label}</label>
                       )}
-                      {renderField(f, entry.values, (k, v) =>
+                      {renderField(f, entry.values, (k, v) => {
+                        markDirty();
                         setEffectEntries((prev) =>
                           prev.map((x) => (x.id === entry.id ? { ...x, values: { ...x.values, [k]: v } } : x)),
-                        )
-                      )}
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
@@ -279,18 +388,10 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
       <div className="border-t pt-4">
         <h3 className="text-sm font-semibold text-gray-800 mb-2">Превью</h3>
         <p className="text-sm text-gray-700 mb-2">{summary || '—'}</p>
-        {value && !built && (
-          <p className="text-xs text-amber-600 mb-2">Загружено из сохранённых данных (отредактируйте блоки для обновления)</p>
-        )}
-        <button type="button" className="text-xs text-blue-600 flex items-center gap-1" onClick={() => setShowJson((s) => !s)}>
-          <Plus size={12} /> {showJson ? 'Скрыть JSON' : 'Показать JSON'}
-        </button>
-        {showJson && (
-          <pre className="mt-2 p-3 bg-gray-900 text-green-400 text-xs rounded overflow-auto max-h-64">
-            {JSON.stringify(built || value, null, 2)}
-          </pre>
-        )}
+        <p className="text-xs text-gray-400">Полный JSON — на вкладке «Сырой JSON».</p>
       </div>
+      </>
+      )}
     </div>
   );
 };
