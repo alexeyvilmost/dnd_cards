@@ -26,6 +26,10 @@ import type {
   CreateBackgroundRequest,
   UpdateBackgroundRequest,
   BackgroundsResponse,
+  Race,
+  CreateRaceRequest,
+  UpdateRaceRequest,
+  RacesResponse,
   ActiveEffect,
   ApiError
 } from '../types';
@@ -302,6 +306,31 @@ export const backgroundsApi = {
   },
   deleteBackground: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/backgrounds/${id}`);
+  },
+};
+
+export const racesApi = {
+  getRaces: async (params?: {
+    page?: number; limit?: number; size?: string; creature_type?: string;
+    search?: string; sort_by?: string;
+  }): Promise<RacesResponse> => {
+    const response = await apiClient.get<RacesResponse>('/api/races', { params });
+    return response.data;
+  },
+  getRace: async (id: string): Promise<Race> => {
+    const response = await apiClient.get<Race>(`/api/races/${id}`);
+    return response.data;
+  },
+  createRace: async (data: CreateRaceRequest): Promise<Race> => {
+    const response = await apiClient.post<Race>('/api/races', data);
+    return response.data;
+  },
+  updateRace: async (id: string, data: UpdateRaceRequest): Promise<Race> => {
+    const response = await apiClient.put<Race>(`/api/races/${id}`, data);
+    return response.data;
+  },
+  deleteRace: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/races/${id}`);
   },
 };
 

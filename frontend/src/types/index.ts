@@ -1206,3 +1206,75 @@ export interface BackgroundsResponse {
   page: number;
   limit: number;
 }
+
+// ─── Виды (расы) ────────────────────────────────────────────────────────────
+
+export interface RaceTrait {
+  name: string;
+  description: string;
+}
+
+export interface Race {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  creature_type?: string | null;
+  size?: string | null;
+  speed?: number | null;
+  extra_speeds?: string | null;
+  darkvision?: number | null;
+  traits?: RaceTrait[] | null;
+  lineages?: RaceTrait[] | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateRaceRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  card_number?: string;
+  creature_type?: string | null;
+  size?: string | null;
+  speed?: number | null;
+  extra_speeds?: string | null;
+  darkvision?: number | null;
+  traits?: RaceTrait[] | null;
+  lineages?: RaceTrait[] | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+}
+
+export type UpdateRaceRequest = Partial<CreateRaceRequest>;
+
+export interface RacesResponse {
+  races: Race[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const CREATURE_TYPE_OPTIONS = [
+  'Гуманоид', 'Фея', 'Исчадие', 'Небожитель', 'Нежить', 'Элементаль',
+  'Чудовище', 'Дракон', 'Великан', 'Растение', 'Слизь', 'Construct',
+] as const;
+
+export const RACE_SIZE_OPTIONS = [
+  { value: 'Маленький', label: 'Маленький' },
+  { value: 'Средний', label: 'Средний' },
+  { value: 'Маленький или Средний', label: 'Маленький или Средний' },
+] as const;

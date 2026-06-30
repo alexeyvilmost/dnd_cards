@@ -41,6 +41,7 @@ import EffectCreator from './pages/EffectCreator';
 import SpellCreator from './pages/SpellCreator';
 import FeatCreator from './pages/FeatCreator';
 import BackgroundCreator from './pages/BackgroundCreator';
+import RaceCreator from './pages/RaceCreator';
 import ImageStudio from './pages/ImageStudio';
 
 function App() {
@@ -356,6 +357,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <BackgroundCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/race-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <RaceCreator />
             </Layout>
           </ProtectedRoute>
         } />

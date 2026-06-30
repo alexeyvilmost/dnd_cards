@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi } from '../api/client';
-import type { Card, PassiveEffect, Action, Spell, Feat, Background } from '../types';
+import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi } from '../api/client';
+import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
@@ -10,12 +10,14 @@ import ActionPreview from '../components/ActionPreview';
 import SpellPreview from '../components/SpellPreview';
 import FeatPreview from '../components/FeatPreview';
 import BackgroundPreview from '../components/BackgroundPreview';
+import RacePreview from '../components/RacePreview';
 import CardDetailModal from '../components/CardDetailModal';
 import EffectDetailModal from '../components/EffectDetailModal';
 import ActionDetailModal from '../components/ActionDetailModal';
 import SpellDetailModal from '../components/SpellDetailModal';
 import FeatDetailModal from '../components/FeatDetailModal';
 import BackgroundDetailModal from '../components/BackgroundDetailModal';
+import RaceDetailModal from '../components/RaceDetailModal';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
@@ -33,13 +35,14 @@ const CardLibrary = () => {
   const skipFilterUrlSync = useRef(false);
   const openingCardFromUrl = useRef(false);
 
-  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds'>(initialFilters.contentType);
+  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races'>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [feats, setFeats] = useState<Feat[]>([]);
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
+  const [races, setRaces] = useState<Race[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +80,9 @@ const CardLibrary = () => {
   const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
   const [selectedFeat, setSelectedFeat] = useState<Feat | null>(null);
   const [selectedBackground, setSelectedBackground] = useState<Background | null>(null);
+  const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+  const [isRaceModalOpen, setIsRaceModalOpen] = useState(false);
+  const [hoveredRace, setHoveredRace] = useState<Race | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
@@ -370,6 +376,34 @@ const CardLibrary = () => {
     }
   };
 
+  const loadRaces = async (page = 1, append = false) => {
+    try {
+      if (page === 1) setLoading(true); else setLoadingMore(true);
+      const params: any = { page, limit: 50 };
+      if (search) params.search = search;
+      const response = await racesApi.getRaces(params);
+      if (append) {
+        setRaces(prev => {
+          const existing = new Set(prev.map(r => r.id));
+          const combined = [...prev, ...response.races.filter(r => !existing.has(r.id))];
+          setHasMore(response.races.length === 50 && combined.length < response.total);
+          return combined;
+        });
+      } else {
+        setRaces(response.races);
+        setHasMore(response.races.length === 50 && response.races.length < response.total);
+      }
+      setTotalCards(response.total);
+      setCurrentPage(page);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки видов');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
     setCards([]);
@@ -378,6 +412,7 @@ const CardLibrary = () => {
     setSpells([]);
     setFeats([]);
     setBackgrounds([]);
+    setRaces([]);
     if (contentType === 'cards') {
       loadCards(1, false);
     } else if (contentType === 'effects') {
@@ -390,6 +425,8 @@ const CardLibrary = () => {
       loadFeats(1, false);
     } else if (contentType === 'backgrounds') {
       loadBackgrounds(1, false);
+    } else if (contentType === 'races') {
+      loadRaces(1, false);
     }
   }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
@@ -557,6 +594,8 @@ const CardLibrary = () => {
         loadFeats(currentPage + 1, true);
       } else if (contentType === 'backgrounds') {
         loadBackgrounds(currentPage + 1, true);
+      } else if (contentType === 'races') {
+        loadRaces(currentPage + 1, true);
       }
     }
   };
@@ -711,6 +750,22 @@ const CardLibrary = () => {
     }
   };
 
+  // Обработчики для видов (рас)
+  const handleRaceClick = (race: Race) => {
+    setSelectedRace(race);
+    setIsRaceModalOpen(true);
+  };
+  const handleDeleteRace = async (raceId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот вид?')) return;
+    try {
+      await racesApi.deleteRace(raceId);
+      if (contentType === 'races') loadRaces(1, false);
+      setIsRaceModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления вида');
+    }
+  };
+
   const handleDeleteSpell = async (spellId: string) => {
     if (!confirm('Вы уверены, что хотите удалить это заклинание?')) return;
 
@@ -799,68 +854,21 @@ const CardLibrary = () => {
       {/* Поиск и фильтры */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          {/* Переключатель предметы/эффекты/действия */}
-          <div className="flex items-center space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
-            <button
-              onClick={() => setContentType('cards')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                contentType === 'cards'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+          {/* Выпадающий список типов сущностей */}
+          <div className="flex-shrink-0">
+            <select
+              value={contentType}
+              onChange={(e) => setContentType(e.target.value as typeof contentType)}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
             >
-              Предметы
-            </button>
-            <button
-              onClick={() => setContentType('effects')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                contentType === 'effects'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Эффекты
-            </button>
-            <button
-              onClick={() => setContentType('actions')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                contentType === 'actions'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Действия
-            </button>
-            <button
-              onClick={() => setContentType('spells')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                contentType === 'spells'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Заклинания
-            </button>
-            <button
-              onClick={() => setContentType('feats')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                contentType === 'feats'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Черты
-            </button>
-            <button
-              onClick={() => setContentType('backgrounds')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                contentType === 'backgrounds'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Предыстории
-            </button>
+              <option value="cards">Предметы</option>
+              <option value="effects">Эффекты</option>
+              <option value="actions">Действия</option>
+              <option value="spells">Заклинания</option>
+              <option value="feats">Черты</option>
+              <option value="backgrounds">Предыстории</option>
+              <option value="races">Виды</option>
+            </select>
           </div>
 
           {/* Поиск */}
@@ -1732,6 +1740,54 @@ const CardLibrary = () => {
         </>
       )}
 
+      {!loading && contentType === 'races' && races.length === 0 && (
+        <div className="text-center py-12 text-gray-500">Виды не найдены</div>
+      )}
+      {!loading && contentType === 'races' && races.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-gray-600">Показано: {races.length} из {totalCards} видов</div>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+              {races.map((race) => (
+                <div key={race.id} className="flex justify-center">
+                  <RacePreview race={race} onClick={() => handleRaceClick(race)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {races.map((race) => (
+                  <button
+                    key={race.id}
+                    onClick={() => handleRaceClick(race)}
+                    onMouseEnter={() => setHoveredRace(race)}
+                    onMouseLeave={() => setHoveredRace(null)}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        <img src={race.image_url && race.image_url.trim() !== '' ? race.image_url : '/default_image.png'} alt={race.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{race.name}</div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">Вид</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {hoveredRace && (
+                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                  <RacePreview race={hoveredRace} disableHover={true} />
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
       {/* Модальное окно с детальной информацией о карте */}
       <CardDetailModal
         card={selectedCard}
@@ -1778,6 +1834,13 @@ const CardLibrary = () => {
         isOpen={isBackgroundModalOpen}
         onClose={() => { setIsBackgroundModalOpen(false); setSelectedBackground(null); }}
         onDelete={handleDeleteBackground}
+      />
+
+      <RaceDetailModal
+        race={selectedRace}
+        isOpen={isRaceModalOpen}
+        onClose={() => { setIsRaceModalOpen(false); setSelectedRace(null); }}
+        onDelete={handleDeleteRace}
       />
     </div>
   );
