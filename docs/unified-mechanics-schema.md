@@ -1,11 +1,16 @@
-# Унифицированная схема механик D&D 2024 (черновик 1.0)
+# Унифицированная схема механик D&D 2024 (черновик 1.1)
 
 Единый JSON-формат, которым можно описать **эффект**, **действие** и **заклинание**
 (а также черту, видовую особенность, свойство предмета) так, чтобы движок мог
 их интерпретировать, а конструктор — собирать без свободного текста.
 
-> Статус: дизайн-документ. Реализация (модель БД + конструктор) — следующий этап.
-> Ветка: `feature/unified-mechanics-schema`.
+> Статус: дизайн-документ. **План реализации блочного конструктора** (Фаза 1) —
+> [`effect-constructor-implementation-plan.md`](effect-constructor-implementation-plan.md).
+> Машинная схема — [`mechanics.schema.json`](mechanics.schema.json).
+>
+> **Изменения 1.1** (под способности видов PHB 2024): добавлены событие `on_acquire`
+> и семантика «выбора до разрешения» (§5.3); grant-семейство постоянных приобретений
+> (§6.5); конструкция `choice` и модель pending-choice (§6.7).
 
 ---
 
@@ -164,7 +169,14 @@
 `saving_throw_made`, `forced_save`, `ability_check_made`, `reduced_to_0_hp`,
 `creature_enters_reach`, `creature_leaves_reach`, `creature_moves`,
 `turn_start`, `turn_end`, `spell_cast`, `condition_applied`, `initiative_roll`,
-`short_rest`, `long_rest`.
+`short_rest`, `long_rest`,
+**`on_acquire`** (особенность получена персонажем — при создании или повышении уровня),
+**`level_gained`** (получен новый уровень — для особенностей, открывающихся на уровне N).
+
+> **`on_acquire` + `timing:"before"` = выбор (pending choice).** Так описываются
+> особенности «при получении, до разрешения»: персонаж должен **сделать выбор**
+> (навык, черта, заклинание, происхождение). Выбор постоянный и **не развеивается**
+> (такие эффекты в принципе не диспеллятся). Механика выбора — §6.7.
 
 ### 5.4 `targeting` — цель
 
@@ -306,9 +318,30 @@
 // Превращение
 { "kind": "transform", "into": "beast_statblock", "cr_max": "self_level/3" } // Дикий облик
 
+// ── Постоянные приобретения (grant-семейство) — выживают развеивание ──
+// Владение (навык/инструмент/спасбросок/оружие/доспех/язык)
+{ "kind": "grant_proficiency", "prof": "skill", "value": "perception" }   // prof: skill|tool|saving_throw|weapon|armor|language
+// Черта
+{ "kind": "grant_feat", "value": "skilled" }
+// Известное заклинание/заговор (часто с уровневым гейтом через requirements)
+{ "kind": "grant_spell", "value": "prestidigitation", "level_gate": 1, "ability": "int" }
+// Постоянный прирост характеристики / чувств / скорости
+{ "kind": "grant_ability_score", "ability": "con", "amount": 1 }
+{ "kind": "grant_sense", "sense": "darkvision", "range": 60 }            // darkvision|tremorsense|blindsight
+{ "kind": "grant_speed", "mode": "fly", "value": "walk_speed" }          // walk|fly|swim|climb
+
+// Выбор из списка (см. §6.7) — оборачивает один из grant-payload'ов
+{ "kind": "choice", "id": "...", ... }
+
 // Чистый текст
 { "kind": "narrative", "description": "..." }
 ```
+
+> **Зачем отдельное grant-семейство.** `modifier` описывает **временные** бонусы к
+> броскам/значениям (бафф/дебафф, может развеяться). `grant_*` описывает **постоянные
+> приобретения** персонажа (навык, черта, заклинание, чувство). Они применяются один
+> раз при получении/выборе и не откатываются. Движок хранит их в самом персонаже, а не
+> в активном эффекте.
 
 ### 6.6 `modifier` — подсистема модификаторов (расширяет существующий `Script`)
 
@@ -333,6 +366,76 @@
 Примеры `applies_to.roll`: Аура защиты → `saving_throw` (+cha) для союзников в радиусе;
 Безрассудная атака → `attack` advantage (свои) **и** `attack` advantage (входящие по вам);
 Ярость → `damage` (+2 рукопашные Силой) и `saving_throw`/`ability_check` (advantage, Сила).
+
+### 6.7 `choice` — выбор из списка и pending-choice
+
+Ключевая конструкция для видов/черт «при получении». Описывает, что **игрок выбирает
+N вариантов из списка**, и каждый выбор превращается в постоянный grant (§6.5).
+
+```jsonc
+{
+  "kind": "choice",
+  "id": "human_skill",             // СТАБИЛЬНЫЙ id (нужен движку для pending-choice)
+  "prompt": "Выберите навык",
+  "count": 1,                       // сколько выбрать
+  "options": {
+    "source": "skill",              // skill|tool|saving_throw|language|feat|spell|damage_type|subfeature|explicit
+    "filter": "all",                // "all" | именованный список ("origin_feats","wizard_cantrips") | [id,...]
+    "items": [ ChoiceItem ]         // только для source = subfeature | explicit (см. ниже)
+  },
+  "recommended": ["skilled"],       // подсветить рекомендованные (необязательно)
+  "grant": { "kind": "grant_proficiency", "prof": "skill" }, // шаблон: применяется к каждому выбранному
+  "resolution": "on_acquire"        // когда спрашивать: on_acquire (создание/левелап или «!» позже)
+}
+```
+
+- **`grant`-шаблон** — для `source` из «плоских» категорий (skill/feat/spell/…): к
+  каждому выбранному id применяется этот grant с подставленным `value` = id.
+- **`source: "subfeature"`** — для **происхождений/подвидов** (Эльфийское/Гномье/
+  Драконье наследие), где каждый вариант — это **пакет** из нескольких grant'ов, часть
+  с уровневым гейтом. Тогда `options.items` — массив:
+
+```jsonc
+// ChoiceItem (для subfeature/explicit)
+{
+  "id": "high_elf", "name": "Высший эльф",
+  "grants": [
+    { "kind": "grant_spell", "value": "prestidigitation", "ability": "int", "level_gate": 1 },
+    { "kind": "grant_spell", "value": "detect_magic",      "ability": "int", "level_gate": 3 },
+    { "kind": "grant_spell", "value": "misty_step",        "ability": "int", "level_gate": 5 }
+  ]
+}
+```
+
+#### Pending-choice (модель разрешения)
+
+«До разрешения» означает: при получении особенности движок создаёт **запись о
+незакрытом выборе** на персонаже и предлагает закрыть её. Хранение (Фаза 1) — поле
+`pending_choices` (jsonb) у персонажа:
+
+```jsonc
+{
+  "id": "<uuid>",
+  "source": "race:elf:elf_lineage",   // откуда пришёл выбор
+  "choice_id": "elf_lineage",         // = choice.id
+  "prompt": "Выберите происхождение",
+  "count": 1,
+  "options": { ... },                  // снимок options на момент получения
+  "recommended": ["high_elf"],
+  "status": "pending",                 // pending | resolved
+  "resolved": []                       // выбранные id после закрытия
+}
+```
+
+- **Когда спрашивать:** если особенность получена в потоке создания персонажа или
+  повышения уровня → сразу показать окно выбора. Иначе — отложить; в листе персонажа
+  у незакрытых выборов горит «**!**», по клику открывается то же окно.
+- **Постоянство:** после разрешения grant'ы применяются к персонажу навсегда и
+  переживают развеивание. Эффекты с `on_acquire`-выбором **помечаются как
+  неразвеиваемые**.
+
+> Фаза 1 (этот план): конструктор **авторит** `choice`/`grant` и бэкенд **хранит**
+> `mechanics` и `pending_choices`. Само окно разрешения и лист персонажа — Фаза 2.
 
 ---
 
@@ -776,6 +879,11 @@
 duration / uses`. Непокрытых «жёстких» кейсов в ядре правил не осталось; самые
 нестандартные (Дикий облик, призыв существ) опираются на `transform` / ссылку на
 внешний стат-блок + `narrative` как escape-hatch.
+
+> **Полная матрица всех 10 видов PHB 2024 → блоки конструктора** — в
+> [`effect-constructor-implementation-plan.md`](effect-constructor-implementation-plan.md) §7.
+> Там каждая способность (Находчивый, Эльфийское наследие, Оружие дыхания, Наследие
+> великанов и т.д.) разложена на триггер-блок + эффект-блоки.
 
 ---
 

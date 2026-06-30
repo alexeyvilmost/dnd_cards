@@ -81,7 +81,7 @@
       "required": ["event"],
       "properties": {
         "timing": { "enum": ["before", "during", "after", "replaces"] },
-        "event": { "enum": ["attack_roll_made", "hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest"] },
+        "event": { "enum": ["attack_roll_made", "hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
         "subject": { "enum": ["self", "ally", "enemy", "attacker", "target", "any_creature"] },
         "circumstances": { "type": "array", "items": { "$ref": "#/$defs/condition" } }
       }
@@ -155,7 +155,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative"] }
+        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative", "grant_proficiency", "grant_feat", "grant_spell", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
       },
       "allOf": [
         {
@@ -255,8 +255,79 @@
         {
           "if": { "properties": { "kind": { "const": "transform" } } },
           "then": { "properties": { "into": { "type": "string" }, "cr_max": { "$ref": "#/$defs/formula" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "grant_proficiency" } } },
+          "then": {
+            "properties": {
+              "prof": { "enum": ["skill", "tool", "saving_throw", "weapon", "armor", "language"] },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "grant_feat" } } },
+          "then": { "properties": { "value": { "type": "string" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "grant_spell" } } },
+          "then": {
+            "properties": {
+              "value": { "type": "string" },
+              "level_gate": { "type": "integer" },
+              "ability": { "$ref": "#/$defs/ability" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "grant_ability_score" } } },
+          "then": { "properties": { "ability": { "$ref": "#/$defs/ability" }, "amount": { "type": "number" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "grant_sense" } } },
+          "then": { "properties": { "sense": { "enum": ["darkvision", "tremorsense", "blindsight", "truesight"] }, "range": { "type": "number" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "grant_speed" } } },
+          "then": { "properties": { "mode": { "enum": ["walk", "fly", "swim", "climb"] }, "value": { "$ref": "#/$defs/formula" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "choice" } } },
+          "then": { "$ref": "#/$defs/choice" }
         }
       ]
+    },
+
+    "choice": {
+      "type": "object",
+      "required": ["id", "options"],
+      "properties": {
+        "id": { "type": "string" },
+        "prompt": { "type": "string" },
+        "count": { "type": "integer", "minimum": 1, "default": 1 },
+        "options": {
+          "type": "object",
+          "required": ["source"],
+          "properties": {
+            "source": { "enum": ["skill", "tool", "saving_throw", "language", "feat", "spell", "damage_type", "subfeature", "explicit"] },
+            "filter": {},
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "grants": { "type": "array", "items": { "$ref": "#/$defs/payload" } }
+                }
+              }
+            }
+          }
+        },
+        "recommended": { "type": "array", "items": { "type": "string" } },
+        "grant": { "$ref": "#/$defs/payload" },
+        "resolution": { "enum": ["on_acquire", "immediate"] }
+      }
     },
 
     "modifier": {
