@@ -236,6 +236,12 @@ func GetAllMigrations() []Migration {
 			Up:          addMechanicsAndRaceAbilities,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "039_create_classes",
+			Description: "Create classes table and add race level progression",
+			Up:          createClassesAndRaceProgression,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS classes CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -297,6 +303,52 @@ func addMechanicsAndRaceAbilities(db *sql.DB) error {
 	for _, q := range queries {
 		if _, err := db.Exec(q); err != nil {
 			return fmt.Errorf("addMechanicsAndRaceAbilities: %w", err)
+		}
+	}
+	return nil
+}
+
+func createClassesAndRaceProgression(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE races ADD COLUMN IF NOT EXISTS level_progression JSONB",
+		`CREATE TABLE IF NOT EXISTS classes (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			hit_die VARCHAR(20),
+			primary_abilities JSONB,
+			saving_throws JSONB,
+			armor_training JSONB,
+			weapon_proficiencies JSONB,
+			tool_proficiencies JSONB,
+			skill_choices JSONB,
+			starting_equipment JSONB,
+			level_progression JSONB,
+			resources JSONB,
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags JSONB,
+			is_extended BOOLEAN DEFAULT false,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_classes_card_number ON classes(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_classes_created_at ON classes(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_classes_deleted_at ON classes(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createClassesAndRaceProgression: %w", err)
 		}
 	}
 	return nil

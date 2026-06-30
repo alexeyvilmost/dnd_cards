@@ -81,6 +81,12 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       name: '🧬 Вид (раса)',
       description: 'Виды: тип, размер, скорость, тёмное зрение, видовые особенности',
       color: 'bg-lime-50 border-lime-200 hover:bg-lime-100'
+    },
+    {
+      id: 'class',
+      name: '🎓 Класс',
+      description: 'Классы: кость хитов, владения, ресурсы и способности по уровням',
+      color: 'bg-sky-50 border-sky-200 hover:bg-sky-100'
     }
   ];
 
@@ -109,6 +115,8 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
       navigate('/background-creator');
     } else if (typeId === 'race') {
       navigate('/race-creator');
+    } else if (typeId === 'class') {
+      navigate('/class-creator');
     }
   };
 

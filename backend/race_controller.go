@@ -104,7 +104,7 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber,
 		CreatureType: req.CreatureType, Size: req.Size, Speed: req.Speed, ExtraSpeeds: req.ExtraSpeeds,
 		Darkvision: req.Darkvision, Traits: req.Traits, Lineages: req.Lineages,
-		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
+		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions, LevelProgression: req.LevelProgression,
 		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
 	}
 	if r.Author == "" {
@@ -183,6 +183,9 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 	}
 	if req.RelatedActions != nil {
 		r.RelatedActions = req.RelatedActions
+	}
+	if req.LevelProgression != nil {
+		r.LevelProgression = req.LevelProgression
 	}
 	if req.Type != nil {
 		r.Type = req.Type

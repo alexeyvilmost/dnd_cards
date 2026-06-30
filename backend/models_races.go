@@ -65,6 +65,7 @@ type Race struct {
 	Lineages              *RaceTraits    `json:"lineages" gorm:"type:jsonb"`             // Происхождения/подвиды (опц.)
 	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`      // id привязанных эффектов
 	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`      // id привязанных действий
+	LevelProgression      *JSONMap       `json:"level_progression" gorm:"type:jsonb"`    // способности вида по уровням
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -95,6 +96,7 @@ type CreateRaceRequest struct {
 	Lineages            *RaceTraits `json:"lineages"`
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
+	LevelProgression    *JSONMap    `json:"level_progression"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -118,6 +120,7 @@ type UpdateRaceRequest struct {
 	Lineages            *RaceTraits `json:"lineages"`
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
+	LevelProgression    *JSONMap    `json:"level_progression"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -143,6 +146,7 @@ type RaceResponse struct {
 	Lineages            *RaceTraits `json:"lineages"`
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
+	LevelProgression    *JSONMap    `json:"level_progression"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -159,7 +163,7 @@ func (r Race) ToRaceResponse() RaceResponse {
 		ImageURL: r.ImageURL, Rarity: r.Rarity, CardNumber: r.CardNumber,
 		CreatureType: r.CreatureType, Size: r.Size, Speed: r.Speed, ExtraSpeeds: r.ExtraSpeeds,
 		Darkvision: r.Darkvision, Traits: r.Traits, Lineages: r.Lineages,
-		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions,
+		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions, LevelProgression: r.LevelProgression,
 		Type: r.Type, Author: r.Author, Source: r.Source, Tags: r.Tags,
 		IsExtended: r.IsExtended, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}

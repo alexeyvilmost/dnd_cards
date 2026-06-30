@@ -30,6 +30,10 @@ import type {
   CreateRaceRequest,
   UpdateRaceRequest,
   RacesResponse,
+  CharacterClass,
+  CreateClassRequest,
+  UpdateClassRequest,
+  ClassesResponse,
   ActiveEffect,
   ApiError
 } from '../types';
@@ -331,6 +335,33 @@ export const racesApi = {
   },
   deleteRace: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/races/${id}`);
+  },
+};
+
+export const classesApi = {
+  getClasses: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort_by?: string;
+  }): Promise<ClassesResponse> => {
+    const response = await apiClient.get<ClassesResponse>('/api/classes', { params });
+    return response.data;
+  },
+  getClass: async (id: string): Promise<CharacterClass> => {
+    const response = await apiClient.get<CharacterClass>(`/api/classes/${id}`);
+    return response.data;
+  },
+  createClass: async (data: CreateClassRequest): Promise<CharacterClass> => {
+    const response = await apiClient.post<CharacterClass>('/api/classes', data);
+    return response.data;
+  },
+  updateClass: async (id: string, data: UpdateClassRequest): Promise<CharacterClass> => {
+    const response = await apiClient.put<CharacterClass>(`/api/classes/${id}`, data);
+    return response.data;
+  },
+  deleteClass: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/classes/${id}`);
   },
 };
 

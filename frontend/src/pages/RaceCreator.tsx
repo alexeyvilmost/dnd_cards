@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff, Plus, X } from 'lucide-react';
 import { racesApi, effectsApi, actionsApi } from '../api/client';
-import type { CreateRaceRequest, UpdateRaceRequest, Race, RaceTrait } from '../types';
+import type { CreateRaceRequest, UpdateRaceRequest, Race, RaceTrait, LevelProgression } from '../types';
 import { CREATURE_TYPE_OPTIONS, RACE_SIZE_OPTIONS } from '../types';
 import RacePreview from '../components/RacePreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import EntityRefSelector from '../components/EntityRefSelector';
+import LevelProgressionEditor from '../components/LevelProgressionEditor';
 
 type ScalarForm = {
   name: string;
@@ -69,6 +70,7 @@ const RaceCreator = () => {
   const [lineages, setLineages] = useState<RaceTrait[]>([]);
   const [relatedEffects, setRelatedEffects] = useState<string[]>([]);
   const [relatedActions, setRelatedActions] = useState<string[]>([]);
+  const [levelProgression, setLevelProgression] = useState<LevelProgression>({});
   const [loading, setLoading] = useState(false);
   const [loadingRace, setLoadingRace] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +103,7 @@ const RaceCreator = () => {
           setLineages(r.lineages || []);
           setRelatedEffects(r.related_effects || []);
           setRelatedActions(r.related_actions || []);
+          setLevelProgression(r.level_progression || {});
         } catch (err) {
           setError('Ошибка загрузки вида');
         } finally {
@@ -121,7 +124,7 @@ const RaceCreator = () => {
     rarity: 'common', card_number: '',
     creature_type: fd.creature_type || null, size: fd.size || null,
     speed: fd.speed ?? null, extra_speeds: fd.extra_speeds || null, darkvision: fd.darkvision ?? null,
-    traits: cleanTraits(traits), lineages: cleanTraits(lineages),
+    traits: cleanTraits(traits), lineages: cleanTraits(lineages), level_progression: levelProgression,
     created_at: '', updated_at: '',
   };
 
@@ -142,6 +145,7 @@ const RaceCreator = () => {
       lineages: cleanTraits(lineages),
       related_effects: relatedEffects.length ? relatedEffects : null,
       related_actions: relatedActions.length ? relatedActions : null,
+      level_progression: Object.keys(levelProgression).length ? levelProgression : null,
       source: data.source || null,
     };
     try {
@@ -264,6 +268,17 @@ const RaceCreator = () => {
                     value={relatedActions}
                     onChange={setRelatedActions}
                     loadItems={loadActions}
+                  />
+                </div>
+
+                <div className="border-t pt-4 space-y-4">
+                  <h3 className="text-md font-semibold text-gray-900">Способности по уровням</h3>
+                  <p className="text-sm text-gray-500">Для видов, которые получают дополнительные эффекты или действия на определённых уровнях.</p>
+                  <LevelProgressionEditor
+                    value={levelProgression}
+                    onChange={setLevelProgression}
+                    loadEffects={loadEffects}
+                    loadActions={loadActions}
                   />
                 </div>
 

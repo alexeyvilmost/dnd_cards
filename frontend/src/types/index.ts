@@ -1219,6 +1219,13 @@ export interface RaceTrait {
   description: string;
 }
 
+export interface LevelAbilityProgression {
+  effects?: string[] | null;
+  actions?: string[] | null;
+}
+
+export type LevelProgression = Record<string, LevelAbilityProgression>;
+
 export interface Race {
   id: string;
   name: string;
@@ -1236,6 +1243,7 @@ export interface Race {
   lineages?: RaceTrait[] | null;
   related_effects?: string[] | null;
   related_actions?: string[] | null;
+  level_progression?: LevelProgression | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1261,6 +1269,7 @@ export interface CreateRaceRequest {
   lineages?: RaceTrait[] | null;
   related_effects?: string[] | null;
   related_actions?: string[] | null;
+  level_progression?: LevelProgression | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1272,6 +1281,68 @@ export type UpdateRaceRequest = Partial<CreateRaceRequest>;
 
 export interface RacesResponse {
   races: Race[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// ─── Классы ──────────────────────────────────────────────────────────────────
+
+export interface CharacterClass {
+  id: string;
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity: Rarity;
+  card_number: string;
+  hit_die?: string | null;
+  primary_abilities?: string[] | null;
+  saving_throws?: string[] | null;
+  armor_training?: string[] | null;
+  weapon_proficiencies?: string[] | null;
+  tool_proficiencies?: string[] | null;
+  skill_choices?: Record<string, unknown> | null;
+  starting_equipment?: Record<string, unknown> | null;
+  level_progression?: LevelProgression | null;
+  resources?: Record<string, unknown> | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateClassRequest {
+  name: string;
+  description: string;
+  detailed_description?: string | null;
+  image_url?: string;
+  rarity?: Rarity;
+  card_number?: string;
+  hit_die?: string | null;
+  primary_abilities?: string[] | null;
+  saving_throws?: string[] | null;
+  armor_training?: string[] | null;
+  weapon_proficiencies?: string[] | null;
+  tool_proficiencies?: string[] | null;
+  skill_choices?: Record<string, unknown> | null;
+  starting_equipment?: Record<string, unknown> | null;
+  level_progression?: LevelProgression | null;
+  resources?: Record<string, unknown> | null;
+  type?: string | null;
+  author?: string;
+  source?: string | null;
+  tags?: string[] | null;
+  is_extended?: boolean | null;
+}
+
+export type UpdateClassRequest = Partial<CreateClassRequest>;
+
+export interface ClassesResponse {
+  classes: CharacterClass[];
   total: number;
   page: number;
   limit: number;

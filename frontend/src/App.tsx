@@ -42,6 +42,7 @@ import SpellCreator from './pages/SpellCreator';
 import FeatCreator from './pages/FeatCreator';
 import BackgroundCreator from './pages/BackgroundCreator';
 import RaceCreator from './pages/RaceCreator';
+import ClassCreator from './pages/ClassCreator';
 import ImageStudio from './pages/ImageStudio';
 
 function App() {
@@ -364,6 +365,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <RaceCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/class-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <ClassCreator />
             </Layout>
           </ProtectedRoute>
         } />
