@@ -1,5 +1,5 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact' | 'relic' | 'custom';
-export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive' | 'set' | 'choice' | 'equipment';
+export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive' | 'set' | 'choice' | 'equipment' | 'jewelry';
 export type Currency = 'gold' | 'silver' | 'copper';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
@@ -258,6 +258,7 @@ export const PROPERTIES_OPTIONS = [
   { value: 'set', label: 'Набор' },
   { value: 'choice', label: 'Выбор' },
   { value: 'equipment', label: 'Снаряжение' },
+  { value: 'jewelry', label: 'Украшение' },
 ] as const;
 
 export const BONUS_TYPE_OPTIONS = [

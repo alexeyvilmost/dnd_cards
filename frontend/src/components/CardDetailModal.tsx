@@ -208,6 +208,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       'set': 'Набор',
       'choice': 'Выбор',
       'equipment': 'Снаряжение',
+      'jewelry': 'Украшение',
     };
     return properties.map(p => labels[p] || p);
   };

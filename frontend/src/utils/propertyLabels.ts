@@ -31,6 +31,7 @@ export const getPropertyLabel = (property: string): string => {
     'set': 'набор',
     'choice': 'выбор',
     'equipment': 'снаряжение',
+    'jewelry': 'украшение',
   };
   return propertyLabels[property] || property;
 };
