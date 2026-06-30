@@ -3,8 +3,7 @@ import type { Background } from '../types';
 import { getAbilityLabel } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import Bg3Card from './Bg3Card';
-import { ItemIconRow } from './RelatedItems';
-import type { CardRef } from '../types';
+import BackgroundEquipment from './BackgroundEquipment';
 
 interface BackgroundPreviewProps {
   background: Background;
@@ -64,7 +63,8 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
         </div>
       )}
 
-      {background.equipment && (
+      {/* Текстовое снаряжение — только если нет структурированных вариантов (legacy) */}
+      {background.equipment && !background.equipment_options && (
         <div className="bg3-extra">
           <span style={{ color: '#e7cf9a', fontWeight: 600 }}>Снаряжение. </span>
           {background.equipment}
@@ -77,19 +77,7 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
         </div>
       )}
 
-      {(() => {
-        const opts = background.equipment_options;
-        if (!opts) return null;
-        const seen = new Set<string>();
-        const refs: CardRef[] = [...(opts.option_a?.items || []), ...(opts.option_b?.items || [])]
-          .filter((r) => (seen.has(r.card_id) ? false : (seen.add(r.card_id), true)));
-        if (refs.length === 0) return null;
-        return (
-          <div className="bg3-items" style={{ marginTop: 'auto', paddingTop: 8 }}>
-            <ItemIconRow refs={refs} />
-          </div>
-        );
-      })()}
+      <BackgroundEquipment options={background.equipment_options} />
     </Bg3Card>
   );
 };
