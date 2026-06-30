@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff, Plus, X } from 'lucide-react';
-import { racesApi } from '../api/client';
+import { racesApi, effectsApi, actionsApi } from '../api/client';
 import type { CreateRaceRequest, UpdateRaceRequest, Race, RaceTrait } from '../types';
 import { CREATURE_TYPE_OPTIONS, RACE_SIZE_OPTIONS } from '../types';
 import RacePreview from '../components/RacePreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
+import EntityRefSelector from '../components/EntityRefSelector';
 
 type ScalarForm = {
   name: string;
@@ -66,10 +67,22 @@ const RaceCreator = () => {
 
   const [traits, setTraits] = useState<RaceTrait[]>([]);
   const [lineages, setLineages] = useState<RaceTrait[]>([]);
+  const [relatedEffects, setRelatedEffects] = useState<string[]>([]);
+  const [relatedActions, setRelatedActions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingRace, setLoadingRace] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+
+  const loadEffects = useCallback(async () => {
+    const res = await effectsApi.getEffects({ limit: 200 });
+    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
+  }, []);
+
+  const loadActions = useCallback(async () => {
+    const res = await actionsApi.getActions({ limit: 200 });
+    return res.actions.map((a) => ({ id: a.id, name: a.name, card_number: a.card_number }));
+  }, []);
 
   useEffect(() => {
     if (isEditMode && editId) {
@@ -86,6 +99,8 @@ const RaceCreator = () => {
           });
           setTraits(r.traits || []);
           setLineages(r.lineages || []);
+          setRelatedEffects(r.related_effects || []);
+          setRelatedActions(r.related_actions || []);
         } catch (err) {
           setError('Ошибка загрузки вида');
         } finally {
@@ -125,6 +140,8 @@ const RaceCreator = () => {
       darkvision: data.darkvision != null ? Number(data.darkvision) : null,
       traits: cleanTraits(traits),
       lineages: cleanTraits(lineages),
+      related_effects: relatedEffects.length ? relatedEffects : null,
+      related_actions: relatedActions.length ? relatedActions : null,
       source: data.source || null,
     };
     try {
@@ -232,6 +249,23 @@ const RaceCreator = () => {
                 <TraitEditor title="Видовые особенности" items={traits} onChange={setTraits} namePlaceholder="Тёмное зрение / Происхождение фей / ..." />
 
                 <TraitEditor title="Происхождения / подвиды (опционально)" items={lineages} onChange={setLineages} namePlaceholder="Высший эльф / Дроу / Лесной эльф" />
+
+                <div className="border-t pt-4 space-y-4">
+                  <h3 className="text-md font-semibold text-gray-900">Способности (эффекты и действия)</h3>
+                  <p className="text-sm text-gray-500">Привяжите созданные эффекты/действия с механикой. Текстовые особенности выше — для отображения.</p>
+                  <EntityRefSelector
+                    label="Эффекты"
+                    value={relatedEffects}
+                    onChange={setRelatedEffects}
+                    loadItems={loadEffects}
+                  />
+                  <EntityRefSelector
+                    label="Действия"
+                    value={relatedActions}
+                    onChange={setRelatedActions}
+                    loadItems={loadActions}
+                  />
+                </div>
 
                 <div>
                   <label className={labelCls}>Дополнительное описание</label>

@@ -664,6 +664,7 @@ export interface Action {
   recharge?: ActionRecharge | null;
   recharge_custom?: string | null;
   script?: Record<string, any> | null;
+  mechanics?: Record<string, unknown> | null;
   action_type: ActionType;
   type?: string | null;
   author?: string;
@@ -697,6 +698,7 @@ export interface CreateActionRequest {
   recharge?: ActionRecharge | null;
   recharge_custom?: string | null;
   script?: Record<string, any> | null;
+  mechanics?: Record<string, unknown> | null;
   action_type: ActionType;
   type?: string | null;
   author?: string;
@@ -789,6 +791,7 @@ export interface PassiveEffect {
   effect_type: PassiveEffectType;
   condition_description?: string | null;
   script?: Record<string, any> | null;
+  mechanics?: Record<string, unknown> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -820,6 +823,7 @@ export interface CreatePassiveEffectRequest {
   effect_type: PassiveEffectType;
   condition_description?: string | null;
   script?: Record<string, any> | null;
+  mechanics?: Record<string, unknown> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -848,6 +852,7 @@ export interface UpdatePassiveEffectRequest {
   effect_type?: PassiveEffectType;
   condition_description?: string | null;
   script?: Record<string, any> | null;
+  mechanics?: Record<string, unknown> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1229,6 +1234,8 @@ export interface Race {
   darkvision?: number | null;
   traits?: RaceTrait[] | null;
   lineages?: RaceTrait[] | null;
+  related_effects?: string[] | null;
+  related_actions?: string[] | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1252,6 +1259,8 @@ export interface CreateRaceRequest {
   darkvision?: number | null;
   traits?: RaceTrait[] | null;
   lineages?: RaceTrait[] | null;
+  related_effects?: string[] | null;
+  related_actions?: string[] | null;
   type?: string | null;
   author?: string;
   source?: string | null;

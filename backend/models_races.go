@@ -63,6 +63,8 @@ type Race struct {
 	Darkvision            *int           `json:"darkvision" gorm:"type:int"`             // Тёмное зрение, футы (0 = нет)
 	Traits                *RaceTraits    `json:"traits" gorm:"type:jsonb"`               // Видовые особенности
 	Lineages              *RaceTraits    `json:"lineages" gorm:"type:jsonb"`             // Происхождения/подвиды (опц.)
+	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`      // id привязанных эффектов
+	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`      // id привязанных действий
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -91,6 +93,8 @@ type CreateRaceRequest struct {
 	Darkvision          *int        `json:"darkvision"`
 	Traits              *RaceTraits `json:"traits"`
 	Lineages            *RaceTraits `json:"lineages"`
+	RelatedEffects      *Properties `json:"related_effects"`
+	RelatedActions      *Properties `json:"related_actions"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -112,6 +116,8 @@ type UpdateRaceRequest struct {
 	Darkvision          *int        `json:"darkvision"`
 	Traits              *RaceTraits `json:"traits"`
 	Lineages            *RaceTraits `json:"lineages"`
+	RelatedEffects      *Properties `json:"related_effects"`
+	RelatedActions      *Properties `json:"related_actions"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -135,6 +141,8 @@ type RaceResponse struct {
 	Darkvision          *int        `json:"darkvision"`
 	Traits              *RaceTraits `json:"traits"`
 	Lineages            *RaceTraits `json:"lineages"`
+	RelatedEffects      *Properties `json:"related_effects"`
+	RelatedActions      *Properties `json:"related_actions"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -151,6 +159,7 @@ func (r Race) ToRaceResponse() RaceResponse {
 		ImageURL: r.ImageURL, Rarity: r.Rarity, CardNumber: r.CardNumber,
 		CreatureType: r.CreatureType, Size: r.Size, Speed: r.Speed, ExtraSpeeds: r.ExtraSpeeds,
 		Darkvision: r.Darkvision, Traits: r.Traits, Lineages: r.Lineages,
+		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions,
 		Type: r.Type, Author: r.Author, Source: r.Source, Tags: r.Tags,
 		IsExtended: r.IsExtended, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}

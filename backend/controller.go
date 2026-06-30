@@ -837,43 +837,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	responses := make([]ActionResponse, 0)
 	for _, action := range actions {
 		// Конвертируем ActionResources в []ActionResource для ответа
-		resources := make([]ActionResource, 0)
-		if action.Resource != nil && len(action.Resource) > 0 {
-			resources = make([]ActionResource, len(action.Resource))
-			for i, r := range action.Resource {
-				resources[i] = r
-			}
-		}
-
-		responses = append(responses, ActionResponse{
-			ID:                           action.ID,
-			Name:                         action.Name,
-			Description:                  action.Description,
-			DetailedDescription:          action.DetailedDescription,
-			ImageURL:                     action.ImageURL,
-			Rarity:                       action.Rarity,
-			CardNumber:                   action.CardNumber,
-			Resources:                    resources,
-			Distance:                     action.Distance,
-			Recharge:                     action.Recharge,
-			RechargeCustom:               action.RechargeCustom,
-			Script:                       action.Script,
-			ActionType:                   action.ActionType,
-			Type:                         action.Type,
-			Tags:                         action.Tags,
-			Price:                        action.Price,
-			Weight:                       action.Weight,
-			Properties:                   action.Properties,
-			IsExtended:                   action.IsExtended,
-			DescriptionFontSize:          action.DescriptionFontSize,
-			TextAlignment:                action.TextAlignment,
-			TextFontSize:                 action.TextFontSize,
-			ShowDetailedDescription:      action.ShowDetailedDescription,
-			DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
-			DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
-			CreatedAt:                    action.CreatedAt,
-			UpdatedAt:                    action.UpdatedAt,
-		})
+		responses = append(responses, action.ToActionResponse())
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -908,46 +872,7 @@ func (ac *ActionController) GetAction(c *gin.Context) {
 		return
 	}
 
-	// Конвертируем ActionResources в []ActionResource для ответа
-	resources := make([]ActionResource, 0)
-	if action.Resource != nil && len(action.Resource) > 0 {
-		resources = make([]ActionResource, len(action.Resource))
-		for i, r := range action.Resource {
-			resources[i] = r
-		}
-	}
-
-	response := ActionResponse{
-		ID:                           action.ID,
-		Name:                         action.Name,
-		Description:                  action.Description,
-		DetailedDescription:          action.DetailedDescription,
-		ImageURL:                     action.ImageURL,
-		Rarity:                       action.Rarity,
-		CardNumber:                   action.CardNumber,
-		Resources:                    resources,
-		Distance:                     action.Distance,
-		Recharge:                     action.Recharge,
-		RechargeCustom:               action.RechargeCustom,
-		Script:                       action.Script,
-		ActionType:                   action.ActionType,
-		Type:                         action.Type,
-		Tags:                         action.Tags,
-		Price:                        action.Price,
-		Weight:                       action.Weight,
-		Properties:                   action.Properties,
-		IsExtended:                   action.IsExtended,
-		DescriptionFontSize:          action.DescriptionFontSize,
-		TextAlignment:                action.TextAlignment,
-		TextFontSize:                 action.TextFontSize,
-		ShowDetailedDescription:      action.ShowDetailedDescription,
-		DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
-		CreatedAt:                    action.CreatedAt,
-		UpdatedAt:                    action.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, action.ToActionResponse())
 }
 
 // CreateAction - создание нового действия
@@ -1073,6 +998,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 		Recharge:                     req.Recharge,
 		RechargeCustom:               req.RechargeCustom,
 		Script:                       req.Script,
+		Mechanics:                    req.Mechanics,
 		ActionType:                   req.ActionType,
 		Type:                         req.Type,
 		Author:                       req.Author,
@@ -1105,37 +1031,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 	}
 	log.Printf("✅ [CREATE_ACTION] Действие успешно создано: ID=%s, CardNumber=%s", action.ID, action.CardNumber)
 
-	response := ActionResponse{
-		ID:                           action.ID,
-		Name:                         action.Name,
-		Description:                  action.Description,
-		DetailedDescription:          action.DetailedDescription,
-		ImageURL:                     action.ImageURL,
-		Rarity:                       action.Rarity,
-		CardNumber:                   action.CardNumber,
-		Resources:                    resources,
-		Distance:                     action.Distance,
-		Recharge:                     action.Recharge,
-		RechargeCustom:               action.RechargeCustom,
-		Script:                       action.Script,
-		ActionType:                   action.ActionType,
-		Type:                         action.Type,
-		Tags:                         action.Tags,
-		Price:                        action.Price,
-		Weight:                       action.Weight,
-		Properties:                   action.Properties,
-		IsExtended:                   action.IsExtended,
-		DescriptionFontSize:          action.DescriptionFontSize,
-		TextAlignment:                action.TextAlignment,
-		TextFontSize:                 action.TextFontSize,
-		ShowDetailedDescription:      action.ShowDetailedDescription,
-		DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
-		CreatedAt:                    action.CreatedAt,
-		UpdatedAt:                    action.UpdatedAt,
-	}
-
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, action.ToActionResponse())
 }
 
 // UpdateAction - обновление действия
@@ -1196,6 +1092,9 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 	}
 	if req.Script != nil {
 		action.Script = req.Script
+	}
+	if req.Mechanics != nil {
+		action.Mechanics = req.Mechanics
 	}
 	if req.ActionType != "" {
 		action.ActionType = req.ActionType
@@ -1262,43 +1161,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		return
 	}
 
-	// Конвертируем ActionResources в []ActionResource для ответа
-	responseResources := make([]ActionResource, len(action.Resource))
-	for i, r := range action.Resource {
-		responseResources[i] = r
-	}
-
-	response := ActionResponse{
-		ID:                           action.ID,
-		Name:                         action.Name,
-		Description:                  action.Description,
-		DetailedDescription:          action.DetailedDescription,
-		ImageURL:                     action.ImageURL,
-		Rarity:                       action.Rarity,
-		CardNumber:                   action.CardNumber,
-		Resources:                    responseResources,
-		Distance:                     action.Distance,
-		Recharge:                     action.Recharge,
-		RechargeCustom:               action.RechargeCustom,
-		Script:                       action.Script,
-		ActionType:                   action.ActionType,
-		Type:                         action.Type,
-		Tags:                         action.Tags,
-		Price:                        action.Price,
-		Weight:                       action.Weight,
-		Properties:                   action.Properties,
-		IsExtended:                   action.IsExtended,
-		DescriptionFontSize:          action.DescriptionFontSize,
-		TextAlignment:                action.TextAlignment,
-		TextFontSize:                 action.TextFontSize,
-		ShowDetailedDescription:      action.ShowDetailedDescription,
-		DetailedDescriptionAlignment: action.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  action.DetailedDescriptionFontSize,
-		CreatedAt:                    action.CreatedAt,
-		UpdatedAt:                    action.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, action.ToActionResponse())
 }
 
 // DeleteAction - удаление действия
@@ -1389,32 +1252,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	// Преобразование в ответы
 	responses := make([]EffectResponse, 0)
 	for _, effect := range effects {
-		responses = append(responses, EffectResponse{
-			ID:                           effect.ID,
-			Name:                         effect.Name,
-			Description:                  effect.Description,
-			DetailedDescription:          effect.DetailedDescription,
-			ImageURL:                     effect.ImageURL,
-			Rarity:                       effect.Rarity,
-			CardNumber:                   effect.CardNumber,
-			EffectType:                   effect.EffectType,
-			ConditionDescription:         effect.ConditionDescription,
-			Script:                       effect.Script,
-			Type:                         effect.Type,
-			Tags:                         effect.Tags,
-			Price:                        effect.Price,
-			Weight:                       effect.Weight,
-			Properties:                   effect.Properties,
-			IsExtended:                   effect.IsExtended,
-			DescriptionFontSize:          effect.DescriptionFontSize,
-			TextAlignment:                effect.TextAlignment,
-			TextFontSize:                 effect.TextFontSize,
-			ShowDetailedDescription:      effect.ShowDetailedDescription,
-			DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
-			DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
-			CreatedAt:                    effect.CreatedAt,
-			UpdatedAt:                    effect.UpdatedAt,
-		})
+		responses = append(responses, effect.ToEffectResponse())
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -1443,34 +1281,7 @@ func (ec *EffectController) GetEffect(c *gin.Context) {
 		return
 	}
 
-	response := EffectResponse{
-		ID:                           effect.ID,
-		Name:                         effect.Name,
-		Description:                  effect.Description,
-		DetailedDescription:          effect.DetailedDescription,
-		ImageURL:                     effect.ImageURL,
-		Rarity:                       effect.Rarity,
-		CardNumber:                   effect.CardNumber,
-		EffectType:                   effect.EffectType,
-		ConditionDescription:         effect.ConditionDescription,
-		Script:                       effect.Script,
-		Type:                         effect.Type,
-		Tags:                         effect.Tags,
-		Price:                        effect.Price,
-		Weight:                       effect.Weight,
-		Properties:                   effect.Properties,
-		IsExtended:                   effect.IsExtended,
-		DescriptionFontSize:          effect.DescriptionFontSize,
-		TextAlignment:                effect.TextAlignment,
-		TextFontSize:                 effect.TextFontSize,
-		ShowDetailedDescription:      effect.ShowDetailedDescription,
-		DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
-		CreatedAt:                    effect.CreatedAt,
-		UpdatedAt:                    effect.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, effect.ToEffectResponse())
 }
 
 // CreateEffect - создание нового эффекта
@@ -1533,6 +1344,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 		EffectType:                   req.EffectType,
 		ConditionDescription:         req.ConditionDescription,
 		Script:                       req.Script,
+		Mechanics:                    req.Mechanics,
 		Type:                         req.Type,
 		Author:                       req.Author,
 		Source:                       req.Source,
@@ -1567,34 +1379,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 		return
 	}
 
-	response := EffectResponse{
-		ID:                           effect.ID,
-		Name:                         effect.Name,
-		Description:                  effect.Description,
-		DetailedDescription:          effect.DetailedDescription,
-		ImageURL:                     effect.ImageURL,
-		Rarity:                       effect.Rarity,
-		CardNumber:                   effect.CardNumber,
-		EffectType:                   effect.EffectType,
-		ConditionDescription:         effect.ConditionDescription,
-		Script:                       effect.Script,
-		Type:                         effect.Type,
-		Tags:                         effect.Tags,
-		Price:                        effect.Price,
-		Weight:                       effect.Weight,
-		Properties:                   effect.Properties,
-		IsExtended:                   effect.IsExtended,
-		DescriptionFontSize:          effect.DescriptionFontSize,
-		TextAlignment:                effect.TextAlignment,
-		TextFontSize:                 effect.TextFontSize,
-		ShowDetailedDescription:      effect.ShowDetailedDescription,
-		DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
-		CreatedAt:                    effect.CreatedAt,
-		UpdatedAt:                    effect.UpdatedAt,
-	}
-
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, effect.ToEffectResponse())
 }
 
 // UpdateEffect - обновление эффекта
@@ -1645,6 +1430,9 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 	}
 	if req.Script != nil {
 		effect.Script = req.Script
+	}
+	if req.Mechanics != nil {
+		effect.Mechanics = req.Mechanics
 	}
 	if req.Type != nil {
 		effect.Type = req.Type
@@ -1711,34 +1499,7 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 		return
 	}
 
-	response := EffectResponse{
-		ID:                           effect.ID,
-		Name:                         effect.Name,
-		Description:                  effect.Description,
-		DetailedDescription:          effect.DetailedDescription,
-		ImageURL:                     effect.ImageURL,
-		Rarity:                       effect.Rarity,
-		CardNumber:                   effect.CardNumber,
-		EffectType:                   effect.EffectType,
-		ConditionDescription:         effect.ConditionDescription,
-		Script:                       effect.Script,
-		Type:                         effect.Type,
-		Tags:                         effect.Tags,
-		Price:                        effect.Price,
-		Weight:                       effect.Weight,
-		Properties:                   effect.Properties,
-		IsExtended:                   effect.IsExtended,
-		DescriptionFontSize:          effect.DescriptionFontSize,
-		TextAlignment:                effect.TextAlignment,
-		TextFontSize:                 effect.TextFontSize,
-		ShowDetailedDescription:      effect.ShowDetailedDescription,
-		DetailedDescriptionAlignment: effect.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize:  effect.DetailedDescriptionFontSize,
-		CreatedAt:                    effect.CreatedAt,
-		UpdatedAt:                    effect.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, effect.ToEffectResponse())
 }
 
 // DeleteEffect - удаление эффекта

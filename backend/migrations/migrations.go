@@ -230,6 +230,12 @@ func GetAllMigrations() []Migration {
 			Up:          createRacesTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS races CASCADE"); return err },
 		},
+		{
+			Version:     "038_mechanics_and_race_abilities",
+			Description: "Add mechanics jsonb to effects/actions and related abilities to races",
+			Up:          addMechanicsAndRaceAbilities,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -276,6 +282,21 @@ func createRacesTable(db *sql.DB) error {
 	for _, q := range indexes {
 		if _, err := db.Exec(q); err != nil {
 			return fmt.Errorf("failed to create index for races: %w", err)
+		}
+	}
+	return nil
+}
+
+func addMechanicsAndRaceAbilities(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE effects ADD COLUMN IF NOT EXISTS mechanics JSONB",
+		"ALTER TABLE actions ADD COLUMN IF NOT EXISTS mechanics JSONB",
+		"ALTER TABLE races ADD COLUMN IF NOT EXISTS related_effects JSONB",
+		"ALTER TABLE races ADD COLUMN IF NOT EXISTS related_actions JSONB",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("addMechanicsAndRaceAbilities: %w", err)
 		}
 	}
 	return nil

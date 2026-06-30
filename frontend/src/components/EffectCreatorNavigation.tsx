@@ -17,6 +17,12 @@ const sections = [
     icon: '⚔️',
     label: 'Свойства',
     description: 'Устойчивость, иммунитет, уязвимость'
+  },
+  {
+    id: 'mechanics',
+    icon: '🧩',
+    label: 'Механика',
+    description: 'Блочный конструктор способностей'
   }
 ];
 

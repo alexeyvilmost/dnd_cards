@@ -9,6 +9,7 @@ import EffectPreview from '../components/EffectPreview';
 import ImageUploader from '../components/ImageUploader';
 import { EffectCreatorNavigation } from '../components/EffectCreatorNavigation';
 import { PropertiesSection } from '../components/effectCreator/PropertiesSection';
+import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 
 const EffectCreator = () => {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ const EffectCreator = () => {
             detailed_description_alignment: effect.detailed_description_alignment || null,
             detailed_description_font_size: effect.detailed_description_font_size || null,
             script: effect.script || null,
+            mechanics: effect.mechanics || null,
             properties: effect.properties || null,
           });
           
@@ -155,7 +157,8 @@ const EffectCreator = () => {
           rarity: 'common', // Всегда common для эффектов
           effect_type: data.effect_type,
           condition_description: data.condition_description,
-          script: data.script || null, // Добавляем script
+          script: data.script || null,
+          mechanics: data.mechanics ?? null,
           is_extended: data.is_extended,
           description_font_size: data.description_font_size,
           text_alignment: data.text_alignment,
@@ -390,6 +393,19 @@ const EffectCreator = () => {
 
                 {activeSection === 'properties' && (
                   <PropertiesSection setValue={setValue} watch={watch} />
+                )}
+
+                {activeSection === 'mechanics' && (
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Механика (унифицированная)</h2>
+                    <p className="text-sm text-gray-500">
+                      Соберите способность из блоков. JSON сохраняется в поле mechanics.
+                    </p>
+                    <MechanicsBuilder
+                      value={(watch('mechanics') as Record<string, unknown>) || null}
+                      onChange={(m) => setValue('mechanics', m)}
+                    />
+                  </div>
                 )}
 
                 {/* Кнопки */}

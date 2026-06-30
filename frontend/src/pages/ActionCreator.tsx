@@ -7,6 +7,7 @@ import { RARITY_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '..
 import { getAllCharges } from '../utils/charges';
 import ActionPreview from '../components/ActionPreview';
 import ImageUploader from '../components/ImageUploader';
+import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 
 const ActionCreator = () => {
   const navigate = useNavigate();
@@ -66,6 +67,7 @@ const ActionCreator = () => {
             recharge: action.recharge || null,
             recharge_custom: action.recharge_custom || null,
             script: action.script || null,
+            mechanics: action.mechanics || null,
             action_type: action.action_type || 'base_action',
             type: action.type || null,
             author: action.author || 'Admin',
@@ -197,6 +199,7 @@ const ActionCreator = () => {
           recharge: data.recharge || null,
           recharge_custom: data.recharge_custom || null,
           script: data.script || null,
+          mechanics: data.mechanics ?? null,
           action_type: data.action_type,
           type: data.type || null,
           author: data.author || 'Admin',
@@ -429,6 +432,14 @@ const ActionCreator = () => {
                   currentImageUrl={watch('image_url') || ''}
                   entityType="action"
                   entityId={isEditMode && editId ? editId : (watch('card_number') || 'new')}
+                />
+              </div>
+
+              <div className="border-t pt-6 mt-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Механика (унифицированная)</h2>
+                <MechanicsBuilder
+                  value={(watch('mechanics') as Record<string, unknown>) || null}
+                  onChange={(m) => setValue('mechanics', m)}
                 />
               </div>
             </div>

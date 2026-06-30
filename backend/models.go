@@ -1535,6 +1535,7 @@ type Action struct {
 	Recharge                     *ActionRecharge `json:"recharge" gorm:"type:varchar(50)"`
 	RechargeCustom               *string         `json:"recharge_custom" gorm:"type:text"`
 	Script                       *Script         `json:"script" gorm:"type:jsonb"`
+	Mechanics                    *JSONMap        `json:"mechanics" gorm:"type:jsonb"`
 	ActionType                   ActionType      `json:"action_type" gorm:"not null"`
 	Type                         *string         `json:"type" gorm:"type:varchar(50)"`
 	Author                       string          `json:"author" gorm:"type:varchar(255);default:'Admin'"`
@@ -1575,6 +1576,7 @@ type CreateActionRequest struct {
 	Recharge                     *ActionRecharge  `json:"recharge"`
 	RechargeCustom               *string          `json:"recharge_custom"`
 	Script                       *Script          `json:"script"`
+	Mechanics                    *JSONMap         `json:"mechanics"`
 	ActionType                   ActionType       `json:"action_type" binding:"required"`
 	Type                         *string          `json:"type"`
 	Author                       string           `json:"author"`
@@ -1606,6 +1608,7 @@ type UpdateActionRequest struct {
 	Recharge                     *ActionRecharge  `json:"recharge"`
 	RechargeCustom               *string          `json:"recharge_custom"`
 	Script                       *Script          `json:"script"`
+	Mechanics                    *JSONMap         `json:"mechanics"`
 	ActionType                   ActionType       `json:"action_type"`
 	Type                         *string          `json:"type"`
 	Author                       string           `json:"author"`
@@ -1639,6 +1642,7 @@ type ActionResponse struct {
 	Recharge                     *ActionRecharge  `json:"recharge"`
 	RechargeCustom               *string          `json:"recharge_custom"`
 	Script                       *Script          `json:"script"`
+	Mechanics                    *JSONMap         `json:"mechanics"`
 	ActionType                   ActionType       `json:"action_type"`
 	Type                         *string          `json:"type"`
 	Tags                         *Properties      `json:"tags"`
@@ -1654,6 +1658,21 @@ type ActionResponse struct {
 	DetailedDescriptionFontSize  *int             `json:"detailed_description_font_size"`
 	CreatedAt                    time.Time        `json:"created_at"`
 	UpdatedAt                    time.Time        `json:"updated_at"`
+}
+
+// ToActionResponse преобразует модель действия в API-ответ.
+func (a Action) ToActionResponse() ActionResponse {
+	return ActionResponse{
+		ID: a.ID, Name: a.Name, Description: a.Description, DetailedDescription: a.DetailedDescription,
+		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
+		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
+		Script: a.Script, Mechanics: a.Mechanics, ActionType: a.ActionType, Type: a.Type,
+		Tags: a.Tags, Price: a.Price, Weight: a.Weight, Properties: a.Properties, IsExtended: a.IsExtended,
+		DescriptionFontSize: a.DescriptionFontSize, TextAlignment: a.TextAlignment, TextFontSize: a.TextFontSize,
+		ShowDetailedDescription: a.ShowDetailedDescription, DetailedDescriptionAlignment: a.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize: a.DetailedDescriptionFontSize,
+		CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt,
+	}
 }
 
 // GetLocalizedName - получение локализованного названия ресурса действия
@@ -1729,6 +1748,7 @@ type Effect struct {
 	EffectType                   EffectType     `json:"effect_type" gorm:"not null"`
 	ConditionDescription         *string        `json:"condition_description" gorm:"type:text"`
 	Script                       *Script        `json:"script" gorm:"type:jsonb"`
+	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
@@ -1767,6 +1787,7 @@ type CreateEffectRequest struct {
 	EffectType                   EffectType  `json:"effect_type" binding:"required"`
 	ConditionDescription         *string     `json:"condition_description"`
 	Script                       *Script     `json:"script"`
+	Mechanics                    *JSONMap    `json:"mechanics"`
 	Type                         *string     `json:"type"`
 	Author                       string      `json:"author"`
 	Source                       *string     `json:"source"`
@@ -1796,6 +1817,7 @@ type UpdateEffectRequest struct {
 	EffectType                   EffectType  `json:"effect_type"`
 	ConditionDescription         *string     `json:"condition_description"`
 	Script                       *Script     `json:"script"`
+	Mechanics                    *JSONMap    `json:"mechanics"`
 	Type                         *string     `json:"type"`
 	Author                       string      `json:"author"`
 	Source                       *string     `json:"source"`
@@ -1827,6 +1849,7 @@ type EffectResponse struct {
 	EffectType                   EffectType  `json:"effect_type"`
 	ConditionDescription         *string     `json:"condition_description"`
 	Script                       *Script     `json:"script"`
+	Mechanics                    *JSONMap    `json:"mechanics"`
 	Type                         *string     `json:"type"`
 	Tags                         *Properties `json:"tags"`
 	Price                        *int        `json:"price"`
@@ -1841,6 +1864,21 @@ type EffectResponse struct {
 	DetailedDescriptionFontSize  *int        `json:"detailed_description_font_size"`
 	CreatedAt                    time.Time   `json:"created_at"`
 	UpdatedAt                    time.Time   `json:"updated_at"`
+}
+
+// ToEffectResponse преобразует модель эффекта в API-ответ.
+func (e Effect) ToEffectResponse() EffectResponse {
+	return EffectResponse{
+		ID: e.ID, Name: e.Name, Description: e.Description, DetailedDescription: e.DetailedDescription,
+		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
+		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics,
+		Type: e.Type, Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
+		IsExtended: e.IsExtended, DescriptionFontSize: e.DescriptionFontSize, TextAlignment: e.TextAlignment,
+		TextFontSize: e.TextFontSize, ShowDetailedDescription: e.ShowDetailedDescription,
+		DetailedDescriptionAlignment: e.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize: e.DetailedDescriptionFontSize,
+		CreatedAt: e.CreatedAt, UpdatedAt: e.UpdatedAt,
+	}
 }
 
 // GetLocalizedName - получение локализованного названия типа эффекта
