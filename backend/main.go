@@ -91,6 +91,7 @@ func main() {
 	spellController := NewSpellController(db)
 	featController := NewFeatController(db)
 	backgroundController := NewBackgroundController(db)
+	raceController := NewRaceController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -187,6 +188,13 @@ func main() {
 		api.POST("/backgrounds", AuthMiddleware(authService), backgroundController.CreateBackground)
 		api.PUT("/backgrounds/:id", AuthMiddleware(authService), backgroundController.UpdateBackground)
 		api.DELETE("/backgrounds/:id", AuthMiddleware(authService), backgroundController.DeleteBackground)
+
+		// Виды (расы)
+		api.GET("/races", OptionalAuthMiddleware(authService), raceController.GetRaces)
+		api.GET("/races/:id", OptionalAuthMiddleware(authService), raceController.GetRace)
+		api.POST("/races", AuthMiddleware(authService), raceController.CreateRace)
+		api.PUT("/races/:id", AuthMiddleware(authService), raceController.UpdateRace)
+		api.DELETE("/races/:id", AuthMiddleware(authService), raceController.DeleteRace)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

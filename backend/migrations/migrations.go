@@ -224,8 +224,61 @@ func GetAllMigrations() []Migration {
 			Up:          addCardPriceCurrency,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "037_create_races",
+			Description: "Create races table for D&D species",
+			Up:          createRacesTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS races CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// createRacesTable создаёт таблицу видов (рас)
+func createRacesTable(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS races (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT NOT NULL,
+			detailed_description TEXT,
+			image_url TEXT,
+			image_cloudinary_id VARCHAR(255),
+			image_cloudinary_url TEXT,
+			image_generated BOOLEAN DEFAULT false,
+			image_generation_prompt TEXT,
+			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
+			card_number VARCHAR(50) UNIQUE NOT NULL,
+			creature_type VARCHAR(100),
+			size VARCHAR(100),
+			speed INTEGER,
+			extra_speeds TEXT,
+			darkvision INTEGER,
+			traits JSONB,
+			lineages JSONB,
+			type VARCHAR(50),
+			author VARCHAR(255) DEFAULT 'Admin',
+			source VARCHAR(255),
+			tags JSONB,
+			is_extended BOOLEAN DEFAULT false,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("failed to create races table: %w", err)
+	}
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_races_card_number ON races(card_number)",
+		"CREATE INDEX IF NOT EXISTS idx_races_created_at ON races(created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_races_deleted_at ON races(deleted_at) WHERE deleted_at IS NOT NULL",
+	}
+	for _, q := range indexes {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("failed to create index for races: %w", err)
+		}
+	}
+	return nil
 }
 
 // addCardPriceCurrency делает цену предмета дробной и добавляет валюту + флаг сокращения.
