@@ -605,6 +605,9 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
         const e = payloadToEntry(p);
         entries.push({ id: `d_${++c}`, ...e });
       }
+    } else if (it?.kind) {
+      // Payload как самостоятельная интеракция (напр. choice с resolution on_acquire)
+      entries.push({ id: `d_${++c}`, ...payloadToEntry(it) });
     } else {
       entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
     }
