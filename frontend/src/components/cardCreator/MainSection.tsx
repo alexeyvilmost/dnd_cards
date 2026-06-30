@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Control, Controller, FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { CreateCardRequest, DEFAULT_CUSTOM_RARITY_COLOR, type Rarity } from '../../types';
+import { CreateCardRequest, DEFAULT_CUSTOM_RARITY_COLOR } from '../../types';
 import RaritySelector from '../RaritySelector';
+import PropertySelector from '../PropertySelector';
+import ImageGenerator from '../ImageGenerator';
 import { FormattedTextarea } from '../FormattedTextarea';
 import { CURRENCIES } from '../../utils/currencies';
 
@@ -11,15 +13,35 @@ interface MainSectionProps {
   errors: FieldErrors<CreateCardRequest>;
   setValue: UseFormSetValue<CreateCardRequest>;
   watch: UseFormWatch<CreateCardRequest>;
+  onImageGenerated?: (imageUrl: string) => void;
+  onCreateEntity?: () => Promise<string>;
+  entityId?: string;
 }
 
-export const MainSection: React.FC<MainSectionProps> = ({ register, control, errors, setValue, watch }) => {
-  const memoizedWatchedValues = useMemo(() => watch(), [watch]);
+export const MainSection: React.FC<MainSectionProps> = ({
+  register,
+  control,
+  errors,
+  setValue,
+  watch,
+  onImageGenerated,
+  onCreateEntity,
+  entityId,
+}) => {
+  const properties = watch('properties');
+  const rarity = watch('rarity');
+  const customRarityColor = watch('custom_rarity_color');
+  const name = watch('name');
+  const description = watch('description');
+  const imagePromptExtra = watch('image_prompt_extra');
+  const itemType = watch('type');
+  const weaponType = watch('weapon_type');
+  const slot = watch('slot');
 
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-900">Основная информация</h2>
-      
+
       {/* Название */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -36,23 +58,56 @@ export const MainSection: React.FC<MainSectionProps> = ({ register, control, err
         )}
       </div>
 
-      {/* Редкость */}
+      {/* Редкость + генерация изображения */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Редкость
         </label>
-        <RaritySelector
-          value={memoizedWatchedValues.rarity}
-          customColor={memoizedWatchedValues.custom_rarity_color}
-          onChange={(rarity) => {
-            setValue('rarity', rarity);
-            if (rarity !== 'custom') {
-              setValue('custom_rarity_color', null);
-            } else if (!memoizedWatchedValues.custom_rarity_color) {
-              setValue('custom_rarity_color', DEFAULT_CUSTOM_RARITY_COLOR);
-            }
-          }}
-          onCustomColorChange={(color) => setValue('custom_rarity_color', color)}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <RaritySelector
+              value={rarity}
+              customColor={customRarityColor}
+              onChange={(nextRarity) => {
+                setValue('rarity', nextRarity);
+                if (nextRarity !== 'custom') {
+                  setValue('custom_rarity_color', null);
+                } else if (!customRarityColor) {
+                  setValue('custom_rarity_color', DEFAULT_CUSTOM_RARITY_COLOR);
+                }
+              }}
+              onCustomColorChange={(color) => setValue('custom_rarity_color', color)}
+            />
+          </div>
+          {onImageGenerated && (
+            <ImageGenerator
+              variant="compact"
+              entityType="card"
+              entityId={entityId || ''}
+              entityName={name}
+              entityRarity={rarity}
+              entityDescription={description}
+              entityPromptExtra={imagePromptExtra}
+              entityItemType={itemType || undefined}
+              entityWeaponType={weaponType || undefined}
+              entitySlot={slot || undefined}
+              entityProperties={properties || undefined}
+              onImageGenerated={onImageGenerated}
+              onCreateEntity={onCreateEntity}
+              disabled={!name || name === 'Название карты'}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Свойства */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Свойства
+        </label>
+        <PropertySelector
+          value={properties || []}
+          onChange={(next) => setValue('properties', next)}
         />
       </div>
 

@@ -18,6 +18,7 @@ interface ImageGeneratorProps {
   className?: string;
   // Колбэк для создания карты перед генерацией (если нет ID)
   onCreateEntity?: () => Promise<string>; // Возвращает ID созданной сущности
+  variant?: 'full' | 'compact';
 }
 
 const ImageGenerator: React.FC<ImageGeneratorProps> = ({
@@ -35,6 +36,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   disabled = false,
   className = '',
   onCreateEntity,
+  variant = 'full',
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,6 +135,42 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         return 'text-gray-600';
     }
   };
+
+  const isGenerateDisabled =
+    disabled || isGenerating || !entityName.trim() || (!entityId && !onCreateEntity);
+
+  if (variant === 'compact') {
+    return (
+      <div className={className}>
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={isGenerateDisabled}
+          title="Сгенерировать изображение"
+          className={`
+            flex items-center justify-center w-10 h-10 rounded-lg shrink-0
+            transition-all duration-200
+            ${isGenerateDisabled
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : isGenerating
+              ? 'bg-purple-400 text-white'
+              : success
+              ? 'bg-green-500 text-white'
+              : 'bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-md hover:shadow-lg'
+            }
+          `}
+        >
+          {isGenerating ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : success ? (
+            <CheckCircle size={18} />
+          ) : (
+            <Wand2 size={18} />
+          )}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-3 ${className}`}>

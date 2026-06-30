@@ -222,6 +222,7 @@ const CardCreator = () => {
   const memoizedWatchedValues = useMemo(() => watchedValues, [
     watchedValues.name,
     watchedValues.rarity,
+    watchedValues.custom_rarity_color,
     watchedValues.description,
     watchedValues.detailed_description,
     watchedValues.properties,
@@ -546,6 +547,9 @@ const CardCreator = () => {
                   errors={errors}
                   setValue={setValue}
                   watch={watch}
+                  onImageGenerated={setCardImage}
+                  onCreateEntity={!id && !createdCardId ? handleCreateCardForGeneration : undefined}
+                  entityId={id || createdCardId || ''}
                 />
               )}
               
