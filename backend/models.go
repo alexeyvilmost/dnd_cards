@@ -151,7 +151,10 @@ const (
 	PropertySet        = "set"        // Набор
 	PropertyChoice     = "choice"     // Выбор
 	PropertyEquipment  = "equipment"  // Снаряжение
-	PropertyJewelry      = "jewelry"      // Украшение
+	PropertyJewelry           = "jewelry"            // Украшение
+	PropertyMusicalInstrument = "musical_instrument" // Музыкальный инструмент
+	PropertyArtisanTool       = "artisan_tool"       // Ремесленный инструмент
+	PropertyAmmo              = "ammo"               // Боеприпас
 )
 
 // BonusType - тип бонуса
@@ -648,6 +651,12 @@ func (p Properties) GetPropertiesName() string {
 		return "Снаряжение"
 	case PropertyJewelry:
 		return "Украшение"
+	case PropertyMusicalInstrument:
+		return "Музыкальный инструмент"
+	case PropertyArtisanTool:
+		return "Ремесленный инструмент"
+	case PropertyAmmo:
+		return "Боеприпас"
 	default:
 		return "Неизвестно"
 	}
@@ -848,7 +857,8 @@ func IsValidProperty(property string) bool {
 		PropertyCloth, PropertyLightArmor, PropertyMediumArmor, PropertyHeavyArmor,
 		PropertyShield, PropertyRing, PropertyNecklace, PropertyCloak,
 		PropertyPotion, PropertyTool, PropertyProjectile, PropertyExplosive,
-		PropertySet, PropertyChoice, PropertyEquipment, PropertyJewelry:
+		PropertySet, PropertyChoice, PropertyEquipment, PropertyJewelry,
+		PropertyMusicalInstrument, PropertyArtisanTool, PropertyAmmo:
 		return true
 	default:
 		return false

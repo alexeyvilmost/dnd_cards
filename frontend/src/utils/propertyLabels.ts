@@ -32,6 +32,9 @@ export const getPropertyLabel = (property: string): string => {
     'choice': 'выбор',
     'equipment': 'снаряжение',
     'jewelry': 'украшение',
+    'musical_instrument': 'музыкальный инструмент',
+    'artisan_tool': 'ремесленный инструмент',
+    'ammo': 'боеприпас',
   };
   return propertyLabels[property] || property;
 };

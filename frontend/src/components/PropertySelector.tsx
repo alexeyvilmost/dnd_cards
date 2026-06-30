@@ -28,6 +28,9 @@ const getPropertyIcon = (property: string) => {
     'cloak': '/icons/cloak.png',
     'equipment': '/icons/belt.png',
     'jewelry': '/icons/slots/ring.png',
+    'musical_instrument': '/icons/special.png',
+    'artisan_tool': '/icons/melee-hand.png',
+    'ammo': '/icons/ammunition.png',
   };
   
   return iconMap[property] || '/icons/special.png';

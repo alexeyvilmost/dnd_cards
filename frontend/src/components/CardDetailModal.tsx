@@ -209,6 +209,9 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       'choice': 'Выбор',
       'equipment': 'Снаряжение',
       'jewelry': 'Украшение',
+      'musical_instrument': 'Музыкальный инструмент',
+      'artisan_tool': 'Ремесленный инструмент',
+      'ammo': 'Боеприпас',
     };
     return properties.map(p => labels[p] || p);
   };
