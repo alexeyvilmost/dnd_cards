@@ -5,6 +5,8 @@ export type ChoiceOrigin = {
   kind: 'race' | 'class' | 'background' | 'feat' | 'other';
   id: string;
   name: string;
+  featureId?: string;
+  featureName?: string;
 };
 
 // Ожидающий разрешения выбор, извлечённый из механики эффекта.
@@ -27,7 +29,7 @@ function choiceToPending(ch: Dict, origin: ChoiceOrigin): PendingChoice {
   const opts = (ch.options || {}) as Dict;
   const items = (opts.items as Array<Dict>) || [];
   return {
-    id: String(ch.id ?? `${origin.kind}_${origin.id}_choice`),
+    id: `${origin.kind}:${origin.id}:${origin.featureId || 'base'}:${String(ch.id ?? 'choice')}`,
     prompt: String(ch.prompt ?? 'Выбор'),
     count: Number(ch.count ?? 1),
     source: String(form.source ?? 'skill'),

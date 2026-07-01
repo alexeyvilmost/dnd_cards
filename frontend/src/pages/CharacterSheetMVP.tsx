@@ -3,14 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
-import { characterToDraft, finalSaves } from '../character/forgeHelpers';
-import { normalizeSkillList } from '../character/skillNormalize';
+import { characterToDraft } from '../character/forgeHelpers';
+import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import {
   ABILITY_KEYS,
   ABILITY_LABEL_RU,
   type ForgeCharacter,
 } from '../character/types';
-import { abilityMod, savingThrowBonus, skillBonus } from '../character/derive';
 import { labelOf, SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel } from '../types';
 import './CharacterForge.css';
@@ -49,6 +48,10 @@ const CharacterSheetMVP = () => {
   }, [id]);
 
   const draft = useMemo(() => (character ? characterToDraft(character) : null), [character]);
+  const ruleState = useMemo(
+    () => (draft && assembled ? resolveCharacterRules({ draft, assembled }) : null),
+    [draft, assembled],
+  );
 
   const lineageName = useMemo(() => {
     if (!draft?.lineageId || !assembled?.race?.lineages) return draft?.lineageId ?? null;
@@ -74,7 +77,7 @@ const CharacterSheetMVP = () => {
     );
   }
 
-  if (error || !character || !assembled || !draft) {
+  if (error || !character || !assembled || !draft || !ruleState) {
     return (
       <div className="forge">
         <div className="forge-header">Лист персонажа</div>
@@ -88,18 +91,17 @@ const CharacterSheetMVP = () => {
     );
   }
 
-  const skills = normalizeSkillList(character.skill_proficiencies);
-  const saves = character.saving_throw_proficiencies || finalSaves(assembled);
+  const skills = ruleState.proficiencies.skills;
+  const saves = ruleState.proficiencies.savingThrows;
   const scores = draft.abilities;
-  const pb = character.proficiency_bonus ?? assembled.derived.proficiencyBonus;
+  const pb = ruleState.proficiencyBonus;
 
-  const { derived } = assembled;
-  const maxHP = character.max_hp ?? derived.maxHP;
+  const maxHP = ruleState.maxHP;
   const currentHP = character.current_hp ?? maxHP;
-  const speed = character.speed ?? derived.speed;
-  const ac = derived.ac;
-  const initiative = derived.initiative;
-  const spellcasting = derived.spellcasting;
+  const speed = ruleState.speed;
+  const ac = ruleState.armorClass;
+  const initiative = ruleState.initiativeBonus;
+  const spellcasting = ruleState.spellcasting;
 
   const headerLine = [
     assembled.race?.name,
@@ -132,7 +134,7 @@ const CharacterSheetMVP = () => {
             <div className="sheet-abilities">
               {ABILITY_KEYS.map((k) => {
                 const score = scores[k] ?? 10;
-                const mod = abilityMod(scores[k]);
+                const mod = ruleState.abilityMods[k];
                 return (
                   <div key={k} className="sheet-ab">
                     <div className="sheet-ab-label">{ABILITY_LABEL_RU[k]}</div>
@@ -166,7 +168,7 @@ const CharacterSheetMVP = () => {
             <ul className="sheet-list">
               {ABILITY_KEYS.map((k) => {
                 const proficient = saves.includes(k);
-                const bonus = savingThrowBonus(k, scores, proficient, pb);
+                const bonus = ruleState.savingThrowBonuses[k];
                 return (
                   <li key={k}>
                     <span className={proficient ? 'sheet-prof' : ''}>{ABILITY_LABEL_RU[k]}</span>
@@ -182,10 +184,11 @@ const CharacterSheetMVP = () => {
             <ul className="sheet-list sheet-skills">
               {SKILLS.map((skill) => {
                 const proficient = skills.includes(skill.id);
-                const bonus = skillBonus(skill.id, scores, proficient, pb);
+                const expert = ruleState.expertise.skills.includes(skill.id);
+                const bonus = ruleState.skillBonuses[skill.id];
                 return (
                   <li key={skill.id}>
-                    <span className={proficient ? 'sheet-prof' : ''}>{skill.label}</span>
+                    <span className={proficient ? 'sheet-prof' : ''}>{skill.label}{expert ? ' (эксп.)' : ''}</span>
                     <span>{fmtMod(bonus)}</span>
                   </li>
                 );
@@ -236,22 +239,31 @@ const CharacterSheetMVP = () => {
             )}
           </section>
 
-          {(character.languages?.length || character.tool_proficiencies?.length) ? (
+          {ruleState.conflicts.length > 0 && (
+            <section className="sheet-panel sheet-panel-wide">
+              <h2 className="sheet-h2">Конфликты правил</h2>
+              <ul className="issues">
+                {ruleState.conflicts.map((conflict, i) => <li key={i}>{conflict.message}</li>)}
+              </ul>
+            </section>
+          )}
+
+          {(ruleState.proficiencies.languages.length || ruleState.proficiencies.tools.length) ? (
             <section className="sheet-panel">
               <h2 className="sheet-h2">Прочие владения</h2>
-              {character.tool_proficiencies?.length ? (
+              {ruleState.proficiencies.tools.length ? (
                 <div className="sheet-group">
                   <h3 className="sheet-h3">Инструменты</h3>
                   <ul className="sheet-tags">
-                    {character.tool_proficiencies.map((t) => <li key={t}>{labelOf([], t) || t}</li>)}
+                    {ruleState.proficiencies.tools.map((t) => <li key={t}>{labelOf([], t) || t}</li>)}
                   </ul>
                 </div>
               ) : null}
-              {character.languages?.length ? (
+              {ruleState.proficiencies.languages.length ? (
                 <div className="sheet-group">
                   <h3 className="sheet-h3">Языки</h3>
                   <ul className="sheet-tags">
-                    {character.languages.map((l) => <li key={l}>{l}</li>)}
+                    {ruleState.proficiencies.languages.map((l) => <li key={l}>{l}</li>)}
                   </ul>
                 </div>
               ) : null}

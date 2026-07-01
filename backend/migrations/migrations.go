@@ -260,8 +260,32 @@ func GetAllMigrations() []Migration {
 			Up:          seedForgeMVPContent,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "043_character_rule_state",
+			Description: "Add rule state and derived rule fields to characters_v3",
+			Up:          addCharacterRuleStateFields,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addCharacterRuleStateFields добавляет снимок резолюции правил и быстрые derived-поля.
+func addCharacterRuleStateFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS skill_expertise JSONB",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS tool_expertise JSONB",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS rule_state JSONB",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS armor_class INT DEFAULT 10",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS initiative_bonus INT DEFAULT 0",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS passive_perception INT DEFAULT 10",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("addCharacterRuleStateFields: %w", err)
+		}
+	}
+	return nil
 }
 
 // addFeatRelatedAbilities добавляет привязку эффектов/действий к чертам (как у видов).
@@ -297,14 +321,20 @@ func createCharactersV3Table(db *sql.DB) error {
 			spell_ids JSONB,
 			abilities JSONB,
 			skill_proficiencies JSONB,
+			skill_expertise JSONB,
 			saving_throw_proficiencies JSONB,
 			tool_proficiencies JSONB,
+			tool_expertise JSONB,
 			languages JSONB,
 			resolved_choices JSONB,
+			rule_state JSONB,
 			max_hp INT DEFAULT 0,
 			current_hp INT DEFAULT 0,
 			speed INT DEFAULT 30,
 			proficiency_bonus INT DEFAULT 2,
+			armor_class INT DEFAULT 10,
+			initiative_bonus INT DEFAULT 0,
+			passive_perception INT DEFAULT 10,
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 		)`,

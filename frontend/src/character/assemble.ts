@@ -111,10 +111,10 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
 
   const pendingChoices: PendingChoice[] = [];
   for (const { effect, origin } of bundle.effects) {
-    pendingChoices.push(...collectChoices(effect.mechanics, origin));
+    pendingChoices.push(...collectChoices(effect.mechanics, { ...origin, featureId: effect.id, featureName: effect.name }));
   }
   for (const { action, origin } of bundle.actions) {
-    pendingChoices.push(...collectChoices(action.mechanics, origin));
+    pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: action.id, featureName: action.name }));
   }
 
   const abilityMods = Object.fromEntries(

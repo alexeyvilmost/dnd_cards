@@ -66,6 +66,12 @@ func applyCharacterV3Defaults(ch *CharacterV3) {
 	if ch.ProficiencyBonus <= 0 {
 		ch.ProficiencyBonus = 2
 	}
+	if ch.ArmorClass <= 0 {
+		ch.ArmorClass = 10
+	}
+	if ch.PassivePerception <= 0 {
+		ch.PassivePerception = 10
+	}
 }
 
 // CreateCharacterV3 создаёт нового персонажа V3.
@@ -95,14 +101,20 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		SpellIDs:                 req.SpellIDs,
 		Abilities:                req.Abilities,
 		SkillProficiencies:       req.SkillProficiencies,
+		SkillExpertise:           req.SkillExpertise,
 		SavingThrowProficiencies: req.SavingThrowProficiencies,
 		ToolProficiencies:        req.ToolProficiencies,
+		ToolExpertise:            req.ToolExpertise,
 		Languages:                req.Languages,
 		ResolvedChoices:          req.ResolvedChoices,
+		RuleState:                req.RuleState,
 		MaxHP:                    req.MaxHP,
 		CurrentHP:                req.CurrentHP,
 		Speed:                    req.Speed,
 		ProficiencyBonus:         req.ProficiencyBonus,
+		ArmorClass:               req.ArmorClass,
+		InitiativeBonus:          req.InitiativeBonus,
+		PassivePerception:        req.PassivePerception,
 	}
 	applyCharacterV3Defaults(&character)
 
@@ -207,14 +219,20 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 	character.SpellIDs = req.SpellIDs
 	character.Abilities = req.Abilities
 	character.SkillProficiencies = req.SkillProficiencies
+	character.SkillExpertise = req.SkillExpertise
 	character.SavingThrowProficiencies = req.SavingThrowProficiencies
 	character.ToolProficiencies = req.ToolProficiencies
+	character.ToolExpertise = req.ToolExpertise
 	character.Languages = req.Languages
 	character.ResolvedChoices = req.ResolvedChoices
+	character.RuleState = req.RuleState
 	character.MaxHP = req.MaxHP
 	character.CurrentHP = req.CurrentHP
 	character.Speed = req.Speed
 	character.ProficiencyBonus = req.ProficiencyBonus
+	character.ArmorClass = req.ArmorClass
+	character.InitiativeBonus = req.InitiativeBonus
+	character.PassivePerception = req.PassivePerception
 	applyCharacterV3Defaults(&character)
 
 	if err := cc.db.Save(&character).Error; err != nil {

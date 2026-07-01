@@ -7,8 +7,10 @@ import { getSpellLevelLabel } from '../types';
 import { charactersV3Api } from '../character/api';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, ABILITY_LABEL_RU, type CharacterDraft, type AbilityKey } from '../character/types';
-import { buildSavePayload, completionIssues, classSkillChoice } from '../character/forgeHelpers';
+import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
+import { getSkillGrantSource, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
+import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import type { PendingChoice } from '../mechanics/collectChoices';
@@ -69,21 +71,7 @@ const CharacterForge = () => {
         const c = await charactersV3Api.get(editId);
         savedSkillsRef.current = c.skill_proficiencies || [];
         restoredClassSkillsRef.current = false;
-        setDraft({
-          id: c.id,
-          name: c.name,
-          avatarUrl: c.avatar_url,
-          raceId: c.race_id ?? null,
-          lineageId: c.lineage_id ?? null,
-          classId: c.class_id ?? null,
-          backgroundId: c.background_id ?? null,
-          level: c.level || 1,
-          featIds: c.feat_ids || [],
-          spellIds: c.spell_ids || [],
-          abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
-          classSkillChoices: [],
-          resolvedChoices: c.resolved_choices || {},
-        });
+        setDraft(characterToDraft(c));
       } catch (e) {
         console.error(e);
         setError('Не удалось загрузить персонажа');
@@ -111,6 +99,10 @@ const CharacterForge = () => {
   const assembled: AssembledCharacter = useMemo(
     () => assemble({ ...(bundle ?? EMPTY_BUNDLE), spells: selectedSpells }, draft),
     [bundle, selectedSpells, draft],
+  );
+  const ruleState = useMemo(
+    () => resolveCharacterRules({ draft, assembled }),
+    [draft, assembled],
   );
 
   // Синхронизация lineage_id из subfeature-выбора вида
@@ -159,6 +151,7 @@ const CharacterForge = () => {
     const sc = classSkillChoice(assembled);
     const has = draft.classSkillChoices.includes(skill);
     if (has) { patch({ classSkillChoices: draft.classSkillChoices.filter((x) => x !== skill) }); return; }
+    if (getSkillGrantSource(ruleState, skill)) return;
     const max = sc?.count ?? 99;
     const next = draft.classSkillChoices.length >= max
       ? [...draft.classSkillChoices.slice(1), skill]
@@ -172,7 +165,7 @@ const CharacterForge = () => {
   const save = async () => {
     setSaving(true); setError(null);
     try {
-      const payload = buildSavePayload(draft, assembled);
+      const payload = buildSavePayload(draft, assembled, ruleState);
       const res = draft.id
         ? await charactersV3Api.update(draft.id, payload)
         : await charactersV3Api.create(payload);
@@ -231,7 +224,7 @@ const CharacterForge = () => {
               {active === 'race' && (
                 <RaceSection
                   races={races} draft={draft} onSelect={(rid: string) => patch({ raceId: rid, lineageId: null })}
-                  choices={raceChoicesRace} resolved={draft.resolvedChoices} setResolved={setResolved}
+                  choices={raceChoicesRace} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState}
                   race={assembled.race} hasSubfeature={!!subfeatureChoice}
                   onPickLineage={(name: string) => patch({ lineageId: name })} lineageId={draft.lineageId}
                 />
@@ -239,14 +232,14 @@ const CharacterForge = () => {
               {active === 'class' && (
                 <ClassSection
                   classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
-                  onToggleSkill={toggleClassSkill} choices={classChoices} resolved={draft.resolvedChoices} setResolved={setResolved}
+                  onToggleSkill={toggleClassSkill} choices={classChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState}
                 />
               )}
               {active === 'background' && (
                 <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={(bid: string) => patch({ backgroundId: bid })} background={assembled.background} />
               )}
               {active === 'feat' && (
-                <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} choices={featChoices} resolved={draft.resolvedChoices} setResolved={setResolved} />
+                <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} choices={featChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
               {active === 'abilities' && (
                 <AbilityAssigner
@@ -254,7 +247,7 @@ const CharacterForge = () => {
                   onSet={setAbility} onToggleManual={setManualAbilities}
                 />
               )}
-              {active === 'proficiencies' && <ProficienciesSection draft={draft} assembled={assembled} />}
+              {active === 'proficiencies' && <ProficienciesSection draft={draft} assembled={assembled} ruleState={ruleState} />}
               {active === 'spells' && (
                 <SpellsSection spells={spells} selected={draft.spellIds} onToggle={toggleSpell} />
               )}
@@ -303,22 +296,39 @@ function MainSection({ draft, patch, issues, canCreate, saving, onSave, savedId,
   );
 }
 
-function ChoiceList({ choices, resolved, setResolved }: {
+function ChoiceList({ choices, resolved, setResolved, ruleState }: {
   choices: PendingChoice[];
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
+  ruleState: CharacterRuleState;
 }) {
   if (!choices.length) return null;
   return (
     <div className="forge-block">
       <div className="forge-section-h">Выборы</div>
-      {choices.map((pc) => (
-        <ChoiceResolver key={pc.id} choice={pc} value={resolved[pc.id] || []} onChange={(v) => setResolved(pc.id, v)} />
-      ))}
+      {choices.map((pc) => {
+        const value = resolved[pc.id] || [];
+        const unavailableOptions = pc.source === 'skill'
+          ? Object.fromEntries(SKILLS.map((skill) => {
+            const existing = getSkillGrantSource(ruleState, skill.id);
+            const unavailable = !!existing && !value.includes(skill.id);
+            return [skill.id, unavailable ? `Уже есть: ${existing.source.name}` : undefined];
+          }).filter(([, reason]) => !!reason)) as Record<string, string>
+          : undefined;
+        return (
+          <ChoiceResolver
+            key={pc.id}
+            choice={pc}
+            value={value}
+            unavailableOptions={unavailableOptions}
+            onChange={(v) => setResolved(pc.id, v)}
+          />
+        );
+      })}
     </div>
   );
 }
 
-function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, race, hasSubfeature, onPickLineage, lineageId }: any) {
+function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, ruleState, race, hasSubfeature, onPickLineage, lineageId }: any) {
   return (
     <div>
       <div className="forge-block">
@@ -348,12 +358,12 @@ function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, r
         </div>
       )}
 
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
     </div>
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState }: any) {
   const sc = classSkillChoice(assembled);
   return (
     <div>
@@ -371,13 +381,20 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
         <div className="forge-block">
           <div className="forge-section-h">Навыки класса — выберите {sc.count}</div>
           <div className="chips">
-            {sc.options.map((skill: string) => (
-              <button key={skill} type="button"
-                className={`chip ${draft.classSkillChoices.includes(skill) ? 'on' : ''}`}
-                onClick={() => onToggleSkill(skill)}>
-                {labelOf(SKILLS, skill)}
-              </button>
-            ))}
+            {sc.options.map((skill: string) => {
+              const selected = draft.classSkillChoices.includes(skill);
+              const existing = getSkillGrantSource(ruleState, skill);
+              const disabled = !!existing && !selected;
+              return (
+                <button key={skill} type="button"
+                  className={`chip ${selected ? 'on' : ''}`}
+                  disabled={disabled}
+                  title={disabled ? `Уже есть: ${existing.source.name}` : undefined}
+                  onClick={() => onToggleSkill(skill)}>
+                  {labelOf(SKILLS, skill)}
+                </button>
+              );
+            })}
           </div>
           <div className={`choice-count ${draft.classSkillChoices.length >= sc.count ? 'done' : ''}`}>
             Выбрано {draft.classSkillChoices.length} из {sc.count}
@@ -385,7 +402,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
         </div>
       )}
 
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
     </div>
   );
 }
@@ -416,7 +433,7 @@ function BackgroundSection({ backgrounds, draft, onSelect, background }: any) {
   );
 }
 
-function FeatSection({ feats, draft, onToggle, choices, resolved, setResolved }: any) {
+function FeatSection({ feats, draft, onToggle, choices, resolved, setResolved, ruleState }: any) {
   return (
     <div>
       <div className="forge-block">
@@ -430,21 +447,25 @@ function FeatSection({ feats, draft, onToggle, choices, resolved, setResolved }:
           {feats.length === 0 && <p className="forge-note">Нет черт происхождения в базе.</p>}
         </div>
       </div>
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
     </div>
   );
 }
 
-function ProficienciesSection({ draft, assembled }: { draft: CharacterDraft; assembled: AssembledCharacter }) {
-  const skills = [...new Set([...draft.classSkillChoices, ...(assembled.background?.skill_proficiencies || [])])];
-  const saves = assembled.klass?.saving_throws || [];
+function ProficienciesSection({ draft, assembled, ruleState }: { draft: CharacterDraft; assembled: AssembledCharacter; ruleState: CharacterRuleState }) {
+  const skills = ruleState.proficiencies.skills;
+  const saves = ruleState.proficiencies.savingThrows;
   return (
     <div>
       <div className="forge-block">
         <div className="forge-section-h">Владения (итог)</div>
         <p className="forge-note">Навыки: {skills.map((s) => labelOf(SKILLS, s)).join(', ') || '—'}</p>
         <p className="forge-note">Спасброски: {saves.map((s) => labelOf(ABILITIES, s)).join(', ') || '—'}</p>
-        <p className="forge-note">Инструмент: {assembled.background?.tool_proficiency || '—'}</p>
+        <p className="forge-note">Инструменты: {ruleState.proficiencies.tools.join(', ') || '—'}</p>
+        <p className="forge-note">Языки: {ruleState.proficiencies.languages.join(', ') || '—'}</p>
+        {ruleState.conflicts.length > 0 && (
+          <ul className="issues">{ruleState.conflicts.map((it, i) => <li key={i}>{it.message}</li>)}</ul>
+        )}
       </div>
       <div className="forge-block">
         <div className="forge-section-h">Характеристики</div>

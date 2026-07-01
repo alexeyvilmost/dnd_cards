@@ -32,18 +32,26 @@ type CharacterV3 struct {
 
 	// Итоговые владения (jsonb-массивы)
 	SkillProficiencies       *Properties `json:"skill_proficiencies" gorm:"type:jsonb"`
+	SkillExpertise           *Properties `json:"skill_expertise" gorm:"type:jsonb"`
 	SavingThrowProficiencies *Properties `json:"saving_throw_proficiencies" gorm:"type:jsonb"`
 	ToolProficiencies        *Properties `json:"tool_proficiencies" gorm:"type:jsonb"`
+	ToolExpertise            *Properties `json:"tool_expertise" gorm:"type:jsonb"`
 	Languages                *Properties `json:"languages" gorm:"type:jsonb"`
 
 	// Разрешённые выборы из механики: {"<choiceId>": ["<optId>", ...]}
 	ResolvedChoices *JSONMap `json:"resolved_choices" gorm:"type:jsonb"`
 
+	// Снимок состояния правил: источники, применённые grants, конфликты, derived.
+	RuleState *JSONMap `json:"rule_state" gorm:"type:jsonb"`
+
 	// Снимок вычисляемых полей (для быстрого листа; можно пересчитать из ссылок)
-	MaxHP            int `json:"max_hp" gorm:"default:0"`
-	CurrentHP        int `json:"current_hp" gorm:"default:0"`
-	Speed            int `json:"speed" gorm:"default:30"`
-	ProficiencyBonus int `json:"proficiency_bonus" gorm:"default:2"`
+	MaxHP             int `json:"max_hp" gorm:"default:0"`
+	CurrentHP         int `json:"current_hp" gorm:"default:0"`
+	Speed             int `json:"speed" gorm:"default:30"`
+	ProficiencyBonus  int `json:"proficiency_bonus" gorm:"default:2"`
+	ArmorClass        int `json:"armor_class" gorm:"default:10"`
+	InitiativeBonus   int `json:"initiative_bonus" gorm:"default:0"`
+	PassivePerception int `json:"passive_perception" gorm:"default:10"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -74,16 +82,22 @@ type CreateCharacterV3Request struct {
 	Abilities *JSONMap `json:"abilities"`
 
 	SkillProficiencies       *Properties `json:"skill_proficiencies"`
+	SkillExpertise           *Properties `json:"skill_expertise"`
 	SavingThrowProficiencies *Properties `json:"saving_throw_proficiencies"`
 	ToolProficiencies        *Properties `json:"tool_proficiencies"`
+	ToolExpertise            *Properties `json:"tool_expertise"`
 	Languages                *Properties `json:"languages"`
 
 	ResolvedChoices *JSONMap `json:"resolved_choices"`
+	RuleState       *JSONMap `json:"rule_state"`
 
-	MaxHP            int `json:"max_hp"`
-	CurrentHP        int `json:"current_hp"`
-	Speed            int `json:"speed"`
-	ProficiencyBonus int `json:"proficiency_bonus"`
+	MaxHP             int `json:"max_hp"`
+	CurrentHP         int `json:"current_hp"`
+	Speed             int `json:"speed"`
+	ProficiencyBonus  int `json:"proficiency_bonus"`
+	ArmorClass        int `json:"armor_class"`
+	InitiativeBonus   int `json:"initiative_bonus"`
+	PassivePerception int `json:"passive_perception"`
 }
 
 // UpdateCharacterV3Request — запрос на обновление. Полная замена полей черновика
@@ -103,14 +117,20 @@ type UpdateCharacterV3Request struct {
 	Abilities *JSONMap `json:"abilities"`
 
 	SkillProficiencies       *Properties `json:"skill_proficiencies"`
+	SkillExpertise           *Properties `json:"skill_expertise"`
 	SavingThrowProficiencies *Properties `json:"saving_throw_proficiencies"`
 	ToolProficiencies        *Properties `json:"tool_proficiencies"`
+	ToolExpertise            *Properties `json:"tool_expertise"`
 	Languages                *Properties `json:"languages"`
 
 	ResolvedChoices *JSONMap `json:"resolved_choices"`
+	RuleState       *JSONMap `json:"rule_state"`
 
-	MaxHP            int `json:"max_hp"`
-	CurrentHP        int `json:"current_hp"`
-	Speed            int `json:"speed"`
-	ProficiencyBonus int `json:"proficiency_bonus"`
+	MaxHP             int `json:"max_hp"`
+	CurrentHP         int `json:"current_hp"`
+	Speed             int `json:"speed"`
+	ProficiencyBonus  int `json:"proficiency_bonus"`
+	ArmorClass        int `json:"armor_class"`
+	InitiativeBonus   int `json:"initiative_bonus"`
+	PassivePerception int `json:"passive_perception"`
 }

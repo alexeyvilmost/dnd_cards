@@ -1,9 +1,14 @@
 import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
 import { ABILITY_KEYS } from './types';
 import type { AssembledCharacter } from './assemble';
-import { normalizeSkillId, normalizeSkillList } from './skillNormalize';
+import { resolveCharacterRules } from './rules/resolveCharacterRules';
+import type { CharacterRuleState } from './rules/types';
 
 export function characterToDraft(c: ForgeCharacter): CharacterDraft {
+  const classSkillChoices = (c.rule_state?.appliedGrants || [])
+    .filter((grant) => grant.kind === 'skill' && grant.choiceId === 'class_skill_choices')
+    .map((grant) => grant.value);
+
   return {
     id: c.id,
     name: c.name,
@@ -16,7 +21,7 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     featIds: c.feat_ids || [],
     spellIds: c.spell_ids || [],
     abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
-    classSkillChoices: [],
+    classSkillChoices,
     resolvedChoices: c.resolved_choices || {},
   };
 }
@@ -28,41 +33,28 @@ export function classSkillChoice(assembled: AssembledCharacter): { count: number
   return { count: Number(sc.count), options: Array.isArray(sc.options) ? sc.options : [] };
 }
 
-// Собрать значения выборов заданного source из resolvedChoices.
-function resolvedBySource(draft: CharacterDraft, assembled: AssembledCharacter, source: string): string[] {
-  const out: string[] = [];
-  for (const pc of assembled.pendingChoices) {
-    if (pc.source === source) out.push(...(draft.resolvedChoices[pc.id] || []));
-  }
-  return out;
-}
-
 export function finalSkills(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
-  const s = new Set<string>();
-  draft.classSkillChoices.forEach((x) => s.add(normalizeSkillId(x)));
-  normalizeSkillList(assembled.background?.skill_proficiencies || []).forEach((x) => s.add(x));
-  resolvedBySource(draft, assembled, 'skill').forEach((x) => s.add(normalizeSkillId(x)));
-  return [...s];
+  return resolveCharacterRules({ draft, assembled }).proficiencies.skills;
 }
 
 export function finalTools(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
-  const s = new Set<string>();
-  const bgTool = assembled.background?.tool_proficiency;
-  if (bgTool) s.add(bgTool);
-  resolvedBySource(draft, assembled, 'tool').forEach((x) => s.add(x));
-  return [...s];
+  return resolveCharacterRules({ draft, assembled }).proficiencies.tools;
 }
 
 export function finalLanguages(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
-  return [...new Set(resolvedBySource(draft, assembled, 'language'))];
+  return resolveCharacterRules({ draft, assembled }).proficiencies.languages;
 }
 
 export function finalSaves(assembled: AssembledCharacter): string[] {
   return assembled.klass?.saving_throws || [];
 }
 
-export function buildSavePayload(draft: CharacterDraft, assembled: AssembledCharacter): SaveForgeCharacterRequest {
-  const maxHP = assembled.derived.maxHP;
+export function buildSavePayload(
+  draft: CharacterDraft,
+  assembled: AssembledCharacter,
+  ruleState: CharacterRuleState = resolveCharacterRules({ draft, assembled }),
+): SaveForgeCharacterRequest {
+  const maxHP = ruleState.maxHP;
   return {
     name: draft.name.trim(),
     avatar_url: draft.avatarUrl,
@@ -74,15 +66,21 @@ export function buildSavePayload(draft: CharacterDraft, assembled: AssembledChar
     feat_ids: draft.featIds,
     spell_ids: draft.spellIds,
     abilities: draft.abilities,
-    skill_proficiencies: finalSkills(draft, assembled),
-    saving_throw_proficiencies: finalSaves(assembled),
-    tool_proficiencies: finalTools(draft, assembled),
-    languages: finalLanguages(draft, assembled),
+    skill_proficiencies: ruleState.proficiencies.skills,
+    skill_expertise: ruleState.expertise.skills,
+    saving_throw_proficiencies: ruleState.proficiencies.savingThrows,
+    tool_proficiencies: ruleState.proficiencies.tools,
+    tool_expertise: ruleState.expertise.tools,
+    languages: ruleState.proficiencies.languages,
     resolved_choices: draft.resolvedChoices,
+    rule_state: ruleState,
     max_hp: maxHP,
     current_hp: maxHP,
-    speed: assembled.derived.speed,
-    proficiency_bonus: assembled.derived.proficiencyBonus,
+    speed: ruleState.speed,
+    proficiency_bonus: ruleState.proficiencyBonus,
+    armor_class: ruleState.armorClass,
+    initiative_bonus: ruleState.initiativeBonus,
+    passive_perception: ruleState.passivePerception,
   };
 }
 
@@ -112,5 +110,7 @@ export function completionIssues(draft: CharacterDraft, assembled: AssembledChar
   const assigned = ABILITY_KEYS.every((k) => typeof draft.abilities[k] === 'number');
   if (!assigned) issues.push('Задайте характеристики');
   issues.push(...requiredChoiceIssues(draft, assembled));
+  const ruleState = resolveCharacterRules({ draft, assembled });
+  issues.push(...ruleState.conflicts.filter((c) => c.severity === 'error').map((c) => c.message));
   return issues;
 }

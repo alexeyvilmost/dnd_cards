@@ -69,10 +69,16 @@ function optionsForChoice(choice: PendingChoice): RegistryItem[] {
 }
 
 export function ChoiceResolver({
-  choice, value, onChange,
-}: { choice: PendingChoice; value: string[]; onChange: (v: string[]) => void }) {
+  choice, value, onChange, unavailableOptions = {},
+}: {
+  choice: PendingChoice;
+  value: string[];
+  onChange: (v: string[]) => void;
+  unavailableOptions?: Record<string, string>;
+}) {
   const options = optionsForChoice(choice);
   const toggle = (id: string) => {
+    if (unavailableOptions[id] && !value.includes(id)) return;
     if (value.includes(id)) {
       onChange(value.filter((x) => x !== id));
     } else {
@@ -96,6 +102,8 @@ export function ChoiceResolver({
             key={o.id}
             type="button"
             className={`chip ${value.includes(o.id) ? 'on' : ''} ${choice.recommended?.includes(o.id) ? 'rec' : ''}`}
+            disabled={!!unavailableOptions[o.id] && !value.includes(o.id)}
+            title={unavailableOptions[o.id]}
             onClick={() => toggle(o.id)}
           >
             {o.label}
