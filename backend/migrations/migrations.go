@@ -242,8 +242,55 @@ func GetAllMigrations() []Migration {
 			Up:          createClassesAndRaceProgression,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS classes CASCADE"); return err },
 		},
+		{
+			Version:     "040_create_characters_v3",
+			Description: "Create characters_v3 table (entity-referencing character storage)",
+			Up:          createCharactersV3Table,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS characters_v3 CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// createCharactersV3Table создаёт таблицу персонажей V3.
+// Все массивы/объекты — JSONB (никогда text[]).
+func createCharactersV3Table(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS characters_v3 (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id UUID NOT NULL,
+			group_id UUID,
+			name VARCHAR(255) NOT NULL,
+			avatar_url TEXT,
+			race_id UUID,
+			lineage_id VARCHAR(100),
+			class_id UUID,
+			background_id UUID,
+			level INT NOT NULL DEFAULT 1,
+			feat_ids JSONB,
+			spell_ids JSONB,
+			abilities JSONB,
+			skill_proficiencies JSONB,
+			saving_throw_proficiencies JSONB,
+			tool_proficiencies JSONB,
+			languages JSONB,
+			resolved_choices JSONB,
+			max_hp INT DEFAULT 0,
+			current_hp INT DEFAULT 0,
+			speed INT DEFAULT 30,
+			proficiency_bonus INT DEFAULT 2,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_characters_v3_user_id ON characters_v3(user_id)",
+		"CREATE INDEX IF NOT EXISTS idx_characters_v3_created_at ON characters_v3(created_at DESC)",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createCharactersV3Table: %w", err)
+		}
+	}
+	return nil
 }
 
 // createRacesTable создаёт таблицу видов (рас)

@@ -84,6 +84,7 @@ func main() {
 	inventoryController := NewInventoryController(db)
 	characterController := NewCharacterController(db)
 	characterV2Controller := NewCharacterV2Controller(db)
+	characterV3Controller := NewCharacterV3Controller(db)
 	imageLibraryController := NewImageLibraryController(db)
 	shopController := NewShopController(db)
 	actionController := NewActionController(db)
@@ -258,6 +259,13 @@ func main() {
 			protected.POST("/characters-v2/:id/turn-end", characterV2Controller.ProcessTurnEnd)
 			protected.POST("/characters-v2/:id/long-rest", characterV2Controller.ProcessLongRest)
 			protected.GET("/characters-v2/:id/active-effects", characterV2Controller.GetActiveEffects)
+
+			// Персонажи V3 (сущностно-ориентированное хранение)
+			protected.POST("/characters-v3", characterV3Controller.CreateCharacterV3)
+			protected.GET("/characters-v3", characterV3Controller.GetCharactersV3)
+			protected.GET("/characters-v3/:id", characterV3Controller.GetCharacterV3)
+			protected.PUT("/characters-v3/:id", characterV3Controller.UpdateCharacterV3)
+			protected.DELETE("/characters-v3/:id", characterV3Controller.DeleteCharacterV3)
 
 			// Изображения
 			protected.POST("/images/upload", imageController.UploadImage)
