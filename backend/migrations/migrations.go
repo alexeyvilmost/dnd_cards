@@ -248,8 +248,28 @@ func GetAllMigrations() []Migration {
 			Up:          createCharactersV3Table,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS characters_v3 CASCADE"); return err },
 		},
+		{
+			Version:     "041_feat_related_abilities",
+			Description: "Add related_effects/related_actions jsonb to feats",
+			Up:          addFeatRelatedAbilities,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addFeatRelatedAbilities добавляет привязку эффектов/действий к чертам (как у видов).
+func addFeatRelatedAbilities(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE feats ADD COLUMN IF NOT EXISTS related_effects JSONB",
+		"ALTER TABLE feats ADD COLUMN IF NOT EXISTS related_actions JSONB",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("addFeatRelatedAbilities: %w", err)
+		}
+	}
+	return nil
 }
 
 // createCharactersV3Table создаёт таблицу персонажей V3.

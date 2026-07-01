@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { featsApi } from '../api/client';
+import { featsApi, effectsApi, actionsApi } from '../api/client';
 import type { CreateFeatRequest, UpdateFeatRequest, Feat, FeatCategory } from '../types';
 import { FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import FeatPreview from '../components/FeatPreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
+import EntityRefSelector from '../components/EntityRefSelector';
 
 type ScalarForm = {
   name: string;
@@ -32,6 +33,8 @@ const FeatCreator = () => {
   });
 
   const [abilityIncrease, setAbilityIncrease] = useState<string[]>([]);
+  const [relatedEffects, setRelatedEffects] = useState<string[]>([]);
+  const [relatedActions, setRelatedActions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingFeat, setLoadingFeat] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +58,8 @@ const FeatCreator = () => {
             source: feat.source || '',
           });
           setAbilityIncrease(feat.ability_increase || []);
+          setRelatedEffects(feat.related_effects || []);
+          setRelatedActions(feat.related_actions || []);
         } catch (err) {
           setError('Ошибка загрузки черты');
           console.error(err);
@@ -87,6 +92,16 @@ const FeatCreator = () => {
   const toggleAbility = (v: string) =>
     setAbilityIncrease(abilityIncrease.includes(v) ? abilityIncrease.filter((x) => x !== v) : [...abilityIncrease, v]);
 
+  const loadEffects = useCallback(async () => {
+    const res = await effectsApi.getEffects({ limit: 200 });
+    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
+  }, []);
+
+  const loadActions = useCallback(async () => {
+    const res = await actionsApi.getActions({ limit: 200 });
+    return res.actions.map((a) => ({ id: a.id, name: a.name, card_number: a.card_number }));
+  }, []);
+
   const onSubmit = async (data: ScalarForm) => {
     setLoading(true);
     setError(null);
@@ -98,6 +113,8 @@ const FeatCreator = () => {
       category: data.category,
       prerequisite: data.prerequisite || null,
       ability_increase: abilityIncrease,
+      related_effects: relatedEffects.length ? relatedEffects : null,
+      related_actions: relatedActions.length ? relatedActions : null,
       repeatable: !!data.repeatable,
       source: data.source || null,
     };
@@ -196,6 +213,23 @@ const FeatCreator = () => {
                   <input type="checkbox" {...register('repeatable')} className="w-4 h-4 text-indigo-600 rounded" />
                   <span className="text-sm text-gray-700">Повторяемая</span>
                 </label>
+
+                <div className="border-t pt-4 space-y-4">
+                  <h3 className="text-md font-semibold text-gray-900">Способности (эффекты и действия)</h3>
+                  <p className="text-sm text-gray-500">Привяжите созданные эффекты/действия с механикой — они применятся при получении черты (как у видов и классов).</p>
+                  <EntityRefSelector
+                    label="Эффекты"
+                    value={relatedEffects}
+                    onChange={setRelatedEffects}
+                    loadItems={loadEffects}
+                  />
+                  <EntityRefSelector
+                    label="Действия"
+                    value={relatedActions}
+                    onChange={setRelatedActions}
+                    loadItems={loadActions}
+                  />
+                </div>
 
                 <div>
                   <label className={labelCls}>Описание *</label>

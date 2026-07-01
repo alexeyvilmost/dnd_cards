@@ -125,6 +125,30 @@ export const CHOICE_SOURCES: RegistryItem[] = [
 export const labelOf = (items: RegistryItem[], id?: string) =>
   items.find((i) => i.id === id)?.label || id || '';
 
+// Соответствие навык → характеристика (для расчёта бонусов навыков)
+export const SKILL_ABILITY: Record<string, string> = {
+  acrobatics: 'dex',
+  animal_handling: 'wis',
+  arcana: 'int',
+  athletics: 'str',
+  deception: 'cha',
+  history: 'int',
+  insight: 'wis',
+  intimidation: 'cha',
+  investigation: 'int',
+  medicine: 'wis',
+  nature: 'int',
+  perception: 'wis',
+  performance: 'cha',
+  persuasion: 'cha',
+  religion: 'int',
+  sleight_of_hand: 'dex',
+  stealth: 'dex',
+  survival: 'wis',
+};
+
+export const abilityOfSkill = (skill: string): string => SKILL_ABILITY[skill] || 'str';
+
 export function optionsForChoiceSource(source: string): RegistryItem[] {
   switch (source) {
     case 'skill':

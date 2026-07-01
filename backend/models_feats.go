@@ -35,6 +35,8 @@ type Feat struct {
 	Category              FeatCategory   `json:"category" gorm:"type:varchar(50);not null;default:'general'"`
 	Prerequisite          *string        `json:"prerequisite" gorm:"type:text"`      // Требования
 	AbilityIncrease       *Properties    `json:"ability_increase" gorm:"type:jsonb"` // Коды характеристик (str/dex/...)
+	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`  // id привязанных эффектов
+	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`  // id привязанных действий
 	Repeatable            bool           `json:"repeatable" gorm:"type:boolean;default:false"`
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
@@ -60,6 +62,8 @@ type CreateFeatRequest struct {
 	Category            FeatCategory `json:"category"`
 	Prerequisite        *string      `json:"prerequisite"`
 	AbilityIncrease     *Properties  `json:"ability_increase"`
+	RelatedEffects      *Properties  `json:"related_effects"`
+	RelatedActions      *Properties  `json:"related_actions"`
 	Repeatable          bool         `json:"repeatable"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
@@ -78,6 +82,8 @@ type UpdateFeatRequest struct {
 	Category            FeatCategory `json:"category"`
 	Prerequisite        *string      `json:"prerequisite"`
 	AbilityIncrease     *Properties  `json:"ability_increase"`
+	RelatedEffects      *Properties  `json:"related_effects"`
+	RelatedActions      *Properties  `json:"related_actions"`
 	Repeatable          *bool        `json:"repeatable"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
@@ -98,6 +104,8 @@ type FeatResponse struct {
 	Category            FeatCategory `json:"category"`
 	Prerequisite        *string      `json:"prerequisite"`
 	AbilityIncrease     *Properties  `json:"ability_increase"`
+	RelatedEffects      *Properties  `json:"related_effects"`
+	RelatedActions      *Properties  `json:"related_actions"`
 	Repeatable          bool         `json:"repeatable"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
@@ -113,7 +121,8 @@ func (f Feat) ToFeatResponse() FeatResponse {
 	return FeatResponse{
 		ID: f.ID, Name: f.Name, Description: f.Description, DetailedDescription: f.DetailedDescription,
 		ImageURL: f.ImageURL, Rarity: f.Rarity, CardNumber: f.CardNumber, Category: f.Category,
-		Prerequisite: f.Prerequisite, AbilityIncrease: f.AbilityIncrease, Repeatable: f.Repeatable,
+		Prerequisite: f.Prerequisite, AbilityIncrease: f.AbilityIncrease,
+		RelatedEffects: f.RelatedEffects, RelatedActions: f.RelatedActions, Repeatable: f.Repeatable,
 		Type: f.Type, Author: f.Author, Source: f.Source, Tags: f.Tags, IsExtended: f.IsExtended,
 		CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt,
 	}

@@ -1111,6 +1111,8 @@ export interface Feat {
   category: FeatCategory;
   prerequisite?: string | null;
   ability_increase?: string[] | null;
+  related_effects?: string[] | null;
+  related_actions?: string[] | null;
   repeatable: boolean;
   type?: string | null;
   author?: string;
@@ -1131,6 +1133,8 @@ export interface CreateFeatRequest {
   category: FeatCategory;
   prerequisite?: string | null;
   ability_increase?: string[] | null;
+  related_effects?: string[] | null;
+  related_actions?: string[] | null;
   repeatable?: boolean;
   type?: string | null;
   author?: string;

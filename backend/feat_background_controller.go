@@ -113,6 +113,7 @@ func (fc *FeatController) CreateFeat(c *gin.Context) {
 		Name: req.Name, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, Category: req.Category,
 		Prerequisite: req.Prerequisite, AbilityIncrease: req.AbilityIncrease, Repeatable: req.Repeatable,
+		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
 		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
 	}
 	if f.Author == "" {
@@ -173,6 +174,12 @@ func (fc *FeatController) UpdateFeat(c *gin.Context) {
 	}
 	if req.AbilityIncrease != nil {
 		f.AbilityIncrease = req.AbilityIncrease
+	}
+	if req.RelatedEffects != nil {
+		f.RelatedEffects = req.RelatedEffects
+	}
+	if req.RelatedActions != nil {
+		f.RelatedActions = req.RelatedActions
 	}
 	if req.Repeatable != nil {
 		f.Repeatable = *req.Repeatable

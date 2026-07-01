@@ -17,7 +17,45 @@ func NewCharacterV3Controller(db *gorm.DB) *CharacterV3Controller {
 	return &CharacterV3Controller{db: db}
 }
 
-// applyLevelDefaults проставляет разумные значения по умолчанию.
+// resolveUserID возвращает id пользователя из контекста, а если авторизации нет
+// (временно отключена) — общего dev-пользователя "public". Это открывает доступ
+// к системе персонажей V3 без авторизации.
+func (cc *CharacterV3Controller) resolveUserID(c *gin.Context) (uuid.UUID, error) {
+	if v, ok := c.Get("user_id"); ok {
+		if id, ok2 := v.(uuid.UUID); ok2 {
+			return id, nil
+		}
+	}
+	return cc.getOrCreateDefaultUser()
+}
+
+// getOrCreateDefaultUser находит или создаёт общего пользователя "public".
+func (cc *CharacterV3Controller) getOrCreateDefaultUser() (uuid.UUID, error) {
+	var user User
+	err := cc.db.Where("username = ?", "public").First(&user).Error
+	if err == nil {
+		return user.ID, nil
+	}
+	if err != gorm.ErrRecordNotFound {
+		return uuid.Nil, err
+	}
+	user = User{
+		Username:     "public",
+		Email:        "public@local",
+		PasswordHash: "disabled",
+		DisplayName:  "Публичный",
+	}
+	if err := cc.db.Create(&user).Error; err != nil {
+		// Возможна гонка — пробуем прочитать снова.
+		if e2 := cc.db.Where("username = ?", "public").First(&user).Error; e2 == nil {
+			return user.ID, nil
+		}
+		return uuid.Nil, err
+	}
+	return user.ID, nil
+}
+
+// applyCharacterV3Defaults проставляет разумные значения по умолчанию.
 func applyCharacterV3Defaults(ch *CharacterV3) {
 	if ch.Level <= 0 {
 		ch.Level = 1
@@ -32,9 +70,9 @@ func applyCharacterV3Defaults(ch *CharacterV3) {
 
 // CreateCharacterV3 создаёт нового персонажа V3.
 func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
 		return
 	}
 
@@ -45,7 +83,7 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 	}
 
 	character := CharacterV3{
-		UserID:                   userID.(uuid.UUID),
+		UserID:                   userID,
 		Name:                     req.Name,
 		AvatarURL:                req.AvatarURL,
 		RaceID:                   req.RaceID,
@@ -83,9 +121,9 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 
 // GetCharactersV3 возвращает список персонажей V3 текущего пользователя.
 func (cc *CharacterV3Controller) GetCharactersV3(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
 		return
 	}
 
@@ -100,9 +138,9 @@ func (cc *CharacterV3Controller) GetCharactersV3(c *gin.Context) {
 
 // GetCharacterV3 возвращает персонажа V3 по ID (в рамках текущего пользователя).
 func (cc *CharacterV3Controller) GetCharacterV3(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
 		return
 	}
 
@@ -128,9 +166,9 @@ func (cc *CharacterV3Controller) GetCharacterV3(c *gin.Context) {
 
 // UpdateCharacterV3 обновляет персонажа V3 (полная замена полей черновика).
 func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
 		return
 	}
 
@@ -194,9 +232,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 
 // DeleteCharacterV3 удаляет персонажа V3.
 func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
 		return
 	}
 
