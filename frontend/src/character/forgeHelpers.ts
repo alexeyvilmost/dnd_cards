@@ -1,6 +1,24 @@
-import type { CharacterDraft, SaveForgeCharacterRequest } from './types';
+import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
 import { ABILITY_KEYS } from './types';
 import type { AssembledCharacter } from './assemble';
+
+export function characterToDraft(c: ForgeCharacter): CharacterDraft {
+  return {
+    id: c.id,
+    name: c.name,
+    avatarUrl: c.avatar_url,
+    raceId: c.race_id ?? null,
+    lineageId: c.lineage_id ?? null,
+    classId: c.class_id ?? null,
+    backgroundId: c.background_id ?? null,
+    level: c.level || 1,
+    featIds: c.feat_ids || [],
+    spellIds: c.spell_ids || [],
+    abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
+    classSkillChoices: [],
+    resolvedChoices: c.resolved_choices || {},
+  };
+}
 
 // Разбор class.skill_choices вида {count, options[]}
 export function classSkillChoice(assembled: AssembledCharacter): { count: number; options: string[] } | null {

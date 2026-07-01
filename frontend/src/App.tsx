@@ -27,6 +27,7 @@ import CharactersV3 from './pages/CharactersV3';
 import CharacterDetailV3 from './pages/CharacterDetailV3';
 import CreateCharacterV3 from './pages/CreateCharacterV3';
 import CharacterForge from './pages/CharacterForge';
+import CharacterSheetMVP from './pages/CharacterSheetMVP';
 import DiceRoller from './pages/DiceRoller';
 import DiceTest from './pages/DiceTest';
 import CardTypeSelection from './pages/CardTypeSelection';
@@ -58,6 +59,7 @@ function App() {
         {/* Конструктор персонажа (без авторизации, полноэкранный) */}
         <Route path="/character-forge" element={<CharacterForge />} />
         <Route path="/character-forge/:id" element={<CharacterForge />} />
+        <Route path="/characters-v3/:id" element={<CharacterSheetMVP />} />
 
         {/* Защищенные маршруты */}
         <Route path="/" element={
@@ -243,20 +245,14 @@ function App() {
             </Layout>
           </ProtectedRoute>
         } />
-        <Route path="/characters-v3/:id" element={
+        <Route path="/characters-v3/:id/legacy" element={
           <ProtectedRoute>
             <Layout>
               <CharacterDetailV3 />
             </Layout>
           </ProtectedRoute>
         } />
-        <Route path="/characters-v3/:id/edit" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharacterDetailV3 />
-            </Layout>
-          </ProtectedRoute>
-        } />
+        <Route path="/characters-v3/:id/edit" element={<CharacterForge />} />
         <Route path="/characters/create" element={
           <ProtectedRoute>
             <Layout>
