@@ -4,6 +4,7 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft, finalSaves } from '../character/forgeHelpers';
+import { normalizeSkillList } from '../character/skillNormalize';
 import {
   ABILITY_KEYS,
   ABILITY_LABEL_RU,
@@ -87,7 +88,7 @@ const CharacterSheetMVP = () => {
     );
   }
 
-  const skills = character.skill_proficiencies || [];
+  const skills = normalizeSkillList(character.skill_proficiencies);
   const saves = character.saving_throw_proficiencies || finalSaves(assembled);
   const scores = draft.abilities;
   const pb = character.proficiency_bonus ?? assembled.derived.proficiencyBonus;
@@ -180,7 +181,7 @@ const CharacterSheetMVP = () => {
             <h2 className="sheet-h2">Навыки</h2>
             <ul className="sheet-list sheet-skills">
               {SKILLS.map((skill) => {
-                const proficient = skills.includes(skill.id) || skills.includes(skill.label);
+                const proficient = skills.includes(skill.id);
                 const bonus = skillBonus(skill.id, scores, proficient, pb);
                 return (
                   <li key={skill.id}>

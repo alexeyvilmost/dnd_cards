@@ -32,6 +32,7 @@ const Layout = ({ children }: LayoutProps) => {
         { path: '/groups', label: 'Мои группы' },
         { path: '/characters', label: 'Мои персонажи' },
         { path: '/characters-v2', label: 'Персонажи V2' },
+        { path: '/characters-forge', label: 'Конструктор персонажа' },
         { path: '/characters-v3', label: 'Персонажи V3' },
         { path: '/inventory', label: 'Инвентарь' }
       ]

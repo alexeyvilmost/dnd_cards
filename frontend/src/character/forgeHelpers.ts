@@ -1,6 +1,7 @@
 import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
 import { ABILITY_KEYS } from './types';
 import type { AssembledCharacter } from './assemble';
+import { normalizeSkillId, normalizeSkillList } from './skillNormalize';
 
 export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   return {
@@ -38,9 +39,9 @@ function resolvedBySource(draft: CharacterDraft, assembled: AssembledCharacter, 
 
 export function finalSkills(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
   const s = new Set<string>();
-  draft.classSkillChoices.forEach((x) => s.add(x));
-  (assembled.background?.skill_proficiencies || []).forEach((x) => s.add(x));
-  resolvedBySource(draft, assembled, 'skill').forEach((x) => s.add(x));
+  draft.classSkillChoices.forEach((x) => s.add(normalizeSkillId(x)));
+  normalizeSkillList(assembled.background?.skill_proficiencies || []).forEach((x) => s.add(x));
+  resolvedBySource(draft, assembled, 'skill').forEach((x) => s.add(normalizeSkillId(x)));
   return [...s];
 }
 

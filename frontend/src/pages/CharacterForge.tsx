@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Home, User, Swords, ScrollText, Star, Zap, ListChecks, Sparkles } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
@@ -8,6 +8,7 @@ import { charactersV3Api } from '../character/api';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, ABILITY_LABEL_RU, type CharacterDraft, type AbilityKey } from '../character/types';
 import { buildSavePayload, completionIssues, classSkillChoice } from '../character/forgeHelpers';
+import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
@@ -34,6 +35,8 @@ const CharacterForge = () => {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const savedSkillsRef = useRef<string[]>([]);
+  const restoredClassSkillsRef = useRef(false);
 
   // Загрузка справочников
   useEffect(() => {
@@ -63,6 +66,8 @@ const CharacterForge = () => {
     (async () => {
       try {
         const c = await charactersV3Api.get(editId);
+        savedSkillsRef.current = c.skill_proficiencies || [];
+        restoredClassSkillsRef.current = false;
         setDraft({
           id: c.id,
           name: c.name,
@@ -118,6 +123,19 @@ const CharacterForge = () => {
     if (sel !== draft.lineageId) setDraft((d) => ({ ...d, lineageId: sel }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subfeatureChoice, draft.resolvedChoices]);
+
+  // Восстановить навыки класса из сохранённого персонажа при редактировании
+  useEffect(() => {
+    if (!editId || restoredClassSkillsRef.current || !bundle?.klass) return;
+    const sc = classSkillChoice(assemble({ ...bundle, spells: [] }, draft));
+    if (!sc?.options.length) return;
+    const opts = new Set(sc.options.map(normalizeSkillId));
+    const classSkills = normalizeSkillList(savedSkillsRef.current).filter((s) => opts.has(s));
+    if (classSkills.length) {
+      setDraft((d) => ({ ...d, classSkillChoices: classSkills }));
+    }
+    restoredClassSkillsRef.current = true;
+  }, [editId, bundle?.klass, draft.classId]);
 
   // ─── Апдейтеры черновика ───────────────────────────────────────────────────
   const patch = (p: Partial<CharacterDraft>) => setDraft((d) => ({ ...d, ...p }));

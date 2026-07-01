@@ -254,6 +254,12 @@ func GetAllMigrations() []Migration {
 			Up:          addFeatRelatedAbilities,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "042_forge_mvp_content",
+			Description: "Seed forge MVP class abilities, feat effects, normalize background skills",
+			Up:          seedForgeMVPContent,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
