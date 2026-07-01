@@ -26,6 +26,7 @@ import CharacterDetailV2 from './pages/CharacterDetailV2';
 import CharactersV3 from './pages/CharactersV3';
 import CharacterDetailV3 from './pages/CharacterDetailV3';
 import CreateCharacterV3 from './pages/CreateCharacterV3';
+import CharacterForge from './pages/CharacterForge';
 import DiceRoller from './pages/DiceRoller';
 import DiceTest from './pages/DiceTest';
 import CardTypeSelection from './pages/CardTypeSelection';
@@ -53,7 +54,11 @@ function App() {
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+
+        {/* Конструктор персонажа (без авторизации, полноэкранный) */}
+        <Route path="/character-forge" element={<CharacterForge />} />
+        <Route path="/character-forge/:id" element={<CharacterForge />} />
+
         {/* Защищенные маршруты */}
         <Route path="/" element={
           <ProtectedRoute>

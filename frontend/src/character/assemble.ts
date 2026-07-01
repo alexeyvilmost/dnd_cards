@@ -143,8 +143,9 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
   };
 }
 
-// Загружает все сущности черновика и собирает персонажа.
-export async function loadAssembly(draft: CharacterDraft): Promise<AssembledCharacter> {
+// Загружает сущности и связанные эффекты/действия (без заклинаний — их удобнее
+// брать из уже загруженного списка редактора). Спелы возвращаются пустыми.
+export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   const [race, klass, background] = await Promise.all([
     draft.raceId ? racesApi.getRace(draft.raceId).catch(() => null) : Promise.resolve(null),
     draft.classId ? classesApi.getClass(draft.classId).catch(() => null) : Promise.resolve(null),
@@ -173,9 +174,14 @@ export async function loadAssembly(draft: CharacterDraft): Promise<AssembledChar
     )
   ).filter((x): x is OriginAction => !!x);
 
+  return { race, klass, background, feats, effects, actions, spells: [] };
+}
+
+// Загружает все сущности черновика (включая заклинания) и собирает персонажа.
+export async function loadAssembly(draft: CharacterDraft): Promise<AssembledCharacter> {
+  const bundle = await loadBundle(draft);
   const spells = (
     await Promise.all((draft.spellIds || []).map((id) => spellsApi.getSpell(id).catch(() => null)))
   ).filter((s): s is Spell => !!s);
-
-  return assemble({ race, klass, background, feats, effects, actions, spells }, draft);
+  return assemble({ ...bundle, spells }, draft);
 }
