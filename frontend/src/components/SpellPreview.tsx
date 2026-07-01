@@ -9,7 +9,7 @@ import {
 import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
-import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
+import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -84,7 +84,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   }
   // Явно выбранные ресурсы (Ki, очки чародейства и т.п.)
   for (const id of spell.resources || []) {
-    costs.push({ iconSrc: resourceIcon(spellResourceOptions, id), label: resourceLabel(spellResourceOptions, id) });
+    costs.push({ iconSrc: resourceCostIcon(spellResourceOptions, id), label: resourceLabel(spellResourceOptions, id) });
   }
 
   const hasStats =

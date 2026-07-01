@@ -3,7 +3,7 @@ import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
-import { resourceIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
+import { resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 
 interface ActionPreviewProps {
@@ -57,6 +57,8 @@ function parseMechanics(mechanics: Record<string, unknown> | null | undefined) {
       const dmg = onFail?.damage as Record<string, unknown> | undefined;
       if (dmg) readDamage(dmg);
     }
+    scanPayloads(interaction.on_hit);
+    scanPayloads(interaction.on_crit);
     scanPayloads(interaction.on_success);
     scanPayloads(interaction.result);
     if (interaction.kind === 'damage') readDamage(interaction);
@@ -181,7 +183,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
             <span className="sp-cost" key={i}>
               <img
                 className="sp-costicon"
-                src={resourceIcon(resources, id)}
+                src={resourceCostIcon(resources, id)}
                 alt={resourceLabel(resources, id)}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />

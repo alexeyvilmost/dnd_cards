@@ -80,6 +80,27 @@ export function resourceIcon(resources: ResourceOption[], id?: string | null): s
   return findResource(resources, id)?.imageUrl || '/charges/main_action.png';
 }
 
+// Иконки стоимости для нижней плашки карточек (действия/заклинания).
+// Каталог /charges/ пуст — известные ресурсы стоимости отображаем реальными
+// иконками из /icons/resources/, для остальных берём image_url ресурса.
+const COST_ICON_MAP: Record<string, string> = {
+  action: 'action',
+  main_action: 'action',
+  bonus_action: 'bonus_action',
+  reaction: 'reaction',
+  free_action: 'action',
+  ritual: 'ritual',
+  spell_slot: 'spell_slot',
+  warlock_spell_slot: 'warlock_spell_slot',
+};
+
+export function resourceCostIcon(resources: ResourceOption[], id?: string | null): string {
+  if (id && COST_ICON_MAP[id]) return `/icons/resources/${COST_ICON_MAP[id]}.png`;
+  const found = findResource(resources, id);
+  if (found?.imageUrl && !found.imageUrl.startsWith('/charges/')) return found.imageUrl;
+  return '/icons/resources/action.png';
+}
+
 export function registryItems(resources: ResourceOption[]) {
   return resources.map((resource) => ({ id: resource.id, label: resource.label }));
 }
