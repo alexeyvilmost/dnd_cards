@@ -2081,6 +2081,7 @@ type Spell struct {
 	SavingThrow           bool           `json:"saving_throw" gorm:"type:boolean;default:false"`
 	Concentration         bool           `json:"concentration" gorm:"type:boolean;default:false"`
 	Ritual                bool           `json:"ritual" gorm:"type:boolean;default:false"`
+	Resources             *Properties    `json:"resources" gorm:"type:jsonb"` // ID ресурсов, которые тратит заклинание (можно несколько)
 	SaveTypes             *Properties    `json:"save_types" gorm:"type:jsonb"` // Типы спасброска (str, dex, ...)
 	Damage                *SpellDamage   `json:"damage" gorm:"type:jsonb"`
 	Area                  *string        `json:"area" gorm:"type:text"` // Область, например "20 фт"
@@ -2126,6 +2127,7 @@ type CreateSpellRequest struct {
 	SavingThrow         bool         `json:"saving_throw"`
 	Concentration       bool         `json:"concentration"`
 	Ritual              bool         `json:"ritual"`
+	Resources           *Properties  `json:"resources"`
 	SaveTypes           *Properties  `json:"save_types"`
 	Damage              *SpellDamage `json:"damage"`
 	Area                *string      `json:"area"`
@@ -2162,6 +2164,7 @@ type UpdateSpellRequest struct {
 	SavingThrow         *bool        `json:"saving_throw"`
 	Concentration       *bool        `json:"concentration"`
 	Ritual              *bool        `json:"ritual"`
+	Resources           *Properties  `json:"resources"`
 	SaveTypes           *Properties  `json:"save_types"`
 	Damage              *SpellDamage `json:"damage"`
 	Area                *string      `json:"area"`
@@ -2200,6 +2203,7 @@ type SpellResponse struct {
 	SavingThrow         bool         `json:"saving_throw"`
 	Concentration       bool         `json:"concentration"`
 	Ritual              bool         `json:"ritual"`
+	Resources           *Properties  `json:"resources"`
 	SaveTypes           *Properties  `json:"save_types"`
 	Damage              *SpellDamage `json:"damage"`
 	Area                *string      `json:"area"`
@@ -2241,6 +2245,7 @@ func (spell Spell) ToSpellResponse() SpellResponse {
 		SavingThrow:         spell.SavingThrow,
 		Concentration:       spell.Concentration,
 		Ritual:              spell.Ritual,
+		Resources:           spell.Resources,
 		SaveTypes:           spell.SaveTypes,
 		Damage:              spell.Damage,
 		Area:                spell.Area,

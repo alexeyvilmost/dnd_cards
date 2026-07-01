@@ -964,6 +964,7 @@ export interface Spell {
   saving_throw: boolean;
   concentration: boolean;
   ritual: boolean;
+  resources?: string[] | null;
   save_types?: string[] | null;
   damage?: SpellDamageEntry[] | null;
   area?: string | null;
@@ -1002,6 +1003,7 @@ export interface CreateSpellRequest {
   saving_throw?: boolean;
   concentration?: boolean;
   ritual?: boolean;
+  resources?: string[] | null;
   save_types?: string[] | null;
   damage?: SpellDamageEntry[] | null;
   area?: string | null;
@@ -1037,6 +1039,7 @@ export interface UpdateSpellRequest {
   saving_throw?: boolean;
   concentration?: boolean;
   ritual?: boolean;
+  resources?: string[] | null;
   save_types?: string[] | null;
   damage?: SpellDamageEntry[] | null;
   area?: string | null;

@@ -188,6 +188,7 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 		SavingThrow:         req.SavingThrow,
 		Concentration:       req.Concentration,
 		Ritual:              req.Ritual,
+		Resources:           req.Resources,
 		SaveTypes:           req.SaveTypes,
 		Damage:              req.Damage,
 		Area:                req.Area,
@@ -305,6 +306,9 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	}
 	if req.Ritual != nil {
 		spell.Ritual = *req.Ritual
+	}
+	if req.Resources != nil {
+		spell.Resources = req.Resources
 	}
 	if req.SaveTypes != nil {
 		spell.SaveTypes = req.SaveTypes

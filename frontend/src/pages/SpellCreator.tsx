@@ -19,6 +19,7 @@ import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../utils/damageTy
 import SpellPreview from '../components/SpellPreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
+import ResourceMultiSelect from '../components/ResourceMultiSelect';
 
 type ScalarForm = {
   name: string;
@@ -79,6 +80,7 @@ const SpellCreator = () => {
   const [subclassesText, setSubclassesText] = useState('');
   const [saveTypes, setSaveTypes] = useState<string[]>([]);
   const [damage, setDamage] = useState<SpellDamageEntry[]>([]);
+  const [spellResources, setSpellResources] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [loadingSpell, setLoadingSpell] = useState(false);
@@ -123,6 +125,7 @@ const SpellCreator = () => {
           setSubclassesText((spell.subclasses || []).join(', '));
           setSaveTypes(spell.save_types || []);
           setDamage(spell.damage || []);
+          setSpellResources(spell.resources || []);
         } catch (err) {
           setError('Ошибка загрузки заклинания');
           console.error(err);
@@ -164,6 +167,7 @@ const SpellCreator = () => {
     saving_throw: !!fd.saving_throw,
     concentration: !!fd.concentration,
     ritual: !!fd.ritual,
+    resources: spellResources,
     save_types: saveTypes,
     damage,
     area: fd.area || null,
@@ -218,6 +222,7 @@ const SpellCreator = () => {
       saving_throw: !!data.saving_throw,
       concentration: !!data.concentration,
       ritual: !!data.ritual,
+      resources: spellResources,
       save_types: saveTypes,
       damage,
       area: data.area || null,
@@ -362,6 +367,13 @@ const SpellCreator = () => {
                         <input {...register('area')} className={inputCls} placeholder="20 фт" />
                       </div>
                     </div>
+
+                    <ResourceMultiSelect
+                      value={spellResources}
+                      onChange={setSpellResources}
+                      label="Ресурсы (дополнительно к слоту/действию — можно несколько)"
+                      returnTo="spell-creator"
+                    />
 
                     <div>
                       <label className={labelCls}>ID заклинания</label>

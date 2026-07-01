@@ -284,8 +284,22 @@ func GetAllMigrations() []Migration {
 			Up:          expandEffectTypes,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "047_spell_resources",
+			Description: "Add resources jsonb to spells (multi-resource cost)",
+			Up:          addSpellResources,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addSpellResources добавляет заклинаниям список ресурсов (несколько одновременно).
+func addSpellResources(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE spells ADD COLUMN IF NOT EXISTS resources JSONB"); err != nil {
+		return fmt.Errorf("addSpellResources: %w", err)
+	}
+	return nil
 }
 
 const effectTypeCheckValues = "'passive', 'conditional', 'triggered', 'species_ability', 'class_ability', 'feat_ability', 'item_effect', 'spell_effect', 'negative_effect', 'positive_effect'"

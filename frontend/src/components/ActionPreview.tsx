@@ -1,6 +1,10 @@
+import React from 'react';
 import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
+import { FormattedText } from '../utils/formattedText';
 import { resourceIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
+import { SPELL_CARD_CSS } from './spellCardStyle';
 
 interface ActionPreviewProps {
   action: Action;
@@ -10,150 +14,184 @@ interface ActionPreviewProps {
   resources?: ResourceOption[];
 }
 
+// "2d8" → "2к8" (русский BG3-тултип, как в design_preview)
+const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
+
+type DamageEntry = { value: string; type: string };
+
+// Разбор унифицированной механики: атака/спасбросок/урон/лечение.
+function parseMechanics(mechanics: Record<string, unknown> | null | undefined) {
+  const result = {
+    attack: false,
+    save: null as string | null,
+    damage: [] as DamageEntry[],
+    heal: [] as string[],
+  };
+  const effects = Array.isArray(mechanics?.effects) ? (mechanics!.effects as Record<string, unknown>[]) : [];
+
+  const readDamage = (p: Record<string, unknown>) => {
+    const val = p.dice ?? p.formula ?? p.amount;
+    if (val === undefined || val === null || val === '') return;
+    result.damage.push({ value: String(val), type: String(p.damage_type || p.type || 'damage') });
+  };
+  const readHeal = (p: Record<string, unknown>) => {
+    const val = p.dice ?? p.formula ?? p.amount;
+    if (val !== undefined && val !== null && val !== '') result.heal.push(String(val));
+  };
+  const scanPayloads = (arr: unknown) => {
+    (Array.isArray(arr) ? (arr as Record<string, unknown>[]) : []).forEach((p) => {
+      if (p?.kind === 'damage') readDamage(p);
+      else if (p?.kind === 'healing') readHeal(p);
+    });
+  };
+
+  effects.forEach((interaction) => {
+    const resolution = interaction.resolution;
+    if (resolution === 'attack_roll') result.attack = true;
+    if (resolution === 'save') {
+      result.save = String(interaction.ability || '').toUpperCase() || 'СБ';
+      // урон/лечение при провале/успехе
+      scanPayloads(interaction.on_fail);
+      scanPayloads(interaction.on_success);
+      const onFail = interaction.on_fail as Record<string, unknown> | undefined;
+      const dmg = onFail?.damage as Record<string, unknown> | undefined;
+      if (dmg) readDamage(dmg);
+    }
+    scanPayloads(interaction.on_success);
+    scanPayloads(interaction.result);
+    if (interaction.kind === 'damage') readDamage(interaction);
+    if (interaction.kind === 'healing') readHeal(interaction);
+  });
+  return result;
+}
+
 const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
-  const getRechargeLabel = (recharge?: string | null) => {
-    if (!recharge) return '';
-    return ACTION_RECHARGE_OPTIONS.find(opt => opt.value === recharge)?.label || recharge;
-  };
 
-  const getActionTypeLabel = (actionType: string) => {
-    return ACTION_TYPE_OPTIONS.find(opt => opt.value === actionType)?.label || actionType;
-  };
+  const actionTypeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type || '';
+  const rechargeLabel = action.recharge
+    ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
+    : '';
 
-  // Получаем ресурсы для отображения (используем resources если есть, иначе resource)
-  const getResourcesToDisplay = (): string[] => {
-    if (action.resources && action.resources.length > 0) {
-      return action.resources;
-    }
-    // Для обратной совместимости используем resource
-    if (action.resource) {
-      return [action.resource];
-    }
-    return [];
-  };
+  const subtype = [actionTypeLabel, action.distance].filter(Boolean).join(' · ');
 
-  const getMechanicChips = () => {
-    const chips: Array<{ id: string; label: string; icon?: string }> = [];
-    const mechanics = action.mechanics as Record<string, unknown> | null | undefined;
-    const interactions = Array.isArray(mechanics?.effects) ? mechanics.effects as Record<string, unknown>[] : [];
-    interactions.forEach((interaction, index) => {
-      const payloads = Array.isArray(interaction.result) ? interaction.result as Record<string, unknown>[] : [interaction];
-      if (interaction.resolution === 'save') {
-        const onFail = interaction.on_fail as Record<string, unknown> | undefined;
-        const damage = onFail?.damage as Record<string, unknown> | undefined;
-        if (damage) {
-          const type = String(damage.type || 'damage');
-          chips.push({ id: `save-damage-${index}`, label: `${damage.dice || ''} ${type}`.trim(), icon: `/icons/damage_types/${type}.png` });
-        }
-      }
-      payloads.forEach((effect, payloadIndex) => {
-        if (effect.kind === 'damage') {
-          const type = String(effect.damage_type || effect.type || 'damage');
-          chips.push({ id: `damage-${index}-${payloadIndex}`, label: `${effect.amount || effect.formula || ''} ${type}`.trim(), icon: `/icons/damage_types/${type}.png` });
-        }
-        if (effect.kind === 'healing') {
-          chips.push({ id: `healing-${index}-${payloadIndex}`, label: `${effect.amount || ''} лечение`.trim(), icon: '/icons/damage_types/healing.png' });
-        }
-      });
-    });
-    return chips;
-  };
+  const stats = parseMechanics(action.mechanics as Record<string, unknown> | null | undefined);
+  const hasStats = stats.attack || stats.save || stats.damage.length > 0 || stats.heal.length > 0;
 
-  const mechanicChips = getMechanicChips();
+  // Ресурсы (несколько): resources[] с фолбэком на устаревший resource
+  const resourceIds: string[] = Array.isArray(action.resources) && action.resources.length > 0
+    ? action.resources
+    : (action.resource ? [String(action.resource)] : []);
+
+  // Мета-строка
+  const meta: Array<[string, string]> = [];
+  if (rechargeLabel) {
+    meta.push(['⟳', rechargeLabel + (action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : '')]);
+  }
 
   return (
-    <div 
-      className={`relative bg-[#2a1710] rounded-2xl shadow-lg overflow-hidden border border-amber-900/70 ${className} transition-all duration-300 ease-out group ${!disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col w-[300px] ${onClick ? 'cursor-pointer' : ''}`}
+    <div
+      className={`sp-tip ${disableHover ? '' : 'sp-hoverable'} ${className}`}
       onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : undefined}
     >
-      <div className="relative h-36 bg-gradient-to-br from-amber-950 via-stone-900 to-black overflow-hidden">
-        {action.image_url && action.image_url.trim() !== '' ? (
-          <img
-            src={action.image_url}
-            alt={action.name}
-            className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/default_image.png';
-            }}
-          />
-        ) : (
-          <div className="h-full flex items-center justify-center text-5xl text-amber-200/60">?</div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#2a1710] via-transparent to-transparent" />
-        <div className="absolute top-3 left-3 rounded-full bg-black/55 px-3 py-1 text-xs text-amber-100 border border-amber-300/20">
-          {getActionTypeLabel(action.action_type)}
+      <style>{SPELL_CARD_CSS}</style>
+
+      {action.image_url && action.image_url.trim() !== '' && (
+        <img
+          className="sp-bigicon"
+          src={action.image_url}
+          alt={action.name}
+          onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
+        />
+      )}
+
+      <h3>{action.name || 'Название действия'}</h3>
+      <div className="sp-subtype">{subtype || 'Действие'}</div>
+
+      {hasStats && (
+        <div className="sp-stats">
+          {stats.attack && (
+            <div className="sp-srow">
+              <span className="sp-lbl">Атака:</span>
+              <div className="sp-die">к20</div>
+            </div>
+          )}
+          {stats.save && (
+            <div className="sp-srow">
+              <span className="sp-lbl">Спасбросок:</span>
+              <div className="sp-die sp-save">СБ</div>
+              <span className="sp-bonus">{stats.save}</span>
+            </div>
+          )}
+          {stats.damage.length > 0 && (
+            <div className="sp-srow">
+              <span className="sp-lbl">Урон:</span>
+              <span className="sp-dmgval">
+                {stats.damage.map((d, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && <span className="sp-dmgsep">+</span>}
+                    <span className="sp-dmgitem" style={{ color: getDamageColor(d.type) }}>
+                      {diceRu(d.value)}
+                      <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" />
+                      {getDamageLabel(d.type).toLowerCase()}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </span>
+            </div>
+          )}
+          {stats.heal.length > 0 && (
+            <div className="sp-srow">
+              <span className="sp-lbl">Лечение:</span>
+              <span className="sp-dmgval">
+                <span className="sp-dmgitem" style={{ color: getDamageColor('healing') }}>
+                  {diceRu(stats.heal.join(' + '))}
+                  <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
+                  лечение
+                </span>
+              </span>
+            </div>
+          )}
         </div>
+      )}
+
+      <div className="sp-desc">
+        <FormattedText text={action.description || 'Описание действия'} emptyText="Описание действия" />
       </div>
 
-      <div className="flex flex-col p-4 text-amber-50 relative z-0">
-        <div className="mb-2">
-          <h3 className="text-xl font-bold text-amber-50 font-fantasy leading-tight">
-            {action.name || 'Название действия'}
-          </h3>
+      {action.show_detailed_description && action.detailed_description && (
+        <div className="sp-upcast">
+          <FormattedText text={action.detailed_description} emptyText="" />
         </div>
+      )}
 
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {getResourcesToDisplay().map((resourceId) => (
-            <span key={resourceId} className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/10 border border-amber-200/20 px-2 py-1 text-xs text-amber-100">
+      {meta.length > 0 && (
+        <div className="sp-meta">
+          {meta.map(([icon, label], i) => (
+            <span key={i}><i>{icon}</i>{label}</span>
+          ))}
+        </div>
+      )}
+
+      {resourceIds.length > 0 ? (
+        <div className="sp-costbar">
+          {resourceIds.map((id, i) => (
+            <span className="sp-cost" key={i}>
               <img
-                src={resourceIcon(resources, resourceId)}
-                alt={resourceLabel(resources, resourceId)}
-                className="w-4 h-4 object-contain"
+                className="sp-costicon"
+                src={resourceIcon(resources, id)}
+                alt={resourceLabel(resources, id)}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
-              {resourceLabel(resources, resourceId)}
-            </span>
-          ))}
-          {action.distance && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100/10 border border-sky-200/20 px-2 py-1 text-xs text-sky-100">
-              <img src="/charges/distance.png" alt="" className="w-4 h-4 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-              {action.distance}
-            </span>
-          )}
-          {action.recharge && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100/10 border border-purple-200/20 px-2 py-1 text-xs text-purple-100">
-              <img src="/charges/reload.png" alt="" className="w-4 h-4 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-              {getRechargeLabel(action.recharge)}
-              {action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : ''}
-            </span>
-          )}
-          {mechanicChips.map((chip) => (
-            <span key={chip.id} className="inline-flex items-center gap-1.5 rounded-full bg-red-100/10 border border-red-200/20 px-2 py-1 text-xs text-red-100">
-              {chip.icon && <img src={chip.icon} alt="" className="w-4 h-4 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />}
-              {chip.label}
+              {resourceLabel(resources, id)}
             </span>
           ))}
         </div>
-
-        <div className="mb-4 flex-1">
-          <p 
-            className="text-amber-50/90 font-fantasy whitespace-pre-wrap leading-relaxed"
-            style={{
-              fontSize: action.description_font_size ? `${action.description_font_size}px` : '14px',
-              textAlign: (action.text_alignment || 'left') as 'left' | 'center' | 'right'
-            }}
-          >
-            {action.description || 'Нет описания'}
-          </p>
-        </div>
-
-        {action.show_detailed_description && action.detailed_description && (
-          <div className="pt-3 border-t border-amber-100/15">
-            <p 
-              className="text-amber-100/80 font-fantasy whitespace-pre-wrap leading-relaxed"
-              style={{
-                fontSize: action.detailed_description_font_size ? `${action.detailed_description_font_size}px` : '12px',
-                textAlign: (action.detailed_description_alignment || 'left') as 'left' | 'center' | 'right'
-              }}
-            >
-              {action.detailed_description}
-            </p>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="sp-spacer" />
+      )}
     </div>
   );
 };
