@@ -221,7 +221,7 @@ const ActionCreator = () => {
         
         console.log('[ActionCreator] Данные для обновления:', updateData);
         await actionsApi.updateAction(editId, updateData);
-        navigate('/');
+        navigate('/?type=actions');
       } else {
         // Создание нового действия
         console.log('[ActionCreator] Отправляем данные на создание:', data);
@@ -232,7 +232,7 @@ const ActionCreator = () => {
           resources: selectedResources.length > 0 ? selectedResources : null,
         };
         await actionsApi.createAction(submitData);
-        navigate('/');
+        navigate('/?type=actions');
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || (isEditMode ? 'Ошибка обновления действия' : 'Ошибка создания действия');
@@ -314,7 +314,7 @@ const ActionCreator = () => {
                   </label>
                   <button
                     type="button"
-                    onClick={() => navigate('/resource-creator')}
+                    onClick={() => navigate('/resource-creator?returnTo=action-creator')}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     Создать ресурс
@@ -468,7 +468,7 @@ const ActionCreator = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/create')}
+              onClick={() => navigate('/?type=actions')}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               Отмена

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Grid3X3, List, Edit, Trash2 } from 'lucide-react';
 import { Card } from '../types';
 import CardPreview from './CardPreview';
@@ -25,6 +26,7 @@ const TemplateViewer: React.FC<TemplateViewerProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(defaultViewMode);
   const [hoveredTemplate, setHoveredTemplate] = useState<Card | null>(null);
+  const canEditTemplates = Boolean(onTemplateEdit);
 
   const getRarityBorderColor = (rarity: string): string => {
     switch (rarity?.toLowerCase()) {
@@ -108,17 +110,17 @@ const TemplateViewer: React.FC<TemplateViewerProps> = ({
               
               {/* Кнопки редактирования и удаления шаблона */}
               <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                {onTemplateEdit && (
-                  <button
+                {canEditTemplates && (
+                  <Link
+                    to={`/edit/${template.id}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onTemplateEdit(template);
                     }}
                     className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
                     title="Редактировать шаблон"
                   >
                     <Edit size={14} />
-                  </button>
+                  </Link>
                 )}
                 {onTemplateDelete && (
                   <button
@@ -219,17 +221,17 @@ const TemplateViewer: React.FC<TemplateViewerProps> = ({
                 
                 {/* Кнопки редактирования и удаления шаблона */}
                 <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {onTemplateEdit && (
-                    <button
+                  {canEditTemplates && (
+                    <Link
+                      to={`/edit/${template.id}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onTemplateEdit(template);
                       }}
                       className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
                       title="Редактировать шаблон"
                     >
                       <Edit size={14} />
-                    </button>
+                    </Link>
                   )}
                   {onTemplateDelete && (
                     <button

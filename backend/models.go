@@ -1764,9 +1764,16 @@ func (at ActionType) GetLocalizedName() string {
 type EffectType string
 
 const (
-	EffectTypePassive     EffectType = "passive"     // Пассивный (всегда активен)
-	EffectTypeConditional EffectType = "conditional" // Условный (активен при условиях)
-	EffectTypeTriggered   EffectType = "triggered"   // Срабатывающий (активируется при событиях)
+	EffectTypePassive        EffectType = "passive"         // Пассивный (всегда активен)
+	EffectTypeConditional    EffectType = "conditional"     // Условный (активен при условиях)
+	EffectTypeTriggered      EffectType = "triggered"       // Срабатывающий (активируется при событиях)
+	EffectTypeSpeciesAbility EffectType = "species_ability" // Способность вида
+	EffectTypeClassAbility   EffectType = "class_ability"   // Способность класса
+	EffectTypeFeatAbility    EffectType = "feat_ability"    // Способность черты
+	EffectTypeItemEffect     EffectType = "item_effect"     // Эффект предмета
+	EffectTypeSpellEffect    EffectType = "spell_effect"    // Эффект заклинания
+	EffectTypeNegativeEffect EffectType = "negative_effect" // Отрицательный эффект
+	EffectTypePositiveEffect EffectType = "positive_effect" // Положительный эффект
 )
 
 // Effect - модель пассивного эффекта D&D
@@ -1927,6 +1934,20 @@ func (et EffectType) GetLocalizedName() string {
 		return "Условный"
 	case EffectTypeTriggered:
 		return "Срабатывающий"
+	case EffectTypeSpeciesAbility:
+		return "Способность вида"
+	case EffectTypeClassAbility:
+		return "Способность класса"
+	case EffectTypeFeatAbility:
+		return "Способность черты"
+	case EffectTypeItemEffect:
+		return "Эффект предмета"
+	case EffectTypeSpellEffect:
+		return "Эффект заклинания"
+	case EffectTypeNegativeEffect:
+		return "Отрицательный эффект"
+	case EffectTypePositiveEffect:
+		return "Положительный эффект"
 	default:
 		return string(et)
 	}

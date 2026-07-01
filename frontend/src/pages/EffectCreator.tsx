@@ -186,8 +186,7 @@ const EffectCreator = () => {
         console.log('[EffectCreator] Данные для создания:', createData);
         await effectsApi.createEffect(createData);
       }
-      // Перенаправляем на библиотеку карт
-      navigate('/');
+      navigate('/?type=effects');
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || (isEditMode ? 'Ошибка обновления эффекта' : 'Ошибка создания эффекта');
       setError(errorMessage);
@@ -214,7 +213,7 @@ const EffectCreator = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/?type=effects')}
                 className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
@@ -422,7 +421,7 @@ const EffectCreator = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/?type=effects')}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                   >
                     Отмена

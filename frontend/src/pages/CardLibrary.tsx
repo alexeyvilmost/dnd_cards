@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from 'lucide-react';
+import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi } from '../api/client';
-import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
+import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi } from '../api/client';
+import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition } from '../types';
+import { RARITY_OPTIONS, PROPERTIES_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
@@ -20,7 +20,7 @@ import FeatDetailModal from '../components/FeatDetailModal';
 import BackgroundDetailModal from '../components/BackgroundDetailModal';
 import RaceDetailModal from '../components/RaceDetailModal';
 import ClassDetailModal from '../components/ClassDetailModal';
-import { resourceLabel, useResourceOptions } from '../utils/resources';
+import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
@@ -28,8 +28,17 @@ import CurrencyPriceInline from '../components/CurrencyPriceInline';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import {
   buildLibrarySearchParams,
+  type LibraryContentType,
   parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
+
+const RESOURCE_CATEGORY_OPTIONS = [
+  { value: 'action_cost', label: 'Стоимость действия' },
+  { value: 'class_resource', label: 'Ресурс класса' },
+  { value: 'character_resource', label: 'Ресурс персонажа' },
+  { value: 'item_resource', label: 'Ресурс предмета' },
+  { value: 'character', label: 'Персонаж' },
+];
 
 const CardLibrary = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +48,7 @@ const CardLibrary = () => {
   const skipFilterUrlSync = useRef(false);
   const openingCardFromUrl = useRef(false);
 
-  const [contentType, setContentType] = useState<'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes'>(initialFilters.contentType);
+  const [contentType, setContentType] = useState<LibraryContentType>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
@@ -48,11 +57,13 @@ const CardLibrary = () => {
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<CharacterClass[]>([]);
+  const [resources, setResources] = useState<ResourceDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(initialFilters.search);
   const [rarityFilter, setRarityFilter] = useState<string>(initialFilters.rarity);
+  const [effectTypeFilter, setEffectTypeFilter] = useState<string>(initialFilters.effectType);
   const [propertiesFilter, setPropertiesFilter] = useState<string>(initialFilters.properties);
   const [templateTypeFilter, setTemplateTypeFilter] = useState<string>(initialFilters.templateType);
 
@@ -63,6 +74,7 @@ const CardLibrary = () => {
   };
   const [slotFilter, setSlotFilter] = useState<string>(initialFilters.slot);
   const [armorTypeFilter, setArmorTypeFilter] = useState<string>(initialFilters.armorType);
+  const [resourceCategoryFilter, setResourceCategoryFilter] = useState<string>(initialFilters.resourceCategory);
   const [sortBy, setSortBy] = useState<string>(initialFilters.sortBy);
   // Фильтры заклинаний
   const [spellLevel, setSpellLevel] = useState<string>('');
@@ -245,6 +257,7 @@ const CardLibrary = () => {
       
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
+      if (effectTypeFilter) params.effect_type = effectTypeFilter;
       
       const response = await effectsApi.getEffects(params);
       
@@ -440,6 +453,37 @@ const CardLibrary = () => {
     }
   };
 
+  const loadResources = async () => {
+    try {
+      setLoading(true);
+      const response = await resourcesApi.getResources(resourceCategoryFilter ? { category: resourceCategoryFilter } : undefined);
+      const normalizedSearch = search.trim().toLowerCase();
+      const filtered = normalizedSearch
+        ? response.resources.filter((resource) => {
+            const text = [
+              resource.name,
+              resource.resource_id,
+              resource.description || '',
+              resource.category || '',
+              resource.recharge || '',
+            ].join(' ').toLowerCase();
+            return text.includes(normalizedSearch);
+          })
+        : response.resources;
+
+      setResources(filtered);
+      setTotalCards(filtered.length);
+      setHasMore(false);
+      setCurrentPage(1);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки ресурсов');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
     setCards([]);
@@ -450,6 +494,7 @@ const CardLibrary = () => {
     setBackgrounds([]);
     setRaces([]);
     setClasses([]);
+    setResources([]);
     if (contentType === 'cards') {
       loadCards(1, false);
     } else if (contentType === 'effects') {
@@ -466,18 +511,22 @@ const CardLibrary = () => {
       loadRaces(1, false);
     } else if (contentType === 'classes') {
       loadClasses(1, false);
+    } else if (contentType === 'resources') {
+      loadResources();
     }
-  }, [contentType, search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+  }, [contentType, search, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
       contentType,
       search,
       rarity: rarityFilter,
+      effectType: effectTypeFilter,
       properties: propertiesFilter,
       templateType: templateTypeFilter,
       slot: slotFilter,
       armorType: armorTypeFilter,
+      resourceCategory: resourceCategoryFilter,
       sortBy,
       viewMode,
     }),
@@ -485,10 +534,12 @@ const CardLibrary = () => {
       contentType,
       search,
       rarityFilter,
+      effectTypeFilter,
       propertiesFilter,
       templateTypeFilter,
       slotFilter,
       armorTypeFilter,
+      resourceCategoryFilter,
       sortBy,
       viewMode,
     ]
@@ -533,10 +584,12 @@ const CardLibrary = () => {
     setContentType(parsed.contentType);
     setSearch(parsed.search);
     setRarityFilter(parsed.rarity);
+    setEffectTypeFilter(parsed.effectType);
     setPropertiesFilter(parsed.properties);
     setTemplateTypeFilter(parsed.templateType);
     setSlotFilter(parsed.slot);
     setArmorTypeFilter(parsed.armorType);
+    setResourceCategoryFilter(parsed.resourceCategory);
     setSortBy(parsed.sortBy);
     setViewMode(parsed.viewMode);
     lastWrittenParamsRef.current = currentStr;
@@ -699,11 +752,6 @@ const CardLibrary = () => {
     setSelectedEffect(null);
   };
 
-  const handleEditEffect = (effectId: string) => {
-    setIsEffectModalOpen(false);
-    window.location.href = `/effect-creator?edit=${effectId}`;
-  };
-
   const handleDeleteEffect = async (effectId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот эффект?')) return;
     
@@ -727,11 +775,6 @@ const CardLibrary = () => {
   const handleCloseActionModal = () => {
     setIsActionModalOpen(false);
     setSelectedAction(null);
-  };
-
-  const handleEditAction = (actionId: string) => {
-    setIsActionModalOpen(false);
-    window.location.href = `/action-creator?edit=${actionId}`;
   };
 
   const handleDeleteAction = async (actionId: string) => {
@@ -836,23 +879,46 @@ const CardLibrary = () => {
     }
   };
 
+  const handleDeleteResource = async (resourceId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот ресурс?')) return;
+    try {
+      await resourcesApi.deleteResource(resourceId);
+      if (contentType === 'resources') loadResources();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления ресурса');
+    }
+  };
+
   // Получение типа эффекта для отображения
   const getEffectTypeLabel = (effectType: string) => {
-    switch (effectType) {
-      case 'passive':
-        return 'Пассивное';
-      case 'conditional':
-        return 'Условное';
-      case 'triggered':
-        return 'Срабатывающее';
-      default:
-        return effectType;
-    }
+    return PASSIVE_EFFECT_TYPE_OPTIONS.find((opt) => opt.value === effectType)?.label || effectType;
   };
 
   // Получение метки ресурса действия для отображения
   const getActionResourceLabel = (resource: string) => {
     return resourceLabel(resourceOptions, resource);
+  };
+
+  const getResourceCategoryLabel = (category?: string | null) => {
+    if (!category) return 'Без категории';
+    return RESOURCE_CATEGORY_OPTIONS.find((option) => option.value === category)?.label || category;
+  };
+
+  const getResourceRechargeLabel = (recharge?: string | null) => {
+    switch (recharge) {
+      case 'per_turn':
+        return 'Каждый ход';
+      case 'per_round':
+        return 'Каждый раунд';
+      case 'short_rest':
+        return 'Короткий отдых';
+      case 'long_rest':
+        return 'Длинный отдых';
+      case 'custom':
+        return 'Произвольно';
+      default:
+        return 'Без авто-восстановления';
+    }
   };
 
   // Функция для получения цвета полоски редкости
@@ -890,6 +956,19 @@ const CardLibrary = () => {
     }
   };
 
+  const createTargetByType: Record<LibraryContentType, { to: string; label: string }> = {
+    cards: { to: '/create', label: 'Создать карту' },
+    effects: { to: '/effect-creator', label: 'Создать эффект' },
+    actions: { to: '/action-creator', label: 'Создать действие' },
+    spells: { to: '/spell-creator', label: 'Создать заклинание' },
+    feats: { to: '/feat-creator', label: 'Создать черту' },
+    backgrounds: { to: '/background-creator', label: 'Создать предысторию' },
+    races: { to: '/race-creator', label: 'Создать вид' },
+    classes: { to: '/class-creator', label: 'Создать класс' },
+    resources: { to: '/resource-creator', label: 'Создать ресурс' },
+  };
+  const createTarget = createTargetByType[contentType];
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Заголовок */}
@@ -898,11 +977,11 @@ const CardLibrary = () => {
           Библиотека карточек
         </h1>
         <Link
-          to="/create"
+          to={createTarget.to}
           className="btn-primary flex items-center space-x-2 w-full sm:w-auto justify-center"
         >
           <Plus size={18} />
-          <span>Создать карту</span>
+          <span>{createTarget.label}</span>
         </Link>
       </div>
 
@@ -924,6 +1003,7 @@ const CardLibrary = () => {
               <option value="backgrounds">Предыстории</option>
               <option value="races">Виды</option>
               <option value="classes">Классы</option>
+              <option value="resources">Ресурсы</option>
             </select>
           </div>
 
@@ -981,7 +1061,7 @@ const CardLibrary = () => {
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Фильтр по редкости - не для заклинаний */}
-            {contentType !== 'spells' && (
+            {contentType !== 'spells' && contentType !== 'resources' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Редкость
@@ -993,6 +1073,46 @@ const CardLibrary = () => {
                 >
                   <option value="">Все редкости</option>
                   {RARITY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {contentType === 'resources' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Категория ресурса
+                </label>
+                <select
+                  value={resourceCategoryFilter}
+                  onChange={(e) => setResourceCategoryFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Все категории</option>
+                  {RESOURCE_CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {contentType === 'effects' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Тип эффекта
+                </label>
+                <select
+                  value={effectTypeFilter}
+                  onChange={(e) => setEffectTypeFilter(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Все типы</option>
+                  {PASSIVE_EFFECT_TYPE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -1209,6 +1329,7 @@ const CardLibrary = () => {
             )}
 
             {/* Сортировка */}
+            {contentType !== 'resources' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Сортировка
@@ -1228,6 +1349,7 @@ const CardLibrary = () => {
                 <option value="price_desc">По стоимости (дорогие)</option>
               </select>
             </div>
+            )}
           </div>
         )}
       </div>
@@ -1279,6 +1401,15 @@ const CardLibrary = () => {
           <p className="text-gray-500 text-lg">Заклинания не найдены</p>
           <Link to="/spell-creator" className="btn-primary mt-4 inline-block">
             Создать первое заклинание
+          </Link>
+        </div>
+      )}
+
+      {!loading && contentType === 'resources' && resources.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Ресурсы не найдены</p>
+          <Link to="/resource-creator" className="btn-primary mt-4 inline-block">
+            Создать первый ресурс
           </Link>
         </div>
       )}
@@ -1698,6 +1829,112 @@ const CardLibrary = () => {
         </>
       )}
 
+      {/* ── Ресурсы ── */}
+      {!loading && contentType === 'resources' && resources.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {resources.length} из {totalCards} ресурсов
+          </div>
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {resources.map((resource) => (
+                <div
+                  key={resource.resource_id}
+                  className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-slate-50 p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-14 h-14 rounded-lg border border-blue-100 bg-white flex items-center justify-center overflow-hidden">
+                      <img
+                        src={resource.image_url || resourceIcon(resourceOptions, resource.resource_id)}
+                        alt={resource.name}
+                        className="w-10 h-10 object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/charges/main_action.png'; }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-gray-900 truncate">{resource.name}</div>
+                      <div className="text-xs font-mono text-gray-500 truncate">{resource.resource_id}</div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <span className="rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs">
+                          {getResourceCategoryLabel(resource.category)}
+                        </span>
+                        <span className="rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-xs">
+                          {getResourceRechargeLabel(resource.recharge)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {resource.description && (
+                    <p className="mt-3 text-sm text-gray-600 line-clamp-3">{resource.description}</p>
+                  )}
+                  <div className="mt-4 flex items-center justify-between border-t border-blue-100 pt-3">
+                    <Link
+                      to={`/resource-creator?edit=${resource.resource_id}`}
+                      className="text-sm font-medium text-blue-700 hover:text-blue-900"
+                    >
+                      Редактировать
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteResource(resource.resource_id)}
+                      className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
+                    >
+                      <Trash2 size={14} />
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {resources.map((resource) => (
+                <div
+                  key={resource.resource_id}
+                  className="w-full p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
+                      <img
+                        src={resource.image_url || resourceIcon(resourceOptions, resource.resource_id)}
+                        alt={resource.name}
+                        className="w-9 h-9 object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/charges/main_action.png'; }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate text-gray-900">{resource.name}</div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {resource.resource_id} · {getResourceCategoryLabel(resource.category)}
+                      </div>
+                      <div className="text-xs text-gray-400 truncate">
+                        {getResourceRechargeLabel(resource.recharge)}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Link
+                        to={`/resource-creator?edit=${resource.resource_id}`}
+                        className="text-xs font-medium text-blue-700 hover:text-blue-900"
+                      >
+                        Редактировать
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteResource(resource.resource_id)}
+                        className="text-xs text-red-600 hover:text-red-800"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
       {/* ── Черты ── */}
       {!loading && contentType === 'feats' && feats.length === 0 && (
         <div className="text-center py-12 text-gray-500">Черты не найдены</div>
@@ -1917,7 +2154,6 @@ const CardLibrary = () => {
         effect={selectedEffect}
         isOpen={isEffectModalOpen}
         onClose={handleCloseEffectModal}
-        onEdit={handleEditEffect}
         onDelete={handleDeleteEffect}
       />
 
@@ -1926,7 +2162,6 @@ const CardLibrary = () => {
         action={selectedAction}
         isOpen={isActionModalOpen}
         onClose={handleCloseActionModal}
-        onEdit={handleEditAction}
         onDelete={handleDeleteAction}
       />
 

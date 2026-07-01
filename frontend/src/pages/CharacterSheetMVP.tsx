@@ -12,16 +12,29 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
-import { getSpellLevelLabel } from '../types';
+import { getSpellLevelLabel, type Spell } from '../types';
+import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import SpellPreview from '../components/SpellPreview';
 import './CharacterForge.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
+const originLabel = (kind: string) => {
+  switch (kind) {
+    case 'race': return 'Способность вида';
+    case 'class': return 'Способность класса';
+    case 'feat': return 'Способность черты';
+    case 'background': return 'Способность предыстории';
+    default: return 'Способность';
+  }
+};
 
 const CharacterSheetMVP = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
+  const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
+  const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -217,29 +230,33 @@ const CharacterSheetMVP = () => {
             {assembled.effects.length > 0 && (
               <div className="sheet-group">
                 <h3 className="sheet-h3">Эффекты</h3>
-                <ul className="sheet-abilities-list">
+                <div className="sheet-ability-lines">
                   {assembled.effects.map(({ effect, origin }) => (
-                    <li key={effect.id}>
-                      <strong>{effect.name}</strong>
-                      <span className="sheet-origin">{origin.name}</span>
-                      {effect.description && <p>{effect.description}</p>}
-                    </li>
+                    <ForgeAbilityLine
+                      key={effect.id}
+                      name={effect.name}
+                      imageUrl={effect.image_url}
+                      sourceLabel={`${originLabel(origin.kind)} · ${origin.name}`}
+                      effect={effect}
+                    />
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {assembled.actions.length > 0 && (
               <div className="sheet-group">
                 <h3 className="sheet-h3">Действия</h3>
-                <ul className="sheet-abilities-list">
+                <div className="sheet-ability-lines">
                   {assembled.actions.map(({ action, origin }) => (
-                    <li key={action.id}>
-                      <strong>{action.name}</strong>
-                      <span className="sheet-origin">{origin.name}</span>
-                      {action.description && <p>{action.description}</p>}
-                    </li>
+                    <ForgeAbilityLine
+                      key={action.id}
+                      name={action.name}
+                      imageUrl={action.image_url}
+                      sourceLabel={`${originLabel(origin.kind)} · ${origin.name}`}
+                      action={action}
+                    />
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {assembled.feats.length === 0 && assembled.effects.length === 0 && assembled.actions.length === 0 && (
@@ -284,11 +301,44 @@ const CharacterSheetMVP = () => {
               {spellsByLevel.map(([level, spellList]) => (
                 <div key={level} className="sheet-group">
                   <h3 className="sheet-h3">{getSpellLevelLabel(level)}</h3>
-                  <ul className="sheet-tags">
-                    {spellList.map((s) => <li key={s.id}>{s.name}</li>)}
-                  </ul>
+                  <div className="forge-spell-icon-grid sheet-spell-grid">
+                    {spellList.map((spell) => (
+                      <button
+                        key={spell.id}
+                        type="button"
+                        className="forge-spell-icon ready"
+                        title={spell.name}
+                        onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
+                        onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
+                        onMouseLeave={() => setHoveredSpell(null)}
+                      >
+                        {spell.image_url ? (
+                          <img
+                            src={spell.image_url}
+                            alt={spell.name}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }}
+                          />
+                        ) : (
+                          <span className="sheet-spell-fallback">{spell.name.slice(0, 1)}</span>
+                        )}
+                        <span className="forge-spell-badge">{level === 0 ? 'З' : level}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
+              {hoveredSpell && (
+                <div
+                  className="fixed z-50 pointer-events-none"
+                  style={{
+                    left: Math.min(spellMouse.x + 16, window.innerWidth - 360),
+                    top: Math.min(Math.max(spellMouse.y - 40, 10), window.innerHeight - 20),
+                    transform: spellMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+                  }}
+                >
+                  <SpellPreview spell={hoveredSpell} disableHover={true} />
+                </div>
+              )}
             </section>
           )}
         </div>

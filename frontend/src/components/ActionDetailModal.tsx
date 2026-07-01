@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
@@ -9,7 +10,6 @@ interface ActionDetailModalProps {
   action: Action | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (actionId: string) => void;
   onDelete: (actionId: string) => void;
 }
 
@@ -17,7 +17,6 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
   action,
   isOpen,
   onClose,
-  onEdit,
   onDelete,
 }) => {
   const resources = useResourceOptions();
@@ -171,13 +170,13 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
 
           {/* Кнопки действий */}
           <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-200">
-            <button
-              onClick={() => onEdit(action.id)}
+            <Link
+              to={`/action-creator?edit=${action.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
             >
               <Edit size={18} />
               <span>Редактировать</span>
-            </button>
+            </Link>
             <button
               onClick={() => onDelete(action.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2"

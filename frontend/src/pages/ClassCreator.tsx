@@ -149,7 +149,7 @@ const ClassCreator = () => {
       } else {
         await classesApi.createClass({ ...payload, card_number: data.card_number || undefined });
       }
-      navigate('/');
+      navigate('/?type=classes');
     } catch (err: any) {
       setError(err.message || 'Ошибка сохранения класса');
       setLoading(false);
@@ -170,7 +170,7 @@ const ClassCreator = () => {
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <button onClick={() => navigate('/create')} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+          <button onClick={() => navigate('/?type=classes')} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
             <ArrowLeft size={18} /><span className="text-sm sm:text-base">Назад</span>
           </button>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
@@ -285,7 +285,7 @@ const ClassCreator = () => {
                   <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400">
                     {loading ? 'Сохранение...' : isEditMode ? 'Сохранить изменения' : 'Создать класс'}
                   </button>
-                  <button type="button" onClick={() => navigate('/create')} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <button type="button" onClick={() => navigate('/?type=classes')} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                     Отмена
                   </button>
                 </div>

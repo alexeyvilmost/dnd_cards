@@ -278,8 +278,29 @@ func GetAllMigrations() []Migration {
 			Up:          createResourcesTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS resources CASCADE"); return err },
 		},
+		{
+			Version:     "046_expand_effect_types",
+			Description: "Allow semantic effect type categories",
+			Up:          expandEffectTypes,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+const effectTypeCheckValues = "'passive', 'conditional', 'triggered', 'species_ability', 'class_ability', 'feat_ability', 'item_effect', 'spell_effect', 'negative_effect', 'positive_effect'"
+
+func expandEffectTypes(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE effects DROP CONSTRAINT IF EXISTS effects_effect_type_check",
+		fmt.Sprintf("ALTER TABLE effects ADD CONSTRAINT effects_effect_type_check CHECK (effect_type IN (%s))", effectTypeCheckValues),
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("expandEffectTypes: %w", err)
+		}
+	}
+	return nil
 }
 
 func createResourcesTable(db *sql.DB) error {
@@ -1571,7 +1592,7 @@ func createEffectsTable(db *sql.DB) error {
 			image_generation_prompt TEXT,
 			rarity VARCHAR(50) NOT NULL DEFAULT 'common',
 			card_number VARCHAR(50) UNIQUE NOT NULL,
-			effect_type VARCHAR(50) NOT NULL CHECK (effect_type IN ('passive', 'conditional', 'triggered')),
+			effect_type VARCHAR(50) NOT NULL CHECK (effect_type IN ('passive', 'conditional', 'triggered', 'species_ability', 'class_ability', 'feat_ability', 'item_effect', 'spell_effect', 'negative_effect', 'positive_effect')),
 			condition_description TEXT,
 			script JSONB,
 			type VARCHAR(50),

@@ -1260,16 +1260,19 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	})
 }
 
-// GetEffect - получение эффекта по ID
+// GetEffect - получение эффекта по ID (UUID) или card_number
 func (ec *EffectController) GetEffect(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID эффекта"})
-		return
-	}
+	idParam := c.Param("id")
 
 	var effect Effect
-	if err := ec.db.Where("id = ?", id).First(&effect).Error; err != nil {
+	var err error
+	if id, uuidErr := uuid.Parse(idParam); uuidErr == nil {
+		err = ec.db.Where("id = ?", id).First(&effect).Error
+	} else {
+		err = ec.db.Where("card_number = ?", idParam).First(&effect).Error
+	}
+
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Эффект не найден"})
 			return

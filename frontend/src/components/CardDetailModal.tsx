@@ -33,7 +33,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   card,
   isOpen,
   onClose,
-  onEdit,
   onDelete,
   inventoryItem,
   onEquip
@@ -432,7 +431,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             <Link
               to={`/edit/${card.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
-              onClick={() => onEdit?.(card.id)}
             >
               <Edit size={18} />
               <span>Изменить</span>

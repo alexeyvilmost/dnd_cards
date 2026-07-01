@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { resourcesApi } from '../api/client';
 import type { CreateResourceRequest, ResourceDefinition } from '../types';
@@ -25,6 +25,8 @@ const ResourceCreator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+  const returnTo = searchParams.get('returnTo');
+  const returnPath = returnTo === 'action-creator' ? '/action-creator' : '/?type=resources';
   const isEditMode = Boolean(editId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,7 @@ const ResourceCreator = () => {
       } else {
         await resourcesApi.createResource(payload);
       }
-      navigate('/action-creator');
+      navigate(returnPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка сохранения ресурса');
     } finally {
@@ -164,7 +166,7 @@ const ResourceCreator = () => {
           <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400">
             {loading ? 'Сохранение...' : 'Сохранить ресурс'}
           </button>
-          <button type="button" onClick={() => navigate('/action-creator')} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <button type="button" onClick={() => navigate(returnPath)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
             Отмена
           </button>
         </div>
@@ -183,9 +185,9 @@ const ResourceCreator = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => navigate(`/resource-creator?edit=${resource.resource_id}`)} className="text-sm text-blue-600 hover:text-blue-800">
+                <Link to={`/resource-creator?edit=${resource.resource_id}`} className="text-sm text-blue-600 hover:text-blue-800">
                   Редактировать
-                </button>
+                </Link>
                 <button type="button" onClick={() => deleteResource(resource.resource_id)} className="text-sm text-red-600 hover:text-red-800">
                   Удалить
                 </button>

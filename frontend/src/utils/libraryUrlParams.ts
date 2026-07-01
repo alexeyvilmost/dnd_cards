@@ -1,19 +1,21 @@
-export type LibraryContentType = 'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes';
+export type LibraryContentType = 'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes' | 'resources';
 export type LibraryViewMode = 'grid' | 'list';
 
 export interface LibraryFilters {
   contentType: LibraryContentType;
   search: string;
   rarity: string;
+  effectType: string;
   properties: string;
   templateType: string;
   slot: string;
   armorType: string;
+  resourceCategory: string;
   sortBy: string;
   viewMode: LibraryViewMode;
 }
 
-const FILTER_KEYS = ['type', 'q', 'rarity', 'properties', 'template', 'slot', 'armor', 'sort', 'view'] as const;
+const FILTER_KEYS = ['type', 'q', 'rarity', 'effect', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view'] as const;
 
 export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilters {
   const type = params.get('type');
@@ -21,15 +23,17 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
 
   return {
     contentType:
-      type === 'effects' || type === 'actions' || type === 'spells' || type === 'feats' || type === 'backgrounds' || type === 'races' || type === 'classes'
+      type === 'effects' || type === 'actions' || type === 'spells' || type === 'feats' || type === 'backgrounds' || type === 'races' || type === 'classes' || type === 'resources'
         ? type
         : 'cards',
     search: params.get('q') ?? '',
     rarity: params.get('rarity') ?? '',
+    effectType: params.get('effect') ?? '',
     properties: params.get('properties') ?? '',
     templateType: params.get('template') ?? 'cards',
     slot: params.get('slot') ?? '',
     armorType: params.get('armor') ?? '',
+    resourceCategory: params.get('resource') ?? '',
     sortBy: params.get('sort') ?? 'created_desc',
     viewMode: view === 'grid' ? 'grid' : 'list',
   };
@@ -54,6 +58,9 @@ export function buildLibrarySearchParams(
   if (filters.rarity) {
     params.set('rarity', filters.rarity);
   }
+  if (filters.effectType) {
+    params.set('effect', filters.effectType);
+  }
   if (filters.properties) {
     params.set('properties', filters.properties);
   }
@@ -65,6 +72,9 @@ export function buildLibrarySearchParams(
   }
   if (filters.armorType) {
     params.set('armor', filters.armorType);
+  }
+  if (filters.resourceCategory) {
+    params.set('resource', filters.resourceCategory);
   }
   if (filters.sortBy && filters.sortBy !== 'created_desc') {
     params.set('sort', filters.sortBy);

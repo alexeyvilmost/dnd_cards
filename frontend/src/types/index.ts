@@ -809,8 +809,18 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'item_property', label: 'Свойство предмета' },
 ] as const;
 
-// Типы для пассивных эффектов
-export type PassiveEffectType = 'passive' | 'conditional' | 'triggered';
+// Типы для эффектов
+export type PassiveEffectType =
+  | 'passive'
+  | 'conditional'
+  | 'triggered'
+  | 'species_ability'
+  | 'class_ability'
+  | 'feat_ability'
+  | 'item_effect'
+  | 'spell_effect'
+  | 'negative_effect'
+  | 'positive_effect';
 
 export interface PassiveEffect {
   id: string;
@@ -915,6 +925,13 @@ export const PASSIVE_EFFECT_TYPE_OPTIONS = [
   { value: 'passive', label: 'Пассивный' },
   { value: 'conditional', label: 'Условный' },
   { value: 'triggered', label: 'Срабатывающий' },
+  { value: 'species_ability', label: 'Способность вида' },
+  { value: 'class_ability', label: 'Способность класса' },
+  { value: 'feat_ability', label: 'Способность черты' },
+  { value: 'item_effect', label: 'Эффект предмета' },
+  { value: 'spell_effect', label: 'Эффект заклинания' },
+  { value: 'negative_effect', label: 'Отрицательный эффект' },
+  { value: 'positive_effect', label: 'Положительный эффект' },
 ] as const;
 
 // ─── Заклинания ───────────────────────────────────────────────────────────────

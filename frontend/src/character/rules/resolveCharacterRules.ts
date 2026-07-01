@@ -206,8 +206,9 @@ function applyPayload(
   conflicts: RuleConflict[],
 ) {
   if (payload.kind === 'choice') {
-    const choiceId = choiceInstanceId(source, String(payload.id || 'choice'));
-    const selected = input.draft.resolvedChoices[choiceId] || [];
+    const rawChoiceId = String(payload.id || 'choice');
+    const choiceId = choiceInstanceId(source, rawChoiceId);
+    const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
     for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
       const grant = grantFromPayload(selectedPayload, source, choiceId);
       if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts);

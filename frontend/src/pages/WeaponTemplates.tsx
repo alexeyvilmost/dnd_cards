@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Grid3X3, List, Edit, Trash2 } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { Card } from '../types';
@@ -62,10 +62,6 @@ const WeaponTemplates: React.FC = () => {
   const handleTemplateSelect = (template: Card) => {
     // Передаем только ID шаблона, остальную информацию загрузим с бэкенда
     navigate(`/card-creator?template_id=${template.id}`);
-  };
-
-  const handleTemplateEdit = (template: Card) => {
-    navigate(`/edit/${template.id}`);
   };
 
   const handleTemplateDelete = async (template: Card) => {
@@ -198,16 +194,16 @@ const WeaponTemplates: React.FC = () => {
                 
                 {/* Кнопки редактирования и удаления шаблона */}
                 <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                  <button
+                  <Link
+                    to={`/edit/${template.id}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleTemplateEdit(template);
                     }}
                     className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
                     title="Редактировать шаблон"
                   >
                     <Edit size={14} />
-                  </button>
+                  </Link>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -305,16 +301,16 @@ const WeaponTemplates: React.FC = () => {
                   
                   {/* Кнопки редактирования и удаления шаблона */}
                   <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <button
+                    <Link
+                      to={`/edit/${template.id}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleTemplateEdit(template);
                       }}
                       className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
                       title="Редактировать шаблон"
                     >
                       <Edit size={14} />
-                    </button>
+                    </Link>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
@@ -8,7 +9,6 @@ interface EffectDetailModalProps {
   effect: PassiveEffect | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (effectId: string) => void;
   onDelete: (effectId: string) => void;
 }
 
@@ -16,7 +16,6 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
   effect,
   isOpen,
   onClose,
-  onEdit,
   onDelete,
 }) => {
   // Обработчик для закрытия по Esc
@@ -128,13 +127,13 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
 
           {/* Кнопки действий */}
           <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-200">
-            <button
-              onClick={() => onEdit(effect.id)}
+            <Link
+              to={`/effect-creator?edit=${effect.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
             >
               <Edit size={18} />
               <span>Редактировать</span>
-            </button>
+            </Link>
             <button
               onClick={() => onDelete(effect.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2"
