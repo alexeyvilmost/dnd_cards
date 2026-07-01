@@ -1,14 +1,11 @@
 import type { Action } from '../../types';
-import { ACTION_TYPE_OPTIONS } from '../../types';
 
 type ActionHoverCardProps = {
   action: Action;
+  sourceLabel?: string;
 };
 
-const actionTypeLabel = (t: string) =>
-  ACTION_TYPE_OPTIONS.find((o) => o.value === t)?.label || t;
-
-const ActionHoverCard = ({ action }: ActionHoverCardProps) => (
+const ActionHoverCard = ({ action, sourceLabel }: ActionHoverCardProps) => (
   <div className="forge-effect-card">
     {action.image_url?.trim() && (
       <div className="forge-effect-card-art">
@@ -17,7 +14,7 @@ const ActionHoverCard = ({ action }: ActionHoverCardProps) => (
     )}
     <div className="forge-effect-card-body">
       <div className="forge-effect-card-title">{action.name}</div>
-      <div className="forge-effect-card-type">{actionTypeLabel(action.action_type)}</div>
+      <div className="forge-effect-card-type">{sourceLabel || 'Действие персонажа'}</div>
       <p className="forge-effect-card-desc">{action.description}</p>
     </div>
   </div>

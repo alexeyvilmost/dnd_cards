@@ -8,11 +8,12 @@ type ForgeAbilityLineProps = {
   name: string;
   imageUrl?: string | null;
   fallbackImageUrl?: string | null;
+  sourceLabel?: string;
   effect?: PassiveEffect;
   action?: Action;
 };
 
-const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, effect, action }: ForgeAbilityLineProps) => {
+const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, effect, action }: ForgeAbilityLineProps) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const iconUrl = imageUrl?.trim() || fallbackImageUrl?.trim() || null;
@@ -41,8 +42,8 @@ const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, effect, action }: 
             top: Math.min(pos.y + 8, window.innerHeight - 180),
           }}
         >
-          {effect && <EffectHoverCard effect={effect} />}
-          {action && <ActionHoverCard action={action} />}
+          {effect && <EffectHoverCard effect={effect} sourceLabel={sourceLabel} />}
+          {action && <ActionHoverCard action={action} sourceLabel={sourceLabel} />}
         </div>
       )}
     </>

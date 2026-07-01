@@ -14,6 +14,7 @@ export type RuleSourceType =
   | 'other';
 
 export type ProficiencyKind = 'skill' | 'saving_throw' | 'tool' | 'language' | 'weapon' | 'armor';
+export type GrantKind = ProficiencyKind | ExpertiseKind | 'spell';
 export type ExpertiseKind = 'skill' | 'tool';
 export type GrantMode = 'proficiency' | 'expertise';
 
@@ -26,10 +27,11 @@ export interface RuleSource {
 export interface AppliedGrant {
   id: string;
   source: RuleSource;
-  kind: ProficiencyKind | ExpertiseKind;
+  kind: GrantKind;
   value: string;
   mode: GrantMode;
   choiceId?: string;
+  label?: string;
 }
 
 export interface RuleConflict {
@@ -70,6 +72,11 @@ export interface CharacterRuleState {
   expertise: {
     skills: string[];
     tools: string[];
+  };
+  spells: {
+    known: string[];
+    cantrips: string[];
+    leveled: string[];
   };
   skillBonuses: Record<string, number>;
   savingThrowBonuses: Record<AbilityKey, number>;

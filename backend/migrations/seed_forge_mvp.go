@@ -129,9 +129,29 @@ func seedForgeMVPContent(db *sql.DB) error {
 	}`
 	spellcastingMech := `{
 		"activation": {"mode": "passive"},
-		"effects": [{"resolution": "auto", "result": [
-			{"kind": "narrative", "description": "Подготовка заклинаний из книги заклинаний. INT — характеристика заклинаний."}
-		]}]
+		"effects": [
+			{"resolution": "auto", "result": [
+				{"kind": "narrative", "description": "Подготовка заклинаний из книги заклинаний. INT — характеристика заклинаний."}
+			]},
+			{
+				"kind": "choice",
+				"id": "wizard_cantrips",
+				"prompt": "Выберите 3 заговора волшебника",
+				"count": 3,
+				"options": {"source": "spell", "filter": {"classes": ["wizard"], "levels": [0]}},
+				"grant": {"kind": "grant_spell", "label": "cantrip"},
+				"resolution": "on_acquire"
+			},
+			{
+				"kind": "choice",
+				"id": "wizard_spellbook_level_1",
+				"prompt": "Выберите 6 заклинаний 1 уровня в книгу заклинаний",
+				"count": 6,
+				"options": {"source": "spell", "filter": {"classes": ["wizard"], "levels": [1]}},
+				"grant": {"kind": "grant_spell", "label": "spellbook"},
+				"resolution": "on_acquire"
+			}
+		]
 	}`
 	arcaneRecoveryMech := `{
 		"activation": {"mode": "triggered", "trigger": {"event": "short_rest", "timing": "during"}},

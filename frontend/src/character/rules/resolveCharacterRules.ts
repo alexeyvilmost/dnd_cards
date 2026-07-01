@@ -24,6 +24,7 @@ const emptySetMap = () => ({
   language: new Map<string, AppliedGrant>(),
   weapon: new Map<string, AppliedGrant>(),
   armor: new Map<string, AppliedGrant>(),
+  spell: new Map<string, AppliedGrant>(),
 });
 
 const sourceFromOrigin = (origin: { kind: string; id: string; name: string }, feature?: { id: string; name: string }): RuleSource => ({
@@ -37,7 +38,7 @@ const choiceInstanceId = (source: RuleSource, rawChoiceId: string) => `${source.
 const grantId = (grant: Omit<AppliedGrant, 'id'>) =>
   `${grant.source.type}:${grant.source.id}:${grant.kind}:${grant.mode}:${grant.value}:${grant.choiceId || ''}`;
 
-const normalizedValue = (kind: ProficiencyKind | 'skill' | 'tool', value: string) =>
+const normalizedValue = (kind: AppliedGrant['kind'], value: string) =>
   kind === 'skill' ? normalizeSkillId(value) : value;
 
 function payloadsFromMechanics(mechanics: Record<string, unknown> | null | undefined): Dict[] {
@@ -116,6 +117,14 @@ function addGrant(
     return;
   }
 
+  if (full.kind === 'spell') {
+    if (!maps.spell.has(value)) {
+      maps.spell.set(value, full);
+      appliedGrants.push(full);
+    }
+    return;
+  }
+
   const existing = maps[full.kind].get(value);
   if (existing && (existing.source.id !== full.source.id || existing.choiceId !== full.choiceId)) {
     conflicts.push({
@@ -150,6 +159,19 @@ function grantFromPayload(payload: Dict, source: RuleSource, choiceId?: string):
     const value = payload.value;
     if (!value) return null;
     return { source, kind: prof, value: String(value), mode: 'expertise', choiceId };
+  }
+
+  if (kind === 'grant_spell') {
+    const value = payload.value;
+    if (!value) return null;
+    return {
+      source,
+      kind: 'spell',
+      value: String(value),
+      mode: 'proficiency',
+      choiceId,
+      label: typeof payload.label === 'string' ? payload.label : undefined,
+    };
   }
 
   if (kind !== 'grant_proficiency') return null;
@@ -284,6 +306,11 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
       skills: [...expertise.skill.keys()],
       tools: [...expertise.tool.keys()],
     },
+    spells: {
+      known: [...maps.spell.keys()],
+      cantrips: [...maps.spell.values()].filter((g) => g.label === 'cantrip').map((g) => g.value),
+      leveled: [...maps.spell.values()].filter((g) => g.label !== 'cantrip').map((g) => g.value),
+    },
     skillBonuses,
     savingThrowBonuses,
     maxHP,
@@ -300,4 +327,32 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 export function getSkillGrantSource(ruleState: CharacterRuleState, skill: string): AppliedGrant | undefined {
   const id = normalizeSkillId(skill);
   return ruleState.appliedGrants.find((grant) => grant.kind === 'skill' && grant.mode === 'proficiency' && grant.value === id);
+}
+
+export function ruleSourceTypeLabel(source: RuleSource): string {
+  switch (source.type) {
+    case 'species':
+      return 'вид';
+    case 'class':
+      return 'класс';
+    case 'background':
+      return 'предыстория';
+    case 'feat':
+      return 'черта';
+    case 'item':
+      return 'предмет';
+    case 'temporary_effect':
+      return 'временный эффект';
+    case 'condition':
+      return 'состояние';
+    case 'action_result':
+      return 'действие';
+    default:
+      return 'источник';
+  }
+}
+
+export function grantReason(grant: AppliedGrant | undefined): string {
+  if (!grant) return '';
+  return `Получено: ${ruleSourceTypeLabel(grant.source)} · ${grant.source.name}`;
 }

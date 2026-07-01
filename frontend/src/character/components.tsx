@@ -222,6 +222,7 @@ export function SummaryPanel({
             name={e.effect.name}
             imageUrl={e.effect.image_url}
             fallbackImageUrl={race?.image_url}
+            sourceLabel={`Способность вида · ${e.origin.name}`}
             effect={e.effect}
           />
         ))}
@@ -231,6 +232,7 @@ export function SummaryPanel({
             name={a.action.name}
             imageUrl={a.action.image_url}
             fallbackImageUrl={race?.image_url}
+            sourceLabel={`Действие вида · ${a.origin.name}`}
             action={a.action}
           />
         ))}
@@ -254,6 +256,7 @@ export function SummaryPanel({
             name={e.effect.name}
             imageUrl={e.effect.image_url}
             fallbackImageUrl={klass?.image_url}
+            sourceLabel={`Способность класса · ${e.origin.name}`}
             effect={e.effect}
           />
         ))}
@@ -263,6 +266,7 @@ export function SummaryPanel({
             name={a.action.name}
             imageUrl={a.action.image_url}
             fallbackImageUrl={klass?.image_url}
+            sourceLabel={`Действие класса · ${a.origin.name}`}
             action={a.action}
           />
         ))}
@@ -293,6 +297,7 @@ export function SummaryPanel({
                 name={e.effect.name}
                 imageUrl={e.effect.image_url}
                 fallbackImageUrl={f.image_url}
+                sourceLabel={`Способность черты · ${e.origin.name}`}
                 effect={e.effect}
               />
             ))}
@@ -302,6 +307,7 @@ export function SummaryPanel({
                 name={a.action.name}
                 imageUrl={a.action.image_url}
                 fallbackImageUrl={f.image_url}
+                sourceLabel={`Действие черты · ${a.origin.name}`}
                 action={a.action}
               />
             ))}

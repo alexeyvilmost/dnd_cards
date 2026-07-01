@@ -9,10 +9,11 @@ import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from
 import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, ABILITY_LABEL_RU, type CharacterDraft, type AbilityKey } from '../character/types';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
-import { getSkillGrantSource, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
+import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
+import SpellPreview from '../components/SpellPreview';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { abilityMod } from '../character/derive';
@@ -91,19 +92,37 @@ const CharacterForge = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refsKey]);
 
-  const selectedSpells = useMemo(
+  const persistedSpells = useMemo(
     () => spells.filter((s) => draft.spellIds.includes(s.id)),
     [spells, draft.spellIds],
   );
 
   const assembled: AssembledCharacter = useMemo(
-    () => assemble({ ...(bundle ?? EMPTY_BUNDLE), spells: selectedSpells }, draft),
-    [bundle, selectedSpells, draft],
+    () => assemble({ ...(bundle ?? EMPTY_BUNDLE), spells: persistedSpells }, draft),
+    [bundle, persistedSpells, draft],
   );
   const ruleState = useMemo(
     () => resolveCharacterRules({ draft, assembled }),
     [draft, assembled],
   );
+  const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell');
+  const selectedSpellIds = useMemo(
+    () => [...new Set([...draft.spellIds, ...ruleState.spells.known])],
+    [draft.spellIds, ruleState.spells.known],
+  );
+  const selectedSpells = useMemo(
+    () => spells.filter((s) => selectedSpellIds.includes(s.id)),
+    [spells, selectedSpellIds],
+  );
+  const selectedSpellCount = useMemo(
+    () => spellChoices.reduce((sum, pc) => sum + (draft.resolvedChoices[pc.id]?.length ?? 0), 0),
+    [spellChoices, draft.resolvedChoices],
+  );
+  const requiredSpellCount = useMemo(
+    () => spellChoices.reduce((sum, pc) => sum + pc.count, 0),
+    [spellChoices],
+  );
+  const spellsDone = spellChoices.length === 0 || selectedSpellCount >= requiredSpellCount;
 
   // Синхронизация lineage_id из subfeature-выбора вида
   const subfeatureChoice = useMemo(
@@ -144,8 +163,6 @@ const CharacterForge = () => {
   }, []);
   const toggleFeat = (fid: string) =>
     patch({ featIds: draft.featIds.includes(fid) ? draft.featIds.filter((x) => x !== fid) : [...draft.featIds, fid] });
-  const toggleSpell = (sid: string) =>
-    patch({ spellIds: draft.spellIds.includes(sid) ? draft.spellIds.filter((x) => x !== sid) : [...draft.spellIds, sid] });
   const selectClass = (cid: string) => patch({ classId: cid, classSkillChoices: [] });
   const toggleClassSkill = (skill: string) => {
     const sc = classSkillChoice(assembled);
@@ -180,9 +197,9 @@ const CharacterForge = () => {
   };
 
   // Разделы навигации со статусами
-  const raceChoicesRace = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'race');
-  const classChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'class');
-  const featChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'feat');
+  const raceChoicesRace = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'race' && pc.source !== 'spell');
+  const classChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'class' && pc.source !== 'spell');
+  const featChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'feat' && pc.source !== 'spell');
   const abilitiesDone = ABILITY_KEYS.every((k) => typeof draft.abilities[k] === 'number');
   const sc = classSkillChoice(assembled);
   const classDone = !!draft.classId && (!sc || draft.classSkillChoices.length >= sc.count)
@@ -197,7 +214,7 @@ const CharacterForge = () => {
     { id: 'feat', label: 'Черта', icon: <Star size={20} />, sub: assembled.feats[0]?.name, status: featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count) ? 'ok' : 'todo' },
     { id: 'abilities', label: 'Хар-тики', icon: <Zap size={20} />, status: abilitiesDone ? 'ok' : 'todo' },
     { id: 'proficiencies', label: 'Владения', icon: <ListChecks size={20} /> },
-    { id: 'spells', label: 'Заклинания', icon: <Sparkles size={20} />, sub: draft.spellIds.length ? String(draft.spellIds.length) : undefined },
+    { id: 'spells', label: 'Заклинания', icon: <Sparkles size={20} />, sub: selectedSpellCount ? `${selectedSpellCount}/${requiredSpellCount}` : undefined, status: spellChoices.length ? (spellsDone ? 'ok' : 'todo') : null },
   ];
 
   const sectionTitle = sections.find((s) => s.id === active)?.label ?? 'Основное';
@@ -249,7 +266,12 @@ const CharacterForge = () => {
               )}
               {active === 'proficiencies' && <ProficienciesSection draft={draft} assembled={assembled} ruleState={ruleState} />}
               {active === 'spells' && (
-                <SpellsSection spells={spells} selected={draft.spellIds} onToggle={toggleSpell} />
+                <SpellsSection
+                  spells={spells}
+                  choices={spellChoices}
+                  resolved={draft.resolvedChoices}
+                  setResolved={setResolved}
+                />
               )}
             </div>
           </div>
@@ -311,7 +333,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState }: {
           ? Object.fromEntries(SKILLS.map((skill) => {
             const existing = getSkillGrantSource(ruleState, skill.id);
             const unavailable = !!existing && !value.includes(skill.id);
-            return [skill.id, unavailable ? `Уже есть: ${existing.source.name}` : undefined];
+            return [skill.id, unavailable ? grantReason(existing) : undefined];
           }).filter(([, reason]) => !!reason)) as Record<string, string>
           : undefined;
         return (
@@ -385,11 +407,12 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
               const selected = draft.classSkillChoices.includes(skill);
               const existing = getSkillGrantSource(ruleState, skill);
               const disabled = !!existing && !selected;
+              const reason = grantReason(existing);
               return (
                 <button key={skill} type="button"
                   className={`chip ${selected ? 'on' : ''}`}
                   disabled={disabled}
-                  title={disabled ? `Уже есть: ${existing.source.name}` : undefined}
+                  title={disabled ? reason : undefined}
                   onClick={() => onToggleSkill(skill)}>
                   {labelOf(SKILLS, skill)}
                 </button>
@@ -487,34 +510,115 @@ function ProficienciesSection({ draft, assembled, ruleState }: { draft: Characte
   );
 }
 
-function SpellsSection({ spells, selected, onToggle }: { spells: Spell[]; selected: string[]; onToggle: (id: string) => void }) {
+function spellMatchesChoice(spell: Spell, choice: PendingChoice): boolean {
+  const options = (choice.options || {}) as Record<string, unknown>;
+  const filter = (options.filter || choice.filter || {}) as Record<string, unknown> | string | string[];
+  if (Array.isArray(filter)) return filter.includes(spell.id);
+  if (typeof filter === 'string') {
+    if (filter === 'all') return true;
+    if (filter === 'cantrip') return spell.level === 0;
+    return spell.id === filter;
+  }
+
+  const levels = Array.isArray(filter.levels)
+    ? filter.levels.map(Number)
+    : typeof filter.level === 'number'
+      ? [filter.level]
+      : [];
+  if (levels.length && !levels.includes(spell.level)) return false;
+
+  const classes = Array.isArray(filter.classes)
+    ? filter.classes.map(String)
+    : typeof filter.class === 'string'
+      ? [filter.class]
+      : [];
+  if (classes.length) {
+    const spellClasses = spell.classes || [];
+    if (!classes.some((klass) => spellClasses.includes(klass))) return false;
+  }
+
+  return true;
+}
+
+function SpellsSection({ spells, choices, resolved, setResolved }: {
+  spells: Spell[];
+  choices: PendingChoice[];
+  resolved: Record<string, string[]>;
+  setResolved: (id: string, v: string[]) => void;
+}) {
   const [search, setSearch] = useState('');
-  const [level, setLevel] = useState<number | 'all'>('all');
-  const filtered = spells.filter((s) => {
-    if (level !== 'all' && s.level !== level) return false;
-    if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-  const levels = [...new Set(spells.map((s) => s.level))].sort((a, b) => a - b);
+  const [hovered, setHovered] = useState<Spell | null>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  const toggleChoiceSpell = (choice: PendingChoice, spellId: string) => {
+    const value = resolved[choice.id] || [];
+    if (value.includes(spellId)) {
+      setResolved(choice.id, value.filter((id) => id !== spellId));
+      return;
+    }
+    const next = value.length >= choice.count ? [...value.slice(1), spellId] : [...value, spellId];
+    setResolved(choice.id, next);
+  };
+
   return (
     <div>
-      <div className="forge-section-h">Заклинания и заговоры {selected.length ? `(выбрано ${selected.length})` : ''}</div>
+      <div className="forge-section-h">Заклинания и заговоры</div>
       <div className="spell-toolbar">
-        <input className="forge-input" style={{ maxWidth: 220 }} placeholder="Поиск…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className="forge-select" value={String(level)} onChange={(e) => setLevel(e.target.value === 'all' ? 'all' : Number(e.target.value))}>
-          <option value="all">Все уровни</option>
-          {levels.map((l) => <option key={l} value={l}>{getSpellLevelLabel(l)}</option>)}
-        </select>
+        <input className="forge-input" style={{ maxWidth: 260 }} placeholder="Поиск по доступным…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
-      <div className="spell-list">
-        {filtered.map((s) => (
-          <button key={s.id} type="button" className={`spell-item ${selected.includes(s.id) ? 'on' : ''}`} onClick={() => onToggle(s.id)}>
-            <span>{s.name}</span>
-            <span className="lvl">{getSpellLevelLabel(s.level)}</span>
-          </button>
-        ))}
-        {filtered.length === 0 && <p className="forge-note">Ничего не найдено.</p>}
-      </div>
+      {choices.length === 0 && <p className="forge-note">Этот персонаж пока не получил доступных заклинаний из эффектов класса, вида или черт.</p>}
+      {choices.map((choice) => {
+        const selected = resolved[choice.id] || [];
+        const filtered = spells
+          .filter((spell) => spellMatchesChoice(spell, choice))
+          .filter((spell) => !search || spell.name.toLowerCase().includes(search.toLowerCase()));
+        const done = selected.length >= choice.count;
+        return (
+          <div className="forge-block" key={choice.id}>
+            <div className="forge-section-h">{choice.prompt}</div>
+            <div className={`choice-count ${done ? 'done' : ''}`}>
+              Выбрано {selected.length} из {choice.count}
+            </div>
+            <div className="forge-spell-icon-grid">
+              {filtered.map((spell) => {
+                const isSelected = selected.includes(spell.id);
+                return (
+                  <button
+                    key={spell.id}
+                    type="button"
+                    className={`forge-spell-icon ${isSelected ? 'selected' : 'ready'}`}
+                    onClick={() => toggleChoiceSpell(choice, spell.id)}
+                    onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
+                    onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+                    onMouseLeave={() => setHovered(null)}
+                    title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                  >
+                    <img
+                      src={spell.image_url?.trim() || '/default_image.png'}
+                      alt={spell.name}
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
+                    />
+                    {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
+                  </button>
+                );
+              })}
+              {filtered.length === 0 && <p className="forge-note">Нет доступных заклинаний по этому фильтру.</p>}
+            </div>
+          </div>
+        );
+      })}
+      {hovered && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: Math.min(mouse.x + 16, window.innerWidth - 360),
+            top: Math.min(Math.max(mouse.y - 40, 10), window.innerHeight - 20),
+            transform: mouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+          }}
+        >
+          <SpellPreview spell={hovered} disableHover={true} />
+        </div>
+      )}
     </div>
   );
 }

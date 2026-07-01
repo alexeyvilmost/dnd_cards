@@ -4,7 +4,8 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
-import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
+import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
+import { abilityOfSkill } from '../character/rules/foundation';
 import {
   ABILITY_KEYS,
   ABILITY_LABEL_RU,
@@ -136,7 +137,7 @@ const CharacterSheetMVP = () => {
                 const score = scores[k] ?? 10;
                 const mod = ruleState.abilityMods[k];
                 return (
-                  <div key={k} className="sheet-ab">
+                  <div key={k} className="sheet-ab" title={`${ABILITY_LABEL_RU[k]}: значение ${score}, модификатор ${fmtMod(mod)}`}>
                     <div className="sheet-ab-label">{ABILITY_LABEL_RU[k]}</div>
                     <div className="sheet-ab-score">{score}</div>
                     <div className="sheet-ab-mod">{fmtMod(mod)}</div>
@@ -186,8 +187,15 @@ const CharacterSheetMVP = () => {
                 const proficient = skills.includes(skill.id);
                 const expert = ruleState.expertise.skills.includes(skill.id);
                 const bonus = ruleState.skillBonuses[skill.id];
+                const ability = abilityOfSkill(skill.id);
+                const grant = getSkillGrantSource(ruleState, skill.id);
+                const formula = [
+                  `${ABILITY_LABEL_RU[ability]} ${fmtMod(ruleState.abilityMods[ability])}`,
+                  proficient ? `владение ${fmtMod(pb)}${grant ? ` (${grantReason(grant)})` : ''}` : null,
+                  expert ? `экспертиза ${fmtMod(pb)}` : null,
+                ].filter(Boolean).join(' + ');
                 return (
-                  <li key={skill.id}>
+                  <li key={skill.id} title={`${fmtMod(bonus)} = ${formula}`}>
                     <span className={proficient ? 'sheet-prof' : ''}>{skill.label}{expert ? ' (эксп.)' : ''}</span>
                     <span>{fmtMod(bonus)}</span>
                   </li>

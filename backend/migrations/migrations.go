@@ -266,8 +266,53 @@ func GetAllMigrations() []Migration {
 			Up:          addCharacterRuleStateFields,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "044_wizard_spell_choices",
+			Description: "Make wizard spellcasting grant spell choices",
+			Up:          updateWizardSpellChoices,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// updateWizardSpellChoices переводит заклинания волшебника на rule-driven choices.
+func updateWizardSpellChoices(db *sql.DB) error {
+	spellcastingMech := `{
+		"activation": {"mode": "passive"},
+		"effects": [
+			{"resolution": "auto", "result": [
+				{"kind": "narrative", "description": "Подготовка заклинаний из книги заклинаний. INT — характеристика заклинаний."}
+			]},
+			{
+				"kind": "choice",
+				"id": "wizard_cantrips",
+				"prompt": "Выберите 3 заговора волшебника",
+				"count": 3,
+				"options": {"source": "spell", "filter": {"classes": ["wizard"], "levels": [0]}},
+				"grant": {"kind": "grant_spell", "label": "cantrip"},
+				"resolution": "on_acquire"
+			},
+			{
+				"kind": "choice",
+				"id": "wizard_spellbook_level_1",
+				"prompt": "Выберите 6 заклинаний 1 уровня в книгу заклинаний",
+				"count": 6,
+				"options": {"source": "spell", "filter": {"classes": ["wizard"], "levels": [1]}},
+				"grant": {"kind": "grant_spell", "label": "spellbook"},
+				"resolution": "on_acquire"
+			}
+		]
+	}`
+	_, err := db.Exec(`
+		UPDATE effects
+		SET mechanics = $1::jsonb, updated_at = NOW()
+		WHERE card_number = 'EFF-wizard-spellcasting' AND deleted_at IS NULL
+	`, spellcastingMech)
+	if err != nil {
+		return fmt.Errorf("updateWizardSpellChoices: %w", err)
+	}
+	return nil
 }
 
 // addCharacterRuleStateFields добавляет снимок резолюции правил и быстрые derived-поля.

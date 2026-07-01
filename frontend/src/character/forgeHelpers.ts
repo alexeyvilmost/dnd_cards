@@ -64,7 +64,7 @@ export function buildSavePayload(
     background_id: draft.backgroundId,
     level: draft.level,
     feat_ids: draft.featIds,
-    spell_ids: draft.spellIds,
+    spell_ids: ruleState.spells.known,
     abilities: draft.abilities,
     skill_proficiencies: ruleState.proficiencies.skills,
     skill_expertise: ruleState.expertise.skills,
