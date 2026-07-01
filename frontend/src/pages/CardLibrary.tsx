@@ -3,7 +3,7 @@ import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List } from
 import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS, ACTION_RESOURCE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
+import { RARITY_OPTIONS, PROPERTIES_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
@@ -20,6 +20,7 @@ import FeatDetailModal from '../components/FeatDetailModal';
 import BackgroundDetailModal from '../components/BackgroundDetailModal';
 import RaceDetailModal from '../components/RaceDetailModal';
 import ClassDetailModal from '../components/ClassDetailModal';
+import { resourceLabel, useResourceOptions } from '../utils/resources';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
@@ -33,6 +34,7 @@ import {
 const CardLibrary = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
+  const resourceOptions = useResourceOptions();
   const urlInitialized = useRef(false);
   const skipFilterUrlSync = useRef(false);
   const openingCardFromUrl = useRef(false);
@@ -850,8 +852,7 @@ const CardLibrary = () => {
 
   // Получение метки ресурса действия для отображения
   const getActionResourceLabel = (resource: string) => {
-    const option = ACTION_RESOURCE_OPTIONS.find(opt => opt.value === resource);
-    return option?.label || resource;
+    return resourceLabel(resourceOptions, resource);
   };
 
   // Функция для получения цвета полоски редкости
@@ -1548,7 +1549,7 @@ const CardLibrary = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {actions.map((action) => (
                 <div key={action.id} className="flex justify-center">
-                  <ActionPreview action={action} onClick={() => handleActionClick(action)} />
+                  <ActionPreview action={action} onClick={() => handleActionClick(action)} resources={resourceOptions} />
                 </div>
               ))}
             </div>

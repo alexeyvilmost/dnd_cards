@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { actionsApi } from '../api/client';
 import type { CreateActionRequest, UpdateActionRequest } from '../types';
 import { RARITY_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
-import { getAllCharges } from '../utils/charges';
+import { registryItems, useResourceOptions } from '../utils/resources';
 import ActionPreview from '../components/ActionPreview';
 import ImageUploader from '../components/ImageUploader';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
@@ -27,7 +27,8 @@ const ActionCreator = () => {
   const [idError, setIdError] = useState<string | null>(null);
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
 
-  const charges = getAllCharges();
+  const resources = useResourceOptions();
+  const resourceItems = registryItems(resources);
   const formData = watch();
 
   // Обновляем selectedResources при изменении formData.resources
@@ -112,6 +113,7 @@ const ActionCreator = () => {
     recharge: formData.recharge || null,
     recharge_custom: formData.recharge_custom || null,
     script: formData.script || null,
+    mechanics: formData.mechanics || null,
     action_type: formData.action_type || 'base_action',
     type: formData.type || null,
     author: formData.author || 'Admin',
@@ -306,27 +308,36 @@ const ActionCreator = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ресурсы (можно выбрать несколько) *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Ресурсы (можно выбрать несколько) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/resource-creator')}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Создать ресурс
+                  </button>
+                </div>
                 <div className="space-y-2 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
-                  {charges.map((charge) => {
-                    const isSelected = selectedResources.includes(charge.id);
+                  {resources.map((resource) => {
+                    const isSelected = selectedResources.includes(resource.id);
                     return (
                       <label
-                        key={charge.id}
+                        key={resource.id}
                         className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
                       >
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => toggleResource(charge.id)}
+                          onChange={() => toggleResource(resource.id)}
                           className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                         <div className="flex items-center space-x-2 flex-1">
                           <img 
-                            src={`/charges/${charge.image}`} 
-                            alt={charge.russian_name}
+                            src={resource.imageUrl || '/icons/resources/action.png'} 
+                            alt={resource.label}
                             className="w-6 h-6 object-contain"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -334,8 +345,8 @@ const ActionCreator = () => {
                             }}
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{charge.russian_name}</div>
-                            <div className="text-xs text-gray-500">{charge.description}</div>
+                            <div className="text-sm font-medium text-gray-900">{resource.label}</div>
+                            <div className="text-xs text-gray-500">{resource.description}</div>
                           </div>
                         </div>
                       </label>
@@ -430,7 +441,7 @@ const ActionCreator = () => {
                 <ImageUploader
                   onImageUpload={(imageUrl) => setValue('image_url', imageUrl)}
                   currentImageUrl={watch('image_url') || ''}
-                  entityType="action"
+                  entityType="card"
                   entityId={isEditMode && editId ? editId : (watch('card_number') || 'new')}
                 />
               </div>
@@ -440,6 +451,7 @@ const ActionCreator = () => {
                 <MechanicsBuilder
                   value={(watch('mechanics') as Record<string, unknown>) || null}
                   onChange={(m) => setValue('mechanics', m)}
+                  resourceOptions={resourceItems}
                 />
               </div>
             </div>
@@ -481,7 +493,7 @@ const ActionCreator = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Превью действия</h3>
             <div className="flex justify-center">
-              <ActionPreview action={previewAction} disableHover={true} />
+              <ActionPreview action={previewAction} disableHover={true} resources={resources} />
             </div>
           </div>
         </div>

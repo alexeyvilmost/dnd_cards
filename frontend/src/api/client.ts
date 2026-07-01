@@ -34,8 +34,11 @@ import type {
   CreateClassRequest,
   UpdateClassRequest,
   ClassesResponse,
-  ActiveEffect,
-  ApiError
+  ResourceDefinition,
+  ResourcesResponse,
+  CreateResourceRequest,
+  UpdateResourceRequest,
+  ActiveEffect
 } from '../types';
 import type { CharacterV3 } from '../utils/characterCalculationsV3';
 
@@ -362,6 +365,28 @@ export const classesApi = {
   },
   deleteClass: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/classes/${id}`);
+  },
+};
+
+export const resourcesApi = {
+  getResources: async (params?: { category?: string }): Promise<ResourcesResponse> => {
+    const response = await apiClient.get<ResourcesResponse>('/api/resources', { params });
+    return response.data;
+  },
+  getResource: async (id: string): Promise<ResourceDefinition> => {
+    const response = await apiClient.get<ResourceDefinition>(`/api/resources/${id}`);
+    return response.data;
+  },
+  createResource: async (data: CreateResourceRequest): Promise<ResourceDefinition> => {
+    const response = await apiClient.post<ResourceDefinition>('/api/resources', data);
+    return response.data;
+  },
+  updateResource: async (id: string, data: UpdateResourceRequest): Promise<ResourceDefinition> => {
+    const response = await apiClient.put<ResourceDefinition>(`/api/resources/${id}`, data);
+    return response.data;
+  },
+  deleteResource: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/resources/${id}`);
   },
 };
 

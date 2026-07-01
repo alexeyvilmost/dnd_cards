@@ -118,7 +118,21 @@ function addGrant(
   }
 
   if (full.kind === 'spell') {
-    if (!maps.spell.has(value)) {
+    const existing = maps.spell.get(value);
+    if (existing && (existing.source.id !== full.source.id || existing.choiceId !== full.choiceId)) {
+      conflicts.push({
+        code: 'duplicate_spell',
+        message: `Заклинание «${value}» уже выбрано из «${existing.source.name}», повтор из «${full.source.name}» не применяется.`,
+        severity: 'error',
+        kind: 'spell',
+        value,
+        source: full.source,
+        existingSource: existing.source,
+        choiceId: full.choiceId,
+      });
+      return;
+    }
+    if (!existing) {
       maps.spell.set(value, full);
       appliedGrants.push(full);
     }

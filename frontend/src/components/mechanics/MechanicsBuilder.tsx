@@ -19,12 +19,13 @@ type EffectEntry = { id: string; blockId: string; values: Record<string, unknown
 interface MechanicsBuilderProps {
   value: Mechanics | Record<string, unknown> | null;
   onChange: (m: Record<string, unknown> | null) => void;
+  resourceOptions?: { id: string; label: string }[];
 }
 
 let entryCounter = 0;
 const newEntryId = () => `eff_${++entryCounter}`;
 
-const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
+const MechanicsBuilder = ({ value, onChange, resourceOptions = [] }: MechanicsBuilderProps) => {
   const [triggerId, setTriggerId] = useState('trg_passive');
   const [triggerValues, setTriggerValues] = useState<Record<string, unknown>>({});
   const [effectEntries, setEffectEntries] = useState<EffectEntry[]>([]);
@@ -139,6 +140,9 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
     values: Record<string, unknown>,
     onField: (key: string, val: unknown) => void,
   ) => {
+    const options = 'optionSource' in field && field.optionSource === 'resources' && resourceOptions.length
+      ? resourceOptions
+      : ('options' in field ? field.options : []);
     switch (field.type) {
       case 'select':
         return (
@@ -147,7 +151,7 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
             value={String(values[field.key] ?? field.default ?? '')}
             onChange={(e) => onField(field.key, e.target.value)}
           >
-            {field.options.map((o) => (
+            {options.map((o) => (
               <option key={o.id} value={o.id}>{o.label}</option>
             ))}
           </select>
@@ -162,7 +166,7 @@ const MechanicsBuilder = ({ value, onChange }: MechanicsBuilderProps) => {
               onField(field.key, Array.from(e.target.selectedOptions).map((o) => o.value))
             }
           >
-            {field.options.map((o) => (
+            {options.map((o) => (
               <option key={o.id} value={o.id}>{o.label}</option>
             ))}
           </select>

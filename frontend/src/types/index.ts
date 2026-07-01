@@ -650,6 +650,35 @@ export type ActionResource = 'action' | 'bonus_action' | 'reaction' | 'free_acti
 export type ActionRecharge = 'custom' | 'per_turn' | 'per_battle' | 'short_rest' | 'long_rest';
 export type ActionType = 'base_action' | 'class_feature' | 'item_property';
 
+export interface ResourceDefinition {
+  id: string;
+  resource_id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  image_url?: string;
+  recharge?: string;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ResourcesResponse {
+  resources: ResourceDefinition[];
+}
+
+export interface CreateResourceRequest {
+  resource_id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  image_url?: string;
+  recharge?: string;
+  sort_order?: number;
+}
+
+export type UpdateResourceRequest = Partial<CreateResourceRequest>;
+
 export interface Action {
   id: string;
   name: string;
@@ -692,6 +721,7 @@ export interface CreateActionRequest {
   detailed_description?: string | null;
   image_url?: string;
   rarity: Rarity;
+  card_number?: string;
   resource?: ActionResource; // Оставляем для обратной совместимости
   resources?: string[] | null; // Массив ID ресурсов из charges.json
   distance?: string | null; // Дальность действия
@@ -724,12 +754,14 @@ export interface UpdateActionRequest {
   detailed_description?: string | null;
   image_url?: string;
   rarity?: Rarity;
+  card_number?: string;
   resource?: ActionResource;
   resources?: string[] | null; // Массив ID ресурсов из charges.json
   distance?: string | null; // Дальность действия
   recharge?: ActionRecharge | null;
   recharge_custom?: string | null;
   script?: Record<string, any> | null;
+  mechanics?: Record<string, unknown> | null;
   action_type?: ActionType;
   type?: string | null;
   author?: string;

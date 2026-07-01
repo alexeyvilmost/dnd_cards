@@ -10,6 +10,7 @@ import ImageUploader from '../components/ImageUploader';
 import { EffectCreatorNavigation } from '../components/EffectCreatorNavigation';
 import { PropertiesSection } from '../components/effectCreator/PropertiesSection';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
+import { registryItems, useResourceOptions } from '../utils/resources';
 
 const EffectCreator = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const EffectCreator = () => {
   const [idError, setIdError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState('main');
   const [showPreview, setShowPreview] = useState(true);
+  const resourceOptions = useResourceOptions();
 
   // Загрузка эффекта для редактирования
   useEffect(() => {
@@ -404,6 +406,7 @@ const EffectCreator = () => {
                     <MechanicsBuilder
                       value={(watch('mechanics') as Record<string, unknown>) || null}
                       onChange={(m) => setValue('mechanics', m)}
+                      resourceOptions={registryItems(resourceOptions)}
                     />
                   </div>
                 )}

@@ -18,13 +18,13 @@ import {
 } from './registries';
 
 export type Field =
-  | { key: string; label: string; type: 'select'; options: { id: string; label: string }[]; default?: string }
-  | { key: string; label: string; type: 'multiselect'; options: { id: string; label: string }[] }
+  | { key: string; label: string; type: 'select'; options: { id: string; label: string }[]; default?: string; optionSource?: 'resources' }
+  | { key: string; label: string; type: 'multiselect'; options: { id: string; label: string }[]; optionSource?: 'resources' }
   | { key: string; label: string; type: 'number'; default?: number }
   | { key: string; label: string; type: 'text'; default?: string }
   | { key: string; label: string; type: 'formula'; default?: string }
   | { key: string; label: string; type: 'choice-source' }
-  | { key: string; label: string; type: 'damage-type' };
+  | { key: string; label: string; type: 'damage-type'; default?: string };
 
 export type Block = {
   id: string;
@@ -114,17 +114,21 @@ export const TRIGGER_BLOCKS: Block[] = [
     label: 'Активная способность',
     group: 'trigger',
     fields: [
-      { key: 'resource', label: 'Ресурс', type: 'select', options: ACTIVE_RESOURCES, default: 'action' },
+      { key: 'resources', label: 'Ресурсы', type: 'multiselect', options: ACTIVE_RESOURCES, optionSource: 'resources' },
       { key: 'uses_count', label: 'Использований', type: 'text', default: 'prof_bonus' },
       { key: 'uses_per', label: 'За период', type: 'select', options: USES_PER, default: 'long_rest' },
     ],
-    defaults: { resource: 'action', uses_count: 'prof_bonus', uses_per: 'long_rest' },
+    defaults: { resources: ['action'], uses_count: 'prof_bonus', uses_per: 'long_rest' },
     build: (v) => ({
       mode: 'active',
-      cost: [{ resource: v.resource || 'action' }],
+      cost: ((Array.isArray(v.resources) && v.resources.length ? v.resources : [v.resource || 'action']) as unknown[])
+        .map((resource) => ({ resource })),
       uses: { count: v.uses_count || 'prof_bonus', per: v.uses_per || 'long_rest' },
     }),
-    summary: (v) => `Актив: ${labelOf(ACTIVE_RESOURCES, String(v.resource))}, ${v.uses_count}/${labelOf(USES_PER, String(v.uses_per))}`,
+    summary: (v) => {
+      const resources = (Array.isArray(v.resources) ? v.resources : [v.resource || 'action']).map(String);
+      return `Актив: ${resources.map((r) => labelOf(ACTIVE_RESOURCES, r)).join(' + ')}, ${v.uses_count}/${labelOf(USES_PER, String(v.uses_per))}`;
+    },
   },
   {
     id: 'trg_level',
@@ -143,7 +147,7 @@ export const EFFECT_BLOCKS: Block[] = [
     label: 'Выдать ресурс',
     group: 'effect',
     fields: [
-      { key: 'id', label: 'Ресурс', type: 'select', options: RESOURCES },
+      { key: 'id', label: 'Ресурс', type: 'select', options: RESOURCES, optionSource: 'resources' },
       { key: 'amount', label: 'Количество', type: 'number', default: 1 },
     ],
     defaults: { id: 'heroic_inspiration', amount: 1 },
@@ -570,7 +574,8 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   const tv: Dict = {};
   if (act.mode === 'active') {
     triggerId = 'trg_active';
-    tv.resource = ((act.cost as Dict[])?.[0]?.resource) ?? 'action';
+    const cost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
+    tv.resources = cost.length ? cost.map((c) => c.resource).filter(Boolean) : [((act.cost as Dict[])?.[0]?.resource) ?? 'action'];
     tv.uses_count = uses.count ?? 'prof_bonus';
     tv.uses_per = uses.per ?? 'long_rest';
   } else if (act.mode === 'triggered') {

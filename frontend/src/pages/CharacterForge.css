@@ -257,6 +257,14 @@
   border-color: var(--forge-gold);
   box-shadow: 0 0 0 2px var(--forge-gold), 0 0 14px rgba(201, 162, 39, .5);
 }
+.forge-spell-icon.disabled {
+  opacity: .42;
+  cursor: not-allowed;
+  filter: grayscale(.75);
+}
+.forge-spell-icon.disabled img {
+  filter: grayscale(1) brightness(.8);
+}
 .forge-spell-badge {
   position: absolute;
   right: -5px;

@@ -272,8 +272,57 @@ func GetAllMigrations() []Migration {
 			Up:          updateWizardSpellChoices,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "045_create_resources",
+			Description: "Create resource definitions for actions and mechanics",
+			Up:          createResourcesTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS resources CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+func createResourcesTable(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS resources (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			resource_id VARCHAR(100) UNIQUE NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description TEXT,
+			category VARCHAR(50) DEFAULT 'character',
+			image_url TEXT,
+			recharge VARCHAR(50),
+			sort_order INT DEFAULT 0,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_resources_resource_id ON resources(resource_id)",
+		"CREATE INDEX IF NOT EXISTS idx_resources_category ON resources(category)",
+		`INSERT INTO resources (resource_id, name, description, category, image_url, recharge, sort_order)
+		 VALUES
+			('action', 'Действие', 'Основное действие в ход.', 'action_cost', '/charges/main_action.png', 'per_turn', 10),
+			('main_action', 'Основное действие', 'Основное действие в ход.', 'action_cost', '/charges/main_action.png', 'per_turn', 11),
+			('bonus_action', 'Бонусное действие', 'Бонусное действие в ход.', 'action_cost', '/charges/bonus_action.png', 'per_turn', 20),
+			('reaction', 'Реакция', 'Ответное действие до начала вашего следующего хода.', 'action_cost', '/charges/reaction_action.png', 'per_round', 30),
+			('free_action', 'Свободное действие', 'Не тратит основной ресурс действия.', 'action_cost', '/charges/free_action.png', 'per_turn', 40),
+			('rage_charge', 'Заряд ярости', 'Расходуется для входа в ярость.', 'class_resource', '/charges/rage_charge.png', 'long_rest', 100),
+			('heroic_inspiration', 'Героическое вдохновение', 'Можно потратить для переброса.', 'character_resource', '/charges/main_action.png', 'long_rest', 110)
+		 ON CONFLICT (resource_id) DO UPDATE SET
+			name = EXCLUDED.name,
+			description = EXCLUDED.description,
+			category = EXCLUDED.category,
+			image_url = EXCLUDED.image_url,
+			recharge = EXCLUDED.recharge,
+			sort_order = EXCLUDED.sort_order,
+			updated_at = NOW()`,
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createResourcesTable: %w", err)
+		}
+	}
+	return nil
 }
 
 // updateWizardSpellChoices переводит заклинания волшебника на rule-driven choices.

@@ -130,14 +130,15 @@
 { "resource": "reaction" }
 { "resource": "movement", "amount": 10 } // футы
 { "resource": "spell_slot", "level": 1 } // ячейка (level=0 → заговор)
-{ "resource": "rage",  "amount": 1 }
+{ "resource": "rage_charge",  "amount": 1 }
 { "resource": "focus", "amount": 2 }     // очки фокуса (ки) 2024
 { "resource": "superiority_die", "amount": 1 }
 { "resource": "channel_divinity", "amount": 1 }
 { "resource": "hp", "amount": "self_level" } // формула, см. §8
 ```
 
-Несколько элементов = «и то, и то» (заклинание = ячейка **и** компоненты **и** действие).
+Несколько элементов = «и то, и то»: например, Ярость тратит
+`bonus_action` **и** `rage_charge`, поэтому `cost` содержит два объекта.
 
 ### 5.2 `trigger` — Время + Триггер + Обстоятельства
 

@@ -1,0 +1,85 @@
+import { useEffect, useMemo, useState } from 'react';
+import { resourcesApi } from '../api/client';
+import type { ResourceDefinition } from '../types';
+import { getAllCharges } from './charges';
+
+export type ResourceOption = {
+  id: string;
+  label: string;
+  description?: string;
+  category?: string;
+  imageUrl?: string;
+  recharge?: string;
+  sortOrder?: number;
+};
+
+const actionDefaults: ResourceOption[] = [
+  { id: 'action', label: 'Действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 10 },
+  { id: 'main_action', label: 'Основное действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 11 },
+  { id: 'bonus_action', label: 'Бонусное действие', description: 'Бонусное действие в ход.', category: 'action_cost', imageUrl: '/charges/bonus_action.png', sortOrder: 20 },
+  { id: 'reaction', label: 'Реакция', description: 'Ответное действие.', category: 'action_cost', imageUrl: '/charges/reaction_action.png', sortOrder: 30 },
+  { id: 'free_action', label: 'Свободное действие', description: 'Не тратит основной ресурс действия.', category: 'action_cost', imageUrl: '/charges/free_action.png', sortOrder: 40 },
+];
+
+export const staticResourceOptions = (): ResourceOption[] => [
+  ...actionDefaults,
+  ...getAllCharges().map((charge, index) => ({
+    id: charge.id,
+    label: charge.russian_name,
+    description: charge.description,
+    category: 'class_resource',
+    imageUrl: `/charges/${charge.image}`,
+    recharge: charge.cooldown,
+    sortOrder: 1000 + index,
+  })),
+];
+
+const fromApi = (resource: ResourceDefinition): ResourceOption => ({
+  id: resource.resource_id,
+  label: resource.name,
+  description: resource.description,
+  category: resource.category,
+  imageUrl: resource.image_url,
+  recharge: resource.recharge,
+  sortOrder: resource.sort_order,
+});
+
+export function mergeResources(resources: ResourceOption[]): ResourceOption[] {
+  const map = new Map<string, ResourceOption>();
+  for (const res of staticResourceOptions()) map.set(res.id, res);
+  for (const res of resources) map.set(res.id, { ...map.get(res.id), ...res });
+  return [...map.values()].sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999) || a.label.localeCompare(b.label));
+}
+
+export function useResourceOptions() {
+  const [dbResources, setDbResources] = useState<ResourceOption[]>([]);
+  useEffect(() => {
+    let stale = false;
+    resourcesApi.getResources()
+      .then((response) => {
+        if (!stale) setDbResources((response.resources || []).map(fromApi));
+      })
+      .catch(() => {
+        if (!stale) setDbResources([]);
+      });
+    return () => { stale = true; };
+  }, []);
+  return useMemo(() => mergeResources(dbResources), [dbResources]);
+}
+
+export function findResource(resources: ResourceOption[], id?: string | null): ResourceOption | undefined {
+  if (!id) return undefined;
+  return resources.find((resource) => resource.id === id) || staticResourceOptions().find((resource) => resource.id === id);
+}
+
+export function resourceLabel(resources: ResourceOption[], id?: string | null): string {
+  return findResource(resources, id)?.label || id || '';
+}
+
+export function resourceIcon(resources: ResourceOption[], id?: string | null): string {
+  return findResource(resources, id)?.imageUrl || '/charges/main_action.png';
+}
+
+export function registryItems(resources: ResourceOption[]) {
+  return resources.map((resource) => ({ id: resource.id, label: resource.label }));
+}

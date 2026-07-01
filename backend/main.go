@@ -94,6 +94,7 @@ func main() {
 	backgroundController := NewBackgroundController(db)
 	raceController := NewRaceController(db)
 	classController := NewClassController(db)
+	resourceController := NewResourceController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -204,6 +205,13 @@ func main() {
 		api.POST("/classes", AuthMiddleware(authService), classController.CreateClass)
 		api.PUT("/classes/:id", AuthMiddleware(authService), classController.UpdateClass)
 		api.DELETE("/classes/:id", AuthMiddleware(authService), classController.DeleteClass)
+
+		// Ресурсы действий/персонажа
+		api.GET("/resources", OptionalAuthMiddleware(authService), resourceController.GetResources)
+		api.GET("/resources/:id", OptionalAuthMiddleware(authService), resourceController.GetResource)
+		api.POST("/resources", AuthMiddleware(authService), resourceController.CreateResource)
+		api.PUT("/resources/:id", AuthMiddleware(authService), resourceController.UpdateResource)
+		api.DELETE("/resources/:id", AuthMiddleware(authService), resourceController.DeleteResource)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

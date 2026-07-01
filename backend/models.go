@@ -144,13 +144,13 @@ const (
 	PropertyNecklace = "necklace" // Ожерелье
 	PropertyCloak    = "cloak"    // Плащ
 	// Еще новые свойства
-	PropertyPotion     = "potion"     // Зелье
-	PropertyTool       = "tool"       // Инструмент
-	PropertyProjectile = "projectile" // Снаряд
-	PropertyExplosive  = "explosive"  // Взрывчатка
-	PropertySet        = "set"        // Набор
-	PropertyChoice     = "choice"     // Выбор
-	PropertyEquipment  = "equipment"  // Снаряжение
+	PropertyPotion            = "potion"             // Зелье
+	PropertyTool              = "tool"               // Инструмент
+	PropertyProjectile        = "projectile"         // Снаряд
+	PropertyExplosive         = "explosive"          // Взрывчатка
+	PropertySet               = "set"                // Набор
+	PropertyChoice            = "choice"             // Выбор
+	PropertyEquipment         = "equipment"          // Снаряжение
 	PropertyJewelry           = "jewelry"            // Украшение
 	PropertyMusicalInstrument = "musical_instrument" // Музыкальный инструмент
 	PropertyArtisanTool       = "artisan_tool"       // Ремесленный инструмент
@@ -360,7 +360,7 @@ type Card struct {
 	CustomRarityColor            *string        `json:"custom_rarity_color" gorm:"type:varchar(7)"`
 	CardNumber                   string         `json:"card_number" gorm:"uniqueIndex;not null"`
 	Price                        *float64       `json:"price" gorm:"type:numeric"`
-	PriceCurrency                *string        `json:"price_currency" gorm:"type:varchar(20)"`      // gold | silver | copper (расширяемо)
+	PriceCurrency                *string        `json:"price_currency" gorm:"type:varchar(20)"` // gold | silver | copper (расширяемо)
 	PriceAbbreviated             *bool          `json:"price_abbreviated" gorm:"type:boolean;default:true"`
 	Weight                       *float64       `json:"weight" gorm:"type:decimal(5,2)"`
 	BonusType                    *BonusType     `json:"bonus_type" gorm:"type:varchar(50)"`
@@ -391,8 +391,8 @@ type Card struct {
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
 	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
 	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                      // Боевой профиль предмета для сервиса battle
-	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`               // Режим контейнера: all | choice
-	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                           // Содержимое контейнера
+	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`                // Режим контейнера: all | choice
+	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                            // Содержимое контейнера
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -1402,6 +1402,43 @@ func (ar ActionResources) Value() (driver.Value, error) {
 	return strings.Join(parts, ","), nil
 }
 
+// ResourceDefinition — справочник ресурсов, которые тратят действия и механики.
+type ResourceDefinition struct {
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	ResourceID  string         `json:"resource_id" gorm:"uniqueIndex;not null;type:varchar(100)"`
+	Name        string         `json:"name" gorm:"not null;type:varchar(255)"`
+	Description string         `json:"description" gorm:"type:text"`
+	Category    string         `json:"category" gorm:"type:varchar(50);default:'character'"`
+	ImageURL    string         `json:"image_url" gorm:"type:text"`
+	Recharge    string         `json:"recharge" gorm:"type:varchar(50)"`
+	SortOrder   int            `json:"sort_order" gorm:"default:0"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+func (ResourceDefinition) TableName() string { return "resources" }
+
+type CreateResourceRequest struct {
+	ResourceID  string `json:"resource_id" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	ImageURL    string `json:"image_url"`
+	Recharge    string `json:"recharge"`
+	SortOrder   int    `json:"sort_order"`
+}
+
+type UpdateResourceRequest struct {
+	ResourceID  string `json:"resource_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	ImageURL    string `json:"image_url"`
+	Recharge    string `json:"recharge"`
+	SortOrder   int    `json:"sort_order"`
+}
+
 // ActionRecharge - перезарядка действия
 type ActionRecharge string
 
@@ -1671,7 +1708,7 @@ func (a Action) ToActionResponse() ActionResponse {
 		DescriptionFontSize: a.DescriptionFontSize, TextAlignment: a.TextAlignment, TextFontSize: a.TextFontSize,
 		ShowDetailedDescription: a.ShowDetailedDescription, DetailedDescriptionAlignment: a.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize: a.DetailedDescriptionFontSize,
-		CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt,
+		CreatedAt:                   a.CreatedAt, UpdatedAt: a.UpdatedAt,
 	}
 }
 
@@ -1876,8 +1913,8 @@ func (e Effect) ToEffectResponse() EffectResponse {
 		IsExtended: e.IsExtended, DescriptionFontSize: e.DescriptionFontSize, TextAlignment: e.TextAlignment,
 		TextFontSize: e.TextFontSize, ShowDetailedDescription: e.ShowDetailedDescription,
 		DetailedDescriptionAlignment: e.DetailedDescriptionAlignment,
-		DetailedDescriptionFontSize: e.DetailedDescriptionFontSize,
-		CreatedAt: e.CreatedAt, UpdatedAt: e.UpdatedAt,
+		DetailedDescriptionFontSize:  e.DetailedDescriptionFontSize,
+		CreatedAt:                    e.CreatedAt, UpdatedAt: e.UpdatedAt,
 	}
 }
 
@@ -2025,11 +2062,11 @@ type Spell struct {
 	Ritual                bool           `json:"ritual" gorm:"type:boolean;default:false"`
 	SaveTypes             *Properties    `json:"save_types" gorm:"type:jsonb"` // Типы спасброска (str, dex, ...)
 	Damage                *SpellDamage   `json:"damage" gorm:"type:jsonb"`
-	Area                  *string        `json:"area" gorm:"type:text"`                // Область, например "20 фт"
+	Area                  *string        `json:"area" gorm:"type:text"` // Область, например "20 фт"
 	IsHealing             bool           `json:"is_healing" gorm:"type:boolean;default:false"`
-	HealDice              *string        `json:"heal_dice" gorm:"type:varchar(50)"`    // Кубы лечения
-	SaveOutcome           *string        `json:"save_outcome" gorm:"type:text"`        // Результат при спасброске
-	UpcastDescription     *string        `json:"upcast_description" gorm:"type:text"`  // Повышение уровня / Cantrip Upgrade
+	HealDice              *string        `json:"heal_dice" gorm:"type:varchar(50)"`   // Кубы лечения
+	SaveOutcome           *string        `json:"save_outcome" gorm:"type:text"`       // Результат при спасброске
+	UpcastDescription     *string        `json:"upcast_description" gorm:"type:text"` // Повышение уровня / Cantrip Upgrade
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`

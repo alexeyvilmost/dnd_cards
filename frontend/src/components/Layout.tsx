@@ -19,6 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
       icon: UserCircle,
       submenu: [
         { path: '/create', label: 'Создать карту' },
+        { path: '/resource-creator', label: 'Создать ресурс' },
         { path: '/templates', label: 'Шаблоны' },
         { path: '/export', label: 'Экспорт' }
       ]

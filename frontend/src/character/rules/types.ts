@@ -35,10 +35,10 @@ export interface AppliedGrant {
 }
 
 export interface RuleConflict {
-  code: 'duplicate_proficiency' | 'missing_proficiency_for_expertise' | 'unsupported_grant';
+  code: 'duplicate_proficiency' | 'duplicate_spell' | 'missing_proficiency_for_expertise' | 'unsupported_grant';
   message: string;
   severity: 'error' | 'warning';
-  kind?: ProficiencyKind | ExpertiseKind;
+  kind?: GrantKind;
   value?: string;
   source?: RuleSource;
   existingSource?: RuleSource;

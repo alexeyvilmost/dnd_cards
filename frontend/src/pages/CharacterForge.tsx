@@ -550,12 +550,26 @@ function SpellsSection({ spells, choices, resolved, setResolved }: {
   const [hovered, setHovered] = useState<Spell | null>(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
+  const selectedSpellOwners = useMemo(() => {
+    const owners = new Map<string, { choiceId: string; label: string }>();
+    for (const choice of choices) {
+      const origin = [choice.origin.name, choice.origin.featureName].filter(Boolean).join(' · ');
+      const label = origin ? `${choice.prompt} (${origin})` : choice.prompt;
+      for (const spellId of resolved[choice.id] || []) {
+        if (!owners.has(spellId)) owners.set(spellId, { choiceId: choice.id, label });
+      }
+    }
+    return owners;
+  }, [choices, resolved]);
+
   const toggleChoiceSpell = (choice: PendingChoice, spellId: string) => {
     const value = resolved[choice.id] || [];
     if (value.includes(spellId)) {
       setResolved(choice.id, value.filter((id) => id !== spellId));
       return;
     }
+    const owner = selectedSpellOwners.get(spellId);
+    if (owner && owner.choiceId !== choice.id) return;
     const next = value.length >= choice.count ? [...value.slice(1), spellId] : [...value, spellId];
     setResolved(choice.id, next);
   };
@@ -582,16 +596,19 @@ function SpellsSection({ spells, choices, resolved, setResolved }: {
             <div className="forge-spell-icon-grid">
               {filtered.map((spell) => {
                 const isSelected = selected.includes(spell.id);
+                const owner = selectedSpellOwners.get(spell.id);
+                const disabled = !!owner && owner.choiceId !== choice.id;
                 return (
                   <button
                     key={spell.id}
                     type="button"
-                    className={`forge-spell-icon ${isSelected ? 'selected' : 'ready'}`}
+                    className={`forge-spell-icon ${isSelected ? 'selected' : disabled ? 'disabled' : 'ready'}`}
+                    disabled={disabled}
                     onClick={() => toggleChoiceSpell(choice, spell.id)}
                     onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
                     onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
                     onMouseLeave={() => setHovered(null)}
-                    title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                    title={disabled ? `Уже выбрано: ${owner.label}` : `${spell.name} · ${getSpellLevelLabel(spell.level)}`}
                   >
                     <img
                       src={spell.image_url?.trim() || '/default_image.png'}

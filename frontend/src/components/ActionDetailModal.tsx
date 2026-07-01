@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { Action } from '../types';
-import { ACTION_RESOURCE_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
-import { getChargeById, getChargeImagePath } from '../utils/charges';
+import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import ActionPreview from './ActionPreview';
 
 interface ActionDetailModalProps {
@@ -20,6 +20,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const resources = useResourceOptions();
   // Обработчик для закрытия по Esc
   useEffect(() => {
     if (!isOpen) return;
@@ -37,10 +38,6 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen || !action) return null;
-
-  const getResourceLabel = (resource: string) => {
-    return ACTION_RESOURCE_OPTIONS.find(opt => opt.value === resource)?.label || resource;
-  };
 
   const getRechargeLabel = (recharge?: string | null) => {
     if (!recharge) return '';
@@ -77,7 +74,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Левая колонка - превью карточки */}
             <div className="flex justify-center">
-              <ActionPreview action={action} disableHover={true} />
+              <ActionPreview action={action} disableHover={true} resources={resources} />
             </div>
 
             {/* Правая колонка - детальная информация */}
@@ -93,33 +90,23 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Ресурсы</h3>
                 {action.resources && action.resources.length > 0 ? (
                   <div className="space-y-1">
-                    {action.resources.map((resourceId) => {
-                      const charge = getChargeById(resourceId);
-                      if (charge) {
-                        return (
-                          <div key={resourceId} className="flex items-center gap-2">
-                            <img 
-                              src={getChargeImagePath(charge.image)} 
-                              alt={charge.russian_name}
-                              className="w-5 h-5 object-contain"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                              }}
-                            />
-                            <span className="text-gray-900">{charge.russian_name}</span>
-                          </div>
-                        );
-                      }
-                      return (
-                        <div key={resourceId} className="text-gray-900">
-                          {getResourceLabel(resourceId)}
-                        </div>
-                      );
-                    })}
+                    {action.resources.map((resourceId) => (
+                      <div key={resourceId} className="flex items-center gap-2">
+                        <img 
+                          src={resourceIcon(resources, resourceId)} 
+                          alt={resourceLabel(resources, resourceId)}
+                          className="w-5 h-5 object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        <span className="text-gray-900">{resourceLabel(resources, resourceId)}</span>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <p className="text-gray-900">{getResourceLabel(action.resource)}</p>
+                  <p className="text-gray-900">{resourceLabel(resources, action.resource)}</p>
                 )}
               </div>
 

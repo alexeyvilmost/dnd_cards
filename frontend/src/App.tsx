@@ -46,6 +46,7 @@ import FeatCreator from './pages/FeatCreator';
 import BackgroundCreator from './pages/BackgroundCreator';
 import RaceCreator from './pages/RaceCreator';
 import ClassCreator from './pages/ClassCreator';
+import ResourceCreator from './pages/ResourceCreator';
 import ImageStudio from './pages/ImageStudio';
 
 function App() {
@@ -316,6 +317,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <ActionCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/resource-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <ResourceCreator />
             </Layout>
           </ProtectedRoute>
         } />
