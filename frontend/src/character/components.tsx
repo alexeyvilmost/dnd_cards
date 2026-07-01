@@ -5,6 +5,8 @@ import type { AssembledCharacter } from './assemble';
 import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey, type CharacterDraft } from './types';
 import type { Spell } from '../types';
 import { abilityMod } from './derive';
+import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
+import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 
 // ─── Левая навигация ─────────────────────────────────────────────────────────
 
@@ -198,12 +200,31 @@ export function SummaryPanel({
 
       <div className="sum-field">
         <span className="sum-label">Вид: </span>
-        <span className="sum-value">{race ? race.name : '—'}{lineageName ? ` · ${lineageName}` : ''}</span>
+        {race ? (
+          <span className="sum-value-inline">
+            <ForgeEntityIcon imageUrl={race.image_url} alt={race.name} />
+            <span>{race.name}{lineageName ? ` · ${lineageName}` : ''}</span>
+          </span>
+        ) : (
+          <span className="sum-value">—</span>
+        )}
         {effectsByOrigin('race').map((e) => (
-          <div key={e.effect.id} className="sum-sub">{e.effect.name}</div>
+          <ForgeAbilityLine
+            key={e.effect.id}
+            name={e.effect.name}
+            imageUrl={e.effect.image_url}
+            fallbackImageUrl={race?.image_url}
+            effect={e.effect}
+          />
         ))}
         {actionsByOrigin('race').map((a) => (
-          <div key={a.action.id} className="sum-sub">{a.action.name}</div>
+          <ForgeAbilityLine
+            key={a.action.id}
+            name={a.action.name}
+            imageUrl={a.action.image_url}
+            fallbackImageUrl={race?.image_url}
+            action={a.action}
+          />
         ))}
       </div>
 
@@ -211,12 +232,31 @@ export function SummaryPanel({
 
       <div className="sum-field">
         <span className="sum-label">Класс: </span>
-        <span className="sum-value">{klass ? `${klass.name}, ${draft.level}` : '—'}</span>
+        {klass ? (
+          <span className="sum-value-inline">
+            <ForgeEntityIcon imageUrl={klass.image_url} alt={klass.name} />
+            <span>{klass.name}, {draft.level}</span>
+          </span>
+        ) : (
+          <span className="sum-value">—</span>
+        )}
         {effectsByOrigin('class').map((e) => (
-          <div key={e.effect.id} className="sum-sub">{e.effect.name}</div>
+          <ForgeAbilityLine
+            key={e.effect.id}
+            name={e.effect.name}
+            imageUrl={e.effect.image_url}
+            fallbackImageUrl={klass?.image_url}
+            effect={e.effect}
+          />
         ))}
         {actionsByOrigin('class').map((a) => (
-          <div key={a.action.id} className="sum-sub">{a.action.name}</div>
+          <ForgeAbilityLine
+            key={a.action.id}
+            name={a.action.name}
+            imageUrl={a.action.image_url}
+            fallbackImageUrl={klass?.image_url}
+            action={a.action}
+          />
         ))}
       </div>
 
@@ -229,12 +269,37 @@ export function SummaryPanel({
 
       <hr className="sum-divider" />
 
-      {feats.map((f) => (
-        <div key={f.id} className="sum-field">
-          <span className="sum-label">Черта: </span>
-          <span className="sum-value">{f.name}</span>
-        </div>
-      ))}
+      {feats.map((f) => {
+        const featEffects = (assembled?.effects || []).filter((e) => e.origin.kind === 'feat' && e.origin.id === f.id);
+        const featActions = (assembled?.actions || []).filter((a) => a.origin.kind === 'feat' && a.origin.id === f.id);
+        return (
+          <div key={f.id} className="sum-field">
+            <span className="sum-label">Черта: </span>
+            <span className="sum-value-inline">
+              <ForgeEntityIcon imageUrl={f.image_url} alt={f.name} />
+              <span>{f.name}</span>
+            </span>
+            {featEffects.map((e) => (
+              <ForgeAbilityLine
+                key={e.effect.id}
+                name={e.effect.name}
+                imageUrl={e.effect.image_url}
+                fallbackImageUrl={f.image_url}
+                effect={e.effect}
+              />
+            ))}
+            {featActions.map((a) => (
+              <ForgeAbilityLine
+                key={a.action.id}
+                name={a.action.name}
+                imageUrl={a.action.image_url}
+                fallbackImageUrl={f.image_url}
+                action={a.action}
+              />
+            ))}
+          </div>
+        );
+      })}
 
       <hr className="sum-divider" />
 

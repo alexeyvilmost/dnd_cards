@@ -10,6 +10,7 @@ import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, ABILITY_LABEL_RU, type Charac
 import { buildSavePayload, completionIssues, classSkillChoice } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
+import EntitySquareCard from '../components/forge/EntitySquareCard';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { abilityMod } from '../character/derive';
@@ -322,9 +323,15 @@ function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, r
     <div>
       <div className="forge-block">
         <div className="forge-section-h">Вид</div>
-        <div className="forge-grid">
+        <div className="forge-square-grid">
           {races.map((r: Race) => (
-            <EntityChoiceCard key={r.id} name={r.name} subtitle={r.size || undefined} selected={draft.raceId === r.id} onClick={() => onSelect(r.id)} />
+            <EntitySquareCard
+              key={r.id}
+              name={r.name}
+              imageUrl={r.image_url}
+              selected={draft.raceId === r.id}
+              onClick={() => onSelect(r.id)}
+            />
           ))}
           {races.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
         </div>

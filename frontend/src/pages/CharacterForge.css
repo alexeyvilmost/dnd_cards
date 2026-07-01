@@ -85,9 +85,44 @@
 .sum-field { margin-bottom: 14px; }
 .sum-label { color: var(--forge-gold); font-size: 18px; font-weight: 600; }
 .sum-value { color: var(--forge-text); font-size: 18px; }
-.sum-sub {
+.sum-value-inline {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--forge-text); font-size: 18px; vertical-align: middle;
+}
+.sum-sub, .forge-ability-line {
   display: flex; align-items: center; gap: 6px; margin: 3px 0 3px 20px;
-  color: var(--forge-gold-dim); text-decoration: underline; font-size: 15px;
+  color: var(--forge-gold-dim); font-size: 15px;
+}
+.forge-ability-link { text-decoration: underline; cursor: default; }
+.forge-entity-icon {
+  flex-shrink: 0; border-radius: 50%; object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+.forge-entity-icon--placeholder {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255, 255, 255, 0.08);
+  color: var(--forge-text); line-height: 1;
+}
+.forge-effect-popover {
+  position: fixed; z-index: 9999; pointer-events: none; width: 300px;
+}
+.forge-effect-card {
+  background: #1e293b; border: 2px solid #000; border-radius: 8px;
+  padding: 16px 20px 18px; position: relative; overflow: visible;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+.forge-effect-card-art {
+  position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; pointer-events: none;
+}
+.forge-effect-card-art img {
+  width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
+}
+.forge-effect-card-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.forge-effect-card-type { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+.forge-effect-card-desc {
+  margin: 0; color: #fff; font-size: 14px; line-height: 1.45;
+  white-space: pre-wrap;
 }
 .sum-divider { border: none; border-top: 1px solid var(--forge-line); margin: 14px 0; }
 .sum-abilities { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
@@ -107,6 +142,31 @@
 .entity-card.selected { border-color: var(--forge-gold); background: var(--forge-panel-2); box-shadow: 0 0 0 1px var(--forge-gold) inset; }
 .entity-card .ec-name { color: var(--forge-gold); font-weight: 600; }
 .entity-card .ec-sub { font-size: 12px; color: var(--forge-text-dim); }
+
+/* Квадратные карточки выбора вида */
+.forge-square-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px;
+}
+.forge-square-card {
+  aspect-ratio: 1; display: flex; flex-direction: column; align-items: center;
+  border: 2px solid var(--forge-gold-dim); border-radius: 16px;
+  background: var(--forge-panel); padding: 10px 8px 8px; cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s; color: inherit;
+}
+.forge-square-card:hover { border-color: var(--forge-gold); }
+.forge-square-card.selected {
+  border-color: var(--forge-gold);
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.35);
+}
+.forge-square-card-media {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  width: 100%; min-height: 0;
+}
+.forge-square-card-media img { max-width: 72%; max-height: 72%; object-fit: contain; }
+.forge-square-card-placeholder { font-size: 36px; color: var(--forge-text); font-weight: 300; line-height: 1; }
+.forge-square-card-label {
+  font-size: 14px; color: var(--forge-gold); text-align: center; margin-top: 4px; line-height: 1.2;
+}
 
 /* Секции/заголовки */
 .forge-section-h { color: var(--forge-gold); font-size: 16px; font-weight: 600; margin: 4px 0 10px; }
