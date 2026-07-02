@@ -7,6 +7,12 @@ import (
 
 // seedMvpEquipmentCards — тестовые предметы для проверки инвентаря (фаза C).
 func seedMvpEquipmentCards(db *sql.DB) error {
+	if _, err := db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_cards_card_number_unique ON cards (card_number)
+	`); err != nil {
+		return fmt.Errorf("seedMvpEquipmentCards: ensure card_number unique index: %w", err)
+	}
+
 	queries := []string{
 		`INSERT INTO cards (
 			name, description, card_number, rarity, author, type, slot, weight,
