@@ -160,13 +160,7 @@ const NOT_IMPLEMENTED = (step: string, name: string): never => {
 export function rollD20(_opts: RollD20Options): RollLog {
   return NOT_IMPLEMENTED('B2', 'rollD20');
 }
-export function rollFormula(
-  _formula: string,
-  _ctx: Dict,
-  _opts?: { modifiers?: RollModifier[]; rng?: () => number },
-): FormulaRollResult {
-  return NOT_IMPLEMENTED('B2', 'rollFormula');
-}
+export { rollFormula } from '../engine/formula';
 
 // Шаг D4/B2 — engine/modifiers.ts: собрать модификаторы и адвантаж
 // из активных эффектов и пассивок для броска applies_to.roll.

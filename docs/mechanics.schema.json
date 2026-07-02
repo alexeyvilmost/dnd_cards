@@ -18,7 +18,7 @@
     "requirements": { "type": "array", "items": { "$ref": "#/$defs/requirement" } },
     "activation": { "$ref": "#/$defs/activation" },
     "targeting": { "$ref": "#/$defs/targeting" },
-    "interactions": { "type": "array", "items": { "$ref": "#/$defs/interaction" } },
+    "interactions": { "type": "array", "items": { "$ref": "#/$defs/effectItem" } },
     "duration": { "$ref": "#/$defs/duration" },
     "uses": { "$ref": "#/$defs/uses" }
   },
@@ -118,6 +118,29 @@
       }
     },
 
+    "effectItem": {
+      "description": "Элемент массива effects/interactions: interaction или choice на верхнем уровне (формат конструктора).",
+      "oneOf": [
+        { "$ref": "#/$defs/interaction" },
+        { "$ref": "#/$defs/topLevelChoice" }
+      ]
+    },
+
+    "topLevelChoice": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "const": "choice" },
+        "id": { "type": "string" },
+        "prompt": { "type": "string" },
+        "count": { "type": "integer", "minimum": 1 },
+        "options": { "type": "object" },
+        "grant": { "$ref": "#/$defs/payload" },
+        "resolution": { "enum": ["on_acquire", "immediate"] },
+        "recommended": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
     "interaction": {
       "type": "object",
       "required": ["resolution"],
@@ -208,7 +231,7 @@
           "then": {
             "properties": {
               "value": { "enum": ["push", "pull", "teleport", "extra_speed", "knock_prone"] },
-              "distance": { "type": "number" }
+              "distance": { "$ref": "#/$defs/formula" }
             }
           }
         },
@@ -336,7 +359,7 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative"] },
+            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative", "carry", "max_hp"] },
             "filter": { "type": "object" }
           }
         },
@@ -350,7 +373,7 @@
     "duration": {
       "type": "object",
       "properties": {
-        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent"] },
+        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_end_of_turn"] },
         "amount": { "type": "number" },
         "concentration": { "type": "boolean" },
         "ends_when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },

@@ -8,7 +8,6 @@ export type FormulaMarker = 'weapon' | 'auto';
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
 export interface FormulaContext {
-  /** Модификаторы характеристик (не сырые значения). */
   abilityMods?: Partial<Record<AbilityKey, number>>;
   profBonus?: number;
   selfLevel?: number;
@@ -17,11 +16,29 @@ export interface FormulaContext {
   spellSlotAbove?: number;
   rageBonus?: number;
   characterSpeed?: number;
-  /** 0..1, по умолчанию Math.random */
   rng?: () => number;
 }
 
 export type FormulaValue = number | FormulaMarker;
+
+export interface DieRoll {
+  sides: number;
+  result: number;
+  discarded?: boolean;
+}
+
+export interface FormulaModifier {
+  value: number;
+  source: string;
+  reason?: string;
+}
+
+export interface FormulaRollResult {
+  total: number;
+  dice: DieRoll[];
+  modifiers: FormulaModifier[];
+  text: string;
+}
 
 const MARKERS = new Set<string>(['weapon', 'auto']);
 
@@ -41,6 +58,14 @@ type Token =
   | { t: 'op'; v: '+' | '-' | '*' | '/' }
   | { t: 'lparen' }
   | { t: 'rparen' };
+
+interface EvalSink {
+  ctx: FormulaContext;
+  rng: () => number;
+  dice: DieRoll[];
+  modifiers: FormulaModifier[];
+  detailed: boolean;
+}
 
 function defaultRng(): number {
   return Math.random();
@@ -73,7 +98,6 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
-    // NdM или class_level:rogue/2 d6
     const diceMatch = s.slice(i).match(/^(\d+)d(\d+)/i);
     if (diceMatch) {
       tokens.push({ t: 'dice', count: Number(diceMatch[1]), sides: Number(diceMatch[2]) });
@@ -111,53 +135,77 @@ function tokenize(input: string): Token[] {
   return tokens;
 }
 
-function resolveId(id: string, ctx: FormulaContext, rng: () => number): FormulaValue {
+function rollDice(count: number, sides: number, sink: EvalSink): number {
+  let sum = 0;
+  for (let i = 0; i < count; i++) {
+    const result = Math.floor(sink.rng() * sides) + 1;
+    if (sink.detailed) sink.dice.push({ sides, result });
+    sum += result;
+  }
+  return sum;
+}
+
+function addModifier(sink: EvalSink, value: number, source: string, reason?: string): number {
+  if (sink.detailed && value !== 0) {
+    sink.modifiers.push({ value, source, reason });
+  }
+  return value;
+}
+
+function resolveId(id: string, sink: EvalSink): FormulaValue {
   const lower = id.toLowerCase();
+  const { ctx } = sink;
   if (MARKERS.has(lower)) return lower as FormulaMarker;
 
   if (lower.startsWith('__scaling__:')) {
     const [, classId, divStr, sidesStr] = lower.split(':');
     const level = ctx.classLevels?.[classId] ?? 0;
     const count = Math.ceil(level / Number(divStr));
-    return rollDice(count, Number(sidesStr), rng);
+    return rollDice(count, Number(sidesStr), sink);
   }
 
-  if (lower === 'prof_bonus' || lower === 'prof') return ctx.profBonus ?? 0;
-  if (lower === 'self_level') return ctx.selfLevel ?? 0;
-  if (lower === 'spellcasting') return ctx.spellcastingMod ?? 0;
-  if (lower === 'spell_slot_above') return ctx.spellSlotAbove ?? 0;
-  if (lower === 'rage_bonus') return ctx.rageBonus ?? 0;
-  if (lower === 'character_speed') return ctx.characterSpeed ?? 0;
+  if (lower === 'prof_bonus' || lower === 'prof') {
+    return addModifier(sink, ctx.profBonus ?? 0, 'БМ', 'бонус мастерства');
+  }
+  if (lower === 'self_level') {
+    return addModifier(sink, ctx.selfLevel ?? 0, 'уровень', 'уровень персонажа');
+  }
+  if (lower === 'spellcasting') {
+    return addModifier(sink, ctx.spellcastingMod ?? 0, 'заклин.', 'модификатор заклинаний');
+  }
+  if (lower === 'spell_slot_above') {
+    return addModifier(sink, ctx.spellSlotAbove ?? 0, 'ячейка+', 'уровень ячейки выше');
+  }
+  if (lower === 'rage_bonus') {
+    return addModifier(sink, ctx.rageBonus ?? 0, 'ярость', 'бонус ярости');
+  }
+  if (lower === 'character_speed') {
+    return addModifier(sink, ctx.characterSpeed ?? 0, 'скорость', 'скорость персонажа');
+  }
 
   if (lower.startsWith('class_level:')) {
     const classId = lower.slice('class_level:'.length);
-    return ctx.classLevels?.[classId] ?? 0;
+    const v = ctx.classLevels?.[classId] ?? 0;
+    return addModifier(sink, v, `ур.${classId}`, 'уровень класса');
   }
 
   const ability = lower as AbilityKey;
   if (ability in ABILITY_LABEL_RU) {
-    return ctx.abilityMods?.[ability] ?? 0;
+    const v = ctx.abilityMods?.[ability] ?? 0;
+    return addModifier(sink, v, ABILITY_LABEL_RU[ability], 'модификатор характеристики');
   }
 
   throw new Error(`Неизвестная переменная формулы: ${id}`);
 }
 
-function rollDice(count: number, sides: number, rng: () => number): number {
-  let sum = 0;
-  for (let i = 0; i < count; i++) {
-    sum += Math.floor(rng() * sides) + 1;
-  }
-  return sum;
-}
-
-function parseExpr(tokens: Token[], pos: { i: number }, ctx: FormulaContext, rng: () => number): FormulaValue {
-  let left = parseTerm(tokens, pos, ctx, rng);
+function parseExpr(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
+  let left = parseTerm(tokens, pos, sink);
 
   while (pos.i < tokens.length) {
     const tok = tokens[pos.i];
     if (tok.t !== 'op' || (tok.v !== '+' && tok.v !== '-')) break;
     pos.i++;
-    const right = parseTerm(tokens, pos, ctx, rng);
+    const right = parseTerm(tokens, pos, sink);
     if (typeof left === 'string' || typeof right === 'string') {
       throw new Error('Маркеры weapon/auto нельзя складывать с числами');
     }
@@ -166,14 +214,14 @@ function parseExpr(tokens: Token[], pos: { i: number }, ctx: FormulaContext, rng
   return left;
 }
 
-function parseTerm(tokens: Token[], pos: { i: number }, ctx: FormulaContext, rng: () => number): FormulaValue {
-  let left = parseFactor(tokens, pos, ctx, rng);
+function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
+  let left = parseFactor(tokens, pos, sink);
 
   while (pos.i < tokens.length) {
     const tok = tokens[pos.i];
     if (tok.t !== 'op' || (tok.v !== '*' && tok.v !== '/')) break;
     pos.i++;
-    const right = parseFactor(tokens, pos, ctx, rng);
+    const right = parseFactor(tokens, pos, sink);
     if (typeof left === 'string' || typeof right === 'string') {
       throw new Error('Маркеры weapon/auto нельзя умножать');
     }
@@ -182,7 +230,7 @@ function parseTerm(tokens: Token[], pos: { i: number }, ctx: FormulaContext, rng
   return left;
 }
 
-function parseFactor(tokens: Token[], pos: { i: number }, ctx: FormulaContext, rng: () => number): FormulaValue {
+function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
   const tok = tokens[pos.i];
   if (!tok) throw new Error('Незавершённая формула');
 
@@ -193,17 +241,17 @@ function parseFactor(tokens: Token[], pos: { i: number }, ctx: FormulaContext, r
 
   if (tok.t === 'dice') {
     pos.i++;
-    return rollDice(tok.count, tok.sides, rng);
+    return rollDice(tok.count, tok.sides, sink);
   }
 
   if (tok.t === 'id') {
     pos.i++;
-    return resolveId(tok.v, ctx, rng);
+    return resolveId(tok.v, sink);
   }
 
   if (tok.t === 'lparen') {
     pos.i++;
-    const val = parseExpr(tokens, pos, ctx, rng);
+    const val = parseExpr(tokens, pos, sink);
     if (tokens[pos.i]?.t !== 'rparen') throw new Error('Ожидалась закрывающая скобка');
     pos.i++;
     return val;
@@ -211,12 +259,27 @@ function parseFactor(tokens: Token[], pos: { i: number }, ctx: FormulaContext, r
 
   if (tok.t === 'op' && tok.v === '-') {
     pos.i++;
-    const val = parseFactor(tokens, pos, ctx, rng);
+    const val = parseFactor(tokens, pos, sink);
     if (typeof val === 'string') throw new Error('Маркер нельзя инвертировать');
     return -val;
   }
 
   throw new Error(`Неожиданный токен: ${JSON.stringify(tok)}`);
+}
+
+function evalTokens(tokens: Token[], ctx: FormulaContext, detailed: boolean): FormulaValue {
+  const sink: EvalSink = {
+    ctx,
+    rng: ctx.rng ?? defaultRng,
+    dice: [],
+    modifiers: [],
+    detailed,
+  };
+  const pos = { i: 0 };
+  const result = parseExpr(tokens, pos, sink);
+  if (pos.i < tokens.length) throw new Error('Лишние символы в формуле');
+  if (typeof result === 'string') return result;
+  return result;
 }
 
 /** Вычислить формулу. Число возвращается как есть; weapon/auto — маркеры. */
@@ -225,13 +288,66 @@ export function evaluate(formula: string | number, ctx: FormulaContext = {}): Fo
   const trimmed = formula.trim();
   if (!trimmed) throw new Error('Пустая формула');
   if (MARKERS.has(trimmed.toLowerCase())) return trimmed.toLowerCase() as FormulaMarker;
+  return evalTokens(tokenize(trimmed), ctx, false);
+}
 
-  const rng = ctx.rng ?? defaultRng;
+function formatModifier(m: FormulaModifier): string {
+  const sign = m.value >= 0 ? '+' : '';
+  return `${sign}${m.value} ${m.source}`;
+}
+
+function buildRollText(dice: DieRoll[], modifiers: FormulaModifier[], total: number): string {
+  const parts: string[] = [];
+  if (dice.length) {
+    const bySides = new Map<number, number[]>();
+    for (const d of dice) {
+      if (!bySides.has(d.sides)) bySides.set(d.sides, []);
+      bySides.get(d.sides)!.push(d.result);
+    }
+    for (const [sides, results] of bySides) {
+      parts.push(`к${sides}: ${results.join('+')}`);
+    }
+  }
+  for (const m of modifiers) parts.push(formatModifier(m));
+  return parts.length ? `${parts.join(' ')} = ${total}` : String(total);
+}
+
+/** Бросок формулы с разбивкой по костям и модификаторам (для лога). */
+export function rollFormula(
+  formula: string,
+  ctx: Record<string, unknown> = {},
+  opts?: { modifiers?: FormulaModifier[]; rng?: () => number },
+): FormulaRollResult {
+  const trimmed = formula.trim();
+  const fctx: FormulaContext = { ...(ctx as FormulaContext), rng: opts?.rng ?? (ctx as FormulaContext).rng };
+  const sink: EvalSink = {
+    ctx: fctx,
+    rng: opts?.rng ?? fctx.rng ?? defaultRng,
+    dice: [],
+    modifiers: [],
+    detailed: true,
+  };
+
+  if (MARKERS.has(trimmed.toLowerCase())) {
+    throw new Error(`Формула-маркер «${trimmed}» не бросается`);
+  }
+
   const tokens = tokenize(trimmed);
   const pos = { i: 0 };
-  const result = parseExpr(tokens, pos, ctx, rng);
+  const result = parseExpr(tokens, pos, sink);
   if (pos.i < tokens.length) throw new Error(`Лишние символы в формуле «${formula}»`);
-  return result;
+  if (typeof result === 'string') throw new Error(`Формула-маркер «${result}» не бросается`);
+
+  const extra = (opts?.modifiers || []).reduce((s, m) => s + m.value, 0);
+  const allModifiers = [...sink.modifiers, ...(opts?.modifiers || [])];
+  const total = result + extra;
+
+  return {
+    total,
+    dice: sink.dice,
+    modifiers: allModifiers,
+    text: buildRollText(sink.dice, allModifiers, total),
+  };
 }
 
 function describeId(id: string, ctx: FormulaContext): string {

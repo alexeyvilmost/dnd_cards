@@ -2149,6 +2149,7 @@ type UpdateSpellRequest struct {
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
 	Rarity              Rarity       `json:"rarity"`
+	CardNumber          *string      `json:"card_number"`
 	Level               *int         `json:"level"`
 	School              *string      `json:"school"`
 	CastingTime         *string      `json:"casting_time"`

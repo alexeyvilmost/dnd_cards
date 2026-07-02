@@ -264,6 +264,20 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	if req.Rarity != "" && IsValidRarity(req.Rarity) {
 		spell.Rarity = req.Rarity
 	}
+	if req.CardNumber != nil && *req.CardNumber != "" && *req.CardNumber != spell.CardNumber {
+		cardNumber := *req.CardNumber
+		matched, _ := regexp.MatchString("^[a-zA-Z0-9_-]{1,30}$", cardNumber)
+		if !matched {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов"})
+			return
+		}
+		var existing Spell
+		if err := sc.db.Where("card_number = ? AND id <> ?", cardNumber, spell.ID).First(&existing).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Заклинание с таким ID уже существует"})
+			return
+		}
+		spell.CardNumber = cardNumber
+	}
 	if req.Level != nil {
 		if *req.Level >= 0 && *req.Level <= 12 {
 			spell.Level = *req.Level
