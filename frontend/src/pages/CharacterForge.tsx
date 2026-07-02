@@ -15,6 +15,7 @@ import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssign
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SpellPreview from '../components/SpellPreview';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
+import { isEntityUuid } from '../engine/ids';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { abilityMod } from '../character/derive';
@@ -124,14 +125,36 @@ const CharacterForge = () => {
   );
   const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell');
 
-  const grantedSpells = useMemo(() => {
-    const list: Spell[] = [];
-    for (const slug of ruleState.spells.known) {
-      const s = spellIndex.bySlug.get(slug);
-      if (s) list.push(s);
+  const [resolvedGrantedSpells, setResolvedGrantedSpells] = useState<Spell[]>([]);
+
+  useEffect(() => {
+    const slugs = ruleState.spells.known.filter((s) => !isEntityUuid(s));
+    if (!slugs.length) {
+      setResolvedGrantedSpells([]);
+      return;
     }
-    return list;
+    let stale = false;
+    (async () => {
+      const byId = new Map<string, Spell>();
+      for (const slug of slugs) {
+        const cached = spellIndex.bySlug.get(slug);
+        if (cached) {
+          byId.set(cached.id, cached);
+          continue;
+        }
+        try {
+          const s = await spellsApi.getSpell(slug);
+          if (s?.id) byId.set(s.id, s);
+        } catch {
+          /* slug не найден */
+        }
+      }
+      if (!stale) setResolvedGrantedSpells([...byId.values()]);
+    })();
+    return () => { stale = true; };
   }, [ruleState.spells.known, spellIndex]);
+
+  const grantedSpells = resolvedGrantedSpells;
 
   const selectedSpells = useMemo(() => {
     const byId = new Map<string, Spell>();
@@ -238,7 +261,7 @@ const CharacterForge = () => {
     { id: 'feat', label: 'Черта', icon: <Star size={20} />, sub: assembled.feats[0]?.name, status: featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count) ? 'ok' : 'todo' },
     { id: 'abilities', label: 'Хар-тики', icon: <Zap size={20} />, status: abilitiesDone ? 'ok' : 'todo' },
     { id: 'proficiencies', label: 'Владения', icon: <ListChecks size={20} /> },
-    { id: 'spells', label: 'Заклинания', icon: <Sparkles size={20} />, sub: selectedSpellCount ? `${selectedSpellCount}/${requiredSpellCount}` : undefined, status: spellChoices.length ? (spellsDone ? 'ok' : 'todo') : null },
+    { id: 'spells', label: 'Заклинания', icon: <Sparkles size={20} />, sub: spellChoices.length ? (selectedSpellCount ? `${selectedSpellCount}/${requiredSpellCount}` : undefined) : (grantedSpells.length ? `${grantedSpells.length} получено` : undefined), status: spellChoices.length ? (spellsDone ? 'ok' : 'todo') : (grantedSpells.length ? 'ok' : null) },
   ];
 
   const sectionTitle = sections.find((s) => s.id === active)?.label ?? 'Основное';
@@ -292,6 +315,7 @@ const CharacterForge = () => {
               {active === 'spells' && (
                 <SpellsSection
                   spells={spells}
+                  granted={grantedSpells}
                   choices={spellChoices}
                   resolved={draft.resolvedChoices}
                   setResolved={setResolved}
@@ -564,8 +588,9 @@ function spellMatchesChoice(spell: Spell, choice: PendingChoice): boolean {
   return true;
 }
 
-function SpellsSection({ spells, choices, resolved, setResolved }: {
+function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
   spells: Spell[];
+  granted: Spell[];
   choices: PendingChoice[];
   resolved: Record<string, string[]>;
   setResolved: (id: string, v: string[]) => void;
@@ -573,6 +598,11 @@ function SpellsSection({ spells, choices, resolved, setResolved }: {
   const [search, setSearch] = useState('');
   const [hovered, setHovered] = useState<Spell | null>(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  const grantedFiltered = useMemo(
+    () => granted.filter((spell) => !search || spell.name.toLowerCase().includes(search.toLowerCase())),
+    [granted, search],
+  );
 
   const selectedSpellOwners = useMemo(() => {
     const owners = new Map<string, { choiceId: string; label: string }>();
@@ -602,9 +632,36 @@ function SpellsSection({ spells, choices, resolved, setResolved }: {
     <div>
       <div className="forge-section-h">Заклинания и заговоры</div>
       <div className="spell-toolbar">
-        <input className="forge-input" style={{ maxWidth: 260 }} placeholder="Поиск по доступным…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="forge-input" style={{ maxWidth: 260 }} placeholder="Поиск…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
-      {choices.length === 0 && <p className="forge-note">Этот персонаж пока не получил доступных заклинаний из эффектов класса, вида или черт.</p>}
+      {grantedFiltered.length > 0 && (
+        <div className="forge-block">
+          <div className="forge-section-h">Получено от вида, класса или черты</div>
+          <p className="forge-note">Эти заклинания выдаются автоматически и не требуют выбора.</p>
+          <div className="forge-spell-icon-grid">
+            {grantedFiltered.map((spell) => (
+              <div
+                key={spell.id}
+                className="forge-spell-icon ready"
+                title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
+                onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+                onMouseLeave={() => setHovered(null)}
+              >
+                <img
+                  src={spell.image_url?.trim() || '/default_image.png'}
+                  alt={spell.name}
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
+                />
+                {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {choices.length === 0 && granted.length === 0 && (
+        <p className="forge-note">Этот персонаж пока не получил заклинаний из эффектов класса, вида или черт.</p>
+      )}
       {choices.map((choice) => {
         const selected = resolved[choice.id] || [];
         const filtered = spells
