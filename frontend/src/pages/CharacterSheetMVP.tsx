@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Pencil } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
+import { ArrowLeft, Dices, Pencil } from 'lucide-react';
+import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
@@ -15,6 +15,9 @@ import { labelOf, SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
+import EventJournal from '../components/EventJournal';
+import { rollEvent } from '../engine/events';
+import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -37,6 +40,21 @@ const CharacterSheetMVP = () => {
   const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [journal, setJournal] = useState<CharacterEventRow[]>([]);
+  const [journalLoading, setJournalLoading] = useState(false);
+  const [rollingInit, setRollingInit] = useState(false);
+
+  const loadJournal = useCallback(async (characterId: string) => {
+    setJournalLoading(true);
+    try {
+      const rows = await charactersV3Api.getEvents(characterId);
+      setJournal(rows);
+    } catch (e) {
+      console.error('journal load', e);
+    } finally {
+      setJournalLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -51,6 +69,7 @@ const CharacterSheetMVP = () => {
         const draft = characterToDraft(c);
         const asm = await loadAssembly(draft);
         if (!stale) setAssembled(asm);
+        if (!stale) await loadJournal(id);
       } catch (e) {
         console.error(e);
         if (!stale) setError('Не удалось загрузить лист персонажа');
@@ -59,7 +78,7 @@ const CharacterSheetMVP = () => {
       }
     })();
     return () => { stale = true; };
-  }, [id]);
+  }, [id, loadJournal]);
 
   const draft = useMemo(() => (character ? characterToDraft(character) : null), [character]);
   const ruleState = useMemo(
@@ -116,6 +135,24 @@ const CharacterSheetMVP = () => {
   const ac = ruleState.armorClass;
   const initiative = ruleState.initiativeBonus;
   const spellcasting = ruleState.spellcasting;
+
+  const rollInitiative = async () => {
+    if (!id || rollingInit) return;
+    setRollingInit(true);
+    try {
+      const roll = rollD20({
+        modifiers: [{ value: initiative, source: 'инициатива', reason: 'бонус инициативы' }],
+        rng: () => Math.random(),
+      });
+      const event = rollEvent('Инициатива', roll);
+      const saved = await charactersV3Api.postEvents(id, [{ type: 'roll', payload: event }]);
+      setJournal((prev) => [...saved, ...prev]);
+    } catch (e) {
+      console.error('initiative roll', e);
+    } finally {
+      setRollingInit(false);
+    }
+  };
 
   const headerLine = [
     assembled.race?.name,
@@ -341,6 +378,27 @@ const CharacterSheetMVP = () => {
               )}
             </section>
           )}
+
+          <section className="sheet-panel sheet-panel-wide">
+            <div className="sheet-journal-head">
+              <h2 className="sheet-h2">Журнал</h2>
+              <button
+                type="button"
+                className="forge-btn ghost sheet-roll-btn"
+                onClick={rollInitiative}
+                disabled={rollingInit}
+                title="Бросок инициативы"
+              >
+                <Dices size={16} />
+                {rollingInit ? 'Бросок…' : 'Инициатива'}
+              </button>
+            </div>
+            {journalLoading ? (
+              <p className="forge-note">Загрузка журнала…</p>
+            ) : (
+              <EventJournal rows={journal} />
+            )}
+          </section>
         </div>
       </div>
     </div>

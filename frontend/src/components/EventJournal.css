@@ -1,0 +1,80 @@
+.event-journal {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event-journal-empty {
+  margin: 0;
+  color: var(--forge-muted, #8a8f98);
+  font-size: 0.9rem;
+}
+
+.event-journal-item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.event-journal-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.event-journal-head:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.event-journal-time {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--forge-muted, #8a8f98);
+  font-variant-numeric: tabular-nums;
+}
+
+.event-journal-summary {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.event-journal-chevron {
+  flex: 0 0 auto;
+  opacity: 0.6;
+  font-size: 0.75rem;
+}
+
+.event-journal-detail {
+  padding: 0 0.75rem 0.65rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+  color: #c8cdd6;
+}
+
+.event-journal-detail p {
+  margin: 0.5rem 0 0;
+}
+
+.event-journal-dice {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+}
+
+.event-journal-dice .discarded {
+  opacity: 0.55;
+  text-decoration: line-through;
+}

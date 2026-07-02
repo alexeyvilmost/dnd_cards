@@ -321,6 +321,9 @@
 .sheet-panel { border: 1px solid var(--forge-line); border-radius: 10px; padding: 16px; background: var(--forge-panel); }
 .sheet-panel-wide { grid-column: 1 / -1; }
 .sheet-h2 { color: var(--forge-gold); font-size: 18px; margin: 0 0 12px; font-weight: 600; }
+.sheet-journal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sheet-journal-head .sheet-h2 { margin: 0; }
+.sheet-roll-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px; }
 .sheet-h3 { color: var(--forge-gold-dim); font-size: 14px; margin: 0 0 8px; font-weight: 600; }
 .sheet-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .sheet-ab { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--forge-panel-2); }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -272,4 +273,92 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "персонаж удалён"})
+}
+
+// GetCharacterEvents возвращает журнал событий персонажа (новые сверху).
+func (cc *CharacterV3Controller) GetCharacterEvents(c *gin.Context) {
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
+		return
+	}
+
+	characterID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
+		return
+	}
+
+	var count int64
+	if err := cc.db.Model(&CharacterV3{}).Where("id = ? AND user_id = ?", characterID, userID).Count(&count).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка проверки персонажа"})
+		return
+	}
+	if count == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	var events []CharacterEvent
+	if err := cc.db.Where("character_id = ?", characterID).Order("ts DESC, created_at DESC").Find(&events).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения журнала"})
+		return
+	}
+	c.JSON(http.StatusOK, events)
+}
+
+// PostCharacterEvents добавляет пакет событий в журнал персонажа.
+func (cc *CharacterV3Controller) PostCharacterEvents(c *gin.Context) {
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
+		return
+	}
+
+	characterID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
+		return
+	}
+
+	var count int64
+	if err := cc.db.Model(&CharacterV3{}).Where("id = ? AND user_id = ?", characterID, userID).Count(&count).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка проверки персонажа"})
+		return
+	}
+	if count == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		return
+	}
+
+	var req BatchCharacterEventsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса", "details": err.Error()})
+		return
+	}
+	if len(req.Events) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "пустой список событий"})
+		return
+	}
+
+	rows := make([]CharacterEvent, 0, len(req.Events))
+	now := time.Now()
+	for _, item := range req.Events {
+		ts := now
+		if item.Ts != nil {
+			ts = *item.Ts
+		}
+		rows = append(rows, CharacterEvent{
+			CharacterID: characterID,
+			Ts:          ts,
+			Type:        item.Type,
+			Payload:     item.Payload,
+		})
+	}
+
+	if err := cc.db.Create(&rows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка сохранения событий", "details": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, rows)
 }

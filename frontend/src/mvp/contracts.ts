@@ -157,9 +157,7 @@ const NOT_IMPLEMENTED = (step: string, name: string): never => {
 };
 
 // Шаг B2 — engine/roll.ts
-export function rollD20(_opts: RollD20Options): RollLog {
-  return NOT_IMPLEMENTED('B2', 'rollD20');
-}
+export { rollD20 } from '../engine/roll';
 export { rollFormula } from '../engine/formula';
 
 // Шаг D4/B2 — engine/modifiers.ts: собрать модификаторы и адвантаж

@@ -290,6 +290,12 @@ func GetAllMigrations() []Migration {
 			Up:          addSpellResources,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "048_character_events",
+			Description: "Create character_events table for engine event log",
+			Up:          createCharacterEventsTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS character_events CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -298,6 +304,27 @@ func GetAllMigrations() []Migration {
 func addSpellResources(db *sql.DB) error {
 	if _, err := db.Exec("ALTER TABLE spells ADD COLUMN IF NOT EXISTS resources JSONB"); err != nil {
 		return fmt.Errorf("addSpellResources: %w", err)
+	}
+	return nil
+}
+
+// createCharacterEventsTable — журнал событий движка по персонажу (фаза B3).
+func createCharacterEventsTable(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS character_events (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			character_id UUID NOT NULL REFERENCES characters_v3(id) ON DELETE CASCADE,
+			ts TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			type VARCHAR(64) NOT NULL,
+			payload JSONB NOT NULL,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_character_events_character_ts ON character_events(character_id, ts DESC)",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createCharacterEventsTable: %w", err)
+		}
 	}
 	return nil
 }
