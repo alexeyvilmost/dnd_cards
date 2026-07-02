@@ -39,11 +39,11 @@ func seedMvpEquipmentCards(db *sql.DB) error {
 			updated_at = NOW()`,
 		`INSERT INTO cards (
 			name, description, card_number, rarity, author, type, slot, weight,
-			bonus_type, bonus_value, defense_type, is_template
+			bonus_type, bonus_value, is_template
 		) VALUES (
 			'Щит', 'Тестовый щит для MVP-инвентаря.', 'MVP-SHIELD', 'common', 'Admin',
 			'shield', 'one_hand', 3,
-			'defense', '+2', 'shield', 'false'
+			'defense', '+2', 'false'
 		) ON CONFLICT (card_number) DO UPDATE SET
 			name = EXCLUDED.name,
 			description = EXCLUDED.description,
@@ -52,7 +52,7 @@ func seedMvpEquipmentCards(db *sql.DB) error {
 			weight = EXCLUDED.weight,
 			bonus_type = EXCLUDED.bonus_type,
 			bonus_value = EXCLUDED.bonus_value,
-			defense_type = EXCLUDED.defense_type,
+			defense_type = NULL,
 			is_template = EXCLUDED.is_template,
 			updated_at = NOW()`,
 	}
