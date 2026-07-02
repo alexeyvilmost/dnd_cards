@@ -169,7 +169,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
           <Search size={16} className="sheet-inv-search-icon" />
           <input
             className="forge-input sheet-inv-search-input"
-            placeholder="Поиск в библиотеке карт (мин. 2 символа)…"
+            placeholder="Поиск: «Длинный меч», «Щит» (MVP-LONGSWORD / MVP-SHIELD)…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

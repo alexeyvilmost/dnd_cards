@@ -302,6 +302,12 @@ func GetAllMigrations() []Migration {
 			Up:          addCharacterRuntimeFields,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "050_mvp_equipment",
+			Description: "Seed MVP equipment cards for inventory testing",
+			Up:          seedMvpEquipmentCards,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

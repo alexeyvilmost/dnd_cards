@@ -1,6 +1,9 @@
 package main
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,7 +58,7 @@ type CharacterV3 struct {
 
 	// Runtime (фаза C1): экипировка, инвентарь, ресурсы боя
 	Equipment      *JSONMap    `json:"equipment" gorm:"type:jsonb"`
-	InventoryItems *Properties `json:"inventory_items" gorm:"type:jsonb"`
+	InventoryItems *InventoryItemRows `json:"inventory_items" gorm:"type:jsonb"`
 	Resources      *JSONMap    `json:"resources" gorm:"type:jsonb"`
 	MaxResources   *JSONMap    `json:"max_resources" gorm:"type:jsonb"`
 	ActiveEffects  *Properties `json:"active_effects" gorm:"type:jsonb"`
@@ -149,10 +152,47 @@ type PatchCharacterRuntimeRequest struct {
 	CurrentHP      *int        `json:"current_hp"`
 	MaxHP          *int        `json:"max_hp"`
 	Equipment      *JSONMap    `json:"equipment"`
-	InventoryItems *Properties `json:"inventory_items"`
+	InventoryItems *InventoryItemRows `json:"inventory_items"`
 	Resources      *JSONMap    `json:"resources"`
 	MaxResources   *JSONMap    `json:"max_resources"`
 	ActiveEffects  *Properties `json:"active_effects"`
 	TurnState      *JSONMap    `json:"turn_state"`
 	Currency       *JSONMap    `json:"currency"`
+}
+
+// InventoryItemRow — строка инвентаря персонажа v3.
+type InventoryItemRow struct {
+	CardID string `json:"card_id"`
+	Qty    int    `json:"qty"`
+}
+
+// InventoryItemRows — jsonb-массив инвентаря.
+type InventoryItemRows []InventoryItemRow
+
+func (r *InventoryItemRows) Scan(value interface{}) error {
+	if value == nil {
+		*r = nil
+		return nil
+	}
+	var data []byte
+	switch v := value.(type) {
+	case string:
+		data = []byte(v)
+	case []byte:
+		data = v
+	default:
+		return fmt.Errorf("неподдерживаемый тип для InventoryItemRows: %T", value)
+	}
+	if len(data) == 0 || string(data) == "null" {
+		*r = nil
+		return nil
+	}
+	return json.Unmarshal(data, r)
+}
+
+func (r InventoryItemRows) Value() (driver.Value, error) {
+	if r == nil {
+		return nil, nil
+	}
+	return json.Marshal(r)
 }
