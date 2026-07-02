@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dnd_cards — превью нового дизайна</title>
+<style>
+/* ═══════════════ ТОКЕНЫ (docs/design-project.md §2) ═══════════════ */
+:root{
+  --bg:#141210; --panel:#1c1813; --panel-2:#241f18;
+  --border:#6b5836; --gold:#d8b978; --gold-dim:#c9a45f;
+  --text:#e8e0d0; --text-dim:#a99f8b; --danger:#d98a6a;
+  --glow:rgba(201,162,39,.35);
+  --dt-fire:#e8703d; --dt-cold:#7ec8e3; --dt-necrotic:#9b7bd4;
+  --dt-radiant:#f0d98a; --dt-physical:#c9bfae; --dt-acid:#9acb46;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--bg); color:var(--text);
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif; line-height:1.45;}
+h1,h2,h3,.serif{font-family:Georgia,serif; color:var(--gold); font-weight:600;}
+main{max-width:1280px; margin:0 auto; padding:24px 20px 80px;}
+
+/* Навигация превью */
+.topnav{position:sticky; top:0; z-index:50; background:rgba(20,18,16,.94);
+  border-bottom:1px solid var(--border); backdrop-filter:blur(4px);}
+.topnav .in{max-width:1280px; margin:0 auto; display:flex; gap:22px; padding:12px 20px; align-items:center;}
+.topnav a{color:var(--text-dim); text-decoration:none; font-size:14px;}
+.topnav a:hover{color:var(--gold);}
+.topnav b{color:var(--gold); font-family:Georgia,serif; margin-right:8px;}
+
+section{margin-top:56px;}
+.sec-h{font-size:22px; margin-bottom:4px;}
+.sec-sub{color:var(--text-dim); font-size:14px; margin-bottom:22px;}
+.demo-row{display:flex; gap:28px; flex-wrap:wrap; align-items:flex-end; margin:18px 0;}
+.demo-note{font-size:12px; color:var(--text-dim); margin-top:6px; text-align:center;}
+.swatches{display:flex; gap:10px; flex-wrap:wrap;}
+.sw{width:120px; border:1px solid var(--border); border-radius:10px; overflow:hidden;}
+.sw .c{height:52px;} .sw .t{padding:6px 8px; font-size:11px; color:var(--text-dim); background:var(--panel);}
+
+/* ═══════════════ ОРНАМЕНТНАЯ РАМКА ═══════════════ */
+.ornate{position:relative; border:1px solid var(--gold-dim); border-radius:16px;
+  background:linear-gradient(170deg, rgba(36,31,24,.6), rgba(20,18,16,.9)); padding:28px 30px;}
+.ornate::before,.ornate::after,
+.ornate .c3,.ornate .c4{content:''; position:absolute; width:26px; height:26px;
+  border:2px solid var(--gold-dim); pointer-events:none;}
+.ornate::before{top:-2px; left:-2px; border-right:none; border-bottom:none; border-radius:14px 0 0 0;}
+.ornate::after{top:-2px; right:-2px; border-left:none; border-bottom:none; border-radius:0 14px 0 0;}
+.ornate .c3{bottom:-2px; left:-2px; border-right:none; border-top:none; border-radius:0 0 0 14px;}
+.ornate .c4{bottom:-2px; right:-2px; border-left:none; border-top:none; border-radius:0 0 14px 0;}
+.ornate .spire{position:absolute; top:-17px; left:50%; transform:translateX(-50%);
+  width:34px; height:34px; background:var(--bg); border:1px solid var(--gold-dim); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--gold);}
+
+/* ═══════════════ EntityIcon (§3.1) ═══════════════ */
+.ei{position:relative; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px; border:1px solid var(--border); cursor:pointer;
+  background:radial-gradient(circle at 50% 35%, #35302a 0%, #211d18 70%, #191512 100%);
+  transition:transform .12s ease, box-shadow .12s ease; user-select:none;}
+.ei img{width:72%; height:72%; object-fit:contain; pointer-events:none;}
+.ei .glyph{pointer-events:none; filter:saturate(.55) sepia(.25); text-shadow:0 2px 6px rgba(0,0,0,.7);}
+.ei-sm{width:32px; height:32px; font-size:16px;}
+.ei-md{width:44px; height:44px; font-size:22px;}
+.ei-lg{width:56px; height:56px; font-size:28px;}
+.ei-xl{width:76px; height:76px; font-size:38px; border-radius:12px;}
+.ei.ready{border-color:var(--gold-dim);}
+.ei.ready:hover{transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,.5), 0 0 14px var(--glow);}
+.ei.selected{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 0 18px var(--glow);}
+.ei.disabled{filter:grayscale(1) brightness(.6); cursor:not-allowed;}
+.ei .badge{position:absolute; right:-5px; bottom:-5px; min-width:17px; height:17px; padding:0 4px;
+  border-radius:9px; background:#241f18; border:1px solid var(--gold-dim); color:var(--gold);
+  font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+.ei .corner{position:absolute; left:-4px; top:-4px; width:10px; height:10px; border-radius:3px;
+  border:1px solid rgba(0,0,0,.5);}
+.corner-bonus{background:#e0913e;} .corner-react{background:#5f8fd4;}
+.ei-wrap{display:inline-flex; flex-direction:column; align-items:center; gap:7px; width:96px; text-align:center;}
+.ei-wrap .lbl{font-size:13px; color:var(--text); line-height:1.15;}
+.ei-wrap.sel .lbl{color:var(--gold);}
+
+/* ═══════════════ EntityInline (§3.2) ═══════════════ */
+.einline{display:flex; align-items:center; gap:8px; padding:3px 0; cursor:pointer; width:fit-content;}
+.einline .ico{width:22px; height:22px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 40% 35%, #2d4a6b, #16243a 75%);
+  border:1px solid #3d5877; display:flex; align-items:center; justify-content:center; font-size:12px;}
+.einline .nm{color:var(--gold-dim); text-decoration:underline; text-underline-offset:2px; font-size:14.5px;}
+.einline:hover .nm{color:var(--gold);}
+.einline .src{color:var(--text-dim); font-size:12px;}
+
+/* ═══════════════ EntityHoverCard = sp-tip (§3.3) ═══════════════ */
+.sp-tip{position:relative; width:330px; border-radius:12px; color:#ece3d4;
+  background:linear-gradient(160deg,#2b2520,#191410); border:1px solid #8a7320;
+  box-shadow:0 12px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(201,162,39,.08);
+  padding:18px 18px 0; font-size:14px;}
+.sp-tip .bigicon{position:absolute; top:-24px; right:-16px; width:92px; height:92px;
+  display:flex; align-items:center; justify-content:center; font-size:58px;
+  filter:drop-shadow(0 0 16px rgba(201,162,39,.55)); pointer-events:none;}
+.sp-tip h4{font-family:Georgia,serif; font-size:1.3rem; color:#f3ead4; padding-right:74px; line-height:1.15; font-weight:600;}
+.sp-tip .subtype{color:#a59886; font-size:.88rem; margin:.15rem 0 .8rem; font-style:italic;}
+.sp-tip .srow{display:flex; align-items:center; gap:.55rem; margin:.35rem 0;}
+.sp-tip .lbl{color:#a59886; font-size:.8rem; min-width:92px;}
+.sp-tip .die{width:29px; height:29px; border-radius:6px; display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.7rem; color:#cfeac0;
+  background:radial-gradient(circle at 50% 40%,#3a5f3a,#1d331d); border:1px solid #4f7d3a;}
+.sp-tip .die.save{background:radial-gradient(circle at 50% 40%,#5a4a7a,#2a2140); border-color:#6a5a9a; color:#d8c8f0;}
+.sp-tip .dmg{font-weight:700;}
+.sp-tip .desc{font-size:.9rem; line-height:1.5; color:#d8cdb9; margin:.5rem 0 .9rem;}
+.sp-tip .desc b{color:#f0d98a;}
+.sp-tip .meta{display:flex; gap:1rem; flex-wrap:wrap; padding:.65rem 0; border-top:1px solid rgba(58,49,39,.5);
+  color:#a59886; font-size:.82rem;}
+.sp-tip .costbar{display:flex; gap:.6rem; flex-wrap:wrap; margin:0 -18px; padding:.55rem 18px;
+  background:linear-gradient(#221b15,#1a140f); border-top:1px solid #4a3f35; border-radius:0 0 12px 12px; font-size:.82rem;}
+.sp-tip .cost{display:inline-flex; align-items:center; gap:.35rem;}
+.pip{width:12px; height:12px; display:inline-block;}
+.pip-a{background:var(--gold); border-radius:50%;}
+.pip-b{background:#e0913e; border-radius:2px;}
+.pip-s{background:#9a6fd4; border-radius:2px;}
+#hovercard{position:fixed; z-index:100; pointer-events:none; display:none;}
+
+/* ═══════════════ РЕЙЛ ПРОГРЕССА (§4.1) ═══════════════ */
+.rail{display:flex; flex-direction:column; gap:20px; width:200px; flex:0 0 auto; padding-top:8px;}
+.rail .step{display:flex; gap:12px; align-items:center; cursor:pointer;}
+.medal{width:44px; height:44px; border-radius:50%; flex:0 0 auto; position:relative;
+  border:2px solid var(--gold-dim); display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 50% 35%, #33291a, #1a140d 80%); color:var(--gold); font-size:19px;}
+.medal::after{content:''; position:absolute; inset:3px; border-radius:50%; border:1px dashed rgba(216,185,120,.35);}
+.rail .step.todo .medal{border-color:#4a3f30; color:#6b5f4d;}
+.rail .step.active .medal{box-shadow:0 0 12px var(--glow);}
+.rail .t1{font-size:14.5px; color:var(--text);}
+.rail .t2{font-size:12.5px; color:var(--gold-dim);}
+.rail .step.todo .t1,.rail .step.todo .t2{color:#6b5f4d;}
+.rail .step.active .t1{color:var(--gold);}
+
+/* ═══════════════ ЛЕНТА ОСОБЕННОСТЕЙ ═══════════════ */
+.strip{border:1px solid var(--border); border-radius:12px; padding:12px 18px 14px; text-align:center;
+  background:rgba(28,24,19,.55); width:fit-content; margin:0 auto;}
+.strip .cap{font-family:Georgia,serif; color:var(--gold); font-size:15px; margin-bottom:10px;}
+.strip .icons{display:flex; gap:10px; justify-content:center;}
+
+/* Résumé-карточка (§4.5) */
+.resume{width:250px; flex:0 0 auto;}
+.resume .emblem{width:72px; height:72px; margin:0 auto 10px; border-radius:50%;
+  border:2px solid var(--gold-dim); display:flex; align-items:center; justify-content:center; font-size:34px;
+  background:radial-gradient(circle at 50% 30%, #2c3d57, #131c2b 75%); box-shadow:0 0 18px rgba(95,143,212,.25);}
+.resume h3{text-align:center; font-size:16px; color:var(--text); font-family:inherit; font-weight:600;}
+.resume .sub{text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:12px;}
+.abrow{display:flex; justify-content:center; gap:9px; margin-bottom:12px;}
+.abrow .a{text-align:center;} .abrow .k{font-size:10.5px; color:var(--text-dim); letter-spacing:.4px;}
+.abrow .v{font-size:15px; color:var(--text); font-weight:600;}
+.medstat{display:flex; gap:12px; justify-content:center; margin-bottom:14px;}
+.medstat .m{width:44px; height:44px; border-radius:50%; border:1.5px solid var(--gold-dim);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:#191512; font-size:13px; font-weight:700;}
+.medstat .m span{font-size:8.5px; font-weight:400; color:var(--text-dim);}
+.resume .grp{font-family:Georgia,serif; color:var(--gold); font-size:14px; text-align:center; margin:10px 0 6px;}
+.resume .kv{font-size:12.5px; margin:3px 0;}
+.resume .kv b{color:var(--text); font-weight:600;}
+.resume .kv i{color:var(--gold-dim); font-style:normal;}
+
+/* Сетка выбора класса */
+.pickgrid{display:grid; grid-template-columns:repeat(4, 1fr); gap:18px 8px; justify-items:center; margin:8px 0 18px;}
+.center-desc{max-width:560px; margin:0 auto 18px; text-align:center; color:var(--text-dim); font-size:14px;}
+.creation-wrap{display:flex; gap:26px; align-items:flex-start;}
+.creation-mid{flex:1;}
+.pb-row{display:flex; align-items:center; gap:10px; max-width:430px; margin:0 auto 8px;}
+.pb-row .nm{flex:1; font-size:15px;}
+.pb-row .val{width:34px; text-align:right; font-size:16px; font-weight:600;}
+.pb-btn{width:24px; height:24px; border-radius:50%; border:1px solid var(--gold-dim); background:none;
+  color:var(--gold); cursor:pointer; font-size:14px; line-height:1;}
+.pb-chk{width:15px; height:15px; border:1px solid var(--border); border-radius:3px; margin:0 8px;}
+.pb-chk.on{background:var(--gold); box-shadow:inset 0 0 0 2px #241f18;}
+
+/* ═══════════════ ЛИСТ ПЕРСОНАЖА (LSS, §5) ═══════════════ */
+.sheet{display:grid; grid-template-columns:250px 1fr 1fr; gap:14px;}
+.sbox{border:1px solid var(--border); border-radius:10px; background:rgba(28,24,19,.5); padding:12px 14px;}
+.sbox .cap{font-size:10.5px; letter-spacing:1.2px; color:var(--text-dim); text-transform:uppercase;
+  text-align:center; margin-bottom:8px; border-bottom:1px solid rgba(107,88,54,.4); padding-bottom:5px;}
+.sheet-head{grid-column:1/-1; display:flex; gap:22px; align-items:center; padding:14px 20px;}
+.sheet-head .nm{font-family:Georgia,serif; font-size:24px; color:var(--gold);}
+.sheet-head .f{font-size:13px;} .sheet-head .f span{display:block; color:var(--text-dim); font-size:10px; letter-spacing:1px; text-transform:uppercase; margin-top:2px;}
+.lvl-medal{margin-left:auto; width:58px; height:58px; border-radius:50%; border:2px solid var(--gold);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; font-size:20px; color:var(--gold);
+  background:radial-gradient(circle at 50% 35%, #33291a, #191410);}
+.lvl-medal span{font-size:8px; color:var(--text-dim); font-weight:400; letter-spacing:1px;}
+.statrow{grid-column:1/-1; display:flex; gap:14px; flex-wrap:wrap;}
+.statrow .sbox{flex:1; min-width:110px; text-align:center; padding:10px 8px;}
+.statrow .big{font-size:22px; font-weight:700; color:var(--text);}
+.shield{width:64px; height:72px; margin:0 auto; clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%);
+  background:linear-gradient(#2c2620,#191410); border:0; display:flex; align-items:center; justify-content:center;
+  font-size:24px; font-weight:700; color:var(--gold); box-shadow:inset 0 0 0 2px var(--gold-dim);}
+.hpline{display:flex; justify-content:center; align-items:baseline; gap:6px;}
+.hpline .cur{font-size:24px; font-weight:700;} .hpline .max{color:var(--text-dim);}
+.deaths{display:flex; gap:4px; justify-content:center; margin-top:6px;}
+.deaths i{width:9px; height:9px; border-radius:50%; border:1px solid var(--gold-dim); display:inline-block;}
+.deaths i.on{background:var(--gold);}
+.abil-block{margin-bottom:12px;}
+.abil-block .top{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+.abil-block .mod{width:46px; height:46px; border-radius:50%; border:2px solid var(--gold-dim);
+  display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--gold); background:#191512;}
+.abil-block .an{font-size:13px; letter-spacing:.6px;} .abil-block .sc{color:var(--text-dim); font-size:12px;}
+.abil-block ul{list-style:none;} .abil-block li{display:flex; justify-content:space-between; font-size:12.5px; padding:1.5px 0; color:var(--text-dim);}
+.abil-block li.prof{color:var(--text);} .abil-block li.prof::before{content:'●'; color:var(--gold); margin-right:6px; font-size:9px;}
+.abil-block li:not(.prof)::before{content:'○'; color:#5c5142; margin-right:6px; font-size:9px;}
+.wtable{width:100%; border-collapse:collapse; font-size:13px;}
+.wtable th{color:var(--text-dim); font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; text-align:left; padding:3px 6px; border-bottom:1px solid rgba(107,88,54,.4);}
+.wtable td{padding:5px 6px; border-bottom:1px solid rgba(107,88,54,.18);}
+.journal{font-size:12.5px; color:var(--text-dim);}
+.journal .e{padding:5px 0; border-bottom:1px solid rgba(107,88,54,.18);}
+.journal .roll{color:var(--text);} .journal .hit{color:#7bbf6a;} .journal .crit{color:var(--gold);}
+.chips-run{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;}
+.runbtn{border:1px solid var(--gold-dim); background:none; color:var(--gold); border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer;}
+.runbtn:hover{background:rgba(216,185,120,.08);}
+.spellgrid{display:flex; gap:8px; flex-wrap:wrap;}
+.note-dep{font-size:12px; color:var(--danger); margin-top:8px;}
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="in">
+  <b>dnd_cards · дизайн-превью</b>
+  <a href="#tokens">Токены</a>
+  <a href="#entities">Сущности</a>
+  <a href="#creation">Создание персонажа</a>
+  <a href="#abilities">Очки умений</a>
+  <a href="#sheet">Лист персонажа</a>
+</div></nav>
+
+<main>
+
+<!-- ══════════════════ ТОКЕНЫ ══════════════════ -->
+<section id="tokens">
+  <h2 class="sec-h">1 · Токены</h2>
+  <p class="sec-sub">Единый :root для всего сайта (см. design-project.md §2). Заголовки — Georgia, золото.</p>
+  <div class="swatches">
+    <div class="sw"><div class="c" style="background:var(--bg)"></div><div class="t">--bg #141210</div></div>
+    <div class="sw"><div class="c" style="background:var(--panel)"></div><div class="t">--panel #1c1813</div></div>
+    <div class="sw"><div class="c" style="background:var(--panel-2)"></div><div class="t">--panel-2 #241f18</div></div>
+    <div class="sw"><div class="c" style="background:var(--border)"></div><div class="t">--border #6b5836</div></div>
+    <div class="sw"><div class="c" style="background:var(--gold)"></div><div class="t">--gold #d8b978</div></div>
+    <div class="sw"><div class="c" style="background:var(--gold-dim)"></div><div class="t">--gold-dim #c9a45f</div></div>
+    <div class="sw"><div class="c" style="background:var(--text)"></div><div class="t">--text #e8e0d0</div></div>
+    <div class="sw"><div class="c" style="background:var(--danger)"></div><div class="t">--danger #d98a6a</div></div>
+  </div>
+</section>
+
+<!-- ══════════════════ СУЩНОСТИ ══════════════════ -->
+<section id="entities">
+  <h2 class="sec-h">2 · Единая система сущностей</h2>
+  <p class="sec-sub">Два формата — <b style="color:var(--gold)">квадратная иконка</b> и <b style="color:var(--gold)">иконка + текст</b>.
+    Оба при наведении показывают одну и ту же карточку-инспектор. Наведи на любой элемент ниже.</p>
+
+  <div class="demo-row">
+    <div>
+      <div class="demo-note">EntityIcon: sm / md / lg / xl</div>
+      <div style="display:flex; gap:14px; align-items:flex-end; margin-top:8px;">
+        <span class="ei ei-sm ready" data-tip="tip-sw"><span class="glyph">🌬️</span></span>
+        <span class="ei ei-md ready" data-tip="tip-sw"><span class="glyph">🌬️</span><span class="corner corner-bonus"></span><span class="badge">2</span></span>
+        <span class="ei ei-lg ready" data-tip="tip-atk"><span class="glyph">⚔️</span></span>
+        <span class="ei ei-xl ready" data-tip="tip-fb"><span class="glyph">🔥</span><span class="badge">З</span></span>
+      </div>
+    </div>
+    <div>
+      <div class="demo-note">Состояния: ready · selected · disabled</div>
+      <div style="display:flex; gap:14px; margin-top:8px;">
+        <span class="ei ei-lg ready" data-tip="tip-atk"><span class="glyph">⚔️</span></span>
+        <span class="ei ei-lg selected" data-tip="tip-atk"><span class="glyph">⚔️</span></span>
+        <span class="ei ei-lg disabled"><span class="glyph">⚔️</span></span>
+      </div>
+    </div>
+    <div>
+      <div class="demo-note">Уголки типа ресурса и бейджи</div>
+      <div style="display:flex; gap:14px; margin-top:8px;">
+        <span class="ei ei-lg ready" data-tip="tip-sw"><span class="glyph">🌬️</span><span class="corner corner-bonus"></span><span class="badge">2</span></span>
+        <span class="ei ei-lg ready" data-tip="tip-shield"><span class="glyph">🛡️</span><span class="corner corner-react"></span></span>
+        <span class="ei ei-lg ready" data-tip="tip-item"><span class="glyph">🗡️</span><span class="badge">1к8</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-row" style="align-items:flex-start;">
+    <div style="min-width:300px;">
+      <div class="demo-note" style="text-align:left;">EntityInline — списки на листе и в сводках</div>
+      <div style="margin-top:8px;">
+        <div class="einline" data-tip="tip-sw"><span class="ico">🌬️</span><span class="nm">Второе дыхание.</span><span class="src">· класс Воин</span></div>
+        <div class="einline" data-tip="tip-dv"><span class="ico">👁️</span><span class="nm">Тёмное зрение.</span><span class="src">· вид Дварф</span></div>
+        <div class="einline" data-tip="tip-fb"><span class="ico">🔥</span><span class="nm">Огненная стрела.</span><span class="src">· заговор</span></div>
+        <div class="einline" data-tip="tip-item"><span class="ico">🗡️</span><span class="nm">Длинный меч.</span><span class="src">· экипировано</span></div>
+      </div>
+      <p class="note-dep">Депрекация: синий поповер forge-effect-card и slate-EffectPreview → заменяются этой карточкой.</p>
+    </div>
+    <div>
+      <div class="demo-note" style="text-align:left;">EntityHoverCard (sp-tip) — статично для образца</div>
+      <div class="sp-tip" style="margin-top:8px;">
+        <div class="bigicon">⚔️</div>
+        <h4>Атака оружием</h4>
+        <div class="subtype">Действие · ближний бой</div>
+        <div class="srow"><span class="lbl">Атака:</span><span class="die">к20</span><span class="dmg">+ 5</span></div>
+        <div class="srow"><span class="lbl">Урон:</span><span class="dmg" style="color:var(--dt-physical)">1к8 + 3 · рубящий</span></div>
+        <div class="desc">Совершаете атаку удерживаемым оружием. При попадании наносите урон <b>костью оружия</b> плюс модификатор характеристики.</div>
+        <div class="meta"><span>🎯 Касание</span><span>⚔ Оружие</span></div>
+        <div class="costbar"><span class="cost"><span class="pip pip-a"></span>Действие</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ СОЗДАНИЕ ПЕРСОНАЖА ══════════════════ -->
+<section id="creation">
+  <h2 class="sec-h">3 · Создание персонажа — экран «Класс»</h2>
+  <p class="sec-sub">Рейл прогресса с медальонами · центральная орнаментная панель · résumé-карточка справа (§4).</p>
+
+  <div class="creation-wrap">
+    <!-- Рейл -->
+    <div class="rail">
+      <div class="step"><div class="medal">✓</div><div><div class="t1">Общее</div><div class="t2">Тордек</div></div></div>
+      <div class="step"><div class="medal">✓</div><div><div class="t1">Вид</div><div class="t2">Дварф</div></div></div>
+      <div class="step"><div class="medal">✓</div><div><div class="t1">Подвид</div><div class="t2">Щитовой дварф</div></div></div>
+      <div class="step active"><div class="medal">⚒</div><div><div class="t1">Класс</div><div class="t2">Монах</div></div></div>
+      <div class="step"><div class="medal">✓</div><div><div class="t1">Предыстория</div><div class="t2">Послушник</div></div></div>
+      <div class="step todo"><div class="medal">◆</div><div><div class="t1">Характеристики</div><div class="t2">27/27</div></div></div>
+      <div class="step todo"><div class="medal">◆</div><div><div class="t1">Владения</div><div class="t2">—</div></div></div>
+    </div>
+
+    <!-- Центральная панель -->
+    <div class="creation-mid ornate">
+      <i class="c3"></i><i class="c4"></i>
+      <div class="spire">⚒</div>
+      <h2 style="text-align:center; font-size:24px; margin-bottom:18px;">Класс</h2>
+      <div class="pickgrid">
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🪓</span></span><span class="lbl">Варвар</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🎻</span></span><span class="lbl">Бард</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🔨</span></span><span class="lbl">Жрец</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🌿</span></span><span class="lbl">Друид</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🗡️</span></span><span class="lbl">Воин</span></span>
+        <span class="ei-wrap sel"><span class="ei ei-xl selected" data-tip="tip-class"><span class="glyph">👊</span></span><span class="lbl">Монах</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🛡️</span></span><span class="lbl">Паладин</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🏹</span></span><span class="lbl">Следопыт</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🔪</span></span><span class="lbl">Плут</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">🔥</span></span><span class="lbl">Чародей</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">👁️</span></span><span class="lbl">Колдун</span></span>
+        <span class="ei-wrap"><span class="ei ei-xl ready" data-tip="tip-class"><span class="glyph">📖</span></span><span class="lbl">Волшебник</span></span>
+      </div>
+
+      <h3 style="text-align:center; font-size:20px; margin-bottom:8px;">Монах</h3>
+      <p class="center-desc">Вы укрощаете силу своего космического просветления, ловко уворачиваясь и умело разя врагов
+        вихрем ошеломляющих ударов и искусных боевых приёмов.</p>
+
+      <div style="display:flex; gap:18px; justify-content:center; flex-wrap:wrap;">
+        <div class="strip">
+          <div class="cap">Действия</div>
+          <div class="icons">
+            <span class="ei ei-md ready" data-tip="tip-flurry"><span class="glyph">👊</span><span class="corner corner-bonus"></span></span>
+          </div>
+        </div>
+        <div class="strip">
+          <div class="cap">Особенности класса</div>
+          <div class="icons">
+            <span class="ei ei-md ready" data-tip="tip-ma"><span class="glyph">🥋</span></span>
+            <span class="ei ei-md ready" data-tip="tip-ud"><span class="glyph">💠</span></span>
+            <span class="ei ei-md ready" data-tip="tip-ma"><span class="glyph">🌀</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Résumé -->
+    <div class="resume ornate" style="padding:20px 18px;">
+      <i class="c3"></i><i class="c4"></i>
+      <div class="emblem">👊</div>
+      <h3>Щитовой дварф</h3>
+      <div class="sub">Уровень 1 Монах</div>
+      <div class="abrow">
+        <span class="a"><span class="k">СИЛ</span><br><span class="v">12</span></span>
+        <span class="a"><span class="k">ЛВК</span><br><span class="v">17</span></span>
+        <span class="a"><span class="k">ВЫН</span><br><span class="v">14</span></span>
+        <span class="a"><span class="k">ИНТ</span><br><span class="v">8</span></span>
+        <span class="a"><span class="k">МДР</span><br><span class="v">14</span></span>
+        <span class="a"><span class="k">ХАР</span><br><span class="v">10</span></span>
+      </div>
+      <div class="medstat">
+        <div class="m">+3<span>иниц.</span></div>
+        <div class="m">10<span>HP</span></div>
+        <div class="m">16<span>КБ</span></div>
+      </div>
+      <div class="grp">Действия</div>
+      <div style="display:flex; justify-content:center; gap:8px; margin-bottom:6px;">
+        <span class="ei ei-md ready" data-tip="tip-flurry"><span class="glyph">👊</span><span class="corner corner-bonus"></span></span>
+        <span class="ei ei-md ready" data-tip="tip-atk"><span class="glyph">⚔️</span></span>
+      </div>
+      <div class="grp">Умения</div>
+      <div class="kv"><b>Оружие</b> — <i>простое, короткие мечи</i></div>
+      <div class="kv"><b>Броня</b> — <i>лёгкая, средняя</i></div>
+      <div class="kv"><b>Навыки</b> — <i>Атлетика, Акробатика, Проницательность</i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ ОЧКИ УМЕНИЙ ══════════════════ -->
+<section id="abilities">
+  <h2 class="sec-h">4 · Создание персонажа — «Характеристики»</h2>
+  <p class="sec-sub">Point-buy 27 + чекбоксы «Назначить бонус +2 / +1» (правила 2024, §4.4).</p>
+  <div class="ornate" style="max-width:620px; margin:0 auto;">
+    <i class="c3"></i><i class="c4"></i>
+    <div class="spire">✦</div>
+    <h2 style="text-align:center; font-size:22px;">Очки умений</h2>
+    <p style="text-align:center; color:var(--text-dim); font-size:13px; margin:4px 0 16px;">Бонус умения: +2 · Очки умений: <b style="color:var(--gold)">0</b></p>
+    <div style="display:flex; justify-content:flex-end; gap:18px; max-width:430px; margin:0 auto 6px; font-size:11px; color:var(--text-dim);">
+      <span>Назначить бонус&nbsp;&nbsp;+2&nbsp;&nbsp;&nbsp;+1</span>
+    </div>
+    <div class="pb-row"><span class="nm">Сила</span><button class="pb-btn">−</button><span class="val">12</span><button class="pb-btn">+</button><span class="pb-chk"></span><span class="pb-chk"></span></div>
+    <div class="pb-row"><span class="nm" style="color:var(--gold)">★ Ловкость</span><button class="pb-btn">−</button><span class="val">15</span><button class="pb-btn">+</button><span class="pb-chk on"></span><span class="pb-chk"></span></div>
+    <div class="pb-row"><span class="nm">Выносливость</span><button class="pb-btn">−</button><span class="val">13</span><button class="pb-btn">+</button><span class="pb-chk"></span><span class="pb-chk on"></span></div>
+    <div class="pb-row"><span class="nm">Интеллект</span><button class="pb-btn">−</button><span class="val">8</span><button class="pb-btn">+</button><span class="pb-chk"></span><span class="pb-chk"></span></div>
+    <div class="pb-row"><span class="nm">Мудрость</span><button class="pb-btn">−</button><span class="val">14</span><button class="pb-btn">+</button><span class="pb-chk"></span><span class="pb-chk"></span></div>
+    <div class="pb-row"><span class="nm">Харизма</span><button class="pb-btn">−</button><span class="val">10</span><button class="pb-btn">+</button><span class="pb-chk"></span><span class="pb-chk"></span></div>
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:16px;">
+      <button class="runbtn">Очистить</button>
+      <button class="runbtn">Оптимальные значения</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ ЛИСТ ПЕРСОНАЖА ══════════════════ -->
+<section id="sheet">
+  <h2 class="sec-h">5 · Лист персонажа (референс LSS, тёмная тема)</h2>
+  <p class="sec-sub">Минимализм: рамочные поля, способности — только EntityInline-строками, полная информация по наведению. Каждое число — с разбивкой.</p>
+
+  <div class="sheet">
+    <!-- Шапка -->
+    <div class="sbox sheet-head">
+      <div class="nm">Тордек</div>
+      <div class="f">Послушник<span>Происхождение</span></div>
+      <div class="f">Монах 1<span>Класс</span></div>
+      <div class="f">Щитовой дварф<span>Вид</span></div>
+      <div class="lvl-medal">1<span>УРОВЕНЬ</span></div>
+    </div>
+
+    <!-- Ряд статов -->
+    <div class="statrow">
+      <div class="sbox"><div class="cap">Бонус умения</div><div class="big">+2</div></div>
+      <div class="sbox"><div class="cap">Инициатива</div><div class="big" title="+3 = +3 [ЛВК]">+3</div></div>
+      <div class="sbox"><div class="cap">Скорость</div><div class="big">25</div></div>
+      <div class="sbox"><div class="cap">П. внимание</div><div class="big">12</div></div>
+      <div class="sbox"><div class="cap">Класс брони</div><div class="shield" title="16 = 10 база + 3 ЛВК + 2 МДР (Защита без доспехов)">16</div></div>
+      <div class="sbox"><div class="cap">Пункты здоровья</div>
+        <div class="hpline"><span class="cur">10</span><span class="max">/ 10</span><span style="color:var(--text-dim); font-size:11px;">+0 врем.</span></div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">кость: к8</div>
+        <div class="deaths"><i class="on"></i><i></i><i></i>&nbsp;&nbsp;<i></i><i></i><i></i></div>
+      </div>
+      <div class="sbox"><div class="cap">Состояния</div><div style="display:flex; gap:6px; justify-content:center;">
+        <span class="ei ei-sm ready" data-tip="tip-dodgefx"><span class="glyph">🌀</span></span>
+      </div></div>
+    </div>
+
+    <!-- Колонка 1: характеристики -->
+    <div>
+      <div class="sbox abil-block">
+        <div class="top"><div class="mod">+3</div><div><div class="an">ЛОВКОСТЬ</div><div class="sc">значение 17</div></div></div>
+        <ul>
+          <li class="prof"><span>Испытание</span><span>+5</span></li>
+          <li class="prof"><span>Акробатика</span><span>+5</span></li>
+          <li><span>Ловкость рук</span><span>+3</span></li>
+          <li><span>Скрытность</span><span>+3</span></li>
+        </ul>
+      </div>
+      <div class="sbox abil-block">
+        <div class="top"><div class="mod">+2</div><div><div class="an">МУДРОСТЬ</div><div class="sc">значение 14</div></div></div>
+        <ul>
+          <li class="prof"><span>Проницательность</span><span>+4</span></li>
+          <li><span>Внимание</span><span>+2</span></li>
+          <li><span>Медицина</span><span>+2</span></li>
+        </ul>
+      </div>
+      <div class="sbox" style="margin-bottom:12px;"><div class="cap">Героическое вдохновение</div>
+        <div style="text-align:center;"><span class="ei ei-sm ready" data-tip="tip-hi"><span class="glyph">✨</span><span class="badge">1</span></span></div>
+      </div>
+      <div class="sbox"><div class="cap">Умения и языки</div>
+        <div style="font-size:12px; color:var(--text-dim);">
+          <b style="color:var(--text)">Броня:</b> лёгкая, средняя<br>
+          <b style="color:var(--text)">Оружие:</b> простое, короткие мечи<br>
+          <b style="color:var(--text)">Языки:</b> Общий, Дварфийский
+        </div>
+      </div>
+    </div>
+
+    <!-- Колонка 2 -->
+    <div>
+      <div class="sbox" style="margin-bottom:14px;"><div class="cap">Оружие и боевые фокусы</div>
+        <table class="wtable">
+          <tr><th>Название</th><th>Бонус</th><th>Урон / вид</th></tr>
+          <tr><td><span class="einline" data-tip="tip-item" style="padding:0"><span class="ico">🗡️</span><span class="nm">Короткий меч</span></span></td>
+              <td>+5</td><td style="color:var(--dt-physical)">1к6+3 колющий</td></tr>
+          <tr><td><span class="einline" data-tip="tip-atk" style="padding:0"><span class="ico">👊</span><span class="nm">Безоружная атака</span></span></td>
+              <td>+5</td><td style="color:var(--dt-physical)">1+3 дробящий</td></tr>
+        </table>
+      </div>
+      <div class="sbox" style="margin-bottom:14px;"><div class="cap">Предметы · вес 24 / 180</div>
+        <div class="einline" data-tip="tip-item"><span class="ico">🗡️</span><span class="nm">Короткий меч</span><span class="src">· экипировано · 1 фнт</span></div>
+        <div class="einline" data-tip="tip-item"><span class="ico">🎒</span><span class="nm">Набор исследователя</span><span class="src">· 10 фнт</span></div>
+        <div class="einline" data-tip="tip-item"><span class="ico">🧪</span><span class="nm">Зелье лечения</span><span class="src">× 2 · 1 фнт</span></div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <span class="ei ei-md ready" data-tip="tip-item"><span class="glyph">🗡️</span></span>
+          <span class="ei ei-md disabled"><span class="glyph">🛡️</span></span>
+          <span class="ei ei-md disabled"><span class="glyph">🧥</span></span>
+          <span class="demo-note" style="align-self:center; margin:0;">слоты экипировки</span>
+        </div>
+      </div>
+      <div class="sbox"><div class="cap">Ход и ресурсы</div>
+        <div class="chips-run">
+          <span class="ei ei-sm ready" title="Действие 1/1"><span class="glyph">●</span></span>
+          <span class="ei ei-sm ready" title="Бонусное 1/1"><span class="glyph">◆</span><span class="corner corner-bonus"></span></span>
+          <span class="ei ei-sm disabled" title="Реакция 0/1"><span class="glyph">↩</span></span>
+          <span class="ei ei-sm ready" data-tip="tip-hi"><span class="glyph">✨</span><span class="badge">1</span></span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="runbtn">Новый ход</button>
+          <button class="runbtn">Короткий отдых</button>
+          <button class="runbtn">Долгий отдых</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Колонка 3 -->
+    <div>
+      <div class="sbox" style="margin-bottom:14px;"><div class="cap">Способности класса</div>
+        <div class="einline" data-tip="tip-ma"><span class="ico">🥋</span><span class="nm">Боевые искусства.</span></div>
+        <div class="einline" data-tip="tip-ud"><span class="ico">💠</span><span class="nm">Защита без доспехов.</span></div>
+        <div class="einline" data-tip="tip-flurry"><span class="ico">👊</span><span class="nm">Шквал ударов.</span><span class="src">· бонусное</span></div>
+      </div>
+      <div class="sbox" style="margin-bottom:14px;"><div class="cap">Видовые особенности</div>
+        <div class="einline" data-tip="tip-dv"><span class="ico">👁️</span><span class="nm">Тёмное зрение.</span></div>
+        <div class="einline" data-tip="tip-dv"><span class="ico">🧱</span><span class="nm">Дварфийская стойкость.</span></div>
+      </div>
+      <div class="sbox" style="margin-bottom:14px;"><div class="cap">Заклинания</div>
+        <div class="spellgrid">
+          <span class="ei ei-md ready" data-tip="tip-fb"><span class="glyph">🔥</span><span class="badge">З</span></span>
+          <span class="ei ei-md ready" data-tip="tip-fb"><span class="glyph">✋</span><span class="badge">З</span></span>
+          <span class="ei ei-md disabled"><span class="glyph">💫</span><span class="badge">1</span></span>
+        </div>
+      </div>
+      <div class="sbox"><div class="cap">Журнал</div>
+        <div class="journal">
+          <div class="e"><span class="roll">Атака: Короткий меч</span> — к20: 13 <span style="color:var(--gold-dim)">+3 [ЛВК] +2 [БМ]</span> = 18 против КБ 15 — <span class="hit">попадание</span></div>
+          <div class="e">Урон — 1к6: 4 <span style="color:var(--gold-dim)">+3 [ЛВК]</span> = <b>7 колющего</b></div>
+          <div class="e"><span class="roll">Второе дыхание</span> — 1к10: 7 <span style="color:var(--gold-dim)">+1 [уровень]</span> = <span class="hit">+8 HP</span></div>
+          <div class="e">к20: <span class="crit">20 — крит!</span> <span style="color:var(--gold-dim)">(отброшено 11, преимущество)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ══════════════ Ховер-карточки (шаблоны) ══════════════ -->
+<div id="tips" style="display:none">
+  <div class="sp-tip" id="tip-atk">
+    <div class="bigicon">⚔️</div><h4>Атака оружием</h4><div class="subtype">Действие · ближний бой</div>
+    <div class="srow"><span class="lbl">Атака:</span><span class="die">к20</span><span class="dmg">+ 5</span></div>
+    <div class="srow"><span class="lbl">Урон:</span><span class="dmg" style="color:var(--dt-physical)">1к8 + 3 · рубящий</span></div>
+    <div class="desc">Совершаете атаку удерживаемым оружием. При попадании наносите урон <b>костью оружия</b> плюс модификатор характеристики.</div>
+    <div class="meta"><span>🎯 Касание</span><span>⚔ Оружие</span></div>
+    <div class="costbar"><span class="cost"><span class="pip pip-a"></span>Действие</span></div>
+  </div>
+  <div class="sp-tip" id="tip-sw">
+    <div class="bigicon">🌬️</div><h4>Второе дыхание</h4><div class="subtype">Бонусное действие · Воин</div>
+    <div class="srow"><span class="lbl">Лечение:</span><span class="dmg" style="color:var(--dt-radiant)">1к10 + уровень</span></div>
+    <div class="desc">Стойкость позволяет <b>восстановить силы</b> в гуще боя.</div>
+    <div class="meta"><span>⏱ Мгновенно</span><span>⟳ 2 / короткий отдых</span></div>
+    <div class="costbar"><span class="cost"><span class="pip pip-b"></span>Бонусное действие</span><span class="cost"><span class="pip pip-a"></span>Второе дыхание ×1</span></div>
+  </div>
+  <div class="sp-tip" id="tip-fb">
+    <div class="bigicon">🔥</div><h4>Огненная стрела</h4><div class="subtype">Заговор · Воплощение</div>
+    <div class="srow"><span class="lbl">Атака:</span><span class="die">к20</span><span class="dmg">+ 5</span></div>
+    <div class="srow"><span class="lbl">Урон:</span><span class="dmg" style="color:var(--dt-fire)">1к10 · огонь</span></div>
+    <div class="desc">Швыряете сгусток огня в существо или предмет. Подожжённый предмет <b>горит</b>.</div>
+    <div class="meta"><span>🎯 120 футов</span><span>✦ В, С</span></div>
+    <div class="costbar"><span class="cost"><span class="pip pip-a"></span>Действие</span></div>
+  </div>
+  <div class="sp-tip" id="tip-shield">
+    <div class="bigicon">🛡️</div><h4>Щит</h4><div class="subtype">Реакция · Ограждение · 1 круг</div>
+    <div class="srow"><span class="lbl">Эффект:</span><span class="dmg" style="color:var(--dt-cold)">+5 КБ до след. хода</span></div>
+    <div class="desc">Незримый барьер вспыхивает, <b>отражая удар</b>, который уже должен был попасть.</div>
+    <div class="meta"><span>⏱ 1 раунд</span></div>
+    <div class="costbar"><span class="cost"><span class="pip" style="background:#5f8fd4; border-radius:50% 50% 50% 0;"></span>Реакция</span><span class="cost"><span class="pip pip-s"></span>Слот 1 круга</span></div>
+  </div>
+  <div class="sp-tip" id="tip-item">
+    <div class="bigicon">🗡️</div><h4>Короткий меч</h4><div class="subtype">Оружие · воинское · фехтовальное</div>
+    <div class="srow"><span class="lbl">Урон:</span><span class="dmg" style="color:var(--dt-physical)">1к6 · колющий</span></div>
+    <div class="srow"><span class="lbl">Свойства:</span><span style="color:#a59886">фехтовальное, лёгкое</span></div>
+    <div class="desc">Клинок, который ценят за <b>скорость и точность</b>.</div>
+    <div class="meta"><span>⚖ 1 фнт</span><span>◈ слот: рука</span><span>◉ 10 зм</span></div>
+    <div class="costbar"><span class="cost">Экипируется: основная / вторая рука</span></div>
+  </div>
+  <div class="sp-tip" id="tip-dv">
+    <div class="bigicon">👁️</div><h4>Тёмное зрение</h4><div class="subtype">Видовая особенность · Дварф</div>
+    <div class="desc">Вы видите в тусклом свете в пределах <b>120 футов</b> как при ярком свете, а в темноте — как в тусклом.</div>
+    <div class="meta"><span>◈ Пассивно</span></div>
+    <div class="costbar"><span class="cost">Постоянный эффект</span></div>
+  </div>
+  <div class="sp-tip" id="tip-ma">
+    <div class="bigicon">🥋</div><h4>Боевые искусства</h4><div class="subtype">Особенность класса · Монах</div>
+    <div class="srow"><span class="lbl">Урон:</span><span class="dmg" style="color:var(--dt-physical)">1к6 · безоружный</span></div>
+    <div class="desc">Кость боевых искусств заменяет урон безоружной атаки; можно использовать <b>ЛВК вместо СИЛ</b>.</div>
+    <div class="costbar"><span class="cost">Постоянный эффект</span></div>
+  </div>
+  <div class="sp-tip" id="tip-ud">
+    <div class="bigicon">💠</div><h4>Защита без доспехов</h4><div class="subtype">Особенность класса · Монах</div>
+    <div class="srow"><span class="lbl">КБ:</span><span class="dmg">10 + ЛВК + МДР</span></div>
+    <div class="desc">Пока вы <b>без доспеха и щита</b>, ваш КБ равен 10 + ЛВК + МДР.</div>
+    <div class="costbar"><span class="cost">Постоянный эффект</span></div>
+  </div>
+  <div class="sp-tip" id="tip-flurry">
+    <div class="bigicon">👊</div><h4>Шквал ударов</h4><div class="subtype">Бонусное действие · Монах</div>
+    <div class="srow"><span class="lbl">Атака:</span><span class="die">к20</span><span class="dmg">×2</span></div>
+    <div class="desc">Сразу после атаки совершаете <b>две безоружные атаки</b>.</div>
+    <div class="costbar"><span class="cost"><span class="pip pip-b"></span>Бонусное действие</span><span class="cost"><span class="pip pip-s"></span>Фокус ×1</span></div>
+  </div>
+  <div class="sp-tip" id="tip-class">
+    <div class="bigicon">👊</div><h4>Монах</h4><div class="subtype">Класс · кость хитов к8</div>
+    <div class="srow"><span class="lbl">Основное:</span><span class="dmg">ЛВК и МДР</span></div>
+    <div class="srow"><span class="lbl">Испытания:</span><span class="dmg">СИЛ, ЛВК</span></div>
+    <div class="desc">Мастер боевых искусств, обращающий <b>внутреннюю энергию</b> в удары.</div>
+    <div class="costbar"><span class="cost">Нажмите, чтобы выбрать</span></div>
+  </div>
+  <div class="sp-tip" id="tip-dodgefx">
+    <div class="bigicon">🌀</div><h4>Уклонение</h4><div class="subtype">Активный эффект · до начала след. хода</div>
+    <div class="desc">Атаки по вам — <b>с помехой</b>; испытания ЛВК — <b>с преимуществом</b>.</div>
+    <div class="costbar"><span class="cost">⏱ истекает в начале вашего хода</span></div>
+  </div>
+  <div class="sp-tip" id="tip-hi">
+    <div class="bigicon">✨</div><h4>Героическое вдохновение</h4><div class="subtype">Ресурс · Человек / правила 2024</div>
+    <div class="desc">Потратьте, чтобы <b>перебросить любой к20</b>. Восстанавливается после долгого отдыха.</div>
+    <div class="costbar"><span class="cost">Запас: 1 / 1</span></div>
+  </div>
+</div>
+
+<div id="hovercard"></div>
+
+<script>
+// EntityHoverCard: один плавающий контейнер, шаблоны клонируются по data-tip
+const hc = document.getElementById('hovercard');
+let currentTip = null;
+function positionCard(e){
+  const pad = 14, w = 330, h = hc.offsetHeight || 300;
+  let x = e.clientX + pad, y = e.clientY - 30;
+  if (x + w + pad > innerWidth) x = e.clientX - w - pad;
+  if (y + h + pad > innerHeight) y = innerHeight - h - pad;
+  if (y < pad) y = pad;
+  hc.style.left = x + 'px'; hc.style.top = y + 'px';
+}
+document.querySelectorAll('[data-tip]').forEach(el => {
+  el.addEventListener('mouseenter', e => {
+    const id = el.getAttribute('data-tip');
+    if (currentTip !== id){
+      const tpl = document.getElementById(id);
+      if (!tpl) return;
+      hc.innerHTML = '';
+      hc.appendChild(tpl.cloneNode(true));
+      hc.firstChild.removeAttribute('id');
+      currentTip = id;
+    }
+    hc.style.display = 'block';
+    positionCard(e);
+  });
+  el.addEventListener('mousemove', positionCard);
+  el.addEventListener('mouseleave', () => { hc.style.display = 'none'; currentTip = null; });
+});
+</script>
+</body>
+</html>
