@@ -1,6 +1,7 @@
 import type { ForgeCharacter } from './types';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { Card } from '../types';
+import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
 
 export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
@@ -14,27 +15,56 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
     maxResources: { ...(c.max_resources ?? {}) },
     equipment: { ...(c.equipment ?? {}) },
     inventory: inv,
-    activeEffects: [],
+    activeEffects: parseActiveEffects(c.active_effects),
   };
+}
+
+function parseActiveEffects(raw: unknown): RuntimeState['activeEffects'] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((e) => e && typeof e === 'object') as RuntimeState['activeEffects'];
 }
 
 export function runtimeInventoryPayload(state: RuntimeState) {
   return state.inventory.map((row) => ({ card_id: row.cardId, qty: row.qty }));
 }
 
+export function classLevelKey(klass: CharacterClass | null): string | null {
+  if (!klass) return null;
+  const cn = klass.card_number || '';
+  const m = cn.match(/CLASS[-_](.+)/i);
+  if (m) return m[1].toLowerCase().replace(/-/g, '_');
+  return klass.id;
+}
+
 export function buildCharacterContext(
   ruleState: CharacterRuleState,
   draft: { level: number; abilities: Record<string, number> },
   equippedCards: Card[],
+  klass?: CharacterClass | null,
 ): CharacterContext {
+  const classKey = classLevelKey(klass ?? null);
   return {
     abilityMods: ruleState.abilityMods,
     profBonus: ruleState.proficiencyBonus,
     level: draft.level,
-    classLevels: ruleState.classLevels,
+    classLevels: classKey ? { [classKey]: draft.level } : undefined,
     characterSpeed: ruleState.speed,
     equippedCards,
     knownCards: equippedCards,
+  };
+}
+
+export function buildExecuteContext(
+  ruleState: CharacterRuleState,
+  draft: { level: number; abilities: Record<string, number> },
+  equippedCards: Card[],
+  klass: CharacterClass | null | undefined,
+  passives: Record<string, unknown>[],
+): import('../mvp/contracts').ExecuteContext & { passives?: Record<string, unknown>[] } {
+  return {
+    character: buildCharacterContext(ruleState, draft, equippedCards, klass),
+    passives,
+    rng: () => Math.random(),
   };
 }
 

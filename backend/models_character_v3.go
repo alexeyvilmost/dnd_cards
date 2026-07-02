@@ -61,7 +61,7 @@ type CharacterV3 struct {
 	InventoryItems *InventoryItemRows `json:"inventory_items" gorm:"type:jsonb"`
 	Resources      *JSONMap    `json:"resources" gorm:"type:jsonb"`
 	MaxResources   *JSONMap    `json:"max_resources" gorm:"type:jsonb"`
-	ActiveEffects  *Properties `json:"active_effects" gorm:"type:jsonb"`
+	ActiveEffects  *ActiveEffectRows `json:"active_effects" gorm:"type:jsonb"`
 	TurnState      *JSONMap    `json:"turn_state" gorm:"type:jsonb"`
 	Currency       *JSONMap    `json:"currency" gorm:"type:jsonb"`
 
@@ -155,7 +155,7 @@ type PatchCharacterRuntimeRequest struct {
 	InventoryItems *InventoryItemRows `json:"inventory_items"`
 	Resources      *JSONMap    `json:"resources"`
 	MaxResources   *JSONMap    `json:"max_resources"`
-	ActiveEffects  *Properties `json:"active_effects"`
+	ActiveEffects  *ActiveEffectRows `json:"active_effects"`
 	TurnState      *JSONMap    `json:"turn_state"`
 	Currency       *JSONMap    `json:"currency"`
 }
@@ -191,6 +191,47 @@ func (r *InventoryItemRows) Scan(value interface{}) error {
 }
 
 func (r InventoryItemRows) Value() (driver.Value, error) {
+	if r == nil {
+		return nil, nil
+	}
+	return json.Marshal(r)
+}
+
+// ActiveEffectRow — активный эффект на листе v3 (runtime).
+type ActiveEffectRow struct {
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	Mechanics  JSONMap `json:"mechanics"`
+	RoundsLeft *int    `json:"roundsLeft,omitempty"`
+	Expiry     *string `json:"expiry,omitempty"`
+	Source     string  `json:"source"`
+}
+
+// ActiveEffectRows — jsonb-массив активных эффектов.
+type ActiveEffectRows []ActiveEffectRow
+
+func (r *ActiveEffectRows) Scan(value interface{}) error {
+	if value == nil {
+		*r = nil
+		return nil
+	}
+	var data []byte
+	switch v := value.(type) {
+	case string:
+		data = []byte(v)
+	case []byte:
+		data = v
+	default:
+		return fmt.Errorf("неподдерживаемый тип для ActiveEffectRows: %T", value)
+	}
+	if len(data) == 0 || string(data) == "null" {
+		*r = nil
+		return nil
+	}
+	return json.Unmarshal(data, r)
+}
+
+func (r ActiveEffectRows) Value() (driver.Value, error) {
 	if r == nil {
 		return nil, nil
 	}

@@ -17,6 +17,7 @@ import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
 import EventJournal from '../components/EventJournal';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
+import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import { rollEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
@@ -156,6 +157,17 @@ const CharacterSheetMVP = () => {
     }
   };
 
+  const appendRuntimeEvents = async (events: import('../mvp/contracts').EngineEvent[]) => {
+    if (!id || !events.length) return;
+    try {
+      const items = events.map((payload) => ({ type: payload.type, payload }));
+      const saved = await charactersV3Api.postEvents(id, items);
+      setJournal((prev) => [...saved, ...prev]);
+    } catch (e) {
+      console.error('runtime events', e);
+    }
+  };
+
   const journalPanel = (
     <section className="sheet-panel sheet-panel-wide sheet-journal-panel" id="sheet-journal">
       <div className="sheet-journal-head">
@@ -223,6 +235,14 @@ const CharacterSheetMVP = () => {
             character={character}
             ruleState={ruleState}
             onUpdated={setCharacter}
+          />
+
+          <SheetRuntimePanel
+            character={character}
+            assembled={assembled}
+            ruleState={ruleState}
+            onUpdated={setCharacter}
+            onEvents={appendRuntimeEvents}
           />
 
           <section className="sheet-panel">

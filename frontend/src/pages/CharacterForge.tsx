@@ -5,6 +5,8 @@ import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../ap
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
 import { charactersV3Api } from '../character/api';
+import { buildCharacterContext } from '../character/runtime';
+import { buildResourceRuntimePatch } from '../character/resourceInit';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, ABILITY_LABEL_RU, type CharacterDraft, type AbilityKey } from '../character/types';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft } from '../character/forgeHelpers';
@@ -233,6 +235,11 @@ const CharacterForge = () => {
       const res = draft.id
         ? await charactersV3Api.update(draft.id, payload)
         : await charactersV3Api.create(payload);
+      const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
+      const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true);
+      if (runtimePatch) {
+        await charactersV3Api.patchRuntime(res.id, runtimePatch);
+      }
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id }));
     } catch (e) {

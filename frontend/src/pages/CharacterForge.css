@@ -374,6 +374,41 @@
 .sheet-inv-search-results { max-height: 220px; overflow-y: auto; }
 .sheet-inv-meta { color: var(--forge-text-dim); font-size: 0.85em; }
 .sheet-inv-actions { display: inline-flex; align-items: center; gap: 4px; }
+.sheet-resource-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.sheet-resource-chip {
+  display: inline-block; padding: 4px 10px; border-radius: 999px;
+  background: var(--forge-surface-elevated, rgba(255,255,255,0.06));
+  border: 1px solid var(--forge-border, rgba(255,255,255,0.12));
+  font-size: 13px;
+}
+.sheet-runtime-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sheet-link-btn {
+  background: none; border: none; padding: 0; color: var(--forge-gold);
+  text-decoration: underline; cursor: pointer; font: inherit;
+}
+.sheet-link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sheet-active-effects { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.sheet-active-effect {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel-2);
+  font-size: 13px;
+}
+.sheet-active-effect-name { flex: 1; color: var(--forge-text); }
+.sheet-active-effect-meta { color: var(--forge-text-dim); font-size: 12px; }
+.sheet-active-effect-dismiss {
+  background: none; border: none; padding: 2px; cursor: pointer;
+  color: var(--forge-text-dim); display: flex; align-items: center;
+}
+.sheet-active-effect-dismiss:hover { color: var(--forge-gold); }
+.sheet-active-effect-dismiss:disabled { opacity: 0.4; cursor: not-allowed; }
+.sheet-combat-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sheet-combat-action {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px;
+}
+.sheet-combat-action-disabled,
+.sheet-combat-action:disabled {
+  opacity: 0.45; cursor: not-allowed;
+}
 .sheet-h3 { color: var(--forge-gold-dim); font-size: 14px; margin: 0 0 8px; font-weight: 600; }
 .sheet-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .sheet-ab { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--forge-panel-2); }

@@ -162,15 +162,8 @@ const NOT_IMPLEMENTED = (step: string, name: string): never => {
 export { rollD20 } from '../engine/roll';
 export { rollFormula } from '../engine/formula';
 
-// Шаг D4/B2 — engine/modifiers.ts: собрать модификаторы и адвантаж
-// из активных эффектов и пассивок для броска applies_to.roll.
-export function collectRollModifiers(
-  _state: RuntimeState,
-  _passives: Dict[],
-  _appliesTo: { roll: string; filter?: Dict },
-): { modifiers: RollModifier[]; advantage: AdvantageState } {
-  return NOT_IMPLEMENTED('D4', 'collectRollModifiers');
-}
+// Шаг D4/B2 — engine/modifiers.ts
+export { collectRollModifiers } from '../engine/modifiers';
 
 // Шаг C4 — engine/ac.ts
 export { computeAC } from '../engine/ac';
@@ -182,36 +175,16 @@ export { weaponContext } from '../engine/weapon';
 export { equipItem, unequipSlot, totalWeight } from '../engine/equipment';
 
 // Шаг D2 — engine/cost.ts
-export function canPay(_state: RuntimeState, _cost: Dict[]): { ok: boolean; missing: string[] } {
-  return NOT_IMPLEMENTED('D2', 'canPay');
-}
-export function pay(_state: RuntimeState, _cost: Dict[]): { state: RuntimeState; events: EngineEvent[] } {
-  return NOT_IMPLEMENTED('D2', 'pay');
-}
+export { canPay, pay } from '../engine/cost';
 
 // Шаг D3 — engine/turn.ts
-export function startTurn(_state: RuntimeState): ExecuteResult {
-  return NOT_IMPLEMENTED('D3', 'startTurn');
-}
-export function shortRest(_state: RuntimeState, _ctx: CharacterContext): ExecuteResult {
-  return NOT_IMPLEMENTED('D3', 'shortRest');
-}
-export function longRest(_state: RuntimeState, _ctx: CharacterContext): ExecuteResult {
-  return NOT_IMPLEMENTED('D3', 'longRest');
-}
+export { shortRest, startTurn, longRest } from '../engine/turn';
 
-// Шаг D1 — engine/resources.ts: max-пулы из класса/эффектов
-export function initResources(_ctx: CharacterContext, _classResources: Dict | null, _grantPayloads: Dict[]): {
-  resources: Record<string, number>;
-  maxResources: Record<string, number>;
-} {
-  return NOT_IMPLEMENTED('D1', 'initResources');
-}
+// Шаг D1 — engine/resources.ts
+export { initResources } from '../engine/resources';
 
-// Шаг E1–E5 — engine/execute.ts: единый исполнитель действий/заклинаний
-export function executeAction(_state: RuntimeState, _mechanics: Dict, _ctx: ExecuteContext): ExecuteResult {
-  return NOT_IMPLEMENTED('E1', 'executeAction');
-}
+// Шаг E1–E5 — engine/execute.ts
+export { executeAction } from '../engine/execute';
 
 // Шаг F2 — engine/breakdown.ts: разбивка любых значений листа
 export function breakdownValue(
