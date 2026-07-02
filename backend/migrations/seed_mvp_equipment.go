@@ -7,6 +7,10 @@ import (
 
 // seedMvpEquipmentCards — тестовые предметы для проверки инвентаря (фаза C).
 func seedMvpEquipmentCards(db *sql.DB) error {
+	if err := deduplicateCardsByCardNumber(db); err != nil {
+		return fmt.Errorf("seedMvpEquipmentCards: deduplicate card_number: %w", err)
+	}
+
 	if _, err := db.Exec(`
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_cards_card_number_unique ON cards (card_number)
 	`); err != nil {
@@ -58,4 +62,27 @@ func seedMvpEquipmentCards(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+// deduplicateCardsByCardNumber удаляет дубликаты card_number, оставляя одну строку:
+// активную (deleted_at IS NULL) с самым свежим updated_at, иначе самую новую по id.
+func deduplicateCardsByCardNumber(db *sql.DB) error {
+	_, err := db.Exec(`
+		WITH ranked AS (
+			SELECT
+				id,
+				ROW_NUMBER() OVER (
+					PARTITION BY card_number
+					ORDER BY
+						(deleted_at IS NULL) DESC,
+						updated_at DESC,
+						created_at DESC,
+						id::text ASC
+				) AS rn
+			FROM cards
+		)
+		DELETE FROM cards
+		WHERE id IN (SELECT id FROM ranked WHERE rn > 1)
+	`)
+	return err
 }
