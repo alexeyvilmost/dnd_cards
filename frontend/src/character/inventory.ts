@@ -46,10 +46,12 @@ export function collectEquippedCards(
   equipment: Record<string, string | null | undefined>,
   cardMap: Map<string, Card>,
 ): Card[] {
-  const order = ['head', 'body', 'main_hand', 'off_hand'];
+  const weaponOrder = ['main_hand', 'off_hand'] as const;
+  const otherOrder = ['head', 'body'] as const;
   const seen = new Set<string>();
   const out: Card[] = [];
-  for (const slot of order) {
+
+  for (const slot of [...otherOrder, ...weaponOrder]) {
     const id = equipment[slot];
     if (id && !seen.has(id) && cardMap.has(id)) {
       seen.add(id);

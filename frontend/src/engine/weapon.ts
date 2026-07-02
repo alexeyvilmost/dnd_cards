@@ -6,8 +6,10 @@ import type { AbilityKey } from './formula';
 import type { CharacterContext, WeaponContext } from '../mvp/contracts';
 import { cardPropsList } from './equipment';
 
-function weaponCards(ctx: CharacterContext): Card[] {
-  return (ctx.equippedCards ?? []).filter((c) => c.type === 'weapon');
+function cardById(ctx: CharacterContext, id: string | null | undefined): Card | undefined {
+  if (!id) return undefined;
+  return (ctx.equippedCards ?? []).find((c) => c.id === id)
+    ?? (ctx.knownCards ?? []).find((c) => c.id === id);
 }
 
 function pickAbility(card: Card, character: CharacterContext): 'str' | 'dex' {
@@ -20,14 +22,7 @@ function pickAbility(card: Card, character: CharacterContext): 'str' | 'dex' {
   return 'str';
 }
 
-/** Параметры оружия в указанной руке (по порядку в equippedCards). */
-export function weaponContext(character: CharacterContext, hand: 'main' | 'off'): WeaponContext | null {
-  const weapons = weaponCards(character);
-  if (!weapons.length) return null;
-
-  const card = hand === 'main' ? weapons[0] : weapons[1];
-  if (!card) return null;
-
+function cardToWeapon(card: Card, character: CharacterContext): WeaponContext {
   return {
     cardId: card.id,
     name: card.name,
@@ -36,6 +31,25 @@ export function weaponContext(character: CharacterContext, hand: 'main' | 'off')
     damageType: card.damage_type ?? 'bludgeoning',
     properties: cardPropsList(card),
   };
+}
+
+/** Параметры оружия в указанной руке (по слоту equipment, R3). */
+export function weaponContext(
+  character: CharacterContext,
+  hand: 'main' | 'off',
+  equipment?: Record<string, string | null | undefined>,
+): WeaponContext | null {
+  const slot = hand === 'main' ? 'main_hand' : 'off_hand';
+  if (equipment) {
+    const card = cardById(character, equipment[slot]);
+    if (card?.type === 'weapon') return cardToWeapon(card, character);
+    return null;
+  }
+
+  const weapons = (character.equippedCards ?? []).filter((c) => c.type === 'weapon');
+  const card = hand === 'main' ? weapons[0] : weapons[1];
+  if (!card) return null;
+  return cardToWeapon(card, character);
 }
 
 export function abilityForWeapon(card: Card, character: CharacterContext): AbilityKey {

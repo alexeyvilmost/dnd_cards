@@ -1,13 +1,15 @@
 /**
  * Ход и отдыхи (фаза D3).
- *
- * shortRest (упрощённо): без костей хитов — +50% max HP (до максимума)
- * и все ресурсы, восстанавливаемые коротким отдыхом (second_wind и т.п.).
  */
 import type { CharacterContext, EngineEvent, ExecuteResult, RuntimeState } from '../mvp/contracts';
 import { resourcesRestoredOnShortRest } from './resources';
 
 type Dict = Record<string, unknown>;
+
+type RestContext = CharacterContext & {
+  passives?: Dict[];
+  resourceRecharge?: Record<string, string>;
+};
 
 const TURN_KEYS = ['action', 'bonus_action', 'reaction'] as const;
 
@@ -55,22 +57,13 @@ export function startTurn(state: RuntimeState): ExecuteResult {
   return { state: next, events };
 }
 
-/** Упрощённый короткий отдых: половина max HP + ресурсы short_rest. */
-export function shortRest(state: RuntimeState, _ctx: CharacterContext): ExecuteResult {
+/** Короткий отдых: только ресурсы с recharge short_rest (без лечения HP, R4). */
+export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteResult {
   const next = cloneState(state);
   const events: EngineEvent[] = [{ type: 'short_rest' }];
+  const recharge = (ctx as RestContext).resourceRecharge;
 
-  const heal = Math.floor(next.hp.max / 2);
-  if (heal > 0) {
-    const before = next.hp.current;
-    next.hp.current = Math.min(next.hp.max, next.hp.current + heal);
-    const gained = next.hp.current - before;
-    if (gained > 0) {
-      events.push({ type: 'healing', amount: gained });
-    }
-  }
-
-  for (const key of resourcesRestoredOnShortRest(next.maxResources)) {
+  for (const key of resourcesRestoredOnShortRest(next.maxResources, recharge)) {
     const max = next.maxResources[key] ?? 0;
     const before = next.resources[key] ?? 0;
     if (before < max) {
@@ -83,8 +76,7 @@ export function shortRest(state: RuntimeState, _ctx: CharacterContext): ExecuteR
 }
 
 function passivesFromCtx(ctx: CharacterContext): Dict[] {
-  const ext = ctx as CharacterContext & { passives?: Dict[] };
-  return ext.passives ?? [];
+  return (ctx as RestContext).passives ?? [];
 }
 
 function applyLongRestPassives(state: RuntimeState, ctx: CharacterContext): RuntimeState {

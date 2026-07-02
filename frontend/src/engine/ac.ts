@@ -75,17 +75,9 @@ function shieldFromState(state: RuntimeState, cards: Card[]): Card | undefined {
 
 function armorAc(armor: Card, character: CharacterContext, parts: RollModifier[]): number {
   const raw = armor.bonus_value ?? '10';
-  const dtype = (armor.defense_type ?? '').toLowerCase();
-
-  if (raw.includes('dex') || dtype === 'light') {
-    const base = evalNum(raw, character);
-    parts.push({ value: base, source: armor.name, reason: 'доспех' });
-    return base;
-  }
-
-  const fixed = evalNum(raw.replace(/\+.*$/, '').trim() || raw, character);
-  parts.push({ value: fixed, source: armor.name, reason: 'доспех' });
-  return fixed;
+  const base = evalNum(raw, character);
+  parts.push({ value: base, source: armor.name, reason: 'доспех' });
+  return base;
 }
 
 /** Вычислить КЗ с разбивкой по источникам. */

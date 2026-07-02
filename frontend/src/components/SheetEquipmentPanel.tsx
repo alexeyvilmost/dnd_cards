@@ -10,6 +10,7 @@ import {
   removeFromInventory,
   runtimeInventoryPayload,
 } from '../character/runtime';
+import { collectEquippedCards } from '../character/inventory';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { computeAC } from '../engine/ac';
@@ -96,17 +97,19 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
   const strScore = character.abilities?.str ?? 10;
   const capacity = carryingCapacity(strScore);
 
-  const equippedCards = useMemo(() => {
-    const out: Card[] = [];
-    for (const id of Object.values(runtime.equipment)) {
-      if (id && cardMap.has(id)) out.push(cardMap.get(id)!);
-    }
-    return out;
-  }, [runtime.equipment, cardMap]);
+  const equippedCards = useMemo(
+    () => collectEquippedCards(runtime.equipment, cardMap),
+    [runtime.equipment, cardMap],
+  );
 
-  const ctx = buildCharacterContext(ruleState, { level: character.level, abilities: character.abilities ?? {} }, equippedCards);
+  const ctx = buildCharacterContext(
+    ruleState,
+    { level: character.level, abilities: character.abilities ?? {} },
+    equippedCards,
+    null,
+  );
   const acBreakdown = computeAC(ctx, runtime, []);
-  const mainWeapon = weaponContext(ctx, 'main');
+  const mainWeapon = weaponContext(ctx, 'main', runtime.equipment);
 
   const persist = useCallback(async (next: RuntimeState) => {
     setBusy(true);

@@ -55,7 +55,7 @@ type Token =
   | { t: 'num'; v: number }
   | { t: 'id'; v: string }
   | { t: 'dice'; count: number; sides: number }
-  | { t: 'op'; v: '+' | '-' | '*' | '/' }
+  | { t: 'op'; v: '+' | '-' | '*' | '/' | ',' }
   | { t: 'lparen' }
   | { t: 'rparen' };
 
@@ -92,8 +92,8 @@ function tokenize(input: string): Token[] {
       i++;
       continue;
     }
-    if ('+-*/'.includes(ch)) {
-      tokens.push({ t: 'op', v: ch as '+' | '-' | '*' | '/' });
+    if ('+-*/,'.includes(ch)) {
+      tokens.push({ t: 'op', v: ch as '+' | '-' | '*' | '/' | ',' });
       i++;
       continue;
     }
@@ -230,6 +230,24 @@ function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): Formula
   return left;
 }
 
+function parseFunctionCall(name: string, tokens: Token[], pos: { i: number }, sink: EvalSink): number {
+  pos.i++; // (
+  const args: number[] = [];
+  while (pos.i < tokens.length && tokens[pos.i].t !== 'rparen') {
+    const v = parseExpr(tokens, pos, sink);
+    if (typeof v === 'string') throw new Error(`Маркер «${v}» нельзя использовать в функции`);
+    args.push(v);
+    if (tokens[pos.i]?.t === 'op' && tokens[pos.i].v === ',') pos.i++;
+    else break;
+  }
+  if (tokens[pos.i]?.t !== 'rparen') throw new Error('Ожидалась закрывающая скобка');
+  pos.i++;
+  const fn = name.toLowerCase();
+  if (fn === 'min') return Math.min(...args);
+  if (fn === 'max') return Math.max(...args);
+  throw new Error(`Неизвестная функция формулы: ${name}`);
+}
+
 function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
   const tok = tokens[pos.i];
   if (!tok) throw new Error('Незавершённая формула');
@@ -245,8 +263,12 @@ function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): Formu
   }
 
   if (tok.t === 'id') {
+    const id = tok.v;
     pos.i++;
-    return resolveId(tok.v, sink);
+    if (tokens[pos.i]?.t === 'lparen') {
+      return parseFunctionCall(id, tokens, pos, sink);
+    }
+    return resolveId(id, sink);
   }
 
   if (tok.t === 'lparen') {

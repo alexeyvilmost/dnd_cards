@@ -116,6 +116,8 @@ export interface CharacterContext {
   equippedCards?: Card[];
   /** Карты для резолва equipment/inventory по id (инвентарь + экипировка). */
   knownCards?: Card[];
+  /** recharge per ресурс: short_rest | long_rest (R4). */
+  resourceRecharge?: Record<string, string>;
 }
 
 export interface TargetContext {

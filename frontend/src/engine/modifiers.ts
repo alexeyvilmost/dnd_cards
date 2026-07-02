@@ -2,6 +2,7 @@
  * Сбор модификаторов броска из активных эффектов (фаза D4).
  */
 import type { AdvantageState, RollModifier, RuntimeState } from '../mvp/contracts';
+import { payloadsOf } from './mechanicsView';
 
 type Dict = Record<string, unknown>;
 
@@ -12,9 +13,10 @@ function combineAdvantage(current: AdvantageState, op: string): AdvantageState {
   return 'none';
 }
 
+/** Ключ фильтра эффекта, отсутствующий в запросе = НЕ матч (R2). */
 function matchFilter(effectFilter: Dict | undefined, queryFilter: Dict | undefined): boolean {
-  if (!effectFilter) return true;
-  if (!queryFilter) return true;
+  if (!effectFilter || Object.keys(effectFilter).length === 0) return true;
+  if (!queryFilter) return false;
   for (const [k, v] of Object.entries(effectFilter)) {
     if (queryFilter[k] !== v) return false;
   }
@@ -55,16 +57,14 @@ export function collectRollModifiers(
   };
 
   for (const effect of state.activeEffects) {
-    collectFromPayload(effect.mechanics, appliesTo, out);
+    for (const payload of payloadsOf(effect.mechanics)) {
+      collectFromPayload(payload, appliesTo, out);
+    }
   }
 
   for (const mech of passives) {
-    const effects = mech.effects as Dict[] | undefined;
-    if (!Array.isArray(effects)) continue;
-    for (const eff of effects) {
-      const results = (eff.result ?? eff.results) as Dict[] | undefined;
-      if (!Array.isArray(results)) continue;
-      for (const r of results) collectFromPayload(r, appliesTo, out);
+    for (const payload of payloadsOf(mech)) {
+      collectFromPayload(payload, appliesTo, out);
     }
   }
 

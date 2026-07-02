@@ -80,10 +80,15 @@ export function rollD20(opts: RollD20Options): RollLog {
   let outcome: RollLog['outcome'];
 
   if (opts.target) {
-    if (opts.target.type === 'ac' && natural === 20) {
-      outcome = 'crit';
-    } else if (opts.target.type === 'ac') {
-      outcome = total >= opts.target.value ? 'hit' : 'miss';
+    if (opts.target.type === 'ac') {
+      const critAt = opts.critRange ?? 20;
+      if (natural === 1) {
+        outcome = 'miss';
+      } else if (natural >= critAt) {
+        outcome = 'crit';
+      } else {
+        outcome = total >= opts.target.value ? 'hit' : 'miss';
+      }
     } else {
       outcome = total >= opts.target.value ? 'success' : 'fail';
     }

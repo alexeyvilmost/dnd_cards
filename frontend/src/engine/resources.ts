@@ -2,6 +2,7 @@
  * Инициализация пулов ресурсов (фаза D1).
  */
 import type { CharacterContext } from '../mvp/contracts';
+import { evaluate, type FormulaContext } from './formula';
 
 type Dict = Record<string, unknown>;
 
@@ -11,14 +12,41 @@ const TURN_RESOURCES: Record<string, number> = {
   reaction: 1,
 };
 
+const TURN_KEYS = ['action', 'bonus_action', 'reaction'] as const;
+
+function formulaCtx(ctx: CharacterContext): FormulaContext {
+  return {
+    abilityMods: ctx.abilityMods,
+    profBonus: ctx.profBonus,
+    selfLevel: ctx.level,
+    classLevels: ctx.classLevels,
+  };
+}
+
 function resolveCount(raw: unknown, ctx: CharacterContext): number {
   if (typeof raw === 'number' && !Number.isNaN(raw)) return raw;
-  if (raw === 'prof_bonus') return ctx.profBonus;
+  if (raw == null) return 0;
   if (typeof raw === 'string') {
-    const n = Number(raw);
-    if (!Number.isNaN(n)) return n;
+    try {
+      const v = evaluate(raw, formulaCtx(ctx));
+      if (typeof v === 'number' && !Number.isNaN(v)) return v;
+    } catch {
+      const n = Number(raw);
+      if (!Number.isNaN(n)) return n;
+    }
   }
   return 0;
+}
+
+export function buildResourceRecharge(classResources: Dict | null): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!classResources) return out;
+  for (const [id, def] of Object.entries(classResources)) {
+    const row = def as Dict;
+    const per = row.per ?? row.recharge;
+    if (per) out[id] = String(per);
+  }
+  return out;
 }
 
 export function initResources(
@@ -52,9 +80,17 @@ export function initResources(
   return { resources, maxResources };
 }
 
-/** Ресурсы, которые не восстанавливаются коротким отдыхом. */
-export const SHORT_REST_SKIP = new Set(['action', 'bonus_action', 'reaction', 'heroic_inspiration']);
-
-export function resourcesRestoredOnShortRest(maxResources: Record<string, number>): string[] {
-  return Object.keys(maxResources).filter((k) => !SHORT_REST_SKIP.has(k));
+/** Ресурсы, восстанавливаемые коротким отдыхом (R4: по recharge; без метаданных — legacy). */
+export function resourcesRestoredOnShortRest(
+  maxResources: Record<string, number>,
+  recharge?: Record<string, string>,
+): string[] {
+  if (!recharge) {
+    const LEGACY_SKIP = new Set(['action', 'bonus_action', 'reaction', 'heroic_inspiration']);
+    return Object.keys(maxResources).filter((k) => !LEGACY_SKIP.has(k));
+  }
+  return Object.keys(maxResources).filter((k) => {
+    if (TURN_KEYS.includes(k as typeof TURN_KEYS[number])) return false;
+    return recharge[k] === 'short_rest';
+  });
 }

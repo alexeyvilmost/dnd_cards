@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Dices, Pencil } from 'lucide-react';
+import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
+import { collectEquippedCards } from '../character/inventory';
+import { collectPassiveMechanics } from '../character/resourceInit';
+import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import { abilityOfSkill } from '../character/rules/foundation';
 import {
@@ -12,12 +16,13 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
-import { getSpellLevelLabel, type Spell } from '../types';
+import { getSpellLevelLabel, type Card, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
 import EventJournal from '../components/EventJournal';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
+import { computeAC } from '../engine/ac';
 import { rollEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
@@ -45,6 +50,7 @@ const CharacterSheetMVP = () => {
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
   const [journalLoading, setJournalLoading] = useState(false);
   const [rollingInit, setRollingInit] = useState(false);
+  const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
 
   const loadJournal = useCallback(async (characterId: string) => {
     setJournalLoading(true);
@@ -87,6 +93,46 @@ const CharacterSheetMVP = () => {
     () => (draft && assembled ? resolveCharacterRules({ draft, assembled }) : null),
     [draft, assembled],
   );
+
+  const equipCardIds = useMemo(() => {
+    if (!character) return [];
+    const ids = new Set<string>();
+    for (const row of character.inventory_items ?? []) ids.add(row.card_id);
+    for (const id of Object.values(character.equipment ?? {})) if (id) ids.add(id);
+    return [...ids];
+  }, [character]);
+
+  useEffect(() => {
+    if (!equipCardIds.length) {
+      setEquipCards(new Map());
+      return;
+    }
+    let stale = false;
+    (async () => {
+      const map = new Map<string, Card>();
+      for (const id of equipCardIds) {
+        try {
+          map.set(id, await cardsApi.getCard(id));
+        } catch {
+          /* skip */
+        }
+      }
+      if (!stale) setEquipCards(map);
+    })();
+    return () => { stale = true; };
+  }, [equipCardIds.join('|')]);
+
+  const runtimeState = useMemo(
+    () => (character ? forgeToRuntimeState(character) : null),
+    [character],
+  );
+
+  const acBreakdown = useMemo(() => {
+    if (!ruleState || !draft || !assembled || !runtimeState) return null;
+    const equipped = collectEquippedCards(runtimeState.equipment, equipCards);
+    const ctx = buildCharacterContext(ruleState, draft, equipped, assembled.klass);
+    return computeAC(ctx, runtimeState, collectPassiveMechanics(assembled));
+  }, [ruleState, draft, assembled, runtimeState, equipCards]);
 
   const lineageName = useMemo(() => {
     if (!draft?.lineageId || !assembled?.race?.lineages) return draft?.lineageId ?? null;
@@ -134,7 +180,7 @@ const CharacterSheetMVP = () => {
   const maxHP = ruleState.maxHP;
   const currentHP = character.current_hp ?? maxHP;
   const speed = ruleState.speed;
-  const ac = ruleState.armorClass;
+  const ac = acBreakdown?.value ?? ruleState.armorClass;
   const initiative = ruleState.initiativeBonus;
   const spellcasting = ruleState.spellcasting;
 
@@ -265,7 +311,9 @@ const CharacterSheetMVP = () => {
           <section className="sheet-panel">
             <h2 className="sheet-h2">Бой</h2>
             <div className="sheet-stats">
-              <div className="sheet-stat"><span>КД</span><strong>{ac}</strong></div>
+              <div className="sheet-stat" title={acBreakdown?.parts.map((p) => `${p.source}: ${p.value}`).join('\n')}>
+                <span>КД</span><strong>{ac}</strong>
+              </div>
               <div className="sheet-stat"><span>HP</span><strong>{currentHP}/{maxHP}</strong></div>
               <div className="sheet-stat"><span>Скорость</span><strong>{speed} фт</strong></div>
               <div className="sheet-stat"><span>Инициатива</span><strong>{fmtMod(initiative)}</strong></div>

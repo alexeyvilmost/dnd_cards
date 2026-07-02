@@ -11,9 +11,10 @@ import {
 import { STANDARD_DODGE } from '../character/standardActions';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
+import { buildResourceRecharge } from '../engine/resources';
 import { canPay } from '../engine/cost';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
-import { executeAction } from '../engine/execute';
+import { executeAction, InsufficientResourcesError } from '../engine/execute';
 import { longRest, shortRest, startTurn } from '../engine/turn';
 import type { Action } from '../types';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
@@ -82,14 +83,22 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
 
   const passives = useMemo(() => collectPassiveMechanics(assembled), [assembled]);
 
+  const resourceRecharge = useMemo(
+    () => buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+    [assembled.klass?.resources],
+  );
+
   const ctx = useMemo(
-    () => buildCharacterContext(
-      ruleState,
-      { level: character.level, abilities: character.abilities ?? {} },
-      [],
-      assembled.klass,
-    ),
-    [ruleState, character.level, character.abilities, assembled.klass],
+    () => ({
+      ...buildCharacterContext(
+        ruleState,
+        { level: character.level, abilities: character.abilities ?? {} },
+        [],
+        assembled.klass,
+      ),
+      resourceRecharge,
+    }),
+    [ruleState, character.level, character.abilities, assembled.klass, resourceRecharge],
   );
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
@@ -158,11 +167,19 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
     if (cost.length && !canPay(runtime, cost).ok) return;
 
-    const { state, events } = executeAction(runtime, mech, {
-      character: ctx,
-      rng: () => Math.random(),
-    });
-    apply(state, events);
+    try {
+      const { state, events } = executeAction(runtime, mech, {
+        character: ctx,
+        rng: () => Math.random(),
+      });
+      apply(state, events);
+    } catch (e) {
+      if (e instanceof InsufficientResourcesError) {
+        setError('Недостаточно ресурсов для действия');
+        return;
+      }
+      throw e;
+    }
   };
 
   const handleDismissEffect = (effectId: string) => {
@@ -202,7 +219,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleStartTurn}>
           <Swords size={14} /> Новый ход
         </button>
-        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleShortRest} title="Короткий отдых: +50% HP, ресурсы short_rest">
+        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleShortRest} title="Короткий отдых: ресурсы short_rest">
           <Sun size={14} /> Короткий отдых
         </button>
         <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleLongRest}>
@@ -256,7 +273,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       </div>
 
       <p className="forge-note" style={{ marginTop: 8 }}>
-        Короткий отдых: +половина max HP (без костей хитов) и заряды умений с восстановлением «короткий отдых».
+        Короткий отдых: восстановление зарядов умений с recharge «короткий отдых» (без лечения HP).
       </p>
     </section>
   );
