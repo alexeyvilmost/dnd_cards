@@ -368,6 +368,12 @@
 .sheet-journal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .sheet-journal-head .sheet-h2 { margin: 0; }
 .sheet-roll-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px; }
+.sheet-inv-search { position: relative; margin-bottom: 8px; }
+.sheet-inv-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--forge-text-dim); pointer-events: none; }
+.sheet-inv-search-input { padding-left: 34px !important; width: 100%; box-sizing: border-box; }
+.sheet-inv-search-results { max-height: 220px; overflow-y: auto; }
+.sheet-inv-meta { color: var(--forge-text-dim); font-size: 0.85em; }
+.sheet-inv-actions { display: inline-flex; align-items: center; gap: 4px; }
 .sheet-h3 { color: var(--forge-gold-dim); font-size: 14px; margin: 0 0 8px; font-weight: 600; }
 .sheet-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .sheet-ab { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--forge-panel-2); }

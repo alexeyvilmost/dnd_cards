@@ -41,3 +41,18 @@ export function buildCharacterContext(
 export function carryingCapacity(strScore: number): number {
   return strScore * 15;
 }
+
+export function addToInventory(state: RuntimeState, cardId: string, qty = 1): RuntimeState {
+  const inventory = state.inventory.map((row) => ({ ...row }));
+  const row = inventory.find((r) => r.cardId === cardId);
+  if (row) row.qty += qty;
+  else inventory.push({ cardId, qty });
+  return { ...state, inventory };
+}
+
+export function removeFromInventory(state: RuntimeState, cardId: string, qty = 1): RuntimeState {
+  const inventory = state.inventory
+    .map((row) => (row.cardId === cardId ? { ...row, qty: row.qty - qty } : { ...row }))
+    .filter((row) => row.qty > 0);
+  return { ...state, inventory };
+}

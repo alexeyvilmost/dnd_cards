@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
-import { buildCharacterContext, carryingCapacity, forgeToRuntimeState, runtimeInventoryPayload } from '../character/runtime';
+import {
+  addToInventory,
+  buildCharacterContext,
+  carryingCapacity,
+  forgeToRuntimeState,
+  removeFromInventory,
+  runtimeInventoryPayload,
+} from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { computeAC } from '../engine/ac';
+import { registerCard } from '../engine/cardRegistry';
 import { equipItem, totalWeight, unequipSlot } from '../engine/equipment';
 import { weaponContext } from '../engine/weapon';
 import type { Card } from '../types';
@@ -27,6 +36,9 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<Card[]>([]);
+  const [searching, setSearching] = useState(false);
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
 
@@ -52,6 +64,32 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
     })();
     return () => { stale = true; };
   }, [cardIds.join('|')]);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    let stale = false;
+    const timer = window.setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await cardsApi.getCards({
+          search: q,
+          limit: 12,
+          exclude_template_only: true,
+        });
+        if (!stale) setSearchResults(res.cards);
+      } catch (e) {
+        console.error(e);
+        if (!stale) setSearchResults([]);
+      } finally {
+        if (!stale) setSearching(false);
+      }
+    }, 350);
+    return () => { stale = true; window.clearTimeout(timer); };
+  }, [search]);
 
   const cardMap = cards;
   const weight = totalWeight(runtime, cardMap);
@@ -90,6 +128,8 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
   }, [character.id, onUpdated]);
 
   const handleEquip = async (card: Card) => {
+    registerCard(card);
+    setCards((prev) => new Map(prev).set(card.id, card));
     const res = equipItem(runtime, card);
     if (res.error) { setError(res.error); return; }
     await persist(res.state);
@@ -97,6 +137,16 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
 
   const handleUnequip = async (slot: string) => {
     await persist(unequipSlot(runtime, slot));
+  };
+
+  const handleAdd = async (card: Card) => {
+    registerCard(card);
+    setCards((prev) => new Map(prev).set(card.id, card));
+    await persist(addToInventory(runtime, card.id, 1));
+  };
+
+  const handleRemove = async (cardId: string) => {
+    await persist(removeFromInventory(runtime, cardId, 1));
   };
 
   return (
@@ -110,6 +160,45 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
         <div className="sheet-stat"><span>Вес</span><strong>{weight.toFixed(1)} / {capacity} фн</strong></div>
         {mainWeapon && (
           <div className="sheet-stat"><span>Оружие</span><strong>{mainWeapon.dice} {mainWeapon.ability.toUpperCase()}</strong></div>
+        )}
+      </div>
+
+      <div className="sheet-group">
+        <h3 className="sheet-h3">Добавить предмет</h3>
+        <div className="sheet-inv-search">
+          <Search size={16} className="sheet-inv-search-icon" />
+          <input
+            className="forge-input sheet-inv-search-input"
+            placeholder="Поиск в библиотеке карт (мин. 2 символа)…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {searching && <p className="forge-note">Поиск…</p>}
+        {!searching && search.trim().length >= 2 && searchResults.length === 0 && (
+          <p className="forge-note">Ничего не найдено.</p>
+        )}
+        {searchResults.length > 0 && (
+          <ul className="sheet-list sheet-inv-search-results">
+            {searchResults.map((card) => (
+              <li key={card.id}>
+                <span>
+                  {card.name}
+                  {card.weight != null && <span className="sheet-inv-meta"> · {card.weight} фн</span>}
+                </span>
+                <button
+                  type="button"
+                  className="forge-btn ghost sheet-roll-btn"
+                  disabled={busy}
+                  onClick={() => handleAdd(card)}
+                  title="Добавить в инвентарь"
+                >
+                  <Plus size={14} />
+                  Добавить
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
@@ -138,18 +227,29 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
 
       <div className="sheet-group">
         <h3 className="sheet-h3">Инвентарь</h3>
-        {!character.inventory_items?.length && <p className="forge-note">Пусто.</p>}
+        {!character.inventory_items?.length && <p className="forge-note">Пусто — найдите предмет выше и нажмите «Добавить».</p>}
         <ul className="sheet-list">
           {(character.inventory_items ?? []).map((row) => {
             const card = cardMap.get(row.card_id);
             return (
               <li key={row.card_id}>
                 <span>{card?.name ?? row.card_id} ×{row.qty}</span>
-                {card && (
-                  <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => handleEquip(card)}>
-                    Надеть
+                <span className="sheet-inv-actions">
+                  {card && (
+                    <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => handleEquip(card)}>
+                      Надеть
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="forge-btn ghost sheet-roll-btn"
+                    disabled={busy}
+                    onClick={() => handleRemove(row.card_id)}
+                    title="Убрать 1 шт."
+                  >
+                    <Trash2 size={14} />
                   </button>
-                )}
+                </span>
               </li>
             );
           })}
