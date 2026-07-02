@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
 const Ajv = require(join(__dirname, '../frontend/node_modules/ajv/dist/ajv.js')).default;
 const addFormats = require(join(__dirname, '../frontend/node_modules/ajv-formats/dist/index.js')).default;
 
-const schema = JSON.parse(readFileSync(join(__dirname, '../docs/mechanics.schema.json'), 'utf8'));
+const schema = JSON.parse(readFileSync(join(__dirname, '../frontend/src/schemas/mechanics.schema.json'), 'utf8'));
 const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
 
 const ajv = new Ajv({ allErrors: true, strict: false });

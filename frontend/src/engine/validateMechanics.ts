@@ -1,7 +1,6 @@
 import Ajv, { type ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
-// @ts-expect-error JSON schema вне src
-import schema from '../../../docs/mechanics.schema.json';
+import schema from '../schemas/mechanics.schema.json';
 
 export type MechanicKind = 'passive_effect' | 'action' | 'spell' | 'trait';
 
