@@ -53,6 +53,15 @@ type CharacterV3 struct {
 	InitiativeBonus   int `json:"initiative_bonus" gorm:"default:0"`
 	PassivePerception int `json:"passive_perception" gorm:"default:10"`
 
+	// Runtime (фаза C1): экипировка, инвентарь, ресурсы боя
+	Equipment      *JSONMap    `json:"equipment" gorm:"type:jsonb"`
+	InventoryItems *Properties `json:"inventory_items" gorm:"type:jsonb"`
+	Resources      *JSONMap    `json:"resources" gorm:"type:jsonb"`
+	MaxResources   *JSONMap    `json:"max_resources" gorm:"type:jsonb"`
+	ActiveEffects  *Properties `json:"active_effects" gorm:"type:jsonb"`
+	TurnState      *JSONMap    `json:"turn_state" gorm:"type:jsonb"`
+	Currency       *JSONMap    `json:"currency" gorm:"type:jsonb"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
@@ -133,4 +142,17 @@ type UpdateCharacterV3Request struct {
 	ArmorClass        int `json:"armor_class"`
 	InitiativeBonus   int `json:"initiative_bonus"`
 	PassivePerception int `json:"passive_perception"`
+}
+
+// PatchCharacterRuntimeRequest — частичное обновление runtime (не трогает черновик).
+type PatchCharacterRuntimeRequest struct {
+	CurrentHP      *int        `json:"current_hp"`
+	MaxHP          *int        `json:"max_hp"`
+	Equipment      *JSONMap    `json:"equipment"`
+	InventoryItems *Properties `json:"inventory_items"`
+	Resources      *JSONMap    `json:"resources"`
+	MaxResources   *JSONMap    `json:"max_resources"`
+	ActiveEffects  *Properties `json:"active_effects"`
+	TurnState      *JSONMap    `json:"turn_state"`
+	Currency       *JSONMap    `json:"currency"`
 }

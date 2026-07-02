@@ -47,4 +47,20 @@ export const charactersV3Api = {
     const { data } = await apiClient.post<CharacterEventRow[]>(`/api/characters-v3/${characterId}/events`, { events });
     return data ?? [];
   },
+  patchRuntime: async (characterId: string, payload: PatchCharacterRuntimeRequest): Promise<ForgeCharacter> => {
+    const { data } = await apiClient.patch<ForgeCharacter>(`/api/characters-v3/${characterId}/runtime`, payload);
+    return data;
+  },
 };
+
+export interface PatchCharacterRuntimeRequest {
+  current_hp?: number;
+  max_hp?: number;
+  equipment?: Record<string, string | null>;
+  inventory_items?: Array<{ card_id: string; qty: number }>;
+  resources?: Record<string, number>;
+  max_resources?: Record<string, number>;
+  active_effects?: unknown[];
+  turn_state?: Record<string, unknown>;
+  currency?: Record<string, number>;
+}

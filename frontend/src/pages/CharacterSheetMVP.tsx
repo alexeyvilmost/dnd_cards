@@ -16,6 +16,7 @@ import { getSpellLevelLabel, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
 import EventJournal from '../components/EventJournal';
+import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import { rollEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
@@ -217,6 +218,13 @@ const CharacterSheetMVP = () => {
 
         <div className="sheet-grid sheet-grid-journal-first">
           {journalPanel}
+
+          <SheetEquipmentPanel
+            character={character}
+            ruleState={ruleState}
+            onUpdated={setCharacter}
+          />
+
           <section className="sheet-panel">
             <h2 className="sheet-h2">Характеристики</h2>
             <div className="sheet-abilities">

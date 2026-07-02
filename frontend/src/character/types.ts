@@ -44,6 +44,14 @@ export interface ForgeCharacter {
   initiative_bonus?: number;
   passive_perception?: number;
 
+  equipment?: Record<string, string | null> | null;
+  inventory_items?: Array<{ card_id: string; qty: number }> | null;
+  resources?: Record<string, number> | null;
+  max_resources?: Record<string, number> | null;
+  active_effects?: unknown[] | null;
+  turn_state?: Record<string, unknown> | null;
+  currency?: Record<string, number> | null;
+
   created_at: string;
   updated_at: string;
 }

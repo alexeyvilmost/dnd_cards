@@ -114,6 +114,8 @@ export interface CharacterContext {
   characterSpeed?: number;
   /** Карточки экипированных предметов (для weapon/AC-конвейеров). */
   equippedCards?: Card[];
+  /** Карты для резолва equipment/inventory по id (инвентарь + экипировка). */
+  knownCards?: Card[];
 }
 
 export interface TargetContext {
@@ -171,28 +173,13 @@ export function collectRollModifiers(
 }
 
 // Шаг C4 — engine/ac.ts
-export function computeAC(_character: CharacterContext, _state: RuntimeState, _passives: Dict[]): ValueBreakdown {
-  return NOT_IMPLEMENTED('C4', 'computeAC');
-}
+export { computeAC } from '../engine/ac';
 
 // Шаг C5 — engine/weapon.ts
-export function weaponContext(
-  _character: CharacterContext,
-  _hand: 'main' | 'off',
-): WeaponContext | null {
-  return NOT_IMPLEMENTED('C5', 'weaponContext');
-}
+export { weaponContext } from '../engine/weapon';
 
 // Шаг C3 — engine/equipment.ts
-export function equipItem(_state: RuntimeState, _card: Card): { state: RuntimeState; error?: string } {
-  return NOT_IMPLEMENTED('C3', 'equipItem');
-}
-export function unequipSlot(_state: RuntimeState, _slot: string): RuntimeState {
-  return NOT_IMPLEMENTED('C3', 'unequipSlot');
-}
-export function totalWeight(_state: RuntimeState, _cards: Map<string, Card>): number {
-  return NOT_IMPLEMENTED('C2', 'totalWeight');
-}
+export { equipItem, unequipSlot, totalWeight } from '../engine/equipment';
 
 // Шаг D2 — engine/cost.ts
 export function canPay(_state: RuntimeState, _cost: Dict[]): { ok: boolean; missing: string[] } {

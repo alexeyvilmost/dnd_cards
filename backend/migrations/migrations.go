@@ -296,6 +296,12 @@ func GetAllMigrations() []Migration {
 			Up:          createCharacterEventsTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS character_events CASCADE"); return err },
 		},
+		{
+			Version:     "049_character_runtime",
+			Description: "Add runtime jsonb fields to characters_v3 (equipment, inventory, resources)",
+			Up:          addCharacterRuntimeFields,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -308,7 +314,24 @@ func addSpellResources(db *sql.DB) error {
 	return nil
 }
 
-// createCharacterEventsTable — журнал событий движка по персонажу (фаза B3).
+// addCharacterRuntimeFields — runtime-состояние персонажа v3 (фаза C1).
+func addCharacterRuntimeFields(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS equipment JSONB DEFAULT '{}'::jsonb",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS inventory_items JSONB DEFAULT '[]'::jsonb",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS resources JSONB DEFAULT '{}'::jsonb",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS max_resources JSONB DEFAULT '{}'::jsonb",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS active_effects JSONB DEFAULT '[]'::jsonb",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS turn_state JSONB DEFAULT '{}'::jsonb",
+		"ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS currency JSONB DEFAULT '{}'::jsonb",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("addCharacterRuntimeFields: %w", err)
+		}
+	}
+	return nil
+}
 func createCharacterEventsTable(db *sql.DB) error {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS character_events (

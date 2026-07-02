@@ -362,3 +362,74 @@ func (cc *CharacterV3Controller) PostCharacterEvents(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, rows)
 }
+
+// PatchCharacterRuntime обновляет только runtime-поля (экипировка, инвентарь, ресурсы).
+func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
+	userID, err := cc.resolveUserID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка определения пользователя", "details": err.Error()})
+		return
+	}
+
+	characterID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
+		return
+	}
+
+	var character CharacterV3
+	if err := cc.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
+		}
+		return
+	}
+
+	var req PatchCharacterRuntimeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса", "details": err.Error()})
+		return
+	}
+
+	if req.CurrentHP != nil {
+		character.CurrentHP = *req.CurrentHP
+	}
+	if req.MaxHP != nil {
+		character.MaxHP = *req.MaxHP
+	}
+	if req.Equipment != nil {
+		character.Equipment = req.Equipment
+	}
+	if req.InventoryItems != nil {
+		character.InventoryItems = req.InventoryItems
+	}
+	if req.Resources != nil {
+		character.Resources = req.Resources
+	}
+	if req.MaxResources != nil {
+		character.MaxResources = req.MaxResources
+	}
+	if req.ActiveEffects != nil {
+		character.ActiveEffects = req.ActiveEffects
+	}
+	if req.TurnState != nil {
+		character.TurnState = req.TurnState
+	}
+	if req.Currency != nil {
+		character.Currency = req.Currency
+	}
+
+	if err := cc.db.Save(&character).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка обновления runtime", "details": err.Error()})
+		return
+	}
+
+	var full CharacterV3
+	if err := cc.db.Preload("User").Preload("Group").First(&full, character.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения данных персонажа"})
+		return
+	}
+	c.JSON(http.StatusOK, full)
+}

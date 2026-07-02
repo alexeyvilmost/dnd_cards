@@ -276,6 +276,7 @@ func main() {
 			protected.DELETE("/characters-v3/:id", characterV3Controller.DeleteCharacterV3)
 			protected.GET("/characters-v3/:id/events", characterV3Controller.GetCharacterEvents)
 			protected.POST("/characters-v3/:id/events", characterV3Controller.PostCharacterEvents)
+			protected.PATCH("/characters-v3/:id/runtime", characterV3Controller.PatchCharacterRuntime)
 
 			// Изображения
 			protected.POST("/images/upload", imageController.UploadImage)
