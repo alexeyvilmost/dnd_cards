@@ -8,6 +8,7 @@ import { characterToDraft } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
+import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import { abilityOfSkill } from '../character/rules/foundation';
 import {
@@ -20,9 +21,11 @@ import { getSpellLevelLabel, type Card, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
 import EventJournal from '../components/EventJournal';
+import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
+import SheetHpPanel from '../components/SheetHpPanel';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
-import { computeAC } from '../engine/ac';
+import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import { rollEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
@@ -127,12 +130,36 @@ const CharacterSheetMVP = () => {
     [character],
   );
 
-  const acBreakdown = useMemo(() => {
-    if (!ruleState || !draft || !assembled || !runtimeState) return null;
+  const passives = useMemo(
+    () => (assembled ? collectPassiveMechanics(assembled) : []),
+    [assembled],
+  );
+
+  const sheetCtx = useMemo(() => {
+    if (!ruleState || !draft || !runtimeState) return null;
     const equipped = collectEquippedCards(runtimeState.equipment, equipCards);
-    const ctx = buildCharacterContext(ruleState, draft, equipped, assembled.klass);
-    return computeAC(ctx, runtimeState, collectPassiveMechanics(assembled));
-  }, [ruleState, draft, assembled, runtimeState, equipCards]);
+    return buildCharacterContext(ruleState, draft, equipped, assembled?.klass ?? null);
+  }, [ruleState, draft, runtimeState, equipCards, assembled?.klass]);
+
+  const acBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState) return null;
+    return breakdownValue('ac', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives]);
+
+  const maxHpBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState) return null;
+    return breakdownValue('max_hp', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives]);
+
+  const initBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState) return null;
+    return breakdownValue('initiative', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives]);
+
+  const speedBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState) return null;
+    return breakdownValue('speed', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives]);
 
   const lineageName = useMemo(() => {
     if (!draft?.lineageId || !assembled?.race?.lineages) return draft?.lineageId ?? null;
@@ -177,11 +204,11 @@ const CharacterSheetMVP = () => {
   const scores = draft.abilities;
   const pb = ruleState.proficiencyBonus;
 
-  const maxHP = ruleState.maxHP;
+  const maxHP = maxHpBreakdown?.value ?? ruleState.maxHP;
   const currentHP = character.current_hp ?? maxHP;
-  const speed = ruleState.speed;
+  const speed = speedBreakdown?.value ?? ruleState.speed;
   const ac = acBreakdown?.value ?? ruleState.armorClass;
-  const initiative = ruleState.initiativeBonus;
+  const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;
   const spellcasting = ruleState.spellcasting;
 
   const rollInitiative = async () => {
@@ -283,10 +310,26 @@ const CharacterSheetMVP = () => {
             onUpdated={setCharacter}
           />
 
+          <SheetActionsPanel
+            character={character}
+            assembled={assembled}
+            ruleState={ruleState}
+            equipCards={equipCards}
+            onUpdated={setCharacter}
+            onEvents={appendRuntimeEvents}
+          />
+
           <SheetRuntimePanel
             character={character}
             assembled={assembled}
             ruleState={ruleState}
+            onUpdated={setCharacter}
+            onEvents={appendRuntimeEvents}
+          />
+
+          <SheetHpPanel
+            character={character}
+            maxHp={maxHP}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
           />
@@ -311,12 +354,38 @@ const CharacterSheetMVP = () => {
           <section className="sheet-panel">
             <h2 className="sheet-h2">Бой</h2>
             <div className="sheet-stats">
-              <div className="sheet-stat" title={acBreakdown?.parts.map((p) => `${p.source}: ${p.value}`).join('\n')}>
-                <span>КД</span><strong>{ac}</strong>
-              </div>
-              <div className="sheet-stat"><span>HP</span><strong>{currentHP}/{maxHP}</strong></div>
-              <div className="sheet-stat"><span>Скорость</span><strong>{speed} фт</strong></div>
-              <div className="sheet-stat"><span>Инициатива</span><strong>{fmtMod(initiative)}</strong></div>
+              {acBreakdown && (
+                <div className="sheet-stat">
+                  <span>КД</span>
+                  <ValueBreakdownTip breakdown={acBreakdown} label="Класс доспеха">
+                    <strong>{ac}</strong>
+                  </ValueBreakdownTip>
+                </div>
+              )}
+              {maxHpBreakdown && (
+                <div className="sheet-stat">
+                  <span>Max HP</span>
+                  <ValueBreakdownTip breakdown={maxHpBreakdown} label="Максимум HP">
+                    <strong>{maxHP}</strong>
+                  </ValueBreakdownTip>
+                </div>
+              )}
+              {speedBreakdown && (
+                <div className="sheet-stat">
+                  <span>Скорость</span>
+                  <ValueBreakdownTip breakdown={speedBreakdown} label="Скорость">
+                    <strong>{speed} фт</strong>
+                  </ValueBreakdownTip>
+                </div>
+              )}
+              {initBreakdown && (
+                <div className="sheet-stat">
+                  <span>Инициатива</span>
+                  <ValueBreakdownTip breakdown={initBreakdown} label="Инициатива">
+                    <strong>{fmtMod(initiative)}</strong>
+                  </ValueBreakdownTip>
+                </div>
+              )}
               <div className="sheet-stat"><span>БМ</span><strong>{fmtMod(pb)}</strong></div>
             </div>
             {spellcasting && (
@@ -333,10 +402,19 @@ const CharacterSheetMVP = () => {
               {ABILITY_KEYS.map((k) => {
                 const proficient = saves.includes(k);
                 const bonus = ruleState.savingThrowBonuses[k];
+                const saveBd = sheetCtx && runtimeState
+                  ? breakdownValue(`save:${k}`, sheetCtx, runtimeState, passives)
+                  : null;
                 return (
                   <li key={k}>
                     <span className={proficient ? 'sheet-prof' : ''}>{ABILITY_LABEL_RU[k]}</span>
-                    <span>{fmtMod(bonus)}</span>
+                    {saveBd ? (
+                      <ValueBreakdownTip breakdown={saveBd} label={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
+                        <span>{fmtMod(bonus)}</span>
+                      </ValueBreakdownTip>
+                    ) : (
+                      <span>{fmtMod(bonus)}</span>
+                    )}
                   </li>
                 );
               })}
@@ -351,6 +429,9 @@ const CharacterSheetMVP = () => {
                 const expert = ruleState.expertise.skills.includes(skill.id);
                 const bonus = ruleState.skillBonuses[skill.id];
                 const ability = abilityOfSkill(skill.id);
+                const skillBd = sheetCtx && runtimeState
+                  ? breakdownValue(`skill:${skill.id}`, sheetCtx, runtimeState, passives)
+                  : null;
                 const grant = getSkillGrantSource(ruleState, skill.id);
                 const formula = [
                   `${ABILITY_LABEL_RU[ability]} ${fmtMod(ruleState.abilityMods[ability])}`,
@@ -360,7 +441,13 @@ const CharacterSheetMVP = () => {
                 return (
                   <li key={skill.id} title={`${fmtMod(bonus)} = ${formula}`}>
                     <span className={proficient ? 'sheet-prof' : ''}>{skill.label}{expert ? ' (эксп.)' : ''}</span>
-                    <span>{fmtMod(bonus)}</span>
+                    {skillBd && !proficient ? (
+                      <ValueBreakdownTip breakdown={skillBd} label={skill.label}>
+                        <span>{fmtMod(bonus)}</span>
+                      </ValueBreakdownTip>
+                    ) : (
+                      <span>{fmtMod(bonus)}</span>
+                    )}
                   </li>
                 );
               })}

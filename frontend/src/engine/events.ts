@@ -27,6 +27,10 @@ export function healingEvent(amount: number, roll?: RollLog): EngineEvent {
   return { type: 'healing', amount, roll };
 }
 
+export function tempHpEvent(amount: number): EngineEvent {
+  return { type: 'temp_hp', amount };
+}
+
 export function narrativeEvent(text: string): EngineEvent {
   return { type: 'narrative', text };
 }

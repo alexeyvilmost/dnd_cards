@@ -188,12 +188,5 @@ export { initResources } from '../engine/resources';
 // Шаг E1–E5 — engine/execute.ts
 export { executeAction } from '../engine/execute';
 
-// Шаг F2 — engine/breakdown.ts: разбивка любых значений листа
-export function breakdownValue(
-  _what: 'ac' | 'max_hp' | 'initiative' | 'speed' | `save:${string}` | `skill:${string}`,
-  _character: CharacterContext,
-  _state: RuntimeState,
-  _passives: Dict[],
-): ValueBreakdown {
-  return NOT_IMPLEMENTED('F2', 'breakdownValue');
-}
+// Шаг F2 — engine/breakdown.ts
+export { breakdownValue } from '../engine/breakdown';

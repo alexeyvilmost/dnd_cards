@@ -405,10 +405,30 @@
 .sheet-combat-action {
   display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px;
 }
-.sheet-combat-action-disabled,
-.sheet-combat-action:disabled {
-  opacity: 0.45; cursor: not-allowed;
+.sheet-action-lvl {
+  font-size: 10px; opacity: 0.75; margin-left: 4px;
 }
+.sheet-target-inputs { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.sheet-target-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--forge-text-dim); }
+.sheet-target-num { width: 72px; padding: 4px 8px !important; }
+.value-breakdown-wrap { position: relative; cursor: help; }
+.value-breakdown-popover {
+  position: absolute; z-index: 20; left: 50%; transform: translateX(-50%); top: calc(100% + 6px);
+  min-width: 160px; padding: 8px 10px; border-radius: 8px;
+  background: var(--forge-panel-2); border: 1px solid var(--forge-line);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25); font-size: 12px;
+}
+.value-breakdown-popover-title { display: block; font-weight: 600; margin-bottom: 6px; color: var(--forge-gold-dim); }
+.value-breakdown-list { list-style: none; padding: 0; margin: 0; }
+.value-breakdown-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.value-breakdown-total { border-top: 1px solid var(--forge-line); margin-top: 4px; padding-top: 4px; font-weight: 600; }
+.sheet-hp-display { margin-bottom: 12px; }
+.sheet-hp-main { display: flex; align-items: center; gap: 8px; font-size: 20px; }
+.sheet-hp-temp { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--forge-gold); margin-left: 8px; }
+.sheet-hp-unconscious { color: #c44; }
+.sheet-hp-status { color: #c44; font-size: 13px; margin: 6px 0 0; }
+.sheet-hp-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sheet-hp-amount { width: 64px; padding: 4px 8px !important; }
 .sheet-h3 { color: var(--forge-gold-dim); font-size: 14px; margin: 0 0 8px; font-weight: 600; }
 .sheet-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .sheet-ab { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--forge-panel-2); }

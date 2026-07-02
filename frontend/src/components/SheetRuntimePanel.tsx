@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Moon, Shield, Sun, Swords, X } from 'lucide-react';
+import { Moon, Sun, Swords, X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
@@ -8,15 +8,11 @@ import {
   collectPassiveMechanics,
   resourcesNeedSync,
 } from '../character/resourceInit';
-import { STANDARD_DODGE } from '../character/standardActions';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
-import { canPay } from '../engine/cost';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
-import { executeAction, InsufficientResourcesError } from '../engine/execute';
 import { longRest, shortRest, startTurn } from '../engine/turn';
-import type { Action } from '../types';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 
 interface Props {
@@ -34,47 +30,6 @@ const RESOURCE_LABELS: Record<string, string> = {
   second_wind: 'Второе дыхание',
   heroic_inspiration: 'Вдохновение',
 };
-
-type CombatAction = {
-  id: string;
-  name: string;
-  mechanics: Record<string, unknown>;
-};
-
-function persistPayload(state: RuntimeState) {
-  return {
-    current_hp: state.hp.current,
-    max_hp: state.hp.max,
-    resources: state.resources,
-    max_resources: state.maxResources,
-    active_effects: state.activeEffects,
-  };
-}
-
-function actionMechanics(action: Action): Record<string, unknown> | null {
-  const mech = action.mechanics;
-  if (!mech || typeof mech !== 'object') return null;
-  const activation = mech.activation as Record<string, unknown> | undefined;
-  if (activation?.mode !== 'active') return null;
-  const cost = activation.cost as unknown[] | undefined;
-  if (!Array.isArray(cost) || !cost.length) return null;
-  return mech as Record<string, unknown>;
-}
-
-function collectCombatActions(assembled: AssembledCharacter): CombatAction[] {
-  const fromEntities: CombatAction[] = assembled.actions
-    .map(({ action }) => {
-      const mechanics = actionMechanics(action);
-      if (!mechanics) return null;
-      return { id: action.id, name: action.name, mechanics };
-    })
-    .filter((a): a is CombatAction => a != null);
-
-  return [
-    { id: 'standard-dodge', name: STANDARD_DODGE.name, mechanics: { ...STANDARD_DODGE.mechanics, name: STANDARD_DODGE.name } },
-    ...fromEntities,
-  ];
-}
 
 export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents }: Props) {
   const [busy, setBusy] = useState(false);
@@ -103,7 +58,16 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
 
-  const combatActions = useMemo(() => collectCombatActions(assembled), [assembled]);
+  function persistPayload(state: RuntimeState) {
+    return {
+      current_hp: state.hp.current,
+      max_hp: state.hp.max,
+      resources: state.resources,
+      max_resources: state.maxResources,
+      active_effects: state.activeEffects,
+      turn_state: { temp_hp: state.hp.temp },
+    };
+  }
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
     setBusy(true);
@@ -161,37 +125,9 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     apply(state, events);
   };
 
-  const handleUseAction = (action: CombatAction) => {
-    const mech = { ...action.mechanics, name: action.name };
-    const activation = mech.activation as Record<string, unknown> | undefined;
-    const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    if (cost.length && !canPay(runtime, cost).ok) return;
-
-    try {
-      const { state, events } = executeAction(runtime, mech, {
-        character: ctx,
-        rng: () => Math.random(),
-      });
-      apply(state, events);
-    } catch (e) {
-      if (e instanceof InsufficientResourcesError) {
-        setError('Недостаточно ресурсов для действия');
-        return;
-      }
-      throw e;
-    }
-  };
-
   const handleDismissEffect = (effectId: string) => {
     const { state, events } = removeActiveEffect(runtime, effectId);
     apply(state, events);
-  };
-
-  const isActionDisabled = (action: CombatAction): boolean => {
-    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
-    const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    if (!cost.length) return busy;
-    return busy || !canPay(runtime, cost).ok;
   };
 
   return (
@@ -249,28 +185,6 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           </ul>
         </div>
       )}
-
-      <div className="sheet-group" style={{ marginTop: 12 }}>
-        <h3 className="sheet-h3">Боевые действия</h3>
-        <div className="sheet-combat-actions">
-          {combatActions.map((action) => {
-            const disabled = isActionDisabled(action);
-            return (
-              <button
-                key={action.id}
-                type="button"
-                className={`forge-btn ghost sheet-combat-action${disabled ? ' sheet-combat-action-disabled' : ''}`}
-                disabled={disabled}
-                title={disabled ? 'Недостаточно ресурсов' : `Использовать: ${action.name}`}
-                onClick={() => handleUseAction(action)}
-              >
-                {action.id === 'standard-dodge' ? <Shield size={14} /> : <Swords size={14} />}
-                {action.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <p className="forge-note" style={{ marginTop: 8 }}>
         Короткий отдых: восстановление зарядов умений с recharge «короткий отдых» (без лечения HP).

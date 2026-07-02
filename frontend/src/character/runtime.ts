@@ -10,7 +10,11 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
     qty: row.qty,
   }));
   return {
-    hp: { current: c.current_hp ?? 0, max: c.max_hp ?? 0, temp: 0 },
+    hp: {
+      current: c.current_hp ?? 0,
+      max: c.max_hp ?? 0,
+      temp: typeof c.turn_state?.temp_hp === 'number' ? c.turn_state.temp_hp : 0,
+    },
     resources: { ...(c.resources ?? {}) },
     maxResources: { ...(c.max_resources ?? {}) },
     equipment: { ...(c.equipment ?? {}) },
