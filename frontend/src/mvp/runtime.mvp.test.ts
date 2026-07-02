@@ -66,6 +66,21 @@ describe('D3: ход и отдыхи', () => {
     expect(next.resources.second_wind).toBe(state.maxResources.second_wind);
   });
 
+  it('shortRest восстанавливает половину max HP', () => {
+    const state = freshFighterState();
+    state.hp = { current: 2, max: 10, temp: 0 };
+    const { state: next, events } = shortRest(state, FIGHTER_CTX);
+    expect(next.hp.current).toBe(7);
+    expect(events.some((e) => e.type === 'healing')).toBe(true);
+  });
+
+  it('shortRest не превышает max HP', () => {
+    const state = freshFighterState();
+    state.hp = { current: 8, max: 10, temp: 0 };
+    const { state: next } = shortRest(state, FIGHTER_CTX);
+    expect(next.hp.current).toBe(10);
+  });
+
   it('longRest: HP до максимума, все ресурсы, активные эффекты сняты', () => {
     const state = freshFighterState();
     state.hp = { current: 3, max: 11, temp: 0 };

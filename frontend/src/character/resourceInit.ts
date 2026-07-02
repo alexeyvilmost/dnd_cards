@@ -3,7 +3,7 @@ import { initResources } from '../engine/resources';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
-import { forgeToRuntimeState } from './runtime';
+import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
 
 type Dict = Record<string, unknown>;
 
@@ -62,20 +62,33 @@ export function resourcesNeedSync(character: ForgeCharacter): boolean {
   return turnKeys.some((k) => max[k] == null);
 }
 
+export function hpNeedsSync(character: ForgeCharacter, computedMaxHp: number): boolean {
+  if (computedMaxHp <= 0) return false;
+  const max = character.max_hp ?? 0;
+  const cur = character.current_hp ?? 0;
+  return max !== computedMaxHp || cur > computedMaxHp;
+}
+
 export function buildResourceRuntimePatch(
   character: ForgeCharacter,
   ctx: CharacterContext,
   assembled: AssembledCharacter,
   force = false,
+  computedMaxHp?: number,
 ): PatchCharacterRuntimeRequest | null {
   const existing = forgeToRuntimeState(character);
-  const synced = syncRuntimeResources(ctx, assembled, existing);
+  const hpBase = computedMaxHp && computedMaxHp > 0
+    ? alignRuntimeHp(existing, computedMaxHp)
+    : existing;
+  const synced = syncRuntimeResources(ctx, assembled, hpBase);
   const maxChanged = JSON.stringify(synced.maxResources) !== JSON.stringify(existing.maxResources);
-  if (!force && !resourcesNeedSync(character) && !maxChanged) return null;
+  const hpChanged = hpBase.hp.max !== existing.hp.max
+    || hpBase.hp.current !== (character.current_hp ?? existing.hp.current);
+  if (!force && !resourcesNeedSync(character) && !maxChanged && !hpChanged) return null;
 
   return {
-    max_hp: character.max_hp ?? existing.hp.max,
-    current_hp: character.current_hp ?? existing.hp.current,
+    max_hp: hpBase.hp.max,
+    current_hp: hpBase.hp.current,
     resources: synced.resources,
     max_resources: synced.maxResources,
   };

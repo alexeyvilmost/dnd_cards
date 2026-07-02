@@ -4,7 +4,7 @@ import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionNeedsTarget, collectSheetActions, type SheetAction } from '../character/actionSheet';
 import { collectPassiveMechanics } from '../character/resourceInit';
-import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
+import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { canPay } from '../engine/cost';
@@ -52,7 +52,10 @@ export default function SheetActionsPanel({
   const [targetAc, setTargetAc] = useState(10);
   const [targetDc, setTargetDc] = useState(12);
 
-  const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
+  const runtime = useMemo(
+    () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
+    [character, ruleState.maxHP],
+  );
   const passives = useMemo(() => collectPassiveMechanics(assembled), [assembled]);
 
   const equippedCards = useMemo(() => {

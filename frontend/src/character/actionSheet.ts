@@ -10,14 +10,35 @@ export type SheetAction = {
   level?: number;
 };
 
+function normalizeActiveMechanics(
+  mech: Record<string, unknown>,
+  fallbackResource?: string,
+): Record<string, unknown> {
+  const activation = { ...(mech.activation as Record<string, unknown> | undefined) };
+  if (activation.mode !== 'active') return mech;
+  const cost = activation.cost as unknown[] | undefined;
+  if (!Array.isArray(cost) || !cost.length) {
+    activation.cost = [{ resource: fallbackResource || 'action' }];
+  }
+  return { ...mech, activation };
+}
+
 function actionMechanics(action: Action): Record<string, unknown> | null {
   const mech = action.mechanics;
-  if (!mech || typeof mech !== 'object') return null;
+  if (!mech || typeof mech !== 'object') {
+    if (!action.resource) return null;
+    return {
+      name: action.name,
+      activation: { mode: 'active', cost: [{ resource: action.resource }] },
+      effects: [{
+        resolution: 'auto',
+        result: [{ kind: 'narrative', description: action.description || action.name }],
+      }],
+    };
+  }
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  const cost = activation.cost as unknown[] | undefined;
-  if (!Array.isArray(cost) || !cost.length) return null;
-  return mech as Record<string, unknown>;
+  return normalizeActiveMechanics(mech as Record<string, unknown>, action.resource);
 }
 
 function spellMechanics(spell: Spell): Record<string, unknown> | null {

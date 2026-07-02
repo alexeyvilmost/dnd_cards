@@ -204,7 +204,7 @@ const CharacterSheetMVP = () => {
   const scores = draft.abilities;
   const pb = ruleState.proficiencyBonus;
 
-  const maxHP = maxHpBreakdown?.value ?? ruleState.maxHP;
+  const maxHP = ruleState.maxHP;
   const currentHP = character.current_hp ?? maxHP;
   const speed = speedBreakdown?.value ?? ruleState.speed;
   const ac = acBreakdown?.value ?? ruleState.armorClass;
@@ -277,7 +277,10 @@ const CharacterSheetMVP = () => {
         <button type="button" className="sheet-back" onClick={() => navigate(-1)} title="Назад">
           <ArrowLeft size={18} />
         </button>
-        <span>Лист персонажа</span>
+        <div className="sheet-header-center">
+          <span className="sheet-header-name">{character.name || 'Без имени'}</span>
+          <span className="sheet-header-sub">Лист персонажа</span>
+        </div>
         <div className="sheet-header-actions">
           <button
             type="button"
@@ -302,14 +305,6 @@ const CharacterSheetMVP = () => {
         </section>
 
         <div className="sheet-grid sheet-grid-journal-first">
-          {journalPanel}
-
-          <SheetEquipmentPanel
-            character={character}
-            ruleState={ruleState}
-            onUpdated={setCharacter}
-          />
-
           <SheetActionsPanel
             character={character}
             assembled={assembled}
@@ -317,6 +312,14 @@ const CharacterSheetMVP = () => {
             equipCards={equipCards}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
+          />
+
+          {journalPanel}
+
+          <SheetEquipmentPanel
+            character={character}
+            ruleState={ruleState}
+            onUpdated={setCharacter}
           />
 
           <SheetRuntimePanel
@@ -330,6 +333,7 @@ const CharacterSheetMVP = () => {
           <SheetHpPanel
             character={character}
             maxHp={maxHP}
+            maxHpBreakdown={maxHpBreakdown}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
           />
@@ -482,7 +486,7 @@ const CharacterSheetMVP = () => {
             )}
             {assembled.actions.length > 0 && (
               <div className="sheet-group">
-                <h3 className="sheet-h3">Действия</h3>
+                <h3 className="sheet-h3">Способности (описание)</h3>
                 <div className="sheet-ability-lines">
                   {assembled.actions.map(({ action, origin }) => (
                     <ForgeAbilityLine

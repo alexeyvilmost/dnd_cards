@@ -1,14 +1,16 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Heart, HeartPulse, Minus, Plus, Shield } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
-import { forgeToRuntimeState } from '../character/runtime';
+import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import ValueBreakdownTip from './ValueBreakdownTip';
+import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 
 interface Props {
   character: ForgeCharacter;
   maxHp: number;
+  maxHpBreakdown?: ValueBreakdown | null;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
 }
@@ -21,11 +23,14 @@ function persistPayload(state: RuntimeState) {
   };
 }
 
-export default function SheetHpPanel({ character, maxHp, onUpdated, onEvents }: Props) {
+export default function SheetHpPanel({ character, maxHp, maxHpBreakdown, onUpdated, onEvents }: Props) {
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState(5);
 
-  const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
+  const runtime = useMemo(
+    () => alignRuntimeHp(forgeToRuntimeState(character), maxHp),
+    [character, maxHp],
+  );
   const unconscious = runtime.hp.current <= 0;
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
@@ -56,7 +61,13 @@ export default function SheetHpPanel({ character, maxHp, onUpdated, onEvents }: 
           <strong className={unconscious ? 'sheet-hp-unconscious' : ''}>
             {runtime.hp.current}
           </strong>
-          <span>/ {maxHp}</span>
+          {maxHpBreakdown ? (
+            <ValueBreakdownTip breakdown={maxHpBreakdown} label="Максимум HP">
+              <span>/ {maxHp}</span>
+            </ValueBreakdownTip>
+          ) : (
+            <span>/ {maxHp}</span>
+          )}
           {runtime.hp.temp > 0 && (
             <span className="sheet-hp-temp" title="Временные HP">
               <Shield size={14} /> +{runtime.hp.temp}

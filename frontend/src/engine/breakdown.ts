@@ -63,13 +63,14 @@ function breakdownAC(
 }
 
 function breakdownMaxHp(character: CharacterContext, state: RuntimeState): ValueBreakdown {
-  const dieMax = hitDieMax(defaultHitDie(character));
+  const hitDie = character.hitDie ?? defaultHitDie(character);
+  const dieMax = hitDieMax(hitDie);
   const conMod = character.abilityMods.con ?? 0;
   const lvl = Math.max(1, character.level);
 
   if (lvl === 1) {
     const parts: RollModifier[] = [
-      { value: dieMax, source: 'кость хитов', reason: defaultHitDie(character) },
+      { value: dieMax, source: 'кость хитов', reason: hitDie },
       { value: conMod, source: 'ТЕЛ', reason: 'модификатор характеристики' },
     ];
     return { value: dieMax + conMod, parts };
@@ -80,7 +81,7 @@ function breakdownMaxHp(character: CharacterContext, state: RuntimeState): Value
     { value: dieMax, source: 'кость хитов', reason: '1-й уровень' },
     { value: (lvl - 1) * perLevel, source: 'уровни', reason: `${lvl - 1}×(${Math.floor(dieMax / 2) + 1}+ТЕЛ)` },
   ];
-  const value = state.hp.max || parts.reduce((s, p) => s + p.value, 0);
+  const value = parts.reduce((s, p) => s + p.value, 0);
   return { value, parts };
 }
 

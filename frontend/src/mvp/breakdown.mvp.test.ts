@@ -22,6 +22,19 @@ describe('F2: breakdownValue', () => {
     expect(bd.parts.some((p) => p.value === 1)).toBe(true);  // ТЕЛ
   });
 
+  it('макс. HP волшебника: d6 + ТЕЛ, не d8', () => {
+    const wizardCtx = {
+      abilityMods: { str: 0, dex: 2, con: 1, int: 3, wis: 0, cha: -1 },
+      profBonus: 2,
+      level: 1,
+      classLevels: { wizard: 1 },
+      hitDie: 'd6',
+    };
+    const bd = breakdownValue('max_hp', wizardCtx, freshFighterState(), []);
+    expect(bd.value).toBe(7);
+    expect(bd.parts.some((p) => p.value === 6 && p.reason === 'd6')).toBe(true);
+  });
+
   it('спасбросок с владением: характеристика + БМ раздельно', () => {
     const bd = breakdownValue('save:str', FIGHTER_CTX, freshFighterState(), []);
     // Воин владеет спасбросками СИЛ/ТЕЛ: +2 СИЛ + 2 БМ

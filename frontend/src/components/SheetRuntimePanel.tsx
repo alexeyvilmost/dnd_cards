@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Moon, Sun, Swords, X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
-import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
+import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
   collectPassiveMechanics,
+  hpNeedsSync,
   resourcesNeedSync,
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
@@ -56,7 +57,10 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     [ruleState, character.level, character.abilities, assembled.klass, resourceRecharge],
   );
 
-  const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
+  const runtime = useMemo(
+    () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
+    [character, ruleState.maxHP],
+  );
 
   function persistPayload(state: RuntimeState) {
     return {
@@ -85,7 +89,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   }, [character.id, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force);
+    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP);
     if (!patch) return;
     setBusy(true);
     setError(null);
@@ -98,13 +102,13 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, onUpdated]);
+  }, [character, ctx, assembled, onUpdated, ruleState.maxHP]);
 
   useEffect(() => {
-    if (syncAttempted.current || !resourcesNeedSync(character)) return;
+    if (syncAttempted.current || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
     syncAttempted.current = true;
     syncResources();
-  }, [character, syncResources]);
+  }, [character, ruleState.maxHP, syncResources]);
 
   const resourceKeys = Object.keys(runtime.maxResources).filter((k) => runtime.maxResources[k] > 0);
 
@@ -155,7 +159,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleStartTurn}>
           <Swords size={14} /> Новый ход
         </button>
-        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleShortRest} title="Короткий отдых: ресурсы short_rest">
+        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleShortRest} title="Короткий отдых: +50% max HP и заряды умений">
           <Sun size={14} /> Короткий отдых
         </button>
         <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleLongRest}>
@@ -187,7 +191,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       )}
 
       <p className="forge-note" style={{ marginTop: 8 }}>
-        Короткий отдых: восстановление зарядов умений с recharge «короткий отдых» (без лечения HP).
+        Короткий отдых: +50% от максимума HP и восстановление зарядов умений с recharge «короткий отдых». Длинный отдых: полное HP и все ресурсы.
       </p>
     </section>
   );

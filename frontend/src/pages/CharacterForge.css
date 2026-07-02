@@ -297,6 +297,30 @@
   gap: 12px;
   position: relative;
 }
+.sheet-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: calc(100% - 160px);
+  text-align: center;
+}
+.sheet-header-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--forge-gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.sheet-header-sub {
+  font-size: 11px;
+  color: var(--forge-text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 .sheet-back, .sheet-edit {
   position: absolute;
   top: 50%;
@@ -405,6 +429,7 @@
 .sheet-combat-action {
   display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px;
 }
+.sheet-combat-action-disabled { opacity: 0.45; cursor: not-allowed; }
 .sheet-action-lvl {
   font-size: 10px; opacity: 0.75; margin-left: 4px;
 }

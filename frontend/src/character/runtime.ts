@@ -4,6 +4,19 @@ import type { Card } from '../types';
 import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
 
+/** Синхронизирует max HP в runtime с расчётным значением правил. */
+export function alignRuntimeHp(state: RuntimeState, computedMax: number): RuntimeState {
+  if (computedMax <= 0) return state;
+  return {
+    ...state,
+    hp: {
+      ...state.hp,
+      max: computedMax,
+      current: Math.min(state.hp.current, computedMax),
+    },
+  };
+}
+
 export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
   const inv = (c.inventory_items ?? []).map((row) => ({
     cardId: row.card_id,
@@ -53,6 +66,7 @@ export function buildCharacterContext(
     level: draft.level,
     classLevels: classKey ? { [classKey]: draft.level } : undefined,
     characterSpeed: ruleState.speed,
+    hitDie: klass?.hit_die ?? null,
     equippedCards,
     knownCards: equippedCards,
   };

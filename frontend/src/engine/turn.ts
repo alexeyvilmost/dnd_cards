@@ -2,6 +2,7 @@
  * Ход и отдыхи (фаза D3).
  */
 import type { CharacterContext, EngineEvent, ExecuteResult, RuntimeState } from '../mvp/contracts';
+import { healingEvent } from './events';
 import { resourcesRestoredOnShortRest } from './resources';
 
 type Dict = Record<string, unknown>;
@@ -57,11 +58,19 @@ export function startTurn(state: RuntimeState): ExecuteResult {
   return { state: next, events };
 }
 
-/** Короткий отдых: только ресурсы с recharge short_rest (без лечения HP, R4). */
+/** Короткий отдых: +50% max HP и ресурсы с recharge short_rest. */
 export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteResult {
   const next = cloneState(state);
   const events: EngineEvent[] = [{ type: 'short_rest' }];
   const recharge = (ctx as RestContext).resourceRecharge;
+
+  const healAmount = Math.floor(next.hp.max / 2);
+  if (healAmount > 0) {
+    const before = next.hp.current;
+    next.hp.current = Math.min(next.hp.max, next.hp.current + healAmount);
+    const healed = next.hp.current - before;
+    if (healed > 0) events.push(healingEvent(healed));
+  }
 
   for (const key of resourcesRestoredOnShortRest(next.maxResources, recharge)) {
     const max = next.maxResources[key] ?? 0;
