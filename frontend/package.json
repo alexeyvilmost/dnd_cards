@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:mvp": "vitest run --config vitest.mvp.config.ts"
   },
   "dependencies": {
     "@fontsource/pangolin": "^5.2.8",
