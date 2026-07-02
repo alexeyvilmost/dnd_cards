@@ -13,6 +13,39 @@
   --glow:rgba(201,162,39,.35);
   --dt-fire:#e8703d; --dt-cold:#7ec8e3; --dt-necrotic:#9b7bd4;
   --dt-radiant:#f0d98a; --dt-physical:#c9bfae; --dt-acid:#9acb46;
+  --success:#7bbf6a; --muted:#6b5f4d; --muted-border:#4a3f30;
+  --nav-bg:rgba(20,18,16,.94);
+  --panel-trans:rgba(28,24,19,.55); --panel-trans-2:rgba(28,24,19,.5);
+  --stone-1:#35302a; --stone-2:#211d18; --stone-3:#191512;
+  --medal-1:#33291a; --medal-2:#1a140d;
+  --emblem-1:#2c3d57; --emblem-2:#131c2b;
+  --ornate-1:rgba(36,31,24,.6); --ornate-2:rgba(20,18,16,.9);
+  --tip-bg-1:#2b2520; --tip-bg-2:#191410; --tip-border:#8a7320;
+  --tip-title:#f3ead4; --tip-text:#ece3d4; --tip-dim:#a59886;
+  --tip-desc:#d8cdb9; --tip-bold:#f0d98a;
+  --tip-meta-border:rgba(58,49,39,.5);
+  --tip-cost-1:#221b15; --tip-cost-2:#1a140f; --tip-cost-border:#4a3f35;
+}
+
+/* ═══ СВЕТЛАЯ ТЕМА («пергамент», как бумажный лист LSS) ═══ */
+body[data-theme="light"]{
+  --bg:#efe8d6; --panel:#f8f3e7; --panel-2:#efe5cd;
+  --border:#b3a075; --gold:#8a6a1c; --gold-dim:#a4813a;
+  --text:#2e2618; --text-dim:#71644d; --danger:#b0512c;
+  --glow:rgba(164,129,58,.32);
+  --success:#3f7d2e; --muted:#a08e68; --muted-border:#c2b394;
+  --nav-bg:rgba(248,243,231,.95);
+  --panel-trans:rgba(255,252,244,.65); --panel-trans-2:rgba(255,252,244,.6);
+  --stone-1:#fffdf6; --stone-2:#efe6cf; --stone-3:#e3d7ba;
+  --medal-1:#f3ead2; --medal-2:#e0d1a9;
+  --emblem-1:#dfe9f6; --emblem-2:#b9cce6;
+  --ornate-1:rgba(255,252,244,.78); --ornate-2:rgba(243,235,216,.92);
+  --tip-bg-1:#fdf9ef; --tip-bg-2:#f1e9d5; --tip-border:#b39b54;
+  --tip-title:#241c0e; --tip-text:#33291a; --tip-dim:#7a6c52;
+  --tip-desc:#4a3f2c; --tip-bold:#8a6516;
+  --tip-meta-border:rgba(140,120,80,.35);
+  --tip-cost-1:#ece1c4; --tip-cost-2:#e2d6b4; --tip-cost-border:#c9b98e;
+  --dt-physical:#6b6154; --dt-radiant:#a8861e; --dt-cold:#2e7fa3; --dt-acid:#6f9a25;
 }
 *{box-sizing:border-box; margin:0; padding:0}
 body{background:var(--bg); color:var(--text);
@@ -21,7 +54,7 @@ h1,h2,h3,.serif{font-family:Georgia,serif; color:var(--gold); font-weight:600;}
 main{max-width:1280px; margin:0 auto; padding:24px 20px 80px;}
 
 /* Навигация превью */
-.topnav{position:sticky; top:0; z-index:50; background:rgba(20,18,16,.94);
+.topnav{position:sticky; top:0; z-index:50; background:var(--nav-bg);
   border-bottom:1px solid var(--border); backdrop-filter:blur(4px);}
 .topnav .in{max-width:1280px; margin:0 auto; display:flex; gap:22px; padding:12px 20px; align-items:center;}
 .topnav a{color:var(--text-dim); text-decoration:none; font-size:14px;}
@@ -39,7 +72,7 @@ section{margin-top:56px;}
 
 /* ═══════════════ ОРНАМЕНТНАЯ РАМКА ═══════════════ */
 .ornate{position:relative; border:1px solid var(--gold-dim); border-radius:16px;
-  background:linear-gradient(170deg, rgba(36,31,24,.6), rgba(20,18,16,.9)); padding:28px 30px;}
+  background:linear-gradient(170deg, var(--ornate-1), var(--ornate-2)); padding:28px 30px;}
 .ornate::before,.ornate::after,
 .ornate .c3,.ornate .c4{content:''; position:absolute; width:26px; height:26px;
   border:2px solid var(--gold-dim); pointer-events:none;}
@@ -54,7 +87,7 @@ section{margin-top:56px;}
 /* ═══════════════ EntityIcon (§3.1) ═══════════════ */
 .ei{position:relative; display:inline-flex; align-items:center; justify-content:center;
   border-radius:10px; border:1px solid var(--border); cursor:pointer;
-  background:radial-gradient(circle at 50% 35%, #35302a 0%, #211d18 70%, #191512 100%);
+  background:radial-gradient(circle at 50% 35%, var(--stone-1) 0%, var(--stone-2) 70%, var(--stone-3) 100%);
   transition:transform .12s ease, box-shadow .12s ease; user-select:none;}
 .ei img{width:72%; height:72%; object-fit:contain; pointer-events:none;}
 .ei .glyph{pointer-events:none; filter:saturate(.55) sepia(.25); text-shadow:0 2px 6px rgba(0,0,0,.7);}
@@ -67,7 +100,7 @@ section{margin-top:56px;}
 .ei.selected{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 0 18px var(--glow);}
 .ei.disabled{filter:grayscale(1) brightness(.6); cursor:not-allowed;}
 .ei .badge{position:absolute; right:-5px; bottom:-5px; min-width:17px; height:17px; padding:0 4px;
-  border-radius:9px; background:#241f18; border:1px solid var(--gold-dim); color:var(--gold);
+  border-radius:9px; background:var(--panel-2); border:1px solid var(--gold-dim); color:var(--gold);
   font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center;}
 .ei .corner{position:absolute; left:-4px; top:-4px; width:10px; height:10px; border-radius:3px;
   border:1px solid rgba(0,0,0,.5);}
@@ -86,28 +119,28 @@ section{margin-top:56px;}
 .einline .src{color:var(--text-dim); font-size:12px;}
 
 /* ═══════════════ EntityHoverCard = sp-tip (§3.3) ═══════════════ */
-.sp-tip{position:relative; width:330px; border-radius:12px; color:#ece3d4;
-  background:linear-gradient(160deg,#2b2520,#191410); border:1px solid #8a7320;
+.sp-tip{position:relative; width:330px; border-radius:12px; color:var(--tip-text);
+  background:linear-gradient(160deg,var(--tip-bg-1),var(--tip-bg-2)); border:1px solid var(--tip-border);
   box-shadow:0 12px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(201,162,39,.08);
   padding:18px 18px 0; font-size:14px;}
 .sp-tip .bigicon{position:absolute; top:-24px; right:-16px; width:92px; height:92px;
   display:flex; align-items:center; justify-content:center; font-size:58px;
   filter:drop-shadow(0 0 16px rgba(201,162,39,.55)); pointer-events:none;}
-.sp-tip h4{font-family:Georgia,serif; font-size:1.3rem; color:#f3ead4; padding-right:74px; line-height:1.15; font-weight:600;}
-.sp-tip .subtype{color:#a59886; font-size:.88rem; margin:.15rem 0 .8rem; font-style:italic;}
+.sp-tip h4{font-family:Georgia,serif; font-size:1.3rem; color:var(--tip-title); padding-right:74px; line-height:1.15; font-weight:600;}
+.sp-tip .subtype{color:var(--tip-dim); font-size:.88rem; margin:.15rem 0 .8rem; font-style:italic;}
 .sp-tip .srow{display:flex; align-items:center; gap:.55rem; margin:.35rem 0;}
-.sp-tip .lbl{color:#a59886; font-size:.8rem; min-width:92px;}
+.sp-tip .lbl{color:var(--tip-dim); font-size:.8rem; min-width:92px;}
 .sp-tip .die{width:29px; height:29px; border-radius:6px; display:flex; align-items:center; justify-content:center;
   font-weight:700; font-size:.7rem; color:#cfeac0;
   background:radial-gradient(circle at 50% 40%,#3a5f3a,#1d331d); border:1px solid #4f7d3a;}
 .sp-tip .die.save{background:radial-gradient(circle at 50% 40%,#5a4a7a,#2a2140); border-color:#6a5a9a; color:#d8c8f0;}
 .sp-tip .dmg{font-weight:700;}
-.sp-tip .desc{font-size:.9rem; line-height:1.5; color:#d8cdb9; margin:.5rem 0 .9rem;}
-.sp-tip .desc b{color:#f0d98a;}
-.sp-tip .meta{display:flex; gap:1rem; flex-wrap:wrap; padding:.65rem 0; border-top:1px solid rgba(58,49,39,.5);
-  color:#a59886; font-size:.82rem;}
+.sp-tip .desc{font-size:.9rem; line-height:1.5; color:var(--tip-desc); margin:.5rem 0 .9rem;}
+.sp-tip .desc b{color:var(--tip-bold);}
+.sp-tip .meta{display:flex; gap:1rem; flex-wrap:wrap; padding:.65rem 0; border-top:1px solid var(--tip-meta-border);
+  color:var(--tip-dim); font-size:.82rem;}
 .sp-tip .costbar{display:flex; gap:.6rem; flex-wrap:wrap; margin:0 -18px; padding:.55rem 18px;
-  background:linear-gradient(#221b15,#1a140f); border-top:1px solid #4a3f35; border-radius:0 0 12px 12px; font-size:.82rem;}
+  background:linear-gradient(var(--tip-cost-1),var(--tip-cost-2)); border-top:1px solid var(--tip-cost-border); border-radius:0 0 12px 12px; font-size:.82rem;}
 .sp-tip .cost{display:inline-flex; align-items:center; gap:.35rem;}
 .pip{width:12px; height:12px; display:inline-block;}
 .pip-a{background:var(--gold); border-radius:50%;}
@@ -120,18 +153,18 @@ section{margin-top:56px;}
 .rail .step{display:flex; gap:12px; align-items:center; cursor:pointer;}
 .medal{width:44px; height:44px; border-radius:50%; flex:0 0 auto; position:relative;
   border:2px solid var(--gold-dim); display:flex; align-items:center; justify-content:center;
-  background:radial-gradient(circle at 50% 35%, #33291a, #1a140d 80%); color:var(--gold); font-size:19px;}
+  background:radial-gradient(circle at 50% 35%, var(--medal-1), var(--medal-2) 80%); color:var(--gold); font-size:19px;}
 .medal::after{content:''; position:absolute; inset:3px; border-radius:50%; border:1px dashed rgba(216,185,120,.35);}
-.rail .step.todo .medal{border-color:#4a3f30; color:#6b5f4d;}
+.rail .step.todo .medal{border-color:var(--muted-border); color:var(--muted);}
 .rail .step.active .medal{box-shadow:0 0 12px var(--glow);}
 .rail .t1{font-size:14.5px; color:var(--text);}
 .rail .t2{font-size:12.5px; color:var(--gold-dim);}
-.rail .step.todo .t1,.rail .step.todo .t2{color:#6b5f4d;}
+.rail .step.todo .t1,.rail .step.todo .t2{color:var(--muted);}
 .rail .step.active .t1{color:var(--gold);}
 
 /* ═══════════════ ЛЕНТА ОСОБЕННОСТЕЙ ═══════════════ */
 .strip{border:1px solid var(--border); border-radius:12px; padding:12px 18px 14px; text-align:center;
-  background:rgba(28,24,19,.55); width:fit-content; margin:0 auto;}
+  background:var(--panel-trans); width:fit-content; margin:0 auto;}
 .strip .cap{font-family:Georgia,serif; color:var(--gold); font-size:15px; margin-bottom:10px;}
 .strip .icons{display:flex; gap:10px; justify-content:center;}
 
@@ -139,7 +172,7 @@ section{margin-top:56px;}
 .resume{width:250px; flex:0 0 auto;}
 .resume .emblem{width:72px; height:72px; margin:0 auto 10px; border-radius:50%;
   border:2px solid var(--gold-dim); display:flex; align-items:center; justify-content:center; font-size:34px;
-  background:radial-gradient(circle at 50% 30%, #2c3d57, #131c2b 75%); box-shadow:0 0 18px rgba(95,143,212,.25);}
+  background:radial-gradient(circle at 50% 30%, var(--emblem-1), var(--emblem-2) 75%); box-shadow:0 0 18px rgba(95,143,212,.25);}
 .resume h3{text-align:center; font-size:16px; color:var(--text); font-family:inherit; font-weight:600;}
 .resume .sub{text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:12px;}
 .abrow{display:flex; justify-content:center; gap:9px; margin-bottom:12px;}
@@ -148,7 +181,7 @@ section{margin-top:56px;}
 .medstat{display:flex; gap:12px; justify-content:center; margin-bottom:14px;}
 .medstat .m{width:44px; height:44px; border-radius:50%; border:1.5px solid var(--gold-dim);
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  background:#191512; font-size:13px; font-weight:700;}
+  background:var(--stone-3); font-size:13px; font-weight:700;}
 .medstat .m span{font-size:8.5px; font-weight:400; color:var(--text-dim);}
 .resume .grp{font-family:Georgia,serif; color:var(--gold); font-size:14px; text-align:center; margin:10px 0 6px;}
 .resume .kv{font-size:12.5px; margin:3px 0;}
@@ -170,7 +203,7 @@ section{margin-top:56px;}
 
 /* ═══════════════ ЛИСТ ПЕРСОНАЖА (LSS, §5) ═══════════════ */
 .sheet{display:grid; grid-template-columns:250px 1fr 1fr; gap:14px;}
-.sbox{border:1px solid var(--border); border-radius:10px; background:rgba(28,24,19,.5); padding:12px 14px;}
+.sbox{border:1px solid var(--border); border-radius:10px; background:var(--panel-trans-2); padding:12px 14px;}
 .sbox .cap{font-size:10.5px; letter-spacing:1.2px; color:var(--text-dim); text-transform:uppercase;
   text-align:center; margin-bottom:8px; border-bottom:1px solid rgba(107,88,54,.4); padding-bottom:5px;}
 .sheet-head{grid-column:1/-1; display:flex; gap:22px; align-items:center; padding:14px 20px;}
@@ -178,13 +211,13 @@ section{margin-top:56px;}
 .sheet-head .f{font-size:13px;} .sheet-head .f span{display:block; color:var(--text-dim); font-size:10px; letter-spacing:1px; text-transform:uppercase; margin-top:2px;}
 .lvl-medal{margin-left:auto; width:58px; height:58px; border-radius:50%; border:2px solid var(--gold);
   display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; font-size:20px; color:var(--gold);
-  background:radial-gradient(circle at 50% 35%, #33291a, #191410);}
+  background:radial-gradient(circle at 50% 35%, var(--medal-1), var(--medal-2));}
 .lvl-medal span{font-size:8px; color:var(--text-dim); font-weight:400; letter-spacing:1px;}
 .statrow{grid-column:1/-1; display:flex; gap:14px; flex-wrap:wrap;}
 .statrow .sbox{flex:1; min-width:110px; text-align:center; padding:10px 8px;}
 .statrow .big{font-size:22px; font-weight:700; color:var(--text);}
 .shield{width:64px; height:72px; margin:0 auto; clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%);
-  background:linear-gradient(#2c2620,#191410); border:0; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(var(--stone-2),var(--stone-3)); border:0; display:flex; align-items:center; justify-content:center;
   font-size:24px; font-weight:700; color:var(--gold); box-shadow:inset 0 0 0 2px var(--gold-dim);}
 .hpline{display:flex; justify-content:center; align-items:baseline; gap:6px;}
 .hpline .cur{font-size:24px; font-weight:700;} .hpline .max{color:var(--text-dim);}
@@ -194,17 +227,17 @@ section{margin-top:56px;}
 .abil-block{margin-bottom:12px;}
 .abil-block .top{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
 .abil-block .mod{width:46px; height:46px; border-radius:50%; border:2px solid var(--gold-dim);
-  display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--gold); background:#191512;}
+  display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--gold); background:var(--stone-3);}
 .abil-block .an{font-size:13px; letter-spacing:.6px;} .abil-block .sc{color:var(--text-dim); font-size:12px;}
 .abil-block ul{list-style:none;} .abil-block li{display:flex; justify-content:space-between; font-size:12.5px; padding:1.5px 0; color:var(--text-dim);}
 .abil-block li.prof{color:var(--text);} .abil-block li.prof::before{content:'●'; color:var(--gold); margin-right:6px; font-size:9px;}
-.abil-block li:not(.prof)::before{content:'○'; color:#5c5142; margin-right:6px; font-size:9px;}
+.abil-block li:not(.prof)::before{content:'○'; color:var(--muted); margin-right:6px; font-size:9px;}
 .wtable{width:100%; border-collapse:collapse; font-size:13px;}
 .wtable th{color:var(--text-dim); font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; text-align:left; padding:3px 6px; border-bottom:1px solid rgba(107,88,54,.4);}
 .wtable td{padding:5px 6px; border-bottom:1px solid rgba(107,88,54,.18);}
 .journal{font-size:12.5px; color:var(--text-dim);}
 .journal .e{padding:5px 0; border-bottom:1px solid rgba(107,88,54,.18);}
-.journal .roll{color:var(--text);} .journal .hit{color:#7bbf6a;} .journal .crit{color:var(--gold);}
+.journal .roll{color:var(--text);} .journal .hit{color:var(--success);} .journal .crit{color:var(--gold);}
 .chips-run{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;}
 .runbtn{border:1px solid var(--gold-dim); background:none; color:var(--gold); border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer;}
 .runbtn:hover{background:rgba(216,185,120,.08);}
@@ -221,6 +254,7 @@ section{margin-top:56px;}
   <a href="#creation">Создание персонажа</a>
   <a href="#abilities">Очки умений</a>
   <a href="#sheet">Лист персонажа</a>
+  <button id="themeToggle" class="runbtn" style="margin-left:auto;">☾ Тёмная</button>
 </div></nav>
 
 <main>
@@ -637,6 +671,16 @@ section{margin-top:56px;}
 
 <script>
 // EntityHoverCard: один плавающий контейнер, шаблоны клонируются по data-tip
+// Переключатель темы (тёмная / светлая-«пергамент»)
+const tt = document.getElementById('themeToggle');
+function applyTheme(t){
+  document.body.dataset.theme = t;
+  tt.textContent = t === 'light' ? '☀ Светлая' : '☾ Тёмная';
+  try { localStorage.setItem('dp-theme', t); } catch (e) {}
+}
+applyTheme((()=>{ try { return localStorage.getItem('dp-theme') || 'dark'; } catch(e){ return 'dark'; } })());
+tt.addEventListener('click', () => applyTheme(document.body.dataset.theme === 'light' ? 'dark' : 'light'));
+
 const hc = document.getElementById('hovercard');
 let currentTip = null;
 function positionCard(e){

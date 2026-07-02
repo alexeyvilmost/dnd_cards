@@ -1,12 +1,12 @@
 import type { AssembledCharacter } from './assemble';
 import { STANDARD_ACTIONS } from './standardActions';
-import type { Action, Spell } from '../types';
+import type { Action, PassiveEffect, Spell } from '../types';
 
 export type SheetAction = {
   id: string;
   name: string;
   mechanics: Record<string, unknown>;
-  group: 'basic' | 'class' | 'spell';
+  group: 'basic' | 'class' | 'race' | 'spell';
   level?: number;
 };
 
@@ -21,6 +21,14 @@ function normalizeActiveMechanics(
     activation.cost = [{ resource: fallbackResource || 'action' }];
   }
   return { ...mech, activation };
+}
+
+function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> | null {
+  const mech = effect.mechanics;
+  if (!mech || typeof mech !== 'object') return null;
+  const activation = mech.activation as Record<string, unknown> | undefined;
+  if (activation?.mode !== 'active') return null;
+  return normalizeActiveMechanics(mech as Record<string, unknown>, 'action');
 }
 
 function actionMechanics(action: Action): Record<string, unknown> | null {
@@ -70,6 +78,20 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
     })
     .filter((a): a is SheetAction => a != null);
 
+  const fromRace: SheetAction[] = assembled.effects
+    .filter(({ origin }) => origin.kind === 'race')
+    .map(({ effect }) => {
+      const mechanics = effectActiveMechanics(effect);
+      if (!mechanics) return null;
+      return {
+        id: effect.id,
+        name: effect.name,
+        mechanics: { ...mechanics, name: effect.name },
+        group: 'race' as const,
+      };
+    })
+    .filter((a): a is SheetAction => a != null);
+
   const spells: SheetAction[] = assembled.spells
     .map((spell) => {
       const mechanics = spellMechanics(spell);
@@ -84,7 +106,7 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
     })
     .filter((a): a is SheetAction => a != null);
 
-  return [...basic, ...fromClass, ...spells];
+  return [...basic, ...fromRace, ...fromClass, ...spells];
 }
 
 export function actionNeedsTarget(mechanics: Record<string, unknown>): boolean {

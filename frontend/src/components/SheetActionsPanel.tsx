@@ -35,6 +35,7 @@ function persistPayload(state: RuntimeState) {
 function actionIcon(action: SheetAction) {
   if (action.id === 'standard-dodge') return <Shield size={14} />;
   if (action.group === 'spell') return <Wand2 size={14} />;
+  if (action.group === 'race') return <Sparkles size={14} />;
   if (action.group === 'class') return <Sparkles size={14} />;
   return <Swords size={14} />;
 }
@@ -138,7 +139,8 @@ export default function SheetActionsPanel({
 
   const groups: { key: SheetAction['group']; label: string; items: SheetAction[] }[] = [
     { key: 'basic', label: 'Базовые', items: actions.filter((a) => a.group === 'basic') },
-    { key: 'class', label: 'Класс и вид', items: actions.filter((a) => a.group === 'class') },
+    { key: 'race', label: 'Вид', items: actions.filter((a) => a.group === 'race') },
+    { key: 'class', label: 'Класс', items: actions.filter((a) => a.group === 'class') },
     { key: 'spell', label: 'Заклинания', items: actions.filter((a) => a.group === 'spell') },
   ];
 
