@@ -116,8 +116,8 @@ const CharacterSheetMVP = () => {
         <div className="forge-header">Лист персонажа</div>
         <div className="sheet-loading">
           <p className="issues">{error || 'Персонаж не найден'}</p>
-          <button type="button" className="forge-btn ghost" onClick={() => navigate('/character-forge')}>
-            К конструктору
+          <button type="button" className="forge-btn ghost" onClick={() => navigate('/characters-forge')}>
+            К списку персонажей
           </button>
         </div>
       </div>
@@ -147,12 +147,36 @@ const CharacterSheetMVP = () => {
       const event = rollEvent('Инициатива', roll);
       const saved = await charactersV3Api.postEvents(id, [{ type: 'roll', payload: event }]);
       setJournal((prev) => [...saved, ...prev]);
+      document.getElementById('sheet-journal')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
       console.error('initiative roll', e);
     } finally {
       setRollingInit(false);
     }
   };
+
+  const journalPanel = (
+    <section className="sheet-panel sheet-panel-wide sheet-journal-panel" id="sheet-journal">
+      <div className="sheet-journal-head">
+        <h2 className="sheet-h2">Журнал</h2>
+        <button
+          type="button"
+          className="forge-btn ghost sheet-roll-btn"
+          onClick={rollInitiative}
+          disabled={rollingInit}
+          title="Бросок инициативы (к20 + бонус инициативы)"
+        >
+          <Dices size={16} />
+          {rollingInit ? 'Бросок…' : 'Инициатива'}
+        </button>
+      </div>
+      {journalLoading ? (
+        <p className="forge-note">Загрузка журнала…</p>
+      ) : (
+        <EventJournal rows={journal} />
+      )}
+    </section>
+  );
 
   const headerLine = [
     assembled.race?.name,
@@ -168,9 +192,21 @@ const CharacterSheetMVP = () => {
           <ArrowLeft size={18} />
         </button>
         <span>Лист персонажа</span>
-        <Link to={`/character-forge/${character.id}`} className="sheet-edit" title="Редактировать">
-          <Pencil size={16} />
-        </Link>
+        <div className="sheet-header-actions">
+          <button
+            type="button"
+            className="sheet-header-btn"
+            onClick={rollInitiative}
+            disabled={rollingInit}
+            title="Бросок инициативы"
+          >
+            <Dices size={16} />
+            <span className="sheet-header-btn-label">{rollingInit ? '…' : 'Инициатива'}</span>
+          </button>
+          <Link to={`/character-forge/${character.id}`} className="sheet-edit" title="Редактировать">
+            <Pencil size={16} />
+          </Link>
+        </div>
       </div>
 
       <div className="sheet-scroll">
@@ -179,7 +215,8 @@ const CharacterSheetMVP = () => {
           <p className="sheet-subtitle">{headerLine || '—'}</p>
         </section>
 
-        <div className="sheet-grid">
+        <div className="sheet-grid sheet-grid-journal-first">
+          {journalPanel}
           <section className="sheet-panel">
             <h2 className="sheet-h2">Характеристики</h2>
             <div className="sheet-abilities">
@@ -379,26 +416,6 @@ const CharacterSheetMVP = () => {
             </section>
           )}
 
-          <section className="sheet-panel sheet-panel-wide">
-            <div className="sheet-journal-head">
-              <h2 className="sheet-h2">Журнал</h2>
-              <button
-                type="button"
-                className="forge-btn ghost sheet-roll-btn"
-                onClick={rollInitiative}
-                disabled={rollingInit}
-                title="Бросок инициативы"
-              >
-                <Dices size={16} />
-                {rollingInit ? 'Бросок…' : 'Инициатива'}
-              </button>
-            </div>
-            {journalLoading ? (
-              <p className="forge-note">Загрузка журнала…</p>
-            ) : (
-              <EventJournal rows={journal} />
-            )}
-          </section>
         </div>
       </div>
     </div>

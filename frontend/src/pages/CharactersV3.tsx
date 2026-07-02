@@ -177,9 +177,9 @@ const CharactersV3: React.FC = () => {
                 </div>
                 <div className="flex space-x-1">
                   <Link
-                    to={`/characters-v3/${character.id}`}
+                    to={`/characters-v3/${character.id}/legacy`}
                     className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                    title="Просмотр"
+                    title="Просмотр (legacy V2)"
                   >
                     <Eye size={16} />
                   </Link>

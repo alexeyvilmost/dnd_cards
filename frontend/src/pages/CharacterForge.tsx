@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Home, User, Swords, ScrollText, Star, Zap, ListChecks, Sparkles } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Home, User, Swords, ScrollText, Star, Zap, ListChecks, Sparkles, FileText } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -268,7 +268,19 @@ const CharacterForge = () => {
 
   return (
     <div className="forge">
-      <div className="forge-header">Создание персонажа</div>
+      <div className="forge-header sheet-header-bar">
+        <span>Создание персонажа</span>
+        {(savedId || draft.id) && (
+          <Link
+            to={`/characters-v3/${savedId || draft.id}`}
+            className="sheet-edit forge-header-sheet-link"
+            title="Открыть лист персонажа"
+          >
+            <FileText size={16} />
+            <span>Лист</span>
+          </Link>
+        )}
+      </div>
       <div className="forge-body">
         <ForgeNav sections={sections} active={active} onSelect={setActive} />
         <div className="forge-main">
