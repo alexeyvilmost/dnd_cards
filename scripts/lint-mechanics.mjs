@@ -6,10 +6,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
+import { createRequire } from 'node:module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const Ajv = require(join(__dirname, '../frontend/node_modules/ajv/dist/ajv.js')).default;
+const addFormats = require(join(__dirname, '../frontend/node_modules/ajv-formats/dist/index.js')).default;
+
 const schema = JSON.parse(readFileSync(join(__dirname, '../docs/mechanics.schema.json'), 'utf8'));
 const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
 
