@@ -4,21 +4,26 @@
  * Запуск: node scripts/audit-refs.mjs
  * Переменные: API_URL (по умолчанию Railway prod)
  */
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-
 const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
 
-async function fetchAll(path, key) {
+async function fetchAll(path, key, retries = 3) {
   const items = [];
   let page = 1;
   const limit = 100;
   while (true) {
-    const res = await fetch(`${API_URL}${path}?page=${page}&limit=${limit}`);
-    if (!res.ok) throw new Error(`${path} HTTP ${res.status}`);
-    const data = await res.json();
-    const batch = data[key] || [];
+    let batch = null;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const res = await fetch(`${API_URL}${path}?page=${page}&limit=${limit}`);
+        if (!res.ok) throw new Error(`${path} HTTP ${res.status}`);
+        const data = await res.json();
+        batch = data[key] || [];
+        break;
+      } catch (err) {
+        if (attempt === retries) throw err;
+        await new Promise((r) => setTimeout(r, 2000 * attempt));
+      }
+    }
     items.push(...batch);
     if (batch.length < limit) break;
     page++;
@@ -26,10 +31,13 @@ async function fetchAll(path, key) {
   return items;
 }
 
-async function resolveSlug(kind, slug) {
-  const paths = { spell: '/api/spells', action: '/api/actions', effect: '/api/effects', feat: '/api/feats' };
-  const res = await fetch(`${API_URL}${paths[kind]}/${encodeURIComponent(slug)}`);
-  return res.ok;
+function buildIndex(items) {
+  const bySlug = new Set();
+  for (const item of items) {
+    if (item.card_number) bySlug.add(item.card_number);
+    if (item.id) bySlug.add(item.id);
+  }
+  return bySlug;
 }
 
 function collectRefs(mechanics, source, out = []) {
@@ -50,8 +58,6 @@ function collectRefs(mechanics, source, out = []) {
   return out;
 }
 
-const CYRILLIC_SKILL = /[а-яА-ЯёЁ]/;
-
 async function main() {
   console.log(`API: ${API_URL}`);
   const [effects, actions, spells, feats, races, classes, backgrounds] = await Promise.all([
@@ -63,6 +69,13 @@ async function main() {
     fetchAll('/api/classes', 'classes'),
     fetchAll('/api/backgrounds', 'backgrounds'),
   ]);
+
+  const indexes = {
+    spell: buildIndex(spells),
+    action: buildIndex(actions),
+    effect: buildIndex(effects),
+    feat: buildIndex(feats),
+  };
 
   const refs = [];
   for (const e of effects) collectRefs(e.mechanics, `effect:${e.card_number || e.id}`, refs);
@@ -78,8 +91,7 @@ async function main() {
 
   const broken = [];
   for (const ref of unique.values()) {
-    const ok = await resolveSlug(ref.kind, ref.slug);
-    if (!ok) broken.push(ref);
+    if (!indexes[ref.kind]?.has(ref.slug)) broken.push(ref);
   }
 
   console.log(`\nПроверено уникальных ссылок: ${unique.size}`);
