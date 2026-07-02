@@ -64,13 +64,18 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 }
 
 func (fc *FeatController) GetFeat(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID черты"})
-		return
-	}
+	idParam := c.Param("id")
+
 	var f Feat
-	if err := fc.db.Where("id = ?", id).First(&f).Error; err != nil {
+	var err error
+
+	if id, uuidErr := uuid.Parse(idParam); uuidErr == nil {
+		err = fc.db.Where("id = ?", id).First(&f).Error
+	} else {
+		err = fc.db.Where("card_number = ?", idParam).First(&f).Error
+	}
+
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Черта не найдена"})
 			return

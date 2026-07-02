@@ -3,11 +3,17 @@ import { ABILITY_KEYS } from './types';
 import type { AssembledCharacter } from './assemble';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
+import { collectChosenSpellUuids } from '../engine/spellRefs';
+import { isEntityUuid } from '../engine/ids';
 
 export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   const classSkillChoices = (c.rule_state?.appliedGrants || [])
     .filter((grant) => grant.kind === 'skill' && grant.choiceId === 'class_skill_choices')
     .map((grant) => grant.value);
+
+  const legacySlugs = (c.spell_ids || []).filter((id) => !isEntityUuid(id));
+  const knownSlugs = (c.rule_state?.spells?.known || []).filter((id) => !isEntityUuid(id));
+  const grantedSpellSlugs = [...new Set([...legacySlugs, ...knownSlugs])];
 
   return {
     id: c.id,
@@ -19,7 +25,8 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     backgroundId: c.background_id ?? null,
     level: c.level || 1,
     featIds: c.feat_ids || [],
-    spellIds: c.spell_ids || [],
+    spellIds: (c.spell_ids || []).filter(isEntityUuid),
+    grantedSpellSlugs,
     abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
     classSkillChoices,
     resolvedChoices: c.resolved_choices || {},
@@ -64,7 +71,7 @@ export function buildSavePayload(
     background_id: draft.backgroundId,
     level: draft.level,
     feat_ids: draft.featIds,
-    spell_ids: ruleState.spells.known,
+    spell_ids: collectChosenSpellUuids(draft, assembled),
     abilities: draft.abilities,
     skill_proficiencies: ruleState.proficiencies.skills,
     skill_expertise: ruleState.expertise.skills,

@@ -14,6 +14,7 @@ import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SpellPreview from '../components/SpellPreview';
+import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { abilityMod } from '../character/derive';
@@ -92,10 +93,26 @@ const CharacterForge = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refsKey]);
 
-  const persistedSpells = useMemo(
-    () => spells.filter((s) => draft.spellIds.includes(s.id)),
-    [spells, draft.spellIds],
+  const spellIndex = useMemo(() => indexSpells(spells), [spells]);
+
+  const baseAssembled = useMemo(
+    () => assemble({ ...(bundle ?? EMPTY_BUNDLE), spells: [] }, draft),
+    [bundle, draft],
   );
+
+  const chosenSpellUuids = useMemo(
+    () => collectChosenSpellUuids(draft, baseAssembled),
+    [draft, baseAssembled],
+  );
+
+  const persistedSpells = useMemo(() => {
+    const list: Spell[] = [];
+    for (const id of chosenSpellUuids) {
+      const s = spellIndex.byId.get(id);
+      if (s) list.push(s);
+    }
+    return list;
+  }, [chosenSpellUuids, spellIndex]);
 
   const assembled: AssembledCharacter = useMemo(
     () => assemble({ ...(bundle ?? EMPTY_BUNDLE), spells: persistedSpells }, draft),
@@ -106,14 +123,21 @@ const CharacterForge = () => {
     [draft, assembled],
   );
   const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell');
-  const selectedSpellIds = useMemo(
-    () => [...new Set([...draft.spellIds, ...ruleState.spells.known])],
-    [draft.spellIds, ruleState.spells.known],
-  );
-  const selectedSpells = useMemo(
-    () => spells.filter((s) => selectedSpellIds.includes(s.id)),
-    [spells, selectedSpellIds],
-  );
+
+  const grantedSpells = useMemo(() => {
+    const list: Spell[] = [];
+    for (const slug of ruleState.spells.known) {
+      const s = spellIndex.bySlug.get(slug);
+      if (s) list.push(s);
+    }
+    return list;
+  }, [ruleState.spells.known, spellIndex]);
+
+  const selectedSpells = useMemo(() => {
+    const byId = new Map<string, Spell>();
+    for (const s of [...grantedSpells, ...persistedSpells]) byId.set(s.id, s);
+    return [...byId.values()];
+  }, [grantedSpells, persistedSpells]);
   const selectedSpellCount = useMemo(
     () => spellChoices.reduce((sum, pc) => sum + (draft.resolvedChoices[pc.id]?.length ?? 0), 0),
     [spellChoices, draft.resolvedChoices],

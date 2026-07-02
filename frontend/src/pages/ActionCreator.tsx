@@ -8,6 +8,7 @@ import { registryItems, useResourceOptions } from '../utils/resources';
 import ActionPreview from '../components/ActionPreview';
 import ImageUploader from '../components/ImageUploader';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
+import { validateMechanics } from '../engine/validateMechanics';
 
 const ActionCreator = () => {
   const navigate = useNavigate();
@@ -180,6 +181,19 @@ const ActionCreator = () => {
       const isUnique = await checkIdUniqueness(data.card_number);
       if (!isUnique) {
         setIdError('Действие с таким ID уже существует');
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (data.mechanics && typeof data.mechanics === 'object') {
+      const check = validateMechanics(data.mechanics as Record<string, unknown>, {
+        id: data.card_number || 'draft-action',
+        name: data.name || 'action',
+        kind: 'action',
+      });
+      if (!check.valid) {
+        setError(`Ошибка схемы механики: ${check.errors.slice(0, 4).join('; ')}`);
         setLoading(false);
         return;
       }

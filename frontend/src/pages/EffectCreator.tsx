@@ -11,6 +11,7 @@ import { EffectCreatorNavigation } from '../components/EffectCreatorNavigation';
 import { PropertiesSection } from '../components/effectCreator/PropertiesSection';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { registryItems, useResourceOptions } from '../utils/resources';
+import { validateMechanics } from '../engine/validateMechanics';
 
 const EffectCreator = () => {
   const navigate = useNavigate();
@@ -140,6 +141,19 @@ const EffectCreator = () => {
       const isUnique = await checkIdUniqueness(data.card_number);
       if (!isUnique) {
         setIdError('Эффект с таким ID уже существует');
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (data.mechanics && typeof data.mechanics === 'object') {
+      const check = validateMechanics(data.mechanics as Record<string, unknown>, {
+        id: data.card_number || 'draft-effect',
+        name: data.name || 'effect',
+        kind: 'passive_effect',
+      });
+      if (!check.valid) {
+        setError(`Ошибка схемы механики: ${check.errors.slice(0, 4).join('; ')}`);
         setLoading(false);
         return;
       }

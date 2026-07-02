@@ -9,6 +9,10 @@ import {
 } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spell, LevelProgression } from '../types';
 import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechanics/collectChoices';
+import { createRegistry } from '../engine/registry';
+import { createApiResolver } from '../engine/apiResolver';
+import { isEntityUuid } from '../engine/ids';
+import type { Spell } from '../types';
 import {
   abilityMod,
   computeMaxHP,
@@ -177,11 +181,24 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   return { race, klass, background, feats, effects, actions, spells: [] };
 }
 
+const entityRegistry = createRegistry(createApiResolver());
+
 // Загружает все сущности черновика (включая заклинания) и собирает персонажа.
 export async function loadAssembly(draft: CharacterDraft): Promise<AssembledCharacter> {
   const bundle = await loadBundle(draft);
-  const spells = (
-    await Promise.all((draft.spellIds || []).map((id) => spellsApi.getSpell(id).catch(() => null)))
-  ).filter((s): s is Spell => !!s);
-  return assemble({ ...bundle, spells }, draft);
+  const uuids = (draft.spellIds || []).filter(isEntityUuid);
+  const slugs = [...new Set(draft.grantedSpellSlugs || [])];
+
+  const byId = new Map<string, Spell>();
+  const uuidSpells = await Promise.all(uuids.map((id) => spellsApi.getSpell(id).catch(() => null)));
+  for (const s of uuidSpells) {
+    if (s) byId.set(s.id, s);
+  }
+
+  const slugSpells = await entityRegistry.resolveMany<Spell>('spell', slugs);
+  for (const s of slugSpells) {
+    if (s?.id) byId.set(s.id, s);
+  }
+
+  return assemble({ ...bundle, spells: [...byId.values()] }, draft);
 }

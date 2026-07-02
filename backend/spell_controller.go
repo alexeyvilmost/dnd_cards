@@ -106,16 +106,20 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	})
 }
 
-// GetSpell - получение заклинания по ID
+// GetSpell - получение заклинания по ID (UUID) или card_number
 func (sc *SpellController) GetSpell(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID заклинания"})
-		return
-	}
+	idParam := c.Param("id")
 
 	var spell Spell
-	if err := sc.db.Where("id = ?", id).First(&spell).Error; err != nil {
+	var err error
+
+	if id, uuidErr := uuid.Parse(idParam); uuidErr == nil {
+		err = sc.db.Where("id = ?", id).First(&spell).Error
+	} else {
+		err = sc.db.Where("card_number = ?", idParam).First(&spell).Error
+	}
+
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заклинание не найдено"})
 			return

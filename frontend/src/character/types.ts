@@ -89,7 +89,10 @@ export interface CharacterDraft {
   backgroundId: string | null;
   level: number;
   featIds: string[];
+  /** UUID заклинаний, выбранных игроком (не slug из grant_spell). */
   spellIds: string[];
+  /** Slug-и заклинаний из rule_state / grant_spell (только для загрузки). */
+  grantedSpellSlugs?: string[];
   abilities: Partial<AbilityScores>;
   classSkillChoices: string[]; // выбранные навыки из class.skill_choices
   resolvedChoices: Record<string, string[]>; // выборы из механики (по id)
