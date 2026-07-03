@@ -385,7 +385,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 
 	card := Card{
 		Name:                         req.Name,
-		Properties:                   req.Properties, // Теперь это указатель, GORM сам обработает nil
+		Properties:                   NormalizeProperties(req.Properties),
 		Description:                  req.Description,
 		DetailedDescription:          req.DetailedDescription,
 		Rarity:                       req.Rarity,
@@ -412,13 +412,13 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Source:                       req.Source,
 		Type:                         req.Type,
 		WeaponType:                   req.WeaponType,
-		RelatedCards:                 req.RelatedCards,
-		RelatedActions:               req.RelatedActions,
-		RelatedEffects:               req.RelatedEffects,
+		RelatedCards:                 NormalizeProperties(req.RelatedCards),
+		RelatedActions:               NormalizeProperties(req.RelatedActions),
+		RelatedEffects:               NormalizeProperties(req.RelatedEffects),
 		Attunement:                   req.Attunement,
 		RequiresAttunement:           req.RequiresAttunement,
 		Range:                        req.Range,
-		Tags:                         req.Tags,
+		Tags:                         NormalizeProperties(req.Tags),
 		IsTemplate:                   req.IsTemplate,
 		Slot:                         req.Slot,
 		Effects:                      req.Effects,
@@ -429,6 +429,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	}
 
 	if err := cc.db.Create(&card).Error; err != nil {
+		fmt.Printf("❌ [CREATE CARD] Ошибка БД: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания карточки"})
 		return
 	}
@@ -505,7 +506,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		card.Name = req.Name
 	}
 	if req.Properties != nil {
-		card.Properties = req.Properties
+		card.Properties = NormalizeProperties(req.Properties)
 	}
 	if req.Description != "" {
 		card.Description = req.Description
@@ -583,13 +584,13 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		card.WeaponType = req.WeaponType
 	}
 	if req.RelatedCards != nil {
-		card.RelatedCards = req.RelatedCards
+		card.RelatedCards = NormalizeProperties(req.RelatedCards)
 	}
 	if req.RelatedActions != nil {
-		card.RelatedActions = req.RelatedActions
+		card.RelatedActions = NormalizeProperties(req.RelatedActions)
 	}
 	if req.RelatedEffects != nil {
-		card.RelatedEffects = req.RelatedEffects
+		card.RelatedEffects = NormalizeProperties(req.RelatedEffects)
 	}
 	if req.Attunement != nil {
 		card.Attunement = req.Attunement
@@ -601,7 +602,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		card.Range = req.Range
 	}
 	if req.Tags != nil {
-		card.Tags = req.Tags
+		card.Tags = NormalizeProperties(req.Tags)
 	}
 	if req.IsTemplate != "" {
 		card.IsTemplate = req.IsTemplate

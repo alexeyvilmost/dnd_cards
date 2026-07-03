@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, LogOut, User, Users, UserCircle, ChevronDown, Menu, X, Sparkles } from 'lucide-react';
+import { BookOpen, LogOut, User, Users, UserCircle, ChevronDown, Menu, X, Sparkles, Swords } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
@@ -25,6 +25,7 @@ const Layout = ({ children }: LayoutProps) => {
       ]
     },
     { path: '/shop/new', label: 'Магазин', icon: BookOpen },
+    { path: '/initiative', label: 'Инициатива', icon: Swords },
     { path: '/image-generator', label: 'Генерация', icon: Sparkles },
     { 
       label: 'Аккаунт', 

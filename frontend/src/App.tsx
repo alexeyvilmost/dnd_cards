@@ -31,6 +31,7 @@ import CharacterSheetMVP from './pages/CharacterSheetMVP';
 import CharactersForgeList from './pages/CharactersForgeList';
 import DiceRoller from './pages/DiceRoller';
 import DiceTest from './pages/DiceTest';
+import InitiativeTracker from './pages/InitiativeTracker';
 import CardTypeSelection from './pages/CardTypeSelection';
 import WeaponSelection from './pages/WeaponSelection';
 import EquipmentSelection from './pages/EquipmentSelection';
@@ -292,6 +293,14 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <DiceTest />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/initiative" element={
+          <ProtectedRoute>
+            <Layout>
+              <InitiativeTracker />
             </Layout>
           </ProtectedRoute>
         } />

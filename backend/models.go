@@ -348,7 +348,7 @@ const (
 type Card struct {
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
-	Properties                   *Properties    `json:"properties" gorm:"type:text[]"` // Храним как массив PostgreSQL
+	Properties                   *Properties    `json:"properties" gorm:"type:jsonb"`
 	Description                  string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription          *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL                     string         `json:"image_url" gorm:"type:text"`
@@ -380,13 +380,13 @@ type Card struct {
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
 	WeaponType                   *string        `json:"weapon_type" gorm:"type:varchar(50)"` // Тип оружия (например, longsword, scimitar)
-	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:text[]"`    // JSON массив ID
-	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text[]"`  // JSON массив ID (плейсхолдер)
-	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text[]"`  // JSON массив ID (плейсхолдер)
+	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:jsonb"`
+	RelatedActions               *Properties    `json:"related_actions" gorm:"type:jsonb"`
+	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:jsonb"`
 	Attunement                   *string        `json:"attunement" gorm:"type:text"`
 	RequiresAttunement           *bool          `json:"requires_attunement" gorm:"type:boolean;default:false"` // Требуется ли настройка
 	Range                        *string        `json:"range" gorm:"column:range;type:varchar(50)"`            // Дальность (например, "30/120")
-	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`                               // Массив тегов
+	Tags                         *Properties    `json:"tags" gorm:"type:jsonb"`
 	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"`   // Тип шаблона
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
 	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
@@ -876,6 +876,14 @@ func ValidateProperties(properties *Properties) bool {
 		}
 	}
 	return true
+}
+
+// NormalizeProperties возвращает nil для пустого слайса (не сохраняем [] в jsonb/text[]).
+func NormalizeProperties(properties *Properties) *Properties {
+	if properties == nil || len(*properties) == 0 {
+		return nil
+	}
+	return properties
 }
 
 // ValidatePrice - проверяет цену (целочисленная, для действий/эффектов)
@@ -1577,12 +1585,12 @@ type Action struct {
 	Type                         *string         `json:"type" gorm:"type:varchar(50)"`
 	Author                       string          `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string         `json:"source" gorm:"type:varchar(255)"`
-	Tags                         *Properties     `json:"tags" gorm:"type:text[]"`
+	Tags                         *Properties     `json:"tags" gorm:"type:jsonb"`
 	Price                        *int            `json:"price" gorm:"type:int"`
 	Weight                       *float64        `json:"weight" gorm:"type:decimal(5,2)"`
-	Properties                   *Properties     `json:"properties" gorm:"type:text[]"`
-	RelatedCards                 *Properties     `json:"related_cards" gorm:"type:text[]"`
-	RelatedActions               *Properties     `json:"related_actions" gorm:"type:text[]"`
+	Properties                   *Properties     `json:"properties" gorm:"type:jsonb"`
+	RelatedCards                 *Properties     `json:"related_cards" gorm:"type:jsonb"`
+	RelatedActions               *Properties     `json:"related_actions" gorm:"type:jsonb"`
 	IsExtended                   *bool           `json:"is_extended" gorm:"type:boolean;default:null"`
 	DescriptionFontSize          *int            `json:"description_font_size" gorm:"type:int"`
 	TextAlignment                *string         `json:"text_alignment" gorm:"type:varchar(20)"`
@@ -1796,13 +1804,13 @@ type Effect struct {
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`
+	Tags                         *Properties    `json:"tags" gorm:"type:jsonb"`
 	Price                        *int           `json:"price" gorm:"type:int"`
 	Weight                       *float64       `json:"weight" gorm:"type:decimal(5,2)"`
-	Properties                   *Properties    `json:"properties" gorm:"type:text[]"`
-	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:text[]"`
-	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text[]"`
-	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text[]"`
+	Properties                   *Properties    `json:"properties" gorm:"type:jsonb"`
+	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:jsonb"`
+	RelatedActions               *Properties    `json:"related_actions" gorm:"type:jsonb"`
+	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:jsonb"`
 	IsExtended                   *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	DescriptionFontSize          *int           `json:"description_font_size" gorm:"type:int"`
 	TextAlignment                *string        `json:"text_alignment" gorm:"type:varchar(20)"`

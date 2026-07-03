@@ -29,7 +29,34 @@ class TestCardCreation:
         # Очистка
         api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
     
-    def test_create_card_with_all_fields(self, api_client: requests.Session):
+    def test_create_equipment_item_with_jewelry_property(self, api_client: requests.Session):
+        """Тест создания предмета экипировки (как венок друидов) с property jewelry и slot head."""
+        card_data = {
+            "name": "Венок друидов",
+            "description": "Природа +1.",
+            "rarity": "uncommon",
+            "properties": ["jewelry"],
+            "price": 160,
+            "price_currency": "gold",
+            "price_abbreviated": True,
+            "weight": 0.4,
+            "author": "Admin",
+            "type": "helmet",
+            "slot": "head",
+            "requires_attunement": False,
+            "is_template": "false",
+            "related_cards": [],
+            "related_actions": [],
+            "related_effects": [],
+        }
+
+        response = api_client.post(get_api_url("/cards"), json=card_data)
+        assert response.status_code == 201, response.text
+        created_card = response.json()
+        assert created_card["properties"] == ["jewelry"]
+        assert created_card["slot"] == "head"
+
+        api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
         """Тест создания карточки со всеми полями"""
         card_data = {
             "name": "Полная карточка",

@@ -308,6 +308,12 @@ func GetAllMigrations() []Migration {
 			Up:          seedMvpEquipmentCards,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "051_entity_array_columns_to_jsonb",
+			Description: "Convert cards/actions/effects array columns from text/text[] to jsonb (Properties JSON serialization)",
+			Up:          convertEntityArrayColumnsToJsonb,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -2215,6 +2221,62 @@ func revertSpellArraysToTextArray(db *sql.DB) error {
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to revert spells.%s to text[]: %w", col, err)
 		}
+	}
+	return nil
+}
+
+// convertEntityArrayColumnsToJsonb переводит колонки Properties (cards/actions/effects) в jsonb.
+// Тип Properties сериализуется через json.Marshal, что несовместимо с text[], но совместимо с jsonb.
+func convertEntityArrayColumnsToJsonb(db *sql.DB) error {
+	tables := []struct {
+		table   string
+		columns []string
+	}{
+		{table: "cards", columns: []string{"properties", "related_cards", "related_actions", "related_effects", "tags"}},
+		{table: "actions", columns: []string{"tags", "properties", "related_cards", "related_actions"}},
+		{table: "effects", columns: []string{"tags", "properties", "related_cards", "related_actions", "related_effects"}},
+	}
+	for _, t := range tables {
+		for _, col := range t.columns {
+			if err := convertColumnToJSONBIfNeeded(db, t.table, col); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func convertColumnToJSONBIfNeeded(db *sql.DB, table, column string) error {
+	var udtName string
+	err := db.QueryRow(`
+		SELECT udt_name FROM information_schema.columns
+		WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2
+	`, table, column).Scan(&udtName)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("check %s.%s: %w", table, column, err)
+	}
+	if udtName == "jsonb" {
+		return nil
+	}
+
+	var query string
+	switch udtName {
+	case "_text":
+		query = fmt.Sprintf(
+			"ALTER TABLE %s ALTER COLUMN %s TYPE JSONB USING to_jsonb(%s)",
+			table, column, column)
+	case "text":
+		query = fmt.Sprintf(
+			"ALTER TABLE %s ALTER COLUMN %s TYPE JSONB USING CASE WHEN %s IS NULL OR trim(%s) = '' THEN NULL ELSE %s::jsonb END",
+			table, column, column, column, column)
+	default:
+		return fmt.Errorf("unsupported type %s for %s.%s", udtName, table, column)
+	}
+	if _, err := db.Exec(query); err != nil {
+		return fmt.Errorf("convert %s.%s to jsonb: %w", table, column, err)
 	}
 	return nil
 }
