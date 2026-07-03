@@ -761,18 +761,14 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 
 // generateCardNumber - генерация уникального номера карточки
 func generateCardNumber(db *gorm.DB) string {
-	// Находим максимальный номер карточки (включая удаленные, так как card_number должен быть уникальным)
 	var maxCard Card
-	db.Unscoped().Order("card_number DESC").First(&maxCard)
+	// Только CARD-*: иначе MVP-* и другие префиксы ломают счётчик и дают коллизию CARD-0001.
+	db.Unscoped().Where("card_number LIKE ?", "CARD-%").Order("card_number DESC").First(&maxCard)
 
-	// Извлекаем номер из строки CARD-XXXX
-	var nextNum int = 1
-	if maxCard.CardNumber != "" {
-		if len(maxCard.CardNumber) >= 9 { // CARD-XXXX
-			numStr := maxCard.CardNumber[5:9]
-			if num, err := strconv.Atoi(numStr); err == nil {
-				nextNum = num + 1
-			}
+	nextNum := 1
+	if strings.HasPrefix(maxCard.CardNumber, "CARD-") {
+		if num, err := strconv.Atoi(strings.TrimPrefix(maxCard.CardNumber, "CARD-")); err == nil {
+			nextNum = num + 1
 		}
 	}
 

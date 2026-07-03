@@ -57,6 +57,8 @@ class TestCardCreation:
         assert created_card["slot"] == "head"
 
         api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
+
+    def test_create_card_with_all_fields(self, api_client: requests.Session):
         """Тест создания карточки со всеми полями"""
         card_data = {
             "name": "Полная карточка",
