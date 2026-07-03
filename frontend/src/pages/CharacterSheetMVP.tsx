@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Dices, Pencil } from 'lucide-react';
+import { ArrowLeft, Dices, Pencil, Sun, Moon } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
@@ -54,6 +54,17 @@ const CharacterSheetMVP = () => {
   const [journalLoading, setJournalLoading] = useState(false);
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
+  const [paperTheme, setPaperTheme] = useState<boolean>(() => {
+    try { return localStorage.getItem('sheet-theme') === 'paper'; } catch { return false; }
+  });
+  const toggleTheme = useCallback(() => {
+    setPaperTheme((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('sheet-theme', next ? 'paper' : 'dark'); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+  const rootCls = paperTheme ? 'forge sheet-paper' : 'forge';
 
   const loadJournal = useCallback(async (characterId: string) => {
     setJournalLoading(true);
@@ -178,7 +189,7 @@ const CharacterSheetMVP = () => {
 
   if (loading) {
     return (
-      <div className="forge">
+      <div className={rootCls}>
         <div className="forge-header">Лист персонажа</div>
         <div className="sheet-loading">Загрузка…</div>
       </div>
@@ -187,7 +198,7 @@ const CharacterSheetMVP = () => {
 
   if (error || !character || !assembled || !draft || !ruleState) {
     return (
-      <div className="forge">
+      <div className={rootCls}>
         <div className="forge-header">Лист персонажа</div>
         <div className="sheet-loading">
           <p className="issues">{error || 'Персонаж не найден'}</p>
@@ -272,7 +283,7 @@ const CharacterSheetMVP = () => {
   ].filter(Boolean).join(' · ');
 
   return (
-    <div className="forge">
+    <div className={rootCls}>
       <div className="forge-header sheet-header-bar">
         <button type="button" className="sheet-back" onClick={() => navigate(-1)} title="Назад">
           <ArrowLeft size={18} />
@@ -282,6 +293,15 @@ const CharacterSheetMVP = () => {
           <span className="sheet-header-sub">Лист персонажа</span>
         </div>
         <div className="sheet-header-actions">
+          <button
+            type="button"
+            className="sheet-header-btn"
+            onClick={toggleTheme}
+            title={paperTheme ? 'Тёмная тема' : 'Светлая (бумажная) тема'}
+          >
+            {paperTheme ? <Moon size={16} /> : <Sun size={16} />}
+            <span className="sheet-header-btn-label">{paperTheme ? 'Тёмная' : 'Бумага'}</span>
+          </button>
           <button
             type="button"
             className="sheet-header-btn"

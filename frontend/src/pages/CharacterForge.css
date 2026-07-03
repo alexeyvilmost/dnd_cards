@@ -496,3 +496,71 @@
 .sheet-abilities-list strong { color: var(--forge-gold); display: block; margin-bottom: 2px; }
 .sheet-abilities-list p { margin: 4px 0 0; color: var(--forge-text-dim); font-size: 13px; line-height: 1.35; }
 .sheet-origin { font-size: 12px; color: var(--forge-text-dim); margin-left: 8px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   СВЕТЛАЯ «БУМАЖНАЯ» ТЕМА ЛИСТА (LSS-стиль) — переключается кнопкой в шапке.
+   Активна на корне: .forge.sheet-paper. Не трогает тёмную тему.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.forge.sheet-paper {
+  --forge-bg: #e9e3d5;        /* «стол» под листом */
+  --forge-panel: #ffffff;     /* сам лист — белый */
+  --forge-panel-2: #f7f4ec;   /* вложенные поля */
+  --forge-line: #c7bfab;      /* тонкие серые рамки */
+  --forge-gold: #2a251d;      /* акцент → чернила (монохром LSS) */
+  --forge-gold-dim: #6a6150;
+  --forge-text: #24201a;
+  --forge-text-dim: #78715f;
+  --forge-danger: #b0402a;
+  --paper-hair: #ddd6c4;      /* волосяные линии-разделители */
+}
+
+/* Документный шрифт заголовков — как в бумажном листе */
+.forge.sheet-paper .sheet-name,
+.forge.sheet-paper .sheet-h2,
+.forge.sheet-paper .sheet-h3,
+.forge.sheet-paper .forge-header {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+/* Шапка листа — светлая, без свечения */
+.forge.sheet-paper .sheet-header-bar { background: #f2eee3; }
+.forge.sheet-paper .sheet-header-btn,
+.forge.sheet-paper .sheet-back,
+.forge.sheet-paper .sheet-edit {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--forge-line);
+  color: var(--forge-text);
+}
+.forge.sheet-paper .sheet-header-btn:hover:not(:disabled),
+.forge.sheet-paper .sheet-back:hover,
+.forge.sheet-paper .sheet-edit:hover { background: rgba(0, 0, 0, 0.08); }
+.forge.sheet-paper .sheet-header-sub { color: var(--forge-text-dim); }
+
+/* Панели — белые «карточки» листа с чёткой тонкой рамкой */
+.forge.sheet-paper .sheet-panel { box-shadow: 0 1px 2px rgba(60, 50, 30, 0.06); }
+.forge.sheet-paper .sheet-h2 {
+  text-transform: uppercase; font-size: 13px; letter-spacing: 1.2px;
+  color: var(--forge-text-dim); font-weight: 700;
+  border-bottom: 1px solid var(--forge-line); padding-bottom: 6px; margin-bottom: 12px;
+}
+.forge.sheet-paper .sheet-h3 { color: var(--forge-text); font-weight: 700; }
+
+/* Волосяные линии-разделители → светло-серые */
+.forge.sheet-paper .sheet-list li,
+.forge.sheet-paper .sheet-ability-lines > *,
+.forge.sheet-paper .sheet-abilities-list li { border-bottom-color: var(--paper-hair); }
+
+/* Характеристики: модификатор крупный чёрный, значение — серое (как LSS) */
+.forge.sheet-paper .sheet-ab-mod,
+.forge.sheet-paper .sheet-stat strong,
+.forge.sheet-paper .sheet-ab-score { color: var(--forge-text); font-weight: 700; }
+.forge.sheet-paper .sheet-prof { color: var(--forge-text); font-weight: 600; }
+
+/* Чипы ресурсов / кнопки — светлый вид */
+.forge.sheet-paper .sheet-resource-chip,
+.forge.sheet-paper .forge-btn.ghost {
+  background: var(--forge-panel-2); border-color: var(--forge-line); color: var(--forge-text);
+}
+.forge.sheet-paper .forge-btn.ghost:hover { background: #efe9da; }
+.forge.sheet-paper .forge-spell-icon { background: var(--forge-panel-2); border-color: var(--forge-line); }
