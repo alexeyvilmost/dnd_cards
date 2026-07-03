@@ -1,0 +1,172 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CharacterSheetV2 — компактный «кокпит» листа под 16:9 с независимым скроллом
+   колонок. Наследует палитру --forge-* (работает и в тёмной, и в бумажной теме).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.csheet {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 4px;
+  color: var(--forge-text);
+  font-size: 13px;
+}
+
+/* ── Верхняя лента ── */
+.csheet-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--forge-line);
+  border-radius: 10px;
+  background: var(--forge-panel);
+}
+.cs-ident { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 0 0 auto; }
+.cs-portrait {
+  width: 52px; height: 52px; border-radius: 50%; flex: 0 0 auto; overflow: hidden;
+  border: 2px solid var(--forge-gold-dim); background: var(--forge-panel-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: Georgia, serif; font-size: 24px; color: var(--forge-gold);
+}
+.cs-portrait img { width: 100%; height: 100%; object-fit: cover; }
+.cs-name { font-family: Georgia, serif; font-size: 22px; color: var(--forge-gold); line-height: 1.1; }
+.cs-sub { font-size: 12.5px; color: var(--forge-text-dim); margin-top: 2px; }
+
+.cs-vitals { display: flex; align-items: stretch; gap: 8px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.cs-ac {
+  width: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 1px solid var(--forge-gold-dim); border-radius: 8px; background: var(--forge-panel-2);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); padding: 6px 0 10px;
+}
+.cs-ac-v { font-size: 22px; font-weight: 700; color: var(--forge-text); line-height: 1; }
+.cs-ac-l { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--forge-text-dim); }
+.cs-hp {
+  min-width: 150px; display: flex; flex-direction: column; justify-content: center; gap: 5px;
+  border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel-2); padding: 7px 12px;
+}
+.cs-hp-top { display: flex; align-items: baseline; gap: 5px; }
+.cs-hp-cur { font-size: 22px; font-weight: 700; color: var(--forge-text); line-height: 1; }
+.cs-hp-max { color: var(--forge-text-dim); font-size: 13px; }
+.cs-hp-tmp { color: var(--dt-cold, #7ec8e3); font-size: 12px; font-weight: 600; }
+.cs-hp-l { margin-left: auto; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--forge-text-dim); }
+.cs-hp-bar { height: 6px; border-radius: 4px; background: rgba(128,128,128,.28); overflow: hidden; }
+.cs-hp-bar i { display: block; height: 100%; background: var(--success, #7bbf6a); transition: width .25s; }
+.cs-pill {
+  min-width: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel-2); padding: 6px 8px;
+}
+.cs-pill-l { font-size: 9px; letter-spacing: .6px; text-transform: uppercase; color: var(--forge-text-dim); }
+.cs-pill-v { font-size: 15px; font-weight: 700; color: var(--forge-text); margin-top: 2px; white-space: nowrap; }
+
+/* ── Три колонки ── */
+.csheet-cols {
+  flex: 1 1 auto; min-height: 0;
+  display: grid; grid-template-columns: 268px minmax(300px, 1fr) minmax(360px, 1.3fr); gap: 12px;
+}
+.csheet-col {
+  min-height: 0; overflow-y: auto; padding-right: 4px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.csheet-col::-webkit-scrollbar { width: 8px; }
+.csheet-col::-webkit-scrollbar-thumb { background: var(--forge-line); border-radius: 4px; }
+.csheet-col::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Карточки ── */
+.cs-card { border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel); padding: 9px 11px; }
+.cs-card-h {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; letter-spacing: 1.1px; text-transform: uppercase; font-weight: 700;
+  color: var(--forge-text-dim); border-bottom: 1px solid var(--forge-line);
+  padding-bottom: 5px; margin-bottom: 8px;
+}
+.cs-card--hook { border-style: dashed; opacity: .82; }
+.cs-soon { font-size: 9px; letter-spacing: .5px; color: var(--forge-gold-dim); border: 1px solid var(--forge-gold-dim); border-radius: 8px; padding: 1px 6px; }
+.cs-hook-note { font-size: 12px; color: var(--forge-text-dim); font-style: italic; }
+
+/* Переиспользуемые панели — компактнее внутри кокпита */
+.csheet .sheet-panel { margin: 0; padding: 9px 11px; border-radius: 8px; }
+.csheet .sheet-h2 {
+  font-size: 11px; letter-spacing: 1.1px; text-transform: uppercase; font-weight: 700;
+  color: var(--forge-text-dim); margin: 0 0 8px; border-bottom: 1px solid var(--forge-line); padding-bottom: 5px;
+}
+.csheet .sheet-journal-head { margin-bottom: 8px; }
+
+/* ── Характеристики ── */
+.cs-abils { display: flex; flex-direction: column; gap: 6px; }
+.cs-abil {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px;
+  border: 1px solid var(--forge-line); border-radius: 6px; background: var(--forge-panel-2); padding: 5px 9px;
+}
+.cs-abil-id { display: flex; flex-direction: column; line-height: 1.1; min-width: 34px; }
+.cs-abil-ab { font-size: 10px; letter-spacing: .6px; color: var(--forge-text-dim); }
+.cs-abil-sc { font-size: 14px; font-weight: 600; color: var(--forge-text); }
+.cs-abil-mod { text-align: center; font-size: 20px; font-weight: 700; color: var(--forge-gold); }
+.cs-abil-save { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--forge-text-dim); }
+.cs-abil-save.on { color: var(--forge-text); }
+.cs-abil-save.on .cs-dot { background: var(--forge-gold); border-color: var(--forge-gold); }
+
+.cs-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--forge-gold-dim); flex: 0 0 auto; }
+
+/* ── Ключ-значение / чувства / владения ── */
+.cs-kv { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 3px 0; }
+.cs-kv span { color: var(--forge-text-dim); }
+.cs-kv b { color: var(--forge-text); font-weight: 600; text-align: right; }
+.cs-kv.cs-muted { opacity: .55; }
+
+/* ── Навыки ── */
+.cs-skills { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px 18px; }
+.cs-skills li { display: grid; grid-template-columns: 10px 1fr auto auto; align-items: center; gap: 6px; padding: 2.5px 0; font-size: 12.5px; }
+.cs-skills li.on .cs-dot { background: var(--forge-gold); border-color: var(--forge-gold); }
+.cs-skills li.on .cs-skill-nm { color: var(--forge-text); font-weight: 600; }
+.cs-skill-nm { color: var(--forge-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-skill-ab { font-size: 9px; color: var(--forge-text-dim); opacity: .7; }
+.cs-skill-v { color: var(--forge-text); font-weight: 600; min-width: 24px; text-align: right; }
+
+/* ── Черты и способности ── */
+.cs-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.cs-tag { font-size: 12px; border: 1px solid var(--forge-line); border-radius: 999px; padding: 2px 9px; color: var(--forge-text); background: var(--forge-panel-2); }
+.cs-lines { display: flex; flex-direction: column; gap: 3px; }
+
+/* ── Заклинания ── */
+.cs-spell-grp { margin-bottom: 8px; }
+.cs-spell-lvl { font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--forge-text-dim); margin-bottom: 5px; }
+.cs-spell-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-spell {
+  position: relative; width: 42px; height: 42px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--forge-line); background: var(--forge-panel-2); overflow: visible; padding: 0;
+}
+.cs-spell img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
+.cs-spell-fb { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 18px; color: var(--forge-gold); }
+.cs-spell-badge {
+  position: absolute; right: -4px; bottom: -4px; min-width: 15px; height: 15px; padding: 0 3px;
+  border-radius: 8px; background: var(--forge-panel); border: 1px solid var(--forge-gold-dim);
+  color: var(--forge-gold); font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.cs-spell:hover { border-color: var(--forge-gold); }
+.cs-spell-pop { position: fixed; z-index: 200; pointer-events: none; }
+
+/* ── Журнал / кнопки ── */
+.cs-card--journal { display: flex; flex-direction: column; min-height: 160px; }
+.cs-card--journal .cs-card-h { margin-bottom: 6px; }
+.cs-mini-btn {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer;
+  border: 1px solid var(--forge-line); border-radius: 6px; background: var(--forge-panel-2);
+  color: var(--forge-text); padding: 2px 8px;
+}
+.cs-mini-btn:hover:not(:disabled) { border-color: var(--forge-gold-dim); }
+.cs-mini-btn:disabled { opacity: .5; cursor: default; }
+
+/* ── Конфликты ── */
+.cs-conflicts { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--forge-danger); padding: 2px 4px; }
+
+@media (max-width: 1100px) {
+  .csheet-cols { grid-template-columns: 1fr 1fr; }
+  .csheet-col--ctrl { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .csheet-cols { display: flex; flex-direction: column; overflow-y: auto; }
+  .csheet-col { overflow: visible; }
+}

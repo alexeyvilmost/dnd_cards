@@ -26,6 +26,7 @@ import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
+import CharacterSheetV2 from './CharacterSheetV2';
 import { rollEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
@@ -66,6 +67,16 @@ const CharacterSheetMVP = () => {
     });
   }, []);
   const rootCls = paperTheme ? 'forge sheet-paper' : 'forge';
+  const [useV2, setUseV2] = useState<boolean>(() => {
+    try { return localStorage.getItem('sheet-layout') === 'v2'; } catch { return false; }
+  });
+  const toggleLayout = useCallback(() => {
+    setUseV2((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('sheet-layout', next ? 'v2' : 'classic'); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
 
   const loadJournal = useCallback(async (characterId: string) => {
     setJournalLoading(true);
@@ -217,7 +228,6 @@ const CharacterSheetMVP = () => {
   const pb = ruleState.proficiencyBonus;
 
   const maxHP = ruleState.maxHP;
-  const currentHP = character.current_hp ?? maxHP;
   const speed = speedBreakdown?.value ?? ruleState.speed;
   const ac = acBreakdown?.value ?? ruleState.armorClass;
   const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;
@@ -275,6 +285,14 @@ const CharacterSheetMVP = () => {
           <button
             type="button"
             className="sheet-header-btn"
+            onClick={toggleLayout}
+            title={useV2 ? 'Классический макет' : 'Новый макет (кокпит)'}
+          >
+            <span className="sheet-header-btn-label">{useV2 ? 'Классический' : '✦ Новый'}</span>
+          </button>
+          <button
+            type="button"
+            className="sheet-header-btn"
             onClick={toggleTheme}
             title={paperTheme ? 'Тёмная тема' : 'Светлая (бумажная) тема'}
           >
@@ -297,6 +315,30 @@ const CharacterSheetMVP = () => {
         </div>
       </div>
 
+      {useV2 ? (
+        <CharacterSheetV2
+          character={character}
+          assembled={assembled}
+          ruleState={ruleState}
+          draft={draft}
+          sheetCtx={sheetCtx}
+          runtimeState={runtimeState}
+          passives={passives}
+          equipCards={equipCards}
+          acBreakdown={acBreakdown}
+          maxHpBreakdown={maxHpBreakdown}
+          initBreakdown={initBreakdown}
+          speedBreakdown={speedBreakdown}
+          spellsByLevel={spellsByLevel}
+          journal={journal}
+          journalLoading={journalLoading}
+          rollingInit={rollingInit}
+          lineageName={lineageName}
+          onUpdated={setCharacter}
+          onEvents={appendRuntimeEvents}
+          onRollInitiative={rollInitiative}
+        />
+      ) : (
       <div className="sheet-scroll">
         <section className="sheet-hero">
           <h1 className="sheet-name">{character.name}</h1>
@@ -582,15 +624,18 @@ const CharacterSheetMVP = () => {
 
         </div>
       </div>
+      )}
 
-      <SheetJournalFab
-        open={journalOpen}
-        onOpenChange={setJournalOpen}
-        rows={journal}
-        loading={journalLoading}
-        onRollInitiative={rollInitiative}
-        rollingInit={rollingInit}
-      />
+      {!useV2 && (
+        <SheetJournalFab
+          open={journalOpen}
+          onOpenChange={setJournalOpen}
+          rows={journal}
+          loading={journalLoading}
+          onRollInitiative={rollInitiative}
+          rollingInit={rollingInit}
+        />
+      )}
     </div>
   );
 };
