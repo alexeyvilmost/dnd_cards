@@ -22,6 +22,7 @@ export interface InitiativeCharacter {
   maxHp: number;
   currentHp: number;
   notes: string;
+  description: string;
 }
 
 export interface InitiativeTrackerState {
@@ -44,6 +45,7 @@ export function createEmptyCharacter(): InitiativeCharacter {
     maxHp: 10,
     currentHp: 10,
     notes: '',
+    description: '',
   };
 }
 

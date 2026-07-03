@@ -1,5 +1,5 @@
-import React from 'react';
-import { Trash2, ChevronUp, ChevronDown, Dices } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, ChevronUp, ChevronDown, Dices, ChevronsDown, ChevronsUp } from 'lucide-react';
 import {
   INITIATIVE_COLORS,
   getInitiativeColor,
@@ -30,6 +30,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
   canMoveUp,
   canMoveDown,
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const color = getInitiativeColor(character.color);
   const hpPercent = character.maxHp > 0
     ? Math.min(100, Math.round((character.currentHp / character.maxHp) * 100))
@@ -38,7 +39,8 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
   const handleNumberChange = (field: 'ac' | 'initiative' | 'maxHp' | 'currentHp', value: string) => {
     const parsed = value === '' ? 0 : parseInt(value, 10);
     if (Number.isNaN(parsed)) return;
-    onUpdate(character.id, { [field]: parsed });
+    const final = field === 'currentHp' ? Math.max(0, parsed) : parsed;
+    onUpdate(character.id, { [field]: final });
   };
 
   const adjustHp = (delta: number) => {
@@ -46,11 +48,139 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
     onUpdate(character.id, { currentHp: next });
   };
 
+  const hpColor = hpPercent > 50 ? '#16a34a' : hpPercent > 25 ? '#ca8a04' : '#dc2626';
+
+  const cardClass = `rounded-lg border bg-white shadow-sm transition-all ${
+    isActive ? 'ring-2 ring-blue-500 shadow-md' : 'border-gray-200'
+  }`;
+
+  const moveButtons = (
+    <div className="flex flex-col gap-0.5">
+      <button
+        type="button"
+        onClick={() => onMoveUp(character.id)}
+        disabled={!canMoveUp}
+        className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Выше в порядке"
+      >
+        <ChevronUp size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => onMoveDown(character.id)}
+        disabled={!canMoveDown}
+        className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Ниже в порядке"
+      >
+        <ChevronDown size={16} />
+      </button>
+    </div>
+  );
+
+  if (!isExpanded) {
+    return (
+      <div
+        className={cardClass}
+        style={{ borderLeftWidth: '4px', borderLeftColor: color.hex }}
+      >
+        <div className="flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2">
+          <div
+            className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-base font-bold"
+            style={{ backgroundColor: color.hex, color: color.text }}
+            title="Инициатива"
+          >
+            {character.initiative}
+          </div>
+
+          <input
+            type="text"
+            value={character.name}
+            onChange={(e) => onUpdate(character.id, { name: e.target.value })}
+            placeholder="Имя"
+            className="flex-shrink-0 w-24 sm:w-32 px-2 py-1 text-sm font-semibold border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+
+          <span
+            className="flex-shrink-0 text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded"
+            title="Класс доспеха"
+          >
+            КД {character.ac}
+          </span>
+
+          <div className="flex-shrink-0 flex items-center gap-0.5" title="Текущие / макс. HP">
+            <button
+              type="button"
+              onClick={() => adjustHp(-1)}
+              className="w-6 h-6 rounded border border-gray-300 hover:bg-gray-50 text-sm font-medium leading-none"
+              title="−1 HP"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min={0}
+              value={character.currentHp}
+              onChange={(e) => handleNumberChange('currentHp', e.target.value)}
+              onFocus={(e) => e.target.select()}
+              className="w-11 sm:w-12 px-1 py-0.5 text-xs font-medium tabular-nums text-center border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              style={{ color: hpColor }}
+              title="Текущие HP — введите значение напрямую"
+            />
+            <span className="text-xs text-gray-400">/</span>
+            <span className="text-xs font-medium text-gray-500 tabular-nums min-w-[1.5rem]">
+              {character.maxHp}
+            </span>
+            <button
+              type="button"
+              onClick={() => adjustHp(1)}
+              className="w-6 h-6 rounded border border-gray-300 hover:bg-gray-50 text-sm font-medium leading-none"
+              title="+1 HP"
+            >
+              +
+            </button>
+          </div>
+
+          <input
+            type="text"
+            value={character.notes}
+            onChange={(e) => onUpdate(character.id, { notes: e.target.value })}
+            placeholder="Заметки..."
+            className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+
+          {isActive && (
+            <span className="flex-shrink-0 text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded hidden sm:inline">
+              Ход
+            </span>
+          )}
+
+          {moveButtons}
+
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="flex-shrink-0 p-1 rounded hover:bg-gray-100 text-gray-500"
+            title="Развернуть"
+          >
+            <ChevronsDown size={16} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onRemove(character.id)}
+            className="flex-shrink-0 p-1 rounded text-red-500 hover:bg-red-50"
+            title="Удалить"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`rounded-lg border bg-white shadow-sm transition-all ${
-        isActive ? 'ring-2 ring-blue-500 shadow-md' : 'border-gray-200'
-      }`}
+      className={cardClass}
       style={{ borderLeftWidth: '6px', borderLeftColor: color.hex }}
     >
       <div className="p-4 space-y-4">
@@ -88,23 +218,14 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
+            {moveButtons}
             <button
               type="button"
-              onClick={() => onMoveUp(character.id)}
-              disabled={!canMoveUp}
-              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Выше в порядке"
+              onClick={() => setIsExpanded(false)}
+              className="p-1 rounded hover:bg-gray-100 text-gray-500"
+              title="Свернуть"
             >
-              <ChevronUp size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => onMoveDown(character.id)}
-              disabled={!canMoveDown}
-              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Ниже в порядке"
-            >
-              <ChevronDown size={18} />
+              <ChevronsUp size={18} />
             </button>
             <button
               type="button"
@@ -213,6 +334,18 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
             className="input-field resize-y min-h-[4rem]"
           />
         </label>
+
+        {character.description ? (
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Описание</span>
+            <textarea
+              value={character.description}
+              onChange={(e) => onUpdate(character.id, { description: e.target.value })}
+              rows={8}
+              className="input-field resize-y min-h-[8rem] text-sm bg-gray-50"
+            />
+          </div>
+        ) : null}
 
         {isActive && (
           <div className="text-sm font-medium text-blue-600 bg-blue-50 rounded-md px-3 py-1.5">
