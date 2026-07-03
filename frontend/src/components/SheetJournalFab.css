@@ -1,0 +1,114 @@
+.sheet-journal-fab-root {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.sheet-journal-fab-root > * {
+  pointer-events: auto;
+}
+
+.sheet-journal-popup {
+  width: min(420px, calc(100vw - 40px));
+  max-height: min(520px, calc(100vh - 120px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--forge-line);
+  border-radius: 14px;
+  background: var(--forge-panel);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.sheet-paper .sheet-journal-popup {
+  background: #f5eed8;
+  border-color: #c4b896;
+  box-shadow: 0 12px 36px rgba(60, 45, 20, 0.25);
+}
+
+.sheet-journal-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--forge-line);
+}
+
+.sheet-journal-popup-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--forge-gold);
+}
+
+.sheet-journal-popup-init {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 5px 8px;
+}
+
+.sheet-journal-popup-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 14px 14px;
+  min-height: 120px;
+}
+
+.sheet-journal-popup-loading {
+  margin: 0;
+}
+
+.sheet-journal-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--forge-line);
+  background: var(--forge-panel);
+  color: var(--forge-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.sheet-journal-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.sheet-journal-fab.open {
+  color: var(--forge-text, #e8e8e8);
+}
+
+.sheet-paper .sheet-journal-fab {
+  background: #f5eed8;
+  border-color: #c4b896;
+  color: #5c4a1f;
+  box-shadow: 0 6px 18px rgba(60, 45, 20, 0.2);
+}
+
+.sheet-journal-d20 {
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .sheet-journal-fab-root {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .sheet-journal-popup {
+    width: calc(100vw - 28px);
+  }
+}

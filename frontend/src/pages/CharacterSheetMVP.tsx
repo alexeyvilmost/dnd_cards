@@ -20,7 +20,7 @@ import { labelOf, SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel, type Card, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
-import EventJournal from '../components/EventJournal';
+import SheetJournalFab from '../components/SheetJournalFab';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
@@ -52,6 +52,7 @@ const CharacterSheetMVP = () => {
   const [error, setError] = useState<string | null>(null);
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
   const [journalLoading, setJournalLoading] = useState(false);
+  const [journalOpen, setJournalOpen] = useState(false);
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
@@ -70,7 +71,7 @@ const CharacterSheetMVP = () => {
     setJournalLoading(true);
     try {
       const rows = await charactersV3Api.getEvents(characterId);
-      setJournal(rows);
+      setJournal([...rows].reverse());
     } catch (e) {
       console.error('journal load', e);
     } finally {
@@ -232,8 +233,8 @@ const CharacterSheetMVP = () => {
       });
       const event = rollEvent('Инициатива', roll);
       const saved = await charactersV3Api.postEvents(id, [{ type: 'roll', payload: event }]);
-      setJournal((prev) => [...saved, ...prev]);
-      document.getElementById('sheet-journal')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setJournal((prev) => [...prev, ...saved]);
+      setJournalOpen(true);
     } catch (e) {
       console.error('initiative roll', e);
     } finally {
@@ -246,34 +247,12 @@ const CharacterSheetMVP = () => {
     try {
       const items = events.map((payload) => ({ type: payload.type, payload }));
       const saved = await charactersV3Api.postEvents(id, items);
-      setJournal((prev) => [...saved, ...prev]);
+      setJournal((prev) => [...prev, ...saved]);
+      setJournalOpen(true);
     } catch (e) {
       console.error('runtime events', e);
     }
   };
-
-  const journalPanel = (
-    <section className="sheet-panel sheet-panel-wide sheet-journal-panel" id="sheet-journal">
-      <div className="sheet-journal-head">
-        <h2 className="sheet-h2">Журнал</h2>
-        <button
-          type="button"
-          className="forge-btn ghost sheet-roll-btn"
-          onClick={rollInitiative}
-          disabled={rollingInit}
-          title="Бросок инициативы (к20 + бонус инициативы)"
-        >
-          <Dices size={16} />
-          {rollingInit ? 'Бросок…' : 'Инициатива'}
-        </button>
-      </div>
-      {journalLoading ? (
-        <p className="forge-note">Загрузка журнала…</p>
-      ) : (
-        <EventJournal rows={journal} />
-      )}
-    </section>
-  );
 
   const headerLine = [
     assembled.race?.name,
@@ -324,7 +303,7 @@ const CharacterSheetMVP = () => {
           <p className="sheet-subtitle">{headerLine || '—'}</p>
         </section>
 
-        <div className="sheet-grid sheet-grid-journal-first">
+        <div className="sheet-grid">
           <SheetActionsPanel
             character={character}
             assembled={assembled}
@@ -333,8 +312,6 @@ const CharacterSheetMVP = () => {
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
           />
-
-          {journalPanel}
 
           <SheetEquipmentPanel
             character={character}
@@ -605,6 +582,15 @@ const CharacterSheetMVP = () => {
 
         </div>
       </div>
+
+      <SheetJournalFab
+        open={journalOpen}
+        onOpenChange={setJournalOpen}
+        rows={journal}
+        loading={journalLoading}
+        onRollInitiative={rollInitiative}
+        rollingInit={rollingInit}
+      />
     </div>
   );
 };
