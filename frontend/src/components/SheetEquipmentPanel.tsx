@@ -24,6 +24,7 @@ interface Props {
   character: ForgeCharacter;
   ruleState: CharacterRuleState;
   onUpdated: (c: ForgeCharacter) => void;
+  embedded?: boolean;
 }
 
 const SLOT_LABELS: Record<string, string> = {
@@ -33,7 +34,7 @@ const SLOT_LABELS: Record<string, string> = {
   head: 'Голова',
 };
 
-export default function SheetEquipmentPanel({ character, ruleState, onUpdated }: Props) {
+export default function SheetEquipmentPanel({ character, ruleState, onUpdated, embedded }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,9 +153,8 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
     await persist(removeFromInventory(runtime, cardId, 1));
   };
 
-  return (
-    <section className="sheet-panel sheet-panel-wide">
-      <h2 className="sheet-h2">Инвентарь и экипировка</h2>
+  const body = (
+    <>
       {error && <p className="issues">{error}</p>}
       <div className="sheet-stats" style={{ marginBottom: 12 }}>
         <div className="sheet-stat" title={acBreakdown.parts.map((p) => `${p.source}: ${p.value}`).join('\n')}>
@@ -258,6 +258,15 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated }:
           })}
         </ul>
       </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <section className="sheet-panel sheet-panel-wide">
+      <h2 className="sheet-h2">Инвентарь и экипировка</h2>
+      {body}
     </section>
   );
 }

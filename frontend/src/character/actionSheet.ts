@@ -8,6 +8,11 @@ export type SheetAction = {
   mechanics: Record<string, unknown>;
   group: 'basic' | 'class' | 'race' | 'spell';
   level?: number;
+  imageUrl?: string | null;
+  sourceLabel?: string;
+  actionRef?: Action;
+  effectRef?: PassiveEffect;
+  spellRef?: Spell;
 };
 
 function normalizeActiveMechanics(
@@ -66,7 +71,7 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
   }));
 
   const fromClass: SheetAction[] = assembled.actions
-    .map(({ action }) => {
+    .map(({ action, origin }) => {
       const mechanics = actionMechanics(action);
       if (!mechanics) return null;
       return {
@@ -74,13 +79,16 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
         name: action.name,
         mechanics: { ...mechanics, name: action.name },
         group: 'class' as const,
+        imageUrl: action.image_url,
+        sourceLabel: `${origin.name}`,
+        actionRef: action,
       };
     })
     .filter((a): a is SheetAction => a != null);
 
   const fromRace: SheetAction[] = assembled.effects
     .filter(({ origin }) => origin.kind === 'race')
-    .map(({ effect }) => {
+    .map(({ effect, origin }) => {
       const mechanics = effectActiveMechanics(effect);
       if (!mechanics) return null;
       return {
@@ -88,6 +96,9 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
         name: effect.name,
         mechanics: { ...mechanics, name: effect.name },
         group: 'race' as const,
+        imageUrl: effect.image_url,
+        sourceLabel: `${origin.name}`,
+        effectRef: effect,
       };
     })
     .filter((a): a is SheetAction => a != null);
@@ -102,6 +113,9 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
         mechanics: { ...mechanics, name: spell.name },
         group: 'spell' as const,
         level: spell.level ?? 0,
+        imageUrl: spell.image_url,
+        sourceLabel: spell.school ? `Заклинание · ${spell.school}` : 'Заклинание',
+        spellRef: spell,
       };
     })
     .filter((a): a is SheetAction => a != null);

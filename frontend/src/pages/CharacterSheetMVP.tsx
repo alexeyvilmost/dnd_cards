@@ -330,13 +330,9 @@ const CharacterSheetMVP = () => {
           initBreakdown={initBreakdown}
           speedBreakdown={speedBreakdown}
           spellsByLevel={spellsByLevel}
-          journal={journal}
-          journalLoading={journalLoading}
-          rollingInit={rollingInit}
           lineageName={lineageName}
           onUpdated={setCharacter}
           onEvents={appendRuntimeEvents}
-          onRollInitiative={rollInitiative}
         />
       ) : (
       <div className="sheet-scroll">
@@ -626,16 +622,14 @@ const CharacterSheetMVP = () => {
       </div>
       )}
 
-      {!useV2 && (
-        <SheetJournalFab
-          open={journalOpen}
-          onOpenChange={setJournalOpen}
-          rows={journal}
-          loading={journalLoading}
-          onRollInitiative={rollInitiative}
-          rollingInit={rollingInit}
-        />
-      )}
+      <SheetJournalFab
+        open={journalOpen}
+        onOpenChange={setJournalOpen}
+        rows={journal}
+        loading={journalLoading}
+        onRollInitiative={rollInitiative}
+        rollingInit={rollingInit}
+      />
     </div>
   );
 };

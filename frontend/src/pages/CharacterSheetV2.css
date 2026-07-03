@@ -18,6 +18,7 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   padding: 8px 12px;
   border: 1px solid var(--forge-line);
@@ -74,14 +75,27 @@
 .csheet-col::-webkit-scrollbar-thumb { background: var(--forge-line); border-radius: 4px; }
 .csheet-col::-webkit-scrollbar-track { background: transparent; }
 
-/* ── Карточки ── */
+/* ── Карточки / сворачивание ── */
 .cs-card { border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel); padding: 9px 11px; }
+.cs-card--collapsed .cs-card-body { display: none; }
 .cs-card-h {
   display: flex; align-items: center; justify-content: space-between;
   font-size: 11px; letter-spacing: 1.1px; text-transform: uppercase; font-weight: 700;
   color: var(--forge-text-dim); border-bottom: 1px solid var(--forge-line);
   padding-bottom: 5px; margin-bottom: 8px;
 }
+.cs-card--collapsed .cs-card-h { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+.cs-card-h--toggle { gap: 8px; }
+.cs-card-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; background: transparent; padding: 0; cursor: pointer;
+  font: inherit; font-size: 11px; letter-spacing: 1.1px; text-transform: uppercase; font-weight: 700;
+  color: var(--forge-text-dim);
+}
+.cs-card-toggle:hover { color: var(--forge-text); }
+.cs-chevron { transition: transform .2s; flex-shrink: 0; }
+.cs-chevron.open { transform: rotate(180deg); }
+.cs-card-body { /* content wrapper */ }
 .cs-card--hook { border-style: dashed; opacity: .82; }
 .cs-soon { font-size: 9px; letter-spacing: .5px; color: var(--forge-gold-dim); border: 1px solid var(--forge-gold-dim); border-radius: 8px; padding: 1px 6px; }
 .cs-hook-note { font-size: 12px; color: var(--forge-text-dim); font-style: italic; }
@@ -118,6 +132,7 @@
 
 /* ── Навыки ── */
 .cs-skills { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px 18px; }
+.cs-skills--col { grid-template-columns: 1fr; gap: 0; }
 .cs-skills li { display: grid; grid-template-columns: 10px 1fr auto auto; align-items: center; gap: 6px; padding: 2.5px 0; font-size: 12.5px; }
 .cs-skills li.on .cs-dot { background: var(--forge-gold); border-color: var(--forge-gold); }
 .cs-skills li.on .cs-skill-nm { color: var(--forge-text); font-weight: 600; }
@@ -149,15 +164,40 @@
 .cs-spell-pop { position: fixed; z-index: 200; pointer-events: none; }
 
 /* ── Журнал / кнопки ── */
-.cs-card--journal { display: flex; flex-direction: column; min-height: 160px; }
-.cs-card--journal .cs-card-h { margin-bottom: 6px; }
-.cs-mini-btn {
-  display: inline-flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer;
+.cs-top-rest { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cs-top-rest-btn {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; cursor: pointer;
   border: 1px solid var(--forge-line); border-radius: 6px; background: var(--forge-panel-2);
-  color: var(--forge-text); padding: 2px 8px;
+  color: var(--forge-text); padding: 5px 10px; white-space: nowrap;
 }
-.cs-mini-btn:hover:not(:disabled) { border-color: var(--forge-gold-dim); }
-.cs-mini-btn:disabled { opacity: .5; cursor: default; }
+.cs-top-rest-btn:hover:not(:disabled) { border-color: var(--forge-gold-dim); }
+.cs-top-rest-btn:disabled { opacity: .5; cursor: default; }
+
+/* ── Ресурсы в действиях ── */
+.cs-resources { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.cs-resource {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel-2);
+  padding: 4px 10px; font-size: 12px;
+}
+.cs-resource-icon { width: 18px; height: 18px; object-fit: contain; }
+.cs-resource-l { color: var(--forge-text-dim); }
+.cs-resource-v { font-weight: 700; color: var(--forge-text); }
+
+/* ── Строки действий ── */
+.cs-action-lines { display: flex; flex-direction: column; gap: 2px; }
+.cs-action-line {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  border: none; background: transparent; padding: 4px 2px; cursor: pointer;
+  text-align: left; font-size: 12.5px; color: var(--forge-text); border-radius: 4px;
+}
+.cs-action-line:hover:not(:disabled) { background: var(--forge-panel-2); }
+.cs-action-line--disabled { opacity: .45; cursor: not-allowed; }
+.cs-action-line-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-action-line-lvl {
+  font-size: 10px; font-weight: 700; color: var(--forge-gold);
+  border: 1px solid var(--forge-gold-dim); border-radius: 6px; padding: 0 5px;
+}
 
 /* ── Конфликты ── */
 .cs-conflicts { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--forge-danger); padding: 2px 4px; }

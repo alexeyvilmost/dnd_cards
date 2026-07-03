@@ -1,24 +1,22 @@
 import { useState, type ReactNode } from 'react';
-import { Dices } from 'lucide-react';
 import type { AssembledCharacter } from '../character/assemble';
 import type { CharacterRuleState } from '../character/rules/types';
 import type { CharacterDraft, ForgeCharacter } from '../character/types';
 import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
-import type { CharacterEventRow } from '../character/api';
 import type { CharacterContext, EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { breakdownValue } from '../engine/breakdown';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
-import { SKILLS, labelOf } from '../mechanics/registries';
+import { SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel, type Card, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
-import EventJournal from '../components/EventJournal';
+import CollapsibleSection from '../components/CollapsibleSection';
 import SheetActionsPanel from '../components/SheetActionsPanel';
-import SheetRuntimePanel from '../components/SheetRuntimePanel';
-import SheetHpPanel from '../components/SheetHpPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
+import SheetHpDialog from '../components/SheetHpDialog';
+import SheetRestButtons from '../components/SheetRestButtons';
 import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -47,34 +45,19 @@ interface Props {
   initBreakdown: ValueBreakdown | null;
   speedBreakdown: ValueBreakdown | null;
   spellsByLevel: [number, Spell[]][];
-  journal: CharacterEventRow[];
-  journalLoading: boolean;
-  rollingInit: boolean;
   lineageName: string | null;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents: (events: EngineEvent[]) => void;
-  onRollInitiative: () => void;
-}
-
-function Card({ title, wide, hook, children }: { title: string; wide?: boolean; hook?: boolean; children?: ReactNode }) {
-  return (
-    <section className={`cs-card${wide ? ' cs-card--wide' : ''}${hook ? ' cs-card--hook' : ''}`}>
-      <div className="cs-card-h">
-        <span>{title}</span>
-        {hook && <span className="cs-soon">скоро</span>}
-      </div>
-      {children}
-    </section>
-  );
 }
 
 const CharacterSheetV2 = ({
   character, assembled, ruleState, draft, sheetCtx, runtimeState, passives, equipCards,
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown, spellsByLevel,
-  journal, journalLoading, rollingInit, lineageName, onUpdated, onEvents, onRollInitiative,
+  lineageName, onUpdated, onEvents,
 }: Props) => {
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
+  const [hpOpen, setHpOpen] = useState(false);
 
   const scores = draft.abilities;
   const pb = ruleState.proficiencyBonus;
@@ -108,7 +91,6 @@ const CharacterSheetV2 = ({
 
   return (
     <div className="csheet">
-      {/* ── Верхняя лента: личность + жизненные показатели ── */}
       <div className="csheet-top">
         <div className="cs-ident">
           <div className="cs-portrait">
@@ -122,6 +104,15 @@ const CharacterSheetV2 = ({
           </div>
         </div>
 
+        <SheetRestButtons
+          character={character}
+          assembled={assembled}
+          ruleState={ruleState}
+          onUpdated={onUpdated}
+          onEvents={onEvents}
+          compact
+        />
+
         <div className="cs-vitals">
           <div className="cs-ac">
             <ValueBreakdownTip breakdown={acBreakdown ?? { value: ac, parts: [] }} label="Класс доспеха">
@@ -129,7 +120,7 @@ const CharacterSheetV2 = ({
             </ValueBreakdownTip>
             <span className="cs-ac-l">КД</span>
           </div>
-          <div className="cs-hp">
+          <button type="button" className="cs-hp cs-hp-btn" onClick={() => setHpOpen(true)} title="Управление хитами">
             <div className="cs-hp-top">
               <span className="cs-hp-cur">{currentHP}</span>
               <span className="cs-hp-max">/ {maxHP}</span>
@@ -137,21 +128,18 @@ const CharacterSheetV2 = ({
               <span className="cs-hp-l">хиты</span>
             </div>
             <div className="cs-hp-bar"><i style={{ width: `${hpPct}%` }} /></div>
-          </div>
+          </button>
           {pill('Иниц', fmtMod(initiative), initBreakdown)}
           {pill('Скор', `${speed}`, speedBreakdown)}
           {pill('БМ', fmtMod(pb))}
-          {pill('Владение', `+${pb}`)}
           {spellcasting && pill('Заклин.', `СЛ ${spellcasting.saveDC} · ${fmtMod(spellcasting.attack)}`)}
         </div>
       </div>
 
-      {/* ── Три колонки ── */}
       <div className="csheet-cols">
-
-        {/* ЛЕВАЯ: характеристики, чувства, состояния */}
+        {/* ЛЕВАЯ: характеристики, навыки, чувства */}
         <div className="csheet-col">
-          <Card title="Характеристики">
+          <CollapsibleSection title="Характеристики">
             <div className="cs-abils">
               {ABILITY_KEYS.map((k) => {
                 const score = scores[k] ?? 10;
@@ -178,22 +166,10 @@ const CharacterSheetV2 = ({
                 );
               })}
             </div>
-          </Card>
+          </CollapsibleSection>
 
-          <Card title="Чувства">
-            <div className="cs-kv"><span>Пассивное восприятие</span><b>{ruleState.passivePerception}</b></div>
-            <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>
-          </Card>
-
-          <Card title="Состояния" hook>
-            <p className="cs-hook-note">Активные состояния и их эффекты появятся здесь.</p>
-          </Card>
-        </div>
-
-        {/* ЦЕНТР: навыки, владения, черты/способности */}
-        <div className="csheet-col">
-          <Card title="Навыки">
-            <ul className="cs-skills">
+          <CollapsibleSection title="Навыки">
+            <ul className="cs-skills cs-skills--col">
               {SKILLS.map((skill) => {
                 const proficient = skills.includes(skill.id);
                 const expert = ruleState.expertise.skills.includes(skill.id);
@@ -218,20 +194,30 @@ const CharacterSheetV2 = ({
                 );
               })}
             </ul>
-          </Card>
+          </CollapsibleSection>
 
-          {(ruleState.proficiencies.tools.length > 0 || ruleState.proficiencies.languages.length > 0) && (
-            <Card title="Владения и языки">
-              {ruleState.proficiencies.tools.length > 0 && (
-                <div className="cs-kv"><span>Инструменты</span><b>{ruleState.proficiencies.tools.map((t) => labelOf([], t) || t).join(', ')}</b></div>
-              )}
-              {ruleState.proficiencies.languages.length > 0 && (
-                <div className="cs-kv"><span>Языки</span><b>{ruleState.proficiencies.languages.join(', ')}</b></div>
-              )}
-            </Card>
-          )}
+          <CollapsibleSection title="Чувства">
+            <div className="cs-kv"><span>Пассивное восприятие</span><b>{ruleState.passivePerception}</b></div>
+            <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>
+          </CollapsibleSection>
 
-          <Card title="Черты и способности">
+          <CollapsibleSection title="Состояния" hook>
+            <p className="cs-hook-note">Активные состояния и их эффекты появятся здесь.</p>
+          </CollapsibleSection>
+        </div>
+
+        {/* ЦЕНТР: инвентарь, черты и способности */}
+        <div className="csheet-col">
+          <CollapsibleSection title="Инвентарь и экипировка">
+            <SheetEquipmentPanel
+              character={character}
+              ruleState={ruleState}
+              onUpdated={onUpdated}
+              embedded
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Черты и способности">
             {assembled.feats.length > 0 && (
               <div className="cs-tags">
                 {assembled.feats.map((f) => <span key={f.id} className="cs-tag">{f.name}</span>)}
@@ -250,26 +236,25 @@ const CharacterSheetV2 = ({
             {assembled.feats.length === 0 && assembled.effects.length === 0 && assembled.actions.length === 0 && (
               <p className="cs-hook-note">Нет привязанных способностей.</p>
             )}
-          </Card>
-
-          <Card title="Заметки" hook>
-            <p className="cs-hook-note">Свободные заметки игрока — скоро.</p>
-          </Card>
+          </CollapsibleSection>
         </div>
 
-        {/* ПРАВАЯ: действия, ресурсы/ход, хиты, заклинания, снаряжение, журнал */}
+        {/* ПРАВАЯ: действия, заклинания */}
         <div className="csheet-col csheet-col--ctrl">
-          <SheetActionsPanel character={character} assembled={assembled} ruleState={ruleState}
-            equipCards={equipCards} onUpdated={onUpdated} onEvents={onEvents} />
-
-          <SheetRuntimePanel character={character} assembled={assembled} ruleState={ruleState}
-            onUpdated={onUpdated} onEvents={onEvents} />
-
-          <SheetHpPanel character={character} maxHp={maxHP} maxHpBreakdown={maxHpBreakdown}
-            onUpdated={onUpdated} onEvents={onEvents} />
+          <CollapsibleSection title="Действия">
+            <SheetActionsPanel
+              character={character}
+              assembled={assembled}
+              ruleState={ruleState}
+              equipCards={equipCards}
+              onUpdated={onUpdated}
+              onEvents={onEvents}
+              embedded
+            />
+          </CollapsibleSection>
 
           {assembled.spells.length > 0 && (
-            <Card title="Заклинания">
+            <CollapsibleSection title="Заклинания">
               {spellsByLevel.map(([level, list]) => (
                 <div key={level} className="cs-spell-grp">
                   <div className="cs-spell-lvl">{getSpellLevelLabel(level)}</div>
@@ -289,21 +274,8 @@ const CharacterSheetV2 = ({
                   </div>
                 </div>
               ))}
-            </Card>
+            </CollapsibleSection>
           )}
-
-          <SheetEquipmentPanel character={character} ruleState={ruleState} onUpdated={onUpdated} />
-
-          <section className="cs-card cs-card--journal">
-            <div className="cs-card-h">
-              <span>Журнал</span>
-              <button type="button" className="cs-mini-btn" onClick={onRollInitiative} disabled={rollingInit}
-                title="Бросок инициативы (к20 + бонус)">
-                <Dices size={13} />{rollingInit ? '…' : 'Иниц'}
-              </button>
-            </div>
-            {journalLoading ? <p className="cs-hook-note">Загрузка журнала…</p> : <EventJournal rows={journal} />}
-          </section>
         </div>
       </div>
 
@@ -322,6 +294,16 @@ const CharacterSheetV2 = ({
           <SpellPreview spell={hoveredSpell} disableHover />
         </div>
       )}
+
+      <SheetHpDialog
+        open={hpOpen}
+        onClose={() => setHpOpen(false)}
+        character={character}
+        maxHp={maxHP}
+        maxHpBreakdown={maxHpBreakdown}
+        onUpdated={onUpdated}
+        onEvents={onEvents}
+      />
     </div>
   );
 };

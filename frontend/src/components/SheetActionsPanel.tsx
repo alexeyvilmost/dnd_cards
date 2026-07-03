@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Shield, Sparkles, Swords, Wand2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionNeedsTarget, collectSheetActions, type SheetAction } from '../character/actionSheet';
@@ -9,8 +9,10 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { canPay } from '../engine/cost';
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
+import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import type { Card } from '../types';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import SheetActionLine from './SheetActionLine';
 
 interface Props {
   character: ForgeCharacter;
@@ -19,7 +21,24 @@ interface Props {
   equipCards: Map<string, Card>;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  embedded?: boolean;
 }
+
+const RESOURCE_LABELS: Record<string, string> = {
+  action: 'Действие',
+  bonus_action: 'Бонус',
+  reaction: 'Реакция',
+  second_wind: 'Второе дыхание',
+  heroic_inspiration: 'Вдохновение',
+};
+
+const RESOURCE_ICONS: Record<string, string> = {
+  action: '/icons/resources/action.png',
+  bonus_action: '/icons/resources/bonus_action.png',
+  reaction: '/icons/resources/reaction.png',
+  spell_slot: '/icons/resources/spell_slot.png',
+  warlock_spell_slot: '/icons/resources/warlock_spell_slot.png',
+};
 
 function persistPayload(state: RuntimeState) {
   return {
@@ -32,14 +51,6 @@ function persistPayload(state: RuntimeState) {
   };
 }
 
-function actionIcon(action: SheetAction) {
-  if (action.id === 'standard-dodge') return <Shield size={14} />;
-  if (action.group === 'spell') return <Wand2 size={14} />;
-  if (action.group === 'race') return <Sparkles size={14} />;
-  if (action.group === 'class') return <Sparkles size={14} />;
-  return <Swords size={14} />;
-}
-
 export default function SheetActionsPanel({
   character,
   assembled,
@@ -47,11 +58,11 @@ export default function SheetActionsPanel({
   equipCards,
   onUpdated,
   onEvents,
+  embedded,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [targetAc, setTargetAc] = useState(10);
-  const [targetDc, setTargetDc] = useState(12);
 
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
@@ -84,6 +95,7 @@ export default function SheetActionsPanel({
   );
 
   const actions = useMemo(() => collectSheetActions(assembled), [assembled]);
+  const resourceKeys = Object.keys(runtime.maxResources).filter((k) => runtime.maxResources[k] > 0);
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
     setBusy(true);
@@ -137,6 +149,11 @@ export default function SheetActionsPanel({
     return busy || !canPay(runtime, cost).ok;
   };
 
+  const handleDismissEffect = (effectId: string) => {
+    const { state, events } = removeActiveEffect(runtime, effectId);
+    apply(state, events);
+  };
+
   const groups: { key: SheetAction['group']; label: string; items: SheetAction[] }[] = [
     { key: 'basic', label: 'Базовые', items: actions.filter((a) => a.group === 'basic') },
     { key: 'race', label: 'Вид', items: actions.filter((a) => a.group === 'race') },
@@ -144,10 +161,25 @@ export default function SheetActionsPanel({
     { key: 'spell', label: 'Заклинания', items: actions.filter((a) => a.group === 'spell') },
   ];
 
-  return (
-    <section className="sheet-panel sheet-panel-wide">
-      <h2 className="sheet-h2">Действия</h2>
+  const body = (
+    <>
       {error && <p className="issues">{error}</p>}
+
+      {resourceKeys.length > 0 && (
+        <div className="cs-resources">
+          {resourceKeys.map((key) => (
+            <div key={key} className="cs-resource" title={key}>
+              {RESOURCE_ICONS[key] && (
+                <img src={RESOURCE_ICONS[key]} alt="" className="cs-resource-icon" />
+              )}
+              <span className="cs-resource-l">{RESOURCE_LABELS[key] ?? key}</span>
+              <span className="cs-resource-v">
+                {runtime.resources[key] ?? 0}/{runtime.maxResources[key]}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="sheet-target-inputs">
         <label className="sheet-target-field">
@@ -161,48 +193,68 @@ export default function SheetActionsPanel({
             onChange={(e) => setTargetAc(Number(e.target.value) || 10)}
           />
         </label>
-        <label className="sheet-target-field">
-          <span>СЛ (спасброски)</span>
-          <input
-            type="number"
-            className="forge-input sheet-target-num"
-            value={targetDc}
-            min={1}
-            max={30}
-            onChange={(e) => setTargetDc(Number(e.target.value) || 12)}
-          />
-        </label>
       </div>
 
       {groups.map(({ key, label, items }) => items.length > 0 && (
         <div key={key} className="sheet-group">
           <h3 className="sheet-h3">{label}</h3>
-          <div className="sheet-combat-actions">
+          <div className="cs-action-lines">
             {items.map((action) => {
               const disabled = isDisabled(action);
               return (
-                <button
+                <SheetActionLine
                   key={action.id}
-                  type="button"
-                  className={`forge-btn ghost sheet-combat-action${disabled ? ' sheet-combat-action-disabled' : ''}`}
+                  name={action.name}
+                  imageUrl={action.imageUrl}
+                  sourceLabel={action.sourceLabel ?? (action.group === 'basic' ? 'Базовое действие' : undefined)}
+                  description={action.group === 'basic' ? action.name : undefined}
+                  level={action.level}
+                  actionRef={action.actionRef}
+                  effectRef={action.effectRef}
+                  spellRef={action.spellRef}
                   disabled={disabled}
-                  title={disabled ? 'Недостаточно ресурсов' : action.name}
-                  onClick={() => runAction(action)}
-                >
-                  {actionIcon(action)}
-                  {action.name}
-                  {action.group === 'spell' && action.level != null && (
-                    <span className="sheet-action-lvl">{action.level === 0 ? 'З' : action.level}</span>
-                  )}
-                </button>
+                  disabledTitle="Недостаточно ресурсов"
+                  onActivate={() => runAction(action)}
+                />
               );
             })}
           </div>
         </div>
       ))}
 
+      {runtime.activeEffects.length > 0 && (
+        <div className="sheet-group" style={{ marginTop: 8 }}>
+          <h3 className="sheet-h3">Активные эффекты</h3>
+          <ul className="sheet-active-effects">
+            {runtime.activeEffects.map((fx) => (
+              <li key={fx.id} className="sheet-active-effect">
+                <span className="sheet-active-effect-name">{fx.name}</span>
+                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry)}</span>
+                <button
+                  type="button"
+                  className="sheet-active-effect-dismiss"
+                  disabled={busy}
+                  title="Снять вручную"
+                  onClick={() => handleDismissEffect(fx.id)}
+                >
+                  <X size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <section className="sheet-panel sheet-panel-wide">
+      <h2 className="sheet-h2">Действия</h2>
+      {body}
       <p className="forge-note" style={{ marginTop: 8 }}>
-        Атаки и спасброски используют КЗ/СЛ цели выше. Результаты — в журнале с анимацией броска.
+        Атаки используют КЗ цели выше. Результаты — в журнале с анимацией броска.
       </p>
     </section>
   );

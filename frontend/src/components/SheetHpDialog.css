@@ -1,0 +1,58 @@
+.cs-hp-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.cs-hp-dialog {
+  width: min(420px, 100%);
+  border: 1px solid var(--forge-line);
+  border-radius: 12px;
+  background: var(--forge-panel);
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+.cs-hp-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.cs-hp-dialog-title {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--forge-text-dim);
+}
+.cs-hp-dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--forge-line);
+  border-radius: 6px;
+  background: var(--forge-panel-2);
+  color: var(--forge-text);
+  padding: 4px;
+  cursor: pointer;
+}
+.cs-hp-dialog-close:hover { border-color: var(--forge-gold-dim); }
+.csheet-top .cs-hp-btn {
+  cursor: pointer;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+.csheet-top .cs-hp-btn:hover .cs-hp-bar i { filter: brightness(1.15); }
+.csheet-top .cs-hp-btn:focus-visible {
+  outline: 2px solid var(--forge-gold-dim);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

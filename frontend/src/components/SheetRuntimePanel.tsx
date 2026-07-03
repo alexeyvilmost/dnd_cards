@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Moon, Sun, Swords, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
@@ -13,8 +13,8 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
-import { longRest, shortRest, startTurn } from '../engine/turn';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import SheetRestButtons from './SheetRestButtons';
 
 interface Props {
   character: ForgeCharacter;
@@ -112,23 +112,6 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
 
   const resourceKeys = Object.keys(runtime.maxResources).filter((k) => runtime.maxResources[k] > 0);
 
-  const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
-
-  const handleStartTurn = () => {
-    const { state, events } = startTurn(runtime);
-    apply(state, events);
-  };
-
-  const handleShortRest = () => {
-    const { state, events } = shortRest(runtime, restCtx);
-    apply(state, events);
-  };
-
-  const handleLongRest = () => {
-    const { state, events } = longRest(runtime, restCtx);
-    apply(state, events);
-  };
-
   const handleDismissEffect = (effectId: string) => {
     const { state, events } = removeActiveEffect(runtime, effectId);
     apply(state, events);
@@ -155,17 +138,13 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         )}
       </div>
 
-      <div className="sheet-runtime-actions">
-        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleStartTurn}>
-          <Swords size={14} /> Новый ход
-        </button>
-        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleShortRest} title="Короткий отдых: +50% max HP и заряды умений">
-          <Sun size={14} /> Короткий отдых
-        </button>
-        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleLongRest}>
-          <Moon size={14} /> Длинный отдых
-        </button>
-      </div>
+      <SheetRestButtons
+        character={character}
+        assembled={assembled}
+        ruleState={ruleState}
+        onUpdated={onUpdated}
+        onEvents={onEvents}
+      />
 
       {runtime.activeEffects.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 12 }}>
