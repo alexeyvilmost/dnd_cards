@@ -55,3 +55,34 @@ export function sortByInitiative(characters: InitiativeCharacter[]): InitiativeC
     return a.name.localeCompare(b.name, 'ru');
   });
 }
+
+/** Следующий цвет для копии — отличный от исходного и по возможности свободный. */
+export function pickCopyColor(
+  sourceColor: InitiativeColorId,
+  usedColors: InitiativeColorId[],
+): InitiativeColorId {
+  const used = new Set(usedColors);
+  const ids = INITIATIVE_COLORS.map((c) => c.id);
+  const start = (ids.indexOf(sourceColor) + 1 + ids.length) % ids.length;
+
+  for (let offset = 0; offset < ids.length; offset += 1) {
+    const candidate = ids[(start + offset) % ids.length];
+    if (candidate !== sourceColor && !used.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  return ids[(ids.indexOf(sourceColor) + 1) % ids.length];
+}
+
+export function duplicateCharacter(
+  source: InitiativeCharacter,
+  usedColors: InitiativeColorId[],
+): InitiativeCharacter {
+  return {
+    ...source,
+    id: crypto.randomUUID(),
+    color: pickCopyColor(source.color, usedColors),
+    initiative: 0,
+  };
+}

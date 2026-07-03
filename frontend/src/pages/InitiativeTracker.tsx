@@ -3,11 +3,12 @@ import { Plus, Swords, RotateCcw, SkipForward, Play, Download } from 'lucide-rea
 import InitiativeCharacterBlock from '../components/initiative/InitiativeCharacterBlock';
 import {
   createEmptyCharacter,
+  duplicateCharacter,
   sortByInitiative,
   type InitiativeCharacter,
   type InitiativeTrackerState,
 } from '../types/initiative';
-import { importFromDndSuUrl, isDndSuBestiaryUrl } from '../utils/dndSuBestiary';
+import { importFromTtgClubUrl, isTtgClubBestiaryUrl } from '../utils/ttgClubBestiary';
 
 const STORAGE_KEY = 'initiative-tracker-v1';
 
@@ -82,16 +83,16 @@ const InitiativeTracker: React.FC = () => {
     setManualOrder(null);
   };
 
-  const importFromDndSu = async () => {
+  const importFromTtgClub = async () => {
     setImportError(null);
-    if (!isDndSuBestiaryUrl(importUrl)) {
-      setImportError('Вставьте ссылку на монстра с next.dnd.su или 5e14.dnd.su');
+    if (!isTtgClubBestiaryUrl(importUrl)) {
+      setImportError('Вставьте ссылку на монстра с new.ttg.club/bestiary/...');
       return;
     }
 
     setIsImporting(true);
     try {
-      const data = await importFromDndSuUrl(importUrl);
+      const data = await importFromTtgClubUrl(importUrl);
       const character = createEmptyCharacter();
       character.name = data.name;
       character.ac = data.ac;
@@ -110,6 +111,18 @@ const InitiativeTracker: React.FC = () => {
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const copyCharacter = (id: string) => {
+    const source = state.characters.find((c) => c.id === id);
+    if (!source) return;
+
+    const copy = duplicateCharacter(source, state.characters.map((c) => c.color));
+    setState((prev) => ({
+      ...prev,
+      characters: [...prev.characters, copy],
+    }));
+    setManualOrder(null);
   };
 
   const removeCharacter = (id: string) => {
@@ -238,26 +251,26 @@ const InitiativeTracker: React.FC = () => {
               if (importError) setImportError(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') void importFromDndSu();
+              if (e.key === 'Enter') void importFromTtgClub();
             }}
-            placeholder="https://next.dnd.su/bestiary/21552-skeleton/"
+            placeholder="https://new.ttg.club/bestiary/skeleton-mm"
             className="input-field flex-1 text-sm"
           />
           <button
             type="button"
-            onClick={() => void importFromDndSu()}
+            onClick={() => void importFromTtgClub()}
             disabled={isImporting || !importUrl.trim()}
             className="btn-secondary flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
           >
             <Download size={18} />
-            {isImporting ? 'Импорт...' : 'Импорт с dnd.su'}
+            {isImporting ? 'Импорт...' : 'Импорт с ttg.club'}
           </button>
         </div>
         {importError && (
           <p className="text-sm text-red-600">{importError}</p>
         )}
         <p className="text-xs text-gray-500">
-          Подтягиваются имя, КД и макс. HP. Остальное — в описание (видно в развёрнутом блоке).
+          Подтягиваются имя, КД, макс. HP и раздел «Действия» в описание (видно в развёрнутом блоке).
         </p>
       </div>
 
@@ -280,6 +293,7 @@ const InitiativeTracker: React.FC = () => {
               isActive={character.id === activeId}
               onUpdate={updateCharacter}
               onRemove={removeCharacter}
+              onCopy={copyCharacter}
               onRollInitiative={rollInitiative}
               onMoveUp={(id) => moveCharacter(id, -1)}
               onMoveDown={(id) => moveCharacter(id, 1)}

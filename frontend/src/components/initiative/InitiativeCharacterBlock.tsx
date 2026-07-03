@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, ChevronUp, ChevronDown, Dices, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { Trash2, ChevronUp, ChevronDown, Dices, ChevronsDown, ChevronsUp, Copy } from 'lucide-react';
 import {
   INITIATIVE_COLORS,
   getInitiativeColor,
@@ -12,6 +12,7 @@ interface InitiativeCharacterBlockProps {
   isActive: boolean;
   onUpdate: (id: string, patch: Partial<InitiativeCharacter>) => void;
   onRemove: (id: string) => void;
+  onCopy: (id: string) => void;
   onRollInitiative: (id: string) => void;
   onMoveUp: (id: string) => void;
   onMoveDown: (id: string) => void;
@@ -24,6 +25,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
   isActive,
   onUpdate,
   onRemove,
+  onCopy,
   onRollInitiative,
   onMoveUp,
   onMoveDown,
@@ -167,6 +169,15 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
 
           <button
             type="button"
+            onClick={() => onCopy(character.id)}
+            className="flex-shrink-0 p-1 rounded text-gray-600 hover:bg-gray-100"
+            title="Копировать"
+          >
+            <Copy size={16} />
+          </button>
+
+          <button
+            type="button"
             onClick={() => onRemove(character.id)}
             className="flex-shrink-0 p-1 rounded text-red-500 hover:bg-red-50"
             title="Удалить"
@@ -226,6 +237,14 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
               title="Свернуть"
             >
               <ChevronsUp size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onCopy(character.id)}
+              className="p-1 rounded text-gray-600 hover:bg-gray-100"
+              title="Копировать"
+            >
+              <Copy size={18} />
             </button>
             <button
               type="button"
