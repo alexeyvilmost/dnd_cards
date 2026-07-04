@@ -7,6 +7,7 @@ import type { Spell } from '../types';
 import { abilityMod } from './derive';
 import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import ForgeSpellIconGrid from '../components/forge/ForgeSpellIconGrid';
 
 // ─── Левая навигация ─────────────────────────────────────────────────────────
 
@@ -354,8 +355,8 @@ export function SummaryPanel({
 
       {spells.length > 0 && (
         <div className="sum-field" style={{ marginTop: 10 }}>
-          <span className="sum-label" style={{ fontSize: 15 }}>Заклинания: </span>
-          <span className="sum-value" style={{ fontSize: 14 }}>{spells.map((s) => s.name).join(', ')}</span>
+          <span className="sum-label" style={{ fontSize: 15, display: 'block', marginBottom: 6 }}>Заклинания</span>
+          <ForgeSpellIconGrid spells={spells} className="forge-spell-icon-grid sum-spell-grid" />
         </div>
       )}
     </div>

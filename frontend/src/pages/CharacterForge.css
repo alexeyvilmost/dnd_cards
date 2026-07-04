@@ -174,7 +174,10 @@
 .forge-square-card-placeholder { font-size: 36px; color: var(--forge-text); font-weight: 300; line-height: 1; }
 .forge-square-card-label {
   font-size: 14px; color: var(--forge-gold); text-align: center; margin-top: 4px; line-height: 1.2;
+  word-break: break-word; hyphens: auto; max-width: 100%;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
+.forge-square-card-label.long { font-size: 11px; line-height: 1.15; -webkit-line-clamp: 4; }
 
 /* Секции/заголовки */
 .forge-section-h { color: var(--forge-gold); font-size: 16px; font-weight: 600; margin: 4px 0 10px; }
@@ -607,6 +610,24 @@
 .forge-desc-block { text-align: center; }
 .forge-entity-name { font-family: Georgia, serif; font-size: 20px; color: var(--forge-gold); margin-bottom: 6px; }
 .forge-desc-block .forge-note { text-align: center; max-width: 560px; margin: 0 auto; }
+.forge-desc-text { text-align: left !important; margin-bottom: 12px !important; }
+
+.forge-traits-block { text-align: left; max-width: 560px; margin: 14px auto 0; }
+.forge-traits-block .forge-section-h { text-align: left; margin-bottom: 8px; }
+.forge-traits-list { display: flex; flex-direction: column; gap: 8px; }
+.forge-trait { font-size: 13px; color: var(--forge-text); line-height: 1.45; }
+.forge-trait-name { color: var(--forge-gold); font-weight: 600; }
+
+.forge-origin-abilities { text-align: left; max-width: 560px; margin: 0 auto; }
+.forge-origin-abilities .forge-section-h { text-align: left; }
+.forge-ability-lines { display: flex; flex-direction: column; gap: 3px; }
+
+.forge-entity-preview-pop {
+  position: fixed; z-index: 200; pointer-events: none;
+  width: min(320px, calc(100vw - 24px));
+}
+
+.sum-spell-grid { justify-content: flex-start; }
 
 /* Чекбокс «Сменить черту» */
 .forge-check { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; cursor: pointer; font-size: 14px; color: var(--forge-text); }

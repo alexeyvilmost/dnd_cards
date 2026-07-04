@@ -15,11 +15,17 @@ import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../char
 import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
+import ForgeTraitsBlock from '../components/forge/ForgeTraitsBlock';
+import ForgeOriginAbilities from '../components/forge/ForgeOriginAbilities';
+import RacePreview from '../components/RacePreview';
+import ClassPreview from '../components/ClassPreview';
+import BackgroundPreview from '../components/BackgroundPreview';
 import SpellPreview from '../components/SpellPreview';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { isEntityUuid } from '../engine/ids';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
+import { FormattedText } from '../utils/formattedText';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -266,7 +272,8 @@ const CharacterForge = () => {
   const featChoices = assembled.pendingChoices.filter((pc) => pc.source === 'feat');
 
   // Условия появления вкладок
-  const hasSubrace = (assembled.race?.lineages?.length ?? 0) > 0 || raceSubChoices.length > 0;
+  const lineageCount = assembled.race?.lineages?.length ?? 0;
+  const hasSubrace = lineageCount > 1 || raceSubChoices.length > 0;
   const hasSubclass = classSubChoices.length > 0;
   const hasSpells = spellChoices.length > 0 || grantedSpells.length > 0;
   const hasFeatTab = !!draft.swapFeat || featChoices.length > 0;
@@ -278,7 +285,7 @@ const CharacterForge = () => {
   const classDone = !!draft.classId && (!sc || draft.classSkillChoices.length >= sc.count)
     && classOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const raceDone = !!draft.raceId && raceOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
-  const subraceDone = !!draft.lineageId || raceSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const subraceDone = !hasSubrace || !!draft.lineageId || raceSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const subclassDone = classSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const featDone = featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
 
@@ -459,7 +466,14 @@ function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, r
       <div className="forge-block">
         <div className="forge-square-grid">
           {races.map((r: Race) => (
-            <EntitySquareCard key={r.id} name={r.name} imageUrl={r.image_url} selected={draft.raceId === r.id} onClick={() => onSelect(r.id)} />
+            <EntitySquareCard
+              key={r.id}
+              name={r.name}
+              imageUrl={r.image_url}
+              selected={draft.raceId === r.id}
+              onClick={() => onSelect(r.id)}
+              preview={<RacePreview race={r} disableHover />}
+            />
           ))}
           {races.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
         </div>
@@ -467,7 +481,12 @@ function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, r
       {race && (
         <div className="forge-block forge-desc-block">
           <div className="forge-entity-name">{race.name}</div>
-          {race.description && <p className="forge-note">{race.description}</p>}
+          {race.description && (
+            <p className="forge-note"><FormattedText text={race.description} emptyText="" /></p>
+          )}
+          {race.traits && race.traits.length > 0 && (
+            <ForgeTraitsBlock traits={race.traits} />
+          )}
         </div>
       )}
       <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
@@ -509,7 +528,14 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
       <div className="forge-block">
         <div className="forge-square-grid">
           {classes.map((c: CharacterClass) => (
-            <EntitySquareCard key={c.id} name={c.name} imageUrl={c.image_url} selected={draft.classId === c.id} onClick={() => onSelect(c.id)} />
+            <EntitySquareCard
+              key={c.id}
+              name={c.name}
+              imageUrl={c.image_url}
+              selected={draft.classId === c.id}
+              onClick={() => onSelect(c.id)}
+              preview={<ClassPreview characterClass={c} disableHover />}
+            />
           ))}
           {classes.length === 0 && <p className="forge-note">Нет классов в базе.</p>}
         </div>
@@ -517,8 +543,13 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
       {klass && (
         <div className="forge-block forge-desc-block">
           <div className="forge-entity-name">{klass.name}{klass.hit_die ? ` · кость хитов ${klass.hit_die}` : ''}</div>
-          {klass.description && <p className="forge-note">{klass.description}</p>}
+          {klass.description && (
+            <p className="forge-note"><FormattedText text={klass.description} emptyText="" /></p>
+          )}
         </div>
+      )}
+      {draft.classId && assembled && (
+        <ForgeOriginAbilities assembled={assembled} kind="class" fallbackImageUrl={klass?.image_url} />
       )}
       {sc && (
         <div className="forge-block">
@@ -557,24 +588,36 @@ function SubclassSection({ choices, resolved, setResolved, ruleState, klass }: a
 }
 
 function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleSwapFeat }: any) {
+  const bgFromList = backgrounds.find((b: Background) => b.id === draft.backgroundId) as Background | undefined;
+  const bg = background ?? bgFromList;
   return (
     <div>
       <div className="forge-block">
         <div className="forge-square-grid">
           {backgrounds.map((b: Background) => (
-            <EntitySquareCard key={b.id} name={b.name} imageUrl={b.image_url} selected={draft.backgroundId === b.id} onClick={() => onSelect(b.id)} />
+            <EntitySquareCard
+              key={b.id}
+              name={b.name}
+              imageUrl={b.image_url}
+              selected={draft.backgroundId === b.id}
+              onClick={() => onSelect(b.id)}
+              preview={<BackgroundPreview background={b} disableHover />}
+            />
           ))}
           {backgrounds.length === 0 && <p className="forge-note">Нет предысторий в базе.</p>}
         </div>
       </div>
-      {background && (
+      {bg && (
         <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{background.name}</div>
+          <div className="forge-entity-name">{bg.name}</div>
+          {bg.description && (
+            <p className="forge-note forge-desc-text"><FormattedText text={bg.description} emptyText="" /></p>
+          )}
           <p className="forge-note">
-            Навыки: {(background.skill_proficiencies || []).map((s: string) => labelOf(SKILLS, s)).join(', ') || '—'}<br />
-            Инструмент: {background.tool_proficiency || '—'}<br />
-            Характеристики: {(background.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}<br />
-            Черта происхождения: {background.origin_feat || '—'}
+            Навыки: {(bg.skill_proficiencies || []).map((s: string) => labelOf(SKILLS, s)).join(', ') || '—'}<br />
+            Инструмент: {bg.tool_proficiency || '—'}<br />
+            Характеристики: {(bg.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}<br />
+            Черта происхождения: {bg.origin_feat || '—'}
           </p>
           <label className="forge-check">
             <input type="checkbox" checked={!!draft.swapFeat} onChange={(e) => onToggleSwapFeat(e.target.checked)} />
