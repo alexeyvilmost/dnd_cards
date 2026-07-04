@@ -22,18 +22,19 @@ export function ForgeNav({
   sections, active, onSelect,
 }: { sections: ForgeSectionDef[]; active: string; onSelect: (id: string) => void }) {
   return (
-    <nav className="forge-nav">
+    <nav className="forge-rail">
       {sections.map((s) => (
         <button
           key={s.id}
-          className={`forge-nav-item ${active === s.id ? 'active' : ''}`}
+          className={`rail-step ${active === s.id ? 'active' : ''} ${s.status === 'todo' ? 'todo' : ''}`}
           onClick={() => onSelect(s.id)}
           type="button"
         >
-          {s.status && <span className={`dot ${s.status === 'ok' ? 'dot-ok' : 'dot-todo'}`} />}
-          <span className="forge-nav-label">{s.label}</span>
-          <span style={{ height: 22, display: 'flex', alignItems: 'center' }}>{s.icon}</span>
-          {s.sub && <span className="forge-nav-sub">{s.sub}</span>}
+          <span className={`rail-medal ${s.status === 'ok' ? 'ok' : ''}`}>{s.icon}</span>
+          <span className="rail-txt">
+            <span className="rail-label">{s.label}</span>
+            {s.sub && <span className="rail-sub">{s.sub}</span>}
+          </span>
         </button>
       ))}
     </nav>

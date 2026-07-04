@@ -30,6 +30,7 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
     classSkillChoices,
     resolvedChoices: c.resolved_choices || {},
+    swapFeat: (c.feat_ids || []).length > 0,
   };
 }
 

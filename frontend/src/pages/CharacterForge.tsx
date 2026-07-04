@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Home, User, Swords, ScrollText, Star, Zap, ListChecks, Sparkles, FileText } from 'lucide-react';
+import { User, Users, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -8,19 +8,18 @@ import { charactersV3Api } from '../character/api';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch } from '../character/resourceInit';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
-import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, ABILITY_LABEL_RU, type CharacterDraft, type AbilityKey } from '../character/types';
+import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, type CharacterDraft, type AbilityKey } from '../character/types';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
-import { ForgeNav, SummaryPanel, EntityChoiceCard, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
+import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SpellPreview from '../components/SpellPreview';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { isEntityUuid } from '../engine/ids';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
-import { abilityMod } from '../character/derive';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -39,10 +38,20 @@ const CharacterForge = () => {
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
   const [bundle, setBundle] = useState<EntityBundle | null>(null);
   const [manualAbilities, setManualAbilities] = useState(false);
-  const [active, setActive] = useState('main');
+  const [active, setActive] = useState('race');
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paper, setPaper] = useState<boolean>(() => {
+    try { return localStorage.getItem('forge-theme') === 'paper'; } catch { return false; }
+  });
+  const toggleTheme = useCallback(() => {
+    setPaper((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('forge-theme', next ? 'paper' : 'dark'); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
   const savedSkillsRef = useRef<string[]>([]);
   const restoredClassSkillsRef = useRef(false);
 
@@ -140,16 +149,11 @@ const CharacterForge = () => {
       const byId = new Map<string, Spell>();
       for (const slug of slugs) {
         const cached = spellIndex.bySlug.get(slug);
-        if (cached) {
-          byId.set(cached.id, cached);
-          continue;
-        }
+        if (cached) { byId.set(cached.id, cached); continue; }
         try {
           const s = await spellsApi.getSpell(slug);
           if (s?.id) byId.set(s.id, s);
-        } catch {
-          /* slug не найден */
-        }
+        } catch { /* slug не найден */ }
       }
       if (!stale) setResolvedGrantedSpells([...byId.values()]);
     })();
@@ -173,11 +177,17 @@ const CharacterForge = () => {
   );
   const spellsDone = spellChoices.length === 0 || selectedSpellCount >= requiredSpellCount;
 
-  // Синхронизация lineage_id из subfeature-выбора вида
+  // ── Выборы, сгруппированные по назначению вкладок ──
   const subfeatureChoice = useMemo(
     () => assembled.pendingChoices.find((pc) => pc.origin.kind === 'race' && pc.source === 'subfeature'),
     [assembled.pendingChoices],
   );
+  const classSubfeatureChoice = useMemo(
+    () => assembled.pendingChoices.find((pc) => pc.origin.kind === 'class' && pc.source === 'subfeature'),
+    [assembled.pendingChoices],
+  );
+
+  // Синхронизация lineage_id из subfeature-выбора вида
   useEffect(() => {
     if (!subfeatureChoice) return;
     const sel = draft.resolvedChoices[subfeatureChoice.id]?.[0] ?? null;
@@ -192,9 +202,7 @@ const CharacterForge = () => {
     if (!sc?.options.length) return;
     const opts = new Set(sc.options.map(normalizeSkillId));
     const classSkills = normalizeSkillList(savedSkillsRef.current).filter((s) => opts.has(s));
-    if (classSkills.length) {
-      setDraft((d) => ({ ...d, classSkillChoices: classSkills }));
-    }
+    if (classSkills.length) setDraft((d) => ({ ...d, classSkillChoices: classSkills }));
     restoredClassSkillsRef.current = true;
   }, [editId, bundle?.klass, draft.classId]);
 
@@ -211,7 +219,7 @@ const CharacterForge = () => {
     });
   }, []);
   const toggleFeat = (fid: string) =>
-    patch({ featIds: draft.featIds.includes(fid) ? draft.featIds.filter((x) => x !== fid) : [...draft.featIds, fid] });
+    patch({ featIds: draft.featIds.includes(fid) ? draft.featIds.filter((x) => x !== fid) : [fid] });
   const selectClass = (cid: string) => patch({ classId: cid, classSkillChoices: [] });
   const toggleClassSkill = (skill: string) => {
     const sc = classSkillChoice(assembled);
@@ -237,9 +245,7 @@ const CharacterForge = () => {
         : await charactersV3Api.create(payload);
       const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
       const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true);
-      if (runtimePatch) {
-        await charactersV3Api.patchRuntime(res.id, runtimePatch);
-      }
+      if (runtimePatch) await charactersV3Api.patchRuntime(res.id, runtimePatch);
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id }));
     } catch (e) {
@@ -250,96 +256,126 @@ const CharacterForge = () => {
     }
   };
 
-  // Разделы навигации со статусами
-  const raceChoicesRace = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'race' && pc.source !== 'spell');
+  // Выборы по источникам / типам
+  const raceChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'race' && pc.source !== 'spell');
+  const raceOtherChoices = raceChoices.filter((pc) => pc.source !== 'subfeature');
+  const raceSubChoices = raceChoices.filter((pc) => pc.source === 'subfeature');
   const classChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'class' && pc.source !== 'spell');
-  const featChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'feat' && pc.source !== 'spell');
+  const classOtherChoices = classChoices.filter((pc) => pc.source !== 'subfeature');
+  const classSubChoices = classChoices.filter((pc) => pc.source === 'subfeature');
+  const featChoices = assembled.pendingChoices.filter((pc) => pc.source === 'feat');
+
+  // Условия появления вкладок
+  const hasSubrace = (assembled.race?.lineages?.length ?? 0) > 0 || raceSubChoices.length > 0;
+  const hasSubclass = classSubChoices.length > 0;
+  const hasSpells = spellChoices.length > 0 || grantedSpells.length > 0;
+  const hasFeatTab = !!draft.swapFeat || featChoices.length > 0;
+
+  // Статусы завершённости
   const abilitiesDone = ABILITY_KEYS.every((k) => typeof draft.abilities[k] === 'number');
+  const abilitiesAssigned = ABILITY_KEYS.filter((k) => typeof draft.abilities[k] === 'number').length;
   const sc = classSkillChoice(assembled);
   const classDone = !!draft.classId && (!sc || draft.classSkillChoices.length >= sc.count)
-    && classChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
-  const raceDone = !!draft.raceId && raceChoicesRace.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+    && classOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const raceDone = !!draft.raceId && raceOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const subraceDone = !!draft.lineageId || raceSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const subclassDone = classSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const featDone = featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
 
-  const sections: ForgeSectionDef[] = [
-    { id: 'main', label: 'Общее', icon: <Home size={20} /> },
-    { id: 'race', label: 'Вид', icon: <User size={20} />, sub: assembled.race?.name, status: raceDone ? 'ok' : 'todo' },
-    { id: 'class', label: 'Класс', icon: <Swords size={20} />, sub: assembled.klass?.name, status: classDone ? 'ok' : 'todo' },
-    { id: 'background', label: 'Предыстория', icon: <ScrollText size={20} />, sub: assembled.background?.name, status: draft.backgroundId ? 'ok' : 'todo' },
-    { id: 'feat', label: 'Черта', icon: <Star size={20} />, sub: assembled.feats[0]?.name, status: featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count) ? 'ok' : 'todo' },
-    { id: 'abilities', label: 'Хар-тики', icon: <Zap size={20} />, status: abilitiesDone ? 'ok' : 'todo' },
-    { id: 'proficiencies', label: 'Владения', icon: <ListChecks size={20} /> },
-    { id: 'spells', label: 'Заклинания', icon: <Sparkles size={20} />, sub: spellChoices.length ? (selectedSpellCount ? `${selectedSpellCount}/${requiredSpellCount}` : undefined) : (grantedSpells.length ? `${grantedSpells.length} получено` : undefined), status: spellChoices.length ? (spellsDone ? 'ok' : 'todo') : (grantedSpells.length ? 'ok' : null) },
-  ];
+  const lineageName = draft.lineageId
+    ? (assembled.race?.lineages?.find((l) => l.name === draft.lineageId)?.name
+      || raceSubChoices[0]?.items?.find((it) => it.id === draft.lineageId)?.name
+      || draft.lineageId)
+    : undefined;
+  const subclassSel = classSubfeatureChoice ? draft.resolvedChoices[classSubfeatureChoice.id]?.[0] : undefined;
+  const subclassName = classSubfeatureChoice?.items?.find((it) => it.id === subclassSel)?.name || subclassSel;
 
-  const sectionTitle = sections.find((s) => s.id === active)?.label ?? 'Основное';
+  // Динамический список вкладок
+  const sections: ForgeSectionDef[] = [];
+  sections.push({ id: 'race', label: 'Вид', icon: <User size={19} />, sub: assembled.race?.name, status: raceDone ? 'ok' : 'todo' });
+  if (hasSubrace) sections.push({ id: 'subrace', label: 'Подвид', icon: <Users size={19} />, sub: lineageName, status: subraceDone ? 'ok' : 'todo' });
+  sections.push({ id: 'class', label: 'Класс', icon: <Swords size={19} />, sub: assembled.klass?.name, status: classDone ? 'ok' : 'todo' });
+  if (hasSubclass) sections.push({ id: 'subclass', label: 'Подкласс', icon: <Shield size={19} />, sub: subclassName, status: subclassDone ? 'ok' : 'todo' });
+  if (hasSpells) sections.push({ id: 'spells', label: 'Заклинания', icon: <Sparkles size={19} />, sub: spellChoices.length ? `${selectedSpellCount}/${requiredSpellCount}` : `${grantedSpells.length} получено`, status: spellsDone ? 'ok' : 'todo' });
+  sections.push({ id: 'background', label: 'Предыстория', icon: <ScrollText size={19} />, sub: assembled.background?.name, status: draft.backgroundId ? 'ok' : 'todo' });
+  if (hasFeatTab) sections.push({ id: 'feat', label: 'Черта', icon: <Star size={19} />, sub: assembled.feats[0]?.name, status: featDone ? 'ok' : 'todo' });
+  sections.push({ id: 'abilities', label: 'Характеристики', icon: <Zap size={19} />, sub: `${abilitiesAssigned}/6`, status: abilitiesDone ? 'ok' : 'todo' });
+
+  const act = sections.some((s) => s.id === active) ? active : 'race';
+  const sectionTitle = sections.find((s) => s.id === act)?.label ?? 'Вид';
+  const rootCls = paper ? 'forge sheet-paper' : 'forge';
 
   return (
-    <div className="forge">
+    <div className={rootCls}>
       <div className="forge-header sheet-header-bar">
         <span>Создание персонажа</span>
-        {(savedId || draft.id) && (
-          <Link
-            to={`/characters-v3/${savedId || draft.id}`}
-            className="sheet-edit forge-header-sheet-link"
-            title="Открыть лист персонажа"
+        <div className="sheet-header-actions">
+          <button
+            type="button"
+            className="sheet-header-btn"
+            onClick={toggleTheme}
+            title={paper ? 'Тёмная тема' : 'Светлая тема'}
           >
-            <FileText size={16} />
-            <span>Лист</span>
-          </Link>
-        )}
+            {paper ? <Moon size={16} /> : <Sun size={16} />}
+            <span className="sheet-header-btn-label">{paper ? 'Тёмная' : 'Светлая'}</span>
+          </button>
+          {(savedId || draft.id) && (
+            <Link to={`/characters-v3/${savedId || draft.id}`} className="sheet-edit forge-header-sheet-link" title="Открыть лист персонажа">
+              <FileText size={16} />
+              <span>Лист</span>
+            </Link>
+          )}
+        </div>
       </div>
+
       <div className="forge-body">
-        <ForgeNav sections={sections} active={active} onSelect={setActive} />
+        <ForgeNav sections={sections} active={act} onSelect={setActive} />
         <div className="forge-main">
-          <div className="forge-main-title">{active === 'main' ? 'Основное' : sectionTitle}</div>
+          <div className="forge-main-title">{sectionTitle}</div>
           <div className="forge-cols">
-            <div className="forge-summary">
-              <SummaryPanel draft={draft} assembled={assembled} spells={selectedSpells} />
-            </div>
+            {/* ЦЕНТР: блок выбора */}
             <div className="forge-editor">
-              {active === 'main' && (
-                <MainSection
-                  draft={draft} patch={patch} issues={issues} canCreate={canCreate}
-                  saving={saving} onSave={save} savedId={savedId} error={error}
-                  onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
-                />
+              {act === 'race' && (
+                <RaceSection races={races} draft={draft} onSelect={(rid: string) => patch({ raceId: rid, lineageId: null })}
+                  choices={raceOtherChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
-              {active === 'race' && (
-                <RaceSection
-                  races={races} draft={draft} onSelect={(rid: string) => patch({ raceId: rid, lineageId: null })}
-                  choices={raceChoicesRace} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState}
-                  race={assembled.race} hasSubfeature={!!subfeatureChoice}
-                  onPickLineage={(name: string) => patch({ lineageId: name })} lineageId={draft.lineageId}
-                />
+              {act === 'subrace' && (
+                <SubraceSection race={assembled.race} draft={draft} hasSubfeature={raceSubChoices.length > 0}
+                  onPickLineage={(name: string) => patch({ lineageId: name })}
+                  choices={raceSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
-              {active === 'class' && (
-                <ClassSection
-                  classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
-                  onToggleSkill={toggleClassSkill} choices={classChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState}
-                />
+              {act === 'class' && (
+                <ClassSection classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
+                  onToggleSkill={toggleClassSkill} choices={classOtherChoices} resolved={draft.resolvedChoices}
+                  setResolved={setResolved} ruleState={ruleState} />
               )}
-              {active === 'background' && (
-                <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={(bid: string) => patch({ backgroundId: bid })} background={assembled.background} />
+              {act === 'subclass' && (
+                <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} />
               )}
-              {active === 'feat' && (
-                <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} choices={featChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
+              {act === 'spells' && (
+                <SpellsSection spells={spells} granted={grantedSpells} choices={spellChoices} resolved={draft.resolvedChoices} setResolved={setResolved} />
               )}
-              {active === 'abilities' && (
-                <AbilityAssigner
-                  abilities={draft.abilities} standardArray={STANDARD_ARRAY} manual={manualAbilities}
-                  onSet={setAbility} onToggleManual={setManualAbilities}
-                />
+              {act === 'background' && (
+                <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={(bid: string) => patch({ backgroundId: bid })}
+                  background={assembled.background} onToggleSwapFeat={(v: boolean) => patch({ swapFeat: v })} />
               )}
-              {active === 'proficiencies' && <ProficienciesSection draft={draft} assembled={assembled} ruleState={ruleState} />}
-              {active === 'spells' && (
-                <SpellsSection
-                  spells={spells}
-                  granted={grantedSpells}
-                  choices={spellChoices}
-                  resolved={draft.resolvedChoices}
-                  setResolved={setResolved}
-                />
+              {act === 'feat' && (
+                <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} swapFeat={!!draft.swapFeat}
+                  choices={featChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
+              {act === 'abilities' && (
+                <AbilityAssigner abilities={draft.abilities} standardArray={STANDARD_ARRAY} manual={manualAbilities}
+                  onSet={setAbility} onToggleManual={setManualAbilities} />
+              )}
+            </div>
+
+            {/* СПРАВА: обзор персонажа + имя + создание */}
+            <div className="forge-summary">
+              <OverviewPanel
+                draft={draft} patch={patch} assembled={assembled} spells={selectedSpells}
+                issues={issues} canCreate={canCreate} saving={saving} onSave={save}
+                savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
+              />
             </div>
           </div>
         </div>
@@ -348,52 +384,55 @@ const CharacterForge = () => {
   );
 };
 
-// ─── Секции ────────────────────────────────────────────────────────────────
+// ─── Правая панель обзора (имя + résumé + создание) ──────────────────────────
 
-function MainSection({ draft, patch, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
-  draft: CharacterDraft; patch: (p: Partial<CharacterDraft>) => void; issues: string[]; canCreate: boolean;
-  saving: boolean; onSave: () => void; savedId: string | null; error: string | null; onOpenSheet: () => void;
+function OverviewPanel({ draft, patch, assembled, spells, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
+  draft: CharacterDraft; patch: (p: Partial<CharacterDraft>) => void; assembled: AssembledCharacter; spells: Spell[];
+  issues: string[]; canCreate: boolean; saving: boolean; onSave: () => void; savedId: string | null;
+  error: string | null; onOpenSheet: () => void;
 }) {
   return (
-    <div>
+    <div className="forge-overview">
       <div className="forge-block">
         <div className="forge-section-h">Имя персонажа</div>
         <input className="forge-input" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Фарадей фон Грасс" />
       </div>
 
-      {savedId ? (
-        <div className="forge-success">
-          <div className="sum-label" style={{ fontSize: 16 }}>Персонаж сохранён ✓</div>
-          <p className="forge-note">ID: {savedId}</p>
-          <button className="forge-btn" onClick={onOpenSheet}>Открыть лист</button>
-        </div>
-      ) : (
-        <div className="forge-block">
-          <div className="forge-section-h">Готовность</div>
-          {issues.length === 0 ? (
-            <p className="choice-count done">Всё заполнено — можно создавать.</p>
-          ) : (
-            <ul className="issues">{issues.map((it, i) => <li key={i}>{it}</li>)}</ul>
-          )}
-          {error && <p className="issues" style={{ color: 'var(--forge-danger)' }}>{error}</p>}
-          <button className="forge-btn" disabled={!canCreate || saving} onClick={onSave}>
-            {saving ? 'Сохранение…' : draft.id ? 'Сохранить' : 'Создать персонажа'}
-          </button>
-        </div>
-      )}
+      <SummaryPanel draft={draft} assembled={assembled} spells={spells} />
+
+      <div className="forge-overview-footer">
+        {savedId ? (
+          <div className="forge-success">
+            <div className="sum-label" style={{ fontSize: 15 }}>Персонаж сохранён ✓</div>
+            <button className="forge-btn" onClick={onOpenSheet}>Открыть лист</button>
+          </div>
+        ) : (
+          <>
+            {issues.length > 0 && (
+              <ul className="issues forge-overview-issues">{issues.slice(0, 4).map((it, i) => <li key={i}>{it}</li>)}</ul>
+            )}
+            {error && <p className="issues" style={{ color: 'var(--forge-danger)' }}>{error}</p>}
+            <button className="forge-btn forge-create-btn" disabled={!canCreate || saving} onClick={onSave}>
+              {saving ? 'Сохранение…' : draft.id ? 'Сохранить' : 'Создать персонажа'}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function ChoiceList({ choices, resolved, setResolved, ruleState }: {
+// ─── Общий список выборов ────────────────────────────────────────────────────
+
+function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выборы' }: {
   choices: PendingChoice[];
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
-  ruleState: CharacterRuleState;
+  ruleState: CharacterRuleState; title?: string;
 }) {
   if (!choices.length) return null;
   return (
     <div className="forge-block">
-      <div className="forge-section-h">Выборы</div>
+      <div className="forge-section-h">{title}</div>
       {choices.map((pc) => {
         const value = resolved[pc.id] || [];
         const unavailableOptions = pc.source === 'skill'
@@ -404,68 +443,83 @@ function ChoiceList({ choices, resolved, setResolved, ruleState }: {
           }).filter(([, reason]) => !!reason)) as Record<string, string>
           : undefined;
         return (
-          <ChoiceResolver
-            key={pc.id}
-            choice={pc}
-            value={value}
-            unavailableOptions={unavailableOptions}
-            onChange={(v) => setResolved(pc.id, v)}
-          />
+          <ChoiceResolver key={pc.id} choice={pc} value={value} unavailableOptions={unavailableOptions} onChange={(v) => setResolved(pc.id, v)} />
         );
       })}
     </div>
   );
 }
 
-function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, ruleState, race, hasSubfeature, onPickLineage, lineageId }: any) {
+// ─── Секции ────────────────────────────────────────────────────────────────
+
+function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, ruleState }: any) {
+  const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   return (
     <div>
       <div className="forge-block">
-        <div className="forge-section-h">Вид</div>
         <div className="forge-square-grid">
           {races.map((r: Race) => (
-            <EntitySquareCard
-              key={r.id}
-              name={r.name}
-              imageUrl={r.image_url}
-              selected={draft.raceId === r.id}
-              onClick={() => onSelect(r.id)}
-            />
+            <EntitySquareCard key={r.id} name={r.name} imageUrl={r.image_url} selected={draft.raceId === r.id} onClick={() => onSelect(r.id)} />
           ))}
           {races.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
         </div>
       </div>
-
-      {race?.lineages?.length > 0 && !hasSubfeature && (
-        <div className="forge-block">
-          <div className="forge-section-h">Подвид</div>
-          <div className="forge-grid">
-            {race.lineages.map((l: { name: string; description?: string }) => (
-              <EntityChoiceCard key={l.name} name={l.name} subtitle={l.description} selected={lineageId === l.name} onClick={() => onPickLineage(l.name)} />
-            ))}
-          </div>
+      {race && (
+        <div className="forge-block forge-desc-block">
+          <div className="forge-entity-name">{race.name}</div>
+          {race.description && <p className="forge-note">{race.description}</p>}
         </div>
       )}
-
       <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
+    </div>
+  );
+}
+
+function SubraceSection({ race, draft, hasSubfeature, onPickLineage, choices, resolved, setResolved, ruleState }: any) {
+  return (
+    <div>
+      {race?.lineages?.length > 0 && !hasSubfeature && (
+        <div className="forge-block">
+          <div className="forge-square-grid">
+            {race.lineages.map((l: { name: string; description?: string }) => (
+              <EntitySquareCard key={l.name} name={l.name} selected={draft.lineageId === l.name} onClick={() => onPickLineage(l.name)} />
+            ))}
+          </div>
+          {race.lineages.map((l: { name: string; description?: string }) => (
+            draft.lineageId === l.name && l.description ? (
+              <div key={l.name} className="forge-block forge-desc-block">
+                <div className="forge-entity-name">{l.name}</div>
+                <p className="forge-note">{l.description}</p>
+              </div>
+            ) : null
+          ))}
+        </div>
+      )}
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выберите подвид" />
+      {!race && <p className="forge-note">Сначала выберите вид.</p>}
     </div>
   );
 }
 
 function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState }: any) {
   const sc = classSkillChoice(assembled);
+  const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
   return (
     <div>
       <div className="forge-block">
-        <div className="forge-section-h">Класс</div>
-        <div className="forge-grid">
+        <div className="forge-square-grid">
           {classes.map((c: CharacterClass) => (
-            <EntityChoiceCard key={c.id} name={c.name} subtitle={c.hit_die ? `Кость хитов ${c.hit_die}` : undefined} selected={draft.classId === c.id} onClick={() => onSelect(c.id)} />
+            <EntitySquareCard key={c.id} name={c.name} imageUrl={c.image_url} selected={draft.classId === c.id} onClick={() => onSelect(c.id)} />
           ))}
-          {classes.length === 0 && <p className="forge-note">Нет классов в базе (наполняется в Фазе E).</p>}
+          {classes.length === 0 && <p className="forge-note">Нет классов в базе.</p>}
         </div>
       </div>
-
+      {klass && (
+        <div className="forge-block forge-desc-block">
+          <div className="forge-entity-name">{klass.name}{klass.hit_die ? ` · кость хитов ${klass.hit_die}` : ''}</div>
+          {klass.description && <p className="forge-note">{klass.description}</p>}
+        </div>
+      )}
       {sc && (
         <div className="forge-block">
           <div className="forge-section-h">Навыки класса — выберите {sc.count}</div>
@@ -474,13 +528,9 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
               const selected = draft.classSkillChoices.includes(skill);
               const existing = getSkillGrantSource(ruleState, skill);
               const disabled = !!existing && !selected;
-              const reason = grantReason(existing);
               return (
-                <button key={skill} type="button"
-                  className={`chip ${selected ? 'on' : ''}`}
-                  disabled={disabled}
-                  title={disabled ? reason : undefined}
-                  onClick={() => onToggleSkill(skill)}>
+                <button key={skill} type="button" className={`chip ${selected ? 'on' : ''}`} disabled={disabled}
+                  title={disabled ? grantReason(existing) : undefined} onClick={() => onToggleSkill(skill)}>
                   {labelOf(SKILLS, skill)}
                 </button>
               );
@@ -491,88 +541,66 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           </div>
         </div>
       )}
-
       <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
     </div>
   );
 }
 
-function BackgroundSection({ backgrounds, draft, onSelect, background }: any) {
+function SubclassSection({ choices, resolved, setResolved, ruleState, klass }: any) {
+  if (!klass) return <p className="forge-note">Сначала выберите класс.</p>;
+  return (
+    <div>
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выберите подкласс" />
+      {choices.length === 0 && <p className="forge-note">Для этого класса подкласс на 1 уровне не выбирается.</p>}
+    </div>
+  );
+}
+
+function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleSwapFeat }: any) {
   return (
     <div>
       <div className="forge-block">
-        <div className="forge-section-h">Предыстория</div>
-        <div className="forge-grid">
+        <div className="forge-square-grid">
           {backgrounds.map((b: Background) => (
-            <EntityChoiceCard key={b.id} name={b.name} selected={draft.backgroundId === b.id} onClick={() => onSelect(b.id)} />
+            <EntitySquareCard key={b.id} name={b.name} imageUrl={b.image_url} selected={draft.backgroundId === b.id} onClick={() => onSelect(b.id)} />
           ))}
           {backgrounds.length === 0 && <p className="forge-note">Нет предысторий в базе.</p>}
         </div>
       </div>
       {background && (
-        <div className="forge-block">
-          <div className="forge-section-h">Даёт</div>
+        <div className="forge-block forge-desc-block">
+          <div className="forge-entity-name">{background.name}</div>
           <p className="forge-note">
             Навыки: {(background.skill_proficiencies || []).map((s: string) => labelOf(SKILLS, s)).join(', ') || '—'}<br />
             Инструмент: {background.tool_proficiency || '—'}<br />
-            Характеристики: {(background.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}
+            Характеристики: {(background.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}<br />
+            Черта происхождения: {background.origin_feat || '—'}
           </p>
+          <label className="forge-check">
+            <input type="checkbox" checked={!!draft.swapFeat} onChange={(e) => onToggleSwapFeat(e.target.checked)} />
+            <span>Сменить черту происхождения</span>
+          </label>
         </div>
       )}
     </div>
   );
 }
 
-function FeatSection({ feats, draft, onToggle, choices, resolved, setResolved, ruleState }: any) {
+function FeatSection({ feats, draft, onToggle, swapFeat, choices, resolved, setResolved, ruleState }: any) {
   return (
     <div>
-      <div className="forge-block">
-        <div className="forge-section-h">Черты происхождения</div>
-        <div className="forge-grid">
-          {feats.map((f: Feat) => (
-            <EntityChoiceCard key={f.id} name={f.name}
-              subtitle={(f.ability_increase || []).map((a) => labelOf(ABILITIES, a)).join(', ') || undefined}
-              selected={draft.featIds.includes(f.id)} onClick={() => onToggle(f.id)} />
-          ))}
-          {feats.length === 0 && <p className="forge-note">Нет черт происхождения в базе.</p>}
+      {swapFeat && (
+        <div className="forge-block">
+          <div className="forge-section-h">Черта происхождения</div>
+          <div className="forge-square-grid">
+            {feats.map((f: Feat) => (
+              <EntitySquareCard key={f.id} name={f.name} imageUrl={f.image_url} selected={draft.featIds.includes(f.id)} onClick={() => onToggle(f.id)} />
+            ))}
+            {feats.length === 0 && <p className="forge-note">Нет черт происхождения в базе.</p>}
+          </div>
         </div>
-      </div>
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
-    </div>
-  );
-}
-
-function ProficienciesSection({ draft, assembled, ruleState }: { draft: CharacterDraft; assembled: AssembledCharacter; ruleState: CharacterRuleState }) {
-  const skills = ruleState.proficiencies.skills;
-  const saves = ruleState.proficiencies.savingThrows;
-  return (
-    <div>
-      <div className="forge-block">
-        <div className="forge-section-h">Владения (итог)</div>
-        <p className="forge-note">Навыки: {skills.map((s) => labelOf(SKILLS, s)).join(', ') || '—'}</p>
-        <p className="forge-note">Спасброски: {saves.map((s) => labelOf(ABILITIES, s)).join(', ') || '—'}</p>
-        <p className="forge-note">Инструменты: {ruleState.proficiencies.tools.join(', ') || '—'}</p>
-        <p className="forge-note">Языки: {ruleState.proficiencies.languages.join(', ') || '—'}</p>
-        {ruleState.conflicts.length > 0 && (
-          <ul className="issues">{ruleState.conflicts.map((it, i) => <li key={i}>{it.message}</li>)}</ul>
-        )}
-      </div>
-      <div className="forge-block">
-        <div className="forge-section-h">Характеристики</div>
-        <div className="sum-abilities">
-          {ABILITY_KEYS.map((k) => {
-            const v = draft.abilities[k];
-            const m = typeof v === 'number' ? abilityMod(v) : null;
-            return (
-              <div key={k} className="sum-ab">
-                <div className="k">{ABILITY_LABEL_RU[k]}</div>
-                <div className="v">{typeof v === 'number' ? v : '—'}</div>
-                <div className="m">{m === null ? '' : m >= 0 ? `+${m}` : m}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выбор черты" />
     </div>
   );
 }
@@ -586,33 +614,19 @@ function spellMatchesChoice(spell: Spell, choice: PendingChoice): boolean {
     if (filter === 'cantrip') return spell.level === 0;
     return spell.id === filter;
   }
-
-  const levels = Array.isArray(filter.levels)
-    ? filter.levels.map(Number)
-    : typeof filter.level === 'number'
-      ? [filter.level]
-      : [];
+  const levels = Array.isArray(filter.levels) ? filter.levels.map(Number) : typeof filter.level === 'number' ? [filter.level] : [];
   if (levels.length && !levels.includes(spell.level)) return false;
-
-  const classes = Array.isArray(filter.classes)
-    ? filter.classes.map(String)
-    : typeof filter.class === 'string'
-      ? [filter.class]
-      : [];
+  const classes = Array.isArray(filter.classes) ? filter.classes.map(String) : typeof filter.class === 'string' ? [filter.class] : [];
   if (classes.length) {
     const spellClasses = spell.classes || [];
     if (!classes.some((klass) => spellClasses.includes(klass))) return false;
   }
-
   return true;
 }
 
 function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
-  spells: Spell[];
-  granted: Spell[];
-  choices: PendingChoice[];
-  resolved: Record<string, string[]>;
-  setResolved: (id: string, v: string[]) => void;
+  spells: Spell[]; granted: Spell[]; choices: PendingChoice[];
+  resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
 }) {
   const [search, setSearch] = useState('');
   const [hovered, setHovered] = useState<Spell | null>(null);
@@ -637,10 +651,7 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
 
   const toggleChoiceSpell = (choice: PendingChoice, spellId: string) => {
     const value = resolved[choice.id] || [];
-    if (value.includes(spellId)) {
-      setResolved(choice.id, value.filter((id) => id !== spellId));
-      return;
-    }
+    if (value.includes(spellId)) { setResolved(choice.id, value.filter((id) => id !== spellId)); return; }
     const owner = selectedSpellOwners.get(spellId);
     if (owner && owner.choiceId !== choice.id) return;
     const next = value.length >= choice.count ? [...value.slice(1), spellId] : [...value, spellId];
@@ -649,7 +660,6 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
 
   return (
     <div>
-      <div className="forge-section-h">Заклинания и заговоры</div>
       <div className="spell-toolbar">
         <input className="forge-input" style={{ maxWidth: 260 }} placeholder="Поиск…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
@@ -659,19 +669,12 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
           <p className="forge-note">Эти заклинания выдаются автоматически и не требуют выбора.</p>
           <div className="forge-spell-icon-grid">
             {grantedFiltered.map((spell) => (
-              <div
-                key={spell.id}
-                className="forge-spell-icon ready"
-                title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+              <div key={spell.id} className="forge-spell-icon ready" title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
                 onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
                 onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
-                onMouseLeave={() => setHovered(null)}
-              >
-                <img
-                  src={spell.image_url?.trim() || '/default_image.png'}
-                  alt={spell.name}
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
-                />
+                onMouseLeave={() => setHovered(null)}>
+                <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
                 {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
               </div>
             ))}
@@ -690,31 +693,22 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
         return (
           <div className="forge-block" key={choice.id}>
             <div className="forge-section-h">{choice.prompt}</div>
-            <div className={`choice-count ${done ? 'done' : ''}`}>
-              Выбрано {selected.length} из {choice.count}
-            </div>
+            <div className={`choice-count ${done ? 'done' : ''}`}>Выбрано {selected.length} из {choice.count}</div>
             <div className="forge-spell-icon-grid">
               {filtered.map((spell) => {
                 const isSelected = selected.includes(spell.id);
                 const owner = selectedSpellOwners.get(spell.id);
                 const disabled = !!owner && owner.choiceId !== choice.id;
                 return (
-                  <button
-                    key={spell.id}
-                    type="button"
+                  <button key={spell.id} type="button"
                     className={`forge-spell-icon ${isSelected ? 'selected' : disabled ? 'disabled' : 'ready'}`}
-                    disabled={disabled}
-                    onClick={() => toggleChoiceSpell(choice, spell.id)}
+                    disabled={disabled} onClick={() => toggleChoiceSpell(choice, spell.id)}
                     onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
                     onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
                     onMouseLeave={() => setHovered(null)}
-                    title={disabled ? `Уже выбрано: ${owner.label}` : `${spell.name} · ${getSpellLevelLabel(spell.level)}`}
-                  >
-                    <img
-                      src={spell.image_url?.trim() || '/default_image.png'}
-                      alt={spell.name}
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
-                    />
+                    title={disabled ? `Уже выбрано: ${owner.label}` : `${spell.name} · ${getSpellLevelLabel(spell.level)}`}>
+                    <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
                     {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
                   </button>
                 );
@@ -725,14 +719,11 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
         );
       })}
       {hovered && (
-        <div
-          className="fixed z-50 pointer-events-none"
-          style={{
-            left: Math.min(mouse.x + 16, window.innerWidth - 360),
-            top: Math.min(Math.max(mouse.y - 40, 10), window.innerHeight - 20),
-            transform: mouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
-          }}
-        >
+        <div className="fixed z-50 pointer-events-none" style={{
+          left: Math.min(mouse.x + 16, window.innerWidth - 360),
+          top: Math.min(Math.max(mouse.y - 40, 10), window.innerHeight - 20),
+          transform: mouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+        }}>
           <SpellPreview spell={hovered} disableHover={true} />
         </div>
       )}

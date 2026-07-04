@@ -104,6 +104,8 @@ export interface CharacterDraft {
   abilities: Partial<AbilityScores>;
   classSkillChoices: string[]; // выбранные навыки из class.skill_choices
   resolvedChoices: Record<string, string[]>; // выборы из механики (по id)
+  /** «Сменить черту происхождения» в предыстории → показывает вкладку «Черта». */
+  swapFeat?: boolean;
 }
 
 export const STANDARD_ARRAY: number[] = [15, 14, 13, 12, 10, 8];
