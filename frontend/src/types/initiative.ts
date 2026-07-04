@@ -13,16 +13,72 @@ export const INITIATIVE_COLORS = [
 
 export type InitiativeColorId = (typeof INITIATIVE_COLORS)[number]['id'];
 
+/** Существо в бою — либо монстр (сам кидает инициативу), либо игрок (вводит вручную). */
+export type CreatureType = 'monster' | 'player';
+
+export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+
+export const ABILITY_LABELS: Record<AbilityKey, string> = {
+  str: 'Сил',
+  dex: 'Лов',
+  con: 'Тел',
+  int: 'Инт',
+  wis: 'Мдр',
+  cha: 'Хар',
+};
+
+export interface AbilityScore {
+  score: number;
+  mod: number;
+  save: number;
+}
+
+/** Полный статблок монстра, импортированный с ttg.club (всё опционально). */
+export interface StatBlock {
+  speed?: string;
+  senses?: string;
+  languages?: string;
+  cr?: string;
+  vulnerabilities?: string;
+  resistances?: string;
+  immunities?: string;
+  saves?: string;
+  skills?: string;
+  abilities?: Partial<Record<AbilityKey, AbilityScore>>;
+}
+
+/** Есть ли в статблоке хоть какие-то данные для показа. */
+export function hasStatBlock(sb?: StatBlock): sb is StatBlock {
+  if (!sb) return false;
+  return Boolean(
+    sb.speed || sb.senses || sb.languages || sb.cr || sb.vulnerabilities ||
+      sb.resistances || sb.immunities || sb.saves || sb.skills ||
+      (sb.abilities && Object.keys(sb.abilities).length > 0),
+  );
+}
+
+/** Цвет по способу добавления (см. требования): игрок — зелёный, монстр — красный, «Добавить» — синий. */
+export const COLOR_BY_TYPE: Record<CreatureType, InitiativeColorId> = {
+  player: 'green',
+  monster: 'red',
+};
+export const NEUTRAL_COLOR: InitiativeColorId = 'blue';
+
 export interface InitiativeCharacter {
   id: string;
   name: string;
   color: InitiativeColorId;
+  type: CreatureType;
   ac: number;
   initiative: number;
+  /** Бонус к инициативе — прибавляется к d20 при автоматическом броске монстра. */
+  initiativeBonus: number;
   maxHp: number;
   currentHp: number;
   notes: string;
   description: string;
+  /** Полный статблок (для монстров, импортированных с ttg.club). */
+  statblock?: StatBlock;
 }
 
 export interface InitiativeTrackerState {
@@ -35,17 +91,42 @@ export function getInitiativeColor(colorId: InitiativeColorId) {
   return INITIATIVE_COLORS.find((c) => c.id === colorId) ?? INITIATIVE_COLORS[4];
 }
 
-export function createEmptyCharacter(): InitiativeCharacter {
+/** Бросок инициативы: d20 + бонус. */
+export function rollInitiativeValue(bonus = 0): number {
+  return Math.floor(Math.random() * 20) + 1 + bonus;
+}
+
+/** Базовое существо. По умолчанию — нейтральный монстр синего цвета (плейн «Добавить»). */
+export function createEmptyCharacter(overrides: Partial<InitiativeCharacter> = {}): InitiativeCharacter {
   return {
     id: crypto.randomUUID(),
     name: '',
-    color: 'blue',
+    color: NEUTRAL_COLOR,
+    type: 'monster',
     ac: 10,
     initiative: 0,
+    initiativeBonus: 0,
     maxHp: 10,
     currentHp: 10,
     notes: '',
     description: '',
+    ...overrides,
+  };
+}
+
+/** Приводит частично заполненного персонажа (из хранилища/ссылки) к полной форме. */
+export function normalizeCharacter(raw: Partial<InitiativeCharacter>): InitiativeCharacter {
+  const base = createEmptyCharacter();
+  const type: CreatureType = raw.type === 'player' ? 'player' : 'monster';
+  return {
+    ...base,
+    ...raw,
+    id: raw.id ?? base.id,
+    type,
+    initiativeBonus: typeof raw.initiativeBonus === 'number' ? raw.initiativeBonus : 0,
+    description: typeof raw.description === 'string' ? raw.description : '',
+    notes: typeof raw.notes === 'string' ? raw.notes : '',
+    color: raw.color ?? base.color,
   };
 }
 

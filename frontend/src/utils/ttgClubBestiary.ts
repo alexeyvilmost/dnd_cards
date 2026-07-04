@@ -1,9 +1,14 @@
+import type { AbilityKey, StatBlock } from '../types/initiative';
+
 export interface TtgClubBestiaryImport {
   name: string;
   ac: number;
   maxHp: number;
+  /** Бонус к инициативе (например +1). 0, если не найден. */
+  initiativeBonus: number;
   description: string;
   sourceUrl: string;
+  statblock: StatBlock;
 }
 
 const SUPPORTED_HOSTS = new Set(['new.ttg.club', 'ttg.club']);
@@ -67,14 +72,118 @@ function parseStatValue(doc: Document, label: string): number | null {
   return fallback ? parseInt(fallback[1], 10) : null;
 }
 
-function cleanTtgMarkup(text: string): string {
-  return text
-    .replace(/\{@i\s*([^}]+)\}/g, '$1')
-    .replace(/\{@b\s*([^}]+)\}/g, '$1')
-    .replace(/\{@roll[^}]*\}/g, '')
-    .replace(/\{@item[^}]+\}/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+/** «Инициатива: +1 (11)» → 1. Знак учитывается, число в скобках (пассивная) игнорируется. */
+function parseInitiativeBonus(doc: Document): number {
+  const text = doc.body.textContent ?? '';
+  const match = text.match(/Инициатива:\s*([+-]?\d+)/i);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+/** Значение поля «Метка: значение» из статблока (Скорость, Иммунитеты, ПО …). */
+function parseLabeledText(doc: Document, label: string): string | undefined {
+  const spans = Array.from(doc.querySelectorAll('span'));
+  for (const span of spans) {
+    if (span.textContent?.trim() !== `${label}:`) continue;
+    let el = span.nextElementSibling;
+    while (el && !(el.textContent ?? '').trim()) el = el.nextElementSibling;
+    const value = el?.textContent?.trim().replace(/\s+/g, ' ');
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/** Характеристики вида «Сил 16+3+3 Лов 8-1-1 …» из текста статблока. */
+function parseAbilities(doc: Document): StatBlock['abilities'] {
+  const text = (doc.body.textContent ?? '').replace(/\s+/g, ' ');
+  const map: [AbilityKey, string][] = [
+    ['str', 'Сил'], ['dex', 'Лов'], ['con', 'Тел'],
+    ['int', 'Инт'], ['wis', 'Мдр'], ['cha', 'Хар'],
+  ];
+  const abilities: NonNullable<StatBlock['abilities']> = {};
+  for (const [key, ru] of map) {
+    const m = text.match(new RegExp(`${ru}\\s+(\\d+)([+-]\\d+)([+-]\\d+)`));
+    if (m) abilities[key] = { score: +m[1], mod: +m[2], save: +m[3] };
+  }
+  return Object.keys(abilities).length ? abilities : undefined;
+}
+
+function parseStatBlock(doc: Document): StatBlock {
+  return {
+    speed: parseLabeledText(doc, 'Скорость'),
+    senses: parseLabeledText(doc, 'Чувства'),
+    languages: parseLabeledText(doc, 'Языки'),
+    cr: parseLabeledText(doc, 'ПО'),
+    vulnerabilities: parseLabeledText(doc, 'Уязвимости'),
+    resistances: parseLabeledText(doc, 'Сопротивления'),
+    immunities: parseLabeledText(doc, 'Иммунитеты'),
+    saves: parseLabeledText(doc, 'Спасброски'),
+    skills: parseLabeledText(doc, 'Навыки'),
+    abilities: parseAbilities(doc),
+  };
+}
+
+/** Убирает знак «+» перед числом внутри скобок, чтобы «Инициатива: +1» → +1, а не +1 дважды. */
+function signed(value: string): string {
+  const trimmed = value.trim();
+  if (/^-?\d+$/.test(trimmed) && !trimmed.startsWith('-')) return `+${trimmed}`;
+  return trimmed;
+}
+
+/**
+ * Разворачивает разметку ttg.club / 5etools вида {@tag содержимое} в читаемый текст.
+ * Раньше {@roll ...} и {@item ...} удалялись целиком вместе со значениями урона и
+ * бонусами — из-за этого описание «ломалось» (пустые скобки, пропавшие цифры).
+ */
+export function cleanTtgMarkup(text: string): string {
+  const tagPattern = /\{@(\w+)(?:\s+([^{}]*))?\}/g;
+
+  const resolveTag = (_match: string, tag: string, content = ''): string => {
+    const parts = content.split('|');
+    const first = (parts[0] ?? '').trim();
+    switch (tag) {
+      case 'i':
+      case 'b':
+      case 'italic':
+      case 'bold':
+      case 'note':
+        return content.trim();
+      case 'h': // {@h} → «Попадание:» в англ. источнике; на ru-страницах текст уже есть
+        return '';
+      case 'hit':
+      case 'atkr':
+        return signed(first);
+      case 'dc':
+        return first;
+      case 'roll':
+      case 'dice':
+      case 'damage':
+        return first; // «+5» из «+5|notation:1d20+5» или «1к6 + 3»
+      default:
+        // Ссылки: {@item Название|url:...}, {@spell Название|...}, {@creature Название|...}
+        // Отображаем текст ссылки (последняя часть, если задана) либо название.
+        return (parts.length > 2 ? parts[parts.length - 1] : first).trim();
+    }
+  };
+
+  let out = text;
+  let guard = 0;
+  while (/\{@/.test(out) && guard < 5) {
+    const next = out.replace(tagPattern, resolveTag);
+    if (next === out) break;
+    out = next;
+    guard += 1;
+  }
+
+  return out.replace(/\s+/g, ' ').trim();
+}
+
+/** Снимает JSON-экранирование строкового тела действия (\n, \", & и т.п.). */
+function unescapeJsonString(raw: string): string {
+  try {
+    return JSON.parse(`"${raw}"`);
+  } catch {
+    return raw.replace(/\\"/g, '"').replace(/\\n/g, '\n');
+  }
 }
 
 function parseActionsFromJson(html: string): { name: string; text: string }[] {
@@ -82,8 +191,8 @@ function parseActionsFromJson(html: string): { name: string; text: string }[] {
   const actions: { name: string; text: string }[] = [];
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(html)) !== null) {
-    const name = match[1].trim();
-    const text = cleanTtgMarkup(match[2]);
+    const name = unescapeJsonString(match[1]).trim();
+    const text = cleanTtgMarkup(unescapeJsonString(match[2]));
     if (!name || !text) continue;
     if (actions.some((a) => a.name === name)) continue;
     actions.push({ name, text });
@@ -121,9 +230,11 @@ export function parseTtgClubBestiaryHtml(html: string, sourceUrl: string): TtgCl
   if (ac === null) throw new Error('Не найден класс доспеха (КД) на странице');
   if (maxHp === null) throw new Error('Не найдены хиты на странице');
 
+  const initiativeBonus = parseInitiativeBonus(doc);
   const description = parseActionsFromDom(doc, html);
+  const statblock = parseStatBlock(doc);
 
-  return { name, ac, maxHp, description, sourceUrl };
+  return { name, ac, maxHp, initiativeBonus, description, sourceUrl, statblock };
 }
 
 export async function importFromTtgClubUrl(url: string): Promise<TtgClubBestiaryImport> {
