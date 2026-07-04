@@ -1,5 +1,5 @@
-import type { AssembledCharacter } from './assemble';
-import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import type { AssembledCharacter } from '../../character/assemble';
+import ForgeAbilityLine from './ForgeAbilityLine';
 
 type Props = {
   assembled: AssembledCharacter;
