@@ -237,6 +237,21 @@
 .pool .p { border: 1px solid var(--forge-line); border-radius: 6px; padding: 4px 10px; color: var(--forge-text); }
 .pool .p.used { opacity: 0.35; text-decoration: line-through; }
 
+/* Point-buy */
+.pb-ctrl { display: inline-flex; align-items: center; gap: 6px; }
+.pb-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--forge-line);
+  background: var(--forge-panel-2); color: var(--forge-text); cursor: pointer;
+  font-size: 15px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+.pb-btn:hover:not(:disabled) { border-color: var(--forge-gold-dim); color: var(--forge-gold); }
+.pb-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pb-base { min-width: 26px; text-align: center; color: var(--forge-text); font-weight: 600; }
+.pb-bonus { color: var(--forge-gold); font-weight: 600; width: 32px; }
+.pb-final { color: var(--forge-text); font-weight: 700; width: 30px; text-align: center; }
+.pb-over { color: var(--forge-danger); }
+.forge-level-row { display: flex; align-items: center; gap: 8px; }
+
 /* Кнопки */
 .forge-btn {
   background: var(--forge-gold); color: #201b14; border: none; border-radius: 8px;

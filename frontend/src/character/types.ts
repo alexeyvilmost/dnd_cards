@@ -86,6 +86,24 @@ export interface SaveForgeCharacterRequest {
   passive_perception?: number;
 }
 
+// Метод генерации характеристик (решение владельца 2026-07-05: point-buy — основной).
+export type AbilityGenMethod = 'point_buy' | 'manual';
+
+// Бонусы характеристик от предыстории (+2/+1 или +1/+1/+1, PHB 2024).
+export interface AbilityBonuses {
+  mode: 'two_one' | 'one_one_one';
+  /** ability → 2 | 1 */
+  assignments: Partial<Record<AbilityKey, number>>;
+  /** true — можно назначать на любые характеристики, не только из предыстории. */
+  anyAbilities: boolean;
+}
+
+export const emptyBonuses = (): AbilityBonuses => ({
+  mode: 'two_one',
+  assignments: {},
+  anyAbilities: false,
+});
+
 // Черновик персонажа в состоянии редактора (до/во время создания).
 export interface CharacterDraft {
   id?: string; // если редактируется уже сохранённый черновик
@@ -101,7 +119,12 @@ export interface CharacterDraft {
   spellIds: string[];
   /** Slug-и заклинаний из rule_state / grant_spell (только для загрузки). */
   grantedSpellSlugs?: string[];
+  /** ИТОГОВЫЕ значения (база point-buy + бонусы предыстории). */
   abilities: Partial<AbilityScores>;
+  abilityMethod: AbilityGenMethod;
+  abilityBonuses: AbilityBonuses;
+  /** Вариант стартового снаряжения предыстории (a — предметы, b — золото). */
+  equipmentOption: 'a' | 'b';
   classSkillChoices: string[]; // выбранные навыки из class.skill_choices
   resolvedChoices: Record<string, string[]>; // выборы из механики (по id)
   /** «Сменить черту происхождения» в предыстории → показывает вкладку «Черта». */
@@ -131,6 +154,9 @@ export const emptyDraft = (): CharacterDraft => ({
   featIds: [],
   spellIds: [],
   abilities: {},
+  abilityMethod: 'point_buy',
+  abilityBonuses: emptyBonuses(),
+  equipmentOption: 'a',
   classSkillChoices: [],
   resolvedChoices: {},
 });

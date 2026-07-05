@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
@@ -8,7 +8,8 @@ import { charactersV3Api } from '../character/api';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch } from '../character/resourceInit';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
-import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, type CharacterDraft, type AbilityKey } from '../character/types';
+import { emptyDraft, ABILITY_KEYS, type AbilityBonuses, type CharacterDraft, type AbilityKey } from '../character/types';
+import { bonusOf, reapplyBonuses } from '../character/pointBuy';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
@@ -33,6 +34,7 @@ const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, 
 const CharacterForge = () => {
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Справочники сущностей
   const [races, setRaces] = useState<Race[]>([]);
@@ -43,7 +45,6 @@ const CharacterForge = () => {
 
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
   const [bundle, setBundle] = useState<EntityBundle | null>(null);
-  const [manualAbilities, setManualAbilities] = useState(false);
   const [active, setActive] = useState('race');
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -83,7 +84,8 @@ const CharacterForge = () => {
     })();
   }, []);
 
-  // Загрузка существующего черновика для редактирования
+  // Загрузка существующего черновика для редактирования.
+  // ?levelup=1 (кнопка «Поднять уровень» на листе) — сразу +1 уровень.
   useEffect(() => {
     if (!editId) return;
     (async () => {
@@ -91,12 +93,18 @@ const CharacterForge = () => {
         const c = await charactersV3Api.get(editId);
         savedSkillsRef.current = c.skill_proficiencies || [];
         restoredClassSkillsRef.current = false;
-        setDraft(characterToDraft(c));
+        const d = characterToDraft(c);
+        if (searchParams.get('levelup') === '1') {
+          d.level = Math.min(20, (d.level || 1) + 1);
+          setSearchParams({}, { replace: true });
+        }
+        setDraft(d);
       } catch (e) {
         console.error(e);
         setError('Не удалось загрузить персонажа');
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
   // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний).
@@ -226,9 +234,49 @@ const CharacterForge = () => {
       return { ...d, abilities };
     });
   }, []);
+  const setAbilities = useCallback((abilities: Partial<Record<AbilityKey, number>>) => {
+    setDraft((d) => ({ ...d, abilities }));
+  }, []);
   const toggleFeat = (fid: string) =>
     patch({ featIds: draft.featIds.includes(fid) ? draft.featIds.filter((x) => x !== fid) : [fid] });
-  const selectClass = (cid: string) => patch({ classId: cid, classSkillChoices: [] });
+  const selectClass = (cid: string) => {
+    setDraft((d) => {
+      const next = { ...d, classId: cid, classSkillChoices: [] as string[] };
+      // Пустые характеристики → заполнить оптимальным раскладом класса (решение №2).
+      const untouched = ABILITY_KEYS.every((k) => typeof d.abilities[k] !== 'number');
+      const rec = classes.find((c) => c.id === cid)?.recommended_abilities;
+      if (untouched && rec) {
+        const abilities: Partial<Record<AbilityKey, number>> = {};
+        for (const k of ABILITY_KEYS) {
+          const base = rec[k];
+          if (typeof base === 'number') abilities[k] = base + bonusOf(d.abilityBonuses, k);
+        }
+        next.abilities = abilities;
+      }
+      return next;
+    });
+  };
+  const selectBackground = (bid: string) => {
+    setDraft((d) => {
+      const next = { ...d, backgroundId: bid };
+      // Дефолтные бонусы: +2 первой и +1 второй характеристике предыстории.
+      const bg = backgrounds.find((b) => b.id === bid);
+      const bgAbilities = (bg?.ability_scores || []) as AbilityKey[];
+      const untouched = !Object.values(d.abilityBonuses.assignments).some(Boolean);
+      if (untouched && bgAbilities.length >= 2 && d.abilityBonuses.mode === 'two_one') {
+        const bonuses: AbilityBonuses = {
+          ...d.abilityBonuses,
+          assignments: { [bgAbilities[0]]: 2, [bgAbilities[1]]: 1 },
+        };
+        next.abilityBonuses = bonuses;
+        next.abilities = reapplyBonuses(d.abilities, d.abilityBonuses, bonuses);
+      }
+      return next;
+    });
+  };
+  const setBonuses = useCallback((bonuses: AbilityBonuses) => {
+    setDraft((d) => ({ ...d, abilityBonuses: bonuses }));
+  }, []);
   const toggleClassSkill = (skill: string) => {
     const sc = classSkillChoice(assembled);
     const has = draft.classSkillChoices.includes(skill);
@@ -247,13 +295,27 @@ const CharacterForge = () => {
   const save = async () => {
     setSaving(true); setError(null);
     try {
+      const isCreate = !draft.id;
       const payload = buildSavePayload(draft, assembled, ruleState);
       const res = draft.id
         ? await charactersV3Api.update(draft.id, payload)
         : await charactersV3Api.create(payload);
       const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
-      const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true);
-      if (runtimePatch) await charactersV3Api.patchRuntime(res.id, runtimePatch);
+      const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true) ?? {};
+      // Стартовое снаряжение и деньги предыстории — только при создании,
+      // чтобы не перезаписать инвентарь существующего персонажа.
+      if (isCreate) {
+        const options = assembled.background?.equipment_options as
+          | Record<'option_a' | 'option_b', { items?: Array<{ card_id: string; quantity?: number }>; gold?: number }>
+          | null | undefined;
+        const opt = options?.[draft.equipmentOption === 'b' ? 'option_b' : 'option_a'];
+        if (opt) {
+          const items = (opt.items || []).map((it) => ({ card_id: it.card_id, qty: it.quantity ?? 1 }));
+          if (items.length) runtimePatch.inventory_items = items;
+          if (opt.gold) runtimePatch.currency = { gold: opt.gold };
+        }
+      }
+      if (Object.keys(runtimePatch).length) await charactersV3Api.patchRuntime(res.id, runtimePatch);
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id }));
     } catch (e) {
@@ -366,16 +428,27 @@ const CharacterForge = () => {
                 <SpellsSection spells={spells} granted={grantedSpells} choices={spellChoices} resolved={draft.resolvedChoices} setResolved={setResolved} />
               )}
               {act === 'background' && (
-                <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={(bid: string) => patch({ backgroundId: bid })}
-                  background={assembled.background} onToggleSwapFeat={(v: boolean) => patch({ swapFeat: v })} />
+                <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={selectBackground}
+                  background={assembled.background} onToggleSwapFeat={(v: boolean) => patch({ swapFeat: v })}
+                  onEquipmentOption={(opt: 'a' | 'b') => patch({ equipmentOption: opt })} />
               )}
               {act === 'feat' && (
                 <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} swapFeat={!!draft.swapFeat}
                   choices={featChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
               {act === 'abilities' && (
-                <AbilityAssigner abilities={draft.abilities} standardArray={STANDARD_ARRAY} manual={manualAbilities}
-                  onSet={setAbility} onToggleManual={setManualAbilities} />
+                <AbilityAssigner
+                  abilities={draft.abilities}
+                  method={draft.abilityMethod}
+                  bonuses={draft.abilityBonuses}
+                  backgroundName={assembled.background?.name}
+                  backgroundAbilities={((assembled.background?.ability_scores || []) as AbilityKey[])}
+                  recommended={(classes.find((c) => c.id === draft.classId)?.recommended_abilities || {}) as Partial<Record<AbilityKey, number>>}
+                  onSet={setAbility}
+                  onSetAll={setAbilities}
+                  onMethodChange={(m) => patch({ abilityMethod: m })}
+                  onBonusesChange={setBonuses}
+                />
               )}
           </div>
         </div>
@@ -406,6 +479,14 @@ function OverviewPanel({ draft, patch, assembled, spells, lineageName, subChoice
       <div className="forge-block">
         <div className="forge-section-h">Имя персонажа</div>
         <input className="forge-input" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Фарадей фон Грасс" />
+        <div className="forge-section-h" style={{ marginTop: 10 }}>Уровень</div>
+        <div className="forge-level-row">
+          <button type="button" className="pb-btn" disabled={draft.level <= 1}
+            onClick={() => patch({ level: Math.max(1, draft.level - 1) })}>−</button>
+          <span className="pb-base">{draft.level}</span>
+          <button type="button" className="pb-btn" disabled={draft.level >= 20}
+            onClick={() => patch({ level: Math.min(20, draft.level + 1) })}>+</button>
+        </div>
       </div>
 
       <SummaryPanel
@@ -420,22 +501,22 @@ function OverviewPanel({ draft, patch, assembled, spells, lineageName, subChoice
       />
 
       <div className="forge-overview-footer">
-        {savedId ? (
-          <div className="forge-success">
+        {savedId && (
+          <div className="forge-success" style={{ marginBottom: 8 }}>
             <div className="sum-label" style={{ fontSize: 15 }}>Персонаж сохранён ✓</div>
             <button className="forge-btn" onClick={onOpenSheet}>Открыть лист</button>
           </div>
-        ) : (
-          <>
-            {issues.length > 0 && (
-              <ul className="issues forge-overview-issues">{issues.slice(0, 4).map((it, i) => <li key={i}>{it}</li>)}</ul>
-            )}
-            {error && <p className="issues" style={{ color: 'var(--forge-danger)' }}>{error}</p>}
-            <button className="forge-btn forge-create-btn" disabled={!canCreate || saving} onClick={onSave}>
-              {saving ? 'Сохранение…' : draft.id ? 'Сохранить' : 'Создать персонажа'}
-            </button>
-          </>
         )}
+        {issues.length > 0 && (
+          <ul className="issues forge-overview-issues">
+            {issues.slice(0, 4).map((it, i) => <li key={i}>{it}</li>)}
+            {issues.length > 4 && <li>…и ещё {issues.length - 4}</li>}
+          </ul>
+        )}
+        {error && <p className="issues" style={{ color: 'var(--forge-danger)' }}>{error}</p>}
+        <button className="forge-btn forge-create-btn" disabled={!canCreate || saving} onClick={onSave}>
+          {saving ? 'Сохранение…' : draft.id ? 'Сохранить' : 'Создать персонажа'}
+        </button>
       </div>
     </div>
   );
@@ -634,9 +715,19 @@ function SubclassSection({ choices, resolved, setResolved, ruleState, klass }: a
   );
 }
 
-function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleSwapFeat }: any) {
+function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleSwapFeat, onEquipmentOption }: any) {
   const bgFromList = backgrounds.find((b: Background) => b.id === draft.backgroundId) as Background | undefined;
   const bg = background ?? bgFromList;
+  const options = bg?.equipment_options as
+    | Record<'option_a' | 'option_b', { items?: Array<{ card_id: string; quantity?: number }>; gold?: number }>
+    | null | undefined;
+  const optLabel = (o?: { items?: unknown[]; gold?: number }) => {
+    if (!o) return null;
+    const parts: string[] = [];
+    if (o.items?.length) parts.push(`${o.items.length} предм.`);
+    if (o.gold) parts.push(`${o.gold} зм`);
+    return parts.join(' + ') || '—';
+  };
   return (
     <div>
       <div className="forge-block forge-square-block">
@@ -666,6 +757,25 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleS
             Характеристики: {(bg.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}<br />
             Черта происхождения: {bg.origin_feat || '—'}
           </p>
+          {options && (options.option_a || options.option_b) && (
+            <div style={{ marginTop: 8 }}>
+              <div className="forge-section-h">Стартовое снаряжение</div>
+              <div className="chips">
+                {options.option_a && (
+                  <button type="button" className={`chip ${draft.equipmentOption === 'a' ? 'on' : ''}`}
+                    onClick={() => onEquipmentOption('a')}>
+                    Вариант А · {optLabel(options.option_a)}
+                  </button>
+                )}
+                {options.option_b && (
+                  <button type="button" className={`chip ${draft.equipmentOption === 'b' ? 'on' : ''}`}
+                    onClick={() => onEquipmentOption('b')}>
+                    Вариант Б · {optLabel(options.option_b)}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           <label className="forge-check">
             <input type="checkbox" checked={!!draft.swapFeat} onChange={(e) => onToggleSwapFeat(e.target.checked)} />
             <span>Сменить черту происхождения</span>

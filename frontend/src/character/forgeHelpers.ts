@@ -1,5 +1,9 @@
 import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
 import { ABILITY_KEYS } from './types';
+import {
+  BONUS_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
+  bonusIssues, parseBonuses, pointBuyIssues, serializeBonuses,
+} from './pointBuy';
 import type { AssembledCharacter } from './assemble';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
@@ -41,6 +45,16 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   const knownSlugs = (c.rule_state?.spells?.known || []).filter((id) => !isEntityUuid(id));
   const grantedSpellSlugs = [...new Set([...legacySlugs, ...knownSlugs])];
 
+  // Служебные builder:-ключи достаём из resolved_choices и не отдаём их
+  // ChoiceResolver-у (buildSavePayload добавит их обратно при сохранении).
+  const stored = c.resolved_choices || {};
+  const resolvedChoices: Record<string, string[]> = {};
+  for (const [key, vals] of Object.entries(stored)) {
+    if (!key.startsWith('builder:')) resolvedChoices[key] = vals;
+  }
+  const abilityMethod = stored[METHOD_KEY]?.[0] === 'manual' ? 'manual' as const : 'point_buy' as const;
+  const equipmentOption = stored[EQUIPMENT_OPTION_KEY]?.[0] === 'b' ? 'b' as const : 'a' as const;
+
   return {
     id: c.id,
     name: c.name,
@@ -54,8 +68,11 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     spellIds: (c.spell_ids || []).filter(isEntityUuid),
     grantedSpellSlugs,
     abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
+    abilityMethod,
+    abilityBonuses: parseBonuses(stored[BONUS_KEY]),
+    equipmentOption,
     classSkillChoices,
-    resolvedChoices: c.resolved_choices || {},
+    resolvedChoices,
     swapFeat: (c.feat_ids || []).length > 0,
   };
 }
@@ -106,7 +123,12 @@ export function buildSavePayload(
     tool_proficiencies: ruleState.proficiencies.tools,
     tool_expertise: ruleState.expertise.tools,
     languages: ruleState.proficiencies.languages,
-    resolved_choices: draft.resolvedChoices,
+    resolved_choices: {
+      ...draft.resolvedChoices,
+      [METHOD_KEY]: [draft.abilityMethod],
+      [BONUS_KEY]: serializeBonuses(draft.abilityBonuses),
+      [EQUIPMENT_OPTION_KEY]: [draft.equipmentOption],
+    },
     rule_state: ruleState,
     max_hp: maxHP,
     current_hp: maxHP,
@@ -143,6 +165,10 @@ export function completionIssues(draft: CharacterDraft, assembled: AssembledChar
   if (!draft.backgroundId) issues.push('Выберите предысторию');
   const assigned = ABILITY_KEYS.every((k) => typeof draft.abilities[k] === 'number');
   if (!assigned) issues.push('Задайте характеристики');
+  if (assigned && draft.abilityMethod === 'point_buy') {
+    issues.push(...pointBuyIssues(draft.abilities, draft.abilityBonuses));
+  }
+  issues.push(...bonusIssues(draft.abilityBonuses));
   issues.push(...requiredChoiceIssues(draft, assembled));
   const ruleState = resolveCharacterRules({ draft, assembled });
   issues.push(...ruleState.conflicts.filter((c) => c.severity === 'error').map((c) => c.message));

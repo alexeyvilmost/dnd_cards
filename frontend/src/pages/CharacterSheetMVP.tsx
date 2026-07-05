@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Dices, Pencil, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, ChevronsUp, Dices, Pencil, Sun, Moon } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
@@ -309,6 +309,14 @@ const CharacterSheetMVP = () => {
             <Dices size={16} />
             <span className="sheet-header-btn-label">{rollingInit ? '…' : 'Инициатива'}</span>
           </button>
+          <Link
+            to={`/character-forge/${character.id}?levelup=1`}
+            className="sheet-header-btn"
+            title={`Поднять уровень (сейчас ${character.level})`}
+          >
+            <ChevronsUp size={16} />
+            <span className="sheet-header-btn-label">Уровень {character.level} ↑</span>
+          </Link>
           <Link to={`/character-forge/${character.id}`} className="sheet-edit" title="Редактировать">
             <Pencil size={16} />
           </Link>

@@ -2,9 +2,16 @@ import type { ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
-import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey, type CharacterDraft } from './types';
+import {
+  ABILITY_KEYS, ABILITY_LABEL_RU,
+  type AbilityBonuses, type AbilityGenMethod, type AbilityKey, type CharacterDraft,
+} from './types';
 import type { Spell } from '../types';
 import { abilityMod } from './derive';
+import {
+  POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN,
+  baseOf, bonusOf, pointCost, pointsRemaining, reapplyBonuses,
+} from './pointBuy';
 import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import ForgeSpellIconGrid from '../components/forge/ForgeSpellIconGrid';
@@ -125,64 +132,177 @@ export function ChoiceResolver({
 
 // ─── Раскладка характеристик ─────────────────────────────────────────────────
 
+const fmtMod = (v: number) => (v >= 0 ? `+${v}` : `${v}`);
+
 export function AbilityAssigner({
-  abilities, standardArray, manual, onSet, onToggleManual,
+  abilities, method, bonuses, backgroundName, backgroundAbilities,
+  recommended, onSet, onSetAll, onMethodChange, onBonusesChange,
 }: {
+  /** Итоговые значения (база + бонус предыстории). */
   abilities: Partial<Record<AbilityKey, number>>;
-  standardArray: number[];
-  manual: boolean;
+  method: AbilityGenMethod;
+  bonuses: AbilityBonuses;
+  backgroundName?: string;
+  /** Характеристики предыстории (пусто = предыстория не выбрана). */
+  backgroundAbilities: AbilityKey[];
+  /** Оптимальный расклад класса ({} если у класса не задан). */
+  recommended: Partial<Record<AbilityKey, number>>;
   onSet: (key: AbilityKey, value: number | undefined) => void;
-  onToggleManual: (v: boolean) => void;
+  onSetAll: (abilities: Partial<Record<AbilityKey, number>>) => void;
+  onMethodChange: (m: AbilityGenMethod) => void;
+  onBonusesChange: (b: AbilityBonuses) => void;
 }) {
-  const used = ABILITY_KEYS.map((k) => abilities[k]).filter((v): v is number => typeof v === 'number');
-  const remainingPool = [...standardArray];
-  for (const v of used) {
-    const i = remainingPool.indexOf(v);
-    if (i >= 0) remainingPool.splice(i, 1);
-  }
+  const pointBuy = method === 'point_buy';
+  const remaining = pointsRemaining(abilities, bonuses);
+
+  const setBase = (k: AbilityKey, base: number) => {
+    const clamped = Math.min(POINT_BUY_MAX, Math.max(POINT_BUY_MIN, base));
+    onSet(k, clamped + bonusOf(bonuses, k));
+  };
+
+  const applyRecommended = () => {
+    const next: Partial<Record<AbilityKey, number>> = {};
+    for (const k of ABILITY_KEYS) {
+      const base = recommended[k] ?? POINT_BUY_MIN;
+      next[k] = base + bonusOf(bonuses, k);
+    }
+    onSetAll(next);
+  };
+
+  const resetBases = () => {
+    const next: Partial<Record<AbilityKey, number>> = {};
+    for (const k of ABILITY_KEYS) next[k] = POINT_BUY_MIN + bonusOf(bonuses, k);
+    onSetAll(next);
+  };
+
+  const changeBonuses = (next: AbilityBonuses) => {
+    onBonusesChange(next);
+    onSetAll(reapplyBonuses(abilities, bonuses, next));
+  };
+
+  const allowedBonusAbilities: AbilityKey[] = bonuses.anyAbilities || !backgroundAbilities.length
+    ? ABILITY_KEYS
+    : backgroundAbilities;
+
+  /** Клик по чипу бонуса: two_one цикл — нет → +2 → +1 → нет; one_one_one — toggle +1 (макс 3). */
+  const cycleBonus = (k: AbilityKey) => {
+    const a = { ...bonuses.assignments };
+    const cur = a[k] ?? 0;
+    if (bonuses.mode === 'two_one') {
+      const hasTwo = Object.entries(a).some(([key, v]) => key !== k && v === 2);
+      const hasOne = Object.entries(a).some(([key, v]) => key !== k && v === 1);
+      if (cur === 0) a[k] = hasTwo ? (hasOne ? 0 : 1) : 2;
+      else if (cur === 2) a[k] = hasOne ? 0 : 1;
+      else delete a[k];
+      if (a[k] === 0) delete a[k];
+    } else {
+      if (cur) delete a[k];
+      else if (Object.values(a).filter(Boolean).length < 3) a[k] = 1;
+    }
+    changeBonuses({ ...bonuses, assignments: a });
+  };
+
+  const switchMode = (mode: AbilityBonuses['mode']) => {
+    if (mode === bonuses.mode) return;
+    changeBonuses({ ...bonuses, mode, assignments: {} });
+  };
 
   return (
     <div>
-      <label className="forge-note" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input type="checkbox" checked={manual} onChange={(e) => onToggleManual(e.target.checked)} />
-        Ручной ввод (иначе — стандартный набор {standardArray.join('/')})
-      </label>
+      <div className="chips" style={{ marginBottom: 10 }}>
+        <button type="button" className={`chip ${pointBuy ? 'on' : ''}`} onClick={() => onMethodChange('point_buy')}>
+          Point-buy ({POINT_BUY_BUDGET} очков)
+        </button>
+        <button type="button" className={`chip ${!pointBuy ? 'on' : ''}`} onClick={() => onMethodChange('manual')}>
+          Ручной ввод
+        </button>
+      </div>
 
-      {!manual && (
-        <div className="pool">
-          {standardArray.map((v, i) => (
-            <span key={i} className={`p ${remainingPool.includes(v) ? '' : 'used'}`}>{v}</span>
-          ))}
-        </div>
+      {pointBuy && (
+        <>
+          <div className="forge-note" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span>
+              Осталось очков: <b className={remaining < 0 ? 'pb-over' : ''}>{remaining}</b> из {POINT_BUY_BUDGET}
+            </span>
+            <button type="button" className="chip rec" onClick={applyRecommended}
+              disabled={!Object.keys(recommended).length}
+              title={Object.keys(recommended).length ? 'Заполнить оптимальным раскладом класса' : 'Сначала выберите класс'}>
+              Оптимально для класса
+            </button>
+            <button type="button" className="chip" onClick={resetBases}>Сбросить (все 8)</button>
+          </div>
+
+          {ABILITY_KEYS.map((k) => {
+            const base = baseOf(abilities, bonuses, k);
+            const bonus = bonusOf(bonuses, k);
+            const final = abilities[k];
+            const cost = typeof base === 'number' ? pointCost(base) : undefined;
+            return (
+              <div key={k} className="ab-row">
+                <span className="name">{ABILITY_LABEL_RU[k]}</span>
+                <span className="pb-ctrl">
+                  <button type="button" className="pb-btn" disabled={(base ?? POINT_BUY_MIN) <= POINT_BUY_MIN}
+                    onClick={() => setBase(k, (base ?? POINT_BUY_MIN) - 1)}>−</button>
+                  <span className="pb-base">{typeof base === 'number' ? base : '—'}</span>
+                  <button type="button" className="pb-btn"
+                    disabled={(base ?? POINT_BUY_MIN) >= POINT_BUY_MAX
+                      || (typeof base === 'number' && (pointCost(base + 1) ?? 99) - (cost ?? 0) > remaining)}
+                    onClick={() => setBase(k, (base ?? POINT_BUY_MIN - 1) + 1)}>+</button>
+                </span>
+                {bonus > 0 && <span className="pb-bonus">+{bonus}</span>}
+                <span className="pb-final">{typeof final === 'number' ? final : ''}</span>
+                <span className="mod">{typeof final === 'number' ? fmtMod(abilityMod(final)) : ''}</span>
+              </div>
+            );
+          })}
+        </>
       )}
 
-      {ABILITY_KEYS.map((k) => {
+      {!pointBuy && ABILITY_KEYS.map((k) => {
         const cur = abilities[k];
         return (
           <div key={k} className="ab-row">
             <span className="name">{ABILITY_LABEL_RU[k]}</span>
-            {manual ? (
-              <input
-                type="number" min={1} max={30}
-                value={typeof cur === 'number' ? cur : ''}
-                onChange={(e) => onSet(k, e.target.value === '' ? undefined : parseInt(e.target.value, 10))}
-                style={{ width: 80 }}
-              />
-            ) : (
-              <select
-                value={typeof cur === 'number' ? cur : ''}
-                onChange={(e) => onSet(k, e.target.value === '' ? undefined : parseInt(e.target.value, 10))}
-              >
-                <option value="">—</option>
-                {[...new Set([...(typeof cur === 'number' ? [cur] : []), ...remainingPool])]
-                  .sort((a, b) => b - a)
-                  .map((v) => <option key={v} value={v}>{v}</option>)}
-              </select>
-            )}
-            <span className="mod">{typeof cur === 'number' ? (abilityMod(cur) >= 0 ? `+${abilityMod(cur)}` : abilityMod(cur)) : ''}</span>
+            <input
+              type="number" min={1} max={30}
+              value={typeof cur === 'number' ? cur : ''}
+              onChange={(e) => onSet(k, e.target.value === '' ? undefined : parseInt(e.target.value, 10))}
+              style={{ width: 80 }}
+            />
+            <span className="mod">{typeof cur === 'number' ? fmtMod(abilityMod(cur)) : ''}</span>
           </div>
         );
       })}
+
+      <div className="choice-box" style={{ marginTop: 14 }}>
+        <div className="choice-title">
+          Бонусы предыстории{backgroundName ? ` · ${backgroundName}` : ''}
+        </div>
+        <div className="chips" style={{ marginBottom: 6 }}>
+          <button type="button" className={`chip ${bonuses.mode === 'two_one' ? 'on' : ''}`}
+            onClick={() => switchMode('two_one')}>+2 / +1</button>
+          <button type="button" className={`chip ${bonuses.mode === 'one_one_one' ? 'on' : ''}`}
+            onClick={() => switchMode('one_one_one')}>+1 / +1 / +1</button>
+        </div>
+        <div className="chips">
+          {allowedBonusAbilities.map((k) => {
+            const v = bonuses.assignments[k] ?? 0;
+            return (
+              <button key={k} type="button" className={`chip ${v ? 'on' : ''}`} onClick={() => cycleBonus(k)}>
+                {ABILITY_LABEL_RU[k]}{v ? ` +${v}` : ''}
+              </button>
+            );
+          })}
+        </div>
+        <label className="forge-note" style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+          <input
+            type="checkbox"
+            checked={bonuses.anyAbilities}
+            onChange={(e) => changeBonuses({ ...bonuses, anyAbilities: e.target.checked, assignments: {} })}
+          />
+          Разрешить любые характеристики (не только предыстории)
+        </label>
+      </div>
     </div>
   );
 }
