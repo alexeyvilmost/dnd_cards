@@ -192,14 +192,22 @@ export function AbilityAssigner({
 const skillLabel = (id: string) => labelOf(SKILLS, id);
 
 export function SummaryPanel({
-  draft, assembled, spells,
-}: { draft: CharacterDraft; assembled: AssembledCharacter | null; spells: Spell[] }) {
+  draft, assembled, spells, lineageName: lineageNameProp,
+}: {
+  draft: CharacterDraft;
+  assembled: AssembledCharacter | null;
+  spells: Spell[];
+  lineageName?: string;
+}) {
   const race = assembled?.race;
   const klass = assembled?.klass;
   const background = assembled?.background;
   const feats = assembled?.feats || [];
-  const lineageName = race?.lineages?.find((l) => (l as { id?: string }).id === draft.lineageId)?.name
-    || (draft.lineageId ?? undefined);
+  const lineageName = lineageNameProp
+    ?? race?.lineages?.find(
+      (l) => l.name === draft.lineageId || (l as { id?: string }).id === draft.lineageId,
+    )?.name
+    ?? (draft.lineageId && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(draft.lineageId) ? draft.lineageId : undefined);
 
   const effectsByOrigin = (kind: string) => (assembled?.effects || []).filter((e) => e.origin.kind === kind);
   const actionsByOrigin = (kind: string) => (assembled?.actions || []).filter((a) => a.origin.kind === kind);

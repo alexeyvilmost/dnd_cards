@@ -9,7 +9,7 @@ import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch } from '../character/resourceInit';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, STANDARD_ARRAY, ABILITY_KEYS, type CharacterDraft, type AbilityKey } from '../character/types';
-import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft } from '../character/forgeHelpers';
+import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -296,12 +296,11 @@ const CharacterForge = () => {
   const subclassDone = classSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const featDone = featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
 
-  const lineageName = draft.lineageId
-    ? (subraces.find((r) => r.id === draft.lineageId)?.name
-      || assembled.race?.lineages?.find((l) => l.name === draft.lineageId)?.name
-      || raceSubChoices[0]?.items?.find((it) => it.id === draft.lineageId)?.name
-      || draft.lineageId)
-    : undefined;
+  const lineageName = resolveLineageName(draft.lineageId, {
+    subraces,
+    lineages: assembled.race?.lineages,
+    subChoices: raceSubChoices,
+  });
   const subclassSel = classSubfeatureChoice ? draft.resolvedChoices[classSubfeatureChoice.id]?.[0] : undefined;
   const subclassName = classSubfeatureChoice?.items?.find((it) => it.id === subclassSel)?.name || subclassSel;
 
@@ -385,6 +384,7 @@ const CharacterForge = () => {
             <div className="forge-summary">
               <OverviewPanel
                 draft={draft} patch={patch} assembled={assembled} spells={selectedSpells}
+                lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
                 issues={issues} canCreate={canCreate} saving={saving} onSave={save}
                 savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
               />
@@ -398,8 +398,9 @@ const CharacterForge = () => {
 
 // ─── Правая панель обзора (имя + résumé + создание) ──────────────────────────
 
-function OverviewPanel({ draft, patch, assembled, spells, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
+function OverviewPanel({ draft, patch, assembled, spells, lineageName, subChoices, subraces, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
   draft: CharacterDraft; patch: (p: Partial<CharacterDraft>) => void; assembled: AssembledCharacter; spells: Spell[];
+  lineageName?: string; subChoices?: PendingChoice[]; subraces?: Race[];
   issues: string[]; canCreate: boolean; saving: boolean; onSave: () => void; savedId: string | null;
   error: string | null; onOpenSheet: () => void;
 }) {
@@ -410,7 +411,16 @@ function OverviewPanel({ draft, patch, assembled, spells, issues, canCreate, sav
         <input className="forge-input" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Фарадей фон Грасс" />
       </div>
 
-      <SummaryPanel draft={draft} assembled={assembled} spells={spells} />
+      <SummaryPanel
+        draft={draft}
+        assembled={assembled}
+        spells={spells}
+        lineageName={lineageName ?? resolveLineageName(draft.lineageId, {
+          subraces,
+          lineages: assembled.race?.lineages,
+          subChoices,
+        })}
+      />
 
       <div className="forge-overview-footer">
         {savedId ? (
@@ -468,9 +478,14 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
+  const subChoice = subChoices?.[0] as PendingChoice | undefined;
+  const subChoiceItems = subChoice?.items ?? [];
+  const hasEntitySubraces = race && (subraces as Race[]).length > 0;
+  const hasSubfeatureSubraces = race && subChoiceItems.length > 0;
+
   return (
     <div>
-      <div className="forge-block">
+      <div className="forge-block forge-square-block">
         <div className="forge-square-grid">
           {topRaces.map((r: Race) => (
             <EntitySquareCard
@@ -485,22 +500,11 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
           {topRaces.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
         </div>
       </div>
-      {race && (
-        <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{race.name}</div>
-          {race.description && (
-            <p className="forge-note"><FormattedText text={race.description} emptyText="" /></p>
-          )}
-          {race.traits && race.traits.length > 0 && (
-            <ForgeTraitsBlock traits={race.traits} />
-          )}
-        </div>
-      )}
 
-      {/* Подвиды выбранного вида (отдельные виды-сущности) */}
-      {race && subraces.length > 0 && subraceUnlocked && (
-        <div className="forge-block">
-          <div className="forge-section-h">Подвид</div>
+      {/* Подвиды — сразу под основным видом */}
+      {hasEntitySubraces && subraceUnlocked && (
+        <div className="forge-block forge-square-block">
+          <div className="forge-section-h forge-section-h--center">Подвид</div>
           <div className="forge-square-grid">
             {(subraces as Race[]).map((r) => (
               <EntitySquareCard
@@ -515,12 +519,40 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
           </div>
         </div>
       )}
-      {race && subraces.length > 0 && !subraceUnlocked && (
-        <div className="forge-block">
-          <div className="forge-section-h">Подвид</div>
-          <p className="forge-note">Выбор подвида откроется на {subraceLevel}-м уровне.</p>
+      {hasEntitySubraces && !subraceUnlocked && (
+        <div className="forge-block forge-square-block">
+          <div className="forge-section-h forge-section-h--center">Подвид</div>
+          <p className="forge-note forge-note--center">Выбор подвида откроется на {subraceLevel}-м уровне.</p>
         </div>
       )}
+      {hasSubfeatureSubraces && (
+        <div className="forge-block forge-square-block">
+          <div className="forge-section-h forge-section-h--center">{subChoice?.prompt || 'Подвид'}</div>
+          <div className="forge-square-grid">
+            {subChoiceItems.map((item) => (
+              <EntitySquareCard
+                key={item.id}
+                name={item.name}
+                selected={draft.lineageId === item.id}
+                onClick={() => setResolved(subChoice!.id, draft.lineageId === item.id ? [] : [item.id])}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {race && (
+        <div className="forge-block forge-desc-block">
+          <div className="forge-entity-name">{race.name}</div>
+          {race.description && (
+            <p className="forge-note"><FormattedText text={race.description} emptyText="" /></p>
+          )}
+          {race.traits && race.traits.length > 0 && (
+            <ForgeTraitsBlock traits={race.traits} />
+          )}
+        </div>
+      )}
+
       {subrace && (
         <div className="forge-block forge-desc-block">
           <div className="forge-entity-name">{subrace.name}</div>
@@ -533,8 +565,6 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
         </div>
       )}
 
-      {/* Legacy: подвиды через subfeature-выбор */}
-      <ChoiceList choices={subChoices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выберите подвид" />
       <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
     </div>
   );
@@ -545,7 +575,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
   return (
     <div>
-      <div className="forge-block">
+      <div className="forge-block forge-square-block">
         <div className="forge-square-grid">
           {classes.map((c: CharacterClass) => (
             <EntitySquareCard
@@ -612,7 +642,7 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleS
   const bg = background ?? bgFromList;
   return (
     <div>
-      <div className="forge-block">
+      <div className="forge-block forge-square-block">
         <div className="forge-square-grid">
           {backgrounds.map((b: Background) => (
             <EntitySquareCard
@@ -653,8 +683,8 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, resolved, setR
   return (
     <div>
       {swapFeat && (
-        <div className="forge-block">
-          <div className="forge-section-h">Черта происхождения</div>
+        <div className="forge-block forge-square-block">
+          <div className="forge-section-h forge-section-h--center">Черта происхождения</div>
           <div className="forge-square-grid">
             {feats.map((f: Feat) => (
               <EntitySquareCard key={f.id} name={f.name} imageUrl={f.image_url} selected={draft.featIds.includes(f.id)} onClick={() => onToggle(f.id)} />

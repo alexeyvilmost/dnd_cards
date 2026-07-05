@@ -5,6 +5,32 @@ import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
 import { collectChosenSpellUuids } from '../engine/spellRefs';
 import { isEntityUuid } from '../engine/ids';
+import type { Race, RaceTrait } from '../types';
+import type { PendingChoice } from '../mechanics/collectChoices';
+
+export function resolveLineageName(
+  lineageId: string | null | undefined,
+  opts: {
+    subraces?: Race[];
+    lineages?: RaceTrait[] | null;
+    subChoices?: PendingChoice[];
+  },
+): string | undefined {
+  if (!lineageId) return undefined;
+  const { subraces = [], lineages, subChoices = [] } = opts;
+  const fromSubrace = subraces.find((r) => r.id === lineageId)?.name;
+  if (fromSubrace) return fromSubrace;
+  const fromLineage = lineages?.find(
+    (l) => l.name === lineageId || (l as { id?: string }).id === lineageId,
+  )?.name;
+  if (fromLineage) return fromLineage;
+  for (const pc of subChoices) {
+    const item = pc.items?.find((it) => it.id === lineageId);
+    if (item?.name) return item.name;
+  }
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(lineageId)) return undefined;
+  return lineageId;
+}
 
 export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   const classSkillChoices = (c.rule_state?.appliedGrants || [])
