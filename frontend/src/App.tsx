@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import Layout from './components/Layout';
@@ -17,15 +17,6 @@ import Inventory from './pages/Inventory';
 import CreateInventory from './pages/CreateInventory';
 import InventoryDetail from './pages/InventoryDetail';
 import AddItemToInventory from './pages/AddItemToInventory';
-import Characters from './pages/Characters';
-import CharacterDetail from './pages/CharacterDetail';
-import CharacterEdit from './pages/CharacterEdit';
-import CreateCharacter from './pages/CreateCharacter';
-import CharactersV2 from './pages/CharactersV2';
-import CharacterDetailV2 from './pages/CharacterDetailV2';
-import CharactersV3 from './pages/CharactersV3';
-import CharacterDetailV3 from './pages/CharacterDetailV3';
-import CreateCharacterV3 from './pages/CreateCharacterV3';
 import CharacterForge from './pages/CharacterForge';
 import CharacterSheetMVP from './pages/CharacterSheetMVP';
 import CharactersForgeList from './pages/CharactersForgeList';
@@ -206,78 +197,14 @@ function App() {
           </ProtectedRoute>
         } />
         
-        {/* Character routes */}
-        <Route path="/characters" element={
-          <ProtectedRoute>
-            <Layout>
-              <Characters />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters-v2" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharactersV2 />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters-v2/:id" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharacterDetailV2 />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters-v2/:id/edit" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharacterDetailV2 />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters-v3" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharactersV3 />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters-v3/create" element={
-          <ProtectedRoute>
-            <Layout>
-              <CreateCharacterV3 />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters-v3/:id/legacy" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharacterDetailV3 />
-            </Layout>
-          </ProtectedRoute>
-        } />
+        {/* Character routes: легаси-поколения (v1/v2/v3-old) удалены 2026-07-05,
+            старые URL ведут в актуальную систему (Forge). */}
+        <Route path="/characters" element={<Navigate to="/characters-forge" replace />} />
+        <Route path="/characters-v2" element={<Navigate to="/characters-forge" replace />} />
+        <Route path="/characters-v3" element={<Navigate to="/characters-forge" replace />} />
+        <Route path="/characters-v3/create" element={<Navigate to="/character-forge" replace />} />
+        <Route path="/characters/create" element={<Navigate to="/character-forge" replace />} />
         <Route path="/characters-v3/:id/edit" element={<CharacterForge />} />
-        <Route path="/characters/create" element={
-          <ProtectedRoute>
-            <Layout>
-              <CreateCharacter />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters/:id" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharacterDetail />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/characters/:id/edit" element={
-          <ProtectedRoute>
-            <Layout>
-              <CharacterEdit />
-            </Layout>
-          </ProtectedRoute>
-        } />
         
         {/* Dice Roller route */}
         <Route path="/dice" element={
