@@ -192,7 +192,10 @@ function grantFromPayload(payload: Dict, source: RuleSource, choiceId?: string):
   const prof = String(payload.prof || 'skill') as ProficiencyKind;
   const value = payload.value;
   if (!value) return null;
-  const mode: GrantMode = payload.mode === 'expertise' || payload.expertise === true ? 'expertise' : 'proficiency';
+  // Контент помечает экспертизу по-разному: mode:"expertise" | expertise:true | expert:true.
+  const mode: GrantMode = payload.mode === 'expertise' || payload.expertise === true || payload.expert === true
+    ? 'expertise'
+    : 'proficiency';
   return { source, kind: prof, value: String(value), mode, choiceId };
 }
 
