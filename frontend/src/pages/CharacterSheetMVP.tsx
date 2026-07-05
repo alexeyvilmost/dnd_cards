@@ -21,6 +21,9 @@ import { getSpellLevelLabel, type Card, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
 import SheetJournalFab from '../components/SheetJournalFab';
+import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { plannedValuesRng } from '../engine/dicePlan';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
@@ -55,6 +58,9 @@ const CharacterSheetMVP = () => {
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
   const [journalLoading, setJournalLoading] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [unseen, setUnseen] = useState(0);
+  const { toasts, push: pushToast } = useSheetToasts();
+  const diceDialog = useDiceDialog();
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
@@ -238,14 +244,20 @@ const CharacterSheetMVP = () => {
     if (!id || rollingInit) return;
     setRollingInit(true);
     try {
+      const decision = await diceDialog.request([{ sides: 20, label: 'Инициатива' }], 'Бросок инициативы');
+      if (decision.mode === 'cancel') return;
+      const rng = decision.mode === 'manual'
+        ? plannedValuesRng([{ sides: 20, label: 'Инициатива' }], decision.values)
+        : () => Math.random();
       const roll = rollD20({
         modifiers: [{ value: initiative, source: 'инициатива', reason: 'бонус инициативы' }],
-        rng: () => Math.random(),
+        rng,
       });
       const event = rollEvent('Инициатива', roll);
+      pushToast([event]);
+      if (!journalOpen) setUnseen((u) => u + 1);
       const saved = await charactersV3Api.postEvents(id, [{ type: 'roll', payload: event }]);
       setJournal((prev) => [...prev, ...saved]);
-      setJournalOpen(true);
     } catch (e) {
       console.error('initiative roll', e);
     } finally {
@@ -253,16 +265,28 @@ const CharacterSheetMVP = () => {
     }
   };
 
+  // Как в трекере: событие показывается всплывающей подсказкой, полная
+  // история копится в журнале (FAB), который открывается только вручную.
   const appendRuntimeEvents = async (events: import('../mvp/contracts').EngineEvent[]) => {
     if (!id || !events.length) return;
+    pushToast(events);
+    if (!journalOpen) setUnseen((u) => u + 1);
     try {
       const items = events.map((payload) => ({ type: payload.type, payload }));
       const saved = await charactersV3Api.postEvents(id, items);
       setJournal((prev) => [...prev, ...saved]);
-      setJournalOpen(true);
     } catch (e) {
       console.error('runtime events', e);
     }
+  };
+
+  // Клик по заклинанию в секции «Заклинания» — прокрутка к его действию с подсветкой.
+  const scrollToAction = (actionId: string) => {
+    const el = document.querySelector(`[data-action-id="${actionId}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('sheet-action-flash');
+    window.setTimeout(() => el.classList.remove('sheet-action-flash'), 1600);
   };
 
   // Клик по спасброску/навыку — бросок к20 с разбивкой в журнал.
@@ -275,10 +299,19 @@ const CharacterSheetMVP = () => {
     const collected = runtimeState
       ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
       : { advantage: 'none' as const, modifiers: [] };
+    const plan = Array.from(
+      { length: collected.advantage === 'none' ? 1 : 2 },
+      () => ({ sides: 20, label }),
+    );
+    const decision = await diceDialog.request(plan, label);
+    if (decision.mode === 'cancel') return;
+    const rng = decision.mode === 'manual'
+      ? plannedValuesRng(plan, decision.values)
+      : () => Math.random();
     const roll = rollD20({
       advantage: collected.advantage,
       modifiers: [...parts, ...collected.modifiers],
-      rng: () => Math.random(),
+      rng,
     });
     await appendRuntimeEvents([rollEvent(label, roll)]);
   };
@@ -637,10 +670,11 @@ const CharacterSheetMVP = () => {
                         key={spell.id}
                         type="button"
                         className="forge-spell-icon ready"
-                        title={spell.name}
+                        title={`${spell.name} — к действию`}
                         onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
                         onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
                         onMouseLeave={() => setHoveredSpell(null)}
+                        onClick={() => scrollToAction(spell.id)}
                       >
                         {spell.image_url ? (
                           <img
@@ -676,13 +710,15 @@ const CharacterSheetMVP = () => {
       </div>
       )}
 
+      <SheetToasts toasts={toasts} />
       <SheetJournalFab
         open={journalOpen}
-        onOpenChange={setJournalOpen}
+        onOpenChange={(o) => { setJournalOpen(o); if (o) setUnseen(0); }}
         rows={journal}
         loading={journalLoading}
         onRollInitiative={rollInitiative}
         rollingInit={rollingInit}
+        unseen={unseen}
       />
     </div>
   );

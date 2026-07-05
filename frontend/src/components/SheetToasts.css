@@ -1,0 +1,39 @@
+/* Всплывающие подсказки листа: стек справа-снизу, над FAB журнала */
+.sheet-toasts {
+  position: fixed; bottom: 84px; right: 16px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px;
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.sheet-toast {
+  background: #1c1813; border: 1px solid #6b5836; border-left: 3px solid #d8b978;
+  border-radius: 10px; padding: 10px 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  color: #e8e0d0; transition: opacity 0.3s;
+  animation: sheet-toast-in 0.18s ease-out;
+}
+@keyframes sheet-toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.sheet-toast-title { font-weight: 700; color: #d8b978; font-size: 14px; margin-bottom: 2px; }
+.sheet-toast-line { font-size: 13px; color: #e8e0d0; line-height: 1.4; }
+
+/* Бейдж непрочитанных на FAB журнала */
+.sheet-journal-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px; background: #d98a6a; color: #201b14;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Подсветка действия при переходе из секции «Заклинания» */
+.sheet-action-flash {
+  animation: sheet-action-flash 1.5s ease-out;
+  border-radius: 8px;
+}
+@keyframes sheet-action-flash {
+  0%, 40% { box-shadow: 0 0 0 2px #d8b978; background: rgba(216, 185, 120, 0.12); }
+  100% { box-shadow: none; background: transparent; }
+}

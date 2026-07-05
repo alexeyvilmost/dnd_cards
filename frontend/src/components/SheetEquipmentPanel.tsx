@@ -10,7 +10,7 @@ import {
   removeFromInventory,
   runtimeInventoryPayload,
 } from '../character/runtime';
-import { collectEquippedCards, equipFromInventory, unequipToInventory } from '../character/inventory';
+import { characterCurrency, collectEquippedCards, equipFromInventory, unequipToInventory } from '../character/inventory';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { computeAC } from '../engine/ac';
@@ -96,6 +96,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   }, [search]);
 
   const cardMap = cards;
+  const wallet = characterCurrency(character);
   const weight = totalWeight(runtime, cardMap);
   const strScore = character.abilities?.str ?? 10;
   const capacity = carryingCapacity(strScore);
@@ -164,6 +165,16 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
           <span>КД (расчёт)</span><strong>{acBreakdown.value}</strong>
         </div>
         <div className="sheet-stat"><span>Вес</span><strong>{weight.toFixed(1)} / {capacity} фн</strong></div>
+        <div className="sheet-stat" title="Кошелёк персонажа (золото / серебро / медь)">
+          <span>Кошелёк</span>
+          <strong>
+            {[
+              wallet.gold ? `${wallet.gold} зм` : null,
+              wallet.silver ? `${wallet.silver} см` : null,
+              wallet.copper ? `${wallet.copper} мм` : null,
+            ].filter(Boolean).join(' ') || '0 зм'}
+          </strong>
+        </div>
         {mainWeapon && (
           <div className="sheet-stat"><span>Оружие</span><strong>{mainWeapon.dice} {mainWeapon.ability.toUpperCase()}</strong></div>
         )}

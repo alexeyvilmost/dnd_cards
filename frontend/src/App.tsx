@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { DiceDialogProvider } from './contexts/DiceDialogContext';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import CardLibrary from './pages/CardLibrary';
@@ -45,6 +47,7 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <DiceDialogProvider>
         <Routes>
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
@@ -206,6 +209,15 @@ function App() {
         <Route path="/characters/create" element={<Navigate to="/character-forge" replace />} />
         <Route path="/characters-v3/:id/edit" element={<CharacterForge />} />
         
+        {/* Настройки сайта */}
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Layout>
+              <Settings />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
         {/* Dice Roller route */}
         <Route path="/dice" element={
           <ProtectedRoute>
@@ -323,6 +335,7 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
+        </DiceDialogProvider>
       </ToastProvider>
     </AuthProvider>
   );

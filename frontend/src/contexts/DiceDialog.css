@@ -1,0 +1,37 @@
+/* Диалог броска кубов (тёмно-золотая тема листа) */
+.dice-dialog-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10, 8, 6, 0.6);
+  display: flex; align-items: center; justify-content: center;
+}
+.dice-dialog {
+  width: min(420px, calc(100vw - 32px));
+  background: #1c1813; color: #e8e0d0;
+  border: 1px solid #6b5836; border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  padding: 18px 20px;
+}
+.dice-dialog-title { font-size: 18px; font-weight: 700; color: #d8b978; margin-bottom: 6px; }
+.dice-dialog-summary { font-size: 14px; color: #a99f8b; margin-bottom: 12px; }
+.dice-dialog-summary b { color: #e8e0d0; }
+.dice-dialog-list { display: flex; flex-direction: column; gap: 8px; max-height: 40vh; overflow-y: auto; }
+.dice-dialog-row { display: flex; align-items: center; gap: 10px; }
+.dice-dialog-die {
+  flex: 0 0 44px; text-align: center; font-weight: 700; color: #d8b978;
+  border: 1px solid #6b5836; border-radius: 8px; padding: 5px 0; font-size: 14px;
+}
+.dice-dialog-label { flex: 1 1 auto; font-size: 14px; color: #e8e0d0; }
+.dice-dialog-input {
+  flex: 0 0 76px; background: #241f18; color: #e8e0d0;
+  border: 1px solid #6b5836; border-radius: 6px; padding: 6px 8px; font-size: 14px;
+}
+.dice-dialog-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.dice-dialog-btn {
+  border: 1px solid #6b5836; border-radius: 8px; padding: 8px 14px;
+  background: #241f18; color: #e8e0d0; cursor: pointer; font-size: 14px;
+}
+.dice-dialog-btn.primary { background: #d8b978; border-color: #d8b978; color: #201b14; font-weight: 600; }
+.dice-dialog-btn:hover:not(:disabled) { border-color: #d8b978; }
+.dice-dialog-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.dice-dialog-btn.ghost { background: transparent; color: #a99f8b; }
+.dice-dialog-note { margin: 12px 0 0; font-size: 12px; color: #a99f8b; }

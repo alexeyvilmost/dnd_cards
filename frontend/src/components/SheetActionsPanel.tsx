@@ -8,8 +8,10 @@ import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../c
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { canPay } from '../engine/cost';
+import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
 import type { Card } from '../types';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import SheetActionLine from './SheetActionLine';
@@ -68,6 +70,7 @@ export default function SheetActionsPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [targetAc, setTargetAc] = useState(10);
+  const diceDialog = useDiceDialog();
 
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
@@ -117,7 +120,7 @@ export default function SheetActionsPanel({
     }
   }, [character.id, onUpdated, onEvents]);
 
-  const runAction = (action: SheetAction) => {
+  const runAction = async (action: SheetAction) => {
     const mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
@@ -131,12 +134,19 @@ export default function SheetActionsPanel({
         }
       : undefined;
 
+    const execute = (rng: () => number) =>
+      executeAction(runtime, mech, { character: ctx, target, rng });
+
     try {
-      const { state, events } = executeAction(runtime, mech, {
-        character: ctx,
-        target,
-        rng: () => Math.random(),
-      });
+      // План кубов: чистый прогон с фиксированным rng (0.94 → попадание,
+      // чтобы в план вошли и кости урона). Реальный прогон — после решения игрока.
+      const plan = extractDiceFromEvents(execute(PLANNING_RNG).events);
+      const decision = await diceDialog.request(plan, action.name);
+      if (decision.mode === 'cancel') return;
+      const rng = decision.mode === 'manual'
+        ? plannedValuesRng(plan, decision.values)
+        : () => Math.random();
+      const { state, events } = execute(rng);
       apply(state, events);
     } catch (e) {
       if (e instanceof InsufficientResourcesError) {
@@ -207,8 +217,8 @@ export default function SheetActionsPanel({
             {items.map((action) => {
               const disabled = isDisabled(action);
               return (
+                <div key={action.id} data-action-id={action.id}>
                 <SheetActionLine
-                  key={action.id}
                   name={action.name}
                   imageUrl={action.imageUrl}
                   sourceLabel={action.sourceLabel ?? (action.group === 'basic' ? 'Базовое действие' : undefined)}
@@ -221,6 +231,7 @@ export default function SheetActionsPanel({
                   disabledTitle="Недостаточно ресурсов"
                   onActivate={() => runAction(action)}
                 />
+                </div>
               );
             })}
           </div>

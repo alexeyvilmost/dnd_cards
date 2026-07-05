@@ -5,9 +5,11 @@ import type { CharacterDraft, ForgeCharacter } from '../character/types';
 import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
 import type { CharacterContext, EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { breakdownValue } from '../engine/breakdown';
+import { plannedValuesRng } from '../engine/dicePlan';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
 import { SKILLS } from '../mechanics/registries';
@@ -61,9 +63,10 @@ const CharacterSheetV2 = ({
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [hpOpen, setHpOpen] = useState(false);
+  const diceDialog = useDiceDialog();
 
   // Клик по спасброску/навыку — бросок к20 в журнал (учёт активных эффектов).
-  const rollCheck = (
+  const rollCheck = async (
     label: string,
     parts: { value: number; source: string; reason?: string }[],
     rollKind: 'saving_throw' | 'ability_check',
@@ -72,10 +75,19 @@ const CharacterSheetV2 = ({
     const collected = runtimeState
       ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
       : { advantage: 'none' as const, modifiers: [] };
+    const plan = Array.from(
+      { length: collected.advantage === 'none' ? 1 : 2 },
+      () => ({ sides: 20, label }),
+    );
+    const decision = await diceDialog.request(plan, label);
+    if (decision.mode === 'cancel') return;
+    const rng = decision.mode === 'manual'
+      ? plannedValuesRng(plan, decision.values)
+      : () => Math.random();
     const roll = rollD20({
       advantage: collected.advantage,
       modifiers: [...parts, ...collected.modifiers],
-      rng: () => Math.random(),
+      rng,
     });
     onEvents([rollEvent(label, roll)]);
   };

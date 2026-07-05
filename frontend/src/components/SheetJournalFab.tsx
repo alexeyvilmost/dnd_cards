@@ -10,6 +10,8 @@ interface SheetJournalFabProps {
   loading?: boolean;
   onRollInitiative?: () => void;
   rollingInit?: boolean;
+  /** Число новых записей с последнего открытия журнала (бейдж). */
+  unseen?: number;
 }
 
 export default function SheetJournalFab({
@@ -19,6 +21,7 @@ export default function SheetJournalFab({
   loading,
   onRollInitiative,
   rollingInit,
+  unseen = 0,
 }: SheetJournalFabProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +69,7 @@ export default function SheetJournalFab({
         aria-label={open ? 'Закрыть журнал' : 'Открыть журнал'}
       >
         {open ? <X size={26} strokeWidth={2} /> : <D20Icon />}
+        {!open && unseen > 0 && <span className="sheet-journal-badge">{unseen > 99 ? '99+' : unseen}</span>}
       </button>
     </div>
   );

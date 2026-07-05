@@ -33,7 +33,8 @@ const Layout = ({ children }: LayoutProps) => {
       icon: User,
       submenu: [
         { path: '/groups', label: 'Мои группы' },
-        { path: '/inventory', label: 'Инвентарь' }
+        { path: '/inventory', label: 'Инвентарь' },
+        { path: '/settings', label: 'Настройки' }
       ]
     }
   ];
