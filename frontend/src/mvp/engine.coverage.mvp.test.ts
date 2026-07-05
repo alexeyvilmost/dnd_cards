@@ -176,6 +176,21 @@ describe('payload-ы исполнителя: condition / temp_hp / resource / sc
     expect(events.some((e) => e.type === 'resource_restored' && e.resource === 'action')).toBe(true);
   });
 
+  it('cost: канон схемы {resource:"spell_slot", level:1} списывает spell_slot_1', () => {
+    const base = freshFighterState();
+    const state: RuntimeState = {
+      ...base,
+      resources: { ...base.resources, spell_slot_1: 2 },
+      maxResources: { ...base.maxResources, spell_slot_1: 2 },
+    };
+    const spellMech: Mech = {
+      activation: { mode: 'active', cost: [{ resource: 'spell_slot', level: 1, amount: 1 }] },
+      effects: [{ resolution: 'auto', result: [{ kind: 'narrative', description: 'тест' }] }],
+    };
+    const { state: next } = executeAction(state, spellMech, { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(next.resources.spell_slot_1).toBe(1);
+  });
+
   it('auto: resource op:restore восстанавливает ячейку заклинаний до максимума', () => {
     const base = freshFighterState();
     const state: RuntimeState = {

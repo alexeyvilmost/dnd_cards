@@ -66,6 +66,13 @@ async function main() {
       name: a.name,
       id: a.card_number || a.id,
     })),
+    ...(await fetchAll('/api/spells', 'spells')).map((s) => ({
+      label: `spell:${s.card_number || s.id}`,
+      mechanics: s.mechanics,
+      kind: 'spell',
+      name: s.name,
+      id: s.card_number || s.id,
+    })),
   ];
 
   const errors = [];

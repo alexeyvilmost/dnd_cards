@@ -50,7 +50,7 @@
       "type": "object",
       "required": ["resource"],
       "properties": {
-        "resource": { "enum": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "hp", "hit_die"] },
+        "resource": { "enum": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die"] },
         "amount": { "$ref": "#/$defs/formula" },
         "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" }
       }
@@ -178,7 +178,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
+        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative", "grant_proficiency", "grant_feat", "grant_spell", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
       },
       "allOf": [
         {
@@ -230,7 +230,7 @@
           "if": { "properties": { "kind": { "const": "movement" } } },
           "then": {
             "properties": {
-              "value": { "enum": ["push", "pull", "teleport", "extra_speed", "knock_prone"] },
+              "value": { "enum": ["push", "pull", "teleport", "extra_speed", "double", "knock_prone"] },
               "distance": { "$ref": "#/$defs/formula" }
             }
           }
@@ -332,7 +332,7 @@
           "type": "object",
           "required": ["source"],
           "properties": {
-            "source": { "enum": ["skill", "tool", "saving_throw", "language", "feat", "spell", "damage_type", "subfeature", "explicit", "effect"] },
+            "source": { "enum": ["skill", "tool", "saving_throw", "language", "feat", "spell", "damage_type", "subfeature", "explicit"] },
             "filter": {},
             "items": {
               "type": "array",
@@ -341,7 +341,6 @@
                 "properties": {
                   "id": { "type": "string" },
                   "name": { "type": "string" },
-                  "value": { "type": "string" },
                   "grants": { "type": "array", "items": { "$ref": "#/$defs/payload" } }
                 }
               }

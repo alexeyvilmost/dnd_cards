@@ -12,10 +12,17 @@ function costAmount(entry: Dict): number {
   return typeof raw === 'number' ? raw : Number(raw) || 1;
 }
 
+/** Ключ ресурса: канон схемы {resource:'spell_slot', level:N} → spell_slot_N. */
+export function costKey(entry: Dict): string {
+  const resource = String(entry.resource ?? '');
+  if (resource === 'spell_slot' && entry.level != null) return `spell_slot_${entry.level}`;
+  return resource;
+}
+
 export function canPay(state: RuntimeState, cost: Dict[]): { ok: boolean; missing: string[] } {
   const missing: string[] = [];
   for (const entry of cost) {
-    const key = String(entry.resource ?? '');
+    const key = costKey(entry);
     const need = costAmount(entry);
     const have = state.resources[key] ?? 0;
     if (have < need) missing.push(key);
@@ -31,7 +38,7 @@ export function pay(state: RuntimeState, cost: Dict[]): { state: RuntimeState; e
   const events: EngineEvent[] = [];
 
   for (const entry of cost) {
-    const key = String(entry.resource ?? '');
+    const key = costKey(entry);
     const need = costAmount(entry);
     resources[key] = (resources[key] ?? 0) - need;
     events.push(resourceSpentEvent(key, need, resources[key]));
