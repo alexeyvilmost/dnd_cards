@@ -320,8 +320,9 @@ const CharacterForge = () => {
 
   return (
     <div className={rootCls}>
-      <div className="forge-header sheet-header-bar">
-        <span>Создание персонажа</span>
+      <div className="forge-header sheet-header-bar forge-header-layout">
+        <div className="forge-header-spacer" aria-hidden />
+        <span className="forge-header-title">Создание персонажа</span>
         <div className="sheet-header-actions">
           <button
             type="button"

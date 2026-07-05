@@ -327,6 +327,12 @@ func GetAllMigrations() []Migration {
 			Up:          migrateLegacySubraces,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "054_elf_subrace_content",
+			Description: "Fill Drow and Wood Elf subrace descriptions and traits (PHB 2024)",
+			Up:          seedElfSubraceContent,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -479,6 +485,80 @@ func migrateOneLineage(db *sql.DB, parentCard, effectCard, choiceID string, leve
 	newMechJSON, _ := json.Marshal(mech)
 	if _, err := db.Exec("UPDATE effects SET mechanics=$1 WHERE id=$2", newMechJSON, effectID); err != nil {
 		return err
+	}
+	return nil
+}
+
+// seedElfSubraceContent заполняет описание и черты подвидов «Дроу» и «Лесной эльф»
+// по образцу «Высший эльф» (PHB 2024). Идемпотентна.
+func seedElfSubraceContent(db *sql.DB) error {
+	type subraceContent struct {
+		cardNumber  string
+		description string
+		traits      []map[string]string
+		effectDesc  string
+	}
+	entries := []subraceContent{
+		{
+			cardNumber:  "sub-drow",
+			description: "Дроу обычно обитают в Подземье, и оно сформировало их магию. Некоторые дроу избегают Подземья, но всё равно несут его магию в себе.",
+			effectDesc:  "Магия подвида дроу: расширенное тёмное зрение и заклинания Подземья.",
+			traits: []map[string]string{
+				{
+					"name":        "Пляшущие огоньки",
+					"description": "Дальность вашего тёмного зрения увеличивается до 120 футов. Вы также узнаёте заговор __Пляшущие огоньки__.",
+				},
+				{
+					"name":        "Огонь фей",
+					"description": "На 3-ем уровне вы узнаёте заклинание __Огонь фей__. Вы можете использовать его один раз до Долгого отдыха.",
+				},
+				{
+					"name":        "Тьма",
+					"description": "На 5-ом уровне вы узнаёте заклинание __Тьма__. Вы можете использовать его один раз до Долгого отдыха.",
+				},
+			},
+		},
+		{
+			cardNumber:  "sub-wood_elf",
+			description: "Лесные эльфы носят в себе магию первобытных лесов. Их также называют дикими, зелёными или лесными эльфами.",
+			effectDesc:  "Магия подвида лесного эльфа: повышенная скорость и следопытские заклинания.",
+			traits: []map[string]string{
+				{
+					"name":        "Лесная стремительность",
+					"description": "Ваша скорость передвижения увеличивается до 35 футов. Вы также узнаёте заговор __Друидизм__.",
+				},
+				{
+					"name":        "Скороход",
+					"description": "На 3-ем уровне вы узнаёте заклинание __Скороход__. Вы можете использовать его один раз до Долгого отдыха.",
+				},
+				{
+					"name":        "Бесследное передвижение",
+					"description": "На 5-ом уровне вы узнаёте заклинание __Бесследное передвижение__. Вы можете использовать его один раз до Долгого отдыха.",
+				},
+			},
+		},
+	}
+	for _, e := range entries {
+		traitsJSON, err := json.Marshal(e.traits)
+		if err != nil {
+			return fmt.Errorf("seedElfSubraceContent %s traits: %w", e.cardNumber, err)
+		}
+		res, err := db.Exec(
+			`UPDATE races SET description=$1, traits=$2::jsonb WHERE card_number=$3 AND deleted_at IS NULL`,
+			e.description, string(traitsJSON), e.cardNumber,
+		)
+		if err != nil {
+			return fmt.Errorf("seedElfSubraceContent %s: %w", e.cardNumber, err)
+		}
+		if n, _ := res.RowsAffected(); n == 0 {
+			continue // подвид ещё не создан — пропускаем
+		}
+		if _, err := db.Exec(
+			`UPDATE effects SET description=$1 WHERE card_number=$2 AND deleted_at IS NULL`,
+			e.effectDesc, "RE-"+e.cardNumber,
+		); err != nil {
+			return fmt.Errorf("seedElfSubraceContent effect %s: %w", e.cardNumber, err)
+		}
 	}
 	return nil
 }

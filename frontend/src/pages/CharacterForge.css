@@ -29,6 +29,27 @@
   border-bottom: 1px solid var(--forge-line);
   flex: 0 0 auto;
 }
+.forge-header-layout {
+  display: grid;
+  grid-template-columns: 210px 1fr min(390px, 414px);
+  align-items: center;
+  text-align: center;
+}
+.forge-header-spacer { grid-column: 1; }
+.forge-header-title {
+  grid-column: 2;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--forge-gold);
+}
+.forge-header-layout .sheet-header-actions {
+  grid-column: 3;
+  justify-self: end;
+}
+.forge-header-layout .forge-header-sheet-link {
+  position: static;
+  transform: none;
+}
 
 .forge-body { display: flex; flex: 1 1 auto; min-height: 0; align-items: stretch; }
 
@@ -575,7 +596,22 @@
   background: var(--forge-panel-2); border-color: var(--forge-line); color: var(--forge-text);
 }
 .forge.sheet-paper .forge-btn.ghost:hover { background: #efe9da; }
-.forge.sheet-paper .forge-spell-icon { background: var(--forge-panel-2); border-color: var(--forge-line); }
+
+/* Квадраты видов/классов/черт и иконки заклинаний — коричневый фон и в светлой теме */
+.forge.sheet-paper .forge-square-card {
+  background: #241f18;
+  border-color: #c9a45f;
+}
+.forge.sheet-paper .forge-square-card-label { color: #d8b978; }
+.forge.sheet-paper .forge-square-card-placeholder { color: #a99f8b; }
+.forge.sheet-paper .forge-spell-icon {
+  background: radial-gradient(circle at 50% 38%, #3a3027, #221a14);
+  border-color: #c9a45f;
+}
+.forge.sheet-paper .forge-entity-icon,
+.forge.sheet-paper .forge-entity-icon--placeholder {
+  background: radial-gradient(circle at 50% 35%, #3a3027, #1a140d);
+}
 
 /* ═══════════════ Рейл вкладок (BG3-стиль): медальон + две строки ═══════════════ */
 .forge-rail {
