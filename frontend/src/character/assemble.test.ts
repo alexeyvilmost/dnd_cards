@@ -80,6 +80,25 @@ describe('gatherFeatureRefs — гейт по уровню', () => {
     expect(byId['fx-fighting-style']).toBe('class');
     expect(byId['fx-alert-init']).toBe('feat');
   });
+
+  it('подвид добавляет свои эффекты/действия с race-источником', () => {
+    const subrace = {
+      id: 'high-elf', name: 'Высший эльф',
+      related_effects: ['fx-cantrip'], related_actions: ['act-elf-weapon'],
+      level_progression: { '3': { effects: ['fx-elf-l3'] } },
+    } as unknown as Race;
+    const { effectRefs, actionRefs } = gatherFeatureRefs(race, null, [], 3, subrace);
+    const byId = Object.fromEntries(effectRefs.map((r) => [r.id, r.origin]));
+    expect(byId['fx-cantrip']).toEqual({ kind: 'race', id: 'high-elf', name: 'Высший эльф' });
+    expect(byId['fx-elf-l3']).toBeTruthy(); // способность подвида по уровню
+    expect(actionRefs.map((r) => r.id)).toContain('act-elf-weapon');
+  });
+
+  it('подвид без уровня не тянет способности будущих уровней', () => {
+    const subrace = { id: 's', name: 'S', level_progression: { '3': { effects: ['fx-later'] } } } as unknown as Race;
+    const { effectRefs } = gatherFeatureRefs(race, null, [], 1, subrace);
+    expect(effectRefs.map((r) => r.id)).not.toContain('fx-later');
+  });
 });
 
 // ─── Эффекты-«контейнеры»: ссылки на другие эффекты (бусины) ─────────────────

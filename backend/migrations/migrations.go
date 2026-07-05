@@ -308,8 +308,29 @@ func GetAllMigrations() []Migration {
 			Up:          seedMvpEquipmentCards,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "051_race_subrace",
+			Description: "Add is_subrace and parent_race_id to races",
+			Up:          addRaceSubrace,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addRaceSubrace добавляет видам флаг подвида и ссылку на родительский вид.
+func addRaceSubrace(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE races ADD COLUMN IF NOT EXISTS is_subrace BOOLEAN DEFAULT false",
+		"ALTER TABLE races ADD COLUMN IF NOT EXISTS parent_race_id UUID",
+		"CREATE INDEX IF NOT EXISTS idx_races_parent ON races(parent_race_id)",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("addRaceSubrace: %w", err)
+		}
+	}
+	return nil
 }
 
 // addSpellResources добавляет заклинаниям список ресурсов (несколько одновременно).

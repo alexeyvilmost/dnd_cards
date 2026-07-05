@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { User, Users, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
+import { User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -273,9 +273,10 @@ const CharacterForge = () => {
   const classSubChoices = classChoices.filter((pc) => pc.source === 'subfeature');
   const featChoices = assembled.pendingChoices.filter((pc) => pc.source === 'feat');
 
+  // Подвиды — отдельные виды-сущности с parent_race_id текущего вида
+  const subraces = draft.raceId ? races.filter((r) => r.parent_race_id === draft.raceId) : [];
+
   // Условия появления вкладок
-  const lineageCount = assembled.race?.lineages?.length ?? 0;
-  const hasSubrace = lineageCount > 1 || raceSubChoices.length > 0;
   const hasSubclass = classSubChoices.length > 0;
   const hasSpells = spellChoices.length > 0 || grantedSpells.length > 0;
   const hasFeatTab = !!draft.swapFeat || featChoices.length > 0;
@@ -286,13 +287,15 @@ const CharacterForge = () => {
   const sc = classSkillChoice(assembled);
   const classDone = !!draft.classId && (!sc || draft.classSkillChoices.length >= sc.count)
     && classOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
-  const raceDone = !!draft.raceId && raceOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
-  const subraceDone = !hasSubrace || !!draft.lineageId || raceSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const raceDone = !!draft.raceId
+    && raceOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count)
+    && raceSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const subclassDone = classSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const featDone = featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
 
   const lineageName = draft.lineageId
-    ? (assembled.race?.lineages?.find((l) => l.name === draft.lineageId)?.name
+    ? (subraces.find((r) => r.id === draft.lineageId)?.name
+      || assembled.race?.lineages?.find((l) => l.name === draft.lineageId)?.name
       || raceSubChoices[0]?.items?.find((it) => it.id === draft.lineageId)?.name
       || draft.lineageId)
     : undefined;
@@ -301,8 +304,7 @@ const CharacterForge = () => {
 
   // Динамический список вкладок
   const sections: ForgeSectionDef[] = [];
-  sections.push({ id: 'race', label: 'Вид', icon: <User size={19} />, sub: assembled.race?.name, status: raceDone ? 'ok' : 'todo' });
-  if (hasSubrace) sections.push({ id: 'subrace', label: 'Подвид', icon: <Users size={19} />, sub: lineageName, status: subraceDone ? 'ok' : 'todo' });
+  sections.push({ id: 'race', label: 'Вид', icon: <User size={19} />, sub: [assembled.race?.name, lineageName].filter(Boolean).join(' · '), status: raceDone ? 'ok' : 'todo' });
   sections.push({ id: 'class', label: 'Класс', icon: <Swords size={19} />, sub: assembled.klass?.name, status: classDone ? 'ok' : 'todo' });
   if (hasSubclass) sections.push({ id: 'subclass', label: 'Подкласс', icon: <Shield size={19} />, sub: subclassName, status: subclassDone ? 'ok' : 'todo' });
   if (hasSpells) sections.push({ id: 'spells', label: 'Заклинания', icon: <Sparkles size={19} />, sub: spellChoices.length ? `${selectedSpellCount}/${requiredSpellCount}` : `${grantedSpells.length} получено`, status: spellsDone ? 'ok' : 'todo' });
@@ -346,12 +348,9 @@ const CharacterForge = () => {
             <div className="forge-editor">
               {act === 'race' && (
                 <RaceSection races={races} draft={draft} onSelect={(rid: string) => patch({ raceId: rid, lineageId: null })}
-                  choices={raceOtherChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
-              )}
-              {act === 'subrace' && (
-                <SubraceSection race={assembled.race} draft={draft} hasSubfeature={raceSubChoices.length > 0}
-                  onPickLineage={(name: string) => patch({ lineageId: name })}
-                  choices={raceSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
+                  subraces={subraces} onPickSubrace={(id: string) => patch({ lineageId: draft.lineageId === id ? null : id })}
+                  choices={raceOtherChoices} subChoices={raceSubChoices}
+                  resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
               {act === 'class' && (
                 <ClassSection classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
@@ -461,13 +460,15 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выб
 
 // ─── Секции ────────────────────────────────────────────────────────────────
 
-function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, ruleState }: any) {
+function RaceSection({ races, draft, onSelect, subraces, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState }: any) {
+  const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
+  const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
   return (
     <div>
       <div className="forge-block">
         <div className="forge-square-grid">
-          {races.map((r: Race) => (
+          {topRaces.map((r: Race) => (
             <EntitySquareCard
               key={r.id}
               name={r.name}
@@ -477,7 +478,7 @@ function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, r
               preview={<RacePreview race={r} disableHover />}
             />
           ))}
-          {races.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
+          {topRaces.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
         </div>
       </div>
       {race && (
@@ -491,33 +492,40 @@ function RaceSection({ races, draft, onSelect, choices, resolved, setResolved, r
           )}
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
-    </div>
-  );
-}
 
-function SubraceSection({ race, draft, hasSubfeature, onPickLineage, choices, resolved, setResolved, ruleState }: any) {
-  return (
-    <div>
-      {race?.lineages?.length > 0 && !hasSubfeature && (
+      {/* Подвиды выбранного вида (отдельные виды-сущности) */}
+      {race && subraces.length > 0 && (
         <div className="forge-block">
+          <div className="forge-section-h">Подвид</div>
           <div className="forge-square-grid">
-            {race.lineages.map((l: { name: string; description?: string }) => (
-              <EntitySquareCard key={l.name} name={l.name} selected={draft.lineageId === l.name} onClick={() => onPickLineage(l.name)} />
+            {(subraces as Race[]).map((r) => (
+              <EntitySquareCard
+                key={r.id}
+                name={r.name}
+                imageUrl={r.image_url}
+                selected={draft.lineageId === r.id}
+                onClick={() => onPickSubrace(r.id)}
+                preview={<RacePreview race={r} disableHover />}
+              />
             ))}
           </div>
-          {race.lineages.map((l: { name: string; description?: string }) => (
-            draft.lineageId === l.name && l.description ? (
-              <div key={l.name} className="forge-block forge-desc-block">
-                <div className="forge-entity-name">{l.name}</div>
-                <p className="forge-note">{l.description}</p>
-              </div>
-            ) : null
-          ))}
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выберите подвид" />
-      {!race && <p className="forge-note">Сначала выберите вид.</p>}
+      {subrace && (
+        <div className="forge-block forge-desc-block">
+          <div className="forge-entity-name">{subrace.name}</div>
+          {subrace.description && (
+            <p className="forge-note"><FormattedText text={subrace.description} emptyText="" /></p>
+          )}
+          {subrace.traits && subrace.traits.length > 0 && (
+            <ForgeTraitsBlock traits={subrace.traits} />
+          )}
+        </div>
+      )}
+
+      {/* Legacy: подвиды через subfeature-выбор */}
+      <ChoiceList choices={subChoices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выберите подвид" />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
     </div>
   );
 }

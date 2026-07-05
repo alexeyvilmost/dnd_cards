@@ -32,6 +32,7 @@ export function gatherFeatureRefs(
   klass: CharacterClass | null,
   feats: Feat[],
   level: number,
+  subrace?: Race | null,
 ): { effectRefs: Ref[]; actionRefs: Ref[] } {
   const effectRefs: Ref[] = [];
   const actionRefs: Ref[] = [];
@@ -58,6 +59,13 @@ export function gatherFeatureRefs(
     (race.related_effects || []).forEach((id) => pushE(id, origin));
     (race.related_actions || []).forEach((id) => pushA(id, origin));
     addLevelProg(race.level_progression, origin);
+  }
+  if (subrace) {
+    // Подвид работает как вид: его эффекты/действия добавляются с race-источником.
+    const origin: ChoiceOrigin = { kind: 'race', id: subrace.id, name: subrace.name };
+    (subrace.related_effects || []).forEach((id) => pushE(id, origin));
+    (subrace.related_actions || []).forEach((id) => pushA(id, origin));
+    addLevelProg(subrace.level_progression, origin);
   }
   if (klass) {
     const origin: ChoiceOrigin = { kind: 'class', id: klass.id, name: klass.name };
@@ -159,7 +167,11 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     await Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id).catch(() => null)))
   ).filter((f): f is Feat => !!f);
 
-  const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level);
+  // Подвид — отдельный вид-сущность, ссылка хранится в draft.lineageId (UUID).
+  const subraceId = draft.lineageId && isEntityUuid(draft.lineageId) ? draft.lineageId : null;
+  const subrace = subraceId ? await racesApi.getRace(subraceId).catch(() => null) : null;
+
+  const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level, subrace);
 
   const baseEffects = (
     await Promise.all(

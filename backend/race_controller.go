@@ -32,6 +32,14 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 	if search := c.Query("search"); search != "" {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
+	if parent := c.Query("parent_race_id"); parent != "" {
+		query = query.Where("parent_race_id = ?", parent)
+	}
+	if sub := c.Query("is_subrace"); sub == "true" {
+		query = query.Where("is_subrace = ?", true)
+	} else if sub == "false" {
+		query = query.Where("is_subrace IS NOT TRUE")
+	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -104,6 +112,7 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber,
 		CreatureType: req.CreatureType, Size: req.Size, Speed: req.Speed, ExtraSpeeds: req.ExtraSpeeds,
 		Darkvision: req.Darkvision, Traits: req.Traits, Lineages: req.Lineages,
+		IsSubrace: req.IsSubrace, ParentRaceID: req.ParentRaceID,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions, LevelProgression: req.LevelProgression,
 		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
 	}
@@ -177,6 +186,14 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 	}
 	if req.Lineages != nil {
 		r.Lineages = req.Lineages
+	}
+	if req.IsSubrace != nil {
+		r.IsSubrace = req.IsSubrace
+		if *req.IsSubrace {
+			r.ParentRaceID = req.ParentRaceID // задаём родителя вместе с флагом
+		} else {
+			r.ParentRaceID = nil // снятие флага очищает родителя
+		}
 	}
 	if req.RelatedEffects != nil {
 		r.RelatedEffects = req.RelatedEffects

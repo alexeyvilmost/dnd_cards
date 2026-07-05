@@ -68,6 +68,9 @@ const RaceCreator = () => {
 
   const [traits, setTraits] = useState<RaceTrait[]>([]);
   const [lineages, setLineages] = useState<RaceTrait[]>([]);
+  const [isSubrace, setIsSubrace] = useState(false);
+  const [parentRaceId, setParentRaceId] = useState('');
+  const [allRaces, setAllRaces] = useState<Race[]>([]);
   const [relatedEffects, setRelatedEffects] = useState<string[]>([]);
   const [relatedActions, setRelatedActions] = useState<string[]>([]);
   const [levelProgression, setLevelProgression] = useState<LevelProgression>({});
@@ -75,6 +78,10 @@ const RaceCreator = () => {
   const [loadingRace, setLoadingRace] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+
+  useEffect(() => {
+    racesApi.getRaces({ limit: 100 }).then((res) => setAllRaces(res.races || [])).catch(() => {});
+  }, []);
 
   const loadEffects = useCallback(async () => {
     const res = await effectsApi.getEffects({ limit: 200 });
@@ -101,6 +108,8 @@ const RaceCreator = () => {
           });
           setTraits(r.traits || []);
           setLineages(r.lineages || []);
+          setIsSubrace(!!r.is_subrace);
+          setParentRaceId(r.parent_race_id || '');
           setRelatedEffects(r.related_effects || []);
           setRelatedActions(r.related_actions || []);
           setLevelProgression(r.level_progression || {});
@@ -143,6 +152,8 @@ const RaceCreator = () => {
       darkvision: data.darkvision != null ? Number(data.darkvision) : null,
       traits: cleanTraits(traits),
       lineages: cleanTraits(lineages),
+      is_subrace: isSubrace,
+      parent_race_id: isSubrace ? (parentRaceId || null) : null,
       related_effects: relatedEffects.length ? relatedEffects : null,
       related_actions: relatedActions.length ? relatedActions : null,
       level_progression: Object.keys(levelProgression).length ? levelProgression : null,
@@ -207,6 +218,28 @@ const RaceCreator = () => {
                       placeholder="elf"
                       className={`${inputCls} ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''}`} />
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input type="checkbox" checked={isSubrace} onChange={(e) => setIsSubrace(e.target.checked)} />
+                    Это подвид другого вида
+                  </label>
+                  {isSubrace && (
+                    <div>
+                      <label className={labelCls}>Родительский вид</label>
+                      <select value={parentRaceId} onChange={(e) => setParentRaceId(e.target.value)} className={inputCls}>
+                        <option value="">— выберите вид —</option>
+                        {allRaces
+                          .filter((r) => !r.is_subrace && r.id !== editId)
+                          .map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Подвид работает как вид: его эффекты добавляются персонажу. В создании персонажа он
+                        появится под выбором родительского вида.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

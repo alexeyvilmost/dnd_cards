@@ -1297,6 +1297,8 @@ export interface Race {
   darkvision?: number | null;
   traits?: RaceTrait[] | null;
   lineages?: RaceTrait[] | null;
+  is_subrace?: boolean | null;
+  parent_race_id?: string | null;
   related_effects?: string[] | null;
   related_actions?: string[] | null;
   level_progression?: LevelProgression | null;
@@ -1323,6 +1325,8 @@ export interface CreateRaceRequest {
   darkvision?: number | null;
   traits?: RaceTrait[] | null;
   lineages?: RaceTrait[] | null;
+  is_subrace?: boolean | null;
+  parent_race_id?: string | null;
   related_effects?: string[] | null;
   related_actions?: string[] | null;
   level_progression?: LevelProgression | null;

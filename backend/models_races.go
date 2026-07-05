@@ -62,7 +62,9 @@ type Race struct {
 	ExtraSpeeds           *string        `json:"extra_speeds" gorm:"type:text"`          // Доп. скорости (плавание/полёт/лазание)
 	Darkvision            *int           `json:"darkvision" gorm:"type:int"`             // Тёмное зрение, футы (0 = нет)
 	Traits                *RaceTraits    `json:"traits" gorm:"type:jsonb"`               // Видовые особенности
-	Lineages              *RaceTraits    `json:"lineages" gorm:"type:jsonb"`             // Происхождения/подвиды (опц.)
+	Lineages              *RaceTraits    `json:"lineages" gorm:"type:jsonb"`             // Происхождения/подвиды (опц., legacy)
+	IsSubrace             *bool          `json:"is_subrace" gorm:"type:boolean;default:false"` // это подвид другого вида
+	ParentRaceID          *uuid.UUID     `json:"parent_race_id" gorm:"type:uuid"`        // родительский вид (для подвида)
 	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`      // id привязанных эффектов
 	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`      // id привязанных действий
 	LevelProgression      *JSONMap       `json:"level_progression" gorm:"type:jsonb"`    // способности вида по уровням
@@ -94,6 +96,8 @@ type CreateRaceRequest struct {
 	Darkvision          *int        `json:"darkvision"`
 	Traits              *RaceTraits `json:"traits"`
 	Lineages            *RaceTraits `json:"lineages"`
+	IsSubrace           *bool       `json:"is_subrace"`
+	ParentRaceID        *uuid.UUID  `json:"parent_race_id"`
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
 	LevelProgression    *JSONMap    `json:"level_progression"`
@@ -118,6 +122,8 @@ type UpdateRaceRequest struct {
 	Darkvision          *int        `json:"darkvision"`
 	Traits              *RaceTraits `json:"traits"`
 	Lineages            *RaceTraits `json:"lineages"`
+	IsSubrace           *bool       `json:"is_subrace"`
+	ParentRaceID        *uuid.UUID  `json:"parent_race_id"`
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
 	LevelProgression    *JSONMap    `json:"level_progression"`
@@ -144,6 +150,8 @@ type RaceResponse struct {
 	Darkvision          *int        `json:"darkvision"`
 	Traits              *RaceTraits `json:"traits"`
 	Lineages            *RaceTraits `json:"lineages"`
+	IsSubrace           *bool       `json:"is_subrace"`
+	ParentRaceID        *uuid.UUID  `json:"parent_race_id"`
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
 	LevelProgression    *JSONMap    `json:"level_progression"`
@@ -163,6 +171,7 @@ func (r Race) ToRaceResponse() RaceResponse {
 		ImageURL: r.ImageURL, Rarity: r.Rarity, CardNumber: r.CardNumber,
 		CreatureType: r.CreatureType, Size: r.Size, Speed: r.Speed, ExtraSpeeds: r.ExtraSpeeds,
 		Darkvision: r.Darkvision, Traits: r.Traits, Lineages: r.Lineages,
+		IsSubrace: r.IsSubrace, ParentRaceID: r.ParentRaceID,
 		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions, LevelProgression: r.LevelProgression,
 		Type: r.Type, Author: r.Author, Source: r.Source, Tags: r.Tags,
 		IsExtended: r.IsExtended, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
