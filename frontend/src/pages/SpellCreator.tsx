@@ -608,6 +608,12 @@ const SpellCreator = () => {
                     <MechanicsBuilder
                       value={mechanics}
                       onChange={setMechanics}
+                      aiContext={{
+                        kind: 'spell',
+                        name: fd.name || '',
+                        description: [fd.description, fd.upcast_description].filter(Boolean).join('\n'),
+                        extra: `Уровень заклинания: ${Number(fd.level) || 0}`,
+                      }}
                     />
                   </div>
                 )}

@@ -8,6 +8,7 @@ import type { CreateCardRequest, Properties, Effect } from '../types';
 import CardPreview from '../components/CardPreview';
 import ImageLibraryModal from '../components/ImageLibraryModal';
 import { CardCreatorNavigation } from '../components/CardCreatorNavigation';
+import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { MainSection } from '../components/cardCreator/MainSection';
 import { ImageSection } from '../components/cardCreator/ImageSection';
 import { TextSection } from '../components/cardCreator/TextSection';
@@ -32,6 +33,7 @@ const CardCreator = () => {
   const [isPollingImage, setIsPollingImage] = useState(false); // Флаг активного polling'а
   const [activeSection, setActiveSection] = useState('main'); // Активная секция навигации
   const [effects, setEffects] = useState<Effect[]>([]); // Эффекты предмета
+  const [mechanics, setMechanics] = useState<Record<string, unknown> | null>(null); // Унифицированная механика
 
   // Определяем, находимся ли мы в режиме редактирования
   const isEditMode = !!id;
@@ -103,6 +105,9 @@ const CardCreator = () => {
             setEffects(card.effects);
           } else {
             setEffects([]);
+          }
+          if (card.mechanics && typeof card.mechanics === 'object') {
+            setMechanics(card.mechanics as Record<string, unknown>);
           }
           
           // Заполняем форму данными карты через reset для полной синхронизации
@@ -319,11 +324,12 @@ const CardCreator = () => {
         container_mode: data.type === 'container' ? (data.container_mode || null) : null,
         contents: data.type === 'container' ? (data.contents || null) : null,
         effects: effects.length > 0 ? effects.filter(effect =>
-          effect.targetType && 
-          effect.targetSpecific && 
-          effect.modifier && 
+          effect.targetType &&
+          effect.targetSpecific &&
+          effect.modifier &&
           effect.value > 0
-        ) : null
+        ) : null,
+        mechanics: mechanics ?? null
       };
 
 
@@ -597,8 +603,32 @@ const CardCreator = () => {
                 </div>
               )}
               
+              {activeSection === 'engine' && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Механика движка</h2>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Исполняемая механика предмета: пассивные бонусы действуют, пока предмет надет
+                    {' '}(и требуется настройка, если она включена в «Снаряжении»); активируемые
+                    попадают в действия на листе персонажа.
+                  </p>
+                  <MechanicsBuilder
+                    value={mechanics}
+                    onChange={setMechanics}
+                    aiContext={{
+                      kind: 'item',
+                      name: watchedValues.name || '',
+                      description: watchedValues.description || '',
+                      extra: [
+                        watchedValues.type ? `Тип предмета: ${watchedValues.type}` : '',
+                        watchedValues.requires_attunement ? 'Требует настройки' : '',
+                      ].filter(Boolean).join('; '),
+                    }}
+                  />
+                </div>
+              )}
+
               {activeSection === 'privacy' && (
-                <PrivacySection 
+                <PrivacySection
                   register={register}
                   errors={errors}
                 />

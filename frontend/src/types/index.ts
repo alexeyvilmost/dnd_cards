@@ -85,6 +85,7 @@ export interface Card {
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
+  mechanics?: Record<string, unknown> | null;
   battle_profile?: Record<string, any> | null;
   container_mode?: ContainerMode | null;
   contents?: CardRef[] | null;
@@ -131,6 +132,7 @@ export interface CreateCardRequest {
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
+  mechanics?: Record<string, unknown> | null;
   battle_profile?: Record<string, any> | null;
   container_mode?: ContainerMode | null;
   contents?: CardRef[] | null;
@@ -176,6 +178,7 @@ export interface UpdateCardRequest {
   slot?: EquipmentSlot | null;
   image_prompt_extra?: string | null;
   effects?: Effect[] | null;
+  mechanics?: Record<string, unknown> | null;
   battle_profile?: Record<string, any> | null;
   container_mode?: ContainerMode | null;
   contents?: CardRef[] | null;

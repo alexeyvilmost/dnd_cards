@@ -37,6 +37,12 @@ const sections = [
     description: 'Бонусы и модификаторы'
   },
   {
+    id: 'engine',
+    icon: '⚙️',
+    label: 'Движок',
+    description: 'Исполняемая механика предмета'
+  },
+  {
     id: 'privacy',
     icon: '👁️',
     label: 'Приватность',

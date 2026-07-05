@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronUp, Wand2 } from 'lucide-react';
+import { apiClient } from '../../api/client';
 import type { Mechanics } from '../../mechanics/types';
 import {
   TRIGGER_BLOCKS,
@@ -16,16 +17,28 @@ import ChoiceEditor, { choiceFormToOptions, type ChoiceFormValue } from './Choic
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
+/** Контекст для AI-генерации механики по описанию сущности. */
+export interface AiMechanicsContext {
+  kind: 'item' | 'spell' | 'action' | 'passive_effect' | 'trait';
+  name: string;
+  description: string;
+  extra?: string;
+}
+
 interface MechanicsBuilderProps {
   value: Mechanics | Record<string, unknown> | null;
   onChange: (m: Record<string, unknown> | null) => void;
   resourceOptions?: { id: string; label: string }[];
+  /** Если передан — показывается кнопка «AI»: генерация механики по описанию. */
+  aiContext?: AiMechanicsContext;
 }
 
 let entryCounter = 0;
 const newEntryId = () => `eff_${++entryCounter}`;
 
-const MechanicsBuilder = ({ value, onChange, resourceOptions = [] }: MechanicsBuilderProps) => {
+const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: MechanicsBuilderProps) => {
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [triggerId, setTriggerId] = useState('trg_passive');
   const [triggerValues, setTriggerValues] = useState<Record<string, unknown>>({});
   const [effectEntries, setEffectEntries] = useState<EffectEntry[]>([]);
@@ -228,23 +241,68 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [] }: MechanicsBu
     ]);
   };
 
+  // AI-генерация механики по описанию сущности (кнопка «AI»).
+  const generateWithAi = async () => {
+    if (!aiContext || aiBusy) return;
+    if (!aiContext.description?.trim()) {
+      setAiError('Заполните описание — AI генерирует механику по нему');
+      return;
+    }
+    setAiBusy(true);
+    setAiError(null);
+    try {
+      const { data } = await apiClient.post<{ mechanics: Record<string, unknown> }>('/api/ai/mechanics', {
+        kind: aiContext.kind,
+        name: aiContext.name || 'без названия',
+        description: aiContext.description,
+        extra: aiContext.extra ?? '',
+      });
+      const mech = data.mechanics;
+      applyDeserialized(mech);
+      setJsonText(JSON.stringify(mech, null, 2));
+      markDirty();
+      onChange(mech);
+    } catch (e) {
+      console.error(e);
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setAiError(msg || 'Не удалось сгенерировать механику');
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
-        <button
-          type="button"
-          className={`px-3 py-1 text-sm rounded-md ${mode === 'blocks' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
-          onClick={() => mode !== 'blocks' && switchToBlocks()}
-        >
-          Блоки
-        </button>
-        <button
-          type="button"
-          className={`px-3 py-1 text-sm rounded-md ${mode === 'json' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
-          onClick={() => mode !== 'json' && switchToJson()}
-        >
-          Сырой JSON
-        </button>
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+          <button
+            type="button"
+            className={`px-3 py-1 text-sm rounded-md ${mode === 'blocks' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
+            onClick={() => mode !== 'blocks' && switchToBlocks()}
+          >
+            Блоки
+          </button>
+          <button
+            type="button"
+            className={`px-3 py-1 text-sm rounded-md ${mode === 'json' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
+            onClick={() => mode !== 'json' && switchToJson()}
+          >
+            Сырой JSON
+          </button>
+        </div>
+        {aiContext && (
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300"
+            disabled={aiBusy}
+            title="Сгенерировать механику по описанию (OpenAI)"
+            onClick={generateWithAi}
+          >
+            <Wand2 size={14} />
+            {aiBusy ? 'Генерация…' : 'AI'}
+          </button>
+        )}
+        {aiError && <span className="text-xs text-red-600">{aiError}</span>}
       </div>
 
       {mode === 'json' ? (

@@ -7,6 +7,7 @@ import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
+import { collectItemMechanics } from '../character/attunement';
 import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
 import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
@@ -161,10 +162,14 @@ const CharacterSheetMVP = () => {
     [character],
   );
 
-  const passives = useMemo(
-    () => (assembled ? collectPassiveMechanics(assembled) : []),
-    [assembled],
-  );
+  // Пассивки персонажа + механики надетых предметов (с учётом настройки).
+  const passives = useMemo(() => {
+    const base = assembled ? collectPassiveMechanics(assembled) : [];
+    if (!character) return base;
+    const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state)
+      .map((im) => im.mechanics);
+    return [...base, ...items];
+  }, [assembled, character, equipCards]);
 
   const sheetCtx = useMemo(() => {
     if (!ruleState || !draft || !runtimeState) return null;

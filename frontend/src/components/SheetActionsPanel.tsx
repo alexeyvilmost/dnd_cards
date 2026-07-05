@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionNeedsTarget, collectSheetActions, type SheetAction } from '../character/actionSheet';
+import { collectItemMechanics } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
@@ -78,7 +79,12 @@ export default function SheetActionsPanel({
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
     [character, ruleState.maxHP],
   );
-  const passives = useMemo(() => collectPassiveMechanics(assembled), [assembled]);
+  // Пассивки персонажа + механики надетых предметов (с учётом настройки).
+  const passives = useMemo(() => {
+    const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state)
+      .map((im) => im.mechanics);
+    return [...collectPassiveMechanics(assembled), ...items];
+  }, [assembled, character.equipment, character.turn_state, equipCards]);
 
   const equippedCards = useMemo(() => {
     const out: Card[] = [];
@@ -104,7 +110,11 @@ export default function SheetActionsPanel({
     [ruleState, character, equippedCards, assembled.klass, passives],
   );
 
-  const actions = useMemo(() => collectSheetActions(assembled), [assembled]);
+  const itemMechs = useMemo(
+    () => collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state),
+    [character.equipment, character.turn_state, equipCards],
+  );
+  const actions = useMemo(() => collectSheetActions(assembled, itemMechs), [assembled, itemMechs]);
   const resourceKeys = Object.keys(runtime.maxResources).filter((k) => runtime.maxResources[k] > 0);
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
@@ -181,6 +191,7 @@ export default function SheetActionsPanel({
     { key: 'basic', label: 'Базовые', items: actions.filter((a) => a.group === 'basic') },
     { key: 'race', label: 'Вид', items: actions.filter((a) => a.group === 'race') },
     { key: 'class', label: 'Класс', items: actions.filter((a) => a.group === 'class') },
+    { key: 'item', label: 'Предметы', items: actions.filter((a) => a.group === 'item') },
     { key: 'spell', label: 'Заклинания', items: actions.filter((a) => a.group === 'spell') },
   ];
 

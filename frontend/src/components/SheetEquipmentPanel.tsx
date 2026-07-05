@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { MAX_ATTUNED, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
 import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import {
@@ -144,7 +145,36 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   };
 
   const handleUnequip = async (slot: string) => {
+    const id = runtime.equipment[slot];
+    // снятие предмета не разрывает настройку (по правилам она держится),
+    // но его пассивки перестают действовать, т.к. предмет больше не надет
     await persist(unequipToInventory(runtime, slot));
+    void id;
+  };
+
+  // ── Настройка (attunement): максимум 3, менять можно только после отдыха ──
+  const attuned = readAttunedIds(character.turn_state);
+  const canChangeAttunement = attunementUnlocked(character.turn_state);
+
+  const handleToggleAttune = async (cardId: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const next = toggleAttuned(attuned, cardId);
+      if (next.length > MAX_ATTUNED) {
+        setError(`Настроиться можно максимум на ${MAX_ATTUNED} предмета`);
+        return;
+      }
+      const updated = await charactersV3Api.patchRuntime(character.id, {
+        turn_state: { ...(character.turn_state ?? {}), attuned_ids: next },
+      });
+      onUpdated(updated);
+    } catch (e) {
+      console.error(e);
+      setError('Не удалось изменить настройку');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleAdd = async (card: Card) => {
@@ -225,11 +255,29 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
           {Object.entries(SLOT_LABELS).map(([slot, label]) => {
             const id = runtime.equipment[slot];
             const card = id ? cardMap.get(id) : null;
+            const needsAttunement = !!card?.requires_attunement;
+            const cardAttuned = !!card && attuned.includes(card.id);
             return (
               <li key={slot}>
                 <span>{label}</span>
                 <span>
                   {card ? card.name : '—'}
+                  {needsAttunement && card && (
+                    <button
+                      type="button"
+                      className={`sheet-attune-btn${cardAttuned ? ' on' : ''}`}
+                      disabled={busy || (!canChangeAttunement)}
+                      title={cardAttuned
+                        ? (canChangeAttunement ? 'Прервать настройку' : 'Настроен (сменить — на отдыхе)')
+                        : (canChangeAttunement
+                          ? `Настроиться (${attuned.length}/${MAX_ATTUNED})`
+                          : 'Настройка меняется только на коротком/долгом отдыхе')}
+                      onClick={() => handleToggleAttune(card.id)}
+                    >
+                      <Sparkles size={13} />
+                      {cardAttuned ? 'Настроен' : 'Настроиться'}
+                    </button>
+                  )}
                   {card && (
                     <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => handleUnequip(slot)} style={{ marginLeft: 8 }}>
                       Снять

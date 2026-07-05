@@ -63,3 +63,13 @@
 .sheet-condition .sheet-active-effect-dismiss { margin-left: auto; }
 .sheet-condition-add { display: flex; gap: 8px; align-items: center; }
 .sheet-condition-add select { flex: 1; }
+
+/* Кнопка настройки на предмет */
+.sheet-attune-btn {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;
+  border: 1px solid #6b5836; border-radius: 6px; background: transparent;
+  color: #a99f8b; cursor: pointer; font-size: 12px; padding: 3px 8px;
+}
+.sheet-attune-btn.on { border-color: #d8b978; color: #d8b978; }
+.sheet-attune-btn:hover:not(:disabled) { border-color: #d8b978; }
+.sheet-attune-btn:disabled { opacity: 0.45; cursor: not-allowed; }

@@ -420,6 +420,7 @@ const EffectCreator = () => {
                       value={(watch('mechanics') as Record<string, unknown>) || null}
                       onChange={(m) => setValue('mechanics', m)}
                       resourceOptions={registryItems(resourceOptions)}
+                      aiContext={{ kind: 'passive_effect', name: watch('name') || '', description: [watch('description'), watch('condition_description')].filter(Boolean).join(' ') }}
                     />
                   </div>
                 )}

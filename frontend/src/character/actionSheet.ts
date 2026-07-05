@@ -6,7 +6,7 @@ export type SheetAction = {
   id: string;
   name: string;
   mechanics: Record<string, unknown>;
-  group: 'basic' | 'class' | 'race' | 'spell';
+  group: 'basic' | 'class' | 'race' | 'spell' | 'item';
   level?: number;
   imageUrl?: string | null;
   sourceLabel?: string;
@@ -62,7 +62,11 @@ function spellMechanics(spell: Spell): Record<string, unknown> | null {
   return mech as Record<string, unknown>;
 }
 
-export function collectSheetActions(assembled: AssembledCharacter): SheetAction[] {
+export function collectSheetActions(
+  assembled: AssembledCharacter,
+  /** Механики надетых предметов (уже с учётом настройки) — активируемые попадают в действия. */
+  itemMechanics: Array<{ card: import('../types').Card; mechanics: Record<string, unknown> }> = [],
+): SheetAction[] {
   const basic: SheetAction[] = STANDARD_ACTIONS.map((a) => ({
     id: a.id,
     name: a.name,
@@ -120,7 +124,22 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
     })
     .filter((a): a is SheetAction => a != null);
 
-  return [...basic, ...fromRace, ...fromClass, ...spells];
+  const fromItems: SheetAction[] = itemMechanics
+    .map(({ card, mechanics }): SheetAction | null => {
+      const activation = mechanics.activation as Record<string, unknown> | undefined;
+      if (!activation || activation.mode === 'passive') return null;
+      return {
+        id: `item-${card.id}`,
+        name: card.name,
+        mechanics: { ...mechanics, name: card.name },
+        group: 'item' as const,
+        imageUrl: card.image_url,
+        sourceLabel: 'Предмет',
+      };
+    })
+    .filter((a): a is SheetAction => a != null);
+
+  return [...basic, ...fromRace, ...fromClass, ...fromItems, ...spells];
 }
 
 export function actionNeedsTarget(mechanics: Record<string, unknown>): boolean {

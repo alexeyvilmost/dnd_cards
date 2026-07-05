@@ -466,6 +466,7 @@ const ActionCreator = () => {
                   value={(watch('mechanics') as Record<string, unknown>) || null}
                   onChange={(m) => setValue('mechanics', m)}
                   resourceOptions={resourceItems}
+                  aiContext={{ kind: 'action', name: watch('name') || '', description: watch('description') || '' }}
                 />
               </div>
             </div>
