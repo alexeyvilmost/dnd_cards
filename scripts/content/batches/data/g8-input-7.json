@@ -1,0 +1,507 @@
+[
+ {
+  "id": "bf6dbc16-d7bc-4abd-9a85-f204858b9396",
+  "card_number": "SPELL-0265",
+  "name": "Понимание языков",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пока заклинание активно, вы понимаете буквальный смысл услышанной и увиденной жестовой речи на любом языке. Вы также понимаете письмена на любом языке, но для этого должны касаться поверхности, на которой записаны слова. Чтобы прочитать одну страницу текста, требуется около 1 минуты. Это заклинание не расшифровывает особые знаки или тайные послания.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Понимание языков: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+  "card_number": "SPELL-0267",
+  "name": "Порча",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Не более трёх существ по вашему выбору, которых вы видите в пределах дистанции, должны совершить спасброски Харизмы. Пока заклинание активно, каждый раз, когда цель, провалившая этот спасбросок, совершает бросок атаки или спасбросок, она должна бросать 1к4 и вычитать это значение из результата броска атаки или спасброска.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Порча: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+  "card_number": "SPELL-0269",
+  "name": "Поспешное отступление",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "На себя",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы совершаете действие Рывок и можете совершать его Бонусным действием, пока заклинание активно.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Поспешное отступление: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+  "card_number": "SPELL-0272",
+  "name": "Приказ",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете воздействовать на одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Вы произносите команду из одного слова существу, которое можете видеть в пределах дистанции. Цель должна преуспеть в спасброске Мудрости, иначе в свой следующий ход будет исполнять эту команду. Выберите приказ из этих вариантов: Подойди. Цель перемещается к вам по кратчайшему и самому прямому маршруту, заканчивая свой ход, если оказывается в пределах 5 футов от вас. Брось. Цель бросает всё, что держит, и заканчивает ход. Убегай. Цель тратит свой ход на перемещение прочь от вас самым быстрым способом. Падай. Цель становится Сбитой с ног и заканчивает ход. Стой. В свой ход цель не двигается и не совершает действий и Бонусных действий.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Приказ: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "0cee5f3c-e943-46dd-96bc-ced618b90454",
+  "card_number": "SPELL-0274",
+  "name": "Прыжок",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "Касание",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Вы касаетесь согласного существа. Один раз в каждом своём ходу, пока заклинание активно, это существо может прыгать в высоту не более 30 футов, затратив на это 10 футов перемещения.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Прыжок: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "f3098f61-1ea7-4816-9819-1903388cfe06",
+  "card_number": "false_life",
+  "name": "Псевдожизнь",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы получаете 5 дополнительных Временных хитов за каждый уровень ячейки выше первого.",
+  "description": "Вы получаете 2к4 + 4 Временных хитов.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Псевдожизнь: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+  "card_number": "SPELL-0277",
+  "name": "Разговор с Животными",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "10 минут",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пока заклинание активно, вы получаете возможность понимать и устно общаться со Зверьми, а также использовать на них любую опцию действия Влияние. Большинство Зверей не особо общительны на темы, не связанные с выживанием или построением добрососедских отношений, но Зверь как минимум может дать вам сведения о близлежащей местности и чудовищах, в том числе о том, что он видел в последний день.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Разговор с Животными: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "c5a6892f-d388-4075-9da6-6cfb0989ba26",
+  "card_number": "SPELL-0284",
+  "name": "Сверкающие брызги",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": "15-футовом (Конусе)",
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы выпускаете ослепительный поток мигающего разноцветного света. Каждое существо в 15‑футовом Конусе, исходящем от вас, должно преуспеть в спасброске Телосложения, иначе станет Ослеплённым до конца вашего следующего хода.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Сверкающие брызги: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
+  "card_number": "SPELL-0287",
+  "name": "Сглаз",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "90 футов",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "necrotic"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Ваша Концентрация может сохраняться дольше при использовании ячейки 2 (до 4 часов), 3‑4 (до 8 часов) или 5 и выше (до 24 часов) уровней.",
+  "description": "Вы проклинаете существо, которое можете видеть в пределах дистанции. Пока заклинание активно, при каждом попадании по цели броском атаки вы наносите ей дополнительно 1к6 урона Некротической энергией. Кроме того, когда вы сотворяете заклинание, выберите одну характеристику. Цель совершает с Помехой проверки выбранной характеристики. Если Хиты цели опускаются до 0, пока заклинание активно, вы можете в свой следующий ход Бонусным действием проклясть новое существо.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Сглаз: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "90 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "ac198b93-04d7-4633-831e-b0050330cccf",
+  "card_number": "SPELL-0288",
+  "name": "Сигнал тревоги",
+  "level": 1,
+  "casting_time": "1 минута",
+  "range": "30 футов",
+  "duration": "8 часов",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы устанавливаете сигнализацию на случай вторжения. Выберите дверь, окно или область в пределах дистанции не больше Куба со стороной 20 футов. До окончания действия заклинания тревога уведомляет вас каждый раз, когда существо касается охраняемой области или входит в неё. При сотворении заклинания вы можете указать существ, которые не будут вызывать срабатывание тревоги. Вы также выбираете, мысленной будет тревога или слышимой. Слышимая тревога. Сигнал тревоги звучит как колокольчик в течение 10 секунд в пределах 60 футов от охраняемой области. Мысленная тревога. В вашей голове раздаётся звон, если вы находитесь в пределах 1 мили от охраняемой области. Этот звон пробуждает вас, если вы спите.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Сигнал тревоги: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ }
+]

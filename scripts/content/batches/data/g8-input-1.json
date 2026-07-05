@@ -1,0 +1,469 @@
+[
+ {
+  "id": "742c2f7b-b72a-444c-8868-efbe8cd74c70",
+  "card_number": "SPELL-0482",
+  "name": "Астральный рывок",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d8",
+    "damage_type": "radiant"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к8, когда вы достигаете 5-го, 11-го и 17-го уровней.",
+  "description": "Выберите видимое вами незанятое пространство в 15 футах от вас. Вы мгновенно перемещаетесь в него, оставляя позади туман светло-синего цвета. Туман вспыхивает и наносит [radiant]1к8:radiant:излучением[/radiant] всем существам по прямой между точками вашей телепортации.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Астральный рывок: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+  "card_number": "SPELL-0166",
+  "name": "Брызги кислоты",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "acid"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6, когда вы достигаете 5‑го уровня (2к6), 11‑го уровня (3к6) и 17‑го уровня (4к6).",
+  "description": "Вы создаёте кислотный пузырь, который взрывается Сферой радиусом 5 футов, с центром в точке в пределах дистанции. Каждое существо в этой Сфере должно преуспеть в спасброске Ловкости, иначе получит [acid]1к6:acid:кислотой[/acid].",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Брызги кислоты: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+  "card_number": "SPELL-0173",
+  "name": "Волшебная рука",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "В точке, выбранной вами в пределах дистанции, появляется призрачная парящая рука. Рука существует, пока заклинание активно. Рука исчезает, если окажется более чем в 30 футах от вас, или если вы повторно сотворите это заклинание.\n\nВы можете использовать эту руку для манипулирования объектами, открывать незапертые двери и контейнеры, убрать предметы в открытые контейнеры или доставать их оттуда, или выливать содержимое флаконов.\n\nДействием Магия в течение следующих ходов вы можете контролировать руку таким же образом. Частью этого действия вы можете перемещать руку на расстояние не более 30 футов. Рука не может атаковать, активировать магические предметы и переносить более 10 фунтов.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Волшебная рука: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+  "card_number": "SPELL-0192",
+  "name": "Дружба",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "10 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы волшебным образом излучаете чувство дружбы по отношению к одному существу, которое вы можете видеть в пределах дистанции.\n\nЦель должна преуспеть в спасброске Мудрости, иначе станет Очарованной на время длительности. Цель автоматически преуспевает, если не является Гуманоидом, если вы сражаетесь с ней, или если вы сотворяли это заклинание на неё за последние 24 часа.\n\nЗаклинание заканчивается досрочно, если цель получает урон, или если вы совершаете бросок атаки, наносите урон или вынуждаете кого‑либо совершить спасбросок. Когда заклинание заканчивается, цель знает, что была Очарованной вами.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Дружба: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "10 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+  "card_number": "SPELL-0194",
+  "name": "Дубинка",
+  "level": 0,
+  "casting_time": "Бонусное действие",
+  "range": "На себя",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Кость урона меняется, когда вы достигаете 5‑го уровня (к10), 11‑го уровня (к12) и 17‑го уровня (2к6).",
+  "description": "Дубинка или Боевой посох, который вы держите, наполняется силой природы. Пока заклинание активно, вы можете использовать свою заклинательную характеристику вместо Силы для бросков атаки и урона рукопашных атак этим оружием, а кость урона этого оружия заменяется на к8. Если эта атака наносит урон, то это может быть урон Чистой силой или обычный тип урона от этого оружия (по вашему выбору). Заклинание заканчивается, если вы сотворите его снова или выпустите это оружие из рук.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Дубинка: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "73d4195c-5da4-444d-a0c1-19572df641b2",
+  "card_number": "SPELL-0202",
+  "name": "Защита от оружия",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Когда существо совершает бросок атаки по вам до окончания действия заклинания, атакующий вычитает 1к4 из броска атаки.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Защита от оружия: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+  "card_number": "SPELL-0205",
+  "name": "Злая насмешка",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "psychic"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6, когда вы достигаете 5‑го уровня (2к6), 11‑го уровня (3к6) и 17‑го уровня (4к6).",
+  "description": "Вы испускаете на существо, которое вы можете видеть или слышать в пределах дистанции, поток оскорблений вперемешку с тонкой магией. Цель должна преуспеть в спасброске Мудрости, иначе получит 1к6 урона Психической энергией и совершит с Помехой следующий бросок атаки до конца своего следующего хода.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Злая насмешка: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+  "card_number": "druidcraft",
+  "name": "Искусство друидов",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пошептавшись с духами природы, вы создаёте один из нижеперечисленных эффектов в пределах дистанции. Датчик погоды. Вы создаёте Крошечный безвредный ощутимый эффект, предсказывающий погоду в текущем месте в течение следующих 24 часов. Это может быть золотистый шарик, означающий ясную погоду, облачко, означающее дождь, снежинка и так далее. Эффект длится 1 раунд. Цветение. Вы мгновенно заставляете цветок распуститься, семечко прорасти или почку раскрыться. Ощутимый эффект. Вы создаёте мгновенный безвредный ощутимый эффект, такой как падающие листья, спектральные танцующие феи, порыв ветра, звук маленького животного или слабый запах скунса. Эффект должен помещаться в Куб со стороной 5 футов. Игра с огнём. Вы зажигаете или тушите свечу, факел или костёр.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Искусство друидов: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+  "card_number": "minor_illusion",
+  "name": "Малая иллюзия",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы создаёте звук или изображение объекта в пределах дистанции, которое сохраняется пока заклинание активно. Ниже описаны эффекты каждого из типов иллюзии. Иллюзия исчезает, если вы снова сотворяете это заклинание. Если существо совершает действие Изучение применительно к звуку или изображению, оно может определить, что это иллюзия, преуспев в проверке Интеллекта (Расследование) против Сл спасброска ваших заклинаний. Если существо распознаёт иллюзию, она для него притупляется. Звук. Если вы создаёте звук, его громкость может варьироваться от шёпота до крика. Это может быть ваш голос, чужой голос, рык льва, бой барабанов или любой другой звук по вашему выбору. Звук не ослабевает на протяжении всей длительности, и вы можете издавать отдельные звуки в разное время пока заклинание активно. Изображение. Если вы создаёте изображение объекта — например, стула, грязных следов ног или маленького с",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Малая иллюзия: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+  "card_number": "SPELL-0224",
+  "name": "Меткий удар",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Независимо от того, наносите ли вы урон Излучением или обычным типом урона оружия, атака наносит дополнительный урон Излучением, когда вы достигаете 5‑го уровня (1к6), 11‑го уровня (2к6) и 17‑го уровня (3к6).",
+  "description": "Руководствуясь вспышкой магической проницательности, вы совершаете одну атаку оружием, использованным при сотворении заклинания. Атака использует вашу заклинательную характеристику вместо Силы или Ловкости для бросков атаки и урона. Если атака наносит урон, это может быть урон Излучением или обычный урон от атаки этим оружием (по вашему выбору).",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Меткий удар: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ }
+]

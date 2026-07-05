@@ -1,0 +1,522 @@
+[
+ {
+  "id": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+  "card_number": "SPELL-0164",
+  "name": "Божественная кара",
+  "level": 1,
+  "casting_time": "Бонусное действие, которое вы совершаете сразу после попадания по цели Рукопашным оружием или Безоружным ударом.",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "2d8",
+    "damage_type": "radiant"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше первого.",
+  "description": "Цель получает дополнительно 2к8 урона Излучением от атаки. Урон увеличивается на 1к8, если цель Исчадие или Нежить.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Божественная кара: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "a66ca78f-af5f-4310-85c3-01c300e06581",
+  "card_number": "SPELL-0165",
+  "name": "Божественное благоволение",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "На себя",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d4",
+    "damage_type": "radiant"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пока заклинание активно, ваши атаки оружием наносят дополнительно 1к4 урона Излучением при попадании. Легендарная ведьма Таша использует своё заклинание Бурлящий котёл Таши для приготовления волшебного зелья.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Божественное благоволение: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+  "card_number": "SPELL-0174",
+  "name": "Волшебная стрела",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Заклинание создаёт ещё один дротик за каждый уровень ячейки выше первого.",
+  "description": "Вы создаёте три светящихся дротика из магической силы. Каждый дротик поражает существо по вашему выбору, которое вы можете видеть в пределах дистанции. Дротик наносит цели 1к4 + 1 урона Чистой силой. Все дротики атакуют одновременно, и вы можете направить их как в одно существо, так и в разных.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Волшебная стрела: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "120 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+  "card_number": "SPELL-0179",
+  "name": "Вызов на дуэль",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "30 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": [
+   "wis"
+  ],
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы пытаетесь вызвать существо на дуэль. Одно существо, которое вы можете видеть в пределах дистанции, совершает спасбросок Мудрости. При провале цель совершает с Помехой броски атаки по всем существам, кроме вас, и она не может добровольно переместиться в пространство, находящееся более чем в 30 футах от вас. Заклинание заканчивается, если вы совершаете бросок атаки по отличному от цели существу, если сотворяете заклинание на отличного от цели врага, если ваш союзник наносит цели урон, или если вы заканчиваете свой ход более чем в 30 футах от цели.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Вызов на дуэль: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+  "card_number": "SPELL-0181",
+  "name": "Героизм",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Согласное существо, которого вы касаетесь, наполняется храбростью. Пока заклинание активно, существо получает иммунитет к состоянию Испуганный и в начале каждого своего хода получает Временные хиты, равные вашему модификатору заклинательной характеристики.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Героизм: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "857500cb-45e7-4cce-9fd3-61116e10814f",
+  "card_number": "SPELL-0183",
+  "name": "Гневная кара",
+  "level": 1,
+  "casting_time": "Бонусное действие, которое вы совершаете сразу после попадания по существу Рукопашным оружием или Безоружным ударом",
+  "range": "На себя",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "necrotic"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6 за каждый уровень ячейки выше первого.",
+  "description": "Цель получает дополнительно 1к6 урона Некротической энергией от атаки, и она должна преуспеть в спасброске Мудрости, иначе станет Испуганной до окончания действия заклинания. В конце каждого своего хода Испуганная цель повторяет спасбросок, заканчивая действие заклинания на себе при успехе.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Гневная кара: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+  "card_number": "SPELL-0185",
+  "name": "Град шипов",
+  "level": 1,
+  "casting_time": "Бонусное действие, которое вы совершаете сразу после попадания по существу Дальнобойным оружием",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": [
+   "dex"
+  ],
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к10 за каждый уровень ячейки выше первого.",
+  "description": "Аасимар Колдун сокрушает врагов всепоглощающим Голодом Хадара Когда вы попадаете по существу, заклинание создаёт град шипов, вылетающих из вашего Дальнобойного оружия или боеприпаса. Цель атаки и все существа в пределах 5 футов от неё, должны совершить спасбросок Ловкости, получая 1к10 Колющего урона при провале, или половину этого урона при успехе.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Град шипов: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+  "card_number": "SPELL-0186",
+  "name": "Громовая кара",
+  "level": 1,
+  "casting_time": "Бонусное действие, которое вы совершаете сразу после попадания по цели Рукопашным оружием или Безоружным ударом",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "2d6",
+    "damage_type": "thunder"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6 за каждый уровень ячейки выше первого.",
+  "description": "Ваш удар сопровождается громовым рокотом, слышимым с расстояния 300 футов, и цель получает дополнительно 2к6 урона Звуком. Кроме того, если цель — существо, она должна преуспеть в спасброске Силы, иначе будет оттолкнута на 10 футов от вас и станет Сбитой с ног.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Громовая кара: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "4291b817-6869-4f87-afae-5bd1a37aee3f",
+  "card_number": "SPELL-0188",
+  "name": "Добряника",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "24 часа",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": true,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "В вашей руке появляются десять ягод, наполненных магией на время длительности. Любое существо может Бонусным действием съесть одну ягоду. Ягода восстанавливает 1 Хит, и она настолько питательна, что насыщает существо на один день. Несъеденные ягоды исчезают, когда заклинание заканчивается.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Добряника: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "f55f58e8-a6f9-4c97-ab6f-8e7f385591d0",
+  "card_number": "SPELL-0189",
+  "name": "Доспех Агатиса",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "На себя",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Временные хиты и урон Холодом увеличиваются на 5 за каждый уровень ячейки выше первого.",
+  "description": "Вас окружает защитная магическая изморозь. Вы получаете 5 Временных хитов. Если существо попадает по вам рукопашной атакой, пока заклинание активно, оно получает 5 урона Холодом. Заклинание заканчивается досрочно, если у вас нет Временных хитов.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Доспех Агатиса: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ }
+]

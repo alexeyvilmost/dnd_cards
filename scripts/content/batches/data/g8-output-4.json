@@ -1,0 +1,274 @@
+[
+ {
+  "card_number": "SPELL-0164",
+  "name": "Божественная кара",
+  "action": "upgrade",
+  "reason": "Мгновенный дополнительный урон 2к8 Излучением по цели попадания с апкастом +1к8 — выражается auto-уроном; условный +1к8 по Исчадиям/Нежити оставлен narrative-примечанием.",
+  "source_quote": "Цель получает дополнительно 2к8 урона Излучением от атаки. Урон увеличивается на 1к8, если цель Исчадие или Нежить.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "bonus_action" },
+     { "resource": "spell_slot", "level": 1, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "damage",
+       "dice": "2d8",
+       "type": "radiant",
+       "scaling": { "per": "spell_slot_above", "dice": "1d8" }
+      },
+      {
+       "kind": "narrative",
+       "description": "Если цель — Исчадие или Нежить, урон увеличивается на 1к8 (добавьте вручную)."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0165",
+  "name": "Божественное благоволение",
+  "action": "keep_narrative",
+  "reason": "Дополнительная кость 1к4 Излучением к попаданиям атак оружием на протяжении 1 минуты — райдер с костью в модификаторе, явно запрещён контрактом.",
+  "source_quote": "Пока заклинание активно, ваши атаки оружием наносят дополнительно 1к4 урона Излучением при попадании.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0174",
+  "name": "Волшебная стрела",
+  "action": "upgrade",
+  "reason": "Автопопадание без броска: три дротика по 1к4+1 Чистой силой (3к4+3 по одной цели), апкаст +1 дротик = +1к4+1; распределение по нескольким целям оставлено narrative-примечанием (одна цель — ок).",
+  "source_quote": "Дротик наносит цели 1к4 + 1 урона Чистой силой... Заклинание создаёт ещё один дротик за каждый уровень ячейки выше первого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 1, "amount": 1 }
+    ]
+   },
+   "targeting": {
+    "shape": "single",
+    "range": "120 футов",
+    "filter": "any"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "damage",
+       "dice": "3d4 + 3",
+       "type": "force",
+       "scaling": { "per": "spell_slot_above", "dice": "1d4 + 1" }
+      },
+      {
+       "kind": "narrative",
+       "description": "Три дротика (1к4+1 каждый) можно направить в разных существ; бросок выше — суммарный урон по одной цели."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0179",
+  "name": "Вызов на дуэль",
+  "action": "keep_narrative",
+  "reason": "Эффект — Помеха на броски атаки ЦЕЛИ по другим существам и ограничение её перемещения: модификаторы на цель и ограничения движения контрактом запрещены.",
+  "source_quote": "При провале цель совершает с Помехой броски атаки по всем существам, кроме вас, и она не может добровольно переместиться в пространство, находящееся более чем в 30 футах от вас.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0181",
+  "name": "Героизм",
+  "action": "keep_narrative",
+  "reason": "Иммунитет к состоянию Испуганный и Временные хиты, повторяющиеся В НАЧАЛЕ КАЖДОГО хода касаемого существа, — иммунитеты и рекуррентные эффекты на другое существо вне контракта.",
+  "source_quote": "существо получает иммунитет к состоянию Испуганный и в начале каждого своего хода получает Временные хиты, равные вашему модификатору заклинательной характеристики.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0183",
+  "name": "Гневная кара",
+  "action": "upgrade",
+  "reason": "Автоурон 1к6 Некротической энергией (апкаст +1к6) плюс спасбросок Мудрости, при провале состояние Испуганный до конца заклинания (10 раундов) с повторным спасброском в конце хода — выражается контрактом.",
+  "source_quote": "Цель получает дополнительно 1к6 урона Некротической энергией от атаки, и она должна преуспеть в спасброске Мудрости, иначе станет Испуганной до окончания действия заклинания.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "bonus_action" },
+     { "resource": "spell_slot", "level": 1, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "damage",
+       "dice": "1d6",
+       "type": "necrotic",
+       "scaling": { "per": "spell_slot_above", "dice": "1d6" }
+      }
+     ]
+    },
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "condition",
+       "value": "frightened",
+       "op": "apply",
+       "duration": { "type": "rounds", "amount": 10 },
+       "save_ends": { "ability": "wis", "dc": "8 + prof + spellcasting" }
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0185",
+  "name": "Град шипов",
+  "action": "upgrade",
+  "reason": "Спасбросок Ловкости, 1к10 Колющего при провале и половина при успехе (апкаст +1к10) — выражается по одной цели; существа в 5 футах от цели оставлены narrative-примечанием.",
+  "source_quote": "должны совершить спасбросок Ловкости, получая 1к10 Колющего урона при провале, или половину этого урона при успехе.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "bonus_action" },
+     { "resource": "spell_slot", "level": 1, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "1d10",
+       "type": "piercing",
+       "on_success": "half",
+       "scaling": { "per": "spell_slot_above", "dice": "1d10" }
+      }
+     ],
+     "on_success": [
+      {
+       "kind": "damage",
+       "dice": "1d10",
+       "type": "piercing",
+       "on_success": "half",
+       "scaling": { "per": "spell_slot_above", "dice": "1d10" }
+      }
+     ]
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Спасбросок также совершают все существа в пределах 5 футов от цели атаки (бросьте для каждого отдельно)."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0186",
+  "name": "Громовая кара",
+  "action": "upgrade",
+  "reason": "Автоурон 2к6 Звуком (апкаст +1к6) плюс спасбросок Силы, при провале отталкивание на 10 футов и Сбит с ног — полностью выражается контрактом.",
+  "source_quote": "цель получает дополнительно 2к6 урона Звуком... должна преуспеть в спасброске Силы, иначе будет оттолкнута на 10 футов от вас и станет Сбитой с ног.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "bonus_action" },
+     { "resource": "spell_slot", "level": 1, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "damage",
+       "dice": "2d6",
+       "type": "thunder",
+       "scaling": { "per": "spell_slot_above", "dice": "1d6" }
+      }
+     ]
+    },
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "str",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      { "kind": "movement", "value": "push", "distance": 10 },
+      { "kind": "condition", "value": "prone", "op": "apply" }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0188",
+  "name": "Добряника",
+  "action": "keep_narrative",
+  "reason": "Создание десяти волшебных ягод-предметов на 24 часа, которые едят Бонусным действием любые существа, — утилитарный призыв предметов вне контракта.",
+  "source_quote": "Любое существо может Бонусным действием съесть одну ягоду. Ягода восстанавливает 1 Хит.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0189",
+  "name": "Доспех Агатиса",
+  "action": "upgrade",
+  "reason": "5 Временных хитов на себя — исполняется temp_hp; ответный урон 5 Холодом по атакующим (райдер на чужие атаки) и апкаст +5 оставлены narrative-примечанием.",
+  "source_quote": "Вы получаете 5 Временных хитов. Если существо попадает по вам рукопашной атакой, пока заклинание активно, оно получает 5 урона Холодом.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "bonus_action" },
+     { "resource": "spell_slot", "level": 1, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      { "kind": "temp_hp", "amount": "5" },
+      {
+       "kind": "narrative",
+       "description": "Пока заклинание активно: существо, попавшее по вам рукопашной атакой, получает 5 урона Холодом. При ячейке выше 1-го уровня Временные хиты и урон Холодом +5 за уровень."
+      }
+     ]
+    }
+   ]
+  }
+ }
+]

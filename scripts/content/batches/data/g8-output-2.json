@@ -1,0 +1,289 @@
+[
+ {
+  "card_number": "SPELL-0226",
+  "name": "Мистический заряд",
+  "action": "upgrade",
+  "reason": "Классический атакующий заговор: дальнобойная атака заклинанием, 1к10 Чистой силой; рост числа лучей (5/11/17 ур.) аппроксимирован scaling по character_level одним броском по одной цели, что допустимо контрактом.",
+  "source_quote": "Совершите дальнобойную атаку заклинанием... При попадании цель получает 1к10 урона Чистой силой. (EN: On a hit, the target takes 1d10 Force damage.)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "any",
+    "range": "120 футов",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "attack_roll",
+     "attack_kind": "spell_ranged",
+     "ability": "spellcasting",
+     "vs": "ac",
+     "on_hit": [
+      {
+       "kind": "damage",
+       "dice": "1d10",
+       "type": "force",
+       "scaling": {
+        "per": "character_level",
+        "dice": "1d10"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0230",
+  "name": "Наставление",
+  "action": "keep_narrative",
+  "reason": "Бонус 1к4 к проверкам выбранного навыка цели — это кость в модификаторе и бафф на другое существо, что запрещено контрактом движка.",
+  "source_quote": "Пока заклинание активно, цель добавляет 1к4 к любой проверке характеристики, использующей выбранный навык.",
+  "mechanics": null
+ },
+ {
+  "card_number": "dancing_lights",
+  "name": "Пляшущие огоньки",
+  "action": "keep_narrative",
+  "reason": "Чисто утилитарное заклинание освещения (создание и перемещение огоньков) — не выражается резолюциями движка.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0260",
+  "name": "Погребальный звон",
+  "action": "upgrade",
+  "reason": "Спасбросок Мудрости с уроном некротикой выражается контрактом; условная кость 1к12 при неполных Хитах цели не ветвится движком и оставлена как narrative-подсказка рядом с базовым уроном 1к8.",
+  "source_quote": "Цель должна преуспеть в спасброске Мудрости, иначе получит 1к8 урона Некротической энергией. Если Хиты цели неполные, то вместо этого она получает 1к12. (EN: 1d8 Necrotic... it instead takes 1d12 Necrotic damage.)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "1d8",
+       "type": "necrotic",
+       "scaling": {
+        "per": "character_level",
+        "dice": "1d8"
+       }
+      },
+      {
+       "kind": "narrative",
+       "description": "Если Хиты цели неполные, бросайте к12 вместо к8 (1к12; на 5/11/17 уровне — 2к12/3к12/4к12)."
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "mending",
+  "name": "Починка",
+  "action": "keep_narrative",
+  "reason": "Утилитарная починка объекта без бросков, урона и состояний — за пределами контракта движка.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0280",
+  "name": "Раскат грома",
+  "action": "upgrade",
+  "reason": "Спасбросок Телосложения с уроном 1к6 Звуком выражается контрактом; 5-футовая Эманация с несколькими целями аппроксимируется одним спасброском по цели, что допустимо.",
+  "source_quote": "Каждое существо в исходящей от вас 5-футовой Эманации должно преуспеть в спасброске Телосложения, иначе получит 1к6 урона Звуком. (EN: ...or take 1d6 Thunder damage.)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ]
+   },
+   "targeting": {
+    "shape": "self"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "1d6",
+       "type": "thunder",
+       "scaling": {
+        "per": "character_level",
+        "dice": "1d6"
+       }
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0281",
+  "name": "Расщепление разума",
+  "action": "upgrade",
+  "reason": "Спасбросок Интеллекта с уроном 1к6 психикой выражается контрактом; штраф -1к4 к следующему спасброску цели — кость в модификаторе на цель (запрещено), оставлен narrative-подсказкой.",
+  "source_quote": "Цель должна преуспеть в спасброске Интеллекта, иначе получит 1к6 урона Психической энергией и вычтет 1к4 из следующего спасброска. (EN: 1d6 Psychic damage and subtract 1d4 from the next saving throw it makes before the end of your next turn.)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "int",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "1d6",
+       "type": "psychic",
+       "scaling": {
+        "per": "character_level",
+        "dice": "1d6"
+       }
+      },
+      {
+       "kind": "narrative",
+       "description": "Цель вычитает 1к4 из следующего спасброска, совершаемого ею до конца вашего следующего хода."
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "light",
+  "name": "Свет",
+  "action": "keep_narrative",
+  "reason": "Утилитарное заклинание освещения объекта без боевой резолюции — за пределами контракта движка.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0286",
+  "name": "Священное пламя",
+  "action": "upgrade",
+  "reason": "Спасбросок Ловкости с уроном 1к8 Излучением полностью выражается контрактом; игнорирование Укрытия — нюанс на усмотрение стола, не влияет на исполняемую часть.",
+  "source_quote": "Цель должна преуспеть в спасброске Ловкости, иначе получит 1к8 урона Излучением. Цель не получает преимущества от Укрытия... (EN: take 1d8 Radiant damage. The target gains no benefit from Half Cover...)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "1d8",
+       "type": "radiant",
+       "scaling": {
+        "per": "character_level",
+        "dice": "1d8"
+       }
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0291",
+  "name": "Слово сияния",
+  "action": "upgrade",
+  "reason": "Спасбросок Телосложения с уроном 1к6 Излучением выражается контрактом; 5-футовая Эманация по выбранным существам аппроксимируется одним спасброском по цели, что допустимо.",
+  "source_quote": "Каждое существо по вашему выбору... должно преуспеть в спасброске Телосложения, иначе получит 1к6 урона Излучением. (EN: ...throw or take 1d6 Radiant damage.)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ]
+   },
+   "targeting": {
+    "shape": "self"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "1d6",
+       "type": "radiant",
+       "scaling": {
+        "per": "character_level",
+        "dice": "1d6"
+       }
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ }
+]

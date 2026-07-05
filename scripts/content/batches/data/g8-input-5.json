@@ -1,0 +1,508 @@
+[
+ {
+  "id": "db6433bf-f779-4b65-8766-0feffefd1930",
+  "card_number": "SPELL-0190",
+  "name": "Доспехи мага",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "duration": "8 часов",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы касаетесь согласного существа, которое не носит доспехов. Пока заклинание активно, базовый КЗ цели становится равным 13 + её модификатор Ловкости. Заклинание заканчивается, если цель надевает доспех. Голиаф колдун использует Доспех Агатиса и Руки Хадара в битве против врагов морских глубин",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Доспехи мага: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+  "card_number": "SPELL-0193",
+  "name": "Дружба с животными",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "24 часа",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одного дополнительного Зверя за каждый уровень ячейки выше первого.",
+  "description": "Выберите Зверя, которого вы видите в пределах дистанции. Цель должна преуспеть в спасброске Мудрости, иначе станет Очарованной на время действия заклинания. Если вы или один из ваших союзников наносите урон цели, заклинание оканчивается.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Дружба с животными: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+  "card_number": "SPELL-0199",
+  "name": "Жуткий смех Таши",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": [
+   "wis"
+  ],
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Одно существо по вашему выбору, которое вы можете видеть в пределах дистанции, совершает спасбросок Мудрости. При провале оно становится Сбитым с ног и Недееспособным, пока заклинание активно. В течение этого времени оно бесконтрольно смеётся, если способно, и не может закончить на себе состояние Сбитый с ног. В конце каждого своего хода и каждый раз при получении урона оно совершает ещё один спасбросок Мудрости. У цели есть Преимущество к спасброску, если он был вызван получением урона. При успехе заклинание заканчивается.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Жуткий смех Таши: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+  "card_number": "SPELL-0201",
+  "name": "Защита от добра и зла",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "duration": null,
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "25 ЗМ, расходуемая заклинанием) Длительность: Концентрация, вплоть до 10 минут Пока заклинание активно, одно согласное существо, которого вы коснулись, защищено от определённого вида существ: Аберрации, Исчадия, Небожители, Нежить, Феи или Элементали. Защита предоставляет несколько преимуществ. Существа выбранного типа совершают с Помехой броски атаки по цели. Цель также не может стать одержимой ими, либо быть им Очарованной или Испуганной. Если цель уже одержима или является Очарованной или Испуганной таким существом, она совершает последующие спасброски от таких эффектов с преимуществом.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Защита от добра и зла: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "befe393c-7463-40df-a888-d74f1e6e186c",
+  "card_number": "SPELL-0206",
+  "name": "Иллюзорные письмена",
+  "level": 1,
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "duration": null,
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "10 ЗМ, расходуемые заклинанием) Длительность: 10 дней Вы пишете на пергаменте, бумаге или другом подходящем материале и наполняете его иллюзией, существующей, пока активно заклинание. Для вас и всех существ, указанных вами при сотворении заклинания, письмена кажутся обычными, написанными вашей рукой и передающими тот самый смысл, который вкладывали вы. Для всех остальных письмена кажутся написанными на неизвестном или магическом языке, который невозможно прочитать. В качестве альтернативы иллюзия может поменять смысл, почерк или язык, но вы должны знать этот язык. Если рассеять это заклинание, исчезает и исходное письмо, и иллюзия. Существо, имеющее Истинное зрение, может читать скрытое послание.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Иллюзорные письмена: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "5a8cc8b7-8f5c-49d7-a66d-ba31a273c65c",
+  "card_number": "SPELL-0222",
+  "name": "Маскировка",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Человек друид накладывает заклинание малое восстановление, чтобы облегчить страдания друга, отравленного в бою Вы заставляете себя — включая одежду, доспехи, оружие и прочее имущество — выглядеть иначе, пока заклинание активно. Вы можете выглядеть на 1 фут выше или ниже, либо стать худым или толстым. Ваш новый облик должен иметь такой же набор конечностей, что и вы. Во всём остальном характер иллюзии определяете вы. Изменения, вызванные этим заклинанием, не выдерживают проверку физическим исследованием. Например, если вы добавили этим заклинанием к своему снаряжению шляпу, объекты будут проходить сквозь неё, и любой, кто её коснётся, ничего не почувствует. Для обнаружения того, что вы замаскированы, существо должно действием Изучение обследовать вашу внешность и преуспеть в проверке Интеллекта (Расследование) против Сл спасброска ваших заклинаний.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Маскировка: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+  "card_number": "SPELL-0223",
+  "name": "Метка охотника",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "90 футов",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Ваша Концентрация длится дольше с ячейкой заклинания 3‑4 уровней (до 8 часов) или 5 уровня и выше (до 24 часов).",
+  "description": "Вы волшебным образом объявляете своей добычей одно существо, которое можете видеть в пределах дистанции. Пока заклинание активно, вы наносите дополнительно 1к6 урона Чистой силой при попадании по этой цели броском атаки. Вы также совершаете с преимуществом проверки Мудрости (Восприятие или Выживание), совершённые для её поиска. Если Хиты цели опускаются до 0, пока заклинание активно, вы можете Бонусным действием переместить метку на новое существо, которое можете видеть в пределах дистанции.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Метка охотника: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "90 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "13018914-f220-48c5-8aff-902b1fbfff73",
+  "card_number": "SPELL-0232",
+  "name": "Невидимый слуга",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Это заклинание создаёт невидимую, неосмысленную, бесформенную Среднюю силу, которая выполняет ваши простые приказы, пока заклинание активно. Слуга возникает в незанятом пространстве на земле в пределах дистанции. У него КЗ 10, 1 Хит и Сила 2, и он не может атаковать. Если его Хиты опускаются до 0, заклинание заканчивается. Один раз в каждом своём ходу вы можете Бонусным действием отдать команду слуге переместиться на расстояние не более 15 футов и совершить манипуляции с каким‑нибудь объектом. Слуга может выполнять простые задачи, доступные человеку, такие как подношение предметов, чистка, починка и складывание одежды, разжигание костра, подача пищи и разливание вина. Получив команду, слуга начинает её выполнять, стараясь изо всех сил, пока не выполнит, после чего начинает ждать вашу следующую команду. Если вы отдаёте слуге поручение, из-за которого тот окажется дальше чем в 60 футах от ",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Невидимый слуга: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
+  "card_number": "SPELL-0236",
+  "name": "Обнаружение болезней и яда",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пока заклинание активно, вы чувствуете местоположение ядов, ядовитых существ и магических заражений в пределах 30 футов. Вы распознаёте тип яда, существа и заражения для каждого источника. Заклинание блокируется 1 футом камня, грязи или дерева; 1 дюймом металла; или тонким листом свинца.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Обнаружение болезней и яда: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "c6f10945-84d5-422f-bb70-98177142d90e",
+  "card_number": "SPELL-0237",
+  "name": "Обнаружение добра и зла",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пока заклинание активно, вы чувствуете местоположение любой Аберрации, Исчадия, Нежити, Небожителя, Феи или Элементаля в пределах 30 футов. В этих пределах вы также чувствуете активное заклинание Святилище, если оно есть. Заклинание блокируется 1 футом камня, грязи или дерева; 1 дюймом металла; или тонким листом свинца.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Обнаружение добра и зла: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ }
+]

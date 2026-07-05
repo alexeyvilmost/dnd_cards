@@ -1,0 +1,459 @@
+[
+ {
+  "id": "f8ad3edb-c0e2-4321-9a91-172bf19e2ec7",
+  "card_number": "longstrider",
+  "name": "Скороход",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Вы прикасаетесь к существу. Пока заклинание активно, Скорость цели увеличивается на 10 футов.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Скороход: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "2a6cab0a-ee77-4ac4-8148-80743fc8e8ea",
+  "card_number": "SPELL-0292",
+  "name": "Смазка",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Негорючая смазка покрывает пол в квадрате с длиной стороны 10 футов с центром в точке в пределах дистанции, делая квадрат Труднопроходимой местностью, пока заклинание активно. Когда появляется смазка, все существа, стоящие в этой области, должны преуспеть в спасброске Ловкости, иначе будут Сбиты с ног. Существа, входящие в эту область или оканчивающие там свой ход, также должны преуспеть в спасброске Ловкости, иначе будут Сбиты с ног.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Смазка: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+  "card_number": "SPELL-0296",
+  "name": "Сотворение или уничтожение воды",
+  "level": 1,
+  "casting_time": "1 действие",
+  "range": "30 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы создаёте или уничтожаете 10 дополнительных галлонов воды или сторона Куба увеличивается на 5 футов за каждый уровень ячейки выше первого.",
+  "description": "Вы выполняете одно из следующих действий: Сотворение воды. Вы создаёте не более 10 галлонов чистой воды в пределах дистанции в открытом контейнере. В качестве альтернативы вода выпадает дождём в Кубе со стороной 30 футов в пределах дистанции, туша открытое пламя. Уничтожение воды. Вы уничтожаете не более 10 галлонов воды в открытом контейнере в пределах дистанции. В качестве альтернативы вы уничтожаете туман в Кубе со стороной 30 футов в пределах дистанции.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Сотворение или уничтожение воды: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+  "card_number": "SPELL-0303",
+  "name": "Туманное облако",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Радиус тумана увеличивается на 20 футов за каждый уровень ячейки выше первого.",
+  "description": "Вы создаёте Сферу с радиусом 20 футов из тумана с центром на точке в пределах дистанции. Сфера является Сильно заслонённой областью. Она существует, пока активно заклинание или пока сильный ветер (например, созданный заклинанием Порыв ветра) её не развеет.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Туманное облако: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "120 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "52d5507e-4350-4dcb-a5fd-c4a11bd91b67",
+  "card_number": "SPELL-0306",
+  "name": "Убежище",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "30 футов",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы защищаете существо в пределах дистанции. Пока заклинание активно, все существа, выбирающие защищаемое существо целью броска атаки или атакующего заклинания, должны преуспеть в спасброске Мудрости, иначе должны будут выбрать новую цель или потратить впустую свою атаку или заклинание. Это заклинание не защищает существо от областей воздействия. Заклинание заканчивается, когда защищаемое существо совершает атаку, сотворяет заклинание или наносит урон.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Убежище: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "0f81f3e2-ff95-4629-9292-e81332a57282",
+  "card_number": "SPELL-0311",
+  "name": "Усыпление",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Каждое существо по вашему выбору в Сфере радиусом 5 футов с центром в точке в пределах дистанции должно преуспеть в спасброске Мудрости, иначе станет Бессознательным до конца своего следующего хода, где будет должно повторить спасбросок. Если цель проваливает второй спасбросок, она становится Бессознательной на длительность заклинания. Заклинание заканчивается на цели, если она получает урон или кто‑то в пределах 5 футов от неё использует действие, чтобы потрясти цель. Существа, которые не спят, такие как эльфы, или те, у которых есть Иммунитет к состоянию Истощение, автоматически преуспевают в спасброске от этого заклинания.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Усыпление: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "f0256294-e692-4695-8e29-d8288139a7ad",
+  "card_number": "SPELL-0314",
+  "name": "Цветной шарик",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "90 футов",
+  "duration": null,
+  "area": null,
+  "concentration": false,
+  "attack_roll": true,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше первого. Максимальное количество раз, которое шарик может перепрыгивать, равняется уровню используемой ячейки, а существо может стать целью только единожды за каждое сотворение.",
+  "description": "50 ЗМ) Длительность: Мгновенная Вы бросаете энергетический шарик в цель в пределах дистанции. Выберите Звук, Кислоту, Огонь, Холод, Электричество или Яд при создании шарика, а затем совершите по цели дальнобойную атаку заклинанием. При попадании цель получает 3к8 урона выбранного типа. Если выпадет одинаковое число на двух или более к8, шарик перепрыгнет на другую цель по вашему выбору в пределах 30 футов от первой цели. Совершите бросок атаки по новой цели, а также новый бросок урона при попадании. ШаЧеловек чародей обрушивает на упырей непредсказуемую энергию Цветного шарика рик не может вновь перепрыгнуть на новую цель, если только не сотворить заклинание при помощи ячейки второго уровня и выше.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Цветной шарик: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "90 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "d87f4507-849f-450b-b328-0198cb011587",
+  "card_number": "SPELL-0317",
+  "name": "Щит",
+  "level": 1,
+  "casting_time": "Реакция, совершаемая, когда по вам попали броском атаки или вы стали целью заклинания Волшебная стрела",
+  "range": "На себя",
+  "duration": "1 раунд",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вас защищает незримый барьер магической силы. До начала вашего следующего хода вы получаете бонус +5 к КЗ, в том числе против атаки, вызвавшей эту Реакцию, и не получаете урона от заклинания Волшебная стрела. Волшебник Эвард прибегает к своему печально известному заклинанию Чёрные щупальца Эварда,чтобы преподать безрассудным бандитам урок",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "reaction"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Щит: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "656f3c28-9fdd-44c7-88df-ce032a501e52",
+  "card_number": "SPELL-0318",
+  "name": "Щит веры",
+  "level": 1,
+  "casting_time": "Бонусное действие",
+  "range": "60 футов",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Мерцающее поле окутывает выбранное вами существо в пределах дистанции и даёт ему бонус +2 к КЗ, пока заклинание активно.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Щит веры: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ }
+]

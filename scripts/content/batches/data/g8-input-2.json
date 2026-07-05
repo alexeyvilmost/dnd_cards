@@ -1,0 +1,483 @@
+[
+ {
+  "id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+  "card_number": "SPELL-0226",
+  "name": "Мистический заряд",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": true,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Заклинание создаёт два луча на 5‑м уровне, три луча на 11‑м уровне и четыре луча на 17‑м уровне. Вы можете направить лучи в одну цель или в разных. Для каждого луча совершите свой бросок атаки.",
+  "description": "Вы выбрасываете луч потрескивающей энергии. Совершите дальнобойную атаку заклинанием по одному существу или объекту в пределах дистанции. При попадании цель получает 1к10 урона Чистой силой.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Мистический заряд: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "120 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+  "card_number": "SPELL-0230",
+  "name": "Наставление",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы касаетесь согласного существа и выбираете навык. Пока заклинание активно, цель добавляет 1к4 к любой проверке характеристики, использующей выбранный навык.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Наставление: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "b2c5ebf4-facc-4521-948f-55b30746bfa5",
+  "card_number": "dancing_lights",
+  "name": "Пляшущие огоньки",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы создаёте не более четырёх огоньков размером с факел в пределах дистанции, делая их похожими на факелы, фонари или светящиеся сферы, парящие в воздухе. В качестве альтернативы вы можете объединить четыре огонька в одну светящуюся Среднюю человекоподобную фигуру. Какую бы форму вы ни выбрали, каждый огонёк излучает Тусклый свет в пределах 10 футов. Вы можете Бонусным действием в свой ход переместить огоньки на расстояние не более 60 футов в новое место в пределах дистанции. Каждый огонёк должен находиться в пределах 20 футов от другого огонька, созданного этим заклинанием, и огонёк тухнет, если оказывается за пределами дистанции заклинания.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Пляшущие огоньки: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "120 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+  "card_number": "SPELL-0260",
+  "name": "Погребальный звон",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d8/1к12",
+    "damage_type": "necrotic"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на одну кость, когда вы достигаете 5‑го уровня (2к8 или 2к12), 11‑го уровня (3к8 или 3к12) и 17‑го уровня (4к8 или 4к12). Такие заклинания, как Подводное дыхание и Хождение по воде, помогают посещать водные царства",
+  "description": "Вы указываете на одно существо, которое можете видеть в пределах дистанции, и одиночный скорбный звук колокола слышен в пределах 10 футов от цели. Цель должна преуспеть в спасброске Мудрости, иначе получит 1к8 урона Некротической энергией. Если Хиты цели неполные, то вместо этого она получает 1к12 урона Некротической энергией.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Погребальный звон: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+  "card_number": "mending",
+  "name": "Починка",
+  "level": 0,
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Это заклинание чинит одно повреждение или разрыв на объекте, которого касаетесь, например, разорванное звено цепи, две половинки сломанного ключа, порванный плащ или протекающий бурдюк. Если повреждение или разрыв не больше 1 фута в длину, вы чините его, не оставляя следов. Это заклинание может физически починить магический предмет, но не может восстановить магию в таком объекте.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Починка: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+  "card_number": "SPELL-0280",
+  "name": "Раскат грома",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": "5-футовой (Эманации)",
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "thunder"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6, когда вы достигаете 5‑го уровня (2к6), 11‑го уровня (3к6) и 17‑го уровня (4к6).",
+  "description": "Каждое существо в исходящей от вас 5‑футовой Эманации должно преуспеть в спасброске Телосложения, иначе получит 1к6 урона Звуком. Раскат грома от заклинания слышен на расстоянии не более 100 футов.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Раскат грома: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+  "card_number": "SPELL-0281",
+  "name": "Расщепление разума",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "1 раунд",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "psychic"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6, когда вы достигаете 5‑го уровня (2к6), 11‑го уровня (3к6) и 17‑го уровня (4к6).",
+  "description": "Вы пытаетесь временно расщепить разум одного существа, которое вы можете видеть в пределах дистанции. Цель должна преуспеть в спасброске Интеллекта, иначе получит 1к6 урона Психической энергией и вычтет 1к4 из следующего спасброска, совершаемого ею до конца вашего следующего хода.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Расщепление разума: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+  "card_number": "light",
+  "name": "Свет",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "duration": null,
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "мох) Длительность: 1 час Вы касаетесь одного объекта Большого размера или меньше, который никто не носит и не несёт. Пока заклинание активно, объект испускает Яркий свет в пределах 20 футов и Тусклый свет в пределах ещё 20 футов. Свет может быть любого выбранного вами цвета. Полное покрытие предмета чем‑то непрозрачным блокирует свет. Заклинание заканчивается, если вы сотворите его ещё раз.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Свет: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+  "card_number": "SPELL-0286",
+  "name": "Священное пламя",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d8",
+    "damage_type": "radiant"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон заклинания увеличивается на 1к8, когда вы достигаете 5‑го уровня (2к8), 11‑го уровня (3к8) и 17‑го уровня (4к8).",
+  "description": "Похожее на огонь сияние нисходит на существо, которое вы можете видеть в пределах дистанции. Цель должна преуспеть в спасброске Ловкости, иначе получит 1к8 урона Излучением. Цель не получает преимущества от Укрытия на половину и Укрытия на три четверти к этому спасброску.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Священное пламя: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "78eb6e5c-5d2a-42ad-8e6e-6bf3be3f96c0",
+  "card_number": "SPELL-0291",
+  "name": "Слово сияния",
+  "level": 0,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Мгновенная",
+  "area": "5-футовой (Эманацией)",
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [
+   {
+    "dice": "1d6",
+    "damage_type": "radiant"
+   }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6, когда вы достигаете 5‑го уровня (2к6), 11‑го уровня (3к6) и 17‑го уровня (4к6).",
+  "description": "Из вас извергается жгучее сияние 5‑футовой Эманацией. Каждое существо по вашему выбору, которое вы можете видеть, должно преуспеть в спасброске Телосложения, иначе получит 1к6 урона Излучением.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Слово сияния: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ }
+]

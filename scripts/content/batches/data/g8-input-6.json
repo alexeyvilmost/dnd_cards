@@ -1,0 +1,514 @@
+[
+ {
+  "id": "25d868ad-0714-4fce-b5b2-2931dd5646bc",
+  "card_number": "detect_magic",
+  "name": "Обнаружение магии",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "На себя",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Пока заклинание активно, вы чувствуете присутствие магических эффектов в пределах 30 футов. Если вы почувствовали такой эффект, вы можете действием Магия увидеть слабую ауру вокруг видимого существа или объекта в области, несущей магию, и если эффект был создан заклинанием, вы узнаёте школу магии этого заклинания. Заклинание блокируется 1 футом камня, грязи или дерева; 1 дюймом металла; или тонким листом свинца.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Обнаружение магии: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8",
+  "card_number": "SPELL-0241",
+  "name": "Обретение фамильяра",
+  "level": 1,
+  "casting_time": "1 час",
+  "range": "10 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы получаете в услужение фамильяра — духа, принимающего облик животного по вашему выбору: Вороны, Кошки, Крысы, Куницы, Летучей мыши, Лягушки, Осьминога, Паука, Совы, Ястреба, Ящерицы или другого Зверя с Показателем опасности равным 0. Появившись в незанятом пространстве в пределах дистанции, фамильяр имеет статистику выбранного облика (см. приложение В), но он не Зверь, а Исчадие, Небожитель или Фея (по вашему выбору). Ваш фамильяр действует независимо от вас, но всегда повинуется вашим командам. Телепатическая связь. Пока ваш фамильяр находится в пределах 100 футов от вас, вы можете общаться с ним телепатически. Кроме того, вы можете Бонусным действием видеть глазами фамильяра и слышать его ушами до начала своего следующего хода, получая преимущества от всех его особых чувств. Если вы сотворяете заклинание с дистанцией «касание», фамильяр может передать это касание. Ваш фамильяр должен",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Обретение фамильяра: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "10 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "b132a28e-f6c9-4832-924b-1a680390e7fb",
+  "card_number": "faerie_fire",
+  "name": "Огонь фей",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": [
+   "dex"
+  ],
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Объекты в Кубе с длиной ребра 20 футов в пределах дистанции подсвечиваются синим, зелёным или фиолетовым цветом (по вашему выбору). Все существа в Кубе тоже подсвечиваются, если проваливают спасбросок Ловкости. Пока заклинание активно, подсвеченные объекты и существа испускают Тусклый свет в пределах 10 футов и не могут получать преимущества от состояния Невидимый. Броски атаки по затронутым существам и объектам совершаются с Преимуществом, если атакующий может видеть их.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Огонь фей: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "8e26c8a3-c545-4524-98d5-35acc5d29ca5",
+  "card_number": "SPELL-0245",
+  "name": "Опознание",
+  "level": 1,
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "duration": null,
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "100 ЗМ) Длительность: Мгновенная Вы касаетесь объекта на протяжении всего времени сотворения заклинания. Если объект является магическим предметом или другим магическим объектом, вы узнаёте его свойства, способ их использования, требуется ли Настройка, и сколько осталось зарядов, если они есть. Вы узнаёте, действуют ли в данный момент заклинания на этот предмет, и что это за заклинания. Если предмет был создан заклинанием, вы узнаёте название этого заклинания. Если вы вместо этого во время сотворения заклинания касаетесь существа, вы узнаёте, какие заклинания в данный момент действуют на него.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Опознание: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "Касание",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+  "card_number": "SPELL-0246",
+  "name": "Опутывание",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "90 футов",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Из земли в пределах дистанции в квадрате с длиной стороны в 20 футов вырастают цепкие травы. Пока заклинание активно, эти растения превращают землю в Труднопроходимую местность. Они исчезают, когда заклинание заканчивается. Все существа в этой области (кроме вас), когда вы сотворяете заклинание, должны преуспеть в спасброске Силы, иначе станут Опутанными растениями до окончания действия заклинания. Опутанное существо может действием совершить проверку Силы (Атлетика) против Сл спасброска ваших заклинаний. При успехе оно освобождается от цепких растений и больше не Опутано ими. Оживлённый объект Огромный или меньше Конструкт, без мировоззрения КЗ 15 Хиты 10 (Средний или меньше), 20 (Большой), 40 (Огромный) Скорость 30 футов МОД ИСП МОД ИСП МОД ИСП Сил 16 +3 +3 Лов 10 +0 +0 Тел 10 +0 +0 Инт 3 –4 –4 Мдр 3 –4 –4 Хар 1 –5 –5 Иммунитеты Яд, Психический урон; Истощение, Очарованный, Испуганный,",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Опутывание: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "90 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+  "card_number": "SPELL-0247",
+  "name": "Опутывающий удар",
+  "level": 1,
+  "casting_time": "Бонусное действие, которое вы совершаете сразу после попадания оружием по существу",
+  "range": "На себя",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "area": null,
+  "concentration": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": [
+   "str"
+  ],
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Урон увеличивается на 1к6 за каждый уровень ячейки выше первого.",
+  "description": "Когда вы попадаете по цели, на ней появляются извивающиеся лозы, и цель совершает спасбросок Силы. Существа Большого размера и больше совершают этот спасбросок с Преимуществом. При провале цель становится Опутанной до конца действия заклинания. При успехе лозы увядают, и заклинание заканчивается. Будучи Опутанной, цель получает 1к6 Колющего урона в начале каждого своего хода. Цель или существо в пределах своей досягаемости может действием совершить проверку Силы (Атлетика) против Сл спасброска ваших заклинаний. При успехе заклинание заканчивается.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Опутывающий удар: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "shape": "self"
+   }
+  }
+ },
+ {
+  "id": "a6c7db7d-f35c-4072-a5eb-29d4d58be93e",
+  "card_number": "SPELL-0251",
+  "name": "Очарование личности",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": [
+   "wis"
+  ],
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+  "description": "Один гуманоид, которого вы можете видеть в пределах дистанции, совершает спасбросок Мудрости. Он совершает его с Преимуществом, если вы или ваши союзники сражаетесь с ним. При провале цель становится Очарованной, пока заклинание не закончится или пока вы и ваши союзники не нанесёте ей урон. Очарованное существо становится к вам Дружелюбным. Когда заклинание заканчивается, цель знает, что она была Очарована вами.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Очарование личности: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "677a3abf-5fc7-472f-b789-418dcba6dd88",
+  "card_number": "SPELL-0252",
+  "name": "Очищение пищи и питья",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "10 футов",
+  "duration": "Мгновенная",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Вы удаляете яды и гниль из немагической пищи и напитков в Сфере с радиусом 5 футов с центром в точке в пределах дистанции.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Очищение пищи и питья: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "10 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
+  "card_number": "SPELL-0253",
+  "name": "Падение пёрышком",
+  "level": 1,
+  "casting_time": "Реакция, совершаемая вами, когда вы или существо, которое вы можете видеть в пределах 60 футов от вас, начинает падать",
+  "range": "60 футов",
+  "duration": "1 минута",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Выберите не более пяти падающих существ в пределах дистанции. До окончания действия заклинания их скорость падения уменьшается до 60 футов за раунд. Если такое существо приземлится до окончания действия заклинания, оно не получает урон от падения, и заклинание на нём заканчивается.",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "reaction"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Падение пёрышком: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   }
+  }
+ },
+ {
+  "id": "3b1316f0-02e7-496b-8146-602f4bd8284a",
+  "card_number": "SPELL-0256",
+  "name": "Парящий диск Тензера",
+  "level": 1,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "duration": "1 час",
+  "area": null,
+  "concentration": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "save_outcome": null,
+  "upcast_description": null,
+  "description": "Это заклинание создаёт круглый горизонтальный диск из чистой силы диаметром 3 фута и толщиной 1 дюйм (2,5 см), парящий в 3 футах над полом в незанятом пространстве по вашему выбору, которое вы можете видеть в пределах дистанции. Диск существует, пока заклинание активно, и может нести на себе не более 500 фунтов. Если на него поместить больший вес, заклинание закончится, и всё, что было на диске, падает на пол. Диск неподвижен, пока вы находитесь в пределах 20 футов от него. Если вы переместитесь от него на расстояние, превышающее 20 футов, диск следует за вами, оставаясь в пределах 20 футов. Он может перелетать по неровной поверхности, перемещаться по лестницам, склонам и подобным препятствиям, но не может пересекать перепады по высоте в 10 футов и более. Например, диск не сможет перелететь над 10‑футовой ямой и не сможет из неё выбраться, если будет создан на её дне. Если вы переместите",
+  "current_mechanics": {
+   "activation": {
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "amount": 1,
+      "level": 1,
+      "resource": "spell_slot"
+     }
+    ],
+    "mode": "active"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Парящий диск Тензера: см. описание заклинания.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ],
+   "targeting": {
+    "filter": "any",
+    "range": "30 футов",
+    "shape": "single"
+   }
+  }
+ }
+]

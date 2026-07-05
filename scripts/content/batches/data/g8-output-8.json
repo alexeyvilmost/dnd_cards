@@ -1,0 +1,275 @@
+[
+ {
+  "card_number": "longstrider",
+  "name": "Скороход",
+  "action": "upgrade",
+  "reason": "Бафф скорости +10 футов выражается payload-ом movement/extra_speed; апкаст (доп. цели) остаётся текстом.",
+  "source_quote": "Пока заклинание активно, Скорость цели увеличивается на 10 футов.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "ally_and_self",
+    "range": "Касание",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "movement",
+       "value": "extra_speed",
+       "distance": 10
+      },
+      {
+       "kind": "narrative",
+       "description": "Длительность 1 час. Апкаст: одна дополнительная цель за каждый уровень ячейки выше первого."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0292",
+  "name": "Смазка",
+  "action": "upgrade",
+  "reason": "Начальный спасбросок Ловкости против Сбитого с ног выражается контрактом; зона труднопроходимой местности и повторные спасброски остаются narrative-payload-ом.",
+  "source_quote": "все существа, стоящие в этой области, должны преуспеть в спасброске Ловкости, иначе будут Сбиты с ног",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "any",
+    "range": "60 футов",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "condition",
+       "value": "prone",
+       "op": "apply"
+      }
+     ]
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Квадрат со стороной 10 футов становится Труднопроходимой местностью на 1 минуту; существа, входящие в область или оканчивающие там ход, также совершают спасбросок Ловкости, иначе Сбиты с ног."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0296",
+  "name": "Сотворение или уничтожение воды",
+  "action": "keep_narrative",
+  "reason": "Чистая утилитарность (создание/уничтожение воды и тумана) — за пределами контракта движка.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0303",
+  "name": "Туманное облако",
+  "action": "keep_narrative",
+  "reason": "Область Сильной заслонённости (зона на местности) не выражается контрактом движка.",
+  "source_quote": "Сфера является Сильно заслонённой областью.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0306",
+  "name": "Убежище",
+  "action": "keep_narrative",
+  "reason": "Спасбросок навязывается атакующим противникам (rider на чужие атаки) — движок не поддерживает эффекты на чужих бросках.",
+  "source_quote": "все существа, выбирающие защищаемое существо целью броска атаки или атакующего заклинания, должны преуспеть в спасброске Мудрости",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0311",
+  "name": "Усыпление",
+  "action": "keep_narrative",
+  "reason": "Состояние Бессознательный отсутствует в словаре condition движка, а двухступенчатый повторный спасбросок не выражается контрактом.",
+  "source_quote": "иначе станет Бессознательным до конца своего следующего хода, где будет должно повторить спасбросок",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0314",
+  "name": "Цветной шарик",
+  "action": "upgrade",
+  "reason": "Дальнобойная атака заклинанием с 3к8 и апкастом +1к8 выражается контрактом; тип урона выбирается игроком (по умолчанию огонь), выбор типа и перепрыгивание шарика описаны narrative-payload-ом.",
+  "source_quote": "При попадании цель получает 3к8 урона выбранного типа. ... Урон увеличивается на 1к8 за каждый уровень ячейки выше первого. (EN: On a hit, the target takes 3d8 damage of the chosen type.)",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "filter": "any",
+    "range": "90 футов",
+    "shape": "single"
+   },
+   "effects": [
+    {
+     "resolution": "attack_roll",
+     "attack_kind": "spell_ranged",
+     "ability": "spellcasting",
+     "vs": "ac",
+     "on_hit": [
+      {
+       "kind": "damage",
+       "dice": "3d8",
+       "type": "fire",
+       "scaling": {
+        "per": "spell_slot_above",
+        "dice": "1d8"
+       }
+      },
+      {
+       "kind": "narrative",
+       "description": "Тип урона выбирается при сотворении: Звук, Кислота, Огонь, Холод, Электричество или Яд. Если на двух и более к8 выпало одинаковое число, шарик перепрыгивает на новую цель в пределах 30 футов (новая атака и новый бросок урона); без ячейки 2+ уровня перепрыгнуть повторно нельзя."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0317",
+  "name": "Щит",
+  "action": "upgrade",
+  "reason": "Бонус +5 к КЗ на самого кастера выражается modifier-ом; защита от Волшебной стрелы остаётся narrative-payload-ом.",
+  "source_quote": "До начала вашего следующего хода вы получаете бонус +5 к КЗ, в том числе против атаки, вызвавшей эту Реакцию, и не получаете урона от заклинания Волшебная стрела.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "reaction"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "shape": "self"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "modifier",
+       "applies_to": {
+        "roll": "ac"
+       },
+       "op": "add",
+       "value": "+5",
+       "duration": {
+        "type": "until_start_of_next_turn"
+       }
+      },
+      {
+       "kind": "narrative",
+       "description": "Действует до начала вашего следующего хода, в том числе против атаки, вызвавшей Реакцию; вы не получаете урона от заклинания Волшебная стрела."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0318",
+  "name": "Щит веры",
+  "action": "upgrade",
+  "reason": "Числовой бафф +2 к КЗ — явно разрешённый контрактом случай (пример из словаря движка).",
+  "source_quote": "Мерцающее поле окутывает выбранное вами существо в пределах дистанции и даёт ему бонус +2 к КЗ, пока заклинание активно.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "bonus_action"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "shape": "single",
+    "range": "60 футов",
+    "filter": "ally_and_self"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "modifier",
+       "applies_to": {
+        "roll": "ac"
+       },
+       "op": "add",
+       "value": "+2"
+      },
+      {
+       "kind": "narrative",
+       "description": "Концентрация, вплоть до 10 минут."
+      },
+      {
+       "kind": "narrative",
+       "description": "Бафф вешается на владельца листа; на союзника отметьте вручную. Длительность до 10 минут (концентрация)."
+      }
+     ]
+    }
+   ]
+  }
+ }
+]

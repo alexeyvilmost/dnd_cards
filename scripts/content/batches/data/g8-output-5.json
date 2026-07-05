@@ -1,0 +1,181 @@
+[
+ {
+  "card_number": "SPELL-0190",
+  "name": "Доспехи мага",
+  "action": "keep_narrative",
+  "reason": "Заклинание УСТАНАВЛИВАЕТ базовый КЗ (13 + Ловкость) на касаемое существо, а контракт умеет только числовой add на самого кастера — замена на '+3' была бы неверна для альтернативных формул КЗ (Небронированная защита и т.п.).",
+  "source_quote": "Пока заклинание активно, базовый КЗ цели становится равным 13 + её модификатор Ловкости.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0193",
+  "name": "Дружба с животными",
+  "action": "upgrade",
+  "reason": "Спасбросок Мудрости, при провале состояние Очарован — полностью выражается контрактом (доп. цели при апкасте движок не умеет, базовый эффект корректен).",
+  "source_quote": "Цель должна преуспеть в спасброске Мудрости, иначе станет Очарованной на время действия заклинания.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "shape": "single",
+    "range": "30 футов",
+    "filter": "creature_type:beast"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "condition",
+       "value": "charmed",
+       "op": "apply"
+      },
+      {
+       "kind": "narrative",
+       "description": "Очарование длится 24 часа; обрывается, если вы или ваши союзники нанесёте цели урон."
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0199",
+  "name": "Жуткий смех Таши",
+  "action": "upgrade",
+  "reason": "Спасбросок Мудрости, при провале состояния Сбит с ног и Недееспособен на время концентрации (до 10 раундов) с повторными спасбросками — выражается контрактом.",
+  "source_quote": "совершает спасбросок Мудрости. При провале оно становится Сбитым с ног и Недееспособным, пока заклинание активно... В конце каждого своего хода... совершает ещё один спасбросок Мудрости.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {
+      "resource": "action"
+     },
+     {
+      "resource": "spell_slot",
+      "level": 1,
+      "amount": 1
+     }
+    ]
+   },
+   "targeting": {
+    "shape": "single",
+    "range": "30 футов",
+    "filter": "any"
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "condition",
+       "value": "prone",
+       "op": "apply",
+       "duration": {
+        "type": "rounds",
+        "amount": 10
+       },
+       "save_ends": {
+        "ability": "wis",
+        "dc": "8 + prof + spellcasting"
+       }
+      },
+      {
+       "kind": "condition",
+       "value": "incapacitated",
+       "op": "apply",
+       "duration": {
+        "type": "rounds",
+        "amount": 10
+       },
+       "save_ends": {
+        "ability": "wis",
+        "dc": "8 + prof + spellcasting"
+       }
+      },
+      {
+       "kind": "narrative",
+       "description": "Повторный спасбросок также при получении урона — с Преимуществом."
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  }
+ },
+ {
+  "card_number": "SPELL-0201",
+  "name": "Защита от добра и зла",
+  "action": "keep_narrative",
+  "reason": "Эффект — Помеха на броски атаки ВРАГОВ по защищённой цели и иммунитеты к одержимости/очарованию/испугу: модификаторы на чужие броски и на не-кастера контрактом запрещены.",
+  "source_quote": "Существа выбранного типа совершают с Помехой броски атаки по цели. Цель также не может стать одержимой ими, либо быть им Очарованной или Испуганной.",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0206",
+  "name": "Иллюзорные письмена",
+  "action": "keep_narrative",
+  "reason": "Чистая утилитарная иллюзия (зачарованный текст на 10 дней) — вне контракта движка.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0222",
+  "name": "Маскировка",
+  "action": "keep_narrative",
+  "reason": "Иллюзорное изменение внешности с проверкой Расследования для раскрытия — утилитарная иллюзия вне контракта.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0223",
+  "name": "Метка охотника",
+  "action": "keep_narrative",
+  "reason": "Дополнительная кость урона (1к6 Чистой силой) к попаданиям атак кастера — райдер с костью в модификаторе, явно запрещён контрактом (как и преимущество на проверки Мудрости для поиска).",
+  "source_quote": "вы наносите дополнительно 1к6 урона Чистой силой при попадании по этой цели броском атаки",
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0232",
+  "name": "Невидимый слуга",
+  "action": "keep_narrative",
+  "reason": "Призыв управляемой силы-слуги (КЗ 10, 1 Хит) — призывы движок не поддерживает.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0236",
+  "name": "Обнаружение болезней и яда",
+  "action": "keep_narrative",
+  "reason": "Сенсорное обнаружение ядов и болезней в 30 футах — утилитарное прорицание вне контракта.",
+  "source_quote": null,
+  "mechanics": null
+ },
+ {
+  "card_number": "SPELL-0237",
+  "name": "Обнаружение добра и зла",
+  "action": "keep_narrative",
+  "reason": "Сенсорное обнаружение типов существ в 30 футах — утилитарное прорицание вне контракта.",
+  "source_quote": null,
+  "mechanics": null
+ }
+]
