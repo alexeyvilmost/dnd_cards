@@ -345,9 +345,7 @@ const CharacterForge = () => {
         <ForgeNav sections={sections} active={act} onSelect={setActive} />
         <div className="forge-main">
           <div className="forge-main-title">{sectionTitle}</div>
-          <div className="forge-cols">
-            {/* ЦЕНТР: блок выбора */}
-            <div className="forge-editor">
+          <div className="forge-editor">
               {act === 'race' && (
                 <RaceSection races={races} draft={draft} onSelect={(rid: string) => patch({ raceId: rid, lineageId: null })}
                   subraces={subraces} subraceUnlocked={subraceUnlocked} subraceLevel={subraceLevel}
@@ -378,18 +376,16 @@ const CharacterForge = () => {
                 <AbilityAssigner abilities={draft.abilities} standardArray={STANDARD_ARRAY} manual={manualAbilities}
                   onSet={setAbility} onToggleManual={setManualAbilities} />
               )}
-            </div>
-
-            {/* СПРАВА: обзор персонажа + имя + создание */}
-            <div className="forge-summary">
-              <OverviewPanel
-                draft={draft} patch={patch} assembled={assembled} spells={selectedSpells}
-                lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
-                issues={issues} canCreate={canCreate} saving={saving} onSave={save}
-                savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
-              />
-            </div>
           </div>
+        </div>
+
+        <div className="forge-summary">
+          <OverviewPanel
+            draft={draft} patch={patch} assembled={assembled} spells={selectedSpells}
+            lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
+            issues={issues} canCreate={canCreate} saving={saving} onSave={save}
+            savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
+          />
         </div>
       </div>
     </div>

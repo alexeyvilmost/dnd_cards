@@ -30,7 +30,7 @@
   flex: 0 0 auto;
 }
 
-.forge-body { display: flex; flex: 1 1 auto; min-height: 0; }
+.forge-body { display: flex; flex: 1 1 auto; min-height: 0; align-items: stretch; }
 
 /* Левая навигация */
 .forge-nav {
@@ -69,19 +69,20 @@
 .dot-todo { background: var(--forge-danger); }
 
 /* Основная область */
-.forge-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+.forge-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .forge-main-title {
   text-align: center; padding: 10px; font-size: 20px; color: var(--forge-gold-dim);
-  border-bottom: 1px solid var(--forge-line);
+  border-bottom: 1px solid var(--forge-line); flex: 0 0 auto;
 }
-.forge-cols { display: flex; flex: 1 1 auto; min-height: 0; }
 /* Блок выбора — по центру */
-.forge-editor { flex: 1 1 auto; padding: 20px 28px; overflow-y: auto; min-width: 0; }
-/* Обзор персонажа — справа */
+.forge-editor { flex: 1 1 auto; padding: 20px 28px; overflow-y: auto; min-width: 0; min-height: 0; }
+/* Обзор персонажа — справа, на всю высоту forge-body (как левая навигация) */
 .forge-summary {
-  flex: 0 0 390px; max-width: 414px; padding: 18px 20px; overflow-y: auto;
+  flex: 0 0 390px; max-width: 414px; min-height: 0;
+  padding: 18px 20px; overflow-y: auto;
   border-left: 1px solid var(--forge-line);
   display: flex; flex-direction: column;
+  background: var(--forge-panel);
 }
 
 /* Сводка */
@@ -578,7 +579,8 @@
 
 /* ═══════════════ Рейл вкладок (BG3-стиль): медальон + две строки ═══════════════ */
 .forge-rail {
-  width: 210px; flex: 0 0 auto; overflow-y: auto;
+  width: 210px; flex: 0 0 auto; min-height: 0;
+  overflow-y: auto;
   border-right: 1px solid var(--forge-line);
   padding: 16px 10px; display: flex; flex-direction: column; gap: 14px;
 }
@@ -639,7 +641,7 @@
 .forge-check input { width: 16px; height: 16px; accent-color: var(--forge-gold); cursor: pointer; }
 
 /* Правая панель обзора */
-.forge-overview { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.forge-overview { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; }
 .forge-overview-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--forge-line); }
 .forge-overview-issues { margin-bottom: 10px; }
 .forge-create-btn { width: 100%; }
