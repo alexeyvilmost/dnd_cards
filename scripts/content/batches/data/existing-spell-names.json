@@ -1,0 +1,817 @@
+[
+ {
+  "name": "Астральный рывок",
+  "level": 0,
+  "card_number": "SPELL-0482"
+ },
+ {
+  "name": "Брызги кислоты",
+  "level": 0,
+  "card_number": "SPELL-0166"
+ },
+ {
+  "name": "Волшебная рука",
+  "level": 0,
+  "card_number": "SPELL-0173"
+ },
+ {
+  "name": "Дружба",
+  "level": 0,
+  "card_number": "SPELL-0192"
+ },
+ {
+  "name": "Дубинка",
+  "level": 0,
+  "card_number": "SPELL-0194"
+ },
+ {
+  "name": "Защита от оружия",
+  "level": 0,
+  "card_number": "SPELL-0202"
+ },
+ {
+  "name": "Звёздный светлячок",
+  "level": 0,
+  "card_number": "SPELL-0204"
+ },
+ {
+  "name": "Злая насмешка",
+  "level": 0,
+  "card_number": "SPELL-0205"
+ },
+ {
+  "name": "Искусство друидов",
+  "level": 0,
+  "card_number": "druidcraft"
+ },
+ {
+  "name": "Леденящее прикосновение",
+  "level": 0,
+  "card_number": "chill_touch"
+ },
+ {
+  "name": "Луч холода",
+  "level": 0,
+  "card_number": "SPELL-0218"
+ },
+ {
+  "name": "Малая иллюзия",
+  "level": 0,
+  "card_number": "minor_illusion"
+ },
+ {
+  "name": "Меткий удар",
+  "level": 0,
+  "card_number": "SPELL-0224"
+ },
+ {
+  "name": "Мистический заряд",
+  "level": 0,
+  "card_number": "SPELL-0226"
+ },
+ {
+  "name": "Наставление",
+  "level": 0,
+  "card_number": "SPELL-0230"
+ },
+ {
+  "name": "Огненный снаряд",
+  "level": 0,
+  "card_number": "fire_bolt"
+ },
+ {
+  "name": "Пляшущие огоньки",
+  "level": 0,
+  "card_number": "dancing_lights"
+ },
+ {
+  "name": "Погребальный звон",
+  "level": 0,
+  "card_number": "SPELL-0260"
+ },
+ {
+  "name": "Починка",
+  "level": 0,
+  "card_number": "mending"
+ },
+ {
+  "name": "Раскат грома",
+  "level": 0,
+  "card_number": "SPELL-0280"
+ },
+ {
+  "name": "Расщепление разума",
+  "level": 0,
+  "card_number": "SPELL-0281"
+ },
+ {
+  "name": "Свет",
+  "level": 0,
+  "card_number": "light"
+ },
+ {
+  "name": "Священное пламя",
+  "level": 0,
+  "card_number": "SPELL-0286"
+ },
+ {
+  "name": "Слово сияния",
+  "level": 0,
+  "card_number": "SPELL-0291"
+ },
+ {
+  "name": "Сообщение",
+  "level": 0,
+  "card_number": "SPELL-0294"
+ },
+ {
+  "name": "Сопротивление",
+  "level": 0,
+  "card_number": "SPELL-0295"
+ },
+ {
+  "name": "Сотворение пламени",
+  "level": 0,
+  "card_number": "SPELL-0297"
+ },
+ {
+  "name": "Стихийность",
+  "level": 0,
+  "card_number": "SPELL-0298"
+ },
+ {
+  "name": "Терновый кнут",
+  "level": 0,
+  "card_number": "SPELL-0300"
+ },
+ {
+  "name": "Уход за умирающим",
+  "level": 0,
+  "card_number": "SPELL-0312"
+ },
+ {
+  "name": "Фокусы",
+  "level": 0,
+  "card_number": "prestidigitation"
+ },
+ {
+  "name": "Чародейский выброс",
+  "level": 0,
+  "card_number": "SPELL-0315"
+ },
+ {
+  "name": "Чудотворство",
+  "level": 0,
+  "card_number": "thaumaturgy"
+ },
+ {
+  "name": "Электрошок",
+  "level": 0,
+  "card_number": "SPELL-0319"
+ },
+ {
+  "name": "Ядовитые брызги",
+  "level": 0,
+  "card_number": "poison_spray"
+ },
+ {
+  "name": "Адское возмездие",
+  "level": 1,
+  "card_number": "hellish_rebuke"
+ },
+ {
+  "name": "Безмолвный образ",
+  "level": 1,
+  "card_number": "SPELL-0161"
+ },
+ {
+  "name": "Благословение",
+  "level": 1,
+  "card_number": "SPELL-0163"
+ },
+ {
+  "name": "Божественная кара",
+  "level": 1,
+  "card_number": "SPELL-0164"
+ },
+ {
+  "name": "Божественное благоволение",
+  "level": 1,
+  "card_number": "SPELL-0165"
+ },
+ {
+  "name": "Ведьмин снаряд",
+  "level": 1,
+  "card_number": "SPELL-0167"
+ },
+ {
+  "name": "Волна грома",
+  "level": 1,
+  "card_number": "SPELL-0171"
+ },
+ {
+  "name": "Волшебная стрела",
+  "level": 1,
+  "card_number": "SPELL-0174"
+ },
+ {
+  "name": "Вызов на дуэль",
+  "level": 1,
+  "card_number": "SPELL-0179"
+ },
+ {
+  "name": "Героизм",
+  "level": 1,
+  "card_number": "SPELL-0181"
+ },
+ {
+  "name": "Гневная кара",
+  "level": 1,
+  "card_number": "SPELL-0183"
+ },
+ {
+  "name": "Град шипов",
+  "level": 1,
+  "card_number": "SPELL-0185"
+ },
+ {
+  "name": "Громовая кара",
+  "level": 1,
+  "card_number": "SPELL-0186"
+ },
+ {
+  "name": "Диссонирующий шёпот",
+  "level": 1,
+  "card_number": "SPELL-0187"
+ },
+ {
+  "name": "Добряника",
+  "level": 1,
+  "card_number": "SPELL-0188"
+ },
+ {
+  "name": "Доспех Агатиса",
+  "level": 1,
+  "card_number": "SPELL-0189"
+ },
+ {
+  "name": "Доспехи мага",
+  "level": 1,
+  "card_number": "SPELL-0190"
+ },
+ {
+  "name": "Дружба с животными",
+  "level": 1,
+  "card_number": "SPELL-0193"
+ },
+ {
+  "name": "Жуткий смех Таши",
+  "level": 1,
+  "card_number": "SPELL-0199"
+ },
+ {
+  "name": "Защита от добра и зла",
+  "level": 1,
+  "card_number": "SPELL-0201"
+ },
+ {
+  "name": "Иллюзорные письмена",
+  "level": 1,
+  "card_number": "SPELL-0206"
+ },
+ {
+  "name": "Ледяной кинжал",
+  "level": 1,
+  "card_number": "SPELL-0212"
+ },
+ {
+  "name": "Лечащее слово",
+  "level": 1,
+  "card_number": "SPELL-0213"
+ },
+ {
+  "name": "Лечение ран",
+  "level": 1,
+  "card_number": "SPELL-0214"
+ },
+ {
+  "name": "Луч болезни",
+  "level": 1,
+  "card_number": "ray_of_sickness"
+ },
+ {
+  "name": "Маскировка",
+  "level": 1,
+  "card_number": "SPELL-0222"
+ },
+ {
+  "name": "Метка охотника",
+  "level": 1,
+  "card_number": "SPELL-0223"
+ },
+ {
+  "name": "Нанесение ран",
+  "level": 1,
+  "card_number": "SPELL-0228"
+ },
+ {
+  "name": "Направляющий снаряд",
+  "level": 1,
+  "card_number": "SPELL-0229"
+ },
+ {
+  "name": "Невидимый слуга",
+  "level": 1,
+  "card_number": "SPELL-0232"
+ },
+ {
+  "name": "Обнаружение болезней и яда",
+  "level": 1,
+  "card_number": "SPELL-0236"
+ },
+ {
+  "name": "Обнаружение добра и зла",
+  "level": 1,
+  "card_number": "SPELL-0237"
+ },
+ {
+  "name": "Обнаружение магии",
+  "level": 1,
+  "card_number": "detect_magic"
+ },
+ {
+  "name": "Обретение фамильяра",
+  "level": 1,
+  "card_number": "SPELL-0241"
+ },
+ {
+  "name": "Огненные ладони",
+  "level": 1,
+  "card_number": "SPELL-0242"
+ },
+ {
+  "name": "Огонь фей",
+  "level": 1,
+  "card_number": "faerie_fire"
+ },
+ {
+  "name": "Опознание",
+  "level": 1,
+  "card_number": "SPELL-0245"
+ },
+ {
+  "name": "Опутывание",
+  "level": 1,
+  "card_number": "SPELL-0246"
+ },
+ {
+  "name": "Опутывающий удар",
+  "level": 1,
+  "card_number": "SPELL-0247"
+ },
+ {
+  "name": "Очарование личности",
+  "level": 1,
+  "card_number": "SPELL-0251"
+ },
+ {
+  "name": "Очищение пищи и питья",
+  "level": 1,
+  "card_number": "SPELL-0252"
+ },
+ {
+  "name": "Падение пёрышком",
+  "level": 1,
+  "card_number": "SPELL-0253"
+ },
+ {
+  "name": "Палящая кара",
+  "level": 1,
+  "card_number": "SPELL-0254"
+ },
+ {
+  "name": "Парящий диск Тензера",
+  "level": 1,
+  "card_number": "SPELL-0256"
+ },
+ {
+  "name": "Понимание языков",
+  "level": 1,
+  "card_number": "SPELL-0265"
+ },
+ {
+  "name": "Порча",
+  "level": 1,
+  "card_number": "SPELL-0267"
+ },
+ {
+  "name": "Поспешное отступление",
+  "level": 1,
+  "card_number": "SPELL-0269"
+ },
+ {
+  "name": "Приказ",
+  "level": 1,
+  "card_number": "SPELL-0272"
+ },
+ {
+  "name": "Прыжок",
+  "level": 1,
+  "card_number": "SPELL-0274"
+ },
+ {
+  "name": "Псевдожизнь",
+  "level": 1,
+  "card_number": "false_life"
+ },
+ {
+  "name": "Разговор с Животными",
+  "level": 1,
+  "card_number": "SPELL-0277"
+ },
+ {
+  "name": "Руки Хадара",
+  "level": 1,
+  "card_number": "SPELL-0283"
+ },
+ {
+  "name": "Сверкающие брызги",
+  "level": 1,
+  "card_number": "SPELL-0284"
+ },
+ {
+  "name": "Сглаз",
+  "level": 1,
+  "card_number": "SPELL-0287"
+ },
+ {
+  "name": "Сигнал тревоги",
+  "level": 1,
+  "card_number": "SPELL-0288"
+ },
+ {
+  "name": "Скороход",
+  "level": 1,
+  "card_number": "longstrider"
+ },
+ {
+  "name": "Смазка",
+  "level": 1,
+  "card_number": "SPELL-0292"
+ },
+ {
+  "name": "Сотворение или уничтожение воды",
+  "level": 1,
+  "card_number": "SPELL-0296"
+ },
+ {
+  "name": "Туманное облако",
+  "level": 1,
+  "card_number": "SPELL-0303"
+ },
+ {
+  "name": "Убежище",
+  "level": 1,
+  "card_number": "SPELL-0306"
+ },
+ {
+  "name": "Усыпление",
+  "level": 1,
+  "card_number": "SPELL-0311"
+ },
+ {
+  "name": "Цветной шарик",
+  "level": 1,
+  "card_number": "SPELL-0314"
+ },
+ {
+  "name": "Щит",
+  "level": 1,
+  "card_number": "SPELL-0317"
+ },
+ {
+  "name": "Щит веры",
+  "level": 1,
+  "card_number": "SPELL-0318"
+ },
+ {
+  "name": "Бесследное передвижение",
+  "level": 2,
+  "card_number": "pass_without_trace"
+ },
+ {
+  "name": "Вечный огонь",
+  "level": 2,
+  "card_number": "SPELL-0168"
+ },
+ {
+  "name": "Видение невидимого",
+  "level": 2,
+  "card_number": "SPELL-0169"
+ },
+ {
+  "name": "Внушение",
+  "level": 2,
+  "card_number": "SPELL-0170"
+ },
+ {
+  "name": "Волшебная аура Нистула",
+  "level": 2,
+  "card_number": "SPELL-0172"
+ },
+ {
+  "name": "Волшебные уста",
+  "level": 2,
+  "card_number": "SPELL-0175"
+ },
+ {
+  "name": "Волшебный замок",
+  "level": 2,
+  "card_number": "SPELL-0176"
+ },
+ {
+  "name": "Воображаемая сила",
+  "level": 2,
+  "card_number": "SPELL-0177"
+ },
+ {
+  "name": "Воплощение силы",
+  "level": 2,
+  "card_number": "SPELL-0483"
+ },
+ {
+  "name": "Вызов Зверя",
+  "level": 2,
+  "card_number": "SPELL-0178"
+ },
+ {
+  "name": "Гадание",
+  "level": 2,
+  "card_number": "SPELL-0180"
+ },
+ {
+  "name": "Глухота/Слепота",
+  "level": 2,
+  "card_number": "SPELL-0182"
+ },
+ {
+  "name": "Горящий клинок",
+  "level": 2,
+  "card_number": "SPELL-0184"
+ },
+ {
+  "name": "Дребезги",
+  "level": 2,
+  "card_number": "SPELL-0191"
+ },
+ {
+  "name": "Дубовая кожа",
+  "level": 2,
+  "card_number": "SPELL-0195"
+ },
+ {
+  "name": "Духовное оружие",
+  "level": 2,
+  "card_number": "SPELL-0196"
+ },
+ {
+  "name": "Дыхание дракона",
+  "level": 2,
+  "card_number": "SPELL-0197"
+ },
+ {
+  "name": "Животные чувства",
+  "level": 2,
+  "card_number": "SPELL-0198"
+ },
+ {
+  "name": "Завеса стрел",
+  "level": 2,
+  "card_number": "SPELL-0200"
+ },
+ {
+  "name": "Защита от яда",
+  "level": 2,
+  "card_number": "SPELL-0203"
+ },
+ {
+  "name": "Кислотная стрела Мельфа",
+  "level": 2,
+  "card_number": "SPELL-0208"
+ },
+ {
+  "name": "Корона безумия",
+  "level": 2,
+  "card_number": "SPELL-0209"
+ },
+ {
+  "name": "Левитация",
+  "level": 2,
+  "card_number": "SPELL-0210"
+ },
+ {
+  "name": "Лунный луч",
+  "level": 2,
+  "card_number": "SPELL-0215"
+ },
+ {
+  "name": "Луч слабости",
+  "level": 2,
+  "card_number": "ray_of_enfeeblement"
+ },
+ {
+  "name": "Магическое оружие",
+  "level": 2,
+  "card_number": "SPELL-0219"
+ },
+ {
+  "name": "Малое восстановление",
+  "level": 2,
+  "card_number": "SPELL-0221"
+ },
+ {
+  "name": "Мистическая бодрость",
+  "level": 2,
+  "card_number": "SPELL-0225"
+ },
+ {
+  "name": "Молебен лечения",
+  "level": 2,
+  "card_number": "SPELL-0227"
+ },
+ {
+  "name": "Невидимость",
+  "level": 2,
+  "card_number": "SPELL-0231"
+ },
+ {
+  "name": "Нетленные останки",
+  "level": 2,
+  "card_number": "SPELL-0233"
+ },
+ {
+  "name": "Облако кинжалов",
+  "level": 2,
+  "card_number": "SPELL-0234"
+ },
+ {
+  "name": "Область истины",
+  "level": 2,
+  "card_number": "SPELL-0235"
+ },
+ {
+  "name": "Обнаружение мыслей",
+  "level": 2,
+  "card_number": "SPELL-0239"
+ },
+ {
+  "name": "Обретение скакуна",
+  "level": 2,
+  "card_number": "SPELL-0240"
+ },
+ {
+  "name": "Открывание",
+  "level": 2,
+  "card_number": "SPELL-0248"
+ },
+ {
+  "name": "Отражения",
+  "level": 2,
+  "card_number": "SPELL-0249"
+ },
+ {
+  "name": "Охраняющая связь",
+  "level": 2,
+  "card_number": "SPELL-0250"
+ },
+ {
+  "name": "Палящий луч",
+  "level": 2,
+  "card_number": "SPELL-0255"
+ },
+ {
+  "name": "Паутина",
+  "level": 2,
+  "card_number": "SPELL-0257"
+ },
+ {
+  "name": "Паучье лазание",
+  "level": 2,
+  "card_number": "SPELL-0258"
+ },
+ {
+  "name": "Подмога",
+  "level": 2,
+  "card_number": "SPELL-0261"
+ },
+ {
+  "name": "Поиск животных или растений",
+  "level": 2,
+  "card_number": "SPELL-0262"
+ },
+ {
+  "name": "Поиск ловушек",
+  "level": 2,
+  "card_number": "SPELL-0263"
+ },
+ {
+  "name": "Поиск объекта",
+  "level": 2,
+  "card_number": "SPELL-0264"
+ },
+ {
+  "name": "Поросль шипов",
+  "level": 2,
+  "card_number": "SPELL-0266"
+ },
+ {
+  "name": "Порыв ветра",
+  "level": 2,
+  "card_number": "SPELL-0268"
+ },
+ {
+  "name": "Почтовое животное",
+  "level": 2,
+  "card_number": "SPELL-0271"
+ },
+ {
+  "name": "Пронзание разума",
+  "level": 2,
+  "card_number": "SPELL-0273"
+ },
+ {
+  "name": "Пылающий шар",
+  "level": 2,
+  "card_number": "SPELL-0276"
+ },
+ {
+  "name": "Размытый образ",
+  "level": 2,
+  "card_number": "SPELL-0278"
+ },
+ {
+  "name": "Раскалённый металл",
+  "level": 2,
+  "card_number": "SPELL-0279"
+ },
+ {
+  "name": "Речь златоуста",
+  "level": 2,
+  "card_number": "SPELL-0282"
+ },
+ {
+  "name": "Сияющая кара",
+  "level": 2,
+  "card_number": "SPELL-0289"
+ },
+ {
+  "name": "Смена обличья",
+  "level": 2,
+  "card_number": "SPELL-0293"
+ },
+ {
+  "name": "Тёмное зрение",
+  "level": 2,
+  "card_number": "SPELL-0299"
+ },
+ {
+  "name": "Тишина",
+  "level": 2,
+  "card_number": "SPELL-0301"
+ },
+ {
+  "name": "Трюк с верёвкой",
+  "level": 2,
+  "card_number": "SPELL-0302"
+ },
+ {
+  "name": "Туманный шаг",
+  "level": 2,
+  "card_number": "misty_step"
+ },
+ {
+  "name": "Тьма",
+  "level": 2,
+  "card_number": "darkness"
+ },
+ {
+  "name": "Увеличение/уменьшение",
+  "level": 2,
+  "card_number": "SPELL-0307"
+ },
+ {
+  "name": "Удержание личности",
+  "level": 2,
+  "card_number": "hold_person"
+ },
+ {
+  "name": "Улучшение характеристики",
+  "level": 2,
+  "card_number": "SPELL-0309"
+ },
+ {
+  "name": "Умиротворение",
+  "level": 2,
+  "card_number": "SPELL-0310"
+ }
+]
