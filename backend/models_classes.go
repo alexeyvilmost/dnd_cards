@@ -22,6 +22,7 @@ type Class struct {
 	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
 	HitDie                *string        `json:"hit_die" gorm:"type:varchar(20)"`
 	PrimaryAbilities      *Properties    `json:"primary_abilities" gorm:"type:jsonb"`
+	RecommendedAbilities  *JSONMap       `json:"recommended_abilities" gorm:"type:jsonb"` // Оптимальный point-buy расклад {str:15,dex:14,...}
 	SavingThrows          *Properties    `json:"saving_throws" gorm:"type:jsonb"`
 	ArmorTraining         *Properties    `json:"armor_training" gorm:"type:jsonb"`
 	WeaponProficiencies   *Properties    `json:"weapon_proficiencies" gorm:"type:jsonb"`
@@ -49,21 +50,22 @@ type CreateClassRequest struct {
 	ImageURL            string      `json:"image_url"`
 	Rarity              Rarity      `json:"rarity"`
 	CardNumber          string      `json:"card_number"`
-	HitDie              *string     `json:"hit_die"`
-	PrimaryAbilities    *Properties `json:"primary_abilities"`
-	SavingThrows        *Properties `json:"saving_throws"`
-	ArmorTraining       *Properties `json:"armor_training"`
-	WeaponProficiencies *Properties `json:"weapon_proficiencies"`
-	ToolProficiencies   *Properties `json:"tool_proficiencies"`
-	SkillChoices        *JSONMap    `json:"skill_choices"`
-	StartingEquipment   *JSONMap    `json:"starting_equipment"`
-	LevelProgression    *JSONMap    `json:"level_progression"`
-	Resources           *JSONMap    `json:"resources"`
-	Type                *string     `json:"type"`
-	Author              string      `json:"author"`
-	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
-	IsExtended          *bool       `json:"is_extended"`
+	HitDie               *string     `json:"hit_die"`
+	PrimaryAbilities     *Properties `json:"primary_abilities"`
+	RecommendedAbilities *JSONMap    `json:"recommended_abilities"`
+	SavingThrows         *Properties `json:"saving_throws"`
+	ArmorTraining        *Properties `json:"armor_training"`
+	WeaponProficiencies  *Properties `json:"weapon_proficiencies"`
+	ToolProficiencies    *Properties `json:"tool_proficiencies"`
+	SkillChoices         *JSONMap    `json:"skill_choices"`
+	StartingEquipment    *JSONMap    `json:"starting_equipment"`
+	LevelProgression     *JSONMap    `json:"level_progression"`
+	Resources            *JSONMap    `json:"resources"`
+	Type                 *string     `json:"type"`
+	Author               string      `json:"author"`
+	Source               *string     `json:"source"`
+	Tags                 *Properties `json:"tags"`
+	IsExtended           *bool       `json:"is_extended"`
 }
 
 type UpdateClassRequest struct {
@@ -72,21 +74,22 @@ type UpdateClassRequest struct {
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
 	Rarity              Rarity      `json:"rarity"`
-	HitDie              *string     `json:"hit_die"`
-	PrimaryAbilities    *Properties `json:"primary_abilities"`
-	SavingThrows        *Properties `json:"saving_throws"`
-	ArmorTraining       *Properties `json:"armor_training"`
-	WeaponProficiencies *Properties `json:"weapon_proficiencies"`
-	ToolProficiencies   *Properties `json:"tool_proficiencies"`
-	SkillChoices        *JSONMap    `json:"skill_choices"`
-	StartingEquipment   *JSONMap    `json:"starting_equipment"`
-	LevelProgression    *JSONMap    `json:"level_progression"`
-	Resources           *JSONMap    `json:"resources"`
-	Type                *string     `json:"type"`
-	Author              string      `json:"author"`
-	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
-	IsExtended          *bool       `json:"is_extended"`
+	HitDie               *string     `json:"hit_die"`
+	PrimaryAbilities     *Properties `json:"primary_abilities"`
+	RecommendedAbilities *JSONMap    `json:"recommended_abilities"`
+	SavingThrows         *Properties `json:"saving_throws"`
+	ArmorTraining        *Properties `json:"armor_training"`
+	WeaponProficiencies  *Properties `json:"weapon_proficiencies"`
+	ToolProficiencies    *Properties `json:"tool_proficiencies"`
+	SkillChoices         *JSONMap    `json:"skill_choices"`
+	StartingEquipment    *JSONMap    `json:"starting_equipment"`
+	LevelProgression     *JSONMap    `json:"level_progression"`
+	Resources            *JSONMap    `json:"resources"`
+	Type                 *string     `json:"type"`
+	Author               string      `json:"author"`
+	Source               *string     `json:"source"`
+	Tags                 *Properties `json:"tags"`
+	IsExtended           *bool       `json:"is_extended"`
 }
 
 type ClassResponse struct {
@@ -97,30 +100,32 @@ type ClassResponse struct {
 	ImageURL            string      `json:"image_url"`
 	Rarity              Rarity      `json:"rarity"`
 	CardNumber          string      `json:"card_number"`
-	HitDie              *string     `json:"hit_die"`
-	PrimaryAbilities    *Properties `json:"primary_abilities"`
-	SavingThrows        *Properties `json:"saving_throws"`
-	ArmorTraining       *Properties `json:"armor_training"`
-	WeaponProficiencies *Properties `json:"weapon_proficiencies"`
-	ToolProficiencies   *Properties `json:"tool_proficiencies"`
-	SkillChoices        *JSONMap    `json:"skill_choices"`
-	StartingEquipment   *JSONMap    `json:"starting_equipment"`
-	LevelProgression    *JSONMap    `json:"level_progression"`
-	Resources           *JSONMap    `json:"resources"`
-	Type                *string     `json:"type"`
-	Author              string      `json:"author"`
-	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
-	IsExtended          *bool       `json:"is_extended"`
-	CreatedAt           time.Time   `json:"created_at"`
-	UpdatedAt           time.Time   `json:"updated_at"`
+	HitDie               *string     `json:"hit_die"`
+	PrimaryAbilities     *Properties `json:"primary_abilities"`
+	RecommendedAbilities *JSONMap    `json:"recommended_abilities"`
+	SavingThrows         *Properties `json:"saving_throws"`
+	ArmorTraining        *Properties `json:"armor_training"`
+	WeaponProficiencies  *Properties `json:"weapon_proficiencies"`
+	ToolProficiencies    *Properties `json:"tool_proficiencies"`
+	SkillChoices         *JSONMap    `json:"skill_choices"`
+	StartingEquipment    *JSONMap    `json:"starting_equipment"`
+	LevelProgression     *JSONMap    `json:"level_progression"`
+	Resources            *JSONMap    `json:"resources"`
+	Type                 *string     `json:"type"`
+	Author               string      `json:"author"`
+	Source               *string     `json:"source"`
+	Tags                 *Properties `json:"tags"`
+	IsExtended           *bool       `json:"is_extended"`
+	CreatedAt            time.Time   `json:"created_at"`
+	UpdatedAt            time.Time   `json:"updated_at"`
 }
 
 func (cl Class) ToClassResponse() ClassResponse {
 	return ClassResponse{
 		ID: cl.ID, Name: cl.Name, Description: cl.Description, DetailedDescription: cl.DetailedDescription,
 		ImageURL: cl.ImageURL, Rarity: cl.Rarity, CardNumber: cl.CardNumber, HitDie: cl.HitDie,
-		PrimaryAbilities: cl.PrimaryAbilities, SavingThrows: cl.SavingThrows, ArmorTraining: cl.ArmorTraining,
+		PrimaryAbilities: cl.PrimaryAbilities, RecommendedAbilities: cl.RecommendedAbilities,
+		SavingThrows: cl.SavingThrows, ArmorTraining: cl.ArmorTraining,
 		WeaponProficiencies: cl.WeaponProficiencies, ToolProficiencies: cl.ToolProficiencies,
 		SkillChoices: cl.SkillChoices, StartingEquipment: cl.StartingEquipment,
 		LevelProgression: cl.LevelProgression, Resources: cl.Resources,

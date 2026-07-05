@@ -95,7 +95,8 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 	cl := Class{
 		Name: req.Name, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, HitDie: req.HitDie,
-		PrimaryAbilities: req.PrimaryAbilities, SavingThrows: req.SavingThrows, ArmorTraining: req.ArmorTraining,
+		PrimaryAbilities: req.PrimaryAbilities, RecommendedAbilities: req.RecommendedAbilities,
+		SavingThrows: req.SavingThrows, ArmorTraining: req.ArmorTraining,
 		WeaponProficiencies: req.WeaponProficiencies, ToolProficiencies: req.ToolProficiencies,
 		SkillChoices: req.SkillChoices, StartingEquipment: req.StartingEquipment,
 		LevelProgression: req.LevelProgression, Resources: req.Resources,
@@ -157,6 +158,9 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 	if req.PrimaryAbilities != nil {
 		cl.PrimaryAbilities = req.PrimaryAbilities
+	}
+	if req.RecommendedAbilities != nil {
+		cl.RecommendedAbilities = req.RecommendedAbilities
 	}
 	if req.SavingThrows != nil {
 		cl.SavingThrows = req.SavingThrows

@@ -2097,6 +2097,7 @@ type Spell struct {
 	HealDice              *string        `json:"heal_dice" gorm:"type:varchar(50)"`   // Кубы лечения
 	SaveOutcome           *string        `json:"save_outcome" gorm:"type:text"`       // Результат при спасброске
 	UpcastDescription     *string        `json:"upcast_description" gorm:"type:text"` // Повышение уровня / Cantrip Upgrade
+	Mechanics             *JSONMap       `json:"mechanics" gorm:"type:jsonb"`         // Унифицированная механика (как у effects/actions)
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -2143,6 +2144,7 @@ type CreateSpellRequest struct {
 	HealDice            *string      `json:"heal_dice"`
 	SaveOutcome         *string      `json:"save_outcome"`
 	UpcastDescription   *string      `json:"upcast_description"`
+	Mechanics           *JSONMap     `json:"mechanics"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
@@ -2181,6 +2183,7 @@ type UpdateSpellRequest struct {
 	HealDice            *string      `json:"heal_dice"`
 	SaveOutcome         *string      `json:"save_outcome"`
 	UpcastDescription   *string      `json:"upcast_description"`
+	Mechanics           *JSONMap     `json:"mechanics"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
@@ -2220,6 +2223,7 @@ type SpellResponse struct {
 	HealDice            *string      `json:"heal_dice"`
 	SaveOutcome         *string      `json:"save_outcome"`
 	UpcastDescription   *string      `json:"upcast_description"`
+	Mechanics           *JSONMap     `json:"mechanics"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
@@ -2262,6 +2266,7 @@ func (spell Spell) ToSpellResponse() SpellResponse {
 		HealDice:            spell.HealDice,
 		SaveOutcome:         spell.SaveOutcome,
 		UpcastDescription:   spell.UpcastDescription,
+		Mechanics:           spell.Mechanics,
 		Type:                spell.Type,
 		Author:              spell.Author,
 		Source:              spell.Source,

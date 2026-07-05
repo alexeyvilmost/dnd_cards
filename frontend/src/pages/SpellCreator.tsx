@@ -20,6 +20,8 @@ import SpellPreview from '../components/SpellPreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import ResourceMultiSelect from '../components/ResourceMultiSelect';
+import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
+import { validateMechanics } from '../engine/validateMechanics';
 
 type ScalarForm = {
   name: string;
@@ -52,6 +54,7 @@ const SECTIONS = [
   { id: 'main', label: 'Основное' },
   { id: 'components', label: 'Компоненты' },
   { id: 'mechanics', label: 'Механика' },
+  { id: 'engine', label: 'Движок' },
   { id: 'text', label: 'Описание' },
 ] as const;
 
@@ -81,6 +84,7 @@ const SpellCreator = () => {
   const [saveTypes, setSaveTypes] = useState<string[]>([]);
   const [damage, setDamage] = useState<SpellDamageEntry[]>([]);
   const [spellResources, setSpellResources] = useState<string[]>([]);
+  const [mechanics, setMechanics] = useState<Record<string, unknown> | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [loadingSpell, setLoadingSpell] = useState(false);
@@ -126,6 +130,7 @@ const SpellCreator = () => {
           setSaveTypes(spell.save_types || []);
           setDamage(spell.damage || []);
           setSpellResources(spell.resources || []);
+          setMechanics((spell.mechanics as Record<string, unknown>) || null);
         } catch (err) {
           setError('Ошибка загрузки заклинания');
           console.error(err);
@@ -202,6 +207,19 @@ const SpellCreator = () => {
       }
     }
 
+    if (mechanics && typeof mechanics === 'object') {
+      const check = validateMechanics(mechanics, {
+        id: data.card_number || 'draft-spell',
+        name: data.name || 'spell',
+        kind: 'spell',
+      });
+      if (!check.valid) {
+        setError(`Ошибка схемы механики: ${check.errors.slice(0, 4).join('; ')}`);
+        setLoading(false);
+        return;
+      }
+    }
+
     const payload: CreateSpellRequest & UpdateSpellRequest = {
       name: data.name,
       description: data.description,
@@ -230,6 +248,7 @@ const SpellCreator = () => {
       heal_dice: data.heal_dice || null,
       save_outcome: data.save_outcome || null,
       upcast_description: data.upcast_description || null,
+      mechanics: mechanics ?? null,
       source: data.source || null,
     };
 
@@ -575,6 +594,21 @@ const SpellCreator = () => {
                         <input {...register('heal_dice')} className={`${inputCls} mt-2`} placeholder="1d8 + модификатор" />
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* ── Движок (унифицированная механика) ── */}
+                {activeSection === 'engine' && (
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-medium text-gray-900">Механика движка</h2>
+                    <p className="text-sm text-gray-500">
+                      Исполняемая механика заклинания (attack_roll / save / auto), как у действий и эффектов.
+                      JSON сохраняется в поле mechanics.
+                    </p>
+                    <MechanicsBuilder
+                      value={mechanics}
+                      onChange={setMechanics}
+                    />
                   </div>
                 )}
 

@@ -200,6 +200,7 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 		HealDice:            req.HealDice,
 		SaveOutcome:         req.SaveOutcome,
 		UpcastDescription:   req.UpcastDescription,
+		Mechanics:           req.Mechanics,
 		Type:                req.Type,
 		Author:              req.Author,
 		Source:              req.Source,
@@ -348,6 +349,9 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	}
 	if req.UpcastDescription != nil {
 		spell.UpcastDescription = req.UpcastDescription
+	}
+	if req.Mechanics != nil {
+		spell.Mechanics = req.Mechanics
 	}
 	if req.Type != nil {
 		spell.Type = req.Type

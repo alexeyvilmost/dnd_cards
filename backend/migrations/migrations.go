@@ -339,8 +339,36 @@ func GetAllMigrations() []Migration {
 			Up:          seedDragonbornSubraces,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "056_spell_mechanics",
+			Description: "Add mechanics jsonb to spells (unified mechanics, G8-G9)",
+			Up:          addSpellMechanics,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "057_class_recommended_abilities",
+			Description: "Add recommended_abilities jsonb to classes (point-buy defaults)",
+			Up:          addClassRecommendedAbilities,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addSpellMechanics добавляет заклинаниям унифицированную механику (как у effects/actions).
+func addSpellMechanics(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE spells ADD COLUMN IF NOT EXISTS mechanics JSONB"); err != nil {
+		return fmt.Errorf("addSpellMechanics: %w", err)
+	}
+	return nil
+}
+
+// addClassRecommendedAbilities добавляет классам оптимальный point-buy расклад характеристик.
+func addClassRecommendedAbilities(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS recommended_abilities JSONB"); err != nil {
+		return fmt.Errorf("addClassRecommendedAbilities: %w", err)
+	}
+	return nil
 }
 
 // addSubraceLevel добавляет виду уровень, на котором выбирается подвид (по умолчанию 1).

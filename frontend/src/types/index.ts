@@ -972,6 +972,7 @@ export interface Spell {
   heal_dice?: string | null;
   save_outcome?: string | null;
   upcast_description?: string | null;
+  mechanics?: Record<string, unknown> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1011,6 +1012,7 @@ export interface CreateSpellRequest {
   heal_dice?: string | null;
   save_outcome?: string | null;
   upcast_description?: string | null;
+  mechanics?: Record<string, unknown> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1047,6 +1049,7 @@ export interface UpdateSpellRequest {
   heal_dice?: string | null;
   save_outcome?: string | null;
   upcast_description?: string | null;
+  mechanics?: Record<string, unknown> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1360,6 +1363,7 @@ export interface CharacterClass {
   card_number: string;
   hit_die?: string | null;
   primary_abilities?: string[] | null;
+  recommended_abilities?: Record<string, number> | null;
   saving_throws?: string[] | null;
   armor_training?: string[] | null;
   weapon_proficiencies?: string[] | null;
@@ -1386,6 +1390,7 @@ export interface CreateClassRequest {
   card_number?: string;
   hit_die?: string | null;
   primary_abilities?: string[] | null;
+  recommended_abilities?: Record<string, number> | null;
   saving_throws?: string[] | null;
   armor_training?: string[] | null;
   weapon_proficiencies?: string[] | null;
