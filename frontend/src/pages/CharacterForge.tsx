@@ -238,13 +238,16 @@ const CharacterForge = () => {
   const setResolved = useCallback((choiceId: string, vals: string[]) => {
     setDraft((d) => ({ ...d, resolvedChoices: { ...d.resolvedChoices, [choiceId]: vals } }));
   }, []);
+  // Ручная правка (+/− point-buy, ручной ввод) — помечает характеристики
+  // «тронутыми»: смена класса их больше не перезаписывает.
   const setAbility = useCallback((k: AbilityKey, v: number | undefined) => {
     setDraft((d) => {
       const abilities = { ...d.abilities };
       if (v === undefined) delete abilities[k]; else abilities[k] = v;
-      return { ...d, abilities };
+      return { ...d, abilities, abilitiesTouched: true };
     });
   }, []);
+  // Массовые операции (рекомендация класса, сброс, пересчёт бонусов) — не «трогают».
   const setAbilities = useCallback((abilities: Partial<Record<AbilityKey, number>>) => {
     setDraft((d) => ({ ...d, abilities }));
   }, []);
@@ -253,10 +256,10 @@ const CharacterForge = () => {
   const selectClass = (cid: string) => {
     setDraft((d) => {
       const next = { ...d, classId: cid, classSkillChoices: [] as string[] };
-      // Пустые характеристики → заполнить оптимальным раскладом класса (решение №2).
-      const untouched = ABILITY_KEYS.every((k) => typeof d.abilities[k] !== 'number');
+      // Оптимальный расклад класса применяется при каждой смене класса,
+      // пока игрок не правил характеристики вручную (решение №2).
       const rec = classes.find((c) => c.id === cid)?.recommended_abilities;
-      if (untouched && rec) {
+      if (!d.abilitiesTouched && rec) {
         const abilities: Partial<Record<AbilityKey, number>> = {};
         for (const k of ABILITY_KEYS) {
           const base = rec[k];
@@ -546,11 +549,19 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выб
       <div className="forge-section-h">{title}</div>
       {choices.map((pc) => {
         const value = resolved[pc.id] || [];
+        // filter:"proficient" (экспертиза) — логика ОБРАТНАЯ: доступны только
+        // навыки, которыми персонаж уже владеет; без владения экспертиза запрещена.
+        const isExpertise = pc.filter === 'proficient';
         const unavailableOptions = pc.source === 'skill'
           ? Object.fromEntries(SKILLS.map((skill) => {
             const existing = getSkillGrantSource(ruleState, skill.id);
-            const unavailable = !!existing && !value.includes(skill.id);
-            return [skill.id, unavailable ? grantReason(existing) : undefined];
+            const unavailable = isExpertise
+              ? !existing && !value.includes(skill.id)
+              : !!existing && !value.includes(skill.id);
+            const reason = isExpertise
+              ? 'Требуется владение навыком'
+              : (existing ? grantReason(existing) : undefined);
+            return [skill.id, unavailable ? reason : undefined];
           }).filter(([, reason]) => !!reason)) as Record<string, string>
           : undefined;
         return (

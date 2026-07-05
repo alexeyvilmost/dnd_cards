@@ -121,6 +121,8 @@ export interface CharacterDraft {
   grantedSpellSlugs?: string[];
   /** ИТОГОВЫЕ значения (база point-buy + бонусы предыстории). */
   abilities: Partial<AbilityScores>;
+  /** true — игрок правил характеристики вручную; смена класса их не трогает. */
+  abilitiesTouched?: boolean;
   abilityMethod: AbilityGenMethod;
   abilityBonuses: AbilityBonuses;
   /** Вариант стартового снаряжения предыстории (a — предметы, b — золото). */

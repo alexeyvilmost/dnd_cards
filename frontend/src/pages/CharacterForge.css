@@ -706,3 +706,16 @@
 
 /* Заголовок центра — крупнее, серифный, как в BG3 */
 .forge-main-title { font-family: Georgia, serif; color: var(--forge-gold); font-size: 22px; }
+
+/* Карточка персонажа в списке */
+.forge-char-card { position: relative; }
+.forge-char-card-link { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+.forge-char-card-delete {
+  position: absolute; top: 8px; right: 8px; width: 24px; height: 24px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--forge-line); border-radius: 6px; background: transparent;
+  color: var(--forge-text-dim); cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+.forge-char-card:hover .forge-char-card-delete { opacity: 1; }
+.forge-char-card-delete:hover { color: var(--forge-danger); border-color: var(--forge-danger); }
+.forge-char-card-actions { display: flex; gap: 6px; margin-top: 6px; }

@@ -68,6 +68,8 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     spellIds: (c.spell_ids || []).filter(isEntityUuid),
     grantedSpellSlugs,
     abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
+    // Сохранённый персонаж: расклад уже зафиксирован, смена класса не трогает.
+    abilitiesTouched: true,
     abilityMethod,
     abilityBonuses: parseBonuses(stored[BONUS_KEY]),
     equipmentOption,
