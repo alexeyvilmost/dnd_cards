@@ -333,6 +333,12 @@ func GetAllMigrations() []Migration {
 			Up:          seedElfSubraceContent,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "055_dragonborn_subraces",
+			Description: "Create 10 Dragonborn ancestry subraces (PHB 2024)",
+			Up:          seedDragonbornSubraces,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -561,6 +567,177 @@ func seedElfSubraceContent(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+// seedDragonbornSubraces создаёт 10 подвидов драконорождённого (PHB 2024).
+// Каждый подвид: сопротивление типу урона + действие «Оружие дыхания» (общее).
+// У родителя RACE-0008 убираются legacy lineages и переносимые на подвиды ссылки.
+func seedDragonbornSubraces(db *sql.DB) error {
+	var parentID string
+	err := db.QueryRow("SELECT id FROM races WHERE card_number=$1 AND deleted_at IS NULL", "RACE-0008").Scan(&parentID)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	var breathActionID string
+	err = db.QueryRow("SELECT id FROM actions WHERE card_number=$1 AND deleted_at IS NULL", "ACT-breath-weapon").Scan(&breathActionID)
+	if err == sql.ErrNoRows {
+		return nil // нет действия — пропускаем
+	}
+	if err != nil {
+		return err
+	}
+
+	type ancestry struct {
+		slug        string
+		name        string
+		description string
+		damageType  string
+		resistRu    string
+		breathRu    string
+	}
+	entries := []ancestry{
+		{"black", "Чёрный", "Ваши предки — чёрные драконы, чья магия связана с кислотой и разложением.", "acid", "кислоте", "Кислотное"},
+		{"brass", "Латунный", "Ваши предки — латунные драконы пустынь, повелители огня и жары.", "fire", "огню", "Огненное"},
+		{"bronze", "Бронзовый", "Ваши предки — бронзовые драконы морей, чья стихия — молния и шторм.", "lightning", "молнии", "Электрическое"},
+		{"copper", "Медный", "Ваши предки — медные драконы холмов, хранители кислотных источников.", "acid", "кислоте", "Кислотное"},
+		{"gold", "Золотой", "Ваши предки — золотые драконы, символы мудрости и пламени.", "fire", "огню", "Огненное"},
+		{"green", "Зелёный", "Ваши предки — зелёные драконы лесов, чья магия отравлена и коварна.", "poison", "яду", "Ядовитое"},
+		{"red", "Красный", "Ваши предки — красные драконы, повелители огня и сокровищ.", "fire", "огню", "Огненное"},
+		{"silver", "Серебряный", "Ваши предки — серебряные драконы, стражи холодных вершин.", "cold", "холоду", "Холодное"},
+		{"white", "Белый", "Ваши предки — белые драконы ледяных пустошей.", "cold", "холоду", "Холодное"},
+		{"blue", "Синий", "Ваши предки — синие драконы пустынь, чья магия — молния и гром.", "lightning", "молнии", "Электрическое"},
+	}
+
+	for _, e := range entries {
+		subMech := map[string]interface{}{
+			"activation": map[string]interface{}{"mode": "passive"},
+			"effects": []interface{}{
+				map[string]interface{}{
+					"resolution": "auto",
+					"result": []interface{}{
+						map[string]interface{}{
+							"kind":        "resistance",
+							"damage_type": e.damageType,
+							"value":       "resistance",
+						},
+					},
+				},
+			},
+		}
+		subMechJSON, err := json.Marshal(subMech)
+		if err != nil {
+			return fmt.Errorf("seedDragonbornSubraces %s mechanics: %w", e.slug, err)
+		}
+
+		var subEffectID string
+		effectName := "Сопротивление: " + e.name
+		err = db.QueryRow(`INSERT INTO effects (name, description, card_number, effect_type, rarity, mechanics)
+			VALUES ($1,$2,$3,'species_ability','common',$4)
+			ON CONFLICT (card_number) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description, mechanics=EXCLUDED.mechanics
+			RETURNING id`, effectName, "Сопротивление урону "+e.resistRu+".", "RE-sub-"+e.slug, subMechJSON).Scan(&subEffectID)
+		if err != nil {
+			return fmt.Errorf("seedDragonbornSubraces effect %s: %w", e.slug, err)
+		}
+
+		traits := []map[string]string{
+			{
+				"name":        "Оружие дыхания",
+				"description": e.breathRu + " дыхание. Вы получаете способность __Оружие дыхания__ (число использований = бонус мастерства за Долгий отдых).",
+			},
+			{
+				"name":        "Сопротивление урону",
+				"description": "Вы обладаете сопротивлением урону " + e.resistRu + ".",
+			},
+		}
+		traitsJSON, err := json.Marshal(traits)
+		if err != nil {
+			return fmt.Errorf("seedDragonbornSubraces %s traits: %w", e.slug, err)
+		}
+
+		relEffJSON, _ := json.Marshal([]string{subEffectID})
+		relActJSON, _ := json.Marshal([]string{breathActionID})
+		_, err = db.Exec(`INSERT INTO races (name, description, card_number, rarity, is_subrace, parent_race_id, subrace_level, related_effects, related_actions, traits)
+			VALUES ($1,$2,$3,'common', true, $4, 1, $5, $6, $7)
+			ON CONFLICT (card_number) DO UPDATE SET
+				name=EXCLUDED.name,
+				description=EXCLUDED.description,
+				parent_race_id=EXCLUDED.parent_race_id,
+				related_effects=EXCLUDED.related_effects,
+				related_actions=EXCLUDED.related_actions,
+				traits=EXCLUDED.traits,
+				is_subrace=true`,
+			e.name, e.description, "sub-"+e.slug, parentID, string(relEffJSON), string(relActJSON), string(traitsJSON))
+		if err != nil {
+			return fmt.Errorf("seedDragonbornSubraces race %s: %w", e.slug, err)
+		}
+	}
+
+	if err := trimDragonbornParentRefs(db, parentID); err != nil {
+		return err
+	}
+	if _, err := db.Exec(`UPDATE races SET subrace_level=1, lineages='[]'::jsonb WHERE id=$1`, parentID); err != nil {
+		return fmt.Errorf("seedDragonbornSubraces parent: %w", err)
+	}
+	return nil
+}
+
+func trimDragonbornParentRefs(db *sql.DB, parentID string) error {
+	excludeIDs := map[string]struct{}{}
+	for _, cn := range []string{"RE-dragonborn-2", "RE-dragonborn-3"} {
+		var id string
+		err := db.QueryRow("SELECT id FROM effects WHERE card_number=$1 AND deleted_at IS NULL", cn).Scan(&id)
+		if err == sql.ErrNoRows {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		excludeIDs[id] = struct{}{}
+	}
+	var breathID string
+	err := db.QueryRow("SELECT id FROM actions WHERE card_number=$1 AND deleted_at IS NULL", "ACT-breath-weapon").Scan(&breathID)
+	if err == nil {
+		excludeIDs[breathID] = struct{}{}
+	} else if err != sql.ErrNoRows {
+		return err
+	}
+
+	var relEffRaw, relActRaw []byte
+	if err := db.QueryRow("SELECT related_effects, related_actions FROM races WHERE id=$1", parentID).Scan(&relEffRaw, &relActRaw); err != nil {
+		return err
+	}
+
+	filter := func(raw []byte) ([]byte, error) {
+		if len(raw) == 0 {
+			return []byte("[]"), nil
+		}
+		var ids []string
+		if err := json.Unmarshal(raw, &ids); err != nil {
+			return nil, err
+		}
+		out := make([]string, 0, len(ids))
+		for _, id := range ids {
+			if _, skip := excludeIDs[id]; !skip {
+				out = append(out, id)
+			}
+		}
+		return json.Marshal(out)
+	}
+
+	newEff, err := filter(relEffRaw)
+	if err != nil {
+		return err
+	}
+	newAct, err := filter(relActRaw)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("UPDATE races SET related_effects=$1::jsonb, related_actions=$2::jsonb WHERE id=$3", string(newEff), string(newAct), parentID)
+	return err
 }
 
 // addRaceSubrace добавляет видам флаг подвида и ссылку на родительский вид.
