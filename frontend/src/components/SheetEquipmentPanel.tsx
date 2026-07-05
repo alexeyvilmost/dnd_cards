@@ -35,6 +35,12 @@ const SLOT_LABELS: Record<string, string> = {
   main_hand: 'Осн. рука',
   off_hand: 'Вторая рука',
   head: 'Голова',
+  gloves: 'Перчатки',
+  boots: 'Сапоги',
+  cloak: 'Плащ',
+  necklace: 'Ожерелье',
+  ring_1: 'Кольцо I',
+  ring_2: 'Кольцо II',
 };
 
 export default function SheetEquipmentPanel({ character, ruleState, onUpdated, embedded, passives = [] }: Props) {

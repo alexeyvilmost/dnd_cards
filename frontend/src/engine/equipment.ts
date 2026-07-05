@@ -5,7 +5,13 @@ import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 import { registerCard } from './cardRegistry';
 
-export type EquipmentSlotKey = 'head' | 'body' | 'main_hand' | 'off_hand';
+export type EquipmentSlotKey =
+  | 'head' | 'body' | 'main_hand' | 'off_hand'
+  | 'gloves' | 'boots' | 'cloak' | 'necklace' | 'ring_1' | 'ring_2';
+
+export const EQUIPMENT_SLOTS: EquipmentSlotKey[] = [
+  'head', 'body', 'main_hand', 'off_hand', 'gloves', 'boots', 'cloak', 'necklace', 'ring_1', 'ring_2',
+];
 
 function cardProps(card: Card): string[] {
   const p = card.properties;
@@ -32,13 +38,26 @@ function bothHandsFree(equipment: Record<string, string | null | undefined>): bo
 }
 
 function cloneEquipment(state: RuntimeState): Record<string, string | null> {
-  const eq: Record<string, string | null> = {
-    head: state.equipment.head ?? null,
-    body: state.equipment.body ?? null,
-    main_hand: state.equipment.main_hand ?? null,
-    off_hand: state.equipment.off_hand ?? null,
-  };
+  const eq: Record<string, string | null> = {};
+  for (const slot of EQUIPMENT_SLOTS) eq[slot] = state.equipment[slot] ?? null;
   return eq;
+}
+
+/** Слот ношения для «носимых» предметов (не оружие/броня/щит). */
+function wearableSlot(card: Card, equipment: Record<string, string | null>): EquipmentSlotKey | null {
+  const t = String(card.type ?? '');
+  const s = String(card.slot ?? '');
+  if (t === 'helmet' || s === 'head') return 'head';
+  if (t === 'gloves' || s === 'arms') return 'gloves';
+  if (t === 'boots' || s === 'feet') return 'boots';
+  if (t === 'cloak' || s === 'cloak') return 'cloak';
+  if (t === 'necklace' || s === 'necklace') return 'necklace';
+  if (t === 'ring' || s === 'ring') {
+    if (!equipment.ring_1) return 'ring_1';
+    if (!equipment.ring_2) return 'ring_2';
+    return null; // оба пальца заняты
+  }
+  return null;
 }
 
 function pickOneHandSlot(equipment: Record<string, string | null>, card: Card): 'main_hand' | 'off_hand' | null {
@@ -77,6 +96,16 @@ export function equipItem(state: RuntimeState, card: Card): { state: RuntimeStat
     if (!slot) return { state, error: 'Руки заняты — сначала снимите предмет' };
     equipment[slot] = card.id;
     return { state: { ...state, equipment } };
+  }
+
+  // Носимые предметы: шлем, перчатки, сапоги, плащ, ожерелье, кольца (2 слота).
+  const wear = wearableSlot(card, equipment);
+  if (wear) {
+    equipment[wear] = card.id;
+    return { state: { ...state, equipment } };
+  }
+  if (card.type === 'ring' || card.slot === 'ring') {
+    return { state, error: 'Оба кольца уже надеты — сначала снимите одно' };
   }
 
   return { state, error: `Неизвестный тип предмета: ${card.name}` };

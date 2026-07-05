@@ -60,21 +60,26 @@ export default function SheetRestButtons({
     [character, ruleState.maxHP],
   );
 
-  function persistPayload(state: RuntimeState) {
+  // Отдых открывает окно смены настройки на предметы; новый ход закрывает.
+  function persistPayload(state: RuntimeState, attunementUnlocked?: boolean) {
     return {
       current_hp: state.hp.current,
       max_hp: state.hp.max,
       resources: state.resources,
       max_resources: state.maxResources,
       active_effects: state.activeEffects,
-      turn_state: { ...(character.turn_state ?? {}), temp_hp: state.hp.temp },
+      turn_state: {
+        ...(character.turn_state ?? {}),
+        temp_hp: state.hp.temp,
+        ...(attunementUnlocked !== undefined ? { attunement_unlocked: attunementUnlocked } : {}),
+      },
     };
   }
 
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
+  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[], attunementUnlocked?: boolean) => {
     setBusy(true);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next));
+      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, attunementUnlocked));
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {
@@ -108,17 +113,17 @@ export default function SheetRestButtons({
 
   const handleStartTurn = () => {
     const { state, events } = startTurn(runtime);
-    apply(state, events);
+    apply(state, events, false);
   };
 
   const handleShortRest = () => {
     const { state, events } = shortRest(runtime, restCtx);
-    apply(state, events);
+    apply(state, events, true);
   };
 
   const handleLongRest = () => {
     const { state, events } = longRest(runtime, restCtx);
-    apply(state, events);
+    apply(state, events, true);
   };
 
   const cls = compact ? 'cs-top-rest' : 'sheet-runtime-actions';
