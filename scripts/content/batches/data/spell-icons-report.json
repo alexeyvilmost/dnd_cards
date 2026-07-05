@@ -1,299 +1,1154 @@
 {
  "generated": [
   {
-   "name": "Волшебные уста",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289782_i2Qui6Uy.png"
+   "name": "Возрождение",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291505_RBZeaxTd.png"
   },
   {
-   "name": "Волшебная аура Нистула",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289783_AywkocaY.png"
+   "name": "Вызов Нежити",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291506_uoSdxPbo.png"
   },
   {
-   "name": "Волшебный замок",
+   "name": "Аура живучести",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291508_xDMW4euE.png"
+  },
+  {
+   "name": "Вызов Феи",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291523_gCkEbJ5k.png"
+  },
+  {
+   "name": "Газообразная форма",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291526_FK0gTdsF.png"
+  },
+  {
+   "name": "Гипнотический узор",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291527_R6Qvw3Cc.png"
+  },
+  {
+   "name": "Дневной свет",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291543_gDXbpER5.png"
+  },
+  {
+   "name": "Голод Хадара",
    "element": "cold",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289783_TdBpd1Pt.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291544_XPtD8D9E.png"
   },
   {
-   "name": "Воображаемая сила",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289800_4Iwke2Qu.png"
-  },
-  {
-   "name": "Вызов Зверя",
-   "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289800_QqMAoc0O.png"
-  },
-  {
-   "name": "Гадание",
+   "name": "Духовные стражи",
    "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289801_jHvj7VJn.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291545_kYwVjQ8A.png"
   },
   {
-   "name": "Горящий клинок",
-   "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289816_aui6Kym0.png"
-  },
-  {
-   "name": "Дребезги",
-   "element": "thunder",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289817_soc0Osg4.png"
-  },
-  {
-   "name": "Глухота/Слепота",
+   "name": "Замедление",
    "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289818_j1V3lDLJ.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291562_0oRkKbC1.png"
   },
   {
-   "name": "Дубовая кожа",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289832_mGg4Iwk8.png"
-  },
-  {
-   "name": "Духовное оружие",
-   "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289835_9THvj3RF.png"
-  },
-  {
-   "name": "Дыхание дракона",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289837_Go8WKoc0.png"
-  },
-  {
-   "name": "Животные чувства",
-   "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289850_m4Swk8WK.png"
-  },
-  {
-   "name": "Завеса стрел",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289853_S2QuicQE.png"
-  },
-  {
-   "name": "Защита от яда",
+   "name": "Защита от энергии",
    "element": "cold",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289857_sGAe2QEs.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291562_4D7z0my2.png"
   },
   {
-   "name": "Корона безумия",
+   "name": "Зловонное облако",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291564_RzfRqVt4.png"
+  },
+  {
+   "name": "Контрзаклинание",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291578_q38mAMYh.png"
+  },
+  {
+   "name": "Мантия крестоносца",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291581_1yIR0ahs.png"
+  },
+  {
+   "name": "Магический круг",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291580_7X2uXoWs.png"
+  },
+  {
+   "name": "Маяк надежды",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291596_AzhQeK3t.png"
+  },
+  {
+   "name": "Метель",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291598_aPSamAP1.png"
+  },
+  {
+   "name": "Мерцание",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291599_upHW9nCQ.png"
+  },
+  {
+   "name": "Множественное лечащее слово",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291613_R7bx3CfS.png"
+  },
+  {
+   "name": "Молниевая стрела",
+   "element": "lightning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291614_m1ZevKaw.png"
+  },
+  {
+   "name": "Молния",
+   "element": "lightning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291615_YO4rpK7J.png"
+  },
+  {
+   "name": "Образ",
    "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289870_UeYMAocQ.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291631_b0AMetXo.png"
   },
   {
-   "name": "Кислотная стрела Мельфа",
+   "name": "Необнаружимость",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291631_mNr5GfOi.png"
+  },
+  {
+   "name": "Огненный шар",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291641_OZrjGxb3.png"
+  },
+  {
+   "name": "Ослепляющая кара",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291647_slxYhtDO.png"
+  },
+  {
+   "name": "Охранная руна",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291650_UIU5huFQ.png"
+  },
+  {
+   "name": "Подводное дыхание",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291662_xfu6wQgN.png"
+  },
+  {
+   "name": "Поднятие мертвеца",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291665_TyS7tM1t.png"
+  },
+  {
+   "name": "Подсматривание",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291667_elAvM3kB.png"
+  },
+  {
+   "name": "Полёт",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291680_1jYsTqWq.png"
+  },
+  {
+   "name": "Послание",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291683_LJ08hqHc.png"
+  },
+  {
+   "name": "Призрачный скакун",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291685_aUnJ4DaH.png"
+  },
+  {
+   "name": "Призыв Животных",
+   "element": "slashing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291698_WKwL1clz.png"
+  },
+  {
+   "name": "Призыв шквала снарядов",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291703_44tWiOeL.png"
+  },
+  {
+   "name": "Призыв молнии",
+   "element": "lightning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291706_mXI1izZm.png"
+  },
+  {
+   "name": "Прикосновение вампира",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291715_LbM8qJ9v.png"
+  },
+  {
+   "name": "Притворная смерть",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291720_T1PdyP9v.png"
+  },
+  {
+   "name": "Проклятие",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291723_dH2gtIVa.png"
+  },
+  {
+   "name": "Разговор с мёртвыми",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291735_NOY6ghqz.png"
+  },
+  {
+   "name": "Разговор с Растениями",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291737_DTCiWCiV.png"
+  },
+  {
+   "name": "Рассеивание магии",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291741_csFU5htE.png"
+  },
+  {
+   "name": "Рост растений",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291754_TuqVDfTv.png"
+  },
+  {
+   "name": "Слияние с камнем",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291760_lexS2dCM.png"
+  },
+  {
+   "name": "Снятие проклятья",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291761_mixTbsJZ.png"
+  },
+  {
+   "name": "Сотворение пищи и воды",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291772_T6f9jsBK.png"
+  },
+  {
+   "name": "Стена ветров",
+   "element": "bludgeoning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291778_nYH5z9xc.png"
+  },
+  {
+   "name": "Стихийное оружие",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291782_ZeF0fzSa.png"
+  },
+  {
+   "name": "Страх",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291794_t8pH0gzR.png"
+  },
+  {
+   "name": "Ускорение",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291798_3fAP4dmv.png"
+  },
+  {
+   "name": "Хижина Леомунда",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291801_ShkKhLiN.png"
+  },
+  {
+   "name": "Хождение по воде",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291812_wKU2coxG.png"
+  },
+  {
+   "name": "Языки",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291817_ZbzP2pzN.png"
+  },
+  {
+   "name": "Аура жизни",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291819_Hd8tO8uP.png"
+  },
+  {
+   "name": "Верный пёс Морденкайнена",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291833_L0DTgAQ0.png"
+  },
+  {
+   "name": "Аура очищения",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291831_1htEPZfJ.png"
+  },
+  {
+   "name": "Власть над водами",
+   "element": "bludgeoning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291835_UqIkUycR.png"
+  },
+  {
+   "name": "Вызов Аберрации",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291849_LkYt2A8I.png"
+  },
+  {
+   "name": "Воображаемый убийца",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291850_jRD5y1He.png"
+  },
+  {
+   "name": "Вызов Конструкта",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291857_CrDNV5eo.png"
+  },
+  {
+   "name": "Высшая невидимость",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291867_FWPnsSnO.png"
+  },
+  {
+   "name": "Вызов Элементаля",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291868_ChF4kzW3.png"
+  },
+  {
+   "name": "Гигантское насекомое",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291877_jUbD2isB.png"
+  },
+  {
+   "name": "Едкий шар",
    "element": "acid",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289871_OQ8gksqy.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291885_xjqL5rK5.png"
   },
   {
-   "name": "Левитация",
+   "name": "Град",
+   "element": "bludgeoning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291887_3VjGV3fq.png"
+  },
+  {
+   "name": "Защита от смерти",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291894_KI0vVqvG.png"
+  },
+  {
+   "name": "Изготовление",
    "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289874_Euic0OCq.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291906_OP6RmVnz.png"
   },
   {
-   "name": "Лунный луч",
+   "name": "Изгнание",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291906_KBfJcA0g.png"
+  },
+  {
+   "name": "Изменение формы камня",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291913_hXbjsBLU.png"
+  },
+  {
+   "name": "Источник лунного света",
    "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289887_PZDrl9XB.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291923_jSFR2mCO.png"
   },
   {
-   "name": "Луч слабости",
+   "name": "Кабинет Морденкайнена",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291926_BLsiDVht.png"
+  },
+  {
+   "name": "Каменная кожа",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291930_9MsPasHT.png"
+  },
+  {
+   "name": "Магический глаз",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291943_M3GjIgSr.png"
+  },
+  {
+   "name": "Мираж",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291945_jzW8lC6i.png"
+  },
+  {
+   "name": "Оглушающая кара",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291950_ipsZDdC3.png"
+  },
+  {
+   "name": "Огненная стена",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291963_kKlOiSoW.png"
+  },
+  {
+   "name": "Огненный щит",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291963_IszUhH9B.png"
+  },
+  {
+   "name": "Очарование чудовища",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291967_1mEW9jAW.png"
+  },
+  {
+   "name": "Переносящая дверь",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291980_LGRyIT5f.png"
+  },
+  {
+   "name": "Подчинение зверя",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291984_yFPY7gFO.png"
+  },
+  {
+   "name": "Поиск существа",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783291986_W4igvK0i.png"
+  },
+  {
+   "name": "Потайной сундук Леомунда",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292000_OvYaT6nH.png"
+  },
+  {
+   "name": "Превращение",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292003_xBVj1gvJ.png"
+  },
+  {
+   "name": "Предсказание",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292016_t7F5BYhN.png"
+  },
+  {
+   "name": "Призыв лесных обитателей",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292018_WHWaHW9o.png"
+  },
+  {
+   "name": "Призыв малых Элементалей",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292020_J0s1A8Fe.png"
+  },
+  {
+   "name": "Принуждение",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292035_xCtPcC7z.png"
+  },
+  {
+   "name": "Свобода перемещения",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292036_KzTswQpU.png"
+  },
+  {
+   "name": "Смятение",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292038_79oJ0cU7.png"
+  },
+  {
+   "name": "Страж веры",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292056_bz9BdAqh.png"
+  },
+  {
+   "name": "Упругий шар Отилюка",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292057_RS2ehtES.png"
+  },
+  {
+   "name": "Усыхание",
    "element": "necrotic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289887_KOCq0OCg.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292057_GtbDbwH9.png"
   },
   {
-   "name": "Магическое оружие",
+   "name": "Цепкая лоза",
+   "element": "bludgeoning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292072_G7jHT4fr.png"
+  },
+  {
+   "name": "Вызов Дракона",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292090_vlf3HvjX.png"
+  },
+  {
+   "name": "Чёрные щупальца Эварда",
+   "element": "bludgeoning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292095_2koc0OCq.png"
+  },
+  {
+   "name": "Быстрый колчан",
    "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289895_J3RFj7Vz.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292104_lPp3RFth.png"
   },
   {
-   "name": "Малое восстановление",
+   "name": "Вызов Небожителя",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292107_VlVJHvjh.png"
+  },
+  {
+   "name": "Высшее восстановление",
    "element": "cold",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289906_nHvj7VJn.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292115_u6UIwkYM.png"
   },
   {
-   "name": "Мистическая бодрость",
-   "element": "cold",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289907_Gkec0YMA.png"
-  },
-  {
-   "name": "Молебен лечения",
-   "element": "healing",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289912_5PDrbZNB.png"
-  },
-  {
-   "name": "Невидимость",
+   "name": "Гейс",
    "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289923_ge2WAoc0.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292121_VTHv9XLp.png"
   },
   {
-   "name": "Нетленные останки",
+   "name": "Грёзы",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292124_mQEsg4Iw.png"
+  },
+  {
+   "name": "Длань Бигби",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292132_WKoiWKyc.png"
+  },
+  {
+   "name": "Древесный путь",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292141_wQEsg4Iw.png"
+  },
+  {
+   "name": "Заражение",
    "element": "necrotic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289927_W0OsmaYC.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292141_THv9XLp9.png"
   },
   {
-   "name": "Облако кинжалов",
-   "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289931_y2Gui2Gu.png"
-  },
-  {
-   "name": "Область истины",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289939_WqQEi6UI.png"
-  },
-  {
-   "name": "Обнаружение мыслей",
+   "name": "Знание легенд",
    "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289949_d1ZNBpd1.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292148_Q6UIwk4S.png"
   },
   {
-   "name": "Обретение скакуна",
+   "name": "Изменение памяти",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292157_sUSGECAo.png"
+  },
+  {
+   "name": "Изгоняющая кара",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292159_fFdb9XVT.png"
+  },
+  {
+   "name": "Каменная стена",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292164_eMAoc0Os.png"
+  },
+  {
+   "name": "Круг силы",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292176_QaUIwk8W.png"
+  },
+  {
+   "name": "Конус холода",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292180_wQEsc0OC.png"
+  },
+  {
+   "name": "Круг телепортации",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292182_J3Hvj3RF.png"
+  },
+  {
+   "name": "Множественное лечение ран",
    "element": "healing",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289949_X1PDrl9X.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292197_nd1PDr5T.png"
   },
   {
-   "name": "Открывание",
+   "name": "Ментальная связь Рэри",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292200_UIwuig4S.png"
+  },
+  {
+   "name": "Наблюдение",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292200_BLzn1PDr.png"
+  },
+  {
+   "name": "Небесный огонь",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292216_6i2QEi6U.png"
+  },
+  {
+   "name": "Облако смерти",
+   "element": "poison",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292216_th5THv9X.png"
+  },
+  {
+   "name": "Нашествие насекомых",
+   "element": "piercing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292217_Umg4Iwk8.png"
+  },
+  {
+   "name": "Общение",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292233_RlZNBf3R.png"
+  },
+  {
+   "name": "Оживление",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292234_u8WAoc0E.png"
+  },
+  {
+   "name": "Общение с природой",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292236_dxl9XLpd.png"
+  },
+  {
+   "name": "Оживление вещей",
    "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289957_Q4SQECqu.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292251_OcMAoc0E.png"
   },
   {
-   "name": "Отражения",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289965_nPNBznl9.png"
-  },
-  {
-   "name": "Охраняющая связь",
+   "name": "Планарные узы",
    "element": "cold",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289965_Uym6UIwk.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292255_akYym0OC.png"
   },
   {
-   "name": "Палящий луч",
-   "element": "fire",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289977_kui6Uyma.png"
+   "name": "Подчинение личности",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292255_ISwk8WKo.png"
   },
   {
-   "name": "Паучье лазание",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289982_aymaYMqe.png"
-  },
-  {
-   "name": "Паутина",
-   "element": "fire",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289987_y4SGuiIw.png"
-  },
-  {
-   "name": "Подмога",
+   "name": "Преграда жизни",
    "element": "cold",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783289994_Muic0OCq.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292268_NhbPDrf3.png"
   },
   {
-   "name": "Поиск животных или растений",
-   "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290001_Vp7fd1PN.png"
-  },
-  {
-   "name": "Поиск ловушек",
-   "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290005_8wui20Os.png"
-  },
-  {
-   "name": "Поиск объекта",
-   "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290011_o2QEsgUI.png"
-  },
-  {
-   "name": "Поросль шипов",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290020_00OCqui6.png"
-  },
-  {
-   "name": "Порыв ветра",
+   "name": "Призыв залпа",
    "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290024_04SGuiSG.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292270_lPpd1Ft7.png"
   },
   {
-   "name": "Почтовое животное",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290036_aOIGui6U.png"
-  },
-  {
-   "name": "Пронзание разума",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290040_SqaYMqe2.png"
-  },
-  {
-   "name": "Пылающий шар",
+   "name": "Призыв Элементаля",
    "element": "fire",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290041_zDrvj7Lz.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292273_kui6Uyma.png"
   },
   {
-   "name": "Размытый образ",
+   "name": "Притворство",
    "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290054_8i2QEi6U.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292286_USGk8WKy.png"
   },
   {
-   "name": "Раскалённый металл",
-   "element": "fire",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290057_AEsc0Esg.png"
+   "name": "Разрушительная волна",
+   "element": "thunder",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292290_mGui64SG.png"
   },
   {
-   "name": "Речь златоуста",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290060_Quic0OCq.png"
+   "name": "Пробуждение разума",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292300_5lbZNBp3.png"
   },
   {
-   "name": "Сияющая кара",
+   "name": "Рассеивание добра и зла",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292303_Zj3RFth5.png"
+  },
+  {
+   "name": "Реинкарнация",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292307_QQEsc0OC.png"
+  },
+  {
+   "name": "Святилище",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292321_T7VznhVJ.png"
+  },
+  {
+   "name": "Связь с иным планом",
    "element": "radiant",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290071_8c6UIwk8.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292320_HPDrf3Rv.png"
   },
   {
-   "name": "Смена обличья",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290074_5PDrbPDr.png"
-  },
-  {
-   "name": "Тёмное зрение",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290078_1p9XLzn1.png"
-  },
-  {
-   "name": "Тишина",
-   "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290088_vJxl5THv.png"
-  },
-  {
-   "name": "Трюк с верёвкой",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290092_Ftxljh5J.png"
-  },
-  {
-   "name": "Туманный шаг",
+   "name": "Силовая стена",
    "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290097_lzjh5THv.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292325_RbLznbZN.png"
   },
   {
-   "name": "Тьма",
+   "name": "Сияющая буря Джалларзи",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292338_iAYWKIwk.png"
+  },
+  {
+   "name": "Синаптический разряд",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292338_cQUSQYWU.png"
+  },
+  {
+   "name": "Создание прохода",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292343_5fZNrf3H.png"
+  },
+  {
+   "name": "Сотворение",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292356_dd1Pth5J.png"
+  },
+  {
+   "name": "Телекинез",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292357_6Ao8MAo2.png"
+  },
+  {
+   "name": "Удар стального ветра",
    "element": "force",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290107_iQEi6UIw.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292358_HjxlZNBf.png"
   },
   {
-   "name": "Увеличение/уменьшение",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290108_9j3Hvj7V.png"
-  },
-  {
-   "name": "Удержание личности",
+   "name": "Удержание чудовища",
    "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290114_t3Rvj7Lz.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292373_AIwae2QE.png"
   },
   {
-   "name": "Улучшение характеристики",
-   "element": "",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290125_x3Hvj3RF.png"
-  },
-  {
-   "name": "Умиротворение",
+   "name": "Фальшивый двойник",
    "element": "psychic",
-   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783290125_IYMAoYMq.png"
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292376_86UIwa4S.png"
+  },
+  {
+   "name": "Царственное величие Йоланды",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292377_i6Kym0OC.png"
+  },
+  {
+   "name": "Бурлящий котёл Таши",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292392_4eYMqe2Q.png"
+  },
+  {
+   "name": "Вызов Исчадия",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292395_hf3Drf3R.png"
+  },
+  {
+   "name": "Волшебный сосуд",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292394_E8WUIGus.png"
+  },
+  {
+   "name": "Заданная иллюзия",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292412_bvf3RFth.png"
+  },
+  {
+   "name": "Движение почвы",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292412_WKywke2Q.png"
+  },
+  {
+   "name": "Запрет",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292413_gKymaYMA.png"
+  },
+  {
+   "name": "Истинный взор",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292429_Mke2QEsg.png"
+  },
+  {
+   "name": "Исцеление",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292429_aOMKIGus.png"
+  },
+  {
+   "name": "Круг смерти",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292431_U4SGuiSG.png"
+  },
+  {
+   "name": "Ледяная стена",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292446_kui6UIwa.png"
+  },
+  {
+   "name": "Ледяной шар Отилюка",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292446_7Hvj7VJx.png"
+  },
+  {
+   "name": "Магические врата",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292448_uui6Uyma.png"
+  },
+  {
+   "name": "Множественное внушение",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292465_Iwk8WKoc.png"
+  },
+  {
+   "name": "Неудержимая пляска Отто",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292467_4Ei6Uyma.png"
+  },
+  {
+   "name": "Мгновенные вызовы Дромиджа",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292466_xl9XLzn1.png"
+  },
+  {
+   "name": "Окаменение",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292482_Sm6UIwaY.png"
+  },
+  {
+   "name": "Пир героев",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292484_0uimaYCq.png"
+  },
+  {
+   "name": "Планарный союзник",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292484_LtnbZNBp.png"
+  },
+  {
+   "name": "Предосторожность",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292501_yga8WKIw.png"
+  },
+  {
+   "name": "Поиск пути",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292501_Fj3RFthf.png"
+  },
+  {
+   "name": "Поражение",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292501_5nh5THvj.png"
+  },
+  {
+   "name": "Путешествие через растения",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292518_Lnh5THl9.png"
+  },
+  {
+   "name": "Призыв Феи",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292519_O8WKyc0O.png"
+  },
+  {
+   "name": "Разящее око",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292519_1FjRvj7L.png"
+  },
+  {
+   "name": "Распад",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292536_m4SGu8WK.png"
+  },
+  {
+   "name": "Слово возврата",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292537_JRPXVT1Z.png"
+  },
+  {
+   "name": "Солнечный луч",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292546_X7VJxlVJ.png"
+  },
+  {
+   "name": "Сотворение нежити",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292554_B5THvj7V.png"
+  },
+  {
+   "name": "Стена клинков",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292557_h197531Z.png"
+  },
+  {
+   "name": "Стражи и обереги",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292564_K0OswaYM.png"
+  },
+  {
+   "name": "Терновая стена",
+   "element": "piercing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292577_w0OCq4SG.png"
+  },
+  {
+   "name": "Сфера неуязвимости",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292579_Ps2QEs6U.png"
+  },
+  {
+   "name": "Хождение по ветру",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292582_Bpd1Fth5.png"
+  },
+  {
+   "name": "Божественное слово",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292598_dHvj7Lzn.png"
+  },
+  {
+   "name": "Великолепный особняк Морденкайнена",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292601_U42QEs0O.png"
+  },
+  {
+   "name": "Цепная молния",
+   "element": "lightning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292595_lZNBf3Rv.png"
+  },
+  {
+   "name": "Воскрешение",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292614_LJxbf3Hv.png"
+  },
+  {
+   "name": "Замедленный огненный шар",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292617_m6UymaOC.png"
+  },
+  {
+   "name": "Знак",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292625_4e8WAocQ.png"
+  },
+  {
+   "name": "Изменение тяготения",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292633_575TRPNL.png"
+  },
+  {
+   "name": "Изоляция",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292633_BJxvtnb9.png"
+  },
+  {
+   "name": "Меч Морденкайнена",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292642_qec0OMAo.png"
+  },
+  {
+   "name": "Огненная буря",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292652_tj7VJnbP.png"
+  },
+  {
+   "name": "Перст смерти",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292651_CgGui6UI.png"
+  },
+  {
+   "name": "Планарный переход",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292659_GUIGuiSG.png"
+  },
+  {
+   "name": "Призыв Небожителя",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292669_8WKymg4S.png"
+  },
+  {
+   "name": "Подобие",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292670_1l5THv8W.png"
+  },
+  {
+   "name": "Проекция",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292676_SmaYMAoc.png"
+  },
+  {
+   "name": "Радужные брызги",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292685_1bpdRFth.png"
+  },
+  {
+   "name": "Регенерация",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292689_5THFDBzx.png"
+  },
+  {
+   "name": "Слово силы: укрепление",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292695_97LznXLp.png"
+  },
+  {
+   "name": "Таинственный мираж",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292704_jrf3RFj7.png"
+  },
+  {
+   "name": "Телепортация",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292710_kUIwaYMA.png"
+  },
+  {
+   "name": "Узилище",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292712_fbZNBp3R.png"
+  },
+  {
+   "name": "Эфирность",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292722_M4SGui20.png"
+  },
+  {
+   "name": "Антипатия/симпатия",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292730_mi6UIwaY.png"
+  },
+  {
+   "name": "Аура святости",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292733_ymaYMAo2.png"
+  },
+  {
+   "name": "Власть над погодой",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292741_trf3RFt7.png"
+  },
+  {
+   "name": "Воспламеняющаяся туча",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292747_isg4IwkY.png"
+  },
+  {
+   "name": "Демиплан",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292751_mqeSGui6.png"
+  },
+  {
+   "name": "Замешательство",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292759_bbZzn1PD.png"
+  },
+  {
+   "name": "Землетрясение",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292765_ZJxlznbZ.png"
+  },
+  {
+   "name": "Клон",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292769_tXxl9XLp.png"
+  },
+  {
+   "name": "Лабиринт",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292776_O8WKymqe.png"
+  },
+  {
+   "name": "Находчивость",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292784_Fv9XLp9X.png"
+  },
+  {
+   "name": "Подчинение чудовища",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292789_Ttxl9XLz.png"
+  },
+  {
+   "name": "Поле антимагии",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292797_9NBpZNBp.png"
+  },
+  {
+   "name": "Превращение в животных",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292801_YMAym6UI.png"
+  },
+  {
+   "name": "Слово силы: ошеломление",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292807_6Kym4SGk.png"
+  },
+  {
+   "name": "Сокрытие разума",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292815_vBpd1PDr.png"
+  },
+  {
+   "name": "Солнечный ожог",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292818_VFthf3RF.png"
+  },
+  {
+   "name": "Телепатия",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292825_9NBp9NBp.png"
+  },
+  {
+   "name": "Цунами",
+   "element": "bludgeoning",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292833_ECqoc0OC.png"
+  },
+  {
+   "name": "Врата",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292834_rl9XLznb.png"
+  },
+  {
+   "name": "Гроза гнева",
+   "element": "thunder",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292843_HBp3RFth.png"
+  },
+  {
+   "name": "Желание",
+   "element": "force",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292851_wCqe2Gui.png"
+  },
+  {
+   "name": "Заточение",
+   "element": "cold",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292856_E8WKymaY.png"
+  },
+  {
+   "name": "Истинное воскрешение",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292859_pTHvj7Vz.png"
+  },
+  {
+   "name": "Истинное превращение",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292868_VJxb5Jxl.png"
+  },
+  {
+   "name": "Метеоритный дождь",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292875_sSGu8WKo.png"
+  },
+  {
+   "name": "Множественное исцеление",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292876_fznbPDr5.png"
+  },
+  {
+   "name": "Остановка времени",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292889_y2QEsqe2.png"
+  },
+  {
+   "name": "Предвидение",
+   "element": "radiant",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292892_3RFth5Tx.png"
+  },
+  {
+   "name": "Преображение",
+   "element": "",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292896_vv9XLzd1.png"
+  },
+  {
+   "name": "Проекция в астрал",
+   "element": "necrotic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292905_pd1Bp3RF.png"
+  },
+  {
+   "name": "Радужная стена",
+   "element": "fire",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292910_mQEsg4SG.png"
+  },
+  {
+   "name": "Слово силы: исцеление",
+   "element": "healing",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292916_UYWKIGus.png"
+  },
+  {
+   "name": "Слово силы: смерть",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292923_ZDr5THv9.png"
+  },
+  {
+   "name": "Смертный ужас",
+   "element": "psychic",
+   "url": "https://dnd-cards-images.storage.yandexcloud.net/spell_icons/1783292928_oSCg4SGk.png"
   }
  ],
  "failed": [],
