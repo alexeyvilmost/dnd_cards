@@ -49,25 +49,30 @@ interaction — ровно одна резолюция:
 2. {"resolution":"save","who":"target","ability":"str"|"dex"|"con"|"int"|"wis"|"cha","dc":"8 + prof + spellcasting" | число,"on_fail":[payload...],"on_success":[payload...]}
 3. {"resolution":"auto","result":[payload...]}
 
-payload-ы:
-- {"kind":"damage","dice":"2d6","type":"fire|cold|lightning|thunder|acid|poison|necrotic|radiant|psychic|force|bludgeoning|piercing|slashing","scaling":{"per":"character_level"|"spell_slot_above","dice":"1d6"}?,"on_success":"half"?}
+payload-ы (kind СТРОГО из этого списка):
+- {"kind":"damage","dice":"2d6","type":"fire|cold|lightning|thunder|acid|poison|necrotic|radiant|psychic|force|bludgeoning|piercing|slashing","scaling":{"per":"character_level"|"spell_slot_above","dice":"1d6"}?,"on_success":"half"|"none"|"full"?}
 - {"kind":"healing","amount":"1d8 + spellcasting"}
 - {"kind":"temp_hp","amount":"2d4 + 4"}
-- {"kind":"condition","value":"prone|charmed|frightened|restrained|poisoned|stunned|grappled|incapacitated|invisible|blinded|deafened","op":"apply","duration":{"type":"rounds","amount":N}?}
-- {"kind":"resource","op":"grant"|"restore","id":"...","amount":N}
-- {"kind":"modifier","applies_to":{"roll":"attack"|"saving_throw"|"ability_check"|"ac","filter":{"ability":"dex"}?},"op":"add"|"advantage"|"disadvantage","value":"+2"} — ТОЛЬКО числовые значения, ТОЛЬКО на самого владельца.
+- {"kind":"condition","value":"prone|charmed|frightened|restrained|poisoned|stunned|grappled|incapacitated|invisible|blinded|deafened","op":"apply"|"remove","duration":{"type":"rounds","amount":N}?} — duration ТОЛЬКО объект, не строка.
+- {"kind":"resistance","damage_type":"fire|...","value":"resistance"|"immunity"|"vulnerability"} — устойчивость/иммунитет/уязвимость к урону.
+- {"kind":"resource","op":"grant"|"restore"|"spend","id":"...","amount":N}
+- {"kind":"modifier","applies_to":{"roll":"attack"|"damage"|"ability_check"|"saving_throw"|"ac"|"speed"|"spell_dc"|"initiative"|"carry"|"max_hp","filter":{"ability":"dex"}?|{"skill":"stealth"}?},"op":"add"|"set"|"advantage"|"disadvantage"|"multiply","value":"+2"} — roll СТРОГО из списка (НЕ attack_roll, НЕ skill); ТОЛЬКО числовые значения; ТОЛЬКО на самого владельца.
 - {"kind":"set_value","target":"ac_base","formula":"13 + dex"} — базовый КЗ (Доспехи мага и т.п.)
-- {"kind":"movement","value":"push|pull|teleport|extra_speed|double","distance":N}
-- {"kind":"grant_proficiency","prof":"skill|language","value":"..."} / {"kind":"grant_spell","value":"slug"}
+- {"kind":"movement","value":"push|pull|teleport|extra_speed|double|knock_prone","distance":N}
+- {"kind":"grant_speed","mode":"walk"|"fly"|"swim"|"climb","value":N} / {"kind":"grant_sense","sense":"darkvision","range":N}
+- {"kind":"grant_proficiency","prof":"skill|tool|saving_throw|weapon|armor|language","value":"..."} / {"kind":"grant_spell","value":"slug"}
 - {"kind":"narrative","description":"..."} — всё, что движок не исполняет.
 
 ## Правила
 - Формулы: числа, кости NdM, str..cha, prof, spellcasting, self_level, min(), max(), + - * /.
+- uses.per СТРОГО: "turn"|"round"|"short_rest"|"long_rest"|"day".
+- trigger.event СТРОГО: attack_roll_made|hit|miss|crit|damage_dealt|damage_taken|saving_throw_made|ability_check_made|reduced_to_0_hp|turn_start|turn_end|spell_cast|short_rest|long_rest.
+- resolution СТРОГО: attack_roll|save|ability_check|auto. Каждый элемент effects — объект interaction, не строка.
 - Кости в модификаторах (например «+1к4 к атакам») НЕ поддерживаются → narrative.
 - Эффекты на ДРУГИХ существ (бафф союзника, помеха врагу вне спасброска) → narrative.
 - Пассивный бонус предмета (+1 КЗ, +2 к атакам) → mode:"passive", effects:[{"resolution":"auto","result":[{"kind":"modifier",...}]}].
 - Сложные/ситуативные правила упрощай до исполнимого ядра, детали — narrative-payload'ом рядом.
-- Отвечай ТОЛЬКО JSON-объектом механики.`
+- Отвечай ТОЛЬКО JSON-объектом механики, компактно, без markdown.`
 
 // GenerateMechanics — POST /api/ai/mechanics
 func (a *AIMechanicsController) GenerateMechanics(c *gin.Context) {
