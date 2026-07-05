@@ -84,6 +84,17 @@ const CharacterForge = () => {
     })();
   }, []);
 
+  // Переход «редактирование → создание» без размонтирования (те же роуты
+  // /character-forge/:id и /character-forge): сбросить черновик, иначе
+  // сохранение перезапишет предыдущего персонажа.
+  useEffect(() => {
+    if (editId) return;
+    setDraft(emptyDraft());
+    setSavedId(null);
+    savedSkillsRef.current = [];
+    restoredClassSkillsRef.current = false;
+  }, [editId]);
+
   // Загрузка существующего черновика для редактирования.
   // ?levelup=1 (кнопка «Поднять уровень» на листе) — сразу +1 уровень.
   useEffect(() => {

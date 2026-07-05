@@ -22,11 +22,23 @@ function pickAbility(card: Card, character: CharacterContext): 'str' | 'dex' {
   return 'str';
 }
 
-function cardToWeapon(card: Card, character: CharacterContext): WeaponContext {
+/**
+ * Кость урона из bonus_value. Универсальное оружие пишется «1d6 (1d8)»:
+ * скобочная кость — при хвате двумя руками (вторая рука свободна).
+ */
+function weaponDice(card: Card, twoHandedGrip: boolean): string {
+  const raw = String(card.bonus_value ?? '1d4');
+  const dice = raw.match(/\d+[dк]\d+/gi);
+  if (!dice?.length) return '1d4';
+  const pick = twoHandedGrip && dice.length > 1 ? dice[1] : dice[0];
+  return pick.replace(/к/i, 'd');
+}
+
+function cardToWeapon(card: Card, character: CharacterContext, twoHandedGrip = false): WeaponContext {
   return {
     cardId: card.id,
     name: card.name,
-    dice: card.bonus_value ?? '1d4',
+    dice: weaponDice(card, twoHandedGrip),
     ability: pickAbility(card, character),
     damageType: card.damage_type ?? 'bludgeoning',
     properties: cardPropsList(card),
@@ -42,7 +54,9 @@ export function weaponContext(
   const slot = hand === 'main' ? 'main_hand' : 'off_hand';
   if (equipment) {
     const card = cardById(character, equipment[slot]);
-    if (card?.type === 'weapon') return cardToWeapon(card, character);
+    // Хват двумя руками: универсальное оружие в основной руке при пустой второй.
+    const twoHandedGrip = hand === 'main' && !equipment.off_hand;
+    if (card?.type === 'weapon') return cardToWeapon(card, character, twoHandedGrip);
     return null;
   }
 
