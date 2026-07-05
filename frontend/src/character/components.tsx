@@ -58,7 +58,10 @@ export function EntityChoiceCard({
 // ─── Разрешение выбора из механики ───────────────────────────────────────────
 
 function optionsForChoice(choice: PendingChoice): RegistryItem[] {
-  if (choice.source === 'subfeature') {
+  // subfeature (подвиды/наследия), explicit (боевой стиль, дар договора,
+  // «навык А или Б») и effect (выбор эффектов-бусин) несут варианты прямо в
+  // options.items — берём их оттуда.
+  if (choice.source === 'subfeature' || choice.source === 'explicit' || choice.source === 'effect') {
     return (choice.items || []).map((it) => ({ id: it.id, label: it.name }));
   }
   const opts = optionsForChoiceSource(choice.source);

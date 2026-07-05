@@ -331,6 +331,10 @@
 { "kind": "grant_sense", "sense": "darkvision", "range": 60 }            // darkvision|tremorsense|blindsight
 { "kind": "grant_speed", "mode": "fly", "value": "walk_speed" }          // walk|fly|swim|climb
 
+// Ссылка на другой эффект (композиция «бусины») — получить весь набор
+{ "kind": "grant_effect", "value": "EFF-disadvantage-attacks" }          // один эффект по slug/card_number
+{ "kind": "grant_effect", "values": ["EFF-frightened", "EFF-slowed"] }   // или сразу набор
+
 // Выбор из списка (см. §6.7) — оборачивает один из grant-payload'ов
 { "kind": "choice", "id": "...", ... }
 
@@ -380,7 +384,7 @@ N вариантов из списка**, и каждый выбор превр�
   "prompt": "Выберите навык",
   "count": 1,                       // сколько выбрать
   "options": {
-    "source": "skill",              // skill|tool|saving_throw|language|feat|spell|damage_type|subfeature|explicit
+    "source": "skill",              // skill|tool|saving_throw|language|feat|spell|damage_type|subfeature|explicit|effect
     "filter": "all",                // "all" | именованный список ("origin_feats","wizard_cantrips") | [id,...]
     "items": [ ChoiceItem ]         // только для source = subfeature | explicit (см. ниже)
   },

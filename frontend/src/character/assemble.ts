@@ -12,7 +12,6 @@ import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechan
 import { createRegistry } from '../engine/registry';
 import { createApiResolver } from '../engine/apiResolver';
 import { isEntityUuid } from '../engine/ids';
-import type { Spell } from '../types';
 import {
   abilityMod,
   computeMaxHP,
@@ -162,13 +161,21 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
 
   const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level);
 
-  const effects = (
+  const baseEffects = (
     await Promise.all(
       effectRefs.map((r) =>
         effectsApi.getEffect(r.id).then((effect) => ({ effect, origin: r.origin })).catch(() => null),
       ),
     )
   ).filter((x): x is OriginEffect => !!x);
+
+  // Эффекты-«контейнеры»: разворачиваем ссылки на другие эффекты (grant_effect /
+  // choice source:effect) в самостоятельные бусины-эффекты с тем же источником.
+  const effects = await expandEffectGrants(
+    baseEffects,
+    draft,
+    (slug) => entityRegistry.resolve<PassiveEffect>('effect', slug).catch(() => null),
+  );
 
   const actions = (
     await Promise.all(
@@ -182,6 +189,98 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
 }
 
 const entityRegistry = createRegistry(createApiResolver());
+
+// ─── Эффекты, ссылающиеся на другие эффекты (композиция «как бусины») ─────────
+// Поддерживает два режима из унифицированной схемы:
+//   • grant_effect { value | values } — получить весь заготовленный набор;
+//   • choice { source:"effect", items:[{id:<slug>}] } — выбрать X из списка.
+// Ссылки — slug (card_number) или UUID эффекта.
+
+type RefDict = Record<string, unknown>;
+
+export function collectEffectGrantRefs(
+  mechanics: RefDict | null | undefined,
+  effectId: string,
+  origin: ChoiceOrigin,
+  draft: CharacterDraft,
+): string[] {
+  if (!mechanics || typeof mechanics !== 'object') return [];
+  const effects = (mechanics as RefDict).effects;
+  if (!Array.isArray(effects)) return [];
+  const refs: string[] = [];
+  const pushVal = (v: unknown) => {
+    if (typeof v === 'string' && v) refs.push(v);
+    else if (Array.isArray(v)) for (const x of v) if (typeof x === 'string' && x) refs.push(x);
+  };
+  const scan = (payload: RefDict) => {
+    if (!payload || typeof payload !== 'object') return;
+    if (payload.kind === 'grant_effect') {
+      pushVal(payload.value ?? payload.values);
+      return;
+    }
+    if (payload.kind === 'choice') {
+      const opts = (payload.options || {}) as RefDict;
+      if (String(opts.source) !== 'effect') return;
+      const rawChoiceId = String(payload.id ?? 'choice');
+      const instanceId = `${origin.kind}:${origin.id}:${effectId}:${rawChoiceId}`;
+      const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
+      const items = Array.isArray(opts.items) ? (opts.items as RefDict[]) : [];
+      for (const sel of selected) {
+        const item = items.find((it) => String(it.id) === sel);
+        pushVal((item?.value as string) ?? sel); // item.value переопределяет slug, иначе id === slug
+      }
+    }
+  };
+  for (const it of effects as RefDict[]) {
+    if (it?.kind) scan(it);
+    else if (it?.resolution === 'auto' && Array.isArray(it.result)) {
+      for (const p of it.result as RefDict[]) scan(p);
+    }
+  }
+  return refs;
+}
+
+export type EffectResolver = (slug: string) => Promise<PassiveEffect | null>;
+
+export async function expandEffectGrants(
+  base: OriginEffect[],
+  draft: CharacterDraft,
+  resolve: EffectResolver,
+): Promise<OriginEffect[]> {
+  const result: OriginEffect[] = [...base];
+  const seen = new Set<string>();
+  const mark = (e: OriginEffect) => {
+    seen.add(e.effect.id);
+    if (e.effect.card_number) seen.add(e.effect.card_number);
+  };
+  base.forEach(mark);
+
+  let frontier = base;
+  for (let depth = 0; depth < 6 && frontier.length; depth++) {
+    const wanted: { slug: string; origin: ChoiceOrigin }[] = [];
+    for (const { effect, origin } of frontier) {
+      for (const slug of collectEffectGrantRefs(effect.mechanics, effect.id, origin, draft)) {
+        if (!seen.has(slug)) wanted.push({ slug, origin });
+      }
+    }
+    if (!wanted.length) break;
+
+    const resolved = await Promise.all(
+      wanted.map((w) => resolve(w.slug).catch(() => null)),
+    );
+    const next: OriginEffect[] = [];
+    resolved.forEach((eff, i) => {
+      seen.add(wanted[i].slug); // помечаем slug, чтобы не перезапрашивать (в т.ч. битые ссылки)
+      if (!eff || seen.has(eff.id)) return;
+      const oe: OriginEffect = { effect: eff, origin: wanted[i].origin };
+      mark(oe);
+      result.push(oe);
+      next.push(oe);
+    });
+    frontier = next;
+  }
+  return result;
+}
 
 // Загружает все сущности черновика (включая заклинания) и собирает персонажа.
 export async function loadAssembly(draft: CharacterDraft): Promise<AssembledCharacter> {

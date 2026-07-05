@@ -229,6 +229,23 @@ export const EFFECT_BLOCKS: Block[] = [
     summary: (v) => `+${v.amount} ${labelOf(ABILITIES, String(v.ability))}`,
   },
   {
+    id: 'eff_grant_effect',
+    label: 'Дать эффект(ы) — бусины',
+    group: 'effect',
+    fields: [
+      { key: 'slugs', label: 'Эффекты (slug через запятую)', type: 'text', default: '' },
+    ],
+    defaults: { slugs: '' },
+    build: (v) => ({
+      kind: 'grant_effect',
+      values: String(v.slugs || '').split(/[,\s]+/).map((s) => s.trim()).filter(Boolean),
+    }),
+    summary: (v) => {
+      const list = String(v.slugs || '').split(/[,\s]+/).filter(Boolean);
+      return `Дать эффекты: ${list.length ? list.join(', ') : '—'}`;
+    },
+  },
+  {
     id: 'eff_adv',
     label: 'Преимущество/помеха',
     group: 'effect',
@@ -528,6 +545,10 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     case 'grant_sense': return { blockId: 'eff_grant_sense', values: { sense: p.sense, range: p.range ?? 60 } };
     case 'grant_speed': return { blockId: 'eff_grant_speed', values: { mode: p.mode, value: p.value } };
     case 'grant_ability_score': return { blockId: 'eff_grant_ability', values: { ability: p.ability, amount: p.amount ?? 1 } };
+    case 'grant_effect': {
+      const vals = Array.isArray(p.values) ? p.values : (p.value != null ? [p.value] : []);
+      return { blockId: 'eff_grant_effect', values: { slugs: (vals as unknown[]).filter(Boolean).join(', ') } };
+    }
     case 'resistance': return { blockId: 'eff_resistance', values: { damage_type: p.damage_type, value: p.value ?? 'resistance' } };
     case 'temp_hp': return { blockId: 'eff_temp_hp', values: { amount: p.amount } };
     case 'healing': return { blockId: 'eff_heal', values: { amount: p.amount } };

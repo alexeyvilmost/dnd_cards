@@ -99,8 +99,10 @@ const CharacterForge = () => {
     })();
   }, [editId]);
 
-  // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний)
-  const refsKey = `${draft.raceId}|${draft.lineageId}|${draft.classId}|${draft.backgroundId}|${draft.level}|${draft.featIds.join(',')}`;
+  // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний).
+  // resolvedChoices включён, т.к. выбор в choice(source:effect) меняет набор
+  // разворачиваемых эффектов-бусин; резолв эффектов кэшируется в реестре.
+  const refsKey = `${draft.raceId}|${draft.lineageId}|${draft.classId}|${draft.backgroundId}|${draft.level}|${draft.featIds.join(',')}|${JSON.stringify(draft.resolvedChoices)}`;
   useEffect(() => {
     let stale = false;
     (async () => {

@@ -122,6 +122,7 @@ export const CHOICE_SOURCES: RegistryItem[] = [
   { id: 'damage_type', label: 'Тип урона' },
   { id: 'subfeature', label: 'Подвариант' },
   { id: 'explicit', label: 'Явный список' },
+  { id: 'effect', label: 'Эффект (бусины)' },
 ];
 
 export const labelOf = (items: RegistryItem[], id?: string) =>

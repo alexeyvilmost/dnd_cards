@@ -22,8 +22,12 @@ interface ChoiceEditorProps {
   onChange: (v: ChoiceFormValue) => void;
 }
 
+const ITEM_SOURCES = ['subfeature', 'explicit', 'effect'];
+
 const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
   const sourceOptions = useMemo(() => optionsForChoiceSource(value.source || 'skill'), [value.source]);
+  const usesItems = ITEM_SOURCES.includes(value.source || 'skill');
+  const isEffect = value.source === 'effect';
 
   const set = (patch: Partial<ChoiceFormValue>) => onChange({ ...value, ...patch });
 
@@ -103,7 +107,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
         </div>
       )}
 
-      {value.source !== 'subfeature' && value.source !== 'explicit' && (
+      {!usesItems && (
         <div>
           <label className="block text-xs text-gray-600 mb-1">
             Фильтр ({labelOf(CHOICE_SOURCES, value.source)})
@@ -121,10 +125,12 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
         </div>
       )}
 
-      {value.source === 'subfeature' && (
+      {usesItems && (
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-medium text-gray-700">Варианты подвида</span>
+            <span className="text-xs font-medium text-gray-700">
+              {isEffect ? 'Эффекты-бусины (id = slug/card_number эффекта)' : 'Варианты выбора'}
+            </span>
             <button
               type="button"
               className="text-xs text-blue-600"
@@ -137,11 +143,17 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
               + вариант
             </button>
           </div>
+          {isEffect && (
+            <p className="text-xs text-gray-500">
+              id — card_number эффекта (напр. EFF-disadvantage-attacks); при выборе эффект добавляется
+              персонажу как самостоятельная бусина. grants можно оставить пустым.
+            </p>
+          )}
           {(value.items || []).map((item, idx) => (
             <div key={idx} className="p-2 border rounded bg-white space-y-1">
               <input
                 className="w-full px-2 py-1 border rounded text-sm"
-                placeholder="id"
+                placeholder={isEffect ? 'EFF-... (slug эффекта)' : 'id'}
                 value={item.id}
                 onChange={(e) => {
                   const items = [...(value.items || [])];
@@ -162,7 +174,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
               <textarea
                 className="w-full px-2 py-1 border rounded text-sm font-mono text-xs"
                 rows={3}
-                placeholder='[{"kind":"grant_spell","value":"light"}]'
+                placeholder={isEffect ? '[] (доп. гранты; обычно пусто)' : '[{"kind":"grant_spell","value":"light"}]'}
                 value={item.grantsJson}
                 onChange={(e) => {
                   const items = [...(value.items || [])];
@@ -179,9 +191,9 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
 };
 
 export function choiceFormToOptions(value: ChoiceFormValue) {
-  if (value.source === 'subfeature') {
+  if (ITEM_SOURCES.includes(value.source || 'skill')) {
     return {
-      source: 'subfeature',
+      source: value.source,
       items: (value.items || []).map((it) => {
         let grants: unknown[] = [];
         try { grants = JSON.parse(it.grantsJson || '[]'); } catch { /* ignore */ }
