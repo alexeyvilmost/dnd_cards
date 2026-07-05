@@ -1,0 +1,51 @@
+[
+ {
+  "card_number": "light",
+  "name": "Свет",
+  "duration": "1 час",
+  "concentration": false,
+  "source_page": "page-326.txt"
+ },
+ {
+  "card_number": "SPELL-0163",
+  "name": "Благословение",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "source_page": "page-242.txt"
+ },
+ {
+  "card_number": "SPELL-0167",
+  "name": "Ведьмин снаряд",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "source_page": "page-244.txt"
+ },
+ {
+  "card_number": "SPELL-0201",
+  "name": "Защита от добра и зла",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "source_page": "page-272.txt"
+ },
+ {
+  "card_number": "SPELL-0206",
+  "name": "Иллюзорные письмена",
+  "duration": "10 дней",
+  "concentration": false,
+  "source_page": "page-277.txt"
+ },
+ {
+  "card_number": "SPELL-0245",
+  "name": "Опознание",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "source_page": "page-300.txt"
+ },
+ {
+  "card_number": "SPELL-0314",
+  "name": "Цветной шарик",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "source_page": "page-343.txt"
+ }
+]
