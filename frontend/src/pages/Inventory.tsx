@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Package, Users, User, ArrowRight, Edit, Trash2 } from 'lucide-react';
+import { Plus, Package, Users, User, ArrowRight } from 'lucide-react';
 import { inventoryApi } from '../api/inventoryApi';
 import { useAuth } from '../contexts/AuthContext';
-import type { Inventory, InventoryItem } from '../types';
+import type { Inventory } from '../types';
 
 const Inventory: React.FC = () => {
   const [inventories, setInventories] = useState<Inventory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  useAuth();
 
   useEffect(() => {
     loadInventories();

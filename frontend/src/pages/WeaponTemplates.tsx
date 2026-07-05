@@ -5,7 +5,6 @@ import { cardsApi } from '../api/client';
 import { Card } from '../types';
 import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
 import CardPreview from '../components/CardPreview';
-import { getRarityColor } from '../utils/rarityColors';
 
 const WeaponTemplates: React.FC = () => {
   const [templates, setTemplates] = useState<Card[]>([]);

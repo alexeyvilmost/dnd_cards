@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -36,29 +36,29 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({ onClose }) => {
       id: 'simple_melee',
       name: '⚔️ Простое рукопашное',
       description: 'Базовое оружие ближнего боя',
-      filter: (card: Card) => 
-        card.tags?.includes('Простое') && card.tags?.includes('Ближнее')
+      filter: (card: Card) =>
+        (card.tags as string[] | null | undefined)?.includes('Простое') && (card.tags as string[] | null | undefined)?.includes('Ближнее')
     },
     {
       id: 'simple_ranged',
       name: '🏹 Простое дальнобойное',
       description: 'Базовое оружие дальнего боя',
-      filter: (card: Card) => 
-        card.tags?.includes('Простое') && card.tags?.includes('Дальнобойное')
+      filter: (card: Card) =>
+        (card.tags as string[] | null | undefined)?.includes('Простое') && (card.tags as string[] | null | undefined)?.includes('Дальнобойное')
     },
     {
       id: 'martial_melee',
       name: '⚔️ Воинское рукопашное',
       description: 'Профессиональное оружие ближнего боя',
-      filter: (card: Card) => 
-        card.tags?.includes('Воинское') && card.tags?.includes('Ближнее')
+      filter: (card: Card) =>
+        (card.tags as string[] | null | undefined)?.includes('Воинское') && (card.tags as string[] | null | undefined)?.includes('Ближнее')
     },
     {
       id: 'martial_ranged',
       name: '🏹 Воинское дальнобойное',
       description: 'Профессиональное оружие дальнего боя',
-      filter: (card: Card) => 
-        card.tags?.includes('Воинское') && card.tags?.includes('Дальнобойное')
+      filter: (card: Card) =>
+        (card.tags as string[] | null | undefined)?.includes('Воинское') && (card.tags as string[] | null | undefined)?.includes('Дальнобойное')
     }
   ];
 

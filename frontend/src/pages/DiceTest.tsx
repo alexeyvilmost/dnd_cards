@@ -22,7 +22,7 @@ const DiceTest: React.FC = () => {
     rollType: 'normal',
   });
 
-  const getSkillBorderColor = (skillName: string) => {
+  const getSkillBorderColor = (_skillName: string) => {
     return 'border-l-4 border-l-green-500';
   };
 

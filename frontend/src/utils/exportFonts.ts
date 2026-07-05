@@ -1,4 +1,7 @@
-import { getFontEmbedCSS, type Options } from 'html-to-image';
+import { getFontEmbedCSS } from 'html-to-image';
+
+// html-to-image не реэкспортирует Options — выводим тип из сигнатуры getFontEmbedCSS
+type Options = NonNullable<Parameters<typeof getFontEmbedCSS>[1]>;
 
 const CARD_FONT = 'Pangolin';
 /** Размеры, встречающиеся на карточке (заголовок, описание, футер). */

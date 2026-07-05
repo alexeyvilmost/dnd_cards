@@ -27,10 +27,6 @@ function isBodyArmor(card: Card): boolean {
   return card.slot === 'body' || card.type === 'chest' || (!!card.defense_type && !isShield(card));
 }
 
-function handsOccupied(equipment: Record<string, string | null | undefined>): boolean {
-  return !!(equipment.main_hand || equipment.off_hand);
-}
-
 function bothHandsFree(equipment: Record<string, string | null | undefined>): boolean {
   return !equipment.main_hand && !equipment.off_hand;
 }

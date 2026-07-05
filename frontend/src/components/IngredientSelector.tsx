@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -39,7 +39,7 @@ const IngredientSelector: React.FC<IngredientSelectorProps> = ({ onClose }) => {
       description: 'Травы, корни, цветы и плоды',
       color: 'bg-green-50 border-green-200 hover:bg-green-100',
       filter: (card: Card) => 
-        card.slot === 'ingredient_plant' ||
+        (card.slot as string | null | undefined) === 'ingredient_plant' ||
         card.description?.toLowerCase().includes('трава') ||
         card.description?.toLowerCase().includes('корень') ||
         card.description?.toLowerCase().includes('цветок') ||
@@ -51,7 +51,7 @@ const IngredientSelector: React.FC<IngredientSelectorProps> = ({ onClose }) => {
       description: 'Камни, кристаллы и металлы',
       color: 'bg-gray-50 border-gray-200 hover:bg-gray-100',
       filter: (card: Card) => 
-        card.slot === 'ingredient_mineral' ||
+        (card.slot as string | null | undefined) === 'ingredient_mineral' ||
         card.description?.toLowerCase().includes('камень') ||
         card.description?.toLowerCase().includes('кристалл') ||
         card.description?.toLowerCase().includes('металл') ||
@@ -63,7 +63,7 @@ const IngredientSelector: React.FC<IngredientSelectorProps> = ({ onClose }) => {
       description: 'Части животных и их продукты',
       color: 'bg-orange-50 border-orange-200 hover:bg-orange-100',
       filter: (card: Card) => 
-        card.slot === 'ingredient_animal' ||
+        (card.slot as string | null | undefined) === 'ingredient_animal' ||
         card.description?.toLowerCase().includes('кровь') ||
         card.description?.toLowerCase().includes('кость') ||
         card.description?.toLowerCase().includes('шерсть') ||
@@ -75,7 +75,7 @@ const IngredientSelector: React.FC<IngredientSelectorProps> = ({ onClose }) => {
       description: 'Магические компоненты и артефакты',
       color: 'bg-purple-50 border-purple-200 hover:bg-purple-100',
       filter: (card: Card) => 
-        card.slot === 'ingredient_magical' ||
+        (card.slot as string | null | undefined) === 'ingredient_magical' ||
         card.description?.toLowerCase().includes('магический') ||
         card.description?.toLowerCase().includes('энергия') ||
         card.description?.toLowerCase().includes('дух') ||

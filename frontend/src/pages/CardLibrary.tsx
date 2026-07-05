@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Filter, Plus, Package, Users, User, Sword, Grid3X3, List, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, Grid3X3, List, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition } from '../types';
@@ -665,7 +665,7 @@ const CardLibrary = () => {
 
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     const handleScroll = () => {
       // Очищаем предыдущий таймер
@@ -713,16 +713,6 @@ const CardLibrary = () => {
       } else if (contentType === 'classes') {
         loadClasses(currentPage + 1, true);
       }
-    }
-  };
-
-  // Генерация изображения
-  const handleGenerateImage = async (cardId: string) => {
-    try {
-      await cardsApi.generateImage({ card_id: cardId });
-      loadCards(); // Перезагружаем карточки для обновления изображения
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка генерации изображения');
     }
   };
 

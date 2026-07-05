@@ -167,17 +167,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
     }
   };
 
-  const getRarityColor = (rarity: string): string => {
-    switch (rarity) {
-      case 'common': return 'text-gray-600';
-      case 'uncommon': return 'text-green-600';
-      case 'rare': return 'text-blue-600';
-      case 'very_rare': return 'text-purple-600';
-      case 'artifact': return 'text-orange-600';
-      default: return 'text-gray-600';
-    }
-  };
-
   const getPropertyLabels = (properties: string[]): string[] => {
     const labels: Record<string, string> = {
       'consumable': 'Расходуемое',

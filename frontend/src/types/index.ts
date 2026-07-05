@@ -617,8 +617,8 @@ export interface InventoryItem {
 export interface Inventory {
   id: string;
   type: InventoryType;
-  user_id?: string;
-  group_id?: string;
+  user_id?: string | null;
+  group_id?: string | null;
   character_id?: string;
   name: string;
   created_at: string;

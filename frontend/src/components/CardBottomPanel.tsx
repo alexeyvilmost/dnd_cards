@@ -57,19 +57,6 @@ const getBonusShortValue = (bonusValue: string): string => {
   return bonusValue;
 };
 
-const getDamageTypeLabel = (damageType: string): string => {
-  switch (damageType) {
-    case 'piercing':
-      return 'колющий';
-    case 'slashing':
-      return 'рубящий';
-    case 'bludgeoning':
-      return 'дробящий';
-    default:
-      return '';
-  }
-};
-
 const renderDefenseIcons = (defenseType: string) => {
   switch (defenseType) {
     case 'cloth':
@@ -181,7 +168,7 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
               />
             )}
           {card.bonus_type === 'defense' && card.defense_type && renderDefenseIcons(card.defense_type)}
-          {card.bonus_type === 'defense' && card.type === 'щит' && (
+          {card.bonus_type === 'defense' && (card.type as string | null | undefined) === 'щит' && (
             <img src="/icons/defense.png" alt="Защита" style={iconStyle} />
           )}
         </>

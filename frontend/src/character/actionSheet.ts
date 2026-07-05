@@ -71,7 +71,7 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
   }));
 
   const fromClass: SheetAction[] = assembled.actions
-    .map(({ action, origin }) => {
+    .map(({ action, origin }): SheetAction | null => {
       const mechanics = actionMechanics(action);
       if (!mechanics) return null;
       return {
@@ -88,7 +88,7 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
 
   const fromRace: SheetAction[] = assembled.effects
     .filter(({ origin }) => origin.kind === 'race')
-    .map(({ effect, origin }) => {
+    .map(({ effect, origin }): SheetAction | null => {
       const mechanics = effectActiveMechanics(effect);
       if (!mechanics) return null;
       return {
@@ -104,7 +104,7 @@ export function collectSheetActions(assembled: AssembledCharacter): SheetAction[
     .filter((a): a is SheetAction => a != null);
 
   const spells: SheetAction[] = assembled.spells
-    .map((spell) => {
+    .map((spell): SheetAction | null => {
       const mechanics = spellMechanics(spell);
       if (!mechanics) return null;
       return {

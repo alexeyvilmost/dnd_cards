@@ -1,9 +1,6 @@
 import type { Card } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS } from '../types';
 import { FormattedText } from '../utils/formattedText';
-import { getPropertyLabel } from '../utils/propertyLabels';
 import { renderProperties } from '../utils/propertyIcons';
-import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import CardBottomPanel from './CardBottomPanel';
 import { getCardBorderWrapperStyle } from '../utils/cardStyles';
@@ -35,14 +32,8 @@ interface CardPreviewProps {
 }
 
 const CardPreview = ({ card, className = '', disableHover = false, onClick }: CardPreviewProps) => {
-  const rarityOption = RARITY_OPTIONS.find(option => option.value === card.rarity);
   // Для совместимости с одним свойством и массивом свойств
   const propertiesArray = Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []);
-  const propertiesLabels = propertiesArray.map(prop => {
-    const option = PROPERTIES_OPTIONS.find(opt => opt.value === prop);
-    return option?.label || prop;
-  }).join(', ');
-  const isLarge = className.includes('card-preview-large');
   const isExtended = Boolean(card.is_extended);
 
   // Функция для определения размера шрифта заголовка
@@ -192,7 +183,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                       className={`text-xs font-fantasy whitespace-pre-wrap`}
                       style={{
                         fontSize: card.detailed_description_font_size ? `${card.detailed_description_font_size}px` : '12px',
-                        textAlign: card.detailed_description_alignment || 'left',
+                        textAlign: (card.detailed_description_alignment || 'left') as React.CSSProperties['textAlign'],
                         color: getRarityColorValue(card.rarity)
                       }}
                     >
@@ -216,9 +207,9 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                 {/* Основное описание */}
                 <p 
                   className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`} 
-                  style={{ 
+                  style={{
                     fontSize: getCardDescriptionFontSize(card),
-                    textAlign: card.text_alignment || 'center'
+                    textAlign: (card.text_alignment || 'center') as React.CSSProperties['textAlign']
                   }}
                 >
                   <FormattedText text={card.description || ''} />
@@ -271,9 +262,9 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           <div className="px-1 pt-2 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
             <p 
               className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`}
-              style={{ 
+              style={{
                 fontSize: getCardDescriptionFontSize(card),
-                textAlign: card.text_alignment || 'center'
+                textAlign: (card.text_alignment || 'center') as React.CSSProperties['textAlign']
               }}
             >
               <FormattedText text={card.description || ''} />

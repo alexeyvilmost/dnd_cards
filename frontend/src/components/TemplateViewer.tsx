@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Grid3X3, List, Edit, Trash2 } from 'lucide-react';
 import { Card } from '../types';
 import CardPreview from './CardPreview';
-import { getRarityColor } from '../utils/rarityColors';
 
 interface TemplateViewerProps {
   templates: Card[];

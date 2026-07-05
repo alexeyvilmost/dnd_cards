@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Crown, User, Calendar, LogOut, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, Crown, User, Calendar, LogOut } from 'lucide-react';
 import { groupsApi } from '../api/groupsApi';
 import { useAuth } from '../contexts/AuthContext';
 import type { Group, GroupMember } from '../types';

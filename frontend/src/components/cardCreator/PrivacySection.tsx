@@ -7,7 +7,7 @@ interface PrivacySectionProps {
   errors: FieldErrors<CreateCardRequest>;
 }
 
-export const PrivacySection: React.FC<PrivacySectionProps> = ({ register, errors }) => {
+export const PrivacySection: React.FC<PrivacySectionProps> = ({ register }) => {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-900">Настройки приватности</h2>

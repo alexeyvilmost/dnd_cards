@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { CreateCardRequest } from '../../types';
 import { Library } from 'lucide-react';
@@ -19,17 +19,16 @@ interface ImageSectionProps {
 
 export const ImageSection: React.FC<ImageSectionProps> = ({
   register,
-  errors,
-  setValue,
   watch,
   onImageGenerated,
   onCreateEntity,
   entityId,
-  showImageLibrary,
   setShowImageLibrary
 }) => {
   const memoizedWatchedValues = watch();
-  const cardImage = watch('image_url') || '';
+  // 'image_url' не входит в CreateCardRequest (изображение живёт вне формы), локально расширяем тип watch
+  const watchWithImage = watch as UseFormWatch<CreateCardRequest & { image_url?: string }>;
+  const cardImage = watchWithImage('image_url') || '';
 
   return (
     <div className="space-y-6">
@@ -58,7 +57,7 @@ export const ImageSection: React.FC<ImageSectionProps> = ({
         entityName={memoizedWatchedValues.name}
         entityRarity={memoizedWatchedValues.rarity}
         entityDescription={memoizedWatchedValues.description}
-        entityPromptExtra={memoizedWatchedValues.image_prompt_extra}
+        entityPromptExtra={memoizedWatchedValues.image_prompt_extra ?? undefined}
         entityItemType={memoizedWatchedValues.type || undefined}
         entityWeaponType={memoizedWatchedValues.weapon_type || undefined}
         entitySlot={memoizedWatchedValues.slot || undefined}

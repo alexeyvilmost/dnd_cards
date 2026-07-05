@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Save, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
-import type { CreateCardRequest, UpdateCardRequest, Properties, Effect } from '../types';
+import type { CreateCardRequest, Properties, Effect } from '../types';
 import CardPreview from '../components/CardPreview';
 import ImageLibraryModal from '../components/ImageLibraryModal';
 import { CardCreatorNavigation } from '../components/CardCreatorNavigation';
@@ -53,7 +53,7 @@ const CardCreator = () => {
       description: searchParams.get('description') || 'Описание эффекта',
       price: searchParams.get('price') ? parseInt(searchParams.get('price')!) : null,
       weight: searchParams.get('weight') ? parseFloat(searchParams.get('weight')!) : null,
-      bonus_type: searchParams.get('bonus_type') || null,
+      bonus_type: (searchParams.get('bonus_type') as CreateCardRequest['bonus_type']) || null,
       bonus_value: searchParams.get('bonus_value') || null,
       damage_type: searchParams.get('damage_type') || null,
       elemental_damage_value: null,
@@ -62,7 +62,7 @@ const CardCreator = () => {
       is_extended: false,
       author: searchParams.get('author') || 'Admin',
       source: searchParams.get('source') || null,
-      type: searchParams.get('type') || null,
+      type: (searchParams.get('type') as CreateCardRequest['type']) || null,
       related_cards: [],
       related_actions: [],
       related_effects: [],
@@ -657,8 +657,8 @@ const CardCreator = () => {
           weapon_type: watchedValues.weapon_type || undefined,
           slot: watchedValues.slot || undefined,
           armor_type: (() => {
-            // Определяем armor_type из properties
-            const properties = watchedValues.properties || [];
+            // Определяем armor_type из properties (легаси-значения брони хранятся как строки вне union Property)
+            const properties: string[] = watchedValues.properties || [];
             if (properties.includes('cloth')) return 'cloth';
             if (properties.includes('light_armor')) return 'light_armor';
             if (properties.includes('medium_armor')) return 'medium_armor';

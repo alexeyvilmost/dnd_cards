@@ -237,7 +237,8 @@ function parseFunctionCall(name: string, tokens: Token[], pos: { i: number }, si
     const v = parseExpr(tokens, pos, sink);
     if (typeof v === 'string') throw new Error(`Маркер «${v}» нельзя использовать в функции`);
     args.push(v);
-    if (tokens[pos.i]?.t === 'op' && tokens[pos.i].v === ',') pos.i++;
+    const sep = tokens[pos.i];
+    if (sep?.t === 'op' && sep.v === ',') pos.i++;
     else break;
   }
   if (tokens[pos.i]?.t !== 'rparen') throw new Error('Ожидалась закрывающая скобка');

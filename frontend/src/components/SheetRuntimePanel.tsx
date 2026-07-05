@@ -5,7 +5,6 @@ import type { AssembledCharacter } from '../character/assemble';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
-  collectPassiveMechanics,
   hpNeedsSync,
   resourcesNeedSync,
 } from '../character/resourceInit';
@@ -36,8 +35,6 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
-
-  const passives = useMemo(() => collectPassiveMechanics(assembled), [assembled]);
 
   const resourceRecharge = useMemo(
     () => buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),

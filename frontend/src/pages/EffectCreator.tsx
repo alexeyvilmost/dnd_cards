@@ -80,7 +80,7 @@ const EffectCreator = () => {
   }, [isEditMode, editId, reset]);
 
   const formData = watch();
-  const previewEffect = {
+  const previewEffect: PassiveEffect = {
     id: '',
     name: formData.name || 'Название эффекта',
     description: formData.description || 'Описание эффекта',

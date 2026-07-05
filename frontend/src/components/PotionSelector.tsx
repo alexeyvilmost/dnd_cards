@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -39,7 +39,7 @@ const PotionSelector: React.FC<PotionSelectorProps> = ({ onClose }) => {
       description: 'Восстановление здоровья и исцеление',
       color: 'bg-red-50 border-red-200 hover:bg-red-100',
       filter: (card: Card) => 
-        card.slot === 'potion_healing' ||
+        (card.slot as string | null | undefined) === 'potion_healing' ||
         card.description?.toLowerCase().includes('лечение') ||
         card.description?.toLowerCase().includes('здоровье') ||
         card.description?.toLowerCase().includes('исцеление')
@@ -50,7 +50,7 @@ const PotionSelector: React.FC<PotionSelectorProps> = ({ onClose }) => {
       description: 'Улучшение характеристик и способностей',
       color: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
       filter: (card: Card) => 
-        card.slot === 'potion_enhancement' ||
+        (card.slot as string | null | undefined) === 'potion_enhancement' ||
         card.description?.toLowerCase().includes('сила') ||
         card.description?.toLowerCase().includes('ловкость') ||
         card.description?.toLowerCase().includes('усиление')
@@ -61,7 +61,7 @@ const PotionSelector: React.FC<PotionSelectorProps> = ({ onClose }) => {
       description: 'Защитные эффекты и сопротивление',
       color: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
       filter: (card: Card) => 
-        card.slot === 'potion_protection' ||
+        (card.slot as string | null | undefined) === 'potion_protection' ||
         card.description?.toLowerCase().includes('защита') ||
         card.description?.toLowerCase().includes('сопротивление') ||
         card.description?.toLowerCase().includes('броня')
@@ -72,7 +72,7 @@ const PotionSelector: React.FC<PotionSelectorProps> = ({ onClose }) => {
       description: 'Специальные эффекты и способности',
       color: 'bg-green-50 border-green-200 hover:bg-green-100',
       filter: (card: Card) => 
-        card.slot === 'potion_utility' ||
+        (card.slot as string | null | undefined) === 'potion_utility' ||
         card.description?.toLowerCase().includes('невидимость') ||
         card.description?.toLowerCase().includes('полет') ||
         card.description?.toLowerCase().includes('превращение')

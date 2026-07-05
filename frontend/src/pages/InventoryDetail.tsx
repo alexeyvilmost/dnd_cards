@@ -9,7 +9,7 @@ import { getRarityColor } from '../utils/rarityColors';
 const InventoryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   
   const [inventory, setInventory] = useState<Inventory | null>(null);
   const [isLoading, setIsLoading] = useState(true);

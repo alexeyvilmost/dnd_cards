@@ -165,8 +165,6 @@ export const getStatValue = (character: CharacterV3, stat: string): number => {
 // Расчет всех производных характеристик персонажа
 export const calculateDerivedStats = (character: CharacterV3) => {
   const proficiencyBonus = getProficiencyBonus(character.level);
-  const dexModifier = getModifier(character.dexterity);
-  const wisModifier = getModifier(character.wisdom);
 
   return {
     proficiencyBonus,

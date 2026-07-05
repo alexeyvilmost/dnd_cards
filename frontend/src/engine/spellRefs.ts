@@ -58,6 +58,6 @@ export function indexSpells(spells: Spell[]): { byId: Map<string, Spell>; bySlug
 }
 
 /** Разделить сохранённые spell_ids на UUID (игрок) и slug (устаревший формат). */
-export function splitStoredSpellIds(spellIds: string[] | null | undefined): { uuids: string[]; legacySlugs: string[] } {
+export function splitStoredSpellIds(spellIds: string[] | null | undefined): { uuids: string[]; slugs: string[] } {
   return splitRefs(spellIds || []);
 }

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Control, Controller, FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { CreateCardRequest } from '../../types';
 import { FormattedTextarea } from '../FormattedTextarea';
@@ -12,9 +12,7 @@ interface TextSectionProps {
   watch: UseFormWatch<CreateCardRequest>;
 }
 
-export const TextSection: React.FC<TextSectionProps> = ({ register, control, errors, setValue, watch }) => {
-  const memoizedWatchedValues = useMemo(() => watch(), [watch]);
-
+export const TextSection: React.FC<TextSectionProps> = ({ register, control }) => {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-900">Текст</h2>

@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Маппинг свойств на иконки
 export const PROPERTY_ICONS: Record<string, string> = {
   'consumable': '/icons/consumable.png?v=1',

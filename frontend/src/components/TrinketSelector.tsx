@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -23,7 +23,7 @@ const TrinketSelector: React.FC<TrinketSelectorProps> = ({ onClose }) => {
     try {
       setLoading(true);
       const response = await cardsApi.getCards({ template_only: true, limit: 100 });
-      const trinketTemplates = response.cards.filter(card => card.type === 'trinket');
+      const trinketTemplates = response.cards.filter(card => (card.type as string | null | undefined) === 'trinket');
       setTemplates(trinketTemplates);
     } catch (error) {
       console.error('Ошибка загрузки шаблонов безделушек:', error);
@@ -39,7 +39,7 @@ const TrinketSelector: React.FC<TrinketSelectorProps> = ({ onClose }) => {
       description: 'Кольца, ожерелья, браслеты',
       color: 'bg-purple-50 border-purple-200 hover:bg-purple-100',
       filter: (card: Card) => 
-        card.slot === 'trinket_jewelry' ||
+        (card.slot as string | null | undefined) === 'trinket_jewelry' ||
         card.description?.toLowerCase().includes('кольцо') ||
         card.description?.toLowerCase().includes('ожерелье') ||
         card.description?.toLowerCase().includes('браслет') ||
@@ -51,7 +51,7 @@ const TrinketSelector: React.FC<TrinketSelectorProps> = ({ onClose }) => {
       description: 'Детские игрушки и развлечения',
       color: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
       filter: (card: Card) => 
-        card.slot === 'trinket_toys' ||
+        (card.slot as string | null | undefined) === 'trinket_toys' ||
         card.description?.toLowerCase().includes('игрушка') ||
         card.description?.toLowerCase().includes('кукла') ||
         card.description?.toLowerCase().includes('мяч') ||
@@ -63,7 +63,7 @@ const TrinketSelector: React.FC<TrinketSelectorProps> = ({ onClose }) => {
       description: 'Памятные вещи и подарки',
       color: 'bg-pink-50 border-pink-200 hover:bg-pink-100',
       filter: (card: Card) => 
-        card.slot === 'trinket_sentimental' ||
+        (card.slot as string | null | undefined) === 'trinket_sentimental' ||
         card.description?.toLowerCase().includes('память') ||
         card.description?.toLowerCase().includes('подарок') ||
         card.description?.toLowerCase().includes('любовь') ||
@@ -75,7 +75,7 @@ const TrinketSelector: React.FC<TrinketSelectorProps> = ({ onClose }) => {
       description: 'Дорогие и престижные предметы',
       color: 'bg-orange-50 border-orange-200 hover:bg-orange-100',
       filter: (card: Card) => 
-        card.slot === 'trinket_luxury' ||
+        (card.slot as string | null | undefined) === 'trinket_luxury' ||
         card.description?.toLowerCase().includes('золото') ||
         card.description?.toLowerCase().includes('серебро') ||
         card.description?.toLowerCase().includes('драгоценный') ||

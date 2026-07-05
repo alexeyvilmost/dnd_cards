@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
@@ -34,9 +34,9 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ onClose }) => {
     try {
       setLoading(true);
       const response = await cardsApi.getCards({ template_only: true, limit: 100 });
-      const equipmentTemplates = response.cards.filter(card => 
-        card.type === 'armor' || 
-        card.type === 'equipment' ||
+      const equipmentTemplates = response.cards.filter(card =>
+        (card.type as string | null | undefined) === 'armor' ||
+        (card.type as string | null | undefined) === 'equipment' ||
         card.type === 'shield' ||
         card.type === 'ring' ||
         card.type === 'necklace' ||

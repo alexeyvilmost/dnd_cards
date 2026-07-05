@@ -16,7 +16,7 @@ const CreateInventory: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  useAuth();
 
   const navigate = useNavigate();
 

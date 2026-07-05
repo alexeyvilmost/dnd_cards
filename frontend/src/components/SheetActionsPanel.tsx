@@ -118,7 +118,7 @@ export default function SheetActionsPanel({
   }, [character.id, onUpdated, onEvents]);
 
   const runAction = (action: SheetAction) => {
-    const mech = { ...action.mechanics, name: action.name };
+    const mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
     if (cost.length && !canPay(runtime, cost).ok) return;

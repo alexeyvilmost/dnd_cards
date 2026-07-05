@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { equipItem, totalWeight, unequipSlot } from './equipment';
+import { equipItem, totalWeight } from './equipment';
 import { computeAC } from './ac';
 import { weaponContext } from './weapon';
 import { clearCardRegistry } from './cardRegistry';
 import {
-  ALL_CARDS, CARD_CHAIN_MAIL, CARD_GREATAXE, CARD_LEATHER_ARMOR,
-  CARD_LONGSWORD, CARD_SHIELD, CARD_DAGGER,
+  ALL_CARDS, CARD_CHAIN_MAIL,
+  CARD_LONGSWORD, CARD_SHIELD,
   FIGHTER_CTX, FIGHTER_CTX_EQUIPPED, freshFighterState,
 } from '../mvp/fixtures';
 

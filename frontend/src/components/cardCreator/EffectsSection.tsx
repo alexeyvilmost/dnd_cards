@@ -133,7 +133,7 @@ const EffectsSection: React.FC<EffectsSectionProps> = ({ effects, onEffectsChang
     }
   };
 
-  const getEffectDescription = (effect: Effect, index: number) => {
+  const getEffectDescription = (effect: Effect) => {
     const targetOptions = getTargetOptions(effect.targetType);
     const targetLabel = targetOptions.find(opt => opt.value === effect.targetSpecific)?.label || 'Неизвестно';
     
@@ -194,7 +194,7 @@ const EffectsSection: React.FC<EffectsSectionProps> = ({ effects, onEffectsChang
                   <span className="text-2xl">✨</span>
                   <div>
                     <div className="font-medium text-gray-900">
-                      {getEffectDescription(effect, index)}
+                      {getEffectDescription(effect)}
                     </div>
                   </div>
                 </div>

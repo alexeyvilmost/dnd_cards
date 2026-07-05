@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, LogOut, User, Users, UserCircle, ChevronDown, Menu, X, Sparkles, Swords } from 'lucide-react';
+import { BookOpen, LogOut, User, UserCircle, ChevronDown, Menu, X, Sparkles, Swords } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
