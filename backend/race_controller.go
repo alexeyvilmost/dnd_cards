@@ -112,7 +112,7 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber,
 		CreatureType: req.CreatureType, Size: req.Size, Speed: req.Speed, ExtraSpeeds: req.ExtraSpeeds,
 		Darkvision: req.Darkvision, Traits: req.Traits, Lineages: req.Lineages,
-		IsSubrace: req.IsSubrace, ParentRaceID: req.ParentRaceID,
+		IsSubrace: req.IsSubrace, ParentRaceID: req.ParentRaceID, SubraceLevel: req.SubraceLevel,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions, LevelProgression: req.LevelProgression,
 		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
 	}
@@ -194,6 +194,9 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 		} else {
 			r.ParentRaceID = nil // снятие флага очищает родителя
 		}
+	}
+	if req.SubraceLevel != nil {
+		r.SubraceLevel = req.SubraceLevel
 	}
 	if req.RelatedEffects != nil {
 		r.RelatedEffects = req.RelatedEffects

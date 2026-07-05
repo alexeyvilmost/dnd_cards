@@ -196,6 +196,16 @@ function grantFromPayload(payload: Dict, source: RuleSource, choiceId?: string):
   return { source, kind: prof, value: String(value), mode, choiceId };
 }
 
+// Уровневый гейт гранта: применяем, только если уровень персонажа достаточен.
+// Так способности видов/подвидов распределяются по уровням (Высший эльф:
+// Фокус — 1, Обнаружение магии — 3, Туманный шаг — 5).
+function passesLevelGate(payload: Dict, level: number): boolean {
+  const g = payload.level_gate ?? payload.min_level;
+  if (g == null) return true;
+  const n = Number(g);
+  return Number.isNaN(n) || level >= n;
+}
+
 function applyPayload(
   payload: Dict,
   source: RuleSource,
@@ -205,17 +215,20 @@ function applyPayload(
   appliedGrants: AppliedGrant[],
   conflicts: RuleConflict[],
 ) {
+  const level = input.draft.level ?? 1;
   if (payload.kind === 'choice') {
     const rawChoiceId = String(payload.id || 'choice');
     const choiceId = choiceInstanceId(source, rawChoiceId);
     const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
     for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
+      if (!passesLevelGate(selectedPayload, level)) continue;
       const grant = grantFromPayload(selectedPayload, source, choiceId);
       if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts);
     }
     return;
   }
 
+  if (!passesLevelGate(payload, level)) return;
   const grant = grantFromPayload(payload, source);
   if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts);
 }

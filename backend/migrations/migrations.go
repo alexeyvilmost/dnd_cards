@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 )
 
@@ -314,8 +315,172 @@ func GetAllMigrations() []Migration {
 			Up:          addRaceSubrace,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "052_race_subrace_level",
+			Description: "Add subrace_level to races",
+			Up:          addSubraceLevel,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "053_migrate_legacy_subraces",
+			Description: "Convert legacy subfeature lineage choices into subrace race entities",
+			Up:          migrateLegacySubraces,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addSubraceLevel добавляет виду уровень, на котором выбирается подвид (по умолчанию 1).
+func addSubraceLevel(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE races ADD COLUMN IF NOT EXISTS subrace_level INT DEFAULT 1"); err != nil {
+		return fmt.Errorf("addSubraceLevel: %w", err)
+	}
+	return nil
+}
+
+// migrateLegacySubraces превращает legacy-подвиды (choice source:subfeature внутри
+// эффекта вида) в самостоятельные виды-подвиды (is_subrace + parent_race_id) с
+// эффектом, несущим те же гранты (level_gate сохраняется). Идемпотентна:
+// эффект родителя правится последним, вставки — ON CONFLICT.
+func migrateLegacySubraces(db *sql.DB) error {
+	targets := []struct {
+		parentCard string
+		effectCard string
+		choiceID   string
+		level      int
+	}{
+		{"RACE-0004", "RE-elf-4", "elf_lineage", 1},
+		{"RACE-0005", "RE-gnome-3", "gnome_lineage", 1},
+		{"RACE-0009", "RE-tiefling-3", "fiendish_legacy", 1},
+		{"RACE-0010", "RE-aasimar-5", "celestial_revelation", 3},
+		{"RACE-0011", "RE-goliath-1", "giant_ancestry", 1},
+	}
+	for _, t := range targets {
+		if err := migrateOneLineage(db, t.parentCard, t.effectCard, t.choiceID, t.level); err != nil {
+			return fmt.Errorf("migrateLegacySubraces %s: %w", t.parentCard, err)
+		}
+	}
+	return nil
+}
+
+func choiceItems(node map[string]interface{}) []interface{} {
+	opts, _ := node["options"].(map[string]interface{})
+	if opts == nil {
+		return nil
+	}
+	items, _ := opts["items"].([]interface{})
+	return items
+}
+
+func migrateOneLineage(db *sql.DB, parentCard, effectCard, choiceID string, level int) error {
+	var parentID string
+	err := db.QueryRow("SELECT id FROM races WHERE card_number=$1 AND deleted_at IS NULL", parentCard).Scan(&parentID)
+	if err == sql.ErrNoRows {
+		return nil // нет данных (свежая/локальная БД) — пропускаем
+	}
+	if err != nil {
+		return err
+	}
+	if _, err := db.Exec("UPDATE races SET subrace_level=$1 WHERE id=$2", level, parentID); err != nil {
+		return err
+	}
+
+	var effectID string
+	var mechRaw []byte
+	err = db.QueryRow("SELECT id, mechanics FROM effects WHERE card_number=$1 AND deleted_at IS NULL", effectCard).Scan(&effectID, &mechRaw)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	var mech map[string]interface{}
+	if err := json.Unmarshal(mechRaw, &mech); err != nil {
+		return nil // не разобрать — пропускаем
+	}
+
+	effList, _ := mech["effects"].([]interface{})
+	newEff := make([]interface{}, 0, len(effList))
+	var items []interface{}
+	found := false
+	for _, raw := range effList {
+		node, _ := raw.(map[string]interface{})
+		if node == nil {
+			newEff = append(newEff, raw)
+			continue
+		}
+		if node["kind"] == "choice" && node["id"] == choiceID {
+			items = choiceItems(node)
+			found = true
+			continue // вырезаем choice
+		}
+		if node["resolution"] == "auto" {
+			res, _ := node["result"].([]interface{})
+			newRes := make([]interface{}, 0, len(res))
+			for _, pr := range res {
+				p, _ := pr.(map[string]interface{})
+				if p != nil && p["kind"] == "choice" && p["id"] == choiceID {
+					items = choiceItems(p)
+					found = true
+					continue
+				}
+				newRes = append(newRes, pr)
+			}
+			node["result"] = newRes
+		}
+		newEff = append(newEff, node)
+	}
+	if !found {
+		return nil // уже мигрировано
+	}
+
+	// Создаём подвиды ДО правки родительского эффекта (идемпотентность/устойчивость).
+	for _, it := range items {
+		item, _ := it.(map[string]interface{})
+		if item == nil {
+			continue
+		}
+		subID, _ := item["id"].(string)
+		subName, _ := item["name"].(string)
+		grants, _ := item["grants"].([]interface{})
+		if subID == "" {
+			continue
+		}
+		if grants == nil {
+			grants = []interface{}{}
+		}
+		subMech := map[string]interface{}{
+			"activation": map[string]interface{}{"mode": "passive"},
+			"effects": []interface{}{
+				map[string]interface{}{"resolution": "auto", "result": grants},
+			},
+		}
+		subMechJSON, _ := json.Marshal(subMech)
+
+		var subEffectID string
+		err := db.QueryRow(`INSERT INTO effects (name, description, card_number, effect_type, rarity, mechanics)
+			VALUES ($1,$2,$3,'species_ability','common',$4)
+			ON CONFLICT (card_number) DO UPDATE SET mechanics=EXCLUDED.mechanics
+			RETURNING id`, subName, subName, "RE-sub-"+subID, subMechJSON).Scan(&subEffectID)
+		if err != nil {
+			return err
+		}
+		relJSON, _ := json.Marshal([]string{subEffectID})
+		if _, err := db.Exec(`INSERT INTO races (name, description, card_number, rarity, is_subrace, parent_race_id, subrace_level, related_effects)
+			VALUES ($1,$2,$3,'common', true, $4, 1, $5)
+			ON CONFLICT (card_number) DO UPDATE SET parent_race_id=EXCLUDED.parent_race_id, related_effects=EXCLUDED.related_effects, is_subrace=true`,
+			subName, subName, "sub-"+subID, parentID, relJSON); err != nil {
+			return err
+		}
+	}
+
+	mech["effects"] = newEff
+	newMechJSON, _ := json.Marshal(mech)
+	if _, err := db.Exec("UPDATE effects SET mechanics=$1 WHERE id=$2", newMechJSON, effectID); err != nil {
+		return err
+	}
+	return nil
 }
 
 // addRaceSubrace добавляет видам флаг подвида и ссылку на родительский вид.

@@ -143,6 +143,27 @@ describe('resolveCharacterRules — grant_spell и заговоры', () => {
   });
 });
 
+describe('resolveCharacterRules — level_gate распределяет заклинания по уровням', () => {
+  const highElf = (level: number) => build({
+    effects: [fx('high-elf', auto(
+      { kind: 'grant_spell', value: 'prestidigitation', label: 'cantrip', level_gate: 1 },
+      { kind: 'grant_spell', value: 'detect_magic', level_gate: 3 },
+      { kind: 'grant_spell', value: 'misty_step', level_gate: 5 },
+    ))],
+    draft: { level },
+  });
+
+  it('L1: только заклинание с level_gate 1 (Фокус)', () => {
+    expect(highElf(1).spells.known).toEqual(['prestidigitation']);
+  });
+  it('L3: добавляется level_gate 3 (Обнаружение магии)', () => {
+    expect(highElf(3).spells.known.sort()).toEqual(['detect_magic', 'prestidigitation']);
+  });
+  it('L5: все три (в т.ч. Туманный шаг)', () => {
+    expect(highElf(5).spells.known.sort()).toEqual(['detect_magic', 'misty_step', 'prestidigitation']);
+  });
+});
+
 describe('resolveCharacterRules — choice (выбор до разрешения)', () => {
   it('subfeature-выбор (эльфийское наследие) применяет пакет грантов выбранного варианта', () => {
     const choice: Mech = {

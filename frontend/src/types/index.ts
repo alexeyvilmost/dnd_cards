@@ -1299,6 +1299,7 @@ export interface Race {
   lineages?: RaceTrait[] | null;
   is_subrace?: boolean | null;
   parent_race_id?: string | null;
+  subrace_level?: number | null;
   related_effects?: string[] | null;
   related_actions?: string[] | null;
   level_progression?: LevelProgression | null;
@@ -1327,6 +1328,7 @@ export interface CreateRaceRequest {
   lineages?: RaceTrait[] | null;
   is_subrace?: boolean | null;
   parent_race_id?: string | null;
+  subrace_level?: number | null;
   related_effects?: string[] | null;
   related_actions?: string[] | null;
   level_progression?: LevelProgression | null;

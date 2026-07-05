@@ -275,6 +275,9 @@ const CharacterForge = () => {
 
   // Подвиды — отдельные виды-сущности с parent_race_id текущего вида
   const subraces = draft.raceId ? races.filter((r) => r.parent_race_id === draft.raceId) : [];
+  const selectedRace = draft.raceId ? races.find((r) => r.id === draft.raceId) : undefined;
+  const subraceLevel = selectedRace?.subrace_level ?? 1;
+  const subraceUnlocked = draft.level >= subraceLevel;
 
   // Условия появления вкладок
   const hasSubclass = classSubChoices.length > 0;
@@ -348,7 +351,8 @@ const CharacterForge = () => {
             <div className="forge-editor">
               {act === 'race' && (
                 <RaceSection races={races} draft={draft} onSelect={(rid: string) => patch({ raceId: rid, lineageId: null })}
-                  subraces={subraces} onPickSubrace={(id: string) => patch({ lineageId: draft.lineageId === id ? null : id })}
+                  subraces={subraces} subraceUnlocked={subraceUnlocked} subraceLevel={subraceLevel}
+                  onPickSubrace={(id: string) => patch({ lineageId: draft.lineageId === id ? null : id })}
                   choices={raceOtherChoices} subChoices={raceSubChoices}
                   resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
@@ -460,7 +464,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выб
 
 // ─── Секции ────────────────────────────────────────────────────────────────
 
-function RaceSection({ races, draft, onSelect, subraces, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState }: any) {
+function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState }: any) {
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
@@ -494,7 +498,7 @@ function RaceSection({ races, draft, onSelect, subraces, onPickSubrace, choices,
       )}
 
       {/* Подвиды выбранного вида (отдельные виды-сущности) */}
-      {race && subraces.length > 0 && (
+      {race && subraces.length > 0 && subraceUnlocked && (
         <div className="forge-block">
           <div className="forge-section-h">Подвид</div>
           <div className="forge-square-grid">
@@ -509,6 +513,12 @@ function RaceSection({ races, draft, onSelect, subraces, onPickSubrace, choices,
               />
             ))}
           </div>
+        </div>
+      )}
+      {race && subraces.length > 0 && !subraceUnlocked && (
+        <div className="forge-block">
+          <div className="forge-section-h">Подвид</div>
+          <p className="forge-note">Выбор подвида откроется на {subraceLevel}-м уровне.</p>
         </div>
       )}
       {subrace && (

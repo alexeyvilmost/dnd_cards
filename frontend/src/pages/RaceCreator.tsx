@@ -70,6 +70,7 @@ const RaceCreator = () => {
   const [lineages, setLineages] = useState<RaceTrait[]>([]);
   const [isSubrace, setIsSubrace] = useState(false);
   const [parentRaceId, setParentRaceId] = useState('');
+  const [subraceLevel, setSubraceLevel] = useState(1);
   const [allRaces, setAllRaces] = useState<Race[]>([]);
   const [relatedEffects, setRelatedEffects] = useState<string[]>([]);
   const [relatedActions, setRelatedActions] = useState<string[]>([]);
@@ -110,6 +111,7 @@ const RaceCreator = () => {
           setLineages(r.lineages || []);
           setIsSubrace(!!r.is_subrace);
           setParentRaceId(r.parent_race_id || '');
+          setSubraceLevel(r.subrace_level ?? 1);
           setRelatedEffects(r.related_effects || []);
           setRelatedActions(r.related_actions || []);
           setLevelProgression(r.level_progression || {});
@@ -154,6 +156,7 @@ const RaceCreator = () => {
       lineages: cleanTraits(lineages),
       is_subrace: isSubrace,
       parent_race_id: isSubrace ? (parentRaceId || null) : null,
+      subrace_level: isSubrace ? 1 : Math.max(1, Number(subraceLevel) || 1),
       related_effects: relatedEffects.length ? relatedEffects : null,
       related_actions: relatedActions.length ? relatedActions : null,
       level_progression: Object.keys(levelProgression).length ? levelProgression : null,
@@ -237,6 +240,17 @@ const RaceCreator = () => {
                       <p className="text-xs text-gray-500 mt-1">
                         Подвид работает как вид: его эффекты добавляются персонажу. В создании персонажа он
                         появится под выбором родительского вида.
+                      </p>
+                    </div>
+                  )}
+                  {!isSubrace && (
+                    <div>
+                      <label className={labelCls}>Уровень выбора подвида</label>
+                      <input type="number" min={1} max={20} value={subraceLevel}
+                        onChange={(e) => setSubraceLevel(Math.max(1, parseInt(e.target.value || '1', 10)))}
+                        className={inputCls} />
+                      <p className="text-xs text-gray-500 mt-1">
+                        На каком уровне персонаж выбирает подвид (по умолчанию 1; у Аасимара — 3).
                       </p>
                     </div>
                   )}
