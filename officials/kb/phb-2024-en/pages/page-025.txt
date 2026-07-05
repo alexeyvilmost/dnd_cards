@@ -1,0 +1,108 @@
+# Player's Handbook 2024 (EN) — PDF-страница 25/387
+
+UNSEEN ATTACKERS AND TARGETS
+When you make an attack roll against a target you
+can't see, you have Disadvantage on the roll. This
+is true whether you're guessing the target's location or targeting a creature you can hear but not
+see. If the target isn't in the location you targeted,
+you miss.
+When a creature can't see you, you have Advantage on attack rolls against it.
+If you are hidden when you make an attack roll,
+you give away your location when the attack hits
+or misses.
+cover, only the most protective degree of cover applies; the degrees aren't added together. For example, if a target is behind a creature that gives Half
+Cover and a tree trunk that gives Three-Quarters
+Cover, the target has Three-Quarters Cover.
+COVER
+Degree
+Benefit to Target
+Offered By ...
+Half
++2 bonus to AC
+Another creature or an
+and Dexterity
+object that covers at
+saving throws
+least half of the target
+Three-
++5 bonus to AC
+An object that covers
+Quarters and Dexterity
+at least three-quarters
+saving throws
+of the target
+Total
+Can't be targeted An object that covers
+directly
+the whole target
+RANGED ATTACKS
+When you make a ranged attack, you fire a bow,
+hurl an axe, or otherwise send projectiles to strike a
+foe at a distance. Many spells also involve making a
+ranged attack.
+RANGE
+You can make ranged attacks only against targets
+within a specified range. If a ranged attack, such as
+one made with a spell, has a single range, you can't
+attack a target beyond this range.
+Some ranged attacks, such as those made with a
+Longbow, have two ranges. The smaller number is
+the normal range, and the larger number is the long
+range. Your attack roll has Disadvantage when your
+target is beyond normal range, and you can't attack
+a target beyond long range.
+RANGED ATTACKS IN CLOSE COMBAT
+Aiming a ranged attack is more difficult when a foe
+is next to you. When you make a ranged attack roll
+with a weapon, a spell, or some other means, you
+have Disadvantage on the roll if you are within S
+feet of an enemy who can see you and doesn't have
+the Incapacitated condition (see the rules glossary).
+26
+CHAPTER 1 I PLAYING THE GAME
+MELEE ATTACKS
+A melee attack allows you to attack a target within
+your reach. A melee attack typically uses a handheld weapon or an Unarmed Strike. Many monsters
+make melee attacks with claws, teeth, or other body
+parts. A few spells also involve melee attacks.
+REACH
+A creature has a 5-foot reach and can thus attack
+targets within 5 feet when making a melee attack.
+Certain creatures have melee attacks with a reach
+greater than 5 feet, as noted in their descriptions.
+OPPORTUNITY ATTACKS
+Combatants watch for enemies to drop their guard.
+If you move heedlessly past your foes, you put yourself in danger by provoking an Opportunity Attack.
+Avoiding Opportunity Attacks. You can avoid provoking an Opportunity Attack by taking the Disengage action. You also don't provoke an Opportunity
+Attack when you Teleport or when you are moved
+without using your movement, action, Bonus Action, or Reaction. For example, you don't provoke an
+Opportunity Attack if an explosion hurls you out of
+a foe's reach or if you fall past an enemy.
+Making an Opportunity Attack You can make an
+Opportunity Attack when a creature that you can
+see leaves your reach. To make the attack, take a
+Reaction to make one melee attack with a weapon
+or an Unarmed Strike against that creature. The
+attack occurs right before it leaves your reach.
+MOUNTED COMBAT
+A willing creature that is at least one size larger
+than a rider and that has an appropriate anatomy
+can serve as a mount, using the following rules.
+MOUNTING AND DISMOUNTING
+During your move, you can mount a creature that
+is within 5 feet of you or dismount. Doing so costs
+an amount of movement equal to half your Speed
+(round down). For example, if your Speed is 30 feet,
+you spend 15 feet of movement to mount a horse.
+CONTROLLING A MOUNT
+You can control a mount only if it has been trained
+to accept a rider. Domesticated horses, mules, and
+similar creatures have such training.
+The Initiative of a controlled mount changes to
+match yours when you mount it. It moves on your
+turn as you direct it, and it has only three action options during that turn: Dash, Disengage, and Dodge.
+A controlled mount can move and act even on the
+turn that you mount it.
+In contrast, an independent mount-one that lets
+you ride but ignores your control-retains its place
+in the Initiative order and moves and acts as it likes.

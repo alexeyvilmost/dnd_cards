@@ -1,0 +1,129 @@
+# Player's Handbook 2024 (EN) — PDF-страница 123/387
+
+f BEAST OF THE SKY
+Small Beast, Neutraf
+AC 13 plus your Wisdom modifier
+HP 4 plus four times your Ranger level (the beast has a
+number of Hit Dice [d6s] equal to your Ranger level)
+Speed 10 ft., Fly 60 ft.
+~IOD s;. E
+MOD SAVE
+STR 6 -2 -2
+DEX 16 +3 +3
+INT 8 -1
+-1
+WIS 14 +2 +2
+MOD SAVE
+CON l3 +l
++l
+CHA 11
++O +O
+Senses Darkvision 60 ft., Passive Perception 12
+Languages Understands the languages you know
+CR None (XP O; PB equals your Proficiency Bonus)
+TRAITS
+Flyby. The beast doesn't provoke Opportunity Attacks
+when it flies out of an enemy's reach.
+Primal Bond. Add your Proficiency Bonus to any ability
+check or saving throw the beast makes.
+ACTIONS
+Beast's Strike. Mefee Attack Rolf: Bonus equals your
+spell attack modifier, reach 5 ft. Hit: ld4 + 3 plus your
+Wisdom modifier Slashing damage.
+BEAST OF THE SEA
+Medium Beast, Neutral
+AC l3 plus your Wisdom modifier
+'' HP 5 plus five times your Ranger level (the beast has a
+number of Hit Dice [d8s] equal to your Ranger level)
+Speed 5 ft., Swim 60 ft.
+t.lOD SAVE
+Sn 14 +2 +2
+INT 8 -1
+-1
+1.10D SAVE
+DEX 14 +2 +2
+Wis 14 +2 +2
+MOD SAVE
+CON 15 +2 +2
+CHA 11 +O +O
+Senses Darkvision 90 ft., Passive Perception 12
+Languages Understands the languages you know
+1 CR None (XP O; PB equals your Proficiency Bonus)
+TRAITS
+Amphibious. The beast can breathe air and water.
+,,
+Primal Bond. Add your Proficiency Bonus to any ability
+!J
+, check or saving throw the beast makes.
+11
+ACTION S
+,· __
+....:;__::... _______________ _
+;, Beast's Strike. Melee Attack Roll: Bonus equals your
+, spell attack modifier, reach 5 ft. Hit: ld6 + 2 plus your
+' Wisdom modifier Bludgeoning or Piercing damage
+' (your choice when you summon the beast), and the tar-
+1
+get has the Grappled condition (escape DC equals your
+1
+1
+, spell save DC).
+___ di
+FEY WANDERER
+· - -
+Wield Fey Mirth and Fury
+A fey mystique surrounds you, thanks to the boo
+of an arch fey or a location in the Feywild that
+n
+transformed you. However you gained fey magic,
+you are now a Fey Wanderer. Your joyful !aught
+brightens the hearts of the downtrodden, and yo:r
+~artial ~rowess strikes terror in your foes, for great
+1s the mirth of the fey and dreadful is their fury.
+LEVEL 3: DREADFUL STRIKES
+You can augment your weapon strikes with
+mind-scarring magic drawn from the murky hollows of the Feywild. When you hit a creature with a
+weapon, you can deal an extra ld4 Psychic damage
+to the target, which can take this extra damage only
+once per turn. The extra damage increases to ld6
+when you reach Ranger level 11.
+LEVEL 3: FEY WANDERER SPELLS
+When you reach a Ranger level specified in the Fey
+Wanderer Spells table, you thereafter always have
+the listed spells prepared.
+FEY WANDERER SPELLS
+Ranger Level
+Spell
+3
+Charm Person
+5
+Misty Step
+9
+Summon Fey
+13
+Dimension Door
+17
+Mislead
+You also possess a fey blessing. Choose it from the
+Feywild Gifts table or determine it randomly.
+FEYWILD GIFTS
+ld6 Gift
+Illusory butterflies flutter around you while
+you take a Short or Long Rest.
+2
+Flowers bloom from your hair each dawn.
+3
+You faintly smell of cinnamon, lavender, nutmeg, or another comforting herb or spice.
+4
+Your shadow dances while no one is looking
+directly at it.
+5
+Horns or antlers sprout from your head.
+6
+Your skin and hair change color each dawn.
+LEVEL 3: O THERWORLDLY CLA MO UR
+Whenever you make a Charisma check, you gain a
+bonus to the check equal to your V✓i sdom modifier
+(minimum of +l).
+You also gain proficiency in one of these skills of
+your choice: Deception, Performance, or Persuasion.

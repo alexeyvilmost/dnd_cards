@@ -1,0 +1,126 @@
+# Player's Handbook 2024 (EN) — PDF-страница 198/387
+
+•
+rJ
+CHAPTER 5
+FEATS
+---- _:_~-- --
+HIS CHAPTER OFFERS A COLLECT ION OF
+feats, which are special features not tied to a
+character class- A feat represents a talent or
+·-area of expertise that gives a character special
+an
+. .
+•
+d
+capabilities. It embodies trammg, ~xpenence, an
+abilities beyond what a clas_s provides.
+The sections below explam the parts of a feat
+and list a variety of feat options separated into
+categories.
+Your background gives you a feat, and at certain
+levels, your class gives you the Ability Score Improvement feat or the choice of another feat for
+which you qualify.
+By whatever means you acquire a feat, you
+can take it only once unless its description says
+otherwise.
+FEAT DESCRIPTIONS
+This chapter's feats are organized by category-
+Origin, General, Fighting Style, or Epic Boon-and
+alphabetized in each category. All the feats are
+listed alphabetically in the Feat List table. If a feat
+can be taken more than once, an asterisk appears
+after its name in that table.
+PARTS OF A FEAT
+The description of a feat contains the following
+parts, which are presented after the feat's name.
+Category. A feat is a member of a category, which
+is noted in the feat. If you're instructed to choose
+a feat from a specific category, such as the Origin
+category, that category must appear under the
+feat's name. If you're instructed to choose a feat and
+no category is specified, you can choose from any
+category.
+Prerequisite. To take a feat, you must meet any
+prerequisite in its description unless a feature allows you to take the feat without the prerequisite.
+If a prerequisite includes a class, you must have at
+least 1 level in that class to take the feat.
+Benefit. The benefits of a feat are detailed after
+any prerequisites are listed. If you have a feat, you
+gain its benefits.
+Repeatable. A feat can be taken only once unless
+its description states otherwise in a "Repeatable"
+subsection.
+FEAT LIST
+Feat
+Ability Score Improvement*
+Actor
+Alert
+Archery
+Athlete
+Blind Fighting
+Boon of Combat Prowess
+Boon of Dimensional Travel
+Boon of Energy Resistance
+Boon of Fate
+Boon of Fortitude
+Boon of Irresistible Offense
+Boon of Recovery
+Boon of Skill
+Boon of Speed
+Boon of Spell Recall
+Boon of the Night Spirit
+Boon ofTruesight
+Charger
+Chef
+Crafter
+Crossbow Expert
+Crusher
+Defense
+Defensive Duelist
+Dual Wielder
+Dueling
+Durable
+Elemental Adept*
+Fey-Touched
+Grappler
+Great Weapon Fighting
+Great Weapon Master
+Healer
+Category
+General
+General
+Origin
+Fighting Style
+General
+Fighting Style
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+Epic Boon
+General
+General
+Origin
+General
+General
+Fighting Style
+General
+General
+Fighting Style
+General
+General
+General
+General
+Fighting Style
+General
+Origin
+CH APTER 5 I FEATS
+IQQ

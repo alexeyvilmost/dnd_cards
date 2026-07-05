@@ -1,0 +1,222 @@
+# Player's Handbook 2024 (EN) — PDF-страница 82/387
+
+Spell
+School
+Special
+LEVEL 3 DRUID SPELLS
+Detect Magic
+Divination
+C,R
+Spell
+School
+Special
+Detect Poison and Disease
+Divination
+C, R
+Aura of Vitality
+Abjuration
+C
+Entangle
+Conjuration
+C
+Call Lightning
+Conjuration
+C
+Faerie Fire
+Evocation
+C
+Conjure Animals
+Conjuration
+C
+Fog Cloud
+Conjuration
+C
+Daylight
+Evocation
+Good berry
+Conjuration
+Dispel Magic
+Abjuration
+Healing Word
+Abjuration
+Elemental Weapon
+Transmutation
+C
+Ice Knife
+Conjuration
+Feign Death
+Necromancy
+R
+Jump
+Transmutation
+Meld into Stone
+Transmutation
+R
+Longstrider
+Transmutation
+Plant Growth
+Transmutation
+Protection from Evil and
+Abjuration
+C,M
+Protection from Energy
+Abjuration
+C
+Good
+Revivify
+Necromancy
+M
+Purify Food and Drink
+Transmutation
+R
+Sleet Storm
+Conjuration
+C
+Speak with Animals
+Divination
+R
+Speak with Plants
+Transmutation
+Thunderwave
+Evocation
+Summon Fey
+Conjuration
+C, M
+Water Breathing
+Transmutation
+R
+LEVEL 2 DRUID SPELLS
+Water Walk
+Transmutation
+R
+Spell
+School
+Special
+Wind Wall
+Evocation
+C
+Aid
+Abjuration
+Animal Messenger
+Enchantment
+R
+LEVEL 4 DRUID SPELLS
+Augury
+Divination
+R, M
+Spell
+School
+Special
+Barkskin
+Transmutation
+Blight
+Necromancy
+Beast Sense
+Divination
+C,R
+Charm Monster
+Enchantment
+Continual Flame
+Evocation
+M
+Confusion
+Enchantment
+C
+Darkvision
+Transmutation
+Conjure Minor Elementals
+Conjuration
+C
+Enhance Ability
+Transmutation
+C
+Conjure Woodland Beings
+Conjuration
+C
+Enlarge/Reduce
+Transmutation
+C
+Control Water
+Transmutation
+C
+Find Traps
+Divination
+Divination
+Divination
+R, M
+Flame Blade
+Evocation
+C
+Dominate Beast
+Enchantment
+C
+Flaming Sphere
+Evocation
+C
+Fire Shield
+Evocation
+Gust of Wind
+Evocation
+C
+Fount of Moonlight
+Evocation
+C
+Heat Metal
+Transmutation
+C
+Freedom of Movement
+Abjuration
+Hold Person
+Enchantment
+C
+Giant Insect
+Conjuration
+C
+Lesser Restoration
+Abjuration
+Grasping Vine
+Conjuration
+C
+Locate Animals or Plants
+Divination
+R
+Hallucinatory Terrain
+Illusion
+Locate Object
+Divination
+C
+Ice Storm
+Evocation
+Moonbeam
+Evocation
+C
+Locate Creature
+Divination
+C
+Pass without Trace
+Abjuration
+C
+Polymorph
+Transmutation
+C
+Protection from Poison
+Abjuration
+Stone Shape
+Transmutation
+Spike Growth
+Transmutation
+C
+Stoneskin
+Transmutation
+C,M
+Summon Beast
+Conjuration
+C,M
+Summon Elemental
+Conjuration
+C, M
+Wall of Fire
+Evocation
+C
+CHAPTE R 3 i CHA RACTER CLASSES
+83

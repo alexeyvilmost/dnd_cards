@@ -1,0 +1,114 @@
+# Player's Handbook 2024 (EN) — PDF-страница 39/387
+
+I
+Lawful Good
+Neutral Good
+Chaotic Evil
+ALIGNMENTS MIGMT BE VISUIILl"lED /IS II GRID LI KE TMIS-
+IILONG W ITH CREIITURES T M,\T EMBODV TMOSE II LIGNMENTS.
+ALIGNMENT AND PERSONALITY
+Alignment can shape a character's personality,
+goals, and core beliefs. Looking at the two elements
+of an alignment, you can use the lists below to inspire details of your character's personality.
+PERSONALITY TRAITS BY ALIGNMENT
+Alignment
+Chaotic
+Good
+Evil
+Lawful
+Neutral
+ld4
+l
+2
+3
+4
+l
+2
+3
+4
+l
+2
+3
+4
+l
+2
+3
+4
+l
+2
+3
+4
+Associated Trait
+Boastful
+Impulsive
+Rebellious
+Self-absorbed
+Compassionate
+Helpful
+Honest
+Kind
+Dishonest
+Vengeful
+Cruel
+Greedy
+Cooperative
+Loyal
+Judgmental
+Methodical
+Selfish
+Disinterested
+Laconic
+Pragmatic
+4,0
+CHAPTER 2 I CREATING A CHARACTER
+STEP 5: FILL IN DETAIL~--
+Now fill in the rest of your character sheet.
+RECORD CLASS FEATURES
+Look at your class's feature table in chapter 3, and
+write down the level 1 features. The class features
+are detailed in that same chapter.
+Some class features offer choices. Make sure to
+read all your features and make any offered choices.
+FILL IN NUMBERS
+Note these numbers on your character sheet.
+Saving Throws. For the saving throws you have
+proficiency in, add your Proficiency Bonus to the
+appropriate ability modifier and note the total.
+Some players also like to note the modifier for saving throws they're not proficient in, which is just
+the relevant ability modifier.
+Skills. For skills you have proficiency in, add your
+Proficiency Bonus to the ability modifier associated
+with that skill, and note the total. You might also
+wish to note the modifier for skills you're not proficient in, which is just the relevant ability modifier.
+Passive Perception. Sometimes your DM will determine whether your character notices something
+without asking you to make a Wisdom (Perception)
+check; the DM uses your Passive Perception instead.
+Passive Perception is a score that reflects a general
+awareness of your surroundings when you're not
+actively looking for something. Use this formula to
+determine your Passive Perception score:
+Passive Perception= 10 + Wisdom (Perception)
+check modifier
+Include all modifiers that apply to your Wisdom
+(Perception) checks. For example, if your character
+has a Wisdom of 15 and proficiency in the Perception skill, you have a Passive Perception of 14 (10 + 2
+for your Wisdom modifier+ 2 for proficiency).
+Hit Points. Your class and Constitution modifier
+determine your Hit Point maximum at level 1, as
+shown on the Level 1 Hit Points by Class table.
+LEVEL 1 HIT POINTS BY CLASS
+Class
+Barbarian
+Fighter, Paladin, or Ranger
+Bard, Cleric, Druid, Monk,
+Rogue, or Warlock
+Sorcerer or Wizard
+Hit Point Maximum
+12 + Con. modifier
+10 + Con. modifier
+8 + Con. modifier
+6 + Con. modifier
+The character sheet includes room to note your
+current Hit Points when you take damage, as well as
+any Temporary Hit Points you might gain. There's
+also space to track Death Saving Throws.

@@ -1,0 +1,172 @@
+# Player's Handbook 2024 (EN) — PDF-страница 44/387
+
+MULTICLA SS SPELLCASTER:
+SPELL SLOTS PER SPELL LEVEL
+Level
+1
+2
+3
+4
+5
+6
+7
+8
+2
+2
+3
+3
+4
+2
+4
+4
+3
+5
+4
+3
+2
+6
+4
+3
+3
+7
+4
+3
+3
+8
+4
+3
+3
+2
+9
+4
+3
+3
+3
+l
+10
+4
+3
+3
+3
+2
+11
+4
+3
+3
+3
+2
+12
+4
+3
+3
+3
+2
+13
+4
+3
+3
+3
+2
+l
+l
+14
+4
+3
+3
+3
+2
+15
+4
+3
+3
+3
+2
+l
+16
+4
+3
+3
+3
+2
+l
+l
+17
+4
+3
+3
+3
+2
+l
+l
+18
+4
+3
+3
+3
+3
+l
+l
+l
+19
+4
+3
+3
+3
+3
+2
+l
+l
+20
+4
+3
+3
+3
+3
+2
+2
+l
+Spell Slots. You determine your available spell
+slots by adding together the following:
+9
+l
+l
+l
+l
+• All your levels in the Bard, Cleric, Druid, Sorcerer,
+and Wizard classes
+Half your levels (round up) in the Paladin and
+Ranger classes
+One third of your Fighter or Rogue levels (round
+down) if you have the Eldritch Knight or Arcane
+Trickster subclass.
+Then look up this total level in the Level column of
+the Multiclass Spellcaster table. You use the slots
+for that level to cast spells of an appropriate level
+from any class whose Spellcasting feature you have.
+This table might give you spell slots of a higher
+level than the spells you prepare. You can use those
+slots but only to cast your lower-level spells. If a
+lower-level spell that you cast, like Burning Hands,
+has an enhanced effect when cast at a higher level,
+you can use the enhanced effect as normal.
+For example, if you are a level 4 Ranger/ level 3
+Sorcerer, you count as a level 5 character when determining your spell slots, counting all your levels
+as a Sorcerer and half your Ranger levels. As shown
+in the Multiclass Spellcaster table, you have four
+level 1 spell slots, three level 2 slots, and two level 3
+slots. However, you can't prepare any level 3 spells,
+A C>MRIICTER WITH PIILIIDIN /I ND W11RLOC K LEV E LS M IGH T CIILL
+ON BOTH II MIGHT V 011TH /IND /I N OTHERWORLDLY PIITRON.
+nor can you prepare any level 2 Ranger spells. You
+can use the spell slots of those levels to cast the
+spells you do prepare- and potentially enhance
+their effects.
+Pact Magic. If you have the Pact Magic feature
+from the Warlock class and the Spellcasting feature,
+you can use the spell slots you gain from Pact Magic
+to cast spells you have prepared from classes with
+the Spellcasting feature, and you can use the spell
+slots you gain from the Spellcasting feature to cast
+Warlock spells you have prepared.
+CHAPTER 2 I CREATING A CHARACTER
+,~5

@@ -1,0 +1,44 @@
+# Player's Handbook 2024 (EN) — PDF-страница 309/387
+
+against the target. The target also can't be possessed by or gain the Charmed or Frightened conditions from them. If the target is already possessed,
+Charmed, or Frightened by such a creature, the target has Advantage on any new saving throw against
+the relevant effect.
+. - ---------------:;;.=--
+PROTECTION FROM POISON
+Level 2 Abjuration (Cleric, Druid, Paladin, Ranger)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: l hour
+You touch a creature and end the Poisoned condition on it. For the duration, the target has Advantage on saving throws to avoid or end the Poisoned
+condition, and it has Resistance to Poison damage.
+PURIFY FOOD AND D RINK
+Level 1 Transmutation (Cleric, Druid, Paladin)
+Casting Time: Action or Ritual
+Range: 10 feet
+Components: V, S
+Duration: Instantaneous
+You remove poison and rot from nonmagical food
+and drink in a 5-foot-radius Sphere centered on a
+point within range.
+110
+CHAPTER 7 I SPELLS
+RAISE DEAD
+Level 5 Necromancy (Bard, Cleric, Paladin)
+Casting Time: l hour
+Range:Touch
+Components: V, S, M (a diamond worth 500+ GP,
+which the spell consumes)
+Duration: Instantaneous
+With a touch, you revive a dead creature if it has
+been dead no longer than 10 days and it wasn't Undead when it died.
+The creature returns to life with 1 Hit Point. This
+spell also neutralizes any poisons that affected the
+creature at the time of death.
+This spell closes all mortal wounds, but it doesn't
+restore missing body parts. If the creature is lacking
+body parts or organs integral for its survival-its
+head, for instance-the spell automatically fails.
+Coming back from the dead is an ordeal. The target takes a -4 penalty to D20 Tests. Every time the
+target finishes a Long Rest, the penalty is reduced
+by 1 until it becomes 0.

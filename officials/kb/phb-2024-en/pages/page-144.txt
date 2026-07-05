@@ -1,0 +1,53 @@
+# Player's Handbook 2024 (EN) — PDF-страница 144/387
+
+SORC E RER SUBCLASSES
+A Sorcerer subclass is a specialization that grants
+you features at ce1·tain Sorcerer levels, as specified
+in the subclass. This section presents the Aberrant
+Sorcery, Clockwork Sorcery, Draconic Sorcery, and
+Wild Magic Sorcery subclasses.
+ABERRANT SORCERY
+Wield Unnatural Psionic Power
+An alien influence has wrapped its tendrils around
+your mind, giving you psionic power. You can now
+touch other minds with that power and alter the
+world around you. Will this power shine from you
+as a hopeful beacon to others? Or will you be a terror to those who feel the stab of your mind?
+Perhaps a psychic wind from the Astral Plane
+carried psionic energy to you, or you were exposed
+to the Far Realm's warping influence. Alternatively,
+you were implanted with a mind flayer tadpole,
+but your transformation into a mind flayer never
+occurred; now the tadpole's psionic power is yours.
+However you acquired this power, your mind is
+aflame with it.
+LEVEL 3: PSIONIC SPELLS
+When you reach a Sorcerer level specified in the
+Psionic Spells table, you thereafter always have the
+listed spells prepared.
+PSIONIC SPELLS
+Sorcerer Level
+Spells
+3
+Arms of Hadar, Calm Emotions,
+Detect Thoughts, Dissonant Whispers, Mind Sliver
+5
+Hunger of Hadar, Sending
+7
+Evard's Black Tentacles,
+Summon Aberration
+9
+Rary's Telepathic Bond, Telekinesis
+LEVEL 3: TELEPATH IC SPEECH
+You can form a telepathic connection between your
+mind and the mind of another. As a Bonus Action,
+choose one creature you can see within 30 feet of
+yourself. You and the chosen creature can communicate telepathically with each other while the
+two of you are within a number of miles of each
+other equal to your Charisma modifier (minimum
+of 1 mile). To understand each other, you each must
+mentally use a language the other knows.
+The telepathic connection lasts for a number of
+minutes equal to your Sorcerer level. It ends early
+if you use this ability to form a connection with a
+different creature.

@@ -1,0 +1,383 @@
+# Player's Handbook 2024 (EN) — PDF-страница 382/387
+
+property, weapon, 213
+Reincarnate spell, 311
+Searching Ray spell, 313
+Skills with Different
+Somatic (S), 236
+Protection feat, 209
+Relentless Hunter class
+Scorpion stat block, 356
+Abilities sidebar, 14
+Verbal M, 236
+Protection from Energy
+feature, 121
+Scribe background, 184
+Skulker feat, 208
+descriptions, 239
+spell, 309
+Relentless Rage class
+scribing Spell Scrolls, 233
+Slaad Tadpole stat block,
+duration, 237
+Protection from Evil ond
+feature, 53
+Scroll, Spell, 228
+357
+effects, 237
+Good spell, 309
+Reliable Talent class
+Scroll Case, 224
+Slasher feat, 208
+gaining, 235
+Protection from Poison
+feature, 131
+Scrying spell, 313
+Slashing damage, 365
+level, 235
+spell, 310
+Religion skill, 14
+Seahorse, Giant, stat
+Sled, 230
+preparing, 235
+Pseudodragon stat block,
+Remove Curse spell, 312
+block, 350
+Sleep spell, 317
+range, 236
+354
+Repelling Blast
+Search action, 15, 373
+Sleet Storm spell, 317
+save DC, 238
+Psionic Power class
+invocation, 157
+Search table, 373
+Sleight of Hand skill, 14
+saving throw, 238
+feature, 98
+Resilient feat, 206
+Searing Smite spell, 314
+Sling, 215
+slots, 235
+Psionic Spells table, 145
+Resistance, 28, 373
+Sear Undead class
+Sling Bullet, 222
+using a higher-level
+Psi Warrior Energy Dice
+Resistance spell, 312
+feature, 71
+Slippery Mind class
+spell slot, 236
+table, 98
+Rest, Long, 3 70
+Second Wind class
+feature, 131
+Spellcasting class feature,
+Psi Warrior subclass, 98
+Rest, Short, 373
+feature, 91
+Slow spell, 318
+59, 69, 79, 109, 119,
+Psych ic damage, 365
+Resting sidebar, 27
+See Invisibility spell, 314
+Slow Fall class feature,
+139, 165
+punching. See Unarmed
+Restoring Touch class
+Seeking Spell metamagic,
+103
+Spellcasting Focus, 374
+Strike, 377
+feature, 111
+142
+Slow mastery property,
+Spellcasting Services
+Purify Food and Drink
+Restrained condition, 373
+Seeming spell, 314
+214
+table, 232
+spell, 310
+Resurrection spell, 312
+Self-Restoration class
+Small, 25
+spell list, Bard, 62
+Push mastery property,
+Reverse Gravity spell, 312
+feature, 103
+Smith's Tools, 221
+spell list, Cleric, 71
+214
+Revivification, 57
+Selling Equipment
+Snake, Constrictor, stat
+spell list, Druid, 82
+Quarterstaff, 215
+Revivify spell, 312
+sidebar, 213
+block, 348
+spell list, Paladin, 112
+Quasit stat block, 355
+rhythm of play, 8
+Sending spell, 314
+Snake, Venomous, stat
+spell list, Ranger, 121
+Quickened Spell
+Riding Horse stat block,
+senses, special, 19
+block, 358
+spell list, Sorcerer, 142
+metamagic, 142
+356
+Sentinel feat, 207
+Sneak Attack class
+spell list, Warlock, 157
+Quiver, 228
+Ring Mail, 219
+Sequester spell, 315
+feature, 129
+spell list, Wizard, 168
+race. See character
+Ritual, 373
+services, 230
+social interaction, 16
+spell lists, class, 236
+species, 177
+Ritual Adept class
+Session Zero sidebar, 33
+Soldier background, 185
+Spell Mastery class
+Radiant damage, 365
+feature, 166
+Shadowfell, 344
+Somatic component (S),
+feature, 167
+Radiant Strikes class
+Ritual Caster feat, 206
+Shadow-Touched feat,
+236
+Spell Preparation by Class
+feature, 111
+Robe, 228
+207
+Sorcerer class, 49, 139
+table, 235
+Rage class feature, 51
+Rock Gnome, 191
+Shapechange spell, 315
+Core Sorcerer Traits
+spells, 235
+Raise Dead spell, 310
+Rogue class, 49, 129
+shape-shifting, 373
+table, 139
+Spell Sera/I, 228
+Ram, Portable, 228
+Core Rogue Traits
+Shark, Reef, stat block,
+Sorcerer Features
+Spell Sera/I, scribing, 233
+random generation,
+table, 129
+356
+table, 140
+Spell Scroll Costs table,
+ability score, 38
+Rogue Features table,
+Sharpshooter feat, 207
+spell list, 142
+233
+random tables, 9
+130
+Shatter spell, 316
+subclasses, 145
+Spell Sniper feat, 208
+range, 26
+subclasses, 132
+shawm, 221
+Sorcerous Burst spell, 318
+Sphere area of effect, 374
+spell, 236
+roleplaying, 16
+Shield, 219
+Sorcerous Restoration
+Sphinx ofWonder stat
+ranged attack, 26
+Rope, 228
+Shield Master feat, 207
+class feature, 141
+block, 357
+in close combat, 26
+Rope Trick spell, 312
+Shield of Faith spell, 316
+Sorcery Incarnate class
+Spider Climb spell, 319
+ranged attack bonus, 41
+round down, 373
+Shield spell, 316
+feature, 141
+Spider, Giant, stat block,
+Ranged weapon, 213
+Round Down sidebar, 8
+Shillelagh spell, 316
+Sorcery Points, 141
+351
+Range property, 214
+Roving class feature, 121
+Shining Smite spell, 316
+Soulknife Energy Dice
+Spider stat block, 357
+Ranger class, 49, 119
+Rowboat, 230
+ships, 230
+table, 135
+Spike Growth spell, 319
+Core Ranger Traits
+rules glossary, 360
+Shocking Grasp spell, 316
+Soulknife subclass, 135
+Spikes, Iron, 228
+table, 119
+Sack, 228
+Shortbow, 215
+space, occupied, 371
+Spirit Guardians spell, 319
+Ranger Features table,
+Sacred Flame spell, 313
+Short Rest, 3 73
+space, unoccupied, 377
+Spiritual Weapon spell, 319
+120
+Sacred Oath class
+Shortsword, 215
+Spare the Dying spell, 318
+Splint Armor, 219
+spell list, 121
+feature. See Paladin
+Shovel, 228
+Speak with Animals spell,
+Sprite stat block, 358
+subclasses, 122
+Subclass, 111
+shoving. See Unarmed
+318
+Spyglass, 229
+Rapier, 215
+Sacred Weapon class
+Strike, 377
+Speak with Dead spell,
+squalid lifestyle, 231
+Rare Languages table, 37
+feature, 113
+Sickle, 215
+318
+squeezing. See Difficult
+Rary's Telepathic Bond
+saddles, 229-230
+Sigil, 344
+Speak with Plants spell,
+Terrain, 24, 366
+spell,311
+Sage background, 183
+Signal Whistle, 228
+319
+stabilizing a character, 29
+Rations, 228
+Sailing Ship, 230
+Signature Spells class
+Spear, 215
+Stable, 374
+Rat stat block, 355
+Sailor background, 184
+feature, 167
+special senses, 19
+Staggering Smite spell,
+Raven stat block, 355
+Sanctuary spell, 313
+Silence spell, 316
+species, character, 177
+320
+Ray of Enfeeblement spell,
+Sap mastery property, 214
+Silent Image spell, 317
+Speed, 374
+standard array, ability
+311
+Savage Attacker feat, 201
+Silver Piece (SP), 213
+Burrow, 362
+score generation, 38
+Ray of Frost spell, 311
+save, 373
+Simple Melee weapon,
+Climb, 363
+Standard Array by Class
+Ray of Sickness spell, 311
+saving throw, 11 , 373
+213
+Fly, 367
+table, 38
+reach, 26
+and damage, 28
+Simple Ranged weapon,
+Swim, 376
+Standard Languages
+Reach property, 214
+proficiency, 14
+213
+Speedy feat, 208
+table, 37
+Reaction, 15, 372
+spell, 238
+Simulacrum spell, 317
+spell, 374
+Star Map table, 88
+Ready action, 15, 3 72
+Saving Throw, Death, 29
+simultaneous effects, 374
+always-prepared, 235
+Starry Wisp spell, 320
+Reckless Attack class
+Saving Throw Examples
+size, 25, 374
+attack, 374
+starting at higher levels,
+feature, 52
+table, 12
+Skeleton stat block, 356
+attack modifier, 238
+43
+recovering ammunition.
+Scale Mail, 219
+skill, 374
+casting, 235
+Starting Equipment at
+See ammunition, 213
+Scholar class feature, 166
+proficiency, 13
+casting time, 236
+Higher Levels table, 43
+Reef Shark stat block, 356
+Scholar's Pack, 228
+Skilled feat, 201
+casting without slots,
+starvation. See
+refitting plate armor. See
+Schools of Magic table,
+Skill Expert feat, 207
+235
+malnutrition, 371
+equipment sizes, 219
+236
+Skills table, 14
+components, 236
+stat block, 374
+i?egenerate spell, 311
+Scimitar, 215
+Material (M), 237
+stat blocks, creature, 346
+INDEX
+1i

@@ -1,0 +1,129 @@
+# Player's Handbook 2024 (EN) — PDF-страница 218/387
+
+ARMOR
+Armor
+Armor Class (AC)
+Light Armor (1 Minute to Don or Doff)
+Padded Armor
+11 + Dex modifier
+Leather Armor
+Studded Leather Armo r
+11 + Dex modifier
+12 + Dex modifier
+Medium Armor (5 Minutes to Don and 1 Minute to Dolf)
+Hide Armor
+12 + Dex modifier (max 2)
+Chain Shirt
+13 + Dex modifier (max 2)
+Scale Mail
+Breastplate
+Half Plate Armor
+14 + Dex modifie r (max 2)
+14 + Dex modifier (max 2)
+15 + Dex modifier (max 2)
+Heavy Armor (70 Minutes to Don and 5 Minutes to Dolf)
+Ring Mail
+14
+Strength
+Stealth
+Weight
+Cost
+Disadvantage
+816.
+5 GP
+10 lb.
+10 GP
+13 lb.
+45 GP
+1216.
+10 GP
+20 lb.
+50 GP
+Disadvantage
+45 lb.
+50 GP
+20 lb.
+400GP
+Disadvantage
+40 lb.
+750 GP
+Disadvantage
+40 lb.
+30 GP
+Chain Mail
+16
+Str 13
+Disadvantage
+55 lb.
+75 GP
+Splint Armor
+Plate Armor
+Shield
+Shield
+ARMOR
+17
+18
++2
+The Armor table lists the game's main armor. The
+table includes the cost and weight of ar mor, as well
+as the following details:
+Category. Ever y type of armor falls into a category:
+Light, Medium, or Heavy. The category determines how long it takes to don or doff the armor
+(as shown in the table).
+Armor Class {AC). The table's Armor Class column
+tells you what your base AC is when you wear a
+type of armor. For example, if you wear Leather
+Armor, your base AC is 11 plus your Dexterity
+modifier, whereas your AC is 16 in Chain Mail.
+Strength. If the table shows a Strength score in the
+Strength column for an armor type, that armor
+reduces the wearer's speed by 10 feet unless the
+wearer has a Strength score equal to or higher
+than the listed score.
+Stealth. If the table shows "Disadvantage" in the
+Stealth column for an armor type, the wearer has
+Disadvantage on Dexterity (Stealth) checks.
+ARM OR T R AINING
+- - -----------
+Anyone can don armor or hold a Shield, but only
+those with training can use them effectively, as explained below. A character's class and other features
+determine the character's armor training. Amonster has trai ning· w ith any armor in its stat block.
+Str 15
+Str 15
+Disadvantage
+Disadvantage
+60 lb.
+65 lb.
+616.
+LIGHT, MEDIUM, OR HEAVY ARMOR
+200GP
+1,500 GP
+10 GP
+If you wear Light, Medium, or Heavy armor and
+lack training with it, you have Disadvantage on any
+D20 Test that involves Strength or Dexterity, and
+you can't cast spells.
+SHIELD
+You gain the Ar mor Class benefit of a Shield only if
+you have training with it.
+ONE ATA TIME
+A creature can wear only one suit of armor at a
+time and wield only one Shield at a time.
+VARIANT: EQUIPMENT SIZES
+In most campaigns, you can use or wear any
+equipment that you find on your adventures,
+within the bounds of common sense. For example, an ore adventurer won't fit in a halfling's
+Leather Armor, and a cloud giant's robe would be
+far too large for a gnome.
+The OM can impose more realism. For example,
+a suit of Plate Armor made for one human might
+not fit another one without significant alterations,
+and a guard's uniform might be visibly ill-fitting
+when an adventurer tries to wear it as a disguise.
+Using this variant, when adventurers find armor, clothing, and similar items that are made to
+be worn, they might need to visit a smith, a tailor,
+a leatherworker, or a similar expert to make the
+item wearable. The cost for such work is ld4 x 10
+percent of the market price of the item.
+CHAPTER 6 I EQUIPM ENT
+219

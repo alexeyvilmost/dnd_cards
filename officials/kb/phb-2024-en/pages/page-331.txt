@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 331/387
+
+Familiarity. Here are the meanings of the terms in
+the table's Familiarity column:
+"Permanent circle" means a permanent teleportation circle whose sigil sequence you know.
+"Linked object" means you possess an object
+taken from the desired destination within the last
+six months, such as a book from a wizard's library.
+"Very familiar" is a place you have visited often,
+a place you have carefully studied, or a place you
+can see when you cast the spell.
+"Seen casually" is a place you have seen more than
+once but with which you aren't very familiar.
+• "Viewed once or described" is a place you have
+seen once, possibly using magic, or a place you
+know through someone else's description, perhaps
+from a map.
+• "False destination" is a place that doesn't exist.
+Perhaps you tried to scry an enemy's sanctum but
+instead viewed an illusion, or you are attempting
+to teleport to a location that no longer exists.
+Mishap. The spell's unpredictable magic results in
+a difficult journey. Each teleporting creature (or the
+target object) takes 3d10 Force damage, and the DM
+rerolls on the table to see where you wind up (multiple mishaps can occur, dealing damage each time).
+Similar Area. You and your group (or the target
+object) appear in a different area that's visually or
+thematically similar to the target area. You appear
+in the closest similar place. If you are heading for
+your home laboratory, for example, you might appear in another person's laboratory in the same city.
+Off Target. You and your group (or the target object) appear 2d12 miles away from the destination
+in a random direction. Roll ld8 for the direction: 1,
+east; 2, southeast; 3, south; 4, southwest; 5, west; 6,
+northwest; 7, north; or 8, northeast.
+On Target. You and your group (or the target object) appear where you intended.
+TELEPORTATION CIRCLE
+Level 5 Conjuration (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: l minute
+Range: l O feet
+Components: V, M (rare inks worth 50+ GP, which the
+spell consumes)
+Duration: l round
+As you cast the spell, you draw a 5-foot-radius circle
+on the ground inscribed with sigils that link your
+location to a permanent teleportation circle of your
+choice whose sigil sequence you know and that is
+on the same plane of existence as you. A shimmering portal opens within the circle you drew and
+remains open until the end of your next turn. Any
+creature that enters the portal instantly appears
+within 5 feet of the destination circle or in the nearest unoccupied space if that space is occupied.
+Many major temples, guildhalls, and other important places have permanent teleportation circles. Each circle includes a unique sigil sequence- a
+string of runes arranged in a particular pattern.
+When you first gain the ability to cast this spell,
+you learn the sigil sequences for two destinations
+on the Material Plane, determined by the DM. You
+might learn additional sigil sequences during your
+adventures. You can commit a new sigil sequence to
+memory after studying it for 1 minute.
+You can create a permanent teleportation circle
+by casting this spell in the same location every day
+for 365 days.
+TENSER
+1S FLOATING DISK
+Level 1 Conjuration (Wizard)
+Casting Time: Action or Ritual
+Range: 30 feet
+Components: V, S, M (a drop of mercury)
+Duration: l hour
+This spell creates a circular, horizontal plane of
+force, 3 feet in diameter and 1 inch thick, that floats
+3 feet above the ground in an unoccupied space
+of your choice that you can see within range. The
+disk remains for the duration and can hold up to
+500 pounds. If more weight is placed on it, the spell
+ends, and everything on the disk falls to the ground.
+The disk is immobile while you are within 20 feet
+of it. If you move more than 20 feet away from it,
+the disk follows you so that it remains within 20
+feet of you. It can move across uneven terrain, up
+or down stairs, slopes and the like, but it can't cross
+an elevation change of 10 feet or more. For example, the disk can't move across a 10-foot-deep pit,
+nor could it leave such a pit if it was created at the
+bottom.
+If you move more than 100 feet from the disk
+(typically because it can't move around an obstacle
+to follow you), the spell ends.

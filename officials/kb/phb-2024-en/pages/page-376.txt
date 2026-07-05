@@ -1,0 +1,88 @@
+# Player's Handbook 2024 (EN) — PDF-страница 376/387
+
+T, E M ORSE NSE
+A creature with Tremorsense can pinpoint the
+location of creatures and moving objects within
+a specific range, provided that the creature with
+Tremorsense and anything it is detecting are both in
+contact with the same surface (such as the ground,
+a wall, or a ceiling) or the same liquid.
+Tremorsense can't detect creatures or objects in
+the air, and it doesn't count as a form of sight.
+TRUE SIGHT
+If you have Truesight, your vision is enhanced
+within a specified range. Within that range, your
+vision pierces through the following:
+Darkness. You can see in normal and magical
+Darkness.
+Invisibility. You see creatures and objects that have
+the Invisible condition.
+Visual Illusions. Visual illusions appear transparent to you, and you automatically succeed on saving throws against them.
+Transformations. You discern the true form of any
+creature or object you see that has been transformed by magic.
+Ethereal Plane. You see into the Ethereal Plane. See
+also appendix A ("Transitive Planes").
+UNARMED STRI KE
+Instead of using a weapon to make a melee attack,
+you can use a punch, kick, head-butt, or similar
+forceful blow. In game terms, this is an Unarmed
+Strike-a melee attack that involves you using your
+body to damage, grapple, or shove a target within 5
+feet of you.
+Whenever you use your Unarmed Strike, choose
+one of the following options for its effect.
+Damage. You make an attack roll against the target. Your bonus to the roll equals your Strength
+modifier plus your Proficiency Bonus. On a hit, the
+target takes Bludgeoning damage equal to 1 plus
+your Strength modifier.
+Grapple. The target must succeed on a Strength
+or Dexterity saving throw (it chooses which), or it
+has the Grappled condition. The DC for the saving
+throw and any escape attempts equals 8 plus your
+Strength modifier and Proficiency Bonus. This
+grapple is possible only if the target is no more than
+one size larger than you and if you have a hand free
+to grab it. See also "Grappling."
+Shove. The target must succeed on a Strength
+or Dexterity saving throw (it chooses which), or
+you either push it 5 feet away or cause it to have
+the Prone condition. The DC for the saving throw
+equals 8 plus your Strength modifier and Proficiency Bonus. This shove is possible only if the target is no more than one size larger than you.
+----------
+UNCONSCIOUS [CONDITION]
+While you have the Unconscious condition, you experience the following effects.
+Inert. You have the Incapacitated and Prone
+conditions, and you drop whatever you're holding.
+When this condition ends, you remain Prone.
+Speed 0. Your Speed is O and can't increase.
+Attacks Affected. Attack rolls against you have
+Advantage.
+Saving Throws Affected. You automatically fail
+Strength and Dexterity saving throws.
+Automatic Critical Hits. Any attack roll that hits
+you is a Critical Hit if the attacker is within 5 feet of
+you.
+Unaware. You're unaware of your surroundings.
+,-
+UNOCCUPIED SPACE
+A space is unoccupied if no creatures are in it and it
+isn't completely filled by objects.
+UTILIZE [ACTION]
+You normally interact with an object while doing
+something else, such as when you draw a sword as
+part of the Attack action. When an object requires
+an action for its use, you take the Utilize action.
+VULNERABILIT Y
+If you have Vulnerability to a damage type, damage
+of that type is doubled against you. Vulnerability is
+applied only once to an instance of damage. See also
+chapter 1 ("Damage and Healing").
+r -~·---- --
+WEAPON
+A weapon is an object that is in the Simple or
+Martial weapon category. See also chapter 6
+("Weapons").
+W EAPON ATTACK
+A weapon attack is an attack roll made with a
+weapon. See also "Weapon."
+APP EN Dl X C I RULES GLOSSARY

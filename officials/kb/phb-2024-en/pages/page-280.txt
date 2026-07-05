@@ -1,0 +1,46 @@
+# Player's Handbook 2024 (EN) — PDF-страница 280/387
+
+'
+..,
+J
+'
+GREATER INVISIBILITY
+Level 4 Illusion (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: Concentration, up to l minute
+A creature you touch has the Invisible condition until the spell ends.
+GREATER RESTORATION
+Level 5 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (diamond dust worth 100+ GP,
+which the spell consumes)
+Duration: Instantaneous
+You touch a creature and magically remove one of
+the following effects from it:
+• 1 Exhaust~· n level
+• The Ch:u·;,1ed or Petrified condition
+• A curse, including the target's Attunement to a
+cursed magic item
+• Any reduction to one of the target's ability scores
+• Any reduction to the target's Hit Point maximum
+GUARDIAN OF FAITH
+Level 4 Conjuration (Cleric)
+Casting Time: Action
+Range: 30 feet
+Components: V
+Duration: 8 hours
+A Large spectral guardian appears and hovers for
+the duration in an unoccupied space that you can
+see within range. The guardian occupies that space
+and is invulnerable, and it appears in a form appropriate for your deity or pantheon.
+Any enemy that moves to a space within 10 feet of
+the guardian for the first time on a turn or starts its
+turn there makes a Dexterity saving throw, taking
+20 Radiant damage on a failed save or half as much
+damage on a successful one. The guardian vanishes
+when it has dealt a total of 60 damage.
+r'l-f .l DT'll'D., I ~DIH I~
+.... ch

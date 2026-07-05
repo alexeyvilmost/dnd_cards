@@ -67,3 +67,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Официальные PDF-книги (крупные, не версионируем) и артефакты извлечения БЗ
+officials/*.pdf
+officials/.kbvenv/
+officials/__pycache__/

@@ -1,0 +1,382 @@
+# Player's Handbook 2024 (EN) — PDF-страница 378/387
+
+Boon of Skill feat, 211
+Chain, 224
+Cleric Features table,
+Cone of Cold spell, 253
+Create or Destroy Water
+Soon of Speed feat, 211
+Chain Lightning spell, 249
+70
+Confusion spell, 253
+spell, 258
+Soon of Spell Recall feat,
+Chain Mail, 219
+Core Cleric Traits table,
+Conjure Animals spell, 254
+Create Undead spell, 258
+211
+Chain Shirt, 219
+69
+Conjure Barrage spell, 254
+Creating Spell Slots table,
+Boon of the Night Spirit
+Challenge Rating (CR),
+spell list, 71
+Conjure Celestial spell, 254
+141
+feat, 211
+363
+subclasses, 73
+Conjure Elemental spell,
+Creating Verbal
+Boon ofTruesight feat,
+Champion subclass, 96
+Climber's Kit, 225
+254
+Components sidebar,
+211
+Channel Divinity class
+climbing, 363
+Conjure Fey spell, 255
+237
+Bottle, Glass, 224
+feature, 70, 110
+Climb Speed, 363
+Conjure Minor Elementals
+Creation spell, 259
+bows, 215
+Chaos, Elemental, 344
+Clockwork Sorcery
+spell, 255
+creature, 364
+Branding Smite spell. See
+Chaotic Evil (CE), 39
+subclass, 146
+Conjure Volley spell, 255
+creature size, 25
+Shining Sm ite, 316
+Chaotic Good (CG) , 39
+Clockwork Spells table,
+Conjure Woodland Beings
+Creature Size and Space
+breaking objects, 20, 362
+Chaotic Neutral (CN), 39
+146
+spell, 255
+table, 25
+Breaking Your Oath
+character, 7
+Clone spell, 251
+Constitution, 10
+creature stat blocks, 346
+sidebar, 111
+appearance, 38
+Clothes, Fine, 225
+Constrictor Snake stat
+creature type, 364
+Breastplate, 219
+background, 177
+Clothes, Traveler's, 225
+block, 348
+crew, 230
+Brewer's Supplies, 220
+classes, 49
+Cloudkil/ spell, 251
+Construct creature type,
+Criminal background, 179
+brewing heal ing potions,
+create a, 33
+Cloud of Daggers spell,
+364
+Critical Hit, 27, 364
+233
+death/demise, 28
+251
+Construct Spirit stat
+Crocodile stat block, 348
+brewing Potions of
+ga ining a level, 42
+Club, 215
+block, 324
+crossbow bolt. See Bolt,
+Healing, 233
+origin, 177
+Cobbler's Tools, 220
+Contact Other Plane spell,
+222
+Bright Light, 19, 362
+personality, 38
+coins, 213
+255
+Crossbow Bolt Case, 224
+Brown Bear stat block,
+player, 372
+Coin Values table, 213
+Contact Patron class
+Crossbow Expert feat, 203
+347
+species, 177
+Cold damage, 365
+feature, l 55
+crossbows, 215
+Brutal Strike class
+stabilizing a, 29
+College of Dance
+Contagion spell, 256
+Crowbar, 225
+feature, 53
+Character Advancement
+subclass, 64
+Contingency spell, 256
+Crown of Madness spell,
+Bucket, 224
+table, 41
+College of Glamour
+Continual Flame spell,
+259
+Bullets, 222
+character creation, 33
+subclass, 65
+256
+Crusader's Mantle spell,
+Bullseye Lantern, 226
+ability scores, 38
+College of Lore subclass,
+controlling a mount, 26
+259
+Burglar's Pack, 224
+alignment, 39
+66
+Control Water spell, 256
+Crusher feat, 203
+Burning Hands spell, 248
+class, 33
+College ofValor subclass,
+Control Weather spell, 257
+Cube area of effect, 364
+burning hazard, 362
+origin, 36
+67
+Cook's Utensils, 220
+Cunning Action class
+Burrow Speed, 362
+starting at higher
+Color Spray spell, 251
+Copper Piece (CP), 213
+feature, 130
+Bytopia, 344
+levels, 43
+combat, 23
+Cordon of Arrows spell,
+Cunning Strike class
+calculating AC, 12
+character sheet, 33-35,
+mounted, 26
+258
+feature, 130
+Calligrapher's Supplies,
+363
+order of, 23
+Core Barbarian Traits
+Cure Wounds spell, 259
+220
+Charger feat, 202
+step by step, 23
+table, 51
+currency, 213
+Call Lightning spell, 248
+Chariot, 230
+underwater, 27
+Core Bard Traits table, 59
+curse, 364
+Calm Emotions spell, 249
+Charisma, 10
+impeded weapons,
+Core Cleric Traits table,
+Cylinder area of effect,
+Caltrops, 224
+Charlatan background,
+27
+69
+364
+Camel stat block, 347
+179
+comfortable lifestyle, 231
+Core Druid Traits table,
+d3, 9
+campaign, 8, 362
+Charmed condition, 363
+Command spell, 251
+79
+d4,9
+Candle, 224
+Charm Monster spell, 249
+Common language, 37
+Core Fighter Traits table,
+d6,9
+cantrip, 362
+Charm Person spell, 249
+Common Sign Language,
+91
+d8,9
+capacity, carrying, 362
+Chef feat, 202
+37
+Core Monk Traits table,
+dl0,9
+Carceri, 344
+Chest, 225
+Commune spell, 252
+101
+dl2, 9
+cards, playing, 221
+Chill Touch spell, 249
+Commune with Nature
+Core Paladin Traits table,
+d20,9
+Careful Spell metamagic,
+choose a class, 33
+spell, 252
+109
+D20 Test, 9, 10, 364
+141
+choose an alignment, 39
+Compelled Duel spell, 252
+Core Ranger Traits table,
+dl00,9
+cargo, and mount, 229
+Chromatic Orb spell, 249
+component, 236
+119
+Dagger, 215
+Carpenter's Tools, 220
+Chthonic Tiefling, 196
+Material (M), 237
+Core Rogue Traits table,
+damage, 9, 27, 364
+Carriage, 230
+Circle of Death spell, 250
+Somatic (S) , 236
+129
+against multiple
+carrying capacity, 362
+Circle of Power spell, 250
+Verbal M, 236
+Core Sorcerer Traits table,
+targets, 28
+Carrying Capacity table,
+Circle of the Land
+Component Pouch, 225
+139
+half, 28
+363
+subclass, 84
+Comprehend Languages
+Core Warlock Traits table,
+healing, 28
+carrying objects, 20
+Circle of the Moon Spells
+spell, 252
+153
+Immunity, 369
+Cart, 230
+table, 86
+Compulsion spell, 252
+Core Wizard Traits table,
+massive, 28
+Cartographer's Tools, 220
+Circle of the Moon
+Concentration, 363
+165
+order of application, 28
+Case, Crossbow Bolt, 224
+subclass, 86
+condition, 29, 363
+Costume, 225
+Resistance, 3 73
+Case, Map or Scroll, 224
+Circle of the Sea Spells
+Blinded, 361
+Countercharm class
+saving throws and, 28
+Cast a Spell action. See
+table, 87
+Charmed, 363
+feature, 61
+types, 28, 365
+Magic, 15, 371
+Circle of the Sea
+Deafened, 365
+Counterspe/1 spell, 258
+Vulnerability, 377
+Casting in Armor sidebar,
+subclass, 87
+Exhaustion, 366
+cover, 25, 364
+damage roll, 27, 364
+235
+Circle of the Stars
+Frightened, 367
+Cover table, 26
+damage threshold, 364
+casting spells, 235
+subclass, 88
+Grappled, 367
+Crab, Giant, stat block,
+Damage Types table, 365
+casting time, 236
+Clairvoyance spell, 250
+Immunity, 369
+350
+Dancing Ughts spell, 259
+casting without slots, 235
+class, choose a, 33
+Incapacitated, 369
+Crab stat block, 348
+Danger Sense class
+Cat stat block, 347
+classes, character, 49
+Invisible, 370
+Crafter feat, 200
+feature, 52
+Celestial creature type,
+Class Overview table, 33
+Paralyzed, 3 71
+crafting equipment, 233
+Darkness. 19, 365
+364
+class spell lists, 236
+Petrified, 372
+crafting nonmagical
+Darlcness spell, 260
+Celestial language, 37
+Cleansing Touch class
+Poisoned, 372
+items, 233
+Darkvision, 365
+Celestial Patron subclass,
+feature. See Restoring
+Prone, 372
+crawling, 364
+Darlcvision spell, 260
+160
+Touch, 111
+Restrained, 3 73
+create a character, 33
+Dart, 21 S
+Celestial Spells table, 160
+Cleave mastery property,
+Stunned, 376
+Create Food and Water
+Dash action, 15, 365
+Celestial Spirit stat block,
+214
+Unconscious, 377
+spell, 258
+Daylight spell, 260
+323
+Cleric class, 49, 69
+Cone, area of effect, 364
+Deafened condition, 365
+INDEX

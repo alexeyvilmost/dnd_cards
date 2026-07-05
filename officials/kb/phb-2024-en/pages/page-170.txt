@@ -1,0 +1,96 @@
+# Player's Handbook 2024 (EN) — PDF-страница 170/387
+
+Spell
+School
+Special
+Spell
+School
+Special
+Reverse Gravity
+Transmutation
+C
+Power Word Stun
+Enchantment
+Sequester
+Transmutation
+M
+Sunburst
+Evocation
+Simulacrum
+Illusion
+M
+Telepathy
+Divination
+Symbol
+Abjuration
+M
+Teleport
+Conjuration
+LEVEL 9 WIZARD SPELLS
+Spell
+School
+Special
+LEVEL 8 WIZARD SPELLS
+Astral Projection
+Necromancy
+M
+Spell
+School
+Special
+Foresight
+Divination
+Antimagic Field
+Abjuration
+C
+Gate
+Conjuration
+C, M
+Antipathy/Sympathy
+Enchantment
+Imprisonment
+Abjuration
+M
+Befuddlement
+Enchantment
+Meteor Swarm
+Evocation
+Clone
+Necromancy
+M
+Power Word Kill
+Enchantment
+Control Weather
+Transmutation
+C
+Prismatic Wall
+Abjuration
+Demi plane
+Conjuration
+Shapechange
+Transmutation
+C, M
+Dominate Monster
+Enchantment
+C
+Time Stop
+Transmutation
+Incendiary Cloud
+Conjuration
+C
+True Polymorph
+Transmutation
+C
+Maze
+Conjuration
+C
+Weird
+Illusion
+C
+Mind Blank
+Abjuration
+Wish
+Conjuration
+,,
+I
+CHAPTER 3 I CHARACTER CLASSES
+171

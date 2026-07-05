@@ -1,0 +1,99 @@
+# Player's Handbook 2024 (EN) — PDF-страница 248/387
+
+CALM E MOTIO NS
+Level 2 Encliantment (Bard, Cleric)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to l minute
+Each Humanoid in a 20-foot-radius Sphere centered
+on a point you choose within range must succeed
+on a Charisma saving throw or be affected by one of
+the following effects (choose for each creature):
+. The creature has Immunity to the Charmed and
+Frightened conditions until the spell ends. If the
+creature was already Charmed or Frightened,
+those conditions are suppressed for the duration.
+. The creature becomes Indifferent about creatures of your choice that it's Hostile toward. This
+indifference ends if the target takes damage or
+witnesses its allies taking damage. When the spell
+ends, the creature's attitude returns to normal.
+C H AI N LIGHTNING
+Level 6 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 150 feet
+Components: V, S, M (three silver pins)
+Duration: Instantaneous
+You launch a lightning bolt toward a target you can
+see within range. Three bolts then leap from that
+target to as many as three other targets of your
+choice, each of which must be within 30 feet of the
+first target. A target can be a creature or an object
+and can be targeted by only one of the bolts.
+Each target makes a Dexterity saving throw, taking 10d8 Lightning damage on a failed save or half
+as much damage on a successful one.
+Using a Higher-Level Spell Slot. One additional bolt
+leaps from the first target to another target for each
+spell slot level above 6.
+CHARM MONSTER
+Level 4 Enchantment (Bard, Druid, Sorcerer, Warlock,
+Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: l hour
+One creature you can see within range makes a
+Wisdom savi~(J" throw. It does so with Advantage
+t,
+if you or your ,1 Jlies are fighting it. On a failed save,
+the target ha:. the Charmed condition until the
+spell ends or until you or your allies damage it. The
+Charmed creature is Friendly to you. When the
+spell ends, the target knows it was Charmed by you.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 4.
+;,....- ..
+CHARM PERSON
+Level 1 Enchantment (Bard, Druid, Sorcerer, Warlock,
+Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: l hour
+One Humanoid you can see within range makes a
+Wisdom saving throw. It does so with Advantage
+if you or your allies are fighting it. On a failed save,
+the target has the Charmed condition until the
+spell ends or until you or your allies damage it. The
+Charmed creature is Friendly to you. When the
+spell ends, the target knows it was Charmed by you.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 1.
+CHILL TOUCH
+Necromancy Cantrip (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: Touch
+Components: V, S
+Duration: Instantaneous
+Channeling the chill of the grave, make a melee
+spell attack against a target within reach. On a hit,
+the target takes ldlO Necrotic damage, and it can't
+regain Hit Points until the end of your next turn.
+Cantrip Upgrade. The damage increases by ldlO
+when you reach levels 5 (2d10), 11 (3d10), and 17
+(4d10).
+CHROMATIC ORB
+Level 1 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 90 feet
+Components: V, S, M (a diamond worth 50+ GP)
+Duration: Instantaneous
+You hurl an orb of energy at a target within range.
+Choose Acid, Cold, Fire, Lightning, Poison, or Thunder for the type of orb you create, and then make a
+ranged spell attack against the target. On a hit, the
+target takes 3d8 damage of the chosen type.
+If you roll the same number on two or more of
+the d8s, the orb leaps to a different target of your
+choice within 30 feet of the target. Make an attack
+CHAPTER 7 I SPELLS
+249

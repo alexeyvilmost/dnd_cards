@@ -1,0 +1,80 @@
+# Player's Handbook 2024 (EN) — PDF-страница 206/387
+
+spells' spelk .,sting ability is the abi~ity increase~
+b this feat. \Vhenever your Proficiency Bonus mc:eases thereafter, you can add an additional level
+1 spell with the Ritual tag to the spells always preared with this feature.
+p Quiel< Ritual. With this benefit, you can cast a
+Ritual spell that you have prepared using its regular
+casting time rather than the extended time for a Ritual. Doing so doesn't require a spell slot. Once you
+cast the spell in this way, you can't use this benefit
+again until you finish a Long Rest.
+SENTINEL
+General Feat (Prerequisite: Level 4+, Strength or
+Dexterity 13+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Guardian. Immediately after a creature within 5
+feet of you takes the Disengage action or hits a target other than you with an attack, you can make an
+Opportunity Attack against that creature.
+Halt. When you hit a creature with an Opportunity Attack, the creature's Speed becomes O for the
+rest of the current turn.
+S H ADOW-TOUCHED
+General Feat (Prerequisite: Level 4+)
+Your exposure to the Shadowfell's magic grants you
+the following benefits.
+Ability Score Increase. Increase your Intelligence,
+Wisdom, or Charisma score by 1, to a maximum of
+20.
+Shadow Magic. Choose one level 1 spell from the
+Illusion or Necromancy school of magic. You always
+have that spell and the Invisibility spell prepared.
+You can cast each of these spells without expending
+a spell slot. Once you cast either spell in this way,
+you can't cast that spell in this way again until you
+finish a Long Rest. You can also cast these spells using spell slots you have of the appropriate level. The
+spells' spellcasting ability is the ability increased by
+this feat.
+S HARPSH OOTER
+General Feat (Prerequisite: Level 4+, Dexterity 13+)
+You gain the following benefits.
+Ability Score Increase. Increase your Dexterity
+score by 1, to a maximum of 20.
+Bypass Cover. Your ranged attacks with weapons
+ignore Half C,w cr and Three-Quarters Cover.
+Firing in Melee. Being within 5 feet of an enemy
+doesn't impose Disadvantage on your attack rolls
+with Ranged weapons.
+Long Shots. Attacking at long range doesn't impose Disadvantage on your attack rolls with Ranged
+weapons.
+SHIELD MASTER
+General Feat (Prerequisite: Level 4+, Shield Training)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength
+score by 1, to a maximum of 20.
+Shield Bash. If you attack a creature within 5 feet
+of you as part of the Attack action and hit with a
+Melee weapon, you can immediately bash the target
+with your Shield if it's equipped, forcing the target
+to make a Strength saving throw (DC 8 plus your
+Strength modifier and Proficiency Bonus). On a
+failed save, you either push the target 5 feet from
+you or cause it to have the Prone condition {your
+choice). You can use this benefit only once on each
+of your turns.
+Interpose Shield. If you're subjected to an effect
+that allows you to make a Dexterity saving throw to
+take only half damage, you can take a Reaction to
+take no damage if you succeed on the saving throw
+and are holding a Shield.
+SKILL EXPERT
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 20.
+Skill Proficiency. You gain proficiency in one skill
+of your choice.
+Expertise. Choose one skill in which you have proficiency but lack Expertise. You gain Expertise with
+that skill.
+CHAPTER 5 I FEATS
+207

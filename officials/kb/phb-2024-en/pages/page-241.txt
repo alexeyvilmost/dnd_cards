@@ -1,0 +1,91 @@
+# Player's Handbook 2024 (EN) — PDF-страница 241/387
+
+ANTIPATHY/SYMPATHY
+Level 8 Enchantment (Bard, Druid, Wizard)
+Casting Time: l hour
+Range: 60 feet
+Components: V, S, M (a mix of vinegar and honey)
+Duration: 10 days
+As you cast the spell, choose whether it creates antipathy or sympathy, and target one creature or object that is Huge or smaller. Then specify a kind of
+creature, such as red dragons, goblins, or vampires.
+A creature of the chosen kind makes a Wisdom
+saving throw when it comes within 120 feet of the
+target. Your choice of antipathy or sympathy determines what happens to a creature when it fails that
+save:
+Antipathy. The creature has the Frightened condition. The Frightened creature must use its movement on its turns to get as far away as possible
+from the target, moving by the safest route.
+Sympathy. The creature has the Charmed condition. The Charmed creature must use its movement on its turns to get as close as possible to the
+target, moving by the safest route. If the creature
+is within 5 feet of the target, the creature can't
+willingly move away. If the target damages the
+Charmed creature, that creature can make a Wisdom saving throw to end the effect, as described
+below.
+Ending the Effect. If the Frightened or Charmed
+creature ends its turn more than 120 feet away
+from the target, the creature makes a Wisdom saving throw. On a successful save, the creature is no
+longer affected by the target. A creature that successfully saves against this effect is immune to it for
+1 minute, after which it can be affected again.
+ARCANE EYE
+Level 4 Divination (Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (a bit of bat fur)
+Duration: Concentration, up to 1 hour
+You create an Invisible, invulnerable eye within
+range that hovers for the duration. You mentally
+receive visual information from the eye, which can
+see in every direction. It also has Darkvision with a
+range of 30 feet.
+As a Bonus Action, you can move the eye up to 30
+feet in any direction. A solid barrier blocks the eye's
+movement, but the eye can pass through an opening
+as small as 1 inch in diameter.
+24,2
+CHAPTER 7 I SPELLS
+ARCANE GATE
+Level 6 Conjuration (Sorcerer, Warlocl<, W iuird)
+Casting Time: Action
+Range: 500 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You create linked teleportation portals. Choose two
+Large, unoccupied spaces on the ground that you
+can see, one space within range and the other one
+within 10 feet of you. A circular portal opens in
+each of those spaces and remains for the duration.
+The portals are two-dimensional glowing rings
+filled with mist that blocks sight. They hover inches
+from the ground and are perpendicular to it.
+A portal is open on only one side (you choose
+which). Anything entering the open side of a portal
+exits from the open side of the other portal as if the
+two were adjacent to each other. As a Bonus Action
+you can change the facing of the open sides.
+'
+ARCANE LOCK
+Level 2 Abjuration (Wizard)
+Casting Time: Action
+Range:Touch
+_,,. ...
+Components: V, S, M (gold dust worth 25+ GP, which
+the spell consumes)
+Duration: Until dispelled
+You touch a closed door, window, gate, container,
+or hatch and magically lock it for the duration. This
+lock can't be unlocked by any nonmagical means.
+You and any creatures you designate when you cast
+the spell can open and close the object despite the
+lock. You can also set a password that, when spoken
+within 5 feet of the object, unlocks it for 1 minute.
+ARCANE VIGOR
+Level 2 Abjuration (Sorcerer, Wizard)
+Casting Time: Bonus Action
+Range: Self
+Component: V, S
+Duration: Instantaneous
+You tap into your life force to heal yourself. Roll one
+or two of your unexpended Hit Point Dice, and regain a number of Hit Points equal to the rail's total
+plus your spellcasting ability modifier. Those dice
+are then expended.
+Using a Higher-Level Spell Slot. Th~ number of unexpended Hit Dice you can re i i r , :reases by one for
+each spell slot level above 2.

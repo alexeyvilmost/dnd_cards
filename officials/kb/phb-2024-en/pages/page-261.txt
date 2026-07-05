@@ -1,0 +1,114 @@
+# Player's Handbook 2024 (EN) — PDF-страница 261/387
+
+DETECT MAGIC
+Level 1 Divination (Bard, Cleric, Druid, Paladin, Ranger,
+Sorcerer, Warlock, Wizard)
+Casting Time: Action or Ritual
+Range: Self
+Components: V, S
+Duration: Concentration, up to 10 minutes
+For the duration, you sense the presence of magical
+effects within 30 feet of yourself. If you sense such
+effects, you can take the Magic action to see a faint
+aura around any visible creature or object in the
+area that bears the magic, and if an effect was created by a spell, you learn the spell's school of magic.
+The spell is blocked by 1 foot of stone, dirt, or
+wood; 1 inch of metal; or a thin sheet of lead.
+DETECT POISON AND DISEASE
+Level 1 Divination (Cleric, Druid, Paladin, Ranger)
+Casting Time: Action or Ritual
+Range: Self
+Components: V, S, M (a yew leaf)
+Duration: Concentration, up to 10 minutes
+For the duration, you sense the location of poisons,
+poisonous or venomous creatures, and magical
+contagions within 30 feet of yourself. You sense the
+kind of poison, creature, or contagion in each case.
+The spell is blocked by 1 foot of stone, dirt, or
+wood; 1 inch of metal; or a thin sheet of lead.
+DETECT THOUGHTS
+Level 2 Divination (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (1 Copper Piece)
+Duration: Concentration, up to l minute
+You activate one of the effects below. Until the spell
+ends, you can activate either effect as a Magic action on your later turns.
+Sense Thoughts. You sense the presence of
+thoughts within 30 feet of yourself that belong to
+creatures that know languages or are telepathic.
+You don't read the thoughts, but you know that a
+thinking creature is present.
+The spell is blocked by 1 foot of stone, dirt, or
+wood; 1 inch of metal; or a thin sheet of lead.
+Read Thoughts. Target one creature you can see
+within 30 feet of yourself or one creature within
+30 feet of yourself that you detected with the Sense
+Thoughts option. You learn what is most on the target's mind right now. If the target doesn't know any
+languages and isn't telepathic, you learn nothing.
+CHAPTER 7 SPELLS
+As a Magic action on your nex t ~-• t ,1 you
+.
+•
+can try
+to probe deeper mto the target's 1 .i,1d. If you prob
+deeper, the target makes a Wisdom •·aving thr
+e
+On a failed save, you discern the taro-et's reas
+0':·
+.
+0
+oning
+emotions, and someth ing that looms large in its
+'
+mind (such as a worry, love, or hate) On a sue
+•
+cessful save, the spell ends. Either way, the target k
+h
+b.
+.
+.
+.
+nows
+t at you are pro mg m to its mmd, and until you
+shift your attention away from the target's mind
+the target can take an action on its turn to make.an
+Intelligence (Arcana) check against your spell save
+DC, ending the spell on a success.
+DI MEN SI ON DOOR
+Level 4 Conjuration (Ba ,·d. Sorcerer, W arlock, Wizard)
+Casting Time: Action
+Range: 500 feet
+Components: V
+Duration: Instantaneous
+You teleport to a location within range. You arrive
+at exactly the spot desired. It can be a place you can
+see, one you can visualize, or one you can describe
+by stating distance and direction, such as "200 feet
+straight downward" or "300 feet upward to the
+northwest at a 45-degree angle."
+You can also teleport one willing creature. The
+creature must be within 5 feet of you when you
+teleport, and it teleports to a space within 5 feet of
+your destination space.
+If you, the other creature, or both would arrive in
+a space occupied by a creature or completely filled
+by one or more objects, you and any creature traveling with you each take 4d6 Force damage, and the
+telepor tation fa ils.
+DISGUISE SELF
+Level 1 Illusion (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: l hour
+You make yourself-including your clothing, armor,
+weapons, and other belongings on your personlook different until the spell ends. You can seem
+1 foot shorter or taller and can appear heavier or
+lighter. You must adopt a form that has the same
+basic arrangement of limbs as you have. Otherwise,
+the extent of the illusion is up to you.
+The changes wrought by this spell fail to hold
+up to physical inspection. For example, if you use
+this spell to add a hat 1:0 your outfit, objects pass
+through the hat, and a ·1 /ane who touches it would
+feel nothing.

@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 254/387
+
+CONJURE 1:·EY
+Level 6 Conjuration (Druid)
+casting Time: Action
+Range: 60 feet
+components: V, S
+Duration: Concentration, up to 10 minutes
+You conjure a Medium spirit from the Feywild in
+an unoccupied space you can see within range. The
+spirit lasts for the duration, and it looks like a Fey
+creature of your choice. When the spirit appears,
+you can make one melee spell attack against a creature within 5 feet of it. On a hit, the target takes
+Psychic damage equal to 3d12 plus your spellcasting
+ability modifier, and the target has the Frightened
+condition until the start of your next turn, with
+both you and the spirit as the source of the fear.
+As a Bonus Action on your later turns, you can
+teleport the spirit to an unoccupied space you can
+see within 30 feet of the space it left and make the
+attack against a creature within 5 feet of it.
+Using a Higher-Level Spell Slot. The damage increases by 2d12 for each spell slot level above 6.
+CONJURE MINOR ELEMENTALS
+Level 4 Conjuration (Druid, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You conjure spirits from the Elemental Planes that
+flit around you in a 15-foot Emanation for the duration. Until the spell ends, any attack you make deals
+an extra 2d8 damage when you hit a creature in
+the Emanation. This damage is Acid, Cold, Fire, or
+Lightning (your choice when you make the attack).
+In addition, the ground in the Emanation is Difficult Terrain for your enemies.
+Using a Higher-Level Spell Slot. The damage increases by 2d8 for each spell slot level above 4.
+r.
+CONJURE VOLLEY
+Level 5 Conjuration (Ranger)
+Casting Time: Action
+Range: l SO feet
+Components: V, S, M (a Melee or Ranged weapon
+worth at least l CP)
+Duration: Instantaneous
+You brandish t:H! weapon used to cast the spell and
+choose a poit1t v-;ithin range. Hundreds of similar
+spectral we::ipr.-rts (or ammunition appropriate to
+the weapon) '.·.-. :1 in a volley and then disappear.
+Each creature of your choice that you can see in a
+40-foot-radius, 20-foot-high Cylinder centered on
+that point makes a Dexterity saving throw. A creature takes 8d8 Force damage on a failed save or half
+as much damage on a successful one.
+P"
+CONJURE WOODLAND BEINGS
+Level 4 Conjuration (Druid, Ranger)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You conjure nature spirits that flit around you in a
+10-foot Emanation for the duration. Whenever the
+Emanation enters the space of a creature you can
+see and whenever a creature you can see enters the
+Emanation or ends its turn there, you can force that
+creature to make a Wisdom saving throw. The creature takes Sd8 Force damage on a failed save or half
+as much damage on a successful one. A creature
+makes this save only once per turn.
+In addition, you can take the Disengage action as a
+Bonus Action for the spell's duration.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 5.
+CONTACT OTHER PLANE
+Level 5 Divination (Warlock, Wizard)
+Casting Time: l minute or Ritual
+Range: Self
+Components: V
+Duration: l minute
+You mentally contact a demigod, the spirit of a
+long-dead sage, or some other knowledgeable entity
+from another plane. Contacting this otherworldly
+intelligence can break your mind. When you cast
+this spell, make a DC 15 Intelligence saving throw.
+On a successful save, you can ask the entity up to
+five questions. You must ask your questions before
+the spell ends. The DM answers each question with
+one word, such as "yes," "no," "maybe," "never," "irrelevant," or "unclear" (if the entity doesn't know
+the answer to the question). If a one-word answer
+would be misleading, the DM might instead offer a
+short phrase as an answer.
+On a failed save, you take 6d6 Psycl-.ic damage
+and have the Incapacitated condition until you finish a Long Rest. A Greater Restoration spell cast on
+you ends this effect.
+CHAPTER 7 I SPELLS
+255

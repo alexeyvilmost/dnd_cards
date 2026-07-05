@@ -1,0 +1,110 @@
+# Player's Handbook 2024 (EN) — PDF-страница 310/387
+
+:;.--
+RARY'S T l:: L E PATH IC B?ND
+Level 5 Divination (Bard, Wizard)
+Casting Time: Action or Ritual
+Range: 30 feet
+Components: V, S , M (two eggs)
+Duration: l hour
+You forge a telepathic link among up to eight willing
+creatures of your choice within range, psychically
+linking each creature to all the others for the duration. Creatures that can't communicate in any lanuages aren't affected by this spell.
+g Until the spell ends, the targets can communicate
+telepathically through the bond whether or not they
+share a language. The communication is possible
+over any distance, though it can't extend to other
+planes of existence.
+r-:-· --·
+R AY OF ENFEEBLEMENT
+Level 2 Necromancy (Warlock, Wizard)
+casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to l minute
+A beam of enervating energy shoots from you
+toward a creature within range. The target must
+make a Constitution saving throw. On a successful
+save, the target has Disadvantage on the next attack
+roll it makes until the start of your next turn.
+On a failed save, the target has Disadvantage on
+Strength-based D20 Tests for the duration. During
+that time, it also subtracts ld8 from all its damage
+rolls. The target repeats the save at the end of each
+of its turns, ending the spell on a success.
+RAY O F FROST
+Evocation Cantrip (Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+A frigid beam of blue-white light streaks toward a
+creature within range. Make a ranged spell attack
+against the target. On a hit, it takes ld8 Cold damage, and its Speed is reduced by 10 feet until the
+start of your next turn.
+Cantrip Upgrade. The damage increases by ld8
+when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).
+RAY OF SICKNESS
+Level 1 Necromancy (Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+You shoot a greenish ray at a creature within range.
+Make a ranged spell attack against the target. On a
+hit, the target takes 2d8 Poison damage and has the
+Poisoned condition until the end of your next turn.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 1.
+REGENERATE
+Level 7 Transmutation (Bard, Cleric, Druid)
+Casting Time: l minute
+Range:Touch
+Components: V, S, M (a prayer wheel)
+Duration: l hour
+A creature you touch regains 4d8 + 15 Hit Points.
+For the duration, the target regains 1 Hit Point at
+the start of each of its turns, and any severed body
+parts regrow after 2 minutes.
+REINCARNATE
+Level 5 Necromancy (Druid)
+Casting Time: l hour
+Range:Touch
+Components: V, S, M (rare oils worth 1,000+ GP,
+which the spell consumes)
+Duration: Instantaneous
+You touch a dead Humanoid or a piece of one. If
+the creature has been dead no longer than 10 days,
+the spell forms a new body for it and calls the soul
+to enter that body. Roll ldlO and consult the table
+below to determine the body's species, or the OM
+chooses another playable species.
+ldlO
+Species
+ldlO
+Species
+l
+Aasimar
+6
+Goliath
+2
+Dragonborn
+7
+Halfling
+3
+Dwarf
+8
+Human
+4
+Elf
+9
+Ore
+5
+Gnome
+10
+Tiefling
+The reincarnated creature makes any choices that
+a species' description offers, and the creature recalls
+its former life. It retains the capabilities it had in its
+original form, except it loses the traits of its previous species and gains the traits of its new one.
+CHAPTER 7 I SPELLS
+311

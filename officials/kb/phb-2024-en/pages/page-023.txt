@@ -1,0 +1,52 @@
+# Player's Handbook 2024 (EN) — PDF-страница 23/387
+
+Communicating. You can communicate however
+you are able-through brief utterances and gestures-as you take your turn. Doing so uses neither
+your action nor your move.
+Extended communication, such as a detailed explanation of something or an attempt to persuade a
+foe, requires an action. The Influence action is the
+main way you try to influence a monster.
+Interacting with Things. You can interact with
+one object or feature of the environment for free,
+during either your move or action. For example, you
+could open a door during your move as you stride
+toward a foe.
+If you want to interact with a second object, you
+need to take the Utilize action. Some magic items
+and other special objects always require an action
+to use, as stated in their descriptions.
+The DM might require you to use an action for
+any of these activities when it needs special care or
+when it presents an unusual obstacle. For instance,
+the DM might require you to take the Utilize action
+to open a stuck door or turn a crank to lower a
+drawbridge.
+Doing Nothing on Your Tum. You can forgo moving, taking an action, or doing anything at all on
+your turn. If you can't decide what to do, consider
+taking the defensive Dodge action or the Ready action to delay acting.
+CHAlffER I I PLAYING THE GAME
+ENDING COMBAT
+Combat ends when one side or the other is defeated,
+which can mean the creatures are killed or knocked
+out or have surrendered or fled. Combat can also
+end when both sides agree to end it.
+MOVEMENT AND POSITION
+On your turn, you can move a distance equal to
+your Speed or less. Or you can decide not to move.
+Your movement can include climbing, crawling,
+jumping, and swimming (each explained in the rules
+glossary). These different modes of movement can
+be combined with your regular movement, or they
+can constitute your entire move.
+However you're moving with your Speed, you
+deduct the distance of each part of your move from
+it until it is used up or until you are done moving,
+whichever comes first.
+A character's Speed is determined during character creation. A monster's Speed is noted in the
+monster's stat block. See the rules glossary for more
+about Speed as well as about special speeds, such as
+a Climb Speed, Fly Speed, or Swim Speed.
+DIFFICULT TERRAIN
+Combatants are often slowed down by Difficult
+Terrain. Low furniture, rubble, undergrowth, steep
+stairs, snow, and shallow bogs are examples of Difficult Terrain.

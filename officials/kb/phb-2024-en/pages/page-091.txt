@@ -1,0 +1,156 @@
+# Player's Handbook 2024 (EN) — PDF-страница 91/387
+
+FIGHTER FEATURES
+Proficiency
+Second
+Weapon
+Level
+Bonus
+Class Features
+Wind
+M astery
+l
++2
+Fighting Style, Second Wind, Weapon Mastery
+2
+3
+2
++2
+Action Surge (one use), Tactical Mind
+2
+3
+3
++2
+Fighter Subclass
+2
+3
+4
++2
+Ability Score Improvement
+3
+4
+5
++3
+Extra Attack, Tactical Shift
+3
+4
+6
++3
+Ability Score Improvement
+3
+4
+7
++3
+Subclass feature
+3
+4
+8
++3
+Ability Score Improvement
+3
+4
+9
++4
+Indomitable (one use), Tactical Master
+3
+4
+10
++4
+Subclass feature
+4
+5
+11
++4
+Two Extra Attacks
+4
+5
+12
++4
+Ability Score Improvement
+4
+5
+13
++5
+Indomitable (two uses), Studied Attacks
+4
+5
+14
++5
+Ability Score Improvement
+4
+5
+15
++5
+Subclass feature
+4
+5
+16
++5
+Ability Score Improvement
+4
+6
+17
++6
+Action Surge (two uses), Indomitable (three uses)
+4
+6
+18
++6
+Subclass feature
+19
++6
+Epic Boon
+20
++6
+Three Extra Attacks
+LEVEL 3: FIGHTER SUBCLASS
+You gain a Fighter subclass of your choice. The
+Battle Master, Champion, Eldritch Knight, and Psi
+Warrior subclasses are detailed after this class's description. A subclass is a specialization that grants
+you features at certain Fighter levels. For the rest
+of your career, you gain each of your subclass's features that are of your Fighter level or lower.
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Fighter
+levels 6, 8, 12, 14, and 16.
+LEVEL 5: EXTRA ATTACK
+You can attack twice instead of once whenever you
+take the Attack action on your turn.
+LEVEL 5: TACTICAL SHI FT
+Whenever you activate your Second Wind with a
+Bonus Action, you can move up to half your Speed
+without provoking Opportunity Attacks.
+LEVEL 9: INDOMITABLE
+If you fail a saving throw, you can re roll it with a
+bonus equal to your Fighter level. You must use the
+new roll, and you can't use this feature again until
+you finish a Long Rest.
+92
+CH APTER 3 I CHARACTER CLASSES
+4
+6
+4
+6
+4
+6
+You can use this feature twice before a Long Rest
+starting at level 13 and three times before a Long
+Rest starting at level 17.
+LEVEL 9: TACTICAL MASTER
+When you attack with a weapon whose mastery
+property you can use, you can replace that property with the Push, Sap, or Slow property for that
+attack.
+LEVEL 11: Two EXTRA ATTACKS
+You can attack three times instead of once whenever you take the Attack action on your turn.
+LEVEL 13: STUDIED ATTACKS
+You study your opponents and learn from each attack you make. If you make an attack roll against
+a creature and miss, you have Advantage on your
+next attack roll against that creature before the end
+of your next turn.
+LEVE L 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Combat Prowess is recommended.
+LEVEL 20: THR EE E XT RA ATTAC KS
+You can attack four times instead of once whenever
+you take the Attack action on your turn.

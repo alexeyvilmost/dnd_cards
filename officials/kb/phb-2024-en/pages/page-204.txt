@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 204/387
+
+KE EN Mr N D
+General Feat (Prerequisite: Level 4+, Intelligence 13+)
+You gain the following benefits.
+Ability Score Increase. Increase your Intelligence
+score by 1, to a maximum of 20.
+Lore Knowledge. Choose one of the following
+skills: Arcana, History, Investigation, Nature, or
+Religion. If you lack proficiency in the chosen skill,
+you gain proficiency in it, and if you already have
+proficiency in it, you gain Expertise in it.
+Quick Study. You can take the Study action as a
+Bonus Action.
+LIGHTLY ARMORED
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Armor Training. You gain training with Light armor and Shields.
+MAGE SLAYER
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Concentration Breaker. When you damage a
+creature that is concentrating, it has Disadvantage on the saving throw it makes to maintain
+Concentration.
+Guarded Mind. If you fail an Intelligence, a Wisdom, or a Charisma saving throw, you can cause
+yourself to succeed instead. Once you use this benefit, you can't use it again until you finish a Short or
+Long Rest.
+MARTIAL WEAPON TRA INI NG
+General Fea t (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Weapon Proficiency. You gain proficiency with
+Martial weapons.
+MEDIU M AR MOR MASTER
+General Feat (Prerequisite: Level 4+, Medium Armor
+Training)
+You gain the followi ng benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity sco1·~ by l, to a maximum of 20.
+Dexterous Wearer. While you're wearing Medium
+armor, you can add 3, rather than 2, to your AC if
+you have a Dexterity score of 16 or higher.
+MODERATELY ARMORED
+General Feat (Prerequisite: Level 4+, Light Armor
+Training)
+You gain the following benefits.
+Abili~y Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Armor Training. You gain training with Medium
+armor.
+MOUNTED COMBATANT
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength,
+Dexterity, or Wisdom score by 1, to a maximum of
+20.
+Mounted Strike. While mounted, you have Advantage on attack rolls against any unmounted creature within 5 feet of your mount that is at least one
+size smaller than the mount.
+Leap Aside. If your mount is subjected to an effect
+that allows it to make a Dexterity saving throw to
+take only half damage, it instead takes no damage if
+it succeeds on the saving throw and only half damage if it fails. For your mount to gain this benefit,
+you must be riding it, and neither of you can have
+the Incapacitated condition.
+Veer. While mounted, you can force an attack that
+hits your mount to hit you instead if you don't have
+the Incapacitated condition.
+OBSERVANT
+General Feat (Prerequisite: Level 4+, Intelligence or
+Wisdom 13+)
+You gain the following benefits.
+Ability Score Increase. Increase your Intelligence
+or Wisdom score by 1, to a maximum of 20.
+Keen Observer. Choose one of the following skills:
+Insight, Investigation, or Perception. If you lack proficiency with the chosen skill, you gain proficiency
+in it, and if you already have proficiency in it, you
+gain Expertise in it.
+Quick Search. You can take the Search action as a
+Bonus Action.
+CH \PTE R 5 I FEATS
+20~

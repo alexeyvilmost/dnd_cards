@@ -1,0 +1,51 @@
+# Player's Handbook 2024 (EN) — PDF-страница 98/387
+
+unoccupied space you can see. Alternatively, if the
+target is a Tiny object, you can transport it to or
+from your hand.
+Once you take this action, you can't do so again
+until you finish a Short or Long Rest unless you
+expend a Psionic Energy Die (no action required) to
+restore your use of it.
+LEVEL 7: TELEKINETIC ADEPT
+You have mastered new ways to use your telekinetic
+abilities, detailed below.
+Psi-Powered Leap. As a Bonus Action, you gain a
+Fly Speed equal to twice your Speed until the end of
+the current turn. Once you take this Bonus Action,
+you can't do so again until you finish a Short or
+Long Rest unless you expend a Psionic Energy Die
+(no action required) to restore your use of it.
+Telekinetic Thrust. When you deal damage to a
+target with your Psionic Strike, you can force the
+target to make a Strength saving throw (DC 8 plus
+your Intelligence modifier and Proficiency Bonus).
+On a failed save, you can give the target the Prone
+condition or transport it up to 10 feet horizontally.
+LEVEL 10: GUARDED MIND
+You have Resistance to Psychic damage. Moreover,
+if you start your turn with the Charmed or Frightened condition, you can expend a Psionic Energy
+Die (no action required) and end every effect on
+yourself giving you those conditions.
+LEVEL 15: BULWARK OF FORCE
+You can shield yourself and others with telekinetic
+force. As a Bonus Action, you can choose creatures,
+including yourself, within 30 feet of yourself, up
+to a number of creatures equal to your Intelligence
+modifier (minimum of one creature). Each of the
+chosen creatures has Half Cover for 1 minute or until you have the Incapacitated condition.
+Once you use this feature, you can't do so again
+until you finish a Long Rest unless you expend a
+Psionic Energy Die (no action required) to restore
+your use of it.
+LEVEL 18: TELEKINETIC MASTER
+You always have the Telekinesis spell prepared. With
+this feature, you can cast it without a spell slot or
+components, and your spellcasting ability for it is
+Intelligence. On each of your turns while you maintain Concentration on it, including the turn when
+you cast it, you can make one attack with a weapon
+as a Bonus Action.
+Once you cast the spell with this feature, you can't
+do so in this way again until you finish a Long Rest
+unless you expend a Psionic Energy Die (no action
+required) to restore your use of it.

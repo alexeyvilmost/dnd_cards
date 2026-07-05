@@ -1,0 +1,80 @@
+# Player's Handbook 2024 (EN) — PDF-страница 228/387
+
+SPYGLAS S (l. 0 00 G.P)
+Objects viewed through a Spyglass are magnified to
+twice their size.
+STRING (1 SP)
+String is 10 feet long. You can tie a knot in it as a
+Utilize action.
+v
+TENT (2 GP)
+A Tent sleeps up to two Small or Medium creatures.
+TINDERBOX (5 SP)
+A Tinderbox is a small container holding flint, fire
+steel, and tinder (usually dry cloth soaked in light
+oil) used to kindle a fire. Using it to light a Candle,
+Lamp, Lantern, or Torch-or anything else with
+exposed fuel-takes a Bonus Action. Lighting any
+other fire takes 1 minute.
+TORCH (1 CP)
+A Torch burns for 1 hour, casting Bright Light in
+a 20-foot radius and Dim Light for an additional
+20 feet. When you take the Attack action, you can
+attack with the Torch, using it as a Simple Melee
+weapon. On a hit, the target takes 1 Fire damage.
+VIAL (1 GP)
+A Vial holds up to 4 ounces.
+WATERSKIN (2 SP)
+A Waterskin holds up to 4 pints. If you don't drink
+sufficient water, you risk dehydration (see the rules
+glossary).
+MOUNTS AND VEHICLES
+A mount can help you move more quickly through
+the wilderness, but its primary purpose is to carry
+gear that would otherwise slow you down. The
+Mounts and Other Animals table shows each animal's carrying capacity. See appendix B for the animals' stat blocks.
+MOUNTS A ND CARGO
+An animal pulling a carriage, cart, chariot, sled, or
+wagon can move weight up to five times its base
+carrying capacity, including the weight of the vehicle. If multiple animals pull the same vehicle, add
+their carrying cnpacities together.
+BARDING
+Barding is armor designed for a mount. Any type
+of armor on the Armor table in this chapter can be
+purchased as barding. The cost is four times the
+normal cost, and it weighs twice as much.
+SADDLES
+A saddle comes with a bit, a bridle, reins, and any
+other equipment needed to use the saddle. A Military Saddle gives Advantage on any ability check
+you make to remain mounted. An Exotic Saddle is
+required for riding an aquatic or a flying mount.
+MOUNTS AND OTHER ANIMALS
+Item
+Carrying Capacity
+Cost
+Camel
+450 lb.
+50GP
+Elephant
+1,320 lb.
+200GP
+Horse, Draft
+540 lb.
+50GP
+Horse, Riding
+480 lb.
+75 GP
+Mastiff
+195 lb.
+25 GP
+Mule
+420 lb.
+8 GP
+Pony
+225 lb.
+30GP
+Warhorse
+540 lb.
+400GP
+CHAPTER 6 I EQUIPMENT
+229

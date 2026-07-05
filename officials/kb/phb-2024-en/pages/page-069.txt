@@ -1,0 +1,290 @@
+# Player's Handbook 2024 (EN) — PDF-страница 69/387
+
+'JO
+CLERIC FEATURES
+Proficiency
+Channel
+Divinity
+Level
+Bonus
+Class Features
+Spellcasting, Divine Order
++2
+2
++2
+Channel Divinity
+2
+Cleric Subclass
+2
+3
++2
+Ability Score Improvement
+2
+4
++2
+Sear Undead
+2
+s
++3
+6
++3
+Subclass feature
+3
+7
++3
+Blessed Strikes
+3
+8
++3
+Ability Score Improvement
+3
+9
++4
+3
+10
++4
+Divine Intervention
+3
+11
++4
+3
+12
++4
+Ability Score Improvement
+3
+13
++5
+3
+14
++S
+Improved Blessed Strikes
+3
+15
++5
+3
+16
++5
+Ability Score Improvement
+3
+17
++6
+Subclass feature
+3
+18
++6
+4
+19
++6
+Epic Boon
+4
+20
++6
+Greater Divine Intervention
+4
+L EVEL l: DIVINE ORDER
+You have dedicated yourself to one of the following
+sacred roles of your choice.
+Protector. Trained for battle, you gain proficiency
+with Martial weapons and training with Heavy
+armor.
+Thaumaturge. You know one extra cantrip from
+the Cleric spell list. In addition, your mystical connection to the divine gives you a bonus to your
+Intelligence (Arcana or Religion) checks. The bonus
+equals your Wisdom modifier (minimum of +1).
+LEVEL 2: CHANNEL DIVINITY
+You can channel divine energy directly from the
+Outer Planes to fuel magical effects. You start with
+two such effects: Divine Spark and Turn Undead,
+each of which is described below. Each time you use
+this class's Channel Divinity, choose which Channel
+Divinity effect from this class to create. You gain
+additional effect options at higher Cleric levels.
+You can use this class's Channel Divinity twice.
+You regain one of its expended uses when you finish
+a Short Rest, and you regain all expended uses when
+you finish a Long Rest. You gain additional uses
+when you reach certain Cleric levels, as shown in
+the Channel Divinity column of the Cleric Features
+table.
+CHAPTER 3 I CHARACTER CLASSES
+Prepared
+--Spell Slots per Spel 1. . .wel-
+Cantrips
+Spells
+l
+2
+3
+4
+s
+6
+7
+8
+3
+4
+2
+3
+5
+3
+3
+6
+4
+2
+4
+7
+4
+3
+4
+9
+4
+3
+2
+4
+10
+4
+3
+3
+4
+ll
+4
+3
+3
+l
+4
+12
+4
+3
+3
+2
+4
+14
+4
+3
+3
+3
+l
+5
+15
+4
+3
+3
+3
+2
+5
+16
+4
+3
+3
+3
+2
+1
+5
+16
+4
+3
+3
+3
+2
+1
+s
+17
+4
+3
+3
+3
+2
+1
+1
+s
+17
+4
+3
+3
+3
+2
+1
+1
+5
+18
+4
+3
+3
+3
+2
+1
+1
+5
+18
+4
+3
+3
+3
+2
+1
+1
+1
+5
+19
+4
+3
+3
+3
+2
+1
+1
+1
+s
+20
+4
+3
+3
+3
+3
+1
+1
+1
+5
+21
+4
+3
+3
+3
+3
+2
+1
+1
+5
+22
+4
+3
+3
+3
+3
+2
+2
+1
+If a Channel Divinity effect requires a saving
+throw, the DC equals the spell save DC from this
+class's Spellcasting feature.
+Divine Spark. As a Magic action, you point your
+Holy Symbol at another creature you can see within
+30 feet of yourself and focus divine energy at it.
+Roll ld8 and add your Wisdom modifier. You either
+restore Hit Points to the creature equal to that total
+or force the creature to make a Constitution saving
+throw. On a failed save, the creature takes Necrotic
+or Radiant damage (your choice) equal to that total. On a successful save, the creature takes half as
+much damage (round down).
+You roll an additional d8 when you reach Cleric
+levels 7 (2d8), 13 (3d8}, and 18 (4d8).
+Turn Undead. As a Magic action, you present your
+Holy Symbol and censure Undead creatures. Each
+Undead of your choice within 30 feet of you must
+make a Wisdom saving throw. If the creature fails
+its save, it has the Frightened and Incapacitated
+conditions for 1 minute. For that duration, it tries
+to move as far from you as it can on its turns. This
+effect ends early on the creature if it takes any damage, if you have the Incapacitated condition, or if
+you die.
+9
+1
+1

@@ -1,0 +1,916 @@
+# Оглавление — Player's Handbook 2024 (EN)
+Источник: PlayersHandbook2024 EN.pdf
+Страниц: 387
+
+- Cover … стр. 1
+- Table of Contents … стр. 2
+- Welcome to Adventure … стр. 3
+- Chapter 1: Playing the Game … стр. 6
+  - D20 Tests … стр. 9
+  - Proficiency … стр. 12
+  - Actions … стр. 14
+  - Social Interaction … стр. 15
+  - Exploration … стр. 18
+  - Combat … стр. 22
+  - Damage and Healing … стр. 26
+- Chapter 2: Creating a Character … стр. 32
+  - Character Sheet … стр. 33
+  - Step 1: Choose a Class … стр. 32
+  - Step 2: Determine Origin … стр. 35
+  - Step 3: Determine Ability Scores … стр. 37
+  - Step 4: Choose an Alignment … стр. 38
+  - Step 5: Fill in Details … стр. 39
+  - Level Advancement … стр. 40
+  - Starting at Higher Levels … стр. 42
+  - Multiclassing … стр. 43
+  - Trinkets … стр. 45
+- Chapter 3: Character Classes … стр. 48
+  - Barbarian … стр. 49
+    - Path of the Berserker … стр. 53
+    - Path of the Wild Heart … стр. 54
+    - Path of the World Tree … стр. 55
+    - Path of the Zealot … стр. 56
+  - Bard … стр. 57
+    - Bard Spell List … стр. 61
+    - College of Dance … стр. 63
+    - College of Glamour … стр. 64
+    - College of Lore … стр. 65
+    - College of Valor … стр. 66
+  - Cleric … стр. 67
+    - Cleric Spell List … стр. 70
+    - Life Domain … стр. 72
+    - Light Domain … стр. 73
+    - Trickery Domain … стр. 74
+    - War Domain … стр. 75
+  - Druid … стр. 77
+    - Druid Spell List … стр. 81
+    - Circle of the Land … стр. 83
+    - Circle of the Moon … стр. 85
+    - Circle of the Sea … стр. 86
+    - Circle of the Stars … стр. 87
+  - Fighter … стр. 89
+    - Battle Master … стр. 92
+      - Maneuver Options … стр. 93
+    - Champion … стр. 95
+    - Eldritch Knight … стр. 95
+      - Wizard Spell List … стр. 167
+    - Psi Warrior … стр. 97
+  - Monk … стр. 99
+    - Warrior of Mercy … стр. 103
+    - Warrior of Shadow … стр. 104
+    - Warrior of the Elements … стр. 105
+    - Warrior of the Open Hand … стр. 106
+  - Paladin … стр. 107
+    - Paladin Spell List … стр. 111
+    - Oath of Devotion … стр. 112
+    - Oath of Glory … стр. 113
+    - Oath of the Ancients … стр. 114
+    - Oath of Vengeance … стр. 115
+  - Ranger … стр. 117
+    - Ranger Spell List … стр. 120
+    - Beast Master … стр. 121
+    - Fey Wanderer … стр. 123
+    - Gloom Stalker … стр. 124
+    - Hunter … стр. 126
+  - Rogue … стр. 127
+    - Arcane Trickster … стр. 131
+    - Assassin … стр. 133
+    - Soulknife … стр. 134
+    - Thief … стр. 136
+  - Sorcerer … стр. 137
+    - Metamagic Options … стр. 140
+    - Sorcerer Spell List … стр. 141
+    - Aberrant Sorcery … стр. 144
+    - Clockwork Sorcery … стр. 145
+    - Draconic Sorcery … стр. 147
+    - Wild Magic Sorcery … стр. 148
+      - Wild Magic Surge … стр. 149
+  - Warlock … стр. 151
+    - Eldritch Invocation Options … стр. 154
+    - Warlock Spell List … стр. 156
+    - Archfey Patron … стр. 158
+    - Celestial Patron … стр. 159
+    - Fiend Patron … стр. 160
+    - Great Old One Patron … стр. 161
+  - Wizard … стр. 163
+    - Wizard Spell List … стр. 167
+    - Abjurer … стр. 171
+    - Diviner … стр. 172
+    - Evoker … стр. 173
+    - Illusionist … стр. 174
+- Chapter 4: Character Origins … стр. 176
+  - Background Descriptions … стр. 176
+    - Acolyte … стр. 177
+    - Artisan … стр. 177
+    - Charlatan … стр. 178
+    - Criminal … стр. 178
+    - Entertainer … стр. 179
+    - Farmer … стр. 179
+    - Guard … стр. 180
+    - Guide … стр. 180
+    - Hermit … стр. 181
+    - Merchant … стр. 181
+    - Noble … стр. 182
+    - Sage … стр. 182
+    - Sailor … стр. 183
+    - Scribe … стр. 183
+    - Soldier … стр. 184
+    - Wayfarer … стр. 184
+  - Species Descriptions … стр. 185
+    - Aasimar … стр. 185
+    - Dragonborn … стр. 186
+    - Dwarf … стр. 187
+    - Elf … стр. 188
+    - Gnome … стр. 190
+    - Goliath … стр. 191
+    - Halfling … стр. 192
+    - Human … стр. 193
+    - Orc … стр. 194
+    - Tiefling … стр. 195
+- Chapter 5: Feats … стр. 198
+  - Origin Feats (Level 1+) … стр. 199
+    - Alert … стр. 199
+    - Crafter … стр. 199
+    - Healer … стр. 200
+    - Lucky … стр. 200
+    - Magic Initiate … стр. 200
+    - Musician … стр. 200
+    - Savage Attacker … стр. 200
+    - Skilled … стр. 200
+    - Tavern Brawler … стр. 201
+    - Tough … стр. 201
+  - General Feats (Level 4+) … стр. 201
+    - Ability Score Improvement … стр. 201
+    - Actor … стр. 201
+    - Athlete … стр. 201
+    - Charger … стр. 201
+    - Chef … стр. 201
+    - Crossbow Expert … стр. 202
+    - Crusher … стр. 202
+    - Defensive Duelist … стр. 202
+    - Dual Wielder … стр. 202
+    - Durable … стр. 202
+    - Elemental Adept … стр. 202
+    - Fey-Touched … стр. 203
+    - Grappler … стр. 203
+    - Great Weapon Master … стр. 203
+    - Heavily Armored … стр. 203
+    - Inspiring Leader … стр. 203
+    - Keen Mind … стр. 204
+    - Lightly Armored … стр. 204
+    - Mage Slayer … стр. 204
+    - Martial Weapon Training … стр. 204
+    - Medium Armor Master … стр. 204
+    - Moderately Armored … стр. 204
+    - Mounted Combatant … стр. 204
+    - Observant … стр. 204
+    - Piercer … стр. 205
+    - Poisoner … стр. 205
+    - Polearm Master … стр. 205
+    - Resilient … стр. 205
+    - Ritual Caster … стр. 205
+    - Sentinel … стр. 206
+    - Shadow-Touched … стр. 206
+    - Sharpshooter … стр. 206
+    - Shield Master … стр. 206
+    - Skill Expert … стр. 206
+    - Skulker … стр. 207
+    - Slasher … стр. 207
+    - Speedy … стр. 207
+    - Spell Sniper … стр. 207
+    - Telekinetic … стр. 207
+    - Telepathic … стр. 207
+    - War Caster … стр. 208
+    - Weapon Master … стр. 208
+  - Fighting Style Feats (Fighting Style Feature) … стр. 208
+    - Archery … стр. 208
+    - Blind Fighting … стр. 208
+    - Defense … стр. 208
+    - Dueling … стр. 208
+    - Great Weapon Fighting … стр. 208
+    - Interception … стр. 208
+    - Protection … стр. 208
+    - Thrown Weapon Fighting … стр. 209
+    - Two-Weapon Fighting … стр. 209
+    - Unarmed Fighting … стр. 209
+  - Epic Boon Feats (Level 19+) … стр. 209
+    - Boon of Combat Prowess … стр. 209
+    - Boon of Dimensional Travel … стр. 209
+    - Boon of Energy Resistance … стр. 209
+    - Boon of Fate … стр. 209
+    - Boon of Fortitude … стр. 209
+    - Boon of Irresistible Offense … стр. 210
+    - Boon of Recovery … стр. 210
+    - Boon of Skill … стр. 210
+    - Boon of Speed … стр. 210
+    - Boon of Spell Recall … стр. 210
+    - Boon of the Night Spirit … стр. 210
+    - Boon of Truesight … стр. 210
+- Chapter 6: Equipment … стр. 212
+  - Coins … стр. 212
+  - Weapons … стр. 212
+    - Properties … стр. 212
+    - Mastery Properties … стр. 213
+    - Weapons Table … стр. 214
+  - Armor … стр. 218
+  - Tools … стр. 219
+    - Artisan's Tools … стр. 219
+    - Other Tools … стр. 220
+  - Adventuring Gear … стр. 221
+    - Adventuring Gear Table … стр. 222
+  - Mounts and Vehicles … стр. 228
+    - Mounts and Other Animals Table … стр. 228
+    - Tack, Harness, and Drawn Vehicles … стр. 229
+    - Large Vehicles … стр. 229
+    - Airborne and Waterborne Vehicles Table … стр. 229
+  - Services … стр. 229
+    - Lifestyle Expenses … стр. 229
+    - Food, Drink, and Lodging … стр. 230
+    - Travel … стр. 230
+    - Hirelings … стр. 231
+    - Spellcasting … стр. 231
+  - Magic Items … стр. 231
+  - Crafting Equipment … стр. 232
+    - Spell Scroll Costs Table … стр. 232
+- Chapter 7: Spells … стр. 234
+  - Gaining Spells … стр. 234
+  - Casting Spells … стр. 234
+  - Spell Descriptions … стр. 238
+    - A … стр. 238
+      - Acid Splash … стр. 238
+      - Aid … стр. 238
+      - Alarm (R) … стр. 238
+      - Alter Self … стр. 238
+      - Animal Friendship … стр. 238
+      - Animal Messenger (R) … стр. 239
+      - Animal Shapes … стр. 239
+      - Animate Dead … стр. 239
+      - Animate Objects … стр. 239
+        - Animate Object Statblock … стр. 240
+      - Antilife Shell … стр. 240
+      - Antimagic Field … стр. 240
+      - Antipathy/Sympathy … стр. 241
+      - Arcane Eye … стр. 241
+      - Arcane Gate … стр. 241
+      - Arcane Lock … стр. 241
+      - Arcane Vigor … стр. 241
+      - Armor of Agathys … стр. 242
+      - Arms of Hadar … стр. 242
+      - Astral Projection … стр. 242
+      - Augury (R) … стр. 243
+      - Aura of Life … стр. 243
+      - Aura of Purity … стр. 243
+      - Aura of Vitality … стр. 243
+      - Awaken … стр. 243
+    - B … стр. 244
+      - Banishing Smite … стр. 244
+      - Banishment … стр. 244
+      - Barkskin … стр. 244
+      - Beacon of Hope … стр. 244
+      - Beast Sense (R) … стр. 244
+      - Befuddlement … стр. 244
+      - Bestow Curse … стр. 245
+      - Bigby's Hand … стр. 245
+      - Blade Barrier … стр. 246
+      - Blade Ward … стр. 246
+      - Bless … стр. 246
+      - Blight … стр. 246
+      - Blinding Smite … стр. 246
+      - Blindness/Deafness … стр. 247
+      - Blink … стр. 247
+      - Blur … стр. 247
+      - Burning Hands … стр. 247
+    - C … стр. 247
+      - Call Lightning … стр. 247
+      - Calm Emotions … стр. 248
+      - Chain Lightning … стр. 248
+      - Charm Monster … стр. 248
+      - Charm Person … стр. 248
+      - Chill Touch … стр. 248
+      - Chromatic Orb … стр. 248
+      - Circle of Death … стр. 249
+      - Circle of Power … стр. 249
+      - Clairvoyance … стр. 249
+      - Clone … стр. 250
+      - Cloudkill … стр. 250
+      - Cloud of Daggers … стр. 250
+      - Color Spray … стр. 250
+      - Command … стр. 250
+      - Commune (R) … стр. 251
+      - Commune with Nature (R) … стр. 251
+      - Compelled Duel … стр. 251
+      - Comprehend Languages (R) … стр. 251
+      - Compulsion … стр. 251
+      - Cone of Cold … стр. 252
+      - Confusion … стр. 252
+      - Conjure Animals … стр. 253
+      - Conjure Barrage … стр. 253
+      - Conjure Celestial … стр. 253
+      - Conjure Elemental … стр. 253
+      - Conjure Fey … стр. 254
+      - Conjure Minor Elementals … стр. 254
+      - Conjure Volley … стр. 254
+      - Conjure Woodland Beings … стр. 254
+      - Contact Other Plane (R) … стр. 254
+      - Contagion … стр. 255
+      - Contingency … стр. 255
+      - Continual Flame … стр. 255
+      - Control Water … стр. 255
+      - Control Weather … стр. 256
+      - Cordon of Arrows … стр. 257
+      - Counterspell … стр. 257
+      - Create Food and Water … стр. 257
+      - Create or Destroy Water … стр. 257
+      - Create Undead … стр. 257
+      - Creation … стр. 258
+      - Crown of Madness … стр. 258
+      - Crusader's Mantle … стр. 258
+      - Cure Wounds … стр. 258
+    - D … стр. 258
+      - Dancing Lights … стр. 258
+      - Darkness … стр. 259
+      - Darvision … стр. 259
+      - Daylight … стр. 259
+      - Death Ward … стр. 260
+      - Delayed Blast Fireball … стр. 260
+      - Demiplane … стр. 260
+      - Destructive Wave … стр. 260
+      - Detect Evil and Good … стр. 260
+      - Detect Magic (R) … стр. 261
+      - Detect Poison and Disease (R) … стр. 261
+      - Detect Thoughts … стр. 261
+      - Dimension Door … стр. 261
+      - Disguise Self … стр. 261
+      - Disintegrate … стр. 262
+      - Dispel Evil and Good … стр. 262
+      - Dispel Magic … стр. 263
+      - Dissonant Whispers … стр. 263
+      - Divination (R) … стр. 263
+      - Divine Favor … стр. 264
+      - Divine Smite … стр. 264
+      - Divine Word … стр. 264
+      - Dominate Beast … стр. 264
+      - Dominate Monster … стр. 264
+      - Dominate Person … стр. 265
+      - Dragon's Breath … стр. 265
+      - Drawmij's Instant Summons (R) … стр. 265
+      - Dream … стр. 265
+      - Druidcraft … стр. 265
+    - E … стр. 266
+      - Earthquake … стр. 266
+      - Eldritch Blast … стр. 266
+      - Elementalism … стр. 266
+      - Elemental Weapon … стр. 267
+      - Enhance Ability … стр. 267
+      - Enlarge/Reduce … стр. 267
+      - Ensnaring Strike … стр. 267
+      - Entangle … стр. 267
+      - Enthrall … стр. 268
+      - Etherealness … стр. 268
+      - Evard's Black Tentacles … стр. 269
+      - Expeditious Retreat … стр. 269
+      - Eyebite … стр. 269
+    - F … стр. 270
+      - Fabricate … стр. 270
+      - Faerie Fire … стр. 270
+      - False Life … стр. 270
+      - Fear … стр. 270
+      - Feather Fall … стр. 270
+      - Feign Death (R) … стр. 270
+      - Find Familiar (R) … стр. 271
+      - Find Steed … стр. 271
+        - Otherwordly Steed Statblock … стр. 272
+      - Find the Path … стр. 272
+      - Find Traps … стр. 272
+      - Finger of Death … стр. 272
+      - Fireball … стр. 273
+      - Fire Bolt … стр. 273
+      - Fire Shield … стр. 273
+      - Fire Storm … стр. 274
+      - Flame Blade … стр. 274
+      - Flame Strike … стр. 274
+      - Flaming Sphere … стр. 274
+      - Flesh to Stone … стр. 274
+      - Fly … стр. 275
+      - Fog Cloud … стр. 275
+      - Forbiddance (R) … стр. 275
+      - Forcecage … стр. 275
+      - Foresight … стр. 275
+      - Fount of Moonlight … стр. 276
+      - Freedom of Movement … стр. 276
+      - Friends … стр. 276
+    - G … стр. 276
+      - Gaseous Form … стр. 276
+      - Gate … стр. 276
+      - Geas … стр. 277
+      - Gentle Repose (R) … стр. 277
+      - Giant Insect … стр. 278
+        - Giant Insect Statblock … стр. 278
+      - Glibness … стр. 278
+      - Globe of Invulnerability … стр. 278
+      - Glyph of Warding … стр. 278
+      - Goodberry … стр. 279
+      - Grasping Vine … стр. 279
+      - Grease … стр. 279
+      - Greater Invisibility … стр. 280
+      - Greater Restoration … стр. 280
+      - Guardian of Faith … стр. 280
+      - Guards and Wards … стр. 281
+      - Guidance … стр. 281
+      - Guiding Bolt … стр. 281
+      - Gust of Wind … стр. 281
+    - H … стр. 282
+      - Hail of Thorns … стр. 282
+      - Hallow … стр. 282
+      - Hallucinatory Terrain … стр. 282
+      - Harm … стр. 282
+      - Haste … стр. 283
+      - Heal … стр. 283
+      - Healing Word … стр. 283
+      - Heat Metal … стр. 283
+      - Hellish Rebuke … стр. 283
+      - Heroes' Feast … стр. 283
+      - Heroism … стр. 284
+      - Hex … стр. 284
+      - Hold Monster … стр. 284
+      - Hold Person … стр. 285
+      - Holy Aura … стр. 285
+      - Hunger of Hadar … стр. 285
+      - Hunter's Mark … стр. 286
+      - Hypnotic Pattern … стр. 286
+    - I … стр. 286
+      - Ice Knife … стр. 286
+      - Ice Storm … стр. 286
+      - Identify (R) … стр. 286
+      - Illusory Script (R) … стр. 287
+      - Imprisonment … стр. 287
+      - Incendiary Cloud … стр. 287
+      - Inflict Wounds … стр. 287
+      - Insect Plague … стр. 288
+      - Invisibility … стр. 288
+    - J … стр. 288
+      - Jallarzi's Storm of Radiance … стр. 288
+      - Jump … стр. 289
+    - K … стр. 289
+      - Knock … стр. 289
+    - L … стр. 289
+      - Legend Lore … стр. 289
+      - Leomund's Secret Chest … стр. 289
+      - Leomund's Tiny Hut (R) … стр. 290
+      - Lesser Restoration … стр. 290
+      - Levitate … стр. 290
+      - Light … стр. 291
+      - Lightning Arrow … стр. 291
+      - Lightning Bolt … стр. 291
+      - Locate Animals or Plants (R) … стр. 291
+      - Locate Creature … стр. 291
+      - Locate Object … стр. 292
+      - Longstrider … стр. 292
+    - M … стр. 292
+      - Mage Armor … стр. 292
+      - Mage Hand … стр. 292
+      - Magic Circle … стр. 292
+      - Magic Jar … стр. 293
+      - Magic Missile … стр. 294
+      - Magic Mouth (R) … стр. 294
+      - Magic Weapon … стр. 294
+      - Major Image … стр. 294
+      - Mass Cure Wounds … стр. 295
+      - Mass Heal … стр. 295
+      - Mass Healing Word … стр. 295
+      - Mass Suggestion … стр. 295
+      - Maze … стр. 295
+      - Meld Into Stone (R) … стр. 295
+      - Melf's Acid Arrow … стр. 296
+      - Mending … стр. 296
+      - Message … стр. 297
+      - Meteor Swarm … стр. 297
+      - Mind Blank … стр. 297
+      - Mind Sliver … стр. 297
+      - Mind Spike … стр. 297
+      - Minor Illusion … стр. 297
+      - Mirage Arcane … стр. 298
+      - Mirror Image … стр. 298
+      - Mislead … стр. 298
+      - Misty Step … стр. 298
+      - Modify Memory … стр. 298
+      - Moonbeam … стр. 299
+      - Mordenkainen's Faithful Hound … стр. 299
+      - Mordenkainen's Magnificent Mansion … стр. 299
+      - Mordenkainen's Private Sanctum … стр. 300
+      - Mordenkainen's Sword … стр. 301
+      - Move Earth … стр. 301
+    - N … стр. 301
+      - Nondetection … стр. 301
+      - Nystul's Magic Aura … стр. 301
+    - O … стр. 301
+      - Otiluke's Freezing Sphere … стр. 301
+      - Otiluke's Resilient Sphere … стр. 302
+      - Otto's Irresistible Dance … стр. 302
+    - P … стр. 302
+      - Passwall … стр. 302
+      - Pass without Trace … стр. 302
+      - Phantasmal Force … стр. 303
+      - Pantasmal Killer … стр. 303
+      - Phantom Steed (R) … стр. 303
+      - Planar Ally … стр. 303
+      - Planar Binding … стр. 304
+      - Plane Shift … стр. 304
+      - Plant Growth … стр. 304
+      - Poison Spray … стр. 305
+      - Polymorph … стр. 305
+      - Power Word Fortify … стр. 305
+      - Power Word Heal … стр. 305
+      - Power Word Kill … стр. 305
+      - Power Word Stun … стр. 305
+      - Prayer of Healing … стр. 306
+      - Prestidigitation … стр. 306
+      - Prismatic Spray … стр. 306
+      - Prismatic Wall … стр. 307
+      - Produce Flame … стр. 307
+      - Programmed Illusion … стр. 308
+      - Project Image … стр. 308
+      - Protection from Energy … стр. 308
+      - Protection from Evil and Good … стр. 308
+      - Protection from Poison … стр. 309
+      - Purify Food and Drink (R) … стр. 309
+    - R … стр. 309
+      - Raise Dead … стр. 309
+      - Rary's Telepathic Bond (R) … стр. 310
+      - Ray of Enfeeblement … стр. 310
+      - Ray of Frost … стр. 310
+      - Ray of Sickness … стр. 310
+      - Regenerate … стр. 310
+      - Reincarnate … стр. 310
+      - Remove Curse … стр. 311
+      - Resistance … стр. 311
+      - Resurrection … стр. 311
+      - Reverse Gravity … стр. 311
+      - Revivify … стр. 311
+      - Rope Trick … стр. 311
+    - S … стр. 312
+      - Sacred Flame … стр. 312
+      - Sanctuary … стр. 312
+      - Scorching Ray … стр. 312
+      - Scrying … стр. 312
+      - Searing Smite … стр. 313
+      - See Invisibility … стр. 313
+      - Seeming … стр. 313
+      - Sending … стр. 313
+      - Sequester … стр. 314
+      - Shapechange … стр. 314
+      - Shatter … стр. 315
+      - Shield … стр. 315
+      - Shield of Faith … стр. 315
+      - Shillelagh … стр. 315
+      - Shining Smite … стр. 315
+      - Shocking Grasp … стр. 315
+      - Silence (R) … стр. 315
+      - Silent Image … стр. 316
+      - Simulacrum … стр. 316
+      - Sleep … стр. 316
+      - Sleet Storm … стр. 316
+      - Slow … стр. 317
+      - Sorcerous Burst … стр. 317
+      - Spare the Dying … стр. 317
+      - Speak with Animals (R) … стр. 317
+      - Speak with Dead … стр. 317
+      - Speak with Plants … стр. 318
+      - Spider Climb … стр. 318
+      - Spike Growth … стр. 318
+      - Spirit Guardians … стр. 318
+      - Spiritual Weapon … стр. 318
+      - Staggering Smite … стр. 319
+      - Starry Wisp … стр. 319
+      - Steel Wind Strike … стр. 319
+      - Stinking Cloud … стр. 320
+      - Stone Shape … стр. 320
+      - Stoneskin … стр. 320
+      - Storm of Vengeance … стр. 320
+      - Suggestion … стр. 320
+      - Summon Aberration … стр. 321
+        - Abberant Spirit Statblock … стр. 321
+      - Summon Beast … стр. 321
+        - Bestial Spirit … стр. 322
+      - Summon Celestial … стр. 322
+        - Celestial Spirit … стр. 322
+      - Summon Construct … стр. 323
+        - Construct Spirit … стр. 323
+      - Summon Dragon … стр. 323
+        - Draconic Spirit … стр. 324
+      - Summon Elemental … стр. 324
+        - Elemental Spirit … стр. 324
+      - Summon Fey … стр. 325
+        - Fey Spirit … стр. 325
+      - Summon Fiend … стр. 325
+        - Fiendish Spirit … стр. 326
+      - Summon Undead … стр. 327
+        - Undead Spirit … стр. 327
+      - Sunbeam … стр. 328
+      - Sunburst … стр. 328
+      - Swift Quiver … стр. 328
+      - Symbol … стр. 328
+      - Synaptic Static … стр. 329
+    - T … стр. 329
+      - Tasha's Bubbling Cauldron … стр. 329
+      - Tasha's Hideous Laughter … стр. 330
+      - Telekinesis … стр. 330
+      - Telepathy … стр. 330
+      - Teleport … стр. 330
+      - Teleportation Circle … стр. 331
+      - Tenser's Floating Disk (R) … стр. 331
+      - Thaumaturgy … стр. 332
+      - Thorn Whip … стр. 332
+      - Thunderclap … стр. 332
+      - Thunderous Smite … стр. 333
+      - Thunderwave … стр. 333
+      - Time Stop … стр. 333
+      - Toll the Dead … стр. 333
+      - Tongues … стр. 333
+      - Transport via Plants … стр. 333
+      - Tree Stride … стр. 334
+      - True Polymorph … стр. 334
+      - True Resurrection … стр. 335
+      - True Seeing … стр. 335
+      - True Strike … стр. 335
+      - Tsunami … стр. 335
+    - U … стр. 335
+      - Unseen Servant (R) … стр. 335
+    - V … стр. 336
+      - Vampiric Touch … стр. 336
+      - Vicious Mockery … стр. 336
+      - Vitriolic Sphere … стр. 336
+    - W … стр. 337
+      - Wall of Fire … стр. 337
+      - Wall of Force … стр. 337
+      - Wall of Ice … стр. 338
+      - Wall of Stone … стр. 338
+      - Wall of Thorns … стр. 338
+      - Warding Bond … стр. 339
+      - Water Breathing … стр. 339
+      - Water Walk (R) … стр. 339
+      - Web … стр. 339
+      - Weird … стр. 340
+      - Wind Walk … стр. 340
+      - Wind Wall … стр. 340
+      - Wish … стр. 340
+      - Witch Bolt … стр. 342
+      - Word of Radiance … стр. 342
+      - Word of Recall … стр. 342
+      - Wrathful Smite … стр. 342
+    - Y … стр. 342
+      - Yolande's Regal Presence … стр. 342
+    - Z … стр. 342
+      - Zone of Truth … стр. 342
+- Appendix A: The Multiverse … стр. 343
+- Appendix B: Creature Stat Blocks … стр. 345
+  - Ape 1/2 … стр. 345
+  - Badger 0 … стр. 345
+  - Bat 0 … стр. 345
+  - Black Bear 1/2 … стр. 345
+  - Boar 1/4 … стр. 346
+  - Brown Bear 1 … стр. 346
+  - Camel 1/8 … стр. 346
+  - Cat 0 … стр. 346
+  - Constrictor Snake 1/4 … стр. 347
+  - Crab 0 … стр. 347
+  - Crocodile 1/2 … стр. 347
+  - Dire Wolf 1 … стр. 347
+  - Draft Horse 1/4 … стр. 348
+  - Elephant 4 … стр. 348
+  - Elk 1/4 … стр. 348
+  - Frog 0 … стр. 348
+  - Giant Badger 1/4 … стр. 349
+  - Giant Crab 1/8 … стр. 349
+  - Giant Goat 1/2 … стр. 349
+  - Giant Seahorse 1/2 … стр. 349
+  - Giant Spider 1 … стр. 350
+  - Giant Weasel 1/8 … стр. 350
+  - Goat 0 … стр. 350
+  - Hawk 0 … стр. 351
+  - Imp 1 … стр. 351
+  - Lion 1 … стр. 351
+  - Lizard 0 … стр. 352
+  - Mastiff 1/8 … стр. 352
+  - Mule 1/8 … стр. 352
+  - Octopus 0 … стр. 352
+  - Owl 0 … стр. 353
+  - Panther 1/4 … стр. 353
+  - Pony 1/8 … стр. 353
+  - Pseudodragon 1/4 … стр. 353
+  - Quasit 1 … стр. 354
+  - Rat 0 … стр. 354
+  - Raven 0 … стр. 354
+  - Reef Shark 1/2 … стр. 355
+  - Riding Horse 1/4 … стр. 355
+  - Scorpion 0 … стр. 355
+  - Skeleton 1/4 … стр. 355
+  - Slaad Tadpole 1/8 … стр. 356
+  - Sphinx of Wonder 1 … стр. 356
+  - Spider 0 … стр. 356
+  - Sprite 1/4 … стр. 357
+  - Tiger 1 … стр. 357
+  - Venomous Snake 1/8 … стр. 357
+  - Warhorse 1/2 … стр. 358
+  - Weasel 0 … стр. 358
+  - Wolf 1/4 … стр. 358
+  - Zombie 1/4 … стр. 358
+- Appendix C: Rules Glossary … стр. 359
+  - Ability Check … стр. 359
+  - Ability Score and Modifier … стр. 359
+  - Action … стр. 359
+    - Attack … стр. 360
+    - Dash … стр. 364
+    - Disengage … стр. 365
+    - Dodge … стр. 365
+    - Help … стр. 367
+    - Hide … стр. 367
+    - Influence … стр. 368
+    - Magic … стр. 370
+    - Ready … стр. 371
+    - Search … стр. 372
+    - Study … стр. 374
+    - Utilize … стр. 376
+  - Advantage … стр. 359
+  - Adventure … стр. 359
+  - Alignment … стр. 359
+  - Ally … стр. 360
+  - Area of Effect … стр. 360
+    - Cone … стр. 363
+    - Cube … стр. 363
+    - Cylinder … стр. 363
+    - Emanation … стр. 365
+    - Line … стр. 369
+    - Sphere … стр. 373
+  - Armor Class … стр. 360
+  - Armor Training … стр. 360
+  - Attack [Action] … стр. 360
+  - Attack Roll … стр. 360
+  - Attitude … стр. 360
+    - Friendly … стр. 366
+    - Hostile … стр. 367
+    - Indifferent … стр. 368
+  - Attunement … стр. 360
+  - Blinded [Condition] … стр. 360
+  - Blindsight … стр. 360
+  - Bloodied … стр. 361
+  - Bonus Action … стр. 361
+  - Breaking Objects … стр. 361
+  - Bright Light … стр. 361
+  - Burning [Hazard] … стр. 361
+  - Burrow Speed … стр. 361
+  - Campaign … стр. 361
+  - Cantrip … стр. 361
+  - Carrying Capacity … стр. 361
+  - Challenge Rating … стр. 362
+  - Character Sheet … стр. 362
+  - Charmed [Condition] … стр. 362
+  - Climbing … стр. 362
+  - Climb Speed … стр. 362
+  - Concentration … стр. 362
+  - Condition … стр. 362
+    - Blinded … стр. 360
+    - Charmed … стр. 362
+    - Deafened … стр. 364
+    - Exhaustion … стр. 365
+    - Frightened … стр. 366
+    - Grappled … стр. 366
+    - Incapacitated … стр. 368
+    - Invisible … стр. 369
+    - Paralyzed … стр. 370
+    - Petrified … стр. 371
+    - Poisoned … стр. 371
+    - Prone … стр. 371
+    - Restrained … стр. 372
+    - Stunned … стр. 375
+    - Unconscious … стр. 376
+  - Cone [Area of Effect] … стр. 363
+  - Cover … стр. 363
+  - Crawling … стр. 363
+  - Creature … стр. 363
+  - Creature Type … стр. 363
+  - Critical Hit … стр. 363
+  - Cube [Area of Effect] … стр. 363
+  - Curses … стр. 363
+  - Cylinder [Area of Effect] … стр. 363
+  - D20 Test … стр. 363
+  - Damage … стр. 363
+  - Damage Roll … стр. 363
+  - Damage Threshold … стр. 363
+  - Damage Types … стр. 364
+  - Darkness … стр. 364
+  - Darkvision … стр. 364
+  - Dash [Action] … стр. 364
+  - Dead … стр. 364
+  - Deafened [Condition] … стр. 364
+  - Death Saving Throw … стр. 364
+  - Dehydration [Hazard] … стр. 364
+  - Difficult Terrain … стр. 365
+  - Difficulty Class … стр. 365
+  - Dim Light … стр. 365
+  - Disadvantage … стр. 365
+  - Disengage [Action] … стр. 365
+  - Dodge [Action] … стр. 365
+  - Emanation [Area of Effect] … стр. 365
+  - Encounter … стр. 365
+  - Enemy … стр. 365
+  - Exhaustion [Condition] … стр. 365
+  - Experience Points … стр. 365
+  - Expertise … стр. 366
+  - Falling [Hazard] … стр. 366
+  - Flying … стр. 366
+  - Fly Speed … стр. 366
+  - Friendly [Attitude] … стр. 366
+  - Frightened [Condition] … стр. 366
+  - Grappled [Condition] … стр. 366
+  - Grappling … стр. 366
+  - Hazard … стр. 367
+    - Burning … стр. 361
+    - Dehydration … стр. 364
+    - Falling … стр. 366
+    - Malnutrition … стр. 370
+    - Suffocation … стр. 375
+  - Healing … стр. 367
+  - Heavily Obscured … стр. 367
+  - Help [Action] … стр. 367
+  - Heroic Inspiration … стр. 367
+  - Hide [Action] … стр. 367
+  - High Jump … стр. 367
+  - Hit Point Dice … стр. 367
+  - Hit Points … стр. 367
+  - Hostile [Attitude] … стр. 367
+  - Hover … стр. 367
+  - Illusions … стр. 368
+  - Immunity … стр. 368
+  - Improvised Weapons … стр. 368
+  - Incapacitated [Condition] … стр. 368
+  - Indifferent [Attitude] … стр. 368
+  - Influence [Action] … стр. 368
+  - Initiative … стр. 368
+  - Invisible [Condition] … стр. 369
+  - Jumping … стр. 369
+    - High Jump … стр. 367
+    - Long Jump … стр. 369
+  - Knocking Out a Creature … стр. 369
+  - Lightly Obscured … стр. 369
+  - Line [Area of Effect] … стр. 369
+  - Long Jump … стр. 369
+  - Long Rest … стр. 369
+  - Magic [Action] … стр. 370
+  - Magical Effect … стр. 370
+  - Malnutrition [Hazard] … стр. 370
+  - Monster … стр. 370
+  - Nonplayer Character … стр. 370
+  - Object … стр. 370
+  - Occupied Space … стр. 370
+  - Opportunity Attacks … стр. 370
+  - Paralyzed [Condition] … стр. 370
+  - Passive Perception … стр. 371
+  - Per Day … стр. 371
+  - Petrified [Condition] … стр. 371
+  - Player Character … стр. 371
+  - Poisoned [Condition] … стр. 371
+  - Possession … стр. 371
+  - Proficiency … стр. 371
+  - Prone [Condition] … стр. 371
+  - Reaction … стр. 371
+  - Ready [Action] … стр. 371
+  - Resistance … стр. 372
+  - Restrained [Condition] … стр. 372
+  - Ritual … стр. 372
+  - Round Down … стр. 372
+  - Save … стр. 372
+  - Saving Throw … стр. 372
+  - Search [Action] … стр. 372
+  - Shape-Shifting … стр. 372
+  - Short Rest … стр. 372
+  - Simultaneous Effects … стр. 373
+  - Size … стр. 373
+  - Skill … стр. 373
+  - Speed … стр. 373
+  - Spell … стр. 373
+  - Spell Attack … стр. 373
+  - Spellcasting Focus … стр. 373
+  - Sphere [Area of Effect] … стр. 373
+  - Stable … стр. 373
+  - Stat Block … стр. 373
+  - Study [Action] … стр. 374
+  - Stunned [Condition] … стр. 375
+  - Suffocation [Hazard] … стр. 375
+  - Surprise … стр. 375
+  - Swimming … стр. 375
+  - Swim Speed … стр. 375
+  - Target … стр. 375
+  - Telepathy … стр. 375
+  - Teleportation … стр. 375
+  - Temporary Hit Points … стр. 375
+  - Tremorsense … стр. 376
+  - Truesight … стр. 376
+  - Unarmed Strike … стр. 376
+  - Unconscious [Condition] … стр. 376
+  - Unoccupied Space … стр. 376
+  - Utilize [Action] … стр. 376
+  - Vulnerability … стр. 376
+  - Weapon … стр. 376
+  - Weapon Attack … стр. 376
+- Index … стр. 377

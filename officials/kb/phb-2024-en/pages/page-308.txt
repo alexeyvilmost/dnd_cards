@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 308/387
+
+,. e
+..:
+A S f' E LL C. /\S T E R C. O ULO USE
+PRO GRAMM ED J L tUSIO N TO C/\USE /\
+w/\TC.H 0O G T O A P PE/\ R /\NO K INDLY
+/IS K IN TR U D E R S TO LE/\VE .
+._,.. __ _
+PROGRAM MED I L LUSION
+Level 6 Jllusion (Bard, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (jade dust worth 25+ GP)
+Duration: Until dispelled
+--
+You create an illusion of an object, a creature, or
+some other visible phenomenon within range that
+activates when a specific trigger occurs. The illusion
+is imperceptible until then. It must be no larger than
+a 30-foot Cube, and you decide when you cast the
+spell how the illusion behaves and what sounds it
+makes. This scripted performance can last up to 5
+minutes.
+When the trigger you specify occurs, the illusion
+springs into existence and performs in the manner
+you described. Once the illusion finishes performing, it disappears and remains dormant for 10 minutes, after which the illusion can be activated again.
+The trigger can be as general or as detailed as you
+like, though it must be based on visual or audible
+phenomena that occur within 30 feet of the area.
+For example, you could create an illusion of yourself
+to appear and warn off others who attempt to open
+a trapped door.
+Physical interaction with the image reveals it to be
+illusory, since things can pass through it. A creature
+that takes the Study action to examine the image
+can determine that it is an illusion with a successful
+Intelligence (Investigation) check against your spell
+save DC. If a creature discerns the illusion for what
+it is, the creature can see through the image, and
+any noise it: makes sounds hollow to the creature.
+PROJECT IMAGE
+Level 7 Illusion (Bard, Wizard)
+Casting Time: Action
+Range: 500 miles
+Components: V, S, M (a statuette of yourself worth
+5+ GP)
+Duration: Concentration, up to l day
+You create an illusory copy of yourself that lasts for
+the duration. The copy can appear at any location
+within range that you have seen before, regardless
+of intervening obstacles. The illusion looks and
+sounds like you, but it is intangible. If the illusion
+takes any damage, it disappears, and the spell ends.
+You can see through the illusion's eyes and hear
+through its ears as if you were in its space. As a
+Magic action, you can move it up to 60 feet and
+make it gesture, speak, and behave in whatever way
+you choose. It mimics your mannerisms perfectly.
+Physical interaction with the image reveals it to be
+illusory, since things can pass through it. A creature
+that takes the Study action to examine the image
+can determine that it is an illusion with a successful
+Intelligence (Investigation) check against your spell
+save DC. If a creature discerns the illusion for what
+it is, the creature can see through the image, and
+any noise it makes sounds hollow to the creature.
+PROTECTION FROM ENERGY
+Level 3 Abjuration (Cleric, Druid, Ranger, Sorcerer,
+Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: Concentration, up to 1 hour
+For the duration, the willing creature you touch has
+Resistance to one damage type of your choice: Acid,
+Cold, Fire, Lightning, or Thunder.
+PROTECTION FROM EVIL AND Goon
+Level 1 Abjuration (Cleric, Druid, Paladin, Warlock,
+Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a flask of Holy Water worth 25+
+GP, which the spell consumes)
+Duration: Concentration up to 10 minutes
+Until the spell ends, one willing creature you touch
+is protected against creatures that are Aberrations,
+Celestials, Elementals, Fey, Fiends, or Undead.
+The protection grants several benefits. Creatures
+of those types have Disadvantage on attack rolls
+CHAPTER 7 I SPELLS
+309

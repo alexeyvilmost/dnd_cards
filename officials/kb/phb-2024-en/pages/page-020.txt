@@ -1,0 +1,58 @@
+# Player's Handbook 2024 (EN) — PDF-страница 20/387
+
+§
+u z r
+Q,
+The characters are exploring Castle Raven/oft, and the
+OM describes the room the characters have entered.
+Jared (as OM): A blazing hearth fire fills this room
+with warm light. Firelight glints off a poker beside
+the fireplace, and the wal ls are lined with ancient
+books. A huge painting hangs above the mantelpiece in a gilded frame. The firelight illuminates
+the portrait-an exact likeness of lreena Kolyana.
+Phillip (as Gareth): How old does the painting look?
+Maeve (as Mirabella): I'm going to check the books!
+Jared: OK, I'll get to those in a second. Russell and
+Amy, what are your characters doing?
+Russell (as Shreeve): I stand near the door, sword
+drawn, ready for danger. This place is creepy!
+Amy (as Auro): I go near the fireplace. A warm fire
+sounds nice. But I'm also alert for danger.
+I
+Jared: Got it. OK, Phillip, please make an ln_tel~igence
+(History) check as Gareth looks at the painting.
+'
+Phillip: I don't have proficiency in History, but here
+I goes. I got-oh! A 20! For a total of ... 20.
+Jared: Two things leap out at Gareth about the painting. First, the woman's clothes look old-fashioned.
+Second, the paint is flaking in places, and the
+whole thing is covered by a thin layer of soot.
+You'd say this painting is a few centuries old.
+Phillip: So maybe an ancestor of lreena's? Unless
+she's already a vampire and this "bitten by Strahd"
+thing is a ruse.
+Jared: Who knows? Now, Mirabella's looking at the
+books?
+Maeve: Yeah, I pull one off the shelf at random.
+Everyone Is Accounted For. Exploration is
+open-ended; the players don't take turns
+moving around the dungeon the way they do
+in combat. But the OM frequently checks in
+to make sure it's clear where everyone is and
+what they're doing.
+Teamwork Matters. The player characters
+are working toward a common goal. They
+move together through the dungeon and
+cooperate to overcome its challenges. When
+the characters enter the room, they explore
+different parts of the room. When Auro finds
+a secret door behind the fireplace later in the
+example, they come together again to examine it, and Gareth figures out how to bypass
+the fire. It might seem like Russell's character wasn't doing much, but Shreeve was protecting the group by guarding the door.
+Oo-i=========~
+Worth Rolling with or without Proficiency.
+You usually have a chance of success on
+an ability check even if you don't have proficiency in a relevant skill. In the example,
+Phillip gets a 20 without proficiency. The d20
+brings many surprises to the game-surprises that the DM then interprets.
+CH APTER l I PLAY ING THE GAME

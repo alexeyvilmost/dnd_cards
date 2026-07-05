@@ -1,0 +1,83 @@
+# Player's Handbook 2024 (EN) — PDF-страница 370/387
+
+Taking any damage
+1 hour of walking or other physical exertion
+If you rested at least 1 hour before the interruption,
+you gain the benefits of a Short Rest. See also "Short
+Rest."
+You can resume a Long Rest immediately after an
+interruption. If you do so, the rest requires 1 additional hour per interruption to finish.
+MAGIC [ACTIO N]
+When you take the Magic action, you cast a spell
+that has a casting time of an action or use a feature
+or magic item that requires a Magic action to be
+activated.
+If you cast a spell that has a casting time of 1 minute or longer, you must take the Magic action on
+each turn of that casting, and you must maintain
+Concentration while you do so. If your Concentration is broken, the spell fails, but you don't expend a
+spell slot. See also "Concentration."
+MAGICAL EFFECT
+An effect is magical if it is created by a spell, a magic
+item, or a phenomenon that a rule labels as magical.
+MALN UTRITION [HAZARD]
+A creature needs an amount of food per day based
+on its size, as shown in the Food Needs per Day table. A creature that eats but consumes less than half
+the required food for a day must succeed on a DC
+10 Constitution saving throw or gain 1 Exhaustion
+level at the day's end. A creature that eats nothing
+for 5 days automatically gains 1 Exhaustion level at
+the end of the fifth day as well as an additional level
+at the end of each subsequent day without food.
+Exhaustion caused by malnutrition can't be removed until the creature eats the full amount of
+food required for a day. See also "Exhaustion."
+Fooo NEEDS PER DAY
+Size
+Food
+Size
+Food
+Tiny
+1/4 pound
+Large
+4 pounds
+S111all
+l pound
+Huge
+16 pounds
+Medium
+l pound
+Gargantuan 64 pounds
+MONSTER
+A monster is a creature controlled by the DM, even
+if the creature is benevolent. See also "Creature" and
+"NPC."
+NONPLAYER CHARACTER
+A nonplayer character (NPC) is a monster that has
+a personal name and a distinct personality. See also
+"Monster."
+OBJECT
+An object is a nonliving, distinct thing. Composite
+things, like buildings, comprise more than one object. See also "Breaking Objects."
+OCCUPIED SPACE
+A space is occupied if a creature is in it or if it is
+completely filled by objects.
+OPPORTUNITY ATTACKS
+You can make an Opportunity Attack when a creature that you can see leaves your reach using its
+action, its Bonus Action, its Reaction, or one of its
+speeds. To make the Opportunity Attack, take a Reaction to make one melee attack with a weapon or
+an Unarmed Strike against the provoking creature.
+The attack occurs right before the creature leaves
+your reach. See also chapter 1 ("Combat").
+PARALYZED [CONDITION]
+While you have the Paralyzed condition, you experience the following effects.
+Incapacitated. You have the Incapacitated
+condition.
+Speed 0. Your Speed is O and can't increase.
+Saving Throws Affected. You automatically fail
+Strength and Dexterity saving throws.
+Attacks Affected. Attack rolls against you have
+Advantage.
+Automatic Critical Hits. Any attack roll that hits
+you is a Critical Hit if the attacker is within 5 feet of
+you.
+APPENDIX C I RULES GLOSSARY
+371

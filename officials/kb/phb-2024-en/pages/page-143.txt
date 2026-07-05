@@ -1,0 +1,221 @@
+# Player's Handbook 2024 (EN) — PDF-страница 143/387
+
+Spell
+School
+Special
+Spell
+School
+Special
+Fireball
+Evocation
+Telekinesis
+Transmutation
+C
+Fly
+Transmutation
+C
+Teleportation Circle
+Conjuration
+M
+Gaseous Form
+Transmutation
+C
+Wall of Stone
+Evocation
+C
+Haste
+Transmutation
+C
+Hypnotic Pattern
+Illusion
+C
+LEVEL 6 SORCERER SPELLS
+Lightning Bolt
+Evocation
+Spell
+School
+Special
+Major Image
+Illusion
+C
+Arcane Gate
+Conjuration
+C
+Protection from Energy
+Abjuration
+C
+Chain Lightning
+Evocation
+Sleet Storm
+Conjuration
+C
+Circle of Death
+Necromancy
+M
+Slow
+Transmutation
+C
+Disintegrate
+Transmutation
+Stinking Cloud
+Conjuration
+C
+Eyebite
+Necromancy
+C
+Tongues
+Divination
+Flesh to Stone
+Transmutation
+C
+Vampiric Touch
+Necromancy
+C
+Globe of Invulnerability
+Abjuration
+C
+Water Breathing
+Transmutation
+R
+Mass Suggestion
+Enchantment
+Water Walk
+Transmutation
+R
+Move Earth
+Transmutation
+C
+Otiluke's Freezing Sphere
+Evocation
+LEVEL 4 SORCERER SPELLS
+Sunbeam
+Evocation
+C
+Spell
+School
+Special
+True Seeing
+Divination
+M
+Banishment
+Abjuration
+C
+Blight
+Necromancy
+LEVEL 7 S ORCERER SPELLS
+Charm Monster
+Enchantment
+Spell
+School
+Special
+Confusion
+Enchantment
+C
+Delayed Blast Fireball
+Evocation
+C
+Dimension Door
+Conjuration
+Etherealness
+Conjuration
+Dominate Beast
+Enchantment
+C
+Finger of Death
+Necromancy
+Fire Shield
+Evocation
+Fire Storm
+Evocation
+Greater Invisibility
+Illusion
+C
+Plane Shift
+Conjuration
+M
+Ice Storm
+Evocation
+Prismatic Spray
+Evocation
+Polymorph
+Transmutation
+C
+Reverse Gravity
+Transmutation
+C
+Stoneskin
+Transmutation
+C,M
+Teleport
+Conjuration
+Vitriolic Sphere
+Evocation
+LEVEL 8 SORCERER SPELLS
+Wall of Fire
+Evocation
+C
+Spell
+School
+Special
+LEVEL 5 SORCERER SPELLS
+Demi plane
+Conjuration
+Spell
+School
+Special
+Dominate Monster
+Enchantment
+C
+Animate Objects
+Transmutation
+C
+Earthquake
+Transmutation
+C
+Bigby's Hand
+Evocation
+C
+Incendiary Cloud
+Conjuration
+C
+Cloudkill
+Conjuration
+C
+Power Word Stun
+Enchantment
+Cone of Cold
+Evocation
+Sunburst
+Evocation
+Creation
+Illusion
+LEVEL 9 SORCERER SPELLS
+Dominate Person
+Enchantment
+C
+Spell
+School
+Special
+' Hold Monster
+Enchantment
+C
+Gate
+Conjuration
+C, M
+Insect Plague
+Conjuration
+C
+Meteor Swarm
+Evocation
+Seeming
+Illusion
+Power Word Kill
+Enchantment
+Synaptic Static
+Enchantment
+Time Stop
+Transmutation
+Wish
+Conjuration
+14.A.
+CHAPTER 3 I CHARACTER CLASSES

@@ -1,0 +1,47 @@
+# Player's Handbook 2024 (EN) — PDF-страница 296/387
+
+with Disadvantage. You remain aware of the passage of time and can cast spells on yourself while
+merged in the stone. You can use 5 feet of movement to leave the stone where you entered it, which
+ends the spell. You otherwise can't move.
+Minor physical damage to the stone doesn't harm
+you, but its partial destruction or a change in its
+shape (to the extent that you no longer fit within it)
+expels you and deals 6d6 Force damage to you. The
+stone's complete destruction (or transmutation into
+a different substance) expels you and deals 50 Force
+damage to you. If expelled, you move into an unoccupied space closest to where you first entered and
+have the Prone condition.
+M ELF 1S ACID ARROW
+Level 2 Evocation (Wizard)
+Casting Time: Action
+Range: 90 feet
+Components: V, S, M (powdered rhubarb leaf)
+Duration: Instantaneous
+A shimmering green arrow streaks toward a target
+within rangrJ and bursts in a spray of acid. Make a
+ranged spell a; ack against the target. On a hit, the
+target takes 4d4 Acid damage and 2d4 Acid damage
+at the end of its next turn. On a miss, the arrow
+splashes the target with acid for half as much of the
+initial damage only.
+Using a Higher-Level Spell Slot. The damage (both
+initial and later) increases by ld4 for each spell slot
+level above 2.
+p -----·------------
+MENDING
+Transmutation Cantrip (Bard, Cleric, Druid, Sorcerer,
+Wizard)
+Casting Time: l minute
+Range:Touch
+Components: V, S, M (two lodestones)
+Duration: Instantaneous
+This spell repairs a single break or tear in an object
+you touch, such as a broken chain link, two halves
+of a broken key, a torn cloak, or a leaking wineskin.
+As long as the break or tear is no larger than 1 foot
+in any dimension, you mend it, leaving no trace of
+the former damage.
+This spell can physically repair a magic item, but
+it can't restore magic to such an object.
+CHAPTER 7 I SPELLS
+297

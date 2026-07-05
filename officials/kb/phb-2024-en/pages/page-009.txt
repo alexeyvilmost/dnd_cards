@@ -1,0 +1,133 @@
+# Player's Handbook 2024 (EN) — PDF-страница 9/387
+
+THE Six ABILITIES
+All creatures-characters and monsters-have six
+abilities that measure physical and mental characteristics, as shown on the Ability Descriptions table.
+ABILITY DESCRIPTIONS
+Ability
+Score Measures ...
+Strength
+Physical might
+Dexterity
+Agility, reflexes, and balance
+Constitution
+Health and stamina
+Intelligence
+Reasoning and memory
+Wisdom
+Perceptiveness and mental fortitude
+Charisma
+Confidence, poise, and charm
+ABILITY SCORES
+Each ability has a score from 1 to 20, although some
+monsters have a score as high as 30. The score
+represents the magnitude of an ability. The Ability
+Scores table summarizes what the scores mean.
+ABILITY SCORES
+Score
+l
+2-9
+10-11
+12-19
+20
+21-29
+30
+Meaning
+This is the lowest a score can normally go.
+If an effect reduces a score to 0, that effect
+explains what happens.
+This represents a weak capability.
+This represents the human average.
+This represents a strong capability.
+This is the highest an adventurer's score
+can go unless a feature says otherwise.
+This represents an extraordinary capability.
+This is the highest a score can go.
+ABILITY MODIFIERS
+Each ability has a modifier that you apply whenever
+you make a D20 Test with that ability (explained in
+"D20 Tests"). An ability modifier is derived from its
+score, as shown in the Ability Modifiers table.
+ABILITY MODIFIERS
+Score
+Modifier
+Score
+Modifier
+l
+-5
+16-17
++3
+2-3
+-4
+18-19
++4
+4-5
+-3
+20-21
++5
+6-7
+-2
+22-23
++6
+8-9
+-1
+24-25
++7
+10-11
++0
+26-27
++8
+12-13
++l
+28-29
++9
+14-15
++2
+30
++10
+IO
+CHAPTER 1 I PLAYING THE GAME
+D20 TESTS
+When the outcome of an action is uncertain, the
+game uses a d20 roll to determine success or failure.
+These rolls are called D20 Tests, and they come in
+three kinds: ability checks, saving throws, and attack rolls. They follow these steps:
+1: Roll 1d20. You always want to roll high. If the
+roll has Advantage or Disadvantage (described
+later in this chapter), you roll two d20s, but
+you use the number from only one of them- the
+higher one if you have Advantage or the lower
+one if you have Disadvantage.
+2: Add Modifiers. Add these modifiers to the number rolled on the d20:
+The Relevant Ability Modifier. This chapter and
+the rules glossary explain which ability modifiers
+to use for various D20 Tests.
+Your Proficiency Bonus If Relevant. Each creature has a Proficiency Bonus, a number added
+when making a D20 Test that uses something,
+such as a skill, in which the creature has proficiency. See "Proficiency" later in this chapter.
+Circumstantial Bonuses and Penalties. A class
+feature, a spell, or another rule might give a bonus or penalty to the die roll.
+3: Compare the Total to a Target Number. If the
+total of the d20 and its modifiers equals or exceeds the target number, the D20 Test succeeds.
+Otherwise, it fails. The Dungeon Master determines target numbers and tells players whether
+their rolls are successful. The target number
+for an ability check or a saving throw is called a
+Difficulty Class (DC). The target number for an
+attack roll is called an Armor Class (AC), which
+appears on a character sheet or in a stat block
+(see the rules glossary).
+ABILITY CHECKS
+An ability check represents a creature using talent
+and training to try to overcome a challenge, such
+as forcing open a stuck door, picking a lock, entertaining a crowd, or deciphering a cipher. The OM
+and the rules often call for an ability check when a
+creature attempts something other than an attack
+that has a chance of meaningful failure. When the
+outcome is uncertain and narratively interesting,
+the dice determine the result.
+ABILITY MODIFIER
+An ability check is named for the ability modifier it
+uses: a Strength check, an Intelligence check, and so
+on. Different ability checks are called for in different situations, depending on which ability is most
+relevant. See the Ability Check Examples table for
+examples of each check's use.

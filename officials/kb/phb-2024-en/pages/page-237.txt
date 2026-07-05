@@ -1,0 +1,62 @@
+# Player's Handbook 2024 (EN) — PDF-страница 237/387
+
+A Clear Path to the Target. To target something
+with a spell, a caster must have a clear path to it, so
+it can't be behind Total Cover.
+Targeting Yourself. If a spell targets a creature
+of your choice, you can choose yourself unless the
+creature must be Hostile or specifically a creature
+other than you.
+Areas of Effect. Some spells, such as Thunderwave,
+cover an area called an area of effect, which is defined in the rules glossary. The area determines
+what the spell targets. The description of a spell
+specifies whether it has an area of effect, which is
+typically one of these shapes: Cone, Cube, Cylinder,
+Emanation, Line, or Sphere.
+Awareness of Being Targeted. Unless a spell has a
+perceptible effect, a creature doesn't know it was
+targeted by the spell. An effect like lightning is obvious, but a more subtle effect, such as an attempt
+to read thoughts, goes unnoticed unless a spell's
+description says otherwise.
+Invalid Targets. If you cast a spell on someone
+or something that can't be affected by it, nothing
+happens to that target, but if you used a spell slot to
+cast the spell, the slot is still expended.
+If the spell normally has no effect on a target that
+succeeds on a saving throw, the invalid target appears to have succeeded on its saving throw, even
+though it didn't attempt one (giving no hint that the
+creature is an invalid target). Otherwise, you perceive that the spell did nothing to the target.
+SAVING THROWS
+Many spells specify that a target makes a saving
+throw to avoid some or all of a spell's effects. The
+spell specifies the ability that the target uses for
+238
+CHAPTER 7 I SPE LLS
+the save and what happens on a success or failure.
+Here's how to calculate the DC for your spells:
+Spell save DC= 8 + your spellcasting ability modifier
++ your Proficiency Bonus
+ATTACK ROLLS
+Some spells require the caster to make an attack roll
+to determine whether the spell hits a target. Here's
+how to calculate the attack modifier for your spells:
+Spell attack modifier= your spellcasting ability
+modifier+ your Proficiency Bonus
+COMBINING SPELL EFFECTS
+The effects of different spells add together while
+their durations overlap. In contrast, the effects of
+the same spell cast multiple times don't combine.
+Instead, the most potent effect-such as the highest bonus-from those castings applies while their
+durations overlap. The most recent effect applies if
+the castings are equally potent and their durations
+overlap. For example, if two Clerics cast Bless on the
+same target, that target gains the spell's benefit only
+once; the target doesn't receive two bonus dice. But
+if the durations of the spells overlap, the effect continues until the duration of the second Bless ends.
+IDENTIFYING AN ONGOI NG $~ ELL
+You can try to identify a non-ir.stantaneous spell
+by its observable effects if its d;.:r ;}t:on is ongoing.
+To identify it, you must take tr1 , ~,tJdy action and
+succeed on a DC 15 lntellige:1,:·: •:-;r:ana) check.
+........ . •··•-
+-----

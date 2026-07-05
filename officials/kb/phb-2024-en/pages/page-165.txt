@@ -1,0 +1,270 @@
+# Player's Handbook 2024 (EN) — PDF-страница 165/387
+
+WIZARD FEATURES
+Prepared
+--Spell Slots per Spell Level--
+Proficiency
+Level
+Bonus
+Class Features
+Cantrips
+Spells
+1
+2
+3
+4
+5
+6
+7
+8
+9
++2
+Spellcasting, Ritual Adept,
+Arcane Recovery
+2
++2
+Scholar
+3
++2
+Wizard Subclass
+4
++2
+Ability Score Improvement
+5
++3
+Memorize Spell
+6
++3
+Subclass feature
+7
++3
+8
++3
+Ability Score Improvement
+9
++4
+10
++4
+Subclass feature
+11
++4
+12
++4
+Ability Score Improvement
+l3
++5
+14
++5
+Subclass feature
+15
++5
+16
++5
+Ability Score Improvement
+17
++6
+18
++6
+Spell Mastery
+19
++6
+Epic Boon
+20
++6
+Signature Spells
+The number of spells on your list increases as you
+gain Wizard levels, as shown in the Prepared Spells
+column of the Wizard Features table. Whenever
+that number increases, choose additional Wizard spells until the number of spells on your list
+matches the number in the table. The chosen spells
+must be of a level for which you have spell slots. For
+example, if you're a level 3 Wizard, your list of prepared spells can include six spells of levels 1 and 2 in
+any combination, chosen from your spellbook.
+If another Wizard feature gives you spells that
+you always have prepared, those spells don't count
+against the number of spells you can prepare with
+this feature, but those spells otherwise count as
+Wizard spells for you.
+Changing Your Prepared Spells. Whenever you
+finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with
+spells from your spellbook.
+Spellcasting Ability. Intelligence is your spellcasting ability for your Wizard spells.
+Spellcasting Focus. You can use an Arcane Focus
+or your spellbook as a Spellcasting Focus for your
+Wizard spells.
+I6f,
+CHAPTER 3 I CHARACTER CLASSES
+3
+3
+3
+4
+4
+4
+4
+4
+4
+5
+5
+5
+5
+5
+5
+5
+5
+5
+5
+5
+4
+2 -
+-
+-
+-
+-
+-
+-
+5
+3
+6
+4
+2
+7
+4
+3
+9
+4
+3
+2
+10
+4
+3
+3
+11
+4
+3
+3
+l
+12
+4
+3
+3
+2
+14
+4
+3
+3
+3
+l
+15
+4
+3
+3
+3
+2
+16
+4
+3
+3
+3
+2
+1
+16
+4
+3
+3
+3
+2
+l
+17
+4
+3
+3
+3
+2
+1
+1
+18
+4
+3
+3
+3
+2
+1
+1
+19
+4
+3
+3
+3
+2
+1
+1
+1
+21
+4
+3
+3
+3
+2
+1
+1
+1
+22
+4
+3
+3
+3
+2
+1
+1
+1
+1
+23
+4
+3
+3
+3
+3
+1
+1
+1
+1
+24
+4
+3
+3
+3
+3
+2
+1
+1
+1
+25
+4
+3
+3
+3
+3
+2
+2
+1
+1
+LEVEL l : RITUAL ADEPT
+You can cast any spell as a Ritual if that spell has
+the Ritual tag and the spell is in your spellbook. You
+needn't have the spell prepared, but you must read
+from the book to cast a spell in this way.
+LEVEL l: ARCANE RECOVERY
+You can regain some of your magical energy by
+studying your spellbook. When you finish a Short
+Rest, you can choose expended spell slots to recover.
+The spell slots can have a combined level equal to no
+more than half your Wizard level {round up), and
+none of the slots can be level 6 or higher. For example, if you're a level 4 Wizard, you can recover up to
+two levels' worth of spell slots, regaining either one
+level 2 spell slot or two level 1 spell slots.
+Once you use this feature, you can't do so again
+until you finish a Long Rest.
+LEVEL2:SCHOLAR
+While studying magic, you also specialized in another field of study. Choose one of the following
+skills in which you have proficiency: 1-'.r~ana, History, Investigation, Medicine, Natur-:-, or Religion.
+You have Expertise in the chosen sk;H.

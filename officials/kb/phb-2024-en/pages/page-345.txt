@@ -1,0 +1,115 @@
+# Player's Handbook 2024 (EN) — PDF-страница 345/387
+
+APPEND IX B
+CREATURE STAT B LO .~I{ ~:~
+- ==--.<:(_C:,:V:-
+This appendix provides stat blocks for creatures
+mentioned elsewhere in the book, particularly in
+the class, equipment, and spell chapters. See the
+rules glossary for how to read a stat block, and see
+the Monster Manual for even more creatures.
+The following stat blocks are presented in alphabetical order. When the Dungeon Master uses a stat
+block, the OM may change details in it.
+APE
+Medium Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP 19 (3d8 + 6)
+Speed 30 ft., Climb 30 ft.
+MOD SAVE
+STR 16 +3
++3
+INT 6 -2 - 2
+MOD SAVE
+DEX 14 +2 +2
+Wis 12 +l
++1
+Skills Athletics +S, Perception +3
+Senses Passive Perception 13
+Languages None
+CR 1/2 (XP 100; PB +2)
+ACTIONS
+MOD SAVE
+CON 14 +2 +2
+CHA 7 - 2 -2
+Multiattack. The ape makes two Fist attacks.
+Fist. Melee Attack Roll: +5, reach 5 ft. Hit: 5 (ld4 + 3)
+Bludgeoning damage.
+Rock (Recharge 6). Ranged Attack Roll: +5, range
+25/50 ft. Hit: 10 (2d6 + 3) Bludgeoning damage.
+BADGER
+Tiny Beast, Unaligned
+AC 11
+Initiative +O (10)
+HP S (ld4 + 3)
+Speed 20 ft., Burrow S ft.
+MO D SAVE
+t.10D SAVE
+MOD SAVE
+STR 10 +O +O
+DEX 11 +0 +0
+CON 16 +3
++3
+INT
+2 -4 -4
+Wis 12 +l
++1
+CHA S -3 -3
+Skills Perception +3
+Resistances Poison
+Senses Darkvision 30 ft., Passive Perception 13
+• Languages None
+CR 0 (XP 10; PB +2)
+ACTIONS
+NDIX B I CREATURE STAT BLOCKS
+BAT
+Tiny Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP l (ld4 - 1)
+Speed 5 ft., Fly 30 ft.
+MOD SAVE
+MOD SAVE
+STR 2
+- 4
+- 4
+DEX l 5 +2 +2
+INT 2 -4 - 4
+Wis 12 +l
++1
+MOD SAVE
+CON 8
+-1
+- 1
+CHA 4 - 3 - 3
+Senses Blindsight 60 ft., Passive Perception 11
+Languages None
+CR O (XP 10; PB +2)
+ACTIONS
+Bite. Melee Attack Roll: +4, reach 5 ft. Hit: 1 Piercing
+damage.
+BLACK BEAR
+Medium Beast, Unaligned
+AC 11
+Initiative + 1 (11)
+HP 19 (3d8 + 6)
+Speed 30 ft., Climb 30 ft., Swim 30 ft.
+MOD SAVE
+STR 15 +2 +2
+INT 2 -4 -4
+Skills Perception +S
+MOD SAVE
+D EX 12 +1
++1
+Wis 12 +1
++l
+MOD SAVE
+CO N 14 +2 +2
+CHA 7 - 2 - 2
+Senses Darkvision 60 ft., Passive Perceptio n 1 S
+Languages None
+CR 1/2 (XP 100; PB +2)
+A CTIONS
+Multiattack. The bear makes two ••• _nd attacks.
+Rend. Melee Attack Roll: +4, r~~,i•~~ •: 1·~. Hit: 5 (ld6 + 2)
+Slashing damage.

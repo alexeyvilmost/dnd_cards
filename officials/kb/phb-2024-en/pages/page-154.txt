@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 154/387
+
+LEVE L :\-. A BILITY S C ORE IMPROVEMENT
+You gai n the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Warlock
+levels 8, 12, and 16.
+LEVEL 9 : CONTACT PATRON
+In the past, you usually contacted your patron
+through intermediaries. Now you can communicate
+directly; you always have the Contact Other Plane
+spell prepared. With this feature, you can cast the
+spell without expending a spell slot to contact your
+patron, and you automatically succeed on the spell's
+saving throw.
+Once you cast the spell with this feature, you can't
+do so in this way again until you finish a Long Rest.
+LEVEL 11: MYSTIC ARCANUM
+Your patron grants you a magical secret called an
+arcanum. Choose one level 6 Warlock spell as this
+arcanum.
+You can cast your arcanum spell once without expending a spell slot, and you must finish a Long Rest
+before you can cast it in this way again.
+As shown in the Warlock Features table, you gain
+another Warlock spell of your choice that can be
+cast in this way when you reach Warlock levels 13
+(level 7 spell), 15 (level 8 spell), and 17 (level 9 spell).
+You regain all uses of your Mystic Arcanum when
+you finish a Long Rest.
+Whenever you gain a Warlock level, you can replace one of your arcanum spells with another Warlock spell of the same level.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Fate is recommended.
+L EVEL 20: ELD RITCH MASTER
+When you use your Magical Cunning feature, you
+regain all your expended Pact Magic spell slots.
+E LDRITCH INVOCATION OPTIONS
+Eldritch Invocation options appear in alphabetical
+order.
+AG O NIZING BLAST
+Prerequisite: Level 2+ Warlock, a Warlock Cantrip That
+Deals Damage
+Choose one of your known Warlock cantrips that
+deals damage. You can add your Charisma modifier
+to that spell's damage rolls.
+Repeatable. You can gain this invocation more
+than once. Each time you do so, choose a different
+eligible can.trip.
+ARMOR OF SHADOWS
+You can cast Mage Armor on yourself without expending a spell slot.
+ASCENDANT STEP
+Prerequisite: Level 5+ Warlock
+You can cast Levitate on yourself without expending
+a spell slot.
+DEVIL'S SIGHT
+Prerequisite: Level 2+ Warlock
+You can see normally in Dim Light and Darknessboth magical and nonmagical-within 120 feet of
+yourself.
+DEVOURING BLADE
+Prerequisite: Level 12+ Warlock, Thirsting Blade
+Invocation
+The Extra Attack of your Thirsting Blade invocation confers two extra attacks rather than one.
+ELDRITCH MIND
+You have Advantage on Constitution saving throws
+that you make to maintain Concentration.
+ELDRITCH SMITE
+Prerequisite: Level 5+ Warlock, Pact of the Blade
+Invocation
+Once per turn when you hit a creature with your
+pact weapon, you can expend a Pact Magic spell slot
+to deal an extra ld8 Force damage to the target, plus
+another ld8 per level of the spell slot, and you can
+give the target the Prone condition if it is Huge or
+smaller.
+ELDRITCH SPEAR
+Prerequisite: Level 2+ Warlock, a Warlock Cantrip That
+Deals Damage
+Choose one of your known Warlock cantrips that
+deals damage and has a range of 10+ feet. When you
+cast that spell, its range increases by a number of
+feet equal to 30 times your Warlock level.
+Repeatable. You can gain this invocation more
+than once. Each time you do so, choose a different
+eligible cantrip.
+FIENDISH VIGOR
+Prerequisite: Level 2+ Warlock
+You can cast False Life on yourself without expending a spell slot. When you cast the spell with this
+feature, you don't roll the die for the Temporary Hit
+Points; you automatically get the highest number on
+the die.
+CHAPTER 3 I CHARACTE R CLASSES
+155

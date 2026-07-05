@@ -1,0 +1,91 @@
+# Player's Handbook 2024 (EN) — PDF-страница 342/387
+
+WITC H B O LT
+Level 1 Evocation (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a twig struck by lightning)
+Duration: Concentration, up to l minute
+A beam of crackling energy lances toward a creature w ithin range, forming a sustained arc of lightning between you and the target. Make a ranged
+spell attack against it. On a hit, the target takes
+2dl2 Lightning damage.
+On each of your subsequent turns, you can take a
+Bonus Action to deal ld12 Lightning damage to the
+target automatically, even if the first attack missed.
+The spell ends if the target is ever outside the
+spell's range or if it has Total Cover from you.
+Using a Higher-Level Spell Slot. The initial damage
+increases by ld12 for each spell slot level above 1.
+WORD OF RADI A N CE
+Evocation Cantrip (Cleric)
+Casting Time: Action
+Range: Self
+Components: V, M (a sunburst token)
+Duration: Instantaneous
+Burning radiance erupts from you in a 5-foot Emanation. Each creature of your choice that you can
+see in it must succeed on a Constitution saving
+throw or take ld6 Radiant damage.
+Cantrip Upgrade. The damage increases by ld6
+when you reach levels S {2d6), 11 (3d6), and 17 (4d6).
+WORD O F RECALL
+Level 6 Conjuration (Cleric)
+Casting Time: Action
+Range: 5 feet
+Components: V
+Duration: Instantaneous
+You and up to five willing creatures within S feet
+of you instantly teleport to a previously designated
+sanctuary. You and any creatures that teleport with
+you appear in the nearest unoccupied space to the
+spot you designated when you prepared your sanctuary (see below). If you cast this spell without first
+preparing a sanctuary, the spell has no effect.
+You :nnst designate a location, such as a temple, as
+a sanci.,ury by casting this spell there.
+W RATHFUL SMITE
+Level 1 Necromancy (Paladin)
+Casting Time: Bonus Action, which you take immediately after hitting a creature with a Melee weapon or
+an Unarmed Strike
+Range: Self
+Component: V
+Duration: l minute
+The target takes an extra ld6 Necrotic damage
+from the attack, and it must succeed on a Wisdom
+saving throw or have the Frightened condition until
+the spell ends. At the end of each of its turns, the
+Frightened target repeats the save, ending the spell
+on itself on a success.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 1.
+I;:------- -- ---
+YOLANDE'S REGAL PRESENCE
+Level 5 Enchantment (Bard, Wizard)
+Casting Time: Action
+Range: Self
+Component: V, S, M (a miniature tiara)
+Duration: Concentration, up to l minute
+You surround yourself with unearthly majesty in a
+10-foot Emanation. Whenever the Emanation enters the space of a creature you can see and whenever a creature you can see enters the Emanation or
+ends its turn there, you can force that creature to
+make a Wisdom saving throw. On a failed save, the
+target takes 4d6 Psychic damage and has the Prone
+condition, and you can push it up to 10 feet away.
+On a successful save, the target takes half as much
+damage only. A creature makes this save only once
+per turn.
+ZONE OF TRUTH
+Level 2 Enchantment (Bard, Cleric, Paladin)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: 10 minutes
+You create a magical zone that guards against deception in a 15-foot-radius Sphere centered on a
+point within range. Until the spell ends, a creature
+that enters the spell's area for the first time on a
+turn or starts its turn there makes a Charisma saving throw. On a failed save, a creature can't speak a
+deliberate lie while in the radius. You know whether
+a creature succeeds or fails on this save.
+An affected creature is aware of the spell and
+can avoid answering questions to which it would
+normally respond with a lie. Such a creature can be
+evasive yet must be truthful.
+CH APTE R 7 I SPE LLS
+34-3

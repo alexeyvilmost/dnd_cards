@@ -1,0 +1,176 @@
+# Player's Handbook 2024 (EN) — PDF-страница 168/387
+
+Spell
+School
+Special
+Spell
+School
+Special
+Magic Weapon
+Transmutation
+Magic Circle
+Abjuration
+M
+Me/f's Acid Arrow
+Evocation
+Major Image
+Illusion
+C
+Mind Spike
+Divination
+C
+Nondetection
+Abjuration
+M
+Mirror Image
+Illusion
+Phantom Steed
+Illusion
+R
+Misty Step
+Conjuration
+Protection from Energy
+Abjuration
+C
+Nystul's Magic Aura
+Illusion
+Remove Curse
+Abjuration
+Phantasmal Force
+Illusion
+C
+Sending
+Divination
+Ray of Enfeeblement
+Necromancy
+C
+Sleet Storm
+Conjuration
+C
+Rope Trick
+Transmutation
+Slow
+Transmutation
+C
+Scorching Ray
+Evocation
+Speak with Dead
+Necromancy
+See Invisibility
+Divination
+Stinking Cloud
+Conjuration
+C
+Shatter
+Evocation
+Summon Fey
+Conjuration
+C,M
+Spider Climb
+Transmutation
+C
+Summon Undead
+Necromancy
+C,M
+Suggestion
+Enchantment
+C
+Tongues
+Divination
+Web
+Conjuration
+C
+Vampiric Touch
+Necromancy
+C
+Water Breathing
+Transmutation
+R
+LEVEL 3 WIZARD SPELLS
+Spell
+School
+Special
+LEVEL 4 WIZARD SPELLS
+Animate Dead
+Necromancy
+Spell
+School
+Special
+Bestow Curse
+Necromancy
+C
+Arcane Eye
+Divination
+C
+Blink
+Transmutation
+Banishment
+Abjuration
+C
+Clairvoyance
+Divination
+C,M
+Blight
+Necromancy
+Counterspe/1
+Abjuration
+Charm Monster
+Enchantment
+Dispel Magic
+Abjuration
+Confusion
+Enchantment
+C
+Fear
+Illusion
+C
+Conjure Minor Elementals
+Conjuration
+C
+Feign Death
+Necromancy
+R
+Control Water
+Transmutation
+C
+Fireball
+Evocation
+Dimension Door
+Conjuration
+Fly
+Transmutation
+C
+Divination
+Divination
+R, M
+Gaseous Form
+Transmutation
+C
+Evard's Black Tentacles
+Conjuration
+C
+Glyph of Warding
+Abjuration
+M
+Fabricate
+Transmutation
+Haste
+Transmutation
+C
+Fire Shield
+Evocation
+Hypnotic Pattern
+Illusion
+C
+Greater Invisibility
+Illusion
+C
+Leomund's Tiny Hut
+Evocation
+R
+Hallucinatory Terrain
+Illusion
+Lightning Bolt
+Evocation
+CHAPTER 3 I CHARACTER CLASSES
+169

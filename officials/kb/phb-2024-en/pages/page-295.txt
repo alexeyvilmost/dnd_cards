@@ -1,0 +1,91 @@
+# Player's Handbook 2024 (EN) — PDF-страница 295/387
+
+MASS CURE WOUNDS
+Level 5 Abjuration (Bard, C/er-ic, Druid)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+A wave of healing energy washes out from a point
+you can see within range. Choose up to six creatures in a 30-foot-radius Sphere centered on that
+point. Each target regains Hit Points equal to Sd8
+plus your spellcasting ability modifier.
+Using a Higher-Level Spell Slot. The healing increases by ld8 for each spell slot level above 5.
+MASS HEAL
+Level 9 Abjuration (Cleric)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+A flood of healing energy flows from you into
+creatures around you. You restore up to 700 Hit
+Points, divided as you choose among any number of
+creatures that you can see within range. Creatures
+healed by this spell also have the Blinded, Deafened,
+and Poisoned conditions removed from them.
+MASS HEALING WORD
+Level 3 Abjuration (Bard, Cleric)
+Casting Time: Bonus Action
+Range: 60 feet
+Components: V
+Duration: Instantaneous
+Up to six creatures of your choice that you can see
+within range regain Hit Points equal to 2d4 plus
+your spellcasting ability modifier.
+Using a Higher-Level Spell Slot. The healing increases by 1d4 for each spell slot level above 3.
+MASS SUGGESTION
+Level 6 Enchantment (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, M (a snake's tongue)
+Duration: 24 hours
+You suggest a course of activity-described in no
+more than 25 words-to twelve or fewer creatures you can see within range that can hear and
+?Oh
+CHAPTER 7 I SPE LLS
+understand you. The suggestion must so•.!nd achievable and not involve anything that would obviously
+deal damage to any of the targets or their allies. For
+example, you could say, "Walk to the village down
+that road, and help the vi llagers there harvest crops
+until sunset." Or you could say, "Now is not t he time
+for violence. Drop your weapons, and dance! Stop in
+an hour."
+Each target must succeed on a Wisdom saving
+throw or have the Charmed condition for the duration or until you or your allies deal damage to the
+target. Each Charmed target pursues the suggestion
+to the best of its ability. The suggested activity can
+continue for the entire duration, but if the suggested activity can be completed in a shorter time,
+the spell ends for a target upon completing it.
+Using a Higher-Level Spell Slot. The duration is
+longer with a spell slot of level 7 (10 days), 8 (30
+days), or 9 (366 days).
+.,..
+MAZE
+Level 8 Conjuration (Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You banish a creature that you can see within range
+into a labyrinthine demiplane. The target remains
+there for the duration or until it escapes the maze.
+The target can take a Study action to try to escape. When it does so, it makes a DC 20 Intelligence
+(Investigation) check. If it succeeds, it escapes, and
+the spell ends.
+When the spell ends, the target reappears in the
+space it left or, if that space is occupied, in the nearest unoccupied space.
+MELD INTO STONE
+Level 3 Transmutation (Cleric, Druid, Ranger)
+Casting Time: Action or Ritual
+Range:Touch
+Components: V, S
+Duration: 8 hours
+You step into a stone object or surface large enough
+to fully contain your body, merging yourself and
+your equipment with the stone for the duration.
+You must touch the stone to clo so. Nothing of your
+presence remains visible or otherwise detectable by
+nonmagical senses.
+While merged with the st.one:, :,rou can't see what
+occurs outside it, and any Vvi.,;tl,,: ;J (Perception)
+checks you make to hear sou,;(.' · 0·1tside it are made

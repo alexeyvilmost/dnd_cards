@@ -1,0 +1,95 @@
+# Player's Handbook 2024 (EN) — PDF-страница 305/387
+
+on that point become thick and overgrown. A creature moving through that area must spend 4 feet of
+movement for every 1 foot it moves. You can exclude
+one or more areas of any size within the spell's area
+from being affected.
+Enrichment. All plants in a half-mile radius centered on a point within range become enriched for
+365 days. The plants yield twice the normal amount
+of food when harvested. They can benefit from only
+one Plant Growth per year.
+POISON SPRAY
+Necromancy Cantrip (Druid, Sorcerer, Warlock,
+Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: Instantaneous
+You spray toxic mist at a creature within range.
+Make a ranged spell attack against the target. On a
+hit, the target takes ld12 Poison damage.
+Cantrip Upgrade. The damage increases by ld12
+when you reach levels 5 (2d12), 11 (3d12), and 17
+(4dl2).
+-
+POLYMORPH
+Level 4 Transmutation (Bard, Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a caterpillar cocoon)
+Duration: Concentration, up to l hour
+You attempt to transform a creature that you can
+see within range into a Beast. The target must succeed on a Wisdom saving throw or shape-shift into
+a Beast form for the duration. That form can be any
+Beast you choose that has a Challenge Rating equal
+to or less than the target's (or the target's level if
+it doesn't have a Challenge Rating). The target's
+game statistics are replaced by the stat block of the
+chosen Beast, but the target retains its alignment,
+personality, creature type, Hit Points, and Hit Point
+Dice. See appendix B for a sample of Beast stat
+blocks.
+The target gains a number of Temporary Hit
+Points equal to the Hit Points of the Beast form. The
+spell ends early on the target if it has no Temporary
+Hit Points left.
+The target is limited in the actions it can perform
+by the anatomy of its new form, and it can't speak
+or cast spells.
+The target's gear melds into the new form. The
+creature can't use or otherwise benefit from any of
+that equipment.
+306
+CHAPTER 7 I SPELLS
+POWER WORD FORTIFY
+Level 7 Enchantment (Bard, C/e1·ic)
+Casting Time: Action
+Range: 60 feet
+Component: V
+Duration: Instantaneous
+You fortify up to six creatures you can see within
+range. The spell bestows 120 Temporary Hit Points,
+which you divide among the spell's recipients.
+POWER WORD HEAL
+Level 9 Enchantment (Bar·d, Cleric)
+Casting Time: Action
+Range: 60 feet
+Component: V
+Duration: Instantaneous
+A wave of healing energy washes over one creature
+you can see within range. The target regains all its
+Hit Points. If the creature has the Charmed, Frightened, Paralyzed, Poisoned, or Stunned condition,
+the condition ends. If the creature has the Prone
+condition, it can use its Reaction to stand up.
+POWER WORD KILL
+Level 9 Enchantment (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Component: V
+Duration: Instantaneous
+You compel one creature you can see within range
+to die. If the target has 100 Hit Points or fewer, it
+dies. Otherwise, it takes 12d12 Psychic damage.
+POWER WORD STUN
+Level 8 Enchantment (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V
+Duration: Instantaneous
+You overwhelm the mind of one creature you can
+see within range. If the target has 150 Hit Points or
+fewer, it has the Stunned condition. Otherwise, its
+Speed is O until the start of your next turn.
+The Stunned target makes a Constitution saving
+throw at the end of each of its t uriis, ending the
+condition on itself on a success.

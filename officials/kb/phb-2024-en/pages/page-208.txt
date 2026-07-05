@@ -1,0 +1,76 @@
+# Player's Handbook 2024 (EN) — PDF-страница 208/387
+
+.,
+J
+Detect Thoughts. You always have the Detect
+Tlioughts spell prepared. You can cast it without a
+spell slot or spell components, and you must finish
+a Long Rest before you can cast it in this way again.
+You can also cast it using spell slots you have of the
+appropriate level. Your spellcasting ability for the
+spell is the ability increased by this feat.
+WAR CASTER
+General Feat (Prerequisite: Level 4+, Spellcasting or Pact
+Magic Feature)
+You gain the following benefits.
+Ability Score Increase. Increase your Intelligence,
+Wisdom, or Charisma score by 1, to a maximum of
+20.
+Concentration. You have Advantage on Constitution saving throws that you make to maintain
+Concentration.
+Reactive Spell. When a creature provokes an Opportunity Attack from you by leaving your reach,
+you can take a Reaction to cast a spell at the creature rather than making an Opportunity Attack.
+The spell must have a casting time of one action and
+must target only that creature.
+Somatic Components. You can perform the Somatic components of spells even when you have
+weapons or a Shield in one or both hands.
+WEAPON MASTER
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Mastery Property. Your training with weapons allows you to use the mastery property of one kind of
+Simple or Martial weapon of your choice, provided
+you have proficiency with it. Whenever you finish
+a Long Rest, you can change the kind of weapon to
+another eligible kind.
+FIGHTING STYLE FEATS
+These feats are in the Fighting Style category.
+ARCHERY
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+You gain a +2 bonus to attack rolls you make with
+Ranged weapons.
+BLIND Fw : ,·n N G
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+You have Blindsight with a range of 10 feet.
+DEFENSE
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.
+~---------
+DUELING
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When you're holding a Melee weapon in one hand
+and no other weapons, you gain a +2 bonus to damage rolls with that weapon.
+;::::==
+GREAT WEAPON FIGHTING
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When you roll damage for an attack you make with
+a Melee weapon that you are holding with two
+hands, you can treat any 1 or 2 on a damage die as a
+3. The weapon must have the Two-Handed or Versatile property to gain this benefit.
+INTERCEPTION
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When a creature you can see hits another creature
+within 5 feet of you with an attack roll, you can
+take a Reaction to reduce the damage dealt to the
+target by ldl0 plus your Proficiency Bonus. You
+must be holding a Shield or a Simple or Martial
+weapon to use this Reaction.
+PROTECTION
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When a creature you can see attacks a target other
+than you that is within 5 feet of you, you can take a
+Reaction to interpose your Shield if you're holding
+one. You impose Disadvantage on the triggering
+attack roll and all other attack rolls against the target until the start of your next turn if you remain
+within 5 feet of the target.

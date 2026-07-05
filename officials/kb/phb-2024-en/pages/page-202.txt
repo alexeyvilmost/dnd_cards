@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 202/387
+
+CROSSBOW E XPERT
+General Feat (Prerequisite: Level 4+, Dexterity 13+)
+You gain the following benefits.
+Ability Sco1"e Increase. Increase your Dexterity
+score by 1, to a maximum of 20.
+Ignore Loading. You ignore the Loading property
+of the Hand Crossbow, Heavy Crossbow, and Light
+Crossbow (all called crossbows elsewhere in this
+feat). If you're holding one of them, you can load a
+piece of ammunition into it even if you lack a free
+hand.
+Firing in Melee. Being within 5 feet of an enemy
+doesn't impose Disadvantage on your attack rolls
+with crossbows.
+Dual Wielding. When you make the extra attack
+of the Light property, you can add your ability
+modifier to the damage of the extra attack if that attack is with a crossbow that has the Light property
+and you aren't already adding that modifier to the
+damage.
+CRUSHER
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Constitution score by 1, to a maximum of 20.
+Push. Once per turn, when you hit a creature with
+an attack that deals Bludgeoning damage, you can
+move it 5 feet to an unoccupied space if the target is
+no more than one size larger than you.
+Enhanced Critical. When you score a Critical Hit
+that deals Bludgeoning damage to a creature, attack
+rolls against that creature have Advantage until the
+start of your next turn.
+DEF ENSIVE DUELIST
+General Feat (Prerequisite: Level 4+, Dexterity 13+)
+You gain the following benefits.
+Ability Score Increase. Increase your Dexterity
+score by 1, to a maximum of 20.
+Parry. If you're holding a Finesse weapon and
+another creature hits you with a melee attack, you
+can take a Reaction to add your Proficiency Bonus
+to your Armor Class, potentially causing the attack
+to miss you. You gain this bonus to your AC against
+me lee attacks until the start of your next turn.
+DUAL WIELDER
+General Feat (Prerequisite: Level 4+, Strength or
+Dexterity 13+)
+You gain the following benefits.
+Ability Score Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 20.
+Enhanced Dual Wielding. When you take the Attack action on your turn and attack with a weapon
+that has the Light property, you can make one extra
+attack as a Bonus Action later on the same turn
+with a different weapon, which must be a Melee
+weapon that lacks the Two-Handed property. You
+don't add your ability modifier to the extra attack's
+damage unless that modifier is negative.
+Quick Draw. You can draw or stow two weapons that lack the Two-Handed property when you
+would normally be able to draw or stow only one.
+DURABLE
+General Feat (Prerequisite: Level 4+)
+You gain the following benefits.
+Ability Score Increase. Increase your Constitution
+score by 1, to a maximum of 20.
+Defy Death. You have Advantage on Death Saving
+Throws.
+Speedy Recovery. As a Bonus Action, you can expend one of your Hit Point Dice, roll the die, and
+regain a number of Hit Points equal to the roll.
+ELEMENTAL ADEPT
+General Feat (Prerequisite: Level 4+, Spellcasting or Pact
+Magic Feature)
+You gain the following benefits.
+Ability Score Increase. Increase your Intelligence,
+Wisdom, or Charisma score by 1. to a maximum of
+20.
+Energy Mastery. Choose one of the following damage types: Acid, Cold, Fire, Lightning, or Thunder.
+Spells you cast ignore Resistance to damage of the
+chosen type. In addition, when you roll damage for
+a spell you cast that deals damage of that type, you
+can treat any 1 on a damage die as a 2.
+Repeatable. You can take this feat more than once,
+but you must choose a different damage type each
+time for Energy Mastery.
+CHA PTER 5 I FEATS
+203

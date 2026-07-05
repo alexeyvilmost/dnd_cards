@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 311/387
+
+REMOVE CURSE
+Level 3 Abjuration (Cleric, Paladin, Warlock, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: Instantaneous
+At your touch, all curses affecting one creature
+or object end. If the object is a cursed magic item,
+its curse remains, but the spell breaks its owner's
+Attunement to the object so it can be removed or
+discarded.
+RESISTANCE
+Abjuration Cantrip (Cleric, Druid)
+Casting Time: Action
+Range:Touch
+Component: V, S
+Duration: Concentration, up to 1 minute
+You touch a willing creature and choose a damage
+type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen
+type before the spell ends, the creature reduces the
+total damage taken by ld4. A creature can benefit
+from this spell only once per turn.
+RESURRECTION
+Level 7 Necromancy (Bard, Cleric)
+Casting Time: 1 hour
+Range:Touch
+Components: V, S, M (a diamond worth 1,000+ GP,
+which the spell consumes)
+Duration: Instantaneous
+With a touch, you revive a dead creature that has
+been dead for no more than a century, didn't die of
+old age, and wasn't Undead when it died.
+The creature returns to life with all its Hit Points.
+This spell also neutralizes any poisons that affected
+the creature at the time of death. This spell closes
+all mortal wounds and restores any missing body
+parts.
+Coming back from the dead is an ordeal. The target takes a -4 penalty to D20 Tests. Every time the
+target finishes a Long Rest, the penalty is reduced
+by 1 until it becomes 0.
+Casting this spell to revive a creature that has
+been dead for 365 days or longer taxes you. Until
+you finish a Long Rest, you can't cast spells again,
+and you have Disadvantage on D20 Tests.
+REVERSE GRAVITY
+Level 7 Transmuta tion (Druid, S01-cerer, Wizard)
+Casting Time: Action
+Range: 100 feet
+Components: V, S, M (a lodestone and iro n fil ings)
+Duration: Concentration, up to l minute
+This spell reverses gravity in a SO-foot-radius, 100-
+foot high Cylinder centered on a point within range.
+All creatures and objects in that area that aren't
+anchored to the ground fall upward and reach the
+top of the Cylinder. A creature can make a Dexterity saving throw to grab a fixed object it can reach,
+thus avoiding the fall upward.
+If a ceiling or an anchored object is encountered
+in this upward fall, creatures and objects strike it
+just as they would during a downward fall. If an affected creature or object reaches the Cylinder's top
+without striking anything, it hovers there for the
+duration. When the spell ends, affected objects and
+creatures fall downward.
+REVIVIFY
+Level 3 Necromancy (Cleric, Druid, Paladin, Ranger)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a diamond worth 300+ GP,
+which the spell consumes)
+Duration: Instantaneous
+You touch a creature that has died within the last
+minute. That creature revives with 1 Hit Point. This
+spell can't revive a creature that has died of old age,
+nor does it restore any missing body parts.
+ROPE TRICK
+Level 2 Transmutation (Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a segment of rope)
+Duration: l hour
+You touch a rope. One end of it hovers upward until
+the rope hangs perpendicular to the ground or the
+rope reaches a ceiling. At the rope's upper end, an
+Invisible 3-foot-by-5-foot portal opens to an extradimensional space that lasts until the spell ends.
+That space can be reached by climbing the rope,
+which can be pulled into or dropped out of it.
+The space can hold up to eight Medium or smaller
+creatures. Attacks, spells, and 1)th{' r effects can't
+pass into or out of the space, but c1·e2tures inside
+it can see through the portal. Anytning inside the
+space drops out when the !>1Y'll (»-,:l.;.

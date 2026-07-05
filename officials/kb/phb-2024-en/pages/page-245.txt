@@ -1,0 +1,46 @@
+# Player's Handbook 2024 (EN) — PDF-страница 245/387
+
+On a failed save, the target takes 10d12 Psychic
+damage and can't cast spells or take the Magic action. At the end of every 30 days, the target repeats
+the save, ending the effect on a success. The effect
+can also be ended by the Greater Restoration, Heal, or
+Wish spell.
+On a successful save, the target takes half as much
+damage only.
+BESTOW CURSE
+Level 3 Necromancy (Bard, Cleric, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: Concentration, up to l minute
+You touch a creature, which must succeed on a
+Wisdom saving throw or become cursed for the duration. Until the curse ends, the target suffers one of
+the following effects of your choice:
+• Choose one ability. The target has Disadvantage
+on ability checks and saving throws made with
+that ability.
+• The target has Disadvantage on attack rolls
+against you.
+24-6
+CHAPTER 7 I SPELLS
+In combat, the target must succeed on a Wisdom
+saving throw at the start of each of its turns or be
+forced to take the Dodge action on that turn.
+If you deal damage to the target with an attack
+roll or a spell, the target takes an extra ld8 Necrotic damage.
+Using a Higher-Level Spell Slot. If you cast this
+spell using a level 4 spell slot, you can maintain
+Concentration on it for up to 10 minutes. If you use
+a level S+ spell slot, the spell doesn't require Concentration, and the duration becomes 8 hours (level
+5-6 slot) or 24 hours (level 7-8 slot). If you use a
+level 9 spell slot, the spell lasts until dispelled.
+B rGBY's HAND
+Level 5 Evocation (Sorcere,~ Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (an eggshell and a glove)
+Duration: Concentration, up to l minute
+You create a Large hand of shinrn,~ring magical energy in an unoccupied space th~1'· ::,-ou can see within
+range. The hand lasts for the dr 1';,: 1or1, and it moves
+at your command, mimicking th,·· "'.1ovcments of
+your own hand.

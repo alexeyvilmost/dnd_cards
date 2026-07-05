@@ -1,0 +1,118 @@
+# Player's Handbook 2024 (EN) — PDF-страница 121/387
+
+Spell
+School
+Meld into Stone
+Transmutation
+Nondetection
+Abjuration
+Plant Growth
+Transmutation
+Protection from Energy
+Abjuration
+Revivify
+Necromancy
+Speak with Plants
+Transmutation
+Summon Fey
+Conjuration
+Water Breathing
+Transmutation
+Water Walk
+Transmutation
+Wind Wall
+Evocation
+LEVEL 4 RANGER SPELLS
+Spell
+School
+Conjure Woodland Beings
+Conjuration
+Dominate Beast
+Enchantment
+Freedom of Movement
+Abjuration
+Grasping Vine
+Conjuration
+Locate Creature
+Divination
+Stoneskin
+Transmutation
+Summon Elemental
+Conjuration
+Special
+R
+M
+C
+M
+C, M
+R
+R
+C
+Special
+C
+C
+C
+C
+C, M
+C,M
+LEVEL 5 RANGER SPELLS
+Spell
+Commune with Nature
+Conjure Volley
+Greater Restoration
+Steel Wind Strike
+Swift Quiver
+Tree Stride
+School
+Divination
+Conjuration
+Abjuration
+Conjuration
+Transmutation
+Conjuration
+RANGER SUBCLASSES
+Special
+R
+M
+M
+C, M
+C
+A Ranger subclass is a specialization that grants
+you features at certain Ranger levels, as specified
+in the subclass. This section presents the Beast
+Master, Fey Wanderer, Gloom Stalker, and Hunter
+subclasses.
+BEAST MASTER
+Bond with a Primal Beast
+A Beast Master forms a mystical bond w ith a special
+animal, drawing on primal magic and a deep connection to the natural world.
+LEVEL 3: PRIMAL COMPANION
+You magically summon a primal beast, w hich draws
+strength from your bond with nature. Choose its
+stat block: Beast of the Land, Beast of the Sea, or
+Beast of the Sky. You also determine the kind of
+animal it is, choosing a kind appropriate for the stat
+block. Whatever beast you choose, it bears primal
+markings indicating its supernatural origin.
+The beast is Friendly to you and your allies and
+obeys your commands. It vanishes if you die.
+The Beast in Combat. In combat, the beast acts
+during your turn. It can move and use its Reaction
+on its own, but the only action it takes is the Dodge
+action unless you take a Bonus Action to command
+it to take an action in its stat block or some other
+action. You can also sacrifice one of your attacks
+when you take the Attack action to command the
+beast to take the Beast's Strike action. If you have
+the Incapacitated condition, the beast acts on its
+own and isn't limited to the Dodge action.
+Restoring or Replacing the Beast. If the beast has
+died within the last hour, you can take a Magic
+action to touch it and expend a spell slot. The beast
+returns to life after 1 minute with all its Hit Points
+restored.
+Whenever you finish a Long Rest, you can summon a different primal beast, which appears in an
+unoccupied space within 5 feet of yo1.1. You choose
+its stat block and appearance. If you · !ready have a
+beast from this feature, the old one vanishes when
+the new one appears.

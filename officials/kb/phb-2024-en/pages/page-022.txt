@@ -1,0 +1,60 @@
+# Player's Handbook 2024 (EN) — PDF-страница 22/387
+
+COMBAT
+Adventurers encounter many dangerous monsters
+and nefarious villains. In those moments, combat
+often breaks out.
+THE ORDER OF COMBAT
+A typical combat encounter is a clash between two
+sides: a flurry of weapon swings, feints, parries,
+footwork, and spellcasting. The game organizes
+combat into a cycle of rounds and turns. A round
+represents about 6 seconds in the game world.
+During a round, each participant in a battle takes a
+turn. The order of turns is determined at the beginning of combat when everyone rolls Initiative. Once
+everyone has taken a turn, the fight continues to
+the next round if neither side is defeated.
+COMBAT STEP BY STEP
+Combat unfolds in these steps:
+1: Establish Positions. The Dungeon Master determines where all the characters and monsters are
+located. Given the adventurers' marching order
+or their stated positions in the room or other location, the DM figures out where the adversaries
+are-how far away and in what direction.
+2: Roll Initiative. Everyone involved in the combat
+encounter rolls Initiative, determining the order
+of combatants' turns.
+3: Take Turns. Each participant in the battle takes
+a turn in Initiative order. When everyone involved in the combat has had a turn, the round
+ends. Repeat this step until the fighting stops.
+INITIATIVE
+Initiative determines the order of turns during
+combat. When combat starts, every participant
+rolls Initiative; they make a Dexterity check that
+determines their place in the Initiative order. The
+OM rolls for monsters. For a group of identical creatures, the OM makes a single roll, so each member
+of the group has the same Initiative.
+Surprise. If a combatant is surprised by combat
+starting, that combatant has Disadvantage on their
+Initiative roll. For example, if an ambusher starts
+combat while hidden from a foe who is unaware
+that combat is starting, that foe is surprised.
+Initiative Order. A combatant's check total is
+called their Initiative count, or Initiative for short.
+The OM ranks the combatants, from highest to
+lowest Initiative. This is the order in which they act
+during each round. The Initiative order remains the
+same from round to round.
+Ties. If a tie occurs, the DM decides the order
+among tied monsters, and the players decide the
+order among tied characters. The DM decides the
+order if the tie is between a monster and a player
+character.
+YOUR TuRN
+On your turn, you can move a distance up to your
+Speed and take one action. You decide whether to
+move first or take your action first.
+The main actions you can take are listed in "Actions" earlier in this chapter. A character's features
+and a monster's stat block also provide action options. "Movement and Position" later in this chapter
+gives the rules for movement.
+C H APTE R l I PLAY I NG T H E GA M E
+23

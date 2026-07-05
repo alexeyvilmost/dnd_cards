@@ -1,0 +1,32 @@
+# Player's Handbook 2024 (EN) — PDF-страница 150/387
+
+ldl00 Effect
+65-68 If you die within the next hour, you immediately revive as if by the Reincarnate spell.
+69- 72 You have the Frightened condition until the
+end of your next turn. The DM determines
+the source of your fear.
+73- 76 You teleport up to 60 feet to an unoccupied
+space you can see.
+77- 80 A random creature within 60 feet of you has
+the Poisoned condition for ld4 hours.
+81 - 84 You radiate Bright Light in a 30-foot radius
+for the next minute. Any creature that ends
+its turn within 5 feet of you has the Blinded
+condition until the end of its next turn.
+85-88 Up to three creatures of your choice that you
+can see within 30 feet of you take ldl0 Necrotic damage. You regain Hit Points equal
+to the sum of the Necrotic damage dealt.
+ldl00 Effect
+89-92 Up to three creatures of your choice that
+you can see within 30 feet of you take 4dl 0
+Lightning damage.
+93-96 You and all creatures within 30 feet of you
+have Vulnerability to Piercing damage for the
+next minute.
+97-00 Roll ld6: On a 1, you regain 2d10 Hit Points;
+on a 2, one ally of your choice within 300
+feet of you regains 2d10 Hit Points; on a 3,
+you regain your lowest-level expended spell
+slot; on a 4, one ally of your choice within
+300 feet of you regains their lowest-level expended spell slot; on a 5, you regain all your
+expended Sorcery Points; on a 6, all the effects of row 17-20 affect you simultaneously.

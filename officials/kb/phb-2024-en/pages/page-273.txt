@@ -1,0 +1,50 @@
+# Player's Handbook 2024 (EN) — PDF-страница 273/387
+
+FIREBALL
+Level 3 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 150 feet
+Components: V, S, M (a ball of bat guano and sulfur)
+Duration: Instantaneous
+A bright streak flashes from you to a point you
+choose within range and then blossoms with a
+low roar into a fiery explosion. Each creature in a
+20-foot-radius Sphere centered on that point makes
+a Dexterity saving throw, taking 8d6 Fire damage
+on a failed save or half as much damage on a successful one.
+Flammable objects in the area that aren't being
+worn or carried start burning.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 3.
+FIRE BOLT
+Evocation Cantrip (Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: lnstaritaneo•;s
+You hurl a mote of fire at a creature or an object
+within range. Make a ranged spell attack against the
+12.•7•.
+C!! vr;;: { 7 ' Sl·CLI.S
+target. On a hit, the target takes ldlO Fire damage.
+A flammable object hit by this spell starts burning if
+it isn't being worn or carried.
+Cantrip Upgrade. The damage increases by ldlO
+when you reach levels 5 (2d10), 11 (3d10), and 17
+(4d10).
+FIRE SHIELD
+Level 4 Evocation (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a bit of phosphorus or a firefly)
+Duration: 10 minutes
+Wispy flames wreathe your body for the duration
+shedding Bright Light in a 10-foot radius and Dim'
+Light for an additional 10 feet.
+The flames provide you with a warm shield or a
+chill shield, as you choose. The warm shield grants
+you Resistance to Cold damage, and the chill shield
+grants you Resistance to Fire damage.
+In addition, whenever a creature within 5 feet
+of you hits you with a me lee attack roll, the shield
+erupts with flame. The attacker takes 2d8 Fire damage from a warm shicl ·! ,·)r 2d8 Cold damage from a
+chill shield.

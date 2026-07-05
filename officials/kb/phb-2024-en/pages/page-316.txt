@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 316/387
+
+O F THE M UND A N E
+/\ NO THE WHIMSICAL
+SILENT IMAGE
+Level 1 Illusion (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a bit of fleece)
+Duration: Concentration, up to 10 minutes
+You create the image of an object, a creature, or
+some other visible phenomenon that is no larger
+than a 15-foot Cube. The image appears at a spot
+within range and lasts for the duration. The image is
+purely visual; it isn't accompanied by sound, smell,
+or other sensory effects.
+As a Magic action, you can cause the image
+to move to any spot within range. As the image
+changes location, you can alter its appearance so
+that its movements appear natural for the image.
+For example, if you create an image of a creature
+and move it, you can alter the image so that it appears to be walking.
+Physical interaction with the image reveals it to be
+an illusion, since things can pass through it. A creature that takes a Study action to examine the image
+can determine that it is an illusion with a successful
+Intelligence (Investigation) check against your spell
+save DC. If a creature discerns the illusion for what
+it is, the creature can see through the image.
+SI MULACRU M
+Level 7 Illusion (Wizard)
+Casting Time: 12 hours
+Range:Touch
+Components: V, S, M (powdered ruby worth 1,500+
+GP, which the spell consumes)
+Duration: Until dispelled
+You create a Jii..ulacrum of one Beast or Humanoid
+that is within JO feet of you for the entire casting
+of the spell. Yi .. u fi nish the casting by touching both
+the creature and a pile of ice or snow that is the
+same size as that creature, and the pile turns into
+the simulacrum, which is a creature. It uses the
+game statistics of the original creature at the time
+of casting, except it is a Construct, its Hit Point
+maximum is half as much, and it can't cast this spell.
+The simulacrum is Friendly to you and creatures
+you designate. It obeys your commands and acts on
+your turn in combat. The simulacrum can't gain levels, and it can't take Short or Long Rests.
+If the simulacrum takes damage, the only way
+to restore its Hit Points is to repair it as you take a
+Long Rest, during which you expend components
+worth 100 GP per Hit Point restored. The simulacrum must stay within 5 feet of you for the repair.
+The simulacrum lasts until it drops to O Hit
+Points, at which point it reverts to snow and melts
+away. If you cast this spell again, any simulacrum
+you created with this spell is instantly destroyed.
+SLEEP
+Level 1 Enchantment (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a pinch of sand or rose petals)
+Duration: Concentration, up to 1 minute
+Each creature of your choice in a 5-foot-radius
+Sphere centered on a point within range must succeed on a Wisdom saving throw or have the Incapacitated condition until the end of its next turn,
+at which point it must repeat the save. If the target
+fails the second save, the target has the Unconscious
+condition for the duration. The spell ends on a target if it takes damage or someone within 5 feet of it
+takes an action to shake it out of the spell's effect.
+Creatures that don't sleep, such as elves, or that
+have Immunity to the Exhaustion condition automatically succeed on saves against this spell.
+SLEET STORM
+Level 3 Conjuration (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 1 SO feet
+Components: V, S, M {a miniature umbrella)
+Duration: Concentration, up to 1 minute
+Until the spell ends, sleet falls in a 40-foot-tall,
+20-foot-radius Cylinder centered on a point you
+choose within range. The area is Heavily Obscured,
+and exposed flames in the area are doused.
+Ground in the Cylinder is Difficult Terrain. When
+a creature enters the Cylinder for the first time on
+a turn or starts its turn there, it must succeed on a
+Dexterity saving throw or have the Prone condition
+and lose Concentration.
+CH APTER 7 I SPE LLS
+~17

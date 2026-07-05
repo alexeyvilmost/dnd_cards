@@ -1,0 +1,208 @@
+# Player's Handbook 2024 (EN) — PDF-страница 62/387
+
+Spell
+School
+Special
+LEVEL 6 BARD SPELLS
+Nondetection
+Abjuration
+M
+Spell
+School
+Special
+Plant Growth
+Transmutation
+Eyebite
+Necromancy
+C
+Sending
+Divination
+Find the Path
+Divination
+C, M
+Slow
+Transmutation
+C
+Guards and Wards
+Abjuration
+M
+Speak with Dead
+Necromancy
+Heroes' Feast
+Conjuration
+M
+Speak with Plants
+Transmutation
+Mass Suggestion
+Enchantment
+Stinking Cloud
+Conjuration
+C
+Otto's Irresistible Dance
+Enchantment
+C
+Tongues
+Divination
+Programmed Illusion
+Illusion
+M
+True Seeing
+Divination
+M
+LEVEL 4 BARD SPELLS
+Spell
+School
+Special
+LEVEL 7 BARD SPELLS
+Charm Monster
+Enchantment
+Spell
+School
+Special
+Compulsion
+Enchantment
+C
+Etherealness
+Conjuration
+Confusion
+Enchantment
+C
+Forcecage
+Evocation
+C,M
+Dimension Door
+Conjuration
+Mirage Arcane
+Illusion
+Fount of Moonlight
+Evocation
+C
+Mordenkainen's Magnificent Conjuration
+M
+Freedom of Movement
+Abjuration
+Mansion
+Greater Invisibility
+Illusion
+C
+Mordenkainen's Sword
+Evocation
+C,M
+Hallucinatory Terrain
+Illusion
+Power Word Fortify
+Enchantment
+Locate Creature
+Divination
+C
+Prismatic Spray
+Evocation
+Phantasmal Killer
+Illusion
+C
+Project Image
+Illusion
+C,M
+Polymorph
+Transmutation
+C
+Regenerate
+Transmutation
+Resurrection
+Necromancy
+M
+LEVEL 5 BARD SPELLS
+Symbol
+Abjuration
+M
+Spell
+School
+Special
+Teleport
+Conjuration
+Animate Objects
+Transmutation
+C
+Awaken
+Transmutation
+M
+LEVEL 8 BARD SPELLS
+Dominate Person
+Enchantment
+C
+Spell
+School
+Special
+Dream
+Illusion
+Antipathy/Sympathy
+Enchantment
+Geas
+Enchantment
+Befuddlement
+Enchantment
+Greater Restoration
+Abjuration
+M
+Dominate Monster
+Enchantment
+C
+Hold Monster
+Enchantment
+C
+Glibness
+Enchantment
+Legend Lore
+Divination
+M
+Mind Blank
+Abjuration
+Mass Cure Wounds
+Abjuration
+Power Word Stun
+Enchantment
+Mislead
+Illusion
+C
+LEVEL 9 BARD SPELLS
+Modify Memory
+Enchantment
+C
+Spell
+School
+Special
+Planar Binding
+Abjuration
+M
+Foresight
+Divination
+Raise Dead
+Necromancy
+M
+Power Word Heal
+Enchantment
+Rary's Telepathic Bond
+Divination
+R
+Power Word Kill
+Enchantment
+Scrying
+Divination
+C, M
+Prismatic Wall
+Abjuration
+Seeming
+Illusion
+True Polymorph
+Transmutation
+C
+Synaptic Static
+Enchantment
+Teleportation Circle
+Conjuration
+M
+Yolande's Regal Presence
+Enchantment
+C
+C HAPT ER 3 I Cll. RACTER CL\ S~ ES
+63

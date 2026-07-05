@@ -1,0 +1,88 @@
+# Player's Handbook 2024 (EN) — PDF-страница 294/387
+
+:MAGIC M ::;SILE
+Level 1 Evocation (Sorcer·er, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Instantaneous
+You create three glowing darts of magical force.
+Each dart strikes a creature of your choice that
+you can see within range. A dart deals ld4 + 1 Force
+damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature
+or several.
+Using a Higher-Level Spell Slot. The spell creates
+one more dart for each spell slot level above l.
+MAGIC MOUTH
+Level 2 Illusion (Bard, Wizard)
+Casting Time: 1 minute or Ritual
+Range: 30 feet
+Components: V, S, M (jade dust worth 10+ GP, which
+the spell consumes)
+Duration: Until dispelled
+You implant a message within an object in range-a
+message that is uttered when a trigger condition
+is met. Choose an object that you can see and that
+isn't being worn or carried by another creature.
+Then speak the message, which must be 25 words or
+fewer, though it can be delivered over as long as 10
+minutes. Finally, determine the circumstance that
+will trigger the spell to deliver your message.
+When that trigger occurs, a magical mouth appears on the object and recites the message in your
+voice and at the same volume you spoke. If the object you chose has a mouth or something that looks
+like a mouth (for example, the mouth of a statue),
+the magical mouth appears there, so the words appear to come from the object's mouth. When you
+cast this spell, you can have the spell end after it
+delivers its message, or it can remain and repeat its
+message whenever the trigger occurs.
+The trigger can be as general or as detailed as you
+like, though it must be based on visual or audible
+conditions that occur within 30 feet of the object.
+For example, you could instruct the mouth to speak
+when any creature moves within 30 feet of the object or when a .silver bell rings within 30 feet of it.
+MAGIC WEAPON
+Level 2 Transmutation (Paladin, Ranger, Sorcerer,
+Wizard)
+Casting Time: Bonus Action
+Range:Touch
+Components: V, S
+Duration: 1 hour
+You touch a nonmagical weapon. Until the spell
+ends, that weapon becomes a magic weapon with a
++1 bonus to attack rolls and damage rolls. The spell
+ends early if you cast it again.
+Using a Higher-Level Spell Slot. The bonus increases to +2 with a level 3-5 spell slot. The bonus
+increases to +3 with a level 6+ spell slot.
+!.:;..-------·
+MAJOR IMAGE
+Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (a bit of fleece)
+Duration: Concentration, up to 10 minutes
+You create the image of an object, a creature, or
+some other visible phenomenon that is no larger
+than a 20-foot Cube. The image appears at a spot
+that you can see within range and lasts for the duration. It seems real, including sounds, smells, and
+temperature appropriate to the thing depicted, but
+it can't deal damage or cause conditions.
+If you are within range of the illusion, you can
+take a Magic action to cause the image to move to
+any other spot within range. As the image changes
+location, you can alter its appearance so that its
+movements appear natural for the image. For example, if you create an image of a creature and move
+it, you can alter the image so that it appears to be
+walking. Similarly, you can cause the illusion to
+make different sounds at different times, even making it carry on a conversation, for example.
+Physical interaction with the image reveals it to
+be an illusion, for things can pass through it. A creature that takes a Study action to examine the image
+can determine that it is an illusion with a successful Intelligence (Investigation) check against your
+spell save DC. If a creature discerns the illusion for
+what it is, the creature can see through the image,
+and its other sensory qualities become faint to the
+creature.
+Using a Higher-Level Spell Slot. The spell lasts until
+dispelled, without requiring Concentration, if cast
+with a level 4+ spell slot.
+CH APTER 7 l SPELLS
+295

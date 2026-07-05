@@ -1,0 +1,108 @@
+# Player's Handbook 2024 (EN) — PDF-страница 140/387
+
+You have 2 Sorcery Points, and you gain more as
+you reach higher levels, as shown in the Sorcery
+Points column of the Sorcerer Features table. You
+can't have more Sorcery Points than the number
+shown in the table for your level. You regain all expended Sorcery Points when you finish a Long Rest.
+You can use your Sorcery Points to fuel the
+options below, along with other features, such as
+Metamagic, that use those points.
+Converting Spell Slots to Sorcery Points. You can
+expend a spell slot to gain a number of Sorcery
+Points equal to the slot's level (no action required).
+Creating Spell Slots. As a Bonus Action, you can
+transform unexpended Sorcery Points into one spell
+slot. The Creating Spell Slots table shows the cost
+of creating a spell slot of a given level, and it lists
+the minimum Sorcerer level you must be to create
+a slot. You can create a spell slot no higher than
+level 5.
+Any spell slot you create with this feature vanishes when you finish a Long Rest.
+CREATING SPELL SLOTS
+Spell Slot
+Sorcery Point
+Level
+Cost
+l
+2
+3
+4
+5
+2
+3
+5
+6
+7
+L EVEL 2: METAMAGIC
+Min. Sorcerer
+Level
+2
+3
+5
+7
+9
+Because your magic flows from within, you can
+alter your spells to suit your needs; you gain two
+Metamagic options of your choice from "Metamagic Options" later in this class's description. You
+use the chosen options to temporarily modify spells
+you cast. To use an option, you must spend the number of Sorcery Points that it costs.
+You can use only one Metamagic option on a spell
+when you cast it unless otherwise noted in one of
+those options.
+Whenever you gain a Sorcerer level, you can replace one of your Meta magic options with one you
+don't know. You gain two more options at Sorcerer
+level 10 and two more at Sorcerer level 17.
+L EVEL 3: SORCERER SUBCLASS
+You gain a Sorcerer subclass of your choice. The
+Aberrant Sorcery, Clockwork Sorcery, Draconic
+Sorcery, and Wild Magic Sorcery subclasses are
+detailed after this class's description. A subclass is
+a specialization that grants you features at certain
+Sorcerer levels. For the rest of your career, you gain
+each of your subclass's features that are of your
+Sorcerer level or lower.
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Sorcerer
+levels 8, 12, and 16.
+LEVEL 5: SORCEROUS RESTORATION
+When you finish a Short Rest, you can regain expended Sorcery Points, but no more than a number
+equal to half your Sorcerer level (round down).
+Once you use this feature, you can't do so again until you finish a Long Rest.
+LEVEL 7: SORCERY INCARNATE
+If you have no uses of Innate Sorcery left, you can
+use it if you spend 2 Sorcery Points when you take
+the Bonus Action to activate it.
+In addition, while your Innate Sorcery feature is
+active, you can use up to two of your Meta magic
+options on each spell you cast.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Dimensional Travel is recommended.
+LEVEL 20: ARCANE APOTHEOSIS
+While your Innate Sorcery feature is active, you
+can use one Meta magic option on each of your
+turns without spending Sorcery Points on it.
+METAMAGIC OPTIONS
+The following options are available to your Metamagic feature. The options are presented in alphabetical order.
+CAREFUL SPELL
+Cost: 1 Sorcery Point
+When you cast a spell that forces other creatures
+to make a saving throw, you can protect some of
+those creatures from the spell's full force. To do so,
+spend 1 Sorcery Point and choose a number of those
+creatures up to your Charisma modifier (minimum
+of one creature). A chosen creature automatically
+succeeds on its saving throw against the spell, and it
+takes no damage if it would normally take half damage on a successful save.
+DISTANT SPELL
+Cost: 1 Sorcery Point
+When you cast a spell that has a range of at least 5
+feet, you can spend 1 Sorcery Point to double the
+spell's range. Or when you cast a spell that has a
+range of Touch, you can spend 1 Sorcery Point to
+make the spell's range 30 feet.
+II APTER 3 I C t-I A R:\CT ER CLASSES
+TA. I

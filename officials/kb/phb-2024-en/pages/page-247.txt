@@ -1,0 +1,87 @@
+# Player's Handbook 2024 (EN) — PDF-страница 247/387
+
+Blinded condition until the spell ends. At the end of
+each of its turns, the Blinded target makes a Constitution saving throw, ending the spell on itself on a
+success.
+Using a Higher-Level Spell Slot. The extra damage
+increases by ld8 for each spell slot level above 3.
+BLINDNESS/DEAFNESS
+Level 2 TI-ansmutation (Bard, Cleric, Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V
+Duration: 1 minute
+One creature that you can see within range must
+succeed on a Constitution saving throw, or it has
+the Blinded or Deafened condition (your choice)
+for the duration. At the end of each of its turns, the
+target repeats the save, ending the spell on itself on
+a success.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 2.
+BLINK
+Level 3 Transmutation (Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: 1 minute
+Roll ld6 at the end of each of your turns for the duration. On a roll of 4-6, you vanish from your current plane of existence and appear in the Ethereal
+Plane (the spell ends instantly if you are already on
+that plane). While on the Ethereal Plane, you can
+perceive the plane you left, which is cast in shades
+of gray, but you can't see anything there more than
+60 feet away. You can affect and be affected only
+by other creatures on the Ethereal Plane, and creatures on the other plane can't perceive you unless
+they have a special ability that lets them perceive
+things on the Ethereal Plane.
+You return to the other plane at the start of your
+next turn and when the spell ends if you are on the
+Ethereal Plane. You return to an unoccupied space
+of your choice that you can see within 10 feet of the
+space you left. If no unoccupied space is available
+within that range, you appear in the nearest unoccupied space.
+248
+CHAPTER 7 I SPELLS
+BLUR
+Level 2 Illusion (Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Concentration , up to 1 minute
+Your body becomes blurred. For the duration, any
+creature has Disadvantage on attack rolls against
+you. An attacker is immune to this effect if it perceives you with Blindsight or Truesight.
+BURNING HANDS
+Level 1 Evocation (Sorcerer~ Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Instantaneous
+A thin sheet of flames shoots forth from you. Each
+creature in a 15-foot Cone makes a Dexterity saving
+throw, taking 3d6 Fire damage on a failed save or
+half as much damage on a successful one.
+Flammable objects in the Cone that aren't being
+worn or carried start burning.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 1.
+CALL LIGHTNING
+Level 3 Conjuration (Druid)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+A storm cloud appears at a point within range that
+you can see above yourself. It takes the shape of a
+Cylinder that is 10 feet tall with a 60-foot radius.
+When you cast the spell, choose a point you can
+see under"the cloud. A lightning bolt shoots from
+the cloud to that point. Each creature within 5 feet
+of that point makes a Dexterity saving throw, taking 3d10 Lightning damage on a failed save or half
+as much damage on a successful one.
+Until the spell ends, you can take a Magic action
+to call down lightning in that way again, targeting
+the same point or a different one.
+If you're outdoors in a storm when you cast this
+spell, the spell gives you control over that storm instead of creating a new one. Undi':r such conditions,
+the spell's damage increases by 1d to.
+Using a Higher-Level Spell Slot. ') 'he damage increases by ldlO for each spc·ll slo: kvcl above 3.

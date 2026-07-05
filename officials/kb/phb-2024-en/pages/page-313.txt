@@ -1,0 +1,100 @@
+# Player's Handbook 2024 (EN) — PDF-страница 313/387
+
+to it. The target doesn't know what it is making the
+save against, only that it feels uneasy.
+Your Knowledge of the Target Is ...
+Secondhand (heard of the target)
+Save Modifier
++5
+Firsthand (met the target)
++0
+Extensive (know the target well)
+-5
+You Have the Target's ...
+Save Modifier
+Picture or other likeness
+-2
+Garment or other possession
+-4
+Body part, lock of hair, or bit of nail
+-10
+On a successful save, the target isn't affected, and
+you can't use this spell on it again for 24 hours.
+On a failed save, the spell creates an Invisible,
+intangible sensor within 10 feet of the target. You
+can see and hear through the sensor as if you were
+there. The sensor moves with the target, remaining
+within 10 feet of it for the duration. If something
+can see the sensor, it appears as a luminous orb
+about the size of your fist.
+Instead of targeting a creature, you can target a
+location you have seen. When you do so, the sensor
+appears at that location and doesn't move.
+SEARING SMITE
+Level 1 Evocation (Paladin)
+Casting Time: Bonus Action, which you take immediately after hitting a target with a Melee weapon or
+an Unarmed Strike
+Range: Self
+Component: V
+Duration: l minute
+As you hit the target, it takes an extra ld6 Fire damage from the attack. At the start of each of its turns
+until the spell ends, the target takes ld6 Fire damage and then makes a Constitution saving throw.
+On a failed save, the spell continues. On a successful
+save, the spell ends.
+Using a Higher-Level Spell Slot. All the damage increases by ld6 for each spell slot level above 1.
+SEE I NVISIBILITY
+Level 2 Divination (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a pinch of talc)
+Duration: l hour
+For the duration, you see creatures and objects that
+have the Invisible condition as if they were visible,
+and you can see into the Ethereal Plane. Creatures
+and objects there appear ghostly.
+SEEMING
+Level 5 Illusion (Bard, So,·cerer, Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: 8 hours
+You give an illusory appearance to each creature of
+your choice that you can see within range. An unwilling target can make a Charisma saving throw,
+and if it succeeds, it is unaffected by this spell.
+You can give the same appearance or different
+ones to the targets. The spell can change the appearance of the targets' bodies and equipment. You
+can make each creature seem 1 foot shorter or taller
+and appear heavier or lighter. A target's new appearance must have the same basic arrangement of
+limbs as the target, but the extent of the illusion is
+otherwise up to you. The spell lasts for the duration.
+The changes wrought by this spell fail to hold up
+to physical inspection. For example, if you use this
+spell to add a hat to a creature's outfit, objects pass
+through the hat.
+A creature that takes the Study action to examine
+a target can make an Intelligence (Investigation)
+check against your spell save DC. If it succeeds, it
+becomes aware that the target is disguised.
+SENDING
+Level 3 Divination (Bard, Cleric, Wizard)
+Casting Time: Action
+Range: Unlimited
+Components: V, S, M (a copper wire)
+Duration: Instantaneous
+You send a short message of 25 words or fewer to
+a creature you have met or a creature described to
+you by someone who has met it. The target hears
+the message in its mind, recognizes you as the
+sender if it knows you, and can answer in a like
+manner immediately. The spell enables targets to
+understand the meaning of your message.
+You can send the message across any distance and
+even to other planes of existence, but if the target
+is on a different plane than you, there is a 5 percent
+chance that the message doesn't arrive. You know if
+the delivery fails.
+Upon receiving your message, a creature can
+block your ability to reach it again w ith this spell
+for 8 hours. If you try to send 3nr,~her message
+during that time, you learn th.at •rou are blocked,
+and the spell fails.

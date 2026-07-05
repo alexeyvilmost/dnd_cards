@@ -1,0 +1,104 @@
+# Player's Handbook 2024 (EN) — PDF-страница 19/387
+
+WHAT Is AN OBJECT?
+For the purpose of the rules, an object is a discrete,
+inanimate item like a window, door, sword, book,
+table, chair, or stone. It isn't a building or a vehicle,
+which are composed of many objects.
+nME-LIMITED OBJECT INTERACTIONS
+When time is short, such as in combat, interactions
+with objects are limited: one free interaction per
+turn. That interaction must occur during a creature's movement or action. Any additional interactions require the Utilize action, as explained in
+"Combat" later in this chapter.
+FINDING HIDDEN OBJECTS
+When your character searches for hidden things,
+such as a secret door or a trap, the DM typically
+asks you to make a Wisdom (Perception) check,
+provided you describe the character searching in
+the hidden object's vicinity. On a success, you find
+the object, other important details, or both.
+If you describe your character searching nowhere
+near a hidden object, a Wisdom (Perception) check
+won't reveal the object, no matter the check's total.
+CARRYING OBJECTS
+You can usually carry your gear and treasure without worrying about the weight of those objects.
+If you try to haul an unusually heavy object or a
+massive number of lighter objects, the DM might require you to abide by the rules for carrying capacity
+in the rules glossary.
+BREAKING OBJECTS
+As an action, you can automatically break or otherwise destroy a fragile, nonmagical object, such as
+a glass container or a piece of paper. If you try to
+damage something more resilient, the DM might use
+the rules on breaking objects in the rules glossary.
+HAZARDS
+Monsters are the main perils characters face, but
+other dangers await. The rules glossary defines the
+following hazards:
+Burning
+Dehydration
+TRAVEL
+Falling
+Malnutrition
+Suffocation
+During an adventure, the characters might travel
+long distances on trips that could take hours or
+days. The DM can summarize this travel without
+calculating exact distances or travel times, or the
+DM might have you use the travel pace rules below.
+If you need to know how fast you can move when
+every second matters, see the movement rules in
+"Combat" later in this chapter.
+20
+CHAPTER l I PLAYING THE GAME
+MARCHING ORDER
+The adventurers should establish a marching
+order while they travel, whether indoors or outdoors. A marching order makes it easier to determine which characters are affected by traps,
+which ones can spot hidden enemies, and which
+ones are the closest to those enemies if a fight
+breaks out. You can change your marching order
+outside combat and record the order any way you
+like: write it down, for example, or arrange miniatures to show it.
+TRAVEL PACE
+While traveling outside combat, a group can move
+at a Fast, Normal, or Slow pace, as shown on the
+Travel Pace table. The table states how far the
+party can move in a period of time; if riding horses
+or other mounts, the group can move twice that
+distance for 1 hour, after which the mounts need
+a Short or Long Rest before they can move at that
+increased pace again (see chapter 6 for a selection
+of mounts for sale). The Dungeon Master's Guide has
+rules that affect which pace you can choose in certain types of terrain.
+TRAVEL PACE
+Distance Traveled Per ...
+Pace
+Minute
+Hour
+Day
+Fast
+400 feet
+4 miles
+30 miles
+Normal
+300 feet
+3 miles
+24 miles
+Slow
+200 feet
+2 miles
+18 miles
+Each travel pace has a game effect, as defined below.
+Fast. Traveling at a Fast pace imposes Disadvantage on a traveler's Wisdom (Perception or Survival) and Dexterity (Stealth) checks.
+Normal. Traveling at a Normal pace imposes Disadvantage on Dexterity (Stealth} checks.
+Slow. Traveling at a Slow pace grants Advantage
+on Wisdom (Perception or Survival} checks.
+VEHICLES
+Travelers in wagons, carriages, or other land vehicles choose a pace as normal. Characters in a waterborne vessel are limited to the speed of the vessel,
+and they don't choose a travel pace. Depending on
+the vessel and the size of the crew, ships might be
+able to travel for up to 24 hours per day. Chapter 6
+includes vehicles for sale.
+EXPLORATION EXAMPLE
+This scene finds the player characters investigating
+a mysterious and potentially dangerous location.
+They're moving through the environment and interacting with things they find there.

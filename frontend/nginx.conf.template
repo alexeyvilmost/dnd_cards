@@ -15,6 +15,21 @@ server {
         add_header Content-Type text/plain;
     }
 
+    # Прокси импорта бестиария ttg.club. В dev это делает vite-middleware, а в проде —
+    # nginx: /proxy/ttg-club-import/bestiary/<slug> → https://new.ttg.club/bestiary/<slug>.
+    # Хост фиксирован (только new.ttg.club), поэтому SSRF невозможен.
+    location /proxy/ttg-club-import/bestiary/ {
+        proxy_pass https://new.ttg.club/bestiary/;
+        proxy_http_version 1.1;
+        proxy_set_header Host new.ttg.club;
+        proxy_set_header User-Agent "Mozilla/5.0 (compatible; BagOfHolding/1.0)";
+        proxy_set_header Accept "text/html";
+        proxy_set_header Accept-Encoding "";
+        proxy_set_header Connection "";
+        proxy_ssl_server_name on;
+        proxy_ssl_protocols TLSv1.2 TLSv1.3;
+    }
+
     location /assets/ {
         try_files $uri =404;
         expires 1y;

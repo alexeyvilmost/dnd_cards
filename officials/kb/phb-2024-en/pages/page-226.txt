@@ -1,0 +1,62 @@
+# Player's Handbook 2024 (EN) — PDF-страница 226/387
+
+Each set or Manacles comes with a key. Without
+the key, a cre:1ture can use Thieves' Tools to pick
+the Manacles' lock with a successful DC 15 Dexterity (Sleight of Hand) check.
+MAP (1 GP)
+If you consult an accurate Map, you gain a +5 bonus
+to Wisdom (Survival) checks you make to find your
+way in the place represented on it.
+MIRROR (5 GP)
+A handheld steel Mirror is useful for personal cosmetics but also for peeking around corners and reflecting light as a signal.
+NET (1 GP)
+When you take the Attack action, you can replace
+one of your attacks with throwing a Net. Target a
+creature you can see within 15 feet of yourself. The
+target must succeed on a Dexterity saving throw
+(DC 8 plus your Dexterity modifier and Proficiency
+Bonus) or have the Restrained condition until it
+escapes. The target succeeds automatically if it is
+Huge or larger.
+To escape, the target or a creature within 5 feet
+of it must take an action to make a DC 10 Strength
+(Athletics) check, freeing the Restrained creature
+on a success. Destroying the Net (AC 10; 5 HP; Immunity to Bludgeoning, Poison, and Psychic damage) also frees the target, ending the effect.
+OI L (1 SP)
+You can douse a creature, object, or space with Oil
+or use it as fuel, as detailed below.
+Dousing a Creature or an Object. When you take
+the Attack action, you can replace one of your attacks with throwing an Oil flask. Target one creature or object within 20 feet of yourself. The target
+must succeed on a Dexterity saving throw (DC 8
+plus your Dexterity modifier and Proficiency Bonus)
+or be covered in oil. If the target takes Fire damage
+before the oil dries (after 1 minute), the target takes
+an extra 5 Fire damage from burning oil.
+Dousing a Space. You can take the Utilize action to
+pour an Oil flask on level ground to cover a 5-footsquare area within 5 feet of yourself. If lit, the oil
+burns until the end of the turn 2 rounds from when
+the oil was lit (0 1 12 seconds) and deals 5 Fire damage to any creat ure that enters the area or ends its
+turn there. A n ~ature can take this damage only
+once per turn.
+Fuel. Oil scr :r•i, as fuel for Lamps and Lanterns.
+Once lit, a fla<. r. Oil burns for 6 hours in a Lamp
+or Lantern. That duration doesn't need to be consecutive; you can extinguish the burning Oil (as
+a Utilize action) and rekindle it again until it has
+burned for a total of 6 hours.
+PAPER (2 SP)
+One sheet of Paper can hold about 250 handwritten
+words.
+PARCHMENT (1 SP)
+One sheet of Parchment can hold about 250 handwritten words.
+PERFUME (5 GP)
+Perfume comes in a 4-ounce vial. For 1 hour after
+applying Perfume to yourself, you have Advantage
+on Charisma (Persuasion) checks made to influence
+an Indifferent Humanoid within 5 feet of yourself.
+POISON, BASIC (100 GP)
+As a Bonus Action, you can use a vial of Basic Poison to coat one weapon or up to three pieces of ammunition. A creature that takes Piercing or Slashing
+damage from the poisoned weapon or ammunition
+takes an extra ld4 Poison damage. Once applied, the
+poison retains potency for 1 minute or until its damage is dealt, whichever comes first.
+CHAPTER 6 I EQUIPMENT
+227

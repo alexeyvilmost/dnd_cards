@@ -1,0 +1,106 @@
+# Player's Handbook 2024 (EN) — PDF-страница 318/387
+
+Until the sp~ i ends, you can ask the corps~ up to
+fi
+questions. T he corpse knows only what 1t knew
+. vl~fe including the languages it knew. Answers are
+in i
+'
+• •
+d h
+usually brief, cryptic, or repetitive, an t e corpse
+. under no compulsion to offer a truthful answer if
+isou are antagonistic toward it or it recognizes you
+y an enemy. T his spell doesn't return the creature's
+as ul to its body, only its animating spirit. Thus, the
+so
+. f
+•
+d
+'
+rpse can't learn new 1n ormat1on, oesn t compre-
+~:nd anything that has happened since it died, and
+can't speculate about future events.
+SPEAK WITH PLANTS
+Level 3 Transmutation (Bard, Druid, Ranger)
+Casting Time: Action
+Range: Self
+components: V, S
+Duration: 10 minutes
+You imbue plants in an immobile 30-foot Emanation with limited sentience and animation, giving
+them the ability to communicate with you and follow your simple commands. You can question plants
+about events in the spell's area within the past day,
+gaining information about creatures that have
+passed, weather, and other circumstances.
+You can also turn Difficult Terrain caused by plant
+growth (such as thickets and undergrowth) into
+ordinary terrain that lasts for the duration. Or you
+can turn ordinary terrain where plants are present
+into Difficult Terrain that lasts for the duration.
+The spell doesn't enable plants to uproot themselves and move about, but they can move their
+branches, tendrils, and stalks for you.
+If a Plant creature is in the area, you can communicate with it as if you shared a common language.
+SPIDER C LIM B
+Level 2 Transmutation (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a drop of bitumen and a spider)
+Duration: Concentration, up to l hour
+Until the spell ends, one willing creature you touch
+gains the ability to move up, down, and across
+vertical surfaces and along ceilings, while leaving
+its hands free. The target also gains a Climb Speed
+equal to its Speed.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level about 2.
+II'
+--
+- --
+::::-==
+SPIKE GROWTH
+Level 2 Transmutation (Druid, Ranger)
+Casting Time: Action
+Range: 150 feet
+Components: V, S, M (seven thorns)
+Duration: Concentration, up to 10 minutes
+The ground in a 20-foot-radius Sphere centered
+on a point within range sprouts hard spikes and
+thorns. The area becomes Difficult Terrain for the
+duration. When a creature moves into or within the
+area, it takes 2d4 Piercing damage for every 5 feet
+it travels.
+The transformation of the ground is camouflaged
+to look natural. Any creature that can't see the area
+when the spell is cast must take a Search action
+and succeed on a Wisdom (Perception or Survival)
+check against your spell save DC to recognize the
+terrain as hazardous before entering it.
+SPIRIT GUARDIANS
+Level 3 Conjuration (Cleric)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a prayer scroll)
+Duration: Concentration, up to 10 minutes
+Protective spirits flit around you in a 15-foot Emanation for the duration. If you are good or neutral,
+their spectral form appears angelic or fey (your
+choice). If you are evil, they appear fiendish.
+When you cast this spell, you can designate creatures to be unaffected by it. Any other creature's
+Speed is halved in the Emanation, and whenever the
+Emanation enters a creature's space and whenever
+a creature enters the Emanation or ends its turn
+there, the creature must make a Wisdom saving
+throw. On a failed save, the creature takes 3d8 Radiant damage (if you are good or neutral) or 3d8
+Necrotic damage (if you are evil). On a successful
+save, the creature takes half as much damage. A
+creature makes this save only once per turn.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 3.
+SPIRITUAL WEAPON
+Level 2 Evocation (Cleric)
+Casting Time: Bonus Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to 1 minute
+You create a floating, spectral force that resembles
+a weapon of your choice and lasts for the duration.
+CHAPTER 7 I SPELLS
+319

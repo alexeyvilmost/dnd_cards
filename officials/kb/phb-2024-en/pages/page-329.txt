@@ -1,0 +1,50 @@
+# Player's Handbook 2024 (EN) — PDF-страница 329/387
+
+Pain. Each target must succeed on a Constitution
+saving throw or have the Incapacitated condition
+for 1 minute.
+Sleep. Each target must succeed on a Wisdom saving throw or have the Unconscious condition for I?
+minutes. A creature awakens if it takes damage or if
+someone takes an action to shake it awake.
+Stunning. Each target must succeed on a Wisdom
+saving throw or have the Stunned condition for 1
+minute.
+SYNAPTIC STATIC
+Level 5 Enchantment (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Instantaneous
+You cause psychic energy to erupt at a point within
+range. Each creature in a 20-foot-radius Sphere
+centered on that point makes an Intelligence saving
+throw, taking 8d6 Psychic damage on a failed save
+or half as much damage on a successful one.
+On a failed save, a target also has muddled
+thoughts for 1 minute. During that time, it subtracts
+ld6 from all its attack rolls and ability checks, as
+well as any Constitution saving throws to maintain
+Concentration. The target makes an Intelligence
+saving throw at the end of each of its turns, ending
+the effect on itself on a success.
+TASHA'S BUBBLING CAULDRON
+Level 6 Conjurntion (Warlock, Wizard)
+Casting Time: Action
+Range: 5 feet
+Component: V, S, M (a gilded ladle worth 500+ GP)
+Duration: 10 minutes
+You conjure a claw-footed cauldron filled with bubbling liquid. The cauldron appears in an unoccupied
+space on the ground within S feet of you and lasts
+for the duration. The cauldron can't be moved and
+disappears when the spell ends, along with the bubbling liquid inside it.
+The liquid in the cauldron duplicates the properties of a Common or an Uncommon potion of
+your choice (such as a Potion of Healing). As a Bonus
+Action, you or an ally can reach into the cauldron
+and withdraw one potion of that kind. The potion is
+contained in a vial that disappears when the potion
+is consumed. The cauldron can produce a number
+of these potions equal to your spell casting ability
+modifier (minimum 1). When the last of these potions is withdrawn from the cauldron, the cauldron
+disappears, and the spell ends.
+Potions obtained from the cauldron that aren't
+consumed disappear when you cast this spell again.

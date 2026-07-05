@@ -1,0 +1,53 @@
+# Player's Handbook 2024 (EN) — PDF-страница 159/387
+
+LEVEL 14: BEWITCHING M AG I C
+Your patron grants you the ability to weave your
+magic with teleportation. Immediately after you
+cast an Enchantment or Illusion spell using an action and a spell slot, you can cast Misty Step as part
+of the same action and without expending a spell
+slot.
+CELESTIAL PATRON
+Call on the Powe,· of the Heavens
+Your pact draws on the Upper Planes, the realms
+of everlasting bliss. You might enter an agreement
+with an empyrean, a couatl, a sphinx, a unicorn,
+or another heavenly entity. Or you might call on
+numerous such beings as you pursue goals aligned
+with theirs. Your pact allows you to experience a
+hint of the holy light that illuminates the multiverse.
+LEVEL 3: CELESTIAL SPELLS
+The magic of your patron ensures you always have
+certain spells ready; when you reach a Warlock level
+specified in the Celestial Spells table, you thereafter
+always have the listed spells prepared.
+CELESTIAL SPELLS
+Warlock Level Spells
+3
+Aid, Cure Wounds, Guiding Bolt,
+Lesser Restoration, Light,
+Sacred Flame
+5
+Daylight, Revivify
+7
+Guardian of Faith, Wall of Fire
+9
+Greater Restoration,
+Summon Celestial
+LEVEL 3: HEALING LIGHT
+You gain the ability to channel celestial energy to
+heal wounds. You have a pool of d6s to fuel this
+healing. The number of dice in the pool equals 1 plus
+your Warlock level.
+As a Bonus Action, you can heal yourself or one
+creature you can see within 60 feet of yourself,
+expending dice from the pool. The maximum number of dice you can expend at once equals your
+Charisma modifier (minimum of one die). Roll the
+dice you expend, and restore a number of Hit Points
+equal to the rail's total. Your pool regains all expended dice when you finish a Long Rest.
+LEVEL 6: RADIANT SOUL
+Your link to your patron allows you to serve as a
+conduit for radiant energy. You have Resistance to
+Radiant damage. Once per turn, when a spell you
+cast deals Radiant or Fire damage, you can add your
+Charisma modifier to that spell's da age against
+one of the spell's targets.

@@ -1,0 +1,64 @@
+# Player's Handbook 2024 (EN) — PDF-страница 166/387
+
+EXPAND IN G AND REPLACING A SPELLBOOK
+The spel ls you add to you r spellbook as you gain
+levels reAect your ongoi ng magical research, but
+you m ight find other spells during your adventures that you can add to the book. You could discover a Wizard spell on a Spe/f Scro/f, for example,
+and then copy it into your spellbook.
+Copying a Spell into the Book. When you find
+a level 1+ W izard spell, you can copy it into your
+spell book if it 's of a level you can prepare and
+if you have time to copy it. For each level of the
+spell, the transcription takes 2 hours and costs 50
+GP. Afterward you can prepare the spell like the
+other spells in your spellbook.
+Copying the Book. You can copy a spell from
+you r spell book into another book. This is like
+copying a new spell into your spellbook but faster,
+since you already know how to cast the spell. You
+need spend only 1 hour and 10 GP for each level
+of the copied spell.
+If you lose your spell book, you can use the same
+procedu re to transcribe the Wizard spells that
+you have prepared into a new spellbook. Filling
+out the remainder of the new book requires you
+to find new spells to do so. For this reason, many
+wizards keep a backup spellbook.
+LEVEL 3: WIZARD S UBCLASS
+You gain a Wizard subclass of your choice. The Abjurer, Diviner, Evoker, and Illusionist subclasses are
+detailed after this class's description. A subclass is
+a specialization that grants you features at certain
+Wizard levels. For the rest of your career, you gain
+each of your subclass's features that are of your
+Wizard level or lower.
+LEVEL 4: ABILITY S CORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Wizard
+levels 8, 12, and 16.
+L EVEL 5: MEMORIZ E S PELL
+Whenever you finish a Short Rest, you can study
+your spellbook and replace one of the level 1+ Wizard spells you have prepared for your Spellcasting
+feature with another level 1+ spell from the book.
+LEVEL 18: S PE LL MASTERY
+You have achieved such mastery over certain spells
+that you can cast them at will. Choose a level 1 and
+a level 2 sp ._.!I in your spellbook that have a casting
+time of an ,1ction. You always have those spells prepared, and ye I can cast them at their lowest level
+without e •pnnding a spell slot. To cast either spell at
+a higher le •\!;, :vou must expend a spell slot.
+Whenever you finish a Long Rest, you can study
+your spell book and replace one of those spells with
+an eligible spell of the same level from the book.
+L EVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Spell Recall is recommended.
+LEVEL 20: SIGNATURE SPE LLS
+Choose two level 3 spells in your spellbook as your
+signature spells. You always have these spells prepared, and you can cast each of them once at level 3
+without expending a spell slot. When you do so, you
+can't cast them in this way again until you finish a
+Short or Long Rest. To cast either spell at a higher
+level, you must expend a spell slot.
+CH APTER 3 I CHAR ACTER CLASSES
+167

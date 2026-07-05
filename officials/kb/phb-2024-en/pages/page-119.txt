@@ -1,0 +1,219 @@
+# Player's Handbook 2024 (EN) — PDF-страница 119/387
+
+RANGER FEATURES
+Proficiency
+Level
+Bonus
+Class Features
+l
++2
+Spellcasting, Favored Enemy,
+Weapon Mastery
+2
++2
+Deft Explorer, Fighting Style
+3
++2
+Ranger Subclass
+4
++2
+Ability Score Improvement
+5
++3
+Extra Attack
+6
++3
+Roving
+7
++3
+Subclass feature
+8
++3
+Ability Score Improvement
+9
++4
+Expertise
+10
++4
+Tireless
+11
++4
+Subclass feature
+12
++4
+Ability Score Improvement
+13
++5
+Relentless Hunter
+14
++5
+Nature's Veil
+15
++5
+Subclass feature
+16
++5
+Ability Score Improvement
+17
++6
+Precise Hunter
+18
++6
+Feral Senses
+19
++6
+Epic Boon
+20
++6
+Foe Slayer
+LEVEL l: WEAPON MASTERY
+Your training with weapons allows you to use the
+mastery properties of two kinds of weapons of your
+choice with which you have proficiency, such as
+Longbows and Shortswords.
+Whenever you finish a Long Rest, you can change
+the kinds of weapons you chose. For example, you
+could switch to using the mastery properties of
+Scimitars and Longswords.
+LEVEL 2: DEFT EXPLORER
+Thanks to your travels, you gain the following
+~benefits.
+Expertise. Choose one of your skill proficiencies
+with which you lack Expertise. You gain Expertise
+in that skill.
+Languages. You know two languages of your
+choice from the language tables in chapter 2.
+L EVEL 2: FIGHTING STYLE
+You gain a Fighting Style feat of your choice (see
+chapter 5). Instead of choosing one of those feats,
+you can choose the option below.
+Druidic Warrior. You learn two Druid cantrips of
+your choice (see the Druid class's section for a list of
+Favored
+Prepared
+-Spell Slots per Spell Level-
+Enemy
+Spells
+l
+2
+3
+4
+5
+2
+2
+2
+2
+3
+2
+2
+4
+3
+2
+5
+3
+3
+6
+4
+2
+3
+6
+4
+2
+3
+7
+4
+3
+3
+7
+4
+3
+4
+9
+4
+3
+2
+4
+9
+4
+3
+2
+4
+10
+4
+3
+3
+4
+10
+4
+3
+3
+5
+11
+4
+3
+3
+l
+5
+11
+4
+3
+3
+l
+5
+12
+4
+3
+3
+2
+5
+12
+4
+3
+3
+2
+6
+14
+4
+3
+3
+3
+l
+6
+14
+4
+3
+3
+3
+6
+15
+4
+3
+3
+3
+2
+6
+15
+4
+3
+3
+3
+2
+Druid spells). Guidance and Starry Wisp are recommended. The chosen cantrips count as Ranger spells
+for you, and Wisdom is your spellcasting ability for
+them. Whenever you gain a Ranger level, you can
+replace one of these cantrips with another Druid
+cantrip.
+LEVEL 3: RANGER SUBCLASS
+You gain a Ranger subclass of your choice. The
+Beast Master, Fey Wanderer, Gloom Stalker, and
+Hunter subclasses are detailed after this class's description. A subclass is a specialization that grants
+you features at certain Ranger levels. For the rest
+of your career, you gain each of your subclass's features that are of your Ranger level or lower.
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Ranger
+levels 8, 12, and 16.
+L EVEL 5: EXTRA ATTACK
+You can attack twice instead of once whenever you
+take the Attack action on your turn.

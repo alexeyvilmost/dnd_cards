@@ -1,0 +1,52 @@
+# Player's Handbook 2024 (EN) — PDF-страница 312/387
+
+SACRED FLAME
+Evocation Cantrip (Cleric)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+Flame-like radiance descends on a creature that you
+can see within range. The target must succeed on
+a Dexterity saving throw or take ld8 Radiant damage. The target gains no benefit from Half Cover or
+Three-Quarters Cover for this save.
+Cantrip Upgrade. The damage increases by ld8
+when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).
+SANCTUARY
+Level 1 Abjuration (Cleric)
+Casting Time: Bonus Action
+Range: 30 feet
+Components: V, S, M (a shard of glass from a mirror)
+Duration: 1 min ute
+You ward a creatu re within range. Until the spell
+ends, any creat:-1 re who targets the warded creature
+with an attack roll or a damaging spell must succeed
+on a Wisdom s, ,ring throw or either choose a new
+target or lose t,1.. ttack or spell. This spell doesn't
+protect the w ~ ·d d creature from areas of effect.
+The spell ends :{ !·he warded creature makes an attack roll, casts :1 spell, or deals damage.
+SCORCHING RAY
+Level 2 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Instantaneous
+You hurl three fiery rays. You can hurl them at one
+target within range or at several. Make a ranged
+spell attack for each ray. On a hit, the target takes
+2d6 Fire damage.
+Using a Higher-Level Spell Slot. You create one additional ray for each spell slot level above 2.
+SCRYING
+Level 5 Divination (Bard, Cleric, Druid, Warlock,
+Wizard)
+Casting Time: 10 minutes
+Range: Self
+Components: V, S, M (a focus worth 1,000+ GP, such
+as a crystal ball, mirror, or water-filled font)
+Duration: Concentration, up to 10 minutes
+You can see and hear a creature you choose that is
+on the same plane of existence as you. The target
+makes a Wisdom saving throw, which is modified
+(see the tables below) by how well you know the
+target and the sort of physical connection you have
+CHAPTER 7 I SPELLS

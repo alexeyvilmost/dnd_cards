@@ -1,0 +1,98 @@
+# Player's Handbook 2024 (EN) — PDF-страница 354/387
+
+.. ..
+QUASIT
+Tiny Fiend (Demon), Chaotic Evil
+AC 13
+Initiative +3 (13)
+HP 25 (10d4)
+Speed 40 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR
+5 - 3 -3
+DEX 17 +3
++3
+CON 10 +0 +0
+INT
+7 - 2 -2
+Wis 10 +0 +0
+CHA 10 +0 +0
+Skills Stealth +5
+Resistances Cold, Fire, Lightning
+Immunities Poison; Poisoned
+Senses Darkvision 120 ft., Passive Perception 10
+Languages Abyssal, Common
+CR l (XP 200; PB +2)
+TRA ITS
+Magic Resistance. The quasit has Advantage on saving
+throws against spells and other magical effects.
+ACTIONS
+Rend. Melee Attack Roll: +5, reach 5 ft. Hit: 5 (ld4 + 3)
+Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.
+Invisibility. The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the
+spellcas ti ng ability.
+Scare (1/Day). Wisdom Saving Throw: DC 10, one creature within 20 feet. Failure: The target has the Frightened condition. At the end of each of its turns, the
+target repeats the save, ending the effect on itself on a
+success. After l minute, it succeeds automatically.
+Shape-Shift. The quasit shape-shifts to resemble a bat
+(Speed () ft., Fly 40 ft.) , a centipede (40 ft., Climb 40
+ft.), or • toad (40 ft., Swim 40 ft.) , or it returns to its
+true for
+Its statistics are the same in each form, except fo:· i: :; Speed. Any equipment it's wearing or carrying isn·,. transformed.
+RAT
+Tiny Beast, Unaligned
+AC 10
+Initiative +0 (10)
+HP l (ld4 - l)
+Speed 20 ft., Climb 20 ft.
+MOD SAVE
+STR 2 -4 -4
+INT 2 -4 -4
+Skills Perception +2
+MOD SAVE
+DEX 11 +0 +0
+Wis 10
+MOD SAVE
+CON 9 -1
+-1
+CHA 4 -3 -3
+Senses Darkvision 30 ft., Passive Perception 12
+Languages None
+CR 0 (XP 10; PB +2)
+TRAITS
+Agile. The rat doesn't provoke Opportunity Attacks
+when it moves out of an enemy's reach.
+ACTIONS
+Bite. Melee Attack Roll: +2, reach 5 ft. Hit: l Piercing
+damage.
+RAVEN
+Tiny Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP 2 (ld4)
+Speed 10 ft., Fly 50 ft.
+MOD SAVE
+STR 2 -4 - 4
+INT 5 -3 -3
+Skills Perception +3
+MOD SAVE
+DEX 14 +2 +2
+WIS 13 +1
++1
+Senses Passive Perception 13
+Languages None
+CR 0 (XP 10; PB +2)
+TRAITS
+MOD SAVE
+CON 10 +0 +0
+CHA 6 -2 -2
+Mimicry. The raven can mimic simple sounds it has
+heard, such as a whisper or chitter. A hearer can discern the sounds are imitations with a successful DC 10
+Wisdom (Insight) check.
+ACTIONS
+Beak. Melee Attack Roll: +4, reach 5 ft. Hit: 1 Piercing
+damage.
+APPENDIX BI CREATURE STAT BLOCKS
+355

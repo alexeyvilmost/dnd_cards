@@ -1,0 +1,91 @@
+# Player's Handbook 2024 (EN) — PDF-страница 363/387
+
+CONE [AREA OF EFFECT]
+A Cone is an area of effect that extends in straight
+lines from a point of origin in a direction its creator chooses. A Cone's width at any point along
+its length is equal to that point's distance from ~he
+point of origin. For example, a Cone is 15 feet wide
+at a point along its length that is 15 feet from the .
+point of origin. The effect that creates a Cone specifies its maximum length.
+A Cone's point of origin isn't included in the area
+of effect unless its creator decides otherwise.
+COVER
+Cover provides a degree of protection to a target
+behind it. There are three degrees of cover, each
+of which provides a different benefit to a target:
+Half Cover (+2 bonus to AC and Dexterity saving
+throws), Three-Quarters Cover (+5 bonus to AC and
+Dexterity saving throws), and Total Cover (can't be
+targeted directly). If behind more than one degree
+of cover, a target benefits only from the most protective degree. See also chapter 1 ("Combat").
+·------;:.,;:::-
+C RAWLING
+While you're crawling, each foot of movement costs
+1 extra foot (2 extra feet in Difficult Terrain). See
+also "Speed."
+CREATURE
+Any being in the game, including a player's character, is a creature. See also "Creature Type."
+CREATURE TYPE
+Every creature, including every player character,
+has a tag in the rules that identifies the type of creature.it is. Most player characters are of the Humanoid ty.pe. These are the game's creature types:
+Aberration
+Elemental
+Monstrosity
+Beast
+Fey
+Ooze
+Celestial
+Fiend
+Plant
+Construct
+Giant
+Undead
+Dragon
+Humanoid
+The types don't have rules themselves, but some
+rules in the game affect creatures of certain types
+in different ways.
+CRITICAL HIT
+If you roll a 20 on the d20 for an attack roll, you
+score a Critical Hit, and the attack hits regardless of
+any modifiers or the target's AC. A Critical Hit lets
+APPENDIX C I RULES GLOSSARY
+you roll extra dice for the attack's damage a1p i:1st
+the target. Roll all of the attack's damage die·' L vice
+and add them together. Then add any relevant modifiers. See also chapter 1 ("Damage and Healing·").
+CUBE [AREA OF EFFECT]
+A Cube is an area of effect that extends in straight
+lines from a point of origin located anywhere on
+a face of the Cube. The effect that creates a Cube
+specifies its size, which is the length of each side.
+A Cube's point of origin isn't included in the area
+of effect unless its creator decides otherwise.
+CURSES
+Some game effects curse a creature or an object.
+The effect that confers a curse defines what the
+curse does. Curses can be removed by the Remove
+Curse and Greater Restoration spells or other magic
+that explicitly ends curses.
+CYLINDER [A REA OF E FFECT]
+A Cylinder is an area of effect that extends in
+straight lines from a point of origin located at the
+center of the circular top or bottom of the Cylinder.
+The effect that creates a Cylinder specifies the radius of the Cylinder's base and the Cylinder's height.
+A Cylinder's point of origin is included in the area
+of effect.
+D20 TEST
+D20 Tests encompass the three main d20 rolls of
+the game: ability checks, attack rolls, and saving
+throws. If something in the game affects D20 Tests,
+it affects all three of these rolls. The DM determines
+whether a D20 Test is warranted in a given circumstance. See also chapter 1 ("D20 Tests").
+D AMAGE
+Damage represents harm that causes a creature or
+an object to lose Hit Points.
+DAMAGE ROLL
+A damage roll is a die roll, adjusted by any applicable modifiers, that deals damage to a target. See also
+chapter 1 ("Damage and Healing").
+DAMAGE TH RESH OLD
+A creature or an object that has a damage threshold has Immunity to all damage unless it takes an
+amount of damage from a single attack or effect
+equal to or greater than its d~mc1ge threshold, in

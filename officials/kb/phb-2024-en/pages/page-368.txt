@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 368/387
+
+ILLUS IONS
+Spells and other effects sometimes create magical illusions. Such an effect defines what the illusion does
+and which senses or mental faculties it deceives.
+If an illusion manifests in space, the illusion is
+insubstantial and weightless, yet it seems to be affected by the environment as if the illusion were
+real unless the effect that created it specifies otherwise. For example, a visual illusion of a creature
+casts shadows and reflections, and wind appears
+to affect the illusory creature. Similarly, an audible
+illusion echoes in an echoey space.
+IMMUNITY
+If you have Immunity to a damage type or a condition, it doesn't affect you in any way.
+IMPROVISED WEAPONS
+An improvised weapon is an object wielded as a
+makeshift weapon, such as broken glass, a table leg,
+or a frying pan. A Simple or Martial weapon also
+counts as an improvised weapon if it's wielded in
+a way contrary to its design; if you use a Ranged
+weapon to make a melee attack or throw a Melee weapon that lacks the Thrown property, the
+weapon counts as an improvised weapon. An improvised weapon follows the rules below.
+Proficiency. Don't add your Proficiency Bonus to
+attack rolls with an improvised weapon.
+Damage. On a hit, the weapon deals ld4 damage of
+a type the OM thinks is appropriate for the object.
+Range. If you throw the weapon, it has a normal
+range of 20 feet and a long range of 60 feet.
+Weapon Equivalents. If an improvised weapon
+resembles a Simple or Martial weapon, the DM may
+say it functions as that weapon and uses that weapon's rules. For example, the OM could treat a table
+leg as a Club.
+INC A PACITATED [CONDITION]
+While you have the Incapacitated condition, you
+experience the following effects.
+Inactive. You can't take any action, Bonus Action,
+or Reaction.
+No Concentration. Your Concentration is broken.
+Speechless. You can't speak.
+Surprised. If you're Incapacitated when you roll
+Initiative, you have Disadvantage on the roll.
+INDIFFERENT [ATTITUDE]
+An Indifferent creature has no desire to help or
+hinder you. Indifferent is the default attitude of a
+monster. See also "Influence."
+INFLUENCE [ACTION]
+With the Influence action, you urge a monster to
+do something. Describe or roleplay how you're
+communicating with the monster. Are you trying
+to deceive, intimidate, amuse, or gently persuade?
+The DM then determines whether the monster feels
+willing, unwilling, or hesitant due to your interaction; this determination establishes whether an ability check is necessary, as explained below.
+Willing. If your urging aligns with the monster's
+desires, no ability check is necessary; the monster
+fulfills your request in a way it prefers.
+Unwilling. If your urging is repugnant to the monster or counter to its alignment, no ability check is
+necessary; it doesn't comply.
+Hesitant. If you urge the monster to do something
+that it is hesitant to do, you must make an ability
+check, which is affected by the monster's attitude:
+Indifferent, Friendly, or Hostile, each of which is
+defined in this glossary. The Influence Checks table suggests which ability check to make based on
+how you're interacting with the monster. The DM
+chooses the check, which has a default DC equal to
+15 or the monster's Intelligence score, whichever is
+higher. On a successful check, the monster does as
+urged. On a failed check, you must wait 24 hours
+(or a duration set by the DM) before urging it in the
+same way again.
+INFLUENCE CHECKS
+Ability Check
+Interaction
+Charisma (Deception)
+Deceiving a monster
+that understands you
+Charisma (Intimidation)
+Intimidating a monster
+Charisma (Performance)
+Amusing a monster
+Charisma (Persuasion)
+Persuading a monster
+that understands you
+Wisdom (Animal Handling) Gently coaxing a Beast
+or Monstrosity
+--- ____ 'C---""_....,,,, __
+INITIATIVE
+Initiative determines the order of turns during combat. The combat rules in chapter l explain how to
+roll Initiative.
+Sometimes a DM might have combatants use
+their Initiative scores instead of rolling Initiative.
+Your Initiative score equals 10 plus your Dexterity
+APPENDIX C I RU LES GLOSSARY
+369

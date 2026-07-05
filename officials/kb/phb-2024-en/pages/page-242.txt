@@ -1,0 +1,51 @@
+# Player's Handbook 2024 (EN) — PDF-страница 242/387
+
+ARMOR OF AGATHYS
+Level I Abjuration (Warlock)
+Casting Time: Bonus Action
+Range: Self
+Components: V, S, M (a shard of blue glass)
+Duration: l hour
+Protective magical frost surrounds you. You gain 5
+Temporary Hit Points. If a creature hits you with a
+melee attack roll before the spell ends, the creature
+takes 5 Cold damage. The spell ends early if you
+have no Temporary Hit Points.
+Using a Higher-Level Spell Slot. The Temporary Hit
+Points and the Cold damage both increase by 5 for
+each spell slot level above 1.
+ARMS OF H ADAR
+Level 1 Conjuration (Warlock)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Instantaneous
+Invoking l·lat!c:r, you cause tendrils to erupt from
+yourself. Each < reature in a 1O-foot Emanation originating from ::, ,u makes a Strength saving throw.
+On a failed ~. ~1 •, ~· , a target takes 2d6 Necrotic damage
+and can't take Reactions until the start of its next
+turn. On a successful save, a target takes half as
+much damage only.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 1.
+ASTRAL PROJECTION
+Level 9 Necromancy (Cleric, Warlock, Wizard)
+Casting Time: 1 hour
+Range: 10 feet
+Components: V, S, M (for each of the spell's targets,
+one jacinth worth 7,000+ GP and one silver bar
+worth 100+ GP, all of which the spell consumes)
+Duration: Until dispelled
+You and up to eight willing creatures within range
+project your astral bodies into the Astral Plane (the
+spell ends instantly if you are already on that plane).
+Each target's body is left behind in a state of suspended animation; it has the Unconscious condition,
+doesn't need food or air, and doesn't age.
+A target's astral form resembles its body in almost
+every way, replicating its game statistics and possessions. The principal difference is the addition of
+a silvery cord that trails from between the shoulder
+blades of the astral form. The cord fades from view
+after 1 foot. If the cord is cut-which happens only
+when an effect states that it does so-the target's
+body and astral form both die.
+CH PTER 7 I SPELLS
+~43

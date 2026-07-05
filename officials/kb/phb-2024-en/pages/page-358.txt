@@ -1,0 +1,117 @@
+# Player's Handbook 2024 (EN) — PDF-страница 358/387
+
+WOLF
+Medium Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP 11 (2d8 + 2)
+Speed 40 ft.
+~OD SAVE
+MOD SAVE
+STR 14 +2 +2
+DEX 15 +2 +2
+INT 3 -4 -4
+W1s 12 +1
++l
+MOD SAVE
+CON 12 +l
++l
+CHA 6 -2 -2
+-
+--11 Skills Perception +S, Stealth +4
+---;;-:;:-;;::==:;::;;~:::::;;::~~~=====~= =====~
+Senses Darkvision 60 ft., Passive Perception 15
+Languages None
+WARHORSE
+Large Beast, Unaligned
+AC 11
+HP 19 (3dl0 + 3)
+Speed 60 ft.
+Initiative +l (11)
+MOD SAVE
+STR 18 +4 +4
+INT 2 -4 -4
+MOD SAVE
+MOD SAVE
+DEX 12 +l
++l
+CON 13 +l
+__,;=:;...,.__,:;
+Wis 12 +l
++3
+CHA 7
+Senses Passive Perception 11
+Languages None
+CR 1/2 (XP 100; PB +2)
+ACTIONS
+Hooves. Melee Attack Roll: +6, reach S ft. Hit: 9 (2d4
++ 4) Bludgeoning damage. If the horse moved at least
+20 feet straight toward the target immediately before
+the hit, the target takes an extra 5 (2d4) Bludgeoning
+damage and, if it is Huge or smaller, has the Prone
+condition.
+WEASEL
+Tiny Beast, Unaligned
+AC 13
+Initiative +3 (13)
+HP l (ld4 - 1)
+Speed 30 ft., Climb 30 ft.
+MOD SAVE
+MOD SAVE
+STR 3 - 4 -4
+DEX 16 +3 +3
+INT 2 --4 - 4
+Wis 12 +l +l
+CON 8
+CHA 3
+Skills Ac;obatics +5, Perception +3, Stealth +5
+Senses Darkvision 60 ft., Passive Perception 13
+Langua~; 1:s None
+CR 0 ()<:- 10; PB +2)
+ACT'('' ,.
+t.. I ,: ....
+MOD SAVE
+-
+- -·· ·-- --------------
+Bite. M.::"e Attack Roll: +5, reach 5 ft. Hit: 1 Piercing
+damat ,:.
+CR 1/4 (XP SO; PB +2)
+TRAITS
+Pack Tactics. The wolf has Advantage on attack rolls
+against a creature if at least one of the wolf's allies is
+within S feet of the creature and the ally doesn't have
+the Incapacitated condition.
+ACTIONS
+Bite. Melee Attack Roll: +4, reach 5 ft. Hit: 5 (ld6 + 2)
+Piercing damage, and the target has the Prone condition if it is Medium or smaller.
+ZOMBIE
+Medium Undead, Neutral Evil
+AC8
+Initiative -2 (8)
+HP 15 (2d8 + 6)
+Speed 20 ft.
+MOD SAVE
+MOO SAVE
+MOD SAVE
+STR 13 +l
++1
+DEX 6 -2 -2
+CoN16
+INT 3
+Wis 6 - 2 -tO
+CHA 5
+Immunities Poison; Exhaustion, Poisoned
+Senses Darkvision 60 ft., Passive Perception 8
+Languages Understands the languages it knew in life
+but can't speak
+CR 1/4 (XP 50; PB +2)
+TRAITS
+Undead Fortitude. If damage reduces the zombie to 0
+Hit Points, it must make a Constitution saving throw
+with a DC of 5 plus the damage taken unless the damage is Radiant or from a Critical Hit. On a successful
+save, the zombie drops to 1 Hit Point instead.
+ACTIONS
+Slam. Melee Attack Roll: +3, reach 5 ft. Hit: 4 (ld6 + 1)
+Bludgeoning damage.
+APPENDIX BI CREATURE STAT BLOCKS
+359

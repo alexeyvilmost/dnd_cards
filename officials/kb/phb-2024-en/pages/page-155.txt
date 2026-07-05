@@ -1,0 +1,99 @@
+# Player's Handbook 2024 (EN) — PDF-страница 155/387
+
+GAZE OF Two MINDS
+Prerequisite: Level 5+ Warlock
+You can use a Bonus Action to touch a willing
+creature and perceive through its senses until the
+end of your next turn. As long as the creature is on
+the same plane of existence as you, you can take a
+Bonus Action on subsequent turns to maintain this
+connection, extending the duration until the end of
+your next turn. The connection ends if you don't
+maintain it in this way.
+While perceiving through the other creature's
+senses, you benefit from any special senses possessed by that creature, and you can cast spells as if
+you were in your space or the other creature's space
+if the two of you are within 60 feet of each other.
+GIFT OF THE DEPTHS
+Prerequisite: Level 5+ Warlock
+You can breathe underwater, and you gain a Swim
+Speed equal to your Speed.
+You can also cast Water Breathing once without
+expending a spell slot. You regain the ability to cast
+it in this way again when you finish a Long Rest.
+GIFT OF THE PROTECTORS
+Prerequisite: Level 9+ Warlock, Pact of the Tome
+Invocation
+A new page appears in your Book of Shadows when
+you conjure it. With your permission, a creature
+can take an action to write its name on that page,
+which can contain a number of names equal to your
+Charisma modifier (minimum of one name).
+When any creature whose name is on the page
+is reduced to O Hit Points but not killed outright,
+the creature magically drops to 1 Hit Point instead.
+Once this magic is triggered, no creature can benefit from it until you finish a Long Rest.
+As a Magic action, you can erase a name on the
+page by touching it.
+INVESTMENT OF THE CHAIN MASTER
+Prerequisite: Level 5+ Warlock, Pact of the Chain
+Invocation
+When you cast Find Familiar, you infuse the summoned familiar with a measure of your eldritch
+power, granting the creature the following benefits.
+Aerial or Aquatic. The familiar gains either a Fly
+Speed or a Sw im Speed (your choice) of 40 feet.
+Quick Attack. As a Bonus Action, you can command the familiar to take the Attack action.
+Necrotic or Radiant Damage. Whenever the familiar deals Bludgeoning, Piercing, or Slashing damage,
+you can make it deal Necrotic or Radiant damage
+instead.
+Your Save DC. If the familiar forces a creature to
+make a saving throw, it uses your spell save DC.
+CH A PTER 3 I CHARACTER CLASSES
+Resistance. When the familia r takes dam age, you
+can take a Reaction to grant it Resistance against
+that damage.
+LESSONS OF THE FIRST ONES
+Prerequisite: Level 2+ Warlock
+You have received knowledge from an elder entity
+of the multiverse, allowing you to gain one Origin
+feat of your choice (see chapter 5).
+Repeatable. You can gain this invocation more
+than once. Each time you do so, choose a different
+Origin feat.
+LIFEDRINKER
+Prerequisite: Level 9+ Warlock, Pact of the Blade
+Invocation
+Once per turn when you hit a creature with your
+pact weapon, you can deal an extra ld6 Necrotic
+Psychic, or Radiant damage (your choice) to the•
+creature, and you can expend one of your Hit Point
+Dice to roll it and regain a number of Hit Points
+equal to the roll plus your Constitution modifier
+(minimum of 1 Hit Point).
+MASK OF MANY FACES
+Prerequisite: Level 2+ Warlock
+You can cast Disguise Self without expending a spell
+slot.
+MASTER O F M Y RIAD FORMS
+Prerequisite: Level 5+ Warlock
+You can cast Alter Self without expending a spell
+slot.
+MISTY VISION S
+Prerequisite: Level 2+ Warlock
+You can cast Silent Image without expending a spell
+slot.
+O N E WIT H S HADOWS
+Prerequisite: Level 5+ Warlock
+While you're in an area of Dim Light or Darkness,
+you can cast Invisibility on yourself without expending a spell slot.
+OTHERWO RLDLY L EAP
+Prerequisite: Level 2+ Warlock
+You can cast jump on yourself without expending a
+spell slot.
+PACT O F THE B LADE
+As a Bonus Action, you can conjure a pact weapon
+in your hand- a Simple or Martial Melee weapon of
+your choice with which you bond- or create a bond
+with a magic weapon you touch; you can't bond
+with a magic weapon if someone else is attuned to
+it or another Warlock is bonded w ith i . Unt il the

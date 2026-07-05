@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 212/387
+
+-j CHAPTER 6
+EQUIPMENT
+HE RIGHT EQUIPMENT CAN MAKE THE
+difference between success and failure for
+adventurers. This chapter provides rules and
+prices for weapons, armor, and other kinds of equipment that characters might purchase or find. The
+DM lets you know if a shop has an item for sale and
+whether it's available at the listed price.
+COINS
+Characters often find coins on their adventures
+and can spend those coins in shops, inns, and other
+businesses. Coins come in different denominations
+based on the relative worth of their material. The
+Coin Values table lists coins and how much they're
+worth relative to the Gold Piece, which is the game's
+main coin. For example, 100 Copper Pieces are
+worth 1 Gold Piece.
+A coin weighs about a third of an ounce, so fifty
+coins weigh a pound.
+COIN VALUES
+Coin
+Copper Piece (CP)
+Silver Piece (SP)
+Electrum Piece (EP)
+Gold Piece (GP)
+Platinum Piece (PP)
+WEAPONS
+Value in GP
+1/100
+1/10
+1/2
+10
+The Weapons table in this section shows the game's
+main weapons. The table lists the cost and weight of
+each weapon, as well as the following details:
+Category. Every weapon falls into a category: Simple or Martial. Weapon proficiencies are usually
+tied to one of these categories. For example, you
+might have proficiency with Simple weapons.
+Melee or Ranged. A weapon is classified as either
+Melee or Ranged. A Melee weapon is used to
+attack a target within 5 feet, whereas a Ranged
+weapon is used to attack at a greater distance.
+SELLIN C EQUIPMENT
+Equipment fetches half its cost when sold. In contrast, trade goods and valuables-like gems and
+art objectsretain their full value in the marketplace. The Dungeon Master's Guide has prices for
+magic items.
+Damage. The table lists the amount of damage a
+weapon deals when an attacker hits with it as well
+as the type of that damage.
+Properties. Any properties a weapon has are listed
+in the Properties column. Each property is defined
+in the "Properties" section.
+Mastery. Each weapon has a mastery property,
+which is defined in the "Mastery Properties" section later in this chapter. To use that property, you
+must have a feature that lets you use it.
+WEAPON PROFICIENCY
+Anyone can wield a weapon, but you must have
+proficiency with it to add your Proficiency Bonus to
+an attack roll you make with it. A player character's
+features can provide weapon proficiencies. A monster is proficient with any weapon in its stat block.
+PROPERTIES
+Here are definitions of the properties in the Properties column of the Weapons table.
+AMMUNITION
+You can use a weapon that has the Ammunition
+property to make a ranged attack only if you have
+ammunition to fire from it. The type of ammunition
+required is specified with the weapon's range. Each
+attack expends one piece of ammunition. Drawing
+the ammunition is part of the attack (you need a
+free hand to load a one-handed weapon). After a
+fight, you can spend 1 minute to recover half the
+ammunition (round down) you used in the fight; the
+rest is lost.
+FINESSE
+When making an attack with a Finesse weapon, use
+your choice of your Strength or Dexterity modifier
+for the attack and damage rolls. You must use the
+same modifier for both rolls.
+HEAVY
+You have Disadvantage on attack rolls with a Heavy
+weapon if it's a Me lee weapon and your Strength
+score isn't at least 13 or if it's a Ranged weapon and
+your Dexterity score isn't at least 13.
+LIGHT
+When you take the Attack action on your turn and
+attack with a Light weapon, you can make one extra
+attack as a Bonus Action later on the same turn.
+That extra attack must be made with a different
+CH APTER 6 I EQUIPMENT
+~13

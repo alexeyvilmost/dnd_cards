@@ -1,0 +1,114 @@
+# Player's Handbook 2024 (EN) — PDF-страница 199/387
+
+Feat
+Heavily Armored
+Heavy Armor Master
+Inspiring Leader
+Interception
+Keen Mind
+Lightly Armored
+Lucky
+Mage Slayer
+Magic Initiate*
+Martial Weapon Training
+Medium Armor Master
+Moderately Armored
+Mounted Combatant
+Musician
+Observant
+Piercer
+Poisoner
+Polearm Master
+Protection
+Resilient
+Ritual Caster
+Savage Attacker
+Sentinel
+Shadow-Touched
+Sharpshooter
+Shield Master
+Skilled*
+Skill Expert
+Skulker
+Slasher
+Speedy
+Spell Sniper
+?nn
+CH APTER 5 I FEATS
+Category
+General
+General
+General
+Fighting Style
+General
+General
+Origin
+General
+Origin
+General
+General
+General
+General
+Origin
+General
+General
+General
+General
+Fighting Style
+General
+General
+Origin
+General
+General
+General
+General
+Origin
+General
+General
+General
+General
+General
+Feat
+Tavern Brawler
+Telekinetic
+Telepathic
+Thrown Weapon Fighting
+Tough
+Two-Weapon Fighting
+Unarmed Fighting
+War Caster
+Weapon Master
+*This feat can be taken more than once.
+ORIGIN FEATS
+Category
+Origin
+General
+Gene ral
+Fighting Style
+Origin
+Fighting Style
+Fighti ng Style
+General
+General
+These feats are in the Origin category.
+A LERT
+Origin Feat
+You gain the following benefits.
+Initiative Proficiency. When you roll Initiative,
+you can add your Proficiency Bonus to the roll.
+Initiative Swap. Immediately after you roll Initiative, you can swap your Initiative with the Initiative
+of one willing ally in the same combat. You can't
+make this swap if you or the ally has the Incapacitated condition.
+CRAFTER
+Origin Feat
+You gain the following benefits.
+Tool Proficiency. You gain proficiency with three
+different Artisan's Tools of your choice from the
+Fast Crafting table.
+Discount. Whenever you buy a nonmagical item,
+you receive a 20 percent discount on it.
+Fast Crafting. When you finish a Long Rest, you
+can craft one piece of gear from the Fast Crafting
+table, provided you have the Artisan's Tools associated with that item and have proficiency with those
+tools. The item lasts until you finish another Long
+Rest, at which point the item fa lls apart.

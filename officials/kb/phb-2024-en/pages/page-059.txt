@@ -1,0 +1,286 @@
+# Player's Handbook 2024 (EN) — PDF-страница 59/387
+
+Bardic
+BARD FEATURES
+Proficiency
+Level
+Bonus
+Class Features
+Die
+Cantrips
+Prepared
+Spells
+--Spell Slots per Spell Lev 1-
+1
+2
+3
+4
+5
+6
+7
+3
+9
+1
++2
+Bardic Inspiration,
+Spellcasting
+D6
+2
+4
+2---- --
+-
+-
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
++2
++2
++2
++3
++3
++3
++3
++4
++4
++4
++4
++5
++5
++5
++5
++6
++6
++6
++6
+Expertise,
+D6
+Jack of All Trades
+Bard Subclass
+D6
+Ability Score Improvement
+D6
+Font of Inspiration
+D8
+Subclass feature
+D8
+Countercharm
+D8
+Ability Score Improvement
+D8
+Expertise
+D8
+Magical Secrets
+Dl0
+D10
+Ability Score Improvement
+D10
+D10
+Subclass feature
+D10
+Dl2
+Ability Score Improvement
+Dl2
+Dl2
+Superior Inspiration
+D12
+Epic Boon
+D12
+Words of Creation
+Dl 2
+The number of spells on your list increases as you
+gain Bard levels, as shown in the Prepared Spells
+column of the Bard Features table. Whenever that
+number increases, choose additional spells from the
+Bard spell list until the number of spells on your list
+matches the number on the table. The chosen spells
+must be of a level for which you have spell slots. For
+example, if you're a level 3 Bard, your list of prepared spells can include six spells of levels 1 and 2 in
+any combination.
+If another Bard feature gives you spells that you
+always have prepared, those spells don't count
+against the number of spells you can prepare with
+this feature, but those spells otherwise count as
+Bard spells for you.
+Changing Your Prepared Spells. Whenever you
+gain a Bard level, you can replace one spell on your
+list with another Bard spell for which you have spell
+slots.
+Spellcasting Ability. Charisma is your spellcasting
+ability for your Bard spells.
+Spellcasting Focus. You can use a Musical Instrument as a Spellcasting Focus for your Bard spells.
+60
+CHAPTER 3 I CHARACTER CLASSES
+2
+5
+3
+-
+-
+- ---
+2
+3
+3
+3
+3
+3
+3
+4
+4
+4
+4
+4
+4
+4
+4
+4
+4
+4
+6
+7
+9
+10
+11
+12
+14
+15
+16
+16
+17
+17
+18
+18
+19
+20
+21
+22
+4
+2
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+4
+3
+LEVEL 2: EXPERTISE
+2
+3
+3
+3
+2
+3
+3
+3
+3
+2
+3
+3
+2
+3
+3
+2
+3
+3
+2
+3
+3
+2
+3
+3
+2
+3
+3
+2
+3
+3
+2
+3
+3
+3
+3
+3
+3
+3
+3
+3
+l
+l
+l
+l
+l
+l
+l
+l
+2
+2
+l
+l
+l
+l
+l
+l
+l
+2
+You gain Expertise (see the rules glossary) in two of
+your skill proficiencies of your choice. Performance
+and Persuasion are recommended if you have proficiency in them.
+At Bard level 9, you gain Expertise in two more of
+your skill proficiencies of your choice.
+LEVEL 2: JACK OF ALL TRADES
+You can add half your Proficiency Bonus (round
+down) to any ability check you make that uses a
+skill proficiency you lack and that doesn't otherwise
+use your Proficiency Bonus.
+For example, if you make a Strength (Athletics)
+check and lack Athletics proficiency, you can add
+half your Proficiency Bonus to the check.
+LEVEL 3: BARD SUBCLASS
+You gain a Bard subclass of your choice. The College
+of Dance, College of Glamour, College of Lore, and
+College of Valor subclasses are detailed after this
+class's description. A subclass is a specialization that
+grants you features at certain Bard levels. For the
+rest of your career, you gain each of your subclass's
+features that are of your Bard level or lower.

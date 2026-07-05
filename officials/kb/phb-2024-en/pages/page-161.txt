@@ -1,0 +1,50 @@
+# Player's Handbook 2024 (EN) — PDF-страница 161/387
+
+LEVEL 6: DARK ON E'S O wN L u cK
+You can call on your fiendish patron to alter fate in
+your favor. When you make an ability check or a
+saving throw, you can use this feature to add ldl0
+to your roll. You can do so after seeing the roll but
+before any of the rail's effects occur.
+You can use this feature a number of times equal
+to your Charisma modifier (minimum of once), but
+you can use it no more than once per roll. You regain all expended uses when you finish a Long Rest.
+L EVEL 10: FIENDISH RESILIENCE
+Choose one damage type, other than Force, whenever you finish a Short or Long Rest. You have
+Resistance to that damage type until you choose a
+different one w ith this feature.
+LEVEL 14: HURL THROUGH HELL
+Once per turn when you hit a creature with an
+attack roll, you can try to instantly transport the
+target through the Lower Planes. The target must
+succeed on a Charisma saving throw against your
+spell save DC, or the target disappears and hurtles
+through a nightmare landscape. The target takes
+8dl0 Psychic damage if it isn't a Fiend, and it has
+the Incapacitated condition until the end of your
+next turn, when it returns to the space it previously
+occupied or the nearest unoccupied space.
+Once you use this feature, you can't use it again
+until you finish a Long Rest unless you expend a
+Pact Magic spell slot (no action required) to restore
+your use of it.
+GREAT OLD ONE PATRON
+Unearth Forbidden Lore of Ineffable Beings
+When you choose this subclass, you might bind
+yourself to an unspeakable being from the Far
+Realm or an elder god-a being such as Tharizdun,
+the Chained God; Zargon, the Returner; Hadar, the
+Dark Hunger; or Great Cthulhu. Or you might invoke several entities without yoking yourself to one.
+The motives of these beings are incomprehensible,
+and the Great Old One might be indifferent to your
+existence. But the secrets you've learned nevertheless allow you to draw strange magic from it.
+L EVEL 3: A WAKENED MIND
+You can form a telepathic connection between your
+mind and the mind of another. As a Bonus Action,
+choose one creature you can see wit hin 30 feet of
+yourself. You and the chosen creature can communicate telepathically with each other while the
+two of you are within a number of , ,ilcs of each
+other equal to your Charisma moJ1fa r (minimum
+of 1 mile). To understand each ol:i er, :/· ;u each must
+mentally use a language the othr:1· k1!c•w<;.
+n

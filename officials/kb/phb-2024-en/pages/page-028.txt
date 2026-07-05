@@ -1,0 +1,97 @@
+# Player's Handbook 2024 (EN) — PDF-страница 28/387
+
+l<N0CKING OUT A CREATURE
+When you would reduce a creature to O Hit Points
+with a melee attack, you can instead reduce the
+creature to 1 Hit Point and give it the Unconscious condition. It then starts a Short Rest, at
+the end of which that condition ends on it. The
+condition ends early if the creature regains any
+Hit Points or if someone takes an action to administer first aid to it, making a successful DC 10
+Wisdom (Medicine) check.
+Unlike other saving throws, this one isn't tied to an
+ability score. You're in the hands of fate now.
+Three Successes/Failures. Roll ld2O. If the roll is 10
+or higher, you succeed. Otherwise, you fail. A success or failure has no effect by itself. On your third
+success, you become Stable (see "Stabilizing a Character" below). On your third failure, you die.
+The successes and failures don't need to be consecutive; keep track of both until you collect three
+of a kind. The number of both is reset to zero when
+you regain any Hit Points or become Stable.
+Rolling a 1 or 20. When you roll a 1 on the d2O for
+a Death Saving Throw, you suffer two failures. If
+you roll a 20 on the d2O, you regain 1 Hit Point.
+Damage at O Hit Points. If you take any damage
+while you have O Hit Points, you suffer a Death Saving Throw failure. If the damage is from a Critical
+Hit, you suffer two failures instead. If the damage
+equals or exceeds your Hit Point maximum, you die.
+STABILIZING A CHARACTER
+You can take the Help action to try to stabilize a
+creature with O Hit Points, which requires a successful DC 10 Wisdom (Medicine) check.
+A Stable creature doesn't make Death Saving
+Throws even though it has O Hit Points, but it still
+has the Unconscious condition. If the creature takes
+damage, it stops being Stable and starts making
+Death Saving Throws again. A Stable creature that
+isn't healed regains 1 Hit Point after ld4 hours.
+TEMPORARY HIT POINTS
+Some spells and other effects confer Temporary Hit
+Points, which are a buffer against losing actual Hit
+Points, as explained below.
+LOSE TEMPORARY HIT POINTS FIRST
+If you have Temporary Hit Points and take damage,
+those points are lost first, and any leftover damage
+carries over to your Hit Points. For example, if you
+have 5 Temporary Hit Points and take 7 damage,
+you lose those points and then lose 2 Hit Points.
+DURATION
+Temporary Hit Points last until they're depleted or
+you finish a Long Rest (see the rules glossary).
+THEY DON'T STACK
+Temporary Hit Points can't be added together. If
+you have Temporary Hit Points and receive more
+of them, you decide whether to keep the ones you
+have or to gain the new ones. For example, if a spell
+grants you 12 Temporary Hit Points when you already have 10, you can have 12 or 10, not 22.
+THEY'RE NOT HIT POINTS OR HEALING
+Temporary Hit Points can't be added to your Hit
+Points, healing can't restore them, and receiving
+Temporary Hit Points doesn't count as healing.
+Because Temporary Hit Points aren't Hit Points, a
+creature can be at full Hit Points and receive Temporary Hit Points.
+If you have O Hit Points, receiving Temporary Hit
+Points doesn't restore you to consciousness. Only
+true healing can save you.
+CONDITIONS
+Many effects impose a condition, a temporary state
+that alters the recipient's capabilities. The following
+conditions are defined in the rules glossary:
+Blinded
+Grappled
+Poisoned
+Charmed
+Incapacitated
+Prone
+Deafened
+Invisible
+Restrained
+Exhaustion
+Paralyzed
+Stunned
+Frightened
+Petrified
+Unconscious
+The definition of a condition specifies what happens
+to its recipient while affected by it, and some conditions apply other conditions.
+DURATION
+A condition lasts either for a duration specified by
+the effect that imposed the condition or until the
+condition is countered (the Prone condition is countered by standing up, for example).
+No STACKING
+If multiple effects impose the same condition on
+you, each instance of the condition has its own duration, but the condition's effects don't get worse.
+Either you have a condition or you don't. The Exhaustion condition is an exception; its effects get
+worse if you have the condition and receive it again.
+COMBAT AND
+DAMAGE EXAMPLE
+In this scene, threats force a group of adventurers into battle. This example demonstrates the
+turn-based flow of combat that gives each player
+a chance to detail what they do during the highstakes moments of a fight.

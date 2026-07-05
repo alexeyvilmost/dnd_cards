@@ -1,0 +1,113 @@
+# Player's Handbook 2024 (EN) — PDF-страница 29/387
+
+Below Castle Raven/oft, the characters enter combat!
+Jared (as OM): Yellow lichen covers the ceiling in this
+passage, which has alcoves along both sides.
+Russell (as Shreeve): I peer into the nearest alcoves.
+I
+Jared: They each contain human skeletal remains.
+The silence is broken suddenly by the rattle of
+o
+1
+bones as the skeletons lurch to their feet all
+around you and prepare to attack!
+Russell: Ack! How many skeletons?
+O Jared: Ten in all, and they're hostile. Roll Initiative!
+Russell: Ten skeletons? Yikes! I got a 16.
+Maeve (as Mirabella): I got 8.
+Phillip (as Gareth): An incredible 2 for Gareth.
+Amy (as Auro): I got a 19!
+I Jared: The Rogue is quick to react-but not as quick
+G)
+as the skeletons! They got a 20. The first four
+I
+attack the person in the lead: Shreeve.
+Russell: Oh, boy.
+\ Jared: Their attack roll totals are 8, 16, 18, and 20.
+G) Russell: The 8 and 16 miss my AC, but the others hit.
+l Jared: Two of them stick you with their broken
+1
+blades, dealing a total of 9 Piercing damage.
+Russell: Is that the best you can do?
+Phillip: Never say that to the OM.
+Jared: Heh. Now two of them attack Auro. The first
+roll is a natural l: a miss. The second roll is 16.
+Amy: That hits.
+Jared: You take 4 Piercing damage, and one of them
+attacks Mirabella with a roll of 14.
+0 Maeve: Hits. No, wait! I cast Shield, so that misses.
+Jared: The skeleton's blade bounces off your shield
+of magical force. Then two of them attack Gareth.
+One misses with a S, but the other one lands a
+solid blow with a 21, dealing 7 piercing damage.
+Phillip: That got my attention!
+Jared: That's nine attacks. There's one more skeleton
+at the end of the hall. It moves up and waits for an
+opening. Now it's Auro's turn.
+Amy: I attack one close to me. Does a 24 hit?
+Jared: A solid hit!
+Amy: And it's next to one of my allies, right?
+Jared: Yes.
+G) Amy: So with my Sneak Attack, that's 22 damage!
+Jared: Your blade slides into an empty eye socket,
+and the skeleton clatters to the ground, now inanimate and harmless.
+~
+Amy: Then I use Cunning Action to Disengage as a
+'f Bonus Action and move 20 feet out of the melee.
+Jared: Very good. Shreeve?
+I Russell: I drop my sword and pull out my warham-
+G,
+mer. Time to break some bones! My first attack is
+I
+a 21 to hit for 7 Bludgeoning damage.
+30
+CH A PTE R I I PLAYING THE GAME
+0 jl)~;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:;:;;:;;;;;;;:;;;;;;;;;;;;;::;;;;;;;;;~
+- -. •
+C
+-
+•
+• -
+-::::-:-,
+Starting Combat. While describing the skeletons animating, the OM gets ready to start
+combat by mentally figuring out where everyone is, referring to the map of the area and
+the party's established marching order.
+\
+l
+•. !
+I: !
+1il
+,.,
+A
+0 ~~~~~;;;:;;;;;;:;;;;;;:;;;;;;;;;;;;;;;;;;;;;;;~ .
+G)J/
+Rolling Initiative. The next step in combat is
+for everyone involved to roll Initiative.
+I Taking Turns. Now each participant in the
+battle takes a turn in Initiative order. The
+skeletons go first because they got the highest Initiative: 20.
+Attack Rolls. When a creature attacks,
+whether swinging a sword or firing an arrow
+from a bow, its player makes an attack roll.
+If the total is equal to or higher than the target's Armor Class (AC), the attack hits.
+~==== = =======~a
+0 &~;;;;:;;;;;;;;;;;;:;;;;;;;;;;;;:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:;;;;;;;;;;;;;;;;;;~~
+Spells and Reactions. Mirabella casts the
+Shield spell. It's a special property of this
+spell that it can be cast even when it's not
+the caster's turn, using her Reaction (see
+"Actions" earlier in this chapter) .
+~
+G) ~
+=;;;;:;;;;;:;;:;;;;:;;;;:;;;=;;;;:;;;;;:;;~;:;;;;:;;;;;;;;;;;;;;;;;;;~,~
+Special Abilities. Auro's Sneak Attack lets
+him deal extra damage to the skeletons, and
+his Cunning Action lets him Disengage as a
+Bonus Action. These are examples of class
+features (described in chapter 3) that let
+characters bend the rules.
+Vulnerability. An attack that deals Bludgeoning damage is deadly to skeletons. Shreeve
+knows this from past experience, which is
+why she drops her sword and switches to a
+Bludgeoning weapon. She rolls only 7 damage, but the DM knows the skeleton actually
+takes 14 damage.

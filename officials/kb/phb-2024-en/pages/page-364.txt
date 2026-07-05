@@ -1,0 +1,117 @@
+# Player's Handbook 2024 (EN) — PDF-страница 364/387
+
+wh ich case it takes that entire instance of damage. Any damage that fails to meet or exceed the
+damage th reshold is superficial and doesn't reduce
+Hit Points. For example, if an object has a damage
+threshold of 10, the object takes no damage if 9
+damage is dealt to it, since that damage fails to
+exceed the threshold. If the same object is dealt 11
+damage, it takes all of that damage.
+DAMAGE TYPES
+Attacks and other harmful effects deal different
+types of damage. Damage types have no rules of
+their own, but other rules, such as Resistance, rely
+on the ty pes. The Damage Types table offers examples to help a DM assign a type to a new effect.
+DAMAGE TYPES
+Type
+Examples
+Acid
+Corrosive liquids, digestive enzymes
+Bludgeoning Blunt objects, constriction, falling
+Cold
+Freezing water, icy blasts
+Fire
+Flames, unbearable heat
+Force
+Lightning
+Necrotic
+Piercing
+Poison
+Psychic
+Radiant
+Slashing
+Pure magical energy
+Electricity
+Life-draining energy
+Fangs, puncturing objects
+Toxic gas, venom
+Mind-rending energy
+Holy energy, searing radiation
+Claws, cutting objects
+Thunder
+Concussive sound
+DARKNESS
+An area of Darkness is Heavily Obscured. See also
+"Heavily Obscured" and chapter 1 ("Exploration").
+DARKVISION
+If you have Darkvision, you can see in Dim Light
+within a specified range as if it were Bright Light
+and in Darkness within that range as if it were Dim
+Light. You discern colors in that Darkness only as
+shades of gray. See also chapter 1 ("Exploration").
+D1'. 'H [ACTIO N]
+W hen you take the Dash action, you gain extra
+movement for the current turn. The increase equals
+youc Speed after applying any modifiers. With a
+Speed of 30 feet, for example, you can move up to
+60 feet on your turn if you Dash. If your Speed of
+30 feet is reduced to 15 feet, you can move up to 30
+feet this turn if you Dash.
+If you have a special speed, such as a Fly Speed or
+Swim Speed, you can use that speed instead of your
+Speed when you take this action. You choose which
+speed to use each time you take it. See also "Speed."
+DEAD
+A dead creature has no Hit Points and can't regain
+them unless it is first revived by magic such as the
+Raise Dead or Revivify spell. When such a spell is
+cast, the spirit knows who is casting it and can refuse. The spirit of a dead creature has left the body
+and departed for the Outer Planes, and reviving the
+creature requires calling the spirit back.
+If the creature returns to life, the revival effect
+determines the creature's current Hit Points. Unless
+otherwise stated, the creature returns to life with
+any conditions, magical contagions, or curses that
+were affecting it at death if the durations of those
+effects are still ongoing. If the creature died with
+any Exhaustion levels, it returns with 1 fewer level.
+If the creature had Attunement to one or more
+magic items, it is no longer attuned to them.
+DEAFENED [CONDITION]
+While you have the Deafened condition, you experience the following effect.
+Can't Hear. You can't hear and automatically fail
+any ability check that requires hearing.
+1~------ -
+------- --~
+- ---
+D EATH SAVING T H ROW
+A player character must make a Death Saving
+Throw (also called a Death Save) if they start their
+turn with O Hit Points. See also chapter 1 ("Damage
+and Healing").
+---------,--~-
+DEH YDRATION [HAZARD]
+A creature requires an amount of water per day
+based on its size, as shown in the Water Needs per
+Day table. A creature that drinks less than half the
+required water for a day gains 1 Exhaustion level
+at the day's end. Exhaustion caused by dehydration can't be removed until the creature drinks the
+full amount of water required for a day. See also
+"Exhaustion."
+WATER NEEDS PER DAY
+Size
+Water
+Size
+Water
+Tiny
+1/4 gallon
+large
+4 gallons
+Small
+l gallon
+Huge
+16 gallons
+Medium
+l gallon
+Gargantuan 64 gallons
+APPENDIX CI RULES GLOSSARY

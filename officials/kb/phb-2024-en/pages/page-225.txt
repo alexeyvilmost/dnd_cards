@@ -1,0 +1,90 @@
+# Player's Handbook 2024 (EN) — PDF-страница 225/387
+
+HOLY SYMBOL (VARIES)
+A Holy Symbol takes one of the forms in the Holy
+Symbol table and is bejeweled ~r painted to channel
+divine magic. A Cleric or Paladm can use a Holy
+Symbol as a Spellcasting Focus.
+The table indicates whether a Holy Symbol needs
+to be held, worn, or borne on fabric (such as a tabard or banner) or a Shield.
+HOLY SYMBOLS
+Symbol
+Amulet (worn or held)
+Emblem (borne on fabric or a Shield)
+Reliquary (held)
+HOLY WATER (25 GP)
+Weight Cost
+1 lb. 5 GP
+5 GP
+2 lb. 5 GP
+When you take the Attack action, you can replace
+one of your attacks with throwing a flask of Holy
+Water. Target one creature you can see within 20
+feet of yourself. The target must succeed on a Dexterity saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus) or take 2d8 Radiant
+damage if it is a Fiend or an Undead.
+r -------------
+HUNTING TRAP (5 GP)
+As a Utilize action, you can set a Hunting Trap,
+which is a sawtooth steel ring that snaps shut when
+a creature steps on a pressure plate in the center.
+The trap is affixed by a heavy chain to an immobile object, such as a tree or a spike driven into the
+ground. A creature that steps on the plate must
+succeed on a DC 13 Dexterity saving throw or take
+ld4 Piercing damage and have its Speed reduced to
+O until the start of its next turn. Thereafter, until
+the creature breaks free of the trap, its movement
+is limited by the length of the chain (typically 3
+feet). A creature can use its action to make a DC
+13 Strength (Athletics) check, freeing itself or another creature within its reach on a success. Each
+failed check deals 1 Piercing damage to the trapped
+creature.
+---------..-.,.=-
+INK (IO GP)
+Ink comes in a 1-ounce bottle, which provides
+enough ink to write about 500 pages.
+INK PEN (2 CP)
+Using Ink, an Ink Pen is used to write or draw.
+226
+CHAPTER 6 I EQUIPMENT
+JuG (2 CP)
+A Jug holds up to 1 gallon.
+LADDER (1 SP)
+A Ladder is 10 feet tall. You must climb to move up
+or down it.
+r
+. -
+- -
+-
+-
+LAMP (5 SP)
+A Lamp burns Oil as fuel to cast Bright Light in a
+15-foot radius and Dim Light for an additional 30
+feet.
+LANTERN, BULLSEYE (IO GP)
+A Bullseye Lantern burns Oil as fuel to cast Bright
+Light in a 60-foot Cone and Dim Light for an additional 60 feet.
+LANTERN, HOODED (5 GP)
+A Hooded Lantern burns Oil as fuel to cast Bright
+Light in a 30-foot radius and Dim Light for an additional 30 feet. As a Bonus Action, you can lower
+the hood, reducing the light to Dim Light in a 5-foot
+radius, or raise it again.
+LOCK (10 GP)
+A Lock comes with a key. Without the key, a creature can use Thieves' Tools to pick this Lock with a
+successful DC 15 Dexterity (Sleight of Hand) check.
+MAGNIFYING GLASS (100 GP)
+A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item. Lighting a fire with a Magnifying Glass
+requires light as bright as sunlight to focus, tinder
+to ignite, and about 5 minutes for the fire to ignite.
+MANACLES (2 GP)
+As a Utilize action, you can use Manacles to bind an
+unwilling Small or Medium creature within 5 feet
+of yourself that has the Grappled, Incapacitated,
+or Restrained condition if you succeed on a DC 13
+Dexterity (Sleight of Hand) check. W hile bound, a
+creature has Disadvantage on attack rolls, and the
+creature is Restrained if the Manacles are attached
+to a chain or hook that is fixed iu phce. Escaping
+the Manacles requires a succes,.fol DC 20 Dexterity
+(Sleight of Hand) check as an ?.ctic ·1. Bursting them
+requires a successful DC 25 Stn;-·,rrth (Athletics)
+check as an action.

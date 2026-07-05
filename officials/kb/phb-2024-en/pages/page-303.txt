@@ -1,0 +1,78 @@
+# Player's Handbook 2024 (EN) — PDF-страница 303/387
+
+PHANTASMAL FORCE
+Level 2 Illusion (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a bit of fleece)
+Duration: Concentration, up to l minute
+You attempt to craft an illusion in the mind of
+a creature you can see within range. The target
+makes an Intelligence saving throw. On a failed
+save, you create a phantasmal object, creature, or
+other phenomenon that is no larger than a 10-foot
+Cube and that is perceivable only to the target for
+the duration. The phantasm includes sound, temperature, and other stimuli.
+The target can take a Study action to examine the
+phantasm with an Intelligence (Investigation) check
+against your spell save DC. If the check succeeds,
+the target realizes that the phantasm is an illusion,
+and the spell ends.
+While affected by the spell, the target treats the
+phantasm as if it were real and rationalizes any illogical outcomes from interacting with it. For example, if the target steps through a phantasmal bridge
+and survives the fall, it believes the bridge exists
+and something else caused it to fall.
+An affected target can even take damage from
+the illusion if the phantasm represents a dangerous
+creature or hazard. On each of your turns, such a
+phantasm can deal 2d8 Psychic damage to the target if it is in the phantasm's area or within 5 feet of
+the phantasm. The target perceives the damage as a
+type appropriate to the illusion.
+PHANTASMAL KILLER
+Level 4 Illusion (Bard, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Concentration, up to l minute
+You tap into the nightmares of a creature you can
+see within range and create an illusion of its deepest
+fears, visible only to that creature. The target makes
+a Wisdom saving throw. On a failed save, the target
+takes 4d10 Psychic damage and has Disadvantage
+on ability checks and attack rolls for the duration.
+On a successful save, the target takes half as much
+damage, and the spell ends.
+For the duration, the target makes a Wisdom saving throw at the end of each of its turns. On a failed
+save, it takes the Psychic damage again. On a successful save, the spell ends.
+Using a Higher-Level Spell Slot. The damage increases by ld10 for each spell slot level above 4.
+CHAPTER 7 I SPELLS
+PHANTOM STEED
+Level 3 Illusion (Wizard)
+Casting Time: l minute or Ritual
+Range: 30 feet
+Components: V, S
+Duration: l hour
+p,..,,. NTOM Sn, e:o
+A Large, quasi-real, horselike creature appears on
+the ground in an unoccupied space of your choice
+within range. You decide the creature's appearance,
+and it is equipped with a saddle, bit, and bridle. Any
+of the equipment created by the spell vanishes in a
+puff of smoke if it is carried more than 10 feet away
+from the steed.
+For the duration, you or a creature you choose
+can ride the steed. The steed uses the Riding Horse
+stat block (see appendix B), except it has a Speed of
+100 feet and can travel 13 miles in an hour. When
+the spell ends, the steed gradually fades, giving the
+rider 1 minute to dismount. The spell ends early if
+the steed takes any damage.
+PLANAR ALLY
+Level 6 Conjuration (Cleric)
+Casting Time: 10 minutes
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+You beseech an otherworldl.' entity for aid. The
+being must be known toy ,~1: a god, a demon prince,
+or some other being of cosmir f0~.-,cr. That entity

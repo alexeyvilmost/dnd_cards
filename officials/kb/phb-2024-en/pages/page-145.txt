@@ -1,0 +1,106 @@
+# Player's Handbook 2024 (EN) — PDF-страница 145/387
+
+LEVEL 6: PSIONIC SORCERY
+When you cast any level l+ spell from your Psionic
+Spells feature, you can cast it by expending a spell
+slot as normal or by spending a number of Sorcery
+Points equal to the spell's level. If you cast the spell
+using Sorcery Points, it requires no Verbal or Somatic components, and it requires no Material components unless they are consumed by the spell or
+have a cost specified in it.
+LEVEL 6: PSYCHIC DEFENSES
+You have Resistance to Psychic damage, and you
+have Advantage on saving throws to avoid or end
+the Charmed or Frightened condition.
+LEVEL 14: REVELATION IN FLESH
+You can unleash the aberrant truth hidden within
+yourself. As a Bonus Action, you can spend 1 Sorcery Point or more to magically alter your body for
+10 minutes. For each Sorcery Point you spend, you
+gain one of the following benefits of your choice,
+the effects of which last until the alteration ends.
+Aquatic Adaptation. You gain a Swim Speed equal
+to hvice your Speed, and you can breathe underwater. Gills grow from your neck or flare behind
+your ears, and your fingers become webbed or you
+grow wriggling cilia.
+Glistening Flight. You gain a Fly Speed equal to
+your Speed, and you can hover. As you fly, your skin
+glistens with mucus or otherworldly light.
+See the Invisible. You can see any Invisible creature within 60 feet of yourself that isn't behind
+Total Cover. Your eyes also turn black or become
+writhing sensory tendrils.
+Wormlike Movement. Your body, along with any
+equipment you are wearing or carrying, becomes
+slimy and pliable. You can move through any space
+as narrow as 1 inch, and you can spend 5 feet of
+movement to escape from nonmagical restraints or
+the Grappled condition.
+LEVEL 18: WARPING IMPLOSION
+You can unleash a space-warping anomaly. As a
+Magic action, you teleport to an unoccupied space
+you can see within 120 feet of yourself. Immediately
+after you disappear, each creature within 30 feet
+of the space you left must make a Strength saving
+throw against your spell save DC. On a failed save,
+a creature takes 3dl0 Force damage and is pulled
+straight toward the space you left, ending in an unoccupied space as close to your former space as possible. On a successful save, the creature takes half as
+much damage only.
+Once you use this feature, you can't do so again
+until you finish a Long Rest unless you spend S Sorcery Points (no action required) to restore your use
+of it.
+146
+CHAPTER 3 I CHARACTER CLASSES
+CLOCKWORK SORCERY
+Channel Cosmic Forces of Orde,·
+The cosmic force of order has suffused you with
+magic. That power arises from Mechanus or a realm
+like it-a plane of existence shaped entirely by clockwork efficiency. You or someone from your lineage
+might have become entangled in the machinations
+of modrons, the orderly beings who inhabit Mechanus. Perhaps your ancestor even took part in the
+Great Modron March. Whatever its origin within
+you, the power of order can seem strange to others,
+but for you, it's part of a vast and glorious system.
+LEVEL 3: CLOCKWORK SPELLS
+When you reach a Sorcerer level specified in the
+Clockwork Spells table, you thereafter always have
+the listed spells prepared.
+CLOCKWORK SPELLS
+Sorcerer Level
+Spells
+3
+Aid, Alarm, Lesser Restoration,
+Protection from Evil and Good
+5
+Dispel Magic, Protection from Energy
+7
+Freedom of Movement, Summon
+Construct
+9
+Greater Restoration, Wall of Force
+In addition, consult the Manifestations of Order
+table and choose or randomly determine a way your
+connection to order manifests while you are casting
+any of your Sorcerer spells.
+MANIFESTATIONS OF ORDER
+ld6
+Manifestation
+Spectral cogwheels hover behind you.
+2
+The hands of a clock spin in your eyes.
+3
+Your skin glows with a brassy sheen.
+4
+Floating equations and geometric objects
+overlay your body.
+5
+Your Spellcasting Focus temporarily takes the
+form of a Tiny clockwork mechanism.
+6
+The ticking of gears or ringing of a clock can
+be heard by you and those affected by your
+magic.
+L EVEL 3: R ESTORE B A LANCE
+Your connection to the plane of absolute order
+allows you to equalize chaotic moments. When
+a creature you can see within 60 feet < f yourself
+is about to roll a d20 with Advantage or Disadvantage, you can take a Reaction to r-rcvent
+the roll from being affected by Advanl,,;~e and
+Disadvantage.

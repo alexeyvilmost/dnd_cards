@@ -1,0 +1,51 @@
+# Player's Handbook 2024 (EN) — PDF-страница 130/387
+
+With drnw (Cost: 1d6). Immediately after the attack, you move up to half your Speed without provoking Opportunity Attacks.
+LEVEL 5: UNCANNY DODGE
+When an attacker that you can see hits you with an
+attack roll, you can take a Reaction to halve the attack's damage against you (round down).
+LEVEL 7: EVASION
+You can nimbly dodge out of the way of certain
+dangers. When you're subjected to an effect that
+allows you to make a Dexterity saving throw to take
+only half damage, you instead take no damage if
+you succeed on the saving throw and only half damage if you fail. You can't use this feature if you have
+the Incapacitated condition.
+LEVEL 7: RELIABLE TALENT
+Whenever you make an ability check that uses one
+of your skill or tool proficiencies, you can treat a
+d20 roll of 9 or lower as a 10.
+LEVEL 11: IMPROVED CUNNING STRIKE
+You can use up to two Cunning Strike effects when
+you deal Sneak Attack damage, paying the die cost
+for each effect.
+LEVEL 14: DEVIOUS STRIKES
+You've practiced new ways to use your Sneak Attack deviously. The following effects are now among
+your Cunning Strike options.
+Daze (Cost: 2d6). The target must succeed on a
+Constitution saving throw, or on its next turn, it
+can do only one of the following: move or take an
+action or a Bonus Action.
+Knock Out (Cost: 6d6). The target must succeed on
+a Constitution saving throw, or it has the Unconscious condition for 1 minute or until it takes any
+damage. The Unconscious target repeats the save
+at the end of each of its turns, ending the effect on
+itself on a success.
+Obscure (Cost: 3d6). The target must succeed on a
+Dexterity saving throw, or it has the Blinded condition until the end of its next turn.
+LEVEL 15: SLIPPERY MIND
+Your cunning mind is exceptionally difficult to control. You gain proficiency in Wisdom and Charisma
+saving throws.
+LEVEL 18: ELUSIVE
+You're so evasive that attackers rarely gain the
+upper hand against you. No attack roll can have
+Advantage against you unless you have the Incapacitated condition.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of the Night Spirit is recommended.
+LEVEL 20: STROKE OF LUCK
+You have a marvelous knack for succeeding when
+you need to. If you fail a D20 Test, you can turn the
+roll into a 20.
+Once you use this feature, you can't use it again
+until you finish a Short or Long Rest.

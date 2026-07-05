@@ -1,0 +1,125 @@
+# Player's Handbook 2024 (EN) — PDF-страница 68/387
+
+!
+.i
+CORE CLERIC TRAITS
+Primary Ability
+Hit Point Die
+Saving Throw
+Proficiencies
+,
+Skill Proficiencies
+i
+I '
+:
+Wisdom
+D8 per Cleric level
+Wisdom and Charisma
+Choose 2: History, Insight,
+Medicine, Persuasion, or
+Religion
+Weapon Proficiencies Simple weapons
+Armor Training
+Starting Equipment
+Light and Medium armor
+and Shields
+Choose A or 8: (A) Chain
+Shirt, Shield, Mace, Holy
+Symbol, Priest's Pack, and 7
+GP; or (B) 110 GP
+I
+:I
+; 1
+I I
+I i
+~:-::: ====================~,....
+LERICS DRAW POWER FROM THE REALMS
+of the gods and harness it to work miracles.
+Blessed by a deity, a pantheon, or another
+immortal entity, a Cleric can reach out to the divine
+magic of the Outer Planes- where gods dwell-and
+channel it to bolster people and battle foes.
+Because their power is a divine gift, Clerics typically associate themselves with temples dedicated
+to the deity or other immortal force that unlocked
+their magic. Harnessing divine magic doesn't rely
+on specific training, yet Clerics might learn prayers
+and rites that help them draw on power from the
+Outer Planes.
+Not every member of a temple or shrine is a
+Cleric. Some priests are called to a simple life of
+temple service, carrying out their devotion through
+prayer and rituals, not through magic. Many mortals claim to speak for the gods, but few can marshal
+the power of those gods the way a Cleric can.
+BECOMING A CLERIC ...
+As A LEVEL 1 CHARACTER
+• Gain all the traits in the Core Cleric Traits table.
+• Gain the Cleric's level 1 features, which are listed
+in the Cleric Features table.
+As A MULTICLASS CHARACTER
+• Gain the following traits from the Core Cleric
+Traits table: Hit Point Die and training with Light
+and Medium armor and Shields .
+Gain the Cleric's level 1 features, which are listed
+in the Cleric Features table. See the multiclassing
+rules in chapter 2 to determine your available
+spell slots.
+As a Cleric, you gain the following class features
+when you reach the specified Cleric levels. These
+features are listed in the Cleric Features table.
+LEVEL 1: SPELLCASTING
+You have learned to cast spells through prayer and
+meditation. See chapter 7 for the rules on spellcasting. The information below details how you use
+those rules with Cleric spells, which appear on the
+Cleric spell list later in the class's description.
+Cantrips. You know three cantrips of your choice
+from the Cleric spell list. Guidance, Sacred Flame, and
+Thaumaturgy are recommended.
+Whenever you gain a Cleric level, you can replace
+one of your can trips with another cantrip of your
+choice from the Cleric spell list.
+When you reach Cleric levels 4 and 10, you learn
+another cantrip of your choice from the Cleric spell
+list, as shown in the Cantrips column of the Cleric
+Features table.
+Spell Slots. The Cleric Features table shows how
+many spell slots you have to cast your level 1+ spells.
+You regain all expended slots when you finish a
+Long Rest.
+Prepared Spells of Level 1+. You prepare the list of
+level 1+ spells that are available for you to cast with
+this feature. To start, choose four level 1 spells from
+the Cleric spell list. Bless, Cure Wounds, Guiding Bolt,
+and Shield of Faith are recommended.
+The number of spells on your list increases as you
+gain Cleric levels, as shown in the Prepared Spells
+column of the Cleric Features table. Whenever that
+number increases, choose additional spells from the
+Cleric spell list until the number of spells on your
+list matches the number on the table. The chosen
+spells must be of a level for which you have spell
+slots. For example, if you're a level 3 Cleric, your list
+of prepared spells can include six spells of levels 1
+and 2 in any combination.
+If another Cleric feature gives you spells that
+you always have prepared, those spells don't count
+against the number of spells you can prepare with
+this feature, but those spells otherwise count as
+Cleric spells for you.
+Changing Your Prepared Spells. Whenever you
+finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with
+other Cleric spells for which you have spell slots.
+Spellcasting Ability. Wisdom is your spellcasting
+ability for your Cleric spells.
+Spellcasting Focus. You can use a Holy Symbol as a
+Spellcasting Focus for your Cleric spells.
+:1
+i
+'f
+I
+I
+I
+I
+t
+I
+CHAPTER 3 I CHARACTER CLASSES
+69

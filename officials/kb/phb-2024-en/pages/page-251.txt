@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 251/387
+
+Flee. The target spends its turn moving away from
+you by the fastest available means.
+Grovel. The target has the Prone condition and
+then ends its turn.
+Halt. On its turn, the target doesn't move and takes
+no action or Bonus Action.
+Using a Higher-Level Spell Slot. You can affect one
+additional creature for each spell slot level above 1.
+COMMUNE
+Level 5 Divination (Cleric)
+Casting Time: l minute or Ritual
+Range: Self
+Components: V, S, M (incense)
+Duration: l minute
+You contact a deity or a divine proxy and ask up
+to three questions that can be answered with yes
+or no. You must ask your questions before the
+spell ends. You receive a correct answer for each
+question.
+Divine beings aren't necessarily omniscient, so
+you might receive "unclear" as an answer if a question pertains to information that lies beyond the
+deity's knowledge. In a case where a one-word answer could be misleading or contrary to the deity's
+interests, the DM might offer a short phrase as an
+answer instead.
+If you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent
+chance for each casting after the first that you get
+no answer.
+COMMUNE WITH NATURE
+Level 5 Divination (Druid, Ranger)
+Casting Time: 1 minute or Ritual
+Range: Self
+Components: V, S
+Duration: Instantaneous
+You commune with nature spirits and gain knowledge of the surrounding area. In the outdoors, the
+spell gives you knowledge of the area within 3 miles
+of you. In caves and other natural underground
+settings, the radius is limited to 300 feet. The spell
+doesn't function where nature has been replaced by
+construction, such as in castles and settlements.
+Choose three of the following facts; you learn
+those facts as they pertain to the spell's area:
+Locations of settlements
+• Locations of portals to other planes of existence
+• Location of one Challenge Rating 10+ creature
+(DM's choice) that is a Celestial, an Elemental, a
+Fey, a Fiend, or an Undead
+252
+CHAPTER 7 I SPELLS
+The most prevalent kind of plant, min i'~t\. or
+Beast (you choose which to lea1·n)
+Locations of bodies of water
+For example, you could determ ine the location of a
+powerful monster in the area, the locations of bodies of water, and the locations of any towns.
+COMPELLED DUEL
+Level 1 Enchantment (Paladin)
+Casting Time: Bonus Action
+Range: 30 feet
+Components: V
+Duration: Concentration, up to l minute
+You try to compel a creature into a duel. One creature that you can see within range makes a Wisdom
+saving throw. On a failed save, the target has Disadvantage on attack rolls against creatures other than
+you, and it can't willingly move to a space that is
+more than 30 feet away from you.
+The spell ends if you make an attack roll against a
+creature other than the target, if you cast a spell on
+an enemy other than the target, if an ally of yours
+damages the target, or if you end your turn more
+than 30 feet away from the target.
+COMPREHEND LANGUAGES
+Level 1 Divination (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action or Ritual
+Range: Self
+Components: V, S, M (a pinch of soot and salt)
+Duration: 1 hour
+For the duration, you understand the literal meaning of any language that you hear or see signed. You
+also understand any written language that you see,
+but you must be touching the surface on which the
+words are written. It takes about 1 minute to read
+one page of text. This spell doesn't decode symbols
+or secret messages.
+COMPULSION
+Level 4 Enchantment (Bard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: Concentration, up to 1 mi nute
+Each creature of your choice that you can see
+within range must succeed on a Wisdom saving
+throw or have the Charmed ronc.lilion until the spell
+ends.

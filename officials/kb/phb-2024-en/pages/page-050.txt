@@ -1,0 +1,104 @@
+# Player's Handbook 2024 (EN) — PDF-страница 50/387
+
+----{--.--:::~--:'T. __
+• -·· --~=-.::. -
+- _ •. /; r -
+-=-
+- ----·-- --- - -----
+-
+, , I y
+.. -- -
+-
+', . r
+BARBARIAN CLASS FEATURES
+CORE BA RBAR I AN TRAITS
+Primary Ability
+Hit Point Die
+Saving Throw
+Proficiencies
+Skill Proficiencies
+Strength
+Dl2 per Barbarian level
+Strength and Constitution
+Choose 2: Animal Handling,
+Athletics, Intimidation, Nature, Perception, or Survival
+Weapon Proficiencies Simple and Martial weapons
+Armor Training
+Starting Equipment
+Light and Medium armor
+and Shields
+Choose A or B: (A) Greataxe,
+4 Handaxes, Explorer's Pack,
+and 15 GP; or (B) 75 GP
+ARBARIANS ARE MIGHTY WARRIORS WHO
+1 [) '\ are powered by primal forces of the multi-
+} __ ~
+verse that manifest as a Rage. More than a
+mere emotion- and not limited to anger-this Rage
+is an incarnation of a predator's ferocity, a storm's
+fury, and a sea's turmoil.
+Some Barbarians personify their Rage as a fierce
+spirit or revered forebear. Others see it as a connection to the pain and anguish of the world, as an
+impersonal tangle of wild magic, or as an expression
+of their own deepest self. For every Barbarian, their
+Rage is a power that fuels not just battle prowess,
+but also uncanny reflexes and heightened senses.
+Barbarians often serve as protectors and leaders
+in their communities. They charge headlong into
+danger so those under their protection don't have
+to. Their courage in the face of danger makes Barbarians perfectly suited for adventure.
+BECOMING A BARBARIAN
+As A LEVEL 1 CHARACTER
+Gain all the traits in the Core Barbarian Traits
+table.
+Gain the Barbarian's level 1 features, which are
+listed in the Barbarian Features table.
+As A MULTICLASS CHARACTER
+Gain the following traits from the Core Barbarian
+Traits table: Hit Point Die, proficiency with Martial weapons, and training with Shields.
+Gain the Barbarian's level 1 features, which are
+listed in the Barbarian Features table.
+As a Barbarian, you gain the following class features when you reach the specified Barbarian levels.
+I
+These features are listed in the Barbarian Features
+table.
+I LEVEL l: RAGE
+,
+You can imbue yourself with a primal power called
+Rage, a force that grants you extraordinary might
+and resilience. You can enter it as a Bonus Action if
+you aren't wearing Heavy armor.
+You can enter your Rage the number of times
+shown for your Barbarian level in the Rages column
+of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you
+regain all expended uses when you finish a Long
+Rest.
+While active, your Rage follows the rules below.
+Damage Resistance. You have Resistance to Bludgeoning, Piercing, and Slashing damage.
+Rage Damage. When you make an attack using
+Strength- with either a weapon or an Unarmed
+Strike-and deal damage to the target, you gain
+a bonus to the damage that increases as you gain
+levels as a Barbarian, as shown in the Rage Damage
+column of the Barbarian Features table.
+Strength Advantage. You have Advantage on
+Strength checks and Strength saving throws.
+No Concentration or Spells. You can't maintain
+Concentration, and you can't cast spells.
+Duration. The Rage lasts until the end of your
+next turn, and it ends early if you don Heavy armor
+or have the Incapacitated condition. If your Rage
+is still active on your next turn, you can extend
+the Rage for another round by doing one of the
+following:
+Make an attack roll against an enemy.
+• Force an enemy to make a saving throw.
+• Take a Bonus Action to extend your Rage.
+Each time the Rage is extended, it lasts until the end
+of your next turn. You can maintain a Rage for up
+to 10 minutes.
+LEVEL l: UNARMORED DEFENSE
+While you aren't wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain
+this benefit.
+CHAPTER 3 I CHA RACTER CL.-\ SSE
+51

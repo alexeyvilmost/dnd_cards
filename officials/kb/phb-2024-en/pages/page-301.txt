@@ -1,0 +1,101 @@
+# Player's Handbook 2024 (EN) — PDF-страница 301/387
+
+MORDENKAINEN'S SWORD
+Level 7 Evocation (Bard, Wizard)
+Casting Time: Action
+Range: 90 feet
+Components: V, S, M (a miniature sword worth
+250+ GP)
+Duration: Concentration, up to l minute
+You create a spectral sword that hovers within
+range. It lasts for the duration.
+When the sword appears, you make a melee spell
+attack against a target within 5 feet of the sword.
+On a hit, the target takes Force damage equal to
+4d12 plus your spellcasting ability modifier.
+On your later turns, you can take a Bonus Action
+to move the sword up to 30 feet to a spot you can
+see and repeat the attack against the same target or
+a different one.
+---- -------
+MOVE EARTH
+Level 6 Transmutation (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (a miniature shovel)
+Duration: Concentration, up to 2 hours
+:;:::,::=-'-
+-
+Choose an area of terrain no larger than 40 feet on
+a side within range. You can reshape dirt, sand, or
+clay in the area in any manner you choose for the
+duration. You can raise or lower the area's elevation, create or fill in a trench, erect or flatten a wall,
+or form a pillar. The extent of any such changes
+can't exceed half the area's largest dimension. For
+example, if you affect a 40-foot square, you can
+create a pillar up to 20 feet high, raise or lower the
+square's elevation by up to 20 feet, dig a trench up
+to 20 feet deep, and so on. It takes 10 minutes for
+these changes to complete. Because the terrain's
+transformation occurs slowly, creatures in the area
+can't usually be trapped or injured by the ground's
+movement.
+At the end of every 10 minutes you spend concentrating on the spell, you can choose a new area of
+terrain to affect within range.
+This spell can't manipulate natural stone or stone
+construction. Rocks and structures shift to accommodate the new terrain. If the way you shape the
+terrain would make a structure unstable, it might
+collapse.
+Similarly, this spell doesn't directly affect plant
+growth. The moved earth carries any plants along
+with it.
+302
+CHAPTER 7 I SPE LLS
+N ONDETECTION
+Level 3 Abjuration (Bard, Ranger, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a pinch of diamond dust worth
+25+ GP, which the spell consumes)
+Duration: 8 hours
+For the duration, you hide a target that you touch
+from Divination spells. The target can be a willing
+creature, or it can be a place or an object no larger
+than 10 feet in any dimension. The target can't
+be targeted by any Divination spell or perceived
+through magical scrying sensors.
+NYSTUL'S MAGIC AURA
+Level 2 Illusion (Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a small square of silk)
+Duration: 24 hours
+With a touch, you place an illusion on a willing
+creature or an object that isn't being worn or carried. A creature gains the Mask effect below, and an
+object gains the False Aura effect below. The effect
+lasts for the duration. If you cast the spell on the
+same target every day for 30 days, the illusion lasts
+until dispelled.
+Mask (Creature). Choose a creature type other
+than the target's actual type. Spells and other magical effects treat the target as if it were a creature of
+the chosen type.
+False Aura (Object). You change the way the target
+appears to spells and magical effects that detect
+magical auras, such as Detect Magic. You can make
+a nonmagical object appear magical, make a magic
+item appear nonmagical, or change the object's aura
+so that it appears to belong to a school of magic you
+choose.
+OTILUKE
+1S FREEZING SPH ERE
+Level 6 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 300 feet
+Components: V, S, M (a miniature crystal sphere)
+Duration: Instantaneous
+A frigid globe streaks from yoi; to a point of
+your choice within range, wh1:n~ ;t explodes in a
+60-foot-radius Sphere. Each cr('.atme in that area
+makes a Constitution saving '·hrow, taking 10d6
+Cold damage on failed save o: l: .:J • as much damage
+on a successful one.

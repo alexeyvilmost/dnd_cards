@@ -1,0 +1,96 @@
+# Player's Handbook 2024 (EN) — PDF-страница 243/387
+
+A target's astral form can travel through the Astral Plane. The moment an astral form leaves that
+plane, the target's body and possessions travel along
+the silver cord, causing the target to re-enter its
+body on the new plane.
+Any damage or other effects that apply to an astral form have no effect on the target's body and
+vice versa. If a target's body or astral form drops to
+0 Hit Points, the spell ends for that target. The spell
+ends for all the targets if you take a Magic action to
+dismiss it.
+When the spell ends for a target who isn't dead,
+the target reappears in its body and exits the state
+of suspended animation.
+AUGURY
+Level 2 Divination (Cleric, Druid, Wizard)
+Casting Time: 1 minute or Ritual
+Range: Self
+Components: V, S, M (specially marked sticks, bones,
+cards, or other divinatory tokens worth 25+ GP)
+Duration: Instantaneous
+You receive an omen from an otherworldly entity
+about the results of a course of action that you
+plan to take within the next 30 minutes. The DM
+chooses the omen from the Omens table.
+OMENS
+Omen
+For Results That Will Be ...
+Weal
+Good
+Woe
+Bad
+Weal and woe
+Good and bad
+Indifference
+Neither good nor bad
+The spell doesn't account for circumstances, such as
+other spells, that might change the results.
+If you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent
+chance for each casting after the first that you get
+no answer.
+AURA OF LIFE
+Level 4 Abjuration (Cleric, Paladin)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Concentration, up to 10 minutes
+An aura radiates from you in a 3O-foot Emanation
+for the duration. While in the aura, you and your
+allies have Resistance to Necrotic damage, and your
+Hit Point maximums can't be reduced. If an ally
+with O Hit Points starts its turn in the aura, that
+ally regains 1 Hit Point.
+~44-
+CHAPTER 7 I SPELLS
+AURA OF PURITY
+Level 4 Abjuration (Cleric, Paladin)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Concentration, up to 10 minutes
+An aura radiates from you in a 3O-foot Emanation
+for the duration. While in the aura, you and your
+allies have Resistance to Poison damage and Advantage on saving throws to avoid or end effects that
+include the Blinded, Charmed, Deafened, Frightened, Paralyzed, Poisoned, or Stunned condition.
+AURA OF VITALITY
+Level 3 Abjuration (Cleric, Druid, Paladin)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Concentration, up to 1 minute
+An aura radiates from you in a 3O-foot Emanation
+for the duration. When you create the aura and at
+the start of each of your turns while it persists, you
+can restore 2d6 Hit Points to one creature in it.
+AWAKEN
+Level 5 Transmutation (Bard, Druid)
+Casting Time: 8 hours
+Range:Touch
+Components: V, S, M (an agate worth 1,000+ GP,
+which the spell consumes)
+Duration: Instantaneous
+You spend the casting time tracing magical pathways within a precious gemstone, and then touch
+the target. The target must be either a Beast or
+Plant creature with an Intelligence of 3 or less or a
+natural plant that isn't a creature. The target gains
+an Intelligence of 10 and the ability to speak one
+language you know. If the target is a natural plant,
+it becomes a Plant creature and gains the ability
+to move its limbs, roots, vines, creepers, and so
+forth, and it gains senses similar to a human's. The
+DM chooses statistics appropriate for the awakened Plant, such as the statistics for the Awakened
+Shrub or Awakened Tree in the Monster Manual.
+The awakened target has the Charmed condition
+for 30 days or until you or your allies deal damage
+to it. When that condition ends, t:1e awakened creature chooses its attitude toward you.

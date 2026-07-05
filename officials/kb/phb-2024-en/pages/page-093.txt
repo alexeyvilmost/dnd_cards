@@ -1,0 +1,47 @@
+# Player's Handbook 2024 (EN) — PDF-страница 93/387
+
+L E VEL 3: S T UDE N T O F W AR
+You gain proficiency with one type of Artisan's
+Tools of your choice, and you gain proficiency in
+one skill of your choice from the skills avai lable to
+Fighters at level 1.
+LEVEL 7: KNOW YOU R ENEMY
+As a Bonus Action, you can discern certa in
+strengths and weaknesses of a creatu re you can see
+within 30 feet of yourself; you know whether that
+creature has any Immunities, Resistances, or Vulnerabilities, and if the creature has any, you know
+what they are.
+Once you use this feature, you can't do so again
+until you finish a Long Rest. You can also restore a
+use of the feature by expending one Superior ity Die
+(no action required).
+LEVEL 10: IMPROVED COMBAT SUPERIORITY
+Your Superiority Die becomes a dl 0 .
+LEVEL 15: RELENTLESS
+Once per turn, when you use a maneuver, you can
+roll ld8 and use the number rolled instead of expending a Superiority Die.
+LEVEL 18: ULTIMATE COMBAT SUPERIORITY
+Your Superiority Die becomes a d12.
+MANEUVER OPTIONS
+The maneuvers are presented here in alphabetical
+order.
+Ambush. When you make a Dexterity (Stealth)
+check or an Initiative roll, you can expend one
+Superiority Die and add the die to the roll, unless
+you have the Incapacitated condition.
+Bait and Switch. When you're within 5 feet of a
+creature on your turn, you can expend one Superiority Die and switch places with that creature,
+provided you spend at least 5 feet of movement and
+the creature is willing and doesn't have the Incapacitated condition. This movement doesn't provoke Opportunity Attacks.
+Roll the Superiority Die. Until the start of your
+next turn, you or the other creature (your choice)
+gains a bonus to AC equal to the number rolled.
+Commander's Strike. When you take the Attack
+action on your turn, you can replace one of your
+attacks to direct one of your companions to strike.
+When you do so, choose a willing creature who can
+see or hear you and expend one Superiority Die.
+That creature can immediately use its Reaction to
+make one attack with a weapon or an Unarmed
+Strike, adding the Superior ity Die to the attack's
+damage roll on a hit.

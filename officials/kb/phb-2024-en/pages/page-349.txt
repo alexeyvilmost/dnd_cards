@@ -1,0 +1,123 @@
+# Player's Handbook 2024 (EN) — PDF-страница 349/387
+
+•
+GI/INT B110GER
+Medium Beast, Unaligned
+AC 13
+Initiative +0 (10)
+HP15 (2d8+6)
+Speed 30 ft., Burrow 10 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 13 +l
++l
+INT 2 - 4 -4
+D EX 10 +0 +0
+CON 17 +3 +3
+Skills Perception +3
+Resistances Poison
+Wis 12 +l
++l
+CHA 5 - 3 -3
+Senses Darkvision 60 ft., Passive Perception 13
+Languages None
+CR 1/4 (XP 50; PB +2)
+ACTIONS
+Bite. Melee Attack Roll: +3, reach 5 ft. Hit: 6 (2d4 + l)
+Piercing damage.
+GIANT CRAB
+Medium Beast, Unaligned
+AC 15
+Initiative +l (11)
+HP 13 (3d8)
+Speed 30 ft., Swim 30 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 13 +l
++1
+DEX 13 +l
++l
+CON 11 +0 +0
+INT
+1 -5 -5
+WIS 9 -1
+- 1
+CHA 3 -4 -4
+Skills Stealth +3
+Senses Blindsight 30 ft., Passive Perception 9
+Languages None
+CR 1/8 (25 XP; PB +2)
+TRAITS
+Amphibious. The crab can breathe air and water.
+ACTIONS
+Claw. Melee Attack Roll: +3, reach 5 ft. Hit: 4 (ld6 + 1)
+Bludgeoning damage. If the target is Medium or
+smaller, it has the Grappled condition (escape DC 11).
+The crab has two claws, each of which can grapple
+one target.
+PPEN DIX B
+CREATURE STAT BLOCKS
+Large Beast, Unaligned
+AC 11
+Initiative + l (11)
+HP 19 (3dl0 + 3)
+Speed 40 ft., Climb 30 ft.
+MOD SAVE
+MOD SAVE
+MOO SAVE
+STR 17 +3
++5
+DEX 13 +l
++l
+C0N12
+INT 3 -4 -4
+w,s 12 +l
++l
+CHA 6
+Skills Perception +3
+Senses Darkvision 60 ft., Passive Perception 13
+Languages None
+CR 1/2 (XP 100; PB +2)
+A CTI ONS
++l
++l
+-2 - 2
+Ram. Melee Attack Roll: +5, reach 5 ft. Hit: 6 (l d6 + 3)
+Bludgeoning damage. If the goat moved at least 20 feet
+straight toward the target immediately before the hit,
+the target takes an extra 5 (2d4) Bludgeoning damage
+and, if it is Huge or smaller, has the Pro ne condition.
+G IANT SEAHORSE
+Large Beast, Unaligned
+AC 14
+Initiative +l (11)
+HP 16 (3dl 0)
+Speed 5 ft. , Swim 40 ft.
+MOD SAVE
+MOD SAVE
+STR 15 +2 +2
+DEX 12 +l
++l
+INT 2 -4 -4
+Wis 12 +l
++l
+Senses Passive Perceptio n 11
+Languages None
+CR 1/2 (XP 100; PB +2)
+TRAITS
+MOD SAVE
+CON 11
++O +O
+CHA 5 -3 - 3
+Water Breathing. The seaho rse can breathe only
+underwater.
+ACTIONS
+Ram. Melee Attack Roll: +4, reach 5 ft. Hit: 9 (2d6 + 2)
+Bludgeoning damage, or the seahorse deals 11 (2d8
++ 2) Bludgeoning damage if it moved at least 20 feet
+straight toward the target immediately before the hit.
+BONUS ACTIONS
+Bubble Dash. While underwater. the seahorse moves
+up to half its Swim Speed wiH1011t orovoking Opportunity Attacks.

@@ -1,0 +1,56 @@
+# Player's Handbook 2024 (EN) — PDF-страница 112/387
+
+:P ::~LA DIN S UBCLASSES
+A Paladin subclass is a specialization that grants
+you fea tu res at certain Paladin levels, as specified
+in the subclass. This section presents the Oath of
+Devotion, Oath of Glory, Oath of the Ancients, and
+Oath of Vengeance subclasses.
+Each of these subclasses represents a body of
+oaths that a Paladin begins taking upon joining the
+class. T he final oath, taken at level 3, is the culmination of a Paladin's training. Some characters with
+this class don't consider themselves true Paladins
+until they've reached level 3 and made this oath. For
+others, the swearing of the oath is a formality, an
+official stamp on what was already in their hearts.
+OATH OF DEVOTION
+Uphold the Ideals of Justice and Order
+The Oath of Devotion binds Paladins to the ideals
+of justice and order. These Paladins meet the archetype of the knight in shining armor. They hold
+themselves to the highest standards of conduct,
+and some- for better or worse- hold the rest of the
+world to the same standards.
+Many who swear this oath are devoted to gods
+of law and good and use their gods' tenets as the
+measure of personal devotion. Others hold angels as
+their ideals and incorporate images of angelic wings
+into their helmets or coats of arms.
+These paladins share the following tenets:
+Let your word be your promise.
+Protect the weak and never fear to act.
+Let your honorable deeds be an example.
+LEVEL 3: OATH OF DEVOTION SPELLS
+The magic of your oath ensures you always have
+certain spells ready; when you reach a Paladin level
+specified in the Oath of Devotion Spells table, you
+thereafter always have the listed spells prepared.
+OATH OF DEVOTION SPELLS
+Paladin Level
+Spells
+3
+Protection from Evil and Good,
+Shield of Faith
+5
+Aid, Zone of Truth
+9
+Beacon of Hope, Dispel Magic
+13
+Freedom of Movement,
+Guardian of Faith
+17
+Commune, Flame Strike
+L EVE L 3: SACRED WEAPON
+When you take the Attack action, you can expend
+one use of your Channel Divinity to imbue one
+Melec: weapon that you are holding with positive
+enery,y. ·or 10 minutes or until you use this feature

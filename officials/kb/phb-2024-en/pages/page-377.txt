@@ -1,0 +1,344 @@
+# Player's Handbook 2024 (EN) — PDF-страница 377/387
+
+INDEX
+'c::v==
+----=~
+Aasimar, 186
+Actions table, 15
+Arcane Trickster subclass,
+Auran language dialect,
+Beast of the Sea stat
+A Balanced Party sidebar,
+Action Surge class
+132
+37
+block, 124
+36
+feature, 91
+Arcane Vigor spell, 242
+Aura of Courage class
+Beast of the Sky stat
+A Bard's Repertoire
+Actor feat, 202
+Archdruid class featu re,
+feature, 111
+block, 124
+sidebar, 61
+adjust ability scores, 38
+82
+Aura of Life spell, 244
+Beast Sense spell, 245
+abbreviations, 360
+advancement, level, 41
+Archery feat, 209
+Aura of Protection class
+Beast Shapes table, 81
+Aberrant Sorcery
+Advantage, 12, 360
+Archfey Patron subclass,
+feature, 111
+Beast Spells class feature,
+subclass, 145
+adventure, 8, 360
+159
+Aura of Purity spell, 244
+81
+Aberrant Spirit stat block,
+adventuring gear, 222
+Archfey Spells table, 159
+Aura ofVitality spell, 244
+Bedro ll, 224
+322
+Adventuring Gear table,
+area of effect, 361
+avoiding Opportunity
+Befuddlement s pell, 245
+Aberration creature type,
+223
+Cone, 364
+Attacks, 26
+being a player, 7
+364
+Agonizing Blast
+Cube, 364
+Awaken spell, 244
+being the Dungeon
+ability, 10
+invocation, 155
+Cylinder, 364
+axes, 215
+Master, 7
+check, 10,360
+Aid spell, 239
+Emanation, 366
+background, character,
+Bell, 224
+Ability Check Examples
+Air, Elemental Plane of,
+Line, 370
+177
+Bestial Spirit stat block,
+table, 11
+344
+Sphere, 374
+Backgrounds and Species
+323
+Ability Descriptions table,
+Airborne and Waterborne
+Areas of Knowledge table,
+from Older Books
+Bestow Curse s pell, 246
+10
+Vehicles table, 230
+375
+sidebar, 38
+Bigby's Hand spell, 246
+ability modifier, 10, 360
+Airship, 230
+Arid Land circle spells
+Backpack, 224
+Black Bear stat block, 346
+determination, 38
+Alarm spell, 239
+table, 84
+Badger, Giant, stat block,
+Blade Barrier spell, 247
+Ability Modifiers table, 10
+Alchemist's Fire, 222
+aristocratic lifestyle, 231
+350
+Blade Ward spell, 247
+ability score, 10, 360
+Alchemist's Supplies, 220
+armor, 219
+Badger stat block, 346
+Blanket, 224
+adjustment, 38
+Alert feat, 200
+Armor Class (AC), 12,
+bagpipes, 221
+Bless spell, 247
+and modifier, 360
+alignment, 39, 360
+41, 361
+Balanced Party, A
+Blessed Strikes class
+assignment, 38
+ally, 361
+base, 12
+sidebar, 36
+feature, 71
+generation, 38
+Alter Self spell, 239
+calculating, 12
+Ball Bearings, 224
+Blight spell, 247
+Ability Sco re
+always-prepared spells,
+Armor of Agathys spell,
+Bane spell, 245
+Blinded co ndition, 361
+Improvement class
+235
+243
+Banishing Smite spell, 245
+Blind Fighting feat, 209
+feature, 53, 61, 71 , 81 ,
+Ambusher's Leap, 125
+Armor of Shadows
+Banishment spell, 245
+Blinding Smite spell, 247
+92, 103,111, 120, 130,
+ammunition, 222
+invocation, 155
+Barbarian class, 49, 51
+Blindness/Deafness spell,
+141,1 55,167
+Ammunition property,
+Armor table, 21 9
+Barbarian Features
+248
+Ability Score
+213
+armor training, 219, 361
+table, 52
+Blindsight, 361
+Improvement feat, 202
+Ammunition table, 222
+Arms of Hadar spell, 243
+Core Barbarian Traits
+Blink spell, 248
+Ability Score Point Costs
+Animal Friendship spell,
+Arrow, 222
+ta ble, 51
+Block and Tackle, 224
+table, 38
+239
+Artisan background, 178
+subclasses, 54
+Bloodied, 362
+Ability Scores and
+Animal Handling skill, 14
+Artisan's Tools, 220
+Bard class, 49, 59
+Blowgun, 215
+Backgrounds table, 36
+Animal Messenger spell,
+Ascendant Step
+Bard Features table, 60
+blowgun needle. See
+Ability Scores and
+240
+invocation, 155
+Core Bard Traits table,
+Needle, 222
+Modifiers table, 38
+Animal Shapes spell, 240
+Ash, Para-elemental
+59
+Bludgeoning damage,
+Ability Scores table, 10
+Animate Dead spell, 240
+Plane of, 344
+spell list, 62
+365
+Abjure Foes class feature,
+Animated Object stat
+Assassin subclass, 134
+subclasses, 64
+Blur spell, 248
+111
+block, 241
+assign ability scores, 38
+Bardic Inspiration class
+Boar stat block, 347
+Abjurer subclass, 172
+Animate Objects spell,
+Astral Plane, 344
+feature, 59
+boats, 230
+Abyss, 344
+240
+Astral Projection spell, 243
+Bardic Inspiration die, 59
+Body and Mind class
+Abyssal language, 37
+Antil!fe Shell spell, 241
+Athlete feat, 202
+barding, 229
+feature, 103
+Abyssal Tiefling, 196
+Antimagic Field spell, 241
+Athletics skill, 14
+Bard's Repertoire, A,
+Bolt, 222
+Acheron, 344
+Antipathy/Sympathy spell,
+attack, l 5, 361
+sidebar, 61
+Bolt Case, Crossbow, 224
+Acid, 222
+242
+action, l 5, 361
+Barkskin spell, 245
+Bonus, Proficiency, 11, 13
+Acid damage, 365
+Antitoxin, 222
+making an, 25
+Barrel, 224
+Bonus Actio n, 15, 362
+Acid Splash spell, 239
+Ape stat block, 346
+melee, 26
+base AC, 12
+Bonus Feats at Level 20
+Acolyte background, 178
+appearance, character, 38
+Opportunity, 26, 371
+Basic Poison, 227
+sidebar, 43
+Acrobatic Movement
+Aquan language dialect,
+ranged, 26
+Basket, 224
+Book, 224
+class feature, 103
+37
+ranged, in close
+Bat stat block, 346
+Book of Shadows. See Pact
+Acrobatics skill, 14
+Arborea, 344
+combat, 26
+Battleaxe, 215
+of the Tome, 157
+action, 15, 360
+Arcadia, 344
+spell, 238
+Battle Master subclass,
+Boon of Combat Prowess
+Attack, 361
+Arcana skill, 14
+weapon, 377
+93
+feat, 21 0
+Dash, 365
+Arcane Apotheosis class
+attack roll, 12, 361
+Beacon of Hope spell, 245
+Boon of Dimensional
+Disengage, 366
+feature, 141
+Attack Roll Abilities table,
+Bea r, Black, stat block,
+Travel feat, 210
+Dodge, 366
+Arcane Eye spell, 242
+12
+346
+Boon of Energy
+Help, 368
+Arcane Focus, 224
+attitude, 361
+Bear, Brown, stat block,
+Resistance feat, 210
+Hide, 368
+Arcane Focuses table,
+Friendly, 367
+347
+B0c,11 of Fate feat, 210
+Influence, 369
+224
+Hostile, 368
+Beast creature type, 364
+lfo<,n of Fortitude feat,
+Magic, 371
+Arcane Gate spell, 242
+Indifferent, 369
+Beastlands, 344
+;:1u
+Ready, 372
+Arcane Lock spell, 242
+Attunement, 232, 361
+Beast Master subclass,
+Ikon t,f Irresistible
+Search, 373
+Arcane Recovery class
+Augury spell, 244
+122
+0 1;: ,1se feat, 211
+Study, 375
+feature, 166
+Aura Expansion class
+Beast of the Land stat
+80,:,, < ,r Recovery feat,
+Utilize, 377
+Arcane Trickster
+feature, 111
+block, 123
+J : ·,
+Action, Bonus, 362
+Spellcasting table, 133
+378
+INDEX

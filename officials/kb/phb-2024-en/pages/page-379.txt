@@ -1,0 +1,384 @@
+# Player's Handbook 2024 (EN) — PDF-страница 379/387
+
+death, 365
+Divine Intervention class
+Eldritch Spear invocation,
+Extended Spell
+Fire Bolt spell, 274
+character, 28
+feature, 71
+155
+metamagic, 142
+Fire damage, 365
+Hit Point maximum of
+Divine Order class
+Electrum Piece (EP), 213
+Extra Attack class feature,
+Fire Shield spell, 274
+0, 28
+feature, 70
+Elemental Adept feat, 203
+53, 92, 103, l 11 , 120
+Fire Storm spell, 275
+instant, 28
+Diviner subclass, 173
+Elemental Chaos, 344
+Eyebite spell, 270
+Fixed Hit Points by Class
+massive damage, 28
+Divine Smite spell, 265
+Elemental creature type,
+Fabricate spell, 271
+table, 42
+monster, 28
+Divine Ward spell, 265
+364
+Faerie Fire spell, 271
+Flail, 215
+Death Saving Throw, 28,
+Dodge action, 15, 366
+Elemental Fury class
+Faithful Steed class
+Flame Blade spell, 275
+365
+Domain Spells class
+feature, 81
+feature, 111
+Flame Strike spell, 275
+Death Ward spell, 261
+feature, 73, 74, 75, 77
+Elementalism spell, 267
+falling hazard, 367
+Flaming Sphere spell, 275
+Deception skill, 14
+Dominate Beast spell, 265
+Elemental Planes, 344
+falling off a mount, 27
+Flask, 225
+Deep Speech language,
+Dominate Monster spell,
+Elemental Spirit stat
+fall ing unconscious, 28
+Flesh to Stone spell, 275
+37
+265
+block, 325
+False Life spell, 271
+Flexible Casting. See Font
+Defense feat, 209
+Dominate Person spell,
+Elemental Weapon spell,
+Familiar. See Find
+of Magic, 140
+Defensive Duelist feat,
+266
+268
+Familiar, 272
+flute, 221
+203
+Draconic Ancestors table,
+Elephant stat block, 349
+Farmer background, 180
+flying, 367
+Deflect Attacks class
+187
+Elf, 189
+Fast Crafting table, 201
+Fly Speed, 367
+feature, l 02
+Draconic language, 37
+Elk stat block, 349
+Fast Movement class
+Fly spell, 276
+Deflect Energy class
+Draconic Sorcery
+Elusive class feature, 131
+feature, 53
+Focus.Arcane, 224
+feature, 103
+subclass, 148
+Elven Lineages table, 190
+Favored Enemy class
+Focus, Druidic, 225
+Deflect Missiles. See
+Draconic Spells table, 148
+Elvish language, 37
+feature, 119
+Focus, Spellcasting, 374
+Deflect Attacks, l 02
+Draconic Spirit stat block,
+Elysium, 344
+Fear spell, 271
+Foe Slayer class feature,
+Deft Explorer class
+325
+Emanation area of effect,
+feat, 199
+121
+feature, 120
+Draft Horse stat block,
+366
+Epic Boon, 210
+Fog Cloud spell, 276
+dehydration hazard, 365
+349
+Empowered Spell
+Fighting Style, 209
+Font of Inspiration class
+Delayed Blast Fireball
+Dragonborn, 187
+metamagic, 142
+General, 202
+feature, 61
+spell, 261
+dragonchess, 221
+Empowered Strikes class
+Origin, 200
+Font of Magic class
+Demiplane spell, 261
+Dragon creature type, 364
+feature, 103
+Feather Fall spell, 271
+feature, 140
+Destroy Undead class
+Dragon's Breath spell, 266
+Empty Body class feature.
+Feat List table, 199
+food , 231
+feature. See Sear
+Drawmij's Instant
+See Superior Defense,
+Feeblemind spell. See
+Food, Drink, and Lodging
+Undead, 71
+Summons spell, 266
+103
+Befuddlement, 245
+table, 231
+Destructive Wave spell,
+Dream spell, 266
+encounter, 366
+Feign Death spell, 271
+Food Needs per Day
+261
+drink, 231
+encumbrance. See
+Feral Instinct class
+table, 3 71
+Detect Evil and Good
+dropping prone, 25
+carrying capacity, 362
+feature, 53
+Forbiddance spell, 276
+spell, 261
+dropping to O Hit Points,
+enemy, 366
+Feral Senses class
+Forcecage spell, 276
+Detect Magic spell, 262
+28
+Enhance Ability spell, 268
+feature, 121
+Force damage, 365
+Detect Poison and Disease
+Drow, 189
+Enlarge/Reduce spell, 268
+Fey creature type, 364
+Foresight spell, 276
+spell,262
+Druid class, 49, 79
+Ensnaring Strike spell, 268
+Fey Spirit stat block, 326
+Forest Gnome, 191
+Detect Thoughts spell, 262
+Core Druid Traits table,
+Entangle spell, 268
+Fey-Touched feat, 204
+Forgery Kit, 221
+Devil's Sight invocation,
+79
+Entertainer background,
+Fey Wanderer Spells
+Fount of Moonlight spell,
+155
+Druid Features table, 80
+180
+table, 124
+277
+Devious Strikes class
+spell list, 82
+Entertainer's Pack, 225
+Fey Wanderer subclass,
+Freedom of Movement
+feature, 131
+subclasses, 84
+Enthrall spell, 269
+124
+spell, 277
+Devouring Blade
+Druidcraft spell, 266
+Epic Boon class feature,
+Feywild, 344
+Friendly attitude, 367
+invocation, l 55
+Druidic class feature, 80
+53,61, 71,81 , 92, 103,
+Feywild Gifts table, 124
+Friends spell, 277
+Dexterity, 10
+Druidic Focus, 225
+111,121,131, 141,
+Fiend creature type, 364
+Frightened condition, 367
+dice, 9
+Druidic Focuses table,
+155,167
+Fiendish Legacies table,
+Frog stat block, 349
+Bardic Inspiration, 59
+225
+Epic Boon feats, 210
+197
+gaining a level, 42
+Martial Arts, 101
+Druidic language, 37
+equipment, 213
+Fiendish Spirit stat block,
+gaining spells, 235
+notation, 9
+drum, 221
+crafting, 233
+327
+Galley, 230
+percentile, 9
+Dual Wielder feat, 203
+proficiency, 14
+Fiendish Vigor
+Gaming Set, 221
+Difficult Terrain, 24, 366
+Dueling feat, 209
+Etherealness spell, 269
+invocation, l 55
+Gargantuan, 25
+Difficulty Class (DC) ,
+dulcimer, 221
+Ethereal Plane, 344
+Fiend Patron subclass,
+Gaseous Form spell, 277
+11, 366
+Dungeoneer's Pack, 225
+Evard's Black Tentacles
+161
+Gate spell, 277
+Dimension Door spell, 262
+Dungeon Master, 4, 7
+spell, 270
+Fiend Spells table, 161
+Gaze ofTwo Minds
+Dim Light, 19, 366
+Durable feat, 203
+Evasion class feature,
+Fighter class, 49, 91
+invocation, 156
+Diplomat's Pack, 225
+Dwarf, 188
+103, 131
+Core Fighter Traits
+gear, adventuring, 222
+Dire Wolf stat block, 348
+Dwarvish language, 37
+Evoker subclass, 174
+table, 91
+Geas spell, 278
+Disadvantage, 12, 366
+Earth, Elemental Plane
+Exceptions Supersede
+Fighter Features table,
+Gehenna, 344
+Disciplined Survivor class
+of, 344
+General Rules
+92
+General feats, 202
+feature, 103
+Earthquake spell, 267
+sidebar, 8
+subclasses, 93
+generate ability scores, 38
+Disengage action, 15, 366
+Eldritch Blast spell, 267
+Exhaustion condition,
+Fighting Style class
+Gentle Repose spell, 278
+Disguise Kit, 221
+Eldritch Invocation
+366
+feature, 91 , 110, 120
+Giant Badger stat block,
+Disguise Self spell, 262
+options, l 55
+Expanding and Replacing
+Fighting Style feats, 209
+350
+Disintegrate spell, 263
+Eldritch Invocations class
+a Spellbook sidebar,
+Find Familiar spell, 272
+Giant Crab stat block, 350
+dismounting, 26
+feature, 153
+167
+finding hidden objects, 20
+Giant creature type, 364
+Dispel Evil and Good spell,
+Eldritch Knight
+Expeditious Retreat spell,
+Find Steed spell, 272
+Giant Goat stat block,
+263
+Spellcasting table, 97
+270
+Find the Path spell, 273
+350
+Dispel Magic spell, 264
+Eldritch Knight subclass,
+expense, lifestyle, 230
+Find Traps spell, 273
+Giant Insect spell, 279
+Dissonani Whispers spell,
+96
+Experience Points (XP),
+Fine Clothes, 225
+Giant Insect stat block,
+264
+Eldritch Master class
+366
+Finesse property, 213
+279
+Distant Spell metamagic,
+feature, 155
+Expertise, 367
+Finger of Death spell, 273
+Giant language, 37
+141
+Eldritch Mind invocation,
+Expertise class feature,
+Fire, Elemental Plane
+Giant Seahorse stat
+Divination spell, 264
+155
+60, 121, 129
+of, 344
+bloc:k, 350
+Divine Favor spell, 265
+Eldritch Smite invocation,
+exploration, 19
+Firearm Bullet, 222
+Giant Spider stat block,
+155
+Explorer's Pack, 225
+Fireball spell, 274
+3, ,
+JI
+380
+INDEX

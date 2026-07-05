@@ -1,0 +1,137 @@
+# Player's Handbook 2024 (EN) — PDF-страница 40/387
+
+Hit Point Dice. Your class's description tells you
+the die type of your character's Hit Point Dice (or
+Hit Dice for short); write this on your character
+sheet. At level 1, your character has 1 Hit Die. You
+can spend Hit Dice during a Short Rest to recover
+Hit Points. Your character sheet also includes space
+to note how many Hit Dice you've spent.
+Initiative. Write your Dexterity modifier in the
+space for Initiative on your character sheet.
+Armor Class. Without armor or a shield, your base
+Armor Class is 10 plus your Dexterity modifier. If
+your starting equipment includes armor or a Shield
+(or both), calculate your AC using the rules in chapter 6. A class feature might give you a different way
+to calculate your AC.
+Attacks. In the Weapons & Damage Cantrips
+section of the character sheet, write your starting
+weapons. The attack roll bonus for a weapon with
+which you have proficiency is one of the following
+unless a weapon's property says otherwise:
+Melee attack bonus = Strength modifier
++ Proficiency Bonus
+Ranged attack bonus= Dexterity modifier
++ Proficiency Bonus
+Look up the damage and properties of your weapons in chapter 6. You add the same ability modifier
+you use for attacks with a weapon to your damage
+rolls with that weapon.
+Spellcasting. Note both the saving throw DC for
+your spells and the attack bonus for attacks you
+make with them, using these formulas:
+Spell save DC = 8 + spellcasting ability modifier
++ Proficiency Bonus
+Spell attack bonus= spellcasting ability modifier
++ Proficiency Bonus
+Your spellcasting ability modifier for a spell is determined by whatever feature gives you the ability
+to cast the spell.
+Spell Slots, Cantrips, and Prepared Spells. If your
+class gives you the Spellcasting or Pact Magic feature, your class features table shows the number of
+spell slots you have available, how many cantrips
+you know, and how many spells you can prepare.
+Choose your cantrips and prepared spells, and note
+them-along with your number of spell slots-on
+your character sheet.
+NAME YOUR CHARACTER
+Choose a name for your character, and write it on
+your character sheet. The name can be whatever
+you like. Was it the name of an ancestor? Does it
+have religious or other significance? ls it a name
+you chose for yourself?
+CREATE FINAL DETAILS
+As you finish creating your character, consider
+whether you'd like to make up any other details
+about the character. Here are the sorts of things
+you might ask yourself as the character:
+• What's your gender?
+• What person or people do you care most about?
+• What's your deepest fear?
+On your adventures, will you seek knowledge,
+wealth, glory, enlightenment, justice, mercy,
+power, or something else?
+LEVEL ADVANCEMENT
+While going on adventures, your character gains
+experience, represented by Experience Points (XP).
+A character who reaches a specified Experience
+Point total advances in capability. This advancement is called gaining a level.
+The Character Advancement table lists the XP
+you need to advance to a level and the Proficiency
+Bonus for a character of that level. When your XP
+total equals or exceeds a number in the Experience
+Points column, you reach the corresponding level.
+CHARACTER ADVANCEMENT
+Level
+Experience Points
+Proficiency Bonus
+1
+0
++2
+2
+300
++2
+3
+900
++2
+4
+2,700
++2
+5
+6,500
++3
+6
+14,000
++3
+7
+23,000
++3
+8
+34,000
++3
+9
+48,000
++4
+10
+64,000
++4
+11
+85,000
++4
+12
+100,000
++4
+13
+120,000
++5
+14
+140,000
++5
+15
+165,000
++S
+16
+195,000
++S
+17
+225,000
++6
+18
+265,000
++6
+19
+305,000
++6
+20
+355,000
++6
+CHAPTER 2 I C RE ATING A C H A RACT E R
+41

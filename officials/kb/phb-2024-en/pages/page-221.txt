@@ -1,0 +1,63 @@
+# Player's Handbook 2024 (EN) — PDF-страница 221/387
+
+ADVENTURING GEAR
+The Adventuring Gear table in this section includes
+gear that adventurers often find useful. These items
+are described here in alphabetical order, with an
+item's price appearing after its name.
+-------
+ACID (25 GP)
+When you take the Attack action, you can replace
+one of your attacks with throwing a vial of Acid.
+Target one creature or object you can see within
+20 feet of yourself. The target must succeed on a
+Dexterity saving throw (DC 8 plus your Dexterity
+modifier and Proficiency Bonus) or take 2d6 Acid
+damage.
+ALCHEMIST'S FIRE (50 GP)
+When you take the Attack action, you can replace
+one of your attacks with throwing a flask of Alchemist's Fire. Target one creature or object you can
+see within 20 feet of yourself. The target must succeed on a Dexterity saving throw (DC 8 plus your
+Dexterity modifier and Proficiency Bonus) or take
+ld4 Fire damage and start burning (see the rules
+glossary).
+CHAPTER 6 I EQUIPMENT
+AMMUNITION (VARIES)
+Ammunition is required by a weapon that has the
+Ammunition property. A weapon's description specifies the type of ammunition used by the weapon.
+The Ammunition table lists the different types and
+the amount you get when you buy them. The table
+also lists the item that is typically used to store each
+type; storage must be bought separately.
+AMMUNITION
+Type
+Amount Storage Weight
+Cost
+Arrows
+20
+Quiver
+l lb.
+l GP
+Bolts
+20
+Case
+l½ lb.
+l GP
+Bullets, Firearm
+10
+Pouch
+2 lb. 3 GP
+Bullets, Sling
+20
+Pouch
+l½ lb.
+4 CP
+Needles
+50
+Pouch
+l lb.
+l GP
+ANTITOXIN (50 GP)
+As a Bonus Action, you can dri ·1 l< a vial of Antitoxin
+to gain Advantage on saving thr'!WS to avoid or end
+the Poisoned condition for 1 ho ,. r.

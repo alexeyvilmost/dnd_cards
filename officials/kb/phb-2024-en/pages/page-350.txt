@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 350/387
+
+.,
+0
+n
+GIANT SPIDER
+Large Beast, Unaligned
+AC 14
+Initiative +3 (13)
+HP 26 (4dl0 + 4)
+Speed 30 ft., Climb 30 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 14 +2
++2
+INT 2 -4 -4
+DEX 16 +3
++3
+CON 12 +l
++l
+Wis 11
++0 +0
+CHA 4 -3 -3
+Skills Perception +4, Stealth +7
+Senses Darkvision 60 ft., Passive Perception 14
+Languages None
+CR l (XP 200; PB +2)
+TRAITS
+Spider Climb. The spider can climb difficult surfaces,
+including along ceilings, without needing to make an
+ability check.
+Web Walker. The spider ignores movement restrictions
+caused by webs, and it knows the location of any other
+creature in contact with the same web.
+ACTION S
+Bite. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (ld8 + 3)
+Piercing damage plus 7 (2d6) Poison damage.
+Web (Recharge 5-6). Dexterity Saving Throw: DC 13,
+one c,,~;iture the spider can see within 60 feet. Failure:
+Tht 1 .1rget has the Restrained condition until the web is
+destr• 1cd (AC 10; HP 5; Vulnerability to Fire damage;
+lmrn .. n:iy to Poison and Psychic damage).
+GIANT WEASEL
+Medium Beast, Unaligned
+AC 13
+Initiative +3 (13)
+HP 9 (2d8)
+Speed 40 ft., Climb 30 ft.
+MOD SAVE
+Sn 11 +0 +0
+INT 4 -3 -3
+~00 SAVE
+DEX 17 +3
++3
+Wis 12 +l
++l
+MOO SAVE
+CON 10 +0 +0
+CHA 5 -3 -3
+Skills Acrobatics +S, Perception +3, Stealth +S
+Senses Darkvision 60 ft., Passive Perception 13
+Languages None
+CR 1/8 (XP 25; PB +2)
+ACTIONS
+Bite. Melee Attack Roll: +S, reach 5 ft. Hit: S (ld4 + 3)
+Piercing damage.
+GOAT
+Medium Beast, Unaligned
+AC 10
+Initiative +0 (10)
+HP 4 (ld8)
+Speed 40 ft., Climb 30 ft.
+MOD SAVE
+MOD SAVE
+STR 11 +0 +2
+DEX 10 +0 +0
+INT 2 -4 -4
+Wis 10 +0 +0
+Skills Perception +2
+MOD SAVE
+CON 11 +0 +0
+CHA 5 -3 -3
+Senses Darkvision 60 ft., Passive Perception 12
+Languages None
+CR O (XP 10; PB +2)
+ACTIONS
+Ram. Melee Attack Roll: +2, reach S ft. Hit: l Bludgeoning damage, or the goat deals 2 (ld4) Bludgeoning
+damage if it moved at least 20 feet straight toward the
+target immediately before the hit.
+APPENDIX B I CREATURE STAT BLOCKS
+. 351

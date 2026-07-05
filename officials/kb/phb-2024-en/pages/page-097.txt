@@ -1,0 +1,111 @@
+# Player's Handbook 2024 (EN) — PDF-страница 97/387
+
+Fighter, your list of prepared spells can include five
+Wizard spells of levels 1 and 2 in any combination.
+Changing Your Prepared Spells. Whenever you
+gain a Fighter level, you can replace one spell on
+your list with another Wizard spell for which you
+have spell slots.
+Spellcasting Ability. Intelligence is your spellcasting ability for your Wizard spells.
+Spellcasting Focus. You can use an Arcane Focus
+as a Spellcasting Focus for your Wizard spells.
+LEVEL 3: WAR BOND
+You learn a ritual that creates a magical bond between yourself and one weapon. You perform the
+ritual over the course of 1 hour, which can be done
+during a Short Rest. The weapon must be within
+your reach throughout the ritual, at the conclusion
+of which you touch the weapon and forge the bond.
+The bond fails if another Fighter is bonded to the
+weapon or if the weapon is a magic item to which
+someone else is attuned.
+Once you have bonded a weapon to yourself, you
+can't be disarmed of that weapon unless you have
+the Incapacitated condition. If it is on the same
+plane of existence, you can summon that weapon as
+a Bonus Action, causing it to teleport instantly to
+your hand.
+You can have up to two bonded weapons, but you
+can summon only one at a time with a Bonus Action. If you attempt to bond with a third weapon,
+you must break the bond with one of the other two.
+LEVEL 7: WAR MAGIC
+When you take the Attack action on your turn, you
+can replace one of the attacks with a casting of one
+of your Wizard cantrips that has a casting time of
+an action.
+LEVEL 10: ELDRITCH STRIKE
+You learn how to make your weapon strikes undercut a creature's ability to withstand your spells.
+When you hit a creature with an attack using a
+weapon, that creature has Disadvantage on the next
+saving throw it makes against a spell you cast before the end of your next turn.
+LEVEL 15: ARCANE CHARGE
+When you use your Action Surge, you can teleport up to 30 feet to an unoccupied space you can
+see. You can teleport before or after the additional
+action.
+L EVEL ]8: I MPROVED WAR MAGIC
+When you take the Attack action on your turn, you
+can replace two of the attacks with a casting of one
+of your level 1 or level 2 Wizard spells that has a
+casting time of an action.
+98
+r; H APTE R 3 I CHARACTER CLASSES
+PSI WARRIOR
+Augment Physical Might with Psionic Power
+Psi Warriors awaken the power of their minds to
+augment their physical might. They harness this
+psionic power to infuse their weapon strikes, lash
+out with telekinetic energy, and create barriers of
+mental force.
+LEVEL 3: PSIONIC POWER
+You harbor a wellspring of psionic energy within
+yourself. It is represented by your Psionic Energy
+Dice, which fuel powers you have from this subclass. The Psi Warrior Energy Dice table shows the
+die size and number of these dice you have when
+you reach certain Fighter levels.
+PSI WARRIOR ENERGY DICE
+Fighter Level
+Die Size
+Number
+3
+D6
+4
+5
+D8
+6
+9
+D8
+8
+11
+D10
+8
+13
+D10
+10
+17
+D12
+12
+Any features in this subclass that use a Psionic Energy Die use only the dice from this subclass. Some
+of your powers expend the Psionic Energy Die, as
+specified in a power's description, and you can't use
+a power if it requires you to use a die when all your
+Psionic Energy Dice are expended.
+You regain one of your expended Psionic Energy
+Dice when you finish a Short Rest, and you regain
+all of them when you finish a Long Rest.
+Protective Field. When you or another creature
+you can see within 30 feet of you takes damage, you
+can take a Reaction to expend one Psionic Energy
+Die, roll the die, and reduce the damage taken by
+the number rolled plus your Intelligence modifier
+(minimum reduction of 1), as you create a momentary shield of telekinetic force.
+Psionic Strike. You can propel your weapons with
+psionic force. Once on each of your turns, immediately after you hit a target within 30 feet of yourself
+with an attack and deal damage to it with a weapon,
+you can expend one Psionic Energy Die, rolling it
+and dealing Force damage to the target equal to the
+number rolled plus your Intelligence modifier.
+Telekinetic Movement. You can move an object
+or a creature with your mind. As a Magic action,
+choose one target you can see within 30 feet of
+yourself; the target must be a loose obj':'ct that is
+Large or smaller or one willing creature other than
+you. You transport the target up to 30 foet to an

@@ -32,7 +32,10 @@ export function normalizeTtgClubUrl(url: string): string {
 
 function resolveProxyPath(url: string): string {
   const normalized = normalizeTtgClubUrl(url);
-  return `/proxy/ttg-club-import?url=${encodeURIComponent(normalized)}`;
+  const { pathname, search } = new URL(normalized);
+  // Путь-контракт (не ?url=): один обработчик и в dev (vite middleware), и в проде
+  // (nginx proxy_pass на new.ttg.club). Так импорт работает и локально, и после выкатки.
+  return `/proxy/ttg-club-import${pathname}${search}`;
 }
 
 export async function fetchTtgClubBestiaryHtml(url: string): Promise<string> {

@@ -1,0 +1,184 @@
+# Player's Handbook 2024 (EN) — PDF-страница 83/387
+
+LEVEL 5 DRUID SPELLS
+Spell
+School
+Special
+Spell
+School
+Special
+Earthquake
+Transmutation
+C
+Antilife Shell
+Abjuration
+C
+Incendiary Cloud
+Conjuration
+C
+Awaken
+Transmutation
+M
+Sunburst
+Evocation
+Commune with Nature
+Divination
+R
+Tsunami
+Conjuration
+C
+Cone of Cold
+Evocation
+Conjure Elemental
+Conjuration
+C
+LEVEL 9 DRUID SPELLS
+Contagion
+Necromancy
+Spell
+School
+Special
+Geas
+Enchantment
+Foresight
+Divination
+Greater Restoration
+Abjuration
+M
+Shapechange
+Transmutation
+C, M
+Insect Plague
+Conjuration
+C
+Storm of Vengeance
+Conjuration
+C
+Mass Cure Wounds
+Abjuration
+True Resurrection
+Necromancy
+M
+Planar Binding
+Abjuration
+M
+Reincarnate
+Necromancy
+M
+DRUID SUBCLASSES
+Scrying
+Divination
+C,M
+A Druid subclass is a specialization that grants you
+Tree Stride
+Conjuration
+C
+features at certain Druid levels, as specified in the
+subclass. Druids form loose associations, which they
+Wall of Stone
+Evocation
+C
+call circles. This section presents the Circle of the
+Land, Circle of the Moon, Circle of the Sea, and Cir-
+LEVEL 6 DRUID SPELLS
+cle of the Stars subclasses.
+Spell
+School
+Special
+CIRCLE OF THE LAND
+Conjure Fey
+Conjuration
+C
+Celebrate Connection to the Natural World
+Find the Path
+Divination
+C, M
+Flesh to Stone
+Transmutation
+C
+The Circle of the Land comprises mystics and sages
+who safeguard ancient knowledge and rites. These
+Heal
+Abjuration
+Druids meet within sacred circles of trees or stand-
+Heroes' Feast
+Conjuration
+M
+ing stones to whisper primal secrets in Druidic. The
+Move Earth
+Transmutation
+C
+circle's wisest members preside as the chief priests
+of their communities.
+Sunbeam
+Evocation
+C
+Transport via Plants
+Conjuration
+LEVEL 3: CIRCLE OF THE LAND SPELLS
+Wall of Thorns
+Conjuration
+C
+Whenever you finish a Long Rest, choose one type
+Wind Walk
+Transmutation
+of land: arid, polar, temperate, or tropical. Consult
+the table below that corresponds to the chosen type;
+LEVEL 7 DRUID SPELLS
+you have the spells listed for your Druid level and
+lower prepared.
+Spell
+School
+Special
+Fire Storm
+Evocation
+ARID LAND
+Mirage Arcane
+Illusion
+Druid Level
+Circle Spells
+Plane Shift
+Conjuration
+M
+3
+Blur, Burning Hands, Fire Bolt
+Regenerate
+Transmutation
+5
+Fireball
+Reverse Gravity
+Transmutation
+C
+7
+Blight
+Symbol
+Abjuration
+M
+9
+Wall of Stone
+LEVEL 8 DRUID SPELLS
+POLAR LAND
+Spell
+School
+Special
+Druid Level
+Circle Spells
+Animal Shapes
+Transmutation
+3
+Fog Cloud, Hold Person, Ray of Frost
+Antipathy/Sympathy
+Enchantment
+5
+Sleet Storm
+Befuddlement
+Enchantment
+7
+Ice Storm
+Control Weather
+Transmutation
+C
+9
+Cone of Cold
+84
+CH APTEP. 3 I CHARACTER CLASSES

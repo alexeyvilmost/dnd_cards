@@ -1,0 +1,75 @@
+# Player's Handbook 2024 (EN) — PDF-страница 210/387
+
+BOON O F ) RRES I STinLE OFFENSE
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Scor·e Increase. Increase your Strength or
+Dexterity score by 1, to a maximum of 30.
+Overcome Defenses. The Bludgeoning, Piercing,
+and Slashing damage you deal always ignores
+Resistance.
+Overwhelming Strike. When you roll a 20 on the
+d20 for an attack roll, you can deal extra damage
+to the target equal to the ability score increased by
+this feat. The extra damage's type is the same as the
+attack's type.
+BOON O F R EC OVERY
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Last Stand. When you would be reduced to 0
+Hit Points, you can drop to 1 Hit Point instead and
+regain a number of Hit Points equal to half your
+Hit Point maximum. Once you use this benefit, you
+can't use it again until you finish a Long Rest.
+Recover Vitality. You have a pool of ten dlOs. As a
+Bonus Action, you can expend dice from the pool,
+roll those dice, and regain a number of Hit Points
+equal to the roll's total. You regain all the expended
+dice when you finish a Long Rest.
+B OO N O F S KILL
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+All-Around Adept. You gain proficiency in all
+skills.
+Expertise. Choose one skill in which you lack Expertise. You gain Expertise in that skill.
+BOO N O F S P EED
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Escape At·tist. As a Bonus Action, you can take
+the Disengage c1ction, which also ends the Grappled
+condition on you.
+Quickness. Your Speed increases by 30 feet.
+BOON OF SPELL RECALL
+Epic Boon Feat (Prerequisite: Level 19+, Spellcasting
+Feature)
+You gain the following benefits.
+Ability Score Increase. Increase your Intelligence,
+Wisdom, or Charisma score by 1, to a maximum of
+30.
+Free Casting. Whenever you cast a spell with a
+level 1-4 spell slot, roll ld4. If the number you roll is
+the same as the slot's level, the slot isn't expended.
+BOON OF THE NIGHT SPIRIT
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Merge with Shadows. While within Dim Light or
+Darkness, you can give yourself the Invisible condition as a Bonus Action. The condition ends on you
+immediately after you take an action, a Bonus Action, or a Reaction.
+Shadowy Form. While within Dim Light or Darkness, you have Resistance to all damage except Psychic and Radiant.
+BOON OF TRUESIGHT
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+'Iruesight. You have Truesight with a range of 60
+feet.
+C H A PTE R 5 I FEATS
+2ll

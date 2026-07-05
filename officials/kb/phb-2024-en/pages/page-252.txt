@@ -1,0 +1,43 @@
+# Player's Handbook 2024 (EN) — PDF-страница 252/387
+
+For the duration, you can take a Bonus Action to
+designate a direction that is horizontal to you. Each
+Charmed target must use as much of its movement
+as possible to move in that direction on its next
+turn, taking the safest route. After moving in this
+way, a target repeats the save, ending the spell on
+itself on a success.
+CONE OF COLD
+Level 5 Evocation (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a small crystal or glass cone)
+Duration: Instantaneous
+You unleash a blast of cold air. Each creature in a
+6O-foot Cone originating from you makes a Constitution saving throw, taking 8d8 Cold damage on a
+failed save or half as much damage on a successful
+one. A creature killed by this spell becomes a frozen
+statue until it thaws.
+Using a High.er-Level Spell Slot. The damage increases by i<l8 for each spell slot level above 5.
+µ-
+CONFUSION
+Level 4 Enchantment (Bard, Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 90 feet
+Components: V, S, M (three nut shells)
+Duration: Concentration, up to 1 minute
+Each creature in a 1O-foot-radius Sphere centered
+on a point you choose within range must succeed
+on a Wisdom saving throw, or that target can't take
+Bonus Actions or Reactions and must roll ldlO at
+the start of each of its turns to determine its behavior for that turn, consulting the table below.
+ldl0 Behavior for the Turn
+The target doesn't take an action, and it uses
+all its movement to move. Roll ld4 for the direction: 1, north; 2, east; 3, south; or 4, west.
+2-6 The target doesn't move or take actions.
+7-8 The target doesn't move, and it takes the Attack action to make one melee attack against
+a random creature within reach. If none are
+within reach, the target takes no action.
+9-10 The target chooses its behavior.
+CHAPTER 7 I SPELLS
+25

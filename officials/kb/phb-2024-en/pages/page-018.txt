@@ -1,0 +1,70 @@
+# Player's Handbook 2024 (EN) — PDF-страница 18/387
+
+EXPLORl'::..TION
+Exploration involves delving into places that are
+dangerous and full of mystery. The rules in this
+section detail some of the ways adventurers interact
+with the environment in such places.
+ADVENTURING EQUIPMENT
+"--- ---------
+As adventurers explore, their equipment can help
+them in many ways. For example, they can reach
+out-of-the-way places with a Ladder, perceive things
+they wouldn't otherwise notice with a Torch or
+another light source, bypass locked doors and containers with Thieves' Tools, and create obstacles for
+pursuers with Caltrops.
+See chapter 6 for rules on many items that are
+useful on adventures. The items in that chapter's
+"Tools" and "Adventuring Gear" sections are especially useful. The weapons in that chapter can
+also be used for more than battle; you could use a
+Quarterstaff, for example, to push a sinister-looking
+button that you're reluctant to touch.
+VISION AND LIGHT
+Some adventuring tasks-such as noticing danger,
+hitting an enemy, and targeting certain spells-are
+affected by sight, so effects that obscure vision can
+hinder you, as explained below.
+OBSCUR ED AREAS
+An area might be Lightly or Heavily Obscured. In
+a Lightly Obscured area-such as an area with Dim
+Light, patchy fog, or moderate foliage-you have
+Disadvantage on Wisdom (Perception) checks that
+rely on sight.
+A Heavily Obscured area-such as an area with
+Darkness, heavy fog, or dense foliage-is opaque.
+You have the Blinded condition (see the rules glossary) when trying to see something there.
+LIGHT
+The presence or absence of light determines the category of illumination in an area, as defined below.
+Bright Light. Bright Light lets most creatures see
+normally. Even gloomy days provide Bright Light,
+as do torches, lanterns, fires, and other sources of
+illumination within a specific radius.
+Dim Light. Dim Light, also called shadows, creates
+a Lightly Obscured area. An area of Dim Light is
+usually a boundary between Bright Light and surrounding Darkness. The soft light of twilight and
+dawn also counts as Dim Light. A full moon might
+bathe the land in Dim Light.
+Darkness. Darkness creates a Heavily Obscured
+area. Characters face Darkness outdoors at night
+{even most moonlit nights), within the confines of
+an unlit dungeon, or in an area of magical Darkness.
+SPECIAL SENSES
+Some creatures have special senses that help them
+perceive things in certain situations. The rules glossary defines the following special senses:
+Blindsight
+Darkvision
+HIDING
+Tremorsense
+Truesight
+Adventurers and monsters often hide, whether to
+spy on one another, sneak past a guardian, or set
+an ambush. The Dungeon Master decides when circumstances are appropriate for hiding. When you
+try to hide, you take the Hide action.
+INTERACTING WITH OBJECTS
+Interacting with objects is often simple to resolve.
+The player tells the OM that their character is doing something, such as moving a lever or opening a
+door, and the OM describes what happens. Sometimes, however, rules govern what you can do with
+an object, as detailed in the following sections.
+n m •"" -
+• &-- •------ - --- -
+~

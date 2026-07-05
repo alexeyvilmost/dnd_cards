@@ -1,0 +1,78 @@
+# Player's Handbook 2024 (EN) — PDF-страница 317/387
+
+SLOW
+Level J Transmutation (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (a drop of molasses)
+Duration: Concentration, up to l minute
+You alter time around up to six creatures of your
+choice in a 40-foot Cube within range. Each target
+must succeed on a Wisdom saving throw or be affected by this spell for the duration.
+An affected target's Speed is halved, it takes a -2
+penalty to AC and Dexterity saving throws, and it
+can't take Reactions. On its turns, it can take either
+an action or a Bonus Action, not both, and it can
+make only one attack if it takes the Attack action.
+If it casts a spell with a Somatic component, there is
+a 25 percent chance the spell fails as a result of the
+target making the spell's gestures too slowly.
+An affected target repeats the save at the end
+of each of its turns, ending the spell on itself on a
+success.
+SORCEROUS BURST
+Cantrip Evocation (Sorcerer)
+Casting Time: Action
+Range: 120 feet
+Component: V, S
+Duration: Instantaneous
+You cast sorcerous energy at one creature or object
+within range. Make a ranged attack roll against the
+target. On a hit, the target takes ld8 damage of a
+type you choose: Acid, Cold, Fire, Lightning, Poison,
+Psychic, or Thunder.
+If you roll an 8 on a d8 for this spell, you can roll
+another d8, and add it to the damage. When you
+cast this spell, the maximum number of these d8s
+you can add to the spell's damage equals your spellcasting ability modifier.
+Cantrip Upgrade. The damage increases by ld8
+when you reach levels S (2d8), 11 (3d8), and 17 (4d8).
+--- -- -- ----
+S PARE THE D YING
+Necromancy Cantrip (Cleric, Druid)
+Casting Time: Action
+Range: 15 feet
+Components: V, S
+Duration: Instantaneous
+Choose a creature within range that has O Hit
+Points and isn't dead. The creature becomes Stable.
+Cantrip Upgrade. The range doubles when you
+reach levels 5 (30 feet), 11 (60 feet), and 17 (120 feet).
+A HUM/IN DRUID USES S PE/11(
+WITH 4NIMI\LS TO C.H/\T \VITH
+HIS BEST BEIIR FRIEND.
+SPEAK WITH ANIMALS
+Level 1 Divination (Bard, Druid, Ranger, Warlock)
+Casting Time: Action or Ritual
+Range: Self
+Components: V, S
+Duration: 10 minutes
+For the duration, you can comprehend and verbally
+communicate with Beasts, and you can use any of
+the Influence action's skill options with them.
+Most Beasts have little to say about topics that
+don't pertain to survival or companionship, but at
+minimum, a Beast can give you information about
+nearby locations and monsters, including whatever
+it has perceived within the past day.
+SPEAK WITH D EAD
+Level 3 Necromancy (Bard, Cleric, Wizard)
+Casting Time: Action
+Range: l O feet
+Components: V, S, M (burning incense)
+Duration: 10 minutes
+You grant the semblance of life to a corpse of your
+choice within range, allowing it to answer questions you pose. The corpse must ,,a re a mouth, and
+this spell fails if the deceased cte ;:, :--e was Undead
+when it died. The spell also f,iiL ;f 1 n, corpse was
+the target of this spell within rh~ 1 t 10 days.

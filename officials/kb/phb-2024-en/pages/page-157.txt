@@ -1,0 +1,214 @@
+# Player's Handbook 2024 (EN) — PDF-страница 157/387
+
+Spell
+School
+Special
+Spell
+School
+Special
+Prestidigitation
+Transmutation
+Gaseous Form
+Transmutation
+C
+Thunderclap
+Evocation
+Hunger of Hadar
+Conjuration
+C
+Toll the Dead
+Necromancy
+Hypnotic Pattern
+Illusion
+C
+True Strike
+Divination
+Magic Circle
+Abjuration
+M
+Major Image
+Illusion
+C
+LEVEL 1 WARLOCK SPELLS
+Remove Curse
+Abjuration
+Spell
+School
+Special
+Summon Fey
+Conjuration
+C, M
+Armor of Agathys
+Abjuration
+Summon Undead
+Necromancy
+C, M
+Arms of Hadar
+Conjuration
+Tongues
+Divination
+Bane
+Enchantment
+C
+Vampiric Touch
+Necromancy
+C
+Charm Person
+Enchantment
+Comprehend Languages
+Divination
+R
+LEVEL 4 WARLOCK SPELLS
+Detect Magic
+Divination
+C,R
+Spell
+School
+Special
+Expeditious Retreat
+Transmutation
+C
+Banishment
+Abjuration
+C
+Hellish Rebuke
+Evocation
+Blight
+Necromancy
+Hex
+Enchantment
+C
+Charm Monster
+Enchantment
+Illusory Script
+Illusion
+R, M
+Dimension Door
+Conjuration
+Protection from Evil and
+Abjuration
+C,M
+Hallucinatory Terrain
+Illusion
+Good
+Summon Aberration
+Conjuration
+C, M
+Speak with Animals
+Divination
+R
+Tasha's Hideous Laughter
+Enchantment
+C
+LEVEL 5 WARLOCK SPELLS
+Unseen Servant
+Conjuration
+R
+Spell
+School
+Special
+Witch Bolt
+Evocation
+C
+Contact Other Plane
+Divination
+R
+Dream
+Illusion
+LEVEL 2 WARLOCK SPELLS
+Hold Monster
+Enchantment
+C
+Spell
+School
+Special
+Jallarzi's Storm of Radiance
+Evocation
+C
+Cloud of Daggers
+Conjuration
+C
+Mislead
+Illusion
+C
+Crown of Madness
+Enchantment
+C
+Planar Binding
+Abjuration
+M
+Darkness
+Evocation
+C
+Scrying
+Divination
+C,M
+Enthrall
+Enchantment
+C
+Synaptic Static
+Enchantment
+Hold Person
+Enchantment
+C
+Teleportation Circle
+Conjuration
+M
+Invisibility
+Illusion
+C
+Mind Spike
+Divination
+C
+LEVEL 6 WARLOCK SPELLS
+Mirror Image
+Illusion
+Spell
+School
+Special
+Misty Step
+Conjuration
+Arcane Gate
+Conjuration
+C
+Ray of Enfeeblement
+Necromancy
+C
+Circle of Death
+Necromancy
+M
+Spider Climb
+Transmutation
+C
+Create Undead
+Necromancy
+M
+Suggestion
+Enchantment
+C
+Eyebite
+Necromancy
+C
+Summon Fiend
+Conjuration
+C, M
+LEVEL 3 WARLOCK SPELLS
+Tasha's Bubbling Cauldron
+Conjuration
+M
+Spell
+School
+Special
+True Seeing
+Divin~tion
+M
+Counterspe/1
+Abjuration
+Dispel Magic
+Abjuration
+Fear
+Illusion
+C
+Fly
+Transmutation
+C

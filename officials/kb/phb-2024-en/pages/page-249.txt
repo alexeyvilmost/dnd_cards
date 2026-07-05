@@ -1,0 +1,44 @@
+# Player's Handbook 2024 (EN) — PDF-страница 249/387
+
+roll against the new target, and make a new damage
+roll. The orb can't leap again unless you cast the
+spell with a level 2+ spell slot.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 1. The
+orb can leap a maximum number of times equal to
+the level of the slot expended, and a creature can be
+targeted only once by each casting of this spell.
+CIRCLE OF DEATH
+Level 6 Necromancy (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 150 feet
+Components: V, S, M (the powder of a crushed black
+pearl worth 500+ GP)
+Duration: Instantaneous
+Negative energy ripples out in a 60-foot-radius
+Sphere from a point you choose within range. Each
+creature in that area makes a Constitution saving
+throw, taking 8d8 Necrotic damage on a failed save
+or half as much damage on a successful one.
+Using a Higher-Level Spell Slot. The damage increases by 2d8 for each spell slot level above 6.
+250
+CHAPTER 7 I SPELLS
+CIRCLE OF POWER
+Level 5 Abjuration (Cleric, Paladin, Wizard)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Concentration, up to 10 minutes
+An aura radiates from you in a 30-foot Emanation
+for the duration. While in the aura, you and your allies have Advantage on saving throws against spells
+and other magical effects. When an affected creature makes a saving throw against a spell or magical
+effect that allows a save to take only half damage, it
+takes no damage if it succeeds on the save.
+CLAIRVOYANCE
+Level J Divination (Bard, Cleric, Sorcerer, Wizard)
+Casting Time: 10 minutes
+Range: l mile
+Components: V, S, M (a focus v:-::·'.h 100+ GP, either a
+jeweled horn for hearing or ,. l.f. ~ eye for seeing)
+Duration: Concentration, up t 1;:, .ninutes
+You create an Invisible scn:;u,• , ,. :-:i r1 range in a
+location familiar to you (a p~· _,. ·; .:: have visited

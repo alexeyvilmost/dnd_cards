@@ -1,0 +1,211 @@
+# Player's Handbook 2024 (EN) — PDF-страница 61/387
+
+BARD SPELL LIST
+Spell
+School
+::;pecial
+This section presents the Bard spell list. The s~ells
+Tasha's Hideous Laughter
+Enchantment
+C
+are organized by spell level and then alphabetized,
+Thunderwave
+Evocat ion
+and each spell's school of magic is listed. In the Spe-
+Unseen Servant
+Conjuration
+R
+cial column, C means the spell requires Concen_tration, R means it's a Ritual, and M means it requires a
+LEV EL 2 BA RD S PELLS
+specific Material component.
+Spell
+School
+Special
+C AN TR I PS (LEVEL O BARD SPELLS}
+Aid
+Abjuration
+Spell
+School
+Special
+Animal Messenger
+Enchantment
+R
+Blade Ward
+Abjuration
+C
+Blindness/Deafness
+Transmutation
+Dancing Lights
+Illusion
+C
+Calm Emotions
+Enchantment
+C
+Friends
+Enchantment
+C
+Cloud of Daggers
+Conjuration
+C
+Light
+Evocation
+Crown of Madness
+Enchantment
+C
+Mage Hand
+Conjuration
+Detect Thoughts
+Divi nat ion
+C
+Mending
+Transmutation
+Enhance Ability
+Transmutation
+C
+Message
+Transmutation
+Enlarge/Reduce
+Transmutation
+C
+Minor Illusion
+Illusion
+Enthrall
+Enchantment
+C
+Prestidigitation
+Transmutation
+Heat Metal
+Transmutation
+C
+Starry Wisp
+Evocation
+Hold Person
+Enchantment
+C
+Thunderclap
+Evocation
+Invisibility
+Il lusion
+C
+True Strike
+Divination
+Knock
+Transmutation
+Vicious Mockery
+Enchantment
+Lesser Restoration
+Abjuration
+LEVEL 1 BARD SPELLS
+Locate Animals or Plants
+Divination
+R
+Locate Object
+Divination
+C
+Spell
+School
+Special
+Magic Mouth
+Illusion
+R, M
+Animal Friendship
+Enchantment
+Mirror Image
+Illusion
+Bane
+Enchantment
+C
+Charm Person
+Enchantment
+Phantasmal Force
+Illusion
+C
+See Invisibility
+Divination
+Color Spray
+Illusion
+Shatter
+Evocation
+Command
+Enchantment
+Silence
+Illusion
+C, R
+Comprehend Languages
+Divination
+R
+Suggestion
+Enchantment
+C
+Cure Wounds
+Abjuration
+Zone of Truth
+Enchantment
+Detect Magic
+Divination
+C, R
+Disguise Self
+Illusion
+L EVEL 3 BARD SP EL LS
+Dissonant Whispers
+Enchantment
+Spell
+School
+Special
+Faerie Fire
+Evocation
+C
+Bestow Curse
+Necromancy
+C
+Feather Fall
+Transmutation
+Clairvoyance
+Divination
+C, M
+Healing Word
+Abjuration
+Dispel Magic
+Abjuration
+Heroism
+Enchantment
+C
+Fear
+Illusion
+C
+Identify
+Divination
+R, M
+Feign Death
+Necromancy
+R
+Illusory Script
+Illusion
+R, M
+Glyph of Warding
+Abjuration
+M
+Longstrider
+Transmutation
+Hypnotic Pattern
+Illusion
+C
+Silent Image
+Illusion
+C
+Leomund's Tiny Hut
+Evocation
+R
+Sleep
+Enchantment
+C
+Major Image
+Illusion
+C
+Speak with Animals
+Divination
+R
+Mass Healing Word
+Abjuration
+62
+CHAPTER 3 I CHARACTER CLASSES

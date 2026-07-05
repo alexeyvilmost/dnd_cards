@@ -1,0 +1,88 @@
+# Player's Handbook 2024 (EN) — PDF-страница 244/387
+
+BANE
+Level 1 Enchan tment (Bard, Cleric, Warlock)
+casting Time: Action
+Range: 30 feet
+components: V, S, M (a drop of blood)
+Duration: Concentration, up to l minute
+Up to three creatures of your choice that you can
+see within range must each make a Charisma saving
+throw. Whenever a target that fails this save makes
+an attack roll or a saving throw before the spell
+ends, the target must subtract ld4 from the attack
+roll or save.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 1.
+BANISHING SMITE
+Level 5 Conjuration (Paladin)
+Casting Time: Bonus Action, which you take immediately after hitting a creature with a Melee weapon or
+an Unarmed Strike
+Range: Self
+Component: V
+Duration: Concentration, up to l minute
+The target hit by the attack roll takes an extra SdlO
+Force damage from the attack. If the attack reduces
+the target to 50 Hit Points or fewer, the target must
+succeed on a Charisma saving throw or be transported to a harmless demiplane for the duration.
+While there, the target has the Incapacitated condition. When the spell ends, the target reappears in
+the space it left or in the nearest unoccupied space if
+that space is occupied.
+BANISHMENT
+Level 4 Abjuration (Cleric, Paladin, Sorcerer, Warlock,
+Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (a pentacle)
+Duration: Concentration, up to 1 minute
+One creature that you can see within range must
+succeed on a Charisma saving throw or be transported to a harmless demiplane for the duration.
+While there, the target has the Incapacitated condition. When the spell ends, the target reappears in
+the space it leA· or in the nearest unoccupied space if
+that space is occupied.
+If the target b a n Aberration, a Celestial, an Elemental, a Fey. or a Fiend, the target doesn't return
+if the spell lasts for 1 minute. The target is instead
+tra~sported to a random location on a plane (DM's
+cho1~e) associated with its creature type.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 4.
+BARKSKIN
+Level 2 Transmutation (Druid, Ranger)
+Casting Time: Bonus Action
+Range:Touch
+Component: V, S, M (a handful of bark)
+Duration: l hour
+You touch a willing creature. Until the spell ends,
+the target's skin assumes a bark-like appearance,
+and the target has an Armor Class of 17 if its AC is
+lower than that.
+BEACON OF HOPE
+Level 3 Abjuration (Cleric)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: Concentration, up to l minute
+Choose any number of creatures within range. For
+the duration, each target has Advantage on Wisdom saving throws and Death Saving Throws and
+regains the maximum number of Hit Points possible
+from any healing.
+BEAST SENSE
+Level 2 Divination (Druid, Ranger)
+Casting Time: Action or Ritual
+Range:Touch
+Components: S
+Duration: Concentration, up to 1 hour
+You touch a willing Beast. For the duration, you can
+perceive through the Beast's senses as well as your
+own. When perceiving through the Beast's senses,
+you benefit from any special senses it has.
+BEFUDDLEMENT
+Level 8 Enchantment (Bard, Druid, Warlock, Wizard)
+Casting Time: Action
+Range: l SO feet
+Components: V, S, M (a key ring with no keys)
+Duration: Instantaneous
+You blast the mind of a creature that you can see
+within range. The target makes an Intelligence saving throw.
+CHAPTER 7 I SPELLS
+245

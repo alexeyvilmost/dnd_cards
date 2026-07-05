@@ -1,0 +1,103 @@
+# Player's Handbook 2024 (EN) — PDF-страница 108/387
+
+, I
+Co HE PA LADIN TR AITS
+Primary Ability
+Strength and Charisma
+Hit Point Die
+D10 per Paladin level
+Saving Throw
+Proficiencies
+Skill Proficiencies
+Weapon Proficiencies
+Armor Training
+Starting Equipment
+Wisdom and Charisma
+Choose 2: Athletics, Insight,
+Intimidation, Medicine,
+Persuasion, or Religion
+Simple and Martial weapons
+Light, Medium, and Heavy
+armor and Shields
+Choose A or B: (A) Chain
+Mail, Shield, Longsword,
+6 Javelins, Holy Symbol,
+Priest's Pack, and 9 GP; or
+(B)lSOGP
+ALADINS ARE UNITED BY THEIR OATHS TO
+stand against the forces of annihilation and
+corruption. Whether sworn before a god's
+altar, in a sacred glade before nature spirits, or in a
+moment of desperation and grief with the dead as
+the only witnesses, a Paladin's oath is a powerful
+bond. It is a source of power that turns a devout
+warrior into a blessed champion.
+Paladins train to learn the skills of combat, mastering a variety of weapons and armor. Even so,
+their martial skills are secondary to the magical
+power they wield: power to heal the injured, smite
+their foes, and protect the helpless and those who
+fight at their side.
+Almost by definition, the life of a Paladin is an
+adventuring life, for every Paladin lives on the front
+lines of the cosmic struggle against annihilation.
+Fighters are rare enough among the ranks of a
+world's armies, but even fewer people can claim the
+calling of a Paladin. When they do receive the call,
+these blessed folk turn from their former occupations and take up arms and magic.
+BECOMING A PALADI N
+As A L EVEL I C HARACTER
+• Gain all the traits in the Core Paladin Traits table.
+• Gain the Paladin's level 1 features, which are listed
+in the Paladin Features table.
+As A H ULTICLASS C HARACTER
+• Gain the following traits from the Core Paladin
+Trails ,able: Hit Point Die, proficiency with Martial weapons, and training with Light and Medium
+armor and Shields.
+Gain the Paladin's level I features, which are listed
+in the Paladin Features table. See the multiclassing rules in chapter 2 to determine your available
+spell slots.
+PALADIN CLASS FEATURES
+As a Paladin, you gain the following class features
+when you reach the specified Paladin levels. These
+features are listed in the Paladin Features table.
+LEVEL l: LAY O N H A NDS
+Your blessed touch can heal wounds. You have a
+pool of healing power that replenishes when you
+finish a Long Rest. With that pool, you can restore
+a total number of Hit Points equal to five times your
+Paladin level.
+As a Bonus Action, you can touch a creature
+(which could be yourself) and draw power from the
+pool of healing to restore a number of Hit Points to
+that creature, up to the maximum amount remaining in the pool.
+You can also expend 5 Hit Points from the pool
+of healing power to remove the Poisoned condition
+from the creature; those points don't also restore
+Hit Points to the creature.
+LEVEL 1: SPELLCASTING
+You have learned to cast spells through prayer and
+meditation. See chapter 7 for the rules on spellcasting. The information below details how you use
+those rules with Paladin spells, which appear in the
+Paladin spell list later in the class's description.
+Spell Slots. The Paladin Features table shows how
+many spell slots you have to cast your level 1+ spells.
+You regain all expended slots when you finish a
+Long Rest.
+Prepared Spells of Level 1+. You prepare the list of
+level 1+ spells that are available for you to cast with
+this feature. To start, choose two level 1 Paladin
+spells. Heroism and Searing Smite are recommended.
+The number of spells on your list increases as
+you gain Paladin levels, as shown in the Prepared
+Spells column of the Paladin Features table. Whenever that number increases, choose additional
+Paladin spells until the number of spells on your
+list matches the number in the Paladin Features
+table. The chosen spells must be of a level for which
+you have spell slots. For example, if you're a level 5
+Paladin, your list of prepared spells can include six
+Paladin spells of level 1 or 2 in any combination.
+If another Paladin feature gives you spells that
+you always have prepared, those spells don't count
+against the number of spells you can prepare with
+this feature, but those spells otherwise count as
+Paladin spells for you.

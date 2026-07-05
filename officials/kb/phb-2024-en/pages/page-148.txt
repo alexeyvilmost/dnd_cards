@@ -1,0 +1,46 @@
+# Player's Handbook 2024 (EN) — PDF-страница 148/387
+
+LEVEL ii\: DRAGO N C OMPANION
+You can cast Summon Dragon without a Material
+component. You can also cast it once without a spell
+slot, and you regain the ability to cast it in this way
+when you finish a Long Rest.
+Whenever you start casting the spell, you can
+modify it so that it doesn't require Concentration. If
+you do so, the spell's duration becomes 1 minute for
+that casting.
+WILD MAGIC SORCERY
+Unleash Chaotic Magic
+Your innate magic stems from the forces of chaos
+that underlie the order of creation. You or an
+ancestor might have endured exposure to raw
+magic, perhaps through a planar portal leading
+to Limbo or the Elemental Planes. Perhaps you
+were blessed by a fey being or marked by a demon. Or your magic could be a fluke with no
+apparent cause. Whatever its source, this magic
+churns within you, waiting for any outlet.
+LEVEL 3: W ILD M AGIC SURGE
+Your spellcasting can unleash surges of untamed
+magic. Once per turn, you can roll ld20 immediately after you cast a Sorcerer spell with a spell slot.
+If you roll a 20, roll on the Wild Magic Surge table
+to create a magical effect.
+If the magical effect is a spell, it is too wild to be
+affected by your Meta magic.
+LEV EL 3: TIDES OF C H AOS
+You can manipulate chaos itself to give yourself
+Advantage on one D20 Test before you roll the
+d20. Once you do so, you must cast a Sorcerer
+spell with a spell slot or finish a Long Rest before you can use this feature again.
+If you do cast a Sorcerer spell with a spell
+slot before you finish a Long Rest, you automatically roll on the Wild Magic Surge table.
+LEVEL 6: B EN D LUCK
+You have the ability to twist fate using your
+wild magic. Immediately after another creature
+you can see rolls the d20 for a D20 Test, you can
+take a Reaction and spend 1 Sorcery Point to roll
+ld4 and apply the number rolled as a bonus or
+penalty (your choice) to the d20 roll.
+LEVEL 14 : C ONTROLLED C HAOS
+You gain a modicum of control over the surges of
+your wild magic. Whenever you roll on the Wild
+Magic Surge table, you can roll twice and use either number.

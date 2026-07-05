@@ -1,0 +1,89 @@
+# Player's Handbook 2024 (EN) — PDF-страница 12/387
+
+IF y ou H /\v E Ao v/\ NT/\ GE, u s e TH E 18 .
+IF Y O U H/\VE 01 S/\ OVANT/\GE , u s e THE 3.
+INTERACTIONS WITH REROLLS
+When you have Advantage or Disadvantage and
+something in the game lets you reroll or replace
+the d20, you can reroll or replace only one die, not
+both. You choose which one.
+For example, if you have Heroic Inspiration (see
+the sidebar) and roll a 3 and an 18 on an ability
+check that has Advantage or Disadvantage, you
+could expend your Heroic Inspiration to reroll one
+of those dice, not both of them.
+HEROIC INSPIRATION
+Sometimes the DM or a rule gives you Heroic
+Inspiration. If you have Heroic Inspiration, you
+can expend it to reroll any die immediately after
+rolling it, and you must use the new roll.
+Only One at a Time. You can never have more
+than one instance of Heroic Inspiration. If some•
+thing gives you Heroic Inspiration and you already have it, you can give it to a player character
+in your group who lacks it.
+Gaining Heroic Inspiration. Your DM can give
+you Heroic Inspiration for a variety of reasons.
+Typically, DMs award it when you do something
+particularly heroic, in character, or entertaining.
+It's a reward for making the game more fun for
+everyone playing.
+Other rules might allow your character to gain
+Heroic Inspiration independent of the DM's decision. For example, Human characters start each
+day with Heroic Inspiration.
+PROFICIENCY
+Characters and monsters are good at various things.
+Some are skilled with many weapons, while others
+can use only a few. Some are better at understanding people's motives, and others are better at unlocking the secrets of the multiverse. All creatures
+have a Proficiency Bonus, which reflects the impact
+that training has on the creature's capabilities. A
+character's Proficiency Bonus increases as the character gains levels (described in chapter 2). Amonster's Proficiency Bonus is based on its Challenge
+Rating (see the rules glossary). The Proficiency Bonus table shows how the bonus is determined.
+This bonus is applied to a D20 Test when the creature has proficiency in a skill, in a saving throw, or
+with an item that the creature uses to make the D20
+Test. The bonus is also used for spell attacks and for
+calculating the DC of saving throws for spells.
+PROFICIENCY BONUS
+Level or CR
+Bonus
+Level or CR
+Bonus
+Up to 4
++2
+17-20
++6
+5-8
++3
+21-24
++7
+9-12
++4
+25-28
++8
+13-16
++5
+29-30
++9
+THE BONUS DOESN'T STACK
+Your Proficiency Bonus can't be added to a die roll
+or another number more than once. For example, if
+a rule allows you to make a Charisma (Deception or
+Persuasion) check, you add your Proficiency Bonus
+if you're proficient in either skill, but you don't add
+it twice if you're proficient in both skills.
+Occasionally, a Proficiency Bonus might be multiplied or divided (doubled or halved, for example) before being added. For example, the Expertise feature
+(see the rules glossary) doubles the Proficiency Bonus for certain ability checks. Whenever the bonus
+is used, it can be multiplied only once and divided
+only once.
+SKILL PROFICIENCIES
+Most ability checks involve using a skill, which represents a category of things creatures try to do with
+an ability check. The descriptions of the actions
+you take (see "Actions" later in this chapter) specify
+which skill applies if you make an ability check for
+that action, and many other rules note when a skill
+is relevant. The OM has the ultimate say on whether
+a skill is relevant in a situation.
+If a creature is proficient in a skill, the creature
+applies its Proficiency Bonus to ability checks involving that skill. Without proficiency in a skill,
+a creature can still make ability checks involving
+CH APTE R I l PL AYI NG TH E GAME
+13

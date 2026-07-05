@@ -1,0 +1,104 @@
+# Player's Handbook 2024 (EN) — PDF-страница 235/387
+
+Magic Items. Spell Scrolls and some other magic
+items contain spells that can be cast without a
+spell slot. The description of such an item specifies
+how many times a spell can be cast from it.
+USING A HIGHER-LEVEL SPELL SLOT
+When a spelkaster casts a spell using a slot that is
+of a higher level than the spell, the spell takes on
+the higher level for that casting. For instance, if a
+Wizard casts Magic Missile using a level 2 slot, that
+Magic Missile is level 2. Effectively, the spell expands
+to fill the slot it is put into.
+Some spells, such as Magic Missile and Cure
+Wounds, have more powerful effects when cast at a
+higher level, as detailed in a spell's description.
+S CHO OL OF MAGIC
+Each spell belongs to a school of magic. The schools
+are listed in the Schools of Magic table. These categories help describe spells but have no rules of their
+own, although some other rules refer to them.
+SCHOOLS OF MAGIC
+School
+Typical Effects
+Abjuration
+Prevents or reverses harmful effects
+Conjuration
+Transports creatures or objects
+Divination
+Reveals information
+Enchantment
+Influences minds
+Evocation
+Channels energy to create effects
+that are often destructive
+Illusion
+Deceives the mind or senses
+Necromancy
+Manipulates life and death
+Transmutation Transforms creatures or objects
+CLASS SPELL LISTS
+If a spell is on a class's spell list, the class's name
+appears in parentheses after the spell's school of
+magic. Some features add a spell to a character's
+spell list even if the character isn't a member of a
+class in the parentheses.
+CASTING TIME
+Most spells require the Magic action to cast, but
+some spells require a Bonus Action, a Reaction, or 1
+minute or more. Aspell's Casting Time entry specifies which of those is required.
+ONE SPELL WITH A SPELL SLOT PER TURN
+On a turn, you can expend only one spell slot to cast
+a spell. This rule means you can't, for example, cast
+a spell with a spell slot using the Magic action and
+another one using a Bonus Action on the same turn.
+236
+CH APTER 7 I SPELLS
+REACTION AND BONUS A CT ION ' J>.(, G ERS
+A spell that has a casting time of a Reaction is cast
+in response to a trigger that is defined in the spell's
+Casting Time entry. Some spells that have a casting
+time of a Bonus Action are also cast in response to a
+trigger defined in the spell.
+LONGER CASTING TIMES
+Certain spells-including a spell cast as a Ritualrequire more time to cast: minutes or even hours.
+While you cast a spell with a casting time of 1
+minute or more, you must take the Magic action
+on each of your turns, and you must maintain Concentration (see the rules glossary) while you do so.
+If your Concentration is broken, the spell fails, but
+you don't expend a spell slot. To cast the spell again,
+you must start over.
+R A NGE
+Aspell's range indicates how far from the spellcaster the spell's effect can originate, and the spell's
+description specifies which part of the effect is limited by the range.
+A range usually takes one of the following forms:
+Distance. The range is expressed in feet.
+Touch. The spell's effect originates on something
+the spellcaster must touch, as defined in the spell.
+Self. The spell is cast on the spellcaster or emanates
+from them, as specified in the spell.
+If a spell has movable effects, they aren't restricted
+by its range unless the spell's description says
+otherwise.
+COMPO NENTS
+Aspell's components are physical requirements the
+spellcaster must meet to cast the spell. Each spell's
+description indicates whether it requires Verbal
+(V), Somatic (S), or Material (M) components. If
+the spellcaster can't provide one or more of a spell's
+components, the spellcaster can't cast the spell.
+VERBAL (V)
+A Verbal component is the chanting of esoteric
+words that sound like nonsense to the uninitiated.
+The words must be uttered in a normal speaking
+voice. The words themselves aren't the source of the
+spell's power; rather, the particular combination of
+sounds, with specific pitch and resonance, sets the
+threads of magic in motion. Thus, a creature who is
+gagged or in an area of magical silence can't cast a
+spell with a Verbal component.
+SOMATIC (S)
+A Somatic component is a force ful gesticulation
+or an intricate set of gestures. A spcllcaster must
+use at least one of their hands !.( 1 :;~rfnrm these
+movements.

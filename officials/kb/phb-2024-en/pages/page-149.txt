@@ -1,0 +1,95 @@
+# Player's Handbook 2024 (EN) — PDF-страница 149/387
+
+LEVEL 18: TAMED SURGE
+ldlOO
+Effect
+Immediately after you cast a Sorcerer spell with a
+25-28 You are transported to the Astral Plan e until
+spell slot, you can create an effect of your choice
+from the Wild Magic Surge table instead of rolling
+the end of your next turn. You then return
+on that table. You can choose any effect in the table
+to the space you previously occupied or the
+except for the final row, and if the chosen effect innearest unoccupied space if that space is
+volves a roll, you must make it.
+occupied.
+Once you use this feature, you can't do so again
+29-32 The next time you cast a spell that deals
+until you finish a Long Rest.
+damage within the next minute, don't roll
+WILD MAGIC SURGE
+the spell's damage dice for the damage. Instead use the highest number possible for
+ldl00 Effect
+each damage die.
+01-04 Roll on this table at the start of each of your
+33- 36 You have Resistance to all damage for the
+turns for the next minute, ignoring this renext minute.
+suit on subsequent rolls.
+37-40 You turn into a potted plant until the start
+05-08 A creature that is Friendly toward you appears in a random unoccupied space within
+of your next turn. Wh ile you 're a plant, you
+60 feet of you. The creature is under the
+have the Incapacitated condition and have
+DM 's control and disappears l minute later.
+Vulnerability to all damage. If you drop to 0
+Roll ld4 to determine the creature: on a
+Hit Points, your pot breaks, and your form
+reverts.
+1, a Modron Duodrone appears; on a 2, a
+Flumph appears; on a 3, a Modron Mono-
+41-44 For the next minute, you can teleport up to
+drone appears; on a 4, a Unicorn appears.
+20 feet as a Bonus Action on each of your
+See the Monster Manual for the creature's
+turns.
+stat block.
+45-48 You and up to three creatures you choose
+09-12 For the next minute, you regain 5 Hit Points
+within 30 feet of you have the Invisible conat the start of each of your turns.
+dition for l m inute. This invisibility ends on
+13-16 Creatures have Disadvantage on saving
+a creature immediately after it makes an atthrows against the next spell you cast in the
+tack roll, deals damage, or casts a spell.
+next minute that involves a saving throw.
+49-52 A spectral shield hovers near you for the
+17-20 You are subjected to an effect that lasts for
+next minute, granting you a +2 bonus to AC
+l minute unless its description says otherand immunity to Magic Missile.
+wise. Roll ld8 to determine the effect: on a
+53-56 You can take one extra action on this turn.
+1, you're surrounded by faint, ethereal music
+57-60 You cast a random spell. If the spell noronly you and creatures within 5 feet of you
+mally requires Concentration, it doesn't
+can hear; on a 2, your size increases by one
+require Concentration in th is case; the
+size category; on a 3, you grow a long beard
+spell lasts for its full duration. Roll ldl0 to
+made of feathers that remains until you
+determine the spell: on a 1, Confusion; on
+sneeze, at which point the feathers explode
+a 2, Fireball; on a 3, Fog Cloud; on a 4, Fly
+from your face and vanish; on a 4, you must
+(cast on a random creature within 60 feet of
+shout when you speak; on a 5, illusory butyou), on a 5, Grease; on a 6, Levitate (cast
+terflies flutter in the air within 10 feet of you;
+on yourself); on a 7, Magic M issile (cast as a
+on a 6, an eye appears on your forehead,
+level 5 spell); on an 8, Mirror Image; on a 9,
+granting you Advantage on Wisdom (Per-
+Polymorph (cast on yourself), and if you fail
+ception) checks; on an 7, pink bubbles float
+the saving throw, you turn into a Goat (see
+out of your mouth whenever you speak; on
+appendix B); on a 10, See Invisibility.
+an 8, your skin turns a vibrant shade of blue
+61-64 For the next m inute, any flammable, nonfor 24 hours or until the effect is ended by a
+magical object you touch that isn't being
+Remove Curse spell.
+worn or carried by another creature bursts
+21-24 For the next minute, all your spells with a
+into flame, takes ld4 Fire damage, and is
+casting time of an action have a casting time
+burning.
+:,.
+of a Bonus Action.
+CHAPT ER 3 I CHARACTER CLASSES

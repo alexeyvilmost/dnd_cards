@@ -1,0 +1,91 @@
+# Player's Handbook 2024 (EN) — PDF-страница 209/387
+
+THROWN WEAPON FIGHTING
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When you hit with a ranged attack roll using a
+weapon that has the Thrown property, you gain a
++2 bonus to the damage roll.
+Two-WEAPON FIGHTING
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When you make an extra attack as a result of using
+a weapon that has the Light property, you can add
+your ability modifier to the damage of that attack if
+you aren't already adding it to the damage.
+----
+.--
+UNARMED FIGHTING
+Fighting Style Feat (Prerequisite: Fighting Style Feature)
+When you hit with your Unarmed Strike and deal
+damage, you can deal Bludgeoning damage equal
+to 1d6 plus your Strength modifier instead of the
+normal damage of an Unarmed Strike. If you aren't
+holding any weapons or a Shield when you make the
+attack roll, the d6 becomes a d8.
+At the start of each of your turns, you can deal
+ld4 Bludgeoning damage to one creature Grappled by you.
+EPIC BOON FEATS
+These feats are in the Epic Boon category.
+--- ---- -- -
+BOON OF COMBAT PROWESS
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+-
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Peerless Aim. When you miss with an attack roll,
+you can hit instead. Once you use this benefit, you
+can't use it again until the start of your next turn.
+--- - -- --
+--
+--.,----
+BOON OF DIMENSIONAL TRAVEL
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Blink Steps. Immediately after you take the Attack
+action or the Magic action, you can teleport up to
+30 feet to an unoccupied space you can see.
+2JO
+CB APTER 5 I FEATS
+BOON OF ENERGY RESIST A N C E
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one abil ity score of
+your choice by 1, to a maximum of 30.
+Energy Resistances. You gain Resistance to two
+of the following damage types of your choice: Acid
+Cold, Fire, Lightning, Necrotic, Poison, Psychic,
+'
+Radiant, or Thunder. Whenever you finish a Long
+Rest, you can change your choices.
+Energy Redirection. When you take damage of
+one of the types chosen for the Energy Resistances
+benefit, you can take a Reaction to direct damage
+of the same type toward another creature you can
+see within 60 feet of yourself that isn't behind Total
+Cover. If you do so, that creature must succeed on
+a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus) or take damage equal to 2d12 plus your Constitution modifier.
+'
+-·
+BOON OF FATE
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Improve Fate. When you or another creature
+within 60 feet of you succeeds on or fails a D20
+Test, you can roll 2d4 and apply the total rolled as a
+bonus or penalty to the d20 roll. Once you use this
+benefit, you can't use it again until you roll Initiative
+or finish a Short or Long Res~.
+BOON OF FORTITUDE
+Epic Boon Feat (Prerequisite: Level 19+)
+You gain the following benefits.
+Ability Score Increase. Increase one ability score of
+your choice by 1, to a maximum of 30.
+Fortified Health. Your Hit Point maximum increases by 40. In addition, whenever you regain Hit
+Points, you can regain additional Hit Points equal to
+your Constitution modifier. Once you've regained
+these additional Hit Points, you can't do so again
+until the start of your next turn.

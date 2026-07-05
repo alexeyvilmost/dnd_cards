@@ -1,0 +1,50 @@
+# Player's Handbook 2024 (EN) — PDF-страница 319/387
+
+•
+The force appears within range in a space of your
+choice, and you can immediately make one melee
+spell attack against one creature within 5 feet of the
+force. On a hit, the target takes Force damage equal
+to ld8 plus your spellcasting ability modifier.
+As a Bonus Action on your later turns, you can
+move the force up to 20 feet and repeat the attack
+against a creature within 5 feet of it.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for every slot level above 2.
+STAGGERING SM ITE
+Level 4 Enchantment (Paladin)
+Casting Time: Bonus Action, which you take immediately after hitting a creature with a Melee weapon or
+an Unarmed Strike
+Range: Self
+Component: V
+Duration: Instantaneous
+The target takes an extra 4d6 Psychic damage from
+the attack, and the target must succeed on a Wisdom saving throw or have the Stunned condition
+until the end of your next turn.
+Using a Higher-Level Spell Slot. The extra damage
+increases by ld6 for each spell slot level above 4.
+'2'.>
+C:H APTER 7 I SP.ELLS
+V
+STARRY WISP
+Evocation Cantrip (Bard, Druid)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+You launch a mote of light at one creature or object
+within range. Make a ranged spell attack against
+the target. On a hit, the target takes ld8 Radiant
+damage, and until the end of your next turn, it emits
+Dim Light in a 10-foot radius and can't benefit from
+the Invisible condition.
+Cantrip Upgrade. The damage increases by ld8
+when you reach levels S (2d8), 11 (3d8), and 17 (4d8).
+STEEL W IND STRIKE
+Level 5 Conjuration (Ranger, Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: S, M (a Melee weapon worth l+ SP)
+Duration: Instantaneous
+You flourish the weapon used ii~ lhe casting and
+then vanish to strike like the wind. Choose up to
+five creatures you can see with ii r tge. Make a

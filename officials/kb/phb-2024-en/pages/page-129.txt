@@ -1,0 +1,134 @@
+# Player's Handbook 2024 (EN) — PDF-страница 129/387
+
+ROGUE FEATURES
+Proficiency
+Sneak Attack
+level
+Bonus
+Class Features
+l
++2
+Expertise, Sneak Attack, Thieves' Cant, Weapon Mastery
+ld6
+2
++2
+Cunning Action
+3
++2
+Rogue Subclass, Steady Aim
+4
++2
+Ability Score Improvement
+5
++3
+Cunning Strike, Uncanny Dodge
+6
++3
+Expertise
+7
++3
+Evasion, Reliable Talent
+8
++3
+Ability Score Improvement
+9
++4
+Subclass feature
+10
++4
+Ability Score Improvement
+11
++4
+Improved Cunning Strike
+12
++4
+Ability Score Improvement
+13
++S
+Subclass feature
+14
++5
+Devious Strikes
+15
++5
+Slippery Mind
+16
++5
+Ability Score Improvement
+17
++6
+Subclass feature
+18
++6
+Elusive
+19
++6
+Epic Boon
+20
++6
+Stroke of Luck
+LEVEL 2: CUNNING ACTION
+Your quick thinking and agility allow you to move
+and act quickly. On your turn, you can take one of
+the following actions as a Bonus Action: Dash, Disengage, or Hide.
+LEVEL 3: ROGUE SUBCLASS
+You gain a Rogue subclass of your choice. The Arcane Trickster, Assassin, Soulknife, and Thief subclasses are detailed after this class's description. A
+subclass is a specialization that grants you features
+at certain Rogue levels. For the rest of your career,
+you gain each of your subclass's features that are of
+your Rogue level or lower.
+LEVEL 3: STEADY A l M
+As a Bonus Action, you give yourself Advantage on
+your next attack roll on the current turn. You can
+use this feature only if you haven't moved during
+this turn, and after you use it, your Speed is O until
+the end of the current turn.
+L EVEL 4: A BILITY SCORE I MPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Rogue
+levels 8, 10, 12, and 16.
+ld6
+2d6
+2d6
+3d6
+3d6
+4d6
+4d6
+Sd6
+Sd6
+6d6
+6d6
+7d6
+7d6
+8d6
+8d6
+9d6
+9d6
+10d6
+10d6
+LEVEL 5: CUNNING STRIKE
+You've developed cunning ways to use your Sneak
+Attack. When you deal Sneak Attack damage, you
+can add one of the following Cunning Strike effects.
+Each effect has a die cost, which is the number of
+Sneak Attack damage dice you must forgo to add
+the effect. You remove the die before rolling, and
+the effect occurs immediately after the attack's
+damage is dealt. For example, if you add the Poison
+effect, remove ld6 from the Sneak Attack's damage
+before rolling.
+If a Cunning Strike effect requires a saving throw,
+the DC equals 8 plus your Dexterity modifier and
+Proficiency Bonus.
+Poison (Cost: 1d6). You add a toxin to your strike,
+forcing the target to make a Constitution saving
+throw. On a failed save, the target has the Poisoned
+condition for 1 minute. At the end of each of its
+turns, the Poisoned target repeats the save, ending
+the effect on itself on a success.
+To use this effect, you must have a Poisoner's Kit
+on your person.
+Trip (Cost: 1d6). If the target is La ··ge or smaller, it
+must succeed on a Dexterity savint i nrnw or have
+the Prone condition.

@@ -1,0 +1,43 @@
+# Player's Handbook 2024 (EN) — PDF-страница 288/387
+
+INSECT PLAGUE
+Level 5 Conjuration (Cleric, Druid, Sorcerer)
+Casting Time: Action
+Range: 300 feet
+Components: V, S, M (a locust)
+Duration: Concentration, up to 10 minutes
+Swarming locusts fill a 20-foot-radius Sphere
+centered on a point you choose within range. The
+Sphere remains for the duration, and its area is
+Lightly Obscured and Difficult Terrain.
+When the swarm appears, each creature in it
+makes a Constitution saving throw, taking 4d10
+Piercing damage on a failed save or half as much
+damage on a successful one. A creature also makes
+this save when it enters the spell's area for the first
+time on a turn or ends its turn there. A creature
+makes this save only once per turn.
+Using a Higher-Level Spell Slot. The damage increases by 1d IO for each spell slot level above 5.
+INVISIBILITY
+Level 2 Illusion (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (an eyelash in gum arabic)
+Duration: Concentration, up to l hour
+A creature you touch has the Invisible condition until the spell ends. The spell ends early immediately
+after the target makes an attack roll, deals damage,
+or casts a spell.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 2.
+p----
+JALLARZI's STORM OF RADIANCE
+Level 5 Evocation (Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Component: V, S, M (a pinch of phosphorus)
+Duration: Concentration, up to l minute
+You unleash a storm of flashing light and raging
+thunder in a 10-foot-radius, 40-foot-high Cylinder centered on a point you can see within range.
+While in this area, creatures have th.e Blinded and
+CHAPTER 7 I SPELLS
+289

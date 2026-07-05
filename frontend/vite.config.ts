@@ -1,9 +1,16 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
+/**
+ * Dev-аналог продакшн nginx-прокси. Контракт — путь, а не ?url=:
+ * `/proxy/ttg-club-import/bestiary/<slug>` проксируется на `<upstreamOrigin>/bestiary/<slug>`.
+ * Тот же контракт в проде обслуживает nginx (см. nginx.conf.template), поэтому импорт
+ * работает и локально, и после выкатки. Старый `?url=` тоже поддержан для совместимости.
+ */
 function externalImportProxy(
   name: string,
   path: string,
+  upstreamOrigin: string,
   allowedHosts: Set<string>,
   pathPattern: RegExp,
   errorLabel: string,
@@ -16,25 +23,32 @@ function externalImportProxy(
       // request to `path` is answered with index.html or a 404 before we see it.
       server.middlewares.use((req, res, next) => {
         const parsed = new URL(req.url ?? '/', 'http://vite.local')
-        if (parsed.pathname !== path) return next()
+        const { pathname, search } = parsed
 
-        const target = parsed.searchParams.get('url')
+        let target: string | null = null
+        if (pathname.startsWith(`${path}/`)) {
+          const ttgPath = pathname.slice(path.length) // "/bestiary/<slug>"
+          if (pathPattern.test(ttgPath)) target = `${upstreamOrigin}${ttgPath}${search}`
+        } else if (pathname === path) {
+          const url = parsed.searchParams.get('url')
+          if (url) {
+            try {
+              target = normalizeImportUrl(url, allowedHosts, pathPattern)
+            } catch {
+              target = null
+            }
+          }
+        } else {
+          return next()
+        }
+
         if (!target) {
           res.statusCode = 400
-          res.end('Missing url parameter')
+          res.end('Invalid import url')
           return
         }
 
-        let normalized: string
-        try {
-          normalized = normalizeImportUrl(target, allowedHosts, pathPattern)
-        } catch (err) {
-          res.statusCode = 400
-          res.end(err instanceof Error ? err.message : 'Invalid url')
-          return
-        }
-
-        fetch(normalized, {
+        fetch(target, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; BagOfHolding/1.0)',
             Accept: 'text/html',
@@ -72,6 +86,7 @@ export default defineConfig({
     externalImportProxy(
       'ttg-club-import-proxy',
       '/proxy/ttg-club-import',
+      'https://new.ttg.club',
       new Set(['new.ttg.club', 'ttg.club']),
       /\/bestiary\/[^/]+/,
       'ttg.club import proxy error',

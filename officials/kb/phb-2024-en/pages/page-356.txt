@@ -1,0 +1,94 @@
+# Player's Handbook 2024 (EN) — PDF-страница 356/387
+
+SLAAD TADPOLE
+Tiny Aberration, Chaotic Neutral
+AC 12
+Initiative +2 (1 2)
+HP 7 (3d4)
+Speed 30 ft. , Burrow 10 ft.
+MOD SAVE
+MOD SAVE
+MOD Sf-VE
+STR
+7 -2 -2
+DEX 15 +2 +2
+CON 10 +0 +0
+INT
+3 -4 - 4
+Wts 5 -3 -3
+CHA 3 -4 -4
+Skills Stealth +4
+Resistances Acid, Cold, Fire, Lightning, Thunder
+Senses Darkvision 60 ft., Passive Perception 7
+Languages Understands Slaad but can't speak
+CR 1/8 (XP 25; PB +2)
+TRAITS
+Magic Resistance. The slaad has Advantage on saving
+throws against spells and other magical effects.
+ACTIONS
+Bite. Melee Attack Roll: +4, reach 5 ft. Hit: 5 (l d6 + 2)
+Piercing damage.
+SPHINX OF WON DER
+Tiny Celestial, Lawful Good
+AC 13
+Initiative +3 (13)
+HP 24 (7d4 + 7)
+Speed 20 ft., Fly 40 ft.
+MOD SAVE
+STR 6 -2 -2
+INT 15 +2 +2
+MOD SAVE
+MOD SAVE
+DEX 17 +3
++3
+CON 13 +l +l
+Wis 12 +l
++l
+CHA 11
+Skills Arcana +4, Religion +4, Stealth +5
+Resistances Necrotic, Psychic, Radiant
+Senses Darkvision 60 ft., Passive Perception 11
+Languages Celestial, Common
+CR 1 (XP 200; PB +2)
+TRAITS
+Magic Resistance. The sphinx has Advantage on saving
+throws against spells and other magical effects.
+A CTi ONS
+Rend. Melee Attack Roll: +5, reach 5 ft. Hit: 5 (ld4 + 3)
+Slashing damage plus 7 (2d6) Radiant damage.
+HEACTIONS
+Burst of Ingenuity (2/Day). Trigger: The sphinx or another creature within 30 feet makes an ability check or a
+saving throw. Response: The sphinx adds 2 to the roll.
+SPH INX O F WONDER
+SPIDER
+Tiny Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP l (ld4 - 1)
+Speed 20 ft., Climb 20 ft.
+MOD SAVE
+STR 2 -4 -4
+INT l -5 -5
+Skills Stealth +4
+MOD SAVE
+DEX 14 +2 +2
+Wis 10 +0 +0
+MOD SAVE
+CON 8 -1
+-1
+CHA 2 -4 -4
+Senses Darkvision 30 ft., Passive Perception 10
+Languages None
+CR O (XP 10; PB +2)
+TRAITS
+Spider Climb. The spider can climb difficult surfaces,
+including along ceilings, without needing to make an
+ability check.
+Web Walker. The spider ignores movement restrictions
+caused by webs, and the spider knows the location of
+any other creature in contact with the same web.
+ACTIONS
+Bite. Melee Attack Roll: +4, reach 5 ft. Hit: 1 Piercing
+damage plus 2 (ld4) Poison damage.
+A PPENDIX BI CREATURE STAT BLOCKS
+357

@@ -1,0 +1,111 @@
+# Player's Handbook 2024 (EN) — PDF-страница 260/387
+
+Alternatively, you cas t the spell on an object that
+. 't being \vorn or carried, causing the sunlight to
+,sn
+•
+• •
+t·
+f
+th
+b
+fill a 60-foot Emanat1?n on~ma mg r?m
+at o -
+. t Covering that obJect with something opaque,
+Jee •
+h
+1· h
+1 as a bowl or helm, blocks t e sun 1g t.
+sue 1
+.
+If any of this spell's area overlaps with an area of
+Darkness created by a spell of level 3 or lower, that
+other spell is dispelled.
+D EATH WARD
+Level 4 Abjuration (Cleric, Paladin)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: 8 hours
+You touch a creature and grant it a measure of protection from death. The first time the target would
+drop to O Hit Points before the spell ends, the target
+instead drops to 1 Hit Point, and the spell ends.
+Jf the spell is still in effect when the target is subjected to an effect that would ki!l it instantly ':"ithout dealing damage, that effect 1s negated against
+the target, and the spell ends.
+D ELAYED B LAST F IRE BALL
+Level 7 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 150 feet
+Components: V, S, M (a ball of bat guano and sulfur)
+Duration: Concentration, up to l minute
+A beam of yellow light flashes from you, then condenses at a chosen point within range as a glowing
+bead for the duration. When the spell ends, the bead
+explodes, and each creature in a 20-foot-radius
+Sphere centered on that point makes a Dexterity
+saving throw. A creature takes Fire damage equal
+to the total accumulated damage on a failed save or
+half as much damage on a successful one.
+The spell's base damage is 12d6, and the damage
+increases by ld6 whenever your turn ends and the
+spell hasn't ended.
+If a creature touches the glowing bead before the
+spell ends, that creature makes a Dexterity saving
+throw. On a failed save, the spell ends, causing the
+bead to explode. On a successful save, the creature
+can throw the bead up to 40 feet. If the thrown
+bead enters a creature's space or collides with a
+solid object, the spell ends, and the bead explodes.
+W hen the head explodes, flammable objects in the
+explosion that a1·en't being worn or carried start
+burning.
+Using a Highcr-1.,evel Spell Slot. The base damage
+increases b~, 1d6 for each spell slot level above 7.
+DEMIPLANE
+Level 8 Conjuration (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: S
+Duration: l hour
+You create a shadowy Medium door on a flat solid
+surface that you can see within range. This door
+can be opened and closed, and it leads to a demiplane that is an empty room 30 feet in each dimension, made of wood or stone (your choice).
+When the spell ends, the door vanishes, and any
+objects inside the demiplane remain there. Any
+creatures inside also remain unless they opt to be
+shunted through the door as it vanishes, landing
+with the Prone condition in the unoccupied spaces
+closest to the door's former space.
+Each time you cast this spell, you can create a
+new demiplane or connect the shadowy door to
+a demiplane you created with a previous casting
+of this spell. Additionally, if you know the nature
+and contents of a demiplane created by a casting of
+this spell by another creature, you can connect the
+shadowy door to that demiplane instead.
+D ESTRUCTIVE WAVE
+Level 5 Evocation (Paladin)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Instantaneous
+Destructive energy ripples outward from you in a
+30-foot Emanation. Each creature you choose in
+the Emanation makes a Constitution saving throw.
+On a failed save, a target takes Sd6 Thunder damage
+and Sd6 Radiant or Necrotic damage (your choice)
+and has the Prone condition. On a successful save, a
+target takes half as much damage only.
+DETECT Ev1L AN D Goon
+Level 1 Divination (Cleric, Paladin)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Concentration, up to 10 minutes
+For the duration, you sense the location of any Aberration, Celestial, Elemental, Fey, Fiend, or Undead
+within 30 feet of yourself. You also sense whether
+the Hallow spell is active there and, if so, where.
+The spell is blocked by 1 foot of stone, dirt, or
+wood; 1 inch of metal; or a thin sheet of lead.
+CH a
+7- I S££LLS
+hT

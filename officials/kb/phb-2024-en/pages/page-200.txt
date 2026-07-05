@@ -1,0 +1,88 @@
+# Player's Handbook 2024 (EN) — PDF-страница 200/387
+
+FAST CRAFT N G
+Artisan's Tools
+Carpenter's Tools
+Leatherworker's Tools
+Mason's Tools
+Potter's Tools
+Smith's Tools
+Tinker's Tools
+Weaver's Tools
+Woodcarver's Tools
+HEALER
+Origin Feat
+Crafted Gear
+Ladder, Torch
+Case, Pouch
+Block and Tackle
+Jug, Lamp
+Ball Bearings, Bucket,
+Caltrops, Grappling Hook,
+Iron Pot
+Bell, Shovel, Tinder Box
+Basket, Rope, Net, Tent
+Club, Greatclub,
+Quarterstaff
+You gain the following benefits.
+Battle Medic. If you have a Healer's Kit, you can
+expend one use of it and tend to a creature within
+5 feet of yourself as a Utilize action. That creature
+can expend one of its Hit Point Dice, and you then
+roll that die. The creature regains a number of Hit
+Points equal to the roll plus your Proficiency Bonus.
+Healing Rerolls. Whenever you roll a die to determine the number of Hit Points you restore with a
+spell or with this feat's Battle Medic benefit, you can
+reroll the die if it rolls a 1, and you must use the new
+roll.
+L UCKY
+Origin Feat
+You gain the following benefits.
+Luck Points. You have a number of Luck Points
+equal to your Proficiency Bonus and can spend the
+points on the benefits below. You regain your expended Luck Points when you finish a Long Rest.
+Advantage. When you roll a d20 for a D20 Test,
+you can spend 1 Luck Point to give yourself Advantage on the roll.
+Disadvantage. When a creature rolls a d20 for an
+attack roll against you, you can spend 1 Luck Point
+to impose Disadvantage on that roll.
+MAGIC INITI ATE
+Origin Feat
+You gain the following benefits.
+Two Cantrips. Yl)u learn two cantrips of your
+choice from the Cleric, Druid, or Wizard spell list.
+Intelligence, W id om, or Charisma is your spellcasting ability for th is feat's spells (choose when you
+select this feat).
+Level 1 Spell. Choose a level 1 spell from the same
+list you selected for this feat's cantrips. You always
+have that spell prepared. You can cast it once without a spell slot, and you regain the ability to cast it
+in that way when you finish a Long Rest. You can
+also cast the spell using any spell slots you have.
+Spell Change. Whenever you gain a new level, you
+can replace one of the spells you chose for this feat
+with a different spell of the same level from the chosen spell list.
+Repeatable. You can take this feat more than once,
+but you must choose a different spell list each time.
+MUSICIAN
+Origin Feat
+You gain the following benefits.
+Instrument Training. You gain proficiency with
+three Musical Instruments of your choice.
+Encouraging Song. As you finish a Short or Long
+Rest, you can play a song on a Musical Instrument
+with which you have proficiency and give Heroic
+Inspiration to allies who hear the song. The number
+of allies you can affect in this way equals your Proficiency Bonus.
+SAVAGE ATTACKER
+Origin Feat
+You've trained to deal particularly damaging
+strikes. Once per turn when you hit a target with
+a weapon, you can roll the weapon's damage dice
+twice and use either roll against the target.
+SKILLED
+Origin Feat
+You gain proficiency in any combination of three
+skills or tools of your choice.
+Repeatable. You can take this feat more than once.
+CHAPTER 5 I FE AT S
+2 0 1

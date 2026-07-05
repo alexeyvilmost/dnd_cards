@@ -1,0 +1,49 @@
+# Player's Handbook 2024 (EN) — PDF-страница 263/387
+
+DISPEL MAGIC
+Level 3 Abjuration (Bard, Cleric, Druid, Paladin, Ranger,
+Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Instantaneous
+Choose one creature, object, or magical effect
+within range. Any ongoing spell of level 3 or lower
+on the target ends. For each ongoing spell of level 4
+or higher on the target, make an ability check using your spellcasting ability (DC 10 plus that spell's
+level). On a successful check, the spell ends.
+Using a Higher-Level Spell Slot. You automatically
+end a spell on the target if the spell's level is equal to
+or less than the level of the spell slot you use.
+DISSONANT WHISPERS
+Level 1 Enchantment (Bard)
+Casting Time: Action
+Range: 60 feet
+Components: V
+Duration: Instantaneous
+One creature of your choice that you can see within
+range hears a discordant melody in its mind. The
+i64
+CH APTER 7 1 SPELLS
+target makes a Wisdom saving throw. On a failed
+save, it takes 3d6 Psychic damage and must immediately use its Reaction, if available, to move as far
+away from you as it can, using the safest route. On a
+successful save, the target takes half as much damage only.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 1.
+DIVINATION
+Level 4 Divination (Cleric, Druid, Wizard)
+Casting Time: Action or Ritual
+Range: Self
+Components: V, S, M (incense worth 25+ GP, which
+the spell consumes)
+Duration: Instantaneous
+This spell puts you in contact with a god or a god's
+servants. You ask one question about a specific
+goal, event, or activity to occur within 7 days. The
+DM offers a truthful reply, which might be a short
+phrase or cryptic rhyme. The ~,nell doesn't account
+for circumstances that might change the answer,
+such as the casting of other c;pr.:lls.
+If you cast the spell more ti 1:>:1 once before finishing a Long Rest, there is :l c:111 1 • • L l.ive 25 percent
+chance for each casting aft~•· the fi rst that you get
+no answer.

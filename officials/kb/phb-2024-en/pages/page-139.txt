@@ -1,0 +1,301 @@
+# Player's Handbook 2024 (EN) — PDF-страница 139/387
+
+SORCERER FEATURES
+--Spell Slots per Spell Level-
+Sorcery
+Prepared
+Proficiency
+Points
+Cantrips
+Spells
+l
+2
+3
+4
+5
+6
+7
+8
+9
+Level
+Bonus
+Class Features
+l
++2
+Spellcasting,
+4
+2
+2
+Innate Sorcery
+Font of Magic,
+2
+4
+4
+3
+-
+-
+-
+-
+-
+-
+-
+2
++2
+Meta magic
+3
++2
+Sorcerer Subclass
+3
+4
+6
+4
+2
+4
++2
+Ability Score
+4
+5
+7
+4
+3
+Improvement
+5
++3
+Sorcerous
+5
+5
+9
+4
+3
+2
+-
+-
+-
+-
+-
+-
+Restoration
+6
++3
+Subclass feature
+6
+5
+10
+4
+3
+3
+7
++3
+Sorcery Incarnate
+7
+5
+11
+4
+3
+3
+l
+8
++3
+Ability Score
+8
+5
+12
+4
+3
+3
+2
+Improvement
+9
++4
+9
+5
+14
+4
+3
+3
+3
+l
+10
++4
+Metamagic
+10
+6
+15
+4
+3
+3
+3
+2
+11
++4
+11
+6
+16
+4
+3
+3
+3
+2
+l
+12
++4
+Ability Score
+12
+6
+16
+4
+3
+3
+3
+2
+l
+Improvement
+13
++5
+13
+6
+17
+4
+3
+3
+3
+2
+l
+l
+14
++5
+Subclass feature
+14
+6
+17
+4
+3
+3
+3
+2
+l
+l
+15
++5
+15
+6
+18
+4
+3
+3
+3
+2
+l
+l
+l
+16
++5
+Ability Score
+16
+6
+18
+4
+3
+3
+3
+2
+l
+l
+l
+Improvement
+17
++6
+Metamagic
+17
+6
+19
+4
+3
+3
+3
+2
+l
+l
+l
+18
++6
+Subclass feature
+18
+6
+20
+4
+3
+3
+3
+3
+l
+1
+1
+l
+19
++6
+Epic Boon
+19
+6
+21
+4
+3
+3
+3
+3
+2
+1
+l
+1
+20
++6
+Arcane Apotheosis
+20
+6
+22
+4
+3
+3
+3
+3
+2
+2
+1
+1
+Sorcerer spells until the number of spells on your
+L EVEL l: I NNATE SORC ERY
+list matches the number in the Sorcerer Features
+An event in your past left an indelible mark on you,
+table. The chosen spells must be of a level for which
+infusing you with simmering magic. As a Bonus
+you have spell slots. For example, if you're a level 3
+Action, you can unleash that magic for 1 minute,
+Sorcerer, your list of prepared spells can include six
+during which you gain the following benefits:
+Sorcerer spells of level 1 or 2 in any combination.
+• The spell save DC of your Sorcerer spells
+If another Sorcerer feature gives you spells that
+you always have prepared, those spells don't count
+increases by 1.
+against the number of spells you can prepare with
+• You have Advantage on the attack rolls of
+this feature, but those spells otherwise count as
+Sorcerer spells you cast.
+Sorcerer spells for you.
+You can use this feature twice, and you regain all
+Changing Your Prepared Spells. Whenever you
+expended uses of it when you fin ish a Long Rest.
+gain a Sorcerer level, you can replace one spell on
+L EVEL 2: F ONT OF MAGIC
+your list with another Sorcerer spell for which you
+have spell slots.
+You can tap into the wellspring of magic within
+Spellcasting Ability. Charisma is your spellcasting
+yourself. This wellspring is represented by Sorcery
+ability for your Sorcerer spells.
+Points, which allow you to create a variety of magi-
+Spellcasting Focus. You can use an Arcane Focus
+cal effects.
+as a Spellcasting Focus for your Sorcerer spells.
+r.d.o
+CHAPTER 3 I CHARACTER CLA SSES

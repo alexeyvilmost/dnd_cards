@@ -1,0 +1,79 @@
+# Player's Handbook 2024 (EN) — PDF-страница 52/387
+
+L EVE L I.~ : ADi .UTY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Barbarian
+levels 8, 12, and 16.
+L EVEL 5: EXTRA ATTACK
+You can attack twice instead of once whenever you
+take the Attack action on your turn.
+LEVEL 5: FAST MOVEMENT
+Your speed increases by 10 feet while you aren't
+wearing Heavy armor.
+LEVEL 7: F ERAL INSTI NCT
+Your instincts are so honed that you have Advantage on Initiative rolls.
+LEVEL 7: INSTINCTIVE POUNCE
+As part of the Bonus Action you take to enter your
+Rage, you can move up to half your Speed.
+LEVEL 9 : BRUTAL STRI KE
+If you use Reck.less Attack, you can forgo any Advantage on one Strength-based attack roll of your
+choice on your turn. The chosen attack roll mustn't
+have Disadvantage. If the chosen attack roll hits, the
+target takes an extra ldlO damage of the same type
+dealt by the weapon or Unarmed Strike, and you
+can cause one Brutal Strike effect of your choice.
+You have the following effect options.
+Forceful Blow. The target is pushed 15 feet straight
+away from you. You can then move up to half your
+Speed straight toward the target without provoking
+Opportunity Attacks.
+Hamstring Blow. The target's Speed is reduced by
+15 feet until the start of your next turn. A target can
+be affected by only one Hamstring Blow at a timethe most recent one.
+LEVEL 11: RELENTLESS RAGE
+Your Rage can keep you fighting despite grievous
+wounds. If you drop to O Hit Points while your Rage
+is active and don't die outright, you can make a DC
+10 Constitution saving throw. If you succeed, your
+Hit Points instead change to a number equal to
+twice your Barbarian level.
+Each time you use this feature after the first, the
+DC increases by 5. When you finish a Short or Long
+Rest, the DC resets to 10.
+LEVEL 13: IMPROVED BRUTAL STRIKE
+You have honed new ways to attack furiously. The
+following effects are now among your Brutal Strike
+options.
+Staggering Blow. The target has Disadvantage on
+the next saving throw it makes, and it can't make
+Opportunity Attacks until the start of your next
+turn.
+Sundering Blow. Before the start of your next
+turn, the next attack roll made by another creature
+against the target gains a +5 bonus to the roll. An
+attack roll can gain only one Sundering Blow bonus.
+LEVEL 15: PERSISTENT RAGE
+When you roll Initiative, you can regain all expended uses of Rage. After you regain uses of Rage
+in this way, you can't do so again until you finish a
+Long Rest.
+In addition, your Rage is so fierce that it now lasts
+for 10 minutes without you needing to do anything
+to extend it from round to round. Your Rage ends
+early if you have the Unconscious condition (not
+just the Incapacitated condition) or don Heavy
+armor.
+LEVEL 17: IMPROVED BRUTAL STRIKE
+The extra damage of your Brutal Strike increases to
+2d10. In addition, you can use two different Brutal
+Strike effects whenever you use your Brutal Strike
+feature.
+LEVEL 18: INDOMITABLE MIGHT
+If your total for a Strength check or Strength saving throw is less than your Strength score, you can
+use that score in place of the total.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Irresistible Offense is recommended.
+LEVEL 20: PRIMAL CHAMPION
+You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of 25.
+CHAPT ER 3 I CHARACTER CLA SSE

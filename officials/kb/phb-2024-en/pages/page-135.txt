@@ -1,0 +1,59 @@
+# Player's Handbook 2024 (EN) — PDF-страница 135/387
+
+mile of each other. A creature can end the telepathic
+connection at any time (no action required).
+The first time you use this power after each Long
+Rest, you don't expend the Psionic Energy Die. All
+other times you use the power, you expend the die.
+LEVEL 3: PSYCHIC BLADES
+You can manifest shimmering blades of psychic energy. Whenever you take the Attack action or make
+an Opportunity Attack, you can manifest a Psychic
+Blade in your free hand and make the attack with
+that blade. The magic blade has the following traits:
+Weapon Category: Simple Melee
+Damage on a Hit: ld6 Psychic plus the ability modifier
+used for the attack roll
+Properties: Finesse, Thrown (range 60/120 feet)
+Mastery: Vex (you can use this property, and it doesn't
+count against the number of properties you can use
+with Weapon Mastery)
+The blade vanishes immediately after it hits or
+misses its target, and it leaves no mark if it deals
+damage.
+After you attack with the blade on your turn, you
+can make a melee or ranged attack with a second
+psychic blade as a Bonus Action on the same turn if
+your other hand is free to create it. The damage die
+of this bonus attack is ld4 instead of ld6.
+L EVEL 9: SOUL BLADES
+You can now use the following powers with your
+Psychic Blades.
+Homing Strikes. If you make an attack roll with
+your Psychic Blade and miss the target, you can roll
+one Psionic Energy Die and add the number rolled
+to the attack roll. If this causes the attack to hit, the
+Psychic Teleportation. As a Bonus Action. you
+manifest a Psychic Blade, expend one Psionic Energy Die and roll it, and throw the blade at a n unoccupied space you can see up to a number of feet
+away equal to 10 times the number rolled. You then
+teleport to that space, and the blade vanishes.
+LEVEL 13: PSYCHIC VEIL
+You can weave a veil of psychic static to mask yourself. As a Magic action, you gain the Invisible condition for 1 hour or until you dismiss this effect (no
+action required). This invisibility ends early immediately after you deal damage to a creature or you
+force a creature to make a saving throw.
+Once you use this feature, you can't do so again
+until you finish a Long Rest unless you expend a
+Psionic Energy Die (no action required) to restore
+your use of it.
+LEVEL 17: REND MIND
+You can sweep your Psychic Blades through a creature's mind. When you use your Psychic Blades to
+deal Sneak Attack damage to a creature, you can
+force that target to make a Wisdom saving throw
+(DC 8 plus your Dexterity modifier and Proficiency
+Bonus). If the save fails, the target has the Stunned
+condition for 1 minute. The Stunned target repeats
+the save at the end of each of its turns, ending the
+effect on itself on a success.
+Once you use this feature, you can't do so again
+until you finish a Long Rest unless you expend three
+Psionic Energy Dice (no action required) to restore
+your use of it.

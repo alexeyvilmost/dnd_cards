@@ -1,0 +1,93 @@
+# Player's Handbook 2024 (EN) — PDF-страница 265/387
+
+DOMINATE PERSON
+Level 5 Enchantment (Bard, Sorcerer~ Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to l minute
+One Humanoid you can see within range must
+succeed on a Wisdom saving throw or have the
+Charmed condition for the duration. The target has
+Advantage on the save if you or your allies are fighting it. Whenever the target takes damage, it repeats
+the save, ending the spell on itself on a success.
+You have a telepathic link with the Charmed target while the two of you are on the same plane of
+existence. On your turn, you can use this link to
+issue commands to the target (no action required),
+such as "Attack that creature," "Move over there,"
+or "Fetch that object." The target does its best to
+obey on its turn. If it completes an order and doesn't
+receive further direction from you, it acts and
+moves as it likes, focusing on protecting itself.
+You can command the target to take a Reaction
+but must take your own Reaction to do so.
+Using a Higher-Level Spell Slot. Your Concentration can last longer with a spell slot of level 6 (up to
+10 minutes), 7 (up to 1 hour), or 8+ (up to 8 hours).
+DRAGON'S BREATH
+Level 2 Transmutation (Sorcerer, Wizard)
+Casting Time: Bonus Action
+Range:Touch
+Components: V, S, M (a hot pepper)
+Duration: Concentration, up to 1 minute
+You touch one willing creature, and choose Acid,
+Cold, Fire, Lightning, or Poison. Until the spell
+ends, the target can take a Magic action to exhale
+a IS-foot Cone. Each creature in that area makes a
+Dexterity saving throw, taking 3d6 damage of the
+chosen type on a failed save or half as much damage
+on a successful one.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 2.
+D RAWMIJ 's I NSTANT SUMM ONS
+Level 6 Conjuration (Wizard)
+Casting Time: 1 minute or Ritual
+Range:Touch
+Components: V, S, M (a sapphire worth 1,000+ GP)
+Duration: Until dispelled
+You touch the sapphire used in the casting and an
+object weighing 10 pounds or less whose longest dimension is 6 feet or less. The spell leaves an Invisible
+266
+Cll :\PTER 7 I SPE LLS
+mark on that object and invisibly in::, i :! .es the object's name on the sapphire. Each tim•! you cast this
+spell, you must use a different sapphi1·e.
+Thereafter, you can take a Magic action to speak
+the object's name and crush the sapphire. The object instantly appears in your hand rega rdless of
+physical or planar distances, and the spell ends.
+If another creature is holding or carrying the object, crushing the sapphire doesn't transport it, but
+instead you learn who that creature is and where
+that creature is currently located.
+DREAM
+Level 5 Illusion (Bard, Warlock, Wizard)
+Casting Time: l minute
+Range: Special
+Components: V, S, M (a handful of sand)
+Duration: 8 hours
+You target a creature you know on the same plane
+of existence. You or a willing creature you touch
+enters a trance state to act as a dream messenger.
+While in the trance, the messenger is Incapacitated
+and has a Speed of 0.
+If the target is asleep, the messenger appears in
+the target's dreams and can converse with the target as long as it remains asleep, through the spell's
+duration. The messenger can also shape the dream's
+environment, creating landscapes, objects, and
+other images. The messenger can emerge from the
+trance at any time, ending the spell. The target recalls the dream perfectly upon waking.
+If the target is awake when you cast the spell, the
+messenger knows it and can either end the trance
+(and the spell) or wait for the target to sleep, at
+which point the messenger enters its dreams.
+You can make the messenger terrifying to the target. If you do so, the messenger can deliver a message of no more than ten words, and then the target
+makes a Wisdom saving throw. On a failed save, the
+target gains no benefit from its rest, and it takes 3d6
+Psychic damage when it wakes up.
+DRUIDCRAFT
+Transmutation Cantrip (Druid)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: Instantaneous
+Whispering to the spi rit~ of 1.ature, you create one
+of the following effects v.:i.-hin range.
+Weather Sensor. You l\:a::c.: a Tiny, harmless sensory effect that predicts whcl.J- the weather will be
+at your location for thr ,·1c,.; i: 24 hours. The effect
+might manifest as a gc11rl,.:;. , 1:\.1 for clear skies, a

@@ -1,0 +1,217 @@
+# Player's Handbook 2024 (EN) — PDF-страница 109/387
+
+PALADIN FEATURES
+Proficiency
+Level
+Bonus
+Class Features
++2
+Lay On Hands, Spellcasting,
+Weapon Mastery
+2
++2
+Fighting Style, Paladin's Smite
+3
++2
+Channel Divinity, Paladin Subclass
+4
++2
+Ability Score Improvement
+5
++3
+Extra Attack, Faithful Steed
+6
++3
+Aura of Protection
+7
++3
+Subclass feature
+8
++3
+Ability Score Improvement
+9
++4
+Abjure Foes
+10
++4
+Aura of Courage
+11
++4
+Radiant Strikes
+12
++4
+Ability Score Improvement
+13
++5
+14
++5
+Restoring Touch
+15
++5
+Subclass feature
+16
++5
+Ability Score Improvement
+17
++6
+18
++6
+Aura Expansion
+19
++6
+Epic Boon
+20
++6
+Subclass feature
+Changing Your Prepared Spells. Whenever you
+finish a Long Rest, you can replace one spell on your
+list with another Paladin spell for which you have
+spell slots.
+Spellcasting Ability. Charisma is your spellcasting
+ability for your Paladin spells.
+Spellcasting Focus. You can use a Holy Symbol as a
+Spellcasting Focus for your Paladin spells.
+LEVEL l: WEAPON MASTERY
+Your training with weapons allows you to use the
+mastery properties of two kinds of weapons of your
+choice with which you have proficiency, such as
+Longs words and Javelins.
+Whenever you finish a Long Rest, you can change
+the kinds of weapons you chose. For example, you
+could switch to using the mastery properties of Halberds and Flails.
+L EVEL 2: FIG-HTIKG STYLE
+You gain a Fighting Style feat of your choice (see
+chapter 5 for feats). Instead of choosing one of those
+feats, you can choose the option below.
+Blessed Warrior. You learn two Cleric cantrips
+of your choice (see the Cleric class's section for a
+list of Cleric spells). Guidance and Sacred Flame are
+Channel
+Prepared
+-Spell Slots per Spell l evel-
+Divinity
+Spells
+l
+2
+3
+4
+s
+2
+2
+3
+2
+2
+4
+3
+2
+5
+3
+2
+6
+4
+2
+2
+6
+4
+2
+2
+7
+4
+3
+2
+7
+4
+3
+2
+9
+4
+3
+2
+2
+9
+4
+3
+2
+3
+10
+4
+3
+3
+3
+10
+4
+3
+3
+3
+11
+4
+3
+3
+l
+3
+11
+4
+3
+3
+l
+3
+12
+4
+3
+3
+2
+3
+12
+4
+3
+3
+2
+3
+14
+4
+3
+3
+3
+l
+3
+14
+4
+3
+3
+3
+l
+3
+15
+4
+3
+3
+3
+2
+3
+15
+4
+3
+3
+3
+2
+recommended. The chosen cantrips count as Paladin spells for you, and Charisma is your spellcasting
+ability for them. W henever you gain a Paladin level,
+you can replace one of these cantrips with another
+Cleric cantrip.
+LEVEL 2: PALADIN'S SMITE
+You always have the Divine Smite spell prepared. In
+addition, you can cast it without expending a spell
+slot, but you must fin ish a Long Rest before you can
+cast it in this way again.
+LEVEL 3: CHANNEL DIVINITY
+You can channel divine energy directly from the
+Outer Planes, using it to fuel magical effects. You
+start with one such effect: Divine Sense, which is
+described below. Other Paladin features give additional Channel Divinity effect options. Each time
+you use this class's Channel Divinity, you choose
+which effect from this class to create.
+You can use this class's Channel Divinity twice.
+You regain one of its expended uses when you finish
+a Short Rest, and you regain all expended uses when
+you finish a Long Rest. You gain an ad<litional use
+when you reach Paladin level 11.

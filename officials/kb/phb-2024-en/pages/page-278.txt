@@ -1,0 +1,110 @@
+# Player's Handbook 2024 (EN) — PDF-страница 278/387
+
+GI A NT I N SECT
+Level 4 Conjuration (Druid)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You summon a giant centipede, spider, or wasp
+(chosen when you cast the spell). It manifests in an
+unoccupied space you can see within range and uses
+the Giant Insect stat block. The form you choose
+determines certain details in its stat block. The
+creature disappears when it drops to O Hit Points or
+when the spell ends.
+The creature is an ally to you and your allies. In
+combat, the creature shares your Initiative count,
+but it takes its turn immediately after yours. It
+GIANT INSECT
+Large Beast, Unaligned
+AC 11 + the spell's level
+HP 30 + 10 for each spell level
+Speed 40 ft., Climb 40 ft., Fly 40 ft. (Wasp only)
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 17 +3
++3
+DEX 13 +l
++l
+CON 15 +2 +2
+INT 4
+-3 -3
+Wis 14 +2 +2
+CHA 3 -4 -4
+Senses Darkvision 60 ft., Passive Perception 12
+Languages Understands the languages you know
+CR None (XP 0; PB equals your Proficiency Bonus)
+TRAITS
+Spider Climb. The insect can climb difficult surfaces,
+including along ceilings, without needing to make an
+ability check.
+ACTIONS
+Multiattack. The insect makes a number of attacks
+equal to half this spell's level (round down).
+Poison jab. Melee Attack Roll: Bonus equals your spell
+attack modifier, reach 10 ft. Hit: ld6 + 3 plus the spell's
+level Piercing damage plus ld4 Poison damage.
+Web Bolt (Spider Only). Ranged Attack Roll: Bonus
+equals you r spell attack modifier, range 60 ft. Hit: ldl0
++ 3 plus the spell's level Bludgeoning damage, and the
+target's Speed is reduced to 0 until the start of the insect's next turn.
+BONUS P. 1: ·1 iONS
+~
+;...;._;..:;_ ____________ _
+Venomous -~ ,ew (Centipede Only). Constitution Saving
+Throw: Yot !r • pell save DC, one creature the insect can
+see with i11 ·:·, feet.Failure: The target has the Poisoned
+condition .,., ~;i the start of the insect's next turn.
+obeys your verbal commands (no action required
+by you). If you don't issue any, it takes the Dodge
+action and uses its movement to avoid danger.
+Using a Higher-Level Spell Slot. Use the spell slot's
+level for the spell's level in the stat block.
+p
+-
+----·- ----- --
+-
+GLIBNESS
+Level 8 Enchantment (Bard, Warlock)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: l hour
+Until the spell ends, when you make a Charisma
+check, you can replace the number you roll with a
+15. Additionally, no matter what you say, magic that
+would determine if you are telling the truth indicates that you are being truthful.
+GLOBE OF INVULNERABILITY
+Level 6 Abjuration (Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a glass bead)
+Duration: Concentration, up to l minute
+An immobile, shimmering barrier appears in a 10-
+foot Emanation around you and remains for the
+duration.
+Any spell of level 5 or lower cast from outside the
+barrier can't affect anything within it. Such a spell
+can target creatures and objects within the barrier,
+but the spell has no effect on them. Similarly, the
+area within the barrier is excluded from areas of
+effect created by such spells.
+Using a Higher-Level Spell Slot. The barrier blocks
+spells of 1 level higher for each spell slot level
+above 6.
+GLYPH OF WARDING
+Level 3 Abjuration (Bard, Cleric, Wizard)
+Casting Time: l hour
+Range:Touch
+Components: V, S, M (powdered diamond worth 200+
+GP, which the spell consumes)
+Duration: Until dispelled or triggered
+You inscribe a glyph that later unleashes a magical
+effect. You inscribe it either on a surface (such as a
+table or a section of floor) or within an object that
+can be closed (such as a book or chest) to conceal
+the glyph. The glyph can cover an area no larger
+CHA PTER 7 I SPELLS
+'2'70

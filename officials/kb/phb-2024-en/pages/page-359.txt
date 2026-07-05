@@ -1,0 +1,142 @@
+# Player's Handbook 2024 (EN) — PDF-страница 359/387
+
+' APPENDIX C
+I
+RULES GLOSSARY
+-==s:c::v=
+GLOSSARY CONVENTIONS
+The glossary uses the following conventions:
+Tags in Brackets. Some entries have a tag in brackets after the entry's name, as in "Attack [Action]."
+A tag-Action, Area of Effect, Attitude, Condition,
+or Hazard-indicates that a rule is part of a family
+of rules. The tags also have glossary entries.
+"You." The game's rules-in this glossary and elsewhere-often talk about something happening to
+you in the game world. That "you" refers to the
+creature or object that the rule applies to in a particular moment of play. For example, the "you" in
+the Prone condition is a creature that currently
+has that condition.
+"See Also." Some glossary entries include a See also
+section that points to other entries in the glossary,
+to chapters in this book, or both.
+No Obsolete Terms. The glossary contains definitions of current rules terms only. If you're looking
+for a term from an earlier version of the fifth edition rules, consult the index.
+Abbreviations. The abbreviations listed below appear in this glossary and elsewhere in the rules.
+AC
+Armor Class
+M
+Material
+C
+Concentration
+component
+CE
+Chaotic Evil
+N
+Neutral
+CG
+Chaotic Good
+NE
+Neutral Evil
+Cha.
+Charisma
+NG
+Neutral Good
+CN
+Chaotic Neutral
+NPC
+Non player
+Con.
+Constitution
+character
+CP
+Copper Piece(s}
+PB
+Proficiency
+Bonus
+CR
+Challenge Rating
+Platinum Piece(s}
+pp
+DC
+Difficulty Class
+Ritual
+R
+Dex.
+Dexterity
+s
+Somatic
+OM
+Dungeon Master
+component
+EP
+Electrum Piece(s)
+SP
+Silver Piece(s}
+GP
+Gold Piece(s)
+Str.
+Strength
+HP
+Hit Point(s)
+V
+Verbal
+Int.
+Intelligence
+component
+LE
+Lawful Evil
+Wis.
+Wisdom
+LG
+Lawful Good
+XP
+Experience
+LN
+Lawful Neutral
+Point(s)
+APPEND
+C
+RULES GLOSSARY
+RULES DEFINITIONS
+Here are definitions of various rules.
+ABILITY CHECK
+An ability check is a D20 Test that represents using
+one of the six abilities- or a specific skill associated
+with an ability- to overcome a challenge. See also
+chapter 1 ("D20 Tests" and "Proficiency").
+ABILITY SCORE AND MODIFIER
+A creature has six ability scores-Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma-each of which has a corresponding modifier.
+Add the modifier when you make a D20 Test with
+the corresponding ability or when a rule asks you to
+do so. See also chapter 1 ("The Six Abilities").
+ACTION
+On your turn, you can take one action. Choose
+which action to take from those below or from the
+special actions provided by your features. See also
+chapter 1 ("Actions"). These actions are defined elsewhere in this glossary:
+Attack
+Dodge
+Influence
+Search
+Dash
+Help
+Magic
+Study
+Disengage
+Hide
+Ready
+Utilize
+i:.- -- - -
+~=-
+ADVANTAGE
+If you have Advantage on a D20 Test, roll two d20s,
+and use the higher roll. A roll can't be affected by
+more than one Advantage, and Advantage and Disadvantage on the same roll cancel each other. See
+also chapter 1 ("D20 Tests").
+A DVENTURE
+An adventure is a series of encounters. A story
+emerges through playing them. See also "Encounter."
+A LIGNMENT
+A creature's alignment broadly describes its ethical
+attitudes and ideals. Alignment is a combination of
+two factors: one identifies morality (good, evil, or
+neutral), and the other descdbes attitudes toward

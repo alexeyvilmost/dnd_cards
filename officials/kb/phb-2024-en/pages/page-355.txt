@@ -1,0 +1,109 @@
+# Player's Handbook 2024 (EN) — PDF-страница 355/387
+
+REEF SHARK
+Medium Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP 22 (4d8 + 4)
+Speed 5 ft., Swim 30 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 14 +2 +2
+INT
+-5 -5
+DEX 15 +2 +2
+CON 13 +1
++1
+Wis 10 +0 +0
+CHA 4 -3 -3
+Skills Perception +2
+Senses Blindsight 30 ft., Passive Perception 12
+Languages None
+CR 1/2 (XP 100; PB +2)
+TRAITS
+Pack Tactics. The shark has Advantage on an attack roll
+against a creature if at least one of the shark's allies is
+within 5 feet of the creature and the ally doesn't have
+the Incapacitated condition.
+Water Breathing. The shark can breathe only underwater.
+ACTIONS
+Bite. Melee Attack Roll: +4, reach 5 ft. Hit: 7 (2d4 + 2)
+Piercing damage.
+RI DING HORSE
+Large Beast, Unaligned
+AC 11
+HP 13 (2dl0 + 2)
+Speed 60 ft.
+Initiative +l (11 )
+AOD SJ.VE
+IAOD SAVE
+I.mo SAE
+STR 16 +3 +3
+DEX 13 +l
++l
+CON 12 +l
++l
+INT
+2 -4 -4
+Wis 11 +O +G
+CHA 7 -2 - 2
+Senses Passive Perception 10
+Languages None
+CR 1/4 (XP 50; PB +2)
+ACTIONS
+Hooves. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (ld8
++ 3) Bludgeoning damage.
+'=-==-==-=-=-===----==-=~==,-.;==:;;;~==,-di
+APPENDIX B j CREATURE STAT BLOCKS
+SCORPION
+Tiny Beast, Unaligned
+AC 11
+HPl(ld4-l)
+Speed 10 ft.
+MOD SAVE
+Initiative +0 (l 0)
+M OD SAVE
+MO D SAVE
+STR 2 -4 -4
+DEX 11
++0 +0
+CON 8 -1
+-1
+INT 1 -5 -5
+Wis 8 -1
+-1
+CHA 2 -4 -4
+Senses Blindsight 10 ft., Passive Perception 9
+Languages None
+CR O (XP 10; PB +2)
+ACTIONS
+Sting. Melee Attack Roll: +2, reach 5 ft. Hit: 1 Piercing
+damage plus 3 (1d6) Poison damage.
+SKELETON
+Medium Undead, Lawful Evil
+AC 13
+Initiative +3 (13)
+HP 13 (2d8 + 4)
+Speed 30 ft.
+MOD SAVE
+MOD SAVE
+M OD SAVE
+STR 10 +0 +0
+DEX 16 +3 +3
+CON 15 +2 +2
+INT 6 -2 -2
+Wis 8 - 1 - 1
+CHA 5 -3 -3
+Vulnerabilities Bludgeoning
+Immunities Poison; Exhaustion, Poisoned
+Gear Shortbow, Shortsword
+Senses Darkvision 60 ft. , Passive Perception 9
+Languages Understands the languages it knew in life
+but can't speak
+CR 1/4 (XP 50; PB +2)
+ACTIONS
+Shortsword. Melee Attack Roll: +5, reach 5 ft. Hit: 6
+(ld6 + 3) Piercing damage.
+Shortbow. Ranged Attack Roll: +5, ra nge 80/320 ft. Hit:
+6 (ld6 + 3) Piercing damage.

@@ -1,0 +1,107 @@
+# Player's Handbook 2024 (EN) — PDF-страница 361/387
+
+BLOODIED
+A creature is Bloodied while it has half its Hit Points
+or fewer remaining.
+BONUS ACTION
+A Bonus Action is a special action that you can take
+on the same turn that you take an action. You can't
+take more than one Bonus Action on a turn, and
+you have a Bonus Action to take only if a rule explicitly says so. See also chapter 1 ("Actions").
+BREAKING OBJECTS
+Objects can be harmed by attacks and by some
+spells, using the rules below. If an object is exceedingly fragile, the DM may allow a creature to break
+it automatically with the Attack or Utilize action.
+Armor Class. The Object Armor Class table suggests ACs for various substances.
+OBJECT ARMOR CLASS
+AC
+Substance
+AC
+Substance
+11
+Cloth, paper, rope
+19
+Iron, steel
+13
+Crystal, glass, ice
+21
+Mithral
+15
+Wood
+23
+Adamantine
+17
+Stone
+Hit Points. An object is destroyed when it has 0
+Hit Points. The Object Hit Points table suggests Hit
+Points for fragile and resilient objects that are Large
+or smaller. To track Hit Points for a Huge or Gargantuan object, divide it into Large or smaller sections, and track each section's Hit Points separately.
+The DM determines whether destroying part of an
+object causes the whole thing to collapse.
+OBJECT HtT POINTS
+Size
+Fragile
+Resilient
+Tiny (bottle, lock)
+2 (ld4)
+5 (2d4)
+Small (chest, lute)
+3 (1 d6)
+10 (3d6)
+Medium (barrel, chandelier)
+4 (ld8)
+18 (4d8)
+Large (cart, dining table)
+5 (ldl0)
+27 (Sdl0)
+Damage Types and Objects. Objects have Immunity to Poison and Psychic damage. The DM might
+decide that some damage types are more or less
+~ 6 2___________
+APPENDIX CI RULES GLOSSARY
+~
+-.:
+__,,,=;-:--~~~ ~~ ~~~
+er
+•
+•
+b"
+F
+1
+p-'A
+e11ect1ve agamst an o ~ect. or examp e, Bludgeoning damage works well for smashing things but not
+for cutting. Paper or cloth objects might have Vulnerability to Fire damage.
+Damage Threshold. Big objects, such as castle
+walls, often have extra resilience represented by a
+damage threshold. See also "Damage Threshold."
+No Ability Scores. An object lacks ability scores
+unless a rule assigns scores to the object. W ithout
+ability scores, an object can't make ability checks,
+and it fails all saving throws.
+BRIGHT LIGHT
+Bright Light is normal illumination. See also chapter
+1 ("Exploration").
+---
+BURN I NG [HAZARD]
+A burning creature or object takes ld4 Fire damage
+at the start of each of its turns. As an action, you
+can extinguish fire on yourself by giving yourself
+the Prone condition and rolling on the ground.
+The fire also goes out if it is doused, submerged, or
+suffocated.
+BURROW SPEED
+A creature that has a Burrow Speed can use that
+speed to move through sand, earth, mud, or ice. The
+creature can't burrow through solid rock unless the
+creature has a trait that allows it to do so. See also
+"Speed."
+CAMPAIGN
+A campaign is a series of adventures. See also
+"Adventure."
+CANTRIP
+A cantrip is a level O spell, which is cast without a
+spell slot. See also chapter 7.
+:::=--=--
+C ARRYING CAPACITY
+Your size and Strength score dcte:·,nine the maximum weight in pounds that yot1 Gin carry, as shown
+in the Carrying Capacity tabh'!. 1'!1(· ~able also shows
+the maximum weight you can dr ;'·:- lilt, or push.

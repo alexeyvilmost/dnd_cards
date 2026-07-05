@@ -1,0 +1,49 @@
+# Player's Handbook 2024 (EN) — PDF-страница 290/387
+
+LEOMUN D·s TIN Y HUT
+Level 3 Evoca tion (Bard, Wizard)
+casting Time: l minute or Rit ual
+Range: Self
+Components: V, S, M (a crystal bead)
+Duration: 8 hours
+A 10-foot Emanation spr ings into existence around
+you and remains stationary for the duration. The
+spell fails when you cast it if the Emanation isn't big
+enough to fully encapsulate all creatures in its area.
+Creatures and objects within the Emanation when
+you cast the spell can move through it freely. All
+other creatures and objects are barred from passing
+through it. Spells of level 3 or lower can't be cast
+through it, and the effects of such spells can't extend into it.
+The atmosphere inside the Emanation is comfortable and dry, regardless of the weather outside.
+· Until the spell ends, you can command the interior
+to have Dim Light or Darkness (no action required).
+The Emanation is opaque from the outside and of
+any color you choose, but it's transparent from the
+inside.
+The spell ends early if you leave the Emanation or
+if you cast it again.
+LESSER RESTORATION
+Level 2 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)
+Casting Time: Bonus Action
+Range:Touch
+Components: V, S
+Duration: Instantaneous
+You touch a creature and end one condition on it:
+Blinded, Deafened, Paralyzed, or Poisoned.
+LEVITATE
+Level 2 Transmutation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a metal spring)
+Duration: Concentration, up to 10 minutes
+One creature or loose object of your choice that you
+can see within range rises vertically up to 20 feet
+and remains suspended there for the duration. The
+spell can levitate an object that weighs up to 500
+pounds. An unwilling creature that succeeds on a
+Constitution saving throw is unaffected.
+The target can move only by pushing or pulling
+against a fixed object or surface within reach (such
+as a wall or a ceiling), which allows it to move as if it
+were climbing. You can change the target's altitude

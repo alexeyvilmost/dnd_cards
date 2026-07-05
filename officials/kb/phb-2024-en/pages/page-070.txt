@@ -1,0 +1,129 @@
+# Player's Handbook 2024 (EN) — PDF-страница 70/387
+
+L EVEL 3: C i.,_., ;;_;,: ~) UB CLASS
+You gain a Ck1·ic subclass of your choice. The Life
+Domain, Light Domain, Trickery Domain, and War
+Domain subclasses are detailed after this class's description. A subclass is a specialization that grants
+you features at certain Cleric levels. For the rest of
+your career, you gain each of your subclass's featu res that are of your Cleric level or lower.
+LEVEL 4 : ABI L ITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Cleric
+levels 8, 12, and 16.
+LEVEL 5: SEAR UNDEAD
+Whenever you use Turn Undead, you can roll a
+number of d8s equal to your Wisdom modifier
+(minimum of ld8) and add the rolls together. Each
+Undead that fails its saving throw against that use
+of Turn Undead takes Radiant damage equal to the
+roll's total. This damage doesn't end the turn effect.
+LEVEL 7: BLESSED STRIKES
+Divine power infuses you in battle. You gain one of
+the following options of your choice (if you get either option from a Cleric subclass in an older book,
+use only the option you choose for this feature).
+Divine Strike. Once on each of your turns when
+you hit a creature with an attack roll using a
+weapon, you can cause the target to take an extra
+ld8 Necrotic or Radiant damage (your choice).
+Potent Spellcasting. Add your Wisdom modifier to
+the damage you deal with any Cleric cantrip.
+LEVEL 10: DIVINE INTERVENTION
+You can call on your deity or pantheon to intervene on your behalf. As a Magic action, choose any
+Cleric spell of level 5 or lower that doesn't require
+a Reaction to cast. As part of the same action, you
+cast that spell without expending a spell slot or
+needing Material components. You can't use this
+feature again until you finish a Long Rest.
+LEVEL 14: IMPROVED BLESSED STRIKES
+The option you chose for Blessed Strikes grows
+more powerful.
+Divine Strike. The extra damage of your Divine
+Strike increases to 2d8.
+Potent Spellcasting. When you cast a Cleric cantrip and deal damage to a creature with it, you
+can give vitality to yourself or another creature
+within 60 feet of yourself, granting a number of
+Temporary Hit Points equal to twice your Wisdom
+modifier.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Fate is recommended.
+LEVEL 20: GREATER DIVINE INTERVENTION
+You can call on even more powerful divine intervention. When you use your Divine Intervention
+feature, you can choose Wish when you select a
+spell. If you do so, you can't use Divine Intervention
+again until you finish 2d4 Long Rests.
+CLERIC SPELL LIST
+This section presents the Cleric spell list. The spells
+are organized by spell level and then alphabetized,
+and each spell's school of magic is listed. In the Special column, C means the spell requires Concentration, R means it's a Ritual, and M means it requires a
+specific Material component.
+CANTRIPS (LEVEL O CLERIC SPELLS}
+Spell
+School
+Special
+Guidance
+Divination
+C
+Light
+Evocation
+Mending
+Transmutation
+Resistance
+Abjuration
+C
+Sacred Flame
+Evocation
+Spare the Dying
+Necromancy
+Thaumaturgy
+Transmutation
+Toll the Dead
+Necromancy
+Word of Radiance
+Evocation
+LEVEL 1 CLERIC SPELLS
+Spell
+School
+Special
+Bane
+Enchantment
+C
+Bless
+Enchantment
+C,M
+Command
+Enchantment
+Create or Destroy Water
+Transmutation
+Cure Wounds
+Abjuration
+Detect Evil and Good
+Divination
+C
+Detect Magic
+Divination
+C,R
+Detect Poison and Disease
+Divination
+C, R
+Guiding Bolt
+Evocation
+Healing Word
+Abjuration
+Inflict Wounds
+Necromancy
+Protection from Evil and
+Abjuration
+C,M
+Good
+Purify Food and Drink
+Transmutation
+R
+Sanctuary
+Abjuration
+Shield of Faith
+Abjuration
+C
+CHAPTER 3 I CH ARACTER CLASSES
+71

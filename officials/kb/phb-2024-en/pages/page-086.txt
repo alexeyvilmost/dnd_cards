@@ -1,0 +1,82 @@
+# Player's Handbook 2024 (EN) — PDF-страница 86/387
+
+LEVEL 6: IMPROVED CIRCLE FORMS
+While in a Wild Shape form, you gain the following
+benefits.
+Lunar Radiance. Each of your attacks in a Wild
+Shape form can deal its normal damage type or Radiant damage. You make this choice each time you
+hit with those attacks.
+Increased Toughness. You can add your Wisdom
+modifier to your Constitution saving throws.
+LEVEL 10: MOONLIGHT STEP
+You magically transport yourself, reappearing amid
+a burst of moonlight. As a Bonus Action, you teleport up to 30 feet to an unoccupied space you can
+see, and you have Advantage on the next attack roll
+you make before the end of this turn.
+You can use this feature a number of times equal
+to your Wisdom modifier (minimum of once), and
+you regain all expended uses when you finish a
+Long Rest. You can also regain uses by expending
+a level 2+ spell slot for each use you want to restore
+(no action required).
+LEVEL14:LUNARFORM
+The power of the moon suffuses you, granting you
+the following benefits.
+Improved Lunar Radiance. Once per turn, you can
+deal an extra 2d10 Radiant damage to a target you
+hit with a Wild Shape form's attack.
+Shared Moonlight. Whenever you use Moonlight
+Step, you can also teleport one willing creature.
+That creature must be within 10 feet of you, and
+you teleport it to an unoccupied space you can see
+within 10 feet of your destination space.
+CIRCLE OF THE SEA
+Become One with Tides and Storms
+Druids of the Circle of the Sea draw on the tempestuous forces of oceans and storms. Some view
+themselves as embodiments of nature's wrath, seeking vengeance against those who despoil nature.
+Others seek mystical unity with nature by attuning
+themselves to the ebb and flow of the tides, following the rush of currents and waves and listening to
+the inscrutable whispers and roars of the winds.
+LEVEL 3: CIRCLE OF THE SEA SPELLS
+When you reach a Druid level specified in the Circle
+of the Sea Spells table, you thereafter always have
+the listed spells prepared.
+CIRCLE OF THE SEA SPELLS
+Druid Level
+Prepared Spells
+3
+Fog Cloud, Gust of Wind, Ray of Frost,
+Shatter, Thunderwave
+5
+Lightning Bolt, Water Breathing
+7
+9
+Control Water, Ice Storm
+Conjure Elemental, Hold Monster
+LEVEL 3: WRATH OF THE SEA
+As a Bonus Action, you can expend a use of your
+Wild Shape to manifest a 5-foot Emanation that
+takes the form of ocean spray that surrounds you
+for 10 minutes. It ends early if you dismiss it (no
+action required), manifest it again, or have the Incapacitated condition.
+When you manifest the Emanation and as a Bonus
+Action on your subsequent turns, you can choose
+another creature you can see in the Emanation. The
+target must succeed on a Constitution saving throw
+against your spell save DC or take Cold damage and,
+if the creature is Large or smaller, be pushed up to
+15 feet away from you. To determine this damage,
+roll a number of d6s equal to your Wisdom modifier
+(minimum of one die).
+LEVEL 6: AQUATIC AFFINITY
+The size of the Emanation created by your Wrath of
+the Sea increases to 10 feet.
+In addition, you gain a Swim Speed equal to your
+Speed.
+LEVEL 10: STORMBORN
+Your Wrath of the Sea confers two more benefits
+while active, as detailed below.
+Flight. You gain a Fly Speed equal to your Speed.
+Resistance. You have Resistance to Cold, Lightning, and Thunder damage.
+CH APTE R 3 I CHARACTER CLASS ES
+87

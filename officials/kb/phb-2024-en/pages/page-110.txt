@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 110/387
+
+ff ::i Channel Divinity effect requires a saving
+th!'ow, the DC equals the spell save DC from this
+class's Spellcasting feature.
+Divine Sense. As a Bonus Action, you can open
+your awareness to detect Celestials, Fiends, and
+Undead. For the next 10 minutes or until you have
+the Incapacitated condition, you know the location
+of any creature of those types within 60 feet of
+yourself, and you know its creat ure type. Within
+the same radius, you also detect the presence of any
+place or object that has been consecrated or desecrated, as with the Hallow spell.
+LEVEL 3: PALADIN SUBCLASS
+You gain a Paladin subclass of your choice. The
+Oath of Devotion, Oath of Glory, Oath of the Ancients, and Oath of Vengeance subclasses are detailed after this class's description. A subclass is a
+specialization that grants you features at certain
+Paladin levels. For the rest of your career, you gain
+each of your subclass's features that are of your Paladin level or lower.
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Paladin
+levels 8, 12, and 16.
+LEVEL 5: EXTRA ATTACK
+You can attack twice instead of once whenever you
+take the Attack action on your turn.
+LEVEL 5: FAITHFUL STEED
+You can call on the aid of an otherworldly steed.
+You always have the Find Steed spell prepared.
+You can also cast the spell once without expending a spell slot, and you regain the ability to do so
+when you finish a Long Rest.
+LEVEL 6: AURA OF PROTECTION
+You radiate a protective, unseeable aura in a 10-foot
+Emanation that originates from you. The aura is inactive while you have the Incapacitated condition.
+You and your allies in the aura gain a bonus to
+saving throws equal to your Charisma modifier
+(minimum bonus of +1).
+If another Paladin is present, a creature can benefit from only one Aura of Protection at a time; the
+creature chooses which aura while in them.
+LEVE L 9: ABJURE FOES
+As a Magic action, you can expend one use of this
+clas~:•s Channel Divinity to overwhelm foes with
+awe. As you present your Holy Symbol or weapon,
+BREAKING YOUR OATH
+A Paladin tries to hold to the highest standards of
+conduct, but even the most dedicated are fallible.
+Sometimes a Paladin transgresses their oath.
+A Paladin who has broken a vow typically seeks
+absolution, spending an all-night vigil as a sign
+of penitence or undertaking a fast. After a rite of
+forgiveness, the Paladin starts fresh.
+If your Paladin unrepentantly violates their oath,
+talk to your DM. Your Paladin should probably
+take a more appropriate subclass or even abandon the class and adopt another one.
+you can target a number of creatures equal to your
+Charisma modifier (minimum of one creature) that
+you can see within 60 feet of yourself. Each target
+must succeed on a Wisdom saving throw or have
+the Frightened condition for 1 minute or until it
+takes any damage. While Frightened in this way, a
+target can do only one of the following on its turns:
+move, take an action, or take a Bonus Action.
+LEVEL 10: AURA OF COURAGE
+You and your allies have Immunity to the Frightened condition while in your Aura of Protection. If
+a Frightened ally enters the aura, that condition has
+no effect on that ally while there.
+LEVEL 11: RADIANT STRIKES
+Your strikes now carry supernatural power. When
+you hit a target with an attack roll using a Melee
+weapon or an Unarmed Strike, the target takes an
+extra ld8 Radiant damage.
+LEVEL 14: RESTORING TOUCH
+When you use Lay On Hands on a creature, you can
+also remove one or more of the following conditions
+from the creature: Blinded, Charmed, Deafened,
+Frightened, Paralyzed, or Stunned. You must expend 5 Hit Points from the healing pool of Lay On
+Hands for each of these conditions you remove;
+those points don't also restore Hit Points to the
+creature.
+LEVEL 18: AURA EXPANSION
+Your Aura of Protection is now a 30-foot
+Emanation.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter S) or another feat of your choice for which you qualify.
+Boon of Truesight is recommended.

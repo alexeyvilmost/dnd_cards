@@ -1,0 +1,46 @@
+# Player's Handbook 2024 (EN) — PDF-страница 285/387
+
+HOLD PERSON
+Level 2 Enchantment (Bard, Cleric, Druid, Sorcerer,
+Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a straight piece of iron)
+Duration: Concentration, up to l minute
+Choose a Humanoid that you can see within range.
+The target must succeed on a Wisdom saving throw
+or have the Paralyzed condition for the duration. At
+the end of each of its turns, the target repeats the
+save, ending the spell on itself on a success.
+Using a Higher-Level Spell Slot. You can target
+one additional Humanoid for each spell slot level
+above 2.
+H OLY AURA
+Level 8 Abjuration (Cleric)
+Casting Time: Action
+Range:Self
+Components: V, S, M (a reliquary worth 1,000+ GP}
+Duration: Concentration, up to 1 minute
+For the duration, you emit an aura in a 3O-foot Emanation. While in the aura, creatures of your choice
+86
+CH APTER 7 I SPELLS
+have Advantage on all saving throws, and other
+creatures have Disadvantage on attack rolls against
+them. In addition, when a Fiend or an Undead hits
+an affected creature with a melee attack roll, the attacker must succeed on a Constitution saving throw
+or have the Blinded condition until the end of its
+next turn.
+HUNGER OF HADAR
+Level 3 ConJuration (Warlock)
+Casting Time: Action
+Range: 150 feet
+Components: V, S, M (a pickled tentacle)
+Duration: Concentration, up to l minute
+You open a gateway to the Far Realm, a region infested with unspeakable horrors. A 2O-foot-radius
+Sphere of Darkness appears, centered on a point
+with range and lasting for the duration. The Sphere
+is Difficult Terrain, and it is filled with strange whispers and slurping noises, which can be heard up to
+30 feet away. No light, magir::il or otherwise, can illuminate the area, and creotur1:.:. fu lly within it have
+the Blinded condition.
+Any creature that start~ it·· t,1 :-. in the area takes
+2d6 Cold damage. Any crc::it, :--t i h~1t ends its turn

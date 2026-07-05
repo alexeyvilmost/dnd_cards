@@ -1,0 +1,79 @@
+# Player's Handbook 2024 (EN) — PDF-страница 224/387
+
+check. If the aeature's legs are bound, the creature
+has the Restrained condition until it escapes. Escaping the Chain requires the creature to make a
+successful DC 18 Dexterity (Acrobatics) check as an
+action. Bursting the Chain requires a successful DC
+20 Strength (Athletics) check as an action.
+CHEST (5 GP)
+A Chest holds up to 12 cubic feet of contents.
+CLIMBER'S KIT (25 GP)
+A Climber's Kit includes boot tips, gloves, pitons,
+and a harness. As a Utilize action, you can use the
+Climber's Kit to anchor yourself; when you do, you
+can't fall more than 25 feet from the anchor point,
+and you can't move more than 25 feet from there
+without undoing the anchor as a Bonus Action.
+CLOTHES , FINE (15 GP)
+Fine Clothes are made of expensive fabrics and
+adorned with expertly crafted details. Some events
+and locations admit only people wearing these
+clothes.
+CLOTHES, TRAVELER'S (2 GP)
+Traveler's Clothes are resilient garments designed
+for travel in various environments.
+COMPONENT POUCH (25 GP)
+A Component Pouch is watertight and filled with
+compartments that hold all the free Material components of your spells.
+COSTUME (5 GP)
+While wearing a Costume, you have Advantage on
+any ability check you make to impersonate the person or type of person it represents.
+C ROWBAR (2 GP)
+Using a Crowbar gives you Advantage on Strength
+checks where the Crowbar's leverage can be applied.
+DIPLOMAT'S .PACK (39 GP)
+A Diplomat's Pack contains the following items:
+Chest, Fine Clothes, Ink, 5 Ink Pens, Lamp, 2 Map
+or Scroll Cases, 4 flasks of Oil, 5 sheets of Paper, 5
+sheets of Parchment, Perfume, and Tinderbox.
+DRUIDIC Focus (VARIES)
+': _Druidic Focus takes one of the forms in the Druidi~ Focuses table and is carved, tied with ribbon, or
+painted to channel primal magic. A Druid or Ranger
+can use such an object as a Spellcasting Focus.
+D RU IDIC FOCUSES
+Focus
+Sprig of mistletoe
+Wooden staff (also a Quarterstaff)
+Yew wand
+DUNGEONEER'S PACK (12 GP)
+Weight
+Cost
+l GP
+4 lb.
+5 GP
+l lb. 10 GP
+A Dungeoneer's Pack contains the following items:
+Backpack, Caltrops, Crowbar, 2 flasks of Oil, 10
+days of Rations, Rope, Tinderbox, 10 Torches, and
+Waterskin.
+--
+ENTERTAINER'S PACK (40 GP)
+An Entertainer's Pack contains the following items:
+Backpack, Bedroll, Bell, Bullseye Lantern, 3 Costumes, Mirror, 8 flasks of Oil, 9 days of Rations,
+Tinderbox, and Waterskin.
+EXPLORER'S PACK (10 GP)
+An Explorer's Pack contains the following items:
+Backpack, Bedroll, 2 flasks of Oil, 10 days of Rations, Rope, Tinderbox, 10 Torches, and Waterskin.
+FLASK (2 CP)
+A Flask holds up to 1 pint.
+GRAPPLING HOOK (2 GP)
+As a Utilize action, you can throw the Grappling
+Hook at a railing, a ledge, or another catch within
+SO feet of yourself, and the hook catches on if you
+succeed on a DC 13 Dexterity (Acrobatics) check. If
+you tied a Rope to the hook, you can then climb it.
+HEALER'S KIT (5 GP)
+A Healer's Kit has ten uses. As a Utilize action, you
+can expend one of its uses to stabilize an Unconscious creature that has O Hit Points without needing to make a Wisdom (Medicine) check.
+CHAPTER 6 I EQUI PMENT
+225

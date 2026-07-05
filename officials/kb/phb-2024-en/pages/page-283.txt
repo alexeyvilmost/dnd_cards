@@ -1,0 +1,88 @@
+# Player's Handbook 2024 (EN) — PDF-страница 283/387
+
+HASTE
+Level 3 Transmutation (Sorcerer~ Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (a shaving of licorice root)
+Duration: Concentration, up to l minute
+Choose a willing creature that you can see within
+range. Until the spell ends, the target's Speed is
+doubled, it gains a +2 bonus to Armor Class, it has
+Advantage on Dexterity saving throws, and it gains
+an additional action on each of its turns. That action can be used to take only the Attack (one attack
+only), Dash, Disengage, Hide, or Utilize action.
+When the spell ends, the target is Incapacitated
+and has a Speed of O until the end of its next turn,
+as a wave of lethargy washes over it.
+HEAL
+Level 6 Abjuration (Cleric, Druid)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+Choose a creature that you can see within range.
+Positive energy washes through the target, restoring 70 Hit Points. This spell also ends the Blinded,
+Deafened, and Poisoned conditions on the target.
+Using a Higher-Level Spell Slot. The healing increases by 10 for each spell slot level above 6.
+H EALING WORD
+Level 1 Abjuration (Bard, Cleric, Druid)
+Casting Time: Bonus Action
+Range: 60 feet
+Components: V
+Duration: Instantaneous
+A creature of your choice that you can see within
+range regains Hit Points equal to 2d4 plus your
+spellcasting ability modifier.
+Using a Higher-Level Spell Slot. The healing increases by 2d4 for each spell slot level above 1.
+HEAT METAL
+Level 2 Transmutation (Bard, Druid)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a piece of iron and a flame)
+Duration: Concentration, up to l minute
+Choose a manufactured metal object, such as a
+metal weapon or a suit of Heavy or Medium metal
+284
+CHAPTER 7 I SPELLS
+armor, that you can see w ithin ran r;e. You cause
+the object to glow red-hot. Any creat :..11·e in physical
+contact with the object takes 2d8 Fire da mage wh
+you cast the spell. Until the spell ends, you can tak:n
+a Bonus Action on each of your later t u rns to deal
+this damage again if the object is within range.
+If a creature is holding or wearing t he object and
+takes the damage from it, the creature must succeed
+on a Constitution sav ing th row or drop the object if
+it can. If it doesn't drop the object, it has Disadvantage on attack rolls and ability checks until the start
+of your next turn.
+Using a Higlter-Level Spell Slot. The da mage increases by ld8 for each spell slot level above 2.
+HELLISH R EBUKE
+Level 1 Evocation (Wad ock)
+Casting Time: Reaction , which yo u ta ke in res ponse
+to taki ng damage from a creature that you can see
+withi n 60 feet of yourself
+Range: 60 feet
+Components: V, S
+Duration: Instanta neous
+The creature that damaged you is momentarily surrounded by green flames. It makes a Dexterity saving throw, taking 2d10 Fire damage on a failed save
+or half as much damage on a successful one.
+Using a Higher-Level Spell Slot. The damage increases by ldlO for each spell slot level above 1.
+HEROES' F EAST
+Level 6 Conjuration (Bard, Cleric, Druid)
+Casting Time: 10 minutes
+Range: Self
+Components: V, S, M (a gem-encrusted bowl worth
+l ,000+ GP, which the spell consumes)
+Duration: Instantaneous
+You conjure a feast that appears on a surface in
+an unoccupied 10-foot Cube next to you. The feast
+takes 1 hour to consume and disappears at the end
+of that time, and the beneficial effects don't set in
+until this hour is over. Up to twelve creatures can
+partake of the feast.
+A creature th at partakes gains several benefits,
+which last for 24 hours. The creature has Resistance to Poison damage, and it has Immunity to the
+Frightened and Poisoned conditions. Its Hit Point
+maximum also increases by 2d10, and it gains the
+same number of Hit Points.

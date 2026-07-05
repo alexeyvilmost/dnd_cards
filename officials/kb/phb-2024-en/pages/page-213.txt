@@ -1,0 +1,95 @@
+# Player's Handbook 2024 (EN) — PDF-страница 213/387
+
+IMPROVISED WEAPONS
+If you use an object-such as a table leg, frying
+pan, or bottle-as a makeshift weapon, see "Im·
+provised Weapons" in the rules glossary. Also see
+those rules if you wield a weapon in an unusual
+way, such as using a Ranged weapon to make a
+melee attack.
+Light weapon, and you don't add your ability mod·
+if1er to the extra attack's damage unless that modi·
+fier is negative. For example, you can attack with a
+Shortsword in one hand and a Dagger in the other
+using the Attack action and a Bonus Action, but you
+don't add your Strength or Dexterity modifier to the
+damage roll of the Bonus Action unless that modifier is negative.
+LOADING
+You can fire only one piece of ammunition from a
+Loading weapon when you use an action, a Bonus
+Action, or a Reaction to fire it, regardless of the
+number of attacks you can normally make.
+RANGE
+A Range weapon has a range in parentheses after
+the Ammunition or Thrown property. The range
+lists two numbers. The first is the weapon's normal
+range in feet, and the second is the weapon's long
+range. When attacking a target beyond normal
+range, you have Disadvantage on the attack roll.
+You can't attack a target beyond the long range.
+REACH
+A Reach weapon adds 5 feet to your reach when you
+attack with it, as well as when determining your
+reach for Opportunity Attacks with it.
+THROWN
+If a weapon has the Thrown property, you can
+throw the weapon to make a ranged attack, and
+you can draw that weapon as part of the attack. If
+the weapon is a Melee weapon, use the same ability
+modifier for the attack and damage rolls that you
+use for a melee attack with that weapon.
+Two - HANDED
+A Two-Handed weapon requires two hands when
+you attack with it.
+VERSATILE
+A Versatile weapon can be used with one or two
+hands. A damage value in parentheses appears with
+the property. The weapon deals that damage when
+used with two hands to make a melee attack.
+CH APT ER 6 I EQUI PME NT
+MASTERY PROPERTIE S
+Each weapon has a mastery property, which is usable only by a character who has a featu re, such as
+Weapon Mastery, that unlocks the property for the
+character. The properties are defined below.
+CLEAVE
+If you hit a creature with a melee attack roll using
+this weapon, you can make a melee attack roll with
+the weapon against a second creature within 5 feet
+of the first that is also within your reach. On a hit,
+the second creature takes the weapon's damage,
+but don't add your ability modifier to that damage
+unless that modifier is negative. You can make this
+extra attack only once per turn.
+GRAZE
+If your attack roll with this weapon misses a creature, you can deal damage to that creature equal to
+the ability modifier you used to make the attack roll.
+This damage is the same type dealt by the weapon,
+and the damage can be increased only by increasing
+the ability modifier.
+NICK
+When you make the extra attack of the Light prop·
+erty, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra
+attack only once per turn.
+PUSH
+If you hit a creature with this weapon, you can push
+the creature up to 10 feet straight away from yourself if it is Large or smaller.
+SAP
+If you hit a creature with this weapon, that creature
+has Disadvantage on its next attack roll before the
+start of your next turn.
+SLOW
+If you hit a creature with this weapon and deal
+damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit
+more than once by weapons that have this property,
+the Speed reduction doesn't exceed 10 feet.
+TOPPLE
+If you hit a creature with this weapon, you can
+force the creature to make a Constitution saving
+throw (DC 8 plus the ability modifier used to make
+the attack roll and your Proficiency Bonus). On a
+failed save, the creature has the P, one condition.
+VEX
+If you hit a creature with this ver,pon and deal
+damage to the creature, you have Ad•1:rntage on
+your next attack roll against tha! crc.:· t ure before
+the end of your next turn.

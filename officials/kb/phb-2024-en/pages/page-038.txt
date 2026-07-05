@@ -1,0 +1,163 @@
+# Player's Handbook 2024 (EN) — PDF-страница 38/387
+
+• I
+STR E~~GT H
+ld4 High Str.
+1
+Muscular
+2
+Sinewy
+3
+Protective
+4
+Direct
+DEXTERITY
+ld4 High Dex.
+Lithe
+2
+Dynamic
+3
+Fidgety
+4
+Poised
+CONSTITUTION
+ld4 High Con.
+l
+Energetic
+2
+Hale
+3
+Hearty
+4
+Stable
+INTELLIGENCE
+ld4 High Int.
+l
+Decisive
+2
+Logical
+3
+Informative
+4
+Curious
+WISDOM
+ld4 High Wis.
+l
+Serene
+2
+Considerate
+3
+Attentive
+4
+Wary
+CHARISMA
+ld4 High Cha.
+Charming
+2
+Commanding
+3
+Hilarious
+4
+Inspiring
+UNALIGNED CREATURES
+ld4 Low Str.
+Weak
+2
+Slight
+3
+Self-conscious
+4
+Indirect
+ld4 Low Dex.
+Jittery
+2
+Clumsy
+3
+Hesitant
+4
+Unsteady
+ld4 Low Con.
+Frail
+2
+Squeamish
+3
+Lethargic
+4
+Fragile
+ld4 Low Int.
+l
+Artless
+2
+Illogical
+3
+Uninformed
+4
+Frivolous
+ld4 Low Wis.
+Rash
+2
+Distracted
+3
+Oblivious
+4
+Naive
+ld4 Low Cha.
+Pedantic
+2
+Humorless
+3
+Reserved
+4
+Tactless
+Most creatures that lack the capacity for rational
+thought don't have alignments; they are unaligned. Sharks are savage predators, for exam•
+pie, but they aren't evil; they are unaligned.
+STEP 4: CHOOSE AN ALIGNMENT
+Choose your character's alignment from the options
+below, and note it on your character sheet.
+D&D assumes that player characters aren't of an
+evil alignment. Check with your OM before making
+an evil character.
+THE NINE ALIGNMENTS
+A creature's alignment broadly describes its ethical
+attitudes and ideals. Alignment is a combination of
+two factors: one identifies morality (good, evil, or
+neutral), and the other describes attitudes toward
+order (lawful, chaotic, or neutral).
+The summaries of the alignments below describe
+the typical behavior of a creature with that alignment; individuals can vary from that behavior.
+Lawful Good (LG). Lawful Good creatures endeavor to do the right thing as expected by society.
+Someone who fights injustice and protects the innocent without hesitation is probably Lawful Good.
+Neutral Good (NG). Neutral Good creatures do the
+best they can, working within rules but not feeling
+bound by them. A kindly person who helps others
+according to their needs is probably Neutral Good.
+Chaotic Good (CG). Chaotic Good creatures act as
+their conscience directs with little regard for what
+others expect. A rebel who waylays a cruel baron's
+tax collectors and uses the stolen money to help the
+poor is probably Chaotic Good.
+Lawful Neutral (LN). Lawful Neutral individuals
+act in accordance with law, tradition, or personal
+codes. Someone who follows a disciplined rule of
+life- and isn't swayed either by the demands of
+those in need or by the temptations of evil-is probably Lawful Neutral.
+Neutral (N). Neutral is the alignment of those who
+prefer to avoid moral questions and don't take sides,
+doing what seems best at the time. Someone who's
+bored by moral debate is probably Neutral.
+Chaotic Neutral (CN). Chaotic Neutral creatures
+follow their whims, valuing their personal freedom
+above all else. A scoundrel who wanders the land
+living by their wits is probably Chaotic Neutral.
+Lawful Evil (LE). Lawful Evil creatures methodically take what they want within the limits of a
+code of tradition, loyalty, or order. An aristocrat exploiting citizens while scheming for power is probably Lawful Evil.
+Neutral Evil (NE). Neutral Evil is the alignment of
+those who are untroubled by the harm they cause as
+they pursue their desires. A criminal who robs and
+murders as they please is probably Neutral Evil.
+Chaotic Evil (CE). Chaotic Evil creatures act with
+arbitrary violence, spurred by their hatred or bloodlust. A villain pursuing schemes of vengeance and
+havoc is probably Chaotic Evil.
+CHAPTER 2 I CREATING A CHARACTE R
+39

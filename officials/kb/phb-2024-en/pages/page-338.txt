@@ -1,0 +1,97 @@
+# Player's Handbook 2024 (EN) — PDF-страница 338/387
+
+WALL O F I C E
+Level 6 Evocation (Wizard)
+casting Time: Action
+Range: 120 feet
+components: V, S, M (a piece of quartz)
+Duration: Concentration , up to 10 minutes
+You create a wall of ice on a solid surface within
+range. You can form it into a hemispherical dome
+or a globe with a radius of up to 10 feet, or you can
+shape a flat surface made up of ten 10-foot-square
+panels. Each panel must be contiguous with another
+panel. In any form, the wall is 1 foot thick and lasts
+for the duration.
+If the wall cuts through a creature's space when
+it appears, the creature is pushed to one side of the
+wall (you choose which side) and makes a Dexterity
+saving throw, taking 10d6 Cold damage on a failed
+save or half as much damage on a successful one.
+The wall is an object that can be damaged and
+thus breached. It has AC 12 and 30 Hit Points per
+10-foot section, and it has Immunity to Cold, Poison, and Psychic damage and Vulnerability to Fire
+damage. Reducing a 10-foot section of wall to O Hit
+Points destroys it and leaves behind a sheet of frigid
+air in the space the wall occupied.
+A creature moving through the sheet of frigid air
+for the first time on a turn makes a Constitution
+saving throw, taking Sd6 Cold damage on a failed
+save or half as much damage on a successful one.
+Using a Higher-Level Spell Slot. The damage the
+wall deals when it appears increases by 2d6 and the
+damage from passing through the sheet of frigid air
+increases by ld6 for each spell slot level above 6.
+WALL O F STO NE
+Level 5 Evocation (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (a cube of granite)
+Duration: Concentration, up to 10 minutes
+A nonmagical wall of solid stone springs into existence at a point you choose within range. The wall
+is 6 inches thick and is composed of ten 10-foot-by-
+10-foot panels. Each panel must be contiguous with
+another panel. Alternatively, you can create 10-footby-20 -foot panels that are only 3 inches thick.
+If the wall cuts through a creature's space when
+it appears, the creature is pushed to one side of the
+wall (yo 1: <:h oose w hich side). If a creature would
+be surro uuded on all sides by the wall (or the wall
+and anotn~·r solid surface), that creature can make
+a Dexterity saving throw. On a success, it can use
+its Reaction to move up to its Speed so that it is no
+longer enclosed by the wall.
+T?e wall can have any shape you desire, though it
+cant occupy the same space as a creature or object.
+The wall doesn't need to be vertical or rest on a firm
+foundation. It must, however, merge with and be
+solidly supported by existing stone. Thus, you can
+use this spell to bridge a chasm or create a ramp.
+If you create a span greater than 20 feet in length,
+you must halve the size of each panel to create supports. You can crudely shape the wall to create battlements and the like.
+The wall is an object made of stone that can be
+damaged and thus breached. Each panel has AC 15
+and 30 Hit Points per inch of thickness, and it has
+Immunity to Poison and Psychic damage. Reducing
+a panel to O Hit Points destroys it and might cause
+connected panels to collapse at the DM's discretion.
+If you maintain your Concentration on this spell
+for its full duration, the wall becomes permanent
+and can't be dispelled. Otherwise, the wall disappears when the spell ends.
+W ALL OF T HORNS
+Level 6 Conjuration (Druid)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (a handful of thorns)
+Duration: Concentration, up to 10 minutes
+You create a wall of tangled brush bristling with
+needle-sharp thorns. The wall appears within range
+on a solid surface and lasts for the duration. You
+choose to make the wall up to 60 feet long, 10 feet
+high, and 5 feet thick or a circle that has a 20-foot
+diameter and is up to 20 feet high and 5 feet thick.
+The wall blocks line of sight.
+When the wall appears, each creature in its area
+makes a Dexterity saving throw, taking 7d8 Piercing damage on a failed save or half as much damage
+on a successful one.
+A creature can move through the wall, albeit
+slowly and painfully. For every 1 foot a creature
+moves through the wall, it must spend 4 feet of
+movement. Furthermore, the first time a creature
+enters a space in the wall on a turn or ends its turn
+there, the creature makes a Dexterity saving throw,
+taking 7d8 Slashing damage on a failed save or half
+as much damage on a successful one. A creature
+makes this save only once per turn.
+Using a Higher-Level Spell Slot. Both types of damage increase by 1d8 for each spell slot level above 6.
+CHA PTER 7 I SPELLS
+39

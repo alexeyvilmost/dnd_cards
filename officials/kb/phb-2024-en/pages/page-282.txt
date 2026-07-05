@@ -1,0 +1,100 @@
+# Player's Handbook 2024 (EN) — PDF-страница 282/387
+
+HAI L O F l'H OR NS
+Level 1 Conjuration (Ranger)
+casting Time: Bonus Action, which you take immediately after hitting a creature with a Ranged weapon
+Range: Self
+Components: V
+Duration: Instantaneous
+As you hit the creature, this spell creates a rain
+of thorns that sprouts from your Ranged weapon
+or ammunition. The target of the attack and each
+creature within S feet of it make a Dexterity saving
+throw, taking ldlO Piercing damage on a failed save
+or half as much damage on a successful one.
+Using a Higher-Level Spell Slot. The damage increases by ldlO for each spell slot level above 1.
+HALLOW
+Level 5 Abjuration (Cleric)
+Casting Time: 24 hours
+Range:Touch
+Components: V, S, M (incense worth l ,000+ GP,
+which the spell consumes)
+Duration: Until dispelled
+You touch a point and infuse an area around it with
+holy or unholy power. The area can have a radius up
+to 60 feet, and the spell fails if the radius includes
+an area already under the effect of Hallow. The affected area has the following effects.
+Hallowed Ward. Choose any of these creature
+types: Aberration, Celestial, Elemental, Fey, Fiend,
+or Undead. Creatures of the chosen types can't
+willingly enter the area, and any creature that is
+possessed by or that has the Charmed or Frightened condition from such creatures isn't possessed,
+Charmed, or Frightened by them while in the area.
+Extra Effect. You bind an extra effect to the area
+from the list below:
+Courage.Creaturesofanytypesyouchoosecan1
+gain the Frightened condition while in the area.
+Darkness. Darkness fills the area. Normal light, as
+well as magical light created by spells of a level
+lower than this spell, can't illuminate the area.
+Daylight. Bright light fills the area. Magical Darkness created by spells of a level lower than this
+spell can't extinguish the light.
+Peaceful Rest. Dead bodies interred in the area
+can't be turned into Undead.
+Extradimensional Interference. Creatures of any
+types yo1 , choose can't enter or exit the area using
+teleporta, ion or interplanar travel.
+Fear. CrcaL :'es of any types you choose have the
+Frighte1 t·d condition while in the area.
+Resistance. Creatures of any types you choose have
+Resistance to one damage type of your choice
+while in the area.
+Silence. No sound can emanate from within the
+area, and no sound can reach into it.
+Tongues. Creatures of any types you choose can
+communicate with any other creature in the area
+even if they don't share a common language.
+Vulnerability. Creatures of any types you choose
+have Vulnerability to one damage type of your
+choice while in the area.
+- ~
+- -- -- -- - --
+----- ------
+-
+HALLUCINATORY TERRAIN
+Level 4 Illusion (Bard, Druid, Warlock, Wizard)
+Casting Time: 10 minutes
+Range: 300 feet
+Components: V, S, M (a mushroom)
+Duration: 24 hours
+You make natural terrain in a 150-foot Cube in
+range look, sound, and smell like another sort of
+natural terrain. Thus, open fields or a road can be
+made to resemble a swamp, hill, crevasse, or some
+other difficult or impassable terrain. A pond can be
+made to seem like a grassy meadow, a precipice like
+a gentle slope, or a rock-strewn gully like a wide and
+smooth road. Manufactured structures, equipment,
+and creatures within the area aren't changed.
+The tactile characteristics of the terrain are unchanged, so creatures entering the area are likely
+to notice the illusion. If the difference isn't obvious
+by touch, a creature examining the illusion can take
+the Study action to make an Intelligence (Investigation) check against your spell save DC to disbelieve
+it. If a creature discerns that the terrain is illusory,
+the creature sees a vague image superimposed on
+the real terrain.
+HARM
+Level 6 Necromancy (Cleric)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+You unleash virulent magic on a creature you can
+see within range. The target makes a Constitution
+saving throw. On a failed save, it takes 14d6 Ne·
+crotic damage, and its Hit Point maximum is reduced by an amount equal to the Necrotic damage
+it took. On a successful save, it takes half as much
+damage only. This spell can't reduce a target's Hit
+Point maximum below 1.
+CHAPTER 7 I SPELLS
+28~

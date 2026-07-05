@@ -1,0 +1,65 @@
+# Player's Handbook 2024 (EN) — PDF-страница 10/387
+
+ABILITY CHECK EXAMPLES
+Ability
+Make a Check To ...
+Strength
+Dexterity
+Constitution
+Intelligence
+Wisdom
+Charisma
+Lift, push, pull, or break something
+Move nimbly, quickly, or quietly
+Push your body beyond normal limits
+Reason or remember
+Notice things in the environment or
+in creatures' behavior
+Influence, entertain, or deceive
+PROFICIENCY BONUS
+Add your Proficiency Bonus to an ability check
+when the DM determines that a skill or tool proficiency is relevant to the check and you have
+that proficiency. For example, if a rule refers to a
+Strength (Acrobatics or Athletics) check, you can
+add your Proficiency Bonus to the check if you have
+proficiency in the Acrobatics or Athletics skill. See
+"Proficiency" later in this chapter for more information about skill and tool proficiencies.
+DIFFICULTY CLASS
+The Difficulty Class of an ability check represents
+the task's difficulty. The more difficult the task, the
+higher its DC. The rules provide DCs for certain
+checks, but the OM ultimately sets them. The Typical Difficulty Classes table presents a range of possible DCs for ability checks.
+TYPICAL DIFFICULTY CLASSES
+Task Difficulty
+DC
+Task Difficulty
+Very easy
+Easy
+Medium
+s
+10
+15
+SAVING THROWS
+Hard
+Very hard
+Nearly impossible
+DC
+20
+25
+30
+A saving throw-also called a save-represents an
+attempt to evade or resist a threat, such as a fiery
+explosion, a blast of poisonous gas, or a spell trying
+to invade your mind. You don't normally choose to
+make a save; you must make one because your character or a monster (if you're the OM) is at risk. A
+save's result is detailed in the effect that caused it.
+If you don't want to resist the effect, you can
+choose to fail the save without rolling.
+ABILITY MODIFIER
+Saving throws are named for the ability modifiers
+they use: a Constitution saving throw, a Wisdom
+saving throw, and so on. Different saving throws
+are used to resist different kinds of effects, as shown
+on the Saving Throw Examples table.
+CHAPTER l I PLAY I NG THE GAME
+II

@@ -1,0 +1,98 @@
+# Player's Handbook 2024 (EN) — PDF-страница 246/387
+
+The hanli :~ an object t hat has AC 20 and Hit
+Points equa i to you r Hit Point maximum. If it drops
+too Hit Points, the spell ends. The hand doesn't occupy its space.
+When you cast the spell and as a Bonus Action on
+your later turns, you can move the hand up to 60
+feet and then cause one of the following effects:
+Clenched Fist. The hand strikes a target within 5
+feet of it. Make a melee spell attack. On a hit, the
+target takes Sd8 Force damage.
+Forceful Hand. The hand attempts to push a Huge
+or smaller creature within 5 feet of it. The target
+must succeed on a Strength saving throw, or the
+hand pushes the target up to 5 feet plus a number
+of feet equal to five times your spellcasting ability
+modifier. The hand moves with the target, remaining within 5 feet of it.
+Grasping Hand. The hand attempts to grapple a
+Huge or smaller creature within S feet of it. The
+target must succeed on a Dexterity saving throw,
+or the target has the Grappled condition, with an
+escape DC equal to your spell save DC. While the
+hand grapples the target, you can take a Bonus
+Action to cause the hand to crush it, dealing Bludgeoning damage to the target equal to 4d6 plus
+your spellcasting ability modifier.
+Interposing Hand. The hand grants you Half Cover
+against attacks and other effects that originate
+from its space or that pass through it. In addition, its space counts as Difficult Terrain for your
+enemies.
+Using a Higher-Level Spell Slot. The damage of the
+Clenched Fist increases by 2d8 and the damage of
+the Grasping Hand increases by 2d6 for each spell
+slot level above 5.
+BLA DE B A RR IER
+Level 6 Evocation (Cleric)
+Casting Time: Action
+Range: 90 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You create a wall of whirling blades made of magical energy. The wall appears within range and lasts
+for the duration. You make a straight wall up to 100
+feet long, 20 feet high, and 5 feet thick, or a ringed
+wall up to 60 feet in diameter, 20 feet high, and S
+feet thick. The wall provides Three-Quarters Cover,
+and its space is Difficult Terrain.
+Any creatu • .• in the wall's space makes a Dexterity
+saving throw. i:aki ng 6d10 Force damage on a failed
+save or half ·"·• much damage on a successful one. A
+creature n h e. . a kes that save if it enters the wall's
+space or en.i·- ;: turn there. A creature makes that
+save only o .
+• per turn.
+BLADE WARD
+Abjuration Cantrip (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Concentration, up to 1 minute
+Whenever a creature makes an attack roll against
+you before the spell ends, the attacker subtracts ld4
+from the attack roll.
+BLESS
+Level 1 Enchantment (Cleric, Paladin)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (a Holy Symbol worth S+ GP)
+Duration: Concentration, up to 1 minute
+You bless up to three creatures within range.
+Whenever a target makes an attack roll or a saving
+throw before the spell ends, the target adds ld4 to
+the attack roll or save.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 1.
+BLIGHT
+Level 4 Necromancy (Druid, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S
+Duration: Instantaneous
+A creature that you can see within range makes
+a Constitution saving throw, taking 8d8 Necrotic
+damage on a failed save or half as much damage on
+a successful one. A Plant creature automatically
+fails the save.
+Alternatively, target a nonmagical plant that isn't
+a creature, such as a tree or shrub. It doesn't make a
+save; it simply withers and dies.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 4.
+BLINDING S MITE
+Level 3 Evocation (Paladin)
+Casting Time: Bonus Action, which you take immediately after hitting a creature with a Melee weapon or
+an Unarmed Strike
+Range: Self
+Component: V
+Duration: l minute
+The target hit by the strike takes an extra 3d8 Radiant damage from the attack, and the target has the
+CHAPTER 7 I SPELLS
+247

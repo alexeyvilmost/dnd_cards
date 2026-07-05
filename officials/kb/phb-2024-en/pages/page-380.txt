@@ -1,0 +1,383 @@
+# Player's Handbook 2024 (EN) — PDF-страница 380/387
+
+Gia nt Weasel stat block,
+Hallucinatory Terrain
+Hostile attitude, 368
+Instrument, Musical, 221
+Life Domain subclass, 73
+351
+spell, 283
+hover, 368
+Intelligence, 10
+Lifedrinker invocation, 156
+Gift of the Depths
+hammers, 215
+Huge, 25
+interacting with objects,
+lifestyle expense, 230
+invocation, 156
+Handaxe, 215
+Human, 194
+19
+aristocratic, 231
+Gift of the Protectors
+Hand Crossbow, 215
+Humanoid creature type,
+interaction, social, 16
+comfortable, 231
+invocation, 156
+Harm spell, 283
+364
+Interception feat, 209
+modest, 231
+Cla ive, 215
+Haste spell, 284
+Hunger of Hadar spell,
+Interpreting Die Rolls in
+poor, 231
+Classblower's Tools, 220
+Hawk stat block, 352
+286
+the Story sidebar, 9
+squalid, 231
+Class Bottle, 224
+hazard, 20, 368
+Hunter's Mark spell, 287
+Intimidation skill, 14
+wealthy, 231
+Glibness spell, 279
+burning, 362
+Hunter subclass, 127
+Investigation skill, 14
+wretched, 230
+Globe of Invulnerability
+dehydration, 365
+Hunting Trap, 226
+Investment of the Chain
+Light, 19
+spell, 279
+falling, 367
+Hypnotic Pattern spell,
+Master invocation, 156
+Bright. 19, 362
+Gloom Stalker Spells
+malnutrition, 371
+287
+Invisible condition, 370
+Dim, 19, 366
+table, 126
+suffocation, 376
+Ice, Para-elemental Plane
+Invisibility spell, 289
+Light armor, 219
+Gloom Stalker subclass,
+Healer feat, 201
+of, 344
+Iron Pot, 228
+Light Crossbow, 215
+125
+Healer's Kit, 225
+Ice Knife spell, 287
+Iron Spikes, 228
+Light Domain Spells
+glossary, rules, 360
+healing, 28, 368
+Ice Storm spell, 287
+items, 233
+table, 74
+Glyph of Warding spell,
+damage and, 27
+identifying a magic item,
+crafting nonmagical,
+Light Domain subclass,
+279
+stabilizing a character,
+232
+233
+74
+Gnome, 191
+29
+Identifying an Ongoing
+wearing, 233
+Light Hammer, 215
+Gnomish language, 37
+Healing, Potion of. 228
+Spell sidebar, 238
+wielding, 233
+Lightly Armored feat, 205
+Goat, Giant, stat block,
+Healing Word spell, 284
+Identify spell, 287
+Jack of All Trades class
+Lightly Obscured, 19, 370
+350
+Heal spell, 284
+lgnan language dialect,
+feature, 60
+Ughtning Arrow spell, 292
+Goat stat block, 351
+Heat Metal spell, 284
+37
+Jallarzi's Storm of
+Ughtning Bait spell, 292
+Goblin language, 37
+Heavily Armored feat, 204
+Illusion, 369
+Radiance spell, 289
+Lightning damage, 365
+Gold Piece (GP), 213
+Heavily Obscured, 19, 368
+Illusionist subclass, 175
+Javelin, 215
+Light property, 213
+Goliath , 192
+Heavy, 213
+Illusory Script spell, 288
+Jeweler's Tools, 220
+Ught spell, 292
+Goodberry spell, 280
+Heavy armor, 219
+Immunity, 28, 369
+Jug, 226
+Limbo, 344
+Grappled condition, 367
+Heavy Armor Master
+impeded weapons,
+Jump, High, 369
+line area of effect, 3 70
+Grappler feat, 204
+feat, 204
+underwater combat, 27
+Jump, Long, 370
+lion stat block, 352
+grappling, 367
+Heavy Crossbow, 215
+Imprisonment spell, 288
+jumping, 370
+Lizard stat block, 353
+Grappling Hook, 225
+Heavy property, 213
+Improved Blessed Strikes
+Jump spell, 290
+Loading property, 214
+Grasping Vine spell, 280
+Heightened Focus class
+class feature, 71
+Keelboat, 230
+Locate Animals or Plants
+Graze mastery property,
+feature, l 03
+Improved Brutal Strike
+Keen Mind feat, 205
+spell, 292
+214
+Heightened Spell
+class feature, 53
+Ki class feature. See
+Locate Creature spell, 292
+Grease spell, 280
+metamagic, 142
+Improved Cunning Strike
+Monk's Focus, 101
+Locate Object spell, 293
+Greataxe, 215
+Hellish Rebuke spell, 284
+class feature, 131
+Ki-Empowered Strikes
+lock,226
+Greatclub, 215
+Help action, l 5, 368
+Improved Divine Smite.
+class feature. See
+lodging, 231
+Greater Divine
+Herbalism Kit, 221
+See Radiant Strikes,
+Empowered Strikes,
+longbow, 215
+Intervention class
+Hermit background, 182
+111
+103
+long Jump, 370
+feature, 71
+Heroes' Feast spell, 284
+Improved Elemental Fury
+ki points. See Monk's
+long Rest, 370
+Greater Invisibility spell,
+Heroic Inspiration, 13,
+class feature, 81
+Focus, 101
+Longship, 230
+281
+368
+improvised weapon, 369
+knocking out a creature,
+Longnrider spell, 293
+Greater Restoration spell,
+Heroic Inspiration
+Improvised Weapons
+29, 370
+longsword, 215
+281
+sidebar, 13
+sidebar, 214
+Knocking Out a Creature
+lucky feat, 201
+Great Old One Patron
+Heroism spell, 285
+Imp stat block, 352
+sidebar, 28
+lute, 221
+subclass, 162
+Hex spell, 285
+Incapacitated condition,
+Knock spell, 290
+lyre, 221
+Great Old One Spells
+Hide action, 15, 368
+369
+Ladder, 226
+Mace, 215
+table, 163
+Hide Armor, 219
+Incendiary Cloud spell,
+lamp, 226
+Mage Armor spell, 293
+Greatsword, 215
+hiding, 19
+288
+lance, 215
+Mage Hand spell, 293
+Great Weapon Fighting
+High Elf, 189
+Indifferent attitude, 369
+language, 37
+Mage Slayer feat, 205
+feat, 209
+High Jump, 368
+Indomitable class feature,
+lanterns, 226
+Magic action, 15, 371
+Great Weapon Master
+hireling, 232
+92
+large, 25
+Magical Cunning class
+feat, 204
+Hirelings table, 232
+Indomitable Might class
+lawful Evil (LE), 39
+feature, 154
+Guard background, 181
+History skill, 14
+feature, 53
+Lawful Good (LG), 39
+magical effect, 3 71
+Guardian of Faith spell,
+Hit, Critical, 27
+Infernal language, 37
+Lawful Neutral (LN), 39
+Magical Secrets class
+281
+Hit Dice, 41, 368
+Infernal Tiefling, 196
+Lay On Hands class
+feature, 61
+Guards and Wards spell,
+Hit Point Dice, 41,368
+Inflict Wounds spell, 288
+feature, 109
+Magic Circle spell, 293
+282
+Hit Point maximum of
+Influence action, 15, 369
+Leather Armor, 219
+Magic Initiate feat, 201
+Guidance spell, 282
+0, 28
+Influence Checks table,
+leatherworker's Tools,
+magic item, 232
+Guide background, 181
+Hit Points, 27, 368
+369
+220
+identifying a, 232
+Guiding Bolt spell, 282
+dropping to 0, 28
+Initiative, 23, 369
+Legend Lore spell, 290
+Magic)arspell, 294
+Guild Artisan. See
+Temporary, 29, 376
+Initiative order, 23
+Leomund's Secret Chest
+Magic Missile spell, 295
+Artisan, 178
+Hold Monster spell, 285
+Ink, 226
+spell, 290
+Magic Mouth spell, 295
+Guild Merchant. See
+Hold Person spell, 286
+Ink Pen, 226
+Leomund's Tiny Hut spell,
+Magic Weapon spell, 29
+Merchant, 182
+Holy Aura spell, 286
+Innate Sorcery class
+291
+Magma, Para-elementa
+G11st of Wind spell, 282
+Holy Symbol, 226
+feature, 139
+Lesser Restoration spell,
+Plane of, 344
+Hades, 344
+Holy Symbols table, 226
+Inner Planes, 344
+291
+Magnifying Glass, 226
+Hail of Thorns spell, 283
+Holy Water, 226
+Insect Plague spell, 289
+Lessons of the First Ones
+Mail, Chain, 219
+Halberd, 215
+Hooded Lantern, 226
+Insight skill, 14
+invocation, 156
+Mail, Ring, 21 9
+Half Cover, 26
+Hook, Grappling, 225
+Inspiration. See Heroic
+level advancement, 41
+Mail. Scale, 219
+half damage, 28
+horn, 221
+Inspiration, 368
+Level 1 Hit Points by
+Major Image spell, 29S
+Hal/ling, 193
+Horse, Draft, stat block,
+Inspiring leader feat, 204
+Class table, 40
+making an attack, 25
+Halfling language, 37
+349
+instant death, 28
+Levitate spell, 291
+making an Opportuni'
+11:i f r late Armor, 219
+Horse, Riding, stat block,
+Instinctive Pounce class
+Life Domain Spells table,
+Attack, 26
+1-'al/ow spell, 283
+356
+feature, 53
+73
+malnutrition hazard, :
+INN

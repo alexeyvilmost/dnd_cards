@@ -1,0 +1,172 @@
+# Player's Handbook 2024 (EN) — PDF-страница 51/387
+
+BARBARIAN FEATURES
+Proficiency
+Rage
+Weapon
+Level
+Bonus
+Class Features
+Rages
+Damage
+Mastery
+1
++2
+Rage, Unarmored Defense, Weapon Mastery
+2
++2
+2
+2
++2
+Danger Sense, Reckless Attack
+2
++2
+2
+3
++2
+Barbarian Subclass, Primal Knowledge
+3
++2
+2
+4
++2
+Ability Score Improvement
+5
++3
+Extra Attack, Fast Movement
+6
++3
+Subclass feature
+7
++3
+Feral Instinct, Instinctive Pounce
+8
++3
+Ability Score Improvement
+9
++4
+Brutal Strike
+10
++4
+Subclass feature
+11
++4
+Relentless Rage
+12
++4
+Ability Score Improvement
+13
++5
+Improved Brutal Strike
+14
++5
+Subclass feature
+15
++5
+Persistent Rage
+16
++5
+Ability Score Improvement
+17
++6
+Improved Brutal Strike
+18
++6
+Indomitable Might
+19
++6
+Epic Boon
+20
++6
+Primal Champion
+LEVEL l: WEAPON MASTERY
+Your training with weapons allows you to use the
+mastery properties of two kinds of Simple or Martial Me lee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long
+Rest, you can practice weapon drills and change one
+of those weapon choices.
+When you reach certain Barbarian levels, you
+gain the ability to use the mastery properties of
+more kinds of weapons, as shown in the Weapon
+Mastery column of the Barbarian Features table.
+LEVEL 2: DANGER SENSE
+You gain an uncanny sense of when things aren't as
+they should be, giving you an edge when you dodge
+perils. You have Advantage on Dexterity saving
+throws unless you have the Incapacitated condition.
+LEVEL 2: RECKLESS ATTACK
+You can throw aside all concern for defense to attack with increased ferocity. When you make your
+first attack roll on your turn, you can decide to attack recklessly. Doing so gives you Advantage on attack rolls using Strength until the start of your next
+turn, but attack rolls against you have Advantage
+during that time.
+52
+CH APTER 3 I CHARACTER CLASSES
+3
++2
+3
+3
++2
+3
+4
++2
+3
+4
++2
+3
+4
++2
+3
+4
++3
+3
+4
++3
+4
+4
++3
+4
+5
++3
+4
+5
++3
+4
+5
++3
+4
+5
++3
+4
+5
++4
+4
+6
++4
+4
+6
++4
+4
+6
++4
+4
+6
++4
+4
+LEVEL 3: BARBARIAN SUBCLASS
+You gain a Barbarian subclass of your choice. The
+Path of the Berserker, Path of the Wild Heart, Path
+of the World Tree, and Path of the Zealot subclasses
+are detailed after this class's description. A subclass
+is a specialization that grants you features at certain Barbarian levels. For the rest of your career,
+you gain each of your subclass's features that are of
+your Barbarian level or lower.
+LEVEL 3: PRIMAL KNOWLEDGE
+You gain proficiency in another skill of your choice
+from the skill list available to Barbarians at level 1.
+In addition, while your Rage is active, you can
+channel primal power when you attempt certain
+tasks; whenever you make an ability check using
+one of the following skills, you can make it as a
+Strength check even if it normally uses a different ability: Acrobatics, Intimidation, Perception,
+Stealth, or Survival. When you use this ability, your
+Strength represents primal power coursing through
+you, honing your agility, bearing, and senses.

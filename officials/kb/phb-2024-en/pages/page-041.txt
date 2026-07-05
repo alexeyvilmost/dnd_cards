@@ -1,0 +1,51 @@
+# Player's Handbook 2024 (EN) — PDF-страница 41/387
+
+ADVE N T UR ING EQ.U I P M E N T IM PROV ES
+AS A C.HA R IIC. TE R PROGRESS ES THR O UGH
+THE TI ER S OF P L AY.
+GAINING A LEVEL
+When you gain a level, follow these steps:
+1: Choose a Class. Most characters advance in the
+same class. However, you might decide to gain a
+level in another class using the rules in the "Multiclassing" section later in this chapter.
+2: Adjust Hit Points and Hit Point Dice. Each time
+you gain a level, you gain an additional Hit Die.
+Roll that die, add your Constitution modifier to
+the roll, and add the total (minimum of 1) to your
+Hit Point maximum. Instead of rolling, you can
+use the fixed value shown in the Fixed Hit Points
+by Class table.
+FIXED HIT POINTS BY CLASS
+Class
+Barbarian
+Fighter, Paladin, or Ranger
+Bard, Cleric, Druid, Monk,
+Rogue, or Warlock
+Sorcerer or Wizard
+Hit Points per Level
+7 + Con. modifier
+6 + Con. modifier
+5 + Con. modifier
+4 + Con. modifier
+.f.2
+CHAPTER 2 I CREATI NG A CHARACTER
+3: Record New Class Features. Look at your class
+features table in chapter 3, and note the features
+you gain at your new level in that class. Make any
+choices offered by a new feature.
+4: Adjust Proficiency Bonus. A character's Proficiency Bonus increases at certain levels, as shown
+in the Character Advancement table and your
+class features table in chapter 3. When your Proficiency Bonus increases, increase all the numbers on your character sheet that include your
+Proficiency Bonus.
+5: Adjust Ability Modifiers. If you choose a feat
+that increases one or more of your ability scores,
+your ability modifier also changes if the new
+score is an even number. When that happens, adjust all the numbers on your character sheet that
+use that ability modifier. When your Constitution
+modifier increases by 1, your Hit Point maximum
+increases by 1 for each level you have attained.
+For example, if a character reaches level 8 and
+increases their Constitution score from 17 to 18,
+the Constitution modifier increases to +4. The
+character's Hit Point maximum then increases by
+8, in addition to the Hit Points gained for reaching level 8 .

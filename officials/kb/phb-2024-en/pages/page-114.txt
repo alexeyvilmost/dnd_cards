@@ -1,0 +1,110 @@
+# Player's Handbook 2024 (EN) — PDF-страница 114/387
+
+distr:l;ute Temporary Hit Points to creatures of
+your :.:hoice within 30 feet of yourself, which can
+include you. The total number of Temporary Hit
+Points equals 2d8 plus your Paladin level, divided
+among the chosen creatures however you like.
+LE VEL 3: OATH OF GLORY SPELLS
+The magic of your oath ensures you always have
+certain spells ready; when you reach a Paladin
+level specified in the Oath of Glory Spells table, you
+thereafter always have the listed spells prepared.
+OATH OF GLORY SPELLS
+Paladin Level
+Spells
+3
+Guiding Bolt, Heroism
+5
+Enhance Ability, Magic Weapon
+9
+Haste, Protection from Energy
+13
+Compulsion, Freedom of Movement
+17
+Legend Lore, Yolande's Regal Presence
+LEVEL 3: PEERLESS ATHLETE
+As a Bonus Action, you can expend one use of your
+Channel Divinity to augment your athleticism. For
+1 hour, you have Advantage on Strength (Athletics)
+and Dexterity (Acrobatics) checks, and the distance
+of your Long and High Jumps increases by 10 feet
+(this extra distance costs movement as normal).
+LEVEL 7: AURA OF ALACRITY
+Your Speed increases by 10 feet.
+In addition, whenever an ally enters your Aura of
+Protection for the first time on a turn or starts their
+turn there, the ally's Speed increases by 10 feet until
+the end of their next turn.
+LEVEL 15: GLORIOUS DEFENSE
+You can turn defense into a sudden strike. When
+you or another creature you can see within 10 feet
+of you is hit by an attack roll, you can take a Reaction to grant a bonus to the target's AC against that
+attack, potentially causing it to miss. The bonus
+equals your Charisma modifier (minimum of +l). If
+the attack misses, you can make one attack with a
+weapon against the attacker as part of this Reaction
+if the attacker is within your weapon's range.
+You can use this feature a number of times equal
+to your Charisma modifier (minimum of once),
+and you regain all expended uses when you finish a
+Long Rest.
+LEV EL 20: L IVING LEGEND
+You can empower yourself with the legendswhether true or exaggerated-of your great deeds.
+As a Bonus Action, you gain the benefits below for
+10 minutes. Once you use this feature, you can't use
+it again until you finish a Long Rest. You can also
+restore your use of it by expending a level 5 spell
+slot (no action required).
+Charismatic. You are blessed with an otherworldly
+presence and have Advantage on all Charisma
+checks.
+Saving Throw Reroll. If you fail a saving throw,
+you can take a Reaction to reroll it. You must use
+this new roll.
+Unerring Strike. Once on each of your turns when
+you make an attack roll with a weapon and miss,
+you can cause that attack to hit instead.
+OATH OF THE ANCIENTS
+Preserve Life and Light in the World
+The Oath of the Ancients is as old as the first elves.
+Paladins who swear this oath cherish the light; they
+love the beautiful and life-giving things of the world
+more than any principles of honor, courage, and
+justice. They often adorn their armor and clothing
+with images of growing things-leaves, antlers, or
+flowers-to reflect their commitment to preserving
+life and light.
+These paladins share the following tenets:
+• Kindle the light of hope.
+• Shelter life.
+• Delight in art and laughter.
+LEVEL 3: NATURE'S WRATH
+As a Magic action, you can expend one use of your
+Channel Divinity to conjure spectral vines around
+nearby creatures. Each creature of your choice that
+you can see within 15 feet of yourself must succeed
+on a Strength saving throw or have the Restrained
+condition for 1 minute. A Restrained creature repeats the save at the end of each of its turns, ending
+the effect on itself on a success.
+LEVEL 3: OATH OF THE ANCIENTS SPELLS
+The magic of your oath ensures you always have
+certain spells ready; when you reach a Paladin
+level specified in the Oath of the Ancients Spells
+table, you thereafter always have the listed spells
+prepared.
+OATH OF THE ANCIENTS SPELLS
+Paladin Level
+Spells
+3
+Ensnaring Strike, Speak with Animals
+5
+Misty Step, Moonbeam
+9
+Plant Growth, Protection from Energy
+13
+Ice Storm, Stoneskin
+17
+Commune with Nature, Tree Stride
+CH APTER 3 I CHAR ACTER CLASSE~
+II~

@@ -1,0 +1,98 @@
+# Player's Handbook 2024 (EN) — PDF-страница 279/387
+
+than 10 feet in diameter. If the surface or object is
+moved more than 10 feet from where you cast this
+spell, the glyph is broken, and the spell ends without
+being triggered.
+The glyph is nearly imperceptible and requires a
+successful Wisdom (Perception) check against your
+spell save DC to notice.
+When you inscribe the glyph, you set its trigger
+and choose whether it's an explosive rune or a spell
+glyph, as explained below.
+Set the 1Hgger. You decide what triggers the glyph
+when you cast the spell. For glyphs inscribed on a
+surface, common triggers include touching or stepping on the glyph, removing another object covering it, or approaching within a certain distance of it.
+For glyphs inscribed within an object, common triggers include opening that object or seeing the glyph.
+Once a glyph is triggered, this spell ends.
+You can refine the trigger so that only creatures
+of certain types activate it (for example, the glyph
+could be set to affect Aberrations). You can also set
+conditions for creatures that don't trigger the glyph,
+such as those who say a certain password.
+Explosive Rune. When triggered, the glyph erupts
+with magical energy in a 20-foot-radius Sphere
+centered on the glyph. Each creature in the area
+makes a Dexterity saving throw. A creature takes
+Sd8 Acid, Cold, Fire, Lightning, or Thunder damage
+(your choice when you create the glyph) on a failed
+save or half as much damage on a successful one.
+Spell Glyph. You can store a prepared spell of
+level 3 or lower in the glyph by casting it as part of
+creating the glyph. The spell must target a single
+creature or an area. The spell being stored has no
+immediate effect when cast in this way.
+When the glyph is triggered, the stored spell takes
+effect. If the spell has a target, it targets the creature that triggered the glyph. If the spell affects an
+area, the area is centered on that creature. If the
+spell summons Hostile creatures or creates harmful
+objects or traps, they appear as close as possible to
+the intruder and attack it. If the spell requires Concentration, it lasts until the end of its full duration.
+Using a Higher-Level Spell Slot. The damage of an
+explosive rune increases by ld8 for each spell slot
+level above 3. If you create a spell glyph, you can
+store any spell of up to the same level as the spell
+slot you use for the Glyph of Warding.
+,,,oO
+C H APT ER 7 I SPELLS
+~ - -
+r-
+Go ODBERRY
+Level 1 Conjuration (Druid, Ranger)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a sprig of mistletoe)
+Duration: 24 hours
+Ten berries appear in your hand and are infused
+with magic for the duration. A creature can tak
+Bonus Ac~ion ~o eat one berry. Eating a berry ree- a
+stores 1 Hit Pomt, and the berry provides enou h
+"h
+•
+g
+nouns ment to sustam a creature for one day.
+Uneaten berries disappear when the spell ends.
+GRASPING VINE
+Level 4 Conjuration (Druid, Ranger)
+Casting Time: Bonus Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to l minute
+You conjure a vine that sprouts from a surface in
+an un?ccupied space that you can see within range.
+The vme lasts for the duration.
+Make a melee spell attack against a creature
+within 30 feet of the vine. On a hit, the target takes
+4d8 Bludgeoning damage and is pulled up to 30 feet
+toward the vine; if the target is Huge or smaller
+it has the Grappled condition (escape DC equal ~o
+your spell save DC). The vine can grapple only one
+creature at a time, and you can cause the vine to release a Grappled creature (no action required).
+As a Bonus Action on your later turns, you can
+repeat the attack against a creature within 30 feet
+of the vine.
+Using a Higher-Level Spell Slot. The number of
+creatures the vine can grapple increases by one for
+each spell slot level above 4.
+GREASE
+Level 1 Conjuration (Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a bit of pork rind or butter)
+Duration: 1 minute
+Nonflammable grease covers the ground in a 10-foot
+square centered on a point within range and turns it
+into Difficult Terrain for the duration.
+When the grease appears, each creature standing in its area must succeed on a Dexterity saving
+throw or have the Pron~ condition. A creature that
+enters the area or ends its t urn there must also succeed on that save or fa !l Prone.

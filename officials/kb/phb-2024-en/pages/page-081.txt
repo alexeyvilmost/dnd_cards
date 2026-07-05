@@ -1,0 +1,75 @@
+# Player's Handbook 2024 (EN) — PDF-страница 81/387
+
+0
+o ·
+(ANTRIPS (LEVEL O DRUID SPELLS)
+LEVEL 20: ARCHDRUID
+The vitality of nature constantly blooms within
+Spell
+School
+Special
+you, granting you the following benefits.
+Druidcraft
+Transmutation
+Evergreen Wild Shape. Whenever you roll Initia-
+Elemental ism
+Transmutation
+tive and have no uses of Wild Shape left, you regain
+one expended use of it.
+Guidance
+Divination
+C
+Nature Magician. You can convert uses of Wild
+Mending
+Transmutation
+Shape into a spell slot (no action required). Choose
+Message
+Transmutation
+a number of your unexpended uses of Wild Shape
+Poison Spray
+Necromancy
+and convert them into a single spell slot, with each
+use contributing 2 spell levels. For example, if you
+Produce Flame
+Conjuration
+convert two uses of Wild Shape, you produce a level
+Resistance
+Abjuration
+C
+4 spell slot. Once you use this benefit, you can't do
+Shillelagh
+Transmutation
+so again until you finish a Long Rest.
+Longevity. The primal magic that you wield causes
+Spare the Dying
+Necromancy
+you to age more slowly. For every ten years that
+Starry Wisp
+Evocation
+pass, your body ages only one year.
+Thorn Whip
+Transmutation
+DRUID SPELL LIST
+Thunderclap
+Evocation
+This section presents the Druid spell list. The spells
+LEVEL 1 DRUID SPELLS
+are organized by spell level and then alphabetized,
+and each spell's school of magic is listed. In the Spe-
+Spell
+School
+Special
+cial column, C means the spell requires Concentra-
+Animal Friendship
+Enchantment
+tion, R means it's a Ritual, and M means it requires a
+Charm Person
+Enchantment
+specific Material component.
+Create or Destroy Water
+Transmutation
+~
+Cure Wounds
+Abjuration
+82
+CHAPTER 3 : CHARACTER CLASSES

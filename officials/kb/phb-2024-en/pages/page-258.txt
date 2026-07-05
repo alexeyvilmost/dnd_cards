@@ -1,0 +1,98 @@
+# Player's Handbook 2024 (EN) — PDF-страница 258/387
+
+Usinu a Higher-Level Spell Slot. If you use a level 7
+spell slot, you can animate or reassert control over
+four Ghouls. If you use a level 8 spell slot, you can
+animate or i·eassert control over five Ghouls or two
+Ghasts or W ights. If you use a level 9 spell slot, you
+can animate or reassert control over six Ghouls,
+three Ghasts or Wights, or two Mummies. See the
+Monster Manual for these stat blocks.
+CREATION
+Level 5 Illusion (Sorcerer, Wizard)
+Casting Time: l minute
+Range: 30 feet
+Components: V, S, M (a paintbrush)
+Duration: Special
+You pull wisps of shadow material from the Shadowfell to create an object within range. It is either
+an object of vegetable matter (soft goods, rope,
+wood, and the like) or mineral matter (stone, crystal, metal, and the like). The object must be no
+larger than a 5-foot Cube, and the object must be of
+a form and material that you have seen.
+The spell's duration depends on the object's material, as shown in the Materials table. If the object
+is composed of multiple materials, use the shortest
+duration. Using any object created by this spell as
+another spell's Material component causes the other
+spell to fail.
+MATERIALS
+Material
+Vegetable matter
+Stone or crystal
+Precious metals
+Duration
+24 hours
+12 hours
+l hour
+Gems
+10 minutes
+Adamantine or mithral
+l minute
+Using a Higher-Level Spell Slot. The Cube increases
+by 5 feet for each spell slot level above 5.
+CROWN O F MA DN ESS
+Level 2 Enchantment (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: Concentration, up to l minute
+One creatu re that you can see within range must
+succeed on n Wisdom saving throw or have the
+Charmed c:undition for the duration. The creature
+succeeds auto 1atically if it isn't Humanoid.
+A spectral r i· lWn appears on the Charmed target's
+head, and it r,· l,5 1: use its action before moving on
+each of its turns to make a melee attack against a
+creature other than itself that you mentally choose.
+The target can act normally on its turn if you
+choose no creature or if no creature is within its
+reach. The target repeats the save at the end of each
+of its turns, ending the spell on itself on a success.
+On your later turns, you must take the Magic action to maintain control of the target, or the spell
+ends.
+CRUSADER'S MANTLE
+Level 3 Evocation (Paladin)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Concentration, up to l minute
+You radiate a magical aura in a 30-foot Emanation.
+While in the aura, you and your allies each deal
+an extra ld4 Radiant damage when hitting with a
+weapon or an Unarmed Strike.
+CURE WOUNDS
+Level 1 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: Instantaneous
+A creature you touch regains a number of Hit
+Points equal to 2d8 plus your spellcasting ability
+modifier.
+Using a Higher-Level Spell Slot. The healing increases by 2d8 for each spell slot level above 1.
+DANCING LIGHTS
+Illusion Cantrip (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: V, S, M (a bit of phosphorus)
+Duration: Concentration, up to l minute
+You create up to four torch-size lights within range,
+making them appear as torches, lanterns, or glowing orbs that hover for the duration. Alternatively,
+you combine the four lights into one glowing Medium form that is vaguely humanlike. Whichever
+form you choose, each light sheds Dim Light in a
+10-foot radius.
+As a Bonus Action, you can move the lights up
+to 60 feet to a space within range. A light must be
+within 20 feet of another light created by this spell,
+and a light vanishes if it exceeds the spell's range.
+CHAPT ER 7 I SPEL LS
+259

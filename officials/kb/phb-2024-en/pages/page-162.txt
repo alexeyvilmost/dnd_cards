@@ -1,0 +1,60 @@
+# Player's Handbook 2024 (EN) — PDF-страница 162/387
+
+The telep,ilhic con nection lasts for a number of
+minutes equal to your Wa rlock level. It ends early
+if you use this feature to connect with a different
+creature.
+LEVEL 3: GREAT OLD ONE SPELLS
+The magic of your patron ensures you always have
+certain spells ready; when you reach a Warlock
+level specified in the Great Old One Spells table, you
+thereafter always have the listed spells prepared.
+GREAT OLD ONE SPELLS
+Warlock Level
+Spells
+3
+Detect Thoughts, Dissonant Whispers, Phantasmal Force, Tasha's
+Hideous Laughter
+5
+Clairvoyance, Hunger of Hadar
+7
+Confusion, Summon Aberration
+9
+Modify Memory, Telekinesis
+LEVEL 3: PSYCHIC SPELLS
+When you cast a Warlock spell that deals damage,
+you can change its damage type to Psychic. In
+addition, when you cast a Warlock spell that is an
+Enchantment or Illusion, you can do so without
+Verbal or Somatic components.
+LEVEL 6: CLAIRVOYANT COMBATANT
+When you form a telepathic bond with a creature
+using your Awakened Mind, you can force that
+creature to make a Wisdom saving throw against
+your spell save DC. On a failed save, the creature
+has Disadvantage on attack rolls against you, and
+you have Advantage on attack rolls against that
+creature for the duration of the bond.
+Once you use this feature, you can't use it again
+until you finish a Short or Long Rest unless you expend a Pact Magic spell slot (no action required) to
+restore your use of it.
+LEVEL 10: ELDRITCH HEX
+Your alien patron grants you a powerful curse. You
+always have the Hex spell prepared. When you cast
+Hex and choose an ability, the target also has Disadvantage on saving throws of the chosen ability for
+the duration of the spell.
+LEVEL 10: THOUGHT SHIELD
+Your thoughts can't be read by telepathy or other
+means unless you allow it. You also have Resistance
+to Psychic damage, and whenever a creature deals
+Psychic damage to you, that creature takes the
+same amount of damage that you take.
+LEVEL 14: CREATE ThRALL
+~hen yo~ cast S~mmon_Aberration, you can modify
+tt so that 1t doesn t require Concentration. If you do
+so, the spell's duration becomes 1 minute for that
+casting, and when summoned, the Aberration has a
+number of Temporary Hit Points equal to your Warlock level plus your Charisma modifier.
+In addition, the first time each turn the Aberration hit~ a creature under the effect of your Hex, the
+Aberration deals extra Psychic damage to the target
+equal to the bonus damage of that spell.

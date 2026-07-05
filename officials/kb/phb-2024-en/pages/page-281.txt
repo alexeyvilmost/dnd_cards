@@ -1,0 +1,89 @@
+# Player's Handbook 2024 (EN) — PDF-страница 281/387
+
+GUARDS AND WARDS
+Level 6 Abjuration (Bard, Wizard)
+Casting Time: l hour
+Range:Touch
+Components: V, S, M (a silver rod worth 10+ GP)
+Duration: 24 hours
+You create a ward that protects up to 2,500 square
+feet of floor space. The warded area can be up to
+20 feet tall, and you shape it as one SO-foot square,
+one hundred 5-foot squares that are contiguous, or
+twenty-five 10-foot squares that are contiguous.
+When you cast this spell, you can specify individuals that are unaffected by the spell's effects.
+You can also specify a password that, when spoken
+aloud within 5 feet of the warded area, makes the
+speaker immune to its effects.
+The spell creates the effects below within the
+warded area. Dispel Magic has no effect on Guards
+and Wards itself, but each of the following effects
+can be dispelled. If all four are dispelled, Guards and
+Wards ends. If you cast the spell every day for 365
+days on the same area, the spell thereafter lasts until all its effects are dispelled.
+Corridors. Fog fills all the warded corridors, making them Heavily Obscured. In addition, at each
+intersection or branching passage offering a choice
+of direction, there is a SO percent chance that a
+creature other than you believes it is going in the
+opposite direction from the one it chooses.
+Doors. All doors in the warded area are magically
+locked, as if sealed by the Arcane Lock spell. In addition, you can cover up to ten doors with an illusion
+to make them appear as plain sections of wall.
+Stairs. Webs fill all stairs in the warded area from
+top to bottom, as in the Web spell. These strands
+regrow in 10 minutes if they are destroyed while
+Guards and Wards lasts.
+Other Spell Effect. Place one of the following magical effects within the warded area:
+• Dancing Lights in four corridors, with a simple program that the lights repeat as long as Guards and
+Wards lasts
+• Magic Mouth in two locations
+• Stinking Cloud in two locations {the vapors return
+within 10 minutes if dispersed while Guards and
+Wards lasts)
+Gust of Wind in one corridor or room {the wind
+blows continuously while the spell lasts)
+• Suggestion in one 5-foot square; any creature
+that enters that square receives the suggestion
+mentally
+GUIDANCE
+Divination Cantrip (Cleric, Druid)
+Casting Time: Action
+Range:Touch
+Component: V, S
+Duration: Concentration , up to l minute
+You touch a willing creature and choose a skill. Until the spell ends, the creature adds ld4 to any ab·lity check using the chosen skill.
+1
+GUIDING BOLT
+Level 1 Evocation (Cleric)
+Casting Time: Action
+Range: 120 feet
+Components: V, S
+Duration: l round
+You hurl a bolt of light toward a creature within
+range. Make a ranged spell attack against the tar t
+On a hit, it takes 4d6 Radiant damage, and the ne~et •
+attack roll made against it before the end of your
+next turn has Advantage.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 1.
+GUST OF WIND
+Level 2 Evocation (Druid, Ranger, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a legume seed)
+Duration: Concentration, up to 1 minute
+A Line of strong wind 60 feet long and 10 feet wide
+blasts from you in a direction you choose for the
+duration. Each creature in the Line must succeed on
+a Strengt~ savi?g th_row or be pushed 15 feet away
+from you m a direction following the Line. A creature that ends its turn in the Line must make the
+same save.
+Any creature in the Line must spend 2 feet of
+movement for every 1 foot it moves when moving
+closer to you.
+The gust disperses gas or vapor, and it extinguishes candles and similar unprotected flames in
+the area. It causes protected flames, such as those
+of lanterns, to dance wildly and has a SO percent
+chance to extinguish them.
+As a Bonus Action on your later tu rns, you can
+change the direction in w hich the Line blasts from
+you.

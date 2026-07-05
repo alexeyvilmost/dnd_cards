@@ -1,0 +1,116 @@
+# Player's Handbook 2024 (EN) — PDF-страница 72/387
+
+LEVEL 7 CLERIC SPELLS
+Spell
+School
+Conjure Celestial
+Conjuration
+Divine Word
+Evocation
+Etherealness
+Conjuration
+Fire Storm
+Evocation
+Plane Shift
+Conjuration
+Power Word Fortify
+Enchantment
+Regenerate
+Transmutation
+Resurrection
+Necromancy
+Symbol
+Abjuration
+LE V EL 8 C LER IC S PELLS
+Spell
+School
+Antimagic Field
+Abjuration
+Control Weather
+Transmutation
+Earthquake
+Transmutation
+Holy Aura
+Abjuration
+Sunburst
+Evocation
+LE V EL 9 C LERIC SPELLS
+Spell
+School
+Astral Projection
+Necromancy
+Gate
+Conjuration
+Mass Heal
+Abjuration
+~
+Power Word Heal
+Enchantment
+True Resurrection
+Necromancy
+Special
+C
+M
+M
+M
+Special
+C
+C
+C
+C, M
+Special
+M
+C,M
+M
+CLERIC SUBCLASSES
+A Cleric subclass is a specialization that grants
+you features at certain Cleric levels, as specified in
+the subclass. Each Cleric subclass is named after a
+domain of existence that is favored by a god, pantheon, or religious order. This section presents the
+Life Domain, Light Domain, Trickery Domain, and
+War Domain subclasses.
+LIFE DO MAIN
+Soothe the Hurts of the World
+The Life Domain focuses on the positive energy that
+helps sustain all life in the multiverse. Clerics who
+tap into this domain are masters of healing, using
+that life force to cure many hurts.
+Existence itself relies on the positive energy associated with this domain, so a Cleric of almost any
+religious tradition might choose it. This domain is
+particularly associated with agricultural deities,
+gods of healing or endurance, and gods of home and
+community. Religious orders of healing also seek
+the magic of this domain.
+L EVEL 3: DISCIPLE OF LIFE
+When a spell you cast with a spell slot restores Hit
+Points to a creature, that creature regains additional Hit Points on the turn you cast the spell. The
+additional Hit Points equal 2 plus the spell slot's
+level.
+LEVEL 3: LIFE DOMA IN SPELLS
+Your connection to this divine domain ensures you
+always have certain spells ready. When you reach
+a Cleric level specified in the Life Domain Spells
+table, you thereafter always have the listed spells
+prepared.
+L I FE DOM A I N S PELLS
+Cleric Level Prepared Spells
+3
+Aid, Bless, Cure Wounds,
+Lesser Restoration
+5
+Mass Healing Word, Revivify
+7
+Aura of Life, Death Ward
+9
+Greater Restoration, Mass Cure Wounds
+LEVEL 3: PRESERVE LIFE
+As a Magic action, you present your Holy Symbol
+and expend a use of your Channel Divinity to evoke
+healing energy that can restore a number of Hit
+Points equal to five times your Cleric level. Choose
+Bloodied creatures within 30 feet of yourself
+(which can include you), and divide those Hit Points
+among them. This feature can restore a creature to
+no more than half its Hit Point maximum.
+CHAPTER 3 I CHARACTER CLASSES
+73

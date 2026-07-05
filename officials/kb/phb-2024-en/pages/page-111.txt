@@ -1,0 +1,172 @@
+# Player's Handbook 2024 (EN) — PDF-страница 111/387
+
+PALADIN SPELL LIST
+This section presents the Paladin spell list. The
+spells are organized by spell level and then alphabetized, and each spell's school of magic is listed.
+In the Special column, C means the spell requires
+Concentration, R means it's a Ritual, and M means it
+requires a specific Material component.
+LEVEL l PALADIN SPELLS
+Spell
+School
+Special
+Bless
+Enchantment
+C, M
+Command
+Enchantment
+Compelled Duel
+Enchantment
+C
+Cure Wounds
+Abjuration
+Detect Evil and Good
+Divination
+C
+Detect Magic
+Divination
+C,R
+Detect Poison and Disease
+Divination
+C, R
+Divine Favor
+Transmutation
+Divine Smite
+Evocation
+Heroism
+Enchantment
+C
+Protection from Evil and
+Abjuration
+C,M
+Good
+Purify Food and Drink
+Transmutation
+R
+Searing Smite
+Evocation
+Shield of Faith
+Abjuration
+C
+Thunderous Smite
+Evocation
+Wrathful Smite
+Necromancy
+LEVEL 2 PALADIN SPELLS
+Spell
+School
+Special
+Aid
+Abjuration
+Find Steed
+Conjuration
+Gentle Repose
+Necromancy
+R, M
+Lesser Restoration
+Abjuration
+Locate Object
+Divination
+C
+Magic Weapon
+Transmutation
+Prayer of Healing
+Abjuration
+Protection from Poison
+Abjuration
+Shining Smite
+Transmutation
+C
+Warding Bond
+Abjuration
+M
+Zone of Truth
+Enchantment
+LEVEL 3 PALADI N SPELLS
+Spell
+School
+Special
+Aura of Vitality
+Abjuration
+C
+Blinding Smite
+Evocation
+Create Food and Water
+Conjuration
+Crusader's Mantle
+Transmutation
+C
+•
+•
+•
+"'
+'
+('
+C'
+c
+Spell
+Daylight
+Dispel Magic
+Elemental Weapon
+Magic Circle
+Remove Curse
+Revivify
+LEVEL 4 PALADIN SPELLS
+Spell
+Aura of Life
+Aura of Purity
+Banishment
+Death Ward
+Locate Creature
+Staggering Smite
+LEVEL 5 PALADIN SPELLS
+Spell
+Banishing Smite
+Circle of Power
+Destructive Wave
+Dispel Evil and Good
+Geas
+Greater Restoration
+Raise Dead
+Summon Celestial
+School
+Evocation
+Abjuration
+Transmutation
+Abjuration
+Abjuration
+Necromancy
+School
+Abjuration
+Abjuration
+Abjuration
+Abjuration
+Divination
+Enchantment
+School
+Conjuration
+Abjuration
+Evocation
+Abjuration
+Enchantment
+Abj uration
+Necrorr·•ancy
+Conjurariun
+Special
+C
+M
+M
+Special
+C
+C
+C
+C
+Special
+C
+C
+C
+M
+M
+C, M
+~
+<

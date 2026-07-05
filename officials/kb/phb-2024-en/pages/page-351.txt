@@ -1,0 +1,105 @@
+# Player's Handbook 2024 (EN) — PDF-страница 351/387
+
+0 1"
+HAWK
+Tiny Beast, Unaligned
+AC 13
+Initiative +3 (13)
+HP l (ld4 - l)
+Speed 10 ft., Fly 60 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 5 -3 -3
+DEX 16 +3
++3
+INT 2 -4 -4
+Wis 14
+CON 8 -1
+-1
+CHA 6 -2 -2
+Skills Perception +6
+Senses Passive Perception 16
+Languages None
+CR O (XP 10; PB +2)
+ACTIONS
+Talons. Melee Attack Roll: +5, reach 5 ft. Hit: l Slashing damage.
+IMP
+Tiny Fiend (Devil), Lawful Evil
+AC 13
+Initiative +3 (13)
+HP 21 (6d4 + 6)
+Speed 20 ft., Fly 40 ft.
+MOD SAVE
+MOD SAVE
+STR 6 -2 -2
+DEX 17 +3 +3
+INT 11 +0 +0
+Wis 12 +l +l
+MOD SAVE
+CoN 13 +l
++l
+CHA 14 +2 +2
+Skills Deception +4, Insight +3, Stealth +S
+Resistances Cold
+Immunities Fire, Poison; Poisoned
+Senses Darkvision 120 ft., Passive Perception 11
+Languages Common, Infernal
+CR l (XP 200; PB +2)
+TRAITS
+Devil's Sight. Magical Darkness doesn't impede the
+imp's Darkvision.
+Magic Resistance. The imp has Advantage on saving
+throws against spells and other magical effects.
+ACTIONS
+Sting. Melee Attack Roll: +5, reach 5 ft. Hit: 6 (ld6 + 3)
+Piercing damage plus 7 (2d6) Poison damage.
+Invisibility. The imp casts Invisibility on itself, requiring
+no spell components and using Charisma as the spellcasting ability.
+Shape-Shift. The imp shape-shifts to resemble a rat
+(Speed 20 ft.), a raven (20 ft., Fly 60 ft.), or a spider
+(20 ft., Climb 20 ft.), or it returns to its true form. Its
+statistics are the same in each form, except for its
+I
+Speed. Any equipment it's wearing or carrying isn't J
+transformed.
+-.-A l>PF
+DIX B I GREAIURE STAT BLOCKS
+LION
+Large Beast, Unaligned
+AC 12
+HP 22 (4dl0)
+Speed 50 ft.
+Initiative +2 (12)
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 17 +3
++3
+DEX 15 +2 +2
+CON 11
++0 +0
+INT 3 -4 -4
+Wis 12 +l
++l
+CHA 8 -1
+-1
+Skills Perception +3, Stealth +4
+Senses Darkvision 60 ft., Passive Perception 13
+Languages None
+CR l (XP 200; PB +2)
+TRAITS
+Pack Tactics. The lion has Advantage on an attack roll
+against a creature if at least one of the lion's allies is
+within 5 feet of the creature and the ally doesn't have
+the Incapacitated condition.
+Running Leap. With a 10-foot running start, the lion
+can Long Jump up to 25 feet.
+ACTIONS
+Multiattack. The lion makes two Rend attacks. It can
+replace one of these attacks with a use of Roar.
+Rend. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1 d8 + 3)
+Slashing damage.
+Roar. Wisdom Saving Throw: DC 11, one creature within
+1 S feet. Failure: The target h~s the Frightened condition
+until the start of the lion's nr::xl tu rn.

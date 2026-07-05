@@ -1,0 +1,39 @@
+# Player's Handbook 2024 (EN) — PDF-страница 133/387
+
+ASSASSIN
+Practice the Grim Art of Death
+--
+An Assassin's training focuses on using stealth,
+poison, and disguise to eliminate foes with deadly
+efficiency. While some Rogues who fol low this path
+are hired killers, spies, or bounty hunters, the capabilities of this subclass are equally useful for adventurers facing a variety of monstrous enemies.
+LEVEL 3: ASSASSINATE
+You're adept at ambushing a target, granting you
+the following benefits.
+Initiative. You have Advantage on Initiative rolls.
+Surprising Strikes. During the first round of each
+combat, you have Advantage on attack rolls against
+any creature that hasn't taken a turn. If your Sneak
+Attack hits any target during that round, the target
+takes extra damage of the weapon's type equal to
+your Rogue level.
+L EVEL 3: ASSASSI N'S TOOLS
+You gain a Disguise Kit and a Poisoner's Kit, and
+you have proficiency with them.
+L EVEL 9: INFILTRATION EXPERTI SE
+You are expert at the following techniques that aid
+your infiltrations.
+Masterful Mimicry. You can unerringly mimic another person's speech, handwriting, or both if you
+have spent at least 1 hour studying them.
+Roving Aim. Your Speed isn't reduced to O by
+using Steady Aim.
+LEVEL 13: ENVENO M WEAPONS
+When you use the Poison option of your Cunning
+Strike, the target also takes 2d6 Poison damage
+whenever it fails the saving throw. This damage
+ignores Resistance to Poison damage.
+L EVEL 17: DEATH ST RI K E
+When you hit with your Sneak Attack on the first
+round of a combat, the target must succeed on a
+Constitution saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus), or the attack's
+damage is doubled against the target.

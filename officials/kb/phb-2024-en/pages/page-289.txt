@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 289/387
+
+Deafened conditions, and they can't cast spells with
+a Verbal component.
+. .
+When the storm appears, each creatu:e m it
+makes a Constitution saving throw, takmg 2dl0
+Radiant damage and 2dl0 Thunder damage on a
+failed save or half as much damage on a su~cessful
+one. A creature also makes this save when it enters
+the spell's area for the first time on a turn or ends
+its turn there. A creature makes this save only once
+per turn.
+Using a Higher-Level Spell Slot. The Radiant and
+Thunder damage increase by ldlO for each spell slot
+level above 5.
+JUMP
+.
+Level J Transmutation (Druid, Ranger, Sorcerer, Wizard)
+Casting Time: Bonus Action
+Range:Touch
+Component: V, S, M (a grasshopper's hind leg)
+Duration: 1 minute
+You touch a willing creature. Once on each of its
+turns until the spell ends, that creature can jump up
+to 30 feet by spending 10 feet of movement.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 1.
+---- - - --- --
+KNOCK
+Level 2 Transmutation (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V
+Duration: Instantaneous
+Choose an object that you can see within range. The
+object can be a door, a box, a chest, a set of manacles, a padlock, or another object that contains a
+mundane or magical means that prevents access.
+A target that is held shut by a mundane lock or
+that is stuck or barred becomes unlocked, unstuck,
+or unbarred. If the object has multiple locks, only
+one of them is unlocked.
+If the target is held shut by Arcane Lock, that spell
+is suppressed for 10 minutes, during which time the
+target can be opened and closed.
+When you cast the spell, a loud knock, audible up
+to 300 feet away, emanates from the target.
+2go
+CHAPTER 7 I SPELLS
+LEGEND LORE
+Level 5 Divination (Bard, Cleric, W izard)
+Casting Time: 10 minutes
+Range: Self
+Components: V, S, M (incense worth 250+ GP, which
+the spell consumes, and fou r ivory strips worth SO+
+GP each)
+Duration: Instantaneous
+Name or describe a famous person, place, or object.
+The spell brings to your mind a brief summary of
+the significant lore about that famous thing, as described by the DM.
+The lore might consist of important details, amusing revelations, or even secret lore that has never
+been widely known. The more information you
+already know about the thing, the more precise and
+detailed the information you receive is. That information is accurate but might be couched in figurative language or poetry, as determined by the DM.
+If the famous thing you chose isn't actually famous, you hear sad musical notes played on a trombone, and the spell fails.
+y-----
+L EOMUND'S SECRET CH E ST
+Level 4 Conjuration (Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a chest, 3 feet by 2 feet by 2
+feet, constructed from rare materials worth 5,000+
+GP, and a Tiny replica of the chest made from the
+same materials worth 50+ GP)
+Duration: Until dispelled
+You hide a chest and all its contents on the Ethereal
+Plane. You must touch the chest and the miniature
+replica that serve as Material components for the
+spell. The chest can contain up to 12 cubic feet of
+nonliving material (3 feet by 2 feet by 2 feet).
+While the chest remains on the Ethereal Plane,
+you can take a Magic action and touch the replica to
+recall the chest. It appears in an unoccupied space
+on the ground within 5 feet of you. You can send
+the chest back to the Ethereal Plane by taking a
+Magic action to touch the chest and the replica.
+After 60 days, there is a cumulative 5 percent
+chance at the end of each day that the spell ends.
+The spell also ends if you cast this spell again or if
+the Tiny replica chest is destroyed. If the spell ends
+and the larger chest is on the Sthereal Plane, the
+chest remains there for you C• i' .,,Jmeone else to find.

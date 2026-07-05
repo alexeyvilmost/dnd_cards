@@ -1,0 +1,79 @@
+# Player's Handbook 2024 (EN) — PDF-страница 366/387
+
+.,
+•--~~lllh ..
+...,, -•, I
+which are awarded by the Dungeon Master. When
+a character's XP total crosses certain thresholds,
+the character's level increases. The Dungeon Master's
+Guide provides guidance on awarding XP. See also
+chapter 2 ("Level Advancement").
+EXPERTISE
+Expertise is a feature that enhances your use of a
+skill proficiency. When you make an ability check
+with a skill proficiency in which you have Expertise,
+your Proficiency Bonus is doubled for that check
+unless the bonus is doubled by another feature.
+If you gain Expertise, you gain it in one skill in
+which you have proficiency. You can't have Expertise in the same skill proficiency more than once.
+See also chapter 1 ("Proficiency").
+f ALLING [HAZARD]
+A creature that falls takes ld6 Bludgeoning damage at the end of the fall for every 10 feet it fell, to
+a maximum of 20d6. When the creature lands, it
+has the Prone condition unless it avoids taking any
+damage from the fall.
+A creature that falls into water or another liquid
+can use its Reaction to make a DC 15 Strength (Athletics) or Dexterity (Acrobatics) check to hit the
+surface head or feet first. On a successful check, any
+damage resulting from the fall is halved.
+FLYING
+A variety of effects allow a creature to fly. While
+flying, you fall if you have the Incapacitated or
+Prone condition or your Fly Speed is reduced to 0.
+You can stay aloft in those circumstances if you can
+hover. See also "Falling" and "Fly Speed."
+FLY SPEED
+A Fly Speed can be used to travel through the air.
+While you have a Fly Speed, you can stay aloft until
+you land, fall, or die. See also "Flying" and "Speed."
+FRI ... • DLY [ATTIT UDE]
+A Frkndly creature views you favorably. You
+haw .f..dvantage on an ability check to influence a
+Frie:,· l y creature. See also "Influence."
+FRIGHTENED [CONDITION]
+While you have the Frightened condition, you experience the following effects.
+Ability Checks and Attacks Affected. You have Disadvantage on ability checks and attack rolls while
+the source of fear is within line of sight.
+Can't Approach. You can't willingly move closer to
+the source of fear.
+GRAPPLED [CONDITION]
+While you have the Grappled condition, you experience the following effects.
+Speed 0. Your Speed is O and can't increase.
+Attacks Affected. You have Disadvantage on attack
+rolls against any target other than the grappler.
+Movable. The grappler can drag or carry you
+when it moves, but every foot of movement costs it 1
+extra foot unless you are Tiny or two or more sizes
+smaller than it.
+;:,. ---
+--·-- -··--·-·--------,----.,.....-
+GRAPPLING
+A creature can grapple another creature. Characters typically grapple by using an Unarmed Strike.
+Many monsters have special attacks that allow
+them to quickly grapple prey. However a grapple is
+initiated, it follows these rules. See also "Unarmed
+Strike" and "Grappled."
+Grappled Condition. Successfully grappling a creature gives it the Grappled condition.
+One Grapple per Hand. A creature must have a
+hand free to grapple another creature. Some stat
+blocks and game effects allow a creature to grapple using a tentacle, a maw, or another body part.
+Whatever part a grappler uses, it can grapple only
+one creature at a time with that part, and the grappler can't use that part to target another creature
+unless it ends the grapple.
+Escaping a Grapple. A Grappled creature can use
+its action to make a Strength (Athletics) or Dexterity (Acrobatics) check against the grapple's escape
+DC, ending the condition on itself on a success. The
+condition also ends if the grappler has the Incapacitated condition or if the distance between the Grappled target and the grappler exceeds the grapple's
+range.
+APPENDIX C I RULES GLOSSARY
+367

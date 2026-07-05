@@ -1,0 +1,360 @@
+# Player's Handbook 2024 (EN) — PDF-страница 383/387
+
+Steady Aim class feature,
+Telekinetic feat, 208
+Tremorsense, 377
+vision and light, 19
+wielding items, 233
+130
+Telepathic feat, 208
+Trickery Domain Spells
+Visions of Distant Realms
+Wild Companion class
+Stealth skill, 14
+telepathy, 3 76
+table, 75
+invocation, 157
+feature, 81
+Steel Wind Strike spell,
+Telepathy spell, 331
+Trickery Domain
+Vitriolic Sphere spell, 337
+Wild Magic Sorcery
+320
+teleportation, 3 76
+subclass, 75
+Vulnerability, 3 77
+subclass, 149
+Stillness of Mind class
+Teleportation Circle spell,
+Trident, 215
+damage, 28
+Wild Magic Surge table,
+feature. See Self-
+332
+trinkets, 46
+Wagon, 230
+150
+Restoration, 103
+Teleport spell, 331
+Trinkets table, 46
+Wall of Fire spell, 338
+Wild Resurgence class
+Stinking Cloud spell, 321
+Temperate Land circle
+Tropical Land circle spells
+Wall of Force spell, 338
+feature, 81
+Stone Shape spell, 321
+spells table, 85
+table, 85
+Wall of Ice spell, 339
+Wild Shape class feature,
+Stoneskin spell, 321
+Temporary Hit Points,
+True Polymorph spell, 335
+Wall of Stone spell, 339
+80
+Storm ofVengeance spell,
+29, 376
+True Resurrection spell,
+Wall of Thorns spell, 339
+Wind Walk spell, 341
+321
+Tenser's Floating Disk
+336
+War Caster feat, 209
+Wind Wall spell, 341
+Strength, l 0
+spell,332
+True Seeing spell, 336
+Warding Bond spell, 340
+Wisdom, 10
+String, 229
+Tent, 229
+Truesight, 377
+War Domain Spells table,
+Wish spell , 341
+Stroke of Luck class
+Terran language dialect,
+True Strike spell, 336
+77
+Witch Bolt spell, 343
+feature, 131
+37
+Tsunami spell, 336
+War Domain subclass, 76
+Witch Sight invocation,
+Studded Leather Armor,
+Thaumaturgy spell, 333
+Turn Undead. See
+Warhammer, 215
+157
+219
+Thief subclass, 137
+Channel Divinity, 70
+Warhorse stat block, 359
+Wizard class, 49, 165
+Studied Attacks class
+Thieves' Cant class
+Twinned Spell
+Warlock class, 49, 153
+Core Wizard Traits
+feature, 92
+feature, 129
+metamagic, 142
+Core Warlock Traits
+table, 165
+Study action, 15, 375
+Thieves' Cant language,
+Two Extra Attacks class
+table, l 53
+spell list, 168
+Stunned condition, 376
+37
+feature, 92
+spell list, 15 7
+subclasses, 172
+Stunning Strike class
+Thieves' Tools, 221
+Two-Handed property,
+subclasses, l 59
+Wizard Features table,
+feature, l 03
+Thirsting Blade
+214
+Warlock Features table,
+166
+Subtle Spell metamagic,
+invocation, 157
+Two-Weapon Fighting
+154
+Wolf, Dire, stat block, 348
+142
+Thorn Whip spell, 333
+feat, 210
+War Pick, 215
+Wolf stat block, 359
+suffocation hazard, 376
+three-dragon ante, 221
+Typical Difficulty Classes
+Warrior of Mercy
+Woodcarver's Tools, 221
+Suggestion spell, 321
+Three Extra Attacks class
+table, 11
+subclass, 104
+Wood Elf, 189
+Summon Aberration spell,
+feature, 92
+Unaligned Creatures
+Warrior of Shadow
+Word of Radiance spell,
+322
+Three-Quarters Cover, 26
+sidebar, 39
+subclass, l 05
+343
+Summon Beast spell, 322
+Thrown property, 214
+Unarmed Fighting feat,
+Warrior of the Elements
+Word of Recall spell, 343
+Summon Celestial spell,
+Thrown Weapon Fighting
+210
+subclass, 106
+Words of Creation class
+32.3
+feat, 210
+Unarmed Strike, 377
+Warrior of the Open
+feature, 61
+Summon Construct spell,
+Thunderclap spell, 333
+Unarmored Defense class
+Hand subclass, l 07
+Wrathful Smite spell, 343
+324
+Thunder damage, 365
+feature, 51, 101
+Warship, 230
+wretched lifestyle, 230
+Summon Dragon spell,
+Thunderous Smite spell,
+Unarmored Movement
+Water, Elemental Plane
+Yolande's Regal Presence
+324
+334
+class feature, 102
+of, 344
+spell, 343
+Summon Elemental spell,
+Thunderwave spell, 334
+Uncanny Dodge class
+Water, Holy, 226
+Ysgard, 344
+325
+Tiefling, 196
+feature, 131
+Water Breathing spell, 340
+0 Hit Points, dropping
+Summon Fey spell, 326
+tiers of play, 43
+Uncanny Metabolism
+Water Needs per Day
+to, 28
+Summon Fiend spell, 326
+Tiger stat block, 358
+class feature, 102
+table, 365
+Zombie stat block, 359
+Summon Undead spell,
+Timeless Body class
+unconscious, falling, 28
+Waterskin, 229
+Zone of Truth spell, 343
+328
+feature. See Self-
+Unconscious condition,
+Water Walk spell, 340
+Sunbeam spell, 329
+Restoration, l 03
+377
+Wayfarer background, 185
+Sunburst spell, 329
+time-limited object
+Undead creature type,
+wealthy lifestyle, 231
+Superior Defense class
+interaction, 20
+364
+weapon, 213,377
+feature, 103
+Time Stop spell, 334
+Undead Spirit stat block,
+attack, 377
+Superior Inspiration class
+Tinderbox, 229
+328
+improvised, 369
+feature, 61
+Tinker's Tools, 221
+Undercommon language,
+Martial, 213
+surprise, 23, 376
+nny, 25
+37
+mastery property, 214
+Survival skill, 14
+Tireless class feature, 121
+underwater combat, 27
+Melee, 213
+Swift Quiver spell, 329
+Toll the Dead spell, 334
+unoccupied space, 377
+Monk, 101
+swimming, 376
+Tongues spell, 334
+Unseen Attackers and
+proficiency, 213
+Swim Speed, 376
+tool proficiency, 220
+Targets sidebar, 26
+property, 213
+swords, 215
+tools, 220
+Unseen Servant spell, 336
+Ranged, 213
+Sylvan language, 37
+Topple mastery property,
+Use an Object. See
+Simple, 213
+Symbol spell, 329
+214
+Utilize, 15, 377
+Weapon Master feat, 209
+Synaptic Static spell, 330
+Torch, 229
+using a higher-level spell
+Weapon Mastery class
+tables, random, 9
+Total Cover, 26
+slot, 236
+feature, 52, 91 , 110,
+Tack, Harness, and
+Tough feat, 202
+Utilize action, 15, 3 77
+120, 129
+Drawn Vehicles table,
+transitive planes, 344
+Vampiric Touch spell, 337
+Weapons table, 215
+230
+Transmuted Spell
+Vanish class feature. See
+wearing items, 233
+Tactical Master class
+metamagic, 142
+Nature's Veil, 121
+Weasel, Giant, stat block,
+feature, 92
+Transport via Plants spell,
+Variant: Equipment Sizes
+351
+Tactical Mind class
+334
+sidebar, 219
+Weasel stat block, 359
+feature, 91
+Trap, Hunting, 226
+vehicle, 20, 229
+Weaver's Tools, 221
+Tactical Shift class
+traps, finding, removing,
+Venomous Snake stat
+Web spell, 340
+feature, 92
+disabling. See Thieves'
+block, 358
+Weird spell, 341
+target, 376
+Tools, 221
+Verbal component M,
+What Would Your
+Tasha's Bubbling C.Ouldron
+travel, 20, 231
+236
+Character Do? sideba r,
+0
+spell, 330
+Traveler's Clothes, 225
+Versatile property, 214
+15
+~
+;i:
+Vex mastery property, 214
+Whip, 215
+V
+Tasha's Hideous Laughter
+travel pace, 20
+., ...
+spell, 331
+Travel Pace table, 20
+Vial, 229
+Whispers of the Grave
+0 "'
+Travel table, 231
+Vicious Mockery spell, 337
+Invocation, l 57
+n
+Tavern Brawler feat, 202
+,!
+-t
+Telekinesis spell, 331
+Tree Stride spell, 335
+viol, 221
+Whistle, Signal, 228
+;;;
+~

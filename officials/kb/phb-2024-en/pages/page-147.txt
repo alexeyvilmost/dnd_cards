@@ -1,0 +1,52 @@
+# Player's Handbook 2024 (EN) — PDF-страница 147/387
+
+DRACONIC SORCERY
+Breathe the Magic of Dragons
+Your innate magic comes from the gift of a dragon.
+Perhaps an ancient dragon facing death bequeathed
+some of its magical power to you or your ancestor.
+You might have absorbed magic from a site infused
+with dragons' power. Or perhaps you handled a
+treasure taken from a dragon's hoard that was
+steeped in draconic power. Or you might have a
+dragon for an ancestor.
+LEVEL 3: DRACONIC RESILIENCE
+The magic in your body manifests physical traits
+of your draconic gift. Your Hit Point maximum
+increases by 3, and it increases by 1 whenever you
+gain another Sorcerer level.
+Parts of you are also covered by dragon-like
+scales. While you aren't wearing armor, your base
+Armor Class equals 10 plus your Dexterity and Charisma modifiers.
+LEVEL 3: DRACONIC SPELLS
+When you reach a Sorcerer level specified in the
+Draconic Spells table, you thereafter always have
+the listed spells prepared.
+DRACONIC SPELLS
+Sorcerer Level Spells
+3
+Alter Self, Chromatic Orb, Command,
+Dragon's Breath
+5
+Fear, Fly
+7
+Arcane Eye, Charm Monster
+9
+Legend Lore, Summon Dragon
+LEVEL 6: ELEMENTAL AFFINITY
+Your draconic magic has an affinity with a damage
+type associated with dragons. Choose one of those
+types: Acid, Cold, Fire, Lightning, or Poison.
+You have Resistance to that damage type, and
+when you cast a spell that deals damage of that
+type, you can add your Charisma modifier to one
+damage roll of that spell.
+LEVEL 14: DRAGON WINGS
+As a Bonus Action, you can cause draconic wings
+to appear on your back. The wings last for 1 hour or
+until you dismiss them (no action required). For the
+duration, you have a Fly Speed of 60 feet.
+Once you use this feature, you can't use it again
+until you finish a Long Rest unless you spend 3 Sorcery Points (no action required) to restore your use
+of it.
+J. ..

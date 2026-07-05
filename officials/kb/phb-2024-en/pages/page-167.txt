@@ -1,0 +1,216 @@
+# Player's Handbook 2024 (EN) — PDF-страница 167/387
+
+WIZARD SPELL LIST
+Spell
+School
+:Special
+This section presents the Wizard spell list. The
+Ice Knife
+Conju ration
+spells are organized by spell level and then alpha-
+Identify
+Divination
+R, M
+betized, and each spell's school of magic is listed.
+Illusory Script
+Illusion
+R, M
+In the Special column, C means the spell requires
+Concentration, R means it's a Ritual, and M means it
+Jump
+Transmutation
+requires a specific Material component.
+Longstrider
+Transmutation
+CANTRIPS (LEVEL O WIZARD SPELLS)
+Mage Armor
+Abjuration
+Magic Missile
+Evocation
+Spell
+School
+Special
+Acid Splash
+Evocation
+Protection from Evil and
+Abjuration
+C, M
+Good
+Blade Ward
+Abjuration
+C
+Ray of Sickness
+Necromancy
+Chill Touch
+Necromancy
+Shield
+Abj uration
+Dancing Lights
+Illusion
+C
+Silent Image
+Illusion
+C
+Elementalism
+Transmutation
+Sleep
+Enchantment
+C
+Fire Bolt
+Evocation
+Tasha's Hideous Laughter
+Enchantment
+C
+Friends
+Enchantment
+C
+Tenser's Floating Disk
+Conjuration
+R
+Light
+Evocation
+Thunderwave
+Evocation
+Mage Hand
+Conjuration
+Unseen Servant
+Conjuration
+R
+Mending
+Transmutation
+Witch Bolt
+Evocation
+C
+Message
+Transmutation
+Mind Sliver
+Enchantment
+LEVEL 2 WIZARD SPELLS
+Minor Illusion
+Illusion
+Spell
+School
+Special
+Poison Spray
+Necromancy
+Alter Self
+Transmutation
+C
+Prestidigitation
+Transmutation
+Arcane Lock
+Abjuration
+M
+Ray of Frost
+Evocation
+Arcane Vigor
+Abjuration
+Shocking Grasp
+Evocation
+Augury
+Divination
+R, M
+Thunderclap
+Evocation
+Blindness/Deafness
+Transmutation
+Toll the Dead
+Necromancy
+Blur
+Illusion
+C
+True Strike
+Divination
+Cloud of Daggers
+Conjuration
+C
+Continual Flame
+Evocation
+M
+LEVEL 1 WIZARD SPELLS
+Crown of Madness
+Enchantment
+C
+Spell
+School
+Special
+Darkness
+Evocation
+C
+Alarm
+Abjuration
+R
+Darkvision
+Transmutation
+Burning Hands
+Evocation
+Detect Thoughts
+C
+Divination
+Charm Person
+Enchantment
+Dragon's Breath
+Transmutation
+C
+Chromatic Orb
+Evocation
+M
+Enhance Ability
+Transmutation
+C
+Color Spray
+Illusion
+Enlarge/Reduce
+Transmutation
+C
+Comprehend Languages
+Divination
+R
+Flaming Sphere
+Evocation
+C
+Detect Magic
+Divination
+C,R
+Gentle Repose
+Necromancy
+R, M
+Disguise Self
+Illusion
+Gust of Wind
+Evocation
+C
+Expeditious Retreat
+Transmutation
+C
+Hold Person
+Enchantment
+C
+False Life
+Necromancy
+Invisibility
+Illusion
+C
+Feather Foll
+Transmutation
+Knock
+Transmutation
+Find Familiar
+Conjuration
+R, M
+Levitate
+Transmutation
+C
+Fog Cloud
+Conjuration
+C
+Locate Object
+Divinati<.;n
+C
+Grease
+Conjuration
+Magic Mouth
+Illusion
+R, M
+:68
+CHAPTER 3 I CHARACTER CLASSES

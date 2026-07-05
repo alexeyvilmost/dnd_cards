@@ -1,0 +1,83 @@
+# Player's Handbook 2024 (EN) — PDF-страница 371/387
+
+PASSIVE PERCEPTION
+Passive Perception is a score that reflects a creature's general awareness of its surroundings. The
+DM uses this score when determining whether a
+creature notices something without consciously
+making a Wisdom (Perception) check.
+A creature's Passive Perception equals 10 plus the
+creature's Wisdom (Perception) check bonus. If the
+creature has Advantage on such checks, increase
+the score by 5. If the creature has Disadvantage on
+them, decrease the score by 5. For example, a level
+1 character with a Wisdom of 15 and proficiency
+in Perception has a Passive Perception of 14 (10 +
+2 + 2). If that character has Advantage on Wisdom
+(Perception) checks, the score becomes 19.
+- - ------ - --- ---- v---
+PER DAY
+If a rule says you can use something a certain number of times per day, that means you must finish a
+Long Rest to use it again after you run out of uses.
+PETRIFIED [CONDITION]
+While you have the Petrified condition, you experience the following effects.
+Turned to Inanimate Substance. You are transformed, along with any nonmagical objects you are
+wearing and carrying, into a solid inanimate substance (usually stone). Your weight increases by a
+factor of ten, and you cease aging.
+Incapacitated. You have the Incapacitated
+condition.
+Speed 0. Your Speed is O and can't increase.
+Attacks Affected. Attack rolls against you have
+Advantage.
+Saving Throws Affected. You automatically fail
+Strength and Dexterity saving throws.
+Resist Damage. You have Resistance to all damage.
+Poison Immunity. You have Immunity to the Poisoned condition.
+--------
+PLAYER CHARACTER
+A player character is a character controlled by a
+player. See also chapter 2.
+POISONED [CON DITION]
+While you have the Poisoned condition, you experience the following effect.
+Ability Checks and Attacks Affected. You have Disadvantage on attack rolls and ability checks.
+37~
+APPE NDIX C I RULES GLOSSARY
+POSSESSION
+Some effects cause a creature to be possessed by another creature or entity. A possessing effect defines
+how the possession operates. Possession can be prevented by the Protection from Evil and Good spell and
+ended by the Dispel Evil and Good spell.
+PROFICIENCY
+If you have proficiency with something, you can add
+your Proficiency Bonus to any D20 Test you make
+using that thing. A creature might have proficiency
+in a skill or saving throw or with a weapon or tool.
+See also chapter 1 ("Proficiency").
+!, --
+PRONE [CONDITION]
+While you have the Prone condition, you experience the following effects.
+Restricted Movement. Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to
+right yourself and thereby end the condition. If your
+Speed is 0, you can't right yourself.
+Attacks Affected. You have Disadvantage on attack
+rolls. An attack roll against you has Advantage if
+the attacker is within 5 feet of you. Otherwise, that
+attack roll has Disadvantage.
+REACTION
+A Reaction is a special action taken in response to
+a trigger defined in the Reaction's description. You
+can take a Reaction on another creature's turn, and
+if you take it on your turn, you can do so even if you
+also take an action, a Bonus Action, or both. Once
+you take a Reaction, you can't take another one until the start of your next turn. The Opportunity Attack is a Reaction available to all creatures. See also
+"Opportunity Attacks" and chapter 1 ("Actions").
+READY [ACTION]
+You take the Ready action to wait for a particular
+circumstance before you act. To do so, you take this
+action on your turn, which lets you act by taking a
+Reaction before the start of your next turn.
+First, you decide what perceivable circumstance
+will trigger your Reaction. Then, you choose the
+action you will take in response to that trigger, or
+you choose to move up to your Speed in response
+to it. Examples include "If the cultist steps on the
+trapdoor, I'll pull the lever that opens it," and "If the
+zombie steps next to me, J move aw~y."

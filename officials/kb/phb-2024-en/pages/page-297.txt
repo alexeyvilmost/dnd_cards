@@ -1,0 +1,90 @@
+# Player's Handbook 2024 (EN) — PDF-страница 297/387
+
+MESSAGE
+Transmutation Cantrip (Bard, Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: S, M (a copper wire)
+Duration: l round
+You point toward a creature within range and
+whisper a message. The target (and only the target)
+hears the message and can reply in a whisper that
+only you can hear.
+You can cast this spell through solid objects if you
+are familiar with the target and know it is beyond
+the barrier. Magical silence; 1 foot of stone, metal, or
+wood; or a thin sheet of lead blocks the spell.
+METEOR SWARM
+Level 9 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: l mile
+Components: V, S
+Duration: Instantaneous
+Blazing orbs of fire plummet to the ground at four
+different points you can see within range. Each
+creature in a 4O-foot-radius Sphere centered on
+each of those points makes a Dexterity saving
+throw. A creature takes 2Od6 Fire damage and
+2Od6 Bludgeoning damage on a failed save or half
+as much damage on a successful one. A creature in
+the area of more than one fiery Sphere is affected
+only once.
+A nonmagical object that isn't being worn or carried also takes the damage if it's in the spell's area,
+and the object starts burning if it's flammable.
+MIND BLANK
+Level 8 Abjuration (Bard, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S
+Duration: 24 hours
+Until the spell ends, one willing creature you touch
+has Immunity to Psychic damage and the Charmed
+condition. The target is also unaffected by anything
+that would sense its emotions or alignment, read its
+thoughts, or magically detect its location, and no
+spell-not even Wish-can gather information about
+the target, observe it remotely, or control its mind.
+298
+CHA PTER 7 I SPE LLS
+MIND SLIVER
+Enchantment Can trip (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V
+Duration: l round
+You try to temporarily sliver the mind of one creature you can see within range. The target must
+succeed on an Intelligence saving throw or take ld6
+Psychic damage and subtract ld4 from the next saving throw it makes before the end of your next turn.
+Cantrip Upgrade. The damage increases by ld6
+when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).
+MIND SPIKE
+Level 2 Divination (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: S
+Duration: Concentration, up to l hour
+You drive a spike of psionic energy into the mind of
+one creature you can see within range. The target
+makes a Wisdom saving throw, taking 3d8 Psychic
+damage on a failed save or half as much damage on
+a successful one. On a failed save, you also always
+know the target's location until the spell ends, but
+only while the two of you are on the same plane
+of existence. While you have this knowledge, the
+target can't become hidden from you, and if it has
+the Invisible condition, it gains no benefit from that
+condition against you.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 2.
+MINOR ILLUSION
+Illusion Cantrip (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: S, M (a bit of fleece)
+Duration: l minute
+You create a sound or an image of an object within
+range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends
+if you cast this spell again.
+If a creature takes a Study r1ction to examine the
+sound or image, the creature can determine that it
+is an illusion with a successfo' .li;telligence (Investigation) check against your sp~i! :;:-,ve DC. If a creature discerns the illusion for v. k .t it is, the illusion
+becomes faint to the crea ·ui•;-

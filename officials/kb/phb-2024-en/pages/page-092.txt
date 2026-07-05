@@ -1,0 +1,38 @@
+# Player's Handbook 2024 (EN) — PDF-страница 92/387
+
+FIGHTER SUBCLASSES
+A Fighter subclass is a specialization that grants
+you features at certain levels, as specified in the
+subclass. This section presents the Battle Master, Champion, Eldritch Knight, and Psi Warrior
+subclasses.
+BATTLE MASTER
+Master Sophisticated Battle Maneuvers
+Battle Masters are students of the art of battle,
+learning martial techniques passed down through
+generations. The most accomplished Battle Masters
+are well-rounded figures who combine their carefully honed combat skills with academic study in
+the fields of history, theory, and the arts.
+LEVEL 3: COMBAT SUPERIORITY
+Your experience on the battlefield has refined your
+fighting techniques. You learn maneuvers that are
+fueled by special dice called Superiority Dice.
+Maneuvers. You learn three maneuvers of your
+choice from the "Maneuver Options" section later
+in this subclass's description. Many maneuvers enhance an attack in some way. You can use only one
+maneuver per attack.
+You learn two additional maneuvers of your
+choice when you reach Fighter levels 7, 10, and 15.
+Each time you learn new maneuvers, you can also
+replace one maneuver you know with a different
+one.
+Superiority Dice. You have four Superiority Dice,
+which are d8s. A Superiority Die is expended when
+you use it. You regain all expended Superiority Dice
+when you finish a Short or Long Rest.
+You gain an additional Superiority Die when you
+reach Fighter levels 7 (five dice total) and 15 (six
+dice total).
+Saving Throws. If a maneuver requires a saving
+throw, the DC equals 8 plus your Strength or Dexterity modifier (your choice) and Proficiency Bonus.
+CHAPTE R 3 I CHARACT ER CLASSES
+93

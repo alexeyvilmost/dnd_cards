@@ -1,0 +1,57 @@
+# Player's Handbook 2024 (EN) — PDF-страница 236/387
+
+A Material component is a particular material
+used in a spell's casting, as specified in parentheses
+in the Components entry. These materials aren't
+consumed by the spell unless the spell's description
+states otherwise. The spellcaster must have a hand
+free to access them, but it can be the same hand
+used to perform Somatic components, if any.
+If a spell doesn't consume its materials and doesn't
+specify a cost for them, a spellcaster can use a Component Pouch (see chapter 6) instead of providing
+the materials specified in the spell, or the spellcaster
+can substitute a Spellcasting Focus if the caster
+has a featu re that allows that substitution. To use
+a Component Pouch, you must have a hand free to
+reach into it, and to use a Spellcasting Focus, you
+must hold it unless its description says otherwise
+(see chapter 6 for descriptions).
+CREATING VERBAL COMPONENTS
+If you'd like to say a spell's Verbal component,
+you may make up the words. However you make
+them, the goal is to create something that's easy
+to say and that doesn't mean anything in the real
+world. Consider this method: take the name of
+the spell, keep only one instance of each of its
+letters, and rearrange the remaining letters into
+words. For example, remove the second I from
+Fireball and rearrange the remaining letters to
+create Ber FifCi or Fe/ Bira.
+A spell's duration is the length of time the spell persists after it is cast. A duration typically takes one of
+the following forms:
+Concentration. A duration that requires Concentration follows the Concentration rules (see the
+rules glossary).
+Instantaneous. An instantaneous duration means
+the spell's magic appears only for a moment and
+then disappears.
+Time Span. A duration that provides a time span
+specifies how long the spell lasts in rounds, minutes, hours, or the like. For example, a Duration
+entry might say "1 minute," meaning the spell ends
+after 1 minute has passed. While a time-span spell
+that you cast is ongoing, you can dismiss it (no action required) if you don't have the Incapacitated
+condition.
+EFFECTS
+The effects of a spell are detailed after its duration
+entry. Those details present exactly what the spell
+does, which ignores mundane physical laws; any
+outcomes beyond those effects are under the DM's
+purview. Whatever the effects, they typically deal
+with targets, saving throws, attack rolls, or all
+three, each of which is detailed below.
+T ARGETS
+A typical spell requires the caster to pick one or
+more targets to be affected by the spell's magic. A
+spelJ's description says whether the spell targets
+creatures, objects, or something else.
+CHAPTER 7 I SPELLS
+237

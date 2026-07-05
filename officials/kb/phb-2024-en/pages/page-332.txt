@@ -1,0 +1,54 @@
+# Player's Handbook 2024 (EN) — PDF-страница 332/387
+
+THAUMATURGY
+Transmutation Cantrip (Cleric)
+Casting Time: Action
+Range: 30 feet
+Components: V
+Duration: Up to 1 minute
+You manifest a minor wonder within range. You
+create one of the effects below within range. If you
+cast this spell multiple times, you can have up to
+three of its 1-minute effects active at a time.
+Altered Eyes. You alter the appearance of your
+eyes for 1 minute.
+Booming Voice. Your voice booms up to three
+times as loud as normal for 1 minute. For the duration, you have Advantage on Charisma (Intimidation) checks.
+Fire Play. You cause flames to flicker, brighten,
+dim, or change color for 1 minute.
+Invisible Hand. You instantaneously cause an unlocked door or window to fly open or slam shut.
+Phantom Sound. You create an instantaneous
+sound that origi nates from a point of your choice
+within range, sue as a rumble of thunder, the cry
+of a raven, or ominous whispers.
+TI-emors. You cause harmless tremors in the
+ground for 1 minu e.
+THORN WHIP
+Transmutation Cantrip (Druid)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (the stem of a thorny plant)
+Duration: Instantaneous
+You create a vine-like whip covered in thorns that
+lashes out at your command toward a creature in
+range. Make a melee spell attack against the target.
+On a hit, the target takes ld6 Piercing damage, and
+if it is Large or smaller, you can pull it up to 10 feet
+closer to you.
+Cantrip Upgrade. The damage increases by ld6
+when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6}.
+THUNDERCLAP
+Evocation Cantrip (Bard, Druid, Sorcerer, Warlock,
+Wizard)
+Casting Time: Action
+Range: Self
+Components: S
+Duration: Instantaneous
+Each creature in a 5-foot Emanation originating
+from you must succeed on a Constitution saving
+throw or take ld6 Thunder damage. The spell's
+thunderous sound can be heard up to 100 feet away.
+Cantrip Upgrade. The damage increases by ld6
+when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).
+CHAPTER 7 I SPELLS
+333

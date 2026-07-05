@@ -1,0 +1,90 @@
+# Player's Handbook 2024 (EN) — PDF-страница 357/387
+
+SPR I TE
+SPRITE
+Tiny Fey, Neutral Good
+AC 15
+Initiative +4 (14)
+HP 10 (4d4)
+Speed 10 ft., Fly 40 ft.
+• OD SA E
+MOD SAVE
+MOD SAVE
+STR 3 -4 -4
+DEX 18 +4 +4
+CON 10 +0 +0
+INT 14 +2 +2
+Wis 13 +1
++1
+CHA 11 +0 +0
+Skills Perception +3, Stealth +8
+Senses Passive Perception 13
+Languages Common, Elvish, Sylvan
+CR 1/4 (XP 50; PB +2)
+ACTIONS
+Needle Sword. Melee Attack Roll: +6, reach 5 ft. Hit: 6
+(ld4 + 4) Piercing damage.
+Enchanting Bow. Ranged Attack Roll: +6, range
+40/160 ft. Hit: l Piercing damage, and the target has
+the Charmed condition until the start of the sprite's
+next turn.
+Heart Sight. Charisma Saving Throw: DC 10, one creature within 5 feet the sprite can see. Celestials, Fiends,
+and Undead automatically fail the save. Failure: The
+sprite knows the target's emotions and alignment.
+Invisibility. The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the
+spellcasting ability.
+358
+A PPE DIX B I CREATURE STAT BLO CK S
+TIGER
+Large Beast, Unaligned
+AC 13
+Initiative +3 (13)
+HP 22 (3dl0 + 6)
+Speed 40 ft.
+MOD SAVE
+MOD SAVE
+MOD SAVE
+STR 17 +3
++3
+DEX 16 +3
++3
+CON 14 +2 +2
+INT 3 - 4 -4
+Wis 12 +l
++l
+CHA 8 - 1 -1
+Skills Perception +3, Stealth +7
+Senses Darkvision 60 ft., Passive Perception 13
+Languages None
+CR l (XP 200; PB +2)
+ACTIONS
+Multiattack. The tiger makes one Pounce attack and
+uses Prowl.
+Pounce. Melee Attack Roll: +5, reach 5 ft. Hit: 6 (l d6
++ 3) Slashing damage. If the tiger had Advantage on
+the attack roll, the target takes an extra 3 (ld6) Slashing damage and, if it is Huge or smaller, has the Prone
+condition.
+Prowl. The tiger moves up to half its Speed without
+provoking Opportunity Attacks. At the end of this
+movement, the tiger can take the Hide action.
+VENOMOUS SNAKE
+Tiny Beast, Unaligned
+AC 12
+Initiative +2 (12)
+HP 5 (2d4)
+Speed 30 ft., Swim 30 ft.
+MOD SAVE
+STR 2 -4 - 4
+INT l - 5 - 5
+MOD SAVE
+DEX 15 +2 +2
+Wis 10 +0 +0
+MOD SAVE
+CON 11 +0 +0
+CHA 3 -4 -4
+Senses Blindsight 10 ft., Passive Perception 10
+Languages None
+CR 1/8 (XP 25; PB +2)
+ACTIONS
+Bite. Melee Attack Roll: +4, reach 5 ft. Hit: 4 (ld4 + 2)
+Piercing damage plus 3 (l d6) Poison damage.

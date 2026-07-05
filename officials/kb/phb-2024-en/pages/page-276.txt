@@ -1,0 +1,95 @@
+# Player's Handbook 2024 (EN) — PDF-страница 276/387
+
+foUNT OF MOONLIGHT
+Level 4 Evocation (Bard, Druid)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Concentration, up to 10 minutes
+A cool light wreathes your body for the duration,
+emitting Bright Light in a 20-foot radius and Dim
+Light for an additional 20 feet.
+Until the spell ends, you have Resistance to Radiant damage, and your melee attacks deal an extra
+2d6 Radiant damage on a hit.
+In addition, immediately after you take damage
+from a creature you can see within 60 feet of yourself, you can take a Reaction to force the creature to
+make a Constitution saving throw. On a failed save,
+the creature has the Blinded condition until the end
+of your next turn.
+.....
+.::-
+FREEDOM OF MOVEMENT
+Level 4 Abjuration (Bard, Cleric, Druid, Ranger)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a leather strap)
+Duration: 1 hour
+You touch a willing creature. For the duration, the
+target's movement is unaffected by Difficult Terrain,
+and spells and other magical effects can neither reduce the target's Speed nor cause the target to have
+the Paralyzed or Restrained conditions. The target
+also has a Swim Speed equal to its Speed.
+In addition, the target can spend 5 feet of movement to automatically escape from nonmagical
+restraints, such as manacles or a creature imposing
+the Grappled condition on it.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 4.
+FRIENDS
+Enchantment Cantrip (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 10 feet
+Components: S, M (some makeup)
+Duration: Concentration, up to 1 minute
+You magically emanate a sense of friendship toward
+one creature you can see within range. The target
+must succeed on a Wisdom saving throw or have
+the Charmed condition for the duration. The target succeeds ::mtomatically if it isn't a Humanoid, if
+you're fighting it, or if you have cast this spell on it
+within the ,ast 24 hours.
+The spell ends early if the target takes damage
+or if you make an attack roll, deal damage, or force
+anyone to make a saving throw. When the spell
+ends, the target knows it was Charmed by you.
+GASEOUS FORM
+Level 3 Transmutation (Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, S, M (a bit of gauze)
+Duration: Concentration, up to 1 hour
+A willing creature you touch shape-shifts, along
+with everything it's wearing and carrying, into
+a misty cloud for the duration. The spell ends on
+the target if it drops to O Hit Points or if it takes a
+Magic action to end the spell on itself.
+While in this form, the target's only method
+of movement is a Fly Speed of 10 feet, and it can
+hover. The target can enter and occupy the space
+of another creature. The target has Resistance to
+Bludgeoning, Piercing, and Slashfog damage; it has
+Immunity to the Prone condition; and it has Advantage on Strength, Dexterity, and Constitution
+saving throws. The target can pass through narrow
+openings, but it treats liquids as though they were
+solid surfaces.
+The target can't talk or manipulate objects, and
+any objects it was carrying or holding can't be
+dropped, used, or otherwise interacted with. Finally, the target can't attack or cast spells.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level above 3.
+GATE
+Level 9 Conjuration (Cleric, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S, M (a diamond worth 5,000+ GP)
+Duration: Concentration, up to 1 minute
+You conjure a portal linking an unoccupied space
+you can see within range to a precise location on a
+different plane of existence. The portal is a circular
+opening, which you can make 5 to 20 feet in diameter. You can orient the portal in any direction you
+choose. The portal lasts for the duration, and the
+portal's destination is visible through it.
+The portal has a front and a hack on each plane
+where it appears. Travel through the portal is possible only by moving through its front. Anything that
+does so is instantly transported to the other plane,
+appearing in the unoccupied space nearest to the
+portal.
+CHAPTER 7 I SPELLS

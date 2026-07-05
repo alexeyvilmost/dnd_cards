@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 333/387
+
+THUNDEROUS SMITE
+Level 1 Evocation (Paladin)
+Casting Time: Bonus Action, which you take immediately after hitting a target with a Melee weapon or
+an Unarmed Strike
+Range: Self
+Component: V
+Duration: Instantaneous
+Your strike rings with thunder that is audible
+within 300 feet of you, and the target takes an extra 2d6 Thunder damage from the attack. Additionally, if the target is a creature, it must succeed on a
+Strength saving throw or be pushed 10 feet away
+from you and have the Prone condition.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 1.
+THUNDERWAVE
+Level 1 Evocation (Bard, Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S
+Duration: Instantaneous
+You unleash a wave of thunderous energy. Each
+creature in a 15-foot Cube originating from you
+makes a Constitution saving throw. On a failed save,
+a creature takes 2d8 Thunder damage and is pushed
+10 feet away from you. On a successful save, a creature takes half as much damage only.
+In addition, unsecured objects that are entirely
+within the Cube are pushed 10 feet away from you,
+and a thunderous boom is audible within 300 feet.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 1.
+TIME STOP
+Level 9 Transmutation (Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V
+Duration: Instantaneous
+You briefly stop the flow of time for everyone but
+yourself. No time passes for other creatures, while
+you take ld4 + 1 turns in a row, during which you
+can use actions and move as normal.
+This spell ends if one of the actions you use during
+this period, or any effects that you create during it,
+affects a creature other than you or an object being worn or carried by someone other than you. In
+addition, the spell ends if you move to a place more
+than 1,000 feet from the location where you cast it.
+11~
+r. Hf\ rn~1< 7 1 srtu s
+TOLL T HE DEAD
+Necromancy Cantrip (Cleric, Warlock, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+You point at one creature you can see within range
+and the single chime of a dolorous bell is audible
+'
+within 10 feet of the target. The target must succeed
+on a Wisdom saving throw or take ld8 Necrotic
+damage. If the target is missing any of its Hit Points
+it instead takes ld12 Necrotic damage.
+'
+Cantrip Upgrade. The damage increases by one
+die when you reach levels 5 (2d8 or 2d12), 11 (3d8 or
+3d12), and 17 (4d8 or 4d12).
+TONGUES
+Level 3 Divination (Bard, Cleric, Sorcerer, Warlock,
+Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, M (a miniature ziggurat)
+Duration: l hour
+This spell grants the creature you touch the ability
+to understand any spoken or signed language that
+it hears or sees. Moreover, when the target communicates by speaking or signing, any creature that
+knows at least one language can understand it if
+that creature can hear the speech or see the signing.
+TRANSPORT VIA PLANTS
+Level 6 Conjuration (Druid)
+Casting Time: Action
+Range: 10 feet
+Components: V, S
+Duration: l minute
+This spell creates a magical link between a Large
+or larger inanimate plant within ra nge and another
+plant, at any distance, on the ~.m,e plane of existence. You must have seen 01· tuuched the destination plant at least once befor,.'. 1~-._.c the duration, any
+creature can step into the 1·:::rr.:::-r plant and exit from
+the destination plant by u~i•;t ; ··r!c t of movement.

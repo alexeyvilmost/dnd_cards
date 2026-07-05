@@ -1,0 +1,164 @@
+# Player's Handbook 2024 (EN) — PDF-страница 120/387
+
+LE VE L b: ROVI NG
+LEVEL 1 RANGER SPELLS
+Your Speed increases by 10 feet while you aren't
+Spell
+School
+Special
+wearing Heavy armor. You also have a Climb Speed
+and a Swim Speed equal to your Speed.
+Alarm
+Abjuration
+R
+Animal Friendship
+Enchantment
+LEVEL 9: EXPERTISE
+Cure Wounds
+Abjuration
+Choose two of your skill proficiencies with which
+you Jack Expertise. You gain Expertise in those skills.
+Detect Magic
+Divination
+C, R
+Detect Poison and Disease
+Divination
+C,R
+L EVEL 10: TIRELESS
+Ensnaring Strike
+Conjuration
+C
+Primal forces now help fuel you on your journeys,
+granting you the following benefits.
+Entangle
+Conjuration
+C
+Temporary Hit Points. As a Magic action, you can
+Fog Cloud
+Conjuration
+C
+give yourself a number of Temporary Hit Points
+Goodberry
+Conjuration
+equal to ld8 plus your Wisdom modifier (minimum
+Hail of Thorns
+Conjuration
+of 1). You can use this action a number of t_imes
+equal to your Wisdom modifier (minimum of once),
+Hunter's Mark
+Divination
+C
+and you regain all expended uses when you finish a
+Jump
+Transmutation
+Long Rest.
+Longstrider
+Transmutation
+Decrease Exhaustion. Whenever you finish a Short
+Speak with Animals
+Divination
+R
+Rest, your Exhaustion level, if any, decreases by 1.
+L EVEL 13: RELENTLESS HUNTER
+LEVEL 2 RANGER SPELLS
+Taking damage can't break your Concentration on
+Spell
+School
+Special
+Hunter's Mark.
+Aid
+Abjuration
+L EVEL 14: NATURE'S VEIL
+Animal Messenger
+Enchantment
+R
+You invoke spirits of nature to magically hide your-
+Barkskin
+Transmutation
+self. As a Bonus Action, you can give yourself the
+Beast Sense
+Divination
+C, R
+Invisible condition until the end of your next turn.
+You can use this feature a number of times equal
+Cordon of Arrows
+Transmutation
+to your Wisdom modifier (minimum of once), and
+Darkvision
+Transmutation
+you regain all expended uses when you finish a
+Enhance Ability
+Transmutation
+C
+Long Rest.
+Find Traps
+Divination
+LEVEL 17: PRECISE HUNTER
+Gust of Wind
+Evocation
+C
+You have Advantage on attack rolls against the
+Lesser Restoration
+Abjuration
+creature currently marked by your Hunter's Mark.
+Locate Animals or Plants
+Divination
+R
+LEVEL 18: FERAL SENSES
+Locate Object
+Divination
+C
+Your connection to the forces of nature grants you
+Magic Weapon
+Transmutation
+Blindsight with a range of 30 feet.
+Pass without Trace
+Abjuration
+C
+L EVEL 19: E PIC BOON
+Protection from Poison
+Abjuration
+You gain an Epic Boon feat (see chapter 5) or an-
+Silence
+Illusion
+C,R
+other feat of your choice for which you qualify.
+Boon of Dimensional Travel is recommended.
+Spike Growth
+Transmutation
+C
+LEVEL 20: FO E SLAYER
+Summon Beast
+Conjuration
+C,M
+The damage die of your Hunter's Mark is a dlO rather
+LEVEL 3 RANGER SPELLS
+than a d6.
+Spell
+School
+Special
+RANGER SPELL L IST
+Conjure Animals
+Conjuration
+C
+This section presents the Ranger spell list. The
+Conjure Barrage
+Conjuration
+spells are organized by spell level and then alpha-
+Daylight
+Evocation
+betized, ,ind each spell's school of magic is listed.
+Dispel Magic
+Abjuration
+In the Special column, C means the spell requires
+Concentration, R means it's a Ritual, and M means it
+Elemental Weapon
+Transmutation
+C
+requires , specific Material component.
+Lightning Arrow
+Transmutation
+-
+---- - . ---
+-
+-

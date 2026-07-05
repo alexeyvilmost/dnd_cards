@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 291/387
+
+by up to 20 feet in either direction on your turn. If
+you are the target, you can move up or down ~s part
+of your move. Otherwise, you can take a 1:'1ag1_c a_ction to move the target, which must remam w1thm
+the spell's range.
+When the spell ends, the target floats gently to the
+ground if it is still aloft.
+LIGHT
+Evocation Cantrip (Bard, Cleric, Sorcerer, Wizard)
+Casting Time: Action
+Range:Touch
+Components: V, M (a firefly or phosphorescent moss)
+Duration: l hour
+You touch one Large or smaller object that isn't
+being worn or carried by someone else. Until the
+spell ends, the object sheds Bright Light in a 20-foot
+radius and Dim Light for an additional 20 feet. The
+light can be colored as you like.
+Covering the object with something opaque
+blocks the light. The spell ends if you cast it again.
+LIGHTNING ARROW
+Level 3 Transmutation (Ranger)
+Casting Time: Bonus Action, which you take immediately after hitting or missing a target with a ranged
+attack using a weapon
+Range: Self
+Components: V, S
+Duration: Instantaneous
+As your attack hits or misses the target, the weapon
+or ammunition you're using transforms into a
+lightning bolt. Instead of taking any damage or
+other effects from the attack, the target takes 4d8
+Lightning damage on a hit or half as much damage
+on a miss. Each creature within 10 feet of the target
+then makes a Dexterity saving throw, taking 2d8
+Lightning damage on a failed save or half as much
+damage on a successful one.
+The weapon or ammunition then returns to its
+normal form.
+Using a Higher-Level Spell Slot. The damage for
+both effects of the spell increases by ld8 for each
+spell slot level above 3.
+292
+CHAPTER 7 I SP ELLS
+LIGHTNING BOLT
+Level 3 Evocation (Sorcerer, Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a bit offur and a crystal rod)
+Duration: Instantaneous
+A stroke of lightning forming a 100-foot-long,
+5-foot-wide Line blasts out from you in a direction
+you choose. Each creature in the Line makes a Dexterity saving throw, taking 8d6 Lightning damage
+on a failed save or half as much damage on a successful one.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 3.
+LOCATE ANIMALS OR PLANTS
+Level 2 Divination (Bard, Druid, Ranger)
+Casting Time: Action or Ritual
+Range: Self
+Components: V, S, M (fur from a bloodhound)
+Duration: Instantaneous
+Describe or name a specific kind of Beast, Plant
+creature, or nonmagical plant. You learn the direction and distance to the closest creature or plant of
+that kind within 5 miles, if any are present.
+LOCATE CREATURE
+Level 4 Divination (Bard, Cleric, Druid, Paladin, Ranger,
+Wizard)
+Casting Time: Action
+Range: Self
+Components: V, S, M (fur from a bloodhound)
+Duration: Concentration, up to l hour
+Describe or name a creature that is familiar to you.
+You sense the direction to the creature's location
+if that creature is within 1,000 feet of you. If the
+creature is moving, you know the direction of its
+movement.
+The spell can locate a specific creature known to
+you or the nearest creature of a specific kind (such
+as a human or a unicorn) if you have seen such a
+creature up close-within 30 feet-at least once.
+If the creature you described or named is in a different form, such as under the effects of a Flesh to
+Stone or Polymorph spell, this spell doesn't locate the
+creature.
+This spell can't locate a creature if any thickness
+of lead blocks a direct path bet,.,:cen you and the
+creature.

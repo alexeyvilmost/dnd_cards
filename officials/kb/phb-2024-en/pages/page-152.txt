@@ -1,0 +1,97 @@
+# Player's Handbook 2024 (EN) — PDF-страница 152/387
+
+CORE W :\RLOCK TRAITS
+Primary Ability
+Charisma
+Hit Point Die
+D8 per Warlock level
+Saving Throw
+Wisdom and Charisma
+Proficiencies
+1 skill Proficiencies
+Weapon Proficiencies
+Armor Training
+Starting Equipment
+Choose 2: Arcana, Deception,
+History, Intimidation, Investigation, Nature, or Religion
+Simple weapons
+Light armor
+Choose A or B: (A) Leather
+Armor, Sickle, 2 Daggers,
+Arcane Focus (orb), Book
+(occult lore), Scholar's Pack,
+and 15 GP; or (B) 100 GP
+ARLOCKS QUEST FOR KNOWLEDGE
+that lies hidden in the fabric of the multiverse. They often begin their search for
+magical power by delving into tomes of forbidden
+lore, dabbling in invocations meant to attract the
+power of extra planar beings, or seeking places of
+power where the influence of these beings can be
+felt. In no time, each Warlock is drawn into a binding pact with a powerful patron. Drawing on the
+ancient knowledge of beings such as angels, archfey,
+demons, devils, hags, and alien entities of the Far
+Realm, Warlocks piece together arcane secrets to
+bolster their own power.
+Warlocks view their patrons as resources, as
+means to the end of achieving magical power. Some
+Warlocks respect, revere, or even love their patrons;
+some serve their patrons grudgingly; and some seek
+to undermine their patrons even as they wield the
+power their patrons have given them.
+Once a pact is made, a Warlock's thirst for knowledge and power can't be slaked with mere study.
+Most Warlocks spend their days pursuing greater
+power and deeper knowledge, which typically
+means some kind of adventure.
+BECOMING A WARLOCK
+As A LEVE L 1 CHARACTER
+Gain all the traits in the Core Warlock Traits
+table.
+Gain the Warlock's level 1 features, which are
+listed in the \A/arlock Features table.
+As A MULTICLASS CHARACTER
+• Gain the following traits from the Core Warlock
+Traits table: Hit Point Die and training with Light
+armor.
+• Gain the Warlock's level 1 features, which are
+listed in the Warlock Features table. See the multiclassing rules in chapter 2 to determine your
+available spell slots.
+WARLOCK CLASS FEATURES
+As a Warlock, you gain the following class features
+when you reach the specified Warlock levels. These
+features are listed in the Warlock Features table.
+LEVEL l: ELDRITCH INVOCATIONS
+; You have unearthed Eldritch Invocations, pieces of
+forbidden knowledge that imbue you with an abiding magical ability or other lessons. You gain one
+invocation of your choice, such as Pact of the Tome.
+Invocations are described in the "Eldritch Invocation Options" section later in this class's description.
+Prerequisites. If an invocation has a prerequisite,
+you must meet it to learn that invocation. For example, if an invocation requires you to be a level S+
+Warlock, you can select the invocation once you
+reach Warlock level 5.
+Replacing and Gaining Invocations. Whenever you
+gain a Warlock level, you can replace one of your
+invocations with another one for which you qualify.
+You can't replace an invocation if it's a prerequisite
+for another invocation that you have.
+When you gain certain Warlock levels, you gain
+more invocations of your choice, as shown in the
+Invocations column of the Warlock Features table.
+You can't pick the same invocation more than
+once unless its description says otherwise.
+LEVEL l: PACT MAGIC
+Through occult ceremony, you have formed a pact
+with a mysterious entity to gain magical powers.
+The entity is a voice in the shadows-its identity
+unclear-but its boon to you is concrete: the ability
+to cast spells. See chapter 7 for the rules on spellcasting. The information below details how you use
+those rules with Warlock spells, which appear in the
+Warlock spell list later in the class's description.
+Cantrips. You know two Warlock cantrips of your
+choice. Eldritch Blast and Prestidigitation are recommended. Whenever you gain a Warlock level, you
+can replace one of your cantrips from this feature
+with another Warlock can trip of your choice.
+When you reach Warlock levels 4 and 10, you
+learn another Warlock cantrip of your choice, as
+shown in the Cantrips column of the Warlock Features table.
+CH APT ER 3 I CHA RACTE R CL ASS ES
+153

@@ -1,0 +1,125 @@
+# Player's Handbook 2024 (EN) — PDF-страница 132/387
+
+ARCA NE T RICKST ER SP ELLCASTING
+Rogue
+Prepared
+-Spell Slots per Spell Level-
+Level
+Spells
+1
+2
+3
+4
+3
+3
+2
+4
+4
+3
+5
+4
+3
+6
+4
+3
+7
+5
+4
+2
+8
+6
+4
+2
+9
+6
+4
+2
+10
+7
+4
+3
+11
+8
+4
+3
+12
+8
+4
+3
+13
+9
+4
+3
+2
+14
+10
+4
+3
+2
+15
+10
+4
+3
+2
+16
+ll
+4
+3
+3
+17
+ll
+4
+3
+3
+18
+11
+4
+3
+3
+19
+12
+4
+3
+3
+20
+13
+4
+3
+3
+Changing Your Prepared Spells. Whenever you
+gain a Rogue level, you can replace one spell on your
+list with another Wizard spell for which you have
+spell slots.
+Spellcasting Ability. Intelligence is your spellcasting ability for your Wizard spells.
+Spellcasting Focus. You can use an Arcane Focus
+as a Spellcasting Focus for your Wizard spells.
+LEVEL 3: MAGE HAND LEGERDEMAIN
+When you cast Mage Hand, you can cast it as a
+Bonus Action, and you can make the spectral hand
+Invisible. You can control the hand as a Bonus
+Action, and through it, you can make Dexterity
+(Sleight of Hand) checks.
+LEVEL 9: MAGICAL.AMBUSH
+If you have the Invisible condition when you cast
+a spell on a creature, it has Disadvantage on any
+saving throw it makes against the spell on the same
+turn.
+LEVEL 13: VERSATILE TRICKSTER
+You gain the ability to distract targets with your
+Mage Hand. When you use the Trip option of your
+Cunning Strike on a creature, you can also use that
+option on another creature within 5 feet of the
+spectral hand.
+LEVEL 17: SPELL T H IEF
+You gain the ability to magically steal the knowledge of how to cast a spell from another spellcaster.
+Immediately after a creature casts a spell that
+targets you or includes you in its area of effect, you
+can take a Reaction to force the creature to make an
+Intelligence saving throw. The DC equals your spell
+save DC. On a failed save, you negate the spell's effect against you, and you steal the knowledge of the
+spell if it is at least level 1 and of a level you can cast
+(it doesn't need to be a Wizard spell). For the next
+8 hours, you have the spell prepared. The creature
+can't cast it until the 8 hours have passed.
+Once you steal a spell with this feature, you can't
+use this feature again until you finish a Long Rest.

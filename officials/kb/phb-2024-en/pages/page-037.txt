@@ -1,0 +1,199 @@
+# Player's Handbook 2024 (EN) — PDF-страница 37/387
+
+STEP 3: DETERMINE ABILITY SCORES
+To determine your character's ability scores, you
+first generate a set of six numbers using the instructions below and then assign them to your six abilities. Chapter 1 explains what each ability means.
+GENERATE YOUR SCORES
+Determine your ability scores by using one of the
+following three methods. Your DM might prefer you
+to use a particular one.
+Standard Array. Use the following six scores for
+your abilities: 15, 14, 13, 12, 10, 8.
+Random Generation. Roll four d6s and record the
+total of the highest three dice. Do this five more
+times, so you have six numbers.
+Point Cost. You have 27 points to spend on your
+ability scores. The cost of each score is shown on
+the Ability Score Point Costs table. For example, a
+score of 14 costs 7 of your 27 points.
+ABILITY SCORE POINT COSTS
+Score
+8
+9
+10
+11
+Cost
+0
+2
+3
+ASSIGN ABILITY SCORES
+Score
+12
+13
+14
+15
+Cost
+4
+5
+7
+9
+Once you've generated six scores, assign them to
+Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma, keeping in mind your class's
+primary ability. Fill in the ability modifiers as well.
+If you're using the Standard Array option, consult
+the Standard Array by Class table for suggestions
+on where to assign scores for your character's class.
+The table puts the highest scores in a class's main
+abilities. If you used a different method to generate the scores, you may still use this table to guide
+where you place your highest and lowest scores.
+BACKGROUNDS AND SPECIES
+FROM OLDER BOOKS
+Backgrounds in older D&D books don't include
+ability score adjustments. If you're using a background from an older book, adjust your ability
+scores by increasing one score by 2 and a different one by 1, or increase three scores by 1. None
+of these increases can raise a score above 20.
+Similarly, species in older books include ability
+score increases. If you're using a species from an
+older book, ignore those increases and use only
+the ones given by your background.
+Also, if the background you choose doesn't provide a feat, you gain an Origin feat of your choice.
+38
+CHAPTER 2 I CREATING A CHARACTER
+STANDARD ARRAY BY CLASS
+Class
+Str.
+Dex. Con.
+Int.
+Wis.
+Cha.
+Barbarian
+15
+13
+14
+10
+12
+8
+Bard
+8
+14
+12
+13
+10
+15
+Cleric
+14
+8
+13
+10
+15
+12
+Druid
+8
+12
+14
+13
+15
+10
+Fighter
+15
+14
+13
+8
+lO
+12
+Monk
+12
+15
+13
+10
+14
+8
+Paladin
+15
+10
+13
+8
+12
+14
+Ranger
+12
+15
+13
+8
+14
+10
+Rogue
+12
+15
+13
+14
+10
+8
+Sorcerer
+10
+13
+14
+8
+12
+15
+Warlock
+8
+14
+13
+12
+10
+15
+Wizard
+8
+12
+13
+15
+14
+10
+ADJUST ABILITY SCORES
+After assigning your ability scores, adjust them according to your background. Your background lists
+three abilities; increase one of those scores by 2 and
+a different one by 1, or increase all three by 1. None
+of these increases can raise a score above 20.
+Some players like to increase their class's primary
+ability, while others prefer to increase a low score.
+DETERMINE ABILITY MODIFIERS
+Finally, determine your ability modifiers using the
+Ability Scores and Modifiers table. Write the modifier next to each of your scores.
+ABILITY SCORES AND MODIFIERS
+Score
+Modifier
+Score
+Modifier
+3
+-4
+12-13
++l
+4-5
+-3
+14-15
++2
+6-7
+-2
+16-17
++3
+8-9
+-1
+18-19
++4
+10-11
++O
+20
++S
+DESCRIBE APPEARANCE AND PERSONALITY
+Ability scores are an essential part of the rules, but
+they can be more than that. Once you've assigned
+your ability scores, give some thought to what those
+scores might say about your character's appearance
+and personality. A very strong character with low
+Charisma might look and behave differently from a
+charismatic character with low Strength. The following tables of descriptive words give suggestions
+of how you might describe your character based on
+having a high or low score in an ability.
+Note your character's appearance and personality
+on your character sheet.

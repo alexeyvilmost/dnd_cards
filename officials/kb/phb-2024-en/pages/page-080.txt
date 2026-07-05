@@ -1,0 +1,110 @@
+# Player's Handbook 2024 (EN) — PDF-страница 80/387
+
+W hen you reach certain Druid levels, your number of known forms and the maximum Challenge
+Rating for those forms increases, as shown in the
+Beast Shapes table. In addition, starting at level 8,
+you can adopt a form that has a Fly Speed.
+When choosing known forms, you may look in the
+Monster Manual or elsewhere for eligible Beasts if
+the Dungeon Master permits you to do so.
+BEAST SHAPES
+Druid
+Known
+Max
+Fly
+Level
+Forms
+CR
+Speed
+2
+4
+1/4
+No
+4
+6
+1/2
+No
+8
+8
+Yes
+Rules While Shape-Shifted. While in a form, you
+retain your personality, memories, and ability to
+speak, and the following rules apply:
+Temporary Hit Points. When you assume a Wild
+Shape form, you gain a number of Temporary Hit
+Points equal to your Druid level.
+Game Statistics. Your game statistics are replaced
+by the Beast's stat block, but you retain your creature type; Hit Points; Hit Point Dice; Intelligence,
+Wisdom, and Charisma scores; class features;
+languages; and feats. You also retain your skill
+and saving throw proficiencies and use your Proficiency Bonus for them, in addition to gaining the
+proficiencies of the creature. If a skill or saving
+throw modifier in the Beast's stat block is higher
+than yours, use the one in the stat block.
+No Spellcasting. You can't cast spells, but shapeshifting doesn't break your Concentration or otherwise interfere with a spell you've already cast.
+Objects. Your ability to handle objects is determined by the form's limbs rather than your own.
+In addition, you choose whether your equipment
+falls in your space, merges into your new form, or
+is worn by it. Worn equipment functions as normal, but the OM decides whether it's practical for
+the new form to wear a piece of equipment based
+on the creature's size and shape. Your equipment
+doesn't change size or shape to match the new
+form, and any equipment that the new form can't
+wear must either fall to the ground or merge with
+the form. Equipment that merges with the form
+has no effect while you're in that form.
+LEVEL 2: WILD COMPANION
+You can summon a nature spirit that assumes an
+animal form to aid you. As a Magic action, you can
+expend a spell slot or a use of Wild Shape to cast the
+Find Familiar spell without Material components.
+When you cast the spell in this way, the familiar is
+Fey and disappears when you finish a Long Rest.
+LEVEL 3: DRUID SUBCLASS
+You gain a Druid subclass of your choice. The Circle
+of the Land, Circle of the Moon, Circle of the Sea,
+and Circle of the Stars subclasses are detailed after
+this class's description. A subclass is a specialization
+that grants you features at certain Druid levels. For
+the rest of your career, you gain each of your subclass's features that are of your Druid level or lower.
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see
+chapter 5) or another feat of your choice for which
+you qualify. You gain this feature again at Druid
+levels 8, 12, and 16.
+LEVEL 5: WILD RESURGENCE
+Once on each of your turns, if you have no uses of
+Wild Shape left, you can give yourself one use by
+expending a spell slot (no action required).
+In addition, you can expend one use of Wild Shape
+(no action required) to give yourself a level 1 spell
+slot, but you can't do so again until you finish a
+Long Rest.
+LEVEL 7: ELEMENTAL FURY
+The might of the elements flows through you. You
+gain one of the following options of your choice.
+Potent Spellcasting. Add your Wisdom modifier to
+the damage you deal with any Druid cantrip.
+Primal Strike. Once on each of your turns when
+you hit a creature with an attack roll using a
+weapon or a Beast form's attack in Wild Shape, you
+can cause the target to take an extra ld8 Cold, Fire,
+Lightning, or Thunder damage (choose when you
+hit).
+LEVEL 15: IMPROVED ELEMENTAL FURY
+The option you chose for Elemental Fury grows
+more powerful, as detailed below.
+Potent Spellcasting. When you cast a Druid cantrip with a range of 10 feet or greater, the spell's
+range increases by 300 feet.
+Primal Strike. The extra damage of your Primal
+Strike increases to 2d8.
+LEVEL 18: BEAST SPELLS
+While using Wild Shape, you can cast spells in
+Beast form, except for any spell that has a Material
+component with a cost specified or that consumes
+its Material component.
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 5) or another feat of your choice for which you qualify.
+Boon of Dimensional Travel is recommended.
+CHAPTER 3 I CHARACTER CLASSES
+8

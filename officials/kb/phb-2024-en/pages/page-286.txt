@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 286/387
+
+there must · !!cceed on a Dexterity saving throw or
+take 2d6 Acid damage from otherworldly tentacles.
+Using a Higher-Level Spell Slot. The Cold or Acid
+damage (your choice) increases by ld6 for each spell
+slot level above 3.
+H U NTER'S MARK
+Level 1 Divination (Ranger)
+casting Time: Bonus Action
+Range: 90 feet
+Components: V
+Duration: Concentration, up to l hour
+You magically mark one creature you can see
+within range as your quarry. Until the spell ends,
+you deal an extra ld6 Force damage to the target
+whenever you hit it with an attack roll. You also
+have Advantage on any Wisdom {Perception or Survival) check you make to find it.
+If the target drops to O Hit Points before this spell
+ends, you can take a Bonus Action to move the mark
+to a new creature you can see within range.
+Using a Higher-Level Spell Slot. Your Concentration can last longer with a spell slot of level 3- 4 (up
+to 8 hours) or 5+ {up to 24 hours).
+HYPNOTIC PATTERN
+Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)
+Casting Time: Action
+Range: 120 feet
+Components: S, M (a pinch of confetti)
+Duration: Concentration, up to l minute
+You create a twisting pattern of colors in a 30-foot
+Cube within range. The pattern appears for a moment and vanishes. Each creature in the area who
+can see the pattern must succeed on a Wisdom
+saving throw or have the Charmed condition for
+the duration. While Charmed, the creature has the
+Incapacitated condition and a Speed of 0.
+The spell ends for an affected creature if it takes
+any damage or if someone else uses an action to
+shake the creature out of its stupor.
+ICE KNIFE
+Level 1 Conjuration (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: S, M (a drop of water or a piece of ice)
+Duration: Instan taneous
+You create a s rnrd of ice and fling it at one creature
+within range. ! 1lake a ranged spell attack against
+the target. C ·. ; hit, the target takes ldlO Piercing
+damage. Hit , .. ~· :Tiiss, the shard then explodes. The
+target and each creature within 5 feet of it must
+succeed on a Dexterity saving throw or take 2d6
+Cold damage.
+Using a Higher-Level Spell Slot. The Cold damage
+increases by ld6 for each spell slot level above 1.
+ICE STORM
+Level 4 Evocation (Druid, Sorcerer, Wizard)
+Casting Time: Action
+Range: 300 feet
+Components: V, S, M (a mitten)
+Duration: Instantaneous
+Hail falls in a 20-foot-radius, 40-foot-high Cylinder
+centered on a point within range. Each creature
+in the Cylinder makes a Dexterity saving throw. A
+creature takes 2d10 Bludgeoning damage and 4d6
+Cold damage on a failed save or half as much damage on a successful one.
+Hailstones turn ground in the Cylinder into Difficult Terrain until the end of your next turn.
+Using a Higher-Level Spell Slot. The Bludgeoning
+damage increases by ldl0 for each spell slot level
+above 4.
+IDENTIFY
+Level 1 Divination (Bard, Wizard)
+Casting Time: l minute or Ritual
+Range:Touch
+Components: V, S, M (a pearl worth 100+ GP)
+Duration: Instantaneous
+You touch an object throughout the spell's casting.
+If the object is a magic item or some other magical object, you learn its properties and how to use
+them, whether it requires Attunement, and how
+many charges it has, if any. You learn whether any
+ongoing spells are affecting the item and what they
+are. If the item was created by a spell, you learn that
+spell's name.
+If you instead touch a creature throughout the
+casting, you learn which ongoing spells, if any, are
+currently affecting it.
+CHAPTER 7 I PELLS
+287

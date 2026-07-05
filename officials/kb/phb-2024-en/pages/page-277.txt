@@ -1,0 +1,53 @@
+# Player's Handbook 2024 (EN) — PDF-страница 277/387
+
+2 8
+l'l
+""
+Deities and other planar rulers can prevent portals created by this spell from opening in their presence or anywhere within their domains.
+When you cast this spell, you can speak the name
+of a specific creature (a pseudonym, title, or nickname doesn't work). If that creature is on a plane
+other than the one you are on, the portal opens
+next to the named creature and transports it to the
+nearest unoccupied space on your side of the portal.
+You gain no special power over the creature, and it
+is free to act as the DM deems appropriate. It might
+leave, attack you, or help you.
+GEAS
+Level 5 Enchantment (Bard, Cleric, Druid, Paladin,
+Wizard)
+Casting Time: l minute
+Range: 60 feet
+Components: V
+Duration: 30 days
+You give a verbal command to a creature that you
+can see within range, ordering it to carry out some
+service or refrain from an action or a course of activity as you decide. The target must succeed on a
+Wisdom saving throw or ha·1e the Charmed condition for the duration. The target automatically succeeds if it can't understand your command.
+C.11 1\PTER 7 I SPELLS
+-,x-
+While Charmed, the creature takes SdlO Psychic
+damage if it acts in a manner directly counter to
+your command. It takes this damage no more than
+once each day.
+You can issue any command you choose, short
+of an activity that would result in certain death.
+Should you issue a suicidal command, the spell ends.
+A Remove Curse, Greater Restoration, or Wish spell
+ends this spell.
+Using a Higher-Level Spell Slot. If you use a level
+7 or 8 spell slot, the duration is 365 days. If you use
+a level 9 spell slot, the spell lasts until it is ended by
+one of the spells mentioned above.
+G ENTLE R EPOSE
+Level 2 Necromancy (Cleric, Paladin, Wizard)
+Casting Time: Action or Ritual
+Range:Touch
+Components: V, S, M (2 Copper Pieces, which the
+spell consumes)
+Duration: 10 days
+You touch a corpse or other remains. For the duration, the target is protected from decay and can't
+become Undead.
+The spell also effect:ve! , extends the time limit on
+raising the target from tj;,_ dead, since days spent
+under the influence of :1 i •; spell don't count against
+the time limit of speib .. ;· :-11 as Raise Dead.

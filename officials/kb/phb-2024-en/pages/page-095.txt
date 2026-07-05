@@ -1,0 +1,44 @@
+# Player's Handbook 2024 (EN) — PDF-страница 95/387
+
+CHAMPION
+~:.:..:...:,:..:_ _____________ --
+Pursue Physical Excellence in Combat
+A Champion focuses on the development of martial
+prowess in a relentless pursuit of victory. Champions combine rigorous training with physical excellence to deal devastating blows, withstand peril, and
+garner glory. Whether in athletic contests or bloody
+battle, Champions strive for the crown of the victor.
+LEVEL 3: IMPROVED CRITICAL
+Your attack rolls with weapons and Unarmed
+Strikes can score a Critical Hit on a roll of 19 or 20
+on the d20.
+LEVEL 3: REMARKABLE ATHLETE
+Thanks to your athleticism, you have Advantage on
+Initiative rolls and Strength (Athletics) checks.
+In addition, immediately after you score a Critical
+Hit, you can move up to half your Speed without
+provoking Opportunity Attacks.
+LEVEL 7: ADDITIONAL FIGHTING STYLE
+You gain another Fighting Style feat of your choice.
+LEVEL 10: HEROIC WARRIOR
+The thrill of battle drives you toward victory.
+During combat, you can give yourself Heroic Inspiration whenever you start your turn without it.
+LEVEL 15: SUPERIOR CRITICAL
+Your attack rolls with weapons and Unarmed
+Strikes can now score a Critical Hit on a roll of
+18-20 on the d20.
+LEVEL 18: SURVIVOR
+You attain the pinnacle of resilience in battle, giving
+you these benefits.
+Defy Death. You have Advantage on Death Saving
+Throws. Moreover, when you roll 18-20 on a Death
+Saving Thr:ow, you gain the benefit of rolling a 20
+on it.
+Heroic Rally. At the start of each of your turns,
+you regain Hit Points equal to 5 plus your Constitution modifier if you are Bloodied and have at least 1
+Hit Point.
+ELDRITCH KNIGHT
+Support Combat Skills with Arcane Magic
+Eldritch Knights combine the martial mastery common to all Fighters with a careful study of magic.
+Their spells both complement and extend their combat skills, providing additional protection to shore
+up their armor and also allowing them to engage
+many foes at once with explosive magic.

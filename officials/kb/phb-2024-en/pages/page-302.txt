@@ -1,0 +1,86 @@
+# Player's Handbook 2024 (EN) — PDF-страница 302/387
+
+If the glc ~,c str ikes a body of water, it freezes the
+water to a depth of 6 inches ?ver an area 30 feet
+square. Th is ice lasts for 1 mmute. Creatures that
+were swimming on the surface of frozen water are
+trapped in the ice and have the Restrained condition. A trapped creature can take an action to make
+a Strength (Athletics) check against your spell save
+DC to break free.
+You can refrain from firing the globe after completing the spell's casting. If you do so, a globe about
+the size of a sling bullet, cool to the touch, appears
+in your hand. At any time, you or a creature you
+give the globe to can throw the globe (to a range of
+40 feet) or hurl it with a sling (to the sling's normal
+range). It shatters on impact, with the same effect
+as a normal casting of the spell. You can also set the
+globe down without shattering it. After 1 minute, if
+the globe hasn't already shattered, it explodes.
+Using a Higher-Level Spell Slot. The damage increases by ld6 for each spell slot level above 6.
+O TILUKE'S RESILIENT SPHERE
+Level 4 Abjuration (Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (a glass sphere)
+Duration: Concentration, up to l minute
+A shimmering sphere encloses a Large or smaller
+creature or object within range. An unwilling creature must succeed on a Dexterity saving throw or
+be enclosed for the duration.
+Nothing-not physical objects, energy, or other
+spell effects-can pass through the barrier, in or out,
+though a creature in the sphere can breathe there.
+The sphere is immune to all damage, and a creature
+or object inside can't be damaged by attacks or effects originating from outside, nor can a creature
+inside the sphere damage anything outside it.
+The sphere is weightless and just large enough to
+contain the creature or object inside. An enclosed
+creature can take an action to push against the
+sphere's walls and thus roll the sphere at up to half
+the creature's Speed. Similarly, the globe can be
+picked up and moved by other creatures.
+A Disintegrate spell targeting the globe destroys it
+without harming anything inside.
+OTTO'S IRRESISTIBLE DANCE
+Level 6 Enchantment (Bard, Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V
+Duration: Concentration, up to l minute
+One creature that you can see within range must
+make a Wisdom saving throw. On a successful save,
+the target dances comically until the end of its next
+turn, during which it must spend all its movement
+to dance in place.
+On a failed save, the target has the Charmed condition for the duration. While Charmed, the target
+dances comically, must use all its movement to
+dance in place, and has Disadvantage on Dexterity
+saving throws and attack rolls, and other creatures
+have Advantage on attack rolls against it. On each
+of its turns, the target can take an action to collect
+itself and repeat the save, ending the spell on itself
+on a success.
+PASSWALL
+Level 5 Transmutation (Wizard)
+Casting Time: Action
+Range: 30 feet
+Components: V, S, M (a pinch of sesame seeds)
+Duration: l hour
+A passage appears at a point that you can see on a
+wooden, plaster, or stone surface (such as a wall,
+ceiling, or floor) within range and lasts for the duration. You choose the opening's dimensions: up to 5
+feet wide, 8 feet tall, and 20 feet deep. The passage
+creates no instability in a structure surrounding it.
+When the opening disappears, any creatures or
+objects still in the passage created by the spell are
+safely ejected to an unoccupied space nearest to the
+surface on which you cast the spell.
+PASS WITHOUT TRACE
+Level 2 Abjuration (Druid, Ranger)
+Casting Time: Action
+Range: Self
+Components: V, S, M (ashes from burned mistletoe)
+Duration: Concentration, up to 1 hour
+You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and
+each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks.
+CHAPTER 7 I SPELLS
+303

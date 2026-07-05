@@ -1,0 +1,55 @@
+# Player's Handbook 2024 (EN) — PDF-страница 160/387
+
+.:.
+LEVEL 10: C ELESTI A L RESILIENCE
+You gain Temporary Hit Points whenever you use
+your Magica l Cunning feature or finish a Short
+or Long Rest. These Temporary Hit Points equal
+your Warlock level plus your Charisma modifier.
+Additionally, choose up to five creatures you can
+see when you gain the points. Those creatures each
+gain Temporary Hit Points equal to half your Warlock level plus your Charisma modifier.
+LEVEL 14 : SEARING VENGEANC E
+When you or an ally within 60 feet of you is about
+to make a Death Saving Throw, you can unleash radiant energy to save the creature. The creature regains Hit Points equal to half its Hit Point maximum
+and can end the Prone condition on itself. Each
+creature of your choice that is within 30 feet of the
+creature takes Radiant damage equal to 2d8 plus
+your Charisma modifier, and each has the Blinded
+condition until the end of the current turn.
+Once you use this feature, you can't use it again
+until you finish a Long Rest.
+FIEND PATRON
+Make a Deal with the Lower Planes
+Your pact draws on the Lower Planes, the realms of
+perdition. You might forge a bargain with a demon
+lord such as Demogorgon or Orcus; an archdevil
+such as Asmodeus; or a pit fiend, balor, yugoloth,
+or night hag that is especially mighty. That patron's
+aims are evil-the corruption or destruction of all
+things, ultimately including you-and your path is
+defined by the extent to which you strive against
+those aims.
+LEVEL 3: DARK ONE 'S BLESSING
+When you reduce an enemy to O Hit Points, you
+gain Temporary Hit Points equal to your Charisma
+modifier plus your Warlock level (minimum of 1
+Temporary Hit Point). You also gain this benefit if
+someone else reduces an enemy within 10 feet of
+you to 0 Hit Points.
+L EV EL 3: FIEND SPELLS
+The magic of your patron ensures you always have
+certain spells ready; when you reach a Warlock level
+specified in the Fiend Spells table, you thereafter
+always have the listed spells prepared.
+FIEND SPELL S
+Warlock Level Spells
+3
+5
+7
+9
+Burning Hands, Command,
+Scorching Ray, Suggestion
+Fireball, Stinking Cloud
+Fire Shield, Wall of Fire
+Geas, Insect Plague

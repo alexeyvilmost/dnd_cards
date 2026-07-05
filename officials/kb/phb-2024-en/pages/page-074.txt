@@ -1,0 +1,48 @@
+# Player's Handbook 2024 (EN) — PDF-страница 74/387
+
+,,_
+0
+:_,1: VEL 6: b i :C-t~•:.:-,-.c: D W ARDING FLARE
+·r'ou regain all expended uses of your Warding Flare
+, ,hen you finish a Short or Long Rest.
+In addition, whenever you use Warding Flare, you
+can give the target of the triggering attack a number of Temporary Hit Points equal to 2d6 plus your
+Wisdom modifier.
+LEVEL 17: CORONA OF LIGHT
+As a Magic action, you cause yourself to emit an
+aura of sunlight that lasts for 1 minute or until you
+dismiss it (no action required). You emit Bright
+Light in a 60-foot radius and Dim Light for an additional 30 feet. Your enemies in the Bright Light
+have Disadvantage on saving throws against your
+Radiance of the Dawn and any spell that deals Fire
+or Radiant damage.
+You can use this feature a number of times equal
+to your Wisdom modifier (minimum of once), and
+you regain all expended uses when you finish a
+Long Rest.
+TRICKERY DOMAIN
+Make Mischief and Challenge Authority
+The Trickery Domain offers magic of deception, illusion, and stealth. Clerics who wield this magic are
+a disruptive force in the world, puncturing pride,
+mocking tyrants, freeing captives, and flouting hollow traditions. They prefer subterfuge and pranks
+to direct confrontation.
+Gods of trickery are mischief-makers and instigators who stand as a constant challenge to the
+accepted order among both gods and mortals.
+They embody the forces of change and social upheaval, and they're patrons of thieves, scoundrels,
+gamblers, rebels, and liberators. Religious orders
+that operate in secret, especially those that seek to
+undermine oppressive governments or hierarchies,
+also draw on the power of the Trickery Domain.
+LEVEL 3: BLESSING OF THE TRICKSTER
+As a Magic action, you can choose yourself or a
+willing creature within 30 feet of yourself to have
+Advantage on Dexterity {Stealth) checks. This
+blessing lasts until you finish a Long Rest or you use
+this feature again.
+LEVEL 3: INVOKE DUPLICITY
+As a Bonus Action, you can expend one use of your
+Channel Divinity to create a perfect visual illusion
+of yourself in an unoccupied space you can see
+within 30 feet of yourself. The illusion is intangible
+and doesn't occupy its space. It lasts for 1 minute,
+but it ends early if you dismiss it (no action required} or have the Incapacitated condition. The illusion is animated and mimics your expressions and

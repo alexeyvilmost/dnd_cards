@@ -1,0 +1,111 @@
+# Player's Handbook 2024 (EN) — PDF-страница 330/387
+
+TASHA'S Hro sous LAU G HTER
+Level J Enchantment (Bard, Warlock, Wizard)
+casting Time: Action
+Range: 30 feet
+components: V, S, M (a tart and a feather)
+Duration: Concentration , up to l minute
+One creature of your choice that you can see within
+range makes a Wisdom saving throw. On a failed
+save, it has the Prone and Incapacitated conditions
+for the duration. During that time, it laughs uncontrollably if it's capable of laughter, and it can't end
+the Prone condition on itself.
+At the end of each of its turns and each time it
+takes damage, it makes another Wisdom saving
+throw. The target has Advantage on the save if the
+save is triggered by damage. On a successful save,
+the spell ends.
+Using a Higher-Level Spell Slot. You can target one
+additional creature for each spell slot level about 1.
+TELEKINESIS
+Level 5 Transmutation (Sorcerer, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You gain the ability to move or manipulate creatures or objects by thought. When you cast the spell
+and as a Magic action on your later turns before the
+spell ends, you can exert your will on one creature
+or object that you can see within range, causing the
+appropriate effect below. You can affect the same
+t::rr,et round after round or choose a new one at any
+time. 1f you switch targets. !:hP. prior target is no
+longer affected by the spell.
+Creature. You can try to move a Huge or smaller
+creature. The target must succeed on a Strength
+saving throw, or you move it up to 30 feet in any
+direction within the spell's range. Until the end of
+your next turn, the creature has the Restrained condition, and if you lift it into the air, it is suspended
+there. It falls at the end of your next turn unless you
+use this option on it again and it fails the save.
+Object. You can try to move a Huge or smaller
+object. If the object isn't being worn or carried, you
+automatically move it up to 30 feet in any direction
+within the spell's r~rnge.
+If the object is ·om or carried by a creature, that
+creature must su(·c.Cc'cd on a Strength saving throw,
+or you pull the obj<::ct away and move it up to 30
+feet in any di rec\:• , 11 within the spell's range.
+You can exerl fi. ·, ' control on objects with your
+telekinetic grip, :,, .,_.h as manipulating a simple tool,
+~~~~ing t door or a container, stowing or retrieving
+te It efm rom ~n open container, or pouring the conn s rom a vial.
+TELEPATHY
+Level 8 Divination (Wizard)
+Casting Time: Action
+Range: Unlimited
+Comp_onents: V, S, M (a pair of linked silver rings)
+Duration: 24 hours
+Y~u_create a telepathic link between yourself and a
+w1llmg creature with which you are familiar. The
+~reature can be anywhere on the same plane of existence as you. The spell ends if you or the target are
+no longer on the same plane.
+Until the spell ends, you and the target can instantly share words, images, sounds, and other
+sensory messages with each other through the link,
+and the target recognizes you as the creature it is
+communicating with. The spell enables a creature
+to understand the meaning of your words and any
+sensory messages you send to it.
+TELEPORT
+Level 7 Conjuration (Bard, Sorcerer, Wizard)
+Casting Time: Action
+Range: 10 feet
+Components: V
+Duration: Instantaneous
+This spell instantly transports you and up to eight
+willing creatures that you can see within range, or a
+single object that you can see within range, to a destination you select. If you target an object, it must
+be Large or smaller, and it can't be held or carried
+by an unwilling creature.
+The destination you choose must be known to
+you, and it must be on the same plane of existence
+as you. Your familiarity with the destination determines whether you arrive there successfully. The
+OM rolls ldlOO and consults the Teleportation Outcome table and the explanations after it.
+TELEP0RTATI0N OUTCOME
+Similar
+Off
+On
+Familiarity
+Mishap
+Area
+Target Target
+Permanent circle
+01-00
+Linked object
+01-00
+Very familiar
+01-05
+06-13
+14-24 25-00
+Seen casually
+01-33
+34-43 44-53 54-00
+Viewed once or
+01-43
+44-53 54-73 74-00
+described
+False destination
+01-50
+51-00
+H PTER 7 I SPELLS

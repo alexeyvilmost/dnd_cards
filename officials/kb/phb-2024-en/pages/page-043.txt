@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 43/387
+
+MULTICLASSING
+Multiclassing allows you to gain levels in multiple
+classes. With this rule, you have the option of gaining a level in a new class whenever you advance in
+level instead of gaining a level in your current class.
+Doing so lets you mix the abilities of those classes
+to realize a character concept that might not be reflected in a single class.
+PREREQUISITES
+To qualify for a new class, you must have a score
+of at least 13 in the primary ability of the new class
+and your current classes. For example, a Barbarian
+who decides to multiclass into the Druid class must
+have Strength and Wisdom scores of 13 or higher,
+since Strength is the primary ability for Barbarians
+and Wisdom is the primary ability for Druids.
+EXPERIENCE POINTS
+The Experience Point cost to gain a level is based on
+your total character level, not your level in a particular class, as shown in the Character Advancement
+table in this chapter. For example, if you are a level
+6 Cleric/ level 1 Fighter, you must gain enough XP
+to reach level 8 before you can take your second
+level as a Fighter or your seventh level as a Cleric.
+HIT POINTS AND HIT POINT DICE
+You gain the Hit Points from your new class as
+described for levels after 1. You gain the level 1 Hit
+Points for a class only when your total character
+level is 1.
+Add together the Hit Dice granted by all your
+classes to form your pool of Hit Dice. If these dice
+are the same die type, you can pool them together.
+For example, both the Fighter and the Paladin have
+a dl0 Hit Die, so if you are a level 5 Fighter/ level 5
+Paladin, you have ten dl0 Hit Dice. If your classes
+give you Hit Dice of different types, track them separately. If you are a level 5 Cleric / level 5 Paladin,
+for example, you have five d8 Hit Dice and five dlO
+Hit Dice.
+PROFICIENCY BONUS
+Your Proficiency Bonus is based on your total character level, not your level in a particular class, as
+shown in the Character Advancement table. For
+example, if you are a level 3 Fighter/ level 2 Rogue,
+you have the Proficiency Bonus of a level 5 character, which is +3.
+44
+CHAPTER 2 I CREATING A CHARACTER
+PROFICIENCIES
+When you gain your first level in a class other than
+your initial class, you gain only some of the new
+class's starting proficiencies, as detailed in each
+class's description in chapter 3.
+CLASS FEATURES
+When you gain a new level in a class, you get its features for that level. A few features have additional
+rules when you're multiclassing. Check the information about multiclassing included in each of your
+classes' descriptions.
+Special rules apply to Extra Attack, Spellcasting,
+and features (such as Unarmored Defense) that give
+you alternative ways to calculate your Armor Class.
+ARMOR CLASS
+If you have multiple ways to calculate your Armor
+Class, you can benefit from only one at a time. For
+example, a Monk/Sorcerer with a Monk's Unarmored Defense feature and a Sorcerer's Draconic
+Resilience feature must choose only one of those
+features as a way to calculate Armor Class.
+EXTRA ATTACK
+If you gain the Extra Attack feature from more than
+one class, the features don't stack. You can't make
+more than two attacks with this feature unless you
+have a feature that says you can (such as the Fighter's Two Extra Attacks feature).
+Similarly, the Warlock's Thirsting Blade invocation, which grants you the Extra Attack feature
+with your pact weapon, doesn't give you additional
+attacks if you also have Extra Attack.
+SPELLCASTING
+Your capacity for spellcasting depends partly on
+your combined levels in all your spellcasting classes
+and partly on your individual levels in those classes.
+Once you have the Spellcasting feature from more
+than one class, use the rules below. If you multiclass
+but have the Spellcasting feature from only one
+class, follow the rules for that class.
+Spells Prepared. You determine what spells you
+can prepare for each class individually, as if you
+were a single-classed member of that class. If you
+are a level 4 Ranger/ level 3 Sorcerer, for example,
+you can prepare five level 1 Ranger spells, and you
+can prepare six Sorcerer spells of level 1 or 2 (as
+well as four Sorcerer cantrips).
+Each spell you prepare is associated with one of
+your classes, and you use the spellcasting ability of
+that class when you cast the spell.
+Cantrips. If a cantrip of yours increases in power
+at higher levels, the increase is based on your total
+character level, not your level in a particular class,
+unless the spell says otherwise.

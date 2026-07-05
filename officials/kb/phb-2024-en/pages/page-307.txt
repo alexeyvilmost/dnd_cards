@@ -1,0 +1,91 @@
+# Player's Handbook 2024 (EN) — PDF-страница 307/387
+
+PRI SMATIC WALL
+Level 9 Abjuration (Bard, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: 10 minutes
+A shimmering, multicolored plane of light forms
+a vertical opaque wall-up to 90 feet long, 30 feet
+high, and 1 inch thick-centered on a point within
+range. Alternatively, you shape the wall into a globe
+up to 30 feet in diameter centered on a point within
+range. The wall lasts for the duration. If you position the wall in a space occupied by a creature, the
+spell ends instantly without effect.
+The wall sheds Bright Light within 100 feet and
+Dim Light for an additional 100 feet. You and creatures you designate when you cast the spell can
+pass through and be near the wall without harm. If
+another creature that can see the wall moves within
+20 feet of it or starts its turn there, the creature
+must succeed on a Constitution saving throw or
+have the Blinded condition for 1 minute.
+The wall consists of seven layers, each with a
+different color. When a creature reaches into or
+passes through the waJl, it does so one layer at a
+time through all the layers. Each layer forces the
+creature to make a Dexterity saving throw or be affected by that layer's properties as described in the
+Prismatic Layers table.
+The wall, which has AC 10, can be destroyed one
+layer at a time, in order from red to violet, by means
+specific to each layer. If a layer is destroyed, it is
+gone for the duration. Antimagic Field has no effect
+on the wall, and Dispel Magic can affect only the violet layer.
+PRODUCE FLAME
+Conjuration Cantrip (Druid)
+Casting Time: Bonus Action
+Range: Self
+Components: V, S
+Duration: 10 minutes
+A flickering flame appears in your hand and remains
+there for the duration. While there, the flame emits
+no heat and ignites nothing, and it sheds Bright
+Light in a 2O-foot radius and Dim Light for an additional 20 feet. The spell ends if you cast it again.
+Until the spell ends, you can take a Magic action
+to hurl fire at a creature or an object within 60 feet
+of you. Make a ranged spell attack. On a hit, the target takes 1d8 Fire damage.
+Cantrip Upgrade. The damage increases by ld8
+when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).
+308
+CHAPTER 7 I SPELLS
+PRISMATIC LAYERS
+Order Effects
+Red. Failed Save: 12d6 Fire damage. Successful Save: Half as much damage. Additional
+Effects: Nonmagical ranged attacks can't
+pass through this layer, which is destroyed if
+it takes at least 25 Cold damage.
+2
+Orange. Failed Save: 12d6 Acid damage.
+Successful Save: Half as much damage. Additional Effects: Magical ranged attacks can't
+pass through th is layer, which is destroyed
+by a strong wind (such as the one created by
+Gust of Wind) .
+3
+Yellow. Failed Save: 12d6 Lightning damage.
+Successful Save: Half as much damage. Additional Effects: The layer is destroyed if it takes
+at least 60 Force damage.
+4
+Green. Failed Save: 12d6 Poison damage.
+Successful Save: Half as much damage. Additional Effects: A Passwa/1 spell, or another
+spell of equal or greater level that can open a
+portal on a solid surface, destroys this layer.
+5
+Blue. Failed Save: 12d6 Cold damage. Successful Save: Half as much damage. Additional Effects: The layer is destroyed if it takes
+at least 25 Fire damage.
+6
+Indigo. Failed Save: The target has the Restrained condition and makes a Constitution saving throw at the end of each of its
+turns. If it successfu lly saves three ti mes,
+the condition ends. If it fa ils three times, it
+has the Petrified condition until it is freed by
+an effect like the Greater Restoration spell.
+The successes and fa ilures needn't be consecutive; keep track of both until the target
+collects three of a kind. Additional Effects:
+Spells can't be cast th rough this layer, which
+is destroyed by Bright Light shed by the Daylight spell.
+7
+Violet. Failed Save: The target has the
+Blinded condition and makes a Wisdom saving throw at the start of your next turn. On
+a successful save, the condition ends. On a
+failed save, the condition ends, and the creature teleports to another plane of existence
+(DM's choice). Additinnol Effects: This layer
+is destroyed by Dispel tv1ae,ic.

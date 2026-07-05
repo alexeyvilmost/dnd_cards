@@ -1,0 +1,53 @@
+# Player's Handbook 2024 (EN) — PDF-страница 75/387
+
+gestures. While it persists, you ga in the foll ,,·. ;ng
+benefits.
+Cast Spells. You can cast spells as though ou
+were in the illusion's space, but you must use your
+own senses.
+Distract. When both you and your illusion are
+within S feet of a creature that can see the illusion
+you have Advantage on attack rolls against that
+'
+creature, given how distracting the illusion is to the
+target.
+Move. As a Bonus Action, you can move the illusion up to 30 feet to an unoccupied space you can
+see that is within 120 feet of yourself.
+LEVEL 3: TRICKERY DOMAIN SP E LL S
+Your connection to this divine domain ensures you
+always have certain spells ready. When you reach a
+Cleric level specified in the Trickery Domain Spells
+table, you thereafter always have the listed spells
+prepared.
+TRICKERY DOMAIN SPELLS
+Cleric Level
+Prepared Spells
+3
+Charm Person, Disguise Self, Invisibility,
+Pass without Trace
+5
+Hypnotic Pattern, Nondetection
+7
+Confusion, Dimension Door
+9
+Dominate Person, Modify Memory
+LEVEL 6: TRICKSTER'S TRANSPOSITION
+Whenever you take the Bonus Action to create or
+move the illusion of your Invoke Duplicity, you can
+teleport, swapping places with the illusion.
+LEVEL 17: IMPROVED DUPLICITY
+The illusion of your Invoke Duplicity has grown
+more powerful in the following ways.
+Shared Distraction. When you and your
+allies make attack rolls against a creature
+within 5 feet of the illusion, the attack rolls
+have Advantage.
+Healing Illusion. When the illusion
+ends, you or a creature of your choice
+within 5 feet of it regains a number of Hit
+Points equal to your Cleric level.
+WAR DOMAIN
+Inspire Valor and Smite Foes
+War has many manifestations. It can make
+heroes of ordinary people. It can be desperate and
+horrific, with acts of cruelty and cowardice eclipsing instances of excellence and courage. Clerics

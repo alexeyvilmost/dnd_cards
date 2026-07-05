@@ -1,0 +1,107 @@
+# Player's Handbook 2024 (EN) — PDF-страница 164/387
+
+l ,
+.......
+CORE W IZARD TR AITS
+Primary Ability
+Intelligence
+Hit Point Die
+saving Throw
+, Proficiencies
+1
+Skill Proficiencies
+Weapon Proficiencies
+Armor Training
+Starting Equipment
+D6 per Wizard level
+Intelligence and Wisdom
+Choose 2: Arcana, History,
+Insight, Investigation, Medicine, Nature, or Religion
+Simple weapons
+No ne
+Choose A or B: (A) 2 Daggers,
+Arcane Focus (Quarterstaff),
+Robe, Spellbook, Scholar's
+Pack, and 5 GP; or (B) 55 GP
+As A MuLTICLASs CHARACTER
+I
+• Gain the Hit Point Die from the Core Wizard
+' I
+Traits table.
+! I
+• Gain the Wizard's level 1 features, which are listed
+in the Wizard Features table. See the multiclassing rules in chapter 2 to determine your available
+spell slots.
+WIZARD CLASS FEATURES
+As a Wizard, you gain the following class features
+when you reach the specified Wizard levels. These
+features are listed in the Wizard Features table.
+LEVEL 1: SPELLCASTING
+As a student of arcane magic, you have learned to
+cast spells. See chapter 7 for the rules on spellcasting. The information below details how you use
+l~~==================-======-1 , those rules with Wizard spells, which appear in the
+IZARDS ARE DEFINED BY THEIR
+/;
+exhaustive study of magic's inner work-
+•
+ings. They cast spells of explosive fire,
+arcing lightning, subtle deception, and spectacular
+transformations. Their magic conjures monsters
+from other planes of existence, glimpses the future,
+or forms protective barriers. Their mightiest spells
+change one substance into another, call meteors
+from the sky, or open portals to other worlds.
+Most Wizards share a scholarly approach to
+magic. They examine the theoreti~al ~nderpinnings
+of magic, particularly the categorization of spells
+into schools of magic. Renowned Wizards such as
+Bigby, Tasha, Mordenkainen, and Yolande have built
+on their studies to invent iconic spells now used
+across the multiverse.
+The closest a Wizard is likely to come to an ordinary life is working as a sage or lecturer. Other
+Wizards sell their services as advisers, serve in military forces, or pursue lives of crime or domination.
+But the lure of knowledge calls even the most
+unadventurous Wizards from the safety of their
+libraries and laboratories and into crumbling ruins and lost cities. Most Wizards believe that their
+counterparts in ancient civilizations knew secrets
+of magic that have been lost to the ages, and discovering those secrets could unlock the path to a power
+greater than any magic available in the present age.
+BECOMING A WIZARD ...
+As A LEV EL 1 C HARACTER
+Gain all the traits in the Core Wizard Traits table.
+Gain the vVi:rnrd's level 1 features, which are listed
+in the Wizard Features table.
+Wizard spell list later in the class's description.
+Cantrips. You know three Wizard cantrips of your
+choice. Light, Mage Hand, and Ray of Frost are recommended. Whenever you finish a Long Rest, you can
+replace one of your cantrips from this feature with
+another Wizard cantrip of your choice.
+When you reach Wizard levels 4 and 10, you learn
+another Wizard cantrip of your choice, as shown in
+the Cantrips column of the Wizard Features table.
+Spellbook. Your wizardly apprenticeship culminated in the creation of a unique book: your
+spellbook. lt is a Tiny object that weighs 3 pounds,
+contains 100 pages, and can be read only by you or
+someone casting Identify. You determine the book's
+appearance and materials, such as a gilt-edged tome
+or a collection of vellum bound with twine.
+The book contains the level 1+ spells you know. It
+starts with six level 1 Wizard spells of your choice.
+Detect Magic, Feather Fall, Mage Armor, Magic Missile,
+Sleep, and Thunderwave are recommended.
+Whenever you gain a Wizard level after 1, add
+two Wizard spells of your choice to your spellbook.
+Each of these spells must be of a level for which you
+have spell slots, as shown in the Wizard Features
+table. The spells are the culmination of arcane research you do regularly.
+Spell Slots. The Wizard Features table shows how
+many spell slots you have to cast your level 1+ spells.
+You regain all expended slots when you finish a
+Long Rest.
+Prepared Spells of Level 1+. You prepare the list of
+level 1+ spells that are available for you to cast with
+this feature. To do so, choose four spells from your
+spellbook. The chosen spells must be of a level for
+which you have spell slots.
+CHAPTE R 3 I CH A RACTER C LASSES
+165

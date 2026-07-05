@@ -1,0 +1,92 @@
+# Player's Handbook 2024 (EN) — PDF-страница 253/387
+
+At the end of each of its turns, an affected target repeats the save, ending the spell on itself on a
+success.
+Using a Higher-Level Spell Slot. The Sphere's radius
+increases by 5 feet for each spell slot level above 4.
+CONJU R E ANIMALS
+Level 3 Conjuration (Druid, Ranger)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You conjure nature spirits that appear as a Large
+pack of spectral, intangible animals in an unoccupied space you can see within range. The pack lasts
+for the duration, and you choose the spirits' animal
+form, such as wolves, serpents, or birds.
+You have Advantage on Strength saving throws
+while you're within 5 feet of the pack, and when you
+move on your turn, you can also move the pack up
+to 30 feet to an unoccupied space you can see.
+Whenever the pack moves within 10 feet of a
+creature you can see and whenever a creature you
+can see enters a space within 10 feet of the pack or
+ends its turn there, you can force that creature to
+make a Dexterity saving throw. On a failed save, the
+creature takes 3d10 Slashing damage. A creature
+makes this save only once per turn.
+Using a Higher-Level Spell Slot. The damage increases by ldlO for each spell slot level above 3.
+CONJURE BARRAGE
+Level 3 Conjuration (Ranger)
+Casting Time: Action
+Range: Self
+Components: V, S, M (a Melee or Ranged weapon
+worth at least l CP)
+Duration: Instantaneous
+You brandish the weapon used to cast the spell and
+conjure similar spectral weapons (or ammunition
+appropriate to the weapon) that launch forward and
+then disappear. Each creature of your choice that
+you can see in a 60-foot Cone makes a Dexterity
+saving throw, taking 5d8 Force damage on a failed
+save or half as much damage on a successful one.
+Using a Higher-Level Spell Slot. The damage increases by ld8 for each spell slot level above 3.
+254
+CH APTER 7 I SPELLS
+CONJURE CELESTIAL
+Level 7 Conjuration (Cleric)
+Casting Time: Action
+Range: 90 feet
+Components: V, S
+Duration: Concentration, up to 10 minutes
+You conjure a spirit from the Upper Planes, which
+manifests as a pillar of light in a 10-foot-radius,
+40-foot-high Cylinder centered on a point within
+range. For each creature you can see in the Cylinder, choose which of these lights shines on it:
+Healing Light. The target regains Hit Points equal
+to 4d12 plus your spellcasting ability modifier.
+Searing Light. The target makes a Dexterity saving
+throw, taking 6d12 Radiant damage on a failed
+save or half as much damage on a successful one.
+Until the spell ends, Bright Light fills the Cylinder,
+and when you move on your turn, you can also
+move the Cylinder up to 30 feet.
+Whenever the Cylinder moves into the space of a
+creature you can see and whenever a creature you
+can see enters the Cylinder or ends its turn there,
+you can bathe it in one of the lights. A creature can
+be affected by this spell only once per turn.
+Using a Higher-Level Spell Slot. The healing and
+damage increase by ld12 for each spell slot level
+above 7.
+CONJURE ELEMENTAL
+Level 5 Conjuration (Druid, Wizard)
+Casting Time: Action
+Range: 60 feet
+Components: V, S
+Duration: Concentration, up to 10 min utes
+You conjure a Large, intangible spirit from the Elemental Planes that appears in an unoccupied space
+within range. Choose the spirit's element, which
+determines its damage type: air (Lightning), earth
+(Thunder), fire (Fire), or water (Cold). The spirit
+lasts for the duration.
+Whenever a creature you can see enters the
+spirit's space or starts its turn within 5 feet of the
+spirit, you can force that creature to make a Dexterity saving throw if the spirit has no creature
+Restrained. On failed save, the target takes 8d8
+damage of the spirit's type, and frc target has the
+Restrained condition until the sJ. ;•J: ends. At the
+start of each of its turns, the Rf':.i: ,·:.i i ned target repeats the save. On a failed :_;ave. t! ,;: I arget takes 4d8
+damage of the spirit's type. On ;1 :.·_;-..::·cssful save, the
+target isn't Restrained by the ' ;_: , i• ..
+Using a Higher-Level Sp.~ii .Sfot. i''., _ da mage increases by 2d8 for each spel' ·,!01 : _ ,e! above 5.
