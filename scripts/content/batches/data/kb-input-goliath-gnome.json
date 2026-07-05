@@ -1,0 +1,206 @@
+[
+ {
+  "id": "d82ad1b1-3345-4eb3-bbf5-33c260628158",
+  "card_number": "RE-sub-storm",
+  "name": "Штормовой",
+  "description": "Штормовой",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Громовой удар: реакцией урон Звуком и помеха.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "86817ebd-10e0-4f47-84e7-197cc973938d",
+  "card_number": "RE-sub-stone",
+  "name": "Каменный",
+  "description": "Каменный",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Каменная стойкость: реакцией уменьшаете урон.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "81bba49b-99da-4ae1-a0c8-fc9cbb14dcc3",
+  "card_number": "RE-sub-hill",
+  "name": "Холмовой",
+  "description": "Холмовой",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Толчок холмов: сбивание с ног при попадании.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "dd24ebf4-91d6-4f42-9654-94b52f43ed59",
+  "card_number": "RE-sub-frost",
+  "name": "Морозный",
+  "description": "Морозный",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Морозная поступь: замедление цели при попадании.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "dbc5133e-5e80-451a-b457-6b8d4de5f678",
+  "card_number": "RE-sub-fire",
+  "name": "Огненный",
+  "description": "Огненный",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Огненный ожог: доп. урон огнём при попадании.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "64efbfe5-4a0a-4143-8254-ca66b3c35a57",
+  "card_number": "RE-sub-cloud",
+  "name": "Облачный",
+  "description": "Облачный",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Облачная телепортация: бонусным действием телепорт на 30 фт.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "e92bba07-a52f-4304-9533-8b307d6d0486",
+  "card_number": "RE-sub-rock",
+  "name": "Скальный гном",
+  "description": "Скальный гном",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "ability": "int",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "mending"
+      },
+      {
+       "ability": "int",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "prestidigitation"
+      },
+      {
+       "description": "Вы создаёте Заводную игрушку.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "147fc0bb-54fd-43a0-bc6c-6c2991e8b2f8",
+  "card_number": "RE-sub-forest",
+  "name": "Лесной гном",
+  "description": "Лесной гном",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "ability": "int",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "minor_illusion"
+      },
+      {
+       "ability": "int",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "SPELL-0277"
+      }
+     ]
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,276 @@
+[
+ {
+  "id": "cc2aa0c1-8fe5-4d60-a443-f8b81280f5f0",
+  "card_number": "EFF-pact-boon",
+  "name": "Дар договора",
+  "description": "Клинок, Цепь или Тome.",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "count": 1,
+     "id": "warlock_pact_boon",
+     "kind": "choice",
+     "options": {
+      "items": [
+       {
+        "grants": [
+         {
+          "description": "Владение военным оружием и призыв pact weapon.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "blade",
+        "name": "Клинок"
+       },
+       {
+        "grants": [
+         {
+          "description": "Призыв familiar с особенностями.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "chain",
+        "name": "Цепь"
+       },
+       {
+        "grants": [
+         {
+          "description": "Grimorio с ритуалами и бонусом к проверкам.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "tome",
+        "name": "Тome"
+       }
+      ],
+      "source": "explicit"
+     },
+     "prompt": "Дар договора",
+     "resolution": "on_acquire"
+    }
+   ]
+  }
+ },
+ {
+  "id": "d9895577-95d9-4104-addb-15a880fd0808",
+  "card_number": "EFF-metamagic",
+  "name": "Метamагия",
+  "description": "Модификация заклинаний за очки чародейства.",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "count": 2,
+     "id": "sorcerer_metamagic",
+     "kind": "choice",
+     "options": {
+      "items": [
+       {
+        "grants": [
+         {
+          "description": "Союзники автоматически успешны на спасброске.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "careful",
+        "name": "Аккуратное"
+       },
+       {
+        "grants": [
+         {
+          "description": "Удвоение дистанции или touch→30 фт.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "distant",
+        "name": "Дальнее"
+       },
+       {
+        "grants": [
+         {
+          "description": "Переброс костей урона/лечения.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "empowered",
+        "name": "Усиленное"
+       },
+       {
+        "grants": [
+         {
+          "description": "Удвоение длительности ≥ 1 мин.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "extended",
+        "name": "Продлённое"
+       },
+       {
+        "grants": [
+         {
+          "description": "Помеха на спасбросок цели.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "heightened",
+        "name": "Повышенное"
+       },
+       {
+        "grants": [
+         {
+          "description": "Заклинание 1–2 ур. бонусным действием.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "quickened",
+        "name": "Ускоренное"
+       },
+       {
+        "grants": [
+         {
+          "description": "Переброс костей урона с помехой.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "seeking",
+        "name": "Ищущее"
+       },
+       {
+        "grants": [
+         {
+          "description": "Сотворение без компонентов.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "subtle",
+        "name": "Тонкое"
+       },
+       {
+        "grants": [
+         {
+          "description": "Смена типа урона.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "transmuted",
+        "name": "Преобразованное"
+       },
+       {
+        "grants": [
+         {
+          "description": "Две цели для одной цели.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "twinned",
+        "name": "Двойное"
+       }
+      ],
+      "source": "explicit"
+     },
+     "prompt": "Выберите 2 опции метамагии",
+     "resolution": "on_acquire"
+    }
+   ]
+  }
+ },
+ {
+  "id": "e4b0f152-777d-4c5a-86c5-6389ab6e3569",
+  "card_number": "EFF-wild-companion",
+  "name": "Дикий спутник",
+  "description": "Дух зверя-комpanьona.",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Призыв духа зверя-комpanьona на службу.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "0d789f7d-d8db-40f5-b2cc-a22afa8cf15a",
+  "card_number": "EFF-cunning-action",
+  "name": "Хитрое действие",
+  "description": "Рывок, Отступление или Засada бонусным действием.",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Бонусным действием: Рывок, Отступление или Засada.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "46aec414-906e-4b1f-a2f9-629ec220a9c4",
+  "card_number": "EFF-divine-order",
+  "name": "Божественный порядок",
+  "description": "Защитник или Тaumaturge.",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "count": 1,
+     "id": "cleric_divine_order",
+     "kind": "choice",
+     "options": {
+      "items": [
+       {
+        "grants": [
+         {
+          "description": "Владение тяжёлыми доспехами и военным оружием.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "protector",
+        "name": "Защитник"
+       },
+       {
+        "grants": [
+         {
+          "description": "Дополнительный заговор и бонус к магическому урону/лечению.",
+          "kind": "narrative"
+         }
+        ],
+        "id": "thaumaturge",
+        "name": "Тaumaturge"
+       }
+      ],
+      "source": "explicit"
+     },
+     "prompt": "Божественный порядок",
+     "resolution": "on_acquire"
+    }
+   ]
+  }
+ }
+]

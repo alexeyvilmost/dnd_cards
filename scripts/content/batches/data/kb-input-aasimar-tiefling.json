@@ -1,0 +1,202 @@
+[
+ {
+  "id": "31529c9a-63bc-4264-8002-7df2e6a92020",
+  "card_number": "RE-sub-necrotic",
+  "name": "Некротический покров",
+  "description": "Некротический покров",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Цель Испугана; доп. урон Некротической энергией = Бонус мастерства.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "0807cbe3-e57f-4632-9584-c11e795420be",
+  "card_number": "RE-sub-radiance",
+  "name": "Внутренний свет",
+  "description": "Внутренний свет",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "description": "Свет 10 фт; доп. урон Излучением = Бонус мастерства.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "b2e15adc-be59-44cb-afad-fcc11f3d8f07",
+  "card_number": "RE-sub-wings",
+  "name": "Небесные крылья",
+  "description": "Небесные крылья",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "grant_speed",
+       "mode": "fly",
+       "value": "30"
+      },
+      {
+       "description": "Бонусным действием на 1 минуту.",
+       "kind": "narrative"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "5dab8c4d-cc42-40b1-a77c-4113f49d061e",
+  "card_number": "RE-sub-infernal",
+  "name": "Преисподней",
+  "description": "Преисподней",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "damage_type": "fire",
+       "kind": "resistance",
+       "value": "resistance"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "fire_bolt"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 3,
+       "value": "hellish_rebuke"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 5,
+       "value": "darkness"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "292fb2dc-327a-4bbc-b78b-04d3d7051c14",
+  "card_number": "RE-sub-chthonic",
+  "name": "Хтоническое",
+  "description": "Хтоническое",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "damage_type": "necrotic",
+       "kind": "resistance",
+       "value": "resistance"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "chill_touch"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 3,
+       "value": "false_life"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 5,
+       "value": "ray_of_enfeeblement"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "aac705a7-8c3b-47cc-8854-a5e68d1b1757",
+  "card_number": "RE-sub-abyssal",
+  "name": "Бездны",
+  "description": "Бездны",
+  "detailed_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "passive"
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "damage_type": "poison",
+       "kind": "resistance",
+       "value": "resistance"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 1,
+       "value": "poison_spray"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 3,
+       "value": "ray_of_sickness"
+      },
+      {
+       "ability": "cha",
+       "kind": "grant_spell",
+       "level_gate": 5,
+       "value": "hold_person"
+      }
+     ]
+    }
+   ]
+  }
+ }
+]
