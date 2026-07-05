@@ -1,0 +1,531 @@
+[
+ {
+  "name": "Антипатия/симпатия",
+  "en_name": "Antipathy/Sympathy",
+  "slug": "antipathy_sympathy",
+  "level": 8,
+  "school": "enchantment",
+  "classes": ["бард", "волшебник", "друид"],
+  "casting_time": "1 час",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "смесь уксуса и мёда",
+  "duration": "10 дней",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "нет эффекта",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите эффект (антипатию или симпатию) и цель — существо или объект Огромного размера или меньше. Укажите тип существ (например, красные драконы, гоблины, вампиры). Когда существо выбранного типа подходит на 120 футов к цели, оно совершает спасбросок Мудрости. При провале: Антипатия — существо Испугано и в свои ходы должно перемещаться как можно дальше от цели безопасным путём; Симпатия — существо Очаровано и должно подходить как можно ближе к цели; в пределах 5 футов от цели не может отойти по своей воле, а получив урон от цели, может повторить спасбросок Мудрости. Если Испуганное или Очарованное существо завершает ход дальше 120 футов от цели, оно совершает спасбросок Мудрости; при успехе эффект прекращается и существо получает иммунитет на 1 минуту, после чего может снова попасть под действие.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "spell_slot", "level": 8, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "condition", "value": "frightened", "op": "apply"},
+      {"kind": "narrative", "description": "При выборе симпатии вместо Испуга применяется Очарование. Действует на существ выбранного типа, подошедших на 120 фт к цели; спасбросок повторяется при завершении хода дальше 120 фт от цели, успех даёт иммунитет на 1 минуту."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-240.txt"
+ },
+ {
+  "name": "Аура живучести",
+  "en_name": "Aura of Vitality",
+  "slug": "aura_of_vitality",
+  "level": 3,
+  "school": "abjuration",
+  "classes": ["друид", "жрец", "паладин"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 30 фт",
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": true,
+  "heal_dice": "2d6",
+  "description": "Пока заклинание активно, от вас исходит аура 30-футовой Эманацией. В момент создания ауры и в начале каждого вашего хода, пока она существует, вы можете восстановить 2к6 Хитов одному существу в ней.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 3, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "healing", "amount": "2d6"},
+      {"kind": "narrative", "description": "Аура — 30-фт эманация от вас; лечение 2к6 одному существу в ауре при сотворении и в начале каждого вашего хода, пока держится концентрация (до 1 минуты)."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-240.txt"
+ },
+ {
+  "name": "Аура жизни",
+  "en_name": "Aura of Life",
+  "slug": "aura_of_life",
+  "level": 4,
+  "school": "abjuration",
+  "classes": ["жрец", "паладин"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 30 фт",
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Пока заклинание активно, от вас исходит аура 30-футовой Эманацией. Вы и ваши союзники в ауре получаете Сопротивление урону Некротической энергией, и ваш максимум Хитов не может быть уменьшен. Каждый союзник восстанавливает 1 Хит, когда начинает свой ход с 0 Хитов в этой ауре.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "30-фт эманация: вы и союзники в ауре имеете Сопротивление урону Некротической энергией, максимум Хитов не может быть уменьшен; союзник, начинающий ход в ауре с 0 Хитов, восстанавливает 1 Хит."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-240.txt"
+ },
+ {
+  "name": "Аура очищения",
+  "en_name": "Aura of Purity",
+  "slug": "aura_of_purity",
+  "level": 4,
+  "school": "abjuration",
+  "classes": ["жрец", "паладин"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 30 фт",
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Пока заклинание активно, от вас исходит аура 30-футовой Эманацией. Вы и ваши союзники в ауре получаете Сопротивление урону Ядом и Преимущество к спасброскам, позволяющим избежать или прекратить эффекты следующих состояний: Испуганный, Оглохший, Ослеплённый, Отравленный, Очарованный, Ошеломлённый, Парализованный.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "30-фт эманация: вы и союзники в ауре получаете Сопротивление урону Ядом и Преимущество к спасброскам против состояний Испуганный, Оглохший, Ослеплённый, Отравленный, Очарованный, Ошеломлённый, Парализованный."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-241.txt"
+ },
+ {
+  "name": "Аура святости",
+  "en_name": "Holy Aura",
+  "slug": "holy_aura",
+  "level": 8,
+  "school": "abjuration",
+  "classes": ["жрец"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 30 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "реликварий стоимостью не менее 1000 ЗМ",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы излучаете ауру 30-футовой Эманацией на время длительности. Находясь в ауре, выбранные вами существа совершают с Преимуществом все спасброски, а остальные существа совершают с Помехой броски атаки по ним. Кроме того, если Исчадие или Нежить попадает по такому существу броском рукопашной атаки, атакующий должен преуспеть в спасброске Телосложения, иначе станет Ослеплённым до конца своего следующего хода.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 8, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "modifier", "applies_to": {"roll": "saving_throw"}, "op": "advantage"},
+      {"kind": "narrative", "description": "30-фт эманация: выбранные существа в ауре получают Преимущество на все спасброски, атаки по ним — с Помехой; Исчадие или Нежить, попавшие по защищённому существу рукопашной атакой, совершают спасбросок Телосложения, при провале Ослеплены до конца своего следующего хода."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-241.txt"
+ },
+ {
+  "name": "Божественное слово",
+  "en_name": "Divine Word",
+  "slug": "divine_word",
+  "level": 7,
+  "school": "evocation",
+  "classes": ["жрец"],
+  "casting_time": "Бонусное действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["cha"],
+  "save_outcome": "нет эффекта",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы произносите слово, наделённое силой Высших планов. Каждое существо по вашему выбору в пределах дистанции совершает спасбросок Харизмы. При провале цель с 50 Хитами и меньше получает эффект по текущим Хитам: 0–20 — умирает; 21–30 — Ослеплена, Оглохшая и Оглушена на 1 час; 31–40 — Ослеплена и Оглохшая на 10 минут; 41–50 — Оглохшая на 1 минуту. Вне зависимости от Хитов Исчадия, Небожители, Феи и Элементали, провалившие спасбросок, изгоняются на родной план (если они не там) и не могут вернуться на ваш план в течение 24 часов иначе как заклинанием Желание.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "bonus_action"}, {"resource": "spell_slot", "level": 7, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "cha",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "narrative", "description": "Цель с 50 Хитами и меньше: 0–20 Хитов — умирает; 21–30 — Ослеплена, Оглохшая и Оглушена на 1 час; 31–40 — Ослеплена и Оглохшая на 10 минут; 41–50 — Оглохшая на 1 минуту. Исчадия, Небожители, Феи и Элементали при провале изгоняются на родной план на 24 часа."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-243.txt"
+ },
+ {
+  "name": "Бурлящий котёл Таши",
+  "en_name": "Tasha's Bubbling Cauldron",
+  "slug": "tashas_bubbling_cauldron",
+  "level": 6,
+  "school": "conjuration",
+  "classes": ["волшебник", "колдун"],
+  "casting_time": "Действие",
+  "range": "5 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "позолоченный половник стоимостью не менее 500 ЗМ",
+  "duration": "10 минут",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте котёл на когтистых лапах с бурлящей жидкостью в незанятом пространстве на земле в пределах 5 футов. Котёл нельзя передвинуть; он исчезает вместе с жидкостью, когда заклинание заканчивается. Жидкость повторяет свойства выбранного вами Обычного или Необычного зелья (например, Зелья лечения). Бонусным действием вы или союзник можете достать из котла одно зелье выбранного вида; зелье во флаконе, флакон исчезает, когда зелье выпито. Котёл создаёт количество зелий, равное вашему модификатору заклинательной характеристики (минимум 1); когда извлечено последнее, котёл исчезает и заклинание заканчивается. Невыпитые зелья исчезают при повторном сотворении этого заклинания.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 6, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Котёл в 5 фт на 10 минут копирует выбранное Обычное или Необычное зелье; Бонусным действием вы или союзник достаёте одно зелье; всего зелий — модификатор заклинательной характеристики (минимум 1); невыпитые зелья исчезают при повторном сотворении."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-243.txt"
+ },
+ {
+  "name": "Быстрый колчан",
+  "en_name": "Swift Quiver",
+  "slug": "swift_quiver",
+  "level": 5,
+  "school": "transmutation",
+  "classes": ["следопыт"],
+  "casting_time": "Бонусное действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "колчан стоимостью не менее 1 ЗМ",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Когда вы сотворяете заклинание и затем Бонусным действием, пока оно действует, вы можете совершить две атаки оружием, стреляющим Стрелами или Болтами (например, Длинным луком или Лёгким арбалетом). Заклинание магически создаёт боеприпасы для каждой из этих атак. Стрелы и Болты, созданные заклинанием, наносят урон как немагические боеприпасы того же вида и распадаются сразу после попадания или промаха.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "bonus_action"}, {"resource": "spell_slot", "level": 5, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "При сотворении и затем каждым Бонусным действием, пока действует концентрация (до 1 минуты), вы совершаете две атаки оружием со Стрелами или Болтами; боеприпасы создаются магически и распадаются после попадания или промаха."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-244.txt"
+ },
+ {
+  "name": "Великолепный особняк Морденкайнена",
+  "en_name": "Mordenkainen's Magnificent Mansion",
+  "slug": "magnificent_mansion",
+  "level": 7,
+  "school": "conjuration",
+  "classes": ["бард", "волшебник"],
+  "casting_time": "1 минута",
+  "range": "300 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "миниатюрная дверь стоимостью не менее 15 ЗМ",
+  "duration": "24 часа",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте межпространственную дверь (5 футов в ширину, 10 в высоту) в пределах дистанции на время действия заклинания. Вы и указанные при сотворении существа можете входить в межпространственное жилище, пока дверь открыта; вы открываете и закрываете её без действия в пределах 30 футов. Закрытая дверь невидима. Внутри — великолепная прихожая и комнаты со свежим тёплым воздухом; планировка на ваш выбор, до 50 смежных Кубов со стороной 10 футов, обстановка по вашему желанию, еды хватает на 100 человек. Прислуживают 100 практически прозрачных слуг, чей облик задаёте вы: они неуязвимы, исполняют приказы, но не могут атаковать, причинять вред и покидать жилище. Вынесенные из особняка предметы превращаются в дым. Когда заклинание заканчивается, все существа внутри изгоняются в свободное пространство у входа.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "spell_slot", "level": 7, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Создаёт межпространственный особняк с дверью в пределах 300 фт на 24 часа: до 50 Кубов по 10 фт, еда на 100 человек, 100 неуязвимых слуг-призраков; предметы вне особняка обращаются в дым; по окончании все существа изгоняются к входу."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-244.txt"
+ },
+ {
+  "name": "Верный пёс Морденкайнена",
+  "en_name": "Mordenkainen's Faithful Hound",
+  "slug": "mordenkainens_faithful_hound",
+  "level": 4,
+  "school": "conjuration",
+  "classes": ["волшебник"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "серебряный свисток",
+  "duration": "8 часов",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "нет урона",
+  "damage": [{"dice": "4d8", "damage_type": "force"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы призываете призрачного сторожевого пса в видимом свободном пространстве в пределах дистанции. Пёс остаётся на время длительности или пока расстояние между вами не превысит 300 футов. Никто, кроме вас, не видит пса; он неосязаем и неуязвим, имеет Истинное зрение в пределах 30 футов. Если Маленькое или большее существо подходит к нему на 30 футов, не произнеся заданный вами пароль, пёс начинает громко лаять. В начале каждого вашего хода пёс пытается укусить одного противника в пределах 5 футов от себя: цель должна преуспеть в спасброске Ловкости, иначе получит 4к8 урона Чистой силой. В последующие ходы вы можете действием Магия переместить пса на расстояние до 30 футов.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Призрачный пёс на 8 часов: виден только вам, неосязаем и неуязвим, Истинное зрение 30 фт; лает при приближении существа без пароля; в начале каждого вашего хода кусает врага в 5 фт — спасбросок Ловкости, при провале 4к8 урона Чистой силой; действием Магия пса можно переместить на 30 фт."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-244.txt"
+ },
+ {
+  "name": "Власть над водами",
+  "en_name": "Control Water",
+  "slug": "control_water",
+  "level": 4,
+  "school": "transmutation",
+  "classes": ["волшебник", "друид", "жрец"],
+  "casting_time": "Действие",
+  "range": "300 футов",
+  "area": "куб 100 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "смесь воды и пыли",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["str"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "2d8", "damage_type": "bludgeoning"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы контролируете воду в Кубе со стороной до 100 футов, выбирая один из эффектов; действием Магия можно повторить или сменить эффект. Наводнение: уровень стоячей воды поднимается до 20 футов либо создаётся волна высотой 20 футов, уносящая транспорт Огромного размера и меньше на другой край области (25% шанс опрокидывания); волна повторяется в начале ваших ходов. Разделение воды: формируется проход со стенами воды по сторонам; после смены эффекта вода возвращается за раунд. Перенаправление потока: вода в области течёт в указанном вами направлении, даже через препятствия и вверх. Водоворот: в квадрате 50 футов глубиной от 25 футов возникает воронка (5 футов у основания, до 50 сверху, высота 25); существа в воде в 25 футах притягиваются на 10 футов; попав в водоворот или заканчивая там ход, существо совершает спасбросок Силы: при провале 2к8 Дробящего урона, при успехе половина; выплыть можно, преуспев действием в проверке Силы (Атлетика) против Сл ваших заклинаний.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Контроль воды в Кубе до 100 фт, режим меняется действием Магия: Наводнение (подъём воды/волна 20 фт), Разделение воды (проход), Перенаправление потока, Водоворот (притягивает на 10 фт, урон по спасброску Силы)."}
+     ]
+    },
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "str",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "2d8", "type": "bludgeoning", "on_success": "half"}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-245.txt"
+ },
+ {
+  "name": "Власть над погодой",
+  "en_name": "Control Weather",
+  "slug": "control_weather",
+  "level": 8,
+  "school": "transmutation",
+  "classes": ["волшебник", "друид", "жрец"],
+  "casting_time": "10 минут",
+  "range": "На себя",
+  "area": "радиус 5 миль",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "горящее благовоние",
+  "duration": "Концентрация, вплоть до 8 часов",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы получаете контроль над погодой в пределах 5 миль от себя на время длительности. Сотворять заклинание нужно на открытом воздухе; оно заканчивается, если вы окажетесь в помещении. Вы изменяете текущие погодные условия, определяемые Мастером: осадки, температуру и ветер, сдвигая текущее состояние на 1 позицию выше или ниже по таблицам (осадки: от чистого неба до проливного дождя/метели; температура: от чрезвычайной жары до мороза; ветер: от штиля до шторма); направление ветра можно менять. Новые условия вступают в силу через 1к4 × 10 минут, после чего можно менять их снова. Когда заклинание заканчивается, погода постепенно возвращается к нормальной.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "spell_slot", "level": 8, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Контроль погоды в радиусе 5 миль до 8 часов (концентрация): сдвиг осадков, температуры и ветра на 1 позицию по таблицам, смена направления ветра; изменения вступают в силу через 1к4 × 10 минут; требуется открытый воздух."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-246.txt"
+ },
+ {
+  "name": "Возрождение",
+  "en_name": "Revivify",
+  "slug": "revivify",
+  "level": 3,
+  "school": "necromancy",
+  "classes": ["друид", "жрец", "паладин", "следопыт"],
+  "casting_time": "Действие",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "бриллиант стоимостью не менее 300 ЗМ, расходуемый заклинанием",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": true,
+  "heal_dice": null,
+  "description": "Вы касаетесь существа, мёртвого не больше минуты. Это существо возвращается к жизни с 1 Хитом. Заклинание не может оживить существ, умерших от старости, и не восстанавливает отсутствующие части тел.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 3, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "healing", "amount": "1"},
+      {"kind": "narrative", "description": "Возвращает к жизни существо, мёртвое не более 1 минуты, с 1 Хитом; не действует на умерших от старости и не восстанавливает отсутствующие части тела."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-247.txt"
+ }
+]

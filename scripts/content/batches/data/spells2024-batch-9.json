@@ -1,0 +1,1458 @@
+[
+ {
+  "name": "Поле антимагии",
+  "en_name": "Antimagic Field",
+  "slug": "antimagic_field",
+  "level": 8,
+  "school": "abjuration",
+  "classes": ["волшебник", "жрец"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "железная стружка",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вас окружает аура антимагии 10-футовой эманацией. Внутри неё нельзя сотворять заклинания, совершать действие Магия и создавать магические эффекты, и всё это не может воздействовать или выбирать целью что-либо внутри ауры. Магические свойства магических предметов не действуют внутри ауры. Области воздействия заклинаний не проникают в ауру; в неё и из неё нельзя телепортироваться или использовать планарные путешествия, порталы внутри временно закрываются. Активные заклинания, кроме созданных Артефактом или божеством, подавляются: пока эффект подавлен, он не действует, но это время учитывается в его длительности. Рассеивание магии не влияет на ауру, а ауры разных Полей антимагии не отменяют друг друга.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 8, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "10-футовая эманация антимагии: внутри нельзя сотворять заклинания и создавать магические эффекты, магические предметы не работают, телепортация и планарные путешествия невозможны, активные заклинания подавляются. Рассеивание магии на ауру не действует."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-311.txt"
+ },
+ {
+  "name": "Полёт",
+  "en_name": "Fly",
+  "slug": "fly",
+  "level": 3,
+  "school": "transmutation",
+  "classes": ["волшебник", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "перо",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь согласного существа. Пока заклинание активно, цель получает скорость полёта 60 футов и может парить. Когда заклинание заканчивается, цель падает, если она находится в воздухе и не может остановить падение.",
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "касание", "filter": "ally"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Согласное существо получает скорость полёта 60 футов и может парить на время концентрации (до 10 минут). При окончании заклинания цель падает, если она в воздухе. Ячейка выше 3 уровня: +1 цель за уровень."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-311.txt"
+ },
+ {
+  "name": "Поражение",
+  "en_name": "Harm",
+  "slug": "harm",
+  "level": 6,
+  "school": "necromancy",
+  "classes": ["жрец"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con"],
+  "save_outcome": "половина урона, максимум хитов не снижается",
+  "damage": [{"dice": "14d6", "damage_type": "necrotic"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы выпускаете опасную магию в существо, которое можете видеть в пределах дистанции. Цель совершает спасбросок Телосложения. При провале она получает 14к6 урона некротической энергией, и её максимум хитов уменьшается на количество полученного урона некротической энергией. При успехе существо получает только половину этого урона. Заклинание не может уменьшить максимум хитов ниже 1.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 6, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "60 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "14d6", "type": "necrotic", "on_success": "half"},
+      {"kind": "narrative", "description": "При провале максимум хитов цели уменьшается на количество полученного урона некротической энергией (не ниже 1). При успехе максимум хитов не снижается."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-311.txt"
+ },
+ {
+  "name": "Послание",
+  "en_name": "Sending",
+  "slug": "sending",
+  "level": 3,
+  "school": "divination",
+  "classes": ["бард", "волшебник", "жрец"],
+  "casting_time": "Действие",
+  "range": "Неограниченная",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "медная проволока",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы посылаете сообщение длиной не более 25 слов существу, которое вы встречали или которое описал вам кто-то, кто его встречал. Существо слышит послание в сознании, распознаёт вас как отправителя и может тут же ответить аналогичным образом; смысл сообщения понятен ему независимо от языка. Послание доходит на любое расстояние и даже на другие планы, но если цель на ином плане, есть 5% шанс, что оно не будет доставлено (вы узнаете о неудаче). Получив сообщение, существо может заблокировать повторную связь этим заклинанием на 8 часов; попытка отправить сообщение в это время проваливается.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Телепатическое сообщение до 25 слов знакомому существу на любом расстоянии и планах; цель может сразу ответить. На другом плане 5% шанс сбоя. Получатель может заблокировать связь на 8 часов."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-312.txt"
+ },
+ {
+  "name": "Потайной сундук Леомунда",
+  "en_name": "Leomund's Secret Chest",
+  "slug": "leomunds_secret_chest",
+  "level": 4,
+  "school": "conjuration",
+  "classes": ["волшебник"],
+  "casting_time": "Действие",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "сундук размером 3×2×2 фута из редких материалов стоимостью не менее 5000 ЗМ и его Крошечная копия из того же материала стоимостью не менее 50 ЗМ",
+  "duration": "Пока не рассеется",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы прячете сундук со всем содержимым (до 12 кубических футов неживой материи) на Эфирном плане, касаясь сундука и его миниатюрной копии — материального компонента заклинания. Пока сундук на Эфирном плане, вы можете действием коснуться копии, чтобы вернуть его: он появляется в незанятом пространстве на земле в пределах 5 футов от вас. Прикоснувшись действием к сундуку и копии, вы отправляете его обратно. Спустя 60 дней появляется накопительный 5% шанс в день, что эффект закончится. Эффект заканчивается, если вы сотворите заклинание ещё раз или копия будет уничтожена; если при этом сундук на Эфирном плане, его можно там найти.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Сундук (до 12 куб. футов неживой материи) прячется на Эфирном плане; действием с копией его можно возвращать и отправлять обратно. После 60 дней — накопительный 5% шанс в день окончания эффекта."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-312.txt"
+ },
+ {
+  "name": "Превращение",
+  "en_name": "Polymorph",
+  "slug": "polymorph",
+  "level": 4,
+  "school": "transmutation",
+  "classes": ["бард", "волшебник", "друид", "чародей"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "кокон гусеницы",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "без эффекта",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы пытаетесь превратить видимое существо в пределах дистанции в Зверя. Цель должна преуспеть в спасброске Мудрости, иначе принимает облик выбранного вами Зверя с Показателем опасности не выше её ПО (или уровня, если ПО нет). Игровая статистика цели заменяется блоком статистики Зверя, но она сохраняет мировоззрение, индивидуальность, тип существа, хиты и кости хитов. Цель получает временные хиты, равные хитам облика Зверя; они исчезают с концом заклинания, а заклинание заканчивается досрочно, если временных хитов не осталось. Действия ограничены анатомией облика: цель не может говорить и сотворять заклинания. Снаряжение сливается с новым обликом, использовать его нельзя.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "60 футов", "filter": "any"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "narrative", "description": "Цель принимает облик Зверя (ПО не выше её ПО или уровня): статистика заменяется блоком Зверя, цель получает временные хиты, равные хитам облика; заклинание заканчивается, когда они кончаются. Нельзя говорить и сотворять заклинания, снаряжение сливается с обликом."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-313.txt"
+ },
+ {
+  "name": "Превращение в животных",
+  "en_name": "Animal Shapes",
+  "slug": "animal_shapes",
+  "level": 8,
+  "school": "transmutation",
+  "classes": ["друид"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "24 часа",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите любое количество согласных существ в пределах дистанции. Каждая цель принимает облик Зверя Большого размера или меньше с Показателем опасности не выше 4 по вашему выбору; облики могут различаться. В последующие ходы вы можете действием Магия давать целям новые облики. Игровые параметры заменяются параметрами Зверя, но цели сохраняют тип существа, хиты, кости хитов, мировоззрение, способность общаться и значения Интеллекта, Мудрости и Харизмы; действия ограничены анатомией, сотворять заклинания нельзя, снаряжение сливается с формой. Цель получает временные хиты, равные хитам первого облика; они исчезают с концом заклинания. Цель может выйти из формы бонусным действием.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 8, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "30 футов", "filter": "ally"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Любое число согласных существ превращается в Зверей (Большой размер или меньше, ПО не выше 4) на 24 часа; действием Магия можно менять облики. Цели получают временные хиты, равные хитам первого облика, и могут выйти из формы бонусным действием."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-313.txt"
+ },
+ {
+  "name": "Преграда жизни",
+  "en_name": "Antilife Shell",
+  "slug": "antilife_shell",
+  "level": 5,
+  "school": "abjuration",
+  "classes": ["друид"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 часа",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "От вас распространяется аура 10-футовой эманацией на время длительности заклинания. Аура не даёт существам, кроме Конструктов и Нежити, проходить и тянуться через неё. Такие существа могут сотворять заклинания и совершать атаки сквозь преграду дальнобойным оружием или оружием со свойством Досягаемость. Если вы перемещаетесь так, что затронутое существо вынуждено пройти через барьер, заклинание заканчивается.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "10-футовая эманация не пропускает существ (кроме Конструктов и Нежити) сквозь себя; атаковать можно только дальнобойным оружием или оружием с Досягаемостью. Если ваша ходьба заставляет существо пройти через барьер — заклинание заканчивается."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-313.txt"
+ },
+ {
+  "name": "Предвидение",
+  "en_name": "Foresight",
+  "slug": "foresight",
+  "level": 9,
+  "school": "divination",
+  "classes": ["бард", "волшебник", "друид", "колдун"],
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "перо колибри",
+  "duration": "8 часов",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь согласного существа, даруя ограниченную способность предвидеть будущее. Пока заклинание активно, цель совершает тесты к20 (броски атаки, проверки характеристик и спасброски) с преимуществом, а другие существа совершают броски атаки по ней с помехой. Заклинание заканчивается досрочно, если вы сотворите его повторно.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 9, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "касание", "filter": "ally"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "На 8 часов цель совершает все тесты к20 с преимуществом, а атаки по ней совершаются с помехой. Повторное сотворение досрочно заканчивает предыдущее."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-313.txt"
+ },
+ {
+  "name": "Предосторожность",
+  "en_name": "Contingency",
+  "slug": "contingency",
+  "level": 6,
+  "school": "abjuration",
+  "classes": ["волшебник"],
+  "casting_time": "10 минут",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "ваша статуэтка, инкрустированная драгоценными камнями стоимостью не менее 1500 ЗМ",
+  "duration": "10 дней",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите заклинание 5 уровня или ниже со временем сотворения 1 действие, которое может нацеливаться на вас. Вы сотворяете его (зависимое заклинание) частью сотворения Предосторожности, тратя ячейки для обоих, но его эффект не проявляется. Он вступает в силу, когда впервые выполняется условие, описанное вами при сотворении (хотите вы того или нет), после чего Предосторожность заканчивается. Зависимое заклинание действует только на вас, даже если обычно может нацеливаться на других. Одновременно может действовать только одна Предосторожность: повторное сотворение отменяет прежнюю. Заклинание также заканчивается, если материальный компонент перестаёт быть при вас.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 6, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Зависимое заклинание (5 уровня и ниже, время сотворения 1 действие, нацеливается на вас) сотворяется вместе с Предосторожностью (тратятся обе ячейки) и срабатывает автоматически при выполнении заданного условия в течение 10 дней. Только одна Предосторожность одновременно."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-314.txt"
+ },
+ {
+  "name": "Предсказание",
+  "en_name": "Divination",
+  "slug": "divination",
+  "level": 4,
+  "school": "divination",
+  "classes": ["волшебник", "друид", "жрец"],
+  "casting_time": "Действие или Ритуал",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "благовония стоимостью не менее 25 ЗМ, расходуемые заклинанием",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Заклинание связывает вас с богом или его слугой. Вы задаёте один вопрос о конкретной цели, событии или деятельности, которая произойдёт в течение следующих 7 дней. Мастер даёт честный ответ: короткую фразу, загадочный стих или знамение. Заклинание не учитывает обстоятельства, способные изменить исход, такие как сотворение дополнительных заклинаний. При повторных сотворениях до завершения долгого отдыха существует накопительный 25% шанс за каждое сотворение после первого не получить ответа.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Один честный ответ Мастера (фраза, стих или знамение) на вопрос о событии в ближайшие 7 дней. Повторные сотворения до долгого отдыха: накопительный 25% шанс не получить ответа."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-314.txt"
+ },
+ {
+  "name": "Преображение",
+  "en_name": "Shapechange",
+  "slug": "shapechange",
+  "level": 9,
+  "school": "transmutation",
+  "classes": ["волшебник", "друид"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "нефритовая диадема стоимостью не менее 1500 ЗМ",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы принимаете облик другого существа, пока заклинание активно, или пока действием Магия не примете другой облик. Новым обликом может быть любое существо с Показателем опасности не выше вашего уровня или ПО, не Конструкт и не Нежить; вы должны были видеть такое существо ранее. При сотворении вы получаете временные хиты, равные хитам первого облика; они исчезают с концом заклинания. Ваша статистика заменяется блоком статистики существа, но вы сохраняете тип существа, мировоззрение, индивидуальность, значения Интеллекта, Мудрости и Харизмы, хиты, кости хитов, владения, способность общаться и умение Сотворение заклинаний. Снаряжение падает на землю либо меняет форму под новый облик (по вашему выбору).",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 9, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Вы принимаете облик существа (ПО не выше вашего уровня, не Конструкт/Нежить, виденного ранее) и получаете временные хиты, равные хитам первого облика. Сохраняете Инт/Мдр/Хар, хиты, владения и сотворение заклинаний; действием Магия можно менять облики в течение часа."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-315.txt"
+ },
+ {
+  "name": "Призрачный скакун",
+  "en_name": "Phantom Steed",
+  "slug": "phantom_steed",
+  "level": 3,
+  "school": "illusion",
+  "classes": ["волшебник"],
+  "casting_time": "1 минута или Ритуал",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "1 час",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "На полу в незанятом пространстве в пределах дистанции появляется Большое полуреальное похожее на лошадь существо с седлом, удилами и уздечкой; внешность выбираете вы. Снаряжение, созданное заклинанием, исчезает в дыму, если отнести его на 10 футов от скакуна. Вы или выбранное вами существо можете ехать на скакуне. Он использует блок статистики Ездовой лошади, но его скорость равна 100 футам, и он может проскакать 13 миль за час. Когда заклинание заканчивается, скакун исчезает медленно, давая ездоку 1 минуту на спешивание. Заклинание заканчивается досрочно, если скакун получает урон.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Призывает иллюзорного скакуна (статистика Ездовой лошади, скорость 100 футов, 13 миль в час) на 1 час. Исчезает при любом уроне, давая 1 минуту на спешивание."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-315.txt"
+ },
+ {
+  "name": "Призыв Животных",
+  "en_name": "Conjure Animals",
+  "slug": "conjure_animals",
+  "level": 3,
+  "school": "conjuration",
+  "classes": ["друид", "следопыт"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": "10 футов от стаи",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "без урона",
+  "damage": [{"dice": "3d10", "damage_type": "slashing"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы призываете духов природы в виде Большой стаи неосязаемых призрачных животных (облик выбираете вы: волки, змеи, птицы и т.п.) в незанятом пространстве в пределах дистанции. Пока вы в пределах 5 футов от стаи, вы совершаете спасброски Силы с преимуществом. Перемещаясь в свой ход, вы можете переместить стаю до 30 футов в видимое незанятое пространство. Когда стая перемещается в пределы 10 футов от видимого существа, а также когда существо входит в пространство в пределах 10 футов от стаи или заканчивает там ход, вы можете заставить его совершить спасбросок Ловкости: при провале оно получает 3к10 рубящего урона. Существо совершает этот спасбросок только раз за ход.",
+  "upcast_description": "Урон увеличивается на 1к10 за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "60 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "3d10", "type": "slashing", "scaling": {"per": "spell_slot_above", "dice": "1d10"}}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Стая призрачных животных: спасбросок Ловкости вызывается, когда стая приближается на 10 футов к существу, существо входит в эту зону или заканчивает там ход (не чаще раза за ход на существо). Пока вы в 5 футах от стаи — преимущество на спасброски Силы; при своём перемещении можно двигать стаю до 30 футов."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-315.txt"
+ },
+ {
+  "name": "Призыв залпа",
+  "en_name": "Conjure Volley",
+  "slug": "conjure_volley",
+  "level": 5,
+  "school": "conjuration",
+  "classes": ["следопыт"],
+  "casting_time": "Действие",
+  "range": "150 футов",
+  "area": "цилиндр радиус 40 фт, высота 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "рукопашное или дальнобойное оружие стоимостью не менее 1 ММ",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "8d8", "damage_type": "force"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы взмахиваете оружием, использованным для сотворения заклинания, и выбираете точку в пределах дистанции. Сотни таких же призрачных оружий (или подходящих боеприпасов) падают залпом и исчезают. Каждое существо по вашему выбору, которое вы видите в цилиндре радиусом 40 футов и высотой 20 футов с центром в этой точке, совершает спасбросок Ловкости, получая 8к8 урона чистой силой при провале или половину этого урона при успехе.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "150 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "8d8", "type": "force", "on_success": "half"},
+      {"kind": "narrative", "description": "Затрагивает каждое выбранное вами существо в цилиндре радиусом 40 футов и высотой 20 футов с центром в точке."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-315.txt"
+ },
+ {
+  "name": "Призыв лесных обитателей",
+  "en_name": "Conjure Woodland Beings",
+  "slug": "conjure_woodland_beings",
+  "level": 4,
+  "school": "conjuration",
+  "classes": ["друид", "следопыт"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "5d8", "damage_type": "force"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы призываете духов природы, летающих вокруг вас в 10-футовой эманации, пока заклинание активно. Когда эманация входит в пространство видимого существа, а также когда видимое существо входит в эманацию или заканчивает там ход, вы можете заставить его совершить спасбросок Мудрости: оно получает 5к8 урона чистой силой при провале или половину при успехе. Существо совершает этот спасбросок только раз за ход. Кроме того, пока заклинание активно, вы можете совершать действие Отход бонусным действием.",
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше четвёртого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "эманация 10 фт", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "5d8", "type": "force", "on_success": "half", "scaling": {"per": "spell_slot_above", "dice": "1d8"}}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Спасбросок вызывается, когда эманация входит в пространство существа, существо входит в неё или заканчивает там ход (раз за ход на существо). Пока заклинание активно, вы можете совершать действие Отход бонусным действием."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-316.txt"
+ },
+ {
+  "name": "Призыв малых Элементалей",
+  "en_name": "Conjure Minor Elementals",
+  "slug": "conjure_minor_elementals",
+  "level": 4,
+  "school": "conjuration",
+  "classes": ["волшебник", "друид"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 15 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы призываете духов со Стихийных планов, летающих вокруг вас в 15-футовой эманации, пока заклинание активно. Пока духи рядом, все ваши атаки наносят дополнительно 2к8 урона при попадании по существу в эманации. Тип этого урона — кислота, огонь, холод или электричество (по вашему выбору при совершении атаки). Кроме того, земля в эманации является труднопроходимой местностью для ваших врагов.",
+  "upcast_description": "Урон увеличивается на 2к8 за каждый уровень ячейки выше четвёртого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Ваши атаки наносят дополнительно 2к8 урона (кислота, огонь, холод или электричество — выбор при атаке) при попадании по существу в 15-футовой эманации; +2к8 за каждый уровень ячейки выше 4. Земля в эманации — труднопроходимая местность для врагов."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-316.txt"
+ },
+ {
+  "name": "Призыв молнии",
+  "en_name": "Call Lightning",
+  "slug": "call_lightning",
+  "level": 3,
+  "school": "conjuration",
+  "classes": ["друид"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "5 футов от точки удара",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "3d10", "damage_type": "lightning"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Над вами в пределах дистанции появляется грозовое облако в форме цилиндра высотой 10 футов и радиусом 60 футов. Выберите видимую точку под облаком: в неё ударяет молния. Все существа в пределах 5 футов от точки совершают спасброски Ловкости, получая 3к10 урона электричеством при провале или половину при успехе. Пока заклинание активно, вы можете действием Магия вызывать молнию снова, выбирая ту же или другую точку. Если при сотворении вы на открытом воздухе во время грозы, заклинание берёт под контроль существующую грозу вместо создания облака, и урон увеличивается на 1к10.",
+  "upcast_description": "Урон увеличивается на 1к10 за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "120 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "3d10", "type": "lightning", "on_success": "half", "scaling": {"per": "spell_slot_above", "dice": "1d10"}},
+      {"kind": "narrative", "description": "Молния бьёт в точку под облаком, затрагивая всех существ в 5 футах от неё. Пока заклинание активно, действием Магия можно вызывать молнию снова. Во время естественной грозы урон увеличивается на 1к10."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-316.txt"
+ },
+ {
+  "name": "Призыв Небожителя",
+  "en_name": "Conjure Celestial",
+  "slug": "conjure_celestial",
+  "level": 7,
+  "school": "conjuration",
+  "classes": ["жрец"],
+  "casting_time": "Действие",
+  "range": "90 футов",
+  "area": "цилиндр радиус 10 фт, высота 40 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "6d12", "damage_type": "radiant"}],
+  "is_healing": true,
+  "heal_dice": "4d12 + spellcasting",
+  "description": "Вы призываете духа с Высших планов, проявляющегося как столб света в виде цилиндра радиусом 10 футов и высотой 40 футов с центром в точке в пределах дистанции. Для каждого видимого существа в цилиндре выберите свет: Лечащий свет — цель восстанавливает 4к12 + модификатор заклинательной характеристики хитов; Опаляющий свет — цель совершает спасбросок Ловкости, получая 6к12 урона излучением при провале или половину при успехе. Пока заклинание активно, цилиндр освещён ярким светом, и при своём перемещении вы можете перемещать его до 30 футов. Когда цилиндр входит в пространство существа, а также когда существо входит в цилиндр или заканчивает там ход, вы можете осветить его одним из видов света. Каждое существо затрагивается не чаще раза за ход.",
+  "upcast_description": "Лечение и урон увеличиваются на 1к12 за каждый уровень ячейки выше седьмого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 7, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "90 футов", "filter": "any"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "6d12", "type": "radiant", "on_success": "half", "scaling": {"per": "spell_slot_above", "dice": "1d12"}}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "healing", "amount": "4d12 + spellcasting", "scaling": {"per": "spell_slot_above", "dice": "1d12"}},
+      {"kind": "narrative", "description": "Для каждого видимого существа в цилиндре выбирается один из светов: Лечащий (лечение) или Опаляющий (спасбросок Ловкости против урона излучением). Срабатывает при входе цилиндра в пространство существа, входе существа в цилиндр или окончании там хода; не чаще раза за ход. При своём перемещении можно двигать цилиндр до 30 футов."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-316.txt"
+ },
+ {
+  "name": "Призыв Феи",
+  "en_name": "Conjure Fey",
+  "slug": "conjure_fey",
+  "level": 6,
+  "school": "conjuration",
+  "classes": ["друид"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": true,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [{"dice": "3d12", "damage_type": "psychic"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы призываете Среднего духа из Страны Фей в незанятое видимое пространство в пределах дистанции. Дух существует, пока заклинание активно, и выглядит как Фея по вашему выбору. Когда дух появляется, вы можете совершить одну рукопашную атаку заклинанием по существу в пределах 5 футов от духа. При попадании цель получает урон психической энергией, равный 3к12 + ваш модификатор заклинательной характеристики, и становится испуганной до начала вашего следующего хода (источник страха — вы и дух). Бонусным действием в следующие ходы вы можете телепортировать духа в видимое незанятое пространство в пределах 30 футов от прежнего и совершить такую же атаку по существу в пределах 5 футов от него.",
+  "upcast_description": "Урон увеличивается на 2к12 за каждый уровень ячейки выше шестого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 6, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "60 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "attack_roll",
+     "attack_kind": "spell_melee",
+     "ability": "spellcasting",
+     "vs": "ac",
+     "on_hit": [
+      {"kind": "damage", "dice": "3d12", "type": "psychic", "scaling": {"per": "spell_slot_above", "dice": "2d12"}},
+      {"kind": "condition", "value": "frightened", "op": "apply", "duration": {"type": "rounds", "amount": 1}},
+      {"kind": "narrative", "description": "К урону добавляется модификатор заклинательной характеристики. Атака совершается по существу в 5 футах от духа. Бонусным действием в следующие ходы: телепорт духа до 30 футов и повторная атака."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-317.txt"
+ },
+ {
+  "name": "Призыв шквала снарядов",
+  "en_name": "Conjure Barrage",
+  "slug": "conjure_barrage",
+  "level": 3,
+  "school": "conjuration",
+  "classes": ["следопыт"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "конус 60 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "рукопашное или дальнобойное оружие стоимостью не менее 1 ММ",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "5d8", "damage_type": "force"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы взмахиваете оружием, использованным для сотворения заклинания, и призываете оружие такого же вида (или подходящие боеприпасы), летящее вперёд и исчезающее. Каждое существо по вашему выбору, которое вы видите в 60-футовом конусе, совершает спасбросок Ловкости, получая 5к8 урона чистой силой при провале или половину этого урона при успехе.",
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "конус 60 фт", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "5d8", "type": "force", "on_success": "half", "scaling": {"per": "spell_slot_above", "dice": "1d8"}},
+      {"kind": "narrative", "description": "Затрагивает каждое выбранное вами существо в 60-футовом конусе."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-317.txt"
+ },
+ {
+  "name": "Призыв Элементаля",
+  "en_name": "Conjure Elemental",
+  "slug": "conjure_elemental",
+  "level": 5,
+  "school": "conjuration",
+  "classes": ["волшебник", "друид"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "без эффекта",
+  "damage": [{"dice": "8d8", "damage_type": "fire"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы призываете Большого неосязаемого духа со Стихийных планов в незанятое пространство в пределах дистанции. Выберите стихию духа, определяющую его тип урона: воздух (электричество), вода (холод), земля (звук) или огонь (огонь). Дух существует всю длительность. Когда видимое существо входит в пространство духа или начинает ход в пределах 5 футов от него, вы можете заставить его совершить спасбросок Ловкости, если дух никого не держит опутанным. При провале цель получает 8к8 урона стихии духа и становится опутанной до окончания заклинания. В начале каждого своего хода опутанная цель повторяет спасбросок: при провале получает 4к8 урона стихии, при успехе перестаёт быть опутанной.",
+  "upcast_description": "Урон увеличивается на 2к8 за каждый уровень ячейки выше пятого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "60 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "8d8", "type": "fire", "scaling": {"per": "spell_slot_above", "dice": "2d8"}},
+      {"kind": "condition", "value": "restrained", "op": "apply"},
+      {"kind": "narrative", "description": "Тип урона зависит от выбранной стихии духа: воздух — электричество, вода — холод, земля — звук, огонь — огонь (по умолчанию огонь). Спасбросок вызывается, когда существо входит в пространство духа или начинает ход в 5 футах от него, если дух никого не держит. Опутанная цель в начале своих ходов повторяет спасбросок: провал — 4к8 урона стихии, успех — конец опутанности."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-317.txt"
+ },
+ {
+  "name": "Прикосновение вампира",
+  "en_name": "Vampiric Touch",
+  "slug": "vampiric_touch",
+  "level": 3,
+  "school": "necromancy",
+  "classes": ["волшебник", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": true,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [{"dice": "3d6", "damage_type": "necrotic"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Касание вашей окутанной тенями руки вытягивает жизненные силы, залечивая ваши раны. Совершите рукопашную атаку заклинанием по существу в пределах досягаемости. При попадании цель получает 3к6 урона некротической энергией, а вы восстанавливаете количество хитов, равное половине нанесённого урона некротической энергией. Пока заклинание активно, вы можете в каждом своём ходу действием Магия совершать эту атаку снова, выбирая ту же или другую цель.",
+  "upcast_description": "Урон увеличивается на 1к6 за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "касание", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "attack_roll",
+     "attack_kind": "spell_melee",
+     "ability": "spellcasting",
+     "vs": "ac",
+     "on_hit": [
+      {"kind": "damage", "dice": "3d6", "type": "necrotic", "scaling": {"per": "spell_slot_above", "dice": "1d6"}},
+      {"kind": "narrative", "description": "Вы восстанавливаете хиты, равные половине нанесённого урона некротической энергией. Пока заклинание активно (до 1 минуты), в каждом ходу можно повторять атаку действием Магия."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-318.txt"
+ },
+ {
+  "name": "Принуждение",
+  "en_name": "Compulsion",
+  "slug": "compulsion",
+  "level": 4,
+  "school": "enchantment",
+  "classes": ["бард"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "без эффекта",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Каждое существо по вашему выбору, которое вы видите в пределах дистанции, должно преуспеть в спасброске Мудрости, иначе станет очарованным на время длительности. Пока заклинание активно, вы можете бонусным действием указать горизонтальное для вас направление. Каждая очарованная этим заклинанием цель в свой следующий ход должна использовать как можно больше своего перемещения, чтобы двигаться в этом направлении самым безопасным маршрутом. После этого перемещения цель повторяет спасбросок, при успехе заканчивая эффект на себе.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "30 футов", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "condition", "value": "charmed", "op": "apply"},
+      {"kind": "narrative", "description": "Бонусным действием вы указываете направление: очарованные цели в свой ход тратят максимум перемещения, двигаясь в нём безопасным маршрутом, затем повторяют спасбросок (успех — конец эффекта). Затрагивает каждое выбранное существо в пределах дистанции."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-318.txt"
+ },
+ {
+  "name": "Притворная смерть",
+  "en_name": "Feign Death",
+  "slug": "feign_death",
+  "level": 3,
+  "school": "necromancy",
+  "classes": ["бард", "волшебник", "друид", "жрец"],
+  "casting_time": "Действие или Ритуал",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "щепотка кладбищенской земли",
+  "duration": "1 час",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь согласного существа и погружаете его в каталептическое состояние, неотличимое от смерти. Пока заклинание активно, цель выглядит мёртвой для любого обследования и заклинаний, определяющих её состояние. Цель становится ослеплённой и недееспособной, её скорость равна 0. Цель также получает сопротивление всем типам урона, кроме урона психической энергией, и иммунитет к состоянию отравленный.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "касание", "filter": "ally"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "condition", "value": "blinded", "op": "apply"},
+      {"kind": "condition", "value": "incapacitated", "op": "apply"},
+      {"kind": "narrative", "description": "Цель (согласное существо) на 1 час выглядит мёртвой: скорость 0, сопротивление всему урону кроме психического, иммунитет к состоянию отравленный."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-318.txt"
+ },
+ {
+  "name": "Притворство",
+  "en_name": "Seeming",
+  "slug": "seeming",
+  "level": 5,
+  "school": "illusion",
+  "classes": ["бард", "волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "8 часов",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["cha"],
+  "save_outcome": "без эффекта (только для несогласных)",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы даёте иллюзорную внешность каждому существу по вашему выбору, которое видите в пределах дистанции. Несогласное существо может совершить спасбросок Харизмы: при успехе заклинание на него не действует. Вы можете придать целям разную или одинаковую внешность: изменить облик и снаряжение, сделать существо на 1 фут выше или ниже, толще или тоньше; новый облик должен иметь тот же набор конечностей. Изменения не выдерживают физического исследования: добавленная иллюзией шляпа пропускает объекты сквозь себя. Существо может действием Изучение исследовать иллюзию проверкой Интеллекта (Расследование) против Сл спасброска ваших заклинаний и при успехе понять, что цель замаскирована.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "30 футов", "filter": "any"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Иллюзорная внешность для любого числа видимых существ на 8 часов (несогласные могут отменить эффект успешным спасброском Харизмы). Меняет облик и снаряжение; распознаётся действием Изучение — проверкой Интеллекта (Расследование) против Сл ваших заклинаний."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-318.txt"
+ },
+ {
+  "name": "Пробуждение разума",
+  "en_name": "Awaken",
+  "slug": "awaken",
+  "level": 5,
+  "school": "transmutation",
+  "classes": ["бард", "друид"],
+  "casting_time": "8 часов",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "агат стоимостью не менее 1000 ЗМ, расходуемый заклинанием",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Потратив время сотворения на прокладывание магических каналов в драгоценном камне, вы касаетесь цели. Целью должен быть Зверь или Растение с Интеллектом 3 или меньше либо обычное растение. Цель получает Интеллект 10 и способность говорить на одном известном вам языке. Обычное растение становится существом типа Растение, получает способность двигать ветками и корнями и органы чувств, подобные человеческим (Мастер выбирает подходящий блок статистики, например Пробуждённый куст или Пробуждённое дерево). Пробуждённая цель очарована вами на 30 дней или пока вы или ваши союзники не нанесёте ей урон; после окончания состояния она сама выбирает отношение к вам.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "касание", "filter": "any"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Зверь или Растение (Интеллект не выше 3) либо обычное растение получает Интеллект 10 и речь; растение становится существом. Цель очарована вами на 30 дней или до получения урона от вас/союзников. Время сотворения 8 часов, агат 1000 ЗМ расходуется."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-318.txt"
+ },
+ {
+  "name": "Проекция",
+  "en_name": "Project Image",
+  "slug": "project_image",
+  "level": 7,
+  "school": "illusion",
+  "classes": ["бард", "волшебник"],
+  "casting_time": "Действие",
+  "range": "500 миль",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "ваша небольшая копия стоимостью не менее 5 ЗМ",
+  "duration": "Концентрация, вплоть до 1 дня",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте иллюзорную копию себя, существующую, пока активно заклинание. Копия может появиться в любом месте в пределах дистанции, которое вы видели ранее, независимо от препятствий. Иллюзия выглядит и звучит как вы, но неосязаема; если она получает урон, заклинание заканчивается. Вы можете видеть её глазами и слышать её ушами, как если бы находились в её пространстве. Действием Магия вы перемещаете её до 60 футов и заставляете жестикулировать, говорить и вести себя как решите. Физический контакт выдаёт иллюзию: сквозь неё всё проходит. Существо может действием Изучение распознать иллюзию проверкой Интеллекта (Расследование) против Сл спасброска ваших заклинаний; распознавший видит сквозь неё.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 7, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Иллюзорная копия вас в видимом ранее месте в пределах 500 миль (до 1 дня, концентрация). Вы видите и слышите через неё; действием Магия перемещаете до 60 футов и управляете поведением. Исчезает при получении урона."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-319.txt"
+ },
+ {
+  "name": "Проекция в астрал",
+  "en_name": "Astral Projection",
+  "slug": "astral_projection",
+  "level": 9,
+  "school": "necromancy",
+  "classes": ["волшебник", "жрец", "колдун"],
+  "casting_time": "1 час",
+  "range": "10 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "для каждой цели один гиацинт стоимостью не менее 1000 ЗМ и один брусок серебра стоимостью не менее 100 ЗМ, все расходуемые заклинанием",
+  "duration": "Пока не рассеется",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы и до восьми согласных существ в пределах дистанции проецируете астральные тела на Астральный план (заклинание мгновенно заканчивается, если вы уже там). Тела целей остаются в анабиозе: бессознательные, не нуждаются в пище и воздухе, не стареют. Астральная форма повторяет тело, имеет те же параметры и снаряжение; от её лопаток тянется серебряная нить, невидимая через 1 фут. Если нить перерезать (это могут только эффекты, где такая возможность указана явно), тело и астральная форма умирают. Астральная форма свободно перемещается по Астральному плану; при переходе на другой план тело и снаряжение перемещаются следом. Урон астральной форме не влияет на тело и наоборот; при 0 хитов любого из них заклинание для цели заканчивается, и она возвращается в тело. Вы можете действием Магия закончить заклинание для всех.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 9, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Вы и до 8 согласных существ проецируетесь на Астральный план; тела остаются в анабиозе. Перерезание серебряной нити убивает цель. Заклинание для цели заканчивается при 0 хитов тела или формы; вы можете завершить его действием Магия."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-319.txt"
+ },
+ {
+  "name": "Проклятие",
+  "en_name": "Bestow Curse",
+  "slug": "bestow_curse",
+  "level": 3,
+  "school": "necromancy",
+  "classes": ["бард", "волшебник", "жрец"],
+  "casting_time": "Действие",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "без эффекта",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь существа, которое должно преуспеть в спасброске Мудрости, иначе станет проклятым на время действия заклинания. Пока проклятие длится, цель подвержена одному эффекту по вашему выбору: помеха на проверки и спасброски выбранной вами характеристики; помеха на броски атаки по вам; в бою в начале каждого своего хода цель должна преуспеть в спасброске Мудрости, иначе совершает действие Уклонение; либо ваши броски атаки и заклинания наносят цели дополнительно 1к8 урона некротической энергией.",
+  "upcast_description": "Ячейка 4 уровня: концентрация вплоть до 10 минут. Ячейка 5-6 уровня: концентрация не нужна, длительность 8 часов. Ячейка 7-8 уровня: 24 часа. Ячейка 9 уровня: пока не рассеется.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "касание", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "narrative", "description": "Проклятие (один эффект на выбор): помеха на проверки и спасброски выбранной характеристики; помеха на атаки по вам; в начале хода цель при провале спасброска Мудрости совершает Уклонение; ваши атаки и заклинания наносят цели +1к8 урона некротической энергией. Ячейкой 5+ уровня — без концентрации, длительность растёт."}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-319.txt"
+ }
+]

@@ -1,0 +1,750 @@
+[
+ {
+  "name": "Неудержимая пляска Отто",
+  "en_name": "Otto's Irresistible Dance",
+  "slug": "otto_irresistible_dance",
+  "level": 6,
+  "school": "enchantment",
+  "classes": ["бард", "волшебник"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "цель лишь смешно танцует до конца своего следующего хода",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Одно существо, которое вы видите в пределах дистанции, совершает спасбросок Мудрости. При успехе цель смешно танцует до конца своего следующего хода, тратя всё перемещение на танец на месте. При провале цель становится Очарованной на время длительности: она смешно танцует на месте, тратит на это всё своё перемещение, совершает с Помехой спасброски Ловкости и броски атаки, а другие существа совершают броски атаки по ней с Преимуществом. В каждый свой ход цель может действием собраться и повторить спасбросок, при успехе заканчивая заклинание на себе.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 6, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "30 футов", "filter": "any"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "condition", "value": "charmed", "op": "apply", "duration": {"type": "rounds", "amount": 10}},
+      {"kind": "narrative", "description": "Очарованная цель смешно танцует на месте, тратя всё перемещение; её спасброски Ловкости и броски атаки совершаются с Помехой, а атаки по ней — с Преимуществом. В свой ход цель может действием повторить спасбросок, при успехе заканчивая заклинание."}
+     ],
+     "on_success": [
+      {"kind": "narrative", "description": "Цель смешно танцует до конца своего следующего хода, тратя всё перемещение на танец на месте."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-293.txt"
+ },
+ {
+  "name": "Облако смерти",
+  "en_name": "Cloudkill",
+  "slug": "cloudkill",
+  "level": 5,
+  "school": "conjuration",
+  "classes": ["волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "сфера радиусом 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "5d8", "damage_type": "poison"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте Сферу радиусом 20 футов из жёлто-зелёного тумана с центром в точке в пределах дистанции. Туман держится, пока активно заклинание; сильный ветер (например, от заклинания Порыв ветра) развеивает его, заканчивая заклинание. Область Сферы — Сильно заслонённая местность. Каждое существо в Сфере совершает спасбросок Телосложения, получая 5к8 урона Ядом при провале или половину при успехе. Существо также совершает этот спасбросок, когда Сфера входит в его пространство, когда оно входит в Сферу или заканчивает там ход, но не чаще одного раза в ход. Сфера перемещается на 10 футов прочь от вас в начале каждого вашего хода.",
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше пятого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "5d8", "type": "poison", "scaling": {"per": "spell_slot_above", "dice": "1d8"}, "on_success": "half"}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Сфера радиусом 20 футов Сильно заслонена. Существо повторяет спасбросок при входе в Сферу, окончании там хода или когда Сфера входит в его пространство (раз в ход). В начале каждого вашего хода Сфера смещается на 10 футов прочь от вас; сильный ветер развеивает туман и заканчивает заклинание."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-293.txt"
+ },
+ {
+  "name": "Образ",
+  "en_name": "Major Image",
+  "slug": "major_image",
+  "level": 3,
+  "school": "illusion",
+  "classes": ["бард", "волшебник", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "куб 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "кусок овечьей шерсти",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте образ объекта, существа или иного видимого явления размером не более Куба с ребром 20 футов в точке, которую видите в пределах дистанции. Образ кажется полностью реальным, включая звуки, запахи и температуру, но не может наносить урон и давать состояния. Пока вы в пределах дистанции от иллюзии, вы можете действием Магия переместить образ в любую точку в пределах дистанции, попутно меняя его внешность, чтобы движение выглядело естественным (походка, разные звуки, даже участие в беседе). Физическое взаимодействие выдаёт иллюзию: всё проходит сквозь неё. Существо действием Изучение может распознать иллюзию проверкой Интеллекта (Расследование) против Сл ваших заклинаний; распознав, оно видит сквозь образ, и прочие сенсорные эффекты для него притупляются.",
+  "upcast_description": "При сотворении с ячейкой 4 уровня и выше заклинание длится, пока не будет рассеяно, и не требует Концентрации.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Иллюзия объекта/существа/явления в Кубе 20 футов: реальные звуки, запахи, температура; без урона и состояний. Действием Магия можно перемещать образ в пределах 120 футов. Распознаётся проверкой Интеллекта (Расследование) против Сл ваших заклинаний действием Изучение."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-294.txt"
+ },
+ {
+  "name": "Общение",
+  "en_name": "Commune",
+  "slug": "commune",
+  "level": 5,
+  "school": "divination",
+  "classes": ["жрец"],
+  "casting_time": "1 минута",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "благовоние",
+  "duration": "1 минута",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы связываетесь с божеством или божественным посредником и задаёте до трёх вопросов, на которые можно ответить «да» или «нет». Вопросы нужно задать, пока заклинание активно; на каждый вы получаете правильный ответ. Божественные создания не всеведущи: если вопрос вне компетенции божества, ответом может быть «неясно». Если односложный ответ вводит в заблуждение или противоречит интересам божества, Мастер может ответить короткой фразой. Если вы сотворяете заклинание более одного раза до завершения Долгого отдыха, есть накопительный шанс 25% за каждое сотворение после первого не получить ответа.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Время сотворения 1 минута (или ритуал). До трёх вопросов божеству с ответами «да»/«нет»; возможен ответ «неясно». Накопительный шанс 25% не получить ответа за каждое повторное сотворение до Долгого отдыха."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-296.txt"
+ },
+ {
+  "name": "Общение с природой",
+  "en_name": "Commune with Nature",
+  "slug": "commune_with_nature",
+  "level": 5,
+  "school": "divination",
+  "classes": ["друид", "следопыт"],
+  "casting_time": "1 минута",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы общаетесь с духами природы и получаете знание об окружающей местности: на открытом воздухе — в пределах 3 миль, в пещерах и естественном подземном окружении — в пределах 300 футов. Заклинание не действует там, где природа заменена постройками (например, в городах и подвалах). Выберите три факта из списка — вы узнаёте их для области заклинания: расположение населённых пунктов; расположение порталов на другие планы бытия; местоположение одного существа с Показателем опасности 10+ (по выбору Мастера) из числа Исчадий, Небожителей, Нежити, Фей или Элементалей; наиболее распространённый вид растения, минерала или Зверя (по вашему выбору); расположение водоёмов.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Время сотворения 1 минута (или ритуал). Вы узнаёте три факта об области (3 мили на открытом воздухе / 300 футов под землёй): поселения, порталы, существо с ПО 10+, распространённый вид растения/минерала/Зверя, водоёмы."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-296.txt"
+ },
+ {
+  "name": "Оглушающая кара",
+  "en_name": "Staggering Smite",
+  "slug": "staggering_smite",
+  "level": 4,
+  "school": "enchantment",
+  "classes": ["паладин"],
+  "casting_time": "Бонусное действие (сразу после попадания по существу Рукопашным оружием или Безоружным ударом)",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "нет Ошеломления (урон наносится в любом случае)",
+  "damage": [{"dice": "4d6", "damage_type": "psychic"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Цель, по которой вы попали, получает дополнительно 4к6 урона Психической энергией и должна преуспеть в спасброске Мудрости, иначе станет Ошеломлённой до конца вашего следующего хода.",
+  "upcast_description": "Дополнительный урон увеличивается на 1к6 за каждый уровень ячейки выше четвертого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "bonus_action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "рукопашная атака", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "damage", "dice": "4d6", "type": "psychic", "scaling": {"per": "spell_slot_above", "dice": "1d6"}},
+      {"kind": "narrative", "description": "Сотворяется Бонусным действием сразу после попадания по существу Рукопашным оружием или Безоружным ударом."}
+     ]
+    },
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "condition", "value": "stunned", "op": "apply", "duration": {"type": "rounds", "amount": 1}}
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-297.txt"
+ },
+ {
+  "name": "Огненная буря",
+  "en_name": "Fire Storm",
+  "slug": "fire_storm",
+  "level": 7,
+  "school": "evocation",
+  "classes": ["друид", "жрец", "чародей"],
+  "casting_time": "Действие",
+  "range": "150 футов",
+  "area": "до 10 кубов по 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "7d10", "damage_type": "fire"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Область бури состоит из не более чем 10 Кубов с ребром 10 футов, которые вы располагаете по своему выбору; каждый Куб должен иметь хотя бы одну общую грань с другим Кубом. Каждое существо в области совершает спасбросок Ловкости, получая 7к10 урона Огнём при провале или половину этого урона при успехе. Горючие объекты в области, которые никто не несёт и не носит, воспламеняются.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 7, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "7d10", "type": "fire", "on_success": "half"}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Область — до 10 смежных Кубов с ребром 10 футов в пределах 150 футов. Горючие объекты, которые никто не несёт и не носит, воспламеняются."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-297.txt"
+ },
+ {
+  "name": "Огненная стена",
+  "en_name": "Wall of Fire",
+  "slug": "wall_of_fire",
+  "level": 4,
+  "school": "evocation",
+  "classes": ["волшебник", "друид", "чародей"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "стена до 60x20x1 фт или кольцо диаметром 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "кусочек угля",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "5d8", "damage_type": "fire"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте стену огня на твёрдой поверхности в пределах дистанции: до 60 футов в длину, 20 футов в высоту и 1 фут толщиной, либо кольцо диаметром до 20 футов, высотой 20 футов и толщиной 1 фут. Стена непрозрачна и существует, пока активно заклинание. При появлении стены каждое существо в её области совершает спасбросок Ловкости, получая 5к8 урона Огнём при провале или половину при успехе. Одна сторона стены (по вашему выбору при сотворении) наносит 5к8 урона Огнём каждому существу, заканчивающему ход в пределах 10 футов от этой стороны или внутри стены; такой же урон существо получает, когда впервые за ход входит в стену или заканчивает там ход. Другая сторона урона не наносит.",
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше четвертого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "5d8", "type": "fire", "scaling": {"per": "spell_slot_above", "dice": "1d8"}, "on_success": "half"}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Выбранная сторона стены наносит 5к8 урона Огнём (с тем же ростом от ячейки) существу, заканчивающему ход в 10 футах от неё или в стене, а также при первом за ход входе в стену. Стена непрозрачна; форма: полоса 60x20x1 фт или кольцо диаметром 20 фт."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-297.txt"
+ },
+ {
+  "name": "Огненный шар",
+  "en_name": "Fireball",
+  "slug": "fireball",
+  "level": 3,
+  "school": "evocation",
+  "classes": ["волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "150 футов",
+  "area": "сфера радиусом 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "шарик из гуано летучей мыши и сера",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "8d6", "damage_type": "fire"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Яркая вспышка проносится от вас к выбранной точке в пределах дистанции и с низким гулом расцветает огненным взрывом. Каждое существо в Сфере радиусом 20 футов с центром в этой точке совершает спасбросок Ловкости, получая 8к6 урона Огнём при провале или половину этого урона при успехе. Горючие объекты в области, которые никто не несёт и не носит, воспламеняются.",
+  "upcast_description": "Урон увеличивается на 1к6 за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "8d6", "type": "fire", "scaling": {"per": "spell_slot_above", "dice": "1d6"}, "on_success": "half"}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Область — Сфера радиусом 20 футов с центром в точке в пределах 150 футов. Горючие объекты, которые никто не несёт и не носит, воспламеняются."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-298.txt"
+ },
+ {
+  "name": "Огненный щит",
+  "en_name": "Fire Shield",
+  "slug": "fire_shield",
+  "level": 4,
+  "school": "evocation",
+  "classes": ["волшебник", "друид", "чародей"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "немного фосфора или светлячок",
+  "duration": "10 минут",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [
+   {"dice": "2d8", "damage_type": "fire"},
+   {"dice": "2d8", "damage_type": "cold"}
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Ваше тело покрывается тонким слоем пламени, испускающим Яркий свет в пределах 10 футов и Тусклый свет ещё на 10 футов. Пламя даёт вам на выбор тёплый или холодный щит: тёплый щит даёт Сопротивление урону Холодом, а холодный — Сопротивление урону Огнём. Кроме того, каждый раз, когда существо в пределах 5 футов попадает по вам рукопашной атакой, щит испускает пламя: атакующий получает 2к8 урона Огнём от тёплого щита или 2к8 урона Холодом от холодного.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 4, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Выберите щит: тёплый — Сопротивление урону Холодом, холодный — Сопротивление урону Огнём. Атакующий в пределах 5 футов, попавший по вам рукопашной атакой, получает 2к8 урона Огнём (тёплый) или Холодом (холодный). Яркий свет 10 футов и тусклый ещё 10 футов. Длительность 10 минут."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-299.txt"
+ },
+ {
+  "name": "Оживление",
+  "en_name": "Raise Dead",
+  "slug": "raise_dead",
+  "level": 5,
+  "school": "necromancy",
+  "classes": ["бард", "жрец", "паладин"],
+  "casting_time": "1 час",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "бриллиант стоимостью не менее 500 ЗМ, расходуемый заклинанием",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Касанием вы возвращаете к жизни существо, мёртвое не более 10 дней и не бывшее Нежитью в момент смерти. Существо оживает с 1 Хитом. Заклинание нейтрализует яды, действовавшие на существо при смерти, и исцеляет все раны, но не восстанавливает отсутствующие части тела: если у существа нет жизненно важных частей тела (например, головы), заклинание автоматически проваливается. Возвращение к жизни — тяжёлое испытание: цель получает штраф −4 ко всем Тестам к20; после каждого Долгого отдыха штраф уменьшается на 1, пока не обнулится.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Время сотворения 1 час; расходуется бриллиант от 500 ЗМ. Оживляет существо, мёртвое не более 10 дней (не Нежить), с 1 Хитом; нейтрализует яды; не восстанавливает недостающие части тела. Оживлённый получает штраф −4 к Тестам к20, уменьшающийся на 1 за каждый Долгий отдых."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-299.txt"
+ },
+ {
+  "name": "Оживление вещей",
+  "en_name": "Animate Objects",
+  "slug": "animate_objects",
+  "level": 5,
+  "school": "transmutation",
+  "classes": ["бард", "волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите немагические объекты в пределах дистанции, которые никто не несёт и не носит, не закреплены и не Громадные. Максимум объектов равен вашему модификатору заклинательной характеристики; цель Среднего размера и меньше считается за 1 объект, Большая — за 2, Огромная — за 3. Каждая цель оживает, отращивает ноги и становится Конструктом с блоком статистики Оживлённого объекта (КЗ 15; Хиты 10/20/40 по размеру; Размашистый удар с бонусом вашей атаки заклинанием: 1к4+3, 2к6+3+модификатор или 2к12+3+модификатор урона Чистой силой). Существа союзны вам, разделяют вашу Инициативу и ходят сразу после вас. Бонусным действием вы можете мысленно приказать любым из них в пределах 500 футов; без приказа они Уклоняются. При 0 Хитов объект возвращается в прежнюю форму, перенося в неё остаток урона.",
+  "upcast_description": "Урон от Размашистого удара существа увеличивается на 1к4 (Средний или меньше), 1к6 (Большой) или 1к12 (Огромный) за каждый уровень ячейки выше пятого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 5, "amount": 1}
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Оживляет до (модификатор заклинательной характеристики) объектов в пределах 120 футов: Конструкты (КЗ 15, Хиты 10/20/40, Размашистый удар 1к4+3 / 2к6+3+мод / 2к12+3+мод урона Чистой силой). Приказы — Бонусным действием в пределах 500 футов; без приказа — Уклонение."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-299.txt"
+ },
+ {
+  "name": "Окаменение",
+  "en_name": "Flesh to Stone",
+  "slug": "flesh_to_stone",
+  "level": 6,
+  "school": "transmutation",
+  "classes": ["волшебник", "друид", "чародей"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "перо куролиска",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con"],
+  "save_outcome": "Скорость цели равна 0 до начала вашего следующего хода",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы пытаетесь обратить в камень существо, которое видите в пределах дистанции. Цель совершает спасбросок Телосложения: при провале она становится Опутанной на время заклинания, при успехе её Скорость равна 0 до начала вашего следующего хода. Конструкты автоматически преуспевают. Опутанная цель повторяет спасбросок Телосложения в конце каждого своего хода: после трёх успехов заклинание заканчивается; после трёх провалов цель превращается в камень и становится Окаменевшей на время заклинания (успехи и провалы не обязаны идти подряд, считайте их раздельно). Если вы удерживаете Концентрацию всё максимальное время, цель остаётся Окаменевшей, пока эффект не снимут заклинанием Высшее восстановление или подобной магией.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 6, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "60 футов", "filter": "any"},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "condition", "value": "restrained", "op": "apply", "duration": {"type": "rounds", "amount": 10}},
+      {"kind": "narrative", "description": "Опутанная цель повторяет спасбросок Телосложения в конце каждого своего хода: 3 успеха — заклинание заканчивается; 3 провала — цель Окаменевает на время заклинания. При полной длительности Концентрации окаменение постоянно до Высшего восстановления. Конструкты автоматически преуспевают."}
+     ],
+     "on_success": [
+      {"kind": "narrative", "description": "Скорость цели равна 0 до начала вашего следующего хода."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-300.txt"
+ },
+ {
+  "name": "Ослепляющая кара",
+  "en_name": "Blinding Smite",
+  "slug": "blinding_smite",
+  "level": 3,
+  "school": "evocation",
+  "classes": ["паладин"],
+  "casting_time": "Бонусное действие (сразу после попадания по существу Рукопашным оружием или Безоружным ударом)",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "1 минута",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con"],
+  "save_outcome": "спасбросок в конце каждого хода цели; при успехе заклинание заканчивается",
+  "damage": [{"dice": "3d8", "damage_type": "radiant"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Цель атаки получает дополнительно 3к8 урона Излучением от атаки и становится Ослеплённой до окончания действия заклинания. В конце каждого своего хода Ослеплённая цель совершает спасбросок Телосложения, при успехе заканчивая заклинание на себе.",
+  "upcast_description": "Дополнительный урон увеличивается на 1к8 за каждый уровень ячейки выше третьего.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "bonus_action"},
+     {"resource": "spell_slot", "level": 3, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "single", "range": "рукопашная атака", "filter": "enemy"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "damage", "dice": "3d8", "type": "radiant", "scaling": {"per": "spell_slot_above", "dice": "1d8"}},
+      {"kind": "condition", "value": "blinded", "op": "apply", "duration": {"type": "rounds", "amount": 10}},
+      {"kind": "narrative", "description": "Сотворяется Бонусным действием сразу после попадания Рукопашным оружием или Безоружным ударом. В конце каждого своего хода цель совершает спасбросок Телосложения, при успехе заканчивая заклинание (снимая Ослепление)."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-301.txt"
+ },
+ {
+  "name": "Остановка времени",
+  "en_name": "Time Stop",
+  "slug": "time_stop",
+  "level": 9,
+  "school": "transmutation",
+  "classes": ["волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы ненадолго останавливаете поток времени для всех, кроме себя: пока для других существ время не течёт, вы получаете 1к4+1 ход подряд, в течение которых можете совершать действия и перемещаться как обычно. Заклинание заканчивается, если одно из ваших действий за этот период или созданный вами эффект воздействует на другое существо или на предмет, который несёт или носит кто-то другой, а также если вы переместитесь более чем на 1000 футов от места сотворения.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     {"resource": "action"},
+     {"resource": "spell_slot", "level": 9, "amount": 1}
+    ]
+   },
+   "targeting": {"shape": "self"},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "narrative", "description": "Вы получаете 1к4+1 ход подряд, пока время остановлено для остальных. Заклинание прерывается, если ваше действие или эффект затрагивает другое существо либо чужой предмет, или если вы удалились более чем на 1000 футов от точки сотворения."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-301.txt"
+ }
+]

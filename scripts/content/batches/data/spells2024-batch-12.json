@@ -1,0 +1,760 @@
+[
+ {
+  "name": "Терновая стена",
+  "en_name": "Wall of Thorns",
+  "slug": "wall_of_thorns",
+  "level": 6,
+  "school": "conjuration",
+  "classes": ["друид"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "стена 60×10×5 фт или круг диаметром 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "пригоршня шипов",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [
+   {"dice": "7d8", "damage_type": "piercing"},
+   {"dice": "7d8", "damage_type": "slashing"}
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте стену из перевитых кустов с острыми как иглы шипами на твёрдой поверхности в пределах дистанции: до 60 футов в длину, 10 в высоту и 5 в толщину, либо круг диаметром 20 футов, высотой до 20 футов и толщиной 5 футов. Стена блокирует линию обзора и существует, пока активно заклинание. Когда стена появляется, каждое существо в её области совершает спасбросок Ловкости, получая 7к8 Колющего урона при провале или половину при успехе. Сквозь стену можно проходить медленно и болезненно: каждый 1 фут пути стоит 4 фута перемещения, и в первый раз за ход, когда существо входит в стену или оканчивает там ход, оно совершает спасбросок Ловкости, получая 7к8 Рубящего урона при провале или половину при успехе (не чаще одного раза за ход).",
+  "upcast_description": "Оба типа урона увеличиваются на 1к8 за каждый уровень ячейки выше 6-го.",
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 6, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [{"kind": "damage", "dice": "7d8", "type": "piercing", "scaling": {"per": "spell_slot_above", "dice": "1d8"}, "on_success": "half"}],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Стена блокирует обзор. Проход сквозь стену: 1 фут пути стоит 4 фута перемещения; первый раз за ход при входе в стену или окончании хода в ней — спасбросок Ловкости: 7к8 Рубящего урона при провале (+1к8 за уровень ячейки выше 6-го), половина при успехе."}]
+    }
+   ]
+  },
+  "source_page": "page-338.txt"
+ },
+ {
+  "name": "Удар стального ветра",
+  "en_name": "Steel Wind Strike",
+  "slug": "steel_wind_strike",
+  "level": 5,
+  "school": "conjuration",
+  "classes": ["волшебник", "следопыт"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": false,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "рукопашное оружие стоимостью не менее 1 СМ",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": true,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [{"dice": "6d10", "damage_type": "force"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы взмахиваете оружием, использованным при сотворении заклинания, и исчезаете, чтобы ударить подобно ветру. Выберите не более пяти существ, которых видите в пределах 30 футов. Совершите рукопашную атаку заклинанием по каждой цели. При попадании цель получает 6к10 урона Чистой силой. После этого вы можете телепортироваться в незанятое пространство, которое видите в пределах 5 футов от одной из целей.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 5, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "attack_roll",
+     "attack_kind": "spell_melee",
+     "ability": "spellcasting",
+     "vs": "ac",
+     "on_hit": [{"kind": "damage", "dice": "6d10", "type": "force"}]
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "До пяти целей — отдельный бросок атаки по каждой. После атак можно телепортироваться в незанятое пространство в пределах 5 футов от одной из целей."}]
+    }
+   ]
+  },
+  "source_page": "page-339.txt"
+ },
+ {
+  "name": "Удержание чудовища",
+  "en_name": "Hold Monster",
+  "slug": "hold_monster",
+  "level": 5,
+  "school": "enchantment",
+  "classes": ["бард", "волшебник", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "90 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "прямой кусок железа",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "нет эффекта; повтор спасброска в конце каждого хода цели",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите существо, которое можете видеть в пределах дистанции. Цель должна преуспеть в спасброске Мудрости, иначе станет Парализованной на время действия заклинания. Цель повторяет спасбросок в конце каждого своего хода, заканчивая на себе действие заклинания при успехе.",
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше 5-го.",
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 5, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [{"kind": "narrative", "description": "Цель Парализована на время действия заклинания; повторяет спасбросок Мудрости в конце каждого своего хода, при успехе эффект заканчивается."}],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-340.txt"
+ },
+ {
+  "name": "Узилище",
+  "en_name": "Forcecage",
+  "slug": "forcecage",
+  "level": 7,
+  "school": "evocation",
+  "classes": ["бард", "волшебник", "колдун"],
+  "casting_time": "Действие",
+  "range": "100 футов",
+  "area": "куб 20 фт (клетка) или куб 10 фт (коробка)",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "порошок рубина стоимостью не менее 1500 ЗМ, расходуемый заклинанием",
+  "duration": "Концентрация, вплоть до 1 часа",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["cha"],
+  "save_outcome": "при успехе существо может использовать телепортацию или межпланарное перемещение для выхода",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вокруг выбранной области возникает неподвижная невидимая тюрьма-Куб из магической силы: клетка с ребром до 20 футов (прутья 1/2 дюйма с зазором 1/2 дюйма) или сплошная коробка с ребром до 10 футов, останавливающая материю и блокирующая заклинания внутрь и наружу. Существа целиком в области оказываются заперты; частично находящиеся или слишком большие выталкиваются наружу. Покинуть узилище немагическими средствами нельзя. При попытке телепортации или межпланарного перемещения существо совершает спасбросок Харизмы: при успехе выходит, при провале тратит впустую использование заклинания или эффекта. Узилище простирается на Эфирный план и не может быть развеяно заклинанием Рассеивание магии.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 7, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Невидимая тюрьма из силового поля (клетка 20 фт или коробка 10 фт) на 1 час концентрации. Побег только магией: спасбросок Харизмы при попытке телепортации/межпланарного перемещения, при провале попытка тратится впустую. Не рассеивается Рассеиванием магии."}]
+    }
+   ]
+  },
+  "source_page": "page-340.txt"
+ },
+ {
+  "name": "Упругий шар Отилюка",
+  "en_name": "Otiluke's Resilient Sphere",
+  "slug": "otilukes_resilient_sphere",
+  "level": 4,
+  "school": "abjuration",
+  "classes": ["волшебник"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "стеклянная сфера",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "при успехе несогласное существо не заключается в сферу",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Мерцающая сфера окружает существо Большого размера или меньше либо объект в пределах дистанции. Нежелающее существо должно преуспеть в спасброске Ловкости, иначе окажется окружено сферой на время действия заклинания. Ничто — ни предметы, ни энергия, ни эффекты заклинаний — не проходит через барьер внутрь или наружу; существо внутри может дышать. Сфера имеет иммунитет ко всему урону; существо или объект внутри не получает урона снаружи и не может нанести урон наружу. Сфера невесома; существо внутри может действием толкать её стены, перемещаясь с половинной Скоростью; другие существа могут поднимать и переносить сферу. Заклинание Распад уничтожает сферу, не вредя содержимому.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [{"kind": "narrative", "description": "Цель заключена в непроницаемую сферу: не получает и не наносит урон сквозь барьер, может действием катить сферу с половинной Скоростью. Распад уничтожает сферу без вреда содержимому."}],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-341.txt"
+ },
+ {
+  "name": "Ускорение",
+  "en_name": "Haste",
+  "slug": "haste",
+  "level": 3,
+  "school": "transmutation",
+  "classes": ["волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "стружка корня лакрицы",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите согласное существо, которое видите в пределах дистанции. Пока заклинание активно, Скорость цели удваивается, она получает бонус +2 к КЗ, совершает с Преимуществом спасброски Ловкости и на каждом ходу может совершать одно дополнительное действие: только Атака (одна атака), Засада, Использование, Отход или Рывок. Когда заклинание заканчивается, цель становится Недееспособной, и её Скорость равна 0 до конца её следующего хода — на неё накатывает волна усталости.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 3, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "modifier", "applies_to": {"roll": "ac"}, "op": "add", "value": "+2"},
+      {"kind": "modifier", "applies_to": {"roll": "saving_throw"}, "op": "advantage"},
+      {"kind": "movement", "value": "double"},
+      {"kind": "narrative", "description": "Цель — согласное существо (модификаторы исполняются при касте на себя). Преимущество только на спасброски Ловкости. Дополнительное действие каждый ход: Атака (одна), Засада, Использование, Отход или Рывок. По окончании заклинания цель Недееспособна и её Скорость 0 до конца её следующего хода."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-341.txt"
+ },
+ {
+  "name": "Усыхание",
+  "en_name": "Blight",
+  "slug": "blight",
+  "level": 4,
+  "school": "necromancy",
+  "classes": ["волшебник", "друид", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "8d8", "damage_type": "necrotic"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Существо, которое вы видите в пределах дистанции, совершает спасбросок Телосложения, получая 8к8 урона Некротической энергией при провале или половину этого урона при успехе. Растения автоматически проваливают этот спасбросок. В качестве альтернативы выберите целью немагическое растение, не являющееся существом (например, дерево или кустарник): оно не совершает спасбросок — просто увядает и умирает.",
+  "upcast_description": "Урон увеличивается на 1к8 за каждый уровень ячейки выше 4-го.",
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [{"kind": "damage", "dice": "8d8", "type": "necrotic", "scaling": {"per": "spell_slot_above", "dice": "1d8"}, "on_success": "half"}],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Существа-растения автоматически проваливают спасбросок. Немагическое растение-объект увядает и умирает без спасброска."}]
+    }
+   ]
+  },
+  "source_page": "page-341.txt"
+ },
+ {
+  "name": "Фальшивый двойник",
+  "en_name": "Mislead",
+  "slug": "mislead",
+  "level": 5,
+  "school": "illusion",
+  "classes": ["бард", "волшебник", "колдун"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": false,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 часа",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы становитесь Невидимым, и одновременно на вашем месте появляется ваш иллюзорный двойник. Двойник существует, пока заклинание активно, но невидимость заканчивается, как только вы атакуете, наносите урон или сотворяете заклинание. Действием Магия вы можете переместить двойника на расстояние до удвоенной вашей Скорости и заставить его жестикулировать, говорить и вести себя как угодно. Он неосязаем и неуязвим. Вы можете видеть его глазами и слышать его ушами, как если бы находились на его месте.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 5, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {"kind": "condition", "value": "invisible", "op": "apply"},
+      {"kind": "narrative", "description": "Невидимость заканчивается при атаке, нанесении урона или сотворении заклинания. Иллюзорный двойник: действием Магия перемещается до удвоенной Скорости, говорит и жестикулирует; неосязаем и неуязвим; можно смотреть его глазами и слушать его ушами."}
+     ]
+    }
+   ]
+  },
+  "source_page": "page-342.txt"
+ },
+ {
+  "name": "Хижина Леомунда",
+  "en_name": "Leomund's Tiny Hut",
+  "slug": "leomunds_tiny_hut",
+  "level": 3,
+  "school": "evocation",
+  "classes": ["бард", "волшебник"],
+  "casting_time": "1 минута или Ритуал",
+  "range": "На себя",
+  "area": "эманация 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "кристаллическая бусина",
+  "duration": "8 часов",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вокруг вас возникает неподвижная 10-футовая Эманация на всю длительность. Заклинание проваливается, если Эманация не может полностью охватить всех существ в своей области. Существа и объекты, находившиеся внутри при сотворении, могут свободно проходить сквозь неё; все остальные не могут войти. Заклинания уровня ниже 4-го не могут сотворяться сквозь Эманацию, и их эффекты не действуют на область. Внутри сухо и комфортно при любой погоде; вы можете делать пространство внутри Тускло освещённым или Тьмой (действий не требуется). Снаружи Эманация непрозрачна (цвет на ваш выбор), изнутри прозрачна. Заклинание заканчивается досрочно, если вы покидаете Эманацию или сотворяете его снова.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 3, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Купол-эманация 10 фт на 8 часов: чужие существа не могут войти, заклинания ниже 4-го уровня не проходят, внутри сухо и комфортно. Сотворение занимает 1 минуту (или ритуал). Заканчивается, если вы выходите из купола."}]
+    }
+   ]
+  },
+  "source_page": "page-342.txt"
+ },
+ {
+  "name": "Хождение по ветру",
+  "en_name": "Wind Walk",
+  "slug": "wind_walk",
+  "level": 6,
+  "school": "transmutation",
+  "classes": ["друид"],
+  "casting_time": "1 минута",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "свеча",
+  "duration": "8 часов",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы и не более десяти согласных существ в пределах дистанции принимаете газообразный облик лёгких облачков на всю длительность. В облике облака цель получает Скорость полёта 300 футов, может парить, имеет Иммунитет к состоянию Сбитый с ног и Сопротивление Дробящему, Колющему и Рубящему урону. В этой форме доступны только действия Рывок и Магия (для возврата к естественному облику). Возврат занимает 1 минуту, во время которой цель Ошеломлена; обратная трансформация также требует действия Магия и 1 минуты. Если при окончании эффекта цель летит в облике облака, она снижается на 60 футов в раунд в течение 1 минуты, после чего падает оставшуюся дистанцию.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 6, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Вы и до 10 согласных существ становитесь облачками на 8 часов: полёт 300 фт, парение, иммунитет к Сбитому с ног, сопротивление дробящему/колющему/рубящему; только действия Рывок и Магия. Возврат в облик — 1 минута (Ошеломление). Сотворение занимает 1 минуту."}]
+    }
+   ]
+  },
+  "source_page": "page-342.txt"
+ },
+ {
+  "name": "Хождение по воде",
+  "en_name": "Water Walk",
+  "slug": "water_walk",
+  "level": 3,
+  "school": "transmutation",
+  "classes": ["друид", "жрец", "следопыт", "чародей"],
+  "casting_time": "Действие или Ритуал",
+  "range": "30 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "кусочек пробки",
+  "duration": "1 час",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Заклинание дарует способность перемещаться по любой жидкой поверхности — воде, кислоте, грязи, снегу, зыбучему песку или лаве — как по безвредной твёрдой поверхности (идущие по расплавленной лаве всё равно получают урон от жара). Не более десяти согласных существ по вашему выбору в пределах дистанции получают эту способность на время действия заклинания. Чтобы погрузиться под поверхность жидкости или вынырнуть, цель должна совершить Бонусное действие; при падении в жидкость цель проходит сквозь поверхность без него.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 3, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "До 10 согласных существ ходят по жидкостям как по твёрдой поверхности 1 час. Погружение/всплытие — Бонусным действием."}]
+    }
+   ]
+  },
+  "source_page": "page-343.txt"
+ },
+ {
+  "name": "Царственное величие Йоланды",
+  "en_name": "Yolande's Regal Presence",
+  "slug": "yolandes_regal_presence",
+  "level": 5,
+  "school": "enchantment",
+  "classes": ["бард", "волшебник"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "миниатюрная тиара",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "половина урона, без Сбивания с ног и толчка",
+  "damage": [{"dice": "4d6", "damage_type": "psychic"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы окружаете себя неземным величием в 10-футовой Эманации. Когда Эманация входит в пространство видимого вами существа, и всякий раз, когда видимое вами существо входит в Эманацию или заканчивает там свой ход, вы можете заставить его совершить спасбросок Мудрости. При провале цель получает 4к6 урона Психической энергией, становится Сбитой с ног, и вы можете оттолкнуть её от себя на расстояние до 10 футов. При успехе цель получает только половину урона. Существо совершает этот спасбросок только один раз за ход.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 5, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "4d6", "type": "psychic", "on_success": "half"},
+      {"kind": "condition", "value": "prone", "op": "apply"},
+      {"kind": "movement", "value": "push", "distance": 10}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Эманация 10 фт вокруг кастера; спасбросок вынуждается при входе существа в эманацию, окончании там хода или входе эманации в его пространство — не чаще одного раза за ход на существо."}]
+    }
+   ]
+  },
+  "source_page": "page-343.txt"
+ },
+ {
+  "name": "Цепкая лоза",
+  "en_name": "Grasping Vine",
+  "slug": "grasping_vine",
+  "level": 4,
+  "school": "conjuration",
+  "classes": ["друид", "следопыт"],
+  "casting_time": "Бонусное действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": true,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [{"dice": "4d8", "damage_type": "bludgeoning"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы создаёте лозу, вырастающую из земли в незанятом пространстве в пределах дистанции; лоза существует, пока заклинание активно. Совершите рукопашную атаку заклинанием по существу в пределах 30 футов от лозы. При попадании цель получает 4к8 Дробящего урона и подтягивается на расстояние до 30 футов к лозе; если цель Огромного размера или меньше, она становится Схваченной (Сл высвобождения равна Сл спасброска ваших заклинаний). Лоза может держать Схваченным только одно существо за раз; вы можете освободить его без действия. В последующие ходы вы можете Бонусным действием повторить атаку по существу в пределах 30 футов от лозы.",
+  "upcast_description": "Количество существ, которых лоза может держать Схваченными, увеличивается на 1 за каждый уровень ячейки выше 4-го.",
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "bonus_action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "attack_roll",
+     "attack_kind": "spell_melee",
+     "ability": "spellcasting",
+     "vs": "ac",
+     "on_hit": [
+      {"kind": "damage", "dice": "4d8", "type": "bludgeoning"},
+      {"kind": "movement", "value": "pull", "distance": 30},
+      {"kind": "condition", "value": "grappled", "op": "apply"}
+     ]
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Лоза в 60 фт атакует существ в пределах 30 фт от себя; Схваченным становится существо Огромного размера или меньше. В последующие ходы атака повторяется Бонусным действием. Лоза держит одно существо (+1 за уровень ячейки выше 4-го)."}]
+    }
+   ]
+  },
+  "source_page": "page-344.txt"
+ },
+ {
+  "name": "Цепная молния",
+  "en_name": "Chain Lightning",
+  "slug": "chain_lightning",
+  "level": 6,
+  "school": "evocation",
+  "classes": ["волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "150 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "три серебряные булавки",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "10d8", "damage_type": "lightning"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы запускаете разряд молнии в цель, которую видите в пределах дистанции. Затем три разряда перепрыгивают с неё на другие цели по вашему выбору (не более трёх), каждая из которых должна находиться в пределах 30 футов от первой цели. Целью может быть существо или объект, и каждая цель может быть поражена только одним разрядом. Каждая цель совершает спасбросок Ловкости, получая 10к8 урона Электричеством при провале или половину этого урона при успехе.",
+  "upcast_description": "Один дополнительный разряд бьёт из первой цели за каждый уровень ячейки выше 6-го.",
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 6, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [{"kind": "damage", "dice": "10d8", "type": "lightning", "on_success": "half"}],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Три разряда перепрыгивают с первой цели на до трёх целей в пределах 30 фт от неё (по одному разряду на цель); каждая совершает такой же спасбросок. +1 разряд за уровень ячейки выше 6-го."}]
+    }
+   ]
+  },
+  "source_page": "page-344.txt"
+ },
+ {
+  "name": "Цунами",
+  "en_name": "Tsunami",
+  "slug": "tsunami",
+  "level": 8,
+  "school": "conjuration",
+  "classes": ["друид"],
+  "casting_time": "1 минута",
+  "range": "1 миля",
+  "area": "стена воды 300×300×50 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 6 раундов",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["str"],
+  "save_outcome": "половина урона",
+  "damage": [{"dice": "6d10", "damage_type": "bludgeoning"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "В выбранной точке в пределах дистанции появляется стена воды длиной до 300 футов, высотой 300 футов и толщиной 50 футов. Когда стена появляется, все существа в её области совершают спасбросок Силы, получая 6к10 Дробящего урона при провале или половину при успехе. В начале каждого вашего хода стена с существами в ней перемещается на 50 футов от вас; существа размером до Огромного внутри стены или в чьё пространство она входит должны преуспеть в спасброске Силы, иначе получат 5к10 Дробящего урона (раз за ход). В конце хода высота стены уменьшается на 50 футов, а урон в последующие раунды — на 1к10; при высоте 0 футов заклинание заканчивается. Для плавания внутри стены нужна успешная проверка Силы (Атлетика) против Сл ваших заклинаний.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 8, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "str",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [{"kind": "damage", "dice": "6d10", "type": "bludgeoning", "on_success": "half"}],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Сотворение занимает 1 минуту. Стена ежераундно движется на 50 фт от вас: существа до Огромного размера — спасбросок Силы, при провале 5к10 Дробящего (урон уменьшается на 1к10 в раунд, высота — на 50 фт). Перемещение внутри стены — проверка Силы (Атлетика) против Сл заклинаний."}]
+    }
+   ]
+  },
+  "source_page": "page-344.txt"
+ },
+ {
+  "name": "Чёрные щупальца Эварда",
+  "en_name": "Evard's Black Tentacles",
+  "slug": "evards_black_tentacles",
+  "level": 4,
+  "school": "conjuration",
+  "classes": ["волшебник"],
+  "casting_time": "Действие",
+  "range": "90 футов",
+  "area": "квадрат 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "щупальце",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["str"],
+  "save_outcome": "нет эффекта",
+  "damage": [{"dice": "3d6", "damage_type": "bludgeoning"}],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Чёрные извивающиеся щупальца заполняют на полу квадрат со стороной 20 футов, который вы видите в пределах дистанции. Пока заклинание активно, область является Труднопроходимой местностью. Каждое существо в области совершает спасбросок Силы: при провале получает 3к6 Дробящего урона и становится Опутанным до конца действия заклинания. Существо также совершает этот спасбросок, когда входит в область или заканчивает там свой ход (но не чаще одного раза за ход). Опутанное существо может действием совершить проверку Силы (Атлетика) против Сл спасброска ваших заклинаний, заканчивая эффект на себе при успехе.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 4, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "str",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {"kind": "damage", "dice": "3d6", "type": "bludgeoning"},
+      {"kind": "condition", "value": "restrained", "op": "apply"}
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Квадрат 20 фт — Труднопроходимая местность. Спасбросок повторяется при входе в область или окончании там хода (раз за ход). Опутанный может действием высвободиться проверкой Силы (Атлетика) против Сл заклинаний."}]
+    }
+   ]
+  },
+  "source_page": "page-345.txt"
+ },
+ {
+  "name": "Эфирность",
+  "en_name": "Etherealness",
+  "slug": "etherealness",
+  "level": 7,
+  "school": "conjuration",
+  "classes": ["бард", "волшебник", "жрец", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "До 8 часов",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы вступаете в Пограничный Эфир — окрестности Эфирного плана, где он пересекается с вашим планом, — и остаётесь там, пока заклинание активно. Вы можете перемещаться в любом направлении; движение вверх или вниз стоит 1 дополнительный фут за фут. Вы воспринимаете покинутый план в оттенках серого, но не видите дальше 60 футов. Вы можете воздействовать только на существ на Эфирном плане, и только они могут воздействовать на вас. Когда заклинание заканчивается, вы возвращаетесь в соответствующее место покинутого плана; если оно занято, вас переносит в ближайшее незанятое пространство, и вы получаете урон Чистой силой, равный удвоенному числу футов переноса. Заклинание сразу заканчивается, если сотворено на Эфирном плане или на плане, не граничащем с ним.",
+  "upcast_description": "Вы можете выбрать до трёх согласных существ (включая себя) за каждый уровень ячейки выше 7-го; существа должны находиться в пределах 10 футов от вас при сотворении.",
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 7, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Переход в Пограничный Эфир до 8 часов: восприятие покинутого плана в сером цвете до 60 фт, взаимодействие только с существами Эфирного плана. При возврате в занятое пространство — перенос в ближайшее свободное с уроном Чистой силой 2 за фут."}]
+    }
+   ]
+  },
+  "source_page": "page-346.txt"
+ },
+ {
+  "name": "Языки",
+  "en_name": "Tongues",
+  "slug": "tongues",
+  "level": 3,
+  "school": "divination",
+  "classes": ["бард", "волшебник", "жрец", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": true,
+  "material_text": "миниатюрный зиккурат",
+  "duration": "1 час",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Заклинание дарует существу, которого вы касаетесь, умение понимать любой разговорный или жестовый язык, который оно слышит или видит. Кроме того, когда цель общается речью или жестами, все существа, знающие хотя бы один язык, понимают сказанное, если могут слышать речь или видеть жесты.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {"mode": "active", "cost": [{"resource": "action"}, {"resource": "spell_slot", "level": 3, "amount": 1}]},
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [{"kind": "narrative", "description": "Цель 1 час понимает любые разговорные и жестовые языки, а её речь/жесты понимают все существа, знающие хотя бы один язык."}]
+    }
+   ]
+  },
+  "source_page": "page-346.txt"
+ }
+]

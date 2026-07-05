@@ -52,6 +52,41 @@ function actionCost(castingTime) {
   return null; // ритуалы/минуты — оставляем как сгенерировано
 }
 
+const USES_PER = new Set(['turn', 'round', 'short_rest', 'long_rest', 'day']);
+const SHAPES = new Set(['self', 'single', 'multi', 'area', 'aura']);
+const PROFS = new Set(['skill', 'tool', 'saving_throw', 'weapon', 'armor', 'language']);
+
+/** Типовые «почти валидные» ответы модели → чиним детерминированно. */
+function sanitize(mechanics) {
+  const t = mechanics.targeting;
+  if (t) {
+    if (typeof t.range === 'number') t.range = `${t.range} feet`;
+    else if (t.range != null && typeof t.range !== 'string') delete t.range;
+    if (t.shape && !SHAPES.has(t.shape)) delete t.shape;
+  }
+  const trig = mechanics.activation?.trigger;
+  if (trig && typeof trig === 'object' && !trig.event) delete mechanics.activation.trigger;
+  if (mechanics.uses) {
+    const per = String(mechanics.uses.per || '');
+    if (!USES_PER.has(per)) {
+      const map = { daily: 'day', encounter: 'short_rest', combat: 'short_rest', rest: 'short_rest' };
+      if (map[per]) mechanics.uses.per = map[per];
+      else delete mechanics.uses;
+    }
+  }
+  for (const eff of mechanics.effects || []) {
+    for (const key of ['result', 'results', 'on_hit', 'on_crit', 'on_fail', 'on_success']) {
+      if (!Array.isArray(eff[key])) continue;
+      eff[key] = eff[key].map((p) => {
+        if (p && p.kind === 'grant_proficiency' && !PROFS.has(p.prof)) {
+          return { kind: 'narrative', description: `Владение: ${p.value ?? p.prof}` };
+        }
+        return p;
+      });
+    }
+  }
+}
+
 /** Страховка: слот своего круга и тип действия в cost. */
 function fixCost(mechanics, spell) {
   const activation = mechanics.activation || (mechanics.activation = { mode: 'active', cost: [] });
@@ -110,6 +145,7 @@ async function main() {
     done++;
     try {
       const mechanics = await aiMechanics(spell);
+      sanitize(mechanics);
       fixCost(mechanics, spell);
       const errs = validateMech(spell.card_number || spell.id, spell.name, mechanics);
       if (errs.length) { report.failed.push(`${spell.name}: схема — ${errs[0]}`); continue; }

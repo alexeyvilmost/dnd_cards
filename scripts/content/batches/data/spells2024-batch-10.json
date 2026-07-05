@@ -1,0 +1,995 @@
+[
+ {
+  "name": "Путешествие через растения",
+  "en_name": "Transport via Plants",
+  "slug": "transport_via_plants",
+  "level": 6,
+  "school": "conjuration",
+  "classes": ["друид"],
+  "casting_time": "Действие",
+  "range": "10 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "1 минута",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Заклинание создаёт магическую связь между неоживлённым растением размером не меньше Большого в пределах дистанции и другим растением на любом расстоянии на том же плане бытия. Вы должны до этого хотя бы раз видеть или касаться растения, служащего местом назначения. Пока заклинание активно, все существа могут входить в целевое растение и выходить из растения, служащего местом назначения, использовав всего 5 футов перемещения.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 6, "amount": 1 }
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Свяжите Большое (или больше) неоживлённое растение в пределах 10 футов с другим знакомым вам растением на том же плане: 1 минуту любые существа могут войти в целевое растение и выйти из растения назначения, потратив 5 футов перемещения."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-320.txt"
+ },
+ {
+  "name": "Радужная стена",
+  "en_name": "Prismatic Wall",
+  "slug": "prismatic_wall",
+  "level": 9,
+  "school": "abjuration",
+  "classes": ["бард", "волшебник"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": "стена до 90×30 фт (толщина 1 дюйм) или сфера диаметром 30 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "10 минут",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con", "dex"],
+  "save_outcome": "зависит от слоя: половина урона (слои 1–5)",
+  "damage": [
+   { "dice": "12d6", "damage_type": "fire" },
+   { "dice": "12d6", "damage_type": "acid" },
+   { "dice": "12d6", "damage_type": "lightning" },
+   { "dice": "12d6", "damage_type": "poison" },
+   { "dice": "12d6", "damage_type": "cold" }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Разноцветная плоскость образует вертикальную стену до 90×30 футов толщиной 1 дюйм либо сферу диаметром 30 футов с центром на точке в пределах дистанции. Если стена пройдёт по пространству существа, заклинание заканчивается без эффекта. Стена испускает Яркий свет на 100 футов и Тусклый ещё на 100. Вы и указанные вами существа проходят сквозь неё без вреда; иное существо, видящее стену, оказавшись в 20 футах от неё или начиная там ход, должно преуспеть в спасброске Телосложения, иначе Ослеплено на 1 минуту. Стена состоит из 7 слоёв; проходящий сквозь неё совершает спасбросок Ловкости против каждого слоя: 1 красный — 12к6 Огнём; 2 оранжевый — 12к6 Кислотой; 3 жёлтый — 12к6 Электричеством; 4 зелёный — 12к6 Ядом; 5 голубой — 12к6 Холодом (успех — половина); 6 синий — Опутан, три проваленных спасброска Телосложения — Окаменение; 7 фиолетовый — Ослеплён, провал спасброска Мудрости — перенос на другой план. Слои (КЗ 10) уничтожаются по одному от красного к фиолетовому особыми средствами (25 урона Холодом; сильный ветер; 60 урона Чистой силой; Создание прохода; 25 урона Огнём; Дневной свет; Рассеивание магии). Поле антимагии на стену не действует.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 9, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "60 футов", "filter": "any" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Создаёт семислойную призматическую стену на 10 минут. Существа в 20 футах, видящие её: спасбросок Телосложения или Ослепление на 1 минуту. Прохождение сквозь стену — спасбросок Ловкости против каждого слоя: 12к6 Огнём/Кислотой/Электричеством/Ядом/Холодом (успех — половина), 6-й слой — Опутан вплоть до Окаменения, 7-й — Ослеплён вплоть до переноса на другой план. Слои уничтожаются по одному от красного к фиолетовому."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-321.txt"
+ },
+ {
+  "name": "Радужные брызги",
+  "en_name": "Prismatic Spray",
+  "slug": "prismatic_spray",
+  "level": 7,
+  "school": "evocation",
+  "classes": ["бард", "волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "конус 60 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "половина урона (лучи 1–5)",
+  "damage": [
+   { "dice": "12d6", "damage_type": "fire" },
+   { "dice": "12d6", "damage_type": "acid" },
+   { "dice": "12d6", "damage_type": "lightning" },
+   { "dice": "12d6", "damage_type": "poison" },
+   { "dice": "12d6", "damage_type": "cold" }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Восемь лучей света вылетают из вас 60-футовым Конусом. Каждое существо в Конусе совершает спасбросок Ловкости; для каждой цели бросьте 1к8, определяя луч: 1 красный — 12к6 урона Огнём; 2 оранжевый — 12к6 Кислотой; 3 жёлтый — 12к6 Электричеством; 4 зелёный — 12к6 Ядом; 5 голубой — 12к6 Холодом (при успехе — половина урона); 6 синий — при провале цель Опутана и совершает спасбросок Телосложения в конце каждого своего хода: три успеха — эффект заканчивается, три провала — Окаменение (снимается, например, Высшим восстановлением); 7 фиолетовый — при провале цель Ослеплена и в начале вашего следующего хода совершает спасбросок Мудрости: успех — слепота заканчивается, провал — существо переносится на другой план бытия (по выбору Мастера); 8 особый — в цель попадают два луча (бросьте дважды, перебрасывая «8»).",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 7, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "self", "area": { "kind": "cone", "size": 60 }, "filter": "any" },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "12d6",
+       "type": "fire",
+       "on_success": "half"
+      },
+      {
+       "kind": "narrative",
+       "description": "Тип урона определяет 1к8: 1 Огонь, 2 Кислота, 3 Электричество, 4 Яд, 5 Холод. 6 — вместо урона Опутан (3 провала спасброска Телосложения — Окаменение), 7 — вместо урона Ослеплён (провал спасброска Мудрости — перенос на другой план), 8 — два луча."
+      }
+     ],
+     "on_success": [
+      {
+       "kind": "damage",
+       "dice": "12d6",
+       "type": "fire",
+       "on_success": "half"
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-322.txt"
+ },
+ {
+  "name": "Разговор с мёртвыми",
+  "en_name": "Speak with Dead",
+  "slug": "speak_with_dead",
+  "level": 3,
+  "school": "necromancy",
+  "classes": ["бард", "волшебник", "жрец"],
+  "casting_time": "Действие",
+  "range": "10 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "горящие благовония",
+  "duration": "10 минут",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы даёте подобие жизни трупу по вашему выбору в пределах дистанции, позволяя ему отвечать на ваши вопросы. У трупа должен быть рот; заклинание проваливается, если существо было Нежитью в момент смерти или труп уже был целью этого заклинания за последние 10 дней. Пока заклинание активно, вы можете задать трупу до пяти вопросов. Труп знает только то, что знал при жизни, включая языки. Ответы обычно короткие, загадочные или невыразительные; труп не обязан отвечать правдиво, если вы враждебны к нему или он распознаёт в вас врага. Заклинание не возвращает душу: труп не узнаёт новую информацию, не осознаёт происходившего после смерти и не может рассуждать о будущем.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 3, "amount": 1 }
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Оживите труп с ртом (не бывший Нежитью и не опрошенный за 10 дней) на 10 минут и задайте ему до пяти вопросов; он знает лишь то, что знал при жизни, и не обязан говорить правду врагу."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-322.txt"
+ },
+ {
+  "name": "Разговор с Растениями",
+  "en_name": "Speak with Plants",
+  "slug": "speak_with_plants",
+  "level": 3,
+  "school": "transmutation",
+  "classes": ["бард", "друид", "следопыт"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 30 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "10 минут",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы наделяете растения в недвижимой 30-футовой Эманации ограниченным сознанием и движением: они могут общаться с вами и выполнять ваши простые инструкции. Можно расспросить их о событиях за последний день — о проходивших существах, погоде и прочих обстоятельствах. На время действия заклинания вы можете превратить Труднопроходимую местность, вызванную растениями (кусты и заросли), в обычную местность, или наоборот — обычную местность, где есть растения, в Труднопроходимую. Растения не могут выкапываться и перемещаться, но свободно двигают ветками, ростками и стеблями. Если в области есть существо с типом Растение, вы можете общаться с ним, как если бы у вас был общий язык.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 3, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "self", "area": { "kind": "emanation", "size": 30 }, "filter": "any" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "10 минут растения в 30-футовой Эманации общаются с вами и выполняют простые инструкции; можно превращать растительную Труднопроходимую местность в обычную и наоборот."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-322.txt"
+ },
+ {
+  "name": "Разрушительная волна",
+  "en_name": "Destructive Wave",
+  "slug": "destructive_wave",
+  "level": 5,
+  "school": "evocation",
+  "classes": ["паладин"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": "эманация 30 фт",
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["con"],
+  "save_outcome": "половина урона, без Сбит с ног",
+  "damage": [
+   { "dice": "5d6", "damage_type": "thunder" },
+   { "dice": "5d6", "damage_type": "radiant" }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "От вас расходится разрушительная энергия 30-футовой Эманацией. Каждое существо по вашему выбору в Эманации совершает спасбросок Телосложения. При провале цель получает 5к6 урона Звуком и 5к6 урона Излучением или Некротической энергией (по вашему выбору) и становится Сбитой с ног. При успехе цель получает только половину этого урона.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "self", "area": { "kind": "emanation", "size": 30 }, "filter": "any" },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "con",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "5d6",
+       "type": "thunder",
+       "on_success": "half"
+      },
+      {
+       "kind": "damage",
+       "dice": "5d6",
+       "type": "radiant",
+       "on_success": "half"
+      },
+      {
+       "kind": "condition",
+       "value": "prone",
+       "op": "apply"
+      },
+      {
+       "kind": "narrative",
+       "description": "Вместо урона Излучением можно выбрать Некротическую энергию. Действует только на выбранных вами существ в Эманации."
+      }
+     ],
+     "on_success": [
+      {
+       "kind": "damage",
+       "dice": "5d6",
+       "type": "thunder",
+       "on_success": "half"
+      },
+      {
+       "kind": "damage",
+       "dice": "5d6",
+       "type": "radiant",
+       "on_success": "half"
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-323.txt"
+ },
+ {
+  "name": "Разящее око",
+  "en_name": "Eyebite",
+  "slug": "eyebite",
+  "level": 6,
+  "school": "necromancy",
+  "classes": ["бард", "волшебник", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["wis"],
+  "save_outcome": "нет эффекта; это существо нельзя выбрать повторно этим сотворением",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Пока заклинание активно, ваши глаза становятся абсолютно чёрными. Одно существо по вашему выбору в пределах 60 футов, которое вы видите, должно преуспеть в спасброске Мудрости, иначе на время длительности попадает под один из эффектов по вашему выбору. Сон: цель Бессознательна; просыпается, получив урон, или если другое существо действием потрясёт её. Паника: цель Испугана; в каждый свой ход она обязана совершать действие Рывок и перемещаться прочь от вас безопасным и коротким маршрутом; если цель окажется в 60+ футах от вас и не сможет вас видеть, эффект заканчивается. Слабость: цель Отравлена. В каждый последующий ход вы можете действием Магия выбрать другое существо; нельзя повторно выбрать существо, преуспевшее в спасброске против этого сотворения заклинания.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 6, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "single", "range": "60 футов", "filter": "any" },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "wis",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "narrative",
+       "description": "По вашему выбору на время концентрации: Сон — цель Бессознательна (просыпается от урона или если её разбудят действием); Паника — цель Испугана и обязана Рывком убегать от вас; Слабость — цель Отравлена."
+      }
+     ],
+     "on_success": []
+    },
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "В каждый последующий ход можно действием Магия выбрать новое существо; преуспевшее в спасброске существо нельзя выбрать снова этим сотворением."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-323.txt"
+ },
+ {
+  "name": "Распад",
+  "en_name": "Disintegrate",
+  "slug": "disintegrate",
+  "level": 6,
+  "school": "transmutation",
+  "classes": ["волшебник", "чародей"],
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "магнетит и щепотка пыли",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["dex"],
+  "save_outcome": "нет эффекта",
+  "damage": [
+   { "dice": "10d6+40", "damage_type": "force" }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы запускаете зелёный луч в цель, которую видите в пределах дистанции: существо, объект или творение из магической силы (например, стену от заклинания Силовая стена). Существо-цель совершает спасбросок Ловкости. При провале оно получает 10к6 + 40 урона Чистой силой. Если этот урон опускает Хиты цели до 0, она и всё немагическое, что она несла и носила, превращается в кучку серого порошка; вернуть её к жизни можно только заклинаниями Истинное воскрешение или Желание. Заклинание автоматически вызывает распад немагического объекта или творения из магической силы Большого размера или меньше; у цели Огромного размера или больше распадается часть в Кубе со стороной 10 футов.",
+  "upcast_description": "Урон увеличивается на 3к6 за каждый уровень ячейки выше шестого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 6, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "single", "range": "60 футов", "filter": "any" },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "dex",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "10d6 + 40",
+       "type": "force",
+       "scaling": { "per": "spell_slot_above", "dice": "3d6" }
+      },
+      {
+       "kind": "narrative",
+       "description": "Если урон опускает Хиты цели до 0, она и всё немагическое на ней распадается в пыль (воскрешение — только Истинное воскрешение или Желание). Немагический объект или творение силы Большого размера и меньше распадается автоматически, без спасброска."
+      }
+     ],
+     "on_success": []
+    }
+   ]
+  },
+  "source_page": "page-324.txt"
+ },
+ {
+  "name": "Рассеивание добра и зла",
+  "en_name": "Dispel Evil and Good",
+  "slug": "dispel_evil_and_good",
+  "level": 5,
+  "school": "abjuration",
+  "classes": ["жрец", "паладин"],
+  "casting_time": "Действие",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "порошок серебра и железа",
+  "duration": "Концентрация, вплоть до 1 минуты",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["cha"],
+  "save_outcome": "цель не отправляется на родной план (функция Изгнание)",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Пока заклинание активно, Исчадия, Небожители, Нежить, Феи и Элементали совершают броски атаки по вам с Помехой. Вы можете досрочно закончить заклинание одним из способов. Поломка чар: действием Магия вы касаетесь существа, одержимого либо имеющего состояние Очарованный или Испуганный от существ перечисленных типов, — цель перестаёт быть одержимой, Очарованной или Испуганной ими. Изгнание: действием Магия выберите видимое существо перечисленных типов в пределах 5 футов; оно должно преуспеть в спасброске Харизмы, иначе будет отправлено на родной план, если уже не там (Нежить отправляется в Царство Теней, Феи — в Страну Фей).",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Пока активна концентрация: Исчадия, Небожители, Нежить, Феи и Элементали атакуют вас с Помехой. Можно досрочно закончить: Поломка чар — касание снимает одержимость/Очарование/Испуг от таких существ; Изгнание — существо такого типа в 5 футах совершает спасбросок Харизмы, при провале отправляется на родной план."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-324.txt"
+ },
+ {
+  "name": "Рассеивание магии",
+  "en_name": "Dispel Magic",
+  "slug": "dispel_magic",
+  "level": 3,
+  "school": "abjuration",
+  "classes": ["бард", "волшебник", "друид", "жрец", "колдун", "паладин", "следопыт", "чародей"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Выберите одно существо, объект или магический эффект в пределах дистанции. Любое активное заклинание 3-го уровня и ниже, нацеленное на цель, заканчивается. Для каждого активного заклинания 4-го уровня и выше на цели совершите проверку характеристики, используя вашу заклинательную характеристику (Сл 10 + уровень активного заклинания); при успехе заклинание заканчивается.",
+  "upcast_description": "Вы автоматически заканчиваете заклинание на цели, если уровень этого заклинания меньше или равен уровню использованной вами ячейки.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 3, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "single", "range": "120 футов", "filter": "any" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Заклинания 3-го уровня и ниже на цели заканчиваются. Для каждого заклинания 4-го уровня и выше — проверка заклинательной характеристики Сл 10 + уровень заклинания; успех заканчивает его. Ячейка выше 3-й автоматически снимает заклинания её уровня и ниже."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-325.txt"
+ },
+ {
+  "name": "Регенерация",
+  "en_name": "Regenerate",
+  "slug": "regenerate",
+  "level": 7,
+  "school": "transmutation",
+  "classes": ["бард", "друид", "жрец"],
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "молитвенный барабан",
+  "duration": "1 час",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": true,
+  "heal_dice": "4d8+15",
+  "description": "Существо, которого вы касаетесь, восстанавливает 4к8 + 15 Хитов. Пока заклинание активно (1 час), цель восстанавливает 1 Хит в начале каждого своего хода, и любые отрубленные части тела вырастают через 2 минуты.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 7, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "single", "range": "touch", "filter": "ally" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "healing",
+       "amount": "4d8 + 15"
+      },
+      {
+       "kind": "narrative",
+       "description": "Время сотворения — 1 минута. В течение 1 часа цель восстанавливает 1 Хит в начале каждого своего хода; отрубленные части тела отрастают через 2 минуты."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-325.txt"
+ },
+ {
+  "name": "Реинкарнация",
+  "en_name": "Reincarnate",
+  "slug": "reincarnate",
+  "level": 5,
+  "school": "necromancy",
+  "classes": ["друид"],
+  "casting_time": "1 час",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "редкие масла стоимостью не менее 1 000 ЗМ, расходуемые заклинанием",
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь мёртвого Гуманоида или его части. Если существо мертво не более 10 дней, заклинание формирует для него новое взрослое тело и зовёт душу занять его. Бросьте 1к10, чтобы определить вид нового тела (1 — Аасимар, 2 — Драконорождённый, 3 — Дварф, 4 — Эльф, 5 — Гном, 6 — Голиаф, 7 — Полурослик, 8 — Человек, 9 — Орк, 10 — Тифлинг), либо Мастер выбирает другой игровой вид. Реинкарнировавшее существо выбирает опции из описания нового вида и помнит свою прошлую жизнь. Оно сохраняет все способности, бывшие в прежнем теле, но теряет особенности прошлого вида и приобретает выбранные новые.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "single", "range": "touch", "filter": "any" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Время сотворения — 1 час; расходуются масла на 1 000 ЗМ. Возвращает к жизни Гуманоида, мёртвого не более 10 дней, в новом теле случайного вида (1к10 по таблице)."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-325.txt"
+ },
+ {
+  "name": "Рост растений",
+  "en_name": "Plant Growth",
+  "slug": "plant_growth",
+  "level": 3,
+  "school": "transmutation",
+  "classes": ["бард", "друид", "следопыт"],
+  "casting_time": "Действие (Чрезмерный рост) или 8 часов (Урожайность)",
+  "range": "150 футов",
+  "area": "сфера радиусом 100 фт (Чрезмерный рост) или радиус 0,5 мили (Урожайность)",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Заклинание вливает жизненные силы в растения; используемое время сотворения определяет вариант. Чрезмерный рост (Действие): все обычные растения в Сфере радиусом 100 футов с центром на точке в пределах дистанции становятся густыми и рослыми — существо, перемещающееся по этой местности, тратит 4 фута перемещения за каждый пройденный фут. Можно исключить одну или несколько областей любого размера внутри области действия. Урожайность (8 часов): все растения в радиусе полумили с центром на точке в пределах дистанции становятся удобренными на 365 дней и приносят удвоенный урожай при сборе; растения могут получить преимущество только от одного Роста растений в год.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 3, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "150 футов", "area": { "kind": "sphere", "size": 100 }, "filter": "any" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Чрезмерный рост (Действие): растения в Сфере радиусом 100 футов густеют — 4 фута перемещения за каждый пройденный фут (можно исключить области). Урожайность (сотворение 8 часов): растения в радиусе полумили удобрены на год и дают двойной урожай."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-325.txt"
+ },
+ {
+  "name": "Свобода перемещения",
+  "en_name": "Freedom of Movement",
+  "slug": "freedom_of_movement",
+  "level": 4,
+  "school": "abjuration",
+  "classes": ["бард", "друид", "жрец", "следопыт"],
+  "casting_time": "Действие",
+  "range": "Касание",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "кожаный ремешок",
+  "duration": "1 час",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь согласного существа. Пока заклинание активно, на перемещение цели не влияет Труднопроходимая местность, а заклинания и прочие магические эффекты не могут ни уменьшить её Скорость, ни сделать её Парализованной или Опутанной. Цель также получает Скорость плавания, равную её Скорости, и может потратить 5 футов перемещения, чтобы автоматически высвободиться из немагических оков, таких как кандалы или состояние Схваченный от другого существа.",
+  "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше четвёртого.",
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 4, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "single", "range": "touch", "filter": "ally" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "На 1 час цель игнорирует Труднопроходимую местность; магия не может снизить её Скорость, Парализовать или Опутать её; Скорость плавания равна Скорости; 5 футов перемещения освобождают от немагических оков и Захвата."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-326.txt"
+ },
+ {
+  "name": "Связь с иным планом",
+  "en_name": "Contact Other Plane",
+  "slug": "contact_other_plane",
+  "level": 5,
+  "school": "divination",
+  "classes": ["волшебник", "колдун"],
+  "casting_time": "1 минута",
+  "range": "На себя",
+  "area": null,
+  "component_verbal": true,
+  "component_somatic": false,
+  "component_material": false,
+  "material_text": null,
+  "duration": "1 минута",
+  "concentration": false,
+  "ritual": true,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["int"],
+  "save_outcome": "успех: можно задать до пяти вопросов (спасбросок Сл 15 совершаете вы сами)",
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы мысленно связываетесь с полубогом, духом давно умершего мудреца или другой таинственной сущностью с иного плана. Контакт может свести вас с ума: при сотворении совершите спасбросок Интеллекта Сл 15. При успехе вы можете задать сущности до пяти вопросов до окончания заклинания; Мастер отвечает на каждый вопрос одним словом («да», «нет», «возможно», «никогда», «неважно», «неясно»), а если односложный ответ может ввести в заблуждение — короткой фразой. При провале вы получаете 6к6 урона Психической энергией и становитесь Недееспособным, пока не завершите Долгий отдых; сотворённое на вас Высшее восстановление прекращает этот эффект.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "self" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Время сотворения — 1 минута (или Ритуал). Совершите спасбросок Интеллекта Сл 15: успех — до пяти вопросов сущности с односложными ответами Мастера; провал — вы получаете 6к6 урона Психической энергией и Недееспособны до конца Долгого отдыха (снимается Высшим восстановлением)."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-326.txt"
+ },
+ {
+  "name": "Святилище",
+  "en_name": "Hallow",
+  "slug": "hallow",
+  "level": 5,
+  "school": "abjuration",
+  "classes": ["жрец"],
+  "casting_time": "24 часа",
+  "range": "Касание",
+  "area": "радиус до 60 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "благовония стоимостью не менее 1 000 ЗМ, расходуемые заклинанием",
+  "duration": "Пока не рассеется",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы касаетесь точки и наполняете область радиусом до 60 футов святой или нечестивой силой; заклинание проваливается, если в радиус попадает область другого Святилища. Священный оберег: выберите любые из типов — Аберрации, Небожители, Элементали, Феи, Исчадия, Нежить. Существа выбранных типов не могут добровольно войти в область, а существа, одержимые, Очарованные или Испуганные ими, освобождаются от этого, пока находятся в области. Дополнительный эффект (один): Храбрость (выбранные типы не могут стать Испуганными); Тьма (обычный и более слабый магический свет не освещает область); Дневной свет (яркий свет, не затмевается слабой магической тьмой); Вечный покой (похороненные тела не становятся Нежитью); запрет входа/выхода телепортацией и межпланарным перемещением для выбранных типов; Страх (выбранные типы Испуганы в области); Сопротивление одному типу урона; Тишина (звук не пересекает границу); Языки (общение без общего языка); Уязвимость одному типу урона.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Время сотворения — 24 часа; расходуются благовония на 1 000 ЗМ. Область радиусом до 60 футов: выбранные типы существ (Аберрации, Небожители, Элементали, Феи, Исчадия, Нежить) не могут добровольно войти; плюс один дополнительный эффект из списка (Храбрость, Тьма, Дневной свет, Вечный покой, антителепорт, Страх, Сопротивление, Тишина, Языки, Уязвимость)."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-327.txt"
+ },
+ {
+  "name": "Силовая стена",
+  "en_name": "Wall of Force",
+  "slug": "wall_of_force",
+  "level": 5,
+  "school": "evocation",
+  "classes": ["волшебник"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "до 10 плит 10×10 фт либо сфера/купол радиусом 10 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": true,
+  "material_text": "осколок стекла",
+  "duration": "Концентрация, вплоть до 10 минут",
+  "concentration": true,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": false,
+  "save_types": [],
+  "save_outcome": null,
+  "damage": [],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Невидимая стена из силового поля появляется в точке в пределах дистанции: горизонтально, вертикально или под наклоном, свободно паря или опираясь на твёрдую поверхность. Форма: полусфера-купол или сфера радиусом до 10 футов, либо плоская поверхность из до десяти соседствующих плит 10×10 футов. Толщина стены — 1/4 дюйма; она существует, пока активно заклинание. Если стена при появлении проходит по пространству существа, оно выталкивается по одну из сторон стены (по вашему выбору). Ничто не может физически пройти сквозь стену. Она обладает иммунитетом ко всем типам урона и не может быть рассеяна Рассеиванием магии, но заклинание Распад полностью уничтожает её. Стена простирается и на Эфирный план, блокируя эфирные перемещения сквозь себя.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "120 футов", "filter": "any" },
+   "effects": [
+    {
+     "resolution": "auto",
+     "result": [
+      {
+       "kind": "narrative",
+       "description": "Создаёт непроходимую невидимую стену (до 10 плит 10×10 футов или сфера/купол радиусом 10 футов) на время концентрации до 10 минут: иммунитет ко всему урону, не снимается Рассеиванием магии, уничтожается Распадом, блокирует и Эфирный план."
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-328.txt"
+ },
+ {
+  "name": "Синаптический разряд",
+  "en_name": "Synaptic Static",
+  "slug": "synaptic_static",
+  "level": 5,
+  "school": "enchantment",
+  "classes": ["бард", "волшебник", "колдун", "чародей"],
+  "casting_time": "Действие",
+  "range": "120 футов",
+  "area": "сфера радиусом 20 фт",
+  "component_verbal": true,
+  "component_somatic": true,
+  "component_material": false,
+  "material_text": null,
+  "duration": "Мгновенная",
+  "concentration": false,
+  "ritual": false,
+  "attack_roll": false,
+  "saving_throw": true,
+  "save_types": ["int"],
+  "save_outcome": "половина урона, без штрафа 1к6",
+  "damage": [
+   { "dice": "8d6", "damage_type": "psychic" }
+  ],
+  "is_healing": false,
+  "heal_dice": null,
+  "description": "Вы вызываете взрыв психической энергии в точке в пределах дистанции. Каждое существо в Сфере радиусом 20 футов с центром в этой точке совершает спасбросок Интеллекта, получая 8к6 урона Психической энергией при провале или половину этого урона при успехе. При провале цель также путается в мыслях на 1 минуту: она вычитает 1к6 из всех своих бросков атаки, проверок характеристик и спасбросков Телосложения, совершаемых для поддержания Концентрации. В конце каждого своего хода цель совершает спасбросок Интеллекта, при успехе заканчивая этот эффект на себе.",
+  "upcast_description": null,
+  "mechanics": {
+   "activation": {
+    "mode": "active",
+    "cost": [
+     { "resource": "action" },
+     { "resource": "spell_slot", "level": 5, "amount": 1 }
+    ]
+   },
+   "targeting": { "shape": "area", "range": "120 футов", "area": { "kind": "sphere", "size": 20 }, "filter": "any" },
+   "effects": [
+    {
+     "resolution": "save",
+     "who": "target",
+     "ability": "int",
+     "dc": "8 + prof + spellcasting",
+     "on_fail": [
+      {
+       "kind": "damage",
+       "dice": "8d6",
+       "type": "psychic",
+       "on_success": "half"
+      },
+      {
+       "kind": "narrative",
+       "description": "На 1 минуту цель вычитает 1к6 из бросков атаки, проверок характеристик и спасбросков Телосложения для Концентрации; в конце каждого своего хода спасбросок Интеллекта заканчивает эффект."
+      }
+     ],
+     "on_success": [
+      {
+       "kind": "damage",
+       "dice": "8d6",
+       "type": "psychic",
+       "on_success": "half"
+      }
+     ]
+    }
+   ]
+  },
+  "source_page": "page-328.txt"
+ }
+]
