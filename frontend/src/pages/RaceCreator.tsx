@@ -129,12 +129,21 @@ const RaceCreator = () => {
 
   const cleanTraits = (arr: RaceTrait[]) => arr.filter((t) => t.name.trim() || t.description.trim());
 
+  const parentRace = isSubrace && parentRaceId
+    ? allRaces.find((r) => r.id === parentRaceId)
+    : undefined;
+
   const previewRace: Race = {
     id: '', name: fd.name || 'Название вида', description: fd.description || 'Описание вида',
     detailed_description: fd.detailed_description || null, image_url: fd.image_url || '',
     rarity: 'common', card_number: '',
-    creature_type: fd.creature_type || null, size: fd.size || null,
-    speed: fd.speed ?? null, extra_speeds: fd.extra_speeds || null, darkvision: fd.darkvision ?? null,
+    is_subrace: isSubrace,
+    parent_race_id: isSubrace ? parentRaceId || null : null,
+    creature_type: isSubrace ? null : (fd.creature_type || null),
+    size: isSubrace ? null : (fd.size || null),
+    speed: isSubrace ? null : (fd.speed ?? null),
+    extra_speeds: isSubrace ? null : (fd.extra_speeds || null),
+    darkvision: fd.darkvision ?? null,
     traits: cleanTraits(traits), lineages: cleanTraits(lineages), level_progression: levelProgression,
     created_at: '', updated_at: '',
   };
@@ -147,10 +156,10 @@ const RaceCreator = () => {
       description: data.description,
       detailed_description: data.detailed_description || null,
       image_url: data.image_url || '',
-      creature_type: data.creature_type || null,
-      size: data.size || null,
-      speed: data.speed ? Number(data.speed) : null,
-      extra_speeds: data.extra_speeds || null,
+      creature_type: isSubrace ? null : (data.creature_type || null),
+      size: isSubrace ? null : (data.size || null),
+      speed: isSubrace ? null : (data.speed ? Number(data.speed) : null),
+      extra_speeds: isSubrace ? null : (data.extra_speeds || null),
       darkvision: data.darkvision != null ? Number(data.darkvision) : null,
       traits: cleanTraits(traits),
       lineages: cleanTraits(lineages),
@@ -256,35 +265,48 @@ const RaceCreator = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Тип существа</label>
-                    <select {...register('creature_type')} className={inputCls}>
-                      {CREATURE_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelCls}>Размер</label>
-                    <select {...register('size')} className={inputCls}>
-                      {RACE_SIZE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                  </div>
-                </div>
+                {!isSubrace && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelCls}>Тип существа</label>
+                        <select {...register('creature_type')} className={inputCls}>
+                          {CREATURE_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Размер</label>
+                        <select {...register('size')} className={inputCls}>
+                          {RACE_SIZE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelCls}>Скорость (фт)</label>
-                    <input type="number" {...register('speed', { valueAsNumber: true })} className={inputCls} placeholder="30" />
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className={labelCls}>Скорость (фт)</label>
+                        <input type="number" {...register('speed', { valueAsNumber: true })} className={inputCls} placeholder="30" />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Тёмное зрение (фт)</label>
+                        <input type="number" {...register('darkvision', { valueAsNumber: true })} className={inputCls} placeholder="0" />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Доп. скорости</label>
+                        <input {...register('extra_speeds')} className={inputCls} placeholder="Плавание 30 фт" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {isSubrace && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelCls}>Тёмное зрение (фт)</label>
+                      <input type="number" {...register('darkvision', { valueAsNumber: true })} className={inputCls} placeholder="0" />
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelCls}>Тёмное зрение (фт)</label>
-                    <input type="number" {...register('darkvision', { valueAsNumber: true })} className={inputCls} placeholder="0" />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Доп. скорости</label>
-                    <input {...register('extra_speeds')} className={inputCls} placeholder="Плавание 30 фт" />
-                  </div>
-                </div>
+                )}
 
                 <div>
                   <label className={labelCls}>Изображение</label>
@@ -357,7 +379,7 @@ const RaceCreator = () => {
               <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 sticky top-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Превью вида</h3>
                 <div className="flex justify-center">
-                  <RacePreview race={previewRace} disableHover />
+                  <RacePreview race={previewRace} parentRaceName={parentRace?.name} disableHover />
                 </div>
               </div>
             </div>

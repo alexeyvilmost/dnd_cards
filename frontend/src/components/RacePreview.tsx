@@ -5,31 +5,37 @@ import Bg3Card from './Bg3Card';
 
 interface RacePreviewProps {
   race: Race;
+  parentRaceName?: string;
   className?: string;
   disableHover?: boolean;
   onClick?: () => void;
 }
 
-const RacePreview: React.FC<RacePreviewProps> = ({ race, className = '', disableHover = false, onClick }) => {
+const RacePreview: React.FC<RacePreviewProps> = ({ race, parentRaceName, className = '', disableHover = false, onClick }) => {
+  const isSubrace = !!race.is_subrace;
+  const subtype = isSubrace
+    ? (parentRaceName ? `Подвид · ${parentRaceName}` : 'Подвид')
+    : 'Вид';
+
   const speedParts: string[] = [];
-  if (race.speed) speedParts.push(`${race.speed} фт`);
-  if (race.extra_speeds) speedParts.push(race.extra_speeds);
+  if (!isSubrace && race.speed) speedParts.push(`${race.speed} фт`);
+  if (!isSubrace && race.extra_speeds) speedParts.push(race.extra_speeds);
   const speed = speedParts.join(', ');
 
   return (
     <Bg3Card
       title={race.name || 'Название вида'}
-      subtype="Вид"
+      subtype={subtype}
       imageUrl={race.image_url}
       disableHover={disableHover}
       onClick={onClick}
       className={className}
     >
       <div className="bg3-stats">
-        {race.creature_type && (
+        {!isSubrace && race.creature_type && (
           <div className="bg3-srow"><span className="bg3-lbl">Тип:</span><span className="bg3-val">{race.creature_type}</span></div>
         )}
-        {race.size && (
+        {!isSubrace && race.size && (
           <div className="bg3-srow"><span className="bg3-lbl">Размер:</span><span className="bg3-val">{race.size}</span></div>
         )}
         {speed && (

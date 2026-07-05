@@ -40,6 +40,22 @@ const RESOURCE_CATEGORY_OPTIONS = [
   { value: 'character', label: 'Персонаж' },
 ];
 
+function splitRacesByKind(list: Race[]) {
+  const mainRaces: Race[] = [];
+  const subraces: Race[] = [];
+  for (const race of list) {
+    if (race.is_subrace) subraces.push(race);
+    else mainRaces.push(race);
+  }
+  return { mainRaces, subraces };
+}
+
+function raceSubtypeLabel(race: Race, parentById: Map<string, Race>): string {
+  if (!race.is_subrace) return 'Вид';
+  const parent = race.parent_race_id ? parentById.get(race.parent_race_id) : undefined;
+  return parent ? `Подвид · ${parent.name}` : 'Подвид';
+}
+
 const CardLibrary = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
@@ -118,6 +134,12 @@ const CardLibrary = () => {
   const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
   const [hoveredBackground, setHoveredBackground] = useState<Background | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const { mainRaces, subraces: subraceRaces } = useMemo(() => splitRacesByKind(races), [races]);
+  const raceParentById = useMemo(
+    () => new Map(mainRaces.map((r) => [r.id, r])),
+    [mainRaces],
+  );
 
   // Загрузка карточек
   const loadCards = async (page = 1, append = false) => {
@@ -2046,19 +2068,39 @@ const CardLibrary = () => {
       )}
       {!loading && contentType === 'races' && races.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">Показано: {races.length} из {totalCards} видов</div>
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {mainRaces.length} {mainRaces.length === 1 ? 'вид' : mainRaces.length < 5 ? 'вида' : 'видов'}
+            {subraceRaces.length > 0 && (
+              <>, {subraceRaces.length} {subraceRaces.length === 1 ? 'подвид' : subraceRaces.length < 5 ? 'подвида' : 'подвидов'}</>
+            )}
+            {' '}(всего {races.length} из {totalCards})
+          </div>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
-              {races.map((race) => (
+              {mainRaces.map((race) => (
                 <div key={race.id} className="flex justify-center">
                   <RacePreview race={race} onClick={() => handleRaceClick(race)} />
+                </div>
+              ))}
+              {mainRaces.length > 0 && subraceRaces.length > 0 && (
+                <div className="col-span-full border-t border-gray-300 my-2 pt-6">
+                  <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">Подвиды</div>
+                </div>
+              )}
+              {subraceRaces.map((race) => (
+                <div key={race.id} className="flex justify-center">
+                  <RacePreview
+                    race={race}
+                    parentRaceName={race.parent_race_id ? raceParentById.get(race.parent_race_id)?.name : undefined}
+                    onClick={() => handleRaceClick(race)}
+                  />
                 </div>
               ))}
             </div>
           ) : (
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                {races.map((race) => (
+                {mainRaces.map((race) => (
                   <button
                     key={race.id}
                     onClick={() => handleRaceClick(race)}
@@ -2073,7 +2115,32 @@ const CardLibrary = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{race.name}</div>
-                        <div className="flex items-center mt-1 text-xs text-[#a59886]">Вид</div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">{raceSubtypeLabel(race, raceParentById)}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                {mainRaces.length > 0 && subraceRaces.length > 0 && (
+                  <div className="col-span-full border-t border-[#8a7320]/40 my-3 pt-4 pb-1">
+                    <div className="text-xs font-medium uppercase tracking-wide text-[#a59886]">Подвиды</div>
+                  </div>
+                )}
+                {subraceRaces.map((race) => (
+                  <button
+                    key={race.id}
+                    onClick={() => handleRaceClick(race)}
+                    onMouseEnter={() => setHoveredRace(race)}
+                    onMouseLeave={() => setHoveredRace(null)}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        <img src={race.image_url && race.image_url.trim() !== '' ? race.image_url : '/default_image.png'} alt={race.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{race.name}</div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">{raceSubtypeLabel(race, raceParentById)}</div>
                       </div>
                     </div>
                   </button>
@@ -2081,7 +2148,11 @@ const CardLibrary = () => {
               </div>
               {hoveredRace && (
                 <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
-                  <RacePreview race={hoveredRace} disableHover={true} />
+                  <RacePreview
+                    race={hoveredRace}
+                    parentRaceName={hoveredRace.parent_race_id ? raceParentById.get(hoveredRace.parent_race_id)?.name : undefined}
+                    disableHover={true}
+                  />
                 </div>
               )}
             </div>
