@@ -210,3 +210,8 @@
   .csheet-cols { display: flex; flex-direction: column; overflow-y: auto; }
   .csheet-col { overflow: visible; }
 }
+
+/* Кликабельные броски (спасброски/навыки) */
+.cs-rollable { cursor: pointer; }
+.cs-rollable:hover .cs-skill-v,
+.cs-rollable:hover span { color: var(--forge-gold); }

@@ -28,6 +28,7 @@ import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CharacterSheetV2 from './CharacterSheetV2';
 import { rollEvent } from '../engine/events';
+import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
 
@@ -264,6 +265,24 @@ const CharacterSheetMVP = () => {
     }
   };
 
+  // Клик по спасброску/навыку — бросок к20 с разбивкой в журнал.
+  const rollCheck = async (
+    label: string,
+    parts: import('../mvp/contracts').RollModifier[],
+    rollKind: 'saving_throw' | 'ability_check',
+    filter?: Record<string, unknown>,
+  ) => {
+    const collected = runtimeState
+      ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
+      : { advantage: 'none' as const, modifiers: [] };
+    const roll = rollD20({
+      advantage: collected.advantage,
+      modifiers: [...parts, ...collected.modifiers],
+      rng: () => Math.random(),
+    });
+    await appendRuntimeEvents([rollEvent(label, roll)]);
+  };
+
   const headerLine = [
     assembled.race?.name,
     lineageName,
@@ -354,6 +373,8 @@ const CharacterSheetMVP = () => {
             character={character}
             assembled={assembled}
             ruleState={ruleState}
+            showResources={false}
+            showEffects={false}
             equipCards={equipCards}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
@@ -363,6 +384,7 @@ const CharacterSheetMVP = () => {
             character={character}
             ruleState={ruleState}
             onUpdated={setCharacter}
+            passives={passives}
           />
 
           <SheetRuntimePanel
@@ -452,16 +474,28 @@ const CharacterSheetMVP = () => {
                 const saveBd = sheetCtx && runtimeState
                   ? breakdownValue(`save:${k}`, sheetCtx, runtimeState, passives)
                   : null;
+                const parts = saveBd?.parts
+                  ?? [{ value: bonus, source: ABILITY_LABEL_RU[k], reason: 'спасбросок' }];
                 return (
                   <li key={k}>
                     <span className={proficient ? 'sheet-prof' : ''}>{ABILITY_LABEL_RU[k]}</span>
-                    {saveBd ? (
-                      <ValueBreakdownTip breakdown={saveBd} label={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
+                    <span className="sheet-roll-cell">
+                      {saveBd ? (
+                        <ValueBreakdownTip breakdown={saveBd} label={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
+                          <span>{fmtMod(bonus)}</span>
+                        </ValueBreakdownTip>
+                      ) : (
                         <span>{fmtMod(bonus)}</span>
-                      </ValueBreakdownTip>
-                    ) : (
-                      <span>{fmtMod(bonus)}</span>
-                    )}
+                      )}
+                      <button
+                        type="button"
+                        className="sheet-dice-btn"
+                        title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
+                        onClick={() => rollCheck(`Спасбросок (${ABILITY_LABEL_RU[k]})`, parts, 'saving_throw', { ability: k })}
+                      >
+                        <Dices size={13} />
+                      </button>
+                    </span>
                   </li>
                 );
               })}
@@ -485,16 +519,28 @@ const CharacterSheetMVP = () => {
                   proficient ? `владение ${fmtMod(pb)}${grant ? ` (${grantReason(grant)})` : ''}` : null,
                   expert ? `экспертиза ${fmtMod(pb)}` : null,
                 ].filter(Boolean).join(' + ');
+                const parts = skillBd?.parts
+                  ?? [{ value: bonus, source: skill.label, reason: 'навык' }];
                 return (
                   <li key={skill.id} title={`${fmtMod(bonus)} = ${formula}`}>
                     <span className={proficient ? 'sheet-prof' : ''}>{skill.label}{expert ? ' (эксп.)' : ''}</span>
-                    {skillBd && !proficient ? (
-                      <ValueBreakdownTip breakdown={skillBd} label={skill.label}>
+                    <span className="sheet-roll-cell">
+                      {skillBd ? (
+                        <ValueBreakdownTip breakdown={skillBd} label={skill.label}>
+                          <span>{fmtMod(bonus)}</span>
+                        </ValueBreakdownTip>
+                      ) : (
                         <span>{fmtMod(bonus)}</span>
-                      </ValueBreakdownTip>
-                    ) : (
-                      <span>{fmtMod(bonus)}</span>
-                    )}
+                      )}
+                      <button
+                        type="button"
+                        className="sheet-dice-btn"
+                        title={`Проверка: ${skill.label}`}
+                        onClick={() => rollCheck(`Проверка (${skill.label})`, parts, 'ability_check', { skill: skill.id })}
+                      >
+                        <Dices size={13} />
+                      </button>
+                    </span>
                   </li>
                 );
               })}

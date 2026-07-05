@@ -22,6 +22,9 @@ interface Props {
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
   embedded?: boolean;
+  /** false — ресурсы/эффекты рисует соседняя SheetRuntimePanel (классический макет). */
+  showResources?: boolean;
+  showEffects?: boolean;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -59,6 +62,8 @@ export default function SheetActionsPanel({
   onUpdated,
   onEvents,
   embedded,
+  showResources = true,
+  showEffects = true,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,7 +170,7 @@ export default function SheetActionsPanel({
     <>
       {error && <p className="issues">{error}</p>}
 
-      {resourceKeys.length > 0 && (
+      {showResources && resourceKeys.length > 0 && (
         <div className="cs-resources">
           {resourceKeys.map((key) => (
             <div key={key} className="cs-resource" title={key}>
@@ -222,7 +227,7 @@ export default function SheetActionsPanel({
         </div>
       ))}
 
-      {runtime.activeEffects.length > 0 && (
+      {showEffects && runtime.activeEffects.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 8 }}>
           <h3 className="sheet-h3">Активные эффекты</h3>
           <ul className="sheet-active-effects">

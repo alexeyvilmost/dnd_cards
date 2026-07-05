@@ -5,6 +5,9 @@ import type { CharacterDraft, ForgeCharacter } from '../character/types';
 import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
 import type { CharacterContext, EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { breakdownValue } from '../engine/breakdown';
+import { rollEvent } from '../engine/events';
+import { collectRollModifiers } from '../engine/modifiers';
+import { rollD20 } from '../engine/roll';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
 import { SKILLS } from '../mechanics/registries';
@@ -58,6 +61,24 @@ const CharacterSheetV2 = ({
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [hpOpen, setHpOpen] = useState(false);
+
+  // Клик по спасброску/навыку — бросок к20 в журнал (учёт активных эффектов).
+  const rollCheck = (
+    label: string,
+    parts: { value: number; source: string; reason?: string }[],
+    rollKind: 'saving_throw' | 'ability_check',
+    filter?: Record<string, unknown>,
+  ) => {
+    const collected = runtimeState
+      ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
+      : { advantage: 'none' as const, modifiers: [] };
+    const roll = rollD20({
+      advantage: collected.advantage,
+      modifiers: [...parts, ...collected.modifiers],
+      rng: () => Math.random(),
+    });
+    onEvents([rollEvent(label, roll)]);
+  };
 
   const scores = draft.abilities;
   const pb = ruleState.proficiencyBonus;
@@ -154,7 +175,18 @@ const CharacterSheetV2 = ({
                       <span className="cs-abil-sc">{score}</span>
                     </div>
                     <div className="cs-abil-mod">{fmtMod(mod)}</div>
-                    <div className={`cs-abil-save${proficient ? ' on' : ''}`} title={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
+                    <div
+                      className={`cs-abil-save${proficient ? ' on' : ''} cs-rollable`}
+                      title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => rollCheck(
+                        `Спасбросок (${ABILITY_LABEL_RU[k]})`,
+                        saveBd?.parts ?? [{ value: saveBonus, source: abbr3(ABILITY_LABEL_RU[k]) }],
+                        'saving_throw',
+                        { ability: k },
+                      )}
+                    >
                       <i className="cs-dot" />
                       {saveBd ? (
                         <ValueBreakdownTip breakdown={saveBd} label={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
@@ -183,7 +215,17 @@ const CharacterSheetV2 = ({
                   expert ? `эксп ${fmtMod(pb)}` : null,
                 ].filter(Boolean).join(' + ');
                 return (
-                  <li key={skill.id} className={proficient ? 'on' : ''} title={`${fmtMod(bonus)} = ${tip}`}>
+                  <li
+                    key={skill.id}
+                    className={`${proficient ? 'on' : ''} cs-rollable`}
+                    title={`${fmtMod(bonus)} = ${tip} · клик — бросок`}
+                    onClick={() => rollCheck(
+                      `Проверка (${skill.label})`,
+                      skillBd?.parts ?? [{ value: bonus, source: skill.label }],
+                      'ability_check',
+                      { skill: skill.id },
+                    )}
+                  >
                     <i className="cs-dot" />
                     <span className="cs-skill-nm">{skill.label}{expert ? ' ⁑' : ''}</span>
                     <span className="cs-skill-ab">{abbr3(ABILITY_LABEL_RU[ability])}</span>
@@ -214,6 +256,7 @@ const CharacterSheetV2 = ({
               ruleState={ruleState}
               onUpdated={onUpdated}
               embedded
+              passives={passives}
             />
           </CollapsibleSection>
 

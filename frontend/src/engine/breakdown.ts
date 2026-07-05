@@ -14,10 +14,11 @@ const ABILITY_LABEL: Record<AbilityKey, string> = {
   str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
 };
 
-const FIGHTER_SAVE_PROF: AbilityKey[] = ['str', 'con'];
-
-function fighterSaves(ctx: CharacterContext): Set<AbilityKey> {
-  if (ctx.classLevels?.fighter) return new Set(FIGHTER_SAVE_PROF);
+/** Владения спасбросками: из rule_state (ctx.saveProficiencies); фолбэк —
+ * старый хардкод Воина, чтобы не сломать вызовы без контекста владений. */
+function saveProficiencies(ctx: CharacterContext): Set<AbilityKey> {
+  if (ctx.saveProficiencies) return new Set(ctx.saveProficiencies as AbilityKey[]);
+  if (ctx.classLevels?.fighter) return new Set<AbilityKey>(['str', 'con']);
   return new Set();
 }
 
@@ -62,7 +63,7 @@ function breakdownAC(
   };
 }
 
-function breakdownMaxHp(character: CharacterContext, state: RuntimeState): ValueBreakdown {
+function breakdownMaxHp(character: CharacterContext, _state: RuntimeState): ValueBreakdown {
   const hitDie = character.hitDie ?? defaultHitDie(character);
   const dieMax = hitDieMax(hitDie);
   const conMod = character.abilityMods.con ?? 0;
@@ -91,7 +92,7 @@ function breakdownSave(ability: AbilityKey, character: CharacterContext): ValueB
     { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики' },
   ];
   let total = mod;
-  if (fighterSaves(character).has(ability)) {
+  if (saveProficiencies(character).has(ability)) {
     parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение' });
     total += character.profBonus;
   }
@@ -101,10 +102,18 @@ function breakdownSave(ability: AbilityKey, character: CharacterContext): ValueB
 function breakdownSkill(skillId: string, character: CharacterContext): ValueBreakdown {
   const ability = abilityOfSkill(skillId) as AbilityKey;
   const mod = character.abilityMods[ability] ?? 0;
-  return {
-    value: mod,
-    parts: [{ value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики' }],
-  };
+  const parts: RollModifier[] = [
+    { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики' },
+  ];
+  let total = mod;
+  if (character.skillExpertise?.includes(skillId)) {
+    parts.push({ value: character.profBonus * 2, source: 'БМ×2', reason: 'экспертиза' });
+    total += character.profBonus * 2;
+  } else if (character.skillProficiencies?.includes(skillId)) {
+    parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение' });
+    total += character.profBonus;
+  }
+  return { value: total, parts };
 }
 
 export function breakdownValue(

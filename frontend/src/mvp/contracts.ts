@@ -120,6 +120,10 @@ export interface CharacterContext {
   hitDie?: string | null;
   /** recharge per ресурс: short_rest | long_rest (R4). */
   resourceRecharge?: Record<string, string>;
+  /** Владения спасбросками/навыками из rule_state (для breakdown, вместо хардкодов). */
+  saveProficiencies?: string[];
+  skillProficiencies?: string[];
+  skillExpertise?: string[];
 }
 
 export interface TargetContext {

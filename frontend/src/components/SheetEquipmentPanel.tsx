@@ -10,12 +10,12 @@ import {
   removeFromInventory,
   runtimeInventoryPayload,
 } from '../character/runtime';
-import { collectEquippedCards } from '../character/inventory';
+import { collectEquippedCards, equipFromInventory, unequipToInventory } from '../character/inventory';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { computeAC } from '../engine/ac';
 import { registerCard } from '../engine/cardRegistry';
-import { equipItem, totalWeight, unequipSlot } from '../engine/equipment';
+import { totalWeight } from '../engine/equipment';
 import { weaponContext } from '../engine/weapon';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
@@ -25,6 +25,8 @@ interface Props {
   ruleState: CharacterRuleState;
   onUpdated: (c: ForgeCharacter) => void;
   embedded?: boolean;
+  /** Пассивные механики персонажа — чтобы «КД (расчёт)» совпадал с шапкой. */
+  passives?: Record<string, unknown>[];
 }
 
 const SLOT_LABELS: Record<string, string> = {
@@ -34,7 +36,7 @@ const SLOT_LABELS: Record<string, string> = {
   head: 'Голова',
 };
 
-export default function SheetEquipmentPanel({ character, ruleState, onUpdated, embedded }: Props) {
+export default function SheetEquipmentPanel({ character, ruleState, onUpdated, embedded, passives = [] }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +111,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
     equippedCards,
     null,
   );
-  const acBreakdown = computeAC(ctx, runtime, []);
+  const acBreakdown = computeAC(ctx, runtime, passives);
   const mainWeapon = weaponContext(ctx, 'main', runtime.equipment);
 
   const persist = useCallback(async (next: RuntimeState) => {
@@ -134,13 +136,14 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const handleEquip = async (card: Card) => {
     registerCard(card);
     setCards((prev) => new Map(prev).set(card.id, card));
-    const res = equipItem(runtime, card);
+    // Из инвентаря: qty −1, вытесненные предметы возвращаются в сумку.
+    const res = equipFromInventory(runtime, card);
     if (res.error) { setError(res.error); return; }
     await persist(res.state);
   };
 
   const handleUnequip = async (slot: string) => {
-    await persist(unequipSlot(runtime, slot));
+    await persist(unequipToInventory(runtime, slot));
   };
 
   const handleAdd = async (card: Card) => {

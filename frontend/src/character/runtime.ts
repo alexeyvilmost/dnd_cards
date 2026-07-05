@@ -69,6 +69,12 @@ export function buildCharacterContext(
     hitDie: klass?.hit_die ?? null,
     equippedCards,
     knownCards: equippedCards,
+    spellcastingMod: ruleState.spellcasting
+      ? ruleState.abilityMods[ruleState.spellcasting.ability]
+      : undefined,
+    saveProficiencies: ruleState.proficiencies.savingThrows,
+    skillProficiencies: ruleState.proficiencies.skills,
+    skillExpertise: ruleState.expertise.skills,
   };
 }
 
