@@ -39,6 +39,14 @@ export function resourceSpentEvent(resource: string, amount: number, remaining: 
   return { type: 'resource_spent', resource, amount, remaining };
 }
 
+export function resourceRestoredEvent(resource: string, amount: number, current: number): EngineEvent {
+  return { type: 'resource_restored', resource, amount, current };
+}
+
+export function conditionAppliedEvent(condition: string): EngineEvent {
+  return { type: 'condition_applied', condition };
+}
+
 export function turnStartedEvent(): EngineEvent {
   return { type: 'turn_started' };
 }

@@ -36,13 +36,24 @@ function restoreTurnResources(state: RuntimeState): RuntimeState {
 
 function expireStartOfTurnEffects(state: RuntimeState): { state: RuntimeState; events: EngineEvent[] } {
   const events: EngineEvent[] = [];
-  const kept = state.activeEffects.filter((e) => {
+  const kept: typeof state.activeEffects = [];
+  for (const e of state.activeEffects) {
     if (e.expiry === 'start_of_next_turn') {
       events.push({ type: 'effect_expired', name: e.name });
-      return false;
+      continue;
     }
-    return true;
-  });
+    // Длительность в раундах (condition duration.rounds): тикаем на начале хода.
+    if (e.roundsLeft != null) {
+      const left = e.roundsLeft - 1;
+      if (left <= 0) {
+        events.push({ type: 'effect_expired', name: e.name });
+        continue;
+      }
+      kept.push({ ...e, roundsLeft: left });
+      continue;
+    }
+    kept.push(e);
+  }
   return { state: { ...state, activeEffects: kept }, events };
 }
 

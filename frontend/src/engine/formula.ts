@@ -337,7 +337,7 @@ function buildRollText(dice: DieRoll[], modifiers: FormulaModifier[], total: num
 /** Бросок формулы с разбивкой по костям и модификаторам (для лога). */
 export function rollFormula(
   formula: string,
-  ctx: Record<string, unknown> = {},
+  ctx: FormulaContext | Record<string, unknown> = {},
   opts?: { modifiers?: FormulaModifier[]; rng?: () => number },
 ): FormulaRollResult {
   const trimmed = formula.trim();

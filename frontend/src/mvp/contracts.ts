@@ -134,6 +134,8 @@ export interface ExecuteContext {
   rng: () => number;
   /** Выборы игрока внутри действия (напр. вариант Толчка). */
   choices?: Record<string, string>;
+  /** Контекст каста заклинания (E5): базовый уровень и уровень слота для апкаста. */
+  spell?: { baseLevel: number; castLevel?: number };
 }
 
 export interface ExecuteResult {
@@ -156,11 +158,7 @@ export interface ValueBreakdown {
   parts: RollModifier[];
 }
 
-// ─── Заглушки (заменять реэкспортами по мере реализации) ────────────────────
-
-const NOT_IMPLEMENTED = (step: string, name: string): never => {
-  throw new Error(`NOT_IMPLEMENTED [${step}] ${name} — см. docs/mvp-transition-plan.md`);
-};
+// ─── Реэкспорты движка (контрактные точки входа) ────────────────────────────
 
 // Шаг B2 — engine/roll.ts
 export { rollD20 } from '../engine/roll';

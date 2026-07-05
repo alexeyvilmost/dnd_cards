@@ -133,18 +133,106 @@ describe('executeAction — маршрутизация и устойчивост
   });
 });
 
+// ─── Payload-ы исполнителя: condition / temp_hp / resource / scaling (E5+) ──
+describe('payload-ы исполнителя: condition / temp_hp / resource / scaling', () => {
+  const noCost = { mode: 'active', cost: [] };
+
+  it('save.on_fail: наложение состояния condition (ошеломление)', () => {
+    const mech: Mech = {
+      activation: noCost,
+      effects: [{
+        resolution: 'save', ability: 'con', dc: '30', who: 'target',
+        on_fail: [{ kind: 'condition', value: 'stunned', op: 'apply', duration: { type: 'rounds', amount: 1 } }],
+      }],
+    };
+    const { state: next, events } = executeAction(freshFighterState(), mech, {
+      character: FIGHTER_CTX, target: { saveMods: { con: 0 } }, rng: seededRng(7),
+    });
+    expect(events.some((e) => e.type === 'condition_applied' && e.condition === 'stunned')).toBe(true);
+    const entry = next.activeEffects.find((e) => e.name === 'stunned');
+    expect(entry).toBeTruthy();
+    expect(entry?.roundsLeft).toBe(1);
+  });
+
+  it('auto: temp_hp применяются к hp.temp и не суммируются (остаётся большее)', () => {
+    const mk = (amount: string): Mech => ({
+      activation: noCost,
+      effects: [{ resolution: 'auto', result: [{ kind: 'temp_hp', amount }] }],
+    });
+    const first = executeAction(freshFighterState(), mk('5'), { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(first.state.hp.temp).toBe(5);
+    expect(first.events.some((e) => e.type === 'temp_hp' && e.amount === 5)).toBe(true);
+    const second = executeAction(first.state, mk('3'), { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(second.state.hp.temp).toBe(5);
+  });
+
+  it('auto: resource op:grant даёт действие сверх максимума (Прилив действий)', () => {
+    const surge: Mech = {
+      activation: noCost,
+      effects: [{ resolution: 'auto', result: [{ kind: 'resource', op: 'grant', id: 'action', amount: 1 }] }],
+    };
+    const { state: next, events } = executeAction(freshFighterState(), surge, { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(next.resources.action).toBe(2); // максимум 1 — grant идёт сверх
+    expect(events.some((e) => e.type === 'resource_restored' && e.resource === 'action')).toBe(true);
+  });
+
+  it('auto: resource op:restore восстанавливает ячейку заклинаний до максимума', () => {
+    const base = freshFighterState();
+    const state: RuntimeState = {
+      ...base,
+      resources: { ...base.resources, spell_slot_1: 0 },
+      maxResources: { ...base.maxResources, spell_slot_1: 2 },
+    };
+    const restore: Mech = {
+      activation: noCost,
+      effects: [{ resolution: 'auto', result: [{ kind: 'resource', op: 'restore', id: 'spell_slot', level: 1, amount: 5 }] }],
+    };
+    const { state: next } = executeAction(state, restore, { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(next.resources.spell_slot_1).toBe(2); // кламп по максимуму
+  });
+
+  it('scaling per character_level: заговор получает вторую кость на 5 уровне', () => {
+    const fireBolt: Mech = {
+      activation: noCost,
+      effects: [{
+        resolution: 'attack_roll', ability: 'spellcasting', vs: 'ac',
+        on_hit: [{ kind: 'damage', dice: '1d10', type: 'fire', scaling: { per: 'character_level', dice: '1d10' } }],
+      }],
+    };
+    const run = (level: number) => executeAction(freshFighterState(), fireBolt, {
+      character: { ...FIGHTER_CTX, level, spellcastingMod: 3 }, target: { ac: 1 }, rng: seededRng(30),
+    });
+    const diceAt = (level: number) => {
+      const dmg = run(level).events.find((e) => e.type === 'damage');
+      return dmg?.type === 'damage' ? dmg.roll?.dice.length : undefined;
+    };
+    expect(diceAt(1)).toBe(1);
+    expect(diceAt(5)).toBe(2);
+  });
+
+  it('scaling per spell_slot_above: апкаст лечения добавляет кости по уровню слота', () => {
+    const cure: Mech = {
+      activation: noCost,
+      effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: '2d8', scaling: { per: 'spell_slot_above', dice: '1d8' } }] }],
+    };
+    const state = freshFighterState();
+    state.hp.current = 1;
+    const { events } = executeAction(state, cure, {
+      character: FIGHTER_CTX, rng: seededRng(31), spell: { baseLevel: 1, castLevel: 3 },
+    });
+    const heal = events.find((e) => e.type === 'healing');
+    expect(heal?.type === 'healing' ? heal.roll?.dice.length : 0).toBe(4); // 2d8 + 1d8 + 1d8
+  });
+});
+
 // ─── Карта пробелов унифицированной схемы (payload-kind → рантайм) ───────────
 // Помечено it.todo: конструкции схемы, ещё не исполняемые движком. Снимать
 // пометку по мере реализации соответствующего исхода в engine/execute.ts.
 describe('НЕреализованные payload-ы исполнителя (roadmap до MVP)', () => {
-  it.todo('save.on_fail: наложение состояния condition (Внезапный удар → ошеломление)');
-  it.todo('auto: temp_hp (временные хиты) применяются к hp.temp');
-  it.todo('auto: resource op:grant/restore во время исполнения (Прилив действий, восстановление ячейки)');
   it.todo('boon: «талон» союзнику (Вдохновение барда)');
   it.todo('reroll / set_die: переброс и подмена кубика (Удача, Предсказание)');
   it.todo('transform: превращение в стат-блок (Дикий облик)');
   it.todo('grant_action во время исполнения (Хитрое действие → варианты бонусного действия)');
-  it.todo('scaling: апкаст заклинаний и рост заговора по уровню персонажа');
   it.todo('movement: применяет фактическое перемещение цели, а не только лог');
   it.todo('resistance: сопротивление/иммунитет учитываются при расчёте урона');
 });

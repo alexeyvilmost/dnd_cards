@@ -11,7 +11,10 @@ import type {
   RuntimeState,
 } from '../mvp/contracts';
 import { canPay, pay } from './cost';
-import { damageEvent, healingEvent, narrativeEvent, rollEvent } from './events';
+import {
+  conditionAppliedEvent, damageEvent, healingEvent, narrativeEvent,
+  resourceRestoredEvent, rollEvent, tempHpEvent,
+} from './events';
 import { evaluate, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import { collectRollModifiers } from './modifiers';
 import { rollD20 } from './roll';
@@ -70,6 +73,30 @@ function expiryFromDuration(duration: Dict | undefined): string | undefined {
   return undefined;
 }
 
+/**
+ * Скейлинг формулы урона/лечения (E5):
+ * - per: 'spell_slot_above' — апкаст: +dice за каждый уровень слота выше базового;
+ * - per: 'character_level' | 'cantrip' — рост заговора на уровнях персонажа 5/11/17.
+ */
+function withScaling(base: string, payload: Dict, ctx: ExecuteContext): string {
+  const scaling = payload.scaling as Dict | undefined;
+  const dice = scaling?.dice;
+  if (!scaling || typeof dice !== 'string' || !dice) return base;
+
+  const per = String(scaling.per ?? '');
+  let steps = 0;
+  if (per === 'spell_slot_above') {
+    const baseLevel = ctx.spell?.baseLevel ?? 0;
+    const castLevel = ctx.spell?.castLevel ?? baseLevel;
+    steps = Math.max(0, castLevel - baseLevel);
+  } else if (per === 'character_level' || per === 'cantrip') {
+    const lvl = ctx.character.level;
+    steps = (lvl >= 5 ? 1 : 0) + (lvl >= 11 ? 1 : 0) + (lvl >= 17 ? 1 : 0);
+  }
+  if (steps <= 0) return base;
+  return `${base}${` + ${dice}`.repeat(steps)}`;
+}
+
 function resolveHand(effect: Dict): 'main' | 'off' {
   const tags = effect.tags as string[] | undefined;
   return tags?.includes('off_hand') ? 'off' : 'main';
@@ -104,36 +131,21 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
   return mods;
 }
 
-function applyAutoResult(
+function applyModifierPayload(
   state: RuntimeState,
-  results: Dict[],
+  payload: Dict,
   source: string,
   events: EngineEvent[],
-  ctx: ExecuteContext,
 ): RuntimeState {
-  let next = state;
-  for (const r of results) {
-    if (r.kind === 'modifier') {
-      const entry: ActiveEffectEntry = {
-        id: `fx-${next.activeEffects.length}-${Date.now()}`,
-        name: source,
-        mechanics: r,
-        expiry: expiryFromDuration(r.duration as Dict | undefined),
-        source,
-      };
-      next = { ...next, activeEffects: [...next.activeEffects, entry] };
-      events.push({ type: 'effect_applied', name: source });
-      continue;
-    }
-    if (r.kind === 'healing') {
-      next = applyHealing(next, r, ctx, events);
-      continue;
-    }
-    if (r.kind === 'narrative') {
-      events.push(narrativeEvent(String(r.description ?? r.text ?? '')));
-    }
-  }
-  return next;
+  const entry: ActiveEffectEntry = {
+    id: `fx-${state.activeEffects.length}-${Date.now()}`,
+    name: source,
+    mechanics: payload,
+    expiry: expiryFromDuration(payload.duration as Dict | undefined),
+    source,
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return { ...state, activeEffects: [...state.activeEffects, entry] };
 }
 
 function applyHealing(
@@ -142,16 +154,94 @@ function applyHealing(
   ctx: ExecuteContext,
   events: EngineEvent[],
 ): RuntimeState {
-  const fr = rollFormula(String(payload.amount ?? '0'), formulaCtx(ctx), { rng: ctx.rng });
+  const formula = withScaling(String(payload.amount ?? '0'), payload, ctx);
+  const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
   const next = cloneState(state);
   next.hp.current = Math.min(next.hp.max, next.hp.current + fr.total);
   events.push(healingEvent(fr.total, {
     kind: 'healing',
+    advantage: 'none',
     dice: fr.dice,
     modifiers: fr.modifiers,
     total: fr.total,
     text: fr.text,
   }));
+  return next;
+}
+
+/** temp_hp: временные хиты не суммируются — остаётся большее значение. */
+function applyTempHp(
+  state: RuntimeState,
+  payload: Dict,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+): RuntimeState {
+  const formula = withScaling(String(payload.amount ?? '0'), payload, ctx);
+  const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
+  const next = cloneState(state);
+  next.hp.temp = Math.max(next.hp.temp, fr.total);
+  events.push(tempHpEvent(fr.total));
+  return next;
+}
+
+/** condition: наложение состояния как активного эффекта (op:apply|remove). */
+function applyCondition(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+): RuntimeState {
+  const condition = String(payload.value ?? '');
+  if (!condition) return state;
+  const op = String(payload.op ?? 'apply');
+
+  if (op === 'remove') {
+    const kept = state.activeEffects.filter((e) => {
+      const m = e.mechanics as Dict;
+      const match = m?.kind === 'condition' && String(m.value ?? '') === condition;
+      if (match) events.push({ type: 'effect_expired', name: e.name });
+      return !match;
+    });
+    return { ...state, activeEffects: kept };
+  }
+
+  const duration = payload.duration as Dict | undefined;
+  const rounds = duration?.type === 'rounds' ? Number(duration.amount) || undefined : undefined;
+  const entry: ActiveEffectEntry = {
+    id: `cond-${state.activeEffects.length}-${Date.now()}`,
+    name: condition,
+    mechanics: payload,
+    roundsLeft: rounds,
+    expiry: expiryFromDuration(duration) ?? (rounds ? undefined : 'manual'),
+    source,
+  };
+  events.push(conditionAppliedEvent(condition));
+  return { ...state, activeEffects: [...state.activeEffects, entry] };
+}
+
+/** resource: grant — сверх максимума (Прилив действий), restore — до максимума. */
+function applyResource(
+  state: RuntimeState,
+  payload: Dict,
+  events: EngineEvent[],
+): RuntimeState {
+  let key = String(payload.id ?? payload.resource ?? '');
+  if (!key) return state;
+  if (key === 'spell_slot' && payload.level != null) key = `spell_slot_${payload.level}`;
+
+  const amount = typeof payload.amount === 'number' ? payload.amount : Number(payload.amount) || 1;
+  const op = String(payload.op ?? 'grant');
+  const next = cloneState(state);
+  const current = next.resources[key] ?? 0;
+
+  if (op === 'restore') {
+    const max = next.maxResources[key];
+    next.resources[key] = max != null ? Math.min(max, current + amount) : current + amount;
+  } else {
+    next.resources[key] = current + amount;
+  }
+  const gained = next.resources[key] - current;
+  if (gained > 0) events.push(resourceRestoredEvent(key, gained, next.resources[key]));
   return next;
 }
 
@@ -180,44 +270,80 @@ function resolveDamageAmount(
     return {
       amount: total,
       damageType,
-      roll: { kind: 'damage', dice: fr.dice, modifiers: fr.modifiers, total, text: fr.text },
+      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total, text: fr.text },
     };
   }
 
   if (payload.amount != null) {
-    const fr = rollFormula(String(payload.amount), formulaCtx(ctx), { rng: ctx.rng });
+    const formula = withScaling(String(payload.amount), payload, ctx);
+    const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
     return {
       amount: fr.total,
       damageType,
-      roll: { kind: 'damage', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
+      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
     };
   }
 
   if (payload.dice != null) {
-    const fr = rollFormula(String(payload.dice), formulaCtx(ctx), { rng: ctx.rng });
+    const formula = withScaling(String(payload.dice), payload, ctx);
+    const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
     return {
       amount: fr.total,
       damageType,
-      roll: { kind: 'damage', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
+      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
     };
   }
 
   return { amount: 0, damageType };
 }
 
-function applyDamageList(
+/**
+ * Единый роутер payload-ов (§6.5 схемы): исполняет список исходов
+ * on_hit / on_crit / on_fail / on_success / result.
+ */
+function applyPayloads(
   payloads: Dict[],
   state: RuntimeState,
   ctx: ExecuteContext,
   events: EngineEvent[],
+  source: string,
   hand: 'main' | 'off',
-  halfOnSuccess = false,
+  halfDamage = false,
 ): RuntimeState {
   let next = state;
   for (const p of payloads) {
-    let { amount, damageType, roll } = resolveDamageAmount(p, ctx, next, hand);
-    if (halfOnSuccess) amount = Math.floor(amount / 2);
-    events.push(damageEvent(amount, damageType, roll));
+    const kind = String(p.kind ?? '');
+    switch (kind) {
+      case 'damage': {
+        let { amount, damageType, roll } = resolveDamageAmount(p, ctx, next, hand);
+        if (halfDamage) amount = Math.floor(amount / 2);
+        events.push(damageEvent(amount, damageType, roll));
+        break;
+      }
+      case 'healing':
+        next = applyHealing(next, p, ctx, events);
+        break;
+      case 'temp_hp':
+        next = applyTempHp(next, p, ctx, events);
+        break;
+      case 'condition':
+        next = applyCondition(next, p, source, events);
+        break;
+      case 'resource':
+        next = applyResource(next, p, events);
+        break;
+      case 'modifier':
+        next = applyModifierPayload(next, p, source, events);
+        break;
+      case 'movement':
+        events.push(narrativeEvent(`Перемещение: ${p.value} ${p.distance ?? ''} фт`));
+        break;
+      case 'narrative':
+        events.push(narrativeEvent(String(p.description ?? p.text ?? '')));
+        break;
+      default:
+        events.push(narrativeEvent(`NOT_IMPLEMENTED payload: ${kind}`));
+    }
   }
   return next;
 }
@@ -227,6 +353,7 @@ function runAttackRoll(
   state: RuntimeState,
   ctx: ExecuteContext,
   events: EngineEvent[],
+  source: string,
 ): RuntimeState {
   const hand = resolveHand(effect);
   const ac = ctx.target?.ac ?? 10;
@@ -247,7 +374,7 @@ function runAttackRoll(
       ? effect.on_crit
       : effect.on_hit) as Dict[] | undefined;
     if (Array.isArray(payloads)) {
-      return applyDamageList(payloads, state, ctx, events, hand);
+      return applyPayloads(payloads, state, ctx, events, source, hand);
     }
   }
   return state;
@@ -258,6 +385,7 @@ function runSave(
   state: RuntimeState,
   ctx: ExecuteContext,
   events: EngineEvent[],
+  source: string,
 ): RuntimeState {
   const dcFormula = String(effect.dc ?? '10');
   const dc = evalDc(dcFormula, ctx);
@@ -281,7 +409,7 @@ function runSave(
   if (!Array.isArray(payloads)) return state;
 
   const half = success && payloads.some((p) => p.on_success === 'half');
-  return applyDamageList(payloads, state, ctx, events, 'main', half);
+  return applyPayloads(payloads, state, ctx, events, source, 'main', half);
 }
 
 function runAbilityCheck(
@@ -353,16 +481,16 @@ export function executeAction(
     if (resolution === 'auto') {
       const results = (eff.result ?? eff.results) as Dict[] | undefined;
       if (Array.isArray(results)) {
-        next = applyAutoResult(next, results, sourceName, events, ctx);
+        next = applyPayloads(results, next, ctx, events, sourceName, 'main');
       }
       continue;
     }
     if (resolution === 'attack_roll') {
-      next = runAttackRoll(eff, next, ctx, events);
+      next = runAttackRoll(eff, next, ctx, events, sourceName);
       continue;
     }
     if (resolution === 'save') {
-      next = runSave(eff, next, ctx, events);
+      next = runSave(eff, next, ctx, events, sourceName);
       continue;
     }
     if (resolution === 'ability_check') {
