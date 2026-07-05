@@ -1,11 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
-import { Heart, HeartPulse, Minus, Plus, Shield, X } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
-import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
+import { X } from 'lucide-react';
 import type { ForgeCharacter } from '../character/types';
-import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
-import ValueBreakdownTip from './ValueBreakdownTip';
-import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+import SheetHpPanel from './SheetHpPanel';
+import type { EngineEvent, ValueBreakdown } from '../mvp/contracts';
 import './SheetHpDialog.css';
 
 interface Props {
@@ -16,52 +12,15 @@ interface Props {
   maxHpBreakdown?: ValueBreakdown | null;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  /** Бонус спасброска ТЕЛ — для проверки концентрации при уроне. */
+  conSaveBonus?: number;
 }
 
-function persistPayload(state: RuntimeState) {
-  return {
-    current_hp: state.hp.current,
-    max_hp: state.hp.max,
-    turn_state: { temp_hp: state.hp.temp },
-  };
-}
-
+/** Диалог хитов кокпита: тонкая обёртка над SheetHpPanel (единая логика
+ * урона/лечения/temp HP, спасбросков смерти и концентрации). */
 export default function SheetHpDialog({
-  open,
-  onClose,
-  character,
-  maxHp,
-  maxHpBreakdown,
-  onUpdated,
-  onEvents,
+  open, onClose, character, maxHp, maxHpBreakdown, onUpdated, onEvents, conSaveBonus,
 }: Props) {
-  const [busy, setBusy] = useState(false);
-  const [amount, setAmount] = useState(5);
-
-  const runtime = useMemo(
-    () => alignRuntimeHp(forgeToRuntimeState(character), maxHp),
-    [character, maxHp],
-  );
-  const unconscious = runtime.hp.current <= 0;
-
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
-    setBusy(true);
-    try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next));
-      onUpdated(updated);
-      onEvents?.(events);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setBusy(false);
-    }
-  }, [character.id, onUpdated, onEvents]);
-
-  const mutate = (fn: (s: RuntimeState) => { state: RuntimeState; events: EngineEvent[] }) => {
-    const { state, events } = fn(runtime);
-    apply(state, events);
-  };
-
   if (!open) return null;
 
   return (
@@ -78,63 +37,15 @@ export default function SheetHpDialog({
             <X size={18} />
           </button>
         </div>
-
-        <div className="sheet-hp-display">
-          <div className="sheet-hp-main">
-            <Heart size={18} />
-            <strong className={unconscious ? 'sheet-hp-unconscious' : ''}>
-              {runtime.hp.current}
-            </strong>
-            {maxHpBreakdown ? (
-              <ValueBreakdownTip breakdown={maxHpBreakdown} label="Максимум HP">
-                <span>/ {maxHp}</span>
-              </ValueBreakdownTip>
-            ) : (
-              <span>/ {maxHp}</span>
-            )}
-            {runtime.hp.temp > 0 && (
-              <span className="sheet-hp-temp" title="Временные HP">
-                <Shield size={14} /> +{runtime.hp.temp}
-              </span>
-            )}
-          </div>
-          {unconscious && <p className="sheet-hp-status">Без сознания</p>}
-        </div>
-
-        <div className="sheet-hp-controls">
-          <input
-            type="number"
-            className="forge-input sheet-hp-amount"
-            min={1}
-            max={999}
-            value={amount}
-            onChange={(e) => setAmount(Math.max(1, Number(e.target.value) || 1))}
-          />
-          <button
-            type="button"
-            className="forge-btn ghost sheet-roll-btn"
-            disabled={busy}
-            onClick={() => mutate((s) => applyDamage(s, amount))}
-          >
-            <Minus size={14} /> Урон
-          </button>
-          <button
-            type="button"
-            className="forge-btn ghost sheet-roll-btn"
-            disabled={busy}
-            onClick={() => mutate((s) => applyHealing(s, amount))}
-          >
-            <HeartPulse size={14} /> Лечение
-          </button>
-          <button
-            type="button"
-            className="forge-btn ghost sheet-roll-btn"
-            disabled={busy}
-            onClick={() => mutate((s) => applyTempHp(s, amount))}
-          >
-            <Plus size={14} /> Temp HP
-          </button>
-        </div>
+        <SheetHpPanel
+          embedded
+          character={character}
+          maxHp={maxHp}
+          maxHpBreakdown={maxHpBreakdown}
+          onUpdated={onUpdated}
+          onEvents={onEvents}
+          conSaveBonus={conSaveBonus}
+        />
       </div>
     </div>
   );

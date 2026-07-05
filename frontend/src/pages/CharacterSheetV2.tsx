@@ -19,6 +19,7 @@ import SpellPreview from '../components/SpellPreview';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CollapsibleSection from '../components/CollapsibleSection';
 import SheetActionsPanel from '../components/SheetActionsPanel';
+import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpDialog from '../components/SheetHpDialog';
 import SheetRestButtons from '../components/SheetRestButtons';
@@ -255,8 +256,13 @@ const CharacterSheetV2 = ({
             <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Состояния" hook>
-            <p className="cs-hook-note">Активные состояния и их эффекты появятся здесь.</p>
+          <CollapsibleSection title="Состояния">
+            <SheetConditionsPanel
+              character={character}
+              onUpdated={onUpdated}
+              onEvents={onEvents}
+              embedded
+            />
           </CollapsibleSection>
         </div>
 
@@ -358,6 +364,7 @@ const CharacterSheetV2 = ({
         maxHpBreakdown={maxHpBreakdown}
         onUpdated={onUpdated}
         onEvents={onEvents}
+        conSaveBonus={ruleState.savingThrowBonuses.con}
       />
     </div>
   );

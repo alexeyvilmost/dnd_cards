@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
+import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -10,12 +10,14 @@ import { buildResourceRuntimePatch } from '../character/resourceInit';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, ABILITY_KEYS, type AbilityBonuses, type CharacterDraft, type AbilityKey } from '../character/types';
 import { bonusOf, reapplyBonuses } from '../character/pointBuy';
-import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, resolveLineageName } from '../character/forgeHelpers';
+import { computeMaxHP } from '../character/derive';
+import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, requiredChoiceIssues, resolveLineageName } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
+import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import ForgeTraitsBlock from '../components/forge/ForgeTraitsBlock';
 import ForgeOriginAbilities from '../components/forge/ForgeOriginAbilities';
 import RacePreview from '../components/RacePreview';
@@ -46,6 +48,9 @@ const CharacterForge = () => {
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
   const [bundle, setBundle] = useState<EntityBundle | null>(null);
   const [active, setActive] = useState('race');
+  /** Режим повышения уровня: показываем только новое, база заблокирована. */
+  const [levelUp, setLevelUp] = useState<{ fromLevel: number } | null>(null);
+  const [prevRefs, setPrevRefs] = useState<{ effects: Set<string>; actions: Set<string> } | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +101,8 @@ const CharacterForge = () => {
   }, [editId]);
 
   // Загрузка существующего черновика для редактирования.
-  // ?levelup=1 (кнопка «Поднять уровень» на листе) — сразу +1 уровень.
+  // ?levelup=1 (кнопка «Поднять уровень» на листе) — особый режим: +1 уровень,
+  // показываются только новые умения и выборы (раса/класс/предыстория заблокированы).
   useEffect(() => {
     if (!editId) return;
     (async () => {
@@ -106,7 +112,9 @@ const CharacterForge = () => {
         restoredClassSkillsRef.current = false;
         const d = characterToDraft(c);
         if (searchParams.get('levelup') === '1') {
-          d.level = Math.min(20, (d.level || 1) + 1);
+          const fromLevel = d.level || 1;
+          d.level = Math.min(20, fromLevel + 1);
+          setLevelUp({ fromLevel });
           setSearchParams({}, { replace: true });
         }
         setDraft(d);
@@ -303,6 +311,22 @@ const CharacterForge = () => {
     patch({ classSkillChoices: next });
   };
 
+  // Диф уровня: какие эффекты/действия были ДО повышения (для показа только нового).
+  useEffect(() => {
+    if (!levelUp || !draft.classId) return;
+    let stale = false;
+    (async () => {
+      const oldBundle = await loadBundle({ ...draft, level: levelUp.fromLevel });
+      if (stale) return;
+      setPrevRefs({
+        effects: new Set(oldBundle.effects.map((e) => e.effect.id)),
+        actions: new Set(oldBundle.actions.map((a) => a.action.id)),
+      });
+    })();
+    return () => { stale = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelUp, draft.classId, draft.raceId]);
+
   const issues = completionIssues(draft, assembled);
   const canCreate = issues.length === 0;
 
@@ -393,6 +417,129 @@ const CharacterForge = () => {
   const act = sections.some((s) => s.id === active) ? active : 'race';
   const sectionTitle = sections.find((s) => s.id === act)?.label ?? 'Вид';
   const rootCls = paper ? 'forge sheet-paper' : 'forge';
+
+  // ─── Режим повышения уровня: только новое, база заблокирована ───
+  if (levelUp) {
+    const newEffects = assembled.effects.filter((e) => !prevRefs || !prevRefs.effects.has(e.effect.id));
+    const newActions = assembled.actions.filter((a) => !prevRefs || !prevRefs.actions.has(a.action.id));
+    const unresolved = assembled.pendingChoices.filter(
+      (pc) => (draft.resolvedChoices[pc.id] || []).length < pc.count,
+    );
+    const unresolvedSpells = unresolved.filter((pc) => pc.source === 'spell');
+    const unresolvedOther = unresolved.filter((pc) => pc.source !== 'spell');
+    const oldMaxHP = computeMaxHP(assembled.klass?.hit_die, draft.abilities.con, levelUp.fromLevel);
+    // Блокируют подтверждение только незакрытые НОВЫЕ выборы; конфликты,
+    // унаследованные от создания, показываем предупреждением (править их тут нечем).
+    const blockingIssues = requiredChoiceIssues(draft, assembled);
+    const conflictWarnings = ruleState.conflicts
+      .filter((c) => c.severity === 'error')
+      .map((c) => c.message);
+    const canConfirm = blockingIssues.length === 0;
+
+    return (
+      <div className={rootCls}>
+        <div className="forge-header sheet-header-bar">
+          <button type="button" className="sheet-back" title="Отмена"
+            onClick={() => navigate(`/characters-v3/${draft.id}`)}>
+            <ArrowLeft size={18} />
+          </button>
+          <span>Повышение уровня — {draft.name || 'Без имени'}</span>
+          <span />
+        </div>
+        <div className="sheet-scroll">
+          <div className="levelup-wrap">
+            <div className="levelup-head">
+              <span className="levelup-badge">Уровень {levelUp.fromLevel} → {draft.level}</span>
+              <span className="levelup-hp">
+                Хиты: {oldMaxHP} → <b>{ruleState.maxHP}</b>
+                {assembled.klass?.hit_die ? ` (кость хитов ${assembled.klass.hit_die})` : ''}
+              </span>
+              <span className="levelup-class">
+                {assembled.klass?.name}{lineageName ? ` · ${lineageName}` : assembled.race ? ` · ${assembled.race.name}` : ''}
+              </span>
+            </div>
+
+            <div className="forge-block">
+              <div className="forge-section-h">Новые способности</div>
+              {newEffects.length === 0 && newActions.length === 0 && (
+                <p className="forge-note">На этом уровне новых способностей нет.</p>
+              )}
+              {newEffects.map(({ effect, origin }) => (
+                <ForgeAbilityLine
+                  key={effect.id}
+                  name={effect.name}
+                  imageUrl={effect.image_url}
+                  sourceLabel={`${origin.kind === 'race' ? 'Способность вида' : 'Способность класса'} · ${origin.name}`}
+                  effect={effect}
+                />
+              ))}
+              {newActions.map(({ action, origin }) => (
+                <ForgeAbilityLine
+                  key={action.id}
+                  name={action.name}
+                  imageUrl={action.image_url}
+                  sourceLabel={`Действие · ${origin.name}`}
+                  action={action}
+                />
+              ))}
+            </div>
+
+            {unresolvedOther.length > 0 && (
+              <ChoiceList
+                choices={unresolvedOther}
+                resolved={draft.resolvedChoices}
+                setResolved={setResolved}
+                ruleState={ruleState}
+                title="Новые выборы"
+              />
+            )}
+
+            {(unresolvedSpells.length > 0) && (
+              <div className="forge-block">
+                <div className="forge-section-h">Новые заклинания</div>
+                <SpellsSection
+                  spells={spells}
+                  granted={grantedSpells}
+                  choices={unresolvedSpells}
+                  resolved={draft.resolvedChoices}
+                  setResolved={setResolved}
+                />
+              </div>
+            )}
+
+            <div className="levelup-footer">
+              {blockingIssues.length > 0 && (
+                <ul className="issues forge-overview-issues">
+                  {blockingIssues.slice(0, 4).map((it, i) => <li key={i}>{it}</li>)}
+                </ul>
+              )}
+              {conflictWarnings.length > 0 && (
+                <p className="forge-note" title={conflictWarnings.join('\n')}>
+                  ⚠ Унаследованные замечания ({conflictWarnings.length}) — не блокируют повышение;
+                  их можно поправить в полном редакторе.
+                </p>
+              )}
+              {error && <p className="issues" style={{ color: 'var(--forge-danger)' }}>{error}</p>}
+              <div className="levelup-actions">
+                <button
+                  type="button"
+                  className="forge-btn forge-create-btn"
+                  disabled={!canConfirm || saving}
+                  onClick={async () => { await save(); navigate(`/characters-v3/${draft.id}`); }}
+                >
+                  {saving ? 'Сохранение…' : `Подтвердить уровень ${draft.level}`}
+                </button>
+                <button type="button" className="forge-btn ghost"
+                  onClick={() => navigate(`/characters-v3/${draft.id}`)}>
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={rootCls}>

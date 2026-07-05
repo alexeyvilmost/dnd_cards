@@ -338,6 +338,53 @@ function applyPayloads(
       case 'movement':
         events.push(narrativeEvent(`Перемещение: ${p.value} ${p.distance ?? ''} фт`));
         break;
+      case 'boon': {
+        // «Талон» (Вдохновение барда): чип-эффект с костью, снимается вручную
+        // при использовании; кость вводится диалогом бросков получателя.
+        const die = String(p.die ?? 'к6').replace(/d/i, 'к');
+        const name = `Талон ${die}${p.id ? ` (${source})` : ''}`;
+        const entry: ActiveEffectEntry = {
+          id: `boon-${next.activeEffects.length}-${Date.now()}`,
+          name,
+          mechanics: p,
+          expiry: 'manual',
+          source,
+        };
+        next = { ...next, activeEffects: [...next.activeEffects, entry] };
+        events.push({ type: 'effect_applied', name, sourceAction: source });
+        events.push(narrativeEvent(
+          `Талон ${die}: получатель добавляет ${die} к броску атаки, проверке или спасброску`
+          + `${p.expires ? ` (истекает: ${p.expires})` : ''}. Снимите эффект при использовании.`,
+        ));
+        break;
+      }
+      case 'reroll': {
+        // Переброс (Везунчик): архитектурно бросок уже совершён — движок
+        // фиксирует право переброса, значение вводится диалогом кубов.
+        const which = String(p.which ?? 'd20').replace(/d/i, 'к');
+        const keep = p.keep === 'either' ? 'оставьте любой из двух результатов' : 'используйте новый результат';
+        events.push(narrativeEvent(`Переброс ${which}: перебросьте кость — ${keep}.`));
+        break;
+      }
+      case 'transform': {
+        // Превращение (Дикий облик): облик как активный эффект-чип; стат-блок
+        // зверя ведётся по бестиарию, лист напоминает об ограничениях.
+        const formName = String(p.form ?? p.value ?? 'Дикий облик');
+        const entry: ActiveEffectEntry = {
+          id: `form-${next.activeEffects.length}-${Date.now()}`,
+          name: `Облик: ${formName}`,
+          mechanics: p,
+          expiry: 'manual',
+          source,
+        };
+        next = { ...next, activeEffects: [...next.activeEffects, entry] };
+        events.push({ type: 'effect_applied', name: entry.name, sourceAction: source });
+        events.push(narrativeEvent(
+          `Превращение (${source}): используйте стат-блок зверя${p.max_cr != null ? ` (ПО ≤ ${p.max_cr})` : ''}; `
+          + 'ментальные характеристики и спасброски МДР/ИНТ/ХАР — ваши. Снимите эффект при возврате.',
+        ));
+        break;
+      }
       case 'narrative':
         events.push(narrativeEvent(String(p.description ?? p.text ?? '')));
         break;

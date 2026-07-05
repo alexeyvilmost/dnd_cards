@@ -1,0 +1,72 @@
+[
+ {
+  "id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+  "card_number": "light",
+  "name": "Свет",
+  "level": 0,
+  "duration": null,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "concentration": false
+ },
+ {
+  "id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+  "card_number": "SPELL-0163",
+  "name": "Благословение",
+  "level": 1,
+  "duration": null,
+  "casting_time": "Действие",
+  "range": "30 футов",
+  "concentration": false
+ },
+ {
+  "id": "96a02044-6274-4e68-a06e-853c206824b8",
+  "card_number": "SPELL-0167",
+  "name": "Ведьмин снаряд",
+  "level": 1,
+  "duration": null,
+  "casting_time": "Действие",
+  "range": "60 футов",
+  "concentration": false
+ },
+ {
+  "id": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+  "card_number": "SPELL-0201",
+  "name": "Защита от добра и зла",
+  "level": 1,
+  "duration": null,
+  "casting_time": "Действие",
+  "range": "Касание",
+  "concentration": false
+ },
+ {
+  "id": "befe393c-7463-40df-a888-d74f1e6e186c",
+  "card_number": "SPELL-0206",
+  "name": "Иллюзорные письмена",
+  "level": 1,
+  "duration": null,
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "concentration": false
+ },
+ {
+  "id": "8e26c8a3-c545-4524-98d5-35acc5d29ca5",
+  "card_number": "SPELL-0245",
+  "name": "Опознание",
+  "level": 1,
+  "duration": null,
+  "casting_time": "1 минута",
+  "range": "Касание",
+  "concentration": false
+ },
+ {
+  "id": "f0256294-e692-4695-8e29-d8288139a7ad",
+  "card_number": "SPELL-0314",
+  "name": "Цветной шарик",
+  "level": 1,
+  "duration": null,
+  "casting_time": "Действие",
+  "range": "90 футов",
+  "concentration": false
+ }
+]

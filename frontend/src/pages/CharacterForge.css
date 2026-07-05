@@ -719,3 +719,19 @@
 .forge-char-card:hover .forge-char-card-delete { opacity: 1; }
 .forge-char-card-delete:hover { color: var(--forge-danger); border-color: var(--forge-danger); }
 .forge-char-card-actions { display: flex; gap: 6px; margin-top: 6px; }
+
+/* Экран повышения уровня */
+.levelup-wrap { max-width: 720px; margin: 0 auto; padding: 8px 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+.levelup-head {
+  display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: baseline;
+  border: 1px solid var(--forge-line); border-radius: 12px;
+  background: var(--forge-panel); padding: 14px 18px;
+}
+.levelup-badge {
+  font-size: 20px; font-weight: 700; color: var(--forge-gold);
+}
+.levelup-hp { font-size: 15px; color: var(--forge-text); }
+.levelup-hp b { color: #7bbf6a; }
+.levelup-class { font-size: 14px; color: var(--forge-text-dim); }
+.levelup-footer { display: flex; flex-direction: column; gap: 8px; }
+.levelup-actions { display: flex; gap: 10px; }

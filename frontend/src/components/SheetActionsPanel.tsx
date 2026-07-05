@@ -7,6 +7,7 @@ import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
+import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
@@ -45,14 +46,15 @@ const RESOURCE_ICONS: Record<string, string> = {
   warlock_spell_slot: '/icons/resources/warlock_spell_slot.png',
 };
 
-function persistPayload(state: RuntimeState) {
+function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined) {
   return {
     current_hp: state.hp.current,
     max_hp: state.hp.max,
     resources: state.resources,
     max_resources: state.maxResources,
     active_effects: state.activeEffects,
-    turn_state: { temp_hp: state.hp.temp },
+    // temp_hp обновляем, остальные поля turn_state (спасброски смерти) сохраняем
+    turn_state: { ...(prevTurnState ?? {}), temp_hp: state.hp.temp },
   };
 }
 
@@ -109,7 +111,7 @@ export default function SheetActionsPanel({
     setBusy(true);
     setError(null);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next));
+      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, character.turn_state));
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {
@@ -146,7 +148,13 @@ export default function SheetActionsPanel({
       const rng = decision.mode === 'manual'
         ? plannedValuesRng(plan, decision.values)
         : () => Math.random();
-      const { state, events } = execute(rng);
+      let { state, events } = execute(rng);
+      // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
+      if (action.spellRef?.concentration) {
+        const conc = startConcentration(state, action.name);
+        state = conc.state;
+        events = [...events, ...conc.events];
+      }
       apply(state, events);
     } catch (e) {
       if (e instanceof InsufficientResourcesError) {

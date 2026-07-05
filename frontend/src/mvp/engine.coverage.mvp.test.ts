@@ -240,13 +240,70 @@ describe('payload-ы исполнителя: condition / temp_hp / resource / sc
   });
 });
 
+// ─── boon / reroll / transform / состояния (глубина боёвки) ─────────────────
+describe('payload-ы боёвки: boon / reroll / transform / модификаторы состояний', () => {
+  const noCost = { mode: 'active', cost: [] };
+  const autoMech = (...result: Mech[]): Mech => ({
+    activation: noCost,
+    effects: [{ resolution: 'auto', result }],
+  });
+
+  it('boon: талон (Вдохновение барда) вешает чип с костью и пишет инструкцию', () => {
+    const { state: next, events } = executeAction(
+      freshFighterState(),
+      { name: 'Вдохновение барда', ...autoMech({ kind: 'boon', id: 'bardic_inspiration', die: '1d6' }) },
+      { character: FIGHTER_CTX, rng: seededRng(1) },
+    );
+    const chip = next.activeEffects.find((e) => e.name.includes('Талон'));
+    expect(chip).toBeTruthy();
+    expect(chip?.expiry).toBe('manual');
+    expect(events.some((e) => e.type === 'narrative' && e.text.includes('1к6'))).toBe(true);
+  });
+
+  it('reroll (Везунчик): нарратив-инструкция переброса, состояние не мутирует', () => {
+    const before = freshFighterState();
+    const { state: next, events } = executeAction(
+      before,
+      autoMech({ kind: 'reroll', which: 'd20', keep: 'either' }),
+      { character: FIGHTER_CTX, rng: seededRng(1) },
+    );
+    expect(events.some((e) => e.type === 'narrative' && /Переброс к20/.test(e.text))).toBe(true);
+    expect(next.activeEffects).toHaveLength(before.activeEffects.length);
+  });
+
+  it('transform (Дикий облик): чип облика + напоминание про стат-блок', () => {
+    const { state: next, events } = executeAction(
+      freshFighterState(),
+      { name: 'Дикий облик', ...autoMech({ kind: 'transform', max_cr: 0.25 }) },
+      { character: FIGHTER_CTX, rng: seededRng(1) },
+    );
+    expect(next.activeEffects.some((e) => e.name.startsWith('Облик:'))).toBe(true);
+    expect(events.some((e) => e.type === 'narrative' && e.text.includes('стат-блок'))).toBe(true);
+  });
+
+  it('состояние «отравлен» даёт помеху атакам и проверкам, но не спасброскам', () => {
+    const state = withEffects([
+      modEffect('poisoned', { kind: 'condition', value: 'poisoned', op: 'apply' }),
+    ]);
+    expect(collectRollModifiers(state, [], { roll: 'attack' }).advantage).toBe('disadvantage');
+    expect(collectRollModifiers(state, [], { roll: 'ability_check' }).advantage).toBe('disadvantage');
+    expect(collectRollModifiers(state, [], { roll: 'saving_throw', filter: { ability: 'con' } }).advantage).toBe('none');
+  });
+
+  it('состояние «опутан»: помеха на спасброски ЛВК, но не ТЕЛ', () => {
+    const state = withEffects([
+      modEffect('restrained', { kind: 'condition', value: 'restrained', op: 'apply' }),
+    ]);
+    expect(collectRollModifiers(state, [], { roll: 'saving_throw', filter: { ability: 'dex' } }).advantage).toBe('disadvantage');
+    expect(collectRollModifiers(state, [], { roll: 'saving_throw', filter: { ability: 'con' } }).advantage).toBe('none');
+  });
+});
+
 // ─── Карта пробелов унифицированной схемы (payload-kind → рантайм) ───────────
 // Помечено it.todo: конструкции схемы, ещё не исполняемые движком. Снимать
 // пометку по мере реализации соответствующего исхода в engine/execute.ts.
 describe('НЕреализованные payload-ы исполнителя (roadmap до MVP)', () => {
-  it.todo('boon: «талон» союзнику (Вдохновение барда)');
-  it.todo('reroll / set_die: переброс и подмена кубика (Удача, Предсказание)');
-  it.todo('transform: превращение в стат-блок (Дикий облик)');
+  it.todo('set_die: подмена кубика заранее (Предсказание)');
   it.todo('grant_action во время исполнения (Хитрое действие → варианты бонусного действия)');
   it.todo('movement: применяет фактическое перемещение цели, а не только лог');
   it.todo('resistance: сопротивление/иммунитет учитываются при расчёте урона');

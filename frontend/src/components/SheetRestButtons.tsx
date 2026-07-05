@@ -67,7 +67,7 @@ export default function SheetRestButtons({
       resources: state.resources,
       max_resources: state.maxResources,
       active_effects: state.activeEffects,
-      turn_state: { temp_hp: state.hp.temp },
+      turn_state: { ...(character.turn_state ?? {}), temp_hp: state.hp.temp },
     };
   }
 

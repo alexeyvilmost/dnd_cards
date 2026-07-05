@@ -20,6 +20,7 @@ import { labelOf, SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel, type Card, type Spell } from '../types';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import SpellPreview from '../components/SpellPreview';
+import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
 import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
@@ -432,6 +433,13 @@ const CharacterSheetMVP = () => {
             character={character}
             maxHp={maxHP}
             maxHpBreakdown={maxHpBreakdown}
+            onUpdated={setCharacter}
+            onEvents={appendRuntimeEvents}
+            conSaveBonus={ruleState.savingThrowBonuses.con}
+          />
+
+          <SheetConditionsPanel
+            character={character}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
           />

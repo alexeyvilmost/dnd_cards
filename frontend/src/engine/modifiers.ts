@@ -2,6 +2,7 @@
  * Сбор модификаторов броска из активных эффектов (фаза D4).
  */
 import type { AdvantageState, RollModifier, RuntimeState } from '../mvp/contracts';
+import { conditionModifierPayloads } from './conditions';
 import { payloadsOf } from './mechanicsView';
 
 type Dict = Record<string, unknown>;
@@ -59,6 +60,12 @@ export function collectRollModifiers(
   for (const effect of state.activeEffects) {
     for (const payload of payloadsOf(effect.mechanics)) {
       collectFromPayload(payload, appliesTo, out);
+      // Состояние (kind:'condition') влияет на броски по правилам 2024.
+      if (payload.kind === 'condition' && payload.value) {
+        for (const rule of conditionModifierPayloads(String(payload.value))) {
+          collectFromPayload({ kind: 'modifier', ...rule }, appliesTo, out);
+        }
+      }
     }
   }
 

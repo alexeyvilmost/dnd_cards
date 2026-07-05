@@ -1,9 +1,18 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Heart, HeartPulse, Minus, Plus, Shield } from 'lucide-react';
+import { Dices, Heart, HeartPulse, Minus, Plus, Shield, Skull } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
+import {
+  applyDamageAtZero, applyDeathSaveRoll, describeDeathSaveOutcome,
+  emptyDeathSaves, readDeathSaves, type DeathSaveState,
+} from '../character/death';
 import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { concentrationDC, concentrationEntry, dropConcentration } from '../engine/concentration';
+import { plannedValuesRng } from '../engine/dicePlan';
 import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
+import { rollD20 } from '../engine/roll';
+import { rollEvent } from '../engine/events';
 import ValueBreakdownTip from './ValueBreakdownTip';
 import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 
@@ -13,48 +22,127 @@ interface Props {
   maxHpBreakdown?: ValueBreakdown | null;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  /** Бонус спасброска ТЕЛ — для проверки концентрации при уроне. */
+  conSaveBonus?: number;
+  /** true — без обёртки-панели (для диалога кокпита). */
+  embedded?: boolean;
 }
 
-function persistPayload(state: RuntimeState) {
-  return {
-    current_hp: state.hp.current,
-    max_hp: state.hp.max,
-    turn_state: { temp_hp: state.hp.temp },
-  };
-}
-
-export default function SheetHpPanel({ character, maxHp, maxHpBreakdown, onUpdated, onEvents }: Props) {
+export default function SheetHpPanel({
+  character, maxHp, maxHpBreakdown, onUpdated, onEvents, conSaveBonus = 0, embedded,
+}: Props) {
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState(5);
+  const diceDialog = useDiceDialog();
 
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), maxHp),
     [character, maxHp],
   );
+  const deathSaves = useMemo(() => readDeathSaves(character.turn_state), [character.turn_state]);
   const unconscious = runtime.hp.current <= 0;
+  const concentration = concentrationEntry(runtime);
 
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
+  const persist = useCallback(async (
+    state: RuntimeState,
+    events: EngineEvent[],
+    ds?: DeathSaveState,
+  ) => {
     setBusy(true);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next));
+      const updated = await charactersV3Api.patchRuntime(character.id, {
+        current_hp: state.hp.current,
+        max_hp: state.hp.max,
+        active_effects: state.activeEffects,
+        turn_state: {
+          ...(character.turn_state ?? {}),
+          temp_hp: state.hp.temp,
+          death_saves: ds ?? readDeathSaves(character.turn_state),
+        },
+      });
       onUpdated(updated);
-      onEvents?.(events);
+      if (events.length) onEvents?.(events);
     } catch (e) {
       console.error(e);
     } finally {
       setBusy(false);
     }
-  }, [character.id, onUpdated, onEvents]);
+  }, [character.id, character.turn_state, onUpdated, onEvents]);
 
-  const mutate = (fn: (s: RuntimeState) => { state: RuntimeState; events: EngineEvent[] }) => {
-    const { state, events } = fn(runtime);
-    apply(state, events);
+  // ── Урон: провалы при 0 HP, проверка концентрации при уроне ──
+  const handleDamage = async () => {
+    if (unconscious) {
+      // урон по бессознательному — провал спасброска смерти
+      const { next, dead } = applyDamageAtZero(deathSaves);
+      const events: EngineEvent[] = [
+        { type: 'narrative', text: dead
+          ? 'Урон по бессознательному: третий провал. Персонаж погибает.'
+          : 'Урон по бессознательному персонажу — провал спасброска смерти (крит — отметьте второй).' },
+      ];
+      await persist(runtime, events, next);
+      return;
+    }
+
+    let { state, events } = applyDamage(runtime, amount);
+    let ds: DeathSaveState | undefined;
+    if (state.hp.current === 0) {
+      ds = emptyDeathSaves(); // счёт начинается заново при падении в 0
+      // концентрация прервана недееспособностью
+      const dropped = dropConcentration(state, 'без сознания');
+      state = dropped.state;
+      events = [...events, ...dropped.events];
+    } else if (concentration && amount > 0) {
+      // проверка концентрации: ТЕЛ СЛ max(10, урон/2)
+      const dc = concentrationDC(amount);
+      const plan = [{ sides: 20, label: `Концентрация (ТЕЛ, СЛ ${dc})` }];
+      const decision = await diceDialog.request(plan, `Проверка концентрации — СЛ ${dc}`);
+      if (decision.mode !== 'cancel') {
+        const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+        const roll = rollD20({
+          modifiers: [{ value: conSaveBonus, source: 'ТЕЛ', reason: 'спасбросок' }],
+          target: { type: 'dc', value: dc },
+          rng,
+        });
+        events = [...events, rollEvent('Проверка концентрации', { ...roll, kind: 'save' })];
+        if (roll.outcome !== 'success') {
+          const dropped = dropConcentration(state, `провал проверки, СЛ ${dc}`);
+          state = dropped.state;
+          events = [...events, ...dropped.events];
+        }
+      }
+    }
+    await persist(state, events, ds);
   };
 
-  return (
-    <section className="sheet-panel">
-      <h2 className="sheet-h2">Хиты</h2>
+  const handleHeal = () => {
+    const { state, events } = applyHealing(runtime, amount);
+    // лечение поднимает из 0 и сбрасывает спасброски смерти
+    persist(state, events, emptyDeathSaves());
+  };
 
+  const rollDeathSave = async () => {
+    const plan = [{ sides: 20, label: 'Спасбросок смерти' }];
+    const decision = await diceDialog.request(plan, 'Спасбросок смерти (без модификаторов)');
+    if (decision.mode === 'cancel') return;
+    const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+    const roll = rollD20({ modifiers: [], rng });
+    const natural = roll.dice.find((d) => !d.discarded)?.result ?? roll.total;
+    const { next, outcome } = applyDeathSaveRoll(deathSaves, natural);
+
+    let state = runtime;
+    const events: EngineEvent[] = [
+      rollEvent('Спасбросок смерти', roll),
+      { type: 'narrative', text: describeDeathSaveOutcome(outcome, natural) },
+    ];
+    if (outcome === 'revive') {
+      const healed = applyHealing(runtime, 1);
+      state = healed.state;
+    }
+    await persist(state, events, next);
+  };
+
+  const body = (
+    <>
       <div className="sheet-hp-display">
         <div className="sheet-hp-main">
           <Heart size={18} />
@@ -74,8 +162,40 @@ export default function SheetHpPanel({ character, maxHp, maxHpBreakdown, onUpdat
             </span>
           )}
         </div>
-        {unconscious && <p className="sheet-hp-status">Без сознания</p>}
+        {concentration && !unconscious && (
+          <p className="sheet-hp-concentration" title="При уроне — проверка ТЕЛ СЛ max(10, урон/2)">
+            ✦ {concentration.name}
+          </p>
+        )}
       </div>
+
+      {unconscious && (
+        <div className="sheet-death-saves">
+          <p className="sheet-hp-status">
+            {deathSaves.dead ? 'Погиб' : deathSaves.stable ? 'Стабилизирован' : 'Без сознания — спасброски смерти'}
+          </p>
+          <div className="sheet-death-rows">
+            <span className="sheet-death-row">
+              Успехи
+              {[0, 1, 2].map((i) => (
+                <i key={i} className={`sheet-death-dot ok ${deathSaves.successes > i ? 'on' : ''}`} />
+              ))}
+            </span>
+            <span className="sheet-death-row">
+              Провалы
+              {[0, 1, 2].map((i) => (
+                <i key={i} className={`sheet-death-dot bad ${deathSaves.failures > i ? 'on' : ''}`} />
+              ))}
+            </span>
+          </div>
+          {!deathSaves.dead && !deathSaves.stable && (
+            <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={rollDeathSave}>
+              <Dices size={14} /> Спасбросок смерти
+            </button>
+          )}
+          {deathSaves.dead && <Skull size={18} className="sheet-death-skull" />}
+        </div>
+      )}
 
       <div className="sheet-hp-controls">
         <input
@@ -86,31 +206,33 @@ export default function SheetHpPanel({ character, maxHp, maxHpBreakdown, onUpdat
           value={amount}
           onChange={(e) => setAmount(Math.max(1, Number(e.target.value) || 1))}
         />
-        <button
-          type="button"
-          className="forge-btn ghost sheet-roll-btn"
-          disabled={busy}
-          onClick={() => mutate((s) => applyDamage(s, amount))}
-        >
+        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleDamage}>
           <Minus size={14} /> Урон
         </button>
-        <button
-          type="button"
-          className="forge-btn ghost sheet-roll-btn"
-          disabled={busy}
-          onClick={() => mutate((s) => applyHealing(s, amount))}
-        >
+        <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={handleHeal}>
           <HeartPulse size={14} /> Лечение
         </button>
         <button
           type="button"
           className="forge-btn ghost sheet-roll-btn"
           disabled={busy}
-          onClick={() => mutate((s) => applyTempHp(s, amount))}
+          onClick={() => {
+            const { state, events } = applyTempHp(runtime, amount);
+            persist(state, events);
+          }}
         >
           <Plus size={14} /> Temp HP
         </button>
       </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <section className="sheet-panel">
+      <h2 className="sheet-h2">Хиты</h2>
+      {body}
     </section>
   );
 }
