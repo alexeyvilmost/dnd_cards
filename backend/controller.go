@@ -422,6 +422,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		IsTemplate:                   req.IsTemplate,
 		Slot:                         req.Slot,
 		Effects:                      req.Effects,
+		Mechanics:                    req.Mechanics,
 		BattleProfile:                req.BattleProfile,
 		ContainerMode:                req.ContainerMode,
 		Contents:                     req.Contents,
@@ -597,6 +598,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.RequiresAttunement != nil {
 		card.RequiresAttunement = req.RequiresAttunement
+	}
+	if req.Mechanics != nil {
+		card.Mechanics = req.Mechanics
 	}
 	if req.Range != nil {
 		card.Range = req.Range

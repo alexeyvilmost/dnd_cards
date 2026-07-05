@@ -351,8 +351,22 @@ func GetAllMigrations() []Migration {
 			Up:          addClassRecommendedAbilities,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "058_card_mechanics",
+			Description: "Add mechanics jsonb to cards (unified item mechanics)",
+			Up:          addCardMechanics,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addCardMechanics добавляет предметам унифицированную механику.
+func addCardMechanics(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE cards ADD COLUMN IF NOT EXISTS mechanics JSONB"); err != nil {
+		return fmt.Errorf("addCardMechanics: %w", err)
+	}
+	return nil
 }
 
 // addSpellMechanics добавляет заклинаниям унифицированную механику (как у effects/actions).

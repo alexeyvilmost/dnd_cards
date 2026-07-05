@@ -390,6 +390,7 @@ type Card struct {
 	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"`   // Тип шаблона
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
 	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
+	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`                           // Унифицированная механика (как у effects/actions)
 	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                      // Боевой профиль предмета для сервиса battle
 	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`                // Режим контейнера: all | choice
 	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                            // Содержимое контейнера
@@ -438,6 +439,7 @@ type CreateCardRequest struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
+	Mechanics                    *JSONMap     `json:"mechanics"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -483,6 +485,7 @@ type UpdateCardRequest struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
+	Mechanics                    *JSONMap     `json:"mechanics"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -536,6 +539,7 @@ type CardResponse struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
+	Mechanics                    *JSONMap     `json:"mechanics"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -820,6 +824,7 @@ func (card Card) ToCardResponse() CardResponse {
 		IsTemplate:                   card.IsTemplate,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
+		Mechanics:                    card.Mechanics,
 		BattleProfile:                card.BattleProfile,
 		ContainerMode:                card.ContainerMode,
 		Contents:                     card.Contents,

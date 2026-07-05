@@ -178,6 +178,10 @@ func main() {
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
 		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageController.GenerateStandaloneImage)
 
+		// AI-генерация механики по описанию (кнопка «AI» в редакторах)
+		aiMechanicsController := NewAIMechanicsController()
+		api.POST("/ai/mechanics", OptionalAuthMiddleware(authService), aiMechanicsController.GenerateMechanics)
+
 		// Черты (публичные, но с опциональной авторизацией)
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
 		api.GET("/feats/:id", OptionalAuthMiddleware(authService), featController.GetFeat)
