@@ -600,7 +600,12 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		card.RequiresAttunement = req.RequiresAttunement
 	}
 	if req.Mechanics != nil {
-		card.Mechanics = req.Mechanics
+		// Пустой объект {} — явный сброс механики.
+		if len(*req.Mechanics) == 0 {
+			card.Mechanics = nil
+		} else {
+			card.Mechanics = req.Mechanics
+		}
 	}
 	if req.Range != nil {
 		card.Range = req.Range
@@ -1095,7 +1100,11 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		action.Script = req.Script
 	}
 	if req.Mechanics != nil {
-		action.Mechanics = req.Mechanics
+		if len(*req.Mechanics) == 0 {
+			action.Mechanics = nil
+		} else {
+			action.Mechanics = req.Mechanics
+		}
 	}
 	if req.ActionType != "" {
 		action.ActionType = req.ActionType
@@ -1433,7 +1442,11 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 		effect.Script = req.Script
 	}
 	if req.Mechanics != nil {
-		effect.Mechanics = req.Mechanics
+		if len(*req.Mechanics) == 0 {
+			effect.Mechanics = nil
+		} else {
+			effect.Mechanics = req.Mechanics
+		}
 	}
 	if req.Type != nil {
 		effect.Type = req.Type

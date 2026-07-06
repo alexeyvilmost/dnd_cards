@@ -351,7 +351,11 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 		spell.UpcastDescription = req.UpcastDescription
 	}
 	if req.Mechanics != nil {
-		spell.Mechanics = req.Mechanics
+		if len(*req.Mechanics) == 0 {
+			spell.Mechanics = nil
+		} else {
+			spell.Mechanics = req.Mechanics
+		}
 	}
 	if req.Type != nil {
 		spell.Type = req.Type
