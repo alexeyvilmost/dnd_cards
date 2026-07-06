@@ -21,6 +21,12 @@ export interface BackgroundEquipmentOptions {
   option_a: EquipmentOption;
   option_b: EquipmentOption;
 }
+// Варианты стартового снаряжения класса (А/Б/В; незаполненные — null)
+export interface ClassEquipmentOptions {
+  option_a?: EquipmentOption | null;
+  option_b?: EquipmentOption | null;
+  option_c?: EquipmentOption | null;
+}
 export type TemplateType = 'false' | 'template' | 'only_template';
 export type EquipmentSlot = 'head' | 'body' | 'arms' | 'feet' | 'cloak' | 'one_hand' | 'versatile' | 'two_hands' | 'necklace' | 'ring';
 
@@ -1375,6 +1381,7 @@ export interface CharacterClass {
   tool_proficiencies?: string[] | null;
   skill_choices?: Record<string, unknown> | null;
   starting_equipment?: Record<string, unknown> | null;
+  equipment_options?: ClassEquipmentOptions | null;
   level_progression?: LevelProgression | null;
   resources?: Record<string, unknown> | null;
   is_subclass?: boolean | null;
@@ -1407,6 +1414,7 @@ export interface CreateClassRequest {
   tool_proficiencies?: string[] | null;
   skill_choices?: Record<string, unknown> | null;
   starting_equipment?: Record<string, unknown> | null;
+  equipment_options?: ClassEquipmentOptions | null;
   level_progression?: LevelProgression | null;
   resources?: Record<string, unknown> | null;
   is_subclass?: boolean | null;

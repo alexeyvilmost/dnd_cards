@@ -39,6 +39,21 @@ import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
+
+// RU-подписи категорий владений класса (PHB 2024).
+const ARMOR_LABEL_RU: Record<string, string> = {
+  light: 'лёгкие доспехи',
+  medium: 'средние доспехи',
+  heavy: 'тяжёлые доспехи',
+  shields: 'щиты',
+};
+const WEAPON_LABEL_RU: Record<string, string> = {
+  simple: 'простое оружие',
+  martial: 'воинское оружие',
+};
+const armorLabel = (v: string) => ARMOR_LABEL_RU[v] || v;
+const weaponLabel = (v: string) => WEAPON_LABEL_RU[v] || v;
+
 const originLabel = (kind: string) => {
   switch (kind) {
     case 'race': return 'Способность вида';
@@ -651,9 +666,26 @@ const CharacterSheetMVP = () => {
             </section>
           )}
 
-          {(ruleState.proficiencies.languages.length || ruleState.proficiencies.tools.length) ? (
+          {(ruleState.proficiencies.languages.length || ruleState.proficiencies.tools.length
+            || ruleState.proficiencies.armor.length || ruleState.proficiencies.weapons.length) ? (
             <section className="sheet-panel">
-              <h2 className="sheet-h2">Прочие владения</h2>
+              <h2 className="sheet-h2">Владения</h2>
+              {ruleState.proficiencies.armor.length ? (
+                <div className="sheet-group">
+                  <h3 className="sheet-h3">Доспехи</h3>
+                  <ul className="sheet-tags">
+                    {ruleState.proficiencies.armor.map((a) => <li key={a}>{armorLabel(a)}</li>)}
+                  </ul>
+                </div>
+              ) : null}
+              {ruleState.proficiencies.weapons.length ? (
+                <div className="sheet-group">
+                  <h3 className="sheet-h3">Оружие</h3>
+                  <ul className="sheet-tags">
+                    {ruleState.proficiencies.weapons.map((w) => <li key={w}>{weaponLabel(w)}</li>)}
+                  </ul>
+                </div>
+              ) : null}
               {ruleState.proficiencies.tools.length ? (
                 <div className="sheet-group">
                   <h3 className="sheet-h3">Инструменты</h3>

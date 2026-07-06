@@ -1,5 +1,6 @@
 import type { AssembledCharacter } from './assemble';
-import { initResources } from '../engine/resources';
+import { collectActionUsesPools } from './actionSheet';
+import { initResources, resolveCount } from '../engine/resources';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
@@ -39,6 +40,15 @@ export function syncRuntimeResources(
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
   const grants = collectResourceGrantPayloads(collectPassiveMechanics(assembled));
   const fresh = initResources(ctx, classRes, grants);
+
+  // Виртуальные пулы использований действий (mechanics.uses → uses_<key>).
+  for (const pool of collectActionUsesPools(assembled)) {
+    const count = resolveCount(pool.count, ctx);
+    if (count > 0) {
+      fresh.maxResources[pool.key] = count;
+      fresh.resources[pool.key] = count;
+    }
+  }
 
   if (!existing) return fresh;
 

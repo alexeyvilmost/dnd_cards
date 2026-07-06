@@ -1,6 +1,9 @@
 import type { AssembledCharacter } from './assemble';
 import { STANDARD_ACTIONS } from './standardActions';
+import { actionUsesKey, applyActionUsesCost, usesFromMechanics } from '../engine/actionUses';
 import type { Action, PassiveEffect, Spell } from '../types';
+
+type Dict = Record<string, unknown>;
 
 export type SheetAction = {
   id: string;
@@ -10,22 +13,40 @@ export type SheetAction = {
   level?: number;
   imageUrl?: string | null;
   sourceLabel?: string;
+  /** Ключ виртуального пула использований (uses_<card_number|id>), если у механики есть uses. */
+  usesKey?: string;
   actionRef?: Action;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
 };
 
+/** uses_<key> для действия с mechanics.uses; undefined — без ограничения использований. */
+function actionUsesRef(action: Action): string | undefined {
+  if (!usesFromMechanics(action.mechanics as Dict | null | undefined)) return undefined;
+  return actionUsesKey(action.card_number || action.id);
+}
+
+function effectUsesRef(effect: PassiveEffect): string | undefined {
+  if (!usesFromMechanics(effect.mechanics as Dict | null | undefined)) return undefined;
+  return actionUsesKey(effect.card_number || effect.id);
+}
+
 function normalizeActiveMechanics(
   mech: Record<string, unknown>,
   fallbackResource?: string,
+  usesKey?: string,
 ): Record<string, unknown> {
   const activation = { ...(mech.activation as Record<string, unknown> | undefined) };
   if (activation.mode !== 'active') return mech;
-  const cost = activation.cost as unknown[] | undefined;
+  // mechanics.uses → трата виртуального пула uses_<key> (canPay/pay из коробки).
+  let next: Dict = { ...mech, activation };
+  if (usesKey) next = applyActionUsesCost(next, usesKey);
+  const nextActivation = next.activation as Record<string, unknown>;
+  const cost = nextActivation.cost as unknown[] | undefined;
   if (!Array.isArray(cost) || !cost.length) {
-    activation.cost = [{ resource: fallbackResource || 'action' }];
+    nextActivation.cost = [{ resource: fallbackResource || 'action' }];
   }
-  return { ...mech, activation };
+  return next;
 }
 
 function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> | null {
@@ -33,7 +54,7 @@ function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> |
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(mech as Record<string, unknown>, 'action');
+  return normalizeActiveMechanics(mech as Record<string, unknown>, 'action', effectUsesRef(effect));
 }
 
 function actionMechanics(action: Action): Record<string, unknown> | null {
@@ -51,7 +72,7 @@ function actionMechanics(action: Action): Record<string, unknown> | null {
   }
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(mech as Record<string, unknown>, action.resource);
+  return normalizeActiveMechanics(mech as Record<string, unknown>, action.resource, actionUsesRef(action));
 }
 
 function spellMechanics(spell: Spell): Record<string, unknown> | null {
@@ -85,6 +106,7 @@ export function collectSheetActions(
         group: 'class' as const,
         imageUrl: action.image_url,
         sourceLabel: `${origin.name}`,
+        usesKey: actionUsesRef(action),
         actionRef: action,
       };
     })
@@ -102,6 +124,7 @@ export function collectSheetActions(
         group: 'race' as const,
         imageUrl: effect.image_url,
         sourceLabel: `${origin.name}`,
+        usesKey: effectUsesRef(effect),
         effectRef: effect,
       };
     })
@@ -140,6 +163,46 @@ export function collectSheetActions(
     .filter((a): a is SheetAction => a != null);
 
   return [...basic, ...fromRace, ...fromClass, ...fromItems, ...spells];
+}
+
+export type ActionUsesPool = { key: string; count: number | string; per?: string };
+
+function isActiveMech(mech: unknown): boolean {
+  if (!mech || typeof mech !== 'object') return false;
+  const activation = (mech as Dict).activation as Dict | undefined;
+  return activation?.mode === 'active';
+}
+
+/**
+ * Пулы использований действий листа: uses_<card_number|id> → {count, per}.
+ * Источники зеркалят collectSheetActions: действия + активные способности вида.
+ */
+export function collectActionUsesPools(assembled: AssembledCharacter): ActionUsesPool[] {
+  const out: ActionUsesPool[] = [];
+  const seen = new Set<string>();
+  const push = (key: string | undefined, mech: unknown) => {
+    const uses = usesFromMechanics(mech as Dict | null | undefined);
+    if (!key || !uses || seen.has(key)) return;
+    seen.add(key);
+    out.push({ key, count: uses.count, per: uses.per });
+  };
+  for (const { action } of assembled.actions) {
+    if (isActiveMech(action.mechanics)) push(actionUsesRef(action), action.mechanics);
+  }
+  for (const { effect, origin } of assembled.effects) {
+    if (origin.kind !== 'race' || !isActiveMech(effect.mechanics)) continue;
+    push(effectUsesRef(effect), effect.mechanics);
+  }
+  return out;
+}
+
+/** recharge-карта пулов использований: uses_<key> → per (short_rest | long_rest). */
+export function collectActionUsesRecharge(assembled: AssembledCharacter): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const pool of collectActionUsesPools(assembled)) {
+    if (pool.per) out[pool.key] = pool.per;
+  }
+  return out;
 }
 
 export function actionNeedsTarget(mechanics: Record<string, unknown>): boolean {

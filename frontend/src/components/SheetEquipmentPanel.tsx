@@ -14,7 +14,8 @@ import {
 import { characterCurrency, collectEquippedCards, equipFromInventory, unequipToInventory } from '../character/inventory';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
-import { computeAC } from '../engine/ac';
+import { breakdownValue } from '../engine/breakdown';
+import { currencyIconStyle, getCurrencyIconPath, getCurrencyInfo } from '../utils/currencies';
 import { registerCard } from '../engine/cardRegistry';
 import { totalWeight } from '../engine/equipment';
 import { weaponContext } from '../engine/weapon';
@@ -124,7 +125,9 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
     equippedCards,
     null,
   );
-  const acBreakdown = computeAC(ctx, runtime, passives);
+  // Как шапка листа: база (доспех/щит) + модификаторы эффектов (напр.
+  // боевой стиль «Оборона» +1). Голый computeAC терял modifier-пассивки.
+  const acBreakdown = breakdownValue('ac', ctx, runtime, passives);
   const mainWeapon = weaponContext(ctx, 'main', runtime.equipment);
 
   const persist = useCallback(async (next: RuntimeState) => {
@@ -208,12 +211,20 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
         <div className="sheet-stat"><span>Вес</span><strong>{weight.toFixed(1)} / {capacity} фн</strong></div>
         <div className="sheet-stat" title="Кошелёк персонажа (золото / серебро / медь)">
           <span>Кошелёк</span>
-          <strong>
-            {[
-              wallet.gold ? `${wallet.gold} зм` : null,
-              wallet.silver ? `${wallet.silver} см` : null,
-              wallet.copper ? `${wallet.copper} мм` : null,
-            ].filter(Boolean).join(' ') || '0 зм'}
+          <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {([['gold', wallet.gold], ['silver', wallet.silver], ['copper', wallet.copper]] as const)
+              .filter(([, amount], i) => amount || (i === 0 && !wallet.gold && !wallet.silver && !wallet.copper))
+              .map(([cur, amount]) => (
+                <span key={cur} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  {amount || 0}
+                  <img
+                    src={getCurrencyIconPath(cur)}
+                    alt={getCurrencyInfo(cur).short}
+                    title={getCurrencyInfo(cur).label}
+                    style={{ width: 16, height: 16, objectFit: 'contain', ...currencyIconStyle }}
+                  />
+                </span>
+              ))}
           </strong>
         </div>
         {mainWeapon && (

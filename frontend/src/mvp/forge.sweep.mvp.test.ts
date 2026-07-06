@@ -196,7 +196,9 @@ describe.skipIf(!RUN)('Свип кузницы: все классы и расы 
     expect(human && bg).toBeTruthy();
 
     const failures: string[] = [];
-    for (const cls of classes) {
+    // Подклассы — не самостоятельные классы: без recommended_abilities и
+    // недоступны для прямого выбора; их сборку покрывает выбор в кузнице.
+    for (const cls of classes.filter((c) => !c.is_subclass)) {
       const draft: CharacterDraft = {
         ...emptyDraft(),
         raceId: human!.id,

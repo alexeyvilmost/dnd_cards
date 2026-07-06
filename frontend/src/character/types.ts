@@ -129,6 +129,8 @@ export interface CharacterDraft {
   abilityBonuses: AbilityBonuses;
   /** Вариант стартового снаряжения предыстории (a — предметы, b — золото). */
   equipmentOption: 'a' | 'b';
+  /** Вариант стартового снаряжения класса (А/Б/В); хранится в resolved_choices['builder:class_equipment']. */
+  classEquipmentOption: 'a' | 'b' | 'c';
   classSkillChoices: string[]; // выбранные навыки из class.skill_choices
   resolvedChoices: Record<string, string[]>; // выборы из механики (по id)
   /** «Сменить черту происхождения» в предыстории → показывает вкладку «Черта». */
@@ -162,6 +164,7 @@ export const emptyDraft = (): CharacterDraft => ({
   abilityMethod: 'point_buy',
   abilityBonuses: emptyBonuses(),
   equipmentOption: 'a',
+  classEquipmentOption: 'a',
   classSkillChoices: [],
   resolvedChoices: {},
 });

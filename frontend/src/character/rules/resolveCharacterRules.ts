@@ -309,6 +309,16 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   for (const save of assembled.klass?.saving_throws || []) {
     addGrant({ source: classSource, kind: 'saving_throw', value: save, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
   }
+  // Владения класса: доспехи / оружие / инструменты (PHB 2024, таблица класса).
+  for (const armor of assembled.klass?.armor_training || []) {
+    addGrant({ source: classSource, kind: 'armor', value: armor, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
+  }
+  for (const weapon of assembled.klass?.weapon_proficiencies || []) {
+    addGrant({ source: classSource, kind: 'weapon', value: weapon, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
+  }
+  for (const tool of assembled.klass?.tool_proficiencies || []) {
+    addGrant({ source: classSource, kind: 'tool', value: tool, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
+  }
 
   for (const { effect, origin } of assembled.effects as OriginEffect[]) {
     applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts);

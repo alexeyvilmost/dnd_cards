@@ -15,6 +15,8 @@ import {
 import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import ForgeSpellIconGrid from '../components/forge/ForgeSpellIconGrid';
+import EntitySquareCard from '../components/forge/EntitySquareCard';
+import FeatPreview from '../components/FeatPreview';
 
 // ─── Левая навигация ─────────────────────────────────────────────────────────
 
@@ -127,26 +129,49 @@ export function ChoiceResolver({
     }
   };
   const done = value.length >= choice.count;
+
+  // Выбор черты (боевой стиль, доп. черта Человека и т.п.) — как выбор
+  // черты происхождения: сетка квадратов с иконкой и превью при наведении.
+  const featById = new Map((feats || []).map((f) => [f.id, f]));
+  const featTiles = choice.source === 'feat'
+    ? options.map((o) => featById.get(o.id)).filter((f): f is Feat => !!f)
+    : [];
+
   return (
     <div className="choice-box">
       <div className="choice-title">
         {choice.prompt} <span className="origin">· {choice.origin.name}</span>
       </div>
-      <div className="chips">
-        {options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            className={`chip ${value.includes(o.id) ? 'on' : ''} ${choice.recommended?.includes(o.id) ? 'rec' : ''}`}
-            disabled={!!unavailableOptions[o.id] && !value.includes(o.id)}
-            title={unavailableOptions[o.id]}
-            onClick={() => toggle(o.id)}
-          >
-            {o.label}
-          </button>
-        ))}
-        {options.length === 0 && <span className="ec-sub">Нет вариантов для источника «{choice.source}»</span>}
-      </div>
+      {featTiles.length > 0 ? (
+        <div className="forge-square-grid">
+          {featTiles.map((f) => (
+            <EntitySquareCard
+              key={f.id}
+              name={f.name}
+              imageUrl={f.image_url}
+              selected={value.includes(f.id)}
+              onClick={() => toggle(f.id)}
+              preview={<FeatPreview feat={f} disableHover />}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="chips">
+          {options.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              className={`chip ${value.includes(o.id) ? 'on' : ''} ${choice.recommended?.includes(o.id) ? 'rec' : ''}`}
+              disabled={!!unavailableOptions[o.id] && !value.includes(o.id)}
+              title={unavailableOptions[o.id]}
+              onClick={() => toggle(o.id)}
+            >
+              {o.label}
+            </button>
+          ))}
+          {options.length === 0 && <span className="ec-sub">Нет вариантов для источника «{choice.source}»</span>}
+        </div>
+      )}
       <div className={`choice-count ${done ? 'done' : ''}`}>
         Выбрано {value.length} из {choice.count}
       </div>

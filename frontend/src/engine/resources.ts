@@ -23,7 +23,8 @@ function formulaCtx(ctx: CharacterContext): FormulaContext {
   };
 }
 
-function resolveCount(raw: unknown, ctx: CharacterContext): number {
+/** Количество из числа или формулы («prof_bonus», «1 + cha»…). */
+export function resolveCount(raw: unknown, ctx: CharacterContext): number {
   if (typeof raw === 'number' && !Number.isNaN(raw)) return raw;
   if (raw == null) return 0;
   if (typeof raw === 'string') {
@@ -36,6 +37,23 @@ function resolveCount(raw: unknown, ctx: CharacterContext): number {
     }
   }
   return 0;
+}
+
+/**
+ * Сетка значений по уровням: {"2": 2, "3": 3, "5": 4} — берётся значение
+ * с наибольшим ключом ≤ уровня персонажа (ступени слотов полу-/треть-кастеров).
+ */
+export function resolveByLevel(byLevel: unknown, level: number): number | null {
+  if (!byLevel || typeof byLevel !== 'object') return null;
+  let best: number | null = null;
+  let bestLvl = -1;
+  for (const [lvl, val] of Object.entries(byLevel as Dict)) {
+    const l = Number(lvl);
+    const v = Number(val);
+    if (Number.isNaN(l) || Number.isNaN(v)) continue;
+    if (l <= level && l > bestLvl) { bestLvl = l; best = v; }
+  }
+  return best;
 }
 
 export function buildResourceRecharge(classResources: Dict | null): Record<string, string> {
@@ -60,7 +78,8 @@ export function initResources(
   if (classResources) {
     for (const [id, def] of Object.entries(classResources)) {
       const row = def as Dict;
-      const count = resolveCount(row.count ?? row.max, ctx);
+      const count = resolveByLevel(row.by_level, ctx.level)
+        ?? resolveCount(row.count ?? row.max, ctx);
       if (count > 0) {
         maxResources[id] = count;
         resources[id] = count;

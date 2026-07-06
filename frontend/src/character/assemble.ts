@@ -160,7 +160,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
       ac: 10 + abilityMod(scores.dex),
       speed: bundle.race?.speed ?? 30,
       abilityMods,
-      spellcasting: spellcasting(bundle.klass?.name, scores, pb),
+      spellcasting: spellcasting(bundle.klass?.name, scores, pb, bundle.subclass?.name),
     },
   };
 }

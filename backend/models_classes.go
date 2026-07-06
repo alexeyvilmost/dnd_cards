@@ -1,11 +1,42 @@
 package main
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+// ClassEquipmentOptions - варианты А/Б/В стартового снаряжения класса (jsonb).
+// Незаполненные варианты — nil (UI показывает только заполненные).
+type ClassEquipmentOptions struct {
+	OptionA *EquipmentOption `json:"option_a,omitempty"`
+	OptionB *EquipmentOption `json:"option_b,omitempty"`
+	OptionC *EquipmentOption `json:"option_c,omitempty"`
+}
+
+// Scan - кастомный сканер для ClassEquipmentOptions
+func (o *ClassEquipmentOptions) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(v), o)
+	case []byte:
+		return json.Unmarshal(v, o)
+	default:
+		return fmt.Errorf("неподдерживаемый тип для ClassEquipmentOptions: %T", value)
+	}
+}
+
+// Value - кастомный value для ClassEquipmentOptions
+func (o ClassEquipmentOptions) Value() (driver.Value, error) {
+	return json.Marshal(o)
+}
 
 // Class - модель класса персонажа D&D.
 type Class struct {
@@ -29,6 +60,7 @@ type Class struct {
 	ToolProficiencies     *Properties    `json:"tool_proficiencies" gorm:"type:jsonb"`
 	SkillChoices          *JSONMap       `json:"skill_choices" gorm:"type:jsonb"`
 	StartingEquipment     *JSONMap       `json:"starting_equipment" gorm:"type:jsonb"`
+	EquipmentOptions      *ClassEquipmentOptions `json:"equipment_options" gorm:"type:jsonb"` // Варианты А/Б/В (предметы + золото)
 	LevelProgression      *JSONMap       `json:"level_progression" gorm:"type:jsonb"`
 	Resources             *JSONMap       `json:"resources" gorm:"type:jsonb"`
 	IsSubclass            *bool          `json:"is_subclass" gorm:"type:boolean;default:false"`
@@ -64,6 +96,7 @@ type CreateClassRequest struct {
 	ToolProficiencies    *Properties `json:"tool_proficiencies"`
 	SkillChoices         *JSONMap    `json:"skill_choices"`
 	StartingEquipment    *JSONMap    `json:"starting_equipment"`
+	EquipmentOptions     *ClassEquipmentOptions `json:"equipment_options"`
 	LevelProgression     *JSONMap    `json:"level_progression"`
 	Resources            *JSONMap    `json:"resources"`
 	IsSubclass           *bool       `json:"is_subclass"`
@@ -93,6 +126,7 @@ type UpdateClassRequest struct {
 	ToolProficiencies    *Properties `json:"tool_proficiencies"`
 	SkillChoices         *JSONMap    `json:"skill_choices"`
 	StartingEquipment    *JSONMap    `json:"starting_equipment"`
+	EquipmentOptions     *ClassEquipmentOptions `json:"equipment_options"`
 	LevelProgression     *JSONMap    `json:"level_progression"`
 	Resources            *JSONMap    `json:"resources"`
 	IsSubclass           *bool       `json:"is_subclass"`
@@ -124,6 +158,7 @@ type ClassResponse struct {
 	ToolProficiencies    *Properties `json:"tool_proficiencies"`
 	SkillChoices         *JSONMap    `json:"skill_choices"`
 	StartingEquipment    *JSONMap    `json:"starting_equipment"`
+	EquipmentOptions     *ClassEquipmentOptions `json:"equipment_options"`
 	LevelProgression     *JSONMap    `json:"level_progression"`
 	Resources            *JSONMap    `json:"resources"`
 	IsSubclass           *bool       `json:"is_subclass"`
@@ -148,6 +183,7 @@ func (cl Class) ToClassResponse() ClassResponse {
 		SavingThrows: cl.SavingThrows, ArmorTraining: cl.ArmorTraining,
 		WeaponProficiencies: cl.WeaponProficiencies, ToolProficiencies: cl.ToolProficiencies,
 		SkillChoices: cl.SkillChoices, StartingEquipment: cl.StartingEquipment,
+		EquipmentOptions: cl.EquipmentOptions,
 		LevelProgression: cl.LevelProgression, Resources: cl.Resources,
 		IsSubclass: cl.IsSubclass, ParentClassID: cl.ParentClassID, SubclassLevel: cl.SubclassLevel,
 		RelatedEffects: cl.RelatedEffects, RelatedActions: cl.RelatedActions,

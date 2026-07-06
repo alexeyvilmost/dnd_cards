@@ -344,18 +344,28 @@ const CharacterForge = () => {
         : await charactersV3Api.create(payload);
       const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
       const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true) ?? {};
-      // Стартовое снаряжение и деньги предыстории — только при создании,
+      // Стартовое снаряжение и деньги предыстории и класса — только при создании,
       // чтобы не перезаписать инвентарь существующего персонажа.
       if (isCreate) {
-        const options = assembled.background?.equipment_options as
+        const bgOptions = assembled.background?.equipment_options as
           | Record<'option_a' | 'option_b', { items?: Array<{ card_id: string; quantity?: number }>; gold?: number }>
           | null | undefined;
-        const opt = options?.[draft.equipmentOption === 'b' ? 'option_b' : 'option_a'];
-        if (opt) {
-          const items = (opt.items || []).map((it) => ({ card_id: it.card_id, qty: it.quantity ?? 1 }));
-          if (items.length) runtimePatch.inventory_items = items;
-          if (opt.gold) runtimePatch.currency = { gold: opt.gold };
+        const bgOpt = bgOptions?.[draft.equipmentOption === 'b' ? 'option_b' : 'option_a'];
+        const clOptions = classes.find((c) => c.id === draft.classId)?.equipment_options;
+        const clKey = draft.classEquipmentOption === 'b' ? 'option_b'
+          : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
+        // Устаревший выбор (вариант удалили из класса) — падаем на вариант А.
+        const clOpt = clOptions?.[clKey] ?? clOptions?.option_a;
+        // Слияние предметов обоих источников (одинаковые card_id — суммируем).
+        const qtyById = new Map<string, number>();
+        for (const it of [...(bgOpt?.items || []), ...(clOpt?.items || [])]) {
+          qtyById.set(it.card_id, (qtyById.get(it.card_id) || 0) + (it.quantity ?? 1));
         }
+        if (qtyById.size) {
+          runtimePatch.inventory_items = [...qtyById].map(([card_id, qty]) => ({ card_id, qty }));
+        }
+        const gold = (bgOpt?.gold || 0) + (clOpt?.gold || 0);
+        if (gold) runtimePatch.currency = { gold };
       }
       if (Object.keys(runtimePatch).length) await charactersV3Api.patchRuntime(res.id, runtimePatch);
       setSavedId(res.id);
@@ -623,7 +633,8 @@ const CharacterForge = () => {
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} resolved={draft.resolvedChoices}
                   setResolved={setResolved} ruleState={ruleState} allFeats={feats}
                   subclasses={subclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
-                  onPickSubclass={(id: string) => patch({ subclassId: draft.subclassId === id ? null : id })} />
+                  onPickSubclass={(id: string) => patch({ subclassId: draft.subclassId === id ? null : id })}
+                  onEquipmentOption={(opt: 'a' | 'b' | 'c') => patch({ classEquipmentOption: opt })} />
               )}
               {act === 'subclass' && (
                 <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} allFeats={feats} />
@@ -860,11 +871,24 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, allFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, allFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption }: any) {
   const sc = classSkillChoice(assembled);
   const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
   const subclass = (subclasses as CharacterClass[]).find((c) => c.id === draft.subclassId);
+  // Варианты стартового снаряжения класса (А/Б/В) — по образцу предыстории.
+  const equipOptions = klass?.equipment_options;
+  const equipVariants = ([
+    ['a', 'А', equipOptions?.option_a],
+    ['b', 'Б', equipOptions?.option_b],
+    ['c', 'В', equipOptions?.option_c],
+  ] as const).filter(([, , opt]) => !!opt && ((opt.items?.length || 0) > 0 || (opt.gold || 0) > 0));
+  const equipLabel = (o: { items?: unknown[] | null; gold?: number } | null | undefined) => {
+    const parts: string[] = [];
+    if (o?.items?.length) parts.push(`${o.items.length} предм.`);
+    if (o?.gold) parts.push(`${o.gold} зм`);
+    return parts.join(' + ') || '—';
+  };
   return (
     <div>
       <div className="forge-block forge-square-block">
@@ -887,6 +911,19 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           <div className="forge-entity-name">{klass.name}{klass.hit_die ? ` · кость хитов ${klass.hit_die}` : ''}</div>
           {klass.description && (
             <p className="forge-note"><FormattedText text={klass.description} emptyText="" /></p>
+          )}
+          {equipVariants.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div className="forge-section-h">Стартовое снаряжение</div>
+              <div className="chips">
+                {equipVariants.map(([key, letter, opt]) => (
+                  <button key={key} type="button" className={`chip ${draft.classEquipmentOption === key ? 'on' : ''}`}
+                    onClick={() => onEquipmentOption?.(key)}>
+                    Вариант {letter} · {equipLabel(opt)}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}

@@ -52,15 +52,20 @@ const CLASS_SPELL_ABILITY: Record<string, AbilityKey> = {
   жрец: 'wis', cleric: 'wis', друид: 'wis', druid: 'wis', следопыт: 'wis', ranger: 'wis',
   бард: 'cha', bard: 'cha', колдун: 'cha', warlock: 'cha',
   чародей: 'cha', sorcerer: 'cha', паладин: 'cha', paladin: 'cha',
+  // Треть-кастеры: подклассы со своим заклинательством (INT, как у волшебника).
+  'мистический рыцарь': 'int', 'eldritch knight': 'int',
+  'мистический ловкач': 'int', 'arcane trickster': 'int',
 };
 
 export function spellcasting(
   className: string | undefined,
   scores: Partial<AbilityScores>,
   pb: number,
+  subclassName?: string | null,
 ): Spellcasting {
-  if (!className) return null;
-  const ability = CLASS_SPELL_ABILITY[className.trim().toLowerCase()];
+  const ability = [className, subclassName]
+    .map((n) => (n ? CLASS_SPELL_ABILITY[n.trim().toLowerCase()] : undefined))
+    .find(Boolean);
   if (!ability) return null;
   const mod = abilityMod(scores[ability]);
   return { ability, saveDC: 8 + pb + mod, attack: pb + mod };

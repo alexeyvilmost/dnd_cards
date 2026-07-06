@@ -101,6 +101,7 @@ export function reapplyBonuses(
 export const BONUS_KEY = 'builder:ability_bonus';
 export const METHOD_KEY = 'builder:ability_method';
 export const EQUIPMENT_OPTION_KEY = 'builder:equipment_option';
+export const CLASS_EQUIPMENT_OPTION_KEY = 'builder:class_equipment';
 
 export function serializeBonuses(b: AbilityBonuses): string[] {
   return [

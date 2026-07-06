@@ -1,7 +1,7 @@
 import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
 import { ABILITY_KEYS } from './types';
 import {
-  BONUS_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
+  BONUS_KEY, CLASS_EQUIPMENT_OPTION_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
   bonusIssues, parseBonuses, pointBuyIssues, serializeBonuses,
 } from './pointBuy';
 
@@ -57,6 +57,8 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   }
   const abilityMethod = stored[METHOD_KEY]?.[0] === 'manual' ? 'manual' as const : 'point_buy' as const;
   const equipmentOption = stored[EQUIPMENT_OPTION_KEY]?.[0] === 'b' ? 'b' as const : 'a' as const;
+  const storedClassOpt = stored[CLASS_EQUIPMENT_OPTION_KEY]?.[0];
+  const classEquipmentOption = storedClassOpt === 'b' || storedClassOpt === 'c' ? storedClassOpt : 'a' as const;
 
   return {
     id: c.id,
@@ -77,6 +79,7 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     abilityMethod,
     abilityBonuses: parseBonuses(stored[BONUS_KEY]),
     equipmentOption,
+    classEquipmentOption,
     classSkillChoices,
     resolvedChoices,
     swapFeat: (c.feat_ids || []).length > 0,
@@ -134,6 +137,7 @@ export function buildSavePayload(
       [METHOD_KEY]: [draft.abilityMethod],
       [BONUS_KEY]: serializeBonuses(draft.abilityBonuses),
       [EQUIPMENT_OPTION_KEY]: [draft.equipmentOption],
+      [CLASS_EQUIPMENT_OPTION_KEY]: [draft.classEquipmentOption],
       [SUBCLASS_KEY]: draft.subclassId ? [draft.subclassId] : [],
     },
     rule_state: ruleState,

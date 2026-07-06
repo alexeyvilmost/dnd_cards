@@ -66,6 +66,7 @@ describe('spellRefs', () => {
         subclassId: null,
         backgroundId: null,
         level: 1,
+        classEquipmentOption: 'a',
         featIds: [],
         spellIds: ['a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'],
         abilities: {},

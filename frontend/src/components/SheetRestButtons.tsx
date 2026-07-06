@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Moon, Sun, Swords } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
+import { collectActionUsesRecharge } from '../character/actionSheet';
 import type { AssembledCharacter } from '../character/assemble';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
   collectPassiveMechanics,
-  hpNeedsSync,
-  resourcesNeedSync,
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -37,9 +36,13 @@ export default function SheetRestButtons({
 
   const passives = useMemo(() => collectPassiveMechanics(assembled), [assembled]);
 
+  // Ресурсы класса + виртуальные пулы использований действий (uses_<key> → per).
   const resourceRecharge = useMemo(
-    () => buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
-    [assembled.klass?.resources],
+    () => ({
+      ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+      ...collectActionUsesRecharge(assembled),
+    }),
+    [assembled],
   );
 
   const ctx = useMemo(
@@ -103,11 +106,13 @@ export default function SheetRestButtons({
     }
   }, [character, ctx, assembled, onUpdated, ruleState.maxHP]);
 
+  // Один прогон синка на маунт: buildResourceRuntimePatch сам вернёт null,
+  // если пулы (включая uses_<key> действий) и HP уже актуальны.
   useEffect(() => {
-    if (syncAttempted.current || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
+    if (syncAttempted.current) return;
     syncAttempted.current = true;
     syncResources();
-  }, [character, ruleState.maxHP, syncResources]);
+  }, [syncResources]);
 
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 

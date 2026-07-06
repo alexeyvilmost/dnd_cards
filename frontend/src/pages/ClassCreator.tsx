@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { actionsApi, classesApi, effectsApi } from '../api/client';
-import type { CharacterClass, CreateClassRequest, LevelProgression, UpdateClassRequest } from '../types';
+import type { CharacterClass, ClassEquipmentOptions, CreateClassRequest, EquipmentOption, LevelProgression, UpdateClassRequest } from '../types';
+import ItemRefSelector from '../components/ItemRefSelector';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import LevelProgressionEditor from '../components/LevelProgressionEditor';
@@ -42,6 +43,15 @@ const parseJsonObject = (value: string, label: string): Record<string, unknown> 
 const stringifyJson = (value: Record<string, unknown> | null | undefined) =>
   value ? JSON.stringify(value, null, 2) : '';
 
+type EquipOptKey = 'option_a' | 'option_b' | 'option_c';
+const EQUIP_OPT_LABELS: Array<{ key: EquipOptKey; label: string }> = [
+  { key: 'option_a', label: 'Вариант А' },
+  { key: 'option_b', label: 'Вариант Б' },
+  { key: 'option_c', label: 'Вариант В' },
+];
+const emptyEquipOption = (): EquipmentOption => ({ items: [], gold: 0 });
+const hasEquipContent = (o: EquipmentOption) => o.items.length > 0 || o.gold > 0;
+
 const ClassCreator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,6 +62,12 @@ const ClassCreator = () => {
     defaultValues: { hit_die: 'd8' },
   });
   const [levelProgression, setLevelProgression] = useState<LevelProgression>({});
+  // Стартовое снаряжение — до трёх вариантов (А/Б/В); пустые не сохраняются.
+  const [equipmentOptions, setEquipmentOptions] = useState<Record<EquipOptKey, EquipmentOption>>({
+    option_a: emptyEquipOption(),
+    option_b: emptyEquipOption(),
+    option_c: emptyEquipOption(),
+  });
   const [loading, setLoading] = useState(false);
   const [loadingClass, setLoadingClass] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +119,11 @@ const ClassCreator = () => {
           source: cl.source || '',
         });
         setLevelProgression(cl.level_progression || {});
+        setEquipmentOptions({
+          option_a: cl.equipment_options?.option_a || emptyEquipOption(),
+          option_b: cl.equipment_options?.option_b || emptyEquipOption(),
+          option_c: cl.equipment_options?.option_c || emptyEquipOption(),
+        });
         setIsSubclass(!!cl.is_subclass);
         setParentClassId(cl.parent_class_id || '');
         setSubclassLevel(cl.subclass_level ?? 3);
@@ -138,10 +159,19 @@ const ClassCreator = () => {
     updated_at: '',
   };
 
+  const setEquipOpt = (key: EquipOptKey, patch: Partial<EquipmentOption>) =>
+    setEquipmentOptions((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+
   const onSubmit = async (data: ClassForm) => {
     setLoading(true);
     setError(null);
     try {
+      // Пустые варианты не сохраняем; подкласс своё снаряжение не выдаёт.
+      const equipPayload: ClassEquipmentOptions | null = isSubclass ? null : {
+        option_a: hasEquipContent(equipmentOptions.option_a) ? equipmentOptions.option_a : null,
+        option_b: hasEquipContent(equipmentOptions.option_b) ? equipmentOptions.option_b : null,
+        option_c: hasEquipContent(equipmentOptions.option_c) ? equipmentOptions.option_c : null,
+      };
       const payload: CreateClassRequest & UpdateClassRequest = {
         name: data.name,
         description: data.description,
@@ -155,6 +185,7 @@ const ClassCreator = () => {
         tool_proficiencies: splitList(data.tool_proficiencies).length ? splitList(data.tool_proficiencies) : null,
         skill_choices: parseJsonObject(data.skill_choices_json, 'Выбор навыков'),
         starting_equipment: parseJsonObject(data.starting_equipment_json, 'Стартовое снаряжение'),
+        equipment_options: equipPayload,
         resources: parseJsonObject(data.resources_json, 'Ресурсы'),
         level_progression: Object.keys(levelProgression).length ? levelProgression : null,
         is_subclass: isSubclass,
@@ -279,6 +310,33 @@ const ClassCreator = () => {
                       <div>
                         <label className={labelCls}>Инструменты</label>
                         <input {...register('tool_proficiencies')} className={inputCls} placeholder="thieves_tools" />
+                      </div>
+                    </div>
+
+                    {/* Стартовое снаряжение — до трёх вариантов (как у предысторий) */}
+                    <div>
+                      <label className={labelCls}>Стартовое снаряжение — варианты (пустые не сохраняются)</label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {EQUIP_OPT_LABELS.map(({ key, label }) => (
+                          <div key={key} className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-gray-800">{label}</span>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number" min={0}
+                                  value={equipmentOptions[key].gold}
+                                  onChange={(e) => setEquipOpt(key, { gold: parseInt(e.target.value || '0', 10) })}
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <span className="text-sm text-yellow-600">ЗМ</span>
+                              </div>
+                            </div>
+                            <ItemRefSelector
+                              value={equipmentOptions[key].items}
+                              onChange={(items) => setEquipOpt(key, { items })}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </>

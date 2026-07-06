@@ -369,8 +369,23 @@ func GetAllMigrations() []Migration {
 			Up:          addResourceSpentImage,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "061_class_equipment_options",
+			Description: "Add equipment_options jsonb to classes (starting gear variants A/B/C)",
+			Up:          addClassEquipmentOptions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addClassEquipmentOptions добавляет классам варианты стартового снаряжения
+// {option_a,option_b,option_c} по образцу equipment_options предысторий.
+func addClassEquipmentOptions(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS equipment_options JSONB"); err != nil {
+		return fmt.Errorf("addClassEquipmentOptions: %w", err)
+	}
+	return nil
 }
 
 // addClassSubclasses добавляет классам поля подкласса по паттерну подвидов рас.

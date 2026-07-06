@@ -8,6 +8,7 @@ import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
+import { isActionUsesKey } from '../engine/actionUses';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
@@ -35,7 +36,6 @@ const RESOURCE_LABELS: Record<string, string> = {
   action: 'Действие',
   bonus_action: 'Бонус',
   reaction: 'Реакция',
-  second_wind: 'Второе дыхание',
   heroic_inspiration: 'Вдохновение',
 };
 
@@ -115,7 +115,9 @@ export default function SheetActionsPanel({
     [character.equipment, character.turn_state, equipCards],
   );
   const actions = useMemo(() => collectSheetActions(assembled, itemMechs), [assembled, itemMechs]);
-  const resourceKeys = Object.keys(runtime.maxResources).filter((k) => runtime.maxResources[k] > 0);
+  // uses_<key> — пулы использований действий: не плитки-ресурсы, остаток на строке действия.
+  const resourceKeys = Object.keys(runtime.maxResources)
+    .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k));
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
     setBusy(true);

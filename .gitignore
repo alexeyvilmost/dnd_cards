@@ -72,3 +72,4 @@ venv.bak/
 officials/*.pdf
 officials/.kbvenv/
 officials/__pycache__/
+all_cards.json

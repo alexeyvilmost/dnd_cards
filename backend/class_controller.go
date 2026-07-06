@@ -110,6 +110,7 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 		SavingThrows: req.SavingThrows, ArmorTraining: req.ArmorTraining,
 		WeaponProficiencies: req.WeaponProficiencies, ToolProficiencies: req.ToolProficiencies,
 		SkillChoices: req.SkillChoices, StartingEquipment: req.StartingEquipment,
+		EquipmentOptions: req.EquipmentOptions,
 		LevelProgression: req.LevelProgression, Resources: req.Resources,
 		IsSubclass: req.IsSubclass, ParentClassID: req.ParentClassID, SubclassLevel: req.SubclassLevel,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
@@ -192,6 +193,9 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 	if req.StartingEquipment != nil {
 		cl.StartingEquipment = req.StartingEquipment
+	}
+	if req.EquipmentOptions != nil {
+		cl.EquipmentOptions = req.EquipmentOptions
 	}
 	if req.LevelProgression != nil {
 		cl.LevelProgression = req.LevelProgression
