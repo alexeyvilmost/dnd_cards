@@ -26,6 +26,7 @@ import ClassPreview from '../components/ClassPreview';
 import BackgroundPreview from '../components/BackgroundPreview';
 import SpellPreview from '../components/SpellPreview';
 import FeatPreview from '../components/FeatPreview';
+import ForgeFeatLine from '../components/forge/ForgeFeatLine';
 import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { isEntityUuid } from '../engine/ids';
@@ -1026,7 +1027,7 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, feats, on
           <div className="forge-note" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>Черта происхождения:</span>
             {originFeat ? (
-              <EntitySquareCard name={originFeat.name} imageUrl={originFeat.image_url} preview={<FeatPreview feat={originFeat} disableHover />} />
+              <ForgeFeatLine feat={originFeat} />
             ) : (
               <span>{bg.origin_feat || '—'}</span>
             )}
