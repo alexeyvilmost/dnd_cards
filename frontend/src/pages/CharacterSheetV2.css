@@ -199,6 +199,26 @@
   border: 1px solid var(--forge-gold-dim); border-radius: 6px; padding: 0 5px;
 }
 
+/* Плиточный режим действий (настройка «Иконки») */
+.cs-action-tiles { display: flex; flex-wrap: wrap; gap: 8px; }
+.cs-action-tile {
+  position: relative; width: 52px; height: 52px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; cursor: pointer; padding: 0;
+  background: var(--forge-panel-2, rgba(255,255,255,0.05));
+  border: 1px solid var(--forge-border, rgba(255,255,255,0.14));
+  transition: border-color .15s, transform .1s;
+}
+.cs-action-tile:hover:not(:disabled) { border-color: var(--forge-gold, #c9a227); transform: translateY(-1px); }
+.cs-action-tile--disabled { opacity: .4; cursor: not-allowed; }
+.cs-action-tile-lvl {
+  position: absolute; top: -5px; right: -5px; z-index: 2;
+  min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box;
+  font-size: 10px; line-height: 13px; font-weight: 800; text-align: center;
+  color: var(--forge-gold, #d8b978); background: #0e0b07;
+  border: 1px solid var(--forge-gold-dim, #8a7320); border-radius: 8px;
+}
+
 /* ── Конфликты ── */
 .cs-conflicts { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--forge-danger); padding: 2px 4px; }
 

@@ -13,6 +13,8 @@ export type SheetAction = {
   level?: number;
   imageUrl?: string | null;
   sourceLabel?: string;
+  /** Человекочитаемое описание (для hover базовых действий). */
+  description?: string;
   /** Ключ виртуального пула использований (uses_<card_number|id>), если у механики есть uses. */
   usesKey?: string;
   actionRef?: Action;
@@ -93,6 +95,8 @@ export function collectSheetActions(
     name: a.name,
     mechanics: { ...a.mechanics },
     group: 'basic' as const,
+    imageUrl: (a as { imageUrl?: string }).imageUrl,
+    description: (a as { description?: string }).description,
   }));
 
   const fromClass: SheetAction[] = assembled.actions

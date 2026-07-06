@@ -16,6 +16,8 @@ type Props = {
   actionRef?: Action;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
+  /** 'row' — строка (по умолчанию); 'icon' — плитка (настройка отображения действий). */
+  variant?: 'row' | 'icon';
   onActivate: () => void;
 };
 
@@ -30,6 +32,7 @@ const SheetActionLine = ({
   actionRef,
   effectRef,
   spellRef,
+  variant = 'row',
   onActivate,
 }: Props) => {
   const [hover, setHover] = useState(false);
@@ -42,22 +45,40 @@ const SheetActionLine = ({
 
   return (
     <>
-      <button
-        type="button"
-        className={`cs-action-line${disabled ? ' cs-action-line--disabled' : ''}`}
-        disabled={disabled}
-        title={disabled ? disabledTitle : name}
-        onClick={onActivate}
-        onMouseEnter={onEnter}
-        onMouseLeave={() => setHover(false)}
-        onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
-      >
-        <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={20} />
-        <span className="cs-action-line-name">{name}</span>
-        {level != null && (
-          <span className="cs-action-line-lvl">{level === 0 ? 'З' : level}</span>
-        )}
-      </button>
+      {variant === 'icon' ? (
+        <button
+          type="button"
+          className={`cs-action-tile${disabled ? ' cs-action-tile--disabled' : ''}`}
+          disabled={disabled}
+          title={disabled ? disabledTitle : name}
+          onClick={onActivate}
+          onMouseEnter={onEnter}
+          onMouseLeave={() => setHover(false)}
+          onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+        >
+          <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={40} />
+          {level != null && (
+            <span className="cs-action-tile-lvl">{level === 0 ? 'З' : level}</span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className={`cs-action-line${disabled ? ' cs-action-line--disabled' : ''}`}
+          disabled={disabled}
+          title={disabled ? disabledTitle : name}
+          onClick={onActivate}
+          onMouseEnter={onEnter}
+          onMouseLeave={() => setHover(false)}
+          onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+        >
+          <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={20} />
+          <span className="cs-action-line-name">{name}</span>
+          {level != null && (
+            <span className="cs-action-line-lvl">{level === 0 ? 'З' : level}</span>
+          )}
+        </button>
+      )}
       {hover && !disabled && (effectRef || actionRef || spellRef || description) && (
         <div
           className="forge-effect-popover"

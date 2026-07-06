@@ -15,6 +15,8 @@ import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { findResource, useResourceOptions } from '../utils/resources';
+import { useSiteSettings } from '../settings';
 import type { Card } from '../types';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import SheetActionLine from './SheetActionLine';
@@ -115,6 +117,9 @@ export default function SheetActionsPanel({
     [character.equipment, character.turn_state, equipCards],
   );
   const actions = useMemo(() => collectSheetActions(assembled, itemMechs), [assembled, itemMechs]);
+  const resourceOptions = useResourceOptions();
+  const { entityDisplay } = useSiteSettings();
+  const actionsAsIcons = entityDisplay.actions === 'icon';
   // uses_<key> — пулы использований действий: не плитки-ресурсы, остаток на строке действия.
   const resourceKeys = Object.keys(runtime.maxResources)
     .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k));
@@ -209,18 +214,24 @@ export default function SheetActionsPanel({
             const spent = cur <= 0;
             const slot = /^spell_slot_(\d)$/.exec(key);
             const warlockSlot = /^warlock_spell_slot(?:_(\d))?$/.exec(key);
-            const icon = RESOURCE_ICONS[key]
+            // Иконка: справочник ресурсов (кастомная, incl. spent) → хардкод → ячейки.
+            const def = findResource(resourceOptions, key);
+            const dictIcon = def?.imageUrl && !def.imageUrl.startsWith('/charges/') ? def.imageUrl : undefined;
+            const dictSpent = def?.imageUrlSpent && !def.imageUrlSpent.startsWith('/charges/') ? def.imageUrlSpent : undefined;
+            const icon = (spent && dictSpent) || dictIcon
+              || RESOURCE_ICONS[key]
               || (slot ? RESOURCE_ICONS.spell_slot : undefined)
               || (warlockSlot ? RESOURCE_ICONS.warlock_spell_slot : undefined);
+            const useSpentImg = spent && !!dictSpent; // если своя spent-картинка — CSS-фильтр не нужен
             const label = slot ? `Ячейка ${slot[1]}-го круга`
               : warlockSlot ? 'Ячейка колдуна'
-              : (RESOURCE_LABELS[key] ?? key);
+              : (def?.label || RESOURCE_LABELS[key] || key);
             const roman = slot ? ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Number(slot[1])] : '';
             return (
-              <div key={key} className={`res-tile${spent ? ' res-tile--spent' : ''}`} title={`${cur}/${max} ${label}`}>
+              <div key={key} className={`res-tile${spent ? ' res-tile--spent' : ''}`} title={`${cur}/${max} ${label}${def?.description ? `\n${def.description}` : ''}`}>
                 {roman && <span className="res-tile-corner">{roman}</span>}
                 {icon
-                  ? <img src={icon} alt="" className={`res-tile-icon${spent ? ' res-tile-icon--dim' : ''}`} />
+                  ? <img src={icon} alt="" className={`res-tile-icon${spent && !useSpentImg ? ' res-tile-icon--dim' : ''}`} />
                   : <span className={`res-tile-mono${spent ? ' res-tile-mono--dim' : ''}`}>{label.slice(0, 2)}</span>}
                 {max > 1 && cur !== 1 && <span className="res-tile-count">{cur}</span>}
               </div>
@@ -246,17 +257,18 @@ export default function SheetActionsPanel({
       {groups.map(({ key, label, items }) => items.length > 0 && (
         <div key={key} className="sheet-group">
           <h3 className="sheet-h3">{label}</h3>
-          <div className="cs-action-lines">
+          <div className={actionsAsIcons ? 'cs-action-tiles' : 'cs-action-lines'}>
             {items.map((action) => {
               const disabled = isDisabled(action);
               return (
-                <div key={action.id} data-action-id={action.id}>
+                <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>
                 <SheetActionLine
                   name={action.name}
                   imageUrl={action.imageUrl}
                   sourceLabel={action.sourceLabel ?? (action.group === 'basic' ? 'Базовое действие' : undefined)}
-                  description={action.group === 'basic' ? action.name : undefined}
+                  description={action.group === 'basic' ? action.description ?? action.name : undefined}
                   level={action.level}
+                  variant={actionsAsIcons ? 'icon' : 'row'}
                   actionRef={action.actionRef}
                   effectRef={action.effectRef}
                   spellRef={action.spellRef}
