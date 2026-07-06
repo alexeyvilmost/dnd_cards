@@ -3,9 +3,18 @@
  */
 import { useEffect, useState } from 'react';
 
+/** Режим отображения карточных сущностей: плитка-иконка или строка с мелкой иконкой. */
+export type EntityDisplayMode = 'icon' | 'row';
+
+export type EntityDisplayKind = 'spells' | 'actions' | 'effects' | 'items';
+
+export type EntityDisplaySettings = Record<EntityDisplayKind, EntityDisplayMode>;
+
 export interface SiteSettings {
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
   diceDialog: boolean;
+  /** Как отображать заклинания/действия/эффекты/предметы в меню и на листе. */
+  entityDisplay: EntityDisplaySettings;
 }
 
 const KEY = 'site-settings';
@@ -13,15 +22,28 @@ const EVENT = 'site-settings-changed';
 
 const DEFAULTS: SiteSettings = {
   diceDialog: true,
+  entityDisplay: {
+    spells: 'icon',
+    actions: 'row',
+    effects: 'row',
+    items: 'row',
+  },
 };
 
 export function getSettings(): SiteSettings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { ...DEFAULTS };
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<SiteSettings>) };
+    if (!raw) return { ...DEFAULTS, entityDisplay: { ...DEFAULTS.entityDisplay } };
+    const parsed = JSON.parse(raw) as Partial<SiteSettings>;
+    // Мердж с дефолтами: вложенный entityDisplay тоже мерджим по ключам,
+    // чтобы старый localStorage без новых полей не ломал настройки.
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
+    };
   } catch {
-    return { ...DEFAULTS };
+    return { ...DEFAULTS, entityDisplay: { ...DEFAULTS.entityDisplay } };
   }
 }
 
@@ -29,6 +51,12 @@ export function setSetting<K extends keyof SiteSettings>(key: K, value: SiteSett
   const next = { ...getSettings(), [key]: value };
   try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* ignore */ }
   window.dispatchEvent(new CustomEvent(EVENT));
+}
+
+/** Переключить режим отображения одного типа сущностей. */
+export function setEntityDisplay(kind: EntityDisplayKind, mode: EntityDisplayMode): void {
+  const cur = getSettings();
+  setSetting('entityDisplay', { ...cur.entityDisplay, [kind]: mode });
 }
 
 /** Реактивные настройки: обновляются при изменении в этой и других вкладках. */

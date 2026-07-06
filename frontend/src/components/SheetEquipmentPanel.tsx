@@ -20,6 +20,8 @@ import { totalWeight } from '../engine/equipment';
 import { weaponContext } from '../engine/weapon';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
+import { useSiteSettings } from '../settings';
+import CardPreview from './CardPreview';
 
 interface Props {
   character: ForgeCharacter;
@@ -50,6 +52,9 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<Card[]>([]);
   const [searching, setSearching] = useState(false);
+  const { entityDisplay } = useSiteSettings();
+  const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
+  const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
 
@@ -299,32 +304,86 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
       <div className="sheet-group">
         <h3 className="sheet-h3">Инвентарь</h3>
         {!character.inventory_items?.length && <p className="forge-note">Пусто — найдите предмет выше и нажмите «Добавить».</p>}
-        <ul className="sheet-list">
-          {(character.inventory_items ?? []).map((row) => {
-            const card = cardMap.get(row.card_id);
-            return (
-              <li key={row.card_id}>
-                <span>{card?.name ?? row.card_id} ×{row.qty}</span>
-                <span className="sheet-inv-actions">
-                  {card && (
-                    <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => handleEquip(card)}>
-                      Надеть
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="forge-btn ghost sheet-roll-btn"
-                    disabled={busy}
-                    onClick={() => handleRemove(row.card_id)}
-                    title="Убрать 1 шт."
+        {entityDisplay.items === 'icon' ? (
+          <div className="forge-spell-icon-grid sheet-inv-icon-grid">
+            {(character.inventory_items ?? []).map((row) => {
+              const card = cardMap.get(row.card_id);
+              return (
+                <div key={row.card_id} className="sheet-inv-tile">
+                  <div
+                    className="forge-spell-icon ready"
+                    title={card?.name ?? row.card_id}
+                    onMouseEnter={(e) => { if (card) { setHoveredItem(card); setItemMouse({ x: e.clientX, y: e.clientY }); } }}
+                    onMouseMove={(e) => setItemMouse({ x: e.clientX, y: e.clientY })}
+                    onMouseLeave={() => setHoveredItem(null)}
                   >
-                    <Trash2 size={14} />
-                  </button>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+                    <img
+                      src={card?.image_url?.trim() || '/default_image.png'}
+                      alt={card?.name ?? row.card_id}
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
+                    />
+                    {row.qty > 1 && <span className="forge-spell-badge">×{row.qty}</span>}
+                  </div>
+                  <div className="sheet-inv-tile-actions">
+                    {card && (
+                      <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => handleEquip(card)}>
+                        Надеть
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="forge-btn ghost sheet-roll-btn"
+                      disabled={busy}
+                      onClick={() => handleRemove(row.card_id)}
+                      title="Убрать 1 шт."
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <ul className="sheet-list">
+            {(character.inventory_items ?? []).map((row) => {
+              const card = cardMap.get(row.card_id);
+              return (
+                <li key={row.card_id}>
+                  <span>{card?.name ?? row.card_id} ×{row.qty}</span>
+                  <span className="sheet-inv-actions">
+                    {card && (
+                      <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => handleEquip(card)}>
+                        Надеть
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="forge-btn ghost sheet-roll-btn"
+                      disabled={busy}
+                      onClick={() => handleRemove(row.card_id)}
+                      title="Убрать 1 шт."
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {hoveredItem && (
+          <div
+            className="fixed z-50 pointer-events-none"
+            style={{
+              left: Math.min(itemMouse.x + 16, window.innerWidth - 220),
+              top: Math.min(Math.max(itemMouse.y - 40, 10), window.innerHeight - 20),
+              transform: itemMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+            }}
+          >
+            <CardPreview card={hoveredItem} disableHover />
+          </div>
+        )}
       </div>
     </>
   );

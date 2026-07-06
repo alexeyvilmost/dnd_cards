@@ -19,7 +19,8 @@ import {
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel, type Card, type Spell } from '../types';
-import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import { useSiteSettings } from '../settings';
+import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SpellPreview from '../components/SpellPreview';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
@@ -62,6 +63,7 @@ const CharacterSheetMVP = () => {
   const [journalOpen, setJournalOpen] = useState(false);
   const [unseen, setUnseen] = useState(0);
   const { toasts, push: pushToast } = useSheetToasts();
+  const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
@@ -606,33 +608,33 @@ const CharacterSheetMVP = () => {
             {assembled.effects.length > 0 && (
               <div className="sheet-group">
                 <h3 className="sheet-h3">Эффекты</h3>
-                <div className="sheet-ability-lines">
-                  {assembled.effects.map(({ effect, origin }) => (
-                    <ForgeAbilityLine
-                      key={effect.id}
-                      name={effect.name}
-                      imageUrl={effect.image_url}
-                      sourceLabel={`${originLabel(origin.kind)} · ${origin.name}`}
-                      effect={effect}
-                    />
-                  ))}
-                </div>
+                <ForgeAbilityDisplay
+                  mode={entityDisplay.effects}
+                  linesClassName="sheet-ability-lines"
+                  entries={assembled.effects.map(({ effect, origin }) => ({
+                    key: effect.id,
+                    name: effect.name,
+                    imageUrl: effect.image_url,
+                    sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                    effect,
+                  }))}
+                />
               </div>
             )}
             {assembled.actions.length > 0 && (
               <div className="sheet-group">
                 <h3 className="sheet-h3">Способности (описание)</h3>
-                <div className="sheet-ability-lines">
-                  {assembled.actions.map(({ action, origin }) => (
-                    <ForgeAbilityLine
-                      key={action.id}
-                      name={action.name}
-                      imageUrl={action.image_url}
-                      sourceLabel={`${originLabel(origin.kind)} · ${origin.name}`}
-                      action={action}
-                    />
-                  ))}
-                </div>
+                <ForgeAbilityDisplay
+                  mode={entityDisplay.actions}
+                  linesClassName="sheet-ability-lines"
+                  entries={assembled.actions.map(({ action, origin }) => ({
+                    key: action.id,
+                    name: action.name,
+                    imageUrl: action.image_url,
+                    sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                    action,
+                  }))}
+                />
               </div>
             )}
             {assembled.feats.length === 0 && assembled.effects.length === 0 && assembled.actions.length === 0 && (
@@ -677,31 +679,61 @@ const CharacterSheetMVP = () => {
               {spellsByLevel.map(([level, spellList]) => (
                 <div key={level} className="sheet-group">
                   <h3 className="sheet-h3">{getSpellLevelLabel(level)}</h3>
-                  <div className="forge-spell-icon-grid sheet-spell-grid">
-                    {spellList.map((spell) => (
-                      <button
-                        key={spell.id}
-                        type="button"
-                        className="forge-spell-icon ready"
-                        title={`${spell.name} — к действию`}
-                        onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
-                        onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
-                        onMouseLeave={() => setHoveredSpell(null)}
-                        onClick={() => scrollToAction(spell.id)}
-                      >
-                        {spell.image_url ? (
-                          <img
-                            src={spell.image_url}
-                            alt={spell.name}
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }}
-                          />
-                        ) : (
-                          <span className="sheet-spell-fallback">{spell.name.slice(0, 1)}</span>
-                        )}
-                        <span className="forge-spell-badge">{level === 0 ? 'З' : level}</span>
-                      </button>
-                    ))}
-                  </div>
+                  {entityDisplay.spells === 'row' ? (
+                    <div className="forge-spell-rows">
+                      {spellList.map((spell) => (
+                        <button
+                          key={spell.id}
+                          type="button"
+                          className="forge-spell-row"
+                          title={`${spell.name} — к действию`}
+                          onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
+                          onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
+                          onMouseLeave={() => setHoveredSpell(null)}
+                          onClick={() => scrollToAction(spell.id)}
+                        >
+                          {spell.image_url ? (
+                            <img
+                              className="forge-spell-row-img"
+                              src={spell.image_url}
+                              alt={spell.name}
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }}
+                            />
+                          ) : (
+                            <span className="forge-spell-row-fallback">{spell.name.slice(0, 1)}</span>
+                          )}
+                          <span className="forge-spell-row-name">{spell.name}</span>
+                          <span className="forge-spell-row-meta">{getSpellLevelLabel(level)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="forge-spell-icon-grid sheet-spell-grid">
+                      {spellList.map((spell) => (
+                        <button
+                          key={spell.id}
+                          type="button"
+                          className="forge-spell-icon ready"
+                          title={`${spell.name} — к действию`}
+                          onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
+                          onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
+                          onMouseLeave={() => setHoveredSpell(null)}
+                          onClick={() => scrollToAction(spell.id)}
+                        >
+                          {spell.image_url ? (
+                            <img
+                              src={spell.image_url}
+                              alt={spell.name}
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }}
+                            />
+                          ) : (
+                            <span className="sheet-spell-fallback">{spell.name.slice(0, 1)}</span>
+                          )}
+                          <span className="forge-spell-badge">{level === 0 ? 'З' : level}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {hoveredSpell && (

@@ -12,6 +12,7 @@ import CurrencyPriceInline from '../components/CurrencyPriceInline';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import { getRarityColor } from '../utils/rarityColors';
 import { getCurrencyInfo } from '../utils/currencies';
+import { getSettings } from '../settings';
 
 type VendorsResponse = Record<string, Card[]>;
 
@@ -22,7 +23,10 @@ const ShopDetail = () => {
   const [vendors, setVendors] = useState<VendorsResponse>({});
   const [characters, setCharacters] = useState<ForgeCharacter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  // Начальный режим — из настройки «Отображение сущностей → Предметы»; переключатель работает поверх.
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(
+    () => (getSettings().entityDisplay.items === 'icon' ? 'grid' : 'list'),
+  );
   const [error, setError] = useState<string | null>(null);
   const [shopMsg, setShopMsg] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);

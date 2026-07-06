@@ -14,7 +14,8 @@ import { abilityOfSkill } from '../character/rules/foundation';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
 import { SKILLS } from '../mechanics/registries';
 import { getSpellLevelLabel, type Card, type Spell } from '../types';
-import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import { useSiteSettings } from '../settings';
+import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SpellPreview from '../components/SpellPreview';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CollapsibleSection from '../components/CollapsibleSection';
@@ -64,6 +65,7 @@ const CharacterSheetV2 = ({
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [hpOpen, setHpOpen] = useState(false);
+  const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
 
   // Клик по спасброску/навыку — бросок к20 в журнал (учёт активных эффектов).
@@ -284,16 +286,28 @@ const CharacterSheetV2 = ({
                 {assembled.feats.map((f) => <span key={f.id} className="cs-tag">{f.name}</span>)}
               </div>
             )}
-            <div className="cs-lines">
-              {assembled.effects.map(({ effect, origin }) => (
-                <ForgeAbilityLine key={effect.id} name={effect.name} imageUrl={effect.image_url}
-                  sourceLabel={`${originLabel(origin.kind)} · ${origin.name}`} effect={effect} />
-              ))}
-              {assembled.actions.map(({ action, origin }) => (
-                <ForgeAbilityLine key={action.id} name={action.name} imageUrl={action.image_url}
-                  sourceLabel={`${originLabel(origin.kind)} · ${origin.name}`} action={action} />
-              ))}
-            </div>
+            <ForgeAbilityDisplay
+              mode={entityDisplay.effects}
+              linesClassName="cs-lines"
+              entries={assembled.effects.map(({ effect, origin }) => ({
+                key: effect.id,
+                name: effect.name,
+                imageUrl: effect.image_url,
+                sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                effect,
+              }))}
+            />
+            <ForgeAbilityDisplay
+              mode={entityDisplay.actions}
+              linesClassName="cs-lines"
+              entries={assembled.actions.map(({ action, origin }) => ({
+                key: action.id,
+                name: action.name,
+                imageUrl: action.image_url,
+                sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                action,
+              }))}
+            />
             {assembled.feats.length === 0 && assembled.effects.length === 0 && assembled.actions.length === 0 && (
               <p className="cs-hook-note">Нет привязанных способностей.</p>
             )}
@@ -319,20 +333,38 @@ const CharacterSheetV2 = ({
               {spellsByLevel.map(([level, list]) => (
                 <div key={level} className="cs-spell-grp">
                   <div className="cs-spell-lvl">{getSpellLevelLabel(level)}</div>
-                  <div className="cs-spell-grid">
-                    {list.map((spell) => (
-                      <button key={spell.id} type="button" className="cs-spell"
-                        title={spell.name}
-                        onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
-                        onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
-                        onMouseLeave={() => setHoveredSpell(null)}>
-                        {spell.image_url
-                          ? <img src={spell.image_url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }} />
-                          : <span className="cs-spell-fb">{spell.name.slice(0, 1)}</span>}
-                        <span className="cs-spell-badge">{level === 0 ? 'З' : level}</span>
-                      </button>
-                    ))}
-                  </div>
+                  {entityDisplay.spells === 'row' ? (
+                    <div className="forge-spell-rows">
+                      {list.map((spell) => (
+                        <button key={spell.id} type="button" className="forge-spell-row"
+                          title={spell.name}
+                          onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
+                          onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
+                          onMouseLeave={() => setHoveredSpell(null)}>
+                          {spell.image_url
+                            ? <img className="forge-spell-row-img" src={spell.image_url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }} />
+                            : <span className="forge-spell-row-fallback">{spell.name.slice(0, 1)}</span>}
+                          <span className="forge-spell-row-name">{spell.name}</span>
+                          <span className="forge-spell-row-meta">{getSpellLevelLabel(level)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="cs-spell-grid">
+                      {list.map((spell) => (
+                        <button key={spell.id} type="button" className="cs-spell"
+                          title={spell.name}
+                          onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
+                          onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
+                          onMouseLeave={() => setHoveredSpell(null)}>
+                          {spell.image_url
+                            ? <img src={spell.image_url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }} />
+                            : <span className="cs-spell-fb">{spell.name.slice(0, 1)}</span>}
+                          <span className="cs-spell-badge">{level === 0 ? 'З' : level}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </CollapsibleSection>

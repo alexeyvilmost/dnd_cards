@@ -17,8 +17,9 @@ import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../char
 import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
-import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import ForgeTraitsBlock from '../components/forge/ForgeTraitsBlock';
+import { useSiteSettings } from '../settings';
 import ForgeOriginAbilities from '../components/forge/ForgeOriginAbilities';
 import RacePreview from '../components/RacePreview';
 import ClassPreview from '../components/ClassPreview';
@@ -37,6 +38,7 @@ const CharacterForge = () => {
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { entityDisplay } = useSiteSettings();
 
   // Справочники сущностей
   const [races, setRaces] = useState<Race[]>([]);
@@ -439,6 +441,11 @@ const CharacterForge = () => {
     // Блокируют подтверждение только незакрытые НОВЫЕ выборы; конфликты,
     // унаследованные от создания, показываем предупреждением (править их тут нечем).
     const blockingIssues = requiredChoiceIssues(draft, assembled);
+    // Пересечение порога подкласса: выбор обязателен.
+    const subclassDue = subclasses.length > 0 && subclassUnlocked && !draft.subclassId;
+    if (subclassDue && levelUp.fromLevel < subclassLevel) {
+      blockingIssues.unshift('Выберите подкласс');
+    }
     const conflictWarnings = ruleState.conflicts
       .filter((c) => c.severity === 'error')
       .map((c) => c.message);
@@ -472,25 +479,50 @@ const CharacterForge = () => {
               {newEffects.length === 0 && newActions.length === 0 && (
                 <p className="forge-note">На этом уровне новых способностей нет.</p>
               )}
-              {newEffects.map(({ effect, origin }) => (
-                <ForgeAbilityLine
-                  key={effect.id}
-                  name={effect.name}
-                  imageUrl={effect.image_url}
-                  sourceLabel={`${origin.kind === 'race' ? 'Способность вида' : 'Способность класса'} · ${origin.name}`}
-                  effect={effect}
-                />
-              ))}
-              {newActions.map(({ action, origin }) => (
-                <ForgeAbilityLine
-                  key={action.id}
-                  name={action.name}
-                  imageUrl={action.image_url}
-                  sourceLabel={`Действие · ${origin.name}`}
-                  action={action}
-                />
-              ))}
+              <ForgeAbilityDisplay
+                mode={entityDisplay.effects}
+                entries={newEffects.map(({ effect, origin }) => ({
+                  key: effect.id,
+                  name: effect.name,
+                  imageUrl: effect.image_url,
+                  sourceLabel: `${origin.kind === 'race' ? 'Способность вида' : 'Способность класса'} · ${origin.name}`,
+                  effect,
+                }))}
+              />
+              <ForgeAbilityDisplay
+                mode={entityDisplay.actions}
+                entries={newActions.map(({ action, origin }) => ({
+                  key: action.id,
+                  name: action.name,
+                  imageUrl: action.image_url,
+                  sourceLabel: `Действие · ${origin.name}`,
+                  action,
+                }))}
+              />
             </div>
+
+            {subclasses.length > 0 && subclassUnlocked && (
+              <div className="forge-block forge-square-block">
+                <div className="forge-section-h">Подкласс</div>
+                <div className="forge-square-grid">
+                  {(subclasses as CharacterClass[]).map((c) => (
+                    <EntitySquareCard
+                      key={c.id}
+                      name={c.name}
+                      imageUrl={c.image_url}
+                      selected={draft.subclassId === c.id}
+                      onClick={() => patch({ subclassId: draft.subclassId === c.id ? null : c.id })}
+                      preview={<ClassPreview characterClass={c} disableHover />}
+                    />
+                  ))}
+                </div>
+                {draft.subclassId && (
+                  <p className="forge-note">
+                    {(subclasses as CharacterClass[]).find((c) => c.id === draft.subclassId)?.description}
+                  </p>
+                )}
+              </div>
+            )}
 
             {unresolvedOther.length > 0 && (
               <ChoiceList
@@ -1043,6 +1075,8 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
   spells: Spell[]; granted: Spell[]; choices: PendingChoice[];
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
 }) {
+  const { entityDisplay } = useSiteSettings();
+  const spellRows = entityDisplay.spells === 'row';
   const [search, setSearch] = useState('');
   const [hovered, setHovered] = useState<Spell | null>(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
@@ -1082,18 +1116,34 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
         <div className="forge-block">
           <div className="forge-section-h">Получено от вида, класса или черты</div>
           <p className="forge-note">Эти заклинания выдаются автоматически и не требуют выбора.</p>
-          <div className="forge-spell-icon-grid">
-            {grantedFiltered.map((spell) => (
-              <div key={spell.id} className="forge-spell-icon ready" title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
-                onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
-                onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
-                onMouseLeave={() => setHovered(null)}>
-                <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
-                {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
-              </div>
-            ))}
-          </div>
+          {spellRows ? (
+            <div className="forge-spell-rows">
+              {grantedFiltered.map((spell) => (
+                <div key={spell.id} className="forge-spell-row" title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                  onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
+                  onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+                  onMouseLeave={() => setHovered(null)}>
+                  <img className="forge-spell-row-img" src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                  <span className="forge-spell-row-name">{spell.name}</span>
+                  <span className="forge-spell-row-meta">{getSpellLevelLabel(spell.level)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="forge-spell-icon-grid">
+              {grantedFiltered.map((spell) => (
+                <div key={spell.id} className="forge-spell-icon ready" title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                  onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
+                  onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+                  onMouseLeave={() => setHovered(null)}>
+                  <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                  {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {choices.length === 0 && granted.length === 0 && (
@@ -1109,19 +1159,35 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
           <div className="forge-block" key={choice.id}>
             <div className="forge-section-h">{choice.prompt}</div>
             <div className={`choice-count ${done ? 'done' : ''}`}>Выбрано {selected.length} из {choice.count}</div>
-            <div className="forge-spell-icon-grid">
+            <div className={spellRows ? 'forge-spell-rows' : 'forge-spell-icon-grid'}>
               {filtered.map((spell) => {
                 const isSelected = selected.includes(spell.id);
                 const owner = selectedSpellOwners.get(spell.id);
                 const disabled = !!owner && owner.choiceId !== choice.id;
+                const title = disabled ? `Уже выбрано: ${owner.label}` : `${spell.name} · ${getSpellLevelLabel(spell.level)}`;
+                const hoverHandlers = {
+                  onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); },
+                  onMouseMove: (e: React.MouseEvent) => setMouse({ x: e.clientX, y: e.clientY }),
+                  onMouseLeave: () => setHovered(null),
+                };
+                if (spellRows) {
+                  return (
+                    <button key={spell.id} type="button"
+                      className={`forge-spell-row ${isSelected ? 'selected' : disabled ? 'disabled' : ''}`}
+                      disabled={disabled} onClick={() => toggleChoiceSpell(choice, spell.id)}
+                      {...hoverHandlers} title={title}>
+                      <img className="forge-spell-row-img" src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                      <span className="forge-spell-row-name">{spell.name}</span>
+                      <span className="forge-spell-row-meta">{getSpellLevelLabel(spell.level)}</span>
+                    </button>
+                  );
+                }
                 return (
                   <button key={spell.id} type="button"
                     className={`forge-spell-icon ${isSelected ? 'selected' : disabled ? 'disabled' : 'ready'}`}
                     disabled={disabled} onClick={() => toggleChoiceSpell(choice, spell.id)}
-                    onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
-                    onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
-                    onMouseLeave={() => setHovered(null)}
-                    title={disabled ? `Уже выбрано: ${owner.label}` : `${spell.name} · ${getSpellLevelLabel(spell.level)}`}>
+                    {...hoverHandlers} title={title}>
                     <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
                       onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
                     {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}

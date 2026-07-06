@@ -31,6 +31,22 @@ import {
   type LibraryContentType,
   parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
+import { getSettings, type EntityDisplayKind } from '../settings';
+
+/** Тип библиотеки → ключ настройки «Отображение сущностей». */
+const ENTITY_DISPLAY_KEY: Partial<Record<LibraryContentType, EntityDisplayKind>> = {
+  cards: 'items',
+  effects: 'effects',
+  actions: 'actions',
+  spells: 'spells',
+};
+
+/** Начальный режим просмотра из настроек сайта (null — тип без настройки). */
+function settingsViewFor(type: LibraryContentType): 'grid' | 'list' | null {
+  const key = ENTITY_DISPLAY_KEY[type];
+  if (!key) return null;
+  return getSettings().entityDisplay[key] === 'icon' ? 'grid' : 'list';
+}
 
 const RESOURCE_CATEGORY_OPTIONS = [
   { value: 'action_cost', label: 'Стоимость действия' },
@@ -189,7 +205,12 @@ const CardLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialFilters.viewMode);
+  // Явный ?view= в URL важнее; без него — режим из настройки «Отображение сущностей».
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (
+    searchParams.get('view')
+      ? initialFilters.viewMode
+      : settingsViewFor(initialFilters.contentType) ?? initialFilters.viewMode
+  ));
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
@@ -681,7 +702,9 @@ const CardLibrary = () => {
     setArmorTypeFilter(parsed.armorType);
     setResourceCategoryFilter(parsed.resourceCategory);
     setSortBy(parsed.sortBy);
-    setViewMode(parsed.viewMode);
+    setViewMode(searchParams.get('view')
+      ? parsed.viewMode
+      : settingsViewFor(parsed.contentType) ?? parsed.viewMode);
     lastWrittenParamsRef.current = currentStr;
   }, [searchParams]);
 
@@ -1072,7 +1095,13 @@ const CardLibrary = () => {
           <div className="flex-shrink-0">
             <select
               value={contentType}
-              onChange={(e) => setContentType(e.target.value as typeof contentType)}
+              onChange={(e) => {
+                const next = e.target.value as typeof contentType;
+                setContentType(next);
+                // Начальный режим вкладки — из настройки; ручной переключатель работает поверх.
+                const preferred = settingsViewFor(next);
+                if (preferred) setViewMode(preferred);
+              }}
               className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
             >
               <option value="cards">Предметы</option>

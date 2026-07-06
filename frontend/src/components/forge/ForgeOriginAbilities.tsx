@@ -1,5 +1,6 @@
 import type { AssembledCharacter } from '../../character/assemble';
-import ForgeAbilityLine from './ForgeAbilityLine';
+import { useSiteSettings } from '../../settings';
+import ForgeAbilityDisplay from './ForgeAbilityDisplay';
 
 type Props = {
   assembled: AssembledCharacter;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 const ForgeOriginAbilities = ({ assembled, kind, fallbackImageUrl }: Props) => {
+  const { entityDisplay } = useSiteSettings();
   const effects = (assembled.effects || []).filter((e) => e.origin.kind === kind);
   const actions = (assembled.actions || []).filter((a) => a.origin.kind === kind);
   if (!effects.length && !actions.length) return null;
@@ -22,35 +24,35 @@ const ForgeOriginAbilities = ({ assembled, kind, fallbackImageUrl }: Props) => {
       {effects.length > 0 && (
         <div className="forge-block">
           <div className="forge-section-h">{effectTitle}</div>
-          <div className="forge-ability-lines">
-            {effects.map(({ effect, origin }) => (
-              <ForgeAbilityLine
-                key={effect.id}
-                name={effect.name}
-                imageUrl={effect.image_url}
-                fallbackImageUrl={fallbackImageUrl}
-                sourceLabel={`${effectSource} · ${origin.name}`}
-                effect={effect}
-              />
-            ))}
-          </div>
+          <ForgeAbilityDisplay
+            mode={entityDisplay.effects}
+            linesClassName="forge-ability-lines"
+            entries={effects.map(({ effect, origin }) => ({
+              key: effect.id,
+              name: effect.name,
+              imageUrl: effect.image_url,
+              fallbackImageUrl,
+              sourceLabel: `${effectSource} · ${origin.name}`,
+              effect,
+            }))}
+          />
         </div>
       )}
       {actions.length > 0 && (
         <div className="forge-block">
           <div className="forge-section-h">{actionTitle}</div>
-          <div className="forge-ability-lines">
-            {actions.map(({ action, origin }) => (
-              <ForgeAbilityLine
-                key={action.id}
-                name={action.name}
-                imageUrl={action.image_url}
-                fallbackImageUrl={fallbackImageUrl}
-                sourceLabel={`${actionSource} · ${origin.name}`}
-                action={action}
-              />
-            ))}
-          </div>
+          <ForgeAbilityDisplay
+            mode={entityDisplay.actions}
+            linesClassName="forge-ability-lines"
+            entries={actions.map(({ action, origin }) => ({
+              key: action.id,
+              name: action.name,
+              imageUrl: action.image_url,
+              fallbackImageUrl,
+              sourceLabel: `${actionSource} · ${origin.name}`,
+              action,
+            }))}
+          />
         </div>
       )}
     </div>
