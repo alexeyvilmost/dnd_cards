@@ -81,7 +81,9 @@ const CharacterForge = () => {
         setRaces(rr.races || []);
         setClasses(cc.classes || []);
         setBackgrounds(bb.backgrounds || []);
-        setFeats((ff.feats || []).filter((f) => f.category === 'origin'));
+        // Все черты: origin — для смены черты происхождения, fighting_style
+        // и другие категории — как варианты choice(source:"feat").
+        setFeats(ff.feats || []);
         setSpells(ss.spells || []);
       } catch (e) {
         console.error(e);
@@ -496,6 +498,7 @@ const CharacterForge = () => {
                 resolved={draft.resolvedChoices}
                 setResolved={setResolved}
                 ruleState={ruleState}
+                feats={feats}
                 title="Новые выборы"
               />
             )}
@@ -581,17 +584,17 @@ const CharacterForge = () => {
                   subraces={subraces} subraceUnlocked={subraceUnlocked} subraceLevel={subraceLevel}
                   onPickSubrace={(id: string) => patch({ lineageId: draft.lineageId === id ? null : id })}
                   choices={raceOtherChoices} subChoices={raceSubChoices}
-                  resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
+                  resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} allFeats={feats} />
               )}
               {act === 'class' && (
                 <ClassSection classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} resolved={draft.resolvedChoices}
-                  setResolved={setResolved} ruleState={ruleState}
+                  setResolved={setResolved} ruleState={ruleState} allFeats={feats}
                   subclasses={subclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
                   onPickSubclass={(id: string) => patch({ subclassId: draft.subclassId === id ? null : id })} />
               )}
               {act === 'subclass' && (
-                <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} />
+                <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} allFeats={feats} />
               )}
               {act === 'spells' && (
                 <SpellsSection spells={spells} granted={grantedSpells} choices={spellChoices} resolved={draft.resolvedChoices} setResolved={setResolved} />
@@ -693,10 +696,10 @@ function OverviewPanel({ draft, patch, assembled, spells, lineageName, subChoice
 
 // ─── Общий список выборов ────────────────────────────────────────────────────
 
-function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выборы' }: {
+function ChoiceList({ choices, resolved, setResolved, ruleState, feats, title = 'Выборы' }: {
   choices: PendingChoice[];
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
-  ruleState: CharacterRuleState; title?: string;
+  ruleState: CharacterRuleState; feats?: Feat[]; title?: string;
 }) {
   if (!choices.length) return null;
   return (
@@ -720,7 +723,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выб
           }).filter(([, reason]) => !!reason)) as Record<string, string>
           : undefined;
         return (
-          <ChoiceResolver key={pc.id} choice={pc} value={value} unavailableOptions={unavailableOptions} onChange={(v) => setResolved(pc.id, v)} />
+          <ChoiceResolver key={pc.id} choice={pc} value={value} unavailableOptions={unavailableOptions} feats={feats} onChange={(v) => setResolved(pc.id, v)} />
         );
       })}
     </div>
@@ -729,7 +732,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, title = 'Выб
 
 // ─── Секции ────────────────────────────────────────────────────────────────
 
-function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState }: any) {
+function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState, allFeats }: any) {
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
@@ -820,12 +823,12 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
         </div>
       )}
 
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} />
     </div>
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, allFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass }: any) {
   const sc = classSkillChoice(assembled);
   const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
@@ -909,16 +912,16 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           </div>
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} />
     </div>
   );
 }
 
-function SubclassSection({ choices, resolved, setResolved, ruleState, klass }: any) {
+function SubclassSection({ choices, resolved, setResolved, ruleState, klass, allFeats }: any) {
   if (!klass) return <p className="forge-note">Сначала выберите класс.</p>;
   return (
     <div>
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выберите подкласс" />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} title="Выберите подкласс" />
       {choices.length === 0 && <p className="forge-note">Для этого класса подкласс на 1 уровне не выбирается.</p>}
     </div>
   );
@@ -996,20 +999,23 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleS
 }
 
 function FeatSection({ feats, draft, onToggle, swapFeat, choices, resolved, setResolved, ruleState }: any) {
+  // В сетке смены черты предыстории — только черты происхождения;
+  // полный список нужен ChoiceResolver-у для choice(source:"feat").
+  const originFeats = (feats as Feat[]).filter((f) => f.category === 'origin');
   return (
     <div>
       {swapFeat && (
         <div className="forge-block forge-square-block">
           <div className="forge-section-h forge-section-h--center">Черта происхождения</div>
           <div className="forge-square-grid">
-            {feats.map((f: Feat) => (
+            {originFeats.map((f: Feat) => (
               <EntitySquareCard key={f.id} name={f.name} imageUrl={f.image_url} selected={draft.featIds.includes(f.id)} onClick={() => onToggle(f.id)} />
             ))}
-            {feats.length === 0 && <p className="forge-note">Нет черт происхождения в базе.</p>}
+            {originFeats.length === 0 && <p className="forge-note">Нет черт происхождения в базе.</p>}
           </div>
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} title="Выбор черты" />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} title="Выбор черты" />
     </div>
   );
 }

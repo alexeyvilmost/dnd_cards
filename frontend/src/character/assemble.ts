@@ -200,13 +200,41 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     )
   ).filter((x): x is OriginEffect => !!x);
 
+  const resolveEffect = (slug: string) =>
+    entityRegistry.resolve<PassiveEffect>('effect', slug).catch(() => null);
+
   // Эффекты-«контейнеры»: разворачиваем ссылки на другие эффекты (grant_effect /
   // choice source:effect) в самостоятельные бусины-эффекты с тем же источником.
-  const effects = await expandEffectGrants(
-    baseEffects,
-    draft,
-    (slug) => entityRegistry.resolve<PassiveEffect>('effect', slug).catch(() => null),
-  );
+  let effects = await expandEffectGrants(baseEffects, draft, resolveEffect);
+
+  // Черты, выбранные через choice(source:"feat") в механике эффектов (боевой
+  // стиль воина/паладина/следопыта, черты происхождения): подгружаем сами черты
+  // и их related_effects/related_actions, чтобы механика стиля попала в сборку.
+  const knownFeatIds = new Set(feats.map((f) => f.id));
+  const chosenFeatIds = [...new Set(
+    effects.flatMap(({ effect, origin }) => collectFeatChoiceRefs(effect.mechanics, effect.id, origin, draft)),
+  )].filter((id) => isEntityUuid(id) && !knownFeatIds.has(id));
+  const chosenFeats = (
+    await Promise.all(chosenFeatIds.map((id) => featsApi.getFeat(id).catch(() => null)))
+  ).filter((f): f is Feat => !!f);
+  const allFeats = [...feats, ...chosenFeats];
+
+  if (chosenFeats.length) {
+    const featRefs = gatherFeatureRefs(null, null, chosenFeats, draft.level);
+    const loadedEffectIds = new Set(effects.map((e) => e.effect.id));
+    const featEffects = (
+      await Promise.all(
+        featRefs.effectRefs
+          .filter((r) => !loadedEffectIds.has(r.id))
+          .map((r) =>
+            effectsApi.getEffect(r.id).then((effect) => ({ effect, origin: r.origin })).catch(() => null),
+          ),
+      )
+    ).filter((x): x is OriginEffect => !!x);
+    effects = await expandEffectGrants([...effects, ...featEffects], draft, resolveEffect);
+    const knownActionIds = new Set(actionRefs.map((r) => r.id));
+    actionRefs.push(...featRefs.actionRefs.filter((r) => !knownActionIds.has(r.id)));
+  }
 
   const actions = (
     await Promise.all(
@@ -216,7 +244,7 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     )
   ).filter((x): x is OriginAction => !!x);
 
-  return { race, klass: klassWithSub, subclass, background, feats, effects, actions, spells: [] };
+  return { race, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [] };
 }
 
 const entityRegistry = createRegistry(createApiResolver());
@@ -260,6 +288,39 @@ export function collectEffectGrantRefs(
         const item = items.find((it) => String(it.id) === sel);
         pushVal((item?.value as string) ?? sel); // item.value переопределяет slug, иначе id === slug
       }
+    }
+  };
+  for (const it of effects as RefDict[]) {
+    if (it?.kind) scan(it);
+    else if (it?.resolution === 'auto' && Array.isArray(it.result)) {
+      for (const p of it.result as RefDict[]) scan(p);
+    }
+  }
+  return refs;
+}
+
+// Черты, выбранные через choice { source:"feat" } (id — UUID черты).
+// Параллельно collectEffectGrantRefs: сканирует механику эффекта и достаёт
+// значения из draft.resolvedChoices по instance-id выбора.
+export function collectFeatChoiceRefs(
+  mechanics: RefDict | null | undefined,
+  effectId: string,
+  origin: ChoiceOrigin,
+  draft: CharacterDraft,
+): string[] {
+  if (!mechanics || typeof mechanics !== 'object') return [];
+  const effects = (mechanics as RefDict).effects;
+  if (!Array.isArray(effects)) return [];
+  const refs: string[] = [];
+  const scan = (payload: RefDict) => {
+    if (!payload || typeof payload !== 'object' || payload.kind !== 'choice') return;
+    const opts = (payload.options || {}) as RefDict;
+    if (String(opts.source) !== 'feat') return;
+    const rawChoiceId = String(payload.id ?? 'choice');
+    const instanceId = `${origin.kind}:${origin.id}:${effectId}:${rawChoiceId}`;
+    const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
+    for (const sel of selected) {
+      if (typeof sel === 'string' && sel) refs.push(sel);
     }
   };
   for (const it of effects as RefDict[]) {

@@ -30,7 +30,7 @@ import type { PendingChoice } from '../mechanics/collectChoices';
 import { LANGUAGES, ORIGIN_FEATS, SKILLS } from '../mechanics/registries';
 import { bonusOf } from '../character/pointBuy';
 import { isEntityUuid } from '../engine/ids';
-import type { Background, CharacterClass, Race, Spell } from '../types';
+import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
 
 const RUN = !!process.env.MVP_CONTENT;
 const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
@@ -51,7 +51,17 @@ async function fetchAll<T>(path: string, key: string): Promise<T[]> {
 let classes: CharacterClass[] = [];
 let races: Race[] = [];
 let backgrounds: Background[] = [];
+let allFeats: Feat[] = [];
 let spellSlugs = new Set<string>();
+
+// filter из choice(source:"feat") → категория черты (как в optionsForChoice).
+const FEAT_FILTER_CATEGORY: Record<string, Feat['category']> = {
+  fighting_style: 'fighting_style',
+  origin_feats: 'origin',
+  origin: 'origin',
+  general: 'general',
+  epic_boon: 'epic_boon',
+};
 
 /** Первые доступные варианты выбора (логика ChoiceList/ChoiceResolver). */
 function pickChoiceOptions(
@@ -67,7 +77,13 @@ function pickChoiceOptions(
   if (pc.source === 'subfeature' || pc.source === 'explicit' || pc.source === 'effect') {
     pool = (pc.items || []).map((it) => it.id);
   } else if (pc.source === 'feat') {
-    pool = (pc.items?.length ? pc.items.map((it) => it.id) : ORIGIN_FEATS.map((f) => f.id));
+    if (pc.items?.length) {
+      pool = pc.items.map((it) => it.id);
+    } else {
+      const category = typeof pc.filter === 'string' ? FEAT_FILTER_CATEGORY[pc.filter] : undefined;
+      const feats = category ? allFeats.filter((f) => f.category === category) : allFeats;
+      pool = feats.length ? feats.map((f) => f.id) : ORIGIN_FEATS.map((f) => f.id);
+    }
   } else if (pc.source === 'skill') {
     const isExpertise = pc.filter === 'proficient';
     const base = Array.isArray(pc.filter)
@@ -164,10 +180,11 @@ async function autoBuild(draft: CharacterDraft): Promise<{
 
 describe.skipIf(!RUN)('Свип кузницы: все классы и расы собираются (живой прод)', () => {
   beforeAll(async () => {
-    [classes, races, backgrounds] = await Promise.all([
+    [classes, races, backgrounds, allFeats] = await Promise.all([
       fetchAll<CharacterClass>('/api/classes', 'classes'),
       fetchAll<Race>('/api/races', 'races'),
       fetchAll<Background>('/api/backgrounds', 'backgrounds'),
+      fetchAll<Feat>('/api/feats', 'feats'),
     ]);
     const spells = await fetchAll<Spell>('/api/spells', 'spells');
     spellSlugs = new Set(spells.map((s) => s.card_number).filter(Boolean));

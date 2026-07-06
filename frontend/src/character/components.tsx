@@ -6,7 +6,7 @@ import {
   ABILITY_KEYS, ABILITY_LABEL_RU,
   type AbilityBonuses, type AbilityGenMethod, type AbilityKey, type CharacterDraft,
 } from './types';
-import type { Spell } from '../types';
+import type { Feat, FeatCategory, Spell } from '../types';
 import { abilityMod } from './derive';
 import {
   POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN,
@@ -64,12 +64,34 @@ export function EntityChoiceCard({
 
 // ─── Разрешение выбора из механики ───────────────────────────────────────────
 
-function optionsForChoice(choice: PendingChoice): RegistryItem[] {
-  // subfeature (подвиды/наследия), explicit (боевой стиль, дар договора,
-  // «навык А или Б») и effect (выбор эффектов-бусин) несут варианты прямо в
-  // options.items — берём их оттуда.
+// filter из механики choice(source:"feat") → категория черты в реестре.
+const FEAT_FILTER_CATEGORY: Record<string, FeatCategory> = {
+  fighting_style: 'fighting_style',
+  origin_feats: 'origin',
+  origin: 'origin',
+  general: 'general',
+  epic_boon: 'epic_boon',
+};
+
+function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[] {
+  // subfeature (подвиды/наследия), explicit (дар договора, «навык А или Б»)
+  // и effect (выбор эффектов-бусин) несут варианты прямо в options.items —
+  // берём их оттуда.
   if (choice.source === 'subfeature' || choice.source === 'explicit' || choice.source === 'effect') {
     return (choice.items || []).map((it) => ({ id: it.id, label: it.name }));
+  }
+  // Черты (боевые стили, черты происхождения): варианты — реальные черты
+  // из справочника, суженные по категории из filter.
+  if (choice.source === 'feat' && feats?.length) {
+    let pool = feats;
+    if (Array.isArray(choice.filter)) {
+      const allow = choice.filter as string[];
+      pool = feats.filter((f) => allow.includes(f.id) || allow.includes(f.card_number));
+    } else if (typeof choice.filter === 'string' && choice.filter && choice.filter !== 'all') {
+      const category = FEAT_FILTER_CATEGORY[choice.filter];
+      pool = category ? feats.filter((f) => f.category === category) : feats;
+    }
+    return pool.map((f) => ({ id: f.id, label: f.name }));
   }
   const opts = optionsForChoiceSource(choice.source);
   if (opts.length) {
@@ -81,14 +103,16 @@ function optionsForChoice(choice: PendingChoice): RegistryItem[] {
 }
 
 export function ChoiceResolver({
-  choice, value, onChange, unavailableOptions = {},
+  choice, value, onChange, unavailableOptions = {}, feats,
 }: {
   choice: PendingChoice;
   value: string[];
   onChange: (v: string[]) => void;
   unavailableOptions?: Record<string, string>;
+  /** Справочник черт для choice(source:"feat") — варианты по категории. */
+  feats?: Feat[];
 }) {
-  const options = optionsForChoice(choice);
+  const options = optionsForChoice(choice, feats);
   const toggle = (id: string) => {
     if (unavailableOptions[id] && !value.includes(id)) return;
     if (value.includes(id)) {

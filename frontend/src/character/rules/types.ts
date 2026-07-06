@@ -14,7 +14,7 @@ export type RuleSourceType =
   | 'other';
 
 export type ProficiencyKind = 'skill' | 'saving_throw' | 'tool' | 'language' | 'weapon' | 'armor';
-export type GrantKind = ProficiencyKind | ExpertiseKind | 'spell';
+export type GrantKind = ProficiencyKind | ExpertiseKind | 'spell' | 'feat';
 export type ExpertiseKind = 'skill' | 'tool';
 export type GrantMode = 'proficiency' | 'expertise';
 

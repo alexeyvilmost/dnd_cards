@@ -25,6 +25,7 @@ const emptySetMap = () => ({
   weapon: new Map<string, AppliedGrant>(),
   armor: new Map<string, AppliedGrant>(),
   spell: new Map<string, AppliedGrant>(),
+  feat: new Map<string, AppliedGrant>(),
 });
 
 const sourceFromOrigin = (origin: { kind: string; id: string; name: string }, feature?: { id: string; name: string }): RuleSource => ({
@@ -69,8 +70,15 @@ function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[] {
     }
 
     const template = (choice.grant || {}) as Dict;
-    if (!template.kind) continue;
-    out.push({ ...template, value });
+    if (template.kind) {
+      out.push({ ...template, value });
+      continue;
+    }
+
+    // choice(source:"feat") без grant-шаблона: выбранное значение — id черты.
+    if (String(opts.source) === 'feat') {
+      out.push({ kind: 'grant_feat', value });
+    }
   }
 
   return out;
@@ -114,6 +122,15 @@ function addGrant(
     const expertiseMap = expertise[full.kind];
     if (!expertiseMap.has(value)) expertiseMap.set(value, full);
     appliedGrants.push(full);
+    return;
+  }
+
+  if (full.kind === 'feat') {
+    // Фиксация выбранной черты (grant_feat): без конфликтов, дубль игнорируем.
+    if (!maps.feat.has(value)) {
+      maps.feat.set(value, full);
+      appliedGrants.push(full);
+    }
     return;
   }
 
@@ -173,6 +190,12 @@ function grantFromPayload(payload: Dict, source: RuleSource, choiceId?: string):
     const value = payload.value;
     if (!value) return null;
     return { source, kind: prof, value: String(value), mode: 'expertise', choiceId };
+  }
+
+  if (kind === 'grant_feat') {
+    const value = payload.value;
+    if (!value) return null;
+    return { source, kind: 'feat', value: String(value), mode: 'proficiency', choiceId };
   }
 
   if (kind === 'grant_spell') {
