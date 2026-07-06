@@ -375,8 +375,69 @@ func GetAllMigrations() []Migration {
 			Up:          addClassEquipmentOptions,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "062_basic_actions",
+			Description: "Seed core PHB actions (unarmed/weapon/offhand/dodge) as editable Action entities (type='basic')",
+			Up:          seedBasicActions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// seedBasicActions заводит базовые боевые действия PHB как обычные редактируемые
+// сущности Action (type='basic'), чтобы владелец мог менять их текст/иконку/механику
+// без перевыкатки. Идемпотентно: ON CONFLICT (card_number) ничего не делает.
+func seedBasicActions(db *sql.DB) error {
+	type basicAction struct {
+		cardNumber  string
+		name        string
+		imageURL    string
+		description string
+		mechanics   string
+	}
+	rows := []basicAction{
+		{
+			cardNumber:  "action_basic_unarmed",
+			name:        "Безоружный удар",
+			imageURL:    "/icons/actions/unarmed_strike.png",
+			description: "Атака кулаком, ногой, головой и т.п. Урон: 1 + модификатор Силы (дробящий); альтернативно можно Схватить или Толкнуть цель.",
+			mechanics:   `{"name":"Безоружный удар","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"ability":"str","attack_kind":"unarmed","resolution":"attack_roll","vs":"ac","on_hit":[{"amount":"1 + str","kind":"damage","type":"bludgeoning"}]}],"targeting":{"filter":"enemy","range":"5 feet","shape":"single"}}`,
+		},
+		{
+			cardNumber:  "action_basic_weapon",
+			name:        "Атака оружием",
+			imageURL:    "/icons/actions/weapon_attack.png",
+			description: "Атака надетым оружием ближнего или дальнего боя. Бонус атаки и урон — по характеристике оружия и бонусу мастерства.",
+			mechanics:   `{"name":"Атака оружием","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"ability":"auto","attack_kind":"weapon_melee","resolution":"attack_roll","vs":"ac","on_hit":[{"ability":"auto","dice":"weapon","kind":"damage","type":"weapon"}]}],"targeting":{"filter":"enemy","range":"weapon","shape":"single"}}`,
+		},
+		{
+			cardNumber:  "action_basic_offhand",
+			name:        "Атака второй рукой",
+			imageURL:    "/icons/actions/offhand_attack.png",
+			description: "Бой двумя оружиями: бонусным действием атаковать вторым лёгким оружием в другой руке. Без модификатора характеристики к урону (если нет соответствующей черты).",
+			mechanics:   `{"name":"Атака второй рукой","activation":{"cost":[{"resource":"bonus_action"}],"mode":"active"},"effects":[{"ability":"auto","attack_kind":"weapon_melee","resolution":"attack_roll","vs":"ac","tags":["off_hand","two_weapon"],"on_hit":[{"ability":"none","dice":"weapon","kind":"damage","type":"weapon"}]}],"targeting":{"filter":"enemy","range":"weapon","shape":"single"}}`,
+		},
+		{
+			cardNumber:  "action_basic_dodge",
+			name:        "Уклонение",
+			imageURL:    "/icons/actions/dodge.png",
+			description: "До начала следующего хода атаки по вам совершаются с помехой, а спасброски Ловкости — с преимуществом (если вы видите атакующего и не обездвижены).",
+			mechanics:   `{"name":"Уклонение","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack","filter":{"against":"self"}},"op":"disadvantage","duration":{"type":"until_start_of_next_turn"}},{"kind":"modifier","applies_to":{"roll":"saving_throw","filter":{"ability":"dex"}},"op":"advantage","duration":{"type":"until_start_of_next_turn"}}]}],"targeting":{"shape":"self"}}`,
+		},
+	}
+
+	const q = `
+		INSERT INTO actions (name, description, image_url, rarity, card_number, action_type, type, resource, mechanics, author, source)
+		VALUES ($1, $2, $3, 'common', $4, 'base_action', 'basic', '', $5::jsonb, 'System', 'PHB 2024')
+		ON CONFLICT (card_number) DO NOTHING`
+
+	for _, r := range rows {
+		if _, err := db.Exec(q, r.name, r.description, r.imageURL, r.cardNumber, r.mechanics); err != nil {
+			return fmt.Errorf("failed to seed basic action %s: %w", r.cardNumber, err)
+		}
+	}
+	return nil
 }
 
 // addClassEquipmentOptions добавляет классам варианты стартового снаряжения

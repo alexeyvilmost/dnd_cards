@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionNeedsTarget, collectSheetActions, type SheetAction } from '../character/actionSheet';
+import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
@@ -116,7 +117,11 @@ export default function SheetActionsPanel({
     () => collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state),
     [character.equipment, character.turn_state, equipCards],
   );
-  const actions = useMemo(() => collectSheetActions(assembled, itemMechs), [assembled, itemMechs]);
+  const basicActions = useBasicActions();
+  const actions = useMemo(
+    () => collectSheetActions(assembled, itemMechs, basicActions),
+    [assembled, itemMechs, basicActions],
+  );
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();
   const actionsAsIcons = entityDisplay.actions === 'icon';

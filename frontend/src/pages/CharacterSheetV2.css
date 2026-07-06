@@ -211,6 +211,13 @@
 }
 .cs-action-tile:hover:not(:disabled) { border-color: var(--forge-gold, #c9a227); transform: translateY(-1px); }
 .cs-action-tile--disabled { opacity: .4; cursor: not-allowed; }
+/* Причина недоступности действия — слой поверх превью (не вместо него). */
+.cs-action-disabled-reason {
+  margin-top: 6px; padding: 5px 9px;
+  font-size: 12px; font-weight: 700; text-align: center;
+  color: #ffb4a2; background: #2a0d08;
+  border: 1px solid #c0442a; border-radius: 6px;
+}
 .cs-action-tile-lvl {
   position: absolute; top: -5px; right: -5px; z-index: 2;
   min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box;

@@ -819,6 +819,11 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 		query = query.Where("action_type = ?", actionType)
 	}
 
+	// Фильтрация по пользовательскому типу (поле type — «basic» для базовых действий и т.п.)
+	if typ := c.Query("type"); typ != "" {
+		query = query.Where("type = ?", typ)
+	}
+
 	// Поиск по названию или card_number
 	if search := c.Query("search"); search != "" {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)

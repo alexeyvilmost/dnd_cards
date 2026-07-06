@@ -79,7 +79,9 @@ const SheetActionLine = ({
           )}
         </button>
       )}
-      {hover && !disabled && (effectRef || actionRef || spellRef || description) && (
+      {/* Превью доступно ВСЕГДА (в т.ч. когда действие недоступно): показывает суть
+          из данных сущности; причина недоступности — отдельным слоем, не вместо. */}
+      {hover && (effectRef || actionRef || spellRef || description) && (
         <div
           className="forge-effect-popover"
           style={{
@@ -98,6 +100,9 @@ const SheetActionLine = ({
                 <p className="forge-effect-card-desc">{description}</p>
               </div>
             </div>
+          )}
+          {disabled && disabledTitle && (
+            <div className="cs-action-disabled-reason">{disabledTitle}</div>
           )}
         </div>
       )}

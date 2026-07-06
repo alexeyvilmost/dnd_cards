@@ -141,6 +141,7 @@ export const actionsApi = {
     rarity?: string;
     resource?: string;
     action_type?: string;
+    type?: string;
     search?: string;
   }): Promise<ActionsResponse> => {
     const response = await apiClient.get<ActionsResponse>('/api/actions', { params });

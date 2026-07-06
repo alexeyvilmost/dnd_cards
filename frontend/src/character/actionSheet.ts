@@ -1,5 +1,4 @@
 import type { AssembledCharacter } from './assemble';
-import { STANDARD_ACTIONS } from './standardActions';
 import { actionUsesKey, applyActionUsesCost, usesFromMechanics } from '../engine/actionUses';
 import type { Action, PassiveEffect, Spell } from '../types';
 
@@ -89,15 +88,25 @@ export function collectSheetActions(
   assembled: AssembledCharacter,
   /** Механики надетых предметов (уже с учётом настройки) — активируемые попадают в действия. */
   itemMechanics: Array<{ card: import('../types').Card; mechanics: Record<string, unknown> }> = [],
+  /** Базовые действия — сущности Action (type='basic') из библиотеки, грузятся отдельно. */
+  basicActions: Action[] = [],
 ): SheetAction[] {
-  const basic: SheetAction[] = STANDARD_ACTIONS.map((a) => ({
-    id: a.id,
-    name: a.name,
-    mechanics: { ...a.mechanics },
-    group: 'basic' as const,
-    imageUrl: (a as { imageUrl?: string }).imageUrl,
-    description: (a as { description?: string }).description,
-  }));
+  const basic: SheetAction[] = basicActions
+    .map((action): SheetAction | null => {
+      const mechanics = actionMechanics(action);
+      if (!mechanics) return null;
+      return {
+        id: action.id,
+        name: action.name,
+        mechanics: { ...mechanics, name: action.name },
+        group: 'basic' as const,
+        imageUrl: action.image_url,
+        description: action.description,
+        usesKey: actionUsesRef(action),
+        actionRef: action,
+      };
+    })
+    .filter((a): a is SheetAction => a != null);
 
   const fromClass: SheetAction[] = assembled.actions
     .map(({ action, origin }): SheetAction | null => {
