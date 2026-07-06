@@ -13,6 +13,7 @@ import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import { findResource, useResourceOptions } from '../utils/resources';
 import SheetRestButtons from './SheetRestButtons';
 
 interface Props {
@@ -31,10 +32,19 @@ const RESOURCE_LABELS: Record<string, string> = {
   heroic_inspiration: 'Вдохновение',
 };
 
+// Каталог /charges/ пуст (см. utils/resources.ts) — такие пути считаем отсутствием картинки,
+// чтобы action/bonus_action/reaction и статические заряды остались текстовыми чипами.
+const usableImageUrl = (url?: string): string | undefined =>
+  url && !url.startsWith('/charges/') ? url : undefined;
+
+const CHARGE_ICON_SIZE = 22;
+const MAX_CHARGE_ROW = 8;
+
 export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
+  const resourceOptions = useResourceOptions();
 
   const resourceRecharge = useMemo(
     () => buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
@@ -120,11 +130,60 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       {error && <p className="issues">{error}</p>}
 
       <div className="sheet-resource-chips">
-        {resourceKeys.map((key) => (
-          <span key={key} className="sheet-resource-chip" title={key}>
-            {RESOURCE_LABELS[key] ?? key}: {runtime.resources[key] ?? 0}/{runtime.maxResources[key]}
-          </span>
-        ))}
+        {resourceKeys.map((key) => {
+          const option = findResource(resourceOptions, key);
+          const label = option?.label || RESOURCE_LABELS[key] || key;
+          const current = runtime.resources[key] ?? 0;
+          const max = runtime.maxResources[key];
+          const title = option?.description ? `${label} — ${option.description}` : label;
+          const iconUrl = usableImageUrl(option?.imageUrl);
+
+          if (!iconUrl) {
+            return (
+              <span key={key} className="sheet-resource-chip" title={title}>
+                {label}: {current}/{max}
+              </span>
+            );
+          }
+
+          const chipStyle = { display: 'inline-flex', alignItems: 'center', gap: 4 } as const;
+
+          if (max > MAX_CHARGE_ROW) {
+            return (
+              <span key={key} className="sheet-resource-chip" title={title} style={chipStyle}>
+                <img
+                  src={iconUrl}
+                  alt=""
+                  style={{ width: CHARGE_ICON_SIZE, height: CHARGE_ICON_SIZE, objectFit: 'contain' }}
+                />
+                {current}/{max}
+              </span>
+            );
+          }
+
+          const spentUrl = usableImageUrl(option?.imageUrlSpent);
+          return (
+            <span key={key} className="sheet-resource-chip" title={title} style={chipStyle}>
+              {label}:
+              {Array.from({ length: max }, (_, i) => {
+                const spent = i >= current;
+                return (
+                  <img
+                    key={i}
+                    src={spent && spentUrl ? spentUrl : iconUrl}
+                    alt={spent ? 'потрачено' : 'заряд'}
+                    style={{
+                      width: CHARGE_ICON_SIZE,
+                      height: CHARGE_ICON_SIZE,
+                      objectFit: 'contain',
+                      ...(spent && !spentUrl ? { opacity: 0.25, filter: 'grayscale(1)' } : null),
+                    }}
+                  />
+                );
+              })}
+            </span>
+          );
+        })}
         {!resourceKeys.length && (
           <p className="forge-note">
             Ресурсы не инициализированы.{' '}

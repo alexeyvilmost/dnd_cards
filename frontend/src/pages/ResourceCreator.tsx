@@ -48,6 +48,7 @@ const ResourceCreator = () => {
           description: resource.description || '',
           category: resource.category || 'class_resource',
           image_url: resource.image_url || '',
+          image_url_spent: resource.image_url_spent || '',
           recharge: resource.recharge || '',
           sort_order: resource.sort_order || 100,
         });
@@ -157,6 +158,16 @@ const ResourceCreator = () => {
             currentImageUrl={watch('image_url') || ''}
             entityType="card"
             entityId={watch('resource_id') || 'new'}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Вид использованного заряда</label>
+          <ImageUploader
+            onImageUpload={(imageUrl) => setValue('image_url_spent', imageUrl)}
+            currentImageUrl={watch('image_url_spent') || ''}
+            entityType="card"
+            entityId={`${watch('resource_id') || 'new'}_spent`}
           />
         </div>
 

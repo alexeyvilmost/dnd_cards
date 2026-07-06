@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Filter, Plus, Grid3X3, List, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi } from '../api/client';
@@ -54,6 +54,67 @@ function raceSubtypeLabel(race: Race, parentById: Map<string, Race>): string {
   if (!race.is_subrace) return 'Вид';
   const parent = race.parent_race_id ? parentById.get(race.parent_race_id) : undefined;
   return parent ? `Подвид · ${parent.name}` : 'Подвид';
+}
+
+function spellGroupLabel(level: number): string {
+  return level === 0 ? 'Заговоры' : `${level}-й круг`;
+}
+
+function groupSpellsByLevel(list: Spell[]): { level: number; label: string; spells: Spell[] }[] {
+  const byLevel = new Map<number, Spell[]>();
+  for (const spell of list) {
+    const bucket = byLevel.get(spell.level);
+    if (bucket) bucket.push(spell);
+    else byLevel.set(spell.level, [spell]);
+  }
+  return [...byLevel.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([level, spells]) => ({ level, label: spellGroupLabel(level), spells }));
+}
+
+const FEAT_GROUP_LABELS: Record<string, string> = {
+  origin: 'Черты происхождения',
+  general: 'Универсальные черты',
+  fighting_style: 'Боевые стили',
+  epic_boon: 'Эпические дары',
+};
+
+function groupFeatsByCategory(list: Feat[]): { category: string; label: string; feats: Feat[] }[] {
+  const byCategory = new Map<string, Feat[]>();
+  for (const feat of list) {
+    const bucket = byCategory.get(feat.category);
+    if (bucket) bucket.push(feat);
+    else byCategory.set(feat.category, [feat]);
+  }
+  const knownOrder = Object.keys(FEAT_GROUP_LABELS);
+  const orderedCategories = [
+    ...knownOrder.filter((category) => byCategory.has(category)),
+    ...[...byCategory.keys()].filter((category) => !knownOrder.includes(category)),
+  ];
+  return orderedCategories.map((category) => ({
+    category,
+    label:
+      FEAT_GROUP_LABELS[category]
+      || FEAT_CATEGORY_OPTIONS.find((o) => o.value === category)?.label
+      || category,
+    feats: byCategory.get(category)!,
+  }));
+}
+
+function splitClassesByKind(list: CharacterClass[]) {
+  const mainClasses: CharacterClass[] = [];
+  const subclasses: CharacterClass[] = [];
+  for (const characterClass of list) {
+    if (characterClass.is_subclass) subclasses.push(characterClass);
+    else mainClasses.push(characterClass);
+  }
+  return { mainClasses, subclasses };
+}
+
+function classSubtypeLabel(characterClass: CharacterClass, parentById: Map<string, CharacterClass>): string {
+  if (!characterClass.is_subclass) return 'Класс';
+  const parent = characterClass.parent_class_id ? parentById.get(characterClass.parent_class_id) : undefined;
+  return parent ? `Подкласс · ${parent.name}` : 'Подкласс';
 }
 
 const CardLibrary = () => {
@@ -139,6 +200,13 @@ const CardLibrary = () => {
   const raceParentById = useMemo(
     () => new Map(mainRaces.map((r) => [r.id, r])),
     [mainRaces],
+  );
+  const spellGroups = useMemo(() => groupSpellsByLevel(spells), [spells]);
+  const featGroups = useMemo(() => groupFeatsByCategory(feats), [feats]);
+  const { mainClasses, subclasses: subclassClasses } = useMemo(() => splitClassesByKind(classes), [classes]);
+  const classParentById = useMemo(
+    () => new Map(mainClasses.map((c) => [c.id, c])),
+    [mainClasses],
   );
 
   // Загрузка карточек
@@ -1771,46 +1839,60 @@ const CardLibrary = () => {
           {viewMode === 'grid' ? (
             /* Сетка заклинаний */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
-              {spells.map((spell) => (
-                <div key={spell.id} className="flex justify-center">
-                  <SpellPreview spell={spell} onClick={() => handleSpellClick(spell)} />
-                </div>
+              {spellGroups.map((group, groupIndex) => (
+                <Fragment key={group.level}>
+                  <div className={`col-span-full ${groupIndex > 0 ? 'border-t border-gray-300 my-2 pt-6' : ''}`}>
+                    <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">{group.label}</div>
+                  </div>
+                  {group.spells.map((spell) => (
+                    <div key={spell.id} className="flex justify-center">
+                      <SpellPreview spell={spell} onClick={() => handleSpellClick(spell)} />
+                    </div>
+                  ))}
+                </Fragment>
               ))}
             </div>
           ) : (
             /* Список заклинаний */
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                {spells.map((spell) => (
-                  <button
-                    key={spell.id}
-                    onClick={() => handleSpellClick(spell)}
-                    onMouseEnter={() => setHoveredSpell(spell)}
-                    onMouseLeave={() => setHoveredSpell(null)}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
-                        <img
-                          src={spell.image_url && spell.image_url.trim() !== '' ? spell.image_url : '/default_image.png'}
-                          alt={spell.name}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/default_image.png';
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>
-                          {spell.name}
-                        </div>
-                        <div className="flex items-center mt-1 text-xs text-[#a59886]">
-                          {getSpellLevelLabel(spell.level)}
-                        </div>
-                      </div>
+                {spellGroups.map((group, groupIndex) => (
+                  <Fragment key={group.level}>
+                    <div className={`col-span-full ${groupIndex > 0 ? 'border-t border-[#8a7320]/40 my-3 pt-4' : ''} pb-1`}>
+                      <div className="text-xs font-medium uppercase tracking-wide text-[#a59886]">{group.label}</div>
                     </div>
-                  </button>
+                    {group.spells.map((spell) => (
+                      <button
+                        key={spell.id}
+                        onClick={() => handleSpellClick(spell)}
+                        onMouseEnter={() => setHoveredSpell(spell)}
+                        onMouseLeave={() => setHoveredSpell(null)}
+                        onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                        className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                            <img
+                              src={spell.image_url && spell.image_url.trim() !== '' ? spell.image_url : '/default_image.png'}
+                              alt={spell.name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/default_image.png';
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>
+                              {spell.name}
+                            </div>
+                            <div className="flex items-center mt-1 text-xs text-[#a59886]">
+                              {getSpellLevelLabel(spell.level)}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </Fragment>
                 ))}
               </div>
 
@@ -1956,34 +2038,48 @@ const CardLibrary = () => {
           <div className="mb-4 text-sm text-gray-600">Показано: {feats.length} из {totalCards} черт</div>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
-              {feats.map((feat) => (
-                <div key={feat.id} className="flex justify-center">
-                  <FeatPreview feat={feat} onClick={() => handleFeatClick(feat)} />
-                </div>
+              {featGroups.map((group, groupIndex) => (
+                <Fragment key={group.category}>
+                  <div className={`col-span-full ${groupIndex > 0 ? 'border-t border-gray-300 my-2 pt-6' : ''}`}>
+                    <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">{group.label}</div>
+                  </div>
+                  {group.feats.map((feat) => (
+                    <div key={feat.id} className="flex justify-center">
+                      <FeatPreview feat={feat} onClick={() => handleFeatClick(feat)} />
+                    </div>
+                  ))}
+                </Fragment>
               ))}
             </div>
           ) : (
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                {feats.map((feat) => (
-                  <button
-                    key={feat.id}
-                    onClick={() => handleFeatClick(feat)}
-                    onMouseEnter={() => setHoveredFeat(feat)}
-                    onMouseLeave={() => setHoveredFeat(null)}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
-                        <img src={feat.image_url && feat.image_url.trim() !== '' ? feat.image_url : '/default_image.png'} alt={feat.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{feat.name}</div>
-                        <div className="flex items-center mt-1 text-xs text-[#a59886]">{FEAT_CATEGORY_OPTIONS.find(o => o.value === feat.category)?.label || feat.category}</div>
-                      </div>
+                {featGroups.map((group, groupIndex) => (
+                  <Fragment key={group.category}>
+                    <div className={`col-span-full ${groupIndex > 0 ? 'border-t border-[#8a7320]/40 my-3 pt-4' : ''} pb-1`}>
+                      <div className="text-xs font-medium uppercase tracking-wide text-[#a59886]">{group.label}</div>
                     </div>
-                  </button>
+                    {group.feats.map((feat) => (
+                      <button
+                        key={feat.id}
+                        onClick={() => handleFeatClick(feat)}
+                        onMouseEnter={() => setHoveredFeat(feat)}
+                        onMouseLeave={() => setHoveredFeat(null)}
+                        onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                        className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                            <img src={feat.image_url && feat.image_url.trim() !== '' ? feat.image_url : '/default_image.png'} alt={feat.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{feat.name}</div>
+                            <div className="flex items-center mt-1 text-xs text-[#a59886]">{FEAT_CATEGORY_OPTIONS.find(o => o.value === feat.category)?.label || feat.category}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </Fragment>
                 ))}
               </div>
               {hoveredFeat && (
@@ -2155,7 +2251,17 @@ const CardLibrary = () => {
           <div className="mb-4 text-sm text-gray-600">Показано: {classes.length} из {totalCards} классов</div>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
-              {classes.map((characterClass) => (
+              {mainClasses.map((characterClass) => (
+                <div key={characterClass.id} className="flex justify-center">
+                  <ClassPreview characterClass={characterClass} onClick={() => handleClassClick(characterClass)} />
+                </div>
+              ))}
+              {mainClasses.length > 0 && subclassClasses.length > 0 && (
+                <div className="col-span-full border-t border-gray-300 my-2 pt-6">
+                  <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">Подклассы</div>
+                </div>
+              )}
+              {subclassClasses.map((characterClass) => (
                 <div key={characterClass.id} className="flex justify-center">
                   <ClassPreview characterClass={characterClass} onClick={() => handleClassClick(characterClass)} />
                 </div>
@@ -2164,7 +2270,7 @@ const CardLibrary = () => {
           ) : (
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                {classes.map((characterClass) => (
+                {mainClasses.map((characterClass) => (
                   <button
                     key={characterClass.id}
                     onClick={() => handleClassClick(characterClass)}
@@ -2185,7 +2291,39 @@ const CardLibrary = () => {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{characterClass.name}</div>
                         <div className="flex items-center mt-1 text-xs text-[#a59886]">
-                          {characterClass.hit_die ? `Кость хитов ${characterClass.hit_die}` : 'Класс'}
+                          {classSubtypeLabel(characterClass, classParentById)}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                {mainClasses.length > 0 && subclassClasses.length > 0 && (
+                  <div className="col-span-full border-t border-[#8a7320]/40 my-3 pt-4 pb-1">
+                    <div className="text-xs font-medium uppercase tracking-wide text-[#a59886]">Подклассы</div>
+                  </div>
+                )}
+                {subclassClasses.map((characterClass) => (
+                  <button
+                    key={characterClass.id}
+                    onClick={() => handleClassClick(characterClass)}
+                    onMouseEnter={() => setHoveredClass(characterClass)}
+                    onMouseLeave={() => setHoveredClass(null)}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
+                        <img
+                          src={characterClass.image_url && characterClass.image_url.trim() !== '' ? characterClass.image_url : '/default_image.png'}
+                          alt={characterClass.name}
+                          className="w-full h-full object-contain"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate" style={{ fontFamily: 'Georgia, serif', color: '#f3ead4' }}>{characterClass.name}</div>
+                        <div className="flex items-center mt-1 text-xs text-[#a59886]">
+                          {classSubtypeLabel(characterClass, classParentById)}
                         </div>
                       </div>
                     </div>

@@ -660,6 +660,7 @@ export interface ResourceDefinition {
   description?: string;
   category?: string;
   image_url?: string;
+  image_url_spent?: string;
   recharge?: string;
   sort_order?: number;
   created_at?: string;
@@ -676,6 +677,7 @@ export interface CreateResourceRequest {
   description?: string;
   category?: string;
   image_url?: string;
+  image_url_spent?: string;
   recharge?: string;
   sort_order?: number;
 }

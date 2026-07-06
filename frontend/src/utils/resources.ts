@@ -9,6 +9,7 @@ export type ResourceOption = {
   description?: string;
   category?: string;
   imageUrl?: string;
+  imageUrlSpent?: string;
   recharge?: string;
   sortOrder?: number;
 };
@@ -40,6 +41,7 @@ const fromApi = (resource: ResourceDefinition): ResourceOption => ({
   description: resource.description,
   category: resource.category,
   imageUrl: resource.image_url,
+  imageUrlSpent: resource.image_url_spent,
   recharge: resource.recharge,
   sortOrder: resource.sort_order,
 });
