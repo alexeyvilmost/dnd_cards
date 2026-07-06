@@ -125,8 +125,9 @@ var spellEnergyColors = map[string]string{
 }
 
 // generateSpellIconPrompt строит максимально предсказуемый промпт для иконки
-// заклинания в стиле Baldur's Gate 3: абстрактный светящийся глиф из энергии
-// выбранного цвета на чистом белом (прозрачном) фоне.
+// заклинания в стиле Baldur's Gate 3: чёткий светящийся глиф из энергии выбранного
+// цвета с ТЕСНЫМ свечением по штрихам (без большого ореола) на прозрачном фоне —
+// без диффузного фонового пятна/дымки, которое читалось как «засветка» на тёмной плитке.
 func generateSpellIconPrompt(subject, element, extra string) string {
 	color := spellEnergyColors[element]
 	if color == "" {
@@ -138,14 +139,16 @@ func generateSpellIconPrompt(subject, element, extra string) string {
 
 	prompt := fmt.Sprintf(
 		"A single magic spell icon in the painterly style of Baldur's Gate 3 and Dungeons & Dragons spell icons. "+
-			"The icon is an abstract arcane symbol made ENTIRELY of glowing %s energy: hand-painted luminous brushstrokes "+
-			"and wisps of light floating in mid-air, evoking the essence of \"%s\". "+
-			"Painterly digital art, soft airbrushed outer glow and halo, a bright glowing core with a luminous outline, "+
-			"a few small floating sparks and glowing dots of light scattered around the symbol. "+
-			"Single centered emblem with a dynamic diagonal flowing composition that fills most of the frame. "+
-			"Pure flat white background, fully transparent, no scene, no ground, no objects, no weapon, no creatures, "+
-			"no hands, no characters, no text, no letters, no numbers, no border and no frame. "+
-			"Only the abstract %s glowing energy of the spell.",
+			"The icon is a clean, crisp arcane symbol drawn with hand-painted luminous brushstrokes of glowing %s energy, "+
+			"evoking the essence of \"%s\". Thin, elegant, well-defined strokes with a bright glowing core and only a THIN, "+
+			"tight neon glow hugging the strokes closely (a narrow rim-light), NOT a large halo. "+
+			"Single centered emblem occupying about two-thirds of the frame, with clear empty margins on all sides and a calm, balanced composition. "+
+			"The background is completely empty and fully transparent: NO large diffuse background glow, NO colored haze, mist, fog or cloud, "+
+			"NO soft glowing blob or bright spot behind the symbol, NO bloom or light bleeding into the background; "+
+			"the glow stays tightly contained on the strokes only, and the surrounding area is clean and fully transparent. "+
+			"No scene, no ground, no objects, no weapon, no creatures, no photo-real hands, no characters, "+
+			"no text, no letters, no numbers, no border and no frame. "+
+			"Only the crisp %s glowing strokes of the spell symbol.",
 		color, subject, color,
 	)
 
