@@ -672,7 +672,7 @@ const CharacterForge = () => {
 
         <div className="forge-summary">
           <OverviewPanel
-            draft={draft} patch={patch} assembled={assembled} spells={selectedSpells}
+            draft={draft} patch={patch} assembled={assembled} ruleState={ruleState} spells={selectedSpells}
             lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
             issues={issues} canCreate={canCreate} saving={saving} onSave={save}
             savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
@@ -685,8 +685,8 @@ const CharacterForge = () => {
 
 // ─── Правая панель обзора (имя + résumé + создание) ──────────────────────────
 
-function OverviewPanel({ draft, patch, assembled, spells, lineageName, subChoices, subraces, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
-  draft: CharacterDraft; patch: (p: Partial<CharacterDraft>) => void; assembled: AssembledCharacter; spells: Spell[];
+function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName, subChoices, subraces, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
+  draft: CharacterDraft; patch: (p: Partial<CharacterDraft>) => void; assembled: AssembledCharacter; ruleState: CharacterRuleState; spells: Spell[];
   lineageName?: string; subChoices?: PendingChoice[]; subraces?: Race[];
   issues: string[]; canCreate: boolean; saving: boolean; onSave: () => void; savedId: string | null;
   error: string | null; onOpenSheet: () => void;
@@ -709,6 +709,7 @@ function OverviewPanel({ draft, patch, assembled, spells, lineageName, subChoice
       <SummaryPanel
         draft={draft}
         assembled={assembled}
+        ruleState={ruleState}
         spells={spells}
         lineageName={lineageName ?? resolveLineageName(draft.lineageId, {
           subraces,

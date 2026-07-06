@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
+import type { CharacterRuleState } from './rules/types';
 import {
   ABILITY_KEYS, ABILITY_LABEL_RU,
   type AbilityBonuses, type AbilityGenMethod, type AbilityKey, type CharacterDraft,
@@ -361,12 +362,14 @@ export function AbilityAssigner({
 const skillLabel = (id: string) => labelOf(SKILLS, id);
 
 export function SummaryPanel({
-  draft, assembled, spells, lineageName: lineageNameProp,
+  draft, assembled, spells, lineageName: lineageNameProp, ruleState,
 }: {
   draft: CharacterDraft;
   assembled: AssembledCharacter | null;
   spells: Spell[];
   lineageName?: string;
+  /** Итоговые правила (с числовыми модификаторами эффектов) — приоритетны над derived. */
+  ruleState?: CharacterRuleState;
 }) {
   const race = assembled?.race;
   const klass = assembled?.klass;
@@ -516,11 +519,11 @@ export function SummaryPanel({
       {assembled && (
         <div className="sum-field" style={{ marginTop: 14 }}>
           <span className="sum-label" style={{ fontSize: 15 }}>HP </span>
-          <span className="sum-value" style={{ fontSize: 15 }}>{assembled.derived.maxHP}</span>
+          <span className="sum-value" style={{ fontSize: 15 }}>{ruleState?.maxHP ?? assembled.derived.maxHP}</span>
           <span className="sum-label" style={{ fontSize: 15, marginLeft: 12 }}>КД </span>
-          <span className="sum-value" style={{ fontSize: 15 }}>{assembled.derived.ac}</span>
+          <span className="sum-value" style={{ fontSize: 15 }}>{ruleState?.armorClass ?? assembled.derived.ac}</span>
           <span className="sum-label" style={{ fontSize: 15, marginLeft: 12 }}>Мастерство </span>
-          <span className="sum-value" style={{ fontSize: 15 }}>+{assembled.derived.proficiencyBonus}</span>
+          <span className="sum-value" style={{ fontSize: 15 }}>+{ruleState?.proficiencyBonus ?? assembled.derived.proficiencyBonus}</span>
         </div>
       )}
 
