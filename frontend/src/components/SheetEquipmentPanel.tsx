@@ -211,17 +211,17 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
         <div className="sheet-stat"><span>Вес</span><strong>{weight.toFixed(1)} / {capacity} фн</strong></div>
         <div className="sheet-stat" title="Кошелёк персонажа (золото / серебро / медь)">
           <span>Кошелёк</span>
-          <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: '1.15rem' }}>
             {([['gold', wallet.gold], ['silver', wallet.silver], ['copper', wallet.copper]] as const)
               .filter(([, amount], i) => amount || (i === 0 && !wallet.gold && !wallet.silver && !wallet.copper))
               .map(([cur, amount]) => (
-                <span key={cur} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                <span key={cur} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   {amount || 0}
                   <img
                     src={getCurrencyIconPath(cur)}
                     alt={getCurrencyInfo(cur).short}
                     title={getCurrencyInfo(cur).label}
-                    style={{ width: 16, height: 16, objectFit: 'contain', ...currencyIconStyle }}
+                    style={{ width: 22, height: 22, objectFit: 'contain', ...currencyIconStyle }}
                   />
                 </span>
               ))}

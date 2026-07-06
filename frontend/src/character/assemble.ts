@@ -174,9 +174,19 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     draft.backgroundId ? backgroundsApi.getBackground(draft.backgroundId).catch(() => null) : Promise.resolve(null),
   ]);
 
-  const feats = (
+  const manualFeats = (
     await Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id).catch(() => null)))
   ).filter((f): f is Feat => !!f);
+
+  // Origin-черта предыстории (по card_number/uuid): действует по умолчанию,
+  // пока игрок не заменил её (флаг swapFeat → выбор в FeatSection). Так черта
+  // предыстории попадает в сборку и overview даже без «Сменить черту».
+  const originFeat = !draft.swapFeat && background?.origin_feat
+    ? await featsApi.getFeat(background.origin_feat).catch(() => null)
+    : null;
+  const feats = originFeat && !manualFeats.some((f) => f.id === originFeat.id)
+    ? [...manualFeats, originFeat]
+    : manualFeats;
 
   // Подвид — отдельный вид-сущность, ссылка хранится в draft.lineageId (UUID).
   const subraceId = draft.lineageId && isEntityUuid(draft.lineageId) ? draft.lineageId : null;
@@ -214,16 +224,35 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   let effects = await expandEffectGrants(baseEffects, draft, resolveEffect);
 
   // Черты, выбранные через choice(source:"feat") в механике эффектов (боевой
-  // стиль воина/паладина/следопыта, черты происхождения): подгружаем сами черты
-  // и их related_effects/related_actions, чтобы механика стиля попала в сборку.
-  const knownFeatIds = new Set(feats.map((f) => f.id));
-  const chosenFeatIds = [...new Set(
-    effects.flatMap(({ effect, origin }) => collectFeatChoiceRefs(effect.mechanics, effect.id, origin, draft)),
-  )].filter((id) => isEntityUuid(id) && !knownFeatIds.has(id));
-  const chosenFeats = (
-    await Promise.all(chosenFeatIds.map((id) => featsApi.getFeat(id).catch(() => null)))
-  ).filter((f): f is Feat => !!f);
-  const allFeats = [...feats, ...chosenFeats];
+  // стиль воина/паладина/следопыта, черты происхождения, бонусная черта Человека):
+  // подгружаем сами черты и их related_effects/related_actions.
+  // ВАЖНО: повторяемую (repeatable) черту допускаем из НЕСКОЛЬКИХ источников
+  // (напр. Человек + предыстория дают одну и ту же «Одарённый») — она попадает
+  // в assembled.feats столько раз, сколько выбрана; неповторяемая — один раз.
+  const chosenFeatRefs = effects
+    .flatMap(({ effect, origin }) => collectFeatChoiceRefs(effect.mechanics, effect.id, origin, draft))
+    .filter((id) => isEntityUuid(id));
+  const chosenById = new Map<string, Feat>(
+    (await Promise.all([...new Set(chosenFeatRefs)].map((id) => featsApi.getFeat(id).catch(() => null))))
+      .filter((f): f is Feat => !!f)
+      .map((f) => [f.id, f]),
+  );
+
+  // Сборка итогового списка черт с учётом повторяемости.
+  const allFeats: Feat[] = [];
+  const seenNonRepeatable = new Set<string>();
+  const pushFeat = (f: Feat) => {
+    if (f.repeatable) { allFeats.push(f); return; } // повторяемую — сколько угодно
+    if (seenNonRepeatable.has(f.id)) return;
+    seenNonRepeatable.add(f.id);
+    allFeats.push(f);
+  };
+  for (const f of feats) pushFeat(f);
+  for (const id of chosenFeatRefs) { const f = chosenById.get(id); if (f) pushFeat(f); }
+
+  // Новые (ранее не собранные) черты — для догрузки их эффектов/действий.
+  const baseFeatIds = new Set(feats.map((f) => f.id));
+  const chosenFeats = [...chosenById.values()].filter((f) => !baseFeatIds.has(f.id));
 
   if (chosenFeats.length) {
     const featRefs = gatherFeatureRefs(null, null, chosenFeats, draft.level);

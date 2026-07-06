@@ -257,7 +257,7 @@ const CharacterSheetMVP = () => {
   const scores = draft.abilities;
   const pb = ruleState.proficiencyBonus;
 
-  const maxHP = ruleState.maxHP;
+  const maxHP = maxHpBreakdown?.value ?? ruleState.maxHP;
   const speed = speedBreakdown?.value ?? ruleState.speed;
   const ac = acBreakdown?.value ?? ruleState.armorClass;
   const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;

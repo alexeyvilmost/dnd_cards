@@ -25,6 +25,8 @@ import RacePreview from '../components/RacePreview';
 import ClassPreview from '../components/ClassPreview';
 import BackgroundPreview from '../components/BackgroundPreview';
 import SpellPreview from '../components/SpellPreview';
+import FeatPreview from '../components/FeatPreview';
+import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { isEntityUuid } from '../engine/ids';
 import type { PendingChoice } from '../mechanics/collectChoices';
@@ -644,7 +646,7 @@ const CharacterForge = () => {
               )}
               {act === 'background' && (
                 <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={selectBackground}
-                  background={assembled.background} onToggleSwapFeat={(v: boolean) => patch({ swapFeat: v })}
+                  background={assembled.background} feats={feats} onToggleSwapFeat={(v: boolean) => patch({ swapFeat: v })}
                   onEquipmentOption={(opt: 'a' | 'b') => patch({ equipmentOption: opt })} />
               )}
               {act === 'feat' && (
@@ -883,12 +885,6 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
     ['b', 'Б', equipOptions?.option_b],
     ['c', 'В', equipOptions?.option_c],
   ] as const).filter(([, , opt]) => !!opt && ((opt.items?.length || 0) > 0 || (opt.gold || 0) > 0));
-  const equipLabel = (o: { items?: unknown[] | null; gold?: number } | null | undefined) => {
-    const parts: string[] = [];
-    if (o?.items?.length) parts.push(`${o.items.length} предм.`);
-    if (o?.gold) parts.push(`${o.gold} зм`);
-    return parts.join(' + ') || '—';
-  };
   return (
     <div>
       <div className="forge-block forge-square-block">
@@ -915,14 +911,8 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           {equipVariants.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <div className="forge-section-h">Стартовое снаряжение</div>
-              <div className="chips">
-                {equipVariants.map(([key, letter, opt]) => (
-                  <button key={key} type="button" className={`chip ${draft.classEquipmentOption === key ? 'on' : ''}`}
-                    onClick={() => onEquipmentOption?.(key)}>
-                    Вариант {letter} · {equipLabel(opt)}
-                  </button>
-                ))}
-              </div>
+              <BackgroundEquipment options={equipOptions} selectable
+                selected={draft.classEquipmentOption} onSelect={(k) => onEquipmentOption?.(k)} />
             </div>
           )}
         </div>
@@ -996,19 +986,14 @@ function SubclassSection({ choices, resolved, setResolved, ruleState, klass, all
   );
 }
 
-function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleSwapFeat, onEquipmentOption }: any) {
+function BackgroundSection({ backgrounds, draft, onSelect, background, feats, onToggleSwapFeat, onEquipmentOption }: any) {
   const bgFromList = backgrounds.find((b: Background) => b.id === draft.backgroundId) as Background | undefined;
   const bg = background ?? bgFromList;
-  const options = bg?.equipment_options as
-    | Record<'option_a' | 'option_b', { items?: Array<{ card_id: string; quantity?: number }>; gold?: number }>
-    | null | undefined;
-  const optLabel = (o?: { items?: unknown[]; gold?: number }) => {
-    if (!o) return null;
-    const parts: string[] = [];
-    if (o.items?.length) parts.push(`${o.items.length} предм.`);
-    if (o.gold) parts.push(`${o.gold} зм`);
-    return parts.join(' + ') || '—';
-  };
+  const options = bg?.equipment_options;
+  // Origin-черта предыстории → сущность (по card_number/uuid), для превью.
+  const originFeat = bg?.origin_feat
+    ? (feats as Feat[])?.find((f) => f.card_number === bg.origin_feat || f.id === bg.origin_feat)
+    : undefined;
   return (
     <div>
       <div className="forge-block forge-square-block">
@@ -1035,26 +1020,21 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, onToggleS
           <p className="forge-note">
             Навыки: {(bg.skill_proficiencies || []).map((s: string) => labelOf(SKILLS, s)).join(', ') || '—'}<br />
             Инструмент: {bg.tool_proficiency || '—'}<br />
-            Характеристики: {(bg.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}<br />
-            Черта происхождения: {bg.origin_feat || '—'}
+            Характеристики: {(bg.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}
           </p>
+          <div className="forge-note" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>Черта происхождения:</span>
+            {originFeat ? (
+              <EntitySquareCard name={originFeat.name} imageUrl={originFeat.image_url} preview={<FeatPreview feat={originFeat} disableHover />} />
+            ) : (
+              <span>{bg.origin_feat || '—'}</span>
+            )}
+          </div>
           {options && (options.option_a || options.option_b) && (
             <div style={{ marginTop: 8 }}>
               <div className="forge-section-h">Стартовое снаряжение</div>
-              <div className="chips">
-                {options.option_a && (
-                  <button type="button" className={`chip ${draft.equipmentOption === 'a' ? 'on' : ''}`}
-                    onClick={() => onEquipmentOption('a')}>
-                    Вариант А · {optLabel(options.option_a)}
-                  </button>
-                )}
-                {options.option_b && (
-                  <button type="button" className={`chip ${draft.equipmentOption === 'b' ? 'on' : ''}`}
-                    onClick={() => onEquipmentOption('b')}>
-                    Вариант Б · {optLabel(options.option_b)}
-                  </button>
-                )}
-              </div>
+              <BackgroundEquipment options={options} selectable
+                selected={draft.equipmentOption} onSelect={(k) => onEquipmentOption(k)} />
             </div>
           )}
           <label className="forge-check">
@@ -1078,7 +1058,7 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, resolved, setR
           <div className="forge-section-h forge-section-h--center">Черта происхождения</div>
           <div className="forge-square-grid">
             {originFeats.map((f: Feat) => (
-              <EntitySquareCard key={f.id} name={f.name} imageUrl={f.image_url} selected={draft.featIds.includes(f.id)} onClick={() => onToggle(f.id)} />
+              <EntitySquareCard key={f.id} name={f.name} imageUrl={f.image_url} selected={draft.featIds.includes(f.id)} onClick={() => onToggle(f.id)} preview={<FeatPreview feat={f} disableHover />} />
             ))}
             {originFeats.length === 0 && <p className="forge-note">Нет черт происхождения в базе.</p>}
           </div>

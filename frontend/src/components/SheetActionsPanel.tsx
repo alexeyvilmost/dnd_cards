@@ -202,18 +202,30 @@ export default function SheetActionsPanel({
       {error && <p className="issues">{error}</p>}
 
       {showResources && resourceKeys.length > 0 && (
-        <div className="cs-resources">
-          {resourceKeys.map((key) => (
-            <div key={key} className="cs-resource" title={key}>
-              {RESOURCE_ICONS[key] && (
-                <img src={RESOURCE_ICONS[key]} alt="" className="cs-resource-icon" />
-              )}
-              <span className="cs-resource-l">{RESOURCE_LABELS[key] ?? key}</span>
-              <span className="cs-resource-v">
-                {runtime.resources[key] ?? 0}/{runtime.maxResources[key]}
-              </span>
-            </div>
-          ))}
+        <div className="res-tile-row">
+          {resourceKeys.map((key) => {
+            const cur = runtime.resources[key] ?? 0;
+            const max = runtime.maxResources[key];
+            const spent = cur <= 0;
+            const slot = /^spell_slot_(\d)$/.exec(key);
+            const warlockSlot = /^warlock_spell_slot(?:_(\d))?$/.exec(key);
+            const icon = RESOURCE_ICONS[key]
+              || (slot ? RESOURCE_ICONS.spell_slot : undefined)
+              || (warlockSlot ? RESOURCE_ICONS.warlock_spell_slot : undefined);
+            const label = slot ? `Ячейка ${slot[1]}-го круга`
+              : warlockSlot ? 'Ячейка колдуна'
+              : (RESOURCE_LABELS[key] ?? key);
+            const roman = slot ? ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Number(slot[1])] : '';
+            return (
+              <div key={key} className={`res-tile${spent ? ' res-tile--spent' : ''}`} title={`${cur}/${max} ${label}`}>
+                {roman && <span className="res-tile-corner">{roman}</span>}
+                {icon
+                  ? <img src={icon} alt="" className={`res-tile-icon${spent ? ' res-tile-icon--dim' : ''}`} />
+                  : <span className={`res-tile-mono${spent ? ' res-tile-mono--dim' : ''}`}>{label.slice(0, 2)}</span>}
+                {max > 1 && cur !== 1 && <span className="res-tile-count">{cur}</span>}
+              </div>
+            );
+          })}
         </div>
       )}
 

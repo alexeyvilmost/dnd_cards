@@ -1,23 +1,30 @@
 import { useEffect, useState } from 'react';
-import type { Card, BackgroundEquipmentOptions, EquipmentOption } from '../types';
+import type { Card, EquipmentOption } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { getCurrencyIconPath, currencyIconStyle } from '../utils/currencies';
 
-const hasContent = (o?: EquipmentOption) => !!o && ((o.items?.length || 0) > 0 || (o.gold || 0) > 0);
+// Совместим и с предысторией ({a,b}), и с классом ({a,b,c}).
+type EquipOptions = {
+  option_a?: EquipmentOption | null;
+  option_b?: EquipmentOption | null;
+  option_c?: EquipmentOption | null;
+};
+type OptKey = 'a' | 'b' | 'c';
 
-const Variant: React.FC<{ label: string; option?: EquipmentOption; index: Map<string, Card> }> = ({
-  label,
-  option,
-  index,
-}) => {
+const hasContent = (o?: EquipmentOption | null) => !!o && ((o.items?.length || 0) > 0 || (o.gold || 0) > 0);
+
+const Variant: React.FC<{
+  label: string; option?: EquipmentOption | null; index: Map<string, Card>;
+  selectable?: boolean; selected?: boolean; onSelect?: () => void;
+}> = ({ label, option, index, selectable, selected, onSelect }) => {
   if (!hasContent(option)) return null;
   const items = (option!.items || [])
     .map((r) => ({ r, card: index.get(r.card_id) }))
     .filter((x): x is { r: { card_id: string; quantity: number }; card: Card } => !!x.card);
   const gold = option!.gold || 0;
 
-  return (
-    <div className="bgeq-variant">
+  const inner = (
+    <>
       <div className="bgeq-divider"><span className="bgeq-letter">{label}</span></div>
       <div className="bgeq-row">
         <div className="bgeq-items">
@@ -40,11 +47,25 @@ const Variant: React.FC<{ label: string; option?: EquipmentOption; index: Map<st
           </div>
         )}
       </div>
-    </div>
+    </>
   );
+
+  if (selectable) {
+    return (
+      <button type="button" className={`bgeq-variant bgeq-variant--btn${selected ? ' bgeq-variant--selected' : ''}`} onClick={onSelect}>
+        {inner}
+      </button>
+    );
+  }
+  return <div className="bgeq-variant">{inner}</div>;
 };
 
-export const BackgroundEquipment: React.FC<{ options?: BackgroundEquipmentOptions | null }> = ({ options }) => {
+export const BackgroundEquipment: React.FC<{
+  options?: EquipOptions | null;
+  selectable?: boolean;
+  selected?: OptKey;
+  onSelect?: (key: OptKey) => void;
+}> = ({ options, selectable, selected, onSelect }) => {
   const [index, setIndex] = useState<Map<string, Card>>(new Map());
   useEffect(() => {
     let alive = true;
@@ -53,7 +74,7 @@ export const BackgroundEquipment: React.FC<{ options?: BackgroundEquipmentOption
   }, []);
 
   if (!options) return null;
-  if (!hasContent(options.option_a) && !hasContent(options.option_b)) return null;
+  if (!hasContent(options.option_a) && !hasContent(options.option_b) && !hasContent(options.option_c)) return null;
 
   return (
     <div className="bgeq">
@@ -61,6 +82,9 @@ export const BackgroundEquipment: React.FC<{ options?: BackgroundEquipmentOption
         .bgeq{ margin-top:auto; padding-top:10px; }
         .bgeq-title{ text-align:center; color:#e7cf9a; font-weight:700; font-size:.95rem; margin-bottom:2px; }
         .bgeq-variant{ margin-top:4px; }
+        .bgeq-variant--btn{ display:block; width:100%; text-align:left; background:transparent; border:1px solid transparent; border-radius:8px; padding:2px 8px; cursor:pointer; transition:border-color .15s, background .15s; }
+        .bgeq-variant--btn:hover{ border-color:#8a7320; }
+        .bgeq-variant--selected{ border-color:#c9a227; background:rgba(201,162,39,.12); }
         .bgeq-divider{ display:flex; align-items:center; gap:10px; margin:6px 0 8px; }
         .bgeq-divider::before, .bgeq-divider::after{
           content:""; flex:1; height:1px;
@@ -82,8 +106,9 @@ export const BackgroundEquipment: React.FC<{ options?: BackgroundEquipmentOption
         .bgeq-gold-amount{ color:#e7cf9a; font-weight:700; font-size:.95rem; line-height:1; margin-top:1px; }
       `}</style>
       <div className="bgeq-title">Снаряжение.</div>
-      <Variant label="А" option={options.option_a} index={index} />
-      <Variant label="Б" option={options.option_b} index={index} />
+      <Variant label="А" option={options.option_a} index={index} selectable={selectable} selected={selected === 'a'} onSelect={() => onSelect?.('a')} />
+      <Variant label="Б" option={options.option_b} index={index} selectable={selectable} selected={selected === 'b'} onSelect={() => onSelect?.('b')} />
+      <Variant label="В" option={options.option_c} index={index} selectable={selectable} selected={selected === 'c'} onSelect={() => onSelect?.('c')} />
     </div>
   );
 };

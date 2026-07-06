@@ -1,6 +1,7 @@
 import type { Action, PassiveEffect } from '../../types';
 import type { OriginAction, OriginEffect } from '../assemble';
 import { computeMaxHP, spellcasting } from '../derive';
+import { evaluate, type FormulaContext } from '../../engine/formula';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
 import { ABILITY_KEYS, type AbilityKey } from '../types';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
@@ -90,6 +91,7 @@ function addGrant(
   expertise: { skill: Map<string, AppliedGrant>; tool: Map<string, AppliedGrant> },
   appliedGrants: AppliedGrant[],
   conflicts: RuleConflict[],
+  repeatableFeats: Set<string> = new Set(),
 ) {
   const value = normalizedValue(grant.kind, grant.value);
   const full: AppliedGrant = { ...grant, value, id: grantId({ ...grant, value }) };
@@ -126,11 +128,28 @@ function addGrant(
   }
 
   if (full.kind === 'feat') {
-    // Фиксация выбранной черты (grant_feat): без конфликтов, дубль игнорируем.
-    if (!maps.feat.has(value)) {
-      maps.feat.set(value, full);
-      appliedGrants.push(full);
+    // Повторяемую (repeatable) черту можно взять несколько раз (из вида и
+    // предыстории) — фиксируем каждый грант. Неповторяемую — один раз, дубль
+    // из ДРУГОГО источника даёт предупреждение (не блок).
+    const dup = maps.feat.has(value);
+    if (dup && !repeatableFeats.has(value)) {
+      const existing = maps.feat.get(value)!;
+      if (existing.source.id !== full.source.id || existing.choiceId !== full.choiceId) {
+        conflicts.push({
+          code: 'duplicate_feat',
+          message: `Черта «${value}» уже получена из «${existing.source.name}» — повтор из «${full.source.name}» не применяется (черта не повторяемая).`,
+          severity: 'warning',
+          kind: 'feat',
+          value,
+          source: full.source,
+          existingSource: existing.source,
+          choiceId: full.choiceId,
+        });
+      }
+      return;
     }
+    if (!dup) maps.feat.set(value, full);
+    appliedGrants.push(full);
     return;
   }
 
@@ -234,6 +253,29 @@ function passesLevelGate(payload: Dict, level: number): boolean {
   return Number.isNaN(n) || level >= n;
 }
 
+// Роли числовых значений листа, на которые ВЛИЯЮТ modifier-пассивки эффектов.
+// Фундаментально: любой эффект с числовым self-модификатором (Крепкий → max_hp,
+// Оборона → ac, сапоги скорости → speed) вливается в производное значение.
+const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative', 'ac']);
+
+/** Собирает числовой self-modifier из payload в аккумулятор numericMods. */
+function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>) {
+  if (payload.kind !== 'modifier') return;
+  const roll = String((payload.applies_to as Dict | undefined)?.roll ?? '');
+  if (!NUMERIC_ROLLS.has(roll)) return;
+  if (payload.op != null && payload.op !== 'add') return; // advantage/disadvantage — не числовые
+  if (payload.value == null) return;
+  const raw = String(payload.value).replace(/^\+/, '');
+  let v: number;
+  try {
+    const r = evaluate(raw, formulaCtx);
+    v = typeof r === 'number' ? r : Number(raw);
+  } catch {
+    v = Number(raw);
+  }
+  if (!Number.isNaN(v) && v !== 0) numericMods[roll] = (numericMods[roll] ?? 0) + v;
+}
+
 function applyPayload(
   payload: Dict,
   source: RuleSource,
@@ -242,6 +284,9 @@ function applyPayload(
   expertise: { skill: Map<string, AppliedGrant>; tool: Map<string, AppliedGrant> },
   appliedGrants: AppliedGrant[],
   conflicts: RuleConflict[],
+  numericMods: Record<string, number>,
+  formulaCtx: FormulaContext,
+  repeatableFeats: Set<string>,
 ) {
   const level = input.draft.level ?? 1;
   if (payload.kind === 'choice') {
@@ -250,15 +295,17 @@ function applyPayload(
     const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
     for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
       if (!passesLevelGate(selectedPayload, level)) continue;
+      collectNumericModifier(selectedPayload, formulaCtx, numericMods);
       const grant = grantFromPayload(selectedPayload, source, choiceId);
-      if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts);
+      if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
     }
     return;
   }
 
   if (!passesLevelGate(payload, level)) return;
+  collectNumericModifier(payload, formulaCtx, numericMods);
   const grant = grantFromPayload(payload, source);
-  if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts);
+  if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
 }
 
 function applyMechanics(
@@ -269,9 +316,12 @@ function applyMechanics(
   expertise: { skill: Map<string, AppliedGrant>; tool: Map<string, AppliedGrant> },
   appliedGrants: AppliedGrant[],
   conflicts: RuleConflict[],
+  numericMods: Record<string, number>,
+  formulaCtx: FormulaContext,
+  repeatableFeats: Set<string>,
 ) {
   for (const payload of payloadsFromMechanics(entity.mechanics)) {
-    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts);
+    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
   }
 }
 
@@ -320,23 +370,37 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     addGrant({ source: classSource, kind: 'tool', value: tool, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
   }
 
+  const scores0 = draft.abilities;
+  const pb0 = proficiencyBonusForLevel(draft.level);
+  const abilityMods0 = Object.fromEntries(
+    ABILITY_KEYS.map((ability) => [ability, abilityMod(scores0[ability])]),
+  ) as Record<AbilityKey, number>;
+  // Контекст формул для числовых модификаторов эффектов («2*self_level» у Крепкого).
+  const formulaCtx: FormulaContext = {
+    abilityMods: abilityMods0,
+    profBonus: pb0,
+    selfLevel: draft.level,
+    classLevels: assembled.klass?.name ? { [assembled.klass.name.toLowerCase()]: draft.level } : {},
+  };
+  const numericMods: Record<string, number> = {};
+  // Повторяемые черты — id из собранных черт (assembled.feats).
+  const repeatableFeats = new Set((assembled.feats || []).filter((f) => f.repeatable).map((f) => f.id));
+
   for (const { effect, origin } of assembled.effects as OriginEffect[]) {
-    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts);
+    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
   }
   for (const { action, origin } of assembled.actions as OriginAction[]) {
-    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts);
+    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
   }
   for (const runtime of input.runtimeSources || []) {
     for (const payload of payloadsFromMechanics(runtime.mechanics)) {
-      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts);
+      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
     }
   }
 
   const scores = draft.abilities;
   const pb = proficiencyBonusForLevel(draft.level);
-  const abilityMods = Object.fromEntries(
-    ABILITY_KEYS.map((ability) => [ability, abilityMod(scores[ability])]),
-  ) as Record<AbilityKey, number>;
+  const abilityMods = abilityMods0;
 
   const skillBonuses = Object.fromEntries(SKILL_IDS.map((skill) => {
     const base = abilityMod(scores[abilityOfSkill(skill)]);
@@ -350,10 +414,12 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     return [ability, base + (maps.saving_throw.has(ability) ? pb : 0)];
   })) as Record<AbilityKey, number>;
 
-  const maxHP = computeMaxHP(assembled.klass?.hit_die, scores.con, draft.level);
-  const armorClass = 10 + abilityMod(scores.dex);
-  const speed = assembled.race?.speed ?? 30;
-  const initiativeBonus = abilityMod(scores.dex);
+  // Числовые модификаторы эффектов вливаются в производные значения листа
+  // (фундаментально, единообразно с расчётом КЗ через breakdown).
+  const maxHP = computeMaxHP(assembled.klass?.hit_die, scores.con, draft.level) + (numericMods.max_hp ?? 0);
+  const armorClass = 10 + abilityMod(scores.dex) + (numericMods.ac ?? 0);
+  const speed = (assembled.race?.speed ?? 30) + (numericMods.speed ?? 0);
+  const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
 
   return {
     version: 1,
