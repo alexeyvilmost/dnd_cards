@@ -122,7 +122,7 @@ export const BackgroundEquipment: React.FC<{
         .bgeq-item{ position:relative; width:46px; height:46px; flex:0 0 auto;
           border-radius:6px; background:rgba(0,0,0,.25); border:1px solid #4a3f35;
           display:flex; align-items:center; justify-content:center; }
-        .bgeq-item img{ width:40px; height:40px; object-fit:contain; }
+        .bgeq-item > img{ width:40px; height:40px; object-fit:contain; }
         .bgeq-qty{ position:absolute; bottom:-4px; right:-4px; min-width:15px; height:15px; padding:0 3px;
           border-radius:8px; background:#1a1410; border:1px solid #8a7320; color:#e7cf9a;
           font-size:.62rem; font-weight:700; line-height:13px; text-align:center; }

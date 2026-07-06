@@ -237,7 +237,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           </div>
 
           {/* Изображение - без отступов */}
-          <div className="flex items-center justify-center h-36">
+          <div className="flex items-center justify-center w-full h-36">
             {card.image_url && card.image_url.trim() !== '' ? (
               <img
                 src={card.image_url}
