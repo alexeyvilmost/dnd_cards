@@ -982,6 +982,12 @@ const CardLibrary = () => {
     }
   };
 
+  // Заклинание обновили в модалке (сменили картинку) — освежаем список и выбранное.
+  const handleSpellUpdated = (updated: Spell) => {
+    setSpells((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setSelectedSpell((prev) => (prev && prev.id === updated.id ? updated : prev));
+  };
+
   const handleDeleteResource = async (resourceId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот ресурс?')) return;
     try {
@@ -2399,6 +2405,7 @@ const CardLibrary = () => {
         isOpen={isSpellModalOpen}
         onClose={handleCloseSpellModal}
         onDelete={handleDeleteSpell}
+        onUpdated={handleSpellUpdated}
       />
 
       <FeatDetailModal

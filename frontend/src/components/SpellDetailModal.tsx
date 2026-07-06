@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Edit, Trash2 } from 'lucide-react';
+import { X, Edit, Trash2, RefreshCw, ImagePlus } from 'lucide-react';
 import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
@@ -8,13 +8,18 @@ import {
   SPELL_SAVE_TYPE_OPTIONS,
   getSpellLevelLabel,
 } from '../types';
+import { spellsApi } from '../api/client';
+import { imagesApi } from '../api/imagesApi';
 import SpellPreview from './SpellPreview';
+import ImageUploader from './ImageUploader';
 
 interface SpellDetailModalProps {
   spell: Spell | null;
   isOpen: boolean;
   onClose: () => void;
   onDelete: (spellId: string) => void;
+  /** Заклинание обновлено (напр. сменили изображение) — для обновления списка. */
+  onUpdated?: (spell: Spell) => void;
 }
 
 const labelFrom = (
@@ -22,12 +27,41 @@ const labelFrom = (
   value?: string | null
 ) => opts.find((o) => o.value === value)?.label || value || '';
 
+// Школа → тип энергии (цвет иконки), как в scripts/content/gen-spell-icons.mjs.
+const SPELL_SCHOOL_ELEMENT: Record<string, string> = {
+  abjuration: 'cold',
+  conjuration: 'force',
+  divination: 'radiant',
+  enchantment: 'psychic',
+  evocation: 'force',
+  illusion: 'psychic',
+  necromancy: 'necrotic',
+  transmutation: '',
+};
+
+// Стихия иконки: по типу урона → лечение → школа (совпадает с батч-генерацией).
+const spellElement = (spell: Spell): string => {
+  const dt = spell.damage?.[0]?.damage_type;
+  if (dt) return dt;
+  if (spell.is_healing) return 'healing';
+  return SPELL_SCHOOL_ELEMENT[spell.school ?? ''] ?? '';
+};
+
+const SPELL_ICON_EXTRA =
+  'Thin elegant strokes of energy. The symbol occupies about two-thirds of the frame, centered, with clear margins on all sides.';
+
 const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   spell,
   isOpen,
   onClose,
   onDelete,
+  onUpdated,
 }) => {
+  const [imageUrl, setImageUrl] = useState<string>(spell?.image_url || '');
+  const [busy, setBusy] = useState<null | 'gen' | 'save'>(null);
+  const [imgError, setImgError] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (event: KeyboardEvent) => {
@@ -37,7 +71,59 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
+  // Сброс локального состояния картинки при смене заклинания.
+  useEffect(() => {
+    setImageUrl(spell?.image_url || '');
+    setImgError(null);
+    setShowUpload(false);
+    setBusy(null);
+  }, [spell?.id, spell?.image_url]);
+
   if (!isOpen || !spell) return null;
+
+  const currentSpell = spell;
+
+  // Сохранить новый image_url на заклинании (частичный PUT — остальные поля целы).
+  const applyImage = async (url: string) => {
+    if (!url) return;
+    setBusy('save');
+    setImgError(null);
+    try {
+      const updated = await spellsApi.updateSpell(currentSpell.id, { image_url: url });
+      setImageUrl(updated.image_url || url);
+      onUpdated?.(updated);
+      setShowUpload(false);
+    } catch (e) {
+      console.error(e);
+      setImgError('Не удалось сохранить изображение');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // Перегенерировать иконку через ИИ (стиль spell_icon, с учётом фикса промпта).
+  const handleRegenerate = async () => {
+    setBusy('gen');
+    setImgError(null);
+    try {
+      const res = await imagesApi.generateStandalone({
+        style: 'spell_icon',
+        subject: currentSpell.name,
+        element: spellElement(currentSpell),
+        extra: SPELL_ICON_EXTRA,
+        quality: 'medium',
+      });
+      if (!res.image_url) throw new Error('нет image_url');
+      const updated = await spellsApi.updateSpell(currentSpell.id, { image_url: res.image_url });
+      setImageUrl(updated.image_url || res.image_url);
+      onUpdated?.(updated);
+    } catch (e) {
+      console.error(e);
+      setImgError('Не удалось перегенерировать изображение');
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const components = [
     spell.component_verbal && 'Вербальный',
@@ -59,9 +145,45 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
 
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Превью карточки */}
-            <div className="flex justify-center pt-6">
-              <SpellPreview spell={spell} disableHover={true} />
+            {/* Превью карточки + смена изображения */}
+            <div className="flex flex-col items-center pt-6 gap-3">
+              <SpellPreview spell={{ ...spell, image_url: imageUrl }} disableHover={true} />
+
+              <div className="w-full max-w-xs space-y-2">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRegenerate}
+                    disabled={busy !== null}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-2 rounded flex items-center justify-center gap-2 text-sm"
+                    title="Сгенерировать новую иконку в стиле заклинаний (ИИ)"
+                  >
+                    <RefreshCw size={16} className={busy === 'gen' ? 'animate-spin' : ''} />
+                    <span>{busy === 'gen' ? 'Генерация…' : 'Перегенерировать'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUpload((v) => !v)}
+                    disabled={busy !== null}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white px-3 py-2 rounded flex items-center justify-center gap-2 text-sm"
+                    title="Загрузить своё изображение"
+                  >
+                    <ImagePlus size={16} />
+                    <span>Загрузить</span>
+                  </button>
+                </div>
+
+                {busy === 'save' && (
+                  <p className="text-xs text-gray-500 text-center">Сохранение…</p>
+                )}
+                {imgError && <p className="text-xs text-red-600 text-center">{imgError}</p>}
+
+                {showUpload && (
+                  // Без currentImageUrl — всегда показываем дропзону (файл/вставка/drag);
+                  // текущая картинка уже видна в превью выше.
+                  <ImageUploader onImageUpload={(url) => applyImage(url)} />
+                )}
+              </div>
             </div>
 
             {/* Детальная информация */}
