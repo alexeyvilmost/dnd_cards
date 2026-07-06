@@ -161,7 +161,9 @@ function addGrant(
     conflicts.push({
       code: 'duplicate_proficiency',
       message: `«${value}» уже получено из «${existing.source.name}», повтор из «${full.source.name}» не применяется.`,
-      severity: 'error',
+      // Дубль из ФИКСИРОВАННОГО гранта (не выбор игрока) исправить нечем —
+      // предупреждаем, но не блокируем создание; дубль из выбора — ошибка.
+      severity: full.choiceId ? 'error' : 'warning',
       kind: full.kind,
       value,
       source: full.source,
