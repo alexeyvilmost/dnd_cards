@@ -31,6 +31,11 @@ type Class struct {
 	StartingEquipment     *JSONMap       `json:"starting_equipment" gorm:"type:jsonb"`
 	LevelProgression      *JSONMap       `json:"level_progression" gorm:"type:jsonb"`
 	Resources             *JSONMap       `json:"resources" gorm:"type:jsonb"`
+	IsSubclass            *bool          `json:"is_subclass" gorm:"type:boolean;default:false"`
+	ParentClassID         *uuid.UUID     `json:"parent_class_id" gorm:"type:uuid;index:idx_classes_parent"`
+	SubclassLevel         *int           `json:"subclass_level" gorm:"type:int;default:3"` // у родителя: уровень выбора подкласса
+	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`
+	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -61,6 +66,11 @@ type CreateClassRequest struct {
 	StartingEquipment    *JSONMap    `json:"starting_equipment"`
 	LevelProgression     *JSONMap    `json:"level_progression"`
 	Resources            *JSONMap    `json:"resources"`
+	IsSubclass           *bool       `json:"is_subclass"`
+	ParentClassID        *uuid.UUID  `json:"parent_class_id"`
+	SubclassLevel        *int        `json:"subclass_level"`
+	RelatedEffects       *Properties `json:"related_effects"`
+	RelatedActions       *Properties `json:"related_actions"`
 	Type                 *string     `json:"type"`
 	Author               string      `json:"author"`
 	Source               *string     `json:"source"`
@@ -85,6 +95,11 @@ type UpdateClassRequest struct {
 	StartingEquipment    *JSONMap    `json:"starting_equipment"`
 	LevelProgression     *JSONMap    `json:"level_progression"`
 	Resources            *JSONMap    `json:"resources"`
+	IsSubclass           *bool       `json:"is_subclass"`
+	ParentClassID        *uuid.UUID  `json:"parent_class_id"`
+	SubclassLevel        *int        `json:"subclass_level"`
+	RelatedEffects       *Properties `json:"related_effects"`
+	RelatedActions       *Properties `json:"related_actions"`
 	Type                 *string     `json:"type"`
 	Author               string      `json:"author"`
 	Source               *string     `json:"source"`
@@ -111,6 +126,11 @@ type ClassResponse struct {
 	StartingEquipment    *JSONMap    `json:"starting_equipment"`
 	LevelProgression     *JSONMap    `json:"level_progression"`
 	Resources            *JSONMap    `json:"resources"`
+	IsSubclass           *bool       `json:"is_subclass"`
+	ParentClassID        *uuid.UUID  `json:"parent_class_id"`
+	SubclassLevel        *int        `json:"subclass_level"`
+	RelatedEffects       *Properties `json:"related_effects"`
+	RelatedActions       *Properties `json:"related_actions"`
 	Type                 *string     `json:"type"`
 	Author               string      `json:"author"`
 	Source               *string     `json:"source"`
@@ -129,6 +149,8 @@ func (cl Class) ToClassResponse() ClassResponse {
 		WeaponProficiencies: cl.WeaponProficiencies, ToolProficiencies: cl.ToolProficiencies,
 		SkillChoices: cl.SkillChoices, StartingEquipment: cl.StartingEquipment,
 		LevelProgression: cl.LevelProgression, Resources: cl.Resources,
+		IsSubclass: cl.IsSubclass, ParentClassID: cl.ParentClassID, SubclassLevel: cl.SubclassLevel,
+		RelatedEffects: cl.RelatedEffects, RelatedActions: cl.RelatedActions,
 		Type: cl.Type, Author: cl.Author, Source: cl.Source, Tags: cl.Tags, IsExtended: cl.IsExtended,
 		CreatedAt: cl.CreatedAt, UpdatedAt: cl.UpdatedAt,
 	}

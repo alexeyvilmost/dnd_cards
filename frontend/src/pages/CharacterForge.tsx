@@ -129,7 +129,7 @@ const CharacterForge = () => {
   // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний).
   // resolvedChoices включён, т.к. выбор в choice(source:effect) меняет набор
   // разворачиваемых эффектов-бусин; резолв эффектов кэшируется в реестре.
-  const refsKey = `${draft.raceId}|${draft.lineageId}|${draft.classId}|${draft.backgroundId}|${draft.level}|${draft.featIds.join(',')}|${JSON.stringify(draft.resolvedChoices)}`;
+  const refsKey = `${draft.raceId}|${draft.lineageId}|${draft.classId}|${draft.subclassId}|${draft.backgroundId}|${draft.level}|${draft.featIds.join(',')}|${JSON.stringify(draft.resolvedChoices)}`;
   useEffect(() => {
     let stale = false;
     (async () => {
@@ -263,7 +263,7 @@ const CharacterForge = () => {
     patch({ featIds: draft.featIds.includes(fid) ? draft.featIds.filter((x) => x !== fid) : [fid] });
   const selectClass = (cid: string) => {
     setDraft((d) => {
-      const next = { ...d, classId: cid, classSkillChoices: [] as string[] };
+      const next = { ...d, classId: cid, subclassId: null, classSkillChoices: [] as string[] };
       // Оптимальный расклад класса применяется при каждой смене класса,
       // пока игрок не правил характеристики вручную (решение №2).
       const rec = classes.find((c) => c.id === cid)?.recommended_abilities;
@@ -378,6 +378,12 @@ const CharacterForge = () => {
   const selectedRace = draft.raceId ? races.find((r) => r.id === draft.raceId) : undefined;
   const subraceLevel = selectedRace?.subrace_level ?? 1;
   const subraceUnlocked = draft.level >= subraceLevel;
+
+  // Подклассы — отдельные классы-сущности с parent_class_id текущего класса
+  const subclasses = draft.classId ? classes.filter((c) => c.parent_class_id === draft.classId) : [];
+  const selectedClassEntity = draft.classId ? classes.find((c) => c.id === draft.classId) : undefined;
+  const subclassLevel = selectedClassEntity?.subclass_level ?? 3;
+  const subclassUnlocked = draft.level >= subclassLevel;
 
   // Условия появления вкладок
   const hasSubclass = classSubChoices.length > 0;
@@ -580,7 +586,9 @@ const CharacterForge = () => {
               {act === 'class' && (
                 <ClassSection classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} resolved={draft.resolvedChoices}
-                  setResolved={setResolved} ruleState={ruleState} />
+                  setResolved={setResolved} ruleState={ruleState}
+                  subclasses={subclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
+                  onPickSubclass={(id: string) => patch({ subclassId: draft.subclassId === id ? null : id })} />
               )}
               {act === 'subclass' && (
                 <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} />
@@ -817,14 +825,16 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass }: any) {
   const sc = classSkillChoice(assembled);
+  const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
+  const subclass = (subclasses as CharacterClass[]).find((c) => c.id === draft.subclassId);
   return (
     <div>
       <div className="forge-block forge-square-block">
         <div className="forge-square-grid">
-          {classes.map((c: CharacterClass) => (
+          {topClasses.map((c: CharacterClass) => (
             <EntitySquareCard
               key={c.id}
               name={c.name}
@@ -834,7 +844,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
               preview={<ClassPreview characterClass={c} disableHover />}
             />
           ))}
-          {classes.length === 0 && <p className="forge-note">Нет классов в базе.</p>}
+          {topClasses.length === 0 && <p className="forge-note">Нет классов в базе.</p>}
         </div>
       </div>
       {klass && (
@@ -842,6 +852,36 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           <div className="forge-entity-name">{klass.name}{klass.hit_die ? ` · кость хитов ${klass.hit_die}` : ''}</div>
           {klass.description && (
             <p className="forge-note"><FormattedText text={klass.description} emptyText="" /></p>
+          )}
+        </div>
+      )}
+      {klass && (subclasses as CharacterClass[]).length > 0 && subclassUnlocked && (
+        <div className="forge-block forge-square-block">
+          <div className="forge-section-h">Подкласс</div>
+          <div className="forge-square-grid">
+            {(subclasses as CharacterClass[]).map((c) => (
+              <EntitySquareCard
+                key={c.id}
+                name={c.name}
+                imageUrl={c.image_url}
+                selected={draft.subclassId === c.id}
+                onClick={() => onPickSubclass?.(c.id)}
+                preview={<ClassPreview characterClass={c} disableHover />}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {klass && (subclasses as CharacterClass[]).length > 0 && !subclassUnlocked && (
+        <div className="forge-block">
+          <p className="forge-note forge-note--center">Выбор подкласса откроется на {subclassLevel}-м уровне.</p>
+        </div>
+      )}
+      {subclass && (
+        <div className="forge-block forge-desc-block">
+          <div className="forge-entity-name">{subclass.name}</div>
+          {subclass.description && (
+            <p className="forge-note"><FormattedText text={subclass.description} emptyText="" /></p>
           )}
         </div>
       )}

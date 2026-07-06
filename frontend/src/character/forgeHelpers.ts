@@ -4,6 +4,9 @@ import {
   BONUS_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
   bonusIssues, parseBonuses, pointBuyIssues, serializeBonuses,
 } from './pointBuy';
+
+/** Служебный ключ resolved_choices для подкласса (без миграции БД). */
+export const SUBCLASS_KEY = 'builder:subclass';
 import type { AssembledCharacter } from './assemble';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
@@ -62,6 +65,7 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     raceId: c.race_id ?? null,
     lineageId: c.lineage_id ?? null,
     classId: c.class_id ?? null,
+    subclassId: stored[SUBCLASS_KEY]?.[0] ?? null,
     backgroundId: c.background_id ?? null,
     level: c.level || 1,
     featIds: c.feat_ids || [],
@@ -130,6 +134,7 @@ export function buildSavePayload(
       [METHOD_KEY]: [draft.abilityMethod],
       [BONUS_KEY]: serializeBonuses(draft.abilityBonuses),
       [EQUIPMENT_OPTION_KEY]: [draft.equipmentOption],
+      [SUBCLASS_KEY]: draft.subclassId ? [draft.subclassId] : [],
     },
     rule_state: ruleState,
     max_hp: maxHP,

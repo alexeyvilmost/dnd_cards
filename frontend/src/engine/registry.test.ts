@@ -63,6 +63,7 @@ describe('spellRefs', () => {
         raceId: null,
         lineageId: null,
         classId: null,
+        subclassId: null,
         backgroundId: null,
         level: 1,
         featIds: [],

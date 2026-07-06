@@ -57,6 +57,18 @@ const ClassCreator = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(true);
 
+  // Подкласс: по паттерну подвидов рас
+  const [isSubclass, setIsSubclass] = useState(false);
+  const [parentClassId, setParentClassId] = useState<string>('');
+  const [subclassLevel, setSubclassLevel] = useState<number>(3);
+  const [parentOptions, setParentOptions] = useState<CharacterClass[]>([]);
+
+  useEffect(() => {
+    classesApi.getClasses({ limit: 100 }).then((res) => {
+      setParentOptions(res.classes.filter((cl) => !cl.is_subclass && cl.id !== editId));
+    }).catch(() => setParentOptions([]));
+  }, [editId]);
+
   const loadEffects = useCallback(async () => {
     const res = await effectsApi.getEffects({ limit: 200 });
     return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
@@ -91,6 +103,9 @@ const ClassCreator = () => {
           source: cl.source || '',
         });
         setLevelProgression(cl.level_progression || {});
+        setIsSubclass(!!cl.is_subclass);
+        setParentClassId(cl.parent_class_id || '');
+        setSubclassLevel(cl.subclass_level ?? 3);
       } catch (err) {
         setError('Ошибка загрузки класса');
       } finally {
@@ -142,8 +157,14 @@ const ClassCreator = () => {
         starting_equipment: parseJsonObject(data.starting_equipment_json, 'Стартовое снаряжение'),
         resources: parseJsonObject(data.resources_json, 'Ресурсы'),
         level_progression: Object.keys(levelProgression).length ? levelProgression : null,
+        is_subclass: isSubclass,
+        parent_class_id: isSubclass ? (parentClassId || null) : null,
+        subclass_level: subclassLevel,
         source: data.source || null,
       };
+      if (isSubclass && !parentClassId) {
+        throw new Error('Выберите родительский класс для подкласса');
+      }
       if (isEditMode && editId) {
         await classesApi.updateClass(editId, payload);
       } else {
@@ -200,37 +221,68 @@ const ClassCreator = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelCls}>Кость хитов</label>
-                    <select {...register('hit_die')} className={inputCls}>
-                      {['d6', 'd8', 'd10', 'd12'].map((die) => <option key={die} value={die}>{die}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelCls}>Основные характеристики</label>
-                    <input {...register('primary_abilities')} className={inputCls} placeholder="str, con" />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Спасброски</label>
-                    <input {...register('saving_throws')} className={inputCls} placeholder="str, con" />
-                  </div>
+                <div className="border rounded-lg p-3 bg-gray-50 space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input type="checkbox" checked={isSubclass} onChange={(e) => setIsSubclass(e.target.checked)} />
+                    Это подкласс другого класса
+                  </label>
+                  {isSubclass ? (
+                    <div>
+                      <label className={labelCls}>Родительский класс *</label>
+                      <select value={parentClassId} onChange={(e) => setParentClassId(e.target.value)} className={inputCls}>
+                        <option value="">— выберите класс —</option>
+                        {parentOptions.map((cl) => <option key={cl.id} value={cl.id}>{cl.name}</option>)}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Подкласс наследует кость хитов, владения и ресурсы родителя. В кузнице он появится
+                        под выбором класса, когда персонаж достигнет уровня подкласса.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="w-48">
+                      <label className={labelCls}>Уровень выбора подкласса</label>
+                      <input type="number" min={1} max={20} value={subclassLevel}
+                        onChange={(e) => setSubclassLevel(Math.max(1, Math.min(20, Number(e.target.value) || 3)))}
+                        className={inputCls} />
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelCls}>Доспехи</label>
-                    <input {...register('armor_training')} className={inputCls} placeholder="light, medium, shields" />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Оружие</label>
-                    <input {...register('weapon_proficiencies')} className={inputCls} placeholder="simple, martial" />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Инструменты</label>
-                    <input {...register('tool_proficiencies')} className={inputCls} placeholder="thieves_tools" />
-                  </div>
-                </div>
+                {!isSubclass && (
+                  <>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className={labelCls}>Кость хитов</label>
+                        <select {...register('hit_die')} className={inputCls}>
+                          {['d6', 'd8', 'd10', 'd12'].map((die) => <option key={die} value={die}>{die}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Основные характеристики</label>
+                        <input {...register('primary_abilities')} className={inputCls} placeholder="str, con" />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Спасброски</label>
+                        <input {...register('saving_throws')} className={inputCls} placeholder="str, con" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className={labelCls}>Доспехи</label>
+                        <input {...register('armor_training')} className={inputCls} placeholder="light, medium, shields" />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Оружие</label>
+                        <input {...register('weapon_proficiencies')} className={inputCls} placeholder="simple, martial" />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Инструменты</label>
+                        <input {...register('tool_proficiencies')} className={inputCls} placeholder="thieves_tools" />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label className={labelCls}>Изображение</label>
@@ -256,14 +308,18 @@ const ClassCreator = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelCls}>Выбор навыков (JSON)</label>
-                    <textarea {...register('skill_choices_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"count":2,"options":["athletics","perception"]}' />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Стартовое снаряжение (JSON)</label>
-                    <textarea {...register('starting_equipment_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"packages":[]}' />
-                  </div>
+                  {!isSubclass && (
+                    <>
+                      <div>
+                        <label className={labelCls}>Выбор навыков (JSON)</label>
+                        <textarea {...register('skill_choices_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"count":2,"options":["athletics","perception"]}' />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Стартовое снаряжение (JSON)</label>
+                        <textarea {...register('starting_equipment_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"packages":[]}' />
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className={labelCls}>Ресурсы (JSON)</label>
                     <textarea {...register('resources_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"rage":{"max":"2"}}' />

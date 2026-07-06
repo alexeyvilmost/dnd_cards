@@ -357,8 +357,46 @@ func GetAllMigrations() []Migration {
 			Up:          addCardMechanics,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "059_class_subclasses",
+			Description: "Add subclass fields to classes (is_subclass, parent_class_id, subclass_level, related_effects/actions)",
+			Up:          addClassSubclasses,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "060_resource_spent_image",
+			Description: "Add image_url_spent to resources (spent-charge look)",
+			Up:          addResourceSpentImage,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addClassSubclasses добавляет классам поля подкласса по паттерну подвидов рас.
+func addClassSubclasses(db *sql.DB) error {
+	stmts := []string{
+		"ALTER TABLE classes ADD COLUMN IF NOT EXISTS is_subclass BOOLEAN DEFAULT false",
+		"ALTER TABLE classes ADD COLUMN IF NOT EXISTS parent_class_id UUID",
+		"CREATE INDEX IF NOT EXISTS idx_classes_parent ON classes(parent_class_id)",
+		"ALTER TABLE classes ADD COLUMN IF NOT EXISTS subclass_level INT DEFAULT 3",
+		"ALTER TABLE classes ADD COLUMN IF NOT EXISTS related_effects JSONB",
+		"ALTER TABLE classes ADD COLUMN IF NOT EXISTS related_actions JSONB",
+	}
+	for _, s := range stmts {
+		if _, err := db.Exec(s); err != nil {
+			return fmt.Errorf("addClassSubclasses: %w", err)
+		}
+	}
+	return nil
+}
+
+// addResourceSpentImage добавляет ресурсам изображение потраченного заряда.
+func addResourceSpentImage(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE resources ADD COLUMN IF NOT EXISTS image_url_spent TEXT"); err != nil {
+		return fmt.Errorf("addResourceSpentImage: %w", err)
+	}
+	return nil
 }
 
 // addCardMechanics добавляет предметам унифицированную механику.

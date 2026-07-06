@@ -112,6 +112,8 @@ export interface CharacterDraft {
   raceId: string | null;
   lineageId: string | null;
   classId: string | null;
+  /** Подкласс (UUID класса-подкласса); хранится в resolved_choices['builder:subclass']. */
+  subclassId: string | null;
   backgroundId: string | null;
   level: number;
   featIds: string[];
@@ -151,6 +153,7 @@ export const emptyDraft = (): CharacterDraft => ({
   raceId: null,
   lineageId: null,
   classId: null,
+  subclassId: null,
   backgroundId: null,
   level: 1,
   featIds: [],

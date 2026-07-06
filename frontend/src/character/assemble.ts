@@ -33,6 +33,7 @@ export function gatherFeatureRefs(
   feats: Feat[],
   level: number,
   subrace?: Race | null,
+  subclass?: CharacterClass | null,
 ): { effectRefs: Ref[]; actionRefs: Ref[] } {
   const effectRefs: Ref[] = [];
   const actionRefs: Ref[] = [];
@@ -71,6 +72,13 @@ export function gatherFeatureRefs(
     const origin: ChoiceOrigin = { kind: 'class', id: klass.id, name: klass.name };
     addLevelProg(klass.level_progression, origin);
   }
+  if (subclass) {
+    // Подкласс работает как класс: его эффекты/действия добавляются с class-источником.
+    const origin: ChoiceOrigin = { kind: 'class', id: subclass.id, name: subclass.name };
+    (subclass.related_effects || []).forEach((id) => pushE(id, origin));
+    (subclass.related_actions || []).forEach((id) => pushA(id, origin));
+    addLevelProg(subclass.level_progression, origin);
+  }
   for (const f of feats) {
     const origin: ChoiceOrigin = { kind: 'feat', id: f.id, name: f.name };
     (f.related_effects || []).forEach((id) => pushE(id, origin));
@@ -87,6 +95,7 @@ export interface OriginAction { action: Action; origin: ChoiceOrigin; }
 export interface AssembledCharacter {
   race: Race | null;
   klass: CharacterClass | null;
+  subclass?: CharacterClass | null;
   background: Background | null;
   feats: Feat[];
   effects: OriginEffect[];
@@ -108,6 +117,7 @@ export interface AssembledCharacter {
 export interface EntityBundle {
   race: Race | null;
   klass: CharacterClass | null;
+  subclass?: CharacterClass | null;
   background: Background | null;
   feats: Feat[];
   effects: OriginEffect[];
@@ -135,6 +145,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
   return {
     race: bundle.race,
     klass: bundle.klass,
+    subclass: bundle.subclass ?? null,
     background: bundle.background,
     feats: bundle.feats,
     effects: bundle.effects,
@@ -171,7 +182,15 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   const subraceId = draft.lineageId && isEntityUuid(draft.lineageId) ? draft.lineageId : null;
   const subrace = subraceId ? await racesApi.getRace(subraceId).catch(() => null) : null;
 
-  const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level, subrace);
+  // Подкласс — отдельный класс-сущность (is_subclass), выбранный на своём уровне.
+  const subclassId = draft.subclassId && isEntityUuid(draft.subclassId) ? draft.subclassId : null;
+  const subclass = subclassId ? await classesApi.getClass(subclassId).catch(() => null) : null;
+  // Ресурсы подкласса вливаются в ресурсы класса (лист читает klass.resources).
+  const klassWithSub = klass && subclass?.resources
+    ? { ...klass, resources: { ...(klass.resources || {}), ...subclass.resources } }
+    : klass;
+
+  const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level, subrace, subclass);
 
   const baseEffects = (
     await Promise.all(
@@ -197,7 +216,7 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     )
   ).filter((x): x is OriginAction => !!x);
 
-  return { race, klass, background, feats, effects, actions, spells: [] };
+  return { race, klass: klassWithSub, subclass, background, feats, effects, actions, spells: [] };
 }
 
 const entityRegistry = createRegistry(createApiResolver());

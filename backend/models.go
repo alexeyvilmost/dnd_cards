@@ -1423,6 +1423,8 @@ type ResourceDefinition struct {
 	Description string         `json:"description" gorm:"type:text"`
 	Category    string         `json:"category" gorm:"type:varchar(50);default:'character'"`
 	ImageURL    string         `json:"image_url" gorm:"type:text"`
+	// Вид потраченного заряда (пустая ячейка); заполняется владельцем.
+	ImageURLSpent string       `json:"image_url_spent" gorm:"type:text"`
 	Recharge    string         `json:"recharge" gorm:"type:varchar(50)"`
 	SortOrder   int            `json:"sort_order" gorm:"default:0"`
 	CreatedAt   time.Time      `json:"created_at"`
@@ -1433,23 +1435,25 @@ type ResourceDefinition struct {
 func (ResourceDefinition) TableName() string { return "resources" }
 
 type CreateResourceRequest struct {
-	ResourceID  string `json:"resource_id" binding:"required"`
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
-	ImageURL    string `json:"image_url"`
-	Recharge    string `json:"recharge"`
-	SortOrder   int    `json:"sort_order"`
+	ResourceID    string `json:"resource_id" binding:"required"`
+	Name          string `json:"name" binding:"required"`
+	Description   string `json:"description"`
+	Category      string `json:"category"`
+	ImageURL      string `json:"image_url"`
+	ImageURLSpent string `json:"image_url_spent"`
+	Recharge      string `json:"recharge"`
+	SortOrder     int    `json:"sort_order"`
 }
 
 type UpdateResourceRequest struct {
-	ResourceID  string `json:"resource_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
-	ImageURL    string `json:"image_url"`
-	Recharge    string `json:"recharge"`
-	SortOrder   int    `json:"sort_order"`
+	ResourceID    string `json:"resource_id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Category      string `json:"category"`
+	ImageURL      string `json:"image_url"`
+	ImageURLSpent string `json:"image_url_spent"`
+	Recharge      string `json:"recharge"`
+	SortOrder     int    `json:"sort_order"`
 }
 
 // ActionRecharge - перезарядка действия

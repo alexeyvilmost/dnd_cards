@@ -69,13 +69,14 @@ func (rc *ResourceController) CreateResource(c *gin.Context) {
 		req.Category = "character"
 	}
 	resource := ResourceDefinition{
-		ResourceID:  req.ResourceID,
-		Name:        req.Name,
-		Description: req.Description,
-		Category:    req.Category,
-		ImageURL:    req.ImageURL,
-		Recharge:    req.Recharge,
-		SortOrder:   req.SortOrder,
+		ResourceID:    req.ResourceID,
+		Name:          req.Name,
+		Description:   req.Description,
+		Category:      req.Category,
+		ImageURL:      req.ImageURL,
+		ImageURLSpent: req.ImageURLSpent,
+		Recharge:      req.Recharge,
+		SortOrder:     req.SortOrder,
 	}
 	if err := rc.db.Create(&resource).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания ресурса", "details": err.Error()})
@@ -117,6 +118,7 @@ func (rc *ResourceController) UpdateResource(c *gin.Context) {
 		resource.Category = req.Category
 	}
 	resource.ImageURL = req.ImageURL
+	resource.ImageURLSpent = req.ImageURLSpent
 	resource.Recharge = req.Recharge
 	resource.SortOrder = req.SortOrder
 	if err := rc.db.Save(&resource).Error; err != nil {

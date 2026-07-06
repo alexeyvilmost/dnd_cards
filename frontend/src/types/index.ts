@@ -1375,6 +1375,11 @@ export interface CharacterClass {
   starting_equipment?: Record<string, unknown> | null;
   level_progression?: LevelProgression | null;
   resources?: Record<string, unknown> | null;
+  is_subclass?: boolean | null;
+  parent_class_id?: string | null;
+  subclass_level?: number | null;
+  related_effects?: string[] | null;
+  related_actions?: string[] | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1402,6 +1407,11 @@ export interface CreateClassRequest {
   starting_equipment?: Record<string, unknown> | null;
   level_progression?: LevelProgression | null;
   resources?: Record<string, unknown> | null;
+  is_subclass?: boolean | null;
+  parent_class_id?: string | null;
+  subclass_level?: number | null;
+  related_effects?: string[] | null;
+  related_actions?: string[] | null;
   type?: string | null;
   author?: string;
   source?: string | null;

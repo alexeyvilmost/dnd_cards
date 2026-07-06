@@ -26,6 +26,17 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
 
+	if parent := c.Query("parent_class_id"); parent != "" {
+		query = query.Where("parent_class_id = ?", parent)
+	}
+	if isSub := c.Query("is_subclass"); isSub != "" {
+		if isSub == "true" {
+			query = query.Where("is_subclass = ?", true)
+		} else {
+			query = query.Where("(is_subclass = ? OR is_subclass IS NULL)", false)
+		}
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset := (page - 1) * limit
@@ -100,6 +111,8 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 		WeaponProficiencies: req.WeaponProficiencies, ToolProficiencies: req.ToolProficiencies,
 		SkillChoices: req.SkillChoices, StartingEquipment: req.StartingEquipment,
 		LevelProgression: req.LevelProgression, Resources: req.Resources,
+		IsSubclass: req.IsSubclass, ParentClassID: req.ParentClassID, SubclassLevel: req.SubclassLevel,
+		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
 		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
 	}
 	if cl.Author == "" {
@@ -185,6 +198,24 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 	if req.Resources != nil {
 		cl.Resources = req.Resources
+	}
+	if req.IsSubclass != nil {
+		cl.IsSubclass = req.IsSubclass
+		if !*req.IsSubclass {
+			cl.ParentClassID = nil
+		}
+	}
+	if req.ParentClassID != nil {
+		cl.ParentClassID = req.ParentClassID
+	}
+	if req.SubclassLevel != nil {
+		cl.SubclassLevel = req.SubclassLevel
+	}
+	if req.RelatedEffects != nil {
+		cl.RelatedEffects = req.RelatedEffects
+	}
+	if req.RelatedActions != nil {
+		cl.RelatedActions = req.RelatedActions
 	}
 	if req.Type != nil {
 		cl.Type = req.Type
