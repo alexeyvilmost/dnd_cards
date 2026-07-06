@@ -31,7 +31,16 @@ const EffectCreator = () => {
   const [idError, setIdError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState('main');
   const [showPreview, setShowPreview] = useState(true);
+  const [knownTypes, setKnownTypes] = useState<string[]>([]);
   const resourceOptions = useResourceOptions();
+
+  // Существующие пользовательские типы эффектов — для подсказки-datalist.
+  useEffect(() => {
+    effectsApi.getEffects({ limit: 500 }).then((res) => {
+      const types = [...new Set((res.effects || []).map((e) => e.type).filter((t): t is string => !!t))].sort();
+      setKnownTypes(types);
+    }).catch(() => setKnownTypes([]));
+  }, []);
 
   // Загрузка эффекта для редактирования
   useEffect(() => {
@@ -53,6 +62,7 @@ const EffectCreator = () => {
             rarity: effect.rarity || 'common',
             card_number: effect.card_number || '',
             effect_type: effect.effect_type || 'passive',
+            type: effect.type || null,
             condition_description: effect.condition_description || null,
             is_extended: effect.is_extended || false,
             description_font_size: effect.description_font_size || null,
@@ -172,6 +182,7 @@ const EffectCreator = () => {
           image_url: data.image_url,
           rarity: 'common', // Всегда common для эффектов
           effect_type: data.effect_type,
+          type: data.type || null,
           condition_description: data.condition_description,
           script: data.script || null,
           mechanics: data.mechanics ?? null,
@@ -334,6 +345,25 @@ const EffectCreator = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Категория (тип)
+                </label>
+                <input
+                  {...register('type')}
+                  list="effect-type-list"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Напр. «Дар договора», «Мистическое воззвание»"
+                />
+                <datalist id="effect-type-list">
+                  {knownTypes.map((t) => <option key={t} value={t} />)}
+                </datalist>
+                <p className="text-xs text-gray-500 mt-1">
+                  Свободная категория для группировки. Эффект можно выбрать через механику
+                  <code className="mx-1">choice(source: "effect_type")</code> — например все Дары договора.
+                </p>
               </div>
 
               {watch('effect_type') === 'conditional' && (

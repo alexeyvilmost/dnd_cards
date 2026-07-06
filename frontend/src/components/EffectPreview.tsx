@@ -45,11 +45,16 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick }
           </h3>
         </div>
 
-        {/* Тип эффекта */}
-        <div className="mb-3">
+        {/* Тип эффекта + пользовательская категория */}
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
           <span className="text-sm text-gray-300">
             {getEffectTypeLabel(effect.effect_type)}
           </span>
+          {effect.type && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-900/60 border border-amber-600/50 text-amber-200 font-fantasy">
+              {effect.type}
+            </span>
+          )}
         </div>
 
         {/* Описание */}

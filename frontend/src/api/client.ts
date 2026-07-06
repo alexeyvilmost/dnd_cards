@@ -178,6 +178,7 @@ export const effectsApi = {
     limit?: number;
     rarity?: string;
     effect_type?: string;
+    type?: string;
     search?: string;
   }): Promise<PassiveEffectsResponse> => {
     const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', { params });

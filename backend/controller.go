@@ -1231,9 +1231,14 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 		query = query.Where("rarity = ?", rarity)
 	}
 
-	// Фильтрация по типу эффекта
+	// Фильтрация по типу эффекта (enum effect_type)
 	if effectType := c.Query("effect_type"); effectType != "" {
 		query = query.Where("effect_type = ?", effectType)
+	}
+
+	// Фильтрация по пользовательскому типу (поле type — «Дар договора» и т.п.)
+	if typ := c.Query("type"); typ != "" {
+		query = query.Where("type = ?", typ)
 	}
 
 	// Поиск по названию или card_number

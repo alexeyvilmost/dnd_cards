@@ -200,6 +200,12 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     )
   ).filter((x): x is OriginEffect => !!x);
 
+  // Материализуем choice(source:"effect_type"): выбор N эффектов заданного
+  // типа (Дар договора, Мистическое воззвание). Тип разворачивается в обычный
+  // choice(source:"effect") со списком эффектов этого типа — дальше работает
+  // штатная машинерия (показ вариантов + expandEffectGrants даёт их механику).
+  await materializeEffectTypeChoices(baseEffects);
+
   const resolveEffect = (slug: string) =>
     entityRegistry.resolve<PassiveEffect>('effect', slug).catch(() => null);
 
@@ -330,6 +336,58 @@ export function collectFeatChoiceRefs(
     }
   }
   return refs;
+}
+
+// Кэш «тип эффекта → список эффектов» на время одной сборки.
+const effectTypeCache = new Map<string, { id: string; name: string; card_number: string }[]>();
+
+async function effectsOfType(type: string): Promise<{ id: string; name: string; card_number: string }[]> {
+  if (effectTypeCache.has(type)) return effectTypeCache.get(type)!;
+  try {
+    const res = await effectsApi.getEffects({ type, limit: 200 });
+    const list = (res.effects || []).map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
+    effectTypeCache.set(type, list);
+    return list;
+  } catch {
+    effectTypeCache.set(type, []);
+    return [];
+  }
+}
+
+/**
+ * Разворачивает choice(source:"effect_type") в choice(source:"effect") со
+ * списком эффектов заданного типа. Мутирует mechanics загруженных эффектов
+ * (объекты одноразовые, из свежего fetch). count:"all" → все эффекты типа.
+ */
+async function materializeEffectTypeChoices(effects: OriginEffect[]): Promise<void> {
+  const scanTargets: RefDict[] = [];
+  const collect = (mech: unknown) => {
+    if (!mech || typeof mech !== 'object') return;
+    const list = (mech as RefDict).effects;
+    if (!Array.isArray(list)) return;
+    for (const it of list as RefDict[]) {
+      if (it?.kind === 'choice' && ((it.options as RefDict)?.source === 'effect_type')) scanTargets.push(it);
+      else if (it?.resolution === 'auto' && Array.isArray(it.result)) {
+        for (const p of it.result as RefDict[]) {
+          if (p?.kind === 'choice' && ((p.options as RefDict)?.source === 'effect_type')) scanTargets.push(p);
+        }
+      }
+    }
+  };
+  for (const { effect } of effects) collect(effect.mechanics);
+  if (!scanTargets.length) return;
+
+  await Promise.all(scanTargets.map(async (choice) => {
+    const opts = choice.options as RefDict;
+    const type = String(opts.type ?? '');
+    if (!type) return;
+    const list = await effectsOfType(type);
+    // id варианта = card_number (slug) → collectEffectGrantRefs резолвит его.
+    opts.source = 'effect';
+    opts.items = list.map((e) => ({ id: e.card_number || e.id, name: e.name, value: e.card_number || e.id }));
+    delete opts.type;
+    if (choice.count === 'all' || opts.count === 'all') choice.count = list.length || 1;
+  }));
 }
 
 export type EffectResolver = (slug: string) => Promise<PassiveEffect | null>;
