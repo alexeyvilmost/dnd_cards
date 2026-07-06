@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Card, EquipmentOption } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { getCurrencyIconPath, currencyIconStyle } from '../utils/currencies';
+import CardPreview from './CardPreview';
 
 // Совместим и с предысторией ({a,b}), и с классом ({a,b,c}).
 type EquipOptions = {
@@ -12,6 +13,38 @@ type EquipOptions = {
 type OptKey = 'a' | 'b' | 'c';
 
 const hasContent = (o?: EquipmentOption | null) => !!o && ((o.items?.length || 0) > 0 || (o.gold || 0) > 0);
+
+// Иконка предмета с карточкой-превью (как в библиотеке) при наведении.
+const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }) => {
+  const [hover, setHover] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  return (
+    <div
+      className="bgeq-item"
+      onMouseEnter={(e) => { setHover(true); setPos({ x: e.clientX, y: e.clientY }); }}
+      onMouseLeave={() => setHover(false)}
+      onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+    >
+      <img
+        src={card.image_url || '/default_image.png'}
+        alt={card.name}
+        onError={(e) => ((e.target as HTMLImageElement).src = '/default_image.png')}
+      />
+      {quantity > 1 && <span className="bgeq-qty">{quantity}</span>}
+      {hover && (
+        <div
+          style={{
+            position: 'fixed', zIndex: 100, pointerEvents: 'none',
+            left: Math.min(pos.x + 14, window.innerWidth - 210),
+            top: Math.min(Math.max(pos.y - 40, 8), window.innerHeight - 290),
+          }}
+        >
+          <CardPreview card={card} disableHover />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Variant: React.FC<{
   label: string; option?: EquipmentOption | null; index: Map<string, Card>;
@@ -29,14 +62,7 @@ const Variant: React.FC<{
       <div className="bgeq-row">
         <div className="bgeq-items">
           {items.map(({ r, card }) => (
-            <div className="bgeq-item" key={r.card_id} title={card.name}>
-              <img
-                src={card.image_url || '/default_image.png'}
-                alt={card.name}
-                onError={(e) => ((e.target as HTMLImageElement).src = '/default_image.png')}
-              />
-              {r.quantity > 1 && <span className="bgeq-qty">{r.quantity}</span>}
-            </div>
+            <ItemIcon key={r.card_id} card={card} quantity={r.quantity} />
           ))}
           {items.length === 0 && <span className="bgeq-only-gold">только золото</span>}
         </div>
