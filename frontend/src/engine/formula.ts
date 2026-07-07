@@ -7,6 +7,9 @@ export type FormulaMarker = 'weapon' | 'auto';
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
+/** Значение переменной персонажа: число или кость(и) (см. docs/variables.md). */
+export type VariableValue = number | { sides: number; count: number };
+
 export interface FormulaContext {
   abilityMods?: Partial<Record<AbilityKey, number>>;
   profBonus?: number;
@@ -16,7 +19,21 @@ export interface FormulaContext {
   spellSlotAbove?: number;
   rageBonus?: number;
   characterSpeed?: number;
+  /** Переменные персонажа (martial_arts_die, rage_damage_modifier, ...). */
+  variables?: Record<string, VariableValue>;
   rng?: () => number;
+}
+
+/**
+ * Формула сослалась на переменную/токен, которого нет у персонажа. Отдельный тип,
+ * чтобы вызывающие (правила/исполнитель) МЯГКО деградировали — пропустили payload
+ * с логом, а не роняли лист/действие. См. docs/variables.md §деградация.
+ */
+export class MissingVariableError extends Error {
+  constructor(public readonly variable: string) {
+    super(`Переменная формулы недоступна: ${variable}`);
+    this.name = 'MissingVariableError';
+  }
 }
 
 export type FormulaValue = number | FormulaMarker;
@@ -195,7 +212,18 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
     return addModifier(sink, v, ABILITY_LABEL_RU[ability], 'модификатор характеристики');
   }
 
-  throw new Error(`Неизвестная переменная формулы: ${id}`);
+  // Переменные персонажа: dice → бросок кости(ей), number → плоский модификатор.
+  const variable = ctx.variables?.[lower] ?? ctx.variables?.[id];
+  if (variable !== undefined) {
+    if (typeof variable === 'number') {
+      return addModifier(sink, variable, id, 'переменная');
+    }
+    return rollDice(variable.count, variable.sides, sink);
+  }
+
+  // Токен не разрешён: неактивная/несуществующая переменная или опечатка. НЕ общий
+  // throw — специальный тип, чтобы вызывающие мягко пропустили payload (деградация).
+  throw new MissingVariableError(id);
 }
 
 function parseExpr(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {

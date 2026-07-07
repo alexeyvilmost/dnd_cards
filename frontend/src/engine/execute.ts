@@ -15,7 +15,7 @@ import {
   conditionAppliedEvent, damageEvent, healingEvent, narrativeEvent,
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
-import { evaluate, rollFormula, type AbilityKey, type FormulaContext } from './formula';
+import { evaluate, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import { collectRollModifiers } from './modifiers';
 import { rollD20 } from './roll';
 import { weaponContext } from './weapon';
@@ -56,6 +56,7 @@ function formulaCtx(ctx: ExecuteContext): FormulaContext {
     selfLevel: ctx.character.level,
     classLevels: ctx.character.classLevels,
     spellcastingMod: ctx.character.spellcastingMod,
+    variables: ctx.character.variables,
     rng: ctx.rng,
   };
 }
@@ -525,26 +526,36 @@ export function executeAction(
 
   for (const eff of effects) {
     const resolution = String(eff.resolution ?? '');
-    if (resolution === 'auto') {
-      const results = (eff.result ?? eff.results) as Dict[] | undefined;
-      if (Array.isArray(results)) {
-        next = applyPayloads(results, next, ctx, events, sourceName, 'main');
+    // Мягкая деградация: если формула эффекта ссылается на недоступную переменную,
+    // эффект пропускается с логом, а не роняет всё действие (см. docs/variables.md).
+    try {
+      if (resolution === 'auto') {
+        const results = (eff.result ?? eff.results) as Dict[] | undefined;
+        if (Array.isArray(results)) {
+          next = applyPayloads(results, next, ctx, events, sourceName, 'main');
+        }
+        continue;
       }
-      continue;
+      if (resolution === 'attack_roll') {
+        next = runAttackRoll(eff, next, ctx, events, sourceName);
+        continue;
+      }
+      if (resolution === 'save') {
+        next = runSave(eff, next, ctx, events, sourceName);
+        continue;
+      }
+      if (resolution === 'ability_check') {
+        next = runAbilityCheck(eff, next, ctx, events);
+        continue;
+      }
+      events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
+    } catch (e) {
+      if (e instanceof MissingVariableError) {
+        events.push(narrativeEvent(`Переменная «${e.variable}» недоступна — эффект «${sourceName}» не применён.`));
+        continue;
+      }
+      throw e;
     }
-    if (resolution === 'attack_roll') {
-      next = runAttackRoll(eff, next, ctx, events, sourceName);
-      continue;
-    }
-    if (resolution === 'save') {
-      next = runSave(eff, next, ctx, events, sourceName);
-      continue;
-    }
-    if (resolution === 'ability_check') {
-      next = runAbilityCheck(eff, next, ctx, events);
-      continue;
-    }
-    events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
   }
 
   void (ctx.character as CharacterContext);

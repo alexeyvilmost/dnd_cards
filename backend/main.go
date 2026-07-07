@@ -95,6 +95,7 @@ func main() {
 	raceController := NewRaceController(db)
 	classController := NewClassController(db)
 	resourceController := NewResourceController(db)
+	variableController := NewVariableController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -216,6 +217,13 @@ func main() {
 		api.POST("/resources", AuthMiddleware(authService), resourceController.CreateResource)
 		api.PUT("/resources/:id", AuthMiddleware(authService), resourceController.UpdateResource)
 		api.DELETE("/resources/:id", AuthMiddleware(authService), resourceController.DeleteResource)
+
+		// Переменные (числовые/dice), выдаваемые классами/эффектами
+		api.GET("/variables", OptionalAuthMiddleware(authService), variableController.GetVariables)
+		api.GET("/variables/:id", OptionalAuthMiddleware(authService), variableController.GetVariable)
+		api.POST("/variables", AuthMiddleware(authService), variableController.CreateVariable)
+		api.PUT("/variables/:id", AuthMiddleware(authService), variableController.UpdateVariable)
+		api.DELETE("/variables/:id", AuthMiddleware(authService), variableController.DeleteVariable)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

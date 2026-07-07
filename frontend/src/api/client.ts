@@ -38,6 +38,10 @@ import type {
   ResourcesResponse,
   CreateResourceRequest,
   UpdateResourceRequest,
+  Variable,
+  VariablesResponse,
+  CreateVariableRequest,
+  UpdateVariableRequest,
   ActiveEffect
 } from '../types';
 
@@ -388,6 +392,28 @@ export const resourcesApi = {
   },
   deleteResource: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/resources/${id}`);
+  },
+};
+
+export const variablesApi = {
+  getVariables: async (params?: { var_type?: string }): Promise<VariablesResponse> => {
+    const response = await apiClient.get<VariablesResponse>('/api/variables', { params });
+    return response.data;
+  },
+  getVariable: async (id: string): Promise<Variable> => {
+    const response = await apiClient.get<Variable>(`/api/variables/${id}`);
+    return response.data;
+  },
+  createVariable: async (data: CreateVariableRequest): Promise<Variable> => {
+    const response = await apiClient.post<Variable>('/api/variables', data);
+    return response.data;
+  },
+  updateVariable: async (id: string, data: UpdateVariableRequest): Promise<Variable> => {
+    const response = await apiClient.put<Variable>(`/api/variables/${id}`, data);
+    return response.data;
+  },
+  deleteVariable: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/variables/${id}`);
   },
 };
 

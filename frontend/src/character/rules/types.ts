@@ -88,4 +88,6 @@ export interface CharacterRuleState {
   spellcasting: AssembledCharacter['derived']['spellcasting'];
   appliedGrants: AppliedGrant[];
   conflicts: RuleConflict[];
+  /** Переменные персонажа (martial_arts_die и т.п.) для формул листа/боя. */
+  variables: Record<string, number | { sides: number; count: number }>;
 }

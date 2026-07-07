@@ -690,6 +690,38 @@ export interface CreateResourceRequest {
 
 export type UpdateResourceRequest = Partial<CreateResourceRequest>;
 
+// Переменная персонажа: name + type + default_value. Значения задают ЭФФЕКТЫ
+// (payload kind:'variable', op set/add/remove), привязанные к уровням класса.
+// См. docs/variables.md.
+export interface Variable {
+  id: string;
+  variable_id: string;
+  name: string;
+  description?: string;
+  var_type?: 'number' | 'dice';
+  default_value?: string; // "0" | "1d6"
+  image_url?: string;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface VariablesResponse {
+  variables: Variable[];
+}
+
+export interface CreateVariableRequest {
+  variable_id: string;
+  name: string;
+  description?: string;
+  var_type?: 'number' | 'dice';
+  default_value?: string;
+  image_url?: string;
+  sort_order?: number;
+}
+
+export type UpdateVariableRequest = Partial<CreateVariableRequest>;
+
 export interface Action {
   id: string;
   name: string;

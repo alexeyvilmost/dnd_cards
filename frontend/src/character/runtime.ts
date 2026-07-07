@@ -65,6 +65,7 @@ export function buildCharacterContext(
     profBonus: ruleState.proficiencyBonus,
     level: draft.level,
     classLevels: classKey ? { [classKey]: draft.level } : undefined,
+    variables: ruleState.variables,
     characterSpeed: ruleState.speed,
     hitDie: klass?.hit_die ?? null,
     equippedCards,

@@ -381,8 +381,52 @@ func GetAllMigrations() []Migration {
 			Up:          seedBasicActions,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "063_create_variables",
+			Description: "Create variables table (name, type number|dice, default_value) + seed core variable definitions",
+			Up:          createVariablesTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS variables CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// createVariablesTable заводит справочник переменных. Переменная сама по себе —
+// name + type + default_value; конкретные значения задают ЭФФЕКТЫ (см.
+// docs/variables.md). Сидим определения; значения по уровню ставят эффекты классов.
+func createVariablesTable(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS variables (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			variable_id VARCHAR(100) UNIQUE NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description TEXT,
+			var_type VARCHAR(20) DEFAULT 'number',
+			default_value VARCHAR(100),
+			image_url TEXT,
+			sort_order INT DEFAULT 0,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_variables_variable_id ON variables(variable_id)",
+		`INSERT INTO variables (variable_id, name, description, var_type, default_value, sort_order)
+		 VALUES
+			('martial_arts_die', 'Кость боевых искусств', 'Кость безоружных ударов и приёмов монаха. Значение задаёт монах (1 ур. d6, далее растёт).', 'dice', '1d6', 10),
+			('rage_damage_modifier', 'Бонус урона Ярости', 'Доп. урон рукопашных атак Силой в Ярости. Значение задаёт варвар (1 ур. 2, далее растёт).', 'number', '2', 20),
+			('bardic_inspiration_die', 'Кость Вдохновения барда', 'Кость Вдохновения барда. Значение задаёт бард (1 ур. d6, далее растёт).', 'dice', '1d6', 30),
+			('superiority_die', 'Кость превосходства', 'Кость приёмов Мастера боя. Значение задаёт подкласс (3 ур. d8, далее растёт).', 'dice', '1d8', 40),
+			('superiority_dice_count', 'Число костей превосходства', 'Сколько костей превосходства доступно Мастеру боя. Значение задаёт подкласс.', 'number', '4', 41)
+		 ON CONFLICT (variable_id) DO UPDATE SET
+			name = EXCLUDED.name, description = EXCLUDED.description, var_type = EXCLUDED.var_type,
+			default_value = EXCLUDED.default_value, sort_order = EXCLUDED.sort_order, updated_at = NOW()`,
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createVariablesTable: %w", err)
+		}
+	}
+	return nil
 }
 
 // seedBasicActions заводит базовые боевые действия PHB как обычные редактируемые

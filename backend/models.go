@@ -1456,6 +1456,45 @@ type UpdateResourceRequest struct {
 	SortOrder     int    `json:"sort_order"`
 }
 
+// Variable — именованное значение персонажа: число или dice. Само по себе это
+// name + type + default_value; конкретные значения задают ЭФФЕКТЫ (add/set/remove),
+// привязанные к уровням класса. Доступна в формулах. См. docs/variables.md.
+type Variable struct {
+	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	VariableID   string         `json:"variable_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок в формулах
+	Name         string         `json:"name" gorm:"not null;type:varchar(255)"`
+	Description  string         `json:"description" gorm:"type:text"`
+	VarType      string         `json:"var_type" gorm:"type:varchar(20);default:'number'"` // number | dice
+	DefaultValue string         `json:"default_value" gorm:"type:varchar(100)"`            // "0" | "1d6" — значение по умолчанию
+	ImageURL     string         `json:"image_url" gorm:"type:text"`
+	SortOrder    int            `json:"sort_order" gorm:"default:0"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+func (Variable) TableName() string { return "variables" }
+
+type CreateVariableRequest struct {
+	VariableID   string `json:"variable_id" binding:"required"`
+	Name         string `json:"name" binding:"required"`
+	Description  string `json:"description"`
+	VarType      string `json:"var_type"`
+	DefaultValue string `json:"default_value"`
+	ImageURL     string `json:"image_url"`
+	SortOrder    int    `json:"sort_order"`
+}
+
+type UpdateVariableRequest struct {
+	VariableID   string `json:"variable_id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	VarType      string `json:"var_type"`
+	DefaultValue string `json:"default_value"`
+	ImageURL     string `json:"image_url"`
+	SortOrder    int    `json:"sort_order"`
+}
+
 // ActionRecharge - перезарядка действия
 type ActionRecharge string
 

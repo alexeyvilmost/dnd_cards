@@ -6,8 +6,11 @@ import {
   effectsApi,
   actionsApi,
   spellsApi,
+  variablesApi,
 } from '../api/client';
-import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spell, LevelProgression } from '../types';
+import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spell, LevelProgression, Variable } from '../types';
+import { collectVariablesFromEffects } from './variables';
+import type { VariableValue } from '../engine/formula';
 import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechanics/collectChoices';
 import { createRegistry } from '../engine/registry';
 import { createApiResolver } from '../engine/apiResolver';
@@ -103,6 +106,8 @@ export interface AssembledCharacter {
   spells: Spell[];
   pendingChoices: PendingChoice[];
   featAbilityIncreases: string[]; // информативно (не применяется автоматически в MVP)
+  /** Активные переменные персонажа (martial_arts_die и т.п.) для формул. */
+  variables: Record<string, VariableValue>;
   derived: {
     proficiencyBonus: number;
     maxHP: number;
@@ -123,6 +128,8 @@ export interface EntityBundle {
   effects: OriginEffect[];
   actions: OriginAction[];
   spells: Spell[];
+  /** Справочник переменных (type/default) для сворачивания variable-payload'ов эффектов. */
+  variableDefs?: Variable[];
 }
 
 // Чистая сборка из уже загруженных сущностей.
@@ -142,6 +149,16 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     ABILITY_KEYS.map((k) => [k, abilityMod(scores[k])]),
   ) as Record<AbilityKey, number>;
 
+  // Переменные: свернуть variable-payload'ы эффектов И действий (в порядке
+  // следования = по возрастанию уровня, поэтому старший уровень перекрывает младший).
+  const variables = collectVariablesFromEffects(
+    [
+      ...bundle.effects.map((e) => e.effect.mechanics),
+      ...bundle.actions.map((a) => a.action.mechanics),
+    ],
+    bundle.variableDefs ?? [],
+  );
+
   return {
     race: bundle.race,
     klass: bundle.klass,
@@ -153,6 +170,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     spells: bundle.spells,
     pendingChoices,
     featAbilityIncreases: bundle.feats.flatMap((f) => f.ability_increase || []),
+    variables,
     derived: {
       proficiencyBonus: pb,
       maxHP: computeMaxHP(bundle.klass?.hit_die, scores.con, draft.level),
@@ -279,7 +297,13 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     )
   ).filter((x): x is OriginAction => !!x);
 
-  return { race, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [] };
+  // Справочник переменных (type/default) для сворачивания variable-payload'ов.
+  const variableDefs = await variablesApi
+    .getVariables()
+    .then((r) => r.variables ?? [])
+    .catch(() => []);
+
+  return { race, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [], variableDefs };
 }
 
 const entityRegistry = createRegistry(createApiResolver());

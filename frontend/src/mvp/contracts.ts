@@ -112,6 +112,8 @@ export interface CharacterContext {
   classLevels?: Record<string, number>;
   spellcastingMod?: number;
   characterSpeed?: number;
+  /** Переменные персонажа (martial_arts_die и т.п.) для формул; см. docs/variables.md. */
+  variables?: Record<string, number | { sides: number; count: number }>;
   /** Карточки экипированных предметов (для weapon/AC-конвейеров). */
   equippedCards?: Card[];
   /** Карты для резолва equipment/inventory по id (инвентарь + экипировка). */

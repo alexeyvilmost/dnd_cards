@@ -381,6 +381,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     profBonus: pb0,
     selfLevel: draft.level,
     classLevels: assembled.klass?.name ? { [assembled.klass.name.toLowerCase()]: draft.level } : {},
+    variables: assembled.variables,
   };
   const numericMods: Record<string, number> = {};
   // Повторяемые черты — id из собранных черт (assembled.feats).
@@ -453,6 +454,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     spellcasting: spellcasting(assembled.klass?.name, scores, pb),
     appliedGrants,
     conflicts,
+    variables: assembled.variables ?? {},
   };
 }
 
