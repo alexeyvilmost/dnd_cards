@@ -25,11 +25,20 @@ export interface FormulaContext {
 }
 
 /**
- * Формула сослалась на переменную/токен, которого нет у персонажа. Отдельный тип,
- * чтобы вызывающие (правила/исполнитель) МЯГКО деградировали — пропустили payload
- * с логом, а не роняли лист/действие. См. docs/variables.md §деградация.
+ * Любая проблема вычисления формулы (парсинг/неизвестный токен/не число).
+ * Вызывающие (правила/исполнитель) ловят этот тип и МЯГКО деградируют —
+ * пропускают payload/эффект с логом, а НЕ роняют лист/действие. Реальные баги
+ * кода (не формульные) наследниками не являются и проходят наверх.
  */
-export class MissingVariableError extends Error {
+export class FormulaError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FormulaError';
+  }
+}
+
+/** Частный случай: формула сослалась на отсутствующую у персонажа переменную. */
+export class MissingVariableError extends FormulaError {
   constructor(public readonly variable: string) {
     super(`Переменная формулы недоступна: ${variable}`);
     this.name = 'MissingVariableError';
@@ -146,7 +155,7 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
-    throw new Error(`Неизвестный символ в формуле «${input}» около «${s.slice(i, i + 8)}»`);
+    throw new FormulaError(`Неизвестный символ в формуле «${input}» около «${s.slice(i, i + 8)}»`);
   }
 
   return tokens;
@@ -235,7 +244,7 @@ function parseExpr(tokens: Token[], pos: { i: number }, sink: EvalSink): Formula
     pos.i++;
     const right = parseTerm(tokens, pos, sink);
     if (typeof left === 'string' || typeof right === 'string') {
-      throw new Error('Маркеры weapon/auto нельзя складывать с числами');
+      throw new FormulaError('Маркеры weapon/auto нельзя складывать с числами');
     }
     left = tok.v === '+' ? left + right : left - right;
   }
@@ -251,7 +260,7 @@ function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): Formula
     pos.i++;
     const right = parseFactor(tokens, pos, sink);
     if (typeof left === 'string' || typeof right === 'string') {
-      throw new Error('Маркеры weapon/auto нельзя умножать');
+      throw new FormulaError('Маркеры weapon/auto нельзя умножать');
     }
     left = tok.v === '*' ? left * right : left / right;
   }
@@ -263,23 +272,23 @@ function parseFunctionCall(name: string, tokens: Token[], pos: { i: number }, si
   const args: number[] = [];
   while (pos.i < tokens.length && tokens[pos.i].t !== 'rparen') {
     const v = parseExpr(tokens, pos, sink);
-    if (typeof v === 'string') throw new Error(`Маркер «${v}» нельзя использовать в функции`);
+    if (typeof v === 'string') throw new FormulaError(`Маркер «${v}» нельзя использовать в функции`);
     args.push(v);
     const sep = tokens[pos.i];
     if (sep?.t === 'op' && sep.v === ',') pos.i++;
     else break;
   }
-  if (tokens[pos.i]?.t !== 'rparen') throw new Error('Ожидалась закрывающая скобка');
+  if (tokens[pos.i]?.t !== 'rparen') throw new FormulaError('Ожидалась закрывающая скобка');
   pos.i++;
   const fn = name.toLowerCase();
   if (fn === 'min') return Math.min(...args);
   if (fn === 'max') return Math.max(...args);
-  throw new Error(`Неизвестная функция формулы: ${name}`);
+  throw new FormulaError(`Неизвестная функция формулы: ${name}`);
 }
 
 function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
   const tok = tokens[pos.i];
-  if (!tok) throw new Error('Незавершённая формула');
+  if (!tok) throw new FormulaError('Незавершённая формула');
 
   if (tok.t === 'num') {
     pos.i++;
@@ -303,7 +312,7 @@ function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): Formu
   if (tok.t === 'lparen') {
     pos.i++;
     const val = parseExpr(tokens, pos, sink);
-    if (tokens[pos.i]?.t !== 'rparen') throw new Error('Ожидалась закрывающая скобка');
+    if (tokens[pos.i]?.t !== 'rparen') throw new FormulaError('Ожидалась закрывающая скобка');
     pos.i++;
     return val;
   }
@@ -311,11 +320,11 @@ function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): Formu
   if (tok.t === 'op' && tok.v === '-') {
     pos.i++;
     const val = parseFactor(tokens, pos, sink);
-    if (typeof val === 'string') throw new Error('Маркер нельзя инвертировать');
+    if (typeof val === 'string') throw new FormulaError('Маркер нельзя инвертировать');
     return -val;
   }
 
-  throw new Error(`Неожиданный токен: ${JSON.stringify(tok)}`);
+  throw new FormulaError(`Неожиданный токен: ${JSON.stringify(tok)}`);
 }
 
 function evalTokens(tokens: Token[], ctx: FormulaContext, detailed: boolean): FormulaValue {
@@ -328,7 +337,7 @@ function evalTokens(tokens: Token[], ctx: FormulaContext, detailed: boolean): Fo
   };
   const pos = { i: 0 };
   const result = parseExpr(tokens, pos, sink);
-  if (pos.i < tokens.length) throw new Error('Лишние символы в формуле');
+  if (pos.i < tokens.length) throw new FormulaError('Лишние символы в формуле');
   if (typeof result === 'string') return result;
   return result;
 }
@@ -337,7 +346,7 @@ function evalTokens(tokens: Token[], ctx: FormulaContext, detailed: boolean): Fo
 export function evaluate(formula: string | number, ctx: FormulaContext = {}): FormulaValue {
   if (typeof formula === 'number') return formula;
   const trimmed = formula.trim();
-  if (!trimmed) throw new Error('Пустая формула');
+  if (!trimmed) throw new FormulaError('Пустая формула');
   if (MARKERS.has(trimmed.toLowerCase())) return trimmed.toLowerCase() as FormulaMarker;
   return evalTokens(tokenize(trimmed), ctx, false);
 }
@@ -380,14 +389,14 @@ export function rollFormula(
   };
 
   if (MARKERS.has(trimmed.toLowerCase())) {
-    throw new Error(`Формула-маркер «${trimmed}» не бросается`);
+    throw new FormulaError(`Формула-маркер «${trimmed}» не бросается`);
   }
 
   const tokens = tokenize(trimmed);
   const pos = { i: 0 };
   const result = parseExpr(tokens, pos, sink);
-  if (pos.i < tokens.length) throw new Error(`Лишние символы в формуле «${formula}»`);
-  if (typeof result === 'string') throw new Error(`Формула-маркер «${result}» не бросается`);
+  if (pos.i < tokens.length) throw new FormulaError(`Лишние символы в формуле «${formula}»`);
+  if (typeof result === 'string') throw new FormulaError(`Формула-маркер «${result}» не бросается`);
 
   const extra = (opts?.modifiers || []).reduce((s, m) => s + m.value, 0);
   const allModifiers = [...sink.modifiers, ...(opts?.modifiers || [])];

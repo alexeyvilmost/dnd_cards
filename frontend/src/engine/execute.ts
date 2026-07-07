@@ -15,7 +15,7 @@ import {
   conditionAppliedEvent, damageEvent, healingEvent, narrativeEvent,
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
-import { evaluate, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
+import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import { collectRollModifiers } from './modifiers';
 import { rollD20 } from './roll';
 import { weaponContext } from './weapon';
@@ -64,7 +64,7 @@ function formulaCtx(ctx: ExecuteContext): FormulaContext {
 function evalDc(formula: string, ctx: ExecuteContext): number {
   const normalized = formula.replace(/\s+/g, '');
   const v = evaluate(normalized, formulaCtx(ctx));
-  if (typeof v !== 'number') throw new Error(`DC формула «${formula}» не число`);
+  if (typeof v !== 'number') throw new FormulaError(`DC формула «${formula}» не число`);
   return v;
 }
 
@@ -550,8 +550,14 @@ export function executeAction(
       }
       events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
     } catch (e) {
+      // Проблема формулы (нет переменной / битая формула) — эффект пропускается с
+      // логом, действие не падает. Реальные (не формульные) ошибки идут наверх.
       if (e instanceof MissingVariableError) {
         events.push(narrativeEvent(`Переменная «${e.variable}» недоступна — эффект «${sourceName}» не применён.`));
+        continue;
+      }
+      if (e instanceof FormulaError) {
+        events.push(narrativeEvent(`Формула эффекта «${sourceName}» не вычислена: ${e.message}`));
         continue;
       }
       throw e;
