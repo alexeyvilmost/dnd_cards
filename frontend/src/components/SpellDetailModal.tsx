@@ -272,12 +272,8 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
                 </div>
               )}
 
-              {spell.detailed_description && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Дополнительное описание</h3>
-                  <p className="text-gray-900 whitespace-pre-wrap">{spell.detailed_description}</p>
-                </div>
-              )}
+              {/* Полное описание живёт только на вики-странице (/spell/:id) —
+                  не дублируем его в детальном окне, чтобы не пугать объёмом. */}
 
               {spell.card_number && (
                 <div>

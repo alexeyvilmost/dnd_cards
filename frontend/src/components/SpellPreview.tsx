@@ -190,11 +190,8 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         </div>
       )}
 
-      {spell.detailed_description && (
-        <div className="sp-upcast">
-          <FormattedText text={spell.detailed_description} emptyText="" />
-        </div>
-      )}
+      {/* Полное описание намеренно НЕ показываем в превью — оно живёт только
+          на вики-странице (/spell/:id), чтобы не пугать новичков объёмом. */}
 
       {spell.save_outcome && <div className="sp-saveline">{spell.save_outcome}</div>}
 
