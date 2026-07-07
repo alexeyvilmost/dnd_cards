@@ -1075,6 +1075,7 @@ const CardLibrary = () => {
     races: { to: '/race-creator', label: 'Создать вид' },
     classes: { to: '/class-creator', label: 'Создать класс' },
     resources: { to: '/resource-creator', label: 'Создать ресурс' },
+    variables: { to: '/variable-creator', label: 'Создать переменную' },
   };
   const createTarget = createTargetByType[contentType];
 
@@ -1119,6 +1120,7 @@ const CardLibrary = () => {
               <option value="races">Виды</option>
               <option value="classes">Классы</option>
               <option value="resources">Ресурсы</option>
+              <option value="variables">Переменные</option>
             </select>
           </div>
 
@@ -1525,6 +1527,19 @@ const CardLibrary = () => {
           <p className="text-gray-500 text-lg">Ресурсы не найдены</p>
           <Link to="/resource-creator" className="btn-primary mt-4 inline-block">
             Создать первый ресурс
+          </Link>
+        </div>
+      )}
+
+      {contentType === 'variables' && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg mb-2">Переменные (число/dice) для формул эффектов</p>
+          <p className="text-gray-400 text-sm mb-4 max-w-xl mx-auto">
+            Переменная — это имя, тип и значение по умолчанию; значение на персонаже задают эффекты.
+            Библиотека и конструктор — на отдельной странице.
+          </p>
+          <Link to="/variable-creator" className="btn-primary inline-block">
+            Открыть библиотеку переменных
           </Link>
         </div>
       )}

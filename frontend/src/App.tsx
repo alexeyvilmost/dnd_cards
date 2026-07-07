@@ -41,6 +41,7 @@ import BackgroundCreator from './pages/BackgroundCreator';
 import RaceCreator from './pages/RaceCreator';
 import ClassCreator from './pages/ClassCreator';
 import ResourceCreator from './pages/ResourceCreator';
+import VariableCreator from './pages/VariableCreator';
 import ImageStudio from './pages/ImageStudio';
 
 function App() {
@@ -272,6 +273,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <ResourceCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/variable-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <VariableCreator />
             </Layout>
           </ProtectedRoute>
         } />
