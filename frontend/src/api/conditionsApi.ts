@@ -1,30 +1,37 @@
-import { apiClient } from './client';
-import { registerConditions, type ConditionRule } from '../engine/conditions';
+import { effectsApi } from './client';
+import { registerConditions, type ConditionModifier, type ConditionRule } from '../engine/conditions';
+import { payloadsOf } from '../engine/mechanicsView';
 
-interface ConditionDTO {
-  condition_id: string;
-  name: string;
-  data?: {
-    modifiers?: ConditionRule['modifiers'];
-    projected_modifiers?: ConditionRule['modifiers'];
-    note?: string;
+/** Payload modifier эффекта-состояния → правило ConditionModifier (scope сохраняется). */
+function toConditionModifier(p: Record<string, unknown>): ConditionModifier | null {
+  if (p.kind !== 'modifier') return null;
+  const applies = p.applies_to as ConditionModifier['applies_to'] | undefined;
+  if (!applies?.roll) return null;
+  return {
+    applies_to: applies,
+    op: String(p.op ?? 'add') as ConditionModifier['op'],
+    ...(p.value != null ? { value: String(p.value) } : {}),
+    ...(p.scope === 'target' ? { scope: 'target' as const } : {}),
   };
 }
 
 /**
- * Догрузить состояния из /api/conditions в реестр движка. Идемпотентно; при ошибке
- * (эндпойнт ещё не задеплоен / нет сети) — тихо остаёмся на встроенных состояниях.
+ * Догрузить состояния из эффектов типа 'condition' в реестр движка. Состояние — это
+ * ЭФФЕКТ (effect_type='condition'); его scoped-модификаторы (self/target) лежат в mechanics.
+ * Идемпотентно; при ошибке — тихо остаёмся на встроенных состояниях.
  */
 export async function loadConditions(): Promise<void> {
   try {
-    const res = await apiClient.get<{ conditions: ConditionDTO[] }>('/api/conditions');
-    const defs: ConditionRule[] = (res.data?.conditions ?? []).map((c) => ({
-      id: c.condition_id,
-      label: c.name,
-      modifiers: c.data?.modifiers ?? [],
-      projected: c.data?.projected_modifiers,
-      note: c.data?.note,
-    }));
+    const res = await effectsApi.getEffects({ effect_type: 'condition', limit: 200 });
+    const defs: ConditionRule[] = (res.effects ?? [])
+      .map((e) => {
+        const modifiers = payloadsOf(e.mechanics as Record<string, unknown> | undefined)
+          .map(toConditionModifier)
+          .filter((m): m is ConditionModifier => m !== null);
+        const id = String(e.card_number ?? '').replace(/^COND-/, '');
+        return { id, label: e.name, modifiers, note: e.description || undefined };
+      })
+      .filter((d) => d.id);
     if (defs.length) registerConditions(defs);
   } catch {
     /* сеть/эндпойнт недоступны — работаем на встроенных состояниях */

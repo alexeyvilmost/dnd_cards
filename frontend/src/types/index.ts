@@ -863,7 +863,8 @@ export type PassiveEffectType =
   | 'item_effect'
   | 'spell_effect'
   | 'negative_effect'
-  | 'positive_effect';
+  | 'positive_effect'
+  | 'condition';
 
 export interface PassiveEffect {
   id: string;
@@ -975,6 +976,7 @@ export const PASSIVE_EFFECT_TYPE_OPTIONS = [
   { value: 'spell_effect', label: 'Эффект заклинания' },
   { value: 'negative_effect', label: 'Отрицательный эффект' },
   { value: 'positive_effect', label: 'Положительный эффект' },
+  { value: 'condition', label: 'Состояние' },
 ] as const;
 
 // ─── Заклинания ───────────────────────────────────────────────────────────────

@@ -1,36 +1,44 @@
 /**
- * Правила состояний D&D 2024. Фаза D: состояния — ДАННЫЕ (сущность Condition,
- * /api/conditions), а не хардкод. Здесь — живой реестр: 13 встроенных (сид/фолбэк,
- * совпадает с миграцией 064 — движок работает и без сети) + догруженные из API через
- * registerConditions. Владелец добавляет состояние данными, без перевыкатки (парадигма №1).
+ * Состояния D&D 2024 как ДАННЫЕ (парадигма №1). Состояние — отдельный вид эффекта
+ * (effect_type 'condition'); его поведение — набор `modifier`-правил с полем `scope`:
+ *   - scope:'self'   (по умолчанию) — влияет на броски НОСИТЕЛЯ состояния;
+ *   - scope:'target' — влияет на броски ПРОТИВ носителя (напр. «атаки по распластанному —
+ *                      с преимуществом»). Это ДАННЫЕ внутри состояния, не код.
  *
- * Моделируется то, что движок исполняет (свои броски владельца, `modifiers`).
- * `projected` — влияние состояния на атакующего/окружающих (двусторонний бой, фаза E).
- * Неисполнимая движком часть — в `note`.
+ * Движок читает scope обобщённо: collectModifiers берёт self, projectedAgainst — target.
+ * Здесь — живой реестр: 13 встроенных (offline-сид, зеркалит миграцию) + догруженные из
+ * /api/conditions (registerConditions). Владелец добавляет/правит состояние данными.
  */
 import type { RollModifier } from '../mvp/contracts';
+
+export interface ConditionModifier {
+  applies_to: { roll: 'attack' | 'saving_throw' | 'ability_check'; filter?: Record<string, unknown> };
+  op: 'advantage' | 'disadvantage' | 'add';
+  value?: string;
+  /** 'self' (по умолчанию) — на броски носителя; 'target' — на броски против носителя. */
+  scope?: 'self' | 'target';
+}
 
 export interface ConditionRule {
   id: string;
   label: string;
-  /** Модификаторы к СВОИМ броскам (формат applies_to как у kind:'modifier'). */
-  modifiers: Array<{
-    applies_to: { roll: 'attack' | 'saving_throw' | 'ability_check'; filter?: Record<string, unknown> };
-    op: 'advantage' | 'disadvantage' | 'add';
-    value?: string;
-  }>;
-  /** Модификаторы, которые состояние ПРОЕЦИРУЕТ на атакующего/окружающих (фаза E). */
-  projected?: ConditionRule['modifiers'];
+  /** Правила состояния как scoped-модификаторы (self + target). */
+  modifiers: ConditionModifier[];
   /** Напоминание о неисполнимой движком части правила. */
   note?: string;
 }
 
-/** 13 встроенных состояний PHB 2024 — сид/фолбэк (совпадает с миграцией 064). */
+const ATTACK = (extra?: Partial<ConditionModifier>): ConditionModifier => ({ applies_to: { roll: 'attack' }, op: 'disadvantage', ...extra });
+/** Преимущество атак ПО носителю (проекция на атакующего) — чистые данные. */
+const ADV_AGAINST: ConditionModifier = { applies_to: { roll: 'attack' }, op: 'advantage', scope: 'target' };
+const DIS_AGAINST: ConditionModifier = { applies_to: { roll: 'attack' }, op: 'disadvantage', scope: 'target' };
+
+/** 13 встроенных состояний PHB 2024 — offline-сид (совпадает с миграцией). */
 export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   blinded: {
     id: 'blinded', label: 'Ослеплён',
-    modifiers: [{ applies_to: { roll: 'attack' }, op: 'disadvantage' }],
-    note: 'Атаки по вам — с преимуществом; вы проваливаете проверки, требующие зрения.',
+    modifiers: [ATTACK(), ADV_AGAINST],
+    note: 'Вы проваливаете проверки, требующие зрения.',
   },
   charmed: {
     id: 'charmed', label: 'Очарован',
@@ -44,15 +52,12 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   },
   frightened: {
     id: 'frightened', label: 'Испуган',
-    modifiers: [
-      { applies_to: { roll: 'attack' }, op: 'disadvantage' },
-      { applies_to: { roll: 'ability_check' }, op: 'disadvantage' },
-    ],
+    modifiers: [ATTACK(), { applies_to: { roll: 'ability_check' }, op: 'disadvantage' }],
     note: 'Помеха, пока источник страха в поле зрения; нельзя приближаться к нему.',
   },
   grappled: {
     id: 'grappled', label: 'Схвачен',
-    modifiers: [{ applies_to: { roll: 'attack' }, op: 'disadvantage' }],
+    modifiers: [ATTACK()],
     note: 'Скорость 0; помеха на атаки по всем, кроме схватившего.',
   },
   incapacitated: {
@@ -62,43 +67,37 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   },
   invisible: {
     id: 'invisible', label: 'Невидим',
-    modifiers: [{ applies_to: { roll: 'attack' }, op: 'advantage' }],
-    note: 'Преимущество на инициативу; атаки по вам — с помехой.',
+    modifiers: [{ applies_to: { roll: 'attack' }, op: 'advantage' }, DIS_AGAINST],
+    note: 'Преимущество на инициативу.',
   },
   paralyzed: {
     id: 'paralyzed', label: 'Парализован',
-    modifiers: [],
-    note: 'Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам с преимуществом, вблизи — крит.',
+    modifiers: [ADV_AGAINST],
+    note: 'Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам вблизи — крит.',
   },
   poisoned: {
     id: 'poisoned', label: 'Отравлен',
-    modifiers: [
-      { applies_to: { roll: 'attack' }, op: 'disadvantage' },
-      { applies_to: { roll: 'ability_check' }, op: 'disadvantage' },
-    ],
+    modifiers: [ATTACK(), { applies_to: { roll: 'ability_check' }, op: 'disadvantage' }],
   },
   prone: {
     id: 'prone', label: 'Распластан',
-    modifiers: [{ applies_to: { roll: 'attack' }, op: 'disadvantage' }],
-    note: 'Атаки по вам вблизи — с преимуществом, издалека — с помехой. Встать — половина скорости.',
+    modifiers: [ATTACK()],
+    note: 'Атаки по вам вблизи — с преимуществом, издалека — с помехой (зависит от дальности). Встать — половина скорости.',
   },
   restrained: {
     id: 'restrained', label: 'Опутан',
-    modifiers: [
-      { applies_to: { roll: 'attack' }, op: 'disadvantage' },
-      { applies_to: { roll: 'saving_throw', filter: { ability: 'dex' } }, op: 'disadvantage' },
-    ],
-    note: 'Скорость 0; атаки по вам — с преимуществом.',
+    modifiers: [ATTACK(), { applies_to: { roll: 'saving_throw', filter: { ability: 'dex' } }, op: 'disadvantage' }, ADV_AGAINST],
+    note: 'Скорость 0.',
   },
   stunned: {
     id: 'stunned', label: 'Ошеломлён',
-    modifiers: [],
-    note: 'Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам — с преимуществом.',
+    modifiers: [ADV_AGAINST],
+    note: 'Недееспособен; провал спасбросков СИЛ/ЛВК.',
   },
   unconscious: {
     id: 'unconscious', label: 'Без сознания',
-    modifiers: [],
-    note: 'Недееспособен, распластан; провал СИЛ/ЛВК; атаки по вам с преимуществом, вблизи — крит.',
+    modifiers: [ADV_AGAINST],
+    note: 'Недееспособен, распластан; провал СИЛ/ЛВК; атаки по вам вблизи — крит.',
   },
 };
 
@@ -120,14 +119,9 @@ export function conditionLabel(value: string): string {
   return registry[value]?.label ?? value;
 }
 
-/** Модификаторы состояния к своему броску (для collectModifiers). */
-export function conditionModifierPayloads(value: string): ConditionRule['modifiers'] {
+/** Все scoped-модификаторы состояния (self + target). Фильтрацию по scope делают вызывающие. */
+export function conditionModifierPayloads(value: string): ConditionModifier[] {
   return registry[value]?.modifiers ?? [];
-}
-
-/** Проецируемые модификаторы (влияние на атакующего/окружающих — фаза E). */
-export function conditionProjectedModifiers(value: string): ConditionRule['modifiers'] {
-  return registry[value]?.projected ?? [];
 }
 
 /** Актуальный список состояний (сид + догруженные) для селекторов UI. */

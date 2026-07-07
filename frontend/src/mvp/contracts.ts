@@ -134,6 +134,10 @@ export interface TargetContext {
   ac?: number;
   saveMods?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   checkMods?: Record<string, number>;
+  /** Богатая цель (фаза E): контекст характеристик цели — динамические спасброски. */
+  characterContext?: CharacterContext;
+  /** Рантайм цели (фаза E): состояния (projected-модификаторы) и сопротивления. */
+  runtimeState?: RuntimeState;
 }
 
 export interface ExecuteContext {

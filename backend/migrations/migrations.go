@@ -393,6 +393,12 @@ func GetAllMigrations() []Migration {
 			Up:          createConditionsTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS conditions CASCADE"); return err },
 		},
+		{
+			Version:     "065_conditions_as_effects",
+			Description: "Unify conditions into effects (effect_type='condition' + scoped-modifier mechanics); drop conditions table",
+			Up:          conditionsAsEffects,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -473,6 +479,39 @@ func createConditionsTable(db *sql.DB) error {
 	for _, q := range queries {
 		if _, err := db.Exec(q); err != nil {
 			return fmt.Errorf("createConditionsTable: %w", err)
+		}
+	}
+	return nil
+}
+
+// conditionsAsEffects — унификация: состояние теперь ЭФФЕКТ (effect_type='condition') со
+// scoped-модификаторами в mechanics (scope:'self' — на носителя, scope:'target' — проекция
+// на атакующего, «преимущество атак по носителю» как ДАННЫЕ). Таблица conditions снимается.
+func conditionsAsEffects(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE effects DROP CONSTRAINT IF EXISTS effects_effect_type_check",
+		fmt.Sprintf("ALTER TABLE effects ADD CONSTRAINT effects_effect_type_check CHECK (effect_type IN (%s))", effectTypeCheckValues),
+		`INSERT INTO effects (name, description, card_number, effect_type, rarity, mechanics) VALUES
+			('Ослеплён','Вы проваливаете проверки, требующие зрения.','COND-blinded','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage"},{"kind":"modifier","applies_to":{"roll":"attack"},"op":"advantage","scope":"target"}]}]}'::jsonb),
+			('Очарован','Нельзя атаковать очаровавшего; у него преимущество на социальные проверки против вас.','COND-charmed','condition','common','{"effects":[{"resolution":"auto","result":[]}]}'::jsonb),
+			('Оглохший','Вы проваливаете проверки, требующие слуха.','COND-deafened','condition','common','{"effects":[{"resolution":"auto","result":[]}]}'::jsonb),
+			('Испуган','Помеха, пока источник страха в поле зрения; нельзя приближаться к нему.','COND-frightened','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage"},{"kind":"modifier","applies_to":{"roll":"ability_check"},"op":"disadvantage"}]}]}'::jsonb),
+			('Схвачен','Скорость 0; помеха на атаки по всем, кроме схватившего.','COND-grappled','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage"}]}]}'::jsonb),
+			('Недееспособен','Нет действий/бонусных действий/реакций; концентрация прервана; помеха на инициативу.','COND-incapacitated','condition','common','{"effects":[{"resolution":"auto","result":[]}]}'::jsonb),
+			('Невидим','Преимущество на инициативу.','COND-invisible','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"advantage"},{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage","scope":"target"}]}]}'::jsonb),
+			('Парализован','Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам вблизи — крит.','COND-paralyzed','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"advantage","scope":"target"}]}]}'::jsonb),
+			('Отравлен','','COND-poisoned','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage"},{"kind":"modifier","applies_to":{"roll":"ability_check"},"op":"disadvantage"}]}]}'::jsonb),
+			('Распластан','Атаки по вам вблизи — с преимуществом, издалека — с помехой (зависит от дальности). Встать — половина скорости.','COND-prone','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage"}]}]}'::jsonb),
+			('Опутан','Скорость 0.','COND-restrained','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"disadvantage"},{"kind":"modifier","applies_to":{"roll":"saving_throw","filter":{"ability":"dex"}},"op":"disadvantage"},{"kind":"modifier","applies_to":{"roll":"attack"},"op":"advantage","scope":"target"}]}]}'::jsonb),
+			('Ошеломлён','Недееспособен; провал спасбросков СИЛ/ЛВК.','COND-stunned','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"advantage","scope":"target"}]}]}'::jsonb),
+			('Без сознания','Недееспособен, распластан; провал СИЛ/ЛВК; атаки по вам вблизи — крит.','COND-unconscious','condition','common','{"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"attack"},"op":"advantage","scope":"target"}]}]}'::jsonb)
+		 ON CONFLICT (card_number) DO UPDATE SET
+			name=EXCLUDED.name, description=EXCLUDED.description, effect_type=EXCLUDED.effect_type, mechanics=EXCLUDED.mechanics`,
+		"DROP TABLE IF EXISTS conditions CASCADE",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("conditionsAsEffects: %w", err)
 		}
 	}
 	return nil
@@ -1050,7 +1089,7 @@ func createCharacterEventsTable(db *sql.DB) error {
 	return nil
 }
 
-const effectTypeCheckValues = "'passive', 'conditional', 'triggered', 'species_ability', 'class_ability', 'feat_ability', 'item_effect', 'spell_effect', 'negative_effect', 'positive_effect'"
+const effectTypeCheckValues = "'passive', 'conditional', 'triggered', 'species_ability', 'class_ability', 'feat_ability', 'item_effect', 'spell_effect', 'negative_effect', 'positive_effect', 'condition'"
 
 func expandEffectTypes(db *sql.DB) error {
 	queries := []string{

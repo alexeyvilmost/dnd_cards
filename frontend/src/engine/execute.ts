@@ -3,6 +3,7 @@
  */
 import type {
   ActiveEffectEntry,
+  AdvantageState,
   CharacterContext,
   EngineEvent,
   ExecuteContext,
@@ -17,8 +18,10 @@ import {
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
-import { collectModifiers } from './modifiers';
+import { collectModifiers, combineAdvantage } from './modifiers';
 import { activeConditionsOf, type EvalContext } from './circumstances';
+import { conditionModifierPayloads } from './conditions';
+import { payloadsOf } from './mechanicsView';
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
 import { rollD20 } from './roll';
@@ -73,6 +76,79 @@ function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
     target: ctx.target,
     activeConditions: activeConditionsOf(state),
   };
+}
+
+// ─── Фаза E: двусторонний контекст ──────────────────────────────────────────
+
+/**
+ * Модификаторы, проецируемые ЦЕЛЬЮ на бросок атакующего (фаза E). Читаются обобщённо из
+ * активных эффектов цели по данным scope:'target' — и из состояний (по данным состояния),
+ * и из любого эффекта с scope:'target'-модификатором. Никакого хардкода проекции.
+ */
+function projectedAgainst(
+  target: ExecuteContext['target'],
+  roll: string,
+): { modifiers: RollModifier[]; advantage: AdvantageState } {
+  const out: { modifiers: RollModifier[]; advantage: AdvantageState } = { modifiers: [], advantage: 'none' };
+  const st = target?.runtimeState;
+  if (!st) return out;
+
+  const consider = (m: Dict, source: string): void => {
+    if (String(m.scope ?? 'self') !== 'target') return;
+    const applies = m.applies_to as Dict | undefined;
+    if (!applies || applies.roll !== roll) return;
+    const op = String(m.op ?? '');
+    if (op === 'advantage' || op === 'disadvantage') {
+      out.advantage = combineAdvantage(out.advantage, op);
+    } else if (op === 'add' && m.value != null) {
+      const v = Number(String(m.value).replace(/^\+/, ''));
+      if (!Number.isNaN(v)) out.modifiers.push({ value: v, source });
+    }
+  };
+
+  for (const e of st.activeEffects) {
+    const mech = e.mechanics as Dict;
+    if (mech?.kind === 'condition' && mech.value) {
+      for (const rule of conditionModifierPayloads(String(mech.value))) consider(rule as unknown as Dict, String(mech.value));
+    } else {
+      for (const p of payloadsOf(mech)) if (p.kind === 'modifier') consider(p, e.name);
+    }
+  }
+  return out;
+}
+
+/** Уровень сопротивления существа к типу урона (активные resistance-эффекты + пассивки). */
+function resistanceLevelFor(state: RuntimeState, ctx: ExecuteContext, damageType: string): string | null {
+  const rank = (l: string | null) => (l === 'immunity' ? 3 : l === 'resistance' ? 2 : l === 'vulnerability' ? 1 : 0);
+  const scan = (mech: Dict | undefined): string | null => {
+    for (const p of payloadsOf(mech)) {
+      if (p.kind === 'resistance' && String(p.damage_type ?? '') === damageType) return String(p.value ?? '');
+    }
+    return null;
+  };
+  let level: string | null = null;
+  for (const e of state.activeEffects) { const l = scan(e.mechanics as Dict); if (rank(l) > rank(level)) level = l; }
+  for (const m of passivesFromCtx(ctx)) { const l = scan(m); if (rank(l) > rank(level)) level = l; }
+  return level;
+}
+
+/** Применить уровень сопротивления к количеству урона. */
+function applyResistance(amount: number, level: string | null): number {
+  if (level === 'immunity') return 0;
+  if (level === 'resistance') return Math.floor(amount / 2);
+  if (level === 'vulnerability') return amount * 2;
+  return amount;
+}
+
+/** Модификатор спасброска цели: динамически из её характеристик (фаза E) или из saveMods. */
+function targetSaveMod(target: ExecuteContext['target'], ability: AbilityKey): number {
+  const cc = target?.characterContext;
+  if (cc) {
+    const base = cc.abilityMods[ability] ?? 0;
+    const prof = cc.saveProficiencies?.includes(ability) ? cc.profBonus : 0;
+    return base + prof;
+  }
+  return target?.saveMods?.[ability] ?? 0;
 }
 
 function evalDc(formula: string, ctx: ExecuteContext): number {
@@ -472,10 +548,13 @@ function runAttackRoll(
     formulaCtx: formulaCtx(ctx),
     evalCtx: evalCtxOf(state, ctx),
   });
-  const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers];
+  // Проекция состояний цели на бросок атакующего (фаза E): атака по распластанному/
+  // опутанному/ослеплённому/парализованному/ошеломлённому/без сознания — с преимуществом.
+  const projected = projectedAgainst(ctx.target, 'attack');
+  const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers, ...projected.modifiers];
 
   const roll = rollD20({
-    advantage: collected.advantage,
+    advantage: combineAdvantage(collected.advantage, projected.advantage),
     modifiers: mods,
     target: { type: 'ac', value: ac },
     rng: ctx.rng,
@@ -508,7 +587,7 @@ function runSave(
   const dcFormula = String(effect.dc ?? '10');
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability ?? 'dex') as AbilityKey;
-  const saveMod = ctx.target?.saveMods?.[ability] ?? 0;
+  const saveMod = targetSaveMod(ctx.target, ability);
   const collected = collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'saving_throw',
     filter: { ability },
@@ -707,11 +786,19 @@ export function applyIncomingDamage(
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
 
-  const dmg = Math.max(0, Math.floor(amount));
+  const raw = Math.max(0, Math.floor(amount));
+  const damageType = opts?.damageType ?? 'урон';
+  // Сопротивление/иммунитет/уязвимость цели (фаза E) — применяется при получении урона.
+  const level = resistanceLevelFor(next, ctx, damageType);
+  const dmg = applyResistance(raw, level);
+  if (level && dmg !== raw) {
+    const label = level === 'immunity' ? 'иммунитет' : level === 'resistance' ? 'сопротивление' : 'уязвимость';
+    events.push(narrativeEvent(`${label} к «${damageType}»: ${raw} → ${dmg}`));
+  }
   const absorbed = Math.min(next.hp.temp, dmg);
   next.hp.temp -= absorbed;
   next.hp.current = Math.max(0, next.hp.current - (dmg - absorbed));
-  events.push(damageEvent(dmg, opts?.damageType ?? 'урон'));
+  events.push(damageEvent(dmg, damageType));
 
   // Авто-проверка концентрации при уроне.
   const conc = concentrationEntry(next);

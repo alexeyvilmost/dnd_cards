@@ -24,7 +24,7 @@ export interface CollectOptions {
   evalCtx?: EvalContext;
 }
 
-function combineAdvantage(current: AdvantageState, op: string): AdvantageState {
+export function combineAdvantage(current: AdvantageState, op: string): AdvantageState {
   if (op !== 'advantage' && op !== 'disadvantage') return current;
   if (current === 'none') return op as AdvantageState;
   if (current === op) return current;
@@ -48,6 +48,8 @@ function collectFromPayload(
   out: { modifiers: RollModifier[]; advantage: AdvantageState },
 ): void {
   if (payload.kind !== 'modifier') return;
+  // scope:'target' — проекция на атакующего носителя (фаза E); к своим броскам не относится.
+  if (String(payload.scope ?? 'self') === 'target') return;
   const applies = payload.applies_to as Dict | undefined;
   if (!applies || applies.roll !== opts.roll) return;
   if (!matchFilter(applies.filter as Dict | undefined, opts.filter)) return;
