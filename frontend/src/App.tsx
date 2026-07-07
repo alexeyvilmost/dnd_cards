@@ -5,6 +5,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DiceDialogProvider } from './contexts/DiceDialogContext';
 import { ReactionPromptProvider } from './contexts/ReactionPromptContext';
+import { PinModeProvider } from './hooks/usePinMode';
+import { EntityDetailProvider } from './components/EntityDetailProvider';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -45,6 +47,7 @@ import RaceCreator from './pages/RaceCreator';
 import ClassCreator from './pages/ClassCreator';
 import ResourceCreator from './pages/ResourceCreator';
 import VariableCreator from './pages/VariableCreator';
+import ConceptCreator from './pages/ConceptCreator';
 import ImageStudio from './pages/ImageStudio';
 
 function App() {
@@ -55,6 +58,8 @@ function App() {
       <ToastProvider>
         <DiceDialogProvider>
         <ReactionPromptProvider>
+        <PinModeProvider>
+        <EntityDetailProvider>
         <Routes>
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
@@ -290,6 +295,14 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/concept-creator" element={
+          <ProtectedRoute>
+            <Layout>
+              <ConceptCreator />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
         {/* Effect routes */}
         <Route path="/effect-creator" element={
           <ProtectedRoute>
@@ -349,6 +362,8 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
+        </EntityDetailProvider>
+        </PinModeProvider>
         </ReactionPromptProvider>
         </DiceDialogProvider>
       </ToastProvider>

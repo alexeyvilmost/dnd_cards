@@ -15,7 +15,6 @@ import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymb
 import { getElementalDamageLabel, hasElementalDamage } from '../utils/elementalDamage';
 import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { FormattedText } from '../utils/formattedText';
-import { useCardTilt } from '../hooks/useCardTilt';
 import { getRarityGlowColor, getRarityGlowSettings } from '../utils/rarityGlow';
 import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/currencies';
 
@@ -42,14 +41,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const {
-    cardRef: tiltRef,
-    tiltStyle,
-    isHovered: isCardHovered,
-    handleMouseMove,
-    handleMouseEnter,
-    handleMouseLeave,
-  } = useCardTilt({ maxTilt: 16, liftPx: 32, hoverScale: 1.04 });
 
   const glowSettings = card ? getRarityGlowSettings(card.rarity) : null;
   const glowColor = card ? getRarityGlowColor(card.rarity, card.custom_rarity_color) : '#9ca3af';
@@ -247,15 +238,11 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         className={`relative z-10 flex flex-col lg:flex-row bg-transparent text-white rounded-lg shadow-xl w-full h-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden ${card.is_extended ? 'max-w-7xl' : 'max-w-6xl'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Левая часть: карточка с 3D-наклоном и свечением */}
+        {/* Левая часть: карточка со свечением (без 3D-наклона — мешает ссылкам в тексте) */}
         <div className={`flex-shrink-0 flex items-center justify-center p-2 sm:p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
           <div
             ref={cardRef}
             className="relative flex items-center justify-center origin-center scale-100 sm:scale-110 md:scale-125 lg:scale-150"
-            style={{ perspective: '1200px' }}
-            onMouseMove={handleMouseMove}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
           >
             {glowSettings && (
               <div
@@ -266,13 +253,13 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
                   width: `${100 * glowSettings.spread}%`,
                   height: '45%',
                   background: `radial-gradient(ellipse at center, ${glowColor} 0%, transparent 72%)`,
-                  opacity: isCardHovered ? glowSettings.hoverOpacity : glowSettings.idleOpacity,
+                  opacity: glowSettings.idleOpacity,
                   filter: `blur(${glowSettings.blur}px)`,
-                  transform: `translateX(-50%) scale(${isCardHovered ? 1.08 : 1})`,
+                  transform: 'translateX(-50%) scale(1)',
                 }}
               />
             )}
-            <div ref={tiltRef} style={tiltStyle} className="relative z-10">
+            <div className="relative z-10">
               <CardPreview card={{ ...card, image_url: cardImage }} disableHover={true} />
             </div>
           </div>

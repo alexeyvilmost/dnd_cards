@@ -1,6 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { Bold, Italic, Underline, Palette, Sparkles } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bold, Italic, Underline, Palette, Sparkles, Link as LinkIcon } from 'lucide-react';
 import { COLOR_TOKENS, ICON_TOKENS } from '../utils/damageTypes';
+import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi } from '../api/client';
+import type { EntityRefType } from './EntityRefRegistry';
 
 interface FormattedTextareaProps {
   value: string;
@@ -24,6 +26,38 @@ const FORMAT_ACTIONS: FormatAction[] = [
   { label: 'Подчёркнутый', marker: '__', icon: <Underline size={16} /> },
 ];
 
+// ─── Поиск сущностей для ссылки [[label|type:ref]] ────────────────────────────
+type LinkResult = { type: EntityRefType; ref: string; name: string; typeLabel: string };
+const TYPE_LABEL: Record<EntityRefType, string> = {
+  card: 'Предмет', spell: 'Заклинание', action: 'Действие', effect: 'Эффект', concept: 'Понятие',
+};
+
+async function searchLinkTargets(query: string): Promise<LinkResult[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const ql = q.toLowerCase();
+  const [cards, spells, actions, effects, concepts] = await Promise.allSettled([
+    cardsApi.getCards({ search: q, limit: 6 }),
+    spellsApi.getSpells({ search: q, limit: 6 }),
+    actionsApi.getActions({ search: q, limit: 6 }),
+    effectsApi.getEffects({ search: q, limit: 6 }),
+    conceptsApi.getConcepts(),
+  ]);
+  const out: LinkResult[] = [];
+  // Для предметов/заклинаний/действий/эффектов ref = uuid (резолвер грузит по uuid),
+  // для понятий ref = slug concept_id (резолвер понимает и slug, и он читаемее).
+  if (cards.status === 'fulfilled') out.push(...cards.value.cards.map((c) => ({ type: 'card' as const, ref: c.id, name: c.name, typeLabel: TYPE_LABEL.card })));
+  if (spells.status === 'fulfilled') out.push(...spells.value.spells.map((s) => ({ type: 'spell' as const, ref: s.id, name: s.name, typeLabel: TYPE_LABEL.spell })));
+  if (actions.status === 'fulfilled') out.push(...actions.value.actions.map((a) => ({ type: 'action' as const, ref: a.id, name: a.name, typeLabel: TYPE_LABEL.action })));
+  if (effects.status === 'fulfilled') out.push(...effects.value.effects.map((e) => ({ type: 'effect' as const, ref: e.id, name: e.name, typeLabel: TYPE_LABEL.effect })));
+  if (concepts.status === 'fulfilled') {
+    for (const c of concepts.value.concepts) {
+      if (c.name.toLowerCase().includes(ql)) out.push({ type: 'concept', ref: c.concept_id, name: c.name, typeLabel: TYPE_LABEL.concept });
+    }
+  }
+  return out;
+}
+
 export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
   value,
   onChange,
@@ -33,7 +67,22 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
   error,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [menu, setMenu] = useState<null | 'color' | 'icon'>(null);
+  const caretRef = useRef<{ start: number; end: number } | null>(null); // последняя каретка (меню крадёт фокус)
+  const [menu, setMenu] = useState<null | 'color' | 'icon' | 'link'>(null);
+  const [linkQuery, setLinkQuery] = useState('');
+  const [linkResults, setLinkResults] = useState<LinkResult[]>([]);
+  const [linkLoading, setLinkLoading] = useState(false);
+
+  // Дебаунс-поиск сущностей для ссылки.
+  useEffect(() => {
+    if (menu !== 'link') return;
+    if (linkQuery.trim().length < 2) { setLinkResults([]); return; }
+    setLinkLoading(true);
+    const t = setTimeout(() => {
+      searchLinkTargets(linkQuery).then((r) => setLinkResults(r)).catch(() => setLinkResults([])).finally(() => setLinkLoading(false));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [linkQuery, menu]);
 
   // Обернуть выделение парой маркеров (open/close могут отличаться)
   const wrap = (open: string, close: string) => {
@@ -63,6 +112,24 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
       textarea.focus();
       const pos = start + token.length;
       textarea.setSelectionRange(pos, pos);
+    });
+  };
+
+  // Вставить ссылку: выделенный текст становится подписью, иначе — имя сущности.
+  const insertLink = (name: string, type: EntityRefType, ref: string) => {
+    const textarea = textareaRef.current;
+    // Меню (autoFocus input) увело фокус — берём последнюю каретку, иначе конец текста.
+    const caret = caretRef.current ?? { start: value.length, end: value.length };
+    const start = caret.start;
+    const end = caret.end;
+    const label = value.substring(start, end) || name;
+    const token = `[[${label}|${type}:${ref}]]`;
+    const next = value.substring(0, start) + token + value.substring(end);
+    onChange(next);
+    requestAnimationFrame(() => {
+      textarea?.focus();
+      const pos = start + token.length;
+      textarea?.setSelectionRange(pos, pos);
     });
   };
 
@@ -149,12 +216,51 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
             </div>
           )}
         </div>
+
+        {/* Ссылка на сущность */}
+        <div className="relative">
+          <button
+            type="button"
+            title="Вставить ссылку на сущность (предмет/заклинание/действие/эффект/понятие)"
+            onClick={() => { setMenu(menu === 'link' ? null : 'link'); setLinkQuery(''); setLinkResults([]); }}
+            className={btnCls}
+          >
+            <LinkIcon size={16} />
+          </button>
+          {menu === 'link' && (
+            <div className="absolute z-20 mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-72 max-h-96 overflow-y-auto">
+              <input
+                autoFocus
+                value={linkQuery}
+                onChange={(e) => setLinkQuery(e.target.value)}
+                placeholder="Поиск: предмет, заклинание, понятие…"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded mb-2 text-sm"
+              />
+              {linkLoading && <div className="text-xs text-gray-400 px-2 py-1">Поиск…</div>}
+              {!linkLoading && linkQuery.trim().length >= 2 && linkResults.length === 0 && (
+                <div className="text-xs text-gray-400 px-2 py-1">Ничего не найдено</div>
+              )}
+              {linkResults.map((r) => (
+                <button
+                  key={`${r.type}:${r.ref}`}
+                  type="button"
+                  onClick={() => { insertLink(r.name, r.type, r.ref); setMenu(null); }}
+                  className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-gray-100 text-sm text-left"
+                >
+                  <span className="truncate text-gray-900">{r.name}</span>
+                  <span className="text-[10px] uppercase tracking-wide text-gray-400 flex-shrink-0">{r.typeLabel}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <textarea
         ref={textareaRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onSelect={(e) => { caretRef.current = { start: e.currentTarget.selectionStart, end: e.currentTarget.selectionEnd }; }}
         onBlur={onBlur}
         rows={rows}
         placeholder={placeholder}
@@ -162,7 +268,8 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
       />
 
       <p className="text-xs text-gray-500 mt-1">
-        **жирный**, *курсив*, __подчёркнутый__. Цвет: выделите текст и выберите тип урона. Иконка: <code>:fire:</code>.
+        **жирный**, *курсив*, __подчёркнутый__. Цвет: выделите текст и выберите тип урона.
+        Иконка: <code>:fire:</code>. Ссылка: кнопка «звено» → поиск сущности (или вручную <code>[[Спасбросок|concept:saving_throw]]</code>).
       </p>
 
       {error && (

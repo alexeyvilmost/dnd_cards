@@ -1500,6 +1500,39 @@ type UpdateVariableRequest struct {
 	SortOrder    int    `json:"sort_order"`
 }
 
+// ConceptEntity — «понятие» глоссария: пояснение, не выражаемое отдельной сущностью
+// (напр. «Спасбросок»). На него ссылаются из текстов ([[label|concept:slug]]). Аналог
+// переменных: глобальный общий справочник (name + описание + иконка).
+type ConceptEntity struct {
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	ConceptID   string         `json:"concept_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок
+	Name        string         `json:"name" gorm:"not null;type:varchar(255)"`
+	Description string         `json:"description" gorm:"type:text"`
+	ImageURL    string         `json:"image_url" gorm:"type:text"`
+	SortOrder   int            `json:"sort_order" gorm:"default:0"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+func (ConceptEntity) TableName() string { return "concepts" }
+
+type CreateConceptRequest struct {
+	ConceptID   string `json:"concept_id" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	ImageURL    string `json:"image_url"`
+	SortOrder   int    `json:"sort_order"`
+}
+
+type UpdateConceptRequest struct {
+	ConceptID   string `json:"concept_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageURL    string `json:"image_url"`
+	SortOrder   int    `json:"sort_order"`
+}
+
 // Состояния D&D теперь — это ЭФФЕКТЫ (effect_type='condition'), а не отдельная сущность.
 // См. миграцию 065 (перенос состояний в таблицу effects) и docs/engine-architecture-review §D2.
 

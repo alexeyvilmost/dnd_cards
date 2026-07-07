@@ -20,6 +20,7 @@ const Layout = ({ children }: LayoutProps) => {
       submenu: [
         { path: '/create', label: 'Создать карту' },
         { path: '/resource-creator', label: 'Создать ресурс' },
+        { path: '/concept-creator', label: 'Создать понятие' },
         { path: '/templates', label: 'Шаблоны' },
         { path: '/export', label: 'Экспорт' }
       ]

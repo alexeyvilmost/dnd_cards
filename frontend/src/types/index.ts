@@ -728,6 +728,33 @@ export interface CreateVariableRequest {
 
 export type UpdateVariableRequest = Partial<CreateVariableRequest>;
 
+// Понятие (глоссарий) — пояснение, не выражаемое отдельной сущностью (напр. «Спасбросок»).
+// На него ссылаются из текстов: [[Спасбросок|concept:saving_throw]]. Аналог переменных.
+export interface Concept {
+  id: string;
+  concept_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ConceptsResponse {
+  concepts: Concept[];
+}
+
+export interface CreateConceptRequest {
+  concept_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  sort_order?: number;
+}
+
+export type UpdateConceptRequest = Partial<CreateConceptRequest>;
+
 export interface Action {
   id: string;
   name: string;

@@ -1,5 +1,9 @@
 import React from 'react';
 import { COLOR_TOKENS, ICON_TOKENS, ICON_TOKEN_MAP, getDamageColor } from './damageTypes';
+import HoverCard from '../components/HoverCard';
+import EntityRefPreview from '../components/EntityRefPreview';
+import type { EntityRefType } from '../components/EntityRefRegistry';
+import { useEntityDetail } from '../contexts/entityDetail';
 
 type FormatType = 'bold' | 'italic' | 'underline';
 
@@ -30,7 +34,14 @@ interface ParsedIconNode {
   dmg: string; // тип урона (для иконки)
 }
 
-type ParsedNode = ParsedTextNode | ParsedFormatNode | ParsedColorNode | ParsedIconNode;
+interface ParsedLinkNode {
+  type: 'link';
+  label: string;      // слово-ссылка, остаётся в тексте
+  refType: EntityRefType;
+  refId: string;      // uuid или slug сущности
+}
+
+type ParsedNode = ParsedTextNode | ParsedFormatNode | ParsedColorNode | ParsedIconNode | ParsedLinkNode;
 
 const FORMAT_DELIMITERS: FormatDelimiter[] = [
   { type: 'bold', open: '**', close: '**' },
@@ -46,6 +57,8 @@ const ICON_RE = new RegExp(`:(${ICON_TOKEN_NAMES.join('|')}):`);
 // [fire]...[/fire] — окраска фрагмента в цвет типа урона / лечения
 const COLOR_OPEN_RE = new RegExp(`\\[(${COLOR_TOKEN_NAMES.join('|')})\\]`);
 const colorClose = (dmg: string) => `[/${dmg}]`;
+// [[Очарование|concept:saving_throw]] — ссылка на сущность (label | type:id)
+const LINK_RE = /\[\[([^\]|]+)\|(card|spell|action|effect|concept):([^\]]+)\]\]/;
 
 const findItalicIndex = (text: string, from: number): number => {
   for (let i = from; i < text.length; i++) {
@@ -80,7 +93,8 @@ const findCloseDelimiter = (text: string, delimiter: FormatDelimiter, from: numb
 type Special =
   | { kind: 'format'; index: number; delimiter: FormatDelimiter }
   | { kind: 'color'; index: number; dmg: string; openLen: number }
-  | { kind: 'icon'; index: number; dmg: string; tokenLen: number };
+  | { kind: 'icon'; index: number; dmg: string; tokenLen: number }
+  | { kind: 'link'; index: number; label: string; refType: EntityRefType; refId: string; matchLen: number };
 
 // Найти ближайшую «спец-конструкцию» начиная с from
 const findEarliestSpecial = (text: string, from: number): Special | null => {
@@ -102,6 +116,9 @@ const findEarliestSpecial = (text: string, from: number): Special | null => {
 
   const color = COLOR_OPEN_RE.exec(text.slice(from));
   if (color) consider({ kind: 'color', index: from + color.index, dmg: color[1], openLen: color[0].length });
+
+  const link = LINK_RE.exec(text.slice(from));
+  if (link) consider({ kind: 'link', index: from + link.index, label: link[1], refType: link[2] as EntityRefType, refId: link[3], matchLen: link[0].length });
 
   return earliest;
 };
@@ -125,6 +142,12 @@ export const parseFormattedText = (text: string): ParsedNode[] => {
     if (match.kind === 'icon') {
       nodes.push({ type: 'icon', dmg: match.dmg });
       position = match.index + match.tokenLen;
+      continue;
+    }
+
+    if (match.kind === 'link') {
+      nodes.push({ type: 'link', label: match.label, refType: match.refType, refId: match.refId });
+      position = match.index + match.matchLen;
       continue;
     }
 
@@ -170,6 +193,7 @@ const extractPlainText = (nodes: ParsedNode[]): string => {
     .map((node) => {
       if (node.type === 'text') return node.content;
       if (node.type === 'icon') return '';
+      if (node.type === 'link') return node.label;
       return extractPlainText(node.children);
     })
     .join('');
@@ -204,13 +228,27 @@ const getFormatInlineStyle = (type: FormatType): React.CSSProperties => {
 const renderParsedNodes = (
   nodes: ParsedNode[],
   keyPrefix: string,
-  useInlineStyles: boolean
+  useInlineStyles: boolean,
+  onOpenRef?: (type: EntityRefType, id: string) => void,
 ): React.ReactNode[] => {
   return nodes.map((node, index) => {
     const key = `${keyPrefix}-${index}`;
 
     if (node.type === 'text') {
       return <React.Fragment key={key}>{node.content}</React.Fragment>;
+    }
+
+    if (node.type === 'link') {
+      return (
+        <HoverCard
+          key={key}
+          className="ft-link"
+          content={<EntityRefPreview type={node.refType} id={node.refId} />}
+          onClick={onOpenRef ? () => onOpenRef(node.refType, node.refId) : undefined}
+        >
+          {node.label}
+        </HoverCard>
+      );
     }
 
     if (node.type === 'icon') {
@@ -236,7 +274,7 @@ const renderParsedNodes = (
     if (node.type === 'color') {
       return (
         <span key={key} style={{ color: getDamageColor(node.dmg) }}>
-          {renderParsedNodes(node.children, key, useInlineStyles)}
+          {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef)}
         </span>
       );
     }
@@ -247,7 +285,7 @@ const renderParsedNodes = (
 
     return (
       <span key={key} {...styleProps}>
-        {renderParsedNodes(node.children, key, useInlineStyles)}
+        {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef)}
       </span>
     );
   });
@@ -259,6 +297,8 @@ interface FormattedTextProps {
   style?: React.CSSProperties;
   useInlineStyles?: boolean;
   emptyText?: string;
+  /** Клик по ссылке [[label|type:id]] — открыть детальное окно сущности. */
+  onOpenRef?: (type: EntityRefType, id: string) => void;
 }
 
 export const FormattedText: React.FC<FormattedTextProps> = ({
@@ -267,7 +307,12 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
   style,
   useInlineStyles = false,
   emptyText = 'Нет описания',
+  onOpenRef,
 }) => {
+  // По умолчанию клик по ссылке открывает деталь через глобальный хост (если он смонтирован).
+  const { openEntity } = useEntityDetail();
+  const effectiveOpenRef = onOpenRef ?? openEntity;
+
   if (!text || text.trim() === '') {
     return <>{emptyText}</>;
   }
@@ -276,7 +321,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
 
   return (
     <span className={className} style={style}>
-      {renderParsedNodes(nodes, 'formatted', useInlineStyles)}
+      {renderParsedNodes(nodes, 'formatted', useInlineStyles, effectiveOpenRef)}
     </span>
   );
 };

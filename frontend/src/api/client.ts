@@ -42,6 +42,10 @@ import type {
   VariablesResponse,
   CreateVariableRequest,
   UpdateVariableRequest,
+  Concept,
+  ConceptsResponse,
+  CreateConceptRequest,
+  UpdateConceptRequest,
   ActiveEffect
 } from '../types';
 
@@ -414,6 +418,28 @@ export const variablesApi = {
   },
   deleteVariable: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/variables/${id}`);
+  },
+};
+
+export const conceptsApi = {
+  getConcepts: async (): Promise<ConceptsResponse> => {
+    const response = await apiClient.get<ConceptsResponse>('/api/concepts');
+    return response.data;
+  },
+  getConcept: async (id: string): Promise<Concept> => {
+    const response = await apiClient.get<Concept>(`/api/concepts/${id}`);
+    return response.data;
+  },
+  createConcept: async (data: CreateConceptRequest): Promise<Concept> => {
+    const response = await apiClient.post<Concept>('/api/concepts', data);
+    return response.data;
+  },
+  updateConcept: async (id: string, data: UpdateConceptRequest): Promise<Concept> => {
+    const response = await apiClient.put<Concept>(`/api/concepts/${id}`, data);
+    return response.data;
+  },
+  deleteConcept: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/concepts/${id}`);
   },
 };
 

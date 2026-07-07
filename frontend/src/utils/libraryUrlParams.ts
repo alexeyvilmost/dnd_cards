@@ -1,4 +1,4 @@
-export type LibraryContentType = 'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes' | 'resources' | 'variables';
+export type LibraryContentType = 'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes' | 'resources' | 'variables' | 'concepts';
 export type LibraryViewMode = 'grid' | 'list';
 
 export interface LibraryFilters {
@@ -23,7 +23,7 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
 
   return {
     contentType:
-      type === 'effects' || type === 'actions' || type === 'spells' || type === 'feats' || type === 'backgrounds' || type === 'races' || type === 'classes' || type === 'resources' || type === 'variables'
+      type === 'effects' || type === 'actions' || type === 'spells' || type === 'feats' || type === 'backgrounds' || type === 'races' || type === 'classes' || type === 'resources' || type === 'variables' || type === 'concepts'
         ? type
         : 'cards',
     search: params.get('q') ?? '',

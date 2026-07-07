@@ -1076,6 +1076,7 @@ const CardLibrary = () => {
     classes: { to: '/class-creator', label: 'Создать класс' },
     resources: { to: '/resource-creator', label: 'Создать ресурс' },
     variables: { to: '/variable-creator', label: 'Создать переменную' },
+    concepts: { to: '/concept-creator', label: 'Создать понятие' },
   };
   const createTarget = createTargetByType[contentType];
 
@@ -1121,6 +1122,7 @@ const CardLibrary = () => {
               <option value="classes">Классы</option>
               <option value="resources">Ресурсы</option>
               <option value="variables">Переменные</option>
+              <option value="concepts">Понятия</option>
             </select>
           </div>
 
@@ -1540,6 +1542,19 @@ const CardLibrary = () => {
           </p>
           <Link to="/variable-creator" className="btn-primary inline-block">
             Открыть библиотеку переменных
+          </Link>
+        </div>
+      )}
+
+      {contentType === 'concepts' && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg mb-2">Понятия (глоссарий) для ссылок в текстах</p>
+          <p className="text-gray-400 text-sm mb-4 max-w-xl mx-auto">
+            Понятие — это пояснение, не выражаемое отдельной сущностью (напр. «Спасбросок»).
+            На него ссылаются из любого текста. Библиотека и конструктор — на отдельной странице.
+          </p>
+          <Link to="/concept-creator" className="btn-primary inline-block">
+            Открыть библиотеку понятий
           </Link>
         </div>
       )}

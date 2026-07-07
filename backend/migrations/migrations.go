@@ -423,8 +423,40 @@ func GetAllMigrations() []Migration {
 			Up:          fixDashDisengageActions,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "070_create_concepts",
+			Description: "Create concepts dictionary (глоссарий понятий: пояснения, не выражаемые сущностью)",
+			Up:          createConceptsTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS concepts CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// createConceptsTable заводит справочник «понятий» (глоссарий): пояснения, которые не
+// выражаются отдельной сущностью (напр. «Спасбросок»). Понятие = slug + name + описание
+// + иконка; на него ссылаются из текстов ([[label|concept:slug]]). Аналог переменных.
+func createConceptsTable(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS concepts (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			concept_id VARCHAR(100) UNIQUE NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description TEXT,
+			image_url TEXT,
+			sort_order INT DEFAULT 0,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_concepts_concept_id ON concepts(concept_id)",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createConceptsTable: %w", err)
+		}
+	}
+	return nil
 }
 
 // fixDashDisengageActions чистит дубли Рывок/Отход (ручные action_dash/disengage +

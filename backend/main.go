@@ -96,6 +96,7 @@ func main() {
 	classController := NewClassController(db)
 	resourceController := NewResourceController(db)
 	variableController := NewVariableController(db)
+	conceptController := NewConceptController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -224,6 +225,13 @@ func main() {
 		api.POST("/variables", AuthMiddleware(authService), variableController.CreateVariable)
 		api.PUT("/variables/:id", AuthMiddleware(authService), variableController.UpdateVariable)
 		api.DELETE("/variables/:id", AuthMiddleware(authService), variableController.DeleteVariable)
+
+		// Понятия (глоссарий): пояснения, не выражаемые отдельной сущностью
+		api.GET("/concepts", OptionalAuthMiddleware(authService), conceptController.GetConcepts)
+		api.GET("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.GetConcept)
+		api.POST("/concepts", AuthMiddleware(authService), conceptController.CreateConcept)
+		api.PUT("/concepts/:id", AuthMiddleware(authService), conceptController.UpdateConcept)
+		api.DELETE("/concepts/:id", AuthMiddleware(authService), conceptController.DeleteConcept)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

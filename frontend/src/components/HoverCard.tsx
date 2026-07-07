@@ -1,0 +1,102 @@
+/**
+ * Единый примитив ховер-превью (парадигма №2), портированный в body.
+ * - Портал в body + z-index — превью не обрезается transformed/overflow-предками.
+ * - Обычный режим: карточка pointer-events:none, закрывается при уходе с триггера.
+ * - Режим закрепления (клавиша T, usePinMode): карточка pointer-events:auto и «липкая» —
+ *   есть время дойти до неё и навести на ссылки внутри; закрывается при уходе с карточки.
+ */
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { usePinMode } from '../hooks/usePinMode';
+
+interface HoverCardProps {
+  children: ReactNode;   // триггер (inline)
+  content: ReactNode;    // плавающее превью
+  className?: string;    // класс триггера
+  onClick?: () => void;  // клик по триггеру (напр. открыть детальное окно)
+}
+
+function computePosition(trigger: DOMRect, card: { width: number; height: number }) {
+  const M = 8;
+  let left = trigger.left;
+  let top = trigger.bottom + 6;
+  if (left + card.width > window.innerWidth - M) left = window.innerWidth - M - card.width;
+  if (left < M) left = M;
+  // не влезает вниз — разворачиваем вверх
+  if (top + card.height > window.innerHeight - M) {
+    const above = trigger.top - card.height - 6;
+    top = above >= M ? above : Math.max(M, window.innerHeight - M - card.height);
+  }
+  return { left, top };
+}
+
+const HoverCard = ({ children, content, className, onClick }: HoverCardProps) => {
+  const { pinModeActive } = usePinMode();
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const timer = useRef<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  const clearTimer = () => { if (timer.current) { window.clearTimeout(timer.current); timer.current = null; } };
+  const scheduleClose = useCallback((delay: number) => {
+    clearTimer();
+    timer.current = window.setTimeout(() => setOpen(false), delay);
+  }, []);
+
+  const openNow = useCallback(() => {
+    clearTimer();
+    setOpen(true);
+  }, []);
+
+  // Выход из режима закрепления с курсором над карточкой: mouseleave не придёт
+  // (pointer-events станут none) — закрываем «залипшую» карточку сами.
+  useEffect(() => {
+    if (!pinModeActive && open) scheduleClose(60);
+  }, [pinModeActive, open, scheduleClose]);
+
+  // Позиционирование после монтирования карточки (когда известен её размер).
+  useLayoutEffect(() => {
+    if (!open) { setPos(null); return; }
+    const t = triggerRef.current?.getBoundingClientRect();
+    const c = cardRef.current;
+    if (!t || !c) return;
+    const rect = c.getBoundingClientRect();
+    setPos(computePosition(t, { width: rect.width, height: rect.height }));
+  }, [open]);
+
+  return (
+    <>
+      <span
+        ref={triggerRef}
+        className={className}
+        onMouseEnter={openNow}
+        onMouseLeave={() => scheduleClose(pinModeActive ? 500 : 60)}
+        onClick={onClick}
+      >
+        {children}
+      </span>
+      {open && createPortal(
+        <div
+          ref={cardRef}
+          style={{
+            position: 'fixed',
+            left: pos?.left ?? -9999,
+            top: pos?.top ?? -9999,
+            zIndex: 9999,
+            // видимость превью не должна воровать курсор, пока не режим закрепления
+            pointerEvents: pinModeActive ? 'auto' : 'none',
+            visibility: pos ? 'visible' : 'hidden',
+          }}
+          onMouseEnter={openNow}
+          onMouseLeave={() => scheduleClose(pinModeActive ? 150 : 60)}
+        >
+          {content}
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+};
+
+export default HoverCard;
