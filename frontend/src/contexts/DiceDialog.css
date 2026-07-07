@@ -2,18 +2,28 @@
 .dice-dialog-backdrop {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(10, 8, 6, 0.6);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  overflow: auto;
+  padding: 16px;
 }
 .dice-dialog-wrap {
-  display: flex; align-items: stretch; gap: 14px;
-  max-width: calc(100vw - 32px); flex-wrap: wrap; justify-content: center;
+  margin: auto; /* центрирование по обеим осям; при переполнении фон прокручивается без обрезки верха */
+  display: flex;
+  align-items: center; /* диалог по центру по вертикали относительно (более высокого) превью */
+  gap: 14px;
+  max-width: calc(100vw - 32px);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .dice-dialog-preview {
-  width: min(320px, calc(100vw - 32px));
-  max-height: 80vh; overflow-y: auto;
-  display: flex; align-items: flex-start;
+  flex: 0 0 auto;
+  /* запас под выступающую большую иконку заклинания (top:-26px / right:-18px в .sp-tip),
+     иначе её обрезает сверху и справа и появляется горизонтальный слайдер */
+  padding: 30px 22px 4px 0;
+  max-height: 86vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-.dice-dialog-preview > * { width: 100%; }
 .dice-dialog {
   width: min(420px, calc(100vw - 32px));
   background: #1c1813; color: #e8e0d0;
