@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Action, PassiveEffect, Spell } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
+import { usePinMode } from '../hooks/usePinMode';
 import ForgeEntityIcon from './forge/ForgeEntityIcon';
 import EffectHoverCard from './forge/EffectHoverCard';
 import ActionHoverCard from './forge/ActionHoverCard';
@@ -44,11 +45,19 @@ const SheetActionLine = ({
 }: Props) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  // Режим закрепления (T): превью не закрывается при уходе мыши и интерактивно.
+  const { pinModeActive } = usePinMode();
+  const prevPin = useRef(pinModeActive);
+  useEffect(() => {
+    if (prevPin.current && !pinModeActive) setHover(false);
+    prevPin.current = pinModeActive;
+  }, [pinModeActive]);
 
   const onEnter = (e: React.MouseEvent) => {
     setHover(true);
     setPos({ x: e.clientX, y: e.clientY });
   };
+  const onLeave = () => { if (!pinModeActive) setHover(false); };
 
   return (
     <>
@@ -60,7 +69,7 @@ const SheetActionLine = ({
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
-          onMouseLeave={() => setHover(false)}
+          onMouseLeave={onLeave}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
           <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={40} />
@@ -76,7 +85,7 @@ const SheetActionLine = ({
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
-          onMouseLeave={() => setHover(false)}
+          onMouseLeave={onLeave}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
           <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={20} />
@@ -94,7 +103,9 @@ const SheetActionLine = ({
           style={{
             left: Math.min(pos.x + 12, window.innerWidth - 320),
             top: Math.min(pos.y + 8, window.innerHeight - 180),
+            pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
+          onMouseLeave={onLeave}
         >
           {effectRef && <EffectHoverCard effect={effectRef} sourceLabel={sourceLabel} />}
           {actionRef && <ActionHoverCard action={actionRef} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} />}

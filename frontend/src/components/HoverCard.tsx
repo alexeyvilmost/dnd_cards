@@ -35,6 +35,7 @@ const HoverCard = ({ children, content, className, onClick }: HoverCardProps) =>
   const triggerRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
+  const prevPin = useRef(pinModeActive);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
@@ -49,11 +50,18 @@ const HoverCard = ({ children, content, className, onClick }: HoverCardProps) =>
     setOpen(true);
   }, []);
 
-  // Выход из режима закрепления с курсором над карточкой: mouseleave не придёт
-  // (pointer-events станут none) — закрываем «залипшую» карточку сами.
+  // Уход мыши: в обычном режиме закрываем; в режиме закрепления НЕ закрываем —
+  // превью остаётся, пока курсор был на триггере (можно дойти до ссылок внутри).
+  const handleLeave = useCallback(() => {
+    if (!pinModeActive) scheduleClose(90);
+  }, [pinModeActive, scheduleClose]);
+
+  // Закрываем «закреплённые» карточки при ВЫХОДЕ из режима (транзиция true→false),
+  // не мешая обычным открытиям в обычном режиме.
   useEffect(() => {
-    if (!pinModeActive && open) scheduleClose(60);
-  }, [pinModeActive, open, scheduleClose]);
+    if (prevPin.current && !pinModeActive) setOpen(false);
+    prevPin.current = pinModeActive;
+  }, [pinModeActive]);
 
   // Позиционирование после монтирования карточки (когда известен её размер).
   useLayoutEffect(() => {
@@ -71,7 +79,7 @@ const HoverCard = ({ children, content, className, onClick }: HoverCardProps) =>
         ref={triggerRef}
         className={className}
         onMouseEnter={openNow}
-        onMouseLeave={() => scheduleClose(pinModeActive ? 500 : 60)}
+        onMouseLeave={handleLeave}
         onClick={onClick}
       >
         {children}
@@ -89,7 +97,7 @@ const HoverCard = ({ children, content, className, onClick }: HoverCardProps) =>
             visibility: pos ? 'visible' : 'hidden',
           }}
           onMouseEnter={openNow}
-          onMouseLeave={() => scheduleClose(pinModeActive ? 150 : 60)}
+          onMouseLeave={handleLeave}
         >
           {content}
         </div>,

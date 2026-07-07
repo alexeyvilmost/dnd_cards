@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePinMode } from '../hooks/usePinMode';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronsUp, Dices, Pencil, Sun, Moon } from 'lucide-react';
 import { cardsApi } from '../api/client';
@@ -70,6 +71,14 @@ const CharacterSheetMVP = () => {
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
+  // Режим закрепления (T): превью заклинания остаётся и становится интерактивным.
+  const { pinModeActive } = usePinMode();
+  const prevPinRef = useRef(pinModeActive);
+  useEffect(() => {
+    if (prevPinRef.current && !pinModeActive) setHoveredSpell(null);
+    prevPinRef.current = pinModeActive;
+  }, [pinModeActive]);
+  const leaveSpell = () => { if (!pinModeActive) setHoveredSpell(null); };
   const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -721,7 +730,7 @@ const CharacterSheetMVP = () => {
                           title={`${spell.name} — к действию`}
                           onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
                           onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
-                          onMouseLeave={() => setHoveredSpell(null)}
+                          onMouseLeave={leaveSpell}
                           onClick={() => scrollToAction(spell.id)}
                         >
                           {spell.image_url ? (
@@ -749,7 +758,7 @@ const CharacterSheetMVP = () => {
                           title={`${spell.name} — к действию`}
                           onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
                           onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
-                          onMouseLeave={() => setHoveredSpell(null)}
+                          onMouseLeave={leaveSpell}
                           onClick={() => scrollToAction(spell.id)}
                         >
                           {spell.image_url ? (
@@ -770,12 +779,14 @@ const CharacterSheetMVP = () => {
               ))}
               {hoveredSpell && (
                 <div
-                  className="fixed z-50 pointer-events-none"
+                  className="fixed z-50"
                   style={{
                     left: Math.min(spellMouse.x + 16, window.innerWidth - 360),
                     top: Math.min(Math.max(spellMouse.y - 40, 10), window.innerHeight - 20),
                     transform: spellMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+                    pointerEvents: pinModeActive ? 'auto' : 'none',
                   }}
+                  onMouseLeave={leaveSpell}
                 >
                   <SpellPreview
                     spell={hoveredSpell}

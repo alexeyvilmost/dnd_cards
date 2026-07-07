@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { Search, Filter, Plus, Grid3X3, List, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi } from '../api/client';
@@ -8,6 +8,7 @@ import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
 import SpellPreview from '../components/SpellPreview';
+import { usePinMode } from '../hooks/usePinMode';
 import FeatPreview from '../components/FeatPreview';
 import BackgroundPreview from '../components/BackgroundPreview';
 import RacePreview from '../components/RacePreview';
@@ -216,6 +217,23 @@ const CardLibrary = () => {
   const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
   const [hoveredBackground, setHoveredBackground] = useState<Background | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Режим закрепления (клавиша T): превью не закрываются при уходе мыши и становятся
+  // интерактивными (можно навести на ссылки внутри). При выходе из режима — закрыть все.
+  const { pinModeActive } = usePinMode();
+  const leaveHover = (clear: () => void) => () => { if (!pinModeActive) clear(); };
+  const previewStyle = (base: CSSProperties): CSSProperties => ({
+    ...base,
+    pointerEvents: pinModeActive ? 'auto' : 'none',
+  });
+  const prevPinRef = useRef(pinModeActive);
+  useEffect(() => {
+    if (prevPinRef.current && !pinModeActive) {
+      setHoveredCard(null); setHoveredSpell(null); setHoveredFeat(null);
+      setHoveredBackground(null); setHoveredRace(null); setHoveredClass(null);
+    }
+    prevPinRef.current = pinModeActive;
+  }, [pinModeActive]);
 
   const { mainRaces, subraces: subraceRaces } = useMemo(() => splitRacesByKind(races), [races]);
   const raceParentById = useMemo(
@@ -1598,7 +1616,7 @@ const CardLibrary = () => {
                     key={card.id}
                     className="relative"
                     onMouseEnter={() => setHoveredCard(card)}
-                    onMouseLeave={() => setHoveredCard(null)}
+                    onMouseLeave={leaveHover(() => setHoveredCard(null))}
                     onMouseMove={(e) => {
                       setMousePosition({ x: e.clientX, y: e.clientY });
                     }}
@@ -1711,12 +1729,12 @@ const CardLibrary = () => {
               {/* Показ карточки при наведении */}
               {hoveredCard && (
                 <div 
-                  className="fixed z-50 pointer-events-none"
-                  style={{
+                  className="fixed z-50"
+                  style={previewStyle({
                     left: Math.min(mousePosition.x + 10, window.innerWidth - 220),
                     top: Math.max(mousePosition.y - 10, 10),
                     transform: mousePosition.y < 300 ? 'translateY(0)' : 'translateY(-100%)'
-                  }}
+                  })}
                 >
                   <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
                     <CardPreview card={hoveredCard} />
@@ -1931,7 +1949,7 @@ const CardLibrary = () => {
                         key={spell.id}
                         onClick={() => handleSpellClick(spell)}
                         onMouseEnter={() => setHoveredSpell(spell)}
-                        onMouseLeave={() => setHoveredSpell(null)}
+                        onMouseLeave={leaveHover(() => setHoveredSpell(null))}
                         onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                         className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
@@ -1973,12 +1991,13 @@ const CardLibrary = () => {
               {/* Детальная карточка при наведении (как в design_preview) */}
               {hoveredSpell && (
                 <div
-                  className="fixed z-50 pointer-events-none"
-                  style={{
+                  className="fixed z-50"
+                  style={previewStyle({
                     left: Math.min(mousePosition.x + 16, window.innerWidth - 360),
                     top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20),
                     transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
-                  }}
+                  })}
+                  onMouseLeave={leaveHover(() => setHoveredSpell(null))}
                 >
                   <SpellPreview spell={hoveredSpell} disableHover={true} />
                 </div>
@@ -2129,7 +2148,7 @@ const CardLibrary = () => {
                         key={feat.id}
                         onClick={() => handleFeatClick(feat)}
                         onMouseEnter={() => setHoveredFeat(feat)}
-                        onMouseLeave={() => setHoveredFeat(null)}
+                        onMouseLeave={leaveHover(() => setHoveredFeat(null))}
                         onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                         className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
@@ -2148,7 +2167,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredFeat && (
-                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
                   <FeatPreview feat={hoveredFeat} disableHover={true} />
                 </div>
               )}
@@ -2180,7 +2199,7 @@ const CardLibrary = () => {
                     key={bg.id}
                     onClick={() => handleBackgroundClick(bg)}
                     onMouseEnter={() => setHoveredBackground(bg)}
-                    onMouseLeave={() => setHoveredBackground(null)}
+                    onMouseLeave={leaveHover(() => setHoveredBackground(null))}
                     onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
@@ -2197,7 +2216,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredBackground && (
-                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
                   <BackgroundPreview background={hoveredBackground} disableHover={true} />
                 </div>
               )}
@@ -2256,7 +2275,7 @@ const CardLibrary = () => {
                     key={race.id}
                     onClick={() => handleRaceClick(race)}
                     onMouseEnter={() => setHoveredRace(race)}
-                    onMouseLeave={() => setHoveredRace(null)}
+                    onMouseLeave={leaveHover(() => setHoveredRace(null))}
                     onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
@@ -2281,7 +2300,7 @@ const CardLibrary = () => {
                     key={race.id}
                     onClick={() => handleRaceClick(race)}
                     onMouseEnter={() => setHoveredRace(race)}
-                    onMouseLeave={() => setHoveredRace(null)}
+                    onMouseLeave={leaveHover(() => setHoveredRace(null))}
                     onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
@@ -2298,7 +2317,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredRace && (
-                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
                   <RacePreview
                     race={hoveredRace}
                     parentRaceName={hoveredRace.parent_race_id ? raceParentById.get(hoveredRace.parent_race_id)?.name : undefined}
@@ -2340,7 +2359,7 @@ const CardLibrary = () => {
                     key={characterClass.id}
                     onClick={() => handleClassClick(characterClass)}
                     onMouseEnter={() => setHoveredClass(characterClass)}
-                    onMouseLeave={() => setHoveredClass(null)}
+                    onMouseLeave={leaveHover(() => setHoveredClass(null))}
                     onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
@@ -2372,7 +2391,7 @@ const CardLibrary = () => {
                     key={characterClass.id}
                     onClick={() => handleClassClick(characterClass)}
                     onMouseEnter={() => setHoveredClass(characterClass)}
-                    onMouseLeave={() => setHoveredClass(null)}
+                    onMouseLeave={leaveHover(() => setHoveredClass(null))}
                     onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
@@ -2396,7 +2415,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredClass && (
-                <div className="fixed z-50 pointer-events-none" style={{ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' }}>
+                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
                   <ClassPreview characterClass={hoveredClass} disableHover={true} />
                 </div>
               )}
