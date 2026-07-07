@@ -174,7 +174,9 @@ func main() {
 		api.GET("/spells", OptionalAuthMiddleware(authService), spellController.GetSpells)
 		api.GET("/spells/:id", OptionalAuthMiddleware(authService), spellController.GetSpell)
 		api.POST("/spells", AuthMiddleware(authService), spellController.CreateSpell)
-		api.PUT("/spells/:id", AuthMiddleware(authService), spellController.UpdateSpell)
+		// PUT публичный (как у понятий): контент заклинаний глобальный, без владельца;
+		// нужен для конструктора без авторизации и массового обогащения описаний.
+		api.PUT("/spells/:id", OptionalAuthMiddleware(authService), spellController.UpdateSpell)
 		api.DELETE("/spells/:id", AuthMiddleware(authService), spellController.DeleteSpell)
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
