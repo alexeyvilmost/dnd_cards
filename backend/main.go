@@ -226,12 +226,13 @@ func main() {
 		api.PUT("/variables/:id", AuthMiddleware(authService), variableController.UpdateVariable)
 		api.DELETE("/variables/:id", AuthMiddleware(authService), variableController.DeleteVariable)
 
-		// Понятия (глоссарий): пояснения, не выражаемые отдельной сущностью
+		// Понятия (глоссарий): пояснения, не выражаемые отдельной сущностью.
+		// Общий справочник без авторизации (создание/правка/удаление доступны всем).
 		api.GET("/concepts", OptionalAuthMiddleware(authService), conceptController.GetConcepts)
 		api.GET("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.GetConcept)
-		api.POST("/concepts", AuthMiddleware(authService), conceptController.CreateConcept)
-		api.PUT("/concepts/:id", AuthMiddleware(authService), conceptController.UpdateConcept)
-		api.DELETE("/concepts/:id", AuthMiddleware(authService), conceptController.DeleteConcept)
+		api.POST("/concepts", OptionalAuthMiddleware(authService), conceptController.CreateConcept)
+		api.PUT("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.UpdateConcept)
+		api.DELETE("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.DeleteConcept)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")
