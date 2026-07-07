@@ -1,0 +1,145 @@
+/* =============================================================================
+   Bag of Holding — Design Tokens (single source of truth)
+   -----------------------------------------------------------------------------
+   ONE warm, dark "adventurer's table" language: near-black parchment canvas,
+   gold as the single accent, warm ink text, terracotta danger. A light "paper"
+   theme mirrors it for document-style surfaces.
+
+   This file replaces EIGHT competing color worlds found in the current app
+   (see current-state-audit.md): stock gray/blue chrome, the forge dark theme,
+   the paper theme, BG3 tooltip cards, item-rarity gradients, auth glassmorphism,
+   ad-hoc accent sprawl, and cold-slate leaks.
+
+   Usage: every surface reads these variables. Never hardcode a hex in a
+   component again — add or adjust a token here and it propagates everywhere.
+   Promote to :root (done below) so consumers outside `.forge` also resolve them.
+   ============================================================================= */
+
+:root {
+  /* ---- Surfaces (dark "table" theme — the default) ---------------------- */
+  --bg-canvas:      #141210; /* app backdrop — the dark parchment table         (was: gray-50 #f9fafb, --forge-bg) */
+  --surface:        #1c1813; /* panels, cards, header, modals                   (was: white chrome, --forge-panel, #2b2520 bg3, slate-800) */
+  --surface-2:      #241f18; /* inset fields, hovers, chips, nested tiles        (was: gray-100 hover, --forge-panel-2) */
+  --surface-well:   #0e0b07; /* deep wells (counters, insets)                                                       */
+
+  /* ---- Lines & text ----------------------------------------------------- */
+  --border:         #6b5836; /* all hairlines & dividers, warm gold-brown       (was: gray-200/300, --forge-line, #8a7320, black) */
+  --border-strong:  #8a7320; /* emphasized borders, selected tiles                                                  */
+  --text:           #e8e0d0; /* primary ink on dark surfaces                    (was: gray-900, --forge-text, 4+ creams) */
+  --text-dim:       #a99f8b; /* labels, helper text, placeholders, meta         (was: gray-500/600/700, cold slate leaks) */
+
+  /* ---- THE signature accent — one gold, everywhere ---------------------- */
+  --accent-gold:     #d8b978; /* primary buttons, active nav, links, headings, focus glow
+                                  (collapses: blue-600, indigo-600, purple-600, amber-600 + 4 competing golds) */
+  --accent-gold-dim: #c9a45f; /* secondary gold: dim borders, sub-labels, focus ring */
+  --accent-gold-ink: #2a251d; /* text placed ON a solid gold fill (buttons) */
+
+  /* ---- Status ----------------------------------------------------------- */
+  --danger:     #c0442a; /* destructive / error — a clear brick red   (unifies red-600, salmon --forge-danger, 3 reds) */
+  --danger-fg:  #ffb4a2; /* text/icon on danger surfaces */
+  --success:    #7bbf6a; /* confirm / add / positive — warm desaturated green (defines the previously-undefined --success) */
+  --info-cool:  #7ec8e3; /* the ONLY sanctioned cool accent — reserved for cold/temp/shield DATA (temp HP, cold dmg) */
+  --focus-ring: #c9a45f; /* one focus affordance app-wide (was: blue/purple/indigo/black rings) */
+
+  /* ---- Rarity ramp — one hex per tier; frame/title/glow derive from it --- */
+  --rarity-common:    #c9c3b8; /* pure white dropped (invisible on parchment) */
+  --rarity-uncommon:  #22c55e;
+  --rarity-rare:      #3b82f6;
+  --rarity-very-rare: #a855f7;
+  --rarity-artifact:  #f59e0b;
+  --rarity-relic:     #ef4444;
+  --rarity-custom:    #e11d48;
+
+  /* ---- Typography ------------------------------------------------------- */
+  --font-sans:    'Inter', system-ui, sans-serif;          /* body + all UI */
+  --font-serif:   Georgia, 'Times New Roman', serif;       /* headings + entity/card titles */
+  --font-fantasy: 'Pangolin', var(--font-serif);           /* brand wordmark + hero card titles ONLY */
+  --font-mono:    ui-monospace, 'SFMono-Regular', Menlo, monospace; /* IDs, card numbers, hex input */
+
+  /* type scale (font-size / line-height) */
+  --text-display: 30px; --lh-display: 1.1;
+  --text-h1:      26px; --lh-h1: 1.2;
+  --text-h2:      20px; --lh-h2: 1.25;
+  --text-h3:      16px; --lh-h3: 1.35;
+  --text-body:    15px; --lh-body: 1.5;
+  --text-sm:      14px; --lh-sm: 1.45;
+  --text-xs:      12px; --lh-xs: 1.4;
+  --text-micro:   11px; --lh-micro: 1.2; /* uppercase cockpit micro-labels, letter-spacing .06em */
+
+  /* ---- Spacing (8px base) ----------------------------------------------- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px;
+
+  /* ---- Radii (one base + two exceptions) -------------------------------- */
+  --radius:       8px;   /* buttons, inputs, cards, panels, modals, tiles, popovers */
+  --radius-pill:  999px; /* chips, tags, badges */
+  --radius-round: 50%;   /* avatars, medals, circular tokens */
+  --frame-thickness: 6px;/* rarity gradient frame — a thickness constant, NOT a corner radius */
+
+  /* ---- Elevation -------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+  --shadow-md: 0 6px 20px rgba(0,0,0,.40);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.45);
+  --shadow-xl: 0 12px 40px rgba(0,0,0,.55);
+  --glow-gold: 0 0 14px rgba(216,185,120,.40); /* selected/active gold emphasis */
+
+  /* ---- Overlays / stacking --------------------------------------------- */
+  --scrim: rgba(10,8,6,.6);   /* one modal backdrop */
+  --z-base: 0; --z-dropdown: 900; --z-modal: 1000; --z-toast: 1100; --z-popover: 1200;
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --transition: 150ms ease;
+
+  /* ---- Texture ---------------------------------------------------------- */
+  --paper-texture: linear-gradient(rgba(20,18,16,.85), rgba(20,18,16,.85)), url(/groovepaper.png);
+}
+
+/* =============================================================================
+   Light "paper" theme — a document-style mirror (character sheet as a printed
+   page on a warm table). Add class="theme-paper" on a wrapper to opt in.
+   Fixes the current bug where --forge-gold was repurposed to near-black ink:
+   here --accent-gold stays a real gold that reads on light.
+   ============================================================================= */
+.theme-paper {
+  --bg-canvas:     #e9e3d5;
+  --surface:       #ffffff;
+  --surface-2:     #f7f4ec;
+  --surface-well:  #efeadd;
+  --border:        #c7bfab;
+  --border-strong: #b5a888;
+  --text:          #24201a;
+  --text-dim:      #6a6150;
+  --accent-gold:     #b8912f;
+  --accent-gold-dim: #9c7c2c;
+  --accent-gold-ink: #ffffff;
+  --danger:        #b0402a;
+  --shadow-sm: 0 1px 2px rgba(60,45,20,.14);
+  --shadow-md: 0 6px 20px rgba(60,45,20,.16);
+  --shadow-lg: 0 8px 32px rgba(60,45,20,.18);
+  --shadow-xl: 0 12px 40px rgba(60,45,20,.22);
+  --scrim: rgba(60,45,20,.35);
+  --paper-texture: linear-gradient(rgba(245,241,235,.7), rgba(245,241,235,.7)), url(/groovepaper.png);
+}
+
+/* -----------------------------------------------------------------------------
+   Base — apply the language to the document. Components style themselves from
+   the tokens above; keep this block minimal.
+   ----------------------------------------------------------------------------- */
+body {
+  margin: 0;
+  background-color: var(--bg-canvas);
+  background-image: var(--paper-texture);
+  background-repeat: repeat;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+}
+h1, h2, h3 { font-family: var(--font-serif); color: var(--accent-gold); margin: 0 0 var(--space-3); }
+h1 { font-size: var(--text-h1); line-height: var(--lh-h1); }
+h2 { font-size: var(--text-h2); line-height: var(--lh-h2); }
+h3 { font-size: var(--text-h3); line-height: var(--lh-h3); font-family: var(--font-sans); font-weight: 600; color: var(--text); }
+a { color: var(--accent-gold); text-decoration: none; }
+a:hover { color: var(--accent-gold-dim); }
+::placeholder { color: var(--text-dim); }
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }

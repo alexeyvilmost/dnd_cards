@@ -1,0 +1,53 @@
+<!-- @dsCard group="Foundations" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); }
+  h2 { margin-top: var(--space-6); } h2:first-of-type { margin-top: 0; }
+  .bars > div { display: flex; align-items: center; gap: var(--space-3); margin-bottom: 6px; }
+  .bars .b { height: 14px; background: var(--accent-gold); border-radius: 3px; }
+  .bars .t { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); width: 120px; }
+  .radii, .elev { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  .box { width: 92px; height: 72px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: flex-end; justify-content: center; padding: 6px; }
+  .box span { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
+  .zrow { display:flex; gap: var(--space-2); flex-wrap: wrap; }
+  .z { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text); background: var(--surface-2); border:1px solid var(--border); padding: 6px 10px; border-radius: var(--radius-pill); }
+</style>
+<div class="stage">
+  <h2>Spacing — 8px base</h2>
+  <div class="bars">
+    <div><span class="t">--space-1 · 4</span><div class="b" style="width:4px"></div></div>
+    <div><span class="t">--space-2 · 8</span><div class="b" style="width:8px"></div></div>
+    <div><span class="t">--space-3 · 12</span><div class="b" style="width:12px"></div></div>
+    <div><span class="t">--space-4 · 16</span><div class="b" style="width:16px"></div></div>
+    <div><span class="t">--space-6 · 24</span><div class="b" style="width:24px"></div></div>
+    <div><span class="t">--space-8 · 32</span><div class="b" style="width:32px"></div></div>
+    <div><span class="t">--space-12 · 48</span><div class="b" style="width:48px"></div></div>
+  </div>
+
+  <h2>Radii — one base + two exceptions</h2>
+  <div class="radii">
+    <div class="box" style="border-radius:var(--radius)"><span>--radius 8</span></div>
+    <div class="box" style="border-radius:var(--radius-pill);width:120px"><span>--radius-pill</span></div>
+    <div class="box" style="border-radius:var(--radius-round);width:72px"><span>round</span></div>
+  </div>
+
+  <h2>Elevation</h2>
+  <div class="elev">
+    <div class="box" style="box-shadow:var(--shadow-sm);border-radius:var(--radius)"><span>sm</span></div>
+    <div class="box" style="box-shadow:var(--shadow-md);border-radius:var(--radius)"><span>md</span></div>
+    <div class="box" style="box-shadow:var(--shadow-lg);border-radius:var(--radius)"><span>lg</span></div>
+    <div class="box" style="box-shadow:var(--shadow-xl);border-radius:var(--radius)"><span>xl</span></div>
+    <div class="box" style="box-shadow:var(--glow-gold);border-radius:var(--radius);border-color:var(--accent-gold)"><span>glow-gold</span></div>
+  </div>
+
+  <h2>Stacking &amp; scrim</h2>
+  <div class="zrow">
+    <span class="z">--z-dropdown 900</span>
+    <span class="z">--z-modal 1000</span>
+    <span class="z">--z-toast 1100</span>
+    <span class="z">--z-popover 1200</span>
+    <span class="z" style="background:var(--scrim)">--scrim rgba(10,8,6,.6)</span>
+  </div>
+  <div style="color:var(--text-dim);font-size:var(--text-sm);margin-top:var(--space-4)">Replaces the current radius zoo (559 <code>rounded-*</code> occurrences), 5 different modal scrims, and 4 colliding z-index bases (toasts at 60 rendering over modals at 50, dialogs at 300/1000/9999).</div>
+</div>

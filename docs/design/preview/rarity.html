@@ -1,0 +1,29 @@
+<!-- @dsCard group="Color" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); }
+  .ramp { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: var(--space-4); }
+  /* one hex per tier drives frame + title + glow, derived with color-mix */
+  .card { border-radius: var(--radius); padding: var(--frame-thickness);
+          background: linear-gradient(135deg, var(--tier) 0%, color-mix(in srgb, var(--tier) 22%, #0a0806) 100%); }
+  .card .inner { background: var(--surface); border-radius: calc(var(--radius) - 2px); padding: var(--space-3); min-height: 92px;
+                 display: flex; flex-direction: column; justify-content: space-between; }
+  .card .title { font-family: var(--font-serif); font-weight: 700; font-size: var(--text-h3);
+                 color: color-mix(in srgb, var(--tier) 70%, #fff); }
+  .card .tk { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
+  .card.glow { box-shadow: 0 0 20px color-mix(in srgb, var(--tier) 45%, transparent); }
+  .note { color: var(--text-dim); font-size: var(--text-sm); margin-top: var(--space-5); }
+</style>
+<div class="stage">
+  <div class="ramp">
+    <div class="card"      style="--tier:var(--rarity-common)"><div class="inner"><div class="title">Обычная</div><div class="tk">--rarity-common</div></div></div>
+    <div class="card"      style="--tier:var(--rarity-uncommon)"><div class="inner"><div class="title">Необычная</div><div class="tk">--rarity-uncommon</div></div></div>
+    <div class="card"      style="--tier:var(--rarity-rare)"><div class="inner"><div class="title">Редкая</div><div class="tk">--rarity-rare</div></div></div>
+    <div class="card glow" style="--tier:var(--rarity-very-rare)"><div class="inner"><div class="title">Очень редкая</div><div class="tk">--rarity-very-rare</div></div></div>
+    <div class="card glow" style="--tier:var(--rarity-artifact)"><div class="inner"><div class="title">Артефакт</div><div class="tk">--rarity-artifact</div></div></div>
+    <div class="card glow" style="--tier:var(--rarity-relic)"><div class="inner"><div class="title">Реликвия</div><div class="tk">--rarity-relic</div></div></div>
+    <div class="card"      style="--tier:var(--rarity-custom)"><div class="inner"><div class="title">Своя</div><div class="tk">--rarity-custom</div></div></div>
+  </div>
+  <div class="note">One hex per tier. The 6px gradient frame, the title color, and the hover glow are all <b>derived</b> from that single token via <code>color-mix()</code> — replacing the four disagreeing rarity sources (config pure-RGB, cardStyles -500, CardPreview -600 classes, and a 4th hex set with the broken <code>epic/legendary</code> keys).</div>
+</div>

@@ -1,0 +1,41 @@
+<!-- @dsCard group="Navigation" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); }
+  .header { display:flex; align-items:center; justify-content:space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0 var(--space-4); height: 56px; }
+  .brand { font-family: var(--font-fantasy); font-size: 22px; color: var(--accent-gold); }
+  .nav { display:flex; gap: 6px; align-items:center; }
+  .nav a { font-size: var(--text-sm); font-weight: 500; color: var(--text-dim); padding: 8px 12px; border-radius: var(--radius); }
+  .nav a:hover { color: var(--text); background: var(--surface-2); }
+  .nav a.active { color: var(--accent-gold-ink); background: var(--accent-gold); }
+  .tabs { display:inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; margin-top: var(--space-6); }
+  .tabs button { border:none; background: transparent; color: var(--text-dim); font-size: var(--text-sm); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  .tabs button.on { background: var(--accent-gold); color: var(--accent-gold-ink); font-weight: 600; }
+  .rail { display:flex; gap: var(--space-4); margin-top: var(--space-6); align-items:center; }
+  .step { display:flex; align-items:center; gap: 8px; color: var(--text-dim); font-size: var(--text-sm); }
+  .medal { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size: var(--text-xs); }
+  .step.done .medal { background: var(--accent-gold); color: var(--accent-gold-ink); border-color: var(--accent-gold); }
+  .step.active .medal { border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: var(--glow-gold); }
+  .step.active { color: var(--text); }
+  .sep { flex: 1; height: 1px; background: var(--border); }
+</style>
+<div class="stage">
+  <div class="header">
+    <span class="brand">Bag of Holding</span>
+    <nav class="nav">
+      <a class="active">Библиотека</a><a>Предметы</a><a>Магазин</a><a>Инициатива</a><a>Персонажи</a>
+    </nav>
+  </div>
+
+  <div class="tabs"><button class="on">Сетка</button><button>Список</button></div>
+
+  <div class="rail">
+    <span class="step done"><span class="medal">✓</span> Раса</span><span class="sep"></span>
+    <span class="step done"><span class="medal">✓</span> Класс</span><span class="sep"></span>
+    <span class="step active"><span class="medal">3</span> Характеристики</span><span class="sep"></span>
+    <span class="step"><span class="medal">4</span> Снаряжение</span>
+  </div>
+
+  <p style="color:var(--text-dim);font-size:var(--text-sm);margin-top:var(--space-6)">Header on <code>--surface/--border</code>, active nav = <b>gold pill</b> (was blue-100/blue-700), brand in the fantasy face (was Inter-bold). Segmented toggle and wizard rail share the same active-gold language. Apply the paper texture at <code>:root</code> so login &amp; forge stop missing it.</p>
+</div>

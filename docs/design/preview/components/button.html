@@ -1,0 +1,48 @@
+<!-- @dsCard group="Buttons" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); }
+  .btn { font-family: var(--font-sans); font-size: var(--text-sm); font-weight: 600; line-height: 1;
+         border-radius: var(--radius); padding: 10px 16px; border: 1px solid transparent; cursor: pointer;
+         display: inline-flex; align-items: center; gap: 8px; transition: background var(--transition), border-color var(--transition), color var(--transition); }
+  .btn-primary   { background: var(--accent-gold); color: var(--accent-gold-ink); }
+  .btn-primary:hover { background: var(--accent-gold-dim); }
+  .btn-secondary { background: transparent; color: var(--accent-gold); border-color: var(--border-strong); }
+  .btn-secondary:hover { background: var(--surface-2); }
+  .btn-ghost     { background: transparent; color: var(--text-dim); }
+  .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+  .btn-danger    { background: var(--danger); color: var(--danger-fg); }
+  .btn-danger:hover { filter: brightness(1.1); }
+  .btn-sm { padding: 6px 12px; font-size: var(--text-xs); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .iconbtn { width: 36px; height: 36px; display:inline-flex; align-items:center; justify-content:center; border-radius: var(--radius);
+             background: transparent; color: var(--text-dim); border: none; cursor: pointer; transition: var(--transition); }
+  .iconbtn:hover { background: var(--surface-2); color: var(--text); }
+  .r { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .lbl { width: 96px; flex: none; font-size: var(--text-micro); text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); }
+  .plus { width:16px;height:16px;display:inline-block;position:relative }
+  .plus::before,.plus::after{content:"";position:absolute;background:currentColor;border-radius:2px}
+  .plus::before{left:7px;top:2px;width:2px;height:12px}.plus::after{left:2px;top:7px;width:12px;height:2px}
+</style>
+<div class="stage">
+  <div class="r"><span class="lbl">Variants</span>
+    <button class="btn btn-primary">Создать карту</button>
+    <button class="btn btn-secondary">Отмена</button>
+    <button class="btn btn-ghost">Подробнее</button>
+    <button class="btn btn-danger">Удалить</button>
+  </div>
+  <div class="r"><span class="lbl">With icon</span>
+    <button class="btn btn-primary"><span class="plus"></span> Добавить</button>
+    <button class="btn btn-secondary btn-sm">Малый</button>
+    <button class="iconbtn" aria-label="close">✕</button>
+  </div>
+  <div class="r"><span class="lbl">States</span>
+    <button class="btn btn-primary">Default</button>
+    <button class="btn btn-primary" style="background:var(--accent-gold-dim)">Hover</button>
+    <button class="btn btn-primary" autofocus>Focus</button>
+    <button class="btn btn-primary" disabled>Disabled</button>
+  </div>
+  <p style="color:var(--text-dim);font-size:var(--text-sm);max-width:60ch">One <code>&lt;Button&gt;</code> with four variants on unified tokens. Replaces blue/indigo/purple/amber/green submit colors, purple→blue &amp; purple→pink gradients, outline-overridden secondaries, and <code>className="btn-primary bg-blue-600"</code> double-declarations. AI/generate is <b>primary + icon</b>, not its own color.</p>
+</div>

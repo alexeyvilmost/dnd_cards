@@ -1,0 +1,49 @@
+<!-- @dsCard group="Forms" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); max-width: 560px; }
+  .field { margin-bottom: var(--space-4); }
+  label.lbl { display: block; font-size: var(--text-sm); font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .input, .select, .textarea { width: 100%; box-sizing: border-box; background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; font-family: var(--font-sans); font-size: var(--text-sm); }
+  .input:focus, .select:focus, .textarea:focus { outline: 2px solid var(--focus-ring); outline-offset: 0; border-color: var(--accent-gold-dim); }
+  .input.err { border-color: var(--danger); }
+  .help { font-size: var(--text-xs); color: var(--text-dim); margin-top: 5px; }
+  .help.err { color: var(--danger); }
+  .help.ok { color: var(--success); }
+  .row { display: flex; gap: var(--space-4); align-items: center; }
+  .chk { display: inline-flex; align-items: center; gap: 8px; color: var(--text); font-size: var(--text-sm); }
+  .chk input { width: 16px; height: 16px; accent-color: var(--accent-gold); }
+  .switch { width: 40px; height: 22px; border-radius: var(--radius-pill); background: var(--surface-well); border: 1px solid var(--border); position: relative; cursor: pointer; }
+  .switch.on { background: color-mix(in srgb, var(--accent-gold) 35%, var(--surface-well)); border-color: var(--accent-gold-dim); }
+  .switch .knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--text-dim); transition: var(--transition); }
+  .switch.on .knob { left: 20px; background: var(--accent-gold); }
+  .swatches { display: flex; gap: 8px; }
+  .swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+  .swatch.sel { border-color: var(--focus-ring); box-shadow: var(--glow-gold); }
+  .chips { display:flex; gap:6px; flex-wrap:wrap }
+  .chip { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-pill); padding: 4px 10px; font-size: var(--text-xs); }
+</style>
+<div class="stage">
+  <div class="field"><label class="lbl">Название</label><input class="input" value="Кинжал вампира" /><div class="help">Отображается на карте и в библиотеке.</div></div>
+  <div class="field"><label class="lbl">Тип</label>
+    <select class="select"><option>Предмет</option><option>Заклинание</option><option>Эффект</option></select></div>
+  <div class="field"><label class="lbl">Описание</label><textarea class="textarea" rows="2">Наносит 1к4 колющего урона…</textarea></div>
+  <div class="field"><label class="lbl">Цена</label><input class="input err" value="-5" /><div class="help err">Цена не может быть отрицательной.</div></div>
+  <div class="field"><label class="lbl">Слаги</label><div class="chips"><span class="chip">магия</span><span class="chip">оружие</span><span class="chip">+ добавить</span></div></div>
+  <div class="field"><label class="lbl">Редкость</label>
+    <div class="swatches">
+      <span class="swatch" style="background:var(--rarity-common)"></span>
+      <span class="swatch" style="background:var(--rarity-uncommon)"></span>
+      <span class="swatch sel" style="background:var(--rarity-rare)"></span>
+      <span class="swatch" style="background:var(--rarity-very-rare)"></span>
+      <span class="swatch" style="background:var(--rarity-artifact)"></span>
+      <span class="swatch" style="background:var(--rarity-relic)"></span>
+    </div></div>
+  <div class="row">
+    <label class="chk"><input type="checkbox" checked /> Требует настройки</label>
+    <span class="chk">Публичная <span class="switch on"><span class="knob"></span></span></span>
+    <span class="chk">Черновик <span class="switch"><span class="knob"></span></span></span>
+  </div>
+</div>

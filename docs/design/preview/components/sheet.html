@@ -1,0 +1,53 @@
+<!-- @dsCard group="Sheet" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); box-shadow: var(--shadow-md); }
+  .panel > h3 { margin: 0 0 var(--space-3); font-family: var(--font-serif); color: var(--accent-gold); font-size: var(--text-h2); }
+  .vitals { display:flex; gap: var(--space-4); align-items:center; flex-wrap: wrap; }
+  .shield { width: 60px; height: 66px; background: var(--surface-2); border: 1px solid var(--border-strong);
+            clip-path: polygon(50% 0,100% 22%,100% 66%,50% 100%,0 66%,0 22%); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .shield .n { font-size: 22px; font-weight: 700; color: var(--accent-gold); }
+  .shield .l { font-size: 9px; text-transform: uppercase; letter-spacing:.06em; color: var(--text-dim); }
+  .hp { flex: 1; min-width: 200px; }
+  .hp .bar { height: 16px; border-radius: var(--radius-pill); background: var(--surface-well); overflow: hidden; display:flex; }
+  .hp .fill { background: var(--success); width: 70%; }
+  .hp .temp { background: var(--info-cool); width: 12%; }
+  .hp .cap { display:flex; justify-content:space-between; font-size: var(--text-xs); color: var(--text-dim); margin-top: 4px; }
+  .pills { display:flex; gap: 8px; }
+  .pill { width: 46px; text-align:center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 0; }
+  .pill .m { font-size: 16px; font-weight: 700; color: var(--text); }
+  .pill .a { font-size: 9px; text-transform: uppercase; color: var(--text-dim); }
+  .tiles { display:flex; gap: 10px; margin-top: var(--space-4); }
+  .tile { width: 42px; height: 42px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); display:flex; align-items:center; justify-content:center; color: var(--accent-gold); font-weight:700; }
+  .tile.spent { color: var(--text-dim); background: var(--surface-well); border-style: dashed; }
+  .econ { display:flex; gap: 8px; margin-top: var(--space-4); }
+  .econ span { font-size: var(--text-xs); padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--border); }
+  .econ .act { color: var(--accent-gold); border-color: var(--accent-gold-dim); }
+  .econ .bon { color: var(--success); border-color: color-mix(in srgb, var(--success) 50%, var(--border)); }
+  .econ .rea { color: var(--info-cool); border-color: color-mix(in srgb, var(--info-cool) 50%, var(--border)); }
+</style>
+<div class="stage">
+  <div class="panel">
+    <h3>Тест Варвар Голиаф</h3>
+    <div class="vitals">
+      <div class="shield"><span class="n">17</span><span class="l">КЗ</span></div>
+      <div class="hp">
+        <div class="bar"><span class="fill"></span><span class="temp"></span></div>
+        <div class="cap"><span>Хиты 45 / 58</span><span style="color:var(--info-cool)">+ врем. 8</span></div>
+      </div>
+      <div class="pills">
+        <div class="pill"><div class="m">+4</div><div class="a">Сил</div></div>
+        <div class="pill"><div class="m">+2</div><div class="a">Лов</div></div>
+        <div class="pill"><div class="m">+3</div><div class="a">Тел</div></div>
+      </div>
+    </div>
+    <div class="tiles">
+      <div class="tile">◈</div><div class="tile">◈</div><div class="tile spent">◈</div>
+      <span style="align-self:center;color:var(--text-dim);font-size:var(--text-xs)">Ярость 2 / 3</span>
+    </div>
+    <div class="econ"><span class="act">Действие</span><span class="bon">Бонусное</span><span class="rea">Реакция</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:var(--text-sm);margin-top:var(--space-4);max-width:64ch">The cockpit consumes <code>:root</code> tokens — no more undefined-var cold fallbacks. Temp HP and the reaction token are the <b>only</b> sanctioned cool accent (<code>--info-cool</code>); everything decorative that leaked blue/slate moves to gold. One icon-tile size token replaces the 38/42/52px set.</p>
+</div>

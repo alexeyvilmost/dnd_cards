@@ -1,0 +1,59 @@
+<!-- @dsCard group="Color" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); font-family: var(--font-sans); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+  .sw { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .sw .chip { height: 56px; }
+  .sw .meta { padding: var(--space-2) var(--space-3); }
+  .sw .name { font-size: var(--text-sm); color: var(--text); font-weight: 600; }
+  .sw .hex { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
+  .sw .role { font-size: var(--text-xs); color: var(--text-dim); margin-top: 2px; }
+  h2 { margin-top: var(--space-6); }
+  h2:first-of-type { margin-top: 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+  .panel { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); }
+  .lbl { font-size: var(--text-micro); text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); margin-bottom: var(--space-3); }
+</style>
+<div class="stage">
+  <h2>Surfaces &amp; text</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:var(--bg-canvas)"></div><div class="meta"><div class="name">--bg-canvas</div><div class="hex">#141210</div><div class="role">app backdrop</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--surface)"></div><div class="meta"><div class="name">--surface</div><div class="hex">#1c1813</div><div class="role">panels, cards, modals</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--surface-2)"></div><div class="meta"><div class="name">--surface-2</div><div class="hex">#241f18</div><div class="role">inset fields, hovers</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--surface-well)"></div><div class="meta"><div class="name">--surface-well</div><div class="hex">#0e0b07</div><div class="role">deep wells</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--border)"></div><div class="meta"><div class="name">--border</div><div class="hex">#6b5836</div><div class="role">hairlines, dividers</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--text)"></div><div class="meta"><div class="name">--text</div><div class="hex">#e8e0d0</div><div class="role">primary ink</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--text-dim)"></div><div class="meta"><div class="name">--text-dim</div><div class="hex">#a99f8b</div><div class="role">labels, helper, meta</div></div></div>
+  </div>
+
+  <h2>Accent &amp; status</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:var(--accent-gold)"></div><div class="meta"><div class="name">--accent-gold ★</div><div class="hex">#d8b978</div><div class="role">THE primary/accent</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-gold-dim)"></div><div class="meta"><div class="name">--accent-gold-dim</div><div class="hex">#c9a45f</div><div class="role">2nd gold, focus ring</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--danger)"></div><div class="meta"><div class="name">--danger</div><div class="hex">#c0442a</div><div class="role">destructive, error</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--success)"></div><div class="meta"><div class="name">--success</div><div class="hex">#7bbf6a</div><div class="role">confirm, add</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--info-cool)"></div><div class="meta"><div class="name">--info-cool</div><div class="hex">#7ec8e3</div><div class="role">cold/temp DATA only</div></div></div>
+  </div>
+
+  <h2>Same tokens, two themes</h2>
+  <div class="cols">
+    <div class="panel">
+      <div class="lbl">Dark — “table” (default)</div>
+      <div style="color:var(--text)">Ink text on <b style="color:var(--accent-gold)">gold</b>. Panels sit on the near-black parchment canvas.</div>
+      <div style="margin-top:var(--space-3);display:flex;gap:var(--space-2)">
+        <span style="background:var(--accent-gold);color:var(--accent-gold-ink);padding:6px 14px;border-radius:var(--radius);font-size:var(--text-sm);font-weight:600">Primary</span>
+        <span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:6px 14px;border-radius:var(--radius);font-size:var(--text-sm)">Secondary</span>
+      </div>
+    </div>
+    <div class="theme-paper panel" style="background:var(--bg-canvas)">
+      <div class="lbl">Light — “paper”</div>
+      <div style="color:var(--text)">Same roles, warm document surface. <b style="color:var(--accent-gold)">Gold</b> stays a real gold.</div>
+      <div style="margin-top:var(--space-3);display:flex;gap:var(--space-2)">
+        <span style="background:var(--accent-gold);color:var(--accent-gold-ink);padding:6px 14px;border-radius:var(--radius);font-size:var(--text-sm);font-weight:600">Primary</span>
+        <span style="background:var(--surface);color:var(--text);border:1px solid var(--border);padding:6px 14px;border-radius:var(--radius);font-size:var(--text-sm)">Secondary</span>
+      </div>
+    </div>
+  </div>
+</div>

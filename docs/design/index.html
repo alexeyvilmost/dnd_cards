@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bag of Holding — Design Foundation</title>
+<style>
+  /* ============================================================
+     SELF-CONTAINED showcase. Tokens are inlined here so this page
+     renders in ANY viewer (no external CSS, no iframes, no web fonts).
+     The canonical source of truth is ../tokens.css — this is a copy.
+     ============================================================ */
+  :root{
+    --bg-canvas:#141210; --surface:#1c1813; --surface-2:#241f18; --surface-well:#0e0b07;
+    --border:#6b5836; --border-strong:#8a7320; --text:#e8e0d0; --text-dim:#a99f8b;
+    --accent-gold:#d8b978; --accent-gold-dim:#c9a45f; --accent-gold-ink:#2a251d;
+    --danger:#c0442a; --danger-fg:#ffb4a2; --success:#7bbf6a; --info-cool:#7ec8e3; --focus-ring:#c9a45f;
+    --rarity-common:#c9c3b8; --rarity-uncommon:#22c55e; --rarity-rare:#3b82f6; --rarity-very-rare:#a855f7;
+    --rarity-artifact:#f59e0b; --rarity-relic:#ef4444; --rarity-custom:#e11d48;
+    --font-sans:'Inter',system-ui,sans-serif; --font-serif:Georgia,'Times New Roman',serif; --font-mono:ui-monospace,Menlo,monospace;
+    --radius:8px; --radius-pill:999px; --frame:6px;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.35); --shadow-md:0 6px 20px rgba(0,0,0,.4);
+    --shadow-lg:0 8px 32px rgba(0,0,0,.45); --shadow-xl:0 12px 40px rgba(0,0,0,.55); --glow-gold:0 0 14px rgba(216,185,120,.4);
+    --scrim:rgba(10,8,6,.6);
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;
+  }
+  .paper{ --bg-canvas:#e9e3d5; --surface:#fff; --surface-2:#f7f4ec; --border:#c7bfab; --text:#24201a;
+    --text-dim:#6a6150; --accent-gold:#b8912f; --accent-gold-ink:#fff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-canvas);color:var(--text);font-family:var(--font-sans);font-size:15px;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:var(--s8) var(--s6)}
+  h1,h2,h3{font-family:var(--font-serif);color:var(--accent-gold);margin:0}
+  .hero h1{font-size:40px}
+  .hero p{color:var(--text-dim);max-width:72ch}
+  .lede{border-left:3px solid var(--accent-gold);padding-left:var(--s4);margin:var(--s6) 0;color:var(--text-dim)}
+  .lede b{color:var(--text)}
+  h2.sec{font-size:24px;margin-top:var(--s8);border-bottom:1px solid var(--border);padding-bottom:var(--s2)}
+  .sub{color:var(--text-dim);font-size:13px;margin:6px 0 var(--s4)}
+  code{font-family:var(--font-mono);font-size:.9em;color:var(--accent-gold-dim)}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--s4);box-shadow:var(--shadow-md)}
+  .grid{display:grid;gap:var(--s4)}
+  @media(min-width:760px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}}
+
+  /* swatches */
+  .sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--s3)}
+  .sw{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+  .sw .chip{height:52px}
+  .sw .m{padding:var(--s2) var(--s3)}
+  .sw .n{font-size:14px;color:var(--text);font-weight:600}
+  .sw .h{font-family:var(--font-mono);font-size:12px;color:var(--text-dim)}
+  .sw .r{font-size:12px;color:var(--text-dim);margin-top:2px}
+
+  /* rarity + item cards */
+  .ramp{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--s4)}
+  .rcard{border-radius:var(--radius);padding:var(--frame);background:linear-gradient(135deg,var(--t) 0%,color-mix(in srgb,var(--t) 22%,#0a0806) 100%)}
+  .rcard.glow{box-shadow:0 0 20px color-mix(in srgb,var(--t) 45%,transparent)}
+  .rcard .in{background:var(--surface);border-radius:6px;padding:var(--s3);min-height:88px;display:flex;flex-direction:column;justify-content:space-between}
+  .rcard .tt{font-family:var(--font-serif);font-weight:700;font-size:16px;color:color-mix(in srgb,var(--t) 72%,#fff)}
+  .rcard .tk{font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+
+  /* type */
+  .trow{display:flex;align-items:baseline;gap:var(--s4);padding:10px 0;border-bottom:1px solid var(--border)}
+  .trow .tag{width:80px;flex:none;font-family:var(--font-mono);font-size:12px;color:var(--text-dim)}
+  .trow .spec{width:150px;flex:none;font-size:12px;color:var(--text-dim)}
+  .fam{border:1px solid var(--border);border-radius:var(--radius);padding:var(--s4);background:var(--surface)}
+  .fam .big{font-size:30px;color:var(--text)}
+  .fam .u{font-size:12px;color:var(--text-dim);margin-top:6px}
+
+  /* foundations */
+  .bar{display:flex;align-items:center;gap:var(--s3);margin-bottom:6px}
+  .bar .t{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);width:118px}
+  .bar .b{height:14px;background:var(--accent-gold);border-radius:3px}
+  .box{width:90px;height:66px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:flex-end;justify-content:center;padding:6px}
+  .box span{font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+  .zpill{font-family:var(--font-mono);font-size:11px;color:var(--text);background:var(--surface-2);border:1px solid var(--border);padding:6px 10px;border-radius:var(--radius-pill)}
+  .flex{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center}
+
+  /* buttons */
+  .btn{font-size:14px;font-weight:600;line-height:1;border-radius:var(--radius);padding:10px 16px;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--accent-gold);color:var(--accent-gold-ink)}
+  .btn-secondary{background:transparent;color:var(--accent-gold);border-color:var(--border-strong)}
+  .btn-ghost{background:transparent;color:var(--text-dim)}
+  .btn-danger{background:var(--danger);color:var(--danger-fg)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);background:transparent;color:var(--text-dim);border:none;cursor:pointer}
+
+  /* forms */
+  .field{margin-bottom:var(--s4)}
+  .field label{display:block;font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px}
+  .input{width:100%;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;font-family:var(--font-sans);font-size:14px}
+  .input.err{border-color:var(--danger)}
+  .help{font-size:12px;color:var(--text-dim);margin-top:5px}
+  .help.err{color:var(--danger)}
+  .chip{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-pill);padding:4px 10px;font-size:12px}
+  .dot{width:24px;height:24px;border-radius:50%;border:2px solid transparent}
+  .dot.sel{border-color:var(--focus-ring);box-shadow:var(--glow-gold)}
+  .switch{width:40px;height:22px;border-radius:var(--radius-pill);background:var(--surface-well);border:1px solid var(--border);position:relative;display:inline-block}
+  .switch.on{background:color-mix(in srgb,var(--accent-gold) 35%,var(--surface-well));border-color:var(--accent-gold-dim)}
+  .switch .k{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-dim)}
+  .switch.on .k{left:20px;background:var(--accent-gold)}
+
+  /* entity card */
+  .item-card{width:190px;border-radius:var(--radius);padding:var(--frame);background:linear-gradient(135deg,var(--rarity-very-rare) 0%,#2c123a 100%);box-shadow:0 0 20px rgba(168,85,247,.4)}
+  .item-card .in{background:var(--surface);border-radius:6px;overflow:hidden}
+  .item-card .art{height:110px;background:radial-gradient(circle at 50% 40%,var(--surface-2),var(--surface-well));display:flex;align-items:center;justify-content:center;font-size:30px}
+  .item-card .b{padding:var(--s3)}
+  .item-card .nm{font-family:var(--font-serif);font-weight:700;font-size:16px;color:#d9a6f5}
+  .item-card .mt{font-size:11px;color:var(--text-dim);display:flex;justify-content:space-between;margin-top:6px}
+  .ent{width:250px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+  .ent .hd{padding:var(--s3) var(--s4);border-bottom:1px solid var(--border)}
+  .ent .tt{font-family:var(--font-serif);font-size:20px;color:var(--accent-gold)}
+  .ent .sb{font-size:12px;color:var(--text-dim);font-style:italic;margin-top:2px}
+  .ent .bd{padding:var(--s3) var(--s4);font-size:14px}
+  .ent .st{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border)}
+  .ent .st b{color:var(--accent-gold-dim)}
+  .ent .ft{padding:var(--s2) var(--s4);background:var(--surface-2);font-size:11px;color:var(--text-dim);display:flex;justify-content:space-between}
+
+  /* modal/toast/tooltip stage */
+  .stage{position:relative;height:360px;overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)}
+  .scrim{position:absolute;inset:0;background:var(--scrim)}
+  .modal{position:absolute;top:34px;left:50%;transform:translateX(-50%);width:360px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-xl);overflow:hidden}
+  .modal .hd{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4);border-bottom:1px solid var(--border)}
+  .modal .hd h3{font-size:20px}
+  .modal .bd{padding:var(--s4);font-size:14px}
+  .modal .ft{display:flex;justify-content:flex-end;gap:var(--s2);padding:var(--s3) var(--s4);border-top:1px solid var(--border)}
+  .toast{position:absolute;right:14px;bottom:14px;width:250px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--success);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:var(--s3)}
+  .toast .t{font-size:14px} .toast .d{font-size:12px;color:var(--text-dim)}
+  .tip{position:absolute;left:14px;bottom:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:var(--s2) var(--s3);font-size:12px;max-width:200px}
+  .tip b{color:var(--accent-gold-dim)}
+
+  /* nav */
+  .hdr{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 var(--s4);height:54px}
+  .brand{font-family:var(--font-serif);font-size:22px;color:var(--accent-gold)}
+  .nav{display:flex;gap:6px;flex-wrap:wrap}
+  .nav a{font-size:14px;font-weight:500;color:var(--text-dim);padding:8px 12px;border-radius:var(--radius);text-decoration:none}
+  .nav a.active{color:var(--accent-gold-ink);background:var(--accent-gold)}
+  .tabs{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:3px}
+  .tabs b{font-size:14px;padding:6px 14px;border-radius:6px;color:var(--text-dim);font-weight:500}
+  .tabs b.on{background:var(--accent-gold);color:var(--accent-gold-ink)}
+  .step{display:flex;align-items:center;gap:8px;color:var(--text-dim);font-size:14px}
+  .medal{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px}
+  .step.done .medal{background:var(--accent-gold);color:var(--accent-gold-ink);border-color:var(--accent-gold)}
+  .step.active{color:var(--text)} .step.active .medal{border-color:var(--accent-gold);color:var(--accent-gold);box-shadow:var(--glow-gold)}
+  .sep{width:36px;height:1px;background:var(--border)}
+
+  /* sheet cockpit */
+  .shield{width:56px;height:62px;background:var(--surface-2);border:1px solid var(--border-strong);clip-path:polygon(50% 0,100% 22%,100% 66%,50% 100%,0 66%,0 22%);display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .shield .n{font-size:20px;font-weight:700;color:var(--accent-gold)}
+  .shield .l{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim)}
+  .hpbar{height:16px;border-radius:var(--radius-pill);background:var(--surface-well);overflow:hidden;display:flex}
+  .hpbar .f{background:var(--success);width:70%} .hpbar .tmp{background:var(--info-cool);width:12%}
+  .pill{width:44px;text-align:center;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 0}
+  .pill .mm{font-size:16px;font-weight:700} .pill .aa{font-size:9px;text-transform:uppercase;color:var(--text-dim)}
+  .tile{width:40px;height:40px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--accent-gold);font-weight:700}
+  .tile.spent{color:var(--text-dim);background:var(--surface-well);border-style:dashed}
+  .econ span{font-size:12px;padding:4px 10px;border-radius:var(--radius-pill);border:1px solid var(--border)}
+  .econ .a{color:var(--accent-gold);border-color:var(--accent-gold-dim)}
+  .econ .b{color:var(--success)} .econ .r{color:var(--info-cool)}
+  .foot{margin-top:var(--s8);color:var(--text-dim);font-size:13px;border-top:1px solid var(--border);padding-top:var(--s4)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Bag of Holding</h1>
+    <p>Design foundation — один тёплый тёмный язык «<b>стол авантюриста</b>»: почти‑чёрная пергаментная канва, золото как единственный акцент, тёплый цвет‑чернил. Всё ниже отрисовано из токенов.</p>
+    <div class="lede"><b>Зачем.</b> Приложение сейчас живёт в <b>восьми</b> несвязанных цветовых мирах (сток gray/blue хром, тёмная тема «кузница», светлый пергамент, BG3‑тултипы, градиенты редкости, auth‑glassmorphism, разнобой indigo/purple/green/amber, и холодные slate‑протечки). Этот фундамент сводит их в один набор токенов. Подробности — в <code>current-state-audit.md</code>.</div>
+  </div>
+
+  <!-- COLOR -->
+  <h2 class="sec">Цвет — поверхности, текст, акцент</h2>
+  <div class="sw-grid">
+    <div class="sw"><div class="chip" style="background:var(--bg-canvas)"></div><div class="m"><div class="n">--bg-canvas</div><div class="h">#141210</div><div class="r">фон приложения</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--surface)"></div><div class="m"><div class="n">--surface</div><div class="h">#1c1813</div><div class="r">панели, карточки, модалки</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--surface-2)"></div><div class="m"><div class="n">--surface-2</div><div class="h">#241f18</div><div class="r">поля, ховеры</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--border)"></div><div class="m"><div class="n">--border</div><div class="h">#6b5836</div><div class="r">линии, разделители</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--text)"></div><div class="m"><div class="n">--text</div><div class="h">#e8e0d0</div><div class="r">основные чернила</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--text-dim)"></div><div class="m"><div class="n">--text-dim</div><div class="h">#a99f8b</div><div class="r">лейблы, подсказки</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-gold)"></div><div class="m"><div class="n">--accent-gold ★</div><div class="h">#d8b978</div><div class="r">ЕДИНСТВЕННЫЙ акцент</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--danger)"></div><div class="m"><div class="n">--danger</div><div class="h">#c0442a</div><div class="r">удаление, ошибка</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--success)"></div><div class="m"><div class="n">--success</div><div class="h">#7bbf6a</div><div class="r">подтверждение</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--info-cool)"></div><div class="m"><div class="n">--info-cool</div><div class="h">#7ec8e3</div><div class="r">только «холодные» данные</div></div></div>
+  </div>
+
+  <!-- RARITY -->
+  <h2 class="sec">Шкала редкости</h2>
+  <div class="sub">Один hex на тир. Рамка, цвет заголовка и свечение <b>выводятся</b> из него через <code>color-mix()</code> — вместо четырёх спорящих источников.</div>
+  <div class="ramp">
+    <div class="rcard" style="--t:var(--rarity-common)"><div class="in"><div class="tt">Обычная</div><div class="tk">--rarity-common</div></div></div>
+    <div class="rcard" style="--t:var(--rarity-uncommon)"><div class="in"><div class="tt">Необычная</div><div class="tk">--rarity-uncommon</div></div></div>
+    <div class="rcard" style="--t:var(--rarity-rare)"><div class="in"><div class="tt">Редкая</div><div class="tk">--rarity-rare</div></div></div>
+    <div class="rcard glow" style="--t:var(--rarity-very-rare)"><div class="in"><div class="tt">Очень редкая</div><div class="tk">--rarity-very-rare</div></div></div>
+    <div class="rcard glow" style="--t:var(--rarity-artifact)"><div class="in"><div class="tt">Артефакт</div><div class="tk">--rarity-artifact</div></div></div>
+    <div class="rcard glow" style="--t:var(--rarity-relic)"><div class="in"><div class="tt">Реликвия</div><div class="tk">--rarity-relic</div></div></div>
+  </div>
+
+  <!-- TYPE -->
+  <h2 class="sec">Типографика</h2>
+  <div class="trow"><span class="tag">h1</span><span class="spec">Georgia · 26 / 700</span><span style="font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--accent-gold)">Библиотека карточек</span></div>
+  <div class="trow"><span class="tag">h2</span><span class="spec">Georgia · 20 / 600</span><span style="font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--accent-gold)">Действия персонажа</span></div>
+  <div class="trow"><span class="tag">body</span><span class="spec">Inter · 15 / 400</span><span style="font-size:15px">Обычный текст описания предмета и правил.</span></div>
+  <div class="trow"><span class="tag">label</span><span class="spec">Inter · 14 / 500</span><span style="font-size:14px;font-weight:500">Название</span></div>
+  <div class="trow"><span class="tag">helper</span><span class="spec">Inter · 12 / 400</span><span style="font-size:12px;color:var(--text-dim)">Подсказка под полем</span></div>
+  <div class="trow"><span class="tag">mono</span><span class="spec">ui-monospace · 12</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim)">CARD-0832</span></div>
+  <div class="grid g3" style="margin-top:var(--s6)">
+    <div class="fam"><div class="big" style="font-family:var(--font-sans)">Aa Яя</div><div style="color:var(--accent-gold);font-weight:600;margin-top:8px">Inter</div><div class="u">Текст и весь UI.</div></div>
+    <div class="fam"><div class="big" style="font-family:var(--font-serif)">Aa Яя</div><div style="color:var(--accent-gold);font-weight:600;margin-top:8px">Georgia (serif)</div><div class="u">Заголовки и титулы карточек.</div></div>
+    <div class="fam"><div class="big" style="font-family:var(--font-serif)">Aa</div><div style="color:var(--accent-gold);font-weight:600;margin-top:8px">Pangolin (fantasy)</div><div class="u">Бренд и титулы hero‑карт. Сейчас подключён, но не используется — задействовать здесь.</div></div>
+  </div>
+
+  <!-- FOUNDATIONS -->
+  <h2 class="sec">Отступы · радиусы · тени · z</h2>
+  <div class="grid g2">
+    <div class="panel">
+      <div class="sub" style="margin-top:0">Шкала отступов (база 8px)</div>
+      <div class="bar"><span class="t">--s1 · 4</span><span class="b" style="width:4px"></span></div>
+      <div class="bar"><span class="t">--s2 · 8</span><span class="b" style="width:8px"></span></div>
+      <div class="bar"><span class="t">--s3 · 12</span><span class="b" style="width:12px"></span></div>
+      <div class="bar"><span class="t">--s4 · 16</span><span class="b" style="width:16px"></span></div>
+      <div class="bar"><span class="t">--s6 · 24</span><span class="b" style="width:24px"></span></div>
+      <div class="bar"><span class="t">--s8 · 32</span><span class="b" style="width:32px"></span></div>
+    </div>
+    <div class="panel">
+      <div class="sub" style="margin-top:0">Тени и радиусы</div>
+      <div class="flex">
+        <div class="box" style="box-shadow:var(--shadow-sm);border-radius:var(--radius)"><span>sm</span></div>
+        <div class="box" style="box-shadow:var(--shadow-md);border-radius:var(--radius)"><span>md</span></div>
+        <div class="box" style="box-shadow:var(--shadow-lg);border-radius:var(--radius)"><span>lg</span></div>
+        <div class="box" style="box-shadow:var(--glow-gold);border-radius:var(--radius);border-color:var(--accent-gold)"><span>glow</span></div>
+      </div>
+      <div class="flex" style="margin-top:var(--s4)">
+        <span class="zpill">--z-modal 1000</span><span class="zpill">--z-toast 1100</span><span class="zpill">--z-popover 1200</span><span class="zpill" style="background:var(--scrim)">--scrim</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTONS -->
+  <h2 class="sec">Кнопки</h2>
+  <div class="panel">
+    <div class="flex" style="margin-bottom:var(--s4)">
+      <button class="btn btn-primary">Создать карту</button>
+      <button class="btn btn-secondary">Отмена</button>
+      <button class="btn btn-ghost">Подробнее</button>
+      <button class="btn btn-danger">Удалить</button>
+      <button class="iconbtn">✕</button>
+    </div>
+    <div class="flex">
+      <button class="btn btn-primary">Default</button>
+      <button class="btn btn-primary" style="background:var(--accent-gold-dim)">Hover</button>
+      <button class="btn btn-primary" disabled>Disabled</button>
+    </div>
+    <div class="sub">Одна <code>&lt;Button&gt;</code> с 4 вариантами. Заменяет blue/indigo/purple/amber/green submit‑кнопки и градиенты. AI/генерация = primary + иконка, не отдельный цвет.</div>
+  </div>
+
+  <!-- FORMS + CARDS -->
+  <h2 class="sec">Формы и карточки</h2>
+  <div class="grid g2">
+    <div class="panel">
+      <div class="field"><label>Название</label><input class="input" value="Кинжал вампира" /><div class="help">Отображается на карте и в библиотеке.</div></div>
+      <div class="field"><label>Цена</label><input class="input err" value="-5" /><div class="help err">Цена не может быть отрицательной.</div></div>
+      <div class="field"><label>Слаги</label><div class="flex"><span class="chip">магия</span><span class="chip">оружие</span><span class="chip">+ добавить</span></div></div>
+      <div class="field"><label>Редкость</label><div class="flex">
+        <span class="dot" style="background:var(--rarity-common)"></span>
+        <span class="dot" style="background:var(--rarity-uncommon)"></span>
+        <span class="dot sel" style="background:var(--rarity-rare)"></span>
+        <span class="dot" style="background:var(--rarity-very-rare)"></span>
+        <span class="dot" style="background:var(--rarity-artifact)"></span>
+        <span class="dot" style="background:var(--rarity-relic)"></span>
+      </div></div>
+      <div class="flex"><span style="font-size:14px">Публичная <span class="switch on"><span class="k"></span></span></span><span style="font-size:14px;color:var(--text-dim)">Черновик <span class="switch"><span class="k"></span></span></span></div>
+    </div>
+    <div class="flex" style="align-items:flex-start;gap:var(--s6)">
+      <div class="item-card"><div class="in"><div class="art">🗡️</div><div class="b"><div class="nm">Кинжал вампира</div><div class="mt"><span>Оружие</span><span style="font-family:var(--font-mono)">CARD-0417</span></div></div></div></div>
+      <div class="ent">
+        <div class="hd"><div class="tt">Огненный шар</div><div class="sb">3 круг · Воплощение</div></div>
+        <div class="bd"><div class="st"><span>Дистанция</span><b>150 футов</b></div><div class="st"><span>Урон</span><b>8к6 огонь</b></div><p style="margin:8px 0 0;color:var(--text-dim)">Взрыв пламени 20 футов.</p></div>
+        <div class="ft"><span>Спасбросок · Ловкость</span><span>V S M</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <h2 class="sec">Модалка · тост · тултип</h2>
+  <div class="stage">
+    <div class="scrim"></div>
+    <div class="modal">
+      <div class="hd"><h3>Удалить карту?</h3><button class="iconbtn">✕</button></div>
+      <div class="bd">«Кинжал вампира» будет удалён без возможности восстановления.</div>
+      <div class="ft"><button class="btn btn-ghost">Отмена</button><button class="btn btn-danger">Удалить</button></div>
+    </div>
+    <div class="toast"><div class="t">Карта сохранена</div><div class="d">CARD-0417 обновлена</div></div>
+    <div class="tip">КЗ = 10 + ловкость + <b>щит (+2)</b>. Разбивка из данных сущности.</div>
+  </div>
+
+  <!-- NAV -->
+  <h2 class="sec">Навигация</h2>
+  <div class="hdr">
+    <span class="brand">Bag of Holding</span>
+    <nav class="nav"><a class="active">Библиотека</a><a>Предметы</a><a>Магазин</a><a>Инициатива</a><a>Персонажи</a></nav>
+  </div>
+  <div class="flex" style="margin-top:var(--s4)">
+    <div class="tabs"><b class="on">Сетка</b><b>Список</b></div>
+    <span class="step done"><span class="medal">✓</span> Раса</span><span class="sep"></span>
+    <span class="step done"><span class="medal">✓</span> Класс</span><span class="sep"></span>
+    <span class="step active"><span class="medal">3</span> Характеристики</span><span class="sep"></span>
+    <span class="step"><span class="medal">4</span> Снаряжение</span>
+  </div>
+
+  <!-- SHEET -->
+  <h2 class="sec">Кокпит листа персонажа</h2>
+  <div class="panel">
+    <h3 style="font-size:20px;margin-bottom:var(--s3)">Тест Варвар Голиаф</h3>
+    <div class="flex">
+      <div class="shield"><span class="n">17</span><span class="l">КЗ</span></div>
+      <div style="flex:1;min-width:200px">
+        <div class="hpbar"><span class="f"></span><span class="tmp"></span></div>
+        <div class="flex" style="justify-content:space-between;font-size:12px;color:var(--text-dim);margin-top:4px"><span>Хиты 45 / 58</span><span style="color:var(--info-cool)">+ врем. 8</span></div>
+      </div>
+      <div class="flex">
+        <div class="pill"><div class="mm">+4</div><div class="aa">Сил</div></div>
+        <div class="pill"><div class="mm">+2</div><div class="aa">Лов</div></div>
+        <div class="pill"><div class="mm">+3</div><div class="aa">Тел</div></div>
+      </div>
+    </div>
+    <div class="flex" style="margin-top:var(--s4)">
+      <div class="tile">◈</div><div class="tile">◈</div><div class="tile spent">◈</div>
+      <span style="color:var(--text-dim);font-size:12px">Ярость 2 / 3</span>
+    </div>
+    <div class="flex econ" style="margin-top:var(--s4)"><span class="a">Действие</span><span class="b">Бонусное</span><span class="r">Реакция</span></div>
+  </div>
+
+  <!-- PAPER THEME -->
+  <h2 class="sec">Те же токены — светлая тема «paper»</h2>
+  <div class="paper panel" style="background:var(--bg-canvas)">
+    <div class="flex">
+      <button class="btn btn-primary">Создать</button>
+      <button class="btn btn-secondary">Отмена</button>
+      <span class="chip">магия</span>
+      <span style="color:var(--text)">Тёплая «бумажная» поверхность, золото остаётся золотом.</span>
+    </div>
+  </div>
+
+  <div class="foot">Каждый файл в <code>preview/**.html</code> несёт первой строкой маркер <code>&lt;!-- @dsCard group="…" --&gt;</code>, поэтому Claude Design индексирует его как карточку автоматически. Канонический источник токенов — <code>tokens.css</code> (эта страница содержит их встроенную копию, чтобы открываться в любом просмотрщике).</div>
+</div>
+</body>
+</html>

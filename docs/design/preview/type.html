@@ -1,0 +1,30 @@
+<!-- @dsCard group="Type" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../tokens.css" />
+<style>
+  .stage { padding: var(--space-6); }
+  .row { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+  .row .tag { width: 92px; flex: none; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
+  .row .spec { width: 150px; flex: none; font-size: var(--text-xs); color: var(--text-dim); }
+  .families { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .fam { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); background: var(--surface); }
+  .fam .big { font-size: 30px; color: var(--text); }
+  .fam .use { font-size: var(--text-xs); color: var(--text-dim); margin-top: var(--space-2); }
+</style>
+<div class="stage">
+  <div class="row"><span class="tag">display</span><span class="spec">Pangolin · 30 / 700</span><span style="font-family:var(--font-fantasy);font-size:30px;color:var(--accent-gold)">Bag of Holding</span></div>
+  <div class="row"><span class="tag">h1</span><span class="spec">Georgia · 26 / 700</span><span style="font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--accent-gold)">Библиотека карточек</span></div>
+  <div class="row"><span class="tag">h2</span><span class="spec">Georgia · 20 / 600</span><span style="font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--accent-gold)">Действия персонажа</span></div>
+  <div class="row"><span class="tag">h3</span><span class="spec">Inter · 16 / 600</span><span style="font-family:var(--font-sans);font-size:16px;font-weight:600;color:var(--text)">Группа полей</span></div>
+  <div class="row"><span class="tag">body</span><span class="spec">Inter · 15 / 400</span><span style="font-family:var(--font-sans);font-size:15px;color:var(--text)">Обычный текст описания предмета и правил.</span></div>
+  <div class="row"><span class="tag">label</span><span class="spec">Inter · 14 / 500</span><span style="font-family:var(--font-sans);font-size:14px;font-weight:500;color:var(--text)">Название</span></div>
+  <div class="row"><span class="tag">helper</span><span class="spec">Inter · 12 / 400</span><span style="font-family:var(--font-sans);font-size:12px;color:var(--text-dim)">Подсказка под полем ввода</span></div>
+  <div class="row"><span class="tag">micro</span><span class="spec">Inter · 11 / 700 caps</span><span style="font-family:var(--font-sans);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim)">КД&nbsp;·&nbsp;Хиты</span></div>
+  <div class="row"><span class="tag">mono</span><span class="spec">ui-monospace · 12</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim)">CARD-0832</span></div>
+
+  <div class="families">
+    <div class="fam"><div class="big" style="font-family:var(--font-sans)">Aa Яя</div><div style="color:var(--accent-gold);font-weight:600;margin-top:8px">Inter</div><div class="use">Body &amp; all UI. Weights 400/500/600/700.</div></div>
+    <div class="fam"><div class="big" style="font-family:var(--font-serif)">Aa Яя</div><div style="color:var(--accent-gold);font-weight:600;margin-top:8px">Georgia (serif)</div><div class="use">Headings &amp; entity/card titles.</div></div>
+    <div class="fam"><div class="big" style="font-family:var(--font-fantasy)">Aa Яя</div><div style="color:var(--accent-gold);font-weight:600;margin-top:8px">Pangolin (fantasy)</div><div class="use">Brand wordmark &amp; hero card titles ONLY. Today it is loaded but unused — put it to work here.</div></div>
+  </div>
+</div>

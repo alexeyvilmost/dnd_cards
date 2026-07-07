@@ -1,0 +1,38 @@
+<!-- @dsCard group="Modals" -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../tokens.css" />
+<style>
+  .stage { padding: 0; position: relative; height: 420px; overflow: hidden; border-radius: var(--radius); }
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .modal { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 380px;
+           background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-xl); overflow: hidden; }
+  .modal .head { display:flex; align-items:center; justify-content:space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+  .modal .head h3 { margin: 0; font-family: var(--font-serif); color: var(--accent-gold); font-size: var(--text-h2); }
+  .x { width: 36px; height: 36px; border: none; background: transparent; color: var(--text-dim); border-radius: var(--radius); cursor: pointer; }
+  .x:hover { background: var(--surface-2); color: var(--text); }
+  .modal .body { padding: var(--space-4); color: var(--text); font-size: var(--text-sm); }
+  .modal .foot { display:flex; justify-content:flex-end; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); }
+  .btn { font-size: var(--text-sm); font-weight: 600; border-radius: var(--radius); padding: 8px 14px; border: 1px solid transparent; cursor: pointer; }
+  .btn-primary { background: var(--accent-gold); color: var(--accent-gold-ink); }
+  .btn-ghost { background: transparent; color: var(--text-dim); }
+  /* toast */
+  .toast { position: absolute; right: 16px; bottom: 16px; width: 260px; background: var(--surface); border: 1px solid var(--border);
+           border-left: 3px solid var(--success); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: var(--space-3); display:flex; gap:10px; }
+  .toast.err { border-left-color: var(--danger); }
+  .toast .t { font-size: var(--text-sm); color: var(--text); }
+  .toast .d { font-size: var(--text-xs); color: var(--text-dim); }
+  /* tooltip */
+  .tip { position: absolute; left: 16px; bottom: 16px; background: var(--surface-2); border: 1px solid var(--border);
+         border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: var(--space-2) var(--space-3); font-size: var(--text-xs); color: var(--text); max-width: 200px; }
+  .tip b { color: var(--accent-gold-dim); }
+</style>
+<div class="stage">
+  <div class="scrim"></div>
+  <div class="modal">
+    <div class="head"><h3>Удалить карту?</h3><button class="x" aria-label="Закрыть">✕</button></div>
+    <div class="body">«Кинжал вампира» будет удалён без возможности восстановления.</div>
+    <div class="foot"><button class="btn btn-ghost">Отмена</button><button class="btn" style="background:var(--danger);color:var(--danger-fg)">Удалить</button></div>
+  </div>
+  <div class="toast"><div><div class="t">Карта сохранена</div><div class="d">CARD-0417 обновлена</div></div></div>
+  <div class="tip">КЗ = 10 + ловкость + <b>щит (+2)</b>. Наведение даёт разбивку из данных сущности.</div>
+</div>
