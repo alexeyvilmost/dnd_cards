@@ -777,7 +777,11 @@ const CharacterSheetMVP = () => {
                     transform: spellMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
                   }}
                 >
-                  <SpellPreview spell={hoveredSpell} disableHover={true} />
+                  <SpellPreview
+                    spell={hoveredSpell}
+                    disableHover={true}
+                    spellcasting={spellcasting ? { saveDC: spellcasting.saveDC, attack: spellcasting.attack } : undefined}
+                  />
                 </div>
               )}
             </section>

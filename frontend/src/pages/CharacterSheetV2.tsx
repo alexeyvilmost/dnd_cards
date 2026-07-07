@@ -384,7 +384,11 @@ const CharacterSheetV2 = ({
           top: Math.min(Math.max(spellMouse.y - 40, 10), window.innerHeight - 20),
           transform: spellMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
         }}>
-          <SpellPreview spell={hoveredSpell} disableHover />
+          <SpellPreview
+            spell={hoveredSpell}
+            disableHover
+            spellcasting={spellcasting ? { saveDC: spellcasting.saveDC, attack: spellcasting.attack } : undefined}
+          />
         </div>
       )}
 
