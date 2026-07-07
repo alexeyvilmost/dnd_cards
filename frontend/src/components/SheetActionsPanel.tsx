@@ -14,6 +14,7 @@ import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
+import { describeMechanicsLine } from '../engine/describeMechanics';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { findResource, useResourceOptions } from '../utils/resources';
@@ -192,7 +193,7 @@ export default function SheetActionsPanel({
       // Предложенные реакции/триггеры со стоимостью (фаза A): спрашиваем игрока.
       for (const offer of main.pending) {
         if (!canPay(state, offer.cost).ok) continue;
-        const decision = await reactionPrompt.request(offer);
+        const decision = await reactionPrompt.request(offer, describeMechanicsLine(offer.mechanics));
         if (decision !== 'accept') continue;
         const rmech = { ...offer.mechanics, name: offer.name };
         const r = await runViaDialog(state, rmech, offer.name);

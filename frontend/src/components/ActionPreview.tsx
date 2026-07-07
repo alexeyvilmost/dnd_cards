@@ -3,6 +3,7 @@ import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
+import { describeMechanics } from '../engine/describeMechanics';
 import { resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 
@@ -81,6 +82,9 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
   const stats = parseMechanics(action.mechanics as Record<string, unknown> | null | undefined);
   const hasStats = stats.attack || stats.save || stats.damage.length > 0 || stats.heal.length > 0;
 
+  // Парадигма №2: описание МЕХАНИКИ из данных (единый describeMechanics), не свободный текст.
+  const mechDesc = describeMechanics(action.mechanics as Record<string, unknown> | null | undefined);
+
   // Ресурсы (несколько): resources[] с фолбэком на устаревший resource
   const resourceIds: string[] = Array.isArray(action.resources) && action.resources.length > 0
     ? action.resources
@@ -156,6 +160,17 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {(mechDesc.summary || mechDesc.details.length > 0) && (
+        <div className="sp-desc" style={{ marginBottom: 4 }}>
+          {mechDesc.summary && <FormattedText text={mechDesc.summary} emptyText="" />}
+          {mechDesc.details.map((d, i) => (
+            <div key={i} style={{ fontSize: '0.85em', opacity: 0.75 }}>
+              <FormattedText text={d} emptyText="" />
+            </div>
+          ))}
         </div>
       )}
 
