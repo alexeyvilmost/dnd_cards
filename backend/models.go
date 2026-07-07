@@ -387,13 +387,13 @@ type Card struct {
 	RequiresAttunement           *bool          `json:"requires_attunement" gorm:"type:boolean;default:false"` // Требуется ли настройка
 	Range                        *string        `json:"range" gorm:"column:range;type:varchar(50)"`            // Дальность (например, "30/120")
 	Tags                         *Properties    `json:"tags" gorm:"type:text"`
-	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"`   // Тип шаблона
-	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
-	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
-	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`                           // Унифицированная механика (как у effects/actions)
-	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                      // Боевой профиль предмета для сервиса battle
-	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`                // Режим контейнера: all | choice
-	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                            // Содержимое контейнера
+	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
+	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
+	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
+	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`                         // Унифицированная механика (как у effects/actions)
+	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                    // Боевой профиль предмета для сервиса battle
+	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`              // Режим контейнера: all | choice
+	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                          // Содержимое контейнера
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -439,7 +439,7 @@ type CreateCardRequest struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
-	Mechanics                    *JSONMap     `json:"mechanics"`
+	Mechanics                    *JSONMap       `json:"mechanics"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -485,7 +485,7 @@ type UpdateCardRequest struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
-	Mechanics                    *JSONMap     `json:"mechanics"`
+	Mechanics                    *JSONMap       `json:"mechanics"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -539,7 +539,7 @@ type CardResponse struct {
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
-	Mechanics                    *JSONMap     `json:"mechanics"`
+	Mechanics                    *JSONMap       `json:"mechanics"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -1417,19 +1417,19 @@ func (ar ActionResources) Value() (driver.Value, error) {
 
 // ResourceDefinition — справочник ресурсов, которые тратят действия и механики.
 type ResourceDefinition struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	ResourceID  string         `json:"resource_id" gorm:"uniqueIndex;not null;type:varchar(100)"`
-	Name        string         `json:"name" gorm:"not null;type:varchar(255)"`
-	Description string         `json:"description" gorm:"type:text"`
-	Category    string         `json:"category" gorm:"type:varchar(50);default:'character'"`
-	ImageURL    string         `json:"image_url" gorm:"type:text"`
+	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	ResourceID  string    `json:"resource_id" gorm:"uniqueIndex;not null;type:varchar(100)"`
+	Name        string    `json:"name" gorm:"not null;type:varchar(255)"`
+	Description string    `json:"description" gorm:"type:text"`
+	Category    string    `json:"category" gorm:"type:varchar(50);default:'character'"`
+	ImageURL    string    `json:"image_url" gorm:"type:text"`
 	// Вид потраченного заряда (пустая ячейка); заполняется владельцем.
-	ImageURLSpent string       `json:"image_url_spent" gorm:"type:text"`
-	Recharge    string         `json:"recharge" gorm:"type:varchar(50)"`
-	SortOrder   int            `json:"sort_order" gorm:"default:0"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	ImageURLSpent string         `json:"image_url_spent" gorm:"type:text"`
+	Recharge      string         `json:"recharge" gorm:"type:varchar(50)"`
+	SortOrder     int            `json:"sort_order" gorm:"default:0"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (ResourceDefinition) TableName() string { return "resources" }
@@ -2139,12 +2139,9 @@ type Spell struct {
 	Duration              *string        `json:"duration" gorm:"type:text"`
 	Classes               *Properties    `json:"classes" gorm:"type:jsonb"`
 	Subclasses            *Properties    `json:"subclasses" gorm:"type:jsonb"`
-	AttackRoll            bool           `json:"attack_roll" gorm:"type:boolean;default:false"`
-	SavingThrow           bool           `json:"saving_throw" gorm:"type:boolean;default:false"`
 	Concentration         bool           `json:"concentration" gorm:"type:boolean;default:false"`
 	Ritual                bool           `json:"ritual" gorm:"type:boolean;default:false"`
 	Resources             *Properties    `json:"resources" gorm:"type:jsonb"` // ID ресурсов, которые тратит заклинание (можно несколько)
-	SaveTypes             *Properties    `json:"save_types" gorm:"type:jsonb"` // Типы спасброска (str, dex, ...)
 	Damage                *SpellDamage   `json:"damage" gorm:"type:jsonb"`
 	Area                  *string        `json:"area" gorm:"type:text"` // Область, например "20 фт"
 	IsHealing             bool           `json:"is_healing" gorm:"type:boolean;default:false"`
@@ -2186,12 +2183,9 @@ type CreateSpellRequest struct {
 	Duration            *string      `json:"duration"`
 	Classes             *Properties  `json:"classes"`
 	Subclasses          *Properties  `json:"subclasses"`
-	AttackRoll          bool         `json:"attack_roll"`
-	SavingThrow         bool         `json:"saving_throw"`
 	Concentration       bool         `json:"concentration"`
 	Ritual              bool         `json:"ritual"`
 	Resources           *Properties  `json:"resources"`
-	SaveTypes           *Properties  `json:"save_types"`
 	Damage              *SpellDamage `json:"damage"`
 	Area                *string      `json:"area"`
 	IsHealing           bool         `json:"is_healing"`
@@ -2225,12 +2219,9 @@ type UpdateSpellRequest struct {
 	Duration            *string      `json:"duration"`
 	Classes             *Properties  `json:"classes"`
 	Subclasses          *Properties  `json:"subclasses"`
-	AttackRoll          *bool        `json:"attack_roll"`
-	SavingThrow         *bool        `json:"saving_throw"`
 	Concentration       *bool        `json:"concentration"`
 	Ritual              *bool        `json:"ritual"`
 	Resources           *Properties  `json:"resources"`
-	SaveTypes           *Properties  `json:"save_types"`
 	Damage              *SpellDamage `json:"damage"`
 	Area                *string      `json:"area"`
 	IsHealing           *bool        `json:"is_healing"`
@@ -2265,12 +2256,9 @@ type SpellResponse struct {
 	Duration            *string      `json:"duration"`
 	Classes             *Properties  `json:"classes"`
 	Subclasses          *Properties  `json:"subclasses"`
-	AttackRoll          bool         `json:"attack_roll"`
-	SavingThrow         bool         `json:"saving_throw"`
 	Concentration       bool         `json:"concentration"`
 	Ritual              bool         `json:"ritual"`
 	Resources           *Properties  `json:"resources"`
-	SaveTypes           *Properties  `json:"save_types"`
 	Damage              *SpellDamage `json:"damage"`
 	Area                *string      `json:"area"`
 	IsHealing           bool         `json:"is_healing"`
@@ -2308,12 +2296,9 @@ func (spell Spell) ToSpellResponse() SpellResponse {
 		Duration:            spell.Duration,
 		Classes:             spell.Classes,
 		Subclasses:          spell.Subclasses,
-		AttackRoll:          spell.AttackRoll,
-		SavingThrow:         spell.SavingThrow,
 		Concentration:       spell.Concentration,
 		Ritual:              spell.Ritual,
 		Resources:           spell.Resources,
-		SaveTypes:           spell.SaveTypes,
 		Damage:              spell.Damage,
 		Area:                spell.Area,
 		IsHealing:           spell.IsHealing,

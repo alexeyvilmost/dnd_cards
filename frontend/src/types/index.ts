@@ -1005,12 +1005,9 @@ export interface Spell {
   duration?: string | null;
   classes?: string[] | null;
   subclasses?: string[] | null;
-  attack_roll: boolean;
-  saving_throw: boolean;
   concentration: boolean;
   ritual: boolean;
   resources?: string[] | null;
-  save_types?: string[] | null;
   damage?: SpellDamageEntry[] | null;
   area?: string | null;
   is_healing: boolean;
@@ -1045,12 +1042,9 @@ export interface CreateSpellRequest {
   duration?: string | null;
   classes?: string[] | null;
   subclasses?: string[] | null;
-  attack_roll?: boolean;
-  saving_throw?: boolean;
   concentration?: boolean;
   ritual?: boolean;
   resources?: string[] | null;
-  save_types?: string[] | null;
   damage?: SpellDamageEntry[] | null;
   area?: string | null;
   is_healing?: boolean;
@@ -1082,12 +1076,9 @@ export interface UpdateSpellRequest {
   duration?: string | null;
   classes?: string[] | null;
   subclasses?: string[] | null;
-  attack_roll?: boolean;
-  saving_throw?: boolean;
   concentration?: boolean;
   ritual?: boolean;
   resources?: string[] | null;
-  save_types?: string[] | null;
   damage?: SpellDamageEntry[] | null;
   area?: string | null;
   is_healing?: boolean;

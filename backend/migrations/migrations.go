@@ -399,8 +399,25 @@ func GetAllMigrations() []Migration {
 			Up:          conditionsAsEffects,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "066_drop_spell_legacy_fields",
+			Description: "Drop legacy spell columns attack_roll/saving_throw/save_types (превью выводится из mechanics)",
+			Up:          dropSpellLegacyFields,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// dropSpellLegacyFields — снять с заклинаний легаси-поля детекции атаки/спасброска.
+// Источник истины теперь — mechanics (parseMechanicsStats на фронте).
+func dropSpellLegacyFields(db *sql.DB) error {
+	for _, c := range []string{"attack_roll", "saving_throw", "save_types"} {
+		if _, err := db.Exec("ALTER TABLE spells DROP COLUMN IF EXISTS " + c); err != nil {
+			return fmt.Errorf("dropSpellLegacyFields: %w", err)
+		}
+	}
+	return nil
 }
 
 // createVariablesTable заводит справочник переменных. Переменная сама по себе —

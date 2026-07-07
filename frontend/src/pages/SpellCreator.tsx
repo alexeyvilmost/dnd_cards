@@ -12,7 +12,6 @@ import type {
 import {
   SPELL_SCHOOL_OPTIONS,
   SPELL_CLASS_OPTIONS,
-  SPELL_SAVE_TYPE_OPTIONS,
   SPELL_CASTING_TIME_OPTIONS,
 } from '../types';
 import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../utils/damageTypes';
@@ -42,8 +41,6 @@ type ScalarForm = {
   component_verbal: boolean;
   component_somatic: boolean;
   component_material: boolean;
-  attack_roll: boolean;
-  saving_throw: boolean;
   concentration: boolean;
   ritual: boolean;
   is_healing: boolean;
@@ -71,8 +68,6 @@ const SpellCreator = () => {
         component_verbal: true,
         component_somatic: true,
         component_material: false,
-        attack_roll: false,
-        saving_throw: false,
         concentration: false,
         ritual: false,
         is_healing: false,
@@ -81,7 +76,6 @@ const SpellCreator = () => {
 
   const [classes, setClasses] = useState<string[]>([]);
   const [subclassesText, setSubclassesText] = useState('');
-  const [saveTypes, setSaveTypes] = useState<string[]>([]);
   const [damage, setDamage] = useState<SpellDamageEntry[]>([]);
   const [spellResources, setSpellResources] = useState<string[]>([]);
   const [mechanics, setMechanics] = useState<Record<string, unknown> | null>(null);
@@ -118,8 +112,6 @@ const SpellCreator = () => {
             component_verbal: spell.component_verbal,
             component_somatic: spell.component_somatic,
             component_material: spell.component_material,
-            attack_roll: spell.attack_roll,
-            saving_throw: spell.saving_throw,
             concentration: spell.concentration,
             ritual: spell.ritual,
             is_healing: spell.is_healing,
@@ -127,7 +119,6 @@ const SpellCreator = () => {
           });
           setClasses(spell.classes || []);
           setSubclassesText((spell.subclasses || []).join(', '));
-          setSaveTypes(spell.save_types || []);
           setDamage(spell.damage || []);
           setSpellResources(spell.resources || []);
           setMechanics((spell.mechanics as Record<string, unknown>) || null);
@@ -168,12 +159,9 @@ const SpellCreator = () => {
     duration: fd.duration || null,
     classes,
     subclasses,
-    attack_roll: !!fd.attack_roll,
-    saving_throw: !!fd.saving_throw,
     concentration: !!fd.concentration,
     ritual: !!fd.ritual,
     resources: spellResources,
-    save_types: saveTypes,
     damage,
     area: fd.area || null,
     is_healing: !!fd.is_healing,
@@ -236,12 +224,9 @@ const SpellCreator = () => {
       duration: data.duration || null,
       classes,
       subclasses,
-      attack_roll: !!data.attack_roll,
-      saving_throw: !!data.saving_throw,
       concentration: !!data.concentration,
       ritual: !!data.ritual,
       resources: spellResources,
-      save_types: saveTypes,
       damage,
       area: data.area || null,
       is_healing: !!data.is_healing,
@@ -486,14 +471,6 @@ const SpellCreator = () => {
 
                     <div className="grid grid-cols-2 gap-2">
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" {...register('attack_roll')} className="w-4 h-4 text-indigo-600 rounded" />
-                        <span className="text-sm text-gray-700">Бросок атаки</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" {...register('saving_throw')} className="w-4 h-4 text-indigo-600 rounded" />
-                        <span className="text-sm text-gray-700">Спасбросок</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
                         <input type="checkbox" {...register('concentration')} className="w-4 h-4 text-indigo-600 rounded" />
                         <span className="text-sm text-gray-700">Концентрация</span>
                       </label>
@@ -503,34 +480,10 @@ const SpellCreator = () => {
                       </label>
                     </div>
 
-                    {fd.saving_throw && (
-                      <div>
-                        <label className={labelCls}>Тип спасброска</label>
-                        <div className="flex flex-wrap gap-2">
-                          {SPELL_SAVE_TYPE_OPTIONS.map((o) => (
-                            <button
-                              type="button"
-                              key={o.value}
-                              onClick={() => toggleInList(o.value, saveTypes, setSaveTypes)}
-                              className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                                saveTypes.includes(o.value)
-                                  ? 'bg-indigo-600 text-white border-indigo-600'
-                                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              {o.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {fd.saving_throw && (
-                      <div>
-                        <label className={labelCls}>Результат при спасброске</label>
-                        <input {...register('save_outcome')} className={inputCls} placeholder="При успехе — половина урона" />
-                      </div>
-                    )}
+                    <div>
+                      <label className={labelCls}>Результат при спасброске</label>
+                      <input {...register('save_outcome')} className={inputCls} placeholder="При успехе — половина урона" />
+                    </div>
 
                     {/* Урон */}
                     <div>

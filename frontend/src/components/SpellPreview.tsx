@@ -2,7 +2,6 @@ import React from 'react';
 import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
-  SPELL_SAVE_TYPE_OPTIONS,
   SPELL_CLASS_OPTIONS,
   getSpellLevelLabel,
 } from '../types';
@@ -31,9 +30,6 @@ const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 const schoolLabel = (school?: string | null) =>
   SPELL_SCHOOL_OPTIONS.find((s) => s.value === school)?.label || school || '';
 
-const saveLabel = (v: string) =>
-  SPELL_SAVE_TYPE_OPTIONS.find((s) => s.value === v)?.label || v;
-
 // "2d8" → "2к8" (для русского BG3-тултипа, как в design_preview)
 const diceRu = (dice: string) => dice.replace(/(\d)[dд](\d)/gi, '$1к$2');
 
@@ -56,13 +52,11 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   if (spell.component_somatic) components.push('С');
   if (spell.component_material) components.push('М');
 
-  // Статистика превью — из МЕХАНИКИ (executable-истина), фолбэк на легаси-флаги заклинания.
+  // Статистика превью — из МЕХАНИКИ (единственный источник истины; легаси-флаги удалены).
   const mstats = parseMechanicsStats((spell as { mechanics?: Record<string, unknown> | null }).mechanics);
-  const showAttack = mstats.attack || !!spell.attack_roll;
-  const showSave = mstats.save || !!spell.saving_throw;
-  const saveAbilityText = mstats.saveAbility
-    ? abilityFullRu(mstats.saveAbility)
-    : (spell.save_types || []).map(saveLabel).join(', ');
+  const showAttack = mstats.attack;
+  const showSave = mstats.save;
+  const saveAbilityText = abilityFullRu(mstats.saveAbility);
   const dmgEntries = mstats.damage.length
     ? mstats.damage
     : (spell.damage || []).map((d) => ({ value: d.dice, type: d.damage_type }));

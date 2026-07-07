@@ -5,11 +5,11 @@ import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
   SPELL_CLASS_OPTIONS,
-  SPELL_SAVE_TYPE_OPTIONS,
   getSpellLevelLabel,
 } from '../types';
 import { spellsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
+import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import SpellPreview from './SpellPreview';
 import ImageUploader from './ImageUploader';
 
@@ -80,6 +80,9 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   }, [spell?.id, spell?.image_url]);
 
   if (!isOpen || !spell) return null;
+
+  // Атака/спасбросок — из механики (легаси-флаги удалены).
+  const mstats = parseMechanicsStats((spell as { mechanics?: Record<string, unknown> | null }).mechanics);
 
   const currentSpell = spell;
 
@@ -224,19 +227,17 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {spell.attack_roll && <Tag>Бросок атаки</Tag>}
-                {spell.saving_throw && <Tag>Спасбросок</Tag>}
+                {mstats.attack && <Tag>Бросок атаки</Tag>}
+                {mstats.save && <Tag>Спасбросок</Tag>}
                 {spell.concentration && <Tag>Концентрация</Tag>}
                 {spell.ritual && <Tag>Ритуал</Tag>}
                 {spell.is_healing && <Tag>Лечение</Tag>}
               </div>
 
-              {spell.saving_throw && spell.save_types && spell.save_types.length > 0 && (
+              {mstats.save && mstats.saveAbility && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-1">Тип спасброска</h3>
-                  <p className="text-gray-900">
-                    {spell.save_types.map((s) => labelFrom(SPELL_SAVE_TYPE_OPTIONS, s)).join(', ')}
-                  </p>
+                  <p className="text-gray-900">{abilityFullRu(mstats.saveAbility)}</p>
                 </div>
               )}
 

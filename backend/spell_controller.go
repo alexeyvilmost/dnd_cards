@@ -188,12 +188,9 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 		Duration:            req.Duration,
 		Classes:             req.Classes,
 		Subclasses:          req.Subclasses,
-		AttackRoll:          req.AttackRoll,
-		SavingThrow:         req.SavingThrow,
 		Concentration:       req.Concentration,
 		Ritual:              req.Ritual,
 		Resources:           req.Resources,
-		SaveTypes:           req.SaveTypes,
 		Damage:              req.Damage,
 		Area:                req.Area,
 		IsHealing:           req.IsHealing,
@@ -314,12 +311,6 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	if req.Subclasses != nil {
 		spell.Subclasses = req.Subclasses
 	}
-	if req.AttackRoll != nil {
-		spell.AttackRoll = *req.AttackRoll
-	}
-	if req.SavingThrow != nil {
-		spell.SavingThrow = *req.SavingThrow
-	}
 	if req.Concentration != nil {
 		spell.Concentration = *req.Concentration
 	}
@@ -328,9 +319,6 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	}
 	if req.Resources != nil {
 		spell.Resources = req.Resources
-	}
-	if req.SaveTypes != nil {
-		spell.SaveTypes = req.SaveTypes
 	}
 	if req.Damage != nil {
 		spell.Damage = req.Damage
