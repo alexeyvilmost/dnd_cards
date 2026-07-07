@@ -7,6 +7,7 @@ import type {
   EngineEvent,
   ExecuteContext,
   ExecuteResult,
+  ReactionOffer,
   RollModifier,
   RuntimeState,
 } from '../mvp/contracts';
@@ -18,6 +19,8 @@ import {
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import { collectModifiers } from './modifiers';
 import { activeConditionsOf, type EvalContext } from './circumstances';
+import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
+import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
 import { rollD20 } from './roll';
 import { weaponContext } from './weapon';
 
@@ -43,6 +46,7 @@ function cloneState(state: RuntimeState): RuntimeState {
     equipment: { ...state.equipment },
     inventory: state.inventory.map((r) => ({ ...r })),
     activeEffects: state.activeEffects.map((e) => ({ ...e })),
+    firedThisTurn: state.firedThisTurn ? [...state.firedThisTurn] : undefined,
   };
 }
 
@@ -412,6 +416,7 @@ function runAttackRoll(
   ctx: ExecuteContext,
   events: EngineEvent[],
   source: string,
+  pending: ReactionOffer[],
 ): RuntimeState {
   const hand = resolveHand(effect);
   const ac = ctx.target?.ac ?? 10;
@@ -431,15 +436,20 @@ function runAttackRoll(
   });
   events.push(rollEvent('Атака', roll));
 
+  let next = state;
   if (roll.outcome === 'hit' || roll.outcome === 'crit') {
     const payloads = (roll.outcome === 'crit' && effect.on_crit
       ? effect.on_crit
       : effect.on_hit) as Dict[] | undefined;
     if (Array.isArray(payloads)) {
-      return applyPayloads(payloads, state, ctx, events, source, hand);
+      next = applyPayloads(payloads, next, ctx, events, source, hand);
     }
+    // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
+    // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
+    next = emitEvent({ kind: 'hit' }, next, ctx, events, pending);
+    if (roll.outcome === 'crit') next = emitEvent({ kind: 'crit' }, next, ctx, events, pending);
   }
-  return state;
+  return next;
 }
 
 function runSave(
@@ -527,6 +537,86 @@ function runAbilityCheck(
   return state;
 }
 
+/**
+ * Исполнить список interactions механики (auto/attack_roll/save/ability_check) с мягкой
+ * деградацией формул. Общий для основного действия и для авто-срабатывающих слушателей
+ * событий (фаза A).
+ */
+function runMechanicEffects(
+  effects: Dict[],
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  sourceName: string,
+  pending: ReactionOffer[],
+): RuntimeState {
+  let next = state;
+  for (const eff of effects) {
+    const resolution = String(eff.resolution ?? '');
+    // Мягкая деградация: если формула эффекта ссылается на недоступную переменную,
+    // эффект пропускается с логом, а не роняет всё действие (см. docs/variables.md).
+    try {
+      if (resolution === 'auto') {
+        const results = (eff.result ?? eff.results) as Dict[] | undefined;
+        if (Array.isArray(results)) next = applyPayloads(results, next, ctx, events, sourceName, 'main');
+        continue;
+      }
+      if (resolution === 'attack_roll') { next = runAttackRoll(eff, next, ctx, events, sourceName, pending); continue; }
+      if (resolution === 'save') { next = runSave(eff, next, ctx, events, sourceName); continue; }
+      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events); continue; }
+      events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
+    } catch (e) {
+      if (e instanceof MissingVariableError) {
+        events.push(narrativeEvent(`Переменная «${e.variable}» недоступна — эффект «${sourceName}» не применён.`));
+        continue;
+      }
+      if (e instanceof FormulaError) {
+        events.push(narrativeEvent(`Формула эффекта «${sourceName}» не вычислена: ${e.message}`));
+        continue;
+      }
+      throw e;
+    }
+  }
+  return next;
+}
+
+/**
+ * Диспетчер события (фаза A): находит слушателей, авто-триггеры исполняет сразу
+ * (с гейтом uses.per:"turn"), а реакции/триггеры со стоимостью складывает в pending
+ * для решения игрока. Возвращает изменённое состояние.
+ */
+function emitEvent(
+  ev: DomainEvent,
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  pending: ReactionOffer[],
+): RuntimeState {
+  const listeners = collectListeners(ev, state, passivesFromCtx(ctx), evalCtxOf(state, ctx));
+  if (!listeners.length) return state;
+
+  let next = state;
+  const fired = new Set(next.firedThisTurn ?? []);
+  let firedChanged = false;
+
+  for (const lm of listeners) {
+    if (isAuto(lm)) {
+      if (lm.usesPer === 'turn' && fired.has(lm.id)) continue;
+      const effs = (lm.mechanics.effects as Dict[]) ?? [];
+      if (effs.length) {
+        events.push(narrativeEvent(`Сработало: ${lm.name}`));
+        next = runMechanicEffects(effs, next, ctx, events, lm.name, pending);
+      }
+      if (lm.usesPer === 'turn') { fired.add(lm.id); firedChanged = true; }
+    } else {
+      pending.push(toOffer(lm, ev));
+    }
+  }
+
+  if (firedChanged) next = { ...next, firedThisTurn: [...fired] };
+  return next;
+}
+
 export function executeAction(
   state: RuntimeState,
   mechanics: Dict,
@@ -534,6 +624,7 @@ export function executeAction(
 ): ExecuteResult {
   let next = cloneState(state);
   const events: EngineEvent[] = [];
+  const pending: ReactionOffer[] = [];
 
   const activation = mechanics.activation as Dict | undefined;
   const cost = (activation?.cost as Dict[]) ?? [];
@@ -549,47 +640,61 @@ export function executeAction(
   if (!Array.isArray(effects)) return { state: next, events };
 
   const sourceName = String(mechanics.name ?? 'действие');
+  next = runMechanicEffects(effects, next, ctx, events, sourceName, pending);
 
-  for (const eff of effects) {
-    const resolution = String(eff.resolution ?? '');
-    // Мягкая деградация: если формула эффекта ссылается на недоступную переменную,
-    // эффект пропускается с логом, а не роняет всё действие (см. docs/variables.md).
-    try {
-      if (resolution === 'auto') {
-        const results = (eff.result ?? eff.results) as Dict[] | undefined;
-        if (Array.isArray(results)) {
-          next = applyPayloads(results, next, ctx, events, sourceName, 'main');
-        }
-        continue;
-      }
-      if (resolution === 'attack_roll') {
-        next = runAttackRoll(eff, next, ctx, events, sourceName);
-        continue;
-      }
-      if (resolution === 'save') {
-        next = runSave(eff, next, ctx, events, sourceName);
-        continue;
-      }
-      if (resolution === 'ability_check') {
-        next = runAbilityCheck(eff, next, ctx, events);
-        continue;
-      }
-      events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
-    } catch (e) {
-      // Проблема формулы (нет переменной / битая формула) — эффект пропускается с
-      // логом, действие не падает. Реальные (не формульные) ошибки идут наверх.
-      if (e instanceof MissingVariableError) {
-        events.push(narrativeEvent(`Переменная «${e.variable}» недоступна — эффект «${sourceName}» не применён.`));
-        continue;
-      }
-      if (e instanceof FormulaError) {
-        events.push(narrativeEvent(`Формула эффекта «${sourceName}» не вычислена: ${e.message}`));
-        continue;
-      }
-      throw e;
+  void (ctx.character as CharacterContext);
+  return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
+}
+
+/**
+ * Применить ВХОДЯЩИЙ урон к владельцу листа (фаза A/E): списывает временные, затем
+ * текущие хиты; при активной концентрации — авто-проверка ТЕЛ (СЛ по 2024, помеха при
+ * крите); эмитит damage_taken → реакции (Адское возмездие и т.п.) как pendingReactions.
+ */
+export function applyIncomingDamage(
+  state: RuntimeState,
+  amount: number,
+  ctx: ExecuteContext,
+  opts?: { crit?: boolean; damageType?: string },
+): ExecuteResult {
+  let next = cloneState(state);
+  const events: EngineEvent[] = [];
+  const pending: ReactionOffer[] = [];
+
+  const dmg = Math.max(0, Math.floor(amount));
+  const absorbed = Math.min(next.hp.temp, dmg);
+  next.hp.temp -= absorbed;
+  next.hp.current = Math.max(0, next.hp.current - (dmg - absorbed));
+  events.push(damageEvent(dmg, opts?.damageType ?? 'урон'));
+
+  // Авто-проверка концентрации при уроне.
+  const conc = concentrationEntry(next);
+  if (conc && dmg > 0) {
+    const dc = concentrationDC(dmg);
+    const collected = collectModifiers(next, passivesFromCtx(ctx), {
+      roll: 'saving_throw', filter: { ability: 'con' },
+      formulaCtx: formulaCtx(ctx), evalCtx: evalCtxOf(next, ctx),
+    });
+    const conMod = ctx.character.abilityMods.con ?? 0;
+    const advantage = opts?.crit
+      ? (collected.advantage === 'advantage' ? 'none' : 'disadvantage')
+      : collected.advantage;
+    const roll = rollD20({
+      advantage,
+      modifiers: [{ value: conMod, source: 'ТЕЛ' }, ...collected.modifiers],
+      target: { type: 'dc', value: dc },
+      rng: ctx.rng,
+    });
+    events.push(rollEvent(`Концентрация (СЛ ${dc})`, { ...roll, kind: 'save' }));
+    if (roll.outcome !== 'success') {
+      const dropped = dropConcentration(next, `провал спасброска СЛ ${dc}`);
+      next = dropped.state;
+      events.push(...dropped.events);
     }
   }
 
-  void (ctx.character as CharacterContext);
-  return { state: next, events };
+  // Событие получения урона → реакции (Адское возмездие, Невероятное уклонение…).
+  next = emitEvent({ kind: 'damage_taken', data: { amount: dmg } }, next, ctx, events, pending);
+
+  return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
 }

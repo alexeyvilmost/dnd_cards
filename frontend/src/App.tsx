@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DiceDialogProvider } from './contexts/DiceDialogContext';
+import { ReactionPromptProvider } from './contexts/ReactionPromptContext';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -49,6 +50,7 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <DiceDialogProvider>
+        <ReactionPromptProvider>
         <Routes>
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
@@ -343,6 +345,7 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
+        </ReactionPromptProvider>
         </DiceDialogProvider>
       </ToastProvider>
     </AuthProvider>

@@ -49,7 +49,7 @@ export function dropConcentration(
   };
 }
 
-/** СЛ проверки концентрации от урона. */
+/** СЛ проверки концентрации от урона (PHB 2024): max(10, урон/2), потолок 30. */
 export function concentrationDC(damage: number): number {
-  return Math.max(10, Math.floor(damage / 2));
+  return Math.min(30, Math.max(10, Math.floor(damage / 2)));
 }

@@ -103,6 +103,8 @@ export interface RuntimeState {
   equipment: Record<string, string | null>;
   inventory: Array<{ cardId: string; qty: number }>;
   activeEffects: ActiveEffectEntry[];
+  /** Id triggered-эффектов, сработавших за этот ход (для uses.per:"turn"); сброс в startTurn. */
+  firedThisTurn?: string[];
 }
 
 export interface CharacterContext {
@@ -144,9 +146,23 @@ export interface ExecuteContext {
   spell?: { baseLevel: number; castLevel?: number };
 }
 
+/**
+ * Предложение реакции/триггера с ценой (фаза A): собирается диспетчером событий и
+ * отдаётся UI, который спрашивает игрока (Automatic/Ask/Disabled) и исполняет выбранное.
+ */
+export interface ReactionOffer {
+  listenerId: string;
+  name: string;
+  mechanics: Dict;
+  cost: Dict[];
+  event: { kind: string; timing?: string };
+}
+
 export interface ExecuteResult {
   state: RuntimeState;
   events: EngineEvent[];
+  /** Реакции/триггеры со стоимостью, требующие решения игрока (фаза A). */
+  pendingReactions?: ReactionOffer[];
 }
 
 export interface WeaponContext {

@@ -61,6 +61,8 @@ export function startTurn(state: RuntimeState): ExecuteResult {
   let next = cloneState(state);
   const events: EngineEvent[] = [{ type: 'turn_started' }];
 
+  // Сброс гейта «раз за ход» для triggered-эффектов (Скрытая атака и т.п.).
+  next = { ...next, firedThisTurn: [] };
   next = restoreTurnResources(next);
   const expired = expireStartOfTurnEffects(next);
   next = expired.state;

@@ -19,7 +19,8 @@ import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
 import type { Card } from '../types';
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '../mvp/contracts';
+import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
 
 interface Props {
@@ -77,6 +78,7 @@ export default function SheetActionsPanel({
   const [error, setError] = useState<string | null>(null);
   const [targetAc, setTargetAc] = useState(10);
   const diceDialog = useDiceDialog();
+  const reactionPrompt = useReactionPrompt();
 
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
@@ -158,25 +160,47 @@ export default function SheetActionsPanel({
         }
       : undefined;
 
-    const execute = (rng: () => number) =>
-      executeAction(runtime, mech, { character: ctx, target, rng });
+    // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
+    const execCtx = (rng: () => number) =>
+      ({ character: ctx, target, rng, passives }) as ExecuteContext & { passives: typeof passives };
+
+    // Прогон механики через диалог кубов: план кубов → вопрос игроку → реальный бросок.
+    const runViaDialog = async (
+      baseState: RuntimeState,
+      m: Record<string, unknown>,
+      title: string,
+    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[] } | null> => {
+      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG)).events);
+      const decision = await diceDialog.request(plan, title);
+      if (decision.mode === 'cancel') return null;
+      const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+      const r = executeAction(baseState, m, execCtx(rng));
+      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [] };
+    };
 
     try {
-      // План кубов: чистый прогон с фиксированным rng (0.94 → попадание,
-      // чтобы в план вошли и кости урона). Реальный прогон — после решения игрока.
-      const plan = extractDiceFromEvents(execute(PLANNING_RNG).events);
-      const decision = await diceDialog.request(plan, action.name);
-      if (decision.mode === 'cancel') return;
-      const rng = decision.mode === 'manual'
-        ? plannedValuesRng(plan, decision.values)
-        : () => Math.random();
-      let { state, events } = execute(rng);
+      const main = await runViaDialog(runtime, mech, action.name);
+      if (!main) return;
+      let { state, events } = main;
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
       if (action.spellRef?.concentration) {
         const conc = startConcentration(state, action.name);
         state = conc.state;
         events = [...events, ...conc.events];
       }
+
+      // Предложенные реакции/триггеры со стоимостью (фаза A): спрашиваем игрока.
+      for (const offer of main.pending) {
+        if (!canPay(state, offer.cost).ok) continue;
+        const decision = await reactionPrompt.request(offer);
+        if (decision !== 'accept') continue;
+        const rmech = { ...offer.mechanics, name: offer.name };
+        const r = await runViaDialog(state, rmech, offer.name);
+        if (!r) continue;
+        state = r.state;
+        events = [...events, ...r.events];
+      }
+
       apply(state, events);
     } catch (e) {
       if (e instanceof InsufficientResourcesError) {
