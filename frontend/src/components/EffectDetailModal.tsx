@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
+import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
 
 interface EffectDetailModalProps {
@@ -80,14 +81,14 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
               {/* Описание */}
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Описание</h3>
-                <p className="text-gray-900 whitespace-pre-wrap">{effect.description}</p>
+                <p className="text-gray-900 whitespace-pre-wrap"><FormattedText text={effect.description || ''} emptyText="—" /></p>
               </div>
 
               {/* Детальное описание */}
               {effect.detailed_description && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-1">Детальное описание</h3>
-                  <p className="text-gray-900 whitespace-pre-wrap">{effect.detailed_description}</p>
+                  <p className="text-gray-900 whitespace-pre-wrap"><FormattedText text={effect.detailed_description} emptyText="" /></p>
                 </div>
               )}
 

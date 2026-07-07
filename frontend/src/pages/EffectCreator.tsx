@@ -6,6 +6,7 @@ import { effectsApi } from '../api/client';
 import type { CreatePassiveEffectRequest, UpdatePassiveEffectRequest, PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import EffectPreview from '../components/EffectPreview';
+import { FormattedTextarea } from '../components/FormattedTextarea';
 import ImageUploader from '../components/ImageUploader';
 import { EffectCreatorNavigation } from '../components/EffectCreatorNavigation';
 import { PropertiesSection } from '../components/effectCreator/PropertiesSection';
@@ -304,12 +305,13 @@ const EffectCreator = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Описание *
                 </label>
-                <textarea
-                  {...register('description', { required: 'Описание обязательно' })}
+                <FormattedTextarea
+                  value={watch('description') || ''}
+                  onChange={(v) => setValue('description', v, { shouldValidate: true })}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Описание эффекта"
+                  placeholder="Описание эффекта (разметка, иконки, цвета, ссылки на сущности)"
                 />
+                <input type="hidden" {...register('description', { required: 'Описание обязательно' })} />
                 {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
               </div>
 

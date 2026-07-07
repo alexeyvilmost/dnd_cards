@@ -1,4 +1,5 @@
 import type { PassiveEffect } from '../../types';
+import { FormattedText } from '../../utils/formattedText';
 
 type EffectHoverCardProps = {
   effect: PassiveEffect;
@@ -26,7 +27,7 @@ const EffectHoverCard = ({ effect, sourceLabel }: EffectHoverCardProps) => {
       <div className="forge-effect-card-body">
         <div className="forge-effect-card-title">{effect.name}</div>
         <div className="forge-effect-card-type">{sourceLabel || 'Способность'}</div>
-        {desc && <p className="forge-effect-card-desc">{desc}</p>}
+        {desc && <p className="forge-effect-card-desc"><FormattedText text={desc} /></p>}
       </div>
     </div>
   );

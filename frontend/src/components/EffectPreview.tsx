@@ -1,5 +1,10 @@
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
+import { FormattedText } from '../utils/formattedText';
+
+// Шрифты как у карточек заклинаний/действий (spellCardStyle): тело — Segoe UI, заголовок — Georgia.
+const BODY_FONT = '"Segoe UI", system-ui, -apple-system, sans-serif';
+const TITLE_FONT = '"Georgia", serif';
 
 interface EffectPreviewProps {
   effect: PassiveEffect;
@@ -14,9 +19,10 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick }
   };
 
   return (
-    <div 
+    <div
       className={`relative bg-slate-800 rounded-lg shadow-md overflow-visible border-black border-2 ${className} transition-all duration-300 ease-out group ${!disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} flex flex-col w-[350px] ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
+      style={{ fontFamily: BODY_FONT }}
     >
       {/* Изображение в правом верхнем углу, вылезает за пределы */}
       {effect.image_url && effect.image_url.trim() !== '' && (
@@ -40,7 +46,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick }
       <div className="flex flex-col p-5 text-white relative z-0">
         {/* Название */}
         <div className="mb-2">
-          <h3 className="text-xl font-bold text-white font-fantasy">
+          <h3 className="text-xl font-bold text-white" style={{ fontFamily: TITLE_FONT }}>
             {effect.name || 'Название эффекта'}
           </h3>
         </div>
@@ -51,7 +57,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick }
             {getEffectTypeLabel(effect.effect_type)}
           </span>
           {effect.type && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-900/60 border border-amber-600/50 text-amber-200 font-fantasy">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-900/60 border border-amber-600/50 text-amber-200">
               {effect.type}
             </span>
           )}
@@ -59,28 +65,28 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick }
 
         {/* Описание */}
         <div className="mb-4 flex-1">
-          <p 
-            className="text-white font-fantasy whitespace-pre-wrap leading-relaxed"
+          <p
+            className="text-white whitespace-pre-wrap leading-relaxed"
             style={{
               fontSize: effect.description_font_size ? `${effect.description_font_size}px` : '14px',
               textAlign: (effect.text_alignment || 'left') as 'left' | 'center' | 'right'
             }}
           >
-            {effect.description || 'Нет описания'}
+            <FormattedText text={effect.description || ''} emptyText="Нет описания" />
           </p>
         </div>
 
         {/* Дополнительное описание, если включено */}
         {effect.show_detailed_description && effect.detailed_description && (
           <div className="mb-4">
-            <p 
-              className="text-white font-fantasy whitespace-pre-wrap leading-relaxed"
+            <p
+              className="text-white whitespace-pre-wrap leading-relaxed"
               style={{
                 fontSize: effect.detailed_description_font_size ? `${effect.detailed_description_font_size}px` : '12px',
                 textAlign: (effect.detailed_description_alignment || 'left') as 'left' | 'center' | 'right'
               }}
             >
-              {effect.detailed_description}
+              <FormattedText text={effect.detailed_description} emptyText="" />
             </p>
           </div>
         )}
