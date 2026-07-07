@@ -1,12 +1,17 @@
 /**
  * Разбивка значений листа (фаза F2).
+ *
+ * Фаза C: числовые модификаторы эффектов собираются единым formula-aware путём
+ * (collectModifiers), а не отдельной копией логики. Спасброски и навыки теперь тоже
+ * получают модификаторы эффектов (Аура защиты, Благословение и т.п. — раньше не
+ * отображались на листе).
  */
 import type { CharacterContext, RollModifier, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { computeAC } from './ac';
 import { hitDieMax } from '../character/derive';
 import { abilityOfSkill } from '../character/rules/foundation';
-import { payloadsOf } from './mechanicsView';
-import { evaluate, type FormulaContext } from './formula';
+import { collectModifiers } from './modifiers';
+import type { FormulaContext } from './formula';
 
 type Dict = Record<string, unknown>;
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
@@ -34,46 +39,29 @@ function formulaCtxOf(character: CharacterContext): FormulaContext {
     profBonus: character.profBonus,
     selfLevel: character.level,
     classLevels: character.classLevels,
+    spellcastingMod: character.spellcastingMod,
+    characterSpeed: character.characterSpeed,
+    variables: character.variables,
   };
 }
 
 /**
- * Числовые self-модификаторы эффектов для заданной роли (ac/max_hp/speed/…).
- * Значение может быть формулой («2*self_level» у Крепкого) — вычисляется.
- * Единый сборщик: раньше существовал только для КЗ (acModifiersFromEffects).
+ * Числовые модификаторы эффектов для роли (ac/max_hp/speed/saving_throw/…) — единым
+ * сборщиком collectModifiers (formula-aware). Advantage игнорируется: разбивка листа
+ * показывает только числовые слагаемые.
  */
-function modifiersFromEffects(
+function effectModifiers(
   roll: string,
+  filter: Dict | undefined,
   character: CharacterContext,
   state: RuntimeState,
   passives: Dict[],
 ): RollModifier[] {
-  const parts: RollModifier[] = [];
-  const ctx = formulaCtxOf(character);
-  const sources = [
-    ...state.activeEffects.map((e) => ({ name: e.name, mech: e.mechanics })),
-    ...passives.map((m, i) => ({ name: String(m.name ?? `пассивка ${i}`), mech: m })),
-  ];
-  for (const { name, mech } of sources) {
-    for (const payload of payloadsOf(mech as Dict)) {
-      if (payload.kind !== 'modifier') continue;
-      const applies = payload.applies_to as Dict | undefined;
-      if (applies?.roll !== roll) continue;
-      if ((payload.op != null && payload.op !== 'add') || payload.value == null) continue;
-      const raw = String(payload.value).replace(/^\+/, '');
-      let value: number;
-      try {
-        const r = evaluate(raw, ctx);
-        value = typeof r === 'number' ? r : Number(raw);
-      } catch {
-        value = Number(raw);
-      }
-      if (!Number.isNaN(value) && value !== 0) {
-        parts.push({ value, source: name, reason: 'эффект' });
-      }
-    }
-  }
-  return parts;
+  return collectModifiers(state, passives, {
+    roll,
+    ...(filter ? { filter } : {}),
+    formulaCtx: formulaCtxOf(character),
+  }).modifiers;
 }
 
 function breakdownAC(
@@ -82,7 +70,7 @@ function breakdownAC(
   passives: Dict[],
 ): ValueBreakdown {
   const base = computeAC(character, state, passives);
-  const fxParts = modifiersFromEffects('ac', character, state, passives);
+  const fxParts = effectModifiers('ac', undefined, character, state, passives);
   const fxSum = fxParts.reduce((s, p) => s + p.value, 0);
   return {
     value: base.value + fxSum,
@@ -106,12 +94,17 @@ function breakdownMaxHp(character: CharacterContext, state: RuntimeState, passiv
       { value: conMod, source: 'ТЕЛ', reason: '1-й уровень' },
       { value: (lvl - 1) * (Math.floor(dieMax / 2) + 1 + conMod), source: 'уровни', reason: `${lvl - 1}×(${Math.floor(dieMax / 2) + 1}+ТЕЛ)` },
     ];
-  const fxParts = modifiersFromEffects('max_hp', character, state, passives);
+  const fxParts = effectModifiers('max_hp', undefined, character, state, passives);
   const parts = [...baseParts, ...fxParts];
   return { value: parts.reduce((s, p) => s + p.value, 0), parts };
 }
 
-function breakdownSave(ability: AbilityKey, character: CharacterContext): ValueBreakdown {
+function breakdownSave(
+  ability: AbilityKey,
+  character: CharacterContext,
+  state: RuntimeState,
+  passives: Dict[],
+): ValueBreakdown {
   const mod = character.abilityMods[ability] ?? 0;
   const parts: RollModifier[] = [
     { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики' },
@@ -121,10 +114,17 @@ function breakdownSave(ability: AbilityKey, character: CharacterContext): ValueB
     parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение' });
     total += character.profBonus;
   }
+  const fxParts = effectModifiers('saving_throw', { ability }, character, state, passives);
+  for (const p of fxParts) { parts.push(p); total += p.value; }
   return { value: total, parts };
 }
 
-function breakdownSkill(skillId: string, character: CharacterContext): ValueBreakdown {
+function breakdownSkill(
+  skillId: string,
+  character: CharacterContext,
+  state: RuntimeState,
+  passives: Dict[],
+): ValueBreakdown {
   const ability = abilityOfSkill(skillId) as AbilityKey;
   const mod = character.abilityMods[ability] ?? 0;
   const parts: RollModifier[] = [
@@ -138,6 +138,8 @@ function breakdownSkill(skillId: string, character: CharacterContext): ValueBrea
     parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение' });
     total += character.profBonus;
   }
+  const fxParts = effectModifiers('ability_check', { skill: skillId }, character, state, passives);
+  for (const p of fxParts) { parts.push(p); total += p.value; }
   return { value: total, parts };
 }
 
@@ -151,21 +153,21 @@ export function breakdownValue(
   if (what === 'max_hp') return breakdownMaxHp(character, state, passives);
   if (what === 'initiative') {
     const base = character.abilityMods.dex ?? 0;
-    const fxParts = modifiersFromEffects('initiative', character, state, passives);
+    const fxParts = effectModifiers('initiative', undefined, character, state, passives);
     const parts = [{ value: base, source: 'ЛВК', reason: 'модификатор инициативы' }, ...fxParts];
     return { value: parts.reduce((s, p) => s + p.value, 0), parts };
   }
   if (what === 'speed') {
     const base = character.characterSpeed ?? 30;
-    const fxParts = modifiersFromEffects('speed', character, state, passives);
+    const fxParts = effectModifiers('speed', undefined, character, state, passives);
     const parts = [{ value: base, source: 'скорость', reason: 'базовая' }, ...fxParts];
     return { value: parts.reduce((s, p) => s + p.value, 0), parts };
   }
   if (what.startsWith('save:')) {
-    return breakdownSave(what.slice(5) as AbilityKey, character);
+    return breakdownSave(what.slice(5) as AbilityKey, character, state, passives);
   }
   if (what.startsWith('skill:')) {
-    return breakdownSkill(what.slice(6), character);
+    return breakdownSkill(what.slice(6), character, state, passives);
   }
   return { value: 0, parts: [] };
 }

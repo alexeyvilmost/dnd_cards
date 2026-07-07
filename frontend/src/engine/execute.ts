@@ -16,7 +16,8 @@ import {
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
-import { collectRollModifiers } from './modifiers';
+import { collectModifiers } from './modifiers';
+import { activeConditionsOf, type EvalContext } from './circumstances';
 import { rollD20 } from './roll';
 import { weaponContext } from './weapon';
 
@@ -58,6 +59,15 @@ function formulaCtx(ctx: ExecuteContext): FormulaContext {
     spellcastingMod: ctx.character.spellcastingMod,
     variables: ctx.character.variables,
     rng: ctx.rng,
+  };
+}
+
+function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
+  return {
+    character: ctx.character,
+    state,
+    target: ctx.target,
+    activeConditions: activeConditionsOf(state),
   };
 }
 
@@ -406,7 +416,11 @@ function runAttackRoll(
   const hand = resolveHand(effect);
   const ac = ctx.target?.ac ?? 10;
   const passives = passivesFromCtx(ctx);
-  const collected = collectRollModifiers(state, passives, { roll: 'attack' });
+  const collected = collectModifiers(state, passives, {
+    roll: 'attack',
+    formulaCtx: formulaCtx(ctx),
+    evalCtx: evalCtxOf(state, ctx),
+  });
   const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers];
 
   const roll = rollD20({
@@ -439,9 +453,11 @@ function runSave(
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability ?? 'dex') as AbilityKey;
   const saveMod = ctx.target?.saveMods?.[ability] ?? 0;
-  const collected = collectRollModifiers(state, passivesFromCtx(ctx), {
+  const collected = collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'saving_throw',
     filter: { ability },
+    formulaCtx: formulaCtx(ctx),
+    evalCtx: evalCtxOf(state, ctx),
   });
 
   const roll = rollD20({
@@ -469,8 +485,18 @@ function runAbilityCheck(
   const ability = String(effect.ability ?? 'str') as AbilityKey;
   const skill = String(effect.skill ?? '');
   const attackerTotal = (ctx.character.abilityMods[ability] ?? 0) + ctx.character.profBonus;
+  const collected = collectModifiers(state, passivesFromCtx(ctx), {
+    roll: 'ability_check',
+    filter: skill ? { skill } : { ability },
+    formulaCtx: formulaCtx(ctx),
+    evalCtx: evalCtxOf(state, ctx),
+  });
   const attRoll = rollD20({
-    modifiers: [{ value: attackerTotal, source: skill || ABILITY_LABEL[ability] }],
+    advantage: collected.advantage,
+    modifiers: [
+      { value: attackerTotal, source: skill || ABILITY_LABEL[ability] },
+      ...collected.modifiers,
+    ],
     rng: ctx.rng,
   });
   events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));

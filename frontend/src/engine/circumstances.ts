@@ -1,0 +1,80 @@
+/**
+ * Вычисление «Обстоятельств» (unified-mechanics-schema.md §5.5): предикаты
+ * when/circumstances на модификаторах и триггерах. До фазы C движок их не вычислял
+ * (0 ссылок в engine/) — условные пассивки применялись безусловно. Здесь — маленький
+ * интерпретатор предикатов над контекстом броска.
+ *
+ * Мягкая деградация: неизвестный/пока не реализованный предикат НЕ блокирует
+ * (возвращаем true), чтобы не терять существующие модификаторы. По мере реализации
+ * предикатов гейтинг становится точнее. Предикаты, для которых нужных данных нет
+ * прямо сейчас (например «у цели состояние», а цели нет), дают false — условие не
+ * выполнено, а не «не знаю».
+ */
+import type { AdvantageState, CharacterContext, RuntimeState, TargetContext } from '../mvp/contracts';
+
+type Dict = Record<string, unknown>;
+
+export interface EvalContext {
+  character?: CharacterContext;
+  state?: RuntimeState;
+  target?: TargetContext;
+  /** Состояния (kind:'condition' value), активные на владельце листа. */
+  activeConditions?: Set<string>;
+  /** Состояния на цели (заполнится в фазе E — двусторонний бой). */
+  targetConditions?: Set<string>;
+  /** Преимущество, накопленное к текущему моменту сбора (для has_advantage). */
+  advantageSoFar?: AdvantageState;
+  /** Результат последнего d20 (для d20_equals). */
+  lastD20?: number;
+}
+
+/** Собрать множество активных состояний владельца из RuntimeState. */
+export function activeConditionsOf(state: RuntimeState | undefined): Set<string> {
+  const out = new Set<string>();
+  if (!state) return out;
+  for (const e of state.activeEffects) {
+    const m = e.mechanics as Dict;
+    if (m?.kind === 'condition' && m.value) out.add(String(m.value));
+  }
+  return out;
+}
+
+/** Вычислить один предикат обстоятельства. Неизвестный предикат → true (не блокируем). */
+export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
+  const kind = String(cond.kind ?? '');
+  switch (kind) {
+    case 'any_of': {
+      const of = (cond.of as Dict[]) ?? [];
+      return of.length === 0 || of.some((c) => evaluateCondition(c, ctx));
+    }
+    case 'all_of': {
+      const of = (cond.of as Dict[]) ?? [];
+      return of.every((c) => evaluateCondition(c, ctx));
+    }
+    case 'not': {
+      const of = cond.of as Dict | undefined;
+      return of ? !evaluateCondition(of, ctx) : true;
+    }
+    case 'you_have_condition':
+      return ctx.activeConditions?.has(String(cond.value)) ?? false;
+    case 'target_has_condition':
+      return ctx.targetConditions?.has(String(cond.value)) ?? false;
+    case 'has_advantage':
+      return ctx.advantageSoFar === 'advantage';
+    case 'd20_equals':
+      return ctx.lastD20 != null && ctx.lastD20 === Number(cond.value);
+    case 'narrative':
+      // Текстовое условие — на усмотрение ГМ; движок не блокирует.
+      return true;
+    default:
+      // Неизвестный/пока не реализованный предикат — не блокируем (деградация).
+      return true;
+  }
+}
+
+/** true, если все when-условия выполнены (или их нет / нет контекста для оценки). */
+export function matchesWhen(when: Dict[] | undefined, ctx?: EvalContext): boolean {
+  if (!when || when.length === 0) return true;
+  if (!ctx) return true; // нет контекста — не блокируем (обратная совместимость)
+  return when.every((c) => evaluateCondition(c, ctx));
+}
