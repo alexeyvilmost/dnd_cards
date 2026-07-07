@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { loadConditions } from './api/conditionsApi';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DiceDialogProvider } from './contexts/DiceDialogContext';
@@ -46,6 +48,8 @@ import VariableCreator from './pages/VariableCreator';
 import ImageStudio from './pages/ImageStudio';
 
 function App() {
+  // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
+  useEffect(() => { loadConditions(); }, []);
   return (
     <AuthProvider>
       <ToastProvider>

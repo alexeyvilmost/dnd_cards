@@ -146,6 +146,52 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
   return mods;
 }
 
+/**
+ * Ключ стека (фаза D, модель StackId из BG3): явный stack_id, а для состояний —
+ * неявный `cond:<value>` (состояние бинарно — оно либо есть, либо нет).
+ */
+function stackKeyOf(mech: Dict | undefined): string | undefined {
+  if (!mech) return undefined;
+  if (mech.stack_id != null) return String(mech.stack_id);
+  if (mech.kind === 'condition' && mech.value != null) return `cond:${String(mech.value)}`;
+  return undefined;
+}
+
+/**
+ * Добавить активный эффект с учётом стекинга (RAW 2024 «Combining Game Effects»):
+ * - нет ключа стека → просто добавить (текущее поведение, обратная совместимость);
+ * - overwrite (дефолт при ключе): потентнейший (stack_priority) остаётся, при равенстве —
+ *   новый (свежесть); одноимённое не удваивается;
+ * - ignore → если такой уже есть, новый не добавляется;
+ * - additive → длительности складываются;
+ * - stack → независимые экземпляры.
+ */
+function stackApply(state: RuntimeState, entry: ActiveEffectEntry, payload: Dict): RuntimeState {
+  const stackId = stackKeyOf(payload);
+  const add = (): RuntimeState => ({ ...state, activeEffects: [...state.activeEffects, entry] });
+  if (!stackId) return add();
+
+  const stackType = String(payload.stack_type ?? 'overwrite');
+  const same = state.activeEffects.filter((e) => stackKeyOf(e.mechanics as Dict) === stackId);
+  const others = state.activeEffects.filter((e) => stackKeyOf(e.mechanics as Dict) !== stackId);
+
+  if (stackType === 'stack') return add();
+  if (stackType === 'ignore') return same.length ? state : add();
+  if (stackType === 'additive') {
+    if (!same.length) return add();
+    const merged = same.map((e) => ({
+      ...e,
+      roundsLeft: ((e.roundsLeft ?? 0) + (entry.roundsLeft ?? 0)) || undefined,
+    }));
+    return { ...state, activeEffects: [...others, ...merged] };
+  }
+  // overwrite: потентнейший (priority) остаётся; равенство → новый (recency).
+  const priority = Number(payload.stack_priority ?? 0);
+  const maxPrio = same.reduce((m, e) => Math.max(m, Number((e.mechanics as Dict).stack_priority ?? 0)), -Infinity);
+  if (same.length && priority < maxPrio) return state;
+  return { ...state, activeEffects: [...others, entry] };
+}
+
 function applyModifierPayload(
   state: RuntimeState,
   payload: Dict,
@@ -160,7 +206,7 @@ function applyModifierPayload(
     source,
   };
   events.push({ type: 'effect_applied', name: source });
-  return { ...state, activeEffects: [...state.activeEffects, entry] };
+  return stackApply(state, entry, payload);
 }
 
 function applyHealing(
@@ -231,7 +277,7 @@ function applyCondition(
     source,
   };
   events.push(conditionAppliedEvent(condition));
-  return { ...state, activeEffects: [...state.activeEffects, entry] };
+  return stackApply(state, entry, payload);
 }
 
 /** resource: grant — сверх максимума (Прилив действий), restore — до максимума. */

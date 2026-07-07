@@ -387,6 +387,12 @@ func GetAllMigrations() []Migration {
 			Up:          createVariablesTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS variables CASCADE"); return err },
 		},
+		{
+			Version:     "064_create_conditions",
+			Description: "Create conditions table (self/projected modifiers + note as data) + seed 13 PHB 2024 conditions",
+			Up:          createConditionsTable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS conditions CASCADE"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -424,6 +430,49 @@ func createVariablesTable(db *sql.DB) error {
 	for _, q := range queries {
 		if _, err := db.Exec(q); err != nil {
 			return fmt.Errorf("createVariablesTable: %w", err)
+		}
+	}
+	return nil
+}
+
+// createConditionsTable заводит справочник состояний (фаза D). Правило состояния —
+// данные (data: self/projected-модификаторы + note), а не хардкод в движке. Сидим 13
+// состояний PHB 2024 — те же self-модификаторы, что были в conditions.ts.
+func createConditionsTable(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS conditions (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			condition_id VARCHAR(100) UNIQUE NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description TEXT,
+			data JSONB,
+			image_url TEXT,
+			sort_order INT DEFAULT 0,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_conditions_condition_id ON conditions(condition_id)",
+		`INSERT INTO conditions (condition_id, name, data, sort_order) VALUES
+			('blinded','Ослеплён','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"disadvantage"}],"note":"Атаки по вам — с преимуществом; вы проваливаете проверки, требующие зрения."}'::jsonb,10),
+			('charmed','Очарован','{"modifiers":[],"note":"Нельзя атаковать очаровавшего; у него преимущество на социальные проверки против вас."}'::jsonb,20),
+			('deafened','Оглохший','{"modifiers":[],"note":"Вы проваливаете проверки, требующие слуха."}'::jsonb,30),
+			('frightened','Испуган','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"disadvantage"},{"applies_to":{"roll":"ability_check"},"op":"disadvantage"}],"note":"Помеха, пока источник страха в поле зрения; нельзя приближаться к нему."}'::jsonb,40),
+			('grappled','Схвачен','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"disadvantage"}],"note":"Скорость 0; помеха на атаки по всем, кроме схватившего."}'::jsonb,50),
+			('incapacitated','Недееспособен','{"modifiers":[],"note":"Нет действий/бонусных действий/реакций; концентрация прервана; помеха на инициативу."}'::jsonb,60),
+			('invisible','Невидим','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"advantage"}],"note":"Преимущество на инициативу; атаки по вам — с помехой."}'::jsonb,70),
+			('paralyzed','Парализован','{"modifiers":[],"note":"Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам с преимуществом, вблизи — крит."}'::jsonb,80),
+			('poisoned','Отравлен','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"disadvantage"},{"applies_to":{"roll":"ability_check"},"op":"disadvantage"}]}'::jsonb,90),
+			('prone','Распластан','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"disadvantage"}],"note":"Атаки по вам вблизи — с преимуществом, издалека — с помехой. Встать — половина скорости."}'::jsonb,100),
+			('restrained','Опутан','{"modifiers":[{"applies_to":{"roll":"attack"},"op":"disadvantage"},{"applies_to":{"roll":"saving_throw","filter":{"ability":"dex"}},"op":"disadvantage"}],"note":"Скорость 0; атаки по вам — с преимуществом."}'::jsonb,110),
+			('stunned','Ошеломлён','{"modifiers":[],"note":"Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам — с преимуществом."}'::jsonb,120),
+			('unconscious','Без сознания','{"modifiers":[],"note":"Недееспособен, распластан; провал СИЛ/ЛВК; атаки по вам с преимуществом, вблизи — крит."}'::jsonb,130)
+		 ON CONFLICT (condition_id) DO UPDATE SET
+			name = EXCLUDED.name, data = EXCLUDED.data, sort_order = EXCLUDED.sort_order, updated_at = NOW()`,
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createConditionsTable: %w", err)
 		}
 	}
 	return nil

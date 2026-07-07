@@ -8,7 +8,7 @@ import { Plus, X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
-import { CONDITION_OPTIONS, conditionLabel, conditionRule } from '../engine/conditions';
+import { conditionOptions, conditionLabel, conditionRule } from '../engine/conditions';
 import type { EngineEvent } from '../mvp/contracts';
 
 interface Props {
@@ -113,7 +113,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
           value={picked}
           onChange={(e) => setPicked(e.target.value)}
         >
-          {CONDITION_OPTIONS.map((o) => (
+          {conditionOptions().map((o) => (
             <option key={o.id} value={o.id} disabled={activeValues.has(o.id)}>{o.label}</option>
           ))}
         </select>

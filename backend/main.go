@@ -96,6 +96,7 @@ func main() {
 	classController := NewClassController(db)
 	resourceController := NewResourceController(db)
 	variableController := NewVariableController(db)
+	conditionController := NewConditionController(db)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -224,6 +225,13 @@ func main() {
 		api.POST("/variables", AuthMiddleware(authService), variableController.CreateVariable)
 		api.PUT("/variables/:id", AuthMiddleware(authService), variableController.UpdateVariable)
 		api.DELETE("/variables/:id", AuthMiddleware(authService), variableController.DeleteVariable)
+
+		// Состояния (правило состояния — данные: self/projected-модификаторы + заметка)
+		api.GET("/conditions", OptionalAuthMiddleware(authService), conditionController.GetConditions)
+		api.GET("/conditions/:id", OptionalAuthMiddleware(authService), conditionController.GetCondition)
+		api.POST("/conditions", AuthMiddleware(authService), conditionController.CreateCondition)
+		api.PUT("/conditions/:id", AuthMiddleware(authService), conditionController.UpdateCondition)
+		api.DELETE("/conditions/:id", AuthMiddleware(authService), conditionController.DeleteCondition)
 
 		// Защищенные маршруты (требуют авторизации)
 		protected := api.Group("/")

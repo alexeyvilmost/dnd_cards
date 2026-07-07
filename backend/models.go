@@ -1495,6 +1495,43 @@ type UpdateVariableRequest struct {
 	SortOrder    int    `json:"sort_order"`
 }
 
+// Condition — сущность-справочник состояния D&D (фаза D). Правило состояния — данные,
+// а не хардкод в движке: data содержит self-модификаторы к своим броскам, projected-
+// модификаторы (влияние на атакующего/окружающих, фаза E) и заметку.
+// data: { "modifiers": [...], "projected_modifiers": [...], "note": "..." }
+type Condition struct {
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	ConditionID string         `json:"condition_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug
+	Name        string         `json:"name" gorm:"not null;type:varchar(255)"`
+	Description string         `json:"description" gorm:"type:text"`
+	Data        JSONMap        `json:"data" gorm:"type:jsonb"`
+	ImageURL    string         `json:"image_url" gorm:"type:text"`
+	SortOrder   int            `json:"sort_order" gorm:"default:0"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+func (Condition) TableName() string { return "conditions" }
+
+type CreateConditionRequest struct {
+	ConditionID string  `json:"condition_id" binding:"required"`
+	Name        string  `json:"name" binding:"required"`
+	Description string  `json:"description"`
+	Data        JSONMap `json:"data"`
+	ImageURL    string  `json:"image_url"`
+	SortOrder   int     `json:"sort_order"`
+}
+
+type UpdateConditionRequest struct {
+	ConditionID string  `json:"condition_id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Data        JSONMap `json:"data"`
+	ImageURL    string  `json:"image_url"`
+	SortOrder   int     `json:"sort_order"`
+}
+
 // ActionRecharge - перезарядка действия
 type ActionRecharge string
 
