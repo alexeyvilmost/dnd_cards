@@ -16,6 +16,8 @@ type Props = {
   actionRef?: Action;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
+  /** Контекст заклинателя (лист): СЛ спасброска и бонус атаки заклинаниями для превью. */
+  spellcasting?: { saveDC?: number; attack?: number };
   /** 'row' — строка (по умолчанию); 'icon' — плитка (настройка отображения действий). */
   variant?: 'row' | 'icon';
   onActivate: () => void;
@@ -32,6 +34,7 @@ const SheetActionLine = ({
   actionRef,
   effectRef,
   spellRef,
+  spellcasting,
   variant = 'row',
   onActivate,
 }: Props) => {
@@ -91,7 +94,7 @@ const SheetActionLine = ({
         >
           {effectRef && <EffectHoverCard effect={effectRef} sourceLabel={sourceLabel} />}
           {actionRef && <ActionHoverCard action={actionRef} sourceLabel={sourceLabel} />}
-          {spellRef && <SpellPreview spell={spellRef} disableHover />}
+          {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} />}
           {!effectRef && !actionRef && !spellRef && description && (
             <div className="forge-effect-card">
               <div className="forge-effect-card-body">

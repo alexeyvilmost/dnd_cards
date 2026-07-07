@@ -177,3 +177,52 @@ export function describeMechanicsLine(mechanics: Dict | null | undefined): strin
   const d = describeMechanics(mechanics);
   return [d.summary, ...d.details].filter(Boolean).join(' · ');
 }
+
+// ─── Структурированная статистика превью (атака/спасбросок/урон/лечение) из механики ──
+
+const ABILITY_FULL_RU: Record<string, string> = {
+  str: 'Сила', dex: 'Ловкость', con: 'Телосложение', int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма',
+};
+/** Полное русское название характеристики ('dex' → 'Ловкость'). */
+export function abilityFullRu(a: string | null | undefined): string {
+  return a ? (ABILITY_FULL_RU[a] ?? String(a)) : '';
+}
+
+export interface MechanicsStats {
+  attack: boolean;
+  save: boolean;
+  /** Характеристика спасброска ('dex' и т.п.) — из механики, для показа «Ловкость». */
+  saveAbility: string | null;
+  damage: Array<{ value: string; type: string }>;
+  heal: string[];
+}
+
+/**
+ * Извлечь статистику превью из СОХРАНЁННОЙ механики (executable-истина), а не из
+ * легаси-флагов заклинания (attack_roll/saving_throw) — они бывают рассинхронены
+ * (напр. Брызги кислоты: saving_throw=false, а в mechanics есть спасбросок ЛВК).
+ */
+export function parseMechanicsStats(mechanics: Dict | null | undefined): MechanicsStats {
+  const out: MechanicsStats = { attack: false, save: false, saveAbility: null, damage: [], heal: [] };
+  const effects = Array.isArray((mechanics as Dict | undefined)?.effects) ? ((mechanics as Dict).effects as Dict[]) : [];
+
+  const readDmg = (arr: unknown): void => {
+    (Array.isArray(arr) ? (arr as Dict[]) : []).forEach((p) => {
+      if (p?.kind === 'damage') {
+        const v = p.dice ?? p.formula ?? p.amount;
+        if (v != null && v !== '') out.damage.push({ value: String(v), type: String(p.type ?? p.damage_type ?? 'damage') });
+      } else if (p?.kind === 'healing') {
+        const v = p.amount ?? p.dice ?? p.formula;
+        if (v != null && v !== '') out.heal.push(String(v));
+      }
+    });
+  };
+
+  for (const eff of effects) {
+    const res = String(eff.resolution ?? '');
+    if (res === 'attack_roll') { out.attack = true; readDmg(eff.on_hit); readDmg(eff.on_crit); }
+    else if (res === 'save') { out.save = true; if (!out.saveAbility && eff.ability) out.saveAbility = String(eff.ability); readDmg(eff.on_fail); readDmg(eff.on_success); }
+    else readDmg(eff.result ?? eff.results);
+  }
+  return out;
+}

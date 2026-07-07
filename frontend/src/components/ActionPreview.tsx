@@ -3,7 +3,7 @@ import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
-import { describeMechanics } from '../engine/describeMechanics';
+import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import { resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 
@@ -18,56 +18,6 @@ interface ActionPreviewProps {
 // "2d8" → "2к8" (русский BG3-тултип, как в design_preview)
 const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
 
-type DamageEntry = { value: string; type: string };
-
-// Разбор унифицированной механики: атака/спасбросок/урон/лечение.
-function parseMechanics(mechanics: Record<string, unknown> | null | undefined) {
-  const result = {
-    attack: false,
-    save: null as string | null,
-    damage: [] as DamageEntry[],
-    heal: [] as string[],
-  };
-  const effects = Array.isArray(mechanics?.effects) ? (mechanics!.effects as Record<string, unknown>[]) : [];
-
-  const readDamage = (p: Record<string, unknown>) => {
-    const val = p.dice ?? p.formula ?? p.amount;
-    if (val === undefined || val === null || val === '') return;
-    result.damage.push({ value: String(val), type: String(p.damage_type || p.type || 'damage') });
-  };
-  const readHeal = (p: Record<string, unknown>) => {
-    const val = p.dice ?? p.formula ?? p.amount;
-    if (val !== undefined && val !== null && val !== '') result.heal.push(String(val));
-  };
-  const scanPayloads = (arr: unknown) => {
-    (Array.isArray(arr) ? (arr as Record<string, unknown>[]) : []).forEach((p) => {
-      if (p?.kind === 'damage') readDamage(p);
-      else if (p?.kind === 'healing') readHeal(p);
-    });
-  };
-
-  effects.forEach((interaction) => {
-    const resolution = interaction.resolution;
-    if (resolution === 'attack_roll') result.attack = true;
-    if (resolution === 'save') {
-      result.save = String(interaction.ability || '').toUpperCase() || 'СБ';
-      // урон/лечение при провале/успехе
-      scanPayloads(interaction.on_fail);
-      scanPayloads(interaction.on_success);
-      const onFail = interaction.on_fail as Record<string, unknown> | undefined;
-      const dmg = onFail?.damage as Record<string, unknown> | undefined;
-      if (dmg) readDamage(dmg);
-    }
-    scanPayloads(interaction.on_hit);
-    scanPayloads(interaction.on_crit);
-    scanPayloads(interaction.on_success);
-    scanPayloads(interaction.result);
-    if (interaction.kind === 'damage') readDamage(interaction);
-    if (interaction.kind === 'healing') readHeal(interaction);
-  });
-  return result;
-}
-
 const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
@@ -79,7 +29,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
 
   const subtype = [actionTypeLabel, action.distance].filter(Boolean).join(' · ');
 
-  const stats = parseMechanics(action.mechanics as Record<string, unknown> | null | undefined);
+  const stats = parseMechanicsStats(action.mechanics as Record<string, unknown> | null | undefined);
   const hasStats = stats.attack || stats.save || stats.damage.length > 0 || stats.heal.length > 0;
 
   // Парадигма №2: описание МЕХАНИКИ из данных (единый describeMechanics), не свободный текст.
@@ -127,8 +77,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
           {stats.save && (
             <div className="sp-srow">
               <span className="sp-lbl">Спасбросок:</span>
-              <div className="sp-die sp-save">СБ</div>
-              <span className="sp-bonus">{stats.save}</span>
+              <span className="sp-bonus">{abilityFullRu(stats.saveAbility) || 'спасбросок'}</span>
             </div>
           )}
           {stats.damage.length > 0 && (

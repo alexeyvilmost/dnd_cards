@@ -302,6 +302,9 @@ export default function SheetActionsPanel({
                   actionRef={action.actionRef}
                   effectRef={action.effectRef}
                   spellRef={action.spellRef}
+                  spellcasting={ruleState.spellcasting
+                    ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack }
+                    : undefined}
                   disabled={disabled}
                   disabledTitle="Недостаточно ресурсов"
                   onActivate={() => runAction(action)}

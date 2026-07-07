@@ -10,6 +10,7 @@ import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/dama
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
+import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -21,7 +22,11 @@ interface SpellPreviewProps {
   className?: string;
   disableHover?: boolean;
   onClick?: () => void;
+  /** Контекст заклинателя (лист персонажа): обогащает превью СЛ спасброска и бонусом атаки. */
+  spellcasting?: { saveDC?: number; attack?: number };
 }
+
+const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 
 const schoolLabel = (school?: string | null) =>
   SPELL_SCHOOL_OPTIONS.find((s) => s.value === school)?.label || school || '';
@@ -37,6 +42,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   className = '',
   disableHover = false,
   onClick,
+  spellcasting,
 }) => {
   const spellResourceOptions = useResourceOptions();
 
@@ -50,8 +56,19 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   if (spell.component_somatic) components.push('С');
   if (spell.component_material) components.push('М');
 
-  // Строка спасброска (характеристики)
-  const saveAbilities = (spell.save_types || []).map(saveLabel).join(', ');
+  // Статистика превью — из МЕХАНИКИ (executable-истина), фолбэк на легаси-флаги заклинания.
+  const mstats = parseMechanicsStats((spell as { mechanics?: Record<string, unknown> | null }).mechanics);
+  const showAttack = mstats.attack || !!spell.attack_roll;
+  const showSave = mstats.save || !!spell.saving_throw;
+  const saveAbilityText = mstats.saveAbility
+    ? abilityFullRu(mstats.saveAbility)
+    : (spell.save_types || []).map(saveLabel).join(', ');
+  const dmgEntries = mstats.damage.length
+    ? mstats.damage
+    : (spell.damage || []).map((d) => ({ value: d.dice, type: d.damage_type }));
+  const healEntries = mstats.heal.length
+    ? mstats.heal
+    : (spell.is_healing && spell.heal_dice ? [spell.heal_dice] : []);
 
   // Meta-элементы (только релевантные)
   const meta: Array<[string, string]> = [];
@@ -87,11 +104,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
     costs.push({ iconSrc: resourceCostIcon(spellResourceOptions, id), label: resourceLabel(spellResourceOptions, id) });
   }
 
-  const hasStats =
-    spell.attack_roll ||
-    spell.saving_throw ||
-    (spell.damage && spell.damage.length > 0) ||
-    (spell.is_healing && spell.heal_dice);
+  const hasStats = showAttack || showSave || dmgEntries.length > 0 || healEntries.length > 0;
 
   return (
     <div
@@ -117,42 +130,45 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
       {hasStats && (
         <div className="sp-stats">
-          {spell.attack_roll && (
+          {showAttack && (
             <div className="sp-srow">
               <span className="sp-lbl">Атака:</span>
               <div className="sp-die">к20</div>
+              {spellcasting?.attack != null && <span className="sp-bonus">{fmtBonus(spellcasting.attack)}</span>}
             </div>
           )}
-          {spell.saving_throw && (
+          {showSave && (
             <div className="sp-srow">
               <span className="sp-lbl">Спасбросок:</span>
-              <div className="sp-die sp-save">СБ</div>
-              {saveAbilities && <span className="sp-bonus">{saveAbilities}</span>}
+              <span className="sp-bonus">
+                {saveAbilityText || 'спасбросок'}
+                {spellcasting?.saveDC != null ? ` (СЛ ${spellcasting.saveDC})` : ''}
+              </span>
             </div>
           )}
-          {spell.damage && spell.damage.length > 0 && (
+          {dmgEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Урон:</span>
               <span className="sp-dmgval">
-                {spell.damage.map((d, i) => (
+                {dmgEntries.map((d, i) => (
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
-                    <span className="sp-dmgitem" style={{ color: getDamageColor(d.damage_type) }}>
-                      {diceRu(d.dice)}
-                      <img className="sp-dmgicon" src={getDamageIconPath(d.damage_type)} alt="" />
-                      {getDamageLabel(d.damage_type).toLowerCase()}
+                    <span className="sp-dmgitem" style={{ color: getDamageColor(d.type) }}>
+                      {diceRu(d.value)}
+                      <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" />
+                      {getDamageLabel(d.type).toLowerCase()}
                     </span>
                   </React.Fragment>
                 ))}
               </span>
             </div>
           )}
-          {spell.is_healing && spell.heal_dice && (
+          {healEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
               <span className="sp-dmgval">
                 <span className="sp-dmgitem" style={{ color: getDamageColor('healing') }}>
-                  {diceRu(spell.heal_dice)}
+                  {diceRu(healEntries.join(' + '))}
                   <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
                   лечение
                 </span>

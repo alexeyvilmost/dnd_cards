@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeMechanics, describeMechanicsLine } from './describeMechanics';
+import { describeMechanics, describeMechanicsLine, parseMechanicsStats, abilityFullRu } from './describeMechanics';
 
 const smite = {
   activation: { mode: 'triggered', cost: [{ resource: 'spell_slot', level: 1 }] },
@@ -66,5 +66,29 @@ describe('describeMechanics (фаза F)', () => {
   it('пустая механика и однострочник', () => {
     expect(describeMechanics(null)).toEqual({ summary: '', details: [] });
     expect(describeMechanicsLine(smite)).toContain('·');
+  });
+});
+
+describe('parseMechanicsStats (превью из механики, не из легаси-флагов)', () => {
+  it('Брызги кислоты: спасбросок ЛВК берётся из механики', () => {
+    const acidSplash = { effects: [{ resolution: 'save', ability: 'dex', dc: '8+prof+spellcasting', on_fail: [{ kind: 'damage', dice: '1d6', type: 'acid' }] }] };
+    const s = parseMechanicsStats(acidSplash);
+    expect(s.save).toBe(true);
+    expect(s.saveAbility).toBe('dex');
+    expect(abilityFullRu(s.saveAbility)).toBe('Ловкость');
+    expect(s.damage).toEqual([{ value: '1d6', type: 'acid' }]);
+    expect(s.attack).toBe(false);
+  });
+
+  it('Огненный снаряд: атака + урон из механики', () => {
+    const fireBolt = { effects: [{ resolution: 'attack_roll', ability: 'spellcasting', on_hit: [{ kind: 'damage', dice: '1d10', type: 'fire' }] }] };
+    const s = parseMechanicsStats(fireBolt);
+    expect(s.attack).toBe(true);
+    expect(s.save).toBe(false);
+    expect(s.damage).toEqual([{ value: '1d10', type: 'fire' }]);
+  });
+
+  it('пустая механика', () => {
+    expect(parseMechanicsStats(null)).toEqual({ attack: false, save: false, saveAbility: null, damage: [], heal: [] });
   });
 });
