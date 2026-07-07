@@ -48,4 +48,7 @@ export const SPELL_CARD_CSS = `
   .sp-cost{display:inline-flex; align-items:center; gap:.35rem; font-size:.84rem; color:#ece3d4;}
   .sp-cost .sp-costicon{width:16px; height:16px; object-fit:contain; flex:0 0 auto;}
   .sp-spacer{height:14px;}
+  .sp-tip .sp-pagelink{display:inline-block; margin:0 0 .7rem; font-size:.82rem; color:#d8b978;
+    text-decoration:none; border:1px solid #6b5836; border-radius:6px; padding:3px 10px; transition:.12s;}
+  .sp-tip .sp-pagelink:hover{background:rgba(216,185,120,.12); border-color:#d8b978;}
 `;

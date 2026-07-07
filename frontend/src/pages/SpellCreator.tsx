@@ -596,8 +596,13 @@ const SpellCreator = () => {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>Дополнительное описание</label>
-                      <textarea {...register('detailed_description')} rows={3} className={inputCls} />
+                      <label className={labelCls}>Полное описание (для вики-страницы)</label>
+                      <FormattedTextarea
+                        value={fd.detailed_description || ''}
+                        onChange={(v) => setValue('detailed_description', v)}
+                        rows={6}
+                        placeholder="Полный текст заклинания — показывается на вики-странице под кратким описанием. Краткое — в поле «Описание» выше."
+                      />
                     </div>
                     <div>
                       <label className={labelCls}>Источник</label>

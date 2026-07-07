@@ -41,6 +41,7 @@ import ShopDetail from './pages/ShopDetail';
 import ActionCreator from './pages/ActionCreator';
 import EffectCreator from './pages/EffectCreator';
 import SpellCreator from './pages/SpellCreator';
+import SpellPage from './pages/SpellPage';
 import FeatCreator from './pages/FeatCreator';
 import BackgroundCreator from './pages/BackgroundCreator';
 import RaceCreator from './pages/RaceCreator';
@@ -69,6 +70,7 @@ function App() {
         <Route path="/character-forge" element={<CharacterForge />} />
         <Route path="/character-forge/:id" element={<CharacterForge />} />
         <Route path="/characters-forge" element={<CharactersForgeList />} />
+        <Route path="/spell/:id" element={<SpellPage />} />
         <Route path="/characters-v3/:id" element={<CharacterSheetMVP />} />
 
         {/* Защищенные маршруты */}

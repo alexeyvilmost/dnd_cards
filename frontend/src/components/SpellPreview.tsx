@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
@@ -121,6 +122,12 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
       <h3>{spell.name || 'Название заклинания'}</h3>
       <div className="sp-subtype">{subtype || 'Заговор'}</div>
+
+      {spell.id && (
+        <Link className="sp-pagelink" to={`/spell/${spell.id}`} onClick={(e) => e.stopPropagation()}>
+          Открыть страницу ↗
+        </Link>
+      )}
 
       {hasStats && (
         <div className="sp-stats">
