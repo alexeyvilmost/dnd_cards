@@ -15,6 +15,7 @@ import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
+import { weaponActionAvailability, weaponAttackPreview } from '../engine/weapon';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { findResource, useResourceOptions } from '../utils/resources';
@@ -152,6 +153,8 @@ export default function SheetActionsPanel({
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
     if (cost.length && !canPay(runtime, cost).ok) return;
+    // Оружейное действие без нужного оружия в руке — не запускаем.
+    if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
 
     const needsTarget = actionNeedsTarget(mech);
     const target = needsTarget
@@ -212,11 +215,15 @@ export default function SheetActionsPanel({
     }
   };
 
-  const isDisabled = (action: SheetAction): boolean => {
+  // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
+  const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
+    const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards);
+    if (!avail.available) return { disabled: true, reason: avail.reason };
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    if (!cost.length) return busy;
-    return busy || !canPay(runtime, cost).ok;
+    const payable = !cost.length || canPay(runtime, cost).ok;
+    if (!payable) return { disabled: true, reason: 'Недостаточно ресурсов' };
+    return { disabled: busy };
   };
 
   const handleDismissEffect = (effectId: string) => {
@@ -289,7 +296,8 @@ export default function SheetActionsPanel({
           <h3 className="sheet-h3">{label}</h3>
           <div className={actionsAsIcons ? 'cs-action-tiles' : 'cs-action-lines'}>
             {items.map((action) => {
-              const disabled = isDisabled(action);
+              const { disabled, reason } = disabledInfo(action);
+              const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment) ?? undefined;
               return (
                 <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>
                 <SheetActionLine
@@ -305,8 +313,9 @@ export default function SheetActionsPanel({
                   spellcasting={ruleState.spellcasting
                     ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack }
                     : undefined}
+                  weaponAttackPreview={weaponPreview}
                   disabled={disabled}
-                  disabledTitle="Недостаточно ресурсов"
+                  disabledTitle={reason ?? 'Недостаточно ресурсов'}
                   onActivate={() => runAction(action)}
                 />
                 </div>

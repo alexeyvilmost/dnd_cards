@@ -68,6 +68,8 @@ export interface Card {
   damage_type?: string | null;
   elemental_damage_value?: string | null;
   elemental_damage_type?: string | null;
+  /** Магический бонус оружия (+N к броскам атаки и урона). */
+  enchant_bonus?: number | null;
   defense_type?: string | null;
   description_font_size?: number | null;
   text_alignment?: string | null;
@@ -115,6 +117,8 @@ export interface CreateCardRequest {
   damage_type?: string | null;
   elemental_damage_value?: string | null;
   elemental_damage_type?: string | null;
+  /** Магический бонус оружия (+N к броскам атаки и урона). */
+  enchant_bonus?: number | null;
   defense_type?: string | null;
   description_font_size?: number | null;
   text_alignment?: string | null;
@@ -161,6 +165,8 @@ export interface UpdateCardRequest {
   damage_type?: string | null;
   elemental_damage_value?: string | null;
   elemental_damage_type?: string | null;
+  /** Магический бонус оружия (+N к броскам атаки и урона). */
+  enchant_bonus?: number | null;
   defense_type?: string | null;
   description_font_size?: number | null;
   text_alignment?: string | null;

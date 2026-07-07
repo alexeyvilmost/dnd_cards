@@ -172,10 +172,15 @@ export interface ExecuteResult {
 export interface WeaponContext {
   cardId: string;
   name: string;
-  /** Кость урона, например «1d8». */
+  /** Кость основного урона, например «1d8» (зеркало damages[0].dice). */
   dice: string;
   ability: 'str' | 'dex';
+  /** Тип основного урона (зеркало damages[0].type). */
   damageType: string;
+  /** Все строки урона оружия: основной + стихийный (гранулярность №4). */
+  damages: Array<{ dice: string; type: string }>;
+  /** Магический бонус «+N» к броскам атаки и к основному урону. */
+  enchant: number;
   properties: string[];
 }
 

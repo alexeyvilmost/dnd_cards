@@ -362,6 +362,21 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
               Отображается в нижней панели рядом с основным уроном
             </p>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Магический бонус (+N)
+            </label>
+            <input
+              type="number"
+              {...register('enchant_bonus', { setValueAs: (v) => (v === '' || v == null ? null : Number(v)) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Прибавляется к броскам атаки и к основному урону (напр. Молот мороза +1). Если пусто — берётся «+N» из названия.
+            </p>
+          </div>
         </>
       )}
 

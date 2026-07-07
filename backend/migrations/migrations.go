@@ -405,8 +405,79 @@ func GetAllMigrations() []Migration {
 			Up:          dropSpellLegacyFields,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "067_card_enchant_bonus",
+			Description: "Add cards.enchant_bonus (магический бонус оружия +N к атаке/урону); backfill из имени '+N'",
+			Up:          addCardEnchantBonus,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE cards DROP COLUMN IF EXISTS enchant_bonus"); return err },
+		},
+		{
+			Version:     "068_dash_disengage_actions",
+			Description: "Seed базовых действий Рывок (Dash) и Отход (Disengage) как редактируемые Action(type='basic')",
+			Up:          seedDashDisengageActions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addCardEnchantBonus заводит числовой магический бонус оружия (+N к броскам атаки и
+// урона). Раньше «+1» жил только в имени карты («Молот мороза +1»); движок читает поле
+// первым, а разбор имени оставлен запасным путём. Бэкфилл — разовый разбор имени.
+func addCardEnchantBonus(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE cards ADD COLUMN IF NOT EXISTS enchant_bonus INT"); err != nil {
+		return fmt.Errorf("addCardEnchantBonus: add column: %w", err)
+	}
+	// Бэкфилл: у оружия с «+N» в имени выставить enchant_bonus = N (первое вхождение).
+	const q = `
+		UPDATE cards
+		SET enchant_bonus = CAST((regexp_match(name, '\+([0-9]+)'))[1] AS INT)
+		WHERE type = 'weapon' AND enchant_bonus IS NULL AND name ~ '\+[0-9]+'`
+	if _, err := db.Exec(q); err != nil {
+		return fmt.Errorf("addCardEnchantBonus: backfill: %w", err)
+	}
+	return nil
+}
+
+// seedDashDisengageActions добавляет базовые действия Рывок и Отход. У движка пока нет
+// модели перемещения/провокаций, поэтому эффекты — декларативный текст (как у Уклонения
+// он auto). Идемпотентно: ON CONFLICT (card_number) ничего не делает.
+func seedDashDisengageActions(db *sql.DB) error {
+	type basicAction struct {
+		cardNumber  string
+		name        string
+		imageURL    string
+		description string
+		mechanics   string
+	}
+	rows := []basicAction{
+		{
+			cardNumber:  "action_basic_dash",
+			name:        "Рывок",
+			imageURL:    "/icons/actions/dash.png",
+			description: "Дополнительное перемещение, равное вашей Скорости, до конца этого хода.",
+			mechanics:   `{"name":"Рывок","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"resolution":"auto","result":[{"kind":"narrative","description":"Дополнительное перемещение, равное вашей Скорости, до конца хода."}]}],"targeting":{"shape":"self"}}`,
+		},
+		{
+			cardNumber:  "action_basic_disengage",
+			name:        "Отход",
+			imageURL:    "/icons/actions/disengage.png",
+			description: "До конца этого хода ваше перемещение не провоцирует атаки.",
+			mechanics:   `{"name":"Отход","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"resolution":"auto","result":[{"kind":"narrative","description":"Ваше перемещение не провоцирует атаки до конца хода."}]}],"targeting":{"shape":"self"}}`,
+		},
+	}
+
+	const q = `
+		INSERT INTO actions (name, description, image_url, rarity, card_number, action_type, type, resource, mechanics, author, source)
+		VALUES ($1, $2, $3, 'common', $4, 'base_action', 'basic', '', $5::jsonb, 'System', 'PHB 2024')
+		ON CONFLICT (card_number) DO NOTHING`
+
+	for _, r := range rows {
+		if _, err := db.Exec(q, r.name, r.description, r.imageURL, r.cardNumber, r.mechanics); err != nil {
+			return fmt.Errorf("failed to seed basic action %s: %w", r.cardNumber, err)
+		}
+	}
+	return nil
 }
 
 // dropSpellLegacyFields — снять с заклинаний легаси-поля детекции атаки/спасброска.

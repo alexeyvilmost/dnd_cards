@@ -1,8 +1,12 @@
 import type { Action } from '../../types';
+import type { WeaponAttackPreview } from '../../engine/weapon';
+import { getDamageColor, getDamageLabel, getDamageIconPath } from '../../utils/damageTypes';
 
 type ActionHoverCardProps = {
   action: Action;
   sourceLabel?: string;
+  /** Числа оружейной атаки (из оружия в руке): «к20 +N» и строки урона. Парадигма №2. */
+  weaponAttackPreview?: WeaponAttackPreview;
 };
 
 /** Описание, если оно информативно (не пустое и не повторяет имя). */
@@ -14,8 +18,13 @@ function usefulText(action: Action): string | null {
   return null;
 }
 
-const ActionHoverCard = ({ action, sourceLabel }: ActionHoverCardProps) => {
+const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
+// «1d8» → «1к8» (русский тултип, как в превью заклинаний).
+const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
+
+const ActionHoverCard = ({ action, sourceLabel, weaponAttackPreview }: ActionHoverCardProps) => {
   const desc = usefulText(action);
+  const wp = weaponAttackPreview;
   return (
     <div className="forge-effect-card">
       {action.image_url?.trim() && (
@@ -26,10 +35,50 @@ const ActionHoverCard = ({ action, sourceLabel }: ActionHoverCardProps) => {
       <div className="forge-effect-card-body">
         <div className="forge-effect-card-title">{action.name}</div>
         <div className="forge-effect-card-type">{sourceLabel || 'Действие персонажа'}</div>
+
+        {wp && (
+          <div className="action-atk-stats">
+            <div className="action-atk-row">
+              <span className="action-atk-lbl">Атака:</span>
+              <span className="action-atk-die">к20</span>
+              <span className="action-atk-bonus">{fmtBonus(wp.attack)}</span>
+            </div>
+            {wp.damages.length > 0 && (
+              <div className="action-atk-row">
+                <span className="action-atk-lbl">Урон:</span>
+                <span className="action-atk-dmg">
+                  {wp.damages.map((d, i) => (
+                    <span key={i} className="action-atk-dmgitem" style={{ color: getDamageColor(d.type) }}>
+                      {i > 0 && <span className="action-atk-sep">+</span>}
+                      {diceRu(d.dice)}{d.bonus !== 0 ? ` ${fmtBonus(d.bonus)}` : ''}
+                      <img className="action-atk-icon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      {getDamageLabel(d.type).toLowerCase()}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {desc && <p className="forge-effect-card-desc">{desc}</p>}
       </div>
+      <style>{ACTION_ATK_CSS}</style>
     </div>
   );
 };
+
+// Локальные стили статблока атаки (self-contained, чтобы не зависеть от загрузки SpellPreview).
+const ACTION_ATK_CSS = `
+.action-atk-stats { display: flex; flex-direction: column; gap: 3px; margin: 6px 0; }
+.action-atk-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.action-atk-lbl { color: #b7a98a; min-width: 48px; }
+.action-atk-die { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 0 6px; font-weight: 600; }
+.action-atk-bonus { font-weight: 700; color: #e8dcc0; }
+.action-atk-dmg { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.action-atk-dmgitem { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
+.action-atk-sep { color: #b7a98a; margin-right: 3px; }
+.action-atk-icon { width: 14px; height: 14px; object-fit: contain; }
+`;
 
 export default ActionHoverCard;

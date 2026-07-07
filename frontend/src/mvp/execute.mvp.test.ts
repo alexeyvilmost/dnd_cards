@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { EngineEvent, RollLog } from './contracts';
 import { executeAction } from './contracts';
 import {
+  CARD_FROST_HAMMER, CARD_LEATHER_ARMOR,
   equippedFighterState, FIGHTER_CTX, FIGHTER_CTX_EQUIPPED, freshFighterState,
   MECH_ATTACK_BONUS_2, MECH_BREATH_WEAPON, MECH_NEXT_ATTACK_ADVANTAGE, MECH_OFFHAND_ATTACK,
   MECH_SECOND_WIND, MECH_SHOVE, MECH_UNARMED_STRIKE, MECH_WEAPON_ATTACK, seededRng,
@@ -54,6 +55,29 @@ describe('E2: attack_roll — три вариации атаки', () => {
       expect(dmg.roll?.dice[0].sides).toBe(8);
       expect(dmg.amount).toBe(dmg.roll!.dice[0].result + 2); // + СИЛ
     }
+  });
+
+  it('Молот мороза +1: два события урона (осн. 2d6+СИЛ+зач., стих. 1d6 без бонуса); +1 к атаке', () => {
+    const state = {
+      ...freshFighterState(),
+      equipment: { body: CARD_LEATHER_ARMOR.id, main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id },
+    };
+    const ctx = { ...FIGHTER_CTX, equippedCards: [CARD_LEATHER_ARMOR, CARD_FROST_HAMMER] };
+    const { events } = executeAction(state, MECH_WEAPON_ATTACK, { character: ctx, target: { ac: 1 }, rng: seededRng(8) });
+
+    // Зачарование +1 попадает в модификаторы броска атаки.
+    const atk = attackRoll(events);
+    expect(atk.modifiers.some((m) => m.value === 1)).toBe(true);
+
+    const dmgs = events.filter((e): e is Extract<EngineEvent, { type: 'damage' }> => e.type === 'damage');
+    expect(dmgs).toHaveLength(2); // основной + стихийный
+
+    const bludg = dmgs.find((d) => d.damageType === 'bludgeoning')!;
+    const cold = dmgs.find((d) => d.damageType === 'cold')!;
+    expect(bludg.roll!.dice).toHaveLength(2); // 2d6
+    expect(bludg.amount).toBe(bludg.roll!.dice.reduce((s, d) => s + d.result, 0) + 2 + 1); // + СИЛ(2) + зач.(1)
+    expect(cold.roll!.dice).toHaveLength(1); // 1d6
+    expect(cold.amount).toBe(cold.roll!.dice.reduce((s, d) => s + d.result, 0)); // без мода и зачарования
   });
 
   it('вторая рука: кость кинжала БЕЗ модификатора характеристики; тратит бонусное действие', () => {

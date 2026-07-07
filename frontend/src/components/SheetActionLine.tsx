@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Action, PassiveEffect, Spell } from '../types';
+import type { WeaponAttackPreview } from '../engine/weapon';
 import ForgeEntityIcon from './forge/ForgeEntityIcon';
 import EffectHoverCard from './forge/EffectHoverCard';
 import ActionHoverCard from './forge/ActionHoverCard';
@@ -18,6 +19,8 @@ type Props = {
   spellRef?: Spell;
   /** Контекст заклинателя (лист): СЛ спасброска и бонус атаки заклинаниями для превью. */
   spellcasting?: { saveDC?: number; attack?: number };
+  /** Числа оружейной атаки (из оружия в руке) для подсказки действия-атаки. */
+  weaponAttackPreview?: WeaponAttackPreview;
   /** 'row' — строка (по умолчанию); 'icon' — плитка (настройка отображения действий). */
   variant?: 'row' | 'icon';
   onActivate: () => void;
@@ -35,6 +38,7 @@ const SheetActionLine = ({
   effectRef,
   spellRef,
   spellcasting,
+  weaponAttackPreview,
   variant = 'row',
   onActivate,
 }: Props) => {
@@ -93,7 +97,7 @@ const SheetActionLine = ({
           }}
         >
           {effectRef && <EffectHoverCard effect={effectRef} sourceLabel={sourceLabel} />}
-          {actionRef && <ActionHoverCard action={actionRef} sourceLabel={sourceLabel} />}
+          {actionRef && <ActionHoverCard action={actionRef} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} />}
           {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} />}
           {!effectRef && !actionRef && !spellRef && description && (
             <div className="forge-effect-card">

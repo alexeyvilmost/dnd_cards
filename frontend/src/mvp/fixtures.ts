@@ -155,6 +155,16 @@ export const CARD_GREATAXE: Card = {
   properties: ['heavy', 'two_handed'] as unknown as Card['properties'],
 } as Card;
 
+// Молот мороза +1: двуручный, 2d6 дробящего + 1d6 холода, зачарование +1.
+export const CARD_FROST_HAMMER: Card = {
+  ...baseCard,
+  id: 'card-frost-hammer', name: 'Молот мороза +1', card_number: 'ITEM-frost-hammer',
+  type: 'weapon', slot: 'two_hands', weight: 10,
+  bonus_type: 'damage' as Card['bonus_type'], bonus_value: '2d6', damage_type: 'bludgeoning',
+  elemental_damage_value: '1d6', elemental_damage_type: 'cold', enchant_bonus: 1,
+  properties: ['two_handed', 'heavy'] as unknown as Card['properties'],
+} as Card;
+
 export const CARD_SHIELD: Card = {
   ...baseCard,
   id: 'card-shield', name: 'Щит', card_number: 'ITEM-shield',
@@ -177,7 +187,7 @@ export const CARD_CHAIN_MAIL: Card = {
 } as Card;
 
 export const ALL_CARDS = new Map<string, Card>(
-  [CARD_LONGSWORD, CARD_DAGGER, CARD_GREATAXE, CARD_SHIELD, CARD_LEATHER_ARMOR, CARD_CHAIN_MAIL]
+  [CARD_LONGSWORD, CARD_DAGGER, CARD_GREATAXE, CARD_FROST_HAMMER, CARD_SHIELD, CARD_LEATHER_ARMOR, CARD_CHAIN_MAIL]
     .map((c) => [c.id, c]),
 );
 

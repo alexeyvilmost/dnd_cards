@@ -208,6 +208,9 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
         source: ABILITY_LABEL[w.ability],
         reason: 'модификатор характеристики',
       });
+      if (w.enchant) {
+        mods.push({ value: w.enchant, source: `+${w.enchant}`, reason: 'зачарование оружия' });
+      }
     }
     mods.push({ value: ctx.character.profBonus, source: 'БМ', reason: 'бонус мастерства' });
   } else {
@@ -382,56 +385,59 @@ function applyResource(
   return next;
 }
 
-function resolveDamageAmount(
+type DamageInstance = { amount: number; damageType: string; roll?: import('../mvp/contracts').RollLog };
+
+/**
+ * Одна payload-строка урона → одна ИЛИ несколько нанесённых инстанций.
+ * dice:"weapon" раскрывается в оружие в руке: основная строка (кость + мод характеристики
+ * + зачарование) плюс отдельная инстанция на каждый стихийный урон (без мода и зачарования).
+ * Порядок стабилен (основная первой) — важно для плана кубов/диалога и сопротивлений по типам.
+ */
+function resolveDamageAmounts(
   payload: Dict,
   ctx: ExecuteContext,
   state: RuntimeState,
   hand: 'main' | 'off',
-): { amount: number; damageType: string; roll?: import('../mvp/contracts').RollLog } {
+): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment);
+
+  if (payload.dice === 'weapon') {
+    const fallbackType = String(payload.type) === 'weapon'
+      ? (handWeapon?.damageType ?? 'bludgeoning')
+      : String(payload.type ?? 'bludgeoning');
+    const lines = handWeapon?.damages ?? [{ dice: handWeapon?.dice ?? '1d4', type: fallbackType }];
+    const ab = String(payload.ability ?? 'auto');
+    return lines.map((line, i) => {
+      const fr = rollFormula(line.dice, formulaCtx(ctx), { rng: ctx.rng });
+      let total = fr.total;
+      // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
+      if (i === 0) {
+        if (ab === 'auto' && handWeapon) total += ctx.character.abilityMods[handWeapon.ability];
+        else if (ab !== 'auto' && ab !== 'none') total += ctx.character.abilityMods[ab as AbilityKey] ?? 0;
+        if (handWeapon?.enchant) total += handWeapon.enchant;
+      }
+      return {
+        amount: total,
+        damageType: line.type,
+        roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total, text: fr.text },
+      };
+    });
+  }
+
   let damageType = String(payload.type ?? 'bludgeoning');
   if (damageType === 'weapon') damageType = handWeapon?.damageType ?? 'bludgeoning';
 
-  if (payload.dice === 'weapon') {
-    const dice = handWeapon?.dice ?? '1d4';
-    const fr = rollFormula(dice, formulaCtx(ctx), { rng: ctx.rng });
-    let total = fr.total;
-    const ab = String(payload.ability ?? 'auto');
-    if (ab !== 'none') {
-      if (ab === 'auto' && handWeapon) {
-        total += ctx.character.abilityMods[handWeapon.ability];
-      } else if (ab !== 'auto') {
-        total += ctx.character.abilityMods[ab as AbilityKey] ?? 0;
-      }
-    }
-    return {
-      amount: total,
-      damageType,
-      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total, text: fr.text },
-    };
-  }
-
-  if (payload.amount != null) {
-    const formula = withScaling(String(payload.amount), payload, ctx);
-    const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
-    return {
+  const flat = payload.amount != null ? String(payload.amount) : payload.dice != null ? String(payload.dice) : null;
+  if (flat != null) {
+    const fr = rollFormula(withScaling(flat, payload, ctx), formulaCtx(ctx), { rng: ctx.rng });
+    return [{
       amount: fr.total,
       damageType,
       roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
-    };
+    }];
   }
 
-  if (payload.dice != null) {
-    const formula = withScaling(String(payload.dice), payload, ctx);
-    const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
-    return {
-      amount: fr.total,
-      damageType,
-      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
-    };
-  }
-
-  return { amount: 0, damageType };
+  return [{ amount: 0, damageType }];
 }
 
 /**
@@ -452,9 +458,12 @@ function applyPayloads(
     const kind = String(p.kind ?? '');
     switch (kind) {
       case 'damage': {
-        let { amount, damageType, roll } = resolveDamageAmount(p, ctx, next, hand);
-        if (halfDamage) amount = Math.floor(amount / 2);
-        events.push(damageEvent(amount, damageType, roll));
+        // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
+        // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
+        for (const dmg of resolveDamageAmounts(p, ctx, next, hand)) {
+          const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
+          events.push(damageEvent(amount, dmg.damageType, dmg.roll));
+        }
         break;
       }
       case 'healing':

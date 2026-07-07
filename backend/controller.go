@@ -400,6 +400,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DamageType:                   req.DamageType,
 		ElementalDamageValue:         req.ElementalDamageValue,
 		ElementalDamageType:          req.ElementalDamageType,
+		EnchantBonus:                 req.EnchantBonus,
 		DefenseType:                  req.DefenseType,
 		DescriptionFontSize:          req.DescriptionFontSize,
 		TextAlignment:                req.TextAlignment,
@@ -547,6 +548,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.ElementalDamageType != nil {
 		card.ElementalDamageType = req.ElementalDamageType
+	}
+	if req.EnchantBonus != nil {
+		card.EnchantBonus = req.EnchantBonus
 	}
 	if req.DefenseType != nil {
 		card.DefenseType = req.DefenseType

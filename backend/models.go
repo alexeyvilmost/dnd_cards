@@ -368,6 +368,7 @@ type Card struct {
 	DamageType                   *string        `json:"damage_type" gorm:"type:varchar(20)"`
 	ElementalDamageValue         *string        `json:"elemental_damage_value" gorm:"type:varchar(20)"`
 	ElementalDamageType          *string        `json:"elemental_damage_type" gorm:"type:varchar(20)"`
+	EnchantBonus                 *int           `json:"enchant_bonus" gorm:"type:int"` // Магический бонус оружия (+N к атаке и урону)
 	DefenseType                  *string        `json:"defense_type" gorm:"type:varchar(20)"`
 	DescriptionFontSize          *int           `json:"description_font_size" gorm:"type:int"`
 	TextAlignment                *string        `json:"text_alignment" gorm:"type:varchar(20)"`
@@ -417,6 +418,7 @@ type CreateCardRequest struct {
 	DamageType                   *string        `json:"damage_type"`
 	ElementalDamageValue         *string        `json:"elemental_damage_value"`
 	ElementalDamageType          *string        `json:"elemental_damage_type"`
+	EnchantBonus                 *int           `json:"enchant_bonus"`
 	DefenseType                  *string        `json:"defense_type"`
 	DescriptionFontSize          *int           `json:"description_font_size"`
 	TextAlignment                *string        `json:"text_alignment"`
@@ -463,6 +465,7 @@ type UpdateCardRequest struct {
 	DamageType                   *string        `json:"damage_type"`
 	ElementalDamageValue         *string        `json:"elemental_damage_value"`
 	ElementalDamageType          *string        `json:"elemental_damage_type"`
+	EnchantBonus                 *int           `json:"enchant_bonus"`
 	DefenseType                  *string        `json:"defense_type"`
 	DescriptionFontSize          *int           `json:"description_font_size"`
 	TextAlignment                *string        `json:"text_alignment"`
@@ -522,6 +525,7 @@ type CardResponse struct {
 	DamageType                   *string        `json:"damage_type"`
 	ElementalDamageValue         *string        `json:"elemental_damage_value"`
 	ElementalDamageType          *string        `json:"elemental_damage_type"`
+	EnchantBonus                 *int           `json:"enchant_bonus"`
 	DefenseType                  *string        `json:"defense_type"`
 	Type                         *string        `json:"type"`
 	WeaponType                   *string        `json:"weapon_type"`
@@ -807,6 +811,7 @@ func (card Card) ToCardResponse() CardResponse {
 		DamageType:                   card.DamageType,
 		ElementalDamageValue:         card.ElementalDamageValue,
 		ElementalDamageType:          card.ElementalDamageType,
+		EnchantBonus:                 card.EnchantBonus,
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
 		WeaponType:                   card.WeaponType,

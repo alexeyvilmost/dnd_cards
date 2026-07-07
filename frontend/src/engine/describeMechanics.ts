@@ -210,7 +210,11 @@ export function parseMechanicsStats(mechanics: Dict | null | undefined): Mechani
     (Array.isArray(arr) ? (arr as Dict[]) : []).forEach((p) => {
       if (p?.kind === 'damage') {
         const v = p.dice ?? p.formula ?? p.amount;
-        if (v != null && v !== '') out.damage.push({ value: String(v), type: String(p.type ?? p.damage_type ?? 'damage') });
+        // dice:"weapon" — плейсхолдер, значение резолвится из оружия в руке (см. weaponAttackPreview).
+        // Без контекста оружия показывать нечего, поэтому пропускаем (иначе рисуется литерал «weapon»).
+        if (v != null && v !== '' && v !== 'weapon') {
+          out.damage.push({ value: String(v), type: String(p.type ?? p.damage_type ?? 'damage') });
+        }
       } else if (p?.kind === 'healing') {
         const v = p.amount ?? p.dice ?? p.formula;
         if (v != null && v !== '') out.heal.push(String(v));
