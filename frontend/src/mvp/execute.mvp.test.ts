@@ -62,7 +62,7 @@ describe('E2: attack_roll — три вариации атаки', () => {
       ...freshFighterState(),
       equipment: { body: CARD_LEATHER_ARMOR.id, main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id },
     };
-    const ctx = { ...FIGHTER_CTX, equippedCards: [CARD_LEATHER_ARMOR, CARD_FROST_HAMMER] };
+    const ctx = { ...FIGHTER_CTX, equippedCards: [CARD_LEATHER_ARMOR, CARD_FROST_HAMMER], attunedIds: [CARD_FROST_HAMMER.id] };
     const { events } = executeAction(state, MECH_WEAPON_ATTACK, { character: ctx, target: { ac: 1 }, rng: seededRng(8) });
 
     // Зачарование +1 попадает в модификаторы броска атаки.
@@ -129,6 +129,47 @@ describe('E2: attack_roll — три вариации атаки', () => {
     expect(() => executeAction(first.state, MECH_WEAPON_ATTACK, {
       character: FIGHTER_CTX_EQUIPPED, target: { ac: 10 }, rng: seededRng(2),
     })).toThrow(); // недостаточно ресурса action
+  });
+});
+
+describe('E2 save: план кубов on_fail + модификаторы принадлежат ЦЕЛИ', () => {
+  // Заклинание типа «Брызги кислоты»: спасбросок ЛВК, при провале 1d6, при успехе — ничего.
+  const MECH_SAVE = {
+    activation: { cost: [{ resource: 'action' }], mode: 'active' },
+    effects: [{
+      resolution: 'save', who: 'target', ability: 'dex', dc: '13',
+      on_fail: [{ kind: 'damage', dice: '1d6', type: 'acid' }], on_success: [],
+    }],
+  };
+
+  it('#8: planning форсирует провал → кости on_fail-урона попадают в события (для плана кубов)', () => {
+    // Высокий бросок (цель бы спаслась), но planning берёт ветку провала, чтобы 1d6 попал в план.
+    const { events } = executeAction(freshFighterState(), MECH_SAVE, {
+      character: FIGHTER_CTX, target: { ac: 10, saveMods: { dex: 0 } }, rng: () => 0.94, planning: true,
+    });
+    const dmg = events.find((e) => e.type === 'damage');
+    expect(dmg, 'урон провала должен попасть в события плана').toBeTruthy();
+    if (dmg?.type === 'damage') expect(dmg.damageType).toBe('acid');
+  });
+
+  it('без planning при успехе спасброска урона нет (ветка on_success пустая)', () => {
+    const { events } = executeAction(freshFighterState(), MECH_SAVE, {
+      character: FIGHTER_CTX, target: { ac: 10, saveMods: { dex: 0 } }, rng: () => 0.94,
+    });
+    expect(events.find((e) => e.type === 'damage')).toBeUndefined();
+  });
+
+  it('#10: преимущество на спасброски у КАСТЕРА не течёт в бросок ЦЕЛИ (один d20)', () => {
+    const state = freshFighterState();
+    state.activeEffects.push({
+      id: 'adv-save', name: 'бафф спасбросков', source: 'тест',
+      mechanics: { effects: [{ result: [{ kind: 'modifier', applies_to: { roll: 'saving_throw' }, op: 'advantage' }] }] },
+    });
+    const { events } = executeAction(state, MECH_SAVE, {
+      character: FIGHTER_CTX, target: { ac: 10, saveMods: { dex: 0 } }, rng: seededRng(3),
+    });
+    const save = events.find((e) => e.type === 'roll');
+    expect(save?.type === 'roll' && save.roll.dice.length, 'спасбросок цели — один d20 без преимущества').toBe(1);
   });
 });
 

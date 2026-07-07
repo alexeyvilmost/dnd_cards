@@ -597,12 +597,12 @@ function runSave(
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability ?? 'dex') as AbilityKey;
   const saveMod = targetSaveMod(ctx.target, ability);
-  const collected = collectModifiers(state, passivesFromCtx(ctx), {
-    roll: 'saving_throw',
-    filter: { ability },
-    formulaCtx: formulaCtx(ctx),
-    evalCtx: evalCtxOf(state, ctx),
-  });
+  // Спасбросок совершает ЦЕЛЬ своими модификаторами/преимуществом — НЕ атакующий.
+  // Берём эффекты из рантайма цели (богатая цель, фаза E); у обобщённой цели их нет.
+  const targetState = ctx.target?.runtimeState;
+  const collected = targetState
+    ? collectModifiers(targetState, [], { roll: 'saving_throw', filter: { ability } })
+    : { modifiers: [] as RollModifier[], advantage: 'none' as const };
 
   const roll = rollD20({
     advantage: collected.advantage,
@@ -612,7 +612,9 @@ function runSave(
   });
   events.push(rollEvent('Спасбросок', { ...roll, kind: 'save' }));
 
-  const success = roll.outcome === 'success';
+  // Планирующий прогон: берём ветку провала, чтобы кости on_fail-урона попали в план кубов
+  // (иначе при высоком PLANNING_RNG цель успевает спастись и урон не планируется → #8).
+  const success = ctx.planning ? false : roll.outcome === 'success';
   const payloads = (success ? effect.on_success : effect.on_fail) as Dict[] | undefined;
   if (!Array.isArray(payloads)) return state;
 

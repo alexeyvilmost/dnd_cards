@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionNeedsTarget, collectSheetActions, type SheetAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
-import { collectItemMechanics } from '../character/attunement';
+import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
@@ -24,6 +24,8 @@ import type { Card } from '../types';
 import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '../mvp/contracts';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
+import SpellPreview from './SpellPreview';
+import ActionHoverCard from './forge/ActionHoverCard';
 
 interface Props {
   character: ForgeCharacter;
@@ -113,6 +115,8 @@ export default function SheetActionsPanel({
         ? ruleState.abilityMods[ruleState.spellcasting.ability]
         : undefined,
       passives,
+      // Настройка на предметы: ненастроенный магический предмет даёт только чистые статы.
+      attunedIds: readAttunedIds(character.turn_state),
     }),
     [ruleState, character, equippedCards, assembled.klass, passives],
   );
@@ -165,17 +169,32 @@ export default function SheetActionsPanel({
       : undefined;
 
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
-    const execCtx = (rng: () => number) =>
-      ({ character: ctx, target, rng, passives }) as ExecuteContext & { passives: typeof passives };
+    // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
+    const execCtx = (rng: () => number, planning = false) =>
+      ({ character: ctx, target, rng, passives, planning }) as ExecuteContext & { passives: typeof passives };
+
+    // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
+    const previewFor = (a: SheetAction): ReactNode => {
+      if (a.spellRef) {
+        return <SpellPreview spell={a.spellRef} disableHover spellcasting={ruleState.spellcasting
+          ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack } : undefined} />;
+      }
+      if (a.actionRef) {
+        return <ActionHoverCard action={a.actionRef} sourceLabel={a.sourceLabel}
+          weaponAttackPreview={weaponAttackPreview(a.mechanics, ctx, runtime.equipment) ?? undefined} />;
+      }
+      return null;
+    };
 
     // Прогон механики через диалог кубов: план кубов → вопрос игроку → реальный бросок.
     const runViaDialog = async (
       baseState: RuntimeState,
       m: Record<string, unknown>,
       title: string,
+      preview?: ReactNode,
     ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[] } | null> => {
-      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG)).events);
-      const decision = await diceDialog.request(plan, title);
+      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true)).events);
+      const decision = await diceDialog.request(plan, title, preview);
       if (decision.mode === 'cancel') return null;
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
       const r = executeAction(baseState, m, execCtx(rng));
@@ -183,7 +202,7 @@ export default function SheetActionsPanel({
     };
 
     try {
-      const main = await runViaDialog(runtime, mech, action.name);
+      const main = await runViaDialog(runtime, mech, action.name, previewFor(action));
       if (!main) return;
       let { state, events } = main;
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.

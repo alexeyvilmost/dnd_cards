@@ -1,6 +1,6 @@
 import type { Action } from '../../types';
 import type { WeaponAttackPreview } from '../../engine/weapon';
-import { getDamageColor, getDamageLabel, getDamageIconPath } from '../../utils/damageTypes';
+import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../../utils/damageTypes';
 
 type ActionHoverCardProps = {
   action: Action;
@@ -44,15 +44,17 @@ const ActionHoverCard = ({ action, sourceLabel, weaponAttackPreview }: ActionHov
               <span className="action-atk-bonus">{fmtBonus(wp.attack)}</span>
             </div>
             {wp.damages.length > 0 && (
-              <div className="action-atk-row">
+              <div className="action-atk-row action-atk-row--dmg">
                 <span className="action-atk-lbl">Урон:</span>
                 <span className="action-atk-dmg">
                   {wp.damages.map((d, i) => (
-                    <span key={i} className="action-atk-dmgitem" style={{ color: getDamageColor(d.type) }}>
+                    <span key={i} className="action-atk-dmgline">
                       {i > 0 && <span className="action-atk-sep">+</span>}
-                      {diceRu(d.dice)}{d.bonus !== 0 ? ` ${fmtBonus(d.bonus)}` : ''}
-                      <img className="action-atk-icon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                      {getDamageLabel(d.type).toLowerCase()}
+                      <span className="action-atk-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
+                        {diceRu(d.dice)}{d.bonus !== 0 ? ` ${fmtBonus(d.bonus)}` : ''}
+                        <img className="action-atk-icon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                        {getDamageLabel(d.type).toLowerCase()}
+                      </span>
                     </span>
                   ))}
                 </span>
@@ -72,12 +74,14 @@ const ActionHoverCard = ({ action, sourceLabel, weaponAttackPreview }: ActionHov
 const ACTION_ATK_CSS = `
 .action-atk-stats { display: flex; flex-direction: column; gap: 3px; margin: 6px 0; }
 .action-atk-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.action-atk-row--dmg { align-items: flex-start; }
 .action-atk-lbl { color: #b7a98a; min-width: 48px; }
 .action-atk-die { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 0 6px; font-weight: 600; }
 .action-atk-bonus { font-weight: 700; color: #e8dcc0; }
-.action-atk-dmg { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.action-atk-dmg { display: flex; flex-direction: column; gap: 2px; }
+.action-atk-dmgline { display: inline-flex; align-items: center; }
 .action-atk-dmgitem { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
-.action-atk-sep { color: #b7a98a; margin-right: 3px; }
+.action-atk-sep { color: #b7a98a; margin-right: 4px; }
 .action-atk-icon { width: 14px; height: 14px; object-fit: contain; }
 `;
 

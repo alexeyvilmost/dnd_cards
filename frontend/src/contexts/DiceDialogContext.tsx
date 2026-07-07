@@ -17,9 +17,10 @@ export type DiceDecision =
 interface DiceDialogApi {
   /**
    * Запросить решение игрока. Если диалог выключен в настройках или план пуст —
-   * сразу резолвится в {mode:'auto'} без показа окна.
+   * сразу резолвится в {mode:'auto'} без показа окна. preview — карточка действия/
+   * заклинания сбоку (ради чего бросок).
    */
-  request: (plan: PlannedDie[], title: string) => Promise<DiceDecision>;
+  request: (plan: PlannedDie[], title: string, preview?: ReactNode) => Promise<DiceDecision>;
 }
 
 const Ctx = createContext<DiceDialogApi | null>(null);
@@ -33,6 +34,7 @@ export function useDiceDialog(): DiceDialogApi {
 interface DialogState {
   plan: PlannedDie[];
   title: string;
+  preview?: ReactNode;
 }
 
 export function DiceDialogProvider({ children }: { children: ReactNode }) {
@@ -40,14 +42,14 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
   const [values, setValues] = useState<string[]>([]);
   const resolver = useRef<((d: DiceDecision) => void) | null>(null);
 
-  const request = useCallback((plan: PlannedDie[], title: string): Promise<DiceDecision> => {
+  const request = useCallback((plan: PlannedDie[], title: string, preview?: ReactNode): Promise<DiceDecision> => {
     if (!getSettings().diceDialog || plan.length === 0) {
       return Promise.resolve({ mode: 'auto' });
     }
     return new Promise((resolve) => {
       resolver.current = resolve;
       setValues(plan.map(() => ''));
-      setDialog({ plan, title });
+      setDialog({ plan, title, preview });
     });
   }, []);
 
@@ -69,7 +71,9 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
       {children}
       {dialog && (
         <div className="dice-dialog-backdrop" onClick={() => finish({ mode: 'cancel' })}>
-          <div className="dice-dialog" role="dialog" aria-label="Бросок кубов" onClick={(e) => e.stopPropagation()}>
+          <div className="dice-dialog-wrap" onClick={(e) => e.stopPropagation()}>
+            {dialog.preview && <div className="dice-dialog-preview">{dialog.preview}</div>}
+          <div className="dice-dialog" role="dialog" aria-label="Бросок кубов">
             <div className="dice-dialog-title">{dialog.title}</div>
             <div className="dice-dialog-summary">
               Бросьте: <b>{summarizeDice(dialog.plan)}</b> — или доверьте бросок системе.
@@ -111,6 +115,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
             <p className="dice-dialog-note">
               Если атака промахнётся, значения костей урона не понадобятся. Окно можно отключить в настройках сайта.
             </p>
+          </div>
           </div>
         </div>
       )}

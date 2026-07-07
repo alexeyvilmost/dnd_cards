@@ -68,6 +68,15 @@ export const isDamageType = (t: string): t is DamageType => t in DAMAGE_TYPE_MAP
 export const getDamageColor = (type: string): string =>
   DAMAGE_TYPE_MAP[type]?.color ?? '#374151';
 
+// Яркий вариант для ТЁМНОГО фона (тултипы листа/диалоги): закреплённый физический
+// цвет #47473A слишком тёмный и сливается — подменяем на светлый пергамент; стихийные
+// цвета достаточно яркие и остаются как есть.
+export const getDamageColorOnDark = (type: string): string => {
+  const info = DAMAGE_TYPE_MAP[type];
+  if (!info) return '#c9c4a8';
+  return info.group === 'physical' ? '#cabf98' : info.color;
+};
+
 export const getDamageLabel = (type: string): string =>
   DAMAGE_TYPE_MAP[type]?.label ?? type;
 

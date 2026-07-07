@@ -417,8 +417,60 @@ func GetAllMigrations() []Migration {
 			Up:          seedDashDisengageActions,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "069_fix_dash_disengage",
+			Description: "Убрать дубли Рывок/Отход; Рывок даёт +Скорость до начала след. хода (модификатор), оба type='basic', без ограничения использований",
+			Up:          fixDashDisengageActions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// fixDashDisengageActions чистит дубли Рывок/Отход (ручные action_dash/disengage +
+// нарративные action_basic_* из миграции 068) и заводит канонические базовые действия:
+// Рывок — реальный модификатор +Скорость до начала следующего хода (движок применяет
+// speed-модификаторы активных эффектов); Отход — нарративный. Оба type='basic', без uses.
+func fixDashDisengageActions(db *sql.DB) error {
+	del := `DELETE FROM actions WHERE card_number IN ('action_dash','action_disengage','action_basic_dash','action_basic_disengage')`
+	if _, err := db.Exec(del); err != nil {
+		return fmt.Errorf("fixDashDisengageActions: cleanup: %w", err)
+	}
+
+	type basicAction struct {
+		cardNumber  string
+		name        string
+		imageURL    string
+		description string
+		mechanics   string
+	}
+	rows := []basicAction{
+		{
+			cardNumber:  "action_basic_dash",
+			name:        "Рывок",
+			imageURL:    "/icons/actions/dash.png",
+			description: "Дополнительное перемещение, равное вашей Скорости, до начала вашего следующего хода.",
+			mechanics:   `{"name":"Рывок","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"resolution":"auto","result":[{"kind":"modifier","applies_to":{"roll":"speed"},"op":"add","value":"character_speed","duration":{"type":"until_start_of_next_turn"}}]}],"targeting":{"shape":"self"}}`,
+		},
+		{
+			cardNumber:  "action_basic_disengage",
+			name:        "Отход",
+			imageURL:    "/icons/actions/disengage.png",
+			description: "До начала вашего следующего хода ваше перемещение не провоцирует атаки.",
+			mechanics:   `{"name":"Отход","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"resolution":"auto","result":[{"kind":"narrative","description":"Ваше перемещение не провоцирует атаки до начала следующего хода."}]}],"targeting":{"shape":"self"}}`,
+		},
+	}
+
+	const q = `
+		INSERT INTO actions (name, description, image_url, rarity, card_number, action_type, type, resource, mechanics, author, source)
+		VALUES ($1, $2, $3, 'common', $4, 'base_action', 'basic', '', $5::jsonb, 'System', 'PHB 2024')
+		ON CONFLICT (card_number) DO NOTHING`
+	for _, r := range rows {
+		if _, err := db.Exec(q, r.name, r.description, r.imageURL, r.cardNumber, r.mechanics); err != nil {
+			return fmt.Errorf("fixDashDisengageActions: seed %s: %w", r.cardNumber, err)
+		}
+	}
+	return nil
 }
 
 // addCardEnchantBonus заводит числовой магический бонус оружия (+N к броскам атаки и

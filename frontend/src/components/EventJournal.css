@@ -51,6 +51,15 @@
   line-height: 1.35;
 }
 
+.event-journal-res-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  vertical-align: -3px;
+  margin: 0 1px 0 3px;
+  display: inline-block;
+}
+
 .event-journal-chevron {
   flex: 0 0 auto;
   opacity: 0.6;

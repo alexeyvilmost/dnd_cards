@@ -71,17 +71,42 @@ describe('weaponActionAvailability: доступность по экипиров
     expect(twoH.reason).toBe('Нет оружия во второй руке');
   });
 
-  it('Безоружная атака: доступна только при свободной от оружия правой руке', () => {
+  it('Безоружная атака: доступна ВСЕГДА (RAW 2024), даже с оружием в руках', () => {
     expect(weaponActionAvailability(MECH_UNARMED_STRIKE, {}, ALL_CARDS).available).toBe(true);
-    const busy = weaponActionAvailability(MECH_UNARMED_STRIKE, { main_hand: CARD_LONGSWORD.id }, ALL_CARDS);
-    expect(busy.available).toBe(false);
-    expect(busy.reason).toBe('Правая рука занята оружием');
-    // Щит — не оружие: безоружная доступна.
-    expect(weaponActionAvailability(MECH_UNARMED_STRIKE, { main_hand: CARD_SHIELD.id }, ALL_CARDS).available).toBe(true);
+    expect(weaponActionAvailability(MECH_UNARMED_STRIKE, { main_hand: CARD_LONGSWORD.id }, ALL_CARDS).available).toBe(true);
+    expect(weaponActionAvailability(MECH_UNARMED_STRIKE,
+      { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id }, ALL_CARDS).available).toBe(true);
   });
 
   it('не-оружейное действие не гейтится', () => {
     expect(weaponActionAvailability({ effects: [{ resolution: 'auto', result: [] }] }, {}, ALL_CARDS).available).toBe(true);
+  });
+});
+
+describe('настройка гейтит магию оружия (#5): без настройки — только чистые статы', () => {
+  const eq = { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id };
+
+  it('ненастроенный Молот мороза +1 — только 2d6 дробящего (нет +1, нет холода)', () => {
+    const unattuned: CharacterContext = { ...CTX, attunedIds: [] };
+    const w = weaponContext(unattuned, 'main', eq)!;
+    expect(w.enchant).toBe(0);
+    expect(w.damages).toEqual([{ dice: '2d6', type: 'bludgeoning' }]);
+    const p = weaponAttackPreview(MECH_WEAPON_ATTACK, unattuned, eq)!;
+    expect(p.attack).toBe(4); // СИЛ(2)+БМ(2), без зачарования
+    expect(p.damages).toEqual([{ dice: '2d6', bonus: 2, type: 'bludgeoning' }]);
+  });
+
+  it('настроенный — снова 2d6 +1 дробящего и 1d6 холода', () => {
+    const attuned: CharacterContext = { ...CTX, attunedIds: [CARD_FROST_HAMMER.id] };
+    const w = weaponContext(attuned, 'main', eq)!;
+    expect(w.enchant).toBe(1);
+    expect(w.damages).toEqual([{ dice: '2d6', type: 'bludgeoning' }, { dice: '1d6', type: 'cold' }]);
+  });
+
+  it('attunedIds не задан (тесты/старый контекст) — не гейтим (обратная совместимость)', () => {
+    const w = weaponContext(CTX, 'main', eq)!; // CTX без attunedIds
+    expect(w.enchant).toBe(1);
+    expect(w.damages).toHaveLength(2);
   });
 });
 

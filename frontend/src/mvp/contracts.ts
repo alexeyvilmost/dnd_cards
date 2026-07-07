@@ -128,6 +128,10 @@ export interface CharacterContext {
   saveProficiencies?: string[];
   skillProficiencies?: string[];
   skillExpertise?: string[];
+  /** Id предметов, на которые персонаж настроен (turn_state.attuned_ids). Для гейтинга
+   * магических бонусов: предмет с requires_attunement без настройки даёт только чистые статы.
+   * undefined — контекст без данных о настройке (тесты) → бонусы не гейтятся. */
+  attunedIds?: string[];
 }
 
 export interface TargetContext {
@@ -148,6 +152,9 @@ export interface ExecuteContext {
   choices?: Record<string, string>;
   /** Контекст каста заклинания (E5): базовый уровень и уровень слота для апкаста. */
   spell?: { baseLevel: number; castLevel?: number };
+  /** Планирующий прогон для плана кубов: спасброски берут ветку провала, чтобы кости
+   * урона попали в план (иначе при СЛ-успехе on_fail-урон не запланируется). Не для боя. */
+  planning?: boolean;
 }
 
 /**

@@ -49,22 +49,35 @@ export function weaponEnchant(card: Card): number {
 }
 
 /**
+ * Магические бонусы предмета действуют, если он не требует настройки ИЛИ на него
+ * настроены. Ненастроенный магический предмет даёт только чистые статы (общее правило
+ * настройки; пока применяется к оружию). attunedIds:undefined — данных нет (тесты) → не гейтим.
+ */
+function itemBonusesActive(card: Card, character: CharacterContext): boolean {
+  if (!card.requires_attunement) return true;
+  if (character.attunedIds == null) return true;
+  return character.attunedIds.includes(card.id);
+}
+
+/**
  * Все строки урона оружия: основная (bonus_value+damage_type) и стихийная
  * (elemental_damage_value+elemental_damage_type), если задана. Гранулярность №4 —
  * каждая строка отдельна, движок бросает и применяет их независимо.
+ * magic=false (не настроен) — стихийный урон отбрасывается (это магическое свойство).
  */
-function weaponDamages(card: Card, twoHandedGrip: boolean): Array<{ dice: string; type: string }> {
+function weaponDamages(card: Card, twoHandedGrip: boolean, magic: boolean): Array<{ dice: string; type: string }> {
   const out: Array<{ dice: string; type: string }> = [
     { dice: weaponDice(card, twoHandedGrip), type: card.damage_type ?? 'bludgeoning' },
   ];
   const ed = card.elemental_damage_value?.trim();
   const et = card.elemental_damage_type?.trim();
-  if (ed && et) out.push({ dice: ed.replace(/к/i, 'd'), type: et });
+  if (magic && ed && et) out.push({ dice: ed.replace(/к/i, 'd'), type: et });
   return out;
 }
 
 function cardToWeapon(card: Card, character: CharacterContext, twoHandedGrip = false): WeaponContext {
-  const damages = weaponDamages(card, twoHandedGrip);
+  const magic = itemBonusesActive(card, character); // настройка: без неё — только чистые статы
+  const damages = weaponDamages(card, twoHandedGrip, magic);
   return {
     cardId: card.id,
     name: card.name,
@@ -72,7 +85,7 @@ function cardToWeapon(card: Card, character: CharacterContext, twoHandedGrip = f
     ability: pickAbility(card, character),
     damageType: damages[0].type,
     damages,
-    enchant: weaponEnchant(card),
+    enchant: magic ? weaponEnchant(card) : 0,
     properties: cardPropsList(card),
   };
 }
@@ -169,9 +182,8 @@ export function weaponActionAvailability(
   const offCard = offId ? cardsById.get(offId) : undefined;
 
   if (kind === 'unarmed') {
-    return isWeaponCard(mainCard)
-      ? { available: false, reason: 'Правая рука занята оружием' }
-      : { available: true };
+    // По RAW 2024 безоружный удар доступен всегда (свободная рука нужна только для Захвата).
+    return { available: true };
   }
   if (kind === 'main') {
     return isWeaponCard(mainCard)

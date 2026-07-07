@@ -162,6 +162,7 @@ export const CARD_FROST_HAMMER: Card = {
   type: 'weapon', slot: 'two_hands', weight: 10,
   bonus_type: 'damage' as Card['bonus_type'], bonus_value: '2d6', damage_type: 'bludgeoning',
   elemental_damage_value: '1d6', elemental_damage_type: 'cold', enchant_bonus: 1,
+  requires_attunement: true,
   properties: ['two_handed', 'heavy'] as unknown as Card['properties'],
 } as Card;
 

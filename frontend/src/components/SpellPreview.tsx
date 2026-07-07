@@ -5,7 +5,7 @@ import {
   SPELL_CLASS_OPTIONS,
   getSpellLevelLabel,
 } from '../types';
-import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
+import { getDamageColor, getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
@@ -147,7 +147,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
                 {dmgEntries.map((d, i) => (
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
-                    <span className="sp-dmgitem" style={{ color: getDamageColor(d.type) }}>
+                    <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
                       {diceRu(d.value)}
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" />
                       {getDamageLabel(d.type).toLowerCase()}
