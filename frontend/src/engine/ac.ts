@@ -6,6 +6,7 @@ import type { CharacterContext, RuntimeState, ValueBreakdown } from '../mvp/cont
 import type { RollModifier } from '../mvp/contracts';
 import { evaluate } from './formula';
 import { getCard } from './cardRegistry';
+import { pickBestMethod, type ValueMethod } from './derivedValue';
 
 type Dict = Record<string, unknown>;
 
@@ -29,7 +30,9 @@ function parseFlatBonus(raw: string): number {
   return m ? Number(m[1]) : 0;
 }
 
-function findAcBaseOverride(passives: Dict[]): string | null {
+/** Все формулы set_value ac_base из пассивок — каждая станет методом-кандидатом. */
+function acBaseOverrides(passives: Dict[]): string[] {
+  const out: string[] = [];
   for (const mech of passives) {
     const effects = (mech.effects ?? mech.interactions) as unknown;
     if (!Array.isArray(effects)) continue;
@@ -38,12 +41,13 @@ function findAcBaseOverride(passives: Dict[]): string | null {
       if (!Array.isArray(results)) continue;
       for (const r of results as Dict[]) {
         if (r.kind === 'set_value' && r.target === 'ac_base') {
-          return String(r.formula ?? r.value ?? '');
+          const f = String(r.formula ?? r.value ?? '');
+          if (f) out.push(f);
         }
       }
     }
   }
-  return null;
+  return out;
 }
 
 function allKnownCards(character: CharacterContext): Card[] {
@@ -103,35 +107,42 @@ export function computeAC(
   const cards = allKnownCards(character);
   const byId = cardIndex ?? new Map(cards.map((c) => [c.id, c]));
   for (const [id, c] of byId) if (!cards.find((x) => x.id === id)) cards.push(c);
-  const parts: RollModifier[] = [];
 
   const armor = armorFromState(state, cards);
   const shield = shieldFromState(state, cards);
 
-  let total: number;
+  // Методы-кандидаты базового КЗ (парадигма №3): берётся максимум применимого.
+  const methods: ValueMethod[] = [];
 
   if (armor) {
-    total = armorAc(armor, character, parts);
+    // В доспехе безоружные методы неприменимы (по RAW 2024 требуют отсутствия доспеха).
+    const parts: RollModifier[] = [];
+    const value = armorAc(armor, character, parts);
+    methods.push({ name: armor.name, value, parts });
   } else {
-    const override = findAcBaseOverride(passives);
-    if (override) {
-      total = evalNum(override, character);
-      parts.push({ value: total, source: 'Защита без доспехов', reason: 'пассивка' });
-    } else {
-      const dex = character.abilityMods.dex ?? 0;
-      parts.push({ value: 10, source: 'база', reason: 'без доспеха' });
-      if (dex) parts.push({ value: dex, source: 'ЛВК', reason: 'модификатор характеристики' });
-      total = 10 + dex;
+    const dex = character.abilityMods.dex ?? 0;
+    const baseParts: RollModifier[] = [{ value: 10, source: 'база', reason: 'без доспеха' }];
+    if (dex) baseParts.push({ value: dex, source: 'ЛВК', reason: 'модификатор характеристики' });
+    methods.push({ name: 'Без доспеха', value: 10 + dex, parts: baseParts });
+
+    // Каждый set_value ac_base — отдельный метод; берётся максимум (Защита без доспехов
+    // 10+ЛВК+ТЕЛ vs Доспех мага 13+ЛВК → больший), а не первый попавшийся.
+    for (const formula of acBaseOverrides(passives)) {
+      const value = evalNum(formula, character);
+      methods.push({
+        name: 'Защита без доспехов',
+        value,
+        parts: [{ value, source: 'Защита без доспехов', reason: 'пассивка' }],
+      });
     }
   }
 
+  // Щит — аддитивный бонус поверх выбранного базового метода.
+  const additive: RollModifier[] = [];
   if (shield?.bonus_value) {
     const bonus = parseFlatBonus(shield.bonus_value);
-    if (bonus) {
-      parts.push({ value: bonus, source: 'Щит', reason: shield.name });
-      total += bonus;
-    }
+    if (bonus) additive.push({ value: bonus, source: 'Щит', reason: shield.name });
   }
 
-  return { value: total, parts };
+  return pickBestMethod(methods, additive);
 }

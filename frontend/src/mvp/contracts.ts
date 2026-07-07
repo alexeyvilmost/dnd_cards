@@ -162,6 +162,8 @@ export interface WeaponContext {
 export interface ValueBreakdown {
   value: number;
   parts: RollModifier[];
+  /** Отвергнутые методы-кандидаты (парадигма №3): показываются в превью «прочие способы». */
+  rejected?: { name: string; value: number }[];
 }
 
 // ─── Реэкспорты движка (контрактные точки входа) ────────────────────────────

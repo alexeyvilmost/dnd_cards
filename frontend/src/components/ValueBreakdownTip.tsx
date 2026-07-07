@@ -41,6 +41,16 @@ export default function ValueBreakdownTip({ breakdown, children, label }: Props)
               <span>{breakdown.value}</span>
             </li>
           </ul>
+          {breakdown.rejected && breakdown.rejected.length > 0 && (
+            <ul className="value-breakdown-alts">
+              {breakdown.rejected.map((r, i) => (
+                <li key={i}>
+                  <span>другой способ: {r.name}</span>
+                  <span>{r.value}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </span>
       )}
     </span>

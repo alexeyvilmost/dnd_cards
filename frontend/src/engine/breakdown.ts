@@ -75,6 +75,7 @@ function breakdownAC(
   return {
     value: base.value + fxSum,
     parts: [...base.parts, ...fxParts],
+    ...(base.rejected ? { rejected: base.rejected } : {}),
   };
 }
 
