@@ -3,14 +3,17 @@ import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { actionsApi } from '../api/client';
 import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import ActionPreview from './ActionPreview';
+import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
 
 interface ActionDetailModalProps {
   action: Action | null;
   isOpen: boolean;
   onClose: () => void;
   onDelete: (actionId: string) => void;
+  onUpdated?: () => void;
 }
 
 const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
@@ -18,6 +21,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
   isOpen,
   onClose,
   onDelete,
+  onUpdated,
 }) => {
   const resources = useResourceOptions();
   // Обработчик для закрытия по Esc
@@ -71,10 +75,15 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
         {/* Содержимое */}
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Левая колонка - превью карточки */}
-            <div className="flex justify-center">
-              <ActionPreview action={action} disableHover={true} resources={resources} />
-            </div>
+            {/* Левая колонка - превью карточки + смена изображения */}
+            <EntityImageEditor
+              entityId={action.id}
+              initialUrl={action.image_url || ''}
+              persist={async (id, url) => (await actionsApi.updateAction(id, { image_url: url })).image_url || url}
+              generateReq={{ style: 'spell_icon', subject: action.name, quality: 'medium', extra: ICON_EXTRA }}
+              renderPreview={(url) => <ActionPreview action={{ ...action, image_url: url }} disableHover resources={resources} />}
+              onUpdated={() => onUpdated?.()}
+            />
 
             {/* Правая колонка - детальная информация */}
             <div className="space-y-4">

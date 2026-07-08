@@ -3,16 +3,19 @@ import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { Feat } from '../types';
 import { getFeatCategoryLabel, getAbilityLabel } from '../types';
+import { featsApi } from '../api/client';
 import FeatPreview from './FeatPreview';
+import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
 
 interface FeatDetailModalProps {
   feat: Feat | null;
   isOpen: boolean;
   onClose: () => void;
   onDelete: (id: string) => void;
+  onUpdated?: () => void;
 }
 
-const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose, onDelete }) => {
+const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose, onDelete, onUpdated }) => {
   useEffect(() => {
     if (!isOpen) return;
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -32,9 +35,14 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="flex justify-center pt-6">
-              <FeatPreview feat={feat} disableHover={true} />
-            </div>
+            <EntityImageEditor
+              entityId={feat.id}
+              initialUrl={feat.image_url || ''}
+              persist={async (id, url) => (await featsApi.updateFeat(id, { image_url: url })).image_url || url}
+              generateReq={{ style: 'spell_icon', subject: feat.name, quality: 'medium', extra: ICON_EXTRA }}
+              renderPreview={(url) => <FeatPreview feat={{ ...feat, image_url: url }} disableHover />}
+              onUpdated={() => onUpdated?.()}
+            />
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Категория</h3>

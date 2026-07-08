@@ -34,11 +34,14 @@ const DetailHost = ({ type, id, onClose }: { type: EntityRefType; id: string; on
   if (loading) return null;
   if (error || !entity) return null;
 
+  // Смена изображения из детального окна → сбросить кэш, чтобы на след. открытии подтянуть новое.
+  const onImageUpdated = () => evictEntity(type, id);
+
   switch (type) {
     case 'card': return <CardDetailModal card={entity as Card} isOpen onClose={onClose} onDelete={handleDelete} />;
-    case 'spell': return <SpellDetailModal spell={entity as Spell} isOpen onClose={onClose} onDelete={handleDelete} />;
-    case 'action': return <ActionDetailModal action={entity as Action} isOpen onClose={onClose} onDelete={handleDelete} />;
-    case 'effect': return <EffectDetailModal effect={entity as PassiveEffect} isOpen onClose={onClose} onDelete={handleDelete} />;
+    case 'spell': return <SpellDetailModal spell={entity as Spell} isOpen onClose={onClose} onDelete={handleDelete} onUpdated={onImageUpdated} />;
+    case 'action': return <ActionDetailModal action={entity as Action} isOpen onClose={onClose} onDelete={handleDelete} onUpdated={onImageUpdated} />;
+    case 'effect': return <EffectDetailModal effect={entity as PassiveEffect} isOpen onClose={onClose} onDelete={handleDelete} onUpdated={onImageUpdated} />;
     case 'concept': return <ConceptDetailModal concept={entity as Concept} isOpen onClose={onClose} onDelete={handleDelete} />;
     default: return null;
   }

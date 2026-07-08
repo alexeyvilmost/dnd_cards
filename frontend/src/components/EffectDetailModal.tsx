@@ -3,14 +3,17 @@ import { Link } from 'react-router-dom';
 import { X, Edit, Trash2 } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
+import { effectsApi } from '../api/client';
 import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
+import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
 
 interface EffectDetailModalProps {
   effect: PassiveEffect | null;
   isOpen: boolean;
   onClose: () => void;
   onDelete: (effectId: string) => void;
+  onUpdated?: () => void;
 }
 
 const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
@@ -18,6 +21,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
   isOpen,
   onClose,
   onDelete,
+  onUpdated,
 }) => {
   // Обработчик для закрытия по Esc
   useEffect(() => {
@@ -65,10 +69,15 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
         {/* Содержимое */}
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Левая колонка - превью карточки */}
-            <div className="flex justify-center">
-              <EffectPreview effect={effect} disableHover={true} />
-            </div>
+            {/* Левая колонка - превью карточки + смена изображения */}
+            <EntityImageEditor
+              entityId={effect.id}
+              initialUrl={effect.image_url || ''}
+              persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
+              generateReq={{ style: 'spell_icon', subject: effect.name, quality: 'medium', extra: ICON_EXTRA }}
+              renderPreview={(url) => <EffectPreview effect={{ ...effect, image_url: url }} disableHover />}
+              onUpdated={() => onUpdated?.()}
+            />
 
             {/* Правая колонка - детальная информация */}
             <div className="space-y-4">
