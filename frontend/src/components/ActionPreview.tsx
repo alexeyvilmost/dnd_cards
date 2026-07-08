@@ -6,6 +6,7 @@ import { FormattedText } from '../utils/formattedText';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import { resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
+import { useSiteSettings } from '../settings';
 
 interface ActionPreviewProps {
   action: Action;
@@ -21,6 +22,7 @@ const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
 const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
+  const { playerMode } = useSiteSettings();
 
   const actionTypeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type || '';
   const rechargeLabel = action.recharge
@@ -112,7 +114,8 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
         </div>
       )}
 
-      {(mechDesc.summary || mechDesc.details.length > 0) && (
+      {/* Авто-описание механики (сырые id/стоимость/использования) — прячем в режиме игрока. */}
+      {!playerMode && (mechDesc.summary || mechDesc.details.length > 0) && (
         <div className="sp-desc" style={{ marginBottom: 4 }}>
           {mechDesc.summary && <FormattedText text={mechDesc.summary} emptyText="" />}
           {mechDesc.details.map((d, i) => (

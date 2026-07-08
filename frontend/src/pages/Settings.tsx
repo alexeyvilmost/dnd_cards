@@ -1,4 +1,4 @@
-import { Dices, LayoutGrid, List } from 'lucide-react';
+import { Dices, LayoutGrid, List, Eye } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -44,6 +44,26 @@ const Settings = () => {
               Перед действием, требующим броска, показывать окно: система подскажет, сколько и каких
               кубов бросить, и позволит либо бросить автоматически, либо ввести значения ваших
               физических кубов. Результат в любом случае попадает в журнал.
+            </span>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-4 p-5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-1 w-5 h-5 text-indigo-600 rounded"
+            checked={settings.playerMode}
+            onChange={(e) => setSetting('playerMode', e.target.checked)}
+          />
+          <span>
+            <span className="flex items-center gap-2 font-medium text-gray-900">
+              <Eye size={18} className="text-indigo-600" />
+              Режим игрока
+            </span>
+            <span className="block text-sm text-gray-500 mt-1">
+              Прячет техническое описание механики (сырые id ресурсов/ячеек, «Стоит…», «Использования…»)
+              из превью и листа персонажа. Остаётся человеческое описание, чипы стоимости и боевые
+              характеристики (атака, урон, лечение). Выключите, чтобы как мастер видеть всю механику.
             </span>
           </span>
         </label>

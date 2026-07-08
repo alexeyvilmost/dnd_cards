@@ -15,6 +15,9 @@ export interface SiteSettings {
   diceDialog: boolean;
   /** Как отображать заклинания/действия/эффекты/предметы в меню и на листе. */
   entityDisplay: EntityDisplaySettings;
+  /** Режим игрока: превью/лист прячут авто-описание механики и сырые id, оставляя
+   *  человеческое описание, чипы стоимости и боевые статы. Мастер выключает — видит всё. */
+  playerMode: boolean;
 }
 
 const KEY = 'site-settings';
@@ -28,6 +31,7 @@ const DEFAULTS: SiteSettings = {
     effects: 'row',
     items: 'row',
   },
+  playerMode: false,
 };
 
 export function getSettings(): SiteSettings {

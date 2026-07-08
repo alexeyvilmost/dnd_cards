@@ -1,6 +1,9 @@
 import type { Action } from '../../types';
+import { ACTION_RECHARGE_OPTIONS } from '../../types';
 import type { WeaponAttackPreview } from '../../engine/weapon';
 import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../../utils/damageTypes';
+import { resourceCostIcon, resourceLabel, useResourceOptions } from '../../utils/resources';
+import { FormattedText } from '../../utils/formattedText';
 
 type ActionHoverCardProps = {
   action: Action;
@@ -25,6 +28,15 @@ const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
 const ActionHoverCard = ({ action, sourceLabel, weaponAttackPreview }: ActionHoverCardProps) => {
   const desc = usefulText(action);
   const wp = weaponAttackPreview;
+  const resources = useResourceOptions();
+  // Стоимость: resources[] (несколько) с фолбэком на устаревший resource — как в библиотечном ActionPreview.
+  const resourceIds: string[] = Array.isArray(action.resources) && action.resources.length > 0
+    ? action.resources
+    : (action.resource ? [String(action.resource)] : []);
+  const rechargeLabel = action.recharge
+    ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
+      + (action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : '')
+    : '';
   return (
     <div className="forge-effect-card">
       {action.image_url?.trim() && (
@@ -63,7 +75,26 @@ const ActionHoverCard = ({ action, sourceLabel, weaponAttackPreview }: ActionHov
           </div>
         )}
 
-        {desc && <p className="forge-effect-card-desc">{desc}</p>}
+        {desc && <p className="forge-effect-card-desc"><FormattedText text={desc} emptyText="" /></p>}
+
+        {rechargeLabel && (
+          <div className="action-hc-recharge"><span className="action-hc-recharge-i">⟳</span>{rechargeLabel}</div>
+        )}
+        {resourceIds.length > 0 && (
+          <div className="action-hc-costbar">
+            {resourceIds.map((id, i) => (
+              <span className="action-hc-cost" key={i}>
+                <img
+                  className="action-hc-costicon"
+                  src={resourceCostIcon(resources, id)}
+                  alt={resourceLabel(resources, id)}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                />
+                {resourceLabel(resources, id)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <style>{ACTION_ATK_CSS}</style>
     </div>
@@ -83,6 +114,11 @@ const ACTION_ATK_CSS = `
 .action-atk-dmgitem { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
 .action-atk-sep { color: #b7a98a; margin-right: 4px; }
 .action-atk-icon { width: 14px; height: 14px; object-fit: contain; }
+.action-hc-recharge { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #b7a98a; margin-top: 6px; }
+.action-hc-recharge-i { font-style: normal; opacity: 0.8; }
+.action-hc-costbar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.action-hc-cost { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #e8dcc0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; padding: 2px 7px; }
+.action-hc-costicon { width: 15px; height: 15px; object-fit: contain; }
 `;
 
 export default ActionHoverCard;
