@@ -271,16 +271,15 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
               key={slot}
               card={card}
               onClick={() => openEquipped(slot, card)}
-              right={<span className="sheet-slot-tag">{label}</span>}
+              stamp={SLOT_ICON[slot]}
             />
           ) : (
-            <div key={slot} className="sheet-item-row is-empty" title={`${label} — пусто`}>
+            <div key={slot} className="sheet-item-row is-empty" title={label}>
               <span className="sheet-item-row-thumb is-slot">
                 <img src={SLOT_ICON[slot]} alt={label} />
               </span>
               <span className="sheet-item-row-body">
-                <span className="sheet-item-row-name">{label}</span>
-                <span className="sheet-slot-empty">пусто</span>
+                <span className="sheet-item-row-name sheet-slot-empty">Пусто</span>
               </span>
             </div>
           );
@@ -301,7 +300,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
               <button
                 key={row.card_id}
                 type="button"
-                className="forge-spell-icon ready"
+                className="forge-spell-icon ready sheet-inv-tile-icon"
                 title={card?.name ?? row.card_id}
                 onClick={() => { if (card) openInventoryItem(card); }}
                 {...hoverHandlers(card)}

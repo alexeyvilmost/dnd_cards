@@ -419,9 +419,9 @@
 .sheet-equip-topbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 .sheet-equip-topbar .sheet-stat { flex: 1 1 120px; }
 .sheet-stat-wallet { flex: 1 1 100%; }
-.sheet-wallet { display: inline-flex; align-items: center; gap: 18px; font-size: 1.35rem; }
-.sheet-wallet-coin { display: inline-flex; align-items: center; gap: 5px; color: var(--forge-gold); }
-.sheet-wallet-coin img { width: 22px; height: 22px; object-fit: contain; }
+.sheet-wallet { display: inline-flex; align-items: center; gap: 18px; }
+.sheet-stat-wallet .sheet-wallet-coin { display: inline-flex; align-items: center; gap: 5px; color: var(--forge-gold); font-size: 18px; font-weight: 700; }
+.sheet-wallet-coin img { width: 20px; height: 20px; object-fit: contain; }
 
 /* Слоты — плитки с лого на фоне */
 .sheet-slot-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
@@ -434,11 +434,11 @@
 .sheet-slot-tile.filled { cursor: pointer; border-color: var(--forge-gold-dim); }
 .sheet-slot-tile.filled:hover { transform: translateY(-2px); border-color: var(--forge-gold); box-shadow: 0 0 12px rgba(201,162,39,.4); }
 .sheet-slot-bg {
-  position: absolute; inset: 0; margin: auto; width: 60%; height: 60%; object-fit: contain;
-  opacity: .28; filter: grayscale(1) brightness(1.7); pointer-events: none;
+  position: absolute; inset: 0; margin: auto; width: 58%; height: 58%; object-fit: contain;
+  opacity: .6; filter: brightness(0) invert(0.62); pointer-events: none;
 }
-.sheet-slot-tile.filled .sheet-slot-bg { opacity: .10; }
-.sheet-slot-item { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.14); }
+.sheet-slot-tile.filled .sheet-slot-bg { opacity: .12; }
+.sheet-slot-item { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transform: scale(1); padding: 5px; }
 .sheet-slot-attune { position: absolute; top: 2px; right: 2px; color: var(--forge-gold); filter: drop-shadow(0 0 3px #000); display: inline-flex; }
 .sheet-slot-tile-label {
   position: absolute; left: 0; right: 0; bottom: 0; font-size: 8.5px; line-height: 1.1;
@@ -455,11 +455,19 @@
 
 /* Ряд-предмет в стиле библиотеки (тёмная тема) */
 .sheet-item-row {
+  position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
   padding: 6px 8px; border: 1px solid var(--forge-line); border-left: 3px solid #5a4a38;
   border-radius: 8px; background: var(--forge-panel-2); cursor: pointer; color: var(--forge-text);
   transition: border-color .14s, background .14s, transform .1s;
 }
+/* Лого-штамп слота на заднем фоне справа (текст перекрывает его). */
+.sheet-item-stamp {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  height: 66%; width: auto; max-width: 44px; object-fit: contain;
+  opacity: .15; filter: brightness(0) invert(1); pointer-events: none; z-index: 0;
+}
+.sheet-item-row-thumb, .sheet-item-row-body, .sheet-item-row-right { position: relative; z-index: 1; }
 .sheet-item-row:hover {
   background: rgba(201,162,39,.08); transform: translateY(-1px);
   border-top-color: var(--forge-gold-dim); border-right-color: var(--forge-gold-dim); border-bottom-color: var(--forge-gold-dim);
@@ -469,11 +477,12 @@
 .sheet-item-row.is-dimmed { opacity: .4; }
 .sheet-item-row.is-selected { border-color: var(--forge-gold); }
 .sheet-item-row-thumb {
-  position: relative; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 6px; overflow: hidden;
-  border: 1px solid #4a3f30; background: radial-gradient(circle at 50% 40%, #2f261d, #191309);
+  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 6px; overflow: hidden;
+  border: none; background: transparent;
 }
-.sheet-item-row-thumb img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); }
-.sheet-item-row-thumb.is-slot img { object-fit: contain; transform: none; opacity: .4; filter: grayscale(1) brightness(1.6); padding: 5px; }
+.sheet-item-row-thumb img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.02); }
+.sheet-item-row-thumb.is-slot img { object-fit: contain; transform: none; opacity: .62; filter: brightness(0) invert(0.66); padding: 4px; }
+.sheet-chip-mono { filter: brightness(0) invert(0.78); }
 .sheet-item-row-qty {
   position: absolute; right: -3px; bottom: -3px; min-width: 16px; height: 16px; padding: 0 3px;
   border-radius: 8px; background: #1a1410; border: 1px solid var(--forge-gold-dim);
@@ -499,7 +508,9 @@
 
 /* #5 — картинка заполняет всю плитку-иконку (убираем пустые поля) */
 .forge-spell-icon { padding: 4px; }
-.forge-spell-icon img { object-fit: cover; transform: scale(1.14); }
+.forge-spell-icon img { object-fit: cover; transform: scale(1.1); }
+/* Предметы в инвентаре — картинка чуть меньше, целиком (посох/молот не упираются в края) */
+.forge-spell-icon.sheet-inv-tile-icon img { object-fit: contain; transform: scale(1.03); }
 
 /* Диалог надевания/снятия */
 .sheet-equip-overlay {

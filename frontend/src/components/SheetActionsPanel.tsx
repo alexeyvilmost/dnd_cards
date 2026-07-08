@@ -20,7 +20,7 @@ import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
-import { SPELL_SCHOOL_OPTIONS, type Card } from '../types';
+import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card } from '../types';
 import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '../mvp/contracts';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
@@ -38,6 +38,8 @@ interface Props {
   /** false — ресурсы/эффекты рисует соседняя SheetRuntimePanel (классический макет). */
   showResources?: boolean;
   showEffects?: boolean;
+  /** Только заклинания, сгруппированные по кругам (блок «Заклинания» = 1:1 с блоком «Действия»). */
+  spellsOnly?: boolean;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -91,6 +93,7 @@ export default function SheetActionsPanel({
   embedded,
   showResources = true,
   showEffects = true,
+  spellsOnly = false,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -264,19 +267,32 @@ export default function SheetActionsPanel({
     apply(state, events);
   };
 
-  const groups: { key: SheetAction['group']; label: string; items: SheetAction[] }[] = [
+  const allGroups: { key: string; label: string; items: SheetAction[] }[] = [
     { key: 'basic', label: 'Базовые', items: actions.filter((a) => a.group === 'basic') },
     { key: 'race', label: 'Вид', items: actions.filter((a) => a.group === 'race') },
     { key: 'class', label: 'Класс', items: actions.filter((a) => a.group === 'class') },
     { key: 'item', label: 'Предметы', items: actions.filter((a) => a.group === 'item') },
     { key: 'spell', label: 'Заклинания', items: actions.filter((a) => a.group === 'spell') },
   ];
+  // Режим «только заклинания»: группировка по кругам (тот же SheetActionLine и то же
+  // поведение по клику/наведению, что и в блоке «Действия»).
+  const spellLevelGroups: { key: string; label: string; items: SheetAction[] }[] = (() => {
+    const m = new Map<number, SheetAction[]>();
+    for (const a of actions) {
+      if (a.group !== 'spell') continue;
+      const lvl = a.spellRef?.level ?? a.level ?? 0;
+      if (!m.has(lvl)) m.set(lvl, []);
+      m.get(lvl)!.push(a);
+    }
+    return [...m.entries()].sort((x, y) => x[0] - y[0]).map(([lvl, items]) => ({ key: `lvl-${lvl}`, label: getSpellLevelLabel(lvl), items }));
+  })();
+  const groups = spellsOnly ? spellLevelGroups : allGroups;
 
   const body = (
     <>
       {error && <p className="issues">{error}</p>}
 
-      {showResources && resourceKeys.length > 0 && (
+      {showResources && !spellsOnly && resourceKeys.length > 0 && (
         <div className="res-tile-row">
           {resourceKeys.map((key) => {
             const cur = runtime.resources[key] ?? 0;
@@ -359,7 +375,7 @@ export default function SheetActionsPanel({
         </div>
       ))}
 
-      {showEffects && runtime.activeEffects.length > 0 && (
+      {showEffects && !spellsOnly && runtime.activeEffects.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 8 }}>
           <h3 className="sheet-h3">Активные эффекты</h3>
           <ul className="sheet-active-effects">

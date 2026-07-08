@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { usePinMode } from '../hooks/usePinMode';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronsUp, Dices, Pencil, Sun, Moon } from 'lucide-react';
 import { cardsApi } from '../api/client';
@@ -19,11 +18,10 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
-import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card, type Spell } from '../types';
+import { type Card } from '../types';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SheetEntityRow from '../components/SheetEntityRow';
-import SpellPreview from '../components/SpellPreview';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
 import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
@@ -78,26 +76,11 @@ const originKindShort = (kind: string) => {
 };
 const originDetail = (kind: string, name: string) => `${originKindShort(kind)} · ${name}`;
 
-const schoolLabel = (school?: string | null) =>
-  SPELL_SCHOOL_OPTIONS.find((s) => s.value === school)?.label || school || '';
-const spellRowDetail = (spell: Spell) =>
-  `${spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}${spell.school ? ` · ${schoolLabel(spell.school)}` : ''}`;
-
 const CharacterSheetMVP = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
-  const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
-  // Режим закрепления (T): превью заклинания остаётся и становится интерактивным.
-  const { pinModeActive } = usePinMode();
-  const prevPinRef = useRef(pinModeActive);
-  useEffect(() => {
-    if (prevPinRef.current && !pinModeActive) setHoveredSpell(null);
-    prevPinRef.current = pinModeActive;
-  }, [pinModeActive]);
-  const leaveSpell = () => { if (!pinModeActive) setHoveredSpell(null); };
-  const [spellMouse, setSpellMouse] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
@@ -328,15 +311,6 @@ const CharacterSheetMVP = () => {
     } catch (e) {
       console.error('runtime events', e);
     }
-  };
-
-  // Клик по заклинанию в секции «Заклинания» — прокрутка к его действию с подсветкой.
-  const scrollToAction = (actionId: string) => {
-    const el = document.querySelector(`[data-action-id="${actionId}"]`);
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.classList.add('sheet-action-flash');
-    window.setTimeout(() => el.classList.remove('sheet-action-flash'), 1600);
   };
 
   // Клик по спасброску/навыку — бросок к20 с разбивкой в журнал.
@@ -642,9 +616,16 @@ const CharacterSheetMVP = () => {
             {assembled.feats.length > 0 && (
               <div className="sheet-group">
                 <h3 className="sheet-h3">Черты</h3>
-                <ul className="sheet-tags">
-                  {assembled.feats.map((f) => <li key={f.id}>{f.name}</li>)}
-                </ul>
+                <div className="sheet-item-cols">
+                  {assembled.feats.map((f) => (
+                    <SheetEntityRow
+                      key={f.id}
+                      imageUrl={(f as { image_url?: string | null }).image_url}
+                      name={f.name}
+                      detail="Черта"
+                    />
+                  ))}
+                </div>
               </div>
             )}
             {assembled.effects.length > 0 && (
@@ -737,72 +718,19 @@ const CharacterSheetMVP = () => {
           {assembled.spells.length > 0 && (
             <section className="sheet-panel sheet-panel-wide">
               <h2 className="sheet-h2">Заклинания</h2>
-              {spellsByLevel.map(([level, spellList]) => (
-                <div key={level} className="sheet-group">
-                  <h3 className="sheet-h3">{getSpellLevelLabel(level)}</h3>
-                  {entityDisplay.spells === 'row' ? (
-                    <div className="sheet-item-cols">
-                      {spellList.map((spell) => (
-                        <SheetEntityRow
-                          key={spell.id}
-                          imageUrl={spell.image_url}
-                          name={spell.name}
-                          detail={spellRowDetail(spell)}
-                          title={`${spell.name} — к действию`}
-                          onClick={() => scrollToAction(spell.id)}
-                          onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
-                          onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
-                          onMouseLeave={leaveSpell}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="forge-spell-icon-grid sheet-spell-grid">
-                      {spellList.map((spell) => (
-                        <button
-                          key={spell.id}
-                          type="button"
-                          className="forge-spell-icon ready"
-                          title={`${spell.name} — к действию`}
-                          onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
-                          onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
-                          onMouseLeave={leaveSpell}
-                          onClick={() => scrollToAction(spell.id)}
-                        >
-                          {spell.image_url ? (
-                            <img
-                              src={spell.image_url}
-                              alt={spell.name}
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }}
-                            />
-                          ) : (
-                            <span className="sheet-spell-fallback">{spell.name.slice(0, 1)}</span>
-                          )}
-                          <span className="forge-spell-badge">{level === 0 ? 'З' : level}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {hoveredSpell && (
-                <div
-                  className="fixed z-50"
-                  style={{
-                    left: Math.min(spellMouse.x + 16, window.innerWidth - 360),
-                    top: Math.min(Math.max(spellMouse.y - 40, 10), window.innerHeight - 20),
-                    transform: spellMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
-                    pointerEvents: pinModeActive ? 'auto' : 'none',
-                  }}
-                  onMouseLeave={leaveSpell}
-                >
-                  <SpellPreview
-                    spell={hoveredSpell}
-                    disableHover={true}
-                    spellcasting={spellcasting ? { saveDC: spellcasting.saveDC, attack: spellcasting.attack } : undefined}
-                  />
-                </div>
-              )}
+              {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel,
+                  тот же SheetActionLine (отображение/наведение/каст по клику),
+                  только сгруппировано по кругам. */}
+              <SheetActionsPanel
+                character={character}
+                assembled={assembled}
+                ruleState={ruleState}
+                equipCards={equipCards}
+                onUpdated={setCharacter}
+                onEvents={appendRuntimeEvents}
+                embedded
+                spellsOnly
+              />
             </section>
           )}
 

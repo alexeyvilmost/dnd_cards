@@ -31,7 +31,7 @@ const hideImg = (e: React.SyntheticEvent<HTMLImageElement>) => {
 function itemChips(card: Card): ReactNode {
   const chips: ReactNode[] = [];
   if (card.weight != null) {
-    chips.push(<span key="w" className="sheet-item-chip">{card.weight}<img src="/icons/weight.png" alt="вес" onError={hideImg} /></span>);
+    chips.push(<span key="w" className="sheet-item-chip">{card.weight}<img className="sheet-chip-mono" src="/icons/weight.png" alt="вес" onError={hideImg} /></span>);
   }
   if (card.bonus_type === 'damage' && card.bonus_value) {
     chips.push(
@@ -42,7 +42,7 @@ function itemChips(card: Card): ReactNode {
     );
   }
   if (card.bonus_type === 'defense') {
-    chips.push(<span key="def" className="sheet-item-chip">{card.bonus_value || 'КД'}<img src="/icons/defense.png" alt="защита" onError={hideImg} /></span>);
+    chips.push(<span key="def" className="sheet-item-chip">{card.bonus_value || 'КД'}<img className="sheet-chip-mono" src="/icons/defense.png" alt="защита" onError={hideImg} /></span>);
   }
   if (card.price != null && card.price > 0) {
     chips.push(<span key="p" className="sheet-item-chip">{card.price}<img src={getCurrencyIconPath(card.price_currency)} alt="цена" onError={hideImg} /></span>);
@@ -58,9 +58,10 @@ interface Props {
   selected?: boolean;
   onClick?: () => void;
   right?: ReactNode;
+  stamp?: string | null;
 }
 
-export default function SheetItemRow({ card, qty, dimmed, selected, onClick, right }: Props) {
+export default function SheetItemRow({ card, qty, dimmed, selected, onClick, right, stamp }: Props) {
   return (
     <SheetEntityRow
       imageUrl={card.image_url}
@@ -71,6 +72,7 @@ export default function SheetItemRow({ card, qty, dimmed, selected, onClick, rig
       selected={selected}
       onClick={onClick}
       right={right}
+      stamp={stamp}
       detail={itemChips(card)}
       namePrefix={
         <span className="sheet-item-rarity" title={getRaritySymbolDescription(card.rarity)}>{getRaritySymbol(card.rarity)}</span>

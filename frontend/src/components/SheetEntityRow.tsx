@@ -13,6 +13,8 @@ interface Props {
   accent?: string;
   qty?: number;
   right?: ReactNode;
+  /** Лого-штамп на заднем фоне справа (напр. лого слота). */
+  stamp?: string | null;
   dimmed?: boolean;
   disabled?: boolean;
   selected?: boolean;
@@ -25,7 +27,7 @@ interface Props {
 }
 
 export default function SheetEntityRow({
-  imageUrl, name, namePrefix, nameSuffix, detail, accent, qty, right,
+  imageUrl, name, namePrefix, nameSuffix, detail, accent, qty, right, stamp,
   dimmed, disabled, selected, title, className = '',
   onClick, onMouseEnter, onMouseMove, onMouseLeave,
 }: Props) {
@@ -42,6 +44,7 @@ export default function SheetEntityRow({
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
     >
+      {stamp && <img className="sheet-item-stamp" src={stamp} alt="" aria-hidden="true" />}
       <span className="sheet-item-row-thumb">
         {url ? (
           <img src={url} alt={name} onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }} />
