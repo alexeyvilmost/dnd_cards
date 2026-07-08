@@ -187,6 +187,8 @@ func main() {
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
 		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageController.GenerateStandaloneImage)
+		// Загрузка готового data-URL (base64) в Yandex Storage — для миграции base64→S3.
+		api.POST("/images/upload-base64", OptionalAuthMiddleware(authService), imageController.UploadBase64Image)
 
 		// AI-генерация механики по описанию (кнопка «AI» в редакторах)
 		aiMechanicsController := NewAIMechanicsController()

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	crand "crypto/rand"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -189,12 +190,19 @@ func (s *YandexStorageService) SetupCORS(ctx context.Context) error {
 	return nil
 }
 
-// generateRandomString генерирует случайную строку
+// generateRandomString генерирует случайную строку (crypto/rand — без коллизий
+// при массовой загрузке; прежняя time-based версия давала повторы имён файлов).
 func generateRandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
+	if _, err := crand.Read(b); err != nil {
+		for i := range b {
+			b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+		}
+		return string(b)
+	}
 	for i := range b {
-		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+		b[i] = charset[int(b[i])%len(charset)]
 	}
 	return string(b)
 }
