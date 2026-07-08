@@ -8,6 +8,9 @@ export type ChoiceOrigin = {
   name: string;
   featureId?: string;
   featureName?: string;
+  /** Дискриминатор экземпляра повторяемой черты (id слота-пикера). Делает ключи вложенных
+   *  выборов уникальными на КАЖДОЕ получение (ASI×N, Одарённый×N). См. instanceFeatureId. */
+  instanceKey?: string;
 };
 
 // Ожидающий разрешения выбор, извлечённый из механики эффекта.

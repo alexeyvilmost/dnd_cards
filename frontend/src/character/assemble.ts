@@ -12,7 +12,7 @@ import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spe
 import { collectVariablesFromEffects } from './variables';
 import type { VariableValue } from '../engine/formula';
 import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechanics/collectChoices';
-import { choiceKey } from '../mechanics/choiceKey';
+import { choiceKey, instanceFeatureId } from '../mechanics/choiceKey';
 import { createRegistry } from '../engine/registry';
 import { createApiResolver } from '../engine/apiResolver';
 import { isEntityUuid } from '../engine/ids';
@@ -140,10 +140,10 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
 
   const pendingChoices: PendingChoice[] = [];
   for (const { effect, origin } of bundle.effects) {
-    pendingChoices.push(...collectChoices(effect.mechanics, { ...origin, featureId: effect.id, featureName: effect.name }, draft.resolvedChoices));
+    pendingChoices.push(...collectChoices(effect.mechanics, { ...origin, featureId: instanceFeatureId(effect.id, origin.instanceKey), featureName: effect.name }, draft.resolvedChoices));
   }
   for (const { action, origin } of bundle.actions) {
-    pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: action.id, featureName: action.name }, draft.resolvedChoices));
+    pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: instanceFeatureId(action.id, origin.instanceKey), featureName: action.name }, draft.resolvedChoices));
   }
 
   const abilityMods = Object.fromEntries(
@@ -251,46 +251,80 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // ВАЖНО: повторяемую (repeatable) черту допускаем из НЕСКОЛЬКИХ источников
   // (напр. Человек + предыстория дают одну и ту же «Одарённый») — она попадает
   // в assembled.feats столько раз, сколько выбрана; неповторяемая — один раз.
-  const chosenFeatRefs = effects
+  const chosenFeatPicks = effects
     .flatMap(({ effect, origin }) => collectFeatChoiceRefs(effect.mechanics, effect.id, origin, draft))
-    .filter((id) => isEntityUuid(id));
+    .filter((p) => isEntityUuid(p.featId));
   const chosenById = new Map<string, Feat>(
-    (await Promise.all([...new Set(chosenFeatRefs)].map((id) => featsApi.getFeat(id).catch(() => null))))
+    (await Promise.all([...new Set(chosenFeatPicks.map((p) => p.featId))].map((id) => featsApi.getFeat(id).catch(() => null))))
       .filter((f): f is Feat => !!f)
       .map((f) => [f.id, f]),
   );
 
-  // Сборка итогового списка черт с учётом повторяемости.
+  // Сборка итогового списка черт с учётом повторяемости (по одной записи на каждый пик).
   const allFeats: Feat[] = [];
   const seenNonRepeatable = new Set<string>();
   const pushFeat = (f: Feat) => {
-    if (f.repeatable) { allFeats.push(f); return; } // повторяемую — сколько угодно
+    if (f.repeatable) { allFeats.push(f); return; } // повторяемую — сколько выбрана
     if (seenNonRepeatable.has(f.id)) return;
     seenNonRepeatable.add(f.id);
     allFeats.push(f);
   };
   for (const f of feats) pushFeat(f);
-  for (const id of chosenFeatRefs) { const f = chosenById.get(id); if (f) pushFeat(f); }
+  for (const p of chosenFeatPicks) { const f = chosenById.get(p.featId); if (f) pushFeat(f); }
 
-  // Новые (ранее не собранные) черты — для догрузки их эффектов/действий.
   const baseFeatIds = new Set(feats.map((f) => f.id));
-  const chosenFeats = [...chosenById.values()].filter((f) => !baseFeatIds.has(f.id));
 
-  if (chosenFeats.length) {
-    const featRefs = gatherFeatureRefs(null, null, chosenFeats, draft.level);
-    const loadedEffectIds = new Set(effects.map((e) => e.effect.id));
-    const featEffects = (
-      await Promise.all(
-        featRefs.effectRefs
-          .filter((r) => !loadedEffectIds.has(r.id))
-          .map((r) =>
-            effectsApi.getEffect(r.id).then((effect) => ({ effect, origin: r.origin })).catch(() => null),
-          ),
-      )
-    ).filter((x): x is OriginEffect => !!x);
-    effects = await expandEffectGrants([...effects, ...featEffects], draft, resolveEffect);
-    const knownActionIds = new Set(actionRefs.map((r) => r.id));
-    actionRefs.push(...featRefs.actionRefs.filter((r) => !knownActionIds.has(r.id)));
+  // Догрузка эффектов/действий выбранных черт.
+  //  • Неповторяемые — как раньше: один раз, origin без instanceKey (стабильный ключ, совместимость).
+  //  • Повторяемые — ПО ЭКЗЕМПЛЯРУ: origin.instanceKey = id слота-пикера, чтобы вложенные выборы
+  //    разных получений (ASI на 4 и 8 ур.) не сталкивались. Один и тот же эффект попадает в
+  //    список несколько раз с разным origin — expandEffectGrants сохраняет дубли базы.
+  const repeatablePicks = chosenFeatPicks.filter((p) => chosenById.get(p.featId)?.repeatable);
+  const nonRepeatableChosen = [...chosenById.values()].filter((f) => !f.repeatable && !baseFeatIds.has(f.id));
+
+  const effCache = new Map<string, PassiveEffect | null>();
+  const getEff = async (id: string) => {
+    if (!effCache.has(id)) effCache.set(id, await effectsApi.getEffect(id).catch(() => null));
+    return effCache.get(id) ?? null;
+  };
+
+  const extraEffects: OriginEffect[] = [];
+  const loadedEffectIds = new Set(effects.map((e) => e.effect.id));
+  const knownActionIds = new Set(actionRefs.map((r) => r.id));
+
+  if (nonRepeatableChosen.length) {
+    const refs = gatherFeatureRefs(null, null, nonRepeatableChosen, draft.level);
+    for (const r of refs.effectRefs) {
+      if (loadedEffectIds.has(r.id)) continue;
+      loadedEffectIds.add(r.id);
+      const eff = await getEff(r.id);
+      if (eff) extraEffects.push({ effect: eff, origin: r.origin });
+    }
+    for (const r of refs.actionRefs) {
+      if (knownActionIds.has(r.id)) continue;
+      knownActionIds.add(r.id);
+      actionRefs.push(r);
+    }
+  }
+
+  for (const pick of repeatablePicks) {
+    const feat = chosenById.get(pick.featId);
+    if (!feat) continue;
+    const origin: ChoiceOrigin = { kind: 'feat', id: feat.id, name: feat.name, instanceKey: pick.instanceKey };
+    for (const eid of feat.related_effects || []) {
+      const eff = await getEff(eid);
+      if (eff) extraEffects.push({ effect: eff, origin }); // экземпляр (instanceKey)
+    }
+    // Действия дедупим по id (не по экземпляру): дублировать одно и то же действие незачем.
+    for (const aid of feat.related_actions || []) {
+      if (knownActionIds.has(aid)) continue;
+      knownActionIds.add(aid);
+      actionRefs.push({ id: aid, origin: { kind: 'feat', id: feat.id, name: feat.name } });
+    }
+  }
+
+  if (extraEffects.length) {
+    effects = await expandEffectGrants([...effects, ...extraEffects], draft, resolveEffect);
   }
 
   const actions = (
@@ -342,7 +376,7 @@ export function collectEffectGrantRefs(
       const opts = (payload.options || {}) as RefDict;
       if (String(opts.source) !== 'effect') return;
       const rawChoiceId = String(payload.id ?? 'choice');
-      const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: effectId }, rawChoiceId);
+      const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: instanceFeatureId(effectId, origin.instanceKey) }, rawChoiceId);
       const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
       const items = Array.isArray(opts.items) ? (opts.items as RefDict[]) : [];
       for (const sel of selected) {
@@ -360,28 +394,32 @@ export function collectEffectGrantRefs(
   return refs;
 }
 
+/** Выбор черты через пикер: id черты + instanceKey (id эффекта-пикера, уникален на слот). */
+export type FeatPick = { featId: string; instanceKey: string };
+
 // Черты, выбранные через choice { source:"feat" } (id — UUID черты).
-// Параллельно collectEffectGrantRefs: сканирует механику эффекта и достаёт
-// значения из draft.resolvedChoices по instance-id выбора.
+// Параллельно collectEffectGrantRefs: сканирует механику эффекта и достаёт значения из
+// draft.resolvedChoices по instance-id выбора. Возвращает и instanceKey (id эффекта-пикера),
+// чтобы одна и та же повторяемая черта на разных слотах давала независимые экземпляры.
 export function collectFeatChoiceRefs(
   mechanics: RefDict | null | undefined,
   effectId: string,
   origin: ChoiceOrigin,
   draft: CharacterDraft,
-): string[] {
+): FeatPick[] {
   if (!mechanics || typeof mechanics !== 'object') return [];
   const effects = (mechanics as RefDict).effects;
   if (!Array.isArray(effects)) return [];
-  const refs: string[] = [];
+  const refs: FeatPick[] = [];
   const scan = (payload: RefDict) => {
     if (!payload || typeof payload !== 'object' || payload.kind !== 'choice') return;
     const opts = (payload.options || {}) as RefDict;
     if (String(opts.source) !== 'feat') return;
     const rawChoiceId = String(payload.id ?? 'choice');
-    const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: effectId }, rawChoiceId);
+    const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: instanceFeatureId(effectId, origin.instanceKey) }, rawChoiceId);
     const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
     for (const sel of selected) {
-      if (typeof sel === 'string' && sel) refs.push(sel);
+      if (typeof sel === 'string' && sel) refs.push({ featId: sel, instanceKey: effectId });
     }
   };
   for (const it of effects as RefDict[]) {

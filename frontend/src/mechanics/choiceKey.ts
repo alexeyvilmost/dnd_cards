@@ -9,6 +9,13 @@ export interface ChoiceKeyOrigin {
   featureId?: string;
 }
 
+/** featureId с учётом ЭКЗЕМПЛЯРА: `${effectId}#${instanceKey}` для повторных получений
+ *  повторяемой черты (ASI/Одарённый) на разных слотах — иначе их вложенные выборы делят
+ *  один ключ и сливаются. Без instanceKey — прежний стабильный ключ (совместимость). */
+export function instanceFeatureId(effectId: string, instanceKey?: string | null): string {
+  return instanceKey ? `${effectId}#${instanceKey}` : effectId;
+}
+
 /** Префикс источника: `${kind}:${entityId}:${featureId||'base'}`. Совпадает с RuleSource.id. */
 export function sourceKey(kind: string, id: string, featureId?: string | null): string {
   return `${kind}:${id}:${featureId || 'base'}`;

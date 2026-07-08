@@ -5,7 +5,7 @@ import { armorClassValue } from '../../engine/ac';
 import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
-import { sourceKey } from '../../mechanics/choiceKey';
+import { sourceKey, instanceFeatureId } from '../../mechanics/choiceKey';
 import { ABILITY_KEYS, type AbilityKey } from '../types';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
 import type {
@@ -32,9 +32,11 @@ const emptySetMap = () => ({
   feat: new Map<string, AppliedGrant>(),
 });
 
-const sourceFromOrigin = (origin: { kind: string; id: string; name: string }, feature?: { id: string; name: string }): RuleSource => ({
+const sourceFromOrigin = (origin: { kind: string; id: string; name: string; instanceKey?: string }, feature?: { id: string; name: string }): RuleSource => ({
   type: origin.kind === 'race' ? 'species' : (origin.kind as RuleSourceType),
-  id: sourceKey(origin.kind, origin.id, feature?.id),
+  // instanceKey (повторяемая черта на разных слотах) входит в featureId → ключи выборов
+  // экземпляров различны; совпадает с тем, что пишет форге (assemble → instanceFeatureId).
+  id: sourceKey(origin.kind, origin.id, instanceFeatureId(feature?.id ?? '', origin.instanceKey)),
   name: feature ? `${origin.name}: ${feature.name}` : origin.name,
 });
 
