@@ -818,6 +818,11 @@
 .sheet-hp-status { color: #c44; font-size: 13px; margin: 6px 0 0; }
 .sheet-hp-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .sheet-hp-amount { width: 64px; padding: 4px 8px !important; }
+/* C15: тип урона + крит для входящего урона */
+.sheet-hp-dmg-opts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.sheet-hp-dmgtype { padding: 4px 8px !important; }
+.sheet-hp-crit { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--forge-text-dim); cursor: pointer; }
+.sheet-hp-crit input { accent-color: var(--forge-gold); cursor: pointer; }
 .sheet-h3 { color: var(--forge-gold-dim); font-size: 14px; margin: 0 0 8px; font-weight: 600; }
 .sheet-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .sheet-ab { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--forge-panel-2); }

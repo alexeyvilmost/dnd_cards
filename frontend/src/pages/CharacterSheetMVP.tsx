@@ -476,6 +476,8 @@ const CharacterSheetMVP = () => {
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
             conSaveBonus={ruleState.savingThrowBonuses.con}
+            sheetCtx={sheetCtx}
+            passives={passives}
           />
 
           <SheetConditionsPanel

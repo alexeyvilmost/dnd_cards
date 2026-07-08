@@ -8,13 +8,35 @@ import {
 import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { concentrationDC, concentrationEntry, dropConcentration } from '../engine/concentration';
-import { plannedValuesRng } from '../engine/dicePlan';
+import { canPay } from '../engine/cost';
+import { describeMechanicsLine } from '../engine/describeMechanics';
+import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
+import { applyIncomingDamage, executeAction } from '../engine/execute';
 import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
 import { rollD20 } from '../engine/roll';
 import { rollEvent } from '../engine/events';
 import ValueBreakdownTip from './ValueBreakdownTip';
-import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+import type { CharacterContext, EngineEvent, ExecuteContext, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+
+// C15: типы урона для селектора (влияют на сопротивления/иммунитеты/уязвимости цели).
+const DAMAGE_TYPES: Array<{ v: string; label: string }> = [
+  { v: '', label: 'Без типа' },
+  { v: 'bludgeoning', label: 'Дробящий' },
+  { v: 'piercing', label: 'Колющий' },
+  { v: 'slashing', label: 'Рубящий' },
+  { v: 'fire', label: 'Огонь' },
+  { v: 'cold', label: 'Холод' },
+  { v: 'lightning', label: 'Молния' },
+  { v: 'thunder', label: 'Гром' },
+  { v: 'acid', label: 'Кислота' },
+  { v: 'poison', label: 'Яд' },
+  { v: 'necrotic', label: 'Некротический' },
+  { v: 'radiant', label: 'Излучение' },
+  { v: 'psychic', label: 'Психический' },
+  { v: 'force', label: 'Силовой' },
+];
 
 interface Props {
   character: ForgeCharacter;
@@ -26,14 +48,22 @@ interface Props {
   conSaveBonus?: number;
   /** true — без обёртки-панели (для диалога кокпита). */
   embedded?: boolean;
+  /** Контекст движка листа: включает полный конвейер входящего урона (C15) —
+   *  сопротивления/иммунитеты/уязвимости, концентрацию, реакции. Без него — простое вычитание. */
+  sheetCtx?: CharacterContext | null;
+  passives?: Record<string, unknown>[];
 }
 
 export default function SheetHpPanel({
   character, maxHp, maxHpBreakdown, onUpdated, onEvents, conSaveBonus = 0, embedded,
+  sheetCtx, passives,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState(5);
+  const [damageType, setDamageType] = useState('');
+  const [crit, setCrit] = useState(false);
   const diceDialog = useDiceDialog();
+  const reactionPrompt = useReactionPrompt();
 
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), maxHp),
@@ -83,6 +113,58 @@ export default function SheetHpPanel({
       return;
     }
 
+    // C15: полный конвейер входящего урона через движок (сопротивления/иммунитеты/
+    // уязвимости + проверка концентрации с collectModifiers и помехой при крите +
+    // реакции на damage_taken) — когда лист передал контекст движка.
+    if (sheetCtx) {
+      const execCtx = (rng: () => number, planning = false): ExecuteContext =>
+        ({ character: sheetCtx, rng, passives: passives ?? [], planning }) as ExecuteContext;
+      const opts = { crit, damageType, conSaveBonus };
+      // План кубов проверки концентрации → диалог игроку → реальный прогон.
+      const plan = extractDiceFromEvents(
+        applyIncomingDamage(runtime, amount, execCtx(PLANNING_RNG, true), opts).events,
+      );
+      let rng: () => number = () => Math.random();
+      if (plan.length) {
+        const dtLabel = DAMAGE_TYPES.find((d) => d.v === damageType)?.label ?? '';
+        const decision = await diceDialog.request(
+          plan, `Урон ${amount}${dtLabel ? ` (${dtLabel})` : ''}${crit ? ', крит' : ''}`,
+        );
+        if (decision.mode === 'cancel') return;
+        rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+      }
+      const res = applyIncomingDamage(runtime, amount, execCtx(rng), opts);
+      let state = res.state;
+      let events = [...res.events];
+      let ds: DeathSaveState | undefined;
+      if (state.hp.current === 0) {
+        ds = emptyDeathSaves();
+        const dropped = dropConcentration(state, 'без сознания');
+        state = dropped.state;
+        events = [...events, ...dropped.events];
+      }
+      // Реакции на получение урона (Адское возмездие и т.п.) — предлагаем игроку.
+      for (const offer of res.pendingReactions ?? []) {
+        if (!canPay(state, offer.cost).ok) continue;
+        const rDecision = await reactionPrompt.request(offer, describeMechanicsLine(offer.mechanics));
+        if (rDecision !== 'accept') continue;
+        const rmech = { ...offer.mechanics, name: offer.name };
+        const rplan = extractDiceFromEvents(executeAction(state, rmech, execCtx(PLANNING_RNG, true)).events);
+        let rrng: () => number = () => Math.random();
+        if (rplan.length) {
+          const rdec = await diceDialog.request(rplan, offer.name);
+          if (rdec.mode === 'cancel') continue;
+          rrng = rdec.mode === 'manual' ? plannedValuesRng(rplan, rdec.values) : () => Math.random();
+        }
+        const r = executeAction(state, rmech, execCtx(rrng));
+        state = r.state;
+        events = [...events, ...r.events];
+      }
+      await persist(state, events, ds);
+      return;
+    }
+
+    // Fallback без контекста листа (кокпит V2): простое вычитание + локальная концентрация.
     let { state, events } = applyDamage(runtime, amount);
     let ds: DeathSaveState | undefined;
     if (state.hp.current === 0) {
@@ -197,6 +279,21 @@ export default function SheetHpPanel({
         </div>
       )}
 
+      {sheetCtx && (
+        <div className="sheet-hp-dmg-opts">
+          <select
+            className="forge-input sheet-hp-dmgtype"
+            value={damageType}
+            onChange={(e) => setDamageType(e.target.value)}
+            title="Тип урона — для сопротивлений/иммунитетов/уязвимостей цели"
+          >
+            {DAMAGE_TYPES.map((d) => <option key={d.v} value={d.v}>{d.label}</option>)}
+          </select>
+          <label className="sheet-hp-crit" title="Критический удар: концентрация проверяется с помехой">
+            <input type="checkbox" checked={crit} onChange={(e) => setCrit(e.target.checked)} /> крит
+          </label>
+        </div>
+      )}
       <div className="sheet-hp-controls">
         <input
           type="number"

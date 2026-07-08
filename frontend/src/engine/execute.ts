@@ -815,7 +815,7 @@ export function applyIncomingDamage(
   state: RuntimeState,
   amount: number,
   ctx: ExecuteContext,
-  opts?: { crit?: boolean; damageType?: string },
+  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number },
 ): ExecuteResult {
   let next = cloneState(state);
   const events: EngineEvent[] = [];
@@ -843,7 +843,9 @@ export function applyIncomingDamage(
       roll: 'saving_throw', filter: { ability: 'con' },
       formulaCtx: formulaCtx(ctx), evalCtx: evalCtxOf(next, ctx),
     });
-    const conMod = ctx.character.abilityMods.con ?? 0;
+    // Базовый модификатор проверки концентрации: полный бонус ТЕЛ-спасброска (мод +
+    // владение), если лист его передал (важно для сорсереров), иначе только мод.
+    const conMod = opts?.conSaveBonus ?? (ctx.character.abilityMods.con ?? 0);
     const advantage = opts?.crit
       ? (collected.advantage === 'advantage' ? 'none' : 'disadvantage')
       : collected.advantage;
