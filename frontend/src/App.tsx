@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { loadConditions } from './api/conditionsApi';
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,48 +7,50 @@ import { DiceDialogProvider } from './contexts/DiceDialogContext';
 import { ReactionPromptProvider } from './contexts/ReactionPromptContext';
 import { PinModeProvider } from './hooks/usePinMode';
 import { EntityDetailProvider } from './components/EntityDetailProvider';
-import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-import CardLibrary from './pages/CardLibrary';
-import CardCreator from './pages/CardCreator';
-import CardExport from './pages/CardExport';
-import WeaponTemplates from './pages/WeaponTemplates';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Groups from './pages/Groups';
-import CreateGroup from './pages/CreateGroup';
-import JoinGroup from './pages/JoinGroup';
-import GroupDetail from './pages/GroupDetail';
-import Inventory from './pages/Inventory';
-import CreateInventory from './pages/CreateInventory';
-import InventoryDetail from './pages/InventoryDetail';
-import AddItemToInventory from './pages/AddItemToInventory';
-import CharacterForge from './pages/CharacterForge';
-import CharacterSheetMVP from './pages/CharacterSheetMVP';
-import CharactersForgeList from './pages/CharactersForgeList';
-import InitiativeTracker from './pages/InitiativeTracker';
-import CardTypeSelection from './pages/CardTypeSelection';
-import WeaponSelection from './pages/WeaponSelection';
-import EquipmentSelection from './pages/EquipmentSelection';
-import PotionSelection from './pages/PotionSelection';
-import IngredientSelection from './pages/IngredientSelection';
-import TrinketSelection from './pages/TrinketSelection';
-import ShopNew from './pages/ShopNew';
-import ShopDetail from './pages/ShopDetail';
-import ActionCreator from './pages/ActionCreator';
-import EffectCreator from './pages/EffectCreator';
-import SpellCreator from './pages/SpellCreator';
-import SpellPage from './pages/SpellPage';
-import FeatCreator from './pages/FeatCreator';
-import BackgroundCreator from './pages/BackgroundCreator';
-import RaceCreator from './pages/RaceCreator';
-import ClassCreator from './pages/ClassCreator';
-import ResourceCreator from './pages/ResourceCreator';
-import VariableCreator from './pages/VariableCreator';
-import ConceptCreator from './pages/ConceptCreator';
-import ImageStudio from './pages/ImageStudio';
 import NotFound from './pages/NotFound';
+
+// Ленивая загрузка страниц (code-splitting по роутам) — уменьшает основной чанк.
+const Settings = lazy(() => import('./pages/Settings'));
+const CardLibrary = lazy(() => import('./pages/CardLibrary'));
+const CardCreator = lazy(() => import('./pages/CardCreator'));
+const CardExport = lazy(() => import('./pages/CardExport'));
+const WeaponTemplates = lazy(() => import('./pages/WeaponTemplates'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Groups = lazy(() => import('./pages/Groups'));
+const CreateGroup = lazy(() => import('./pages/CreateGroup'));
+const JoinGroup = lazy(() => import('./pages/JoinGroup'));
+const GroupDetail = lazy(() => import('./pages/GroupDetail'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const CreateInventory = lazy(() => import('./pages/CreateInventory'));
+const InventoryDetail = lazy(() => import('./pages/InventoryDetail'));
+const AddItemToInventory = lazy(() => import('./pages/AddItemToInventory'));
+const CharacterForge = lazy(() => import('./pages/CharacterForge'));
+const CharacterSheetMVP = lazy(() => import('./pages/CharacterSheetMVP'));
+const CharactersForgeList = lazy(() => import('./pages/CharactersForgeList'));
+const InitiativeTracker = lazy(() => import('./pages/InitiativeTracker'));
+const CardTypeSelection = lazy(() => import('./pages/CardTypeSelection'));
+const WeaponSelection = lazy(() => import('./pages/WeaponSelection'));
+const EquipmentSelection = lazy(() => import('./pages/EquipmentSelection'));
+const PotionSelection = lazy(() => import('./pages/PotionSelection'));
+const IngredientSelection = lazy(() => import('./pages/IngredientSelection'));
+const TrinketSelection = lazy(() => import('./pages/TrinketSelection'));
+const ShopNew = lazy(() => import('./pages/ShopNew'));
+const ShopDetail = lazy(() => import('./pages/ShopDetail'));
+const ActionCreator = lazy(() => import('./pages/ActionCreator'));
+const EffectCreator = lazy(() => import('./pages/EffectCreator'));
+const SpellCreator = lazy(() => import('./pages/SpellCreator'));
+const SpellPage = lazy(() => import('./pages/SpellPage'));
+const FeatCreator = lazy(() => import('./pages/FeatCreator'));
+const BackgroundCreator = lazy(() => import('./pages/BackgroundCreator'));
+const RaceCreator = lazy(() => import('./pages/RaceCreator'));
+const ClassCreator = lazy(() => import('./pages/ClassCreator'));
+const ResourceCreator = lazy(() => import('./pages/ResourceCreator'));
+const VariableCreator = lazy(() => import('./pages/VariableCreator'));
+const ConceptCreator = lazy(() => import('./pages/ConceptCreator'));
+const ImageStudio = lazy(() => import('./pages/ImageStudio'));
 
 function App() {
   // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
@@ -60,6 +62,7 @@ function App() {
         <ReactionPromptProvider>
         <PinModeProvider>
         <EntityDetailProvider>
+        <Suspense fallback={<div style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>Загрузка…</div>}>
         <Routes>
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
@@ -348,6 +351,7 @@ function App() {
         {/* Любой неизвестный URL — страница «не найдено» (иначе белый экран) */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+        </Suspense>
         </EntityDetailProvider>
         </PinModeProvider>
         </ReactionPromptProvider>
