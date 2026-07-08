@@ -1044,3 +1044,57 @@
 .levelup-class { font-size: 14px; color: var(--forge-text-dim); }
 .levelup-footer { display: flex; flex-direction: column; gap: 8px; }
 .levelup-actions { display: flex; gap: 10px; }
+
+/* ═══════════ E6: сквозной нижний таб-бар (≤820px) — кузня ═══════════
+   Рейл категорий превращается в фиксированную нижнюю панель (иконка над
+   подписью, как в мессенджерах). Правый обзор скрыт — доступен вкладкой
+   «Общее». Задел под лист персонажа и конструкторы (сквозной элемент). */
+@media (max-width: 820px) {
+  .forge-rail {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    flex-direction: row;
+    gap: 0;
+    padding: 4px 2px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    border-right: none;
+    border-top: 1px solid var(--forge-line);
+    background: var(--forge-panel);
+    overflow-x: auto;
+    overflow-y: hidden;
+    z-index: 60;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rail-step {
+    flex: 1 0 auto;
+    width: auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 58px;
+    padding: 6px 4px;
+    border-radius: 10px;
+  }
+  .rail-medal {
+    width: 30px;
+    height: 30px;
+  }
+  .rail-medal::after { inset: 2px; }
+  .rail-txt {
+    align-items: center;
+    text-align: center;
+  }
+  .rail-label {
+    font-size: 11px;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  .rail-sub { display: none; }
+
+  /* Центр занимает всю ширину; снизу оставляем место под фиксированный бар. */
+  .forge-main { min-width: 0; }
+  .forge-editor { padding: 16px 14px 92px; }
+}

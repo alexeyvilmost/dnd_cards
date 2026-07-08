@@ -16,6 +16,7 @@ import { normalizeSkillId, normalizeSkillList } from '../character/skillNormaliz
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
+import { useIsMobile } from '../hooks/useIsMobile';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import ForgeTraitsBlock from '../components/forge/ForgeTraitsBlock';
@@ -42,6 +43,9 @@ const FORGE_DRAFT_KEY = 'forge-draft';
 const isDraftMeaningful = (d: CharacterDraft) =>
   !!(d.name?.trim() || d.lineageId || d.raceId || d.classId || d.backgroundId || d.featIds?.length);
 
+// Вкладка «Общее» мобильного таб-бара = правый обзор (E6, сквозной шелл).
+const FORGE_OVERVIEW_ID = 'overview';
+
 const CharacterForge = () => {
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
@@ -60,6 +64,7 @@ const CharacterForge = () => {
   const [restorable, setRestorable] = useState<CharacterDraft | null>(null);
   const [bundle, setBundle] = useState<EntityBundle | null>(null);
   const [active, setActive] = useState('race');
+  const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
   const [levelUp, setLevelUp] = useState<{ fromLevel: number } | null>(null);
   const [prevRefs, setPrevRefs] = useState<{ effects: Set<string>; actions: Set<string> } | null>(null);
@@ -477,9 +482,24 @@ const CharacterForge = () => {
   if (hasFeatTab) sections.push({ id: 'feat', label: 'Черта', icon: <Star size={19} />, sub: assembled.feats[0]?.name, status: featDone ? 'ok' : 'todo' });
   sections.push({ id: 'abilities', label: 'Характеристики', icon: <Zap size={19} />, sub: `${abilitiesAssigned}/6`, status: abilitiesDone ? 'ok' : 'todo' });
 
-  const act = sections.some((s) => s.id === active) ? active : 'race';
+  // Мобильный сквозной таб-бар (E6): добавляем вкладку «Общее» = правый обзор.
+  const navSections: ForgeSectionDef[] = isMobile
+    ? [...sections, { id: FORGE_OVERVIEW_ID, label: 'Общее', icon: <ScrollText size={19} />, status: null }]
+    : sections;
+  const act = navSections.some((s) => s.id === active) ? active : 'race';
+  const showOverviewInMain = isMobile && act === FORGE_OVERVIEW_ID;
   const sectionTitle = sections.find((s) => s.id === act)?.label ?? 'Вид';
   const rootCls = paper ? 'forge sheet-paper' : 'forge';
+
+  // Обзор — переиспользуем и в правой колонке (десктоп), и во вкладке «Общее» (моб.).
+  const overviewPanel = (
+    <OverviewPanel
+      draft={draft} patch={patch} assembled={assembled} ruleState={ruleState} spells={selectedSpells}
+      lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
+      issues={issues} canCreate={canCreate} saving={saving} onSave={save}
+      savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
+    />
+  );
 
   // ─── Режим повышения уровня: только новое, база заблокирована ───
   if (levelUp) {
@@ -707,8 +727,12 @@ const CharacterForge = () => {
       </div>
 
       <div className="forge-body">
-        <ForgeNav sections={sections} active={act} onSelect={setActive} />
+        <ForgeNav sections={navSections} active={act} onSelect={setActive} />
         <div className="forge-main">
+          {showOverviewInMain ? (
+            <div className="forge-editor forge-editor--overview">{overviewPanel}</div>
+          ) : (
+          <>
           <div className="forge-main-title">{sectionTitle}</div>
           <div className="forge-editor">
               {act === 'race' && (
@@ -756,16 +780,11 @@ const CharacterForge = () => {
                 />
               )}
           </div>
+          </>
+          )}
         </div>
 
-        <div className="forge-summary">
-          <OverviewPanel
-            draft={draft} patch={patch} assembled={assembled} ruleState={ruleState} spells={selectedSpells}
-            lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
-            issues={issues} canCreate={canCreate} saving={saving} onSave={save}
-            savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
-          />
-        </div>
+        {!isMobile && <div className="forge-summary">{overviewPanel}</div>}
       </div>
     </div>
   );
