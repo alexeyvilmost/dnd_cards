@@ -272,6 +272,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
               card={card}
               onClick={() => openEquipped(slot, card)}
               stamp={SLOT_ICON[slot]}
+              {...hoverHandlers(card)}
             />
           ) : (
             <div key={slot} className="sheet-item-row is-empty" title={label}>
@@ -323,7 +324,13 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
           const card = cardMap.get(row.card_id);
           if (!card) return null;
           return (
-            <SheetItemRow key={row.card_id} card={card} qty={row.qty} onClick={() => openInventoryItem(card)} />
+            <SheetItemRow
+              key={row.card_id}
+              card={card}
+              qty={row.qty}
+              onClick={() => openInventoryItem(card)}
+              {...hoverHandlers(card)}
+            />
           );
         })}
       </div>

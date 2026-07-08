@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronsUp, Dices, Pencil, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
@@ -22,6 +22,7 @@ import { type Card } from '../types';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SheetEntityRow from '../components/SheetEntityRow';
+import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
 import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
@@ -81,6 +82,7 @@ const CharacterSheetMVP = () => {
   const navigate = useNavigate();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
@@ -358,6 +360,15 @@ const CharacterSheetMVP = () => {
           <span className="sheet-header-sub">Лист персонажа</span>
         </div>
         <div className="sheet-header-actions">
+          <button
+            type="button"
+            className="sheet-header-btn"
+            onClick={() => setSettingsOpen(true)}
+            title="Настройки отображения"
+          >
+            <SettingsIcon size={16} />
+            <span className="sheet-header-btn-label">Настройки</span>
+          </button>
           <button
             type="button"
             className="sheet-header-btn"
@@ -737,6 +748,8 @@ const CharacterSheetMVP = () => {
         </div>
       </div>
       )}
+
+      {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
 
       <SheetToasts toasts={toasts} />
       <SheetJournalFab

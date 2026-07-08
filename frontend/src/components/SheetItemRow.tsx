@@ -59,9 +59,12 @@ interface Props {
   onClick?: () => void;
   right?: ReactNode;
   stamp?: string | null;
+  onMouseEnter?: (e: React.MouseEvent) => void;
+  onMouseMove?: (e: React.MouseEvent) => void;
+  onMouseLeave?: () => void;
 }
 
-export default function SheetItemRow({ card, qty, dimmed, selected, onClick, right, stamp }: Props) {
+export default function SheetItemRow({ card, qty, dimmed, selected, onClick, right, stamp, onMouseEnter, onMouseMove, onMouseLeave }: Props) {
   return (
     <SheetEntityRow
       imageUrl={card.image_url}
@@ -73,6 +76,9 @@ export default function SheetItemRow({ card, qty, dimmed, selected, onClick, rig
       onClick={onClick}
       right={right}
       stamp={stamp}
+      onMouseEnter={onMouseEnter}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
       detail={itemChips(card)}
       namePrefix={
         <span className="sheet-item-rarity" title={getRaritySymbolDescription(card.rarity)}>{getRaritySymbol(card.rarity)}</span>
