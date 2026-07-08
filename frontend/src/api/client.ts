@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cached, bustPrefix } from './apiCache';
 import type { 
   Card, 
   CreateCardRequest, 
@@ -76,7 +77,16 @@ apiClient.interceptors.request.use(
 
 // Интерцептор для обработки ошибок
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // B7: любой успешный не-GET сбрасывает кэш затронутой сущности
+    // (напр. PUT /api/cards/<id> → сброс префикса '/api/cards') — правки видны сразу.
+    const method = (response.config.method || 'get').toLowerCase();
+    if (method !== 'get') {
+      const m = (response.config.url || '').match(/\/api\/[^/?]+/);
+      if (m) bustPrefix(m[0]);
+    }
+    return response;
+  },
   (error) => {
     // ВНИМАНИЕ: авторизация временно отключена — не выкидываем на /login при 401.
     if (error.response?.data?.error) {
@@ -106,10 +116,11 @@ export const cardsApi = {
   },
 
   // Получение карточки по ID
-  getCard: async (id: string): Promise<Card> => {
-    const response = await apiClient.get<Card>(`/api/cards/${id}`);
-    return response.data;
-  },
+  getCard: async (id: string): Promise<Card> =>
+    cached(`/api/cards/${id}`, 60000, async () => {
+      const response = await apiClient.get<Card>(`/api/cards/${id}`);
+      return response.data;
+    }),
 
   // Создание новой карточки
   createCard: async (data: CreateCardRequest): Promise<Card> => {
@@ -158,10 +169,11 @@ export const actionsApi = {
   },
 
   // Получение действия по ID
-  getAction: async (id: string): Promise<Action> => {
-    const response = await apiClient.get<Action>(`/api/actions/${id}`);
-    return response.data;
-  },
+  getAction: async (id: string): Promise<Action> =>
+    cached(`/api/actions/${id}`, 60000, async () => {
+      const response = await apiClient.get<Action>(`/api/actions/${id}`);
+      return response.data;
+    }),
 
   // Создание нового действия
   createAction: async (data: CreateActionRequest): Promise<Action> => {
@@ -197,10 +209,11 @@ export const effectsApi = {
   },
 
   // Получение эффекта по ID
-  getEffect: async (id: string): Promise<PassiveEffect> => {
-    const response = await apiClient.get<PassiveEffect>(`/api/effects/${id}`);
-    return response.data;
-  },
+  getEffect: async (id: string): Promise<PassiveEffect> =>
+    cached(`/api/effects/${id}`, 60000, async () => {
+      const response = await apiClient.get<PassiveEffect>(`/api/effects/${id}`);
+      return response.data;
+    }),
 
   // Получение эффекта по card_number
   getEffectByCardNumber: async (cardNumber: string): Promise<PassiveEffect | null> => {
@@ -256,10 +269,11 @@ export const spellsApi = {
   },
 
   // Получение заклинания по ID
-  getSpell: async (id: string): Promise<Spell> => {
-    const response = await apiClient.get<Spell>(`/api/spells/${id}`);
-    return response.data;
-  },
+  getSpell: async (id: string): Promise<Spell> =>
+    cached(`/api/spells/${id}`, 60000, async () => {
+      const response = await apiClient.get<Spell>(`/api/spells/${id}`);
+      return response.data;
+    }),
 
   // Создание нового заклинания
   createSpell: async (data: CreateSpellRequest): Promise<Spell> => {
@@ -288,10 +302,11 @@ export const featsApi = {
     const response = await apiClient.get<FeatsResponse>('/api/feats', { params });
     return response.data;
   },
-  getFeat: async (id: string): Promise<Feat> => {
-    const response = await apiClient.get<Feat>(`/api/feats/${id}`);
-    return response.data;
-  },
+  getFeat: async (id: string): Promise<Feat> =>
+    cached(`/api/feats/${id}`, 60000, async () => {
+      const response = await apiClient.get<Feat>(`/api/feats/${id}`);
+      return response.data;
+    }),
   createFeat: async (data: CreateFeatRequest): Promise<Feat> => {
     const response = await apiClient.post<Feat>('/api/feats', data);
     return response.data;
@@ -314,10 +329,11 @@ export const backgroundsApi = {
     const response = await apiClient.get<BackgroundsResponse>('/api/backgrounds', { params });
     return response.data;
   },
-  getBackground: async (id: string): Promise<Background> => {
-    const response = await apiClient.get<Background>(`/api/backgrounds/${id}`);
-    return response.data;
-  },
+  getBackground: async (id: string): Promise<Background> =>
+    cached(`/api/backgrounds/${id}`, 60000, async () => {
+      const response = await apiClient.get<Background>(`/api/backgrounds/${id}`);
+      return response.data;
+    }),
   createBackground: async (data: CreateBackgroundRequest): Promise<Background> => {
     const response = await apiClient.post<Background>('/api/backgrounds', data);
     return response.data;
@@ -339,10 +355,11 @@ export const racesApi = {
     const response = await apiClient.get<RacesResponse>('/api/races', { params });
     return response.data;
   },
-  getRace: async (id: string): Promise<Race> => {
-    const response = await apiClient.get<Race>(`/api/races/${id}`);
-    return response.data;
-  },
+  getRace: async (id: string): Promise<Race> =>
+    cached(`/api/races/${id}`, 60000, async () => {
+      const response = await apiClient.get<Race>(`/api/races/${id}`);
+      return response.data;
+    }),
   createRace: async (data: CreateRaceRequest): Promise<Race> => {
     const response = await apiClient.post<Race>('/api/races', data);
     return response.data;
@@ -366,10 +383,11 @@ export const classesApi = {
     const response = await apiClient.get<ClassesResponse>('/api/classes', { params });
     return response.data;
   },
-  getClass: async (id: string): Promise<CharacterClass> => {
-    const response = await apiClient.get<CharacterClass>(`/api/classes/${id}`);
-    return response.data;
-  },
+  getClass: async (id: string): Promise<CharacterClass> =>
+    cached(`/api/classes/${id}`, 60000, async () => {
+      const response = await apiClient.get<CharacterClass>(`/api/classes/${id}`);
+      return response.data;
+    }),
   createClass: async (data: CreateClassRequest): Promise<CharacterClass> => {
     const response = await apiClient.post<CharacterClass>('/api/classes', data);
     return response.data;
