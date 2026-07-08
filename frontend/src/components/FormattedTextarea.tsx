@@ -37,10 +37,11 @@ async function searchLinkTargets(query: string): Promise<LinkResult[]> {
   if (q.length < 2) return [];
   const ql = q.toLowerCase();
   const [cards, spells, actions, effects, concepts] = await Promise.allSettled([
-    cardsApi.getCards({ search: q, limit: 6 }),
-    spellsApi.getSpells({ search: q, limit: 6 }),
-    actionsApi.getActions({ search: q, limit: 6 }),
-    effectsApi.getEffects({ search: q, limit: 6 }),
+    // fields:'list' — автодополнению нужны только id/name; не тянем detailed_description/mechanics.
+    cardsApi.getCards({ search: q, limit: 6, fields: 'list' }),
+    spellsApi.getSpells({ search: q, limit: 6, fields: 'list' }),
+    actionsApi.getActions({ search: q, limit: 6, fields: 'list' }),
+    effectsApi.getEffects({ search: q, limit: 6, fields: 'list' }),
     conceptsApi.getConcepts(),
   ]);
   const out: LinkResult[] = [];

@@ -13,6 +13,35 @@ import (
 	"gorm.io/gorm"
 )
 
+// maxListLimit — верхняя граница параметра limit в списковых эндпоинтах
+// справочников, чтобы ?limit=100000 не мог выкачать всю таблицу разом.
+const maxListLimit = 500
+
+// parseListPagination читает page/limit из query с дефолтами и клампит их
+// в разумные границы. Общий помощник для всех списковых хендлеров справочников.
+func parseListPagination(c *gin.Context) (page, limit, offset int) {
+	page, _ = strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	limit, _ = strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if limit < 1 {
+		limit = 20
+	}
+	if limit > maxListLimit {
+		limit = maxListLimit
+	}
+	offset = (page - 1) * limit
+	return
+}
+
+// wantsListView сообщает, что клиент просит облегчённую проекцию (?fields=list):
+// без тяжёлых полей (detailed_description, mechanics, script, condition_description),
+// нужных только в детальном превью/движке, но не в списках и автодополнении.
+func wantsListView(c *gin.Context) bool {
+	return c.Query("fields") == "list"
+}
+
 // CardController - контроллер для работы с карточками
 type CardController struct {
 	db            *gorm.DB
@@ -70,9 +99,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	}
 
 	// Пагинация
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
@@ -113,9 +140,15 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	log.Printf("Загружено карточек: %d", len(cards))
 
 	// Преобразование в ответы
+	light := wantsListView(c)
 	responses := make([]CardResponse, 0, len(cards))
 	for _, card := range cards {
-		responses = append(responses, card.ToCardResponse())
+		r := card.ToCardResponse()
+		if light {
+			r.DetailedDescription = nil
+			r.Mechanics = nil
+		}
+		responses = append(responses, r)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -834,9 +867,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	}
 
 	// Пагинация
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	// Подсчет общего количества
 	var total int64
@@ -849,10 +880,17 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	responses := make([]ActionResponse, 0)
+	light := wantsListView(c)
+	responses := make([]ActionResponse, 0, len(actions))
 	for _, action := range actions {
 		// Конвертируем ActionResources в []ActionResource для ответа
-		responses = append(responses, action.ToActionResponse())
+		r := action.ToActionResponse()
+		if light {
+			r.DetailedDescription = nil
+			r.Mechanics = nil
+			r.Script = nil
+		}
+		responses = append(responses, r)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -1256,9 +1294,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	}
 
 	// Пагинация
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	// Подсчет общего количества
 	var total int64
@@ -1271,9 +1307,17 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	responses := make([]EffectResponse, 0)
+	light := wantsListView(c)
+	responses := make([]EffectResponse, 0, len(effects))
 	for _, effect := range effects {
-		responses = append(responses, effect.ToEffectResponse())
+		r := effect.ToEffectResponse()
+		if light {
+			r.DetailedDescription = nil
+			r.Mechanics = nil
+			r.Script = nil
+			r.ConditionDescription = nil
+		}
+		responses = append(responses, r)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

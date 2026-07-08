@@ -397,7 +397,7 @@ const effectTypeCache = new Map<string, { id: string; name: string; card_number:
 async function effectsOfType(type: string): Promise<{ id: string; name: string; card_number: string }[]> {
   if (effectTypeCache.has(type)) return effectTypeCache.get(type)!;
   try {
-    const res = await effectsApi.getEffects({ type, limit: 200 });
+    const res = await effectsApi.getEffects({ type, limit: 200, fields: 'list' });
     const list = (res.effects || []).map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
     effectTypeCache.set(type, list);
     return list;

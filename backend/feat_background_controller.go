@@ -40,9 +40,7 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	var total int64
 	query.Count(&total)
@@ -56,9 +54,14 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 		return
 	}
 
-	responses := make([]FeatResponse, 0)
+	light := wantsListView(c)
+	responses := make([]FeatResponse, 0, len(feats))
 	for _, f := range feats {
-		responses = append(responses, f.ToFeatResponse())
+		r := f.ToFeatResponse()
+		if light {
+			r.DetailedDescription = nil
+		}
+		responses = append(responses, r)
 	}
 	c.JSON(http.StatusOK, gin.H{"feats": responses, "total": total, "page": page, "limit": limit})
 }
@@ -249,9 +252,7 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	var total int64
 	query.Count(&total)
@@ -265,9 +266,14 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 		return
 	}
 
-	responses := make([]BackgroundResponse, 0)
+	light := wantsListView(c)
+	responses := make([]BackgroundResponse, 0, len(backgrounds))
 	for _, b := range backgrounds {
-		responses = append(responses, b.ToBackgroundResponse())
+		r := b.ToBackgroundResponse()
+		if light {
+			r.DetailedDescription = nil
+		}
+		responses = append(responses, r)
 	}
 	c.JSON(http.StatusOK, gin.H{"backgrounds": responses, "total": total, "page": page, "limit": limit})
 }

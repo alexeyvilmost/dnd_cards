@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -41,9 +40,7 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 		query = query.Where("is_subrace IS NOT TRUE")
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	var total int64
 	query.Count(&total)

@@ -99,6 +99,7 @@ export const cardsApi = {
     sort_by?: string;
     template_only?: boolean;
     exclude_template_only?: boolean;
+    fields?: 'list';
   }): Promise<CardsResponse> => {
     const response = await apiClient.get<CardsResponse>('/api/cards', { params });
     return response.data;
@@ -150,6 +151,7 @@ export const actionsApi = {
     action_type?: string;
     type?: string;
     search?: string;
+    fields?: 'list';
   }): Promise<ActionsResponse> => {
     const response = await apiClient.get<ActionsResponse>('/api/actions', { params });
     return response.data;
@@ -188,6 +190,7 @@ export const effectsApi = {
     effect_type?: string;
     type?: string;
     search?: string;
+    fields?: 'list';
   }): Promise<PassiveEffectsResponse> => {
     const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', { params });
     return response.data;
@@ -246,6 +249,7 @@ export const spellsApi = {
     ritual?: string;
     search?: string;
     sort_by?: string;
+    fields?: 'list';
   }): Promise<SpellsResponse> => {
     const response = await apiClient.get<SpellsResponse>('/api/spells', { params });
     return response.data;
@@ -279,6 +283,7 @@ export const featsApi = {
   getFeats: async (params?: {
     page?: number; limit?: number; category?: string; repeatable?: string;
     ability?: string; search?: string; sort_by?: string;
+    fields?: 'list';
   }): Promise<FeatsResponse> => {
     const response = await apiClient.get<FeatsResponse>('/api/feats', { params });
     return response.data;
@@ -304,6 +309,7 @@ export const backgroundsApi = {
   getBackgrounds: async (params?: {
     page?: number; limit?: number; ability?: string; skill?: string;
     feat?: string; search?: string; sort_by?: string;
+    fields?: 'list';
   }): Promise<BackgroundsResponse> => {
     const response = await apiClient.get<BackgroundsResponse>('/api/backgrounds', { params });
     return response.data;

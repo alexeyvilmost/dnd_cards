@@ -74,9 +74,7 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	}
 
 	// Пагинация
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset := (page - 1) * limit
+	page, limit, offset := parseListPagination(c)
 
 	// Подсчет общего количества
 	var total int64
@@ -93,9 +91,15 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	responses := make([]SpellResponse, 0)
+	light := wantsListView(c)
+	responses := make([]SpellResponse, 0, len(spells))
 	for _, spell := range spells {
-		responses = append(responses, spell.ToSpellResponse())
+		r := spell.ToSpellResponse()
+		if light {
+			r.DetailedDescription = nil
+			r.Mechanics = nil
+		}
+		responses = append(responses, r)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
