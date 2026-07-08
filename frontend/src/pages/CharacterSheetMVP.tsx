@@ -177,15 +177,13 @@ const CharacterSheetMVP = () => {
     }
     let stale = false;
     (async () => {
-      const map = new Map<string, Card>();
-      for (const id of equipCardIds) {
-        try {
-          map.set(id, await cardsApi.getCard(id));
-        } catch {
-          /* skip */
-        }
-      }
-      if (!stale) setEquipCards(map);
+      // B5: карты экипировки грузим параллельно (раньше — for-await по одной).
+      const entries = await Promise.all(
+        equipCardIds.map((id) =>
+          cardsApi.getCard(id).then((card) => [id, card] as const).catch(() => null),
+        ),
+      );
+      if (!stale) setEquipCards(new Map(entries.filter((e): e is readonly [string, Card] => !!e)));
     })();
     return () => { stale = true; };
   }, [equipCardIds.join('|')]);

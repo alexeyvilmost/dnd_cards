@@ -94,15 +94,13 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   useEffect(() => {
     let stale = false;
     (async () => {
-      const map = new Map<string, Card>();
-      for (const id of cardIds) {
-        try {
-          map.set(id, await cardsApi.getCard(id));
-        } catch {
-          /* skip missing */
-        }
-      }
-      if (!stale) setCards(map);
+      // B5: карты грузим параллельно (раньше — for-await по одной).
+      const entries = await Promise.all(
+        cardIds.map((id) =>
+          cardsApi.getCard(id).then((card) => [id, card] as const).catch(() => null),
+        ),
+      );
+      if (!stale) setCards(new Map(entries.filter((e): e is readonly [string, Card] => !!e)));
     })();
     return () => { stale = true; };
   }, [cardIds.join('|')]);

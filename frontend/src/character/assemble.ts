@@ -186,19 +186,29 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
 // Загружает сущности и связанные эффекты/действия (без заклинаний — их удобнее
 // брать из уже загруженного списка редактора). Спелы возвращаются пустыми.
 export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
-  const [race, klass, background] = await Promise.all([
+  // B5: справочник переменных ни от чего не зависит — стартуем сразу, ждём в конце.
+  const variableDefsP = variablesApi
+    .getVariables()
+    .then((r) => r.variables ?? [])
+    .catch(() => []);
+
+  // B5: все независимые справочные загрузки — одним Promise.all (раньше был водопад
+  // race/klass/background → manualFeats → subrace → subclass). Зависят только от
+  // полей draft, поэтому запускаются параллельно. subrace/subclass — по UUID из draft.
+  const [race, klass, background, manualFeatsRaw, subrace, subclass] = await Promise.all([
     draft.raceId ? racesApi.getRace(draft.raceId).catch(() => null) : Promise.resolve(null),
     draft.classId ? classesApi.getClass(draft.classId).catch(() => null) : Promise.resolve(null),
     draft.backgroundId ? backgroundsApi.getBackground(draft.backgroundId).catch(() => null) : Promise.resolve(null),
+    Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id).catch(() => null))),
+    draft.lineageId && isEntityUuid(draft.lineageId) ? racesApi.getRace(draft.lineageId).catch(() => null) : Promise.resolve(null),
+    draft.subclassId && isEntityUuid(draft.subclassId) ? classesApi.getClass(draft.subclassId).catch(() => null) : Promise.resolve(null),
   ]);
-
-  const manualFeats = (
-    await Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id).catch(() => null)))
-  ).filter((f): f is Feat => !!f);
+  const manualFeats = manualFeatsRaw.filter((f): f is Feat => !!f);
 
   // Origin-черта предыстории (по card_number/uuid): действует по умолчанию,
   // пока игрок не заменил её (флаг swapFeat → выбор в FeatSection). Так черта
   // предыстории попадает в сборку и overview даже без «Сменить черту».
+  // Зависит от background + manualFeats, поэтому после Promise.all выше.
   const originFeat = !draft.swapFeat && background?.origin_feat
     ? await featsApi.getFeat(background.origin_feat).catch(() => null)
     : null;
@@ -206,13 +216,6 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     ? [...manualFeats, originFeat]
     : manualFeats;
 
-  // Подвид — отдельный вид-сущность, ссылка хранится в draft.lineageId (UUID).
-  const subraceId = draft.lineageId && isEntityUuid(draft.lineageId) ? draft.lineageId : null;
-  const subrace = subraceId ? await racesApi.getRace(subraceId).catch(() => null) : null;
-
-  // Подкласс — отдельный класс-сущность (is_subclass), выбранный на своём уровне.
-  const subclassId = draft.subclassId && isEntityUuid(draft.subclassId) ? draft.subclassId : null;
-  const subclass = subclassId ? await classesApi.getClass(subclassId).catch(() => null) : null;
   // Ресурсы подкласса вливаются в ресурсы класса (лист читает klass.resources).
   const klassWithSub = klass && subclass?.resources
     ? { ...klass, resources: { ...(klass.resources || {}), ...subclass.resources } }
@@ -298,10 +301,8 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   ).filter((x): x is OriginAction => !!x);
 
   // Справочник переменных (type/default) для сворачивания variable-payload'ов.
-  const variableDefs = await variablesApi
-    .getVariables()
-    .then((r) => r.variables ?? [])
-    .catch(() => []);
+  // B5: загрузка стартовала в начале функции (variableDefsP) — здесь только ждём.
+  const variableDefs = await variableDefsP;
 
   return { race, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [], variableDefs };
 }
