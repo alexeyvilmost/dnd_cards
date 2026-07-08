@@ -1,6 +1,6 @@
 import { addToInventory, forgeToRuntimeState, removeFromInventory } from './runtime';
 import type { ForgeCharacter } from './types';
-import { equipItem, unequipSlot } from '../engine/equipment';
+import { equipItem, planEquip, unequipSlot } from '../engine/equipment';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 
@@ -32,6 +32,20 @@ export function equipFromInventory(state: RuntimeState, card: Card): { state: Ru
   }
   next = removeFromInventory(next, card.id, 1);
   return { state: next };
+}
+
+/** Надеть с автоматической заменой: если целевой слот занят и обычное надевание
+ *  падает (руки/кольца заняты), сначала снимаем занимающий предмет, потом надеваем. */
+export function equipCardSwapping(state: RuntimeState, card: Card): { state: RuntimeState; error?: string } {
+  const first = equipFromInventory(state, card);
+  if (!first.error) return first;
+  const plan = planEquip(state, card);
+  if (plan.slots.length) {
+    let s = state;
+    for (const slot of plan.slots) s = unequipToInventory(s, slot);
+    return equipFromInventory(s, card);
+  }
+  return first;
 }
 
 /** Снять предмет в инвентарь (+1 qty). */

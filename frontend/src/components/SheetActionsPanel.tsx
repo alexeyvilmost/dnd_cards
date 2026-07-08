@@ -20,7 +20,7 @@ import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
-import type { Card } from '../types';
+import { SPELL_SCHOOL_OPTIONS, type Card } from '../types';
 import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '../mvp/contracts';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
@@ -45,6 +45,20 @@ const RESOURCE_LABELS: Record<string, string> = {
   bonus_action: 'Бонус',
   reaction: 'Реакция',
   heroic_inspiration: 'Вдохновение',
+};
+
+const GROUP_DETAIL: Record<SheetAction['group'], string> = {
+  basic: 'Базовое действие', race: 'Вид', class: 'Класс', item: 'Предмет', spell: 'Заклинание',
+};
+const spellSchoolLabel = (s?: string | null) => SPELL_SCHOOL_OPTIONS.find((o) => o.value === s)?.label || s || '';
+// Вторая строка ряда действия (как у предметов, но без веса/цены).
+const actionDetail = (a: SheetAction): string => {
+  if (a.spellRef) {
+    const lvl = a.spellRef.level ?? a.level ?? 0;
+    return `${lvl === 0 ? 'Заговор' : `${lvl} уровень`}${a.spellRef.school ? ` · ${spellSchoolLabel(a.spellRef.school)}` : ''}`;
+  }
+  if (a.group === 'basic') return 'Базовое действие';
+  return a.sourceLabel ?? GROUP_DETAIL[a.group] ?? '';
 };
 
 const RESOURCE_ICONS: Record<string, string> = {
@@ -313,7 +327,7 @@ export default function SheetActionsPanel({
       {groups.map(({ key, label, items }) => items.length > 0 && (
         <div key={key} className="sheet-group">
           <h3 className="sheet-h3">{label}</h3>
-          <div className={actionsAsIcons ? 'cs-action-tiles' : 'cs-action-lines'}>
+          <div className={actionsAsIcons ? 'cs-action-tiles' : 'sheet-item-cols'}>
             {items.map((action) => {
               const { disabled, reason } = disabledInfo(action);
               const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment) ?? undefined;
@@ -324,6 +338,7 @@ export default function SheetActionsPanel({
                   imageUrl={action.imageUrl}
                   sourceLabel={action.sourceLabel ?? (action.group === 'basic' ? 'Базовое действие' : undefined)}
                   description={action.group === 'basic' ? action.description ?? action.name : undefined}
+                  detail={actionDetail(action)}
                   level={action.level}
                   variant={actionsAsIcons ? 'icon' : 'row'}
                   actionRef={action.actionRef}

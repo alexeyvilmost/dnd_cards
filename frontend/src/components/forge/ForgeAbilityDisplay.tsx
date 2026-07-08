@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Action, PassiveEffect } from '../../types';
 import type { EntityDisplayMode } from '../../settings';
 import ForgeAbilityLine from './ForgeAbilityLine';
@@ -11,6 +11,8 @@ export type AbilityEntry = {
   imageUrl?: string | null;
   fallbackImageUrl?: string | null;
   sourceLabel?: string;
+  /** Вторая строка ряда (напр. «Вид · Эльф», «Базовое действие»). */
+  detail?: ReactNode;
   effect?: PassiveEffect;
   action?: Action;
 };
@@ -43,6 +45,7 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
             imageUrl={entry.imageUrl}
             fallbackImageUrl={entry.fallbackImageUrl}
             sourceLabel={entry.sourceLabel}
+            detail={entry.detail}
             effect={entry.effect}
             action={entry.action}
           />

@@ -1,39 +1,36 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { PassiveEffect, Action } from '../../types';
-import ForgeEntityIcon from './ForgeEntityIcon';
 import EffectHoverCard from './EffectHoverCard';
 import ActionHoverCard from './ActionHoverCard';
+import SheetEntityRow from '../SheetEntityRow';
 
 type ForgeAbilityLineProps = {
   name: string;
   imageUrl?: string | null;
   fallbackImageUrl?: string | null;
   sourceLabel?: string;
+  /** Вторая строка (напр. «Вид · Эльф»). */
+  detail?: ReactNode;
   effect?: PassiveEffect;
   action?: Action;
 };
 
-const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, effect, action }: ForgeAbilityLineProps) => {
+const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detail, effect, action }: ForgeAbilityLineProps) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const iconUrl = imageUrl?.trim() || fallbackImageUrl?.trim() || null;
 
-  const onEnter = (e: React.MouseEvent) => {
-    setHover(true);
-    setPos({ x: e.clientX, y: e.clientY });
-  };
-
   return (
     <>
-      <div
-        className="sum-sub forge-ability-line"
-        onMouseEnter={onEnter}
-        onMouseLeave={() => setHover(false)}
+      <SheetEntityRow
+        imageUrl={iconUrl}
+        name={name}
+        detail={detail}
+        title={name}
+        onMouseEnter={(e) => { setHover(true); setPos({ x: e.clientX, y: e.clientY }); }}
         onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
-      >
-        <ForgeEntityIcon imageUrl={iconUrl} alt={name} size={20} />
-        <span className="forge-ability-link">{name}.</span>
-      </div>
+        onMouseLeave={() => setHover(false)}
+      />
       {hover && (effect || action) && (
         <div
           className="forge-effect-popover"

@@ -111,6 +111,33 @@ export function equipItem(state: RuntimeState, card: Card): { state: RuntimeStat
   return { state, error: `Неизвестный тип предмета: ${card.name}` };
 }
 
+/** Слот(ы), которые займёт предмет, и предмет, который при этом будет вытеснен.
+ *  Используется диалогом надевания, чтобы показать «текущий → новый». */
+export interface EquipPlan {
+  slots: EquipmentSlotKey[];
+  occupantId: string | null;
+  error?: string;
+}
+export function planEquip(state: RuntimeState, card: Card): EquipPlan {
+  const eq = cloneEquipment(state);
+  if (isBodyArmor(card)) return { slots: ['body'], occupantId: eq.body ?? null };
+  if (isTwoHanded(card)) {
+    return { slots: ['main_hand', 'off_hand'], occupantId: eq.main_hand ?? eq.off_hand ?? null };
+  }
+  if (card.slot === 'one_hand' || card.type === 'weapon' || isShield(card)) {
+    const free = pickOneHandSlot(eq, card);
+    if (free) return { slots: [free], occupantId: null };
+    const target: EquipmentSlotKey = isShield(card) ? 'off_hand' : 'main_hand';
+    return { slots: [target], occupantId: eq[target] ?? null };
+  }
+  const wear = wearableSlot(card, eq);
+  if (wear) return { slots: [wear], occupantId: null };
+  if (card.type === 'ring' || card.slot === 'ring') {
+    return { slots: ['ring_1'], occupantId: eq.ring_1 ?? null };
+  }
+  return { slots: [], occupantId: null, error: `Неизвестный тип предмета: ${card.name}` };
+}
+
 /** Снять предмет со слота (двуручное — освобождает обе руки). */
 export function unequipSlot(state: RuntimeState, slot: string): RuntimeState {
   const equipment = cloneEquipment(state);

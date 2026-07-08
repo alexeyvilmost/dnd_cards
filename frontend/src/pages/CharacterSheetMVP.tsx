@@ -19,9 +19,10 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
-import { getSpellLevelLabel, type Card, type Spell } from '../types';
+import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card, type Spell } from '../types';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
+import SheetEntityRow from '../components/SheetEntityRow';
 import SpellPreview from '../components/SpellPreview';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
@@ -64,6 +65,23 @@ const originLabel = (kind: string) => {
     default: return 'Способность';
   }
 };
+
+// Короткая подпись источника для второй строки ряда (Вид · Эльф).
+const originKindShort = (kind: string) => {
+  switch (kind) {
+    case 'race': return 'Вид';
+    case 'class': return 'Класс';
+    case 'feat': return 'Черта';
+    case 'background': return 'Предыстория';
+    default: return 'Способность';
+  }
+};
+const originDetail = (kind: string, name: string) => `${originKindShort(kind)} · ${name}`;
+
+const schoolLabel = (school?: string | null) =>
+  SPELL_SCHOOL_OPTIONS.find((s) => s.value === school)?.label || school || '';
+const spellRowDetail = (spell: Spell) =>
+  `${spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}${spell.school ? ` · ${schoolLabel(spell.school)}` : ''}`;
 
 const CharacterSheetMVP = () => {
   const { id } = useParams<{ id: string }>();
@@ -634,12 +652,13 @@ const CharacterSheetMVP = () => {
                 <h3 className="sheet-h3">Эффекты</h3>
                 <ForgeAbilityDisplay
                   mode={entityDisplay.effects}
-                  linesClassName="sheet-ability-lines"
+                  linesClassName="sheet-item-cols"
                   entries={assembled.effects.map(({ effect, origin }) => ({
                     key: effect.id,
                     name: effect.name,
                     imageUrl: effect.image_url,
                     sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                    detail: originDetail(origin.kind, origin.name),
                     effect,
                   }))}
                 />
@@ -650,12 +669,13 @@ const CharacterSheetMVP = () => {
                 <h3 className="sheet-h3">Способности (описание)</h3>
                 <ForgeAbilityDisplay
                   mode={entityDisplay.actions}
-                  linesClassName="sheet-ability-lines"
+                  linesClassName="sheet-item-cols"
                   entries={assembled.actions.map(({ action, origin }) => ({
                     key: action.id,
                     name: action.name,
                     imageUrl: action.image_url,
                     sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                    detail: originDetail(origin.kind, origin.name),
                     action,
                   }))}
                 />
@@ -721,31 +741,19 @@ const CharacterSheetMVP = () => {
                 <div key={level} className="sheet-group">
                   <h3 className="sheet-h3">{getSpellLevelLabel(level)}</h3>
                   {entityDisplay.spells === 'row' ? (
-                    <div className="forge-spell-rows">
+                    <div className="sheet-item-cols">
                       {spellList.map((spell) => (
-                        <button
+                        <SheetEntityRow
                           key={spell.id}
-                          type="button"
-                          className="forge-spell-row"
+                          imageUrl={spell.image_url}
+                          name={spell.name}
+                          detail={spellRowDetail(spell)}
                           title={`${spell.name} — к действию`}
+                          onClick={() => scrollToAction(spell.id)}
                           onMouseEnter={(e) => { setHoveredSpell(spell); setSpellMouse({ x: e.clientX, y: e.clientY }); }}
                           onMouseMove={(e) => setSpellMouse({ x: e.clientX, y: e.clientY })}
                           onMouseLeave={leaveSpell}
-                          onClick={() => scrollToAction(spell.id)}
-                        >
-                          {spell.image_url ? (
-                            <img
-                              className="forge-spell-row-img"
-                              src={spell.image_url}
-                              alt={spell.name}
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default_image.png'; }}
-                            />
-                          ) : (
-                            <span className="forge-spell-row-fallback">{spell.name.slice(0, 1)}</span>
-                          )}
-                          <span className="forge-spell-row-name">{spell.name}</span>
-                          <span className="forge-spell-row-meta">{getSpellLevelLabel(level)}</span>
-                        </button>
+                        />
                       ))}
                     </div>
                   ) : (

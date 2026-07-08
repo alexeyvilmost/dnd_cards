@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Action, PassiveEffect, Spell } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
 import { usePinMode } from '../hooks/usePinMode';
@@ -6,12 +6,15 @@ import ForgeEntityIcon from './forge/ForgeEntityIcon';
 import EffectHoverCard from './forge/EffectHoverCard';
 import ActionHoverCard from './forge/ActionHoverCard';
 import SpellPreview from './SpellPreview';
+import SheetEntityRow from './SheetEntityRow';
 
 type Props = {
   name: string;
   imageUrl?: string | null;
   sourceLabel?: string;
   description?: string;
+  /** Вторая строка ряда (напр. «Базовое действие», «1 уровень · Иллюзия»). */
+  detail?: ReactNode;
   disabled?: boolean;
   disabledTitle?: string;
   level?: number;
@@ -32,6 +35,7 @@ const SheetActionLine = ({
   imageUrl,
   sourceLabel,
   description,
+  detail,
   disabled,
   disabledTitle,
   level,
@@ -78,22 +82,17 @@ const SheetActionLine = ({
           )}
         </button>
       ) : (
-        <button
-          type="button"
-          className={`cs-action-line${disabled ? ' cs-action-line--disabled' : ''}`}
+        <SheetEntityRow
+          imageUrl={imageUrl}
+          name={name}
+          detail={detail}
           disabled={disabled}
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
-          onMouseLeave={onLeave}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
-        >
-          <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={20} />
-          <span className="cs-action-line-name">{name}</span>
-          {level != null && (
-            <span className="cs-action-line-lvl">{level === 0 ? 'З' : level}</span>
-          )}
-        </button>
+          onMouseLeave={onLeave}
+        />
       )}
       {/* Превью доступно ВСЕГДА (в т.ч. когда действие недоступно): показывает суть
           из данных сущности; причина недоступности — отдельным слоем, не вместо. */}
