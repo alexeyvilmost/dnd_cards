@@ -130,6 +130,8 @@
 - фронт: использовать в CardLibrary, каталогах кузницы и в `FormattedTextarea.searchLinkTargets` (`frontend/src/components/FormattedTextarea.tsx:39-44` — сейчас автодополнение `[[...]]` качает до 2,9 МБ на ввод символа, нужны только id/name);
 - заодно: верхняя граница `limit` в списковых эндпоинтах (сейчас `limit=100000` сработает).
 
+**Сделано (2026-07-08):** бэк — `?fields=list` (обнуляет detailed_description/mechanics/script/condition_description — все указатели без omitempty → null) на cards/spells/actions/effects/feats/backgrounds; кап `limit` до 500 общим helper'ом `parseListPagination` во всех списках справочников (+ races/classes). Фронт — `fields:'list'` применён только в `FormattedTextarea.searchLinkTargets` и `assemble.effectsOfType` (читают лишь id/name). **НЕ применён в CardLibrary/кузнице:** их превью/детали/грид-лица читают detailed_description/mechanics ПРЯМО из спискового объекта (fetch-by-id при взаимодействии нет), обрезка молча сломала бы превью (парадигма №2) — вынесено в отдельную задачу **B2b** (рефактор на fetch-by-id при наведении/открытии, смежно с B5). Инфраструктура `?fields=list` на бэке + типы в client.ts уже готовы.
+
 ### B3. gzip на бэке (P1, S)
 `backend/main.go`: `github.com/gin-contrib/gzip`, `r.Use(gzip.Gzip(gzip.DefaultCompression))`. Замер: /api/cards?limit=30 33,8 КБ → ~4,3 КБ (−87%). Делать в паре с B1 (base64 не жмётся).
 

@@ -40,6 +40,14 @@ interface Props {
   showEffects?: boolean;
   /** Только заклинания, сгруппированные по кругам (блок «Заклинания» = 1:1 с блоком «Действия»). */
   spellsOnly?: boolean;
+  /** Контролируемое «КЗ цели» (E4): один общий таргет на все инстансы панели листа.
+   *  Если не передан — панель держит собственный локальный targetAc. */
+  targetAc?: number;
+  onTargetAcChange?: (n: number) => void;
+  /** Контролируемый «Спас цели» (E5): единый модификатор спасброска цели
+   *  (передаётся во все ability; движок берёт нужный по механике действия). */
+  targetSaveMod?: number;
+  onTargetSaveModChange?: (n: number) => void;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -94,10 +102,27 @@ export default function SheetActionsPanel({
   showResources = true,
   showEffects = true,
   spellsOnly = false,
+  targetAc: targetAcProp,
+  onTargetAcChange,
+  targetSaveMod: targetSaveModProp,
+  onTargetSaveModChange,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [targetAc, setTargetAc] = useState(10);
+  const [localTargetAc, setLocalTargetAc] = useState(10);
+  // E4: если родитель управляет «КЗ цели» — используем его; иначе локальный стейт.
+  const targetAc = targetAcProp ?? localTargetAc;
+  const setTargetAc = (n: number) => {
+    if (onTargetAcChange) onTargetAcChange(n);
+    else setLocalTargetAc(n);
+  };
+  const [localTargetSaveMod, setLocalTargetSaveMod] = useState(0);
+  // E5: единый модификатор спасброска цели (раньше saveMods жёстко = 0).
+  const targetSaveMod = targetSaveModProp ?? localTargetSaveMod;
+  const setTargetSaveMod = (n: number) => {
+    if (onTargetSaveModChange) onTargetSaveModChange(n);
+    else setLocalTargetSaveMod(n);
+  };
   const diceDialog = useDiceDialog();
   const reactionPrompt = useReactionPrompt();
 
@@ -181,7 +206,7 @@ export default function SheetActionsPanel({
     const target = needsTarget
       ? {
           ac: targetAc,
-          saveMods: { dex: 0, con: 0, str: 0, int: 0, wis: 0, cha: 0 },
+          saveMods: { dex: targetSaveMod, con: targetSaveMod, str: targetSaveMod, int: targetSaveMod, wis: targetSaveMod, cha: targetSaveMod },
         }
       : undefined;
 
@@ -336,6 +361,17 @@ export default function SheetActionsPanel({
             min={1}
             max={30}
             onChange={(e) => setTargetAc(Number(e.target.value) || 10)}
+          />
+        </label>
+        <label className="sheet-target-field">
+          <span>Спас цели</span>
+          <input
+            type="number"
+            className="forge-input sheet-target-num"
+            value={targetSaveMod}
+            min={-5}
+            max={20}
+            onChange={(e) => setTargetSaveMod(Number(e.target.value) || 0)}
           />
         </label>
       </div>

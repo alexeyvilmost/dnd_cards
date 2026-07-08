@@ -113,6 +113,7 @@ export function buildSavePayload(
   draft: CharacterDraft,
   assembled: AssembledCharacter,
   ruleState: CharacterRuleState = resolveCharacterRules({ draft, assembled }),
+  prevCurrentHp?: number,
 ): SaveForgeCharacterRequest {
   const maxHP = ruleState.maxHP;
   return {
@@ -142,7 +143,8 @@ export function buildSavePayload(
     },
     rule_state: ruleState,
     max_hp: maxHP,
-    current_hp: maxHP,
+    // E3: при редактировании не восстанавливаем хиты — клампим старый current к новому max.
+    current_hp: prevCurrentHp != null ? Math.min(prevCurrentHp, maxHP) : maxHP,
     speed: ruleState.speed,
     proficiency_bonus: ruleState.proficiencyBonus,
     armor_class: ruleState.armorClass,

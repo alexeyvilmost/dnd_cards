@@ -78,6 +78,9 @@ const CharacterForge = () => {
   }, []);
   const savedSkillsRef = useRef<string[]>([]);
   const restoredClassSkillsRef = useRef(false);
+  // HP существующего персонажа при редактировании — чтобы правка посреди сессии
+  // не восстанавливала хиты (E3). null = создание нового (полный HP).
+  const savedHpRef = useRef<number | null>(null);
 
   // Загрузка справочников. При сбое сети — честный баннер + повтор (иначе
   // игрок видит враньё «Нет видов в базе» вместо ошибки).
@@ -135,6 +138,7 @@ const CharacterForge = () => {
     setSavedId(null);
     savedSkillsRef.current = [];
     restoredClassSkillsRef.current = false;
+    savedHpRef.current = null;
   }, [editId]);
 
   // Загрузка существующего черновика для редактирования.
@@ -146,6 +150,7 @@ const CharacterForge = () => {
       try {
         const c = await charactersV3Api.get(editId);
         savedSkillsRef.current = c.skill_proficiencies || [];
+        savedHpRef.current = c.current_hp ?? null;
         restoredClassSkillsRef.current = false;
         const d = characterToDraft(c);
         if (searchParams.get('levelup') === '1') {
@@ -371,7 +376,7 @@ const CharacterForge = () => {
     setSaving(true); setError(null);
     try {
       const isCreate = !draft.id;
-      const payload = buildSavePayload(draft, assembled, ruleState);
+      const payload = buildSavePayload(draft, assembled, ruleState, savedHpRef.current ?? undefined);
       const res = draft.id
         ? await charactersV3Api.update(draft.id, payload)
         : await charactersV3Api.create(payload);
@@ -403,6 +408,8 @@ const CharacterForge = () => {
       if (Object.keys(runtimePatch).length) await charactersV3Api.patchRuntime(res.id, runtimePatch);
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id }));
+      // Последующие сохранения в этой же сессии тоже не должны лечить (E3).
+      savedHpRef.current = payload.current_hp ?? null;
       // Успешно сохранён — черновик-автосейв больше не нужен.
       setRestorable(null);
       try { localStorage.removeItem(FORGE_DRAFT_KEY); } catch { /* ignore */ }

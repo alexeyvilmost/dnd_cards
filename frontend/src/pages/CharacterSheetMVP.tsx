@@ -94,6 +94,10 @@ const CharacterSheetMVP = () => {
   const diceDialog = useDiceDialog();
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
+  // E4: единое «КЗ цели» на весь лист — оба инстанса SheetActionsPanel
+  // (действия и заклинания) целятся в один и тот же AC.
+  const [targetAc, setTargetAc] = useState(10);
+  const [targetSaveMod, setTargetSaveMod] = useState(0);
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-theme') === 'paper'; } catch { return false; }
   });
@@ -446,6 +450,10 @@ const CharacterSheetMVP = () => {
             equipCards={equipCards}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
+            targetAc={targetAc}
+            onTargetAcChange={setTargetAc}
+            targetSaveMod={targetSaveMod}
+            onTargetSaveModChange={setTargetSaveMod}
           />
 
           <SheetEquipmentPanel
@@ -741,6 +749,10 @@ const CharacterSheetMVP = () => {
                 onEvents={appendRuntimeEvents}
                 embedded
                 spellsOnly
+                targetAc={targetAc}
+                onTargetAcChange={setTargetAc}
+                targetSaveMod={targetSaveMod}
+                onTargetSaveModChange={setTargetSaveMod}
               />
             </section>
           )}
