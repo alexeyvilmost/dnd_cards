@@ -402,30 +402,34 @@ export default function SheetActionsPanel({
         </div>
       )}
 
-      <div className="sheet-target-inputs">
-        <label className="sheet-target-field">
-          <span>КЗ цели</span>
-          <input
-            type="number"
-            className="forge-input sheet-target-num"
-            value={targetAc}
-            min={1}
-            max={30}
-            onChange={(e) => setTargetAc(Number(e.target.value) || 10)}
-          />
-        </label>
-        <label className="sheet-target-field">
-          <span>Спас цели</span>
-          <input
-            type="number"
-            className="forge-input sheet-target-num"
-            value={targetSaveMod}
-            min={-5}
-            max={20}
-            onChange={(e) => setTargetSaveMod(Number(e.target.value) || 0)}
-          />
-        </label>
-      </div>
+      {/* «КЗ/Спас цели» — только в основной панели действий; блок «Заклинания»
+          (spellsOnly) переиспользует общий таргет родителя, поле не дублирует. */}
+      {!spellsOnly && (
+        <div className="sheet-target-inputs">
+          <label className="sheet-target-field">
+            <span>КЗ цели</span>
+            <input
+              type="number"
+              className="forge-input sheet-target-num"
+              value={targetAc}
+              min={1}
+              max={30}
+              onChange={(e) => setTargetAc(Number(e.target.value) || 10)}
+            />
+          </label>
+          <label className="sheet-target-field">
+            <span>Спас цели</span>
+            <input
+              type="number"
+              className="forge-input sheet-target-num"
+              value={targetSaveMod}
+              min={-5}
+              max={20}
+              onChange={(e) => setTargetSaveMod(Number(e.target.value) || 0)}
+            />
+          </label>
+        </div>
+      )}
 
       {groups.map(({ key, label, items }) => items.length > 0 && (
         <div key={key} className="sheet-group">
