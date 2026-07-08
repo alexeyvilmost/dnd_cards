@@ -234,6 +234,20 @@ const CardLibrary = () => {
     ...base,
     pointerEvents: pinModeActive ? 'auto' : 'none',
   });
+  // B6: позицию курсора для превью обновляем не чаще кадра (rAF). Иначе каждый
+  // mousemove по строке списка дёргал setState и перерисовывал весь большой
+  // (2000+ строк) компонент — на быстрой мыши это сотни ре-рендеров в секунду.
+  const pendingMouse = useRef({ x: 0, y: 0 });
+  const mouseRafRef = useRef<number | null>(null);
+  const trackMouse = (x: number, y: number) => {
+    pendingMouse.current = { x, y };
+    if (mouseRafRef.current != null) return;
+    mouseRafRef.current = requestAnimationFrame(() => {
+      mouseRafRef.current = null;
+      setMousePosition(pendingMouse.current);
+    });
+  };
+  useEffect(() => () => { if (mouseRafRef.current != null) cancelAnimationFrame(mouseRafRef.current); }, []);
   const prevPinRef = useRef(pinModeActive);
   useEffect(() => {
     if (prevPinRef.current && !pinModeActive) {
@@ -1655,7 +1669,7 @@ const CardLibrary = () => {
                     onClick={() => handleConceptClick(concept)}
                     onMouseEnter={() => setHoveredConcept(concept)}
                     onMouseLeave={leaveHover(() => setHoveredConcept(null))}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-gray-50"
                   >
                     <div className="flex items-center gap-3">
@@ -1739,9 +1753,7 @@ const CardLibrary = () => {
                     className="relative"
                     onMouseEnter={() => setHoveredCard(card)}
                     onMouseLeave={leaveHover(() => setHoveredCard(null))}
-                    onMouseMove={(e) => {
-                      setMousePosition({ x: e.clientX, y: e.clientY });
-                    }}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                   >
                     <button
                       onClick={() => handleCardClick(card)}
@@ -2072,7 +2084,7 @@ const CardLibrary = () => {
                         onClick={() => handleSpellClick(spell)}
                         onMouseEnter={() => setHoveredSpell(spell)}
                         onMouseLeave={leaveHover(() => setHoveredSpell(null))}
-                        onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                         className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
                         <div className="flex items-center space-x-3">
@@ -2271,7 +2283,7 @@ const CardLibrary = () => {
                         onClick={() => handleFeatClick(feat)}
                         onMouseEnter={() => setHoveredFeat(feat)}
                         onMouseLeave={leaveHover(() => setHoveredFeat(null))}
-                        onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                         className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
                         <div className="flex items-center space-x-3">
@@ -2322,7 +2334,7 @@ const CardLibrary = () => {
                     onClick={() => handleBackgroundClick(bg)}
                     onMouseEnter={() => setHoveredBackground(bg)}
                     onMouseLeave={leaveHover(() => setHoveredBackground(null))}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2398,7 +2410,7 @@ const CardLibrary = () => {
                     onClick={() => handleRaceClick(race)}
                     onMouseEnter={() => setHoveredRace(race)}
                     onMouseLeave={leaveHover(() => setHoveredRace(null))}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2423,7 +2435,7 @@ const CardLibrary = () => {
                     onClick={() => handleRaceClick(race)}
                     onMouseEnter={() => setHoveredRace(race)}
                     onMouseLeave={leaveHover(() => setHoveredRace(null))}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2482,7 +2494,7 @@ const CardLibrary = () => {
                     onClick={() => handleClassClick(characterClass)}
                     onMouseEnter={() => setHoveredClass(characterClass)}
                     onMouseLeave={leaveHover(() => setHoveredClass(null))}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2514,7 +2526,7 @@ const CardLibrary = () => {
                     onClick={() => handleClassClick(characterClass)}
                     onMouseEnter={() => setHoveredClass(characterClass)}
                     onMouseLeave={leaveHover(() => setHoveredClass(null))}
-                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
