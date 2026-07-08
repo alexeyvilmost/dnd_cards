@@ -170,6 +170,14 @@
                     "russian_name": "Духовая трубка"
                 },
                 {
+                    "name": "musket",
+                    "russian_name": "Мушкет"
+                },
+                {
+                    "name": "pistol",
+                    "russian_name": "Пистоль"
+                },
+                {
                     "name": "net",
                     "russian_name": "Сеть"
                 }

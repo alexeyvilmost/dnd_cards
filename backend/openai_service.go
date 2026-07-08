@@ -316,7 +316,7 @@ func inferItemType(itemType, cardName, description string) string {
 		itemType string
 		keywords []string
 	}{
-		{"weapon", []string{"меч", "клинок", "кинжал", "топор", "булава", "копь", "копьё", "копье", "лук", "арбалет", "посох", "жезл", "кистень", "секира", "рапира", "сабля", "sword", "dagger", "axe", "bow", "staff", "wand"}},
+		{"weapon", []string{"меч", "клинок", "кинжал", "топор", "булава", "копь", "копьё", "копье", "лук", "арбалет", "посох", "жезл", "кистень", "секира", "рапира", "сабля", "пистол", "мушкет", "ружь", "sword", "dagger", "axe", "bow", "staff", "wand", "pistol", "musket", "rifle"}},
 		{"shield", []string{"щит", "shield"}},
 		{"ring", []string{"кольцо", "перстень", "ring"}},
 		{"necklace", []string{"ожерелье", "амулет", "кулон", "подвеск", "necklace", "amulet"}},
@@ -418,6 +418,7 @@ func isTallItem(itemType, cardName string) bool {
 		"посох", "staff", "копь", "spear", "копьё", "копье",
 		"лук", "bow", "арбалет", "crossbow", "жезл", "wand",
 		"секир", "axe", "трезуб", "trident", "булава", "mace",
+		"мушкет", "musket", "ружь", "rifle", // длинный ствол — портретный холст; пистоль компактный (квадрат)
 	}
 	for _, kw := range tallKeywords {
 		if strings.Contains(text, kw) {
