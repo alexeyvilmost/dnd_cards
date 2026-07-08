@@ -169,21 +169,37 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
             ))}
           </select>
         );
-      case 'multiselect':
+      case 'multiselect': {
+        // Чипы-переключатели вместо нативного <select multiple> (тот требует ctrl+click и
+        // при обычном клике сбрасывает выбор — из-за этого «нельзя выбрать несколько»).
+        const selected = (values[field.key] as string[]) || [];
+        const toggle = (id: string) => {
+          const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+          onField(field.key, next);
+        };
         return (
-          <select
-            multiple
-            className="w-full px-2 py-1 border rounded text-sm h-20"
-            value={(values[field.key] as string[]) || []}
-            onChange={(e) =>
-              onField(field.key, Array.from(e.target.selectedOptions).map((o) => o.value))
-            }
-          >
-            {options.map((o) => (
-              <option key={o.id} value={o.id}>{o.label}</option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-1.5">
+            {options.map((o) => {
+              const on = selected.includes(o.id);
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => toggle(o.id)}
+                  className={`px-2.5 py-1 rounded text-xs border transition-colors ${
+                    on
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {o.label}
+                </button>
+              );
+            })}
+            {options.length === 0 && <span className="text-xs text-gray-400">Нет вариантов</span>}
+          </div>
         );
+      }
       case 'number':
         return (
           <input
