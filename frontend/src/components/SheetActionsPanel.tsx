@@ -79,6 +79,23 @@ const RESOURCE_ICONS: Record<string, string> = {
   warlock_spell_slot: '/icons/resources/warlock_spell_slot.png',
 };
 
+/** Апкаст (D1): заклинание со стоимостью spell_slot уровня N доступно, если есть ЛЮБОЙ
+ *  слот уровня ≥ N (не только базового) — иначе кастер со свободным старшим слотом, но
+ *  потраченным базовым, не смог бы кастовать. Прочие ресурсы стоимости — обычной проверкой. */
+export function payableWithUpcast(runtime: RuntimeState, cost: Record<string, unknown>[]): boolean {
+  const slot = cost.find((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
+  const nonSlot = cost.filter((c) => c !== slot);
+  if (nonSlot.length && !canPay(runtime, nonSlot).ok) return false;
+  if (slot) {
+    const base = Number(slot.level) || 0;
+    const need = Number(slot.amount ?? 1) || 1;
+    let ok = false;
+    for (let L = base; L <= 9; L++) if ((runtime.resources[`spell_slot_${L}`] ?? 0) >= need) { ok = true; break; }
+    if (!ok) return false;
+  }
+  return true;
+}
+
 function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined) {
   return {
     current_hp: state.hp.current,
@@ -109,6 +126,11 @@ export default function SheetActionsPanel({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Пикер уровня слота (D1 апкаст): промис-модалка без нового провайдера.
+  const [slotPick, setSlotPick] = useState<{ baseLevel: number; options: number[]; resolve: (v: number | null) => void } | null>(null);
+  const requestSlotLevel = (baseLevel: number, options: number[]) =>
+    new Promise<number | null>((resolve) => setSlotPick({ baseLevel, options, resolve }));
+  const resolveSlotPick = (v: number | null) => { slotPick?.resolve(v); setSlotPick(null); };
   const [localTargetAc, setLocalTargetAc] = useState(10);
   // E4: если родитель управляет «КЗ цели» — используем его; иначе локальный стейт.
   const targetAc = targetAcProp ?? localTargetAc;
@@ -195,12 +217,40 @@ export default function SheetActionsPanel({
   }, [character.id, onUpdated, onEvents]);
 
   const runAction = async (action: SheetAction) => {
-    const mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
+    let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    if (cost.length && !canPay(runtime, cost).ok) return;
+    if (cost.length && !payableWithUpcast(runtime, cost)) return;
     // Оружейное действие без нужного оружия в руке — не запускаем.
     if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
+
+    // Апкаст (D1): если действие тратит spell_slot уровня N — выбрать уровень слота N..9
+    // (пикер при >1 доступном; авто при одном). castLevel в mech.cost и в ctx.spell включает
+    // апкаст-скейлинг (withScaling) и эмиссию spell_cast. Заговоры/spellRef без слота тоже
+    // помечаем ctx.spell (для триггеров каста), castLevel не задаём.
+    let spellCtx: { baseLevel: number; castLevel?: number } | undefined;
+    const slotIdx = cost.findIndex((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
+    if (slotIdx >= 0) {
+      const slotEntry = cost[slotIdx];
+      const baseLevel = Number(slotEntry.level) || 0;
+      const need = Number(slotEntry.amount ?? 1) || 1;
+      const options: number[] = [];
+      for (let L = baseLevel; L <= 9; L++) if ((runtime.resources[`spell_slot_${L}`] ?? 0) >= need) options.push(L);
+      if (options.length === 0) return;
+      let castLevel = options[0];
+      if (options.length > 1) {
+        const picked = await requestSlotLevel(baseLevel, options);
+        if (picked == null) return; // отмена
+        castLevel = picked;
+      }
+      if (castLevel !== baseLevel) {
+        const newCost = cost.map((c, i) => (i === slotIdx ? { ...c, level: castLevel } : c));
+        mech = { ...mech, activation: { ...(activation ?? {}), cost: newCost } };
+      }
+      spellCtx = { baseLevel, castLevel };
+    } else if (action.spellRef) {
+      spellCtx = { baseLevel: action.spellRef.level ?? action.level ?? 0 };
+    }
 
     const needsTarget = actionNeedsTarget(mech);
     const target = needsTarget
@@ -213,7 +263,7 @@ export default function SheetActionsPanel({
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
     const execCtx = (rng: () => number, planning = false) =>
-      ({ character: ctx, target, rng, passives, planning }) as ExecuteContext & { passives: typeof passives };
+      ({ character: ctx, target, rng, passives, planning, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
     const previewFor = (a: SheetAction): ReactNode => {
@@ -282,7 +332,8 @@ export default function SheetActionsPanel({
     if (!avail.available) return { disabled: true, reason: avail.reason };
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    const payable = !cost.length || canPay(runtime, cost).ok;
+    // Апкаст: спелл доступен при любом слоте ≥ базового круга (не только базовом).
+    const payable = !cost.length || payableWithUpcast(runtime, cost);
     if (!payable) return { disabled: true, reason: 'Недостаточно ресурсов' };
     return { disabled: busy };
   };
@@ -410,6 +461,35 @@ export default function SheetActionsPanel({
           </div>
         </div>
       ))}
+
+      {slotPick && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Выбор уровня слота заклинания">
+          <div className="absolute inset-0 bg-black/50" onClick={() => resolveSlotPick(null)} />
+          <div className="relative rounded-lg border border-[#8a7320] bg-[#1c1813] text-[#e8e0d0] shadow-xl p-4 w-72 max-w-[90vw]">
+            <div className="text-sm mb-3" style={{ color: '#d8b978' }}>На каком уровне сотворить?</div>
+            <div className="flex flex-col gap-1">
+              {slotPick.options.map((L) => (
+                <button
+                  key={L}
+                  type="button"
+                  onClick={() => resolveSlotPick(L)}
+                  className="flex items-center justify-between px-3 py-2 rounded border border-[#6b5836] hover:bg-[#2b2520] text-sm text-left"
+                >
+                  <span>{getSpellLevelLabel(L)}{L > slotPick.baseLevel ? ' · апкаст' : ''}</span>
+                  <span className="text-[#a99f8b] text-xs">слотов: {runtime.resources[`spell_slot_${L}`] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => resolveSlotPick(null)}
+              className="mt-3 w-full px-3 py-1.5 rounded border border-[#6b5836] text-xs text-[#a99f8b] hover:bg-[#2b2520]"
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
 
       {showEffects && !spellsOnly && runtime.activeEffects.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 8 }}>
