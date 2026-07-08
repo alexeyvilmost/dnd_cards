@@ -4,7 +4,7 @@ import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
-import { resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
+import { actionCostResourceIds, resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useSiteSettings } from '../settings';
 
@@ -37,10 +37,9 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
   // Парадигма №2: описание МЕХАНИКИ из данных (единый describeMechanics), не свободный текст.
   const mechDesc = describeMechanics(action.mechanics as Record<string, unknown> | null | undefined);
 
-  // Ресурсы (несколько): resources[] с фолбэком на устаревший resource
-  const resourceIds: string[] = Array.isArray(action.resources) && action.resources.length > 0
-    ? action.resources
-    : (action.resource ? [String(action.resource)] : []);
+  // Стоимость: единый источник — mechanics.activation.cost (что списывает движок),
+  // откат на устаревшие resources/resource, если стоимости в механике нет.
+  const resourceIds: string[] = actionCostResourceIds(action);
 
   // Мета-строка
   const meta: Array<[string, string]> = [];

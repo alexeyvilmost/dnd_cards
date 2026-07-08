@@ -2,7 +2,7 @@ import type { Action } from '../../types';
 import { ACTION_RECHARGE_OPTIONS } from '../../types';
 import type { WeaponAttackPreview } from '../../engine/weapon';
 import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../../utils/damageTypes';
-import { resourceCostIcon, resourceLabel, useResourceOptions } from '../../utils/resources';
+import { actionCostResourceIds, resourceCostIcon, resourceLabel, useResourceOptions } from '../../utils/resources';
 import { FormattedText } from '../../utils/formattedText';
 
 type ActionHoverCardProps = {
@@ -29,10 +29,8 @@ const ActionHoverCard = ({ action, sourceLabel, weaponAttackPreview }: ActionHov
   const desc = usefulText(action);
   const wp = weaponAttackPreview;
   const resources = useResourceOptions();
-  // Стоимость: resources[] (несколько) с фолбэком на устаревший resource — как в библиотечном ActionPreview.
-  const resourceIds: string[] = Array.isArray(action.resources) && action.resources.length > 0
-    ? action.resources
-    : (action.resource ? [String(action.resource)] : []);
+  // Стоимость из mechanics.activation.cost (единый источник правды) — совпадает с движком.
+  const resourceIds: string[] = actionCostResourceIds(action);
   const rechargeLabel = action.recharge
     ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
       + (action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : '')

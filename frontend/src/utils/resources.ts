@@ -106,3 +106,25 @@ export function resourceCostIcon(resources: ResourceOption[], id?: string | null
 export function registryItems(resources: ResourceOption[]) {
   return resources.map((resource) => ({ id: resource.id, label: resource.label }));
 }
+
+/** Ресурсы-СТОИМОСТЬ действия для отображения. Единый источник правды — mechanics.activation.cost
+ *  (что реально списывает движок). Откат на устаревшие resources/resource только если стоимости
+ *  в механике нет (легаси-действия). spell_slot с уровнем → ключ ячейки конкретного круга. */
+export function actionCostResourceIds(action: {
+  resources?: string[] | null;
+  resource?: string | null;
+  mechanics?: Record<string, unknown> | null;
+}): string[] {
+  const activation = (action.mechanics as Record<string, unknown> | null | undefined)?.activation as Record<string, unknown> | undefined;
+  const cost = Array.isArray(activation?.cost) ? (activation!.cost as Record<string, unknown>[]) : [];
+  if (cost.length) {
+    return cost
+      .map((c) => {
+        const r = String(c.resource ?? '');
+        return r === 'spell_slot' && c.level != null ? `spell_slot_${c.level}` : r;
+      })
+      .filter(Boolean);
+  }
+  if (Array.isArray(action.resources) && action.resources.length) return action.resources;
+  return action.resource ? [String(action.resource)] : [];
+}
