@@ -604,8 +604,14 @@ function runAttackRoll(
     }
     // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
     // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
-    next = emitEvent({ kind: 'hit' }, next, ctx, events, pending);
-    if (roll.outcome === 'crit') next = emitEvent({ kind: 'crit' }, next, ctx, events, pending);
+    next = emitEvent({ kind: 'hit', source: 'self' }, next, ctx, events, pending);
+    if (roll.outcome === 'crit') next = emitEvent({ kind: 'crit', source: 'self' }, next, ctx, events, pending);
+  } else {
+    // Промах: on_miss-райдеры (Graze/Vex — оружейное мастерство 2024) + событие miss.
+    if (Array.isArray(effect.on_miss)) {
+      next = applyPayloads(effect.on_miss as Dict[], next, ctx, events, source, hand);
+    }
+    next = emitEvent({ kind: 'miss', source: 'self' }, next, ctx, events, pending);
   }
   return next;
 }
@@ -745,7 +751,28 @@ function runMechanicEffects(
  * (с гейтом uses.per:"turn"), а реакции/триггеры со стоимостью складывает в pending
  * для решения игрока. Возвращает изменённое состояние.
  */
-function emitEvent(
+/**
+ * Словарь событий шины (C3). Единый источник истины: EMITTED — события, которые движок
+ * реально диспатчит из своих путей; PLANNED — валидные по схеме, но пока не эмитятся
+ * (с указанием причины ниже). Контрактный тест (eventBusContract.test.ts) сверяет
+ * union(EMITTED, PLANNED) с enum схемы: новое событие обязано попасть в один из списков.
+ */
+export const EMITTED_EVENTS = [
+  'hit', 'crit', 'damage_taken', 'miss', 'spell_cast', 'reduced_to_0_hp',
+] as const;
+
+export const PLANNED_EVENTS = [
+  // Требуют конвейера стадий атаки/урона (отдельные точки эмиссии):
+  'attack_roll_made', 'damage_dealt', 'saving_throw_made', 'forced_save', 'ability_check_made',
+  // Требуют endTurn / rest через шину (слайс 2 C3):
+  'turn_start', 'turn_end', 'short_rest', 'long_rest',
+  // Требуют многоактора/EncounterState (позиции, дистанции) — вне текущей модели:
+  'creature_enters_reach', 'creature_leaves_reach', 'creature_moves',
+  // Прочее (условия/инициатива/приобретение/уровень) — отдельные слайсы:
+  'condition_applied', 'initiative_roll', 'on_acquire', 'level_gained',
+] as const;
+
+export function emitEvent(
   ev: DomainEvent,
   state: RuntimeState,
   ctx: ExecuteContext,
@@ -801,6 +828,16 @@ export function executeAction(
 
   const sourceName = String(mechanics.name ?? 'действие');
   next = runMechanicEffects(effects, next, ctx, events, sourceName, pending);
+
+  // Событие «сотворено заклинание» → триггеры на каст (напр. отклик оружия/предмета).
+  // Активируется, когда лист/кузня передают ctx.spell (пикер уровня слота — D1 слайс 2);
+  // до этого не фигурирует (аддитивно, без изменения текущего поведения).
+  if (ctx.spell) {
+    next = emitEvent(
+      { kind: 'spell_cast', source: 'self', data: { level: ctx.spell.castLevel ?? ctx.spell.baseLevel } },
+      next, ctx, events, pending,
+    );
+  }
 
   void (ctx.character as CharacterContext);
   return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
@@ -864,7 +901,13 @@ export function applyIncomingDamage(
   }
 
   // Событие получения урона → реакции (Адское возмездие, Невероятное уклонение…).
-  next = emitEvent({ kind: 'damage_taken', data: { amount: dmg } }, next, ctx, events, pending);
+  next = emitEvent({ kind: 'damage_taken', source: 'self', data: { amount: dmg } }, next, ctx, events, pending);
+
+  // Падение до 0 HP → триггеры «при 0 HP» (напр. Отчаянная стойкость, срабатывания черт).
+  // Гейт «был >0, стал 0» — чтобы не дублировать эмиссию на добивании уже бессознательного.
+  if (next.hp.current === 0 && state.hp.current > 0) {
+    next = emitEvent({ kind: 'reduced_to_0_hp', source: 'self' }, next, ctx, events, pending);
+  }
 
   return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
 }

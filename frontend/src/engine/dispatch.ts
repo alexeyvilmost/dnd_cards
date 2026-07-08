@@ -22,6 +22,11 @@ export interface DomainEvent {
   timing?: 'before' | 'during' | 'after' | 'replaces';
   /** Данные события (напр. { amount } для damage_taken). */
   data?: Dict;
+  /** Провенанс актёра (groundwork под мультиактор/EncounterState): источник/цель события.
+   *  Пока одно-акторный мир — 'self'. subject-матчинг слушателей придёт со слайсом endTurn;
+   *  сейчас trigger.subject НАМЕРЕННО не фильтруется, чтобы не сломать существующий контент. */
+  source?: string;
+  target?: string;
 }
 
 export interface ListenerMatch {
