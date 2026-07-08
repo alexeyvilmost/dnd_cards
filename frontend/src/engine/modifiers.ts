@@ -24,11 +24,31 @@ export interface CollectOptions {
   evalCtx?: EvalContext;
 }
 
+/** @deprecated Бинарная свёртка порядко-зависима ([adv,dis,adv]→adv). Используйте
+ *  foldAdvantage(hasAdv, hasDis) с накоплением флагов (C7). Оставлена для совместимости. */
 export function combineAdvantage(current: AdvantageState, op: string): AdvantageState {
   if (op !== 'advantage' && op !== 'disadvantage') return current;
   if (current === 'none') return op as AdvantageState;
   if (current === op) return current;
   return 'none';
+}
+
+/** RAW 2024: при наличии И преимущества, И помехи они полностью аннулируются (none)
+ *  независимо от числа источников и порядка; иначе — присутствующий вид. */
+export function foldAdvantage(hasAdvantage: boolean, hasDisadvantage: boolean): AdvantageState {
+  if (hasAdvantage && hasDisadvantage) return 'none';
+  if (hasAdvantage) return 'advantage';
+  if (hasDisadvantage) return 'disadvantage';
+  return 'none';
+}
+
+/** Аккумулятор сбора: помимо свёрнутого advantage несёт флаги наличия — чтобы
+ *  межпроходное объединение (collected + projected) тоже было порядко-независимым (C7). */
+export interface CollectResult {
+  modifiers: RollModifier[];
+  advantage: AdvantageState;
+  hasAdvantage: boolean;
+  hasDisadvantage: boolean;
 }
 
 /** Ключ фильтра эффекта, отсутствующий в запросе = НЕ матч (R2). */
@@ -45,7 +65,7 @@ function collectFromPayload(
   payload: Dict,
   opts: CollectOptions,
   sourceName: string,
-  out: { modifiers: RollModifier[]; advantage: AdvantageState },
+  out: CollectResult,
 ): void {
   if (payload.kind !== 'modifier') return;
   // scope:'target' — проекция на атакующего носителя (фаза E); к своим броскам не относится.
@@ -62,7 +82,9 @@ function collectFromPayload(
   if (!matchesWhen(payload.when as Dict[] | undefined, whenCtx)) return;
 
   if (payload.op === 'advantage' || payload.op === 'disadvantage') {
-    out.advantage = combineAdvantage(out.advantage, String(payload.op));
+    if (payload.op === 'advantage') out.hasAdvantage = true;
+    else out.hasDisadvantage = true;
+    out.advantage = foldAdvantage(out.hasAdvantage, out.hasDisadvantage);
     return;
   }
   if ((payload.op == null || payload.op === 'add') && payload.value != null) {
@@ -88,10 +110,12 @@ export function collectModifiers(
   state: RuntimeState,
   passives: Dict[],
   opts: CollectOptions,
-): { modifiers: RollModifier[]; advantage: AdvantageState } {
-  const out: { modifiers: RollModifier[]; advantage: AdvantageState } = {
+): CollectResult {
+  const out: CollectResult = {
     modifiers: [],
     advantage: 'none',
+    hasAdvantage: false,
+    hasDisadvantage: false,
   };
 
   for (const effect of state.activeEffects) {

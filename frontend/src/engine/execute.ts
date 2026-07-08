@@ -18,7 +18,7 @@ import {
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
-import { collectModifiers, combineAdvantage } from './modifiers';
+import { collectModifiers, foldAdvantage } from './modifiers';
 import { activeConditionsOf, type EvalContext } from './circumstances';
 import { conditionModifierPayloads } from './conditions';
 import { payloadsOf } from './mechanicsView';
@@ -88,8 +88,8 @@ function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
 function projectedAgainst(
   target: ExecuteContext['target'],
   roll: string,
-): { modifiers: RollModifier[]; advantage: AdvantageState } {
-  const out: { modifiers: RollModifier[]; advantage: AdvantageState } = { modifiers: [], advantage: 'none' };
+): { modifiers: RollModifier[]; advantage: AdvantageState; hasAdvantage: boolean; hasDisadvantage: boolean } {
+  const out = { modifiers: [] as RollModifier[], advantage: 'none' as AdvantageState, hasAdvantage: false, hasDisadvantage: false };
   const st = target?.runtimeState;
   if (!st) return out;
 
@@ -99,7 +99,8 @@ function projectedAgainst(
     if (!applies || applies.roll !== roll) return;
     const op = String(m.op ?? '');
     if (op === 'advantage' || op === 'disadvantage') {
-      out.advantage = combineAdvantage(out.advantage, op);
+      if (op === 'advantage') out.hasAdvantage = true; else out.hasDisadvantage = true;
+      out.advantage = foldAdvantage(out.hasAdvantage, out.hasDisadvantage);
     } else if (op === 'add' && m.value != null) {
       const v = Number(String(m.value).replace(/^\+/, ''));
       if (!Number.isNaN(v)) out.modifiers.push({ value: v, source });
@@ -592,7 +593,11 @@ function runAttackRoll(
   const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers, ...projected.modifiers];
 
   const roll = rollD20({
-    advantage: combineAdvantage(collected.advantage, projected.advantage),
+    // C7: объединяем флаги обоих проходов — и преим., и помеха (свои + от цели) → none.
+    advantage: foldAdvantage(
+      collected.hasAdvantage || projected.hasAdvantage,
+      collected.hasDisadvantage || projected.hasDisadvantage,
+    ),
     modifiers: mods,
     target: { type: 'ac', value: ac },
     rng: ctx.rng,

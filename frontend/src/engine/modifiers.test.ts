@@ -67,3 +67,27 @@ describe('collectModifiers (фаза C)', () => {
     expect(con.modifiers).toHaveLength(0);
   });
 });
+
+describe('C7 — свёртка преимущества/помехи порядко-независима (RAW 2024)', () => {
+  const adv = (n: string) => modEffect({ kind: 'modifier', applies_to: { roll: 'attack' }, op: 'advantage' }, n);
+  const dis = (n: string) => modEffect({ kind: 'modifier', applies_to: { roll: 'attack' }, op: 'disadvantage' }, n);
+  const advOf = (effs: ActiveEffectEntry[]) => collectModifiers(stateWith(effs), [], { roll: 'attack' }).advantage;
+
+  it('и преимущество, и помеха → none независимо от ПОРЯДКА и числа источников', () => {
+    expect(advOf([adv('a'), dis('b'), adv('c')])).toBe('none'); // раньше бинарная свёртка давала 'advantage'
+    expect(advOf([adv('a'), adv('b'), dis('c')])).toBe('none');
+    expect(advOf([dis('a'), adv('b'), adv('c')])).toBe('none');
+  });
+
+  it('только преимущество → advantage; только помеха → disadvantage', () => {
+    expect(advOf([adv('a'), adv('b')])).toBe('advantage');
+    expect(advOf([dis('a')])).toBe('disadvantage');
+  });
+
+  it('флаги наличия выставлены (для порядко-независимого межпроходного объединения)', () => {
+    const out = collectModifiers(stateWith([adv('a'), dis('b')]), [], { roll: 'attack' });
+    expect(out.hasAdvantage).toBe(true);
+    expect(out.hasDisadvantage).toBe(true);
+    expect(out.advantage).toBe('none');
+  });
+});
