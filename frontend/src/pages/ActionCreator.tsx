@@ -6,6 +6,7 @@ import type { CreateActionRequest, UpdateActionRequest } from '../types';
 import { RARITY_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { registryItems, useResourceOptions } from '../utils/resources';
 import ActionPreview from '../components/ActionPreview';
+import { FormattedTextarea } from '../components/FormattedTextarea';
 import ImageUploader from '../components/ImageUploader';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { validateMechanics } from '../engine/validateMechanics';
@@ -296,12 +297,14 @@ const ActionCreator = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Описание *
                 </label>
-                <textarea
-                  {...register('description', { required: 'Описание обязательно' })}
+                <FormattedTextarea
+                  value={formData.description || ''}
+                  onChange={(v) => setValue('description', v, { shouldValidate: true })}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Описание действия"
                 />
+                {/* Скрытый инпут — регистрация правила required для react-hook-form (значением рулит FormattedTextarea). */}
+                <input type="hidden" {...register('description', { required: 'Описание обязательно' })} />
                 {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
               </div>
 
