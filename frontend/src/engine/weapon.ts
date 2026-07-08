@@ -22,11 +22,14 @@ function cardById(ctx: CharacterContext, id: string | null | undefined): Card | 
 
 function pickAbility(card: Card, character: CharacterContext): 'str' | 'dex' {
   const props = cardPropsList(card);
-  if (props.includes('finesse')) {
-    const str = character.abilityMods.str ?? 0;
-    const dex = character.abilityMods.dex ?? 0;
-    return dex > str ? 'dex' : 'str';
-  }
+  const tags = (card.tags as string[] | null | undefined) ?? [];
+  const best = () => ((character.abilityMods.dex ?? 0) > (character.abilityMods.str ?? 0) ? 'dex' : 'str');
+  // Дальнобойное (лук/арбалет/праща/духовая трубка/огнестрел): свойство ammunition или
+  // тег «Дальнобойное» → атака и урон от ЛВК (C11). Раньше без finesse всё било от СИЛ.
+  if (props.includes('ammunition') || tags.includes('Дальнобойное')) return 'dex';
+  // Фехтовальное (finesse) — лучший из СИЛ/ЛВК (в т.ч. метательное finesse: дротик/кинжал).
+  if (props.includes('finesse')) return best();
+  // Прочее рукопашное/метательное без finesse — от СИЛ.
   return 'str';
 }
 

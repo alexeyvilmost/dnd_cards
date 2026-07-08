@@ -5,6 +5,7 @@ import {
   freshFighterState, MECH_DODGE, MECH_WEAPON_ATTACK, seededRng,
 } from '../mvp/fixtures';
 import { weaponContext, weaponAttackPreview } from './weapon';
+import type { Card } from '../types';
 
 describe('weaponContext slots (R3)', () => {
   it('основная рука по слоту, не по порядку карточек в массиве', () => {
@@ -15,6 +16,31 @@ describe('weaponContext slots (R3)', () => {
     const equipment = { main_hand: CARD_LONGSWORD.id, off_hand: CARD_DAGGER.id };
     expect(weaponContext(ctx, 'main', equipment)?.dice).toBe('1d8');
     expect(weaponContext(ctx, 'off', equipment)?.dice).toBe('1d4');
+  });
+});
+
+describe('C11: дальнобойное оружие атакует от ЛВК', () => {
+  // Силач: СИЛ > ЛВК — чтобы «дальнобойное→ЛВК» не спуталось с finesse «лучший из двух».
+  const strChar: CharacterContext = { ...FIGHTER_CTX, abilityMods: { str: 5, dex: 1, con: 2, int: 0, wis: 1, cha: 0 } };
+  const mkWeapon = (props: string[], tags: string[] = []): Card => ({
+    ...CARD_LONGSWORD, id: 'w', name: 'Тест-оружие', bonus_value: '1d8',
+    properties: props as unknown as Card['properties'],
+    tags: tags as unknown as Card['tags'],
+  });
+  const abilityOf = (card: Card) =>
+    weaponContext({ ...strChar, equippedCards: [card] }, 'main', { main_hand: card.id })?.ability;
+
+  it('лук (свойство ammunition) — ЛВК, несмотря на бОльшую СИЛ', () => {
+    expect(abilityOf(mkWeapon(['ammunition', 'two_handed']))).toBe('dex');
+  });
+  it('тег «Дальнобойное» — ЛВК (фолбэк без свойства ammunition)', () => {
+    expect(abilityOf(mkWeapon([], ['Воинское', 'Дальнобойное']))).toBe('dex');
+  });
+  it('рукопашное без finesse — СИЛ', () => {
+    expect(abilityOf(mkWeapon(['heavy']))).toBe('str');
+  });
+  it('finesse (не дальнобойное) — лучший из СИЛ/ЛВК = СИЛ у силача', () => {
+    expect(abilityOf(mkWeapon(['finesse', 'light']))).toBe('str');
   });
 });
 
