@@ -226,6 +226,36 @@ describe('E4: auto-эффекты', () => {
   });
 });
 
+describe('E4: восстановление ресурса (op:restore) — пополняет до максимума, не max', () => {
+  const restoreMech = (amount: number): Record<string, unknown> => ({
+    activation: { cost: [{ resource: 'action' }], mode: 'active' },
+    effects: [{ resolution: 'auto', result: [{ kind: 'resource', op: 'restore', id: 'second_wind', amount }] }],
+  });
+
+  it('восстанавливает на N до максимума; максимум ресурса не меняется', () => {
+    const state = freshFighterState();
+    state.resources.second_wind = 0; // потрачено
+    const { state: next, events } = executeAction(state, restoreMech(1), { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(next.resources.second_wind).toBe(1);      // 0 + 1
+    expect(next.maxResources.second_wind).toBe(2);   // МАКСИМУМ не тронут
+    expect(events.some((e) => e.type === 'resource_restored')).toBe(true);
+  });
+
+  it('полный ресурс не меняется — no-op без события', () => {
+    const state = freshFighterState(); // second_wind = 2 = максимум
+    const { state: next, events } = executeAction(state, restoreMech(1), { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(next.resources.second_wind).toBe(2);
+    expect(events.some((e) => e.type === 'resource_restored')).toBe(false);
+  });
+
+  it('избыточное количество клампится к максимуму (не выдаёт сверх max)', () => {
+    const state = freshFighterState();
+    state.resources.second_wind = 1;
+    const { state: next } = executeAction(state, restoreMech(5), { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(next.resources.second_wind).toBe(2); // 1 + 5 → clamp до 2
+  });
+});
+
 describe('E5: заклинания через тот же исполнитель', () => {
   it('заговор с уроном (attack_roll, spell) исполняется без слота', () => {
     // Огненная стрела (упрощённо): заговор — атака заклинанием, 1d10 огня

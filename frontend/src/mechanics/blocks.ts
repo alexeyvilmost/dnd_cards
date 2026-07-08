@@ -155,6 +155,19 @@ export const EFFECT_BLOCKS: Block[] = [
     summary: (v) => `+${v.amount} ${labelOf(RESOURCES, String(v.id))}`,
   },
   {
+    id: 'eff_restore_resource',
+    label: 'Восстановить ресурс',
+    group: 'effect',
+    fields: [
+      { key: 'id', label: 'Ресурс', type: 'select', options: RESOURCES, optionSource: 'resources' },
+      { key: 'amount', label: 'Количество', type: 'number', default: 1 },
+    ],
+    defaults: { id: 'heroic_inspiration', amount: 1 },
+    // op:'restore' — пополнить текущее до максимума (не выше). Полный ресурс не меняется.
+    build: (v) => ({ kind: 'resource', op: 'restore', id: v.id, amount: Number(v.amount) || 1 }),
+    summary: (v) => `Восстановить ${v.amount} ${labelOf(RESOURCES, String(v.id))} (до максимума)`,
+  },
+  {
     id: 'eff_grant_prof',
     label: 'Выдать владение',
     group: 'effect',
@@ -538,7 +551,10 @@ export function optionsToChoiceForm(choice: Dict): Dict {
 function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
   const raw = (): { blockId: string; values: Dict } => ({ blockId: 'eff_raw_json', values: { json: JSON.stringify(p) } });
   switch (p?.kind) {
-    case 'resource': return { blockId: 'eff_grant_resource', values: { id: p.id, amount: p.amount ?? 1 } };
+    case 'resource': return {
+      blockId: p.op === 'restore' ? 'eff_restore_resource' : 'eff_grant_resource',
+      values: { id: p.id, amount: p.amount ?? 1 },
+    };
     case 'grant_proficiency': return { blockId: 'eff_grant_prof', values: { prof: p.prof, value: p.value } };
     case 'grant_feat': return { blockId: 'eff_grant_feat', values: { value: p.value } };
     case 'grant_spell': return { blockId: 'eff_grant_spell', values: { value: p.value, ability: p.ability, level_gate: p.level_gate ?? 1 } };
