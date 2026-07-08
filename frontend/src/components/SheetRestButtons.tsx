@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Moon, Sun, Swords } from 'lucide-react';
+import { Hourglass, Moon, Sun, Swords } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { collectActionUsesRecharge } from '../character/actionSheet';
 import type { AssembledCharacter } from '../character/assemble';
@@ -11,7 +11,7 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
-import { longRest, shortRest, startTurn } from '../engine/turn';
+import { endTurn, longRest, shortRest, startTurn } from '../engine/turn';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 
 interface Props {
@@ -117,7 +117,12 @@ export default function SheetRestButtons({
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 
   const handleStartTurn = () => {
-    const { state, events } = startTurn(runtime);
+    const { state, events } = startTurn(runtime, restCtx);
+    apply(state, events, false);
+  };
+
+  const handleEndTurn = () => {
+    const { state, events } = endTurn(runtime, restCtx);
     apply(state, events, false);
   };
 
@@ -137,6 +142,15 @@ export default function SheetRestButtons({
     <div className={cls}>
       <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy} onClick={handleStartTurn}>
         <Swords size={14} /> Новый ход
+      </button>
+      <button
+        type="button"
+        className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
+        disabled={busy}
+        onClick={handleEndTurn}
+        title="Конец хода: спасброски в конце хода, истечение эффектов, тикающие эффекты"
+      >
+        <Hourglass size={14} /> Конец хода
       </button>
       <button
         type="button"

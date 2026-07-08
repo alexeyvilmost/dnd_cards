@@ -161,6 +161,7 @@ function evalDc(formula: string, ctx: ExecuteContext): number {
 function expiryFromDuration(duration: Dict | undefined): string | undefined {
   const t = duration?.type;
   if (t === 'until_start_of_next_turn') return 'start_of_next_turn';
+  if (t === 'until_end_of_turn') return 'end_of_turn';
   return undefined;
 }
 
@@ -769,13 +770,13 @@ function runMechanicEffects(
  */
 export const EMITTED_EVENTS = [
   'hit', 'crit', 'damage_taken', 'miss', 'spell_cast', 'reduced_to_0_hp',
+  // Ход и отдыхи через шину (C3 слайс 2 — turn.ts startTurn/endTurn/shortRest/longRest):
+  'turn_start', 'turn_end', 'short_rest', 'long_rest',
 ] as const;
 
 export const PLANNED_EVENTS = [
   // Требуют конвейера стадий атаки/урона (отдельные точки эмиссии):
   'attack_roll_made', 'damage_dealt', 'saving_throw_made', 'forced_save', 'ability_check_made',
-  // Требуют endTurn / rest через шину (слайс 2 C3):
-  'turn_start', 'turn_end', 'short_rest', 'long_rest',
   // Требуют многоактора/EncounterState (позиции, дистанции) — вне текущей модели:
   'creature_enters_reach', 'creature_leaves_reach', 'creature_moves',
   // Прочее (условия/инициатива/приобретение/уровень) — отдельные слайсы:

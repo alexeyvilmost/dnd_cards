@@ -26,7 +26,7 @@ export interface SheetToast {
 function toastFromEvents(events: EngineEvent[], options: ResourceOptions): SheetToast | null {
   const describe = (e: EngineEvent): ReactNode => resourceEventNode(e, options) ?? describeEngineEvent(e);
   const lines = events
-    .filter((e) => e.type !== 'turn_started')
+    .filter((e) => e.type !== 'turn_started' && e.type !== 'turn_ended')
     .map(describe)
     .filter(Boolean);
   if (!lines.length) return null;

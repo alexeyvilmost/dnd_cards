@@ -51,6 +51,10 @@ export function turnStartedEvent(): EngineEvent {
   return { type: 'turn_started' };
 }
 
+export function turnEndedEvent(): EngineEvent {
+  return { type: 'turn_ended' };
+}
+
 // ─── Сериализация ──────────────────────────────────────────────────────────
 
 export function serializeEngineEvent(event: EngineEvent): string {
@@ -130,6 +134,8 @@ export function describeEngineEvent(event: EngineEvent): string {
       return `Состояние: ${event.condition}`;
     case 'turn_started':
       return 'Начало хода';
+    case 'turn_ended':
+      return 'Конец хода';
     case 'short_rest':
       return 'Короткий отдых';
     case 'long_rest':

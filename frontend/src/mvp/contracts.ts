@@ -59,6 +59,7 @@ export type EngineEvent =
   | { type: 'effect_expired'; name: string }
   | { type: 'condition_applied'; condition: string }
   | { type: 'turn_started' }
+  | { type: 'turn_ended' }
   | { type: 'short_rest' }
   | { type: 'long_rest' }
   | { type: 'narrative'; text: string };
