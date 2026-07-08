@@ -2,9 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
+	"net"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -14,6 +19,44 @@ type OpenAIService struct {
 	client *openai.Client
 }
 
+// newOpenAIHTTPClient — HTTP-клиент для OpenAI с egress Railway:
+//   - Proxy из окружения (HTTPS_PROXY) — можно направить трафик через достижимый прокси,
+//     если прямой доступ к api.openai.com блокируется/таймаутится;
+//   - укороченный dial-timeout (15с вместо дефолтных 30с) — быстрее падаем на недостижимом
+//     Cloudflare-edge и уходим в ретрай (повторный dial часто попадает на рабочий anycast-IP);
+//   - общий бюджет запроса 180с (генерация изображения долгая, но не висит вечно).
+func newOpenAIHTTPClient() *http.Client {
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr.Proxy = http.ProxyFromEnvironment
+	tr.DialContext = (&net.Dialer{
+		Timeout:   15 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext
+	return &http.Client{
+		Timeout:   180 * time.Second,
+		Transport: tr,
+	}
+}
+
+// isRetryableNetErr — временные сетевые сбои (dial i/o timeout, reset, EOF, TLS), на
+// которых повтор имеет смысл (в отличие от 4xx/невалидного запроса).
+func isRetryableNetErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	for _, s := range []string{"i/o timeout", "timeout", "connection reset", "connection refused", "no such host", "eof", "tls handshake", "network is unreachable"} {
+		if strings.Contains(msg, s) {
+			return true
+		}
+	}
+	return false
+}
+
 // NewOpenAIService - создание нового сервиса OpenAI
 func NewOpenAIService() *OpenAIService {
 	apiKey := os.Getenv("OPENAI_API_KEY")
@@ -21,8 +64,15 @@ func NewOpenAIService() *OpenAIService {
 		return nil
 	}
 
-	client := openai.NewClient(apiKey)
-	return &OpenAIService{client: client}
+	config := openai.DefaultConfig(apiKey)
+	// OPENAI_BASE_URL — опциональный прокси/шлюз, совместимый с OpenAI API, если прямой
+	// доступ из Railway недоступен (напр. Cloudflare Worker-релей). Пусто → api.openai.com.
+	if base := strings.TrimSpace(os.Getenv("OPENAI_BASE_URL")); base != "" {
+		config.BaseURL = strings.TrimRight(base, "/")
+		log.Printf("[openai] используется кастомный BaseURL: %s", config.BaseURL)
+	}
+	config.HTTPClient = newOpenAIHTTPClient()
+	return &OpenAIService{client: openai.NewClientWithConfig(config)}
 }
 
 // normalizeImageQuality - приводит качество к допустимому значению gpt-image-1
@@ -66,18 +116,33 @@ func (s *OpenAIService) GenerateImage(prompt, quality, size string) (string, err
 		return "", fmt.Errorf("OpenAI API не настроен")
 	}
 
-	ctx := context.Background()
-	resp, err := s.client.CreateImage(ctx, openai.ImageRequest{
+	req := openai.ImageRequest{
 		Prompt:     prompt,
 		Model:      "gpt-image-1",
 		Size:       normalizeImageSize(size),
 		Quality:    normalizeImageQuality(quality),
 		Background: openai.CreateImageBackgroundTransparent,
 		N:          1,
-	})
+	}
 
-	if err != nil {
-		return "", fmt.Errorf("ошибка генерации изображения: %w", err)
+	// Ретраи на временных сетевых сбоях (dial i/o timeout к Cloudflare-edge OpenAI):
+	// повторный запрос заново резолвит DNS и часто попадает на рабочий anycast-IP.
+	const attempts = 3
+	var resp openai.ImageResponse
+	var err error
+	for i := 0; i < attempts; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 160*time.Second)
+		resp, err = s.client.CreateImage(ctx, req)
+		cancel()
+		if err == nil {
+			break
+		}
+		if i == attempts-1 || !isRetryableNetErr(err) {
+			return "", fmt.Errorf("ошибка генерации изображения: %w", err)
+		}
+		wait := time.Duration(i+1) * 2 * time.Second
+		log.Printf("[openai] генерация изображения: попытка %d/%d не удалась (%v), повтор через %s", i+1, attempts, err, wait)
+		time.Sleep(wait)
 	}
 
 	if len(resp.Data) == 0 {
