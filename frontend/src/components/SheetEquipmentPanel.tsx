@@ -5,7 +5,6 @@ import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import {
   addToInventory,
-  buildCharacterContext,
   carryingCapacity,
   forgeToRuntimeState,
   removeFromInventory,
@@ -13,7 +12,6 @@ import {
 } from '../character/runtime';
 import {
   characterCurrency,
-  collectEquippedCards,
   equipCardSwapping,
   unequipToInventory,
 } from '../character/inventory';
@@ -22,13 +20,13 @@ import type { CharacterRuleState } from '../character/rules/types';
 import { currencyIconStyle, getCurrencyIconPath, getCurrencyInfo } from '../utils/currencies';
 import { registerCard } from '../engine/cardRegistry';
 import { planEquip, totalWeight } from '../engine/equipment';
-import { weaponContext } from '../engine/weapon';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 import { useSiteSettings } from '../settings';
 import CardPreview from './CardPreview';
 import SheetItemRow from './SheetItemRow';
 import EquipItemDialog from './EquipItemDialog';
+import SheetAttunementDialog from './SheetAttunementDialog';
 
 interface Props {
   character: ForgeCharacter;
@@ -81,9 +79,10 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [attuneOpen, setAttuneOpen] = useState(false);
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
-  void passives; // КД считается в шапке листа — панели он больше не нужен
+  void passives; void ruleState; // КД/оружие считаются в шапке листа
 
   const cardIds = useMemo(() => {
     const ids = new Set<string>();
@@ -137,13 +136,6 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const capacity = carryingCapacity(strScore);
   const asIcons = entityDisplay.items === 'icon';
 
-  const ctxRuntime = runtime;
-  const mainWeapon = weaponContext(
-    buildCharacterContext(ruleState, { level: character.level, abilities: character.abilities ?? {} },
-      collectEquippedCards(runtime.equipment, cardMap), null),
-    'main', ctxRuntime.equipment,
-  );
-
   const persist = useCallback(async (next: RuntimeState) => {
     setBusy(true);
     setError(null);
@@ -165,6 +157,10 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
 
   const attuned = readAttunedIds(character.turn_state);
   const canChangeAttunement = attunementUnlocked(character.turn_state);
+  // Списки для окна настройки: настроенные предметы и те, на что можно настроиться.
+  const presentCards = cardIds.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
+  const attunedCards = attuned.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
+  const attunableCards = presentCards.filter((c) => c.requires_attunement && !attuned.includes(c.id));
 
   const handleEquip = async (card: Card) => {
     registerCard(card);
@@ -337,6 +333,47 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
     );
   };
 
+  // ── Результаты поиска (в том же виде, что инвентарь; клик — добавить) ──
+  const renderSearchResults = () => {
+    if (asIcons) {
+      return (
+        <div className="forge-spell-icon-grid sheet-inv-icon-grid">
+          {searchResults.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              className="forge-spell-icon ready sheet-inv-tile-icon"
+              title={`${card.name} — добавить`}
+              disabled={busy}
+              onClick={() => handleAdd(card)}
+              {...hoverHandlers(card)}
+            >
+              <img
+                src={card.image_url?.trim() || '/default_image.png'}
+                alt={card.name}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
+              />
+              <span className="sheet-add-badge"><Plus size={12} /></span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <div className="sheet-item-cols">
+        {searchResults.map((card) => (
+          <SheetItemRow
+            key={card.id}
+            card={card}
+            onClick={() => handleAdd(card)}
+            right={<span className="sheet-add-chip"><Plus size={14} /></span>}
+            {...hoverHandlers(card)}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const dialogCardAttuned = dialog ? attuned.includes(dialog.card.id) : false;
 
   const body = (
@@ -345,9 +382,15 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
 
       <div className="sheet-equip-topbar">
         <div className="sheet-stat"><span>Вес</span><strong>{weight.toFixed(1)} / {capacity} фн</strong></div>
-        {mainWeapon && (
-          <div className="sheet-stat"><span>Оружие</span><strong>{mainWeapon.dice} {mainWeapon.ability.toUpperCase()}</strong></div>
-        )}
+        <button
+          type="button"
+          className="sheet-stat sheet-attune-open"
+          onClick={() => setAttuneOpen(true)}
+          title="Управление настройкой на предметы"
+        >
+          <span><Sparkles size={12} /> Настройка</span>
+          <strong>{attuned.length} / {MAX_ATTUNED}</strong>
+        </button>
         <div className="sheet-stat sheet-stat-wallet" title="Кошелёк (золото / серебро / медь)">
           <span>Кошелёк</span>
           <strong className="sheet-wallet">
@@ -381,28 +424,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
         {!searching && search.trim().length >= 2 && searchResults.length === 0 && (
           <p className="forge-note">Ничего не найдено.</p>
         )}
-        {searchResults.length > 0 && (
-          <ul className="sheet-list sheet-inv-search-results">
-            {searchResults.map((card) => (
-              <li key={card.id}>
-                <span>
-                  {card.name}
-                  {card.weight != null && <span className="sheet-inv-meta"> · {card.weight} фн</span>}
-                </span>
-                <button
-                  type="button"
-                  className="forge-btn ghost sheet-roll-btn"
-                  disabled={busy}
-                  onClick={() => handleAdd(card)}
-                  title="Добавить в инвентарь"
-                >
-                  <Plus size={14} />
-                  Добавить
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {searchResults.length > 0 && renderSearchResults()}
       </div>
 
       <div className="sheet-group">
@@ -443,6 +465,18 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
           onRemove={() => handleRemove(dialog.card.id)}
           onToggleAttune={() => handleToggleAttune(dialog.card.id)}
           onClose={() => setDialog(null)}
+        />
+      )}
+
+      {attuneOpen && (
+        <SheetAttunementDialog
+          attunedCards={attunedCards}
+          attunableCards={attunableCards}
+          max={MAX_ATTUNED}
+          canChange={canChangeAttunement}
+          busy={busy}
+          onToggle={handleToggleAttune}
+          onClose={() => setAttuneOpen(false)}
         />
       )}
     </>
