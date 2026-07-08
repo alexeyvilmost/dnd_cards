@@ -387,6 +387,18 @@ function applyResource(
 
 type DamageInstance = { amount: number; damageType: string; roll?: import('../mvp/contracts').RollLog };
 
+/** C1: модификаторы урона из активных эффектов/пассивок (Ярость +СИЛ, «Свет Латандера» +3).
+ *  Запрос ОБЯЗАН передать ability использованной характеристики — иначе фильтр Ярости
+ *  {ability:'str'} отсечёт её (matchFilter). Возвращает отдельные строки (гранулярность №4). */
+function collectDamageModifiers(ctx: ExecuteContext, state: RuntimeState, filter: Dict): RollModifier[] {
+  return collectModifiers(state, passivesFromCtx(ctx), {
+    roll: 'damage',
+    filter,
+    formulaCtx: formulaCtx(ctx),
+    evalCtx: evalCtxOf(state, ctx),
+  }).modifiers;
+}
+
 /**
  * Одна payload-строка урона → одна ИЛИ несколько нанесённых инстанций.
  * dice:"weapon" раскрывается в оружие в руке: основная строка (кость + мод характеристики
@@ -410,16 +422,21 @@ function resolveDamageAmounts(
     return lines.map((line, i) => {
       const fr = rollFormula(line.dice, formulaCtx(ctx), { rng: ctx.rng });
       let total = fr.total;
+      let extraMods: RollModifier[] = [];
       // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
       if (i === 0) {
         if (ab === 'auto' && handWeapon) total += ctx.character.abilityMods[handWeapon.ability];
         else if (ab !== 'auto' && ab !== 'none') total += ctx.character.abilityMods[ab as AbilityKey] ?? 0;
         if (handWeapon?.enchant) total += handWeapon.enchant;
+        // C1: модификаторы урона из эффектов (Ярость и т.п.) — на основную строку, отдельными частями.
+        const usedAbility = ab === 'auto' ? handWeapon?.ability : (ab !== 'none' ? (ab as AbilityKey) : undefined);
+        extraMods = collectDamageModifiers(ctx, state, { hand, ...(usedAbility ? { ability: usedAbility } : {}) });
+        for (const m of extraMods) total += m.value;
       }
       return {
         amount: total,
         damageType: line.type,
-        roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total, text: fr.text },
+        roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
       };
     });
   }
@@ -430,10 +447,17 @@ function resolveDamageAmounts(
   const flat = payload.amount != null ? String(payload.amount) : payload.dice != null ? String(payload.dice) : null;
   if (flat != null) {
     const fr = rollFormula(withScaling(flat, payload, ctx), formulaCtx(ctx), { rng: ctx.rng });
+    // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
+    // если задан; иначе ability в фильтр не кладём (эффект без ability-фильтра всё равно применится).
+    const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
+      ? (payload.ability as AbilityKey) : undefined;
+    const extraMods = collectDamageModifiers(ctx, state, usedAbility ? { ability: usedAbility } : {});
+    let total = fr.total;
+    for (const m of extraMods) total += m.value;
     return [{
-      amount: fr.total,
+      amount: total,
       damageType,
-      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
+      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
     }];
   }
 

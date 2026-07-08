@@ -7,9 +7,10 @@
  * поэтому применяется к любому действию с теми же маркерами (парадигма №1).
  */
 import type { Card } from '../types';
-import type { AbilityKey } from './formula';
-import type { CharacterContext, WeaponContext } from '../mvp/contracts';
+import type { AbilityKey, FormulaContext } from './formula';
+import type { CharacterContext, RuntimeState, WeaponContext } from '../mvp/contracts';
 import { cardPropsList } from './equipment';
+import { collectModifiers } from './modifiers';
 
 type Dict = Record<string, unknown>;
 
@@ -206,6 +207,33 @@ export interface WeaponAttackPreview {
   damages: Array<{ dice: string; bonus: number; type: string }>;
 }
 
+/** C1: сумма модификаторов урона из эффектов/пассивок для предпросмотра (парадигма №2 —
+ *  превью = исполнению). Фильтр зеркалит resolveDamageAmounts: осн. рука {hand, ability},
+ *  вторая {hand}. Без state (вызовы без рантайма) возвращает 0. */
+function damageModifierBonus(
+  state: RuntimeState | undefined,
+  passives: Dict[] | undefined,
+  character: CharacterContext,
+  hand: 'main' | 'off',
+  ability: AbilityKey | undefined,
+): number {
+  if (!state) return 0;
+  const fctx: FormulaContext = {
+    abilityMods: character.abilityMods,
+    profBonus: character.profBonus,
+    selfLevel: character.level,
+    classLevels: character.classLevels,
+    spellcastingMod: character.spellcastingMod,
+    variables: character.variables,
+  };
+  const collected = collectModifiers(state, passives ?? [], {
+    roll: 'damage',
+    filter: { hand, ...(ability ? { ability } : {}) },
+    formulaCtx: fctx,
+  });
+  return collected.modifiers.reduce((s, m) => s + m.value, 0);
+}
+
 /**
  * Числа для подсказки оружейной атаки, посчитанные из оружия в соответствующей руке.
  * Использует ту же математику, что и исполнение (единый источник истины):
@@ -217,6 +245,8 @@ export function weaponAttackPreview(
   mechanics: Dict | null | undefined,
   character: CharacterContext,
   equipment: Record<string, string | null | undefined> | undefined,
+  state?: RuntimeState,
+  passives?: Dict[],
 ): WeaponAttackPreview | null {
   const kind = weaponAttackKind(mechanics);
   if (!kind) return null;
@@ -241,13 +271,15 @@ export function weaponAttackPreview(
 
   // Мод характеристики к урону: основная рука — да; вторая рука — нет (зачарование — на обеих).
   const dmgAbility = hand === 'off' ? 0 : (character.abilityMods[w.ability] ?? 0);
+  // C1: модификаторы урона из эффектов (Ярость и т.п.) — на основную строку, как в исполнении.
+  const dmgMods = damageModifierBonus(state, passives, character, hand, hand === 'main' ? w.ability : undefined);
 
   return {
     attack: atkAbilityMod + prof + attackEnchant,
     damages: w.damages.map((d, i) => ({
       dice: d.dice,
-      // Мод характеристики + зачарование — только на основную строку урона.
-      bonus: i === 0 ? dmgAbility + w.enchant : 0,
+      // Мод характеристики + зачарование + модификаторы эффектов — только на основную строку.
+      bonus: i === 0 ? dmgAbility + w.enchant + dmgMods : 0,
       type: d.type,
     })),
   };

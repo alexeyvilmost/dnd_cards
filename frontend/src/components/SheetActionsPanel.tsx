@@ -223,7 +223,7 @@ export default function SheetActionsPanel({
       }
       if (a.actionRef) {
         return <ActionHoverCard action={a.actionRef} sourceLabel={a.sourceLabel}
-          weaponAttackPreview={weaponAttackPreview(a.mechanics, ctx, runtime.equipment) ?? undefined} />;
+          weaponAttackPreview={weaponAttackPreview(a.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined} />;
       }
       return null;
     };
@@ -382,7 +382,7 @@ export default function SheetActionsPanel({
           <div className={actionsAsIcons ? 'cs-action-tiles' : 'sheet-item-cols'}>
             {items.map((action) => {
               const { disabled, reason } = disabledInfo(action);
-              const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment) ?? undefined;
+              const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined;
               return (
                 <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>
                 <SheetActionLine
