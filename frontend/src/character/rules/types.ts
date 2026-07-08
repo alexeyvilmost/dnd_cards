@@ -83,6 +83,12 @@ export interface CharacterRuleState {
   maxHP: number;
   armorClass: number;
   speed: number;
+  /** Особые чувства (grant_sense): darkvision/tremorsense/blindsight/truesight + радиус (фт).
+   *  При нескольких источниках одного чувства берётся больший радиус. */
+  senses: { sense: string; range: number }[];
+  /** Доп. режимы перемещения (grant_speed mode≠walk): fly/swim/climb → скорость (фт).
+   *  mode:'walk' вливается в общую speed (numericMods), здесь только небазовые режимы. */
+  speeds: Record<string, number>;
   initiativeBonus: number;
   passivePerception: number;
   spellcasting: AssembledCharacter['derived']['spellcasting'];

@@ -52,6 +52,14 @@ const WEAPON_LABEL_RU: Record<string, string> = {
   simple: 'простое оружие',
   martial: 'воинское оружие',
 };
+// D3: локализация особых чувств и небазовых режимов перемещения.
+const SENSE_LABEL: Record<string, string> = {
+  darkvision: 'Тёмное зрение', blindsight: 'Слепое зрение',
+  tremorsense: 'Чувство вибрации', truesight: 'Истинное зрение',
+};
+const SPEED_MODE_LABEL: Record<string, string> = {
+  fly: 'Полёт', swim: 'Плавание', climb: 'Лазание', burrow: 'Копание',
+};
 const armorLabel = (v: string) => ARMOR_LABEL_RU[v] || v;
 const weaponLabel = (v: string) => WEAPON_LABEL_RU[v] || v;
 
@@ -268,7 +276,7 @@ const CharacterSheetMVP = () => {
 
   const skills = ruleState.proficiencies.skills;
   const saves = ruleState.proficiencies.savingThrows;
-  const scores = draft.abilities;
+  const scores = ruleState.abilities; // D3: финальные характеристики (с grant_ability_score), не «сырые» из драфта
   const pb = ruleState.proficiencyBonus;
 
   const maxHP = maxHpBreakdown?.value ?? ruleState.maxHP;
@@ -539,6 +547,13 @@ const CharacterSheetMVP = () => {
                 </div>
               )}
               <div className="sheet-stat"><span>БМ</span><strong>{fmtMod(pb)}</strong></div>
+              {/* D3: небазовые скорости (полёт/плавание/лазание) и особые чувства. */}
+              {Object.entries(ruleState.speeds).map(([mode, v]) => (
+                <div key={`spd-${mode}`} className="sheet-stat"><span>{SPEED_MODE_LABEL[mode] ?? mode}</span><strong>{v} фт</strong></div>
+              ))}
+              {ruleState.senses.map((s) => (
+                <div key={`sense-${s.sense}`} className="sheet-stat"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><strong>{s.range} фт</strong></div>
+              ))}
             </div>
             {spellcasting && (
               <div className="sheet-spellcasting">

@@ -280,6 +280,78 @@ function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numer
   if (!Number.isNaN(v) && v !== 0) numericMods[roll] = (numericMods[roll] ?? 0) + v;
 }
 
+type SenseEntry = { sense: string; range: number };
+
+/** grant_ability_score → накопление дельты характеристики (D3, пред-скан ДО расчёта
+ *  модов: прирост должен дойти до maxHP/спасбросков/заклинательства/навыков). */
+function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
+  if (String(payload.kind ?? '') !== 'grant_ability_score') return;
+  const ability = String(payload.ability ?? '').toLowerCase();
+  if (!(ABILITY_KEYS as readonly string[]).includes(ability)) return;
+  const amount = Number(payload.amount ?? payload.value ?? 0);
+  if (!Number.isNaN(amount) && amount !== 0) deltas[ability as AbilityKey] += amount;
+}
+
+/** Пред-скан дельт характеристик по всем источникам (эффекты/действия/runtime), с
+ *  разворачиванием choice и уровневым гейтом — зеркалит обход applyPayload. */
+function collectAbilityDeltas(
+  input: RuleInput,
+  effects: OriginEffect[],
+  actions: OriginAction[],
+): Record<AbilityKey, number> {
+  const deltas = Object.fromEntries(ABILITY_KEYS.map((a) => [a, 0])) as Record<AbilityKey, number>;
+  const level = input.draft.level ?? 1;
+  const walk = (payload: Dict, source: RuleSource) => {
+    if (payload.kind === 'choice') {
+      const rawChoiceId = String(payload.id || 'choice');
+      const choiceId = choiceInstanceId(source, rawChoiceId);
+      const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
+      for (const sp of selectedChoicePayloads(payload, selected)) {
+        if (passesLevelGate(sp, level)) applyAbilityDelta(sp, deltas);
+      }
+      return;
+    }
+    if (passesLevelGate(payload, level)) applyAbilityDelta(payload, deltas);
+  };
+  for (const { effect, origin } of effects) {
+    for (const p of payloadsFromMechanics(effect.mechanics)) walk(p, sourceFromOrigin(origin, effect));
+  }
+  for (const { action, origin } of actions) {
+    for (const p of payloadsFromMechanics(action.mechanics)) walk(p, sourceFromOrigin(origin, action));
+  }
+  for (const runtime of input.runtimeSources || []) {
+    for (const p of payloadsFromMechanics(runtime.mechanics)) walk(p, runtime.source);
+  }
+  return deltas;
+}
+
+/** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.speed). */
+function collectSenseSpeed(
+  payload: Dict, formulaCtx: FormulaContext,
+  numericMods: Record<string, number>, senses: SenseEntry[], speeds: Record<string, number>,
+) {
+  const kind = String(payload.kind ?? '');
+  if (kind === 'grant_sense') {
+    const sense = String(payload.sense ?? payload.value ?? '').toLowerCase();
+    if (!sense) return;
+    const range = Number(payload.range ?? 60) || 60;
+    const existing = senses.find((s) => s.sense === sense);
+    if (existing) { if (range > existing.range) existing.range = range; } // несколько источников → больший радиус
+    else senses.push({ sense, range });
+    return;
+  }
+  if (kind === 'grant_speed') {
+    const mode = String(payload.mode ?? 'walk').toLowerCase();
+    const raw = String(payload.value ?? payload.amount ?? 0).replace(/^\+/, '');
+    let v: number;
+    try { const r = evaluate(raw, formulaCtx); v = typeof r === 'number' ? r : Number(raw); }
+    catch { v = Number(raw); } // формульный value (напр. 'walk_speed') без резолва → NaN → мягкий пропуск
+    if (Number.isNaN(v) || v === 0) return;
+    if (mode === 'walk') numericMods.speed = (numericMods.speed ?? 0) + v; // прибавка к наземной скорости
+    else speeds[mode] = Math.max(speeds[mode] ?? 0, v); // абсолютная скорость режима (fly/swim/climb)
+  }
+}
+
 function applyPayload(
   payload: Dict,
   source: RuleSource,
@@ -291,6 +363,8 @@ function applyPayload(
   numericMods: Record<string, number>,
   formulaCtx: FormulaContext,
   repeatableFeats: Set<string>,
+  senses: SenseEntry[],
+  speeds: Record<string, number>,
 ) {
   const level = input.draft.level ?? 1;
   if (payload.kind === 'choice') {
@@ -300,6 +374,7 @@ function applyPayload(
     for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
       if (!passesLevelGate(selectedPayload, level)) continue;
       collectNumericModifier(selectedPayload, formulaCtx, numericMods);
+      collectSenseSpeed(selectedPayload, formulaCtx, numericMods, senses, speeds);
       const grant = grantFromPayload(selectedPayload, source, choiceId);
       if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
     }
@@ -308,6 +383,7 @@ function applyPayload(
 
   if (!passesLevelGate(payload, level)) return;
   collectNumericModifier(payload, formulaCtx, numericMods);
+  collectSenseSpeed(payload, formulaCtx, numericMods, senses, speeds);
   const grant = grantFromPayload(payload, source);
   if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
 }
@@ -323,9 +399,11 @@ function applyMechanics(
   numericMods: Record<string, number>,
   formulaCtx: FormulaContext,
   repeatableFeats: Set<string>,
+  senses: SenseEntry[],
+  speeds: Record<string, number>,
 ) {
   for (const payload of payloadsFromMechanics(entity.mechanics)) {
-    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
+    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
   }
 }
 
@@ -374,7 +452,14 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     addGrant({ source: classSource, kind: 'tool', value: tool, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
   }
 
-  const scores0 = draft.abilities;
+  // D3: grant_ability_score — пред-скан ДО расчёта модов, чтобы прирост дошёл до ВСЕХ
+  // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
+  const abilityDeltas = collectAbilityDeltas(input, assembled.effects as OriginEffect[], assembled.actions as OriginAction[]);
+  const scoresFinal = Object.fromEntries(
+    ABILITY_KEYS.map((a) => [a, Math.max(1, (draft.abilities[a] ?? 10) + (abilityDeltas[a] ?? 0))]),
+  ) as Record<AbilityKey, number>;
+
+  const scores0 = scoresFinal;
   const pb0 = proficiencyBonusForLevel(draft.level);
   const abilityMods0 = Object.fromEntries(
     ABILITY_KEYS.map((ability) => [ability, abilityMod(scores0[ability])]),
@@ -388,22 +473,24 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     variables: assembled.variables,
   };
   const numericMods: Record<string, number> = {};
+  const senses: SenseEntry[] = [];
+  const speeds: Record<string, number> = {};
   // Повторяемые черты — id из собранных черт (assembled.feats).
   const repeatableFeats = new Set((assembled.feats || []).filter((f) => f.repeatable).map((f) => f.id));
 
   for (const { effect, origin } of assembled.effects as OriginEffect[]) {
-    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
+    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
   }
   for (const { action, origin } of assembled.actions as OriginAction[]) {
-    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
+    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
   }
   for (const runtime of input.runtimeSources || []) {
     for (const payload of payloadsFromMechanics(runtime.mechanics)) {
-      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats);
+      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
     }
   }
 
-  const scores = draft.abilities;
+  const scores = scoresFinal;
   const pb = proficiencyBonusForLevel(draft.level);
   const abilityMods = abilityMods0;
 
@@ -476,6 +563,8 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     maxHP,
     armorClass,
     speed,
+    senses,
+    speeds,
     initiativeBonus,
     passivePerception: 10 + (skillBonuses.perception ?? abilityMod(scores.wis)),
     spellcasting: spellDerived,

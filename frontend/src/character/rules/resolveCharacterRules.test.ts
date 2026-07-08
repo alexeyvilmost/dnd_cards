@@ -301,20 +301,41 @@ describe('resolveCharacterRules — grant_language и НЕреализованн
     expect(rs.proficiencies.languages).toContain('elvish');
   });
 
-  it('grant_feat / grant_ability_score / grant_sense / grant_speed пока молча игнорируются (пробел MVP, но не падают)', () => {
+  it('grant_ability_score / grant_sense / grant_speed применяются (D3)', () => {
     const rs = build({
+      klass: { id: 'fighter', name: 'Воин', hit_die: 'd10', saving_throws: ['str', 'con'] },
       effects: [fx('gaps', auto(
-        { kind: 'grant_feat', value: 'lucky' },
-        { kind: 'grant_ability_score', ability: 'con', amount: 1 },
+        { kind: 'grant_ability_score', ability: 'con', amount: 2 },
         { kind: 'grant_sense', sense: 'darkvision', range: 60 },
-        { kind: 'grant_speed', mode: 'fly', value: 'walk_speed' },
+        { kind: 'grant_speed', mode: 'fly', value: 60 },
       ))],
     });
-    // Ни одно из этих приобретений сейчас не влияет на состояние правил:
-    expect(rs.abilities.con).toBe(STD.con); // прирост характеристики НЕ применён
-    expect(rs.proficiencies.skills).toHaveLength(0);
-    expect(rs.spells.known).toHaveLength(0);
-    // и это не роняет резолвер (важно для устойчивости к контенту):
-    expect(rs.conflicts).toHaveLength(0);
+    // прирост характеристики дошёл до характеристики, модификатора И производных:
+    expect(rs.abilities.con).toBe(STD.con + 2);
+    expect(rs.abilityMods.con).toBe(abilityMod(STD.con + 2));
+    expect(rs.savingThrowBonuses.con).toBe(abilityMod(STD.con + 2) + rs.proficiencyBonus);
+    // чувство и небазовая скорость (полёт):
+    expect(rs.senses).toContainEqual({ sense: 'darkvision', range: 60 });
+    expect(rs.speeds.fly).toBe(60);
+  });
+
+  it('grant_speed mode:walk прибавляется к наземной скорости (регресс Лесной эльф 30→35)', () => {
+    const rs = build({
+      race: { id: 'welf', name: 'Лесной эльф', speed: 30 },
+      effects: [fx('woodelf', auto({ kind: 'grant_speed', mode: 'walk', value: 5 }))],
+    });
+    expect(rs.speed).toBe(35);
+    expect(rs.speeds.fly).toBeUndefined();
+  });
+
+  it('несколько grant_sense одного вида — берётся больший радиус', () => {
+    const rs = build({
+      effects: [
+        fx('a', auto({ kind: 'grant_sense', sense: 'darkvision', range: 60 })),
+        fx('b', auto({ kind: 'grant_sense', sense: 'darkvision', range: 120 })),
+      ],
+    });
+    expect(rs.senses.filter((s) => s.sense === 'darkvision')).toHaveLength(1);
+    expect(rs.senses.find((s) => s.sense === 'darkvision')?.range).toBe(120);
   });
 });

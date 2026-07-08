@@ -27,6 +27,14 @@ import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
 const abbr3 = (label: string) => label.slice(0, 3).toUpperCase();
+// D3: локализация особых чувств и небазовых режимов перемещения.
+const SENSE_LABEL: Record<string, string> = {
+  darkvision: 'Тёмное зрение', blindsight: 'Слепое зрение',
+  tremorsense: 'Чувство вибрации', truesight: 'Истинное зрение',
+};
+const SPEED_MODE_LABEL: Record<string, string> = {
+  fly: 'Полёт', swim: 'Плавание', climb: 'Лазание', burrow: 'Копание',
+};
 const originLabel = (kind: string) => {
   switch (kind) {
     case 'race': return 'Вид';
@@ -95,7 +103,7 @@ const CharacterSheetV2 = ({
     onEvents([rollEvent(label, roll)]);
   };
 
-  const scores = draft.abilities;
+  const scores = ruleState.abilities; // D3: с учётом grant_ability_score (ASI/раса), не «сырые» из драфта
   const pb = ruleState.proficiencyBonus;
   const saves = ruleState.proficiencies.savingThrows;
   const skills = ruleState.proficiencies.skills;
@@ -167,6 +175,7 @@ const CharacterSheetV2 = ({
           </button>
           {pill('Иниц', fmtMod(initiative), initBreakdown)}
           {pill('Скор', `${speed}`, speedBreakdown)}
+          {Object.entries(ruleState.speeds).map(([mode, v]) => pill(SPEED_MODE_LABEL[mode] ?? mode, `${v}`))}
           {pill('БМ', fmtMod(pb))}
           {spellcasting && pill('Заклин.', `СЛ ${spellcasting.saveDC} · ${fmtMod(spellcasting.attack)}`)}
         </div>
@@ -255,7 +264,11 @@ const CharacterSheetV2 = ({
 
           <CollapsibleSection title="Чувства">
             <div className="cs-kv"><span>Пассивное восприятие</span><b>{ruleState.passivePerception}</b></div>
-            <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>
+            {ruleState.senses.length > 0
+              ? ruleState.senses.map((s) => (
+                  <div key={s.sense} className="cs-kv"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><b>{s.range} фт</b></div>
+                ))
+              : <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>}
           </CollapsibleSection>
 
           <CollapsibleSection title="Состояния">
