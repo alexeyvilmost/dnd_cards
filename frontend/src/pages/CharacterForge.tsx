@@ -37,6 +37,11 @@ import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
 
+// Автосейв черновика создания в localStorage (F5/«назад» не теряет выборы).
+const FORGE_DRAFT_KEY = 'forge-draft';
+const isDraftMeaningful = (d: CharacterDraft) =>
+  !!(d.name?.trim() || d.lineageId || d.raceId || d.classId || d.backgroundId || d.featIds?.length);
+
 const CharacterForge = () => {
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
@@ -49,8 +54,10 @@ const CharacterForge = () => {
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [feats, setFeats] = useState<Feat[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
+  const [catalogError, setCatalogError] = useState(false);
 
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
+  const [restorable, setRestorable] = useState<CharacterDraft | null>(null);
   const [bundle, setBundle] = useState<EntityBundle | null>(null);
   const [active, setActive] = useState('race');
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
@@ -72,29 +79,52 @@ const CharacterForge = () => {
   const savedSkillsRef = useRef<string[]>([]);
   const restoredClassSkillsRef = useRef(false);
 
-  // Загрузка справочников
-  useEffect(() => {
-    (async () => {
-      try {
-        const [rr, cc, bb, ff, ss] = await Promise.all([
-          racesApi.getRaces({ limit: 100 }).catch(() => ({ races: [] } as { races: Race[] })),
-          classesApi.getClasses({ limit: 100 }).catch(() => ({ classes: [] } as { classes: CharacterClass[] })),
-          backgroundsApi.getBackgrounds({ limit: 100 }).catch(() => ({ backgrounds: [] } as { backgrounds: Background[] })),
-          featsApi.getFeats({ limit: 200 }).catch(() => ({ feats: [] } as { feats: Feat[] })),
-          spellsApi.getSpells({ limit: 500 }).catch(() => ({ spells: [] } as { spells: Spell[] })),
-        ]);
-        setRaces(rr.races || []);
-        setClasses(cc.classes || []);
-        setBackgrounds(bb.backgrounds || []);
-        // Все черты: origin — для смены черты происхождения, fighting_style
-        // и другие категории — как варианты choice(source:"feat").
-        setFeats(ff.feats || []);
-        setSpells(ss.spells || []);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+  // Загрузка справочников. При сбое сети — честный баннер + повтор (иначе
+  // игрок видит враньё «Нет видов в базе» вместо ошибки).
+  const loadCatalogs = useCallback(async () => {
+    setCatalogError(false);
+    try {
+      const [rr, cc, bb, ff, ss] = await Promise.all([
+        racesApi.getRaces({ limit: 100 }),
+        classesApi.getClasses({ limit: 100 }),
+        backgroundsApi.getBackgrounds({ limit: 100 }),
+        featsApi.getFeats({ limit: 200 }),
+        spellsApi.getSpells({ limit: 500 }),
+      ]);
+      setRaces(rr.races || []);
+      setClasses(cc.classes || []);
+      setBackgrounds(bb.backgrounds || []);
+      // Все черты: origin — для смены черты происхождения, fighting_style
+      // и другие категории — как варианты choice(source:"feat").
+      setFeats(ff.feats || []);
+      setSpells(ss.spells || []);
+    } catch (e) {
+      console.error(e);
+      setCatalogError(true);
+    }
   }, []);
+  useEffect(() => { void loadCatalogs(); }, [loadCatalogs]);
+
+  // При входе в режим создания — предложить восстановить сохранённый черновик.
+  useEffect(() => {
+    if (editId) { setRestorable(null); return; }
+    try {
+      const raw = localStorage.getItem(FORGE_DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as CharacterDraft;
+      if (isDraftMeaningful(parsed)) setRestorable(parsed);
+    } catch { /* ignore */ }
+  }, [editId]);
+
+  // Автосейв черновика (только создание): пустой не сохраняем, чтобы не затереть.
+  useEffect(() => {
+    if (editId) return;
+    if (!isDraftMeaningful(draft)) return;
+    const t = window.setTimeout(() => {
+      try { localStorage.setItem(FORGE_DRAFT_KEY, JSON.stringify(draft)); } catch { /* ignore */ }
+    }, 800);
+    return () => window.clearTimeout(t);
+  }, [draft, editId]);
 
   // Переход «редактирование → создание» без размонтирования (те же роуты
   // /character-forge/:id и /character-forge): сбросить черновик, иначе
@@ -373,6 +403,9 @@ const CharacterForge = () => {
       if (Object.keys(runtimePatch).length) await charactersV3Api.patchRuntime(res.id, runtimePatch);
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id }));
+      // Успешно сохранён — черновик-автосейв больше не нужен.
+      setRestorable(null);
+      try { localStorage.removeItem(FORGE_DRAFT_KEY); } catch { /* ignore */ }
     } catch (e) {
       console.error(e);
       setError('Ошибка сохранения персонажа');
@@ -597,6 +630,53 @@ const CharacterForge = () => {
 
   return (
     <div className={rootCls}>
+      {catalogError && (
+        <div
+          role="alert"
+          style={{
+            position: 'fixed', top: 64, left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
+            background: '#3a1c1c', border: '1px solid #a05454', color: '#f0d0d0',
+            padding: '10px 16px', borderRadius: 8, display: 'flex', gap: 12, alignItems: 'center',
+            boxShadow: '0 6px 24px rgba(0,0,0,.5)', maxWidth: '92vw',
+          }}
+        >
+          <span>Не удалось загрузить справочники. Проверьте соединение.</span>
+          <button
+            type="button"
+            onClick={() => void loadCatalogs()}
+            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #d8b978', background: 'transparent', color: '#d8b978', cursor: 'pointer', flex: '0 0 auto' }}
+          >
+            Повторить
+          </button>
+        </div>
+      )}
+      {restorable && !editId && (
+        <div
+          role="dialog"
+          style={{
+            position: 'fixed', top: 64, left: '50%', transform: 'translateX(-50%)', zIndex: 1001,
+            background: '#241d16', border: '1px solid #6b5836', color: '#ece3d4',
+            padding: '12px 18px', borderRadius: 10, display: 'flex', gap: 14, alignItems: 'center',
+            boxShadow: '0 8px 30px rgba(0,0,0,.6)', maxWidth: '92vw', flexWrap: 'wrap', justifyContent: 'center',
+          }}
+        >
+          <span>Продолжить создание незавершённого персонажа?</span>
+          <button
+            type="button"
+            onClick={() => { setDraft(restorable); setRestorable(null); }}
+            style={{ padding: '6px 14px', borderRadius: 7, border: 'none', background: '#d8b978', color: '#1a140a', fontWeight: 600, cursor: 'pointer' }}
+          >
+            Продолжить
+          </button>
+          <button
+            type="button"
+            onClick={() => { setRestorable(null); try { localStorage.removeItem(FORGE_DRAFT_KEY); } catch { /* ignore */ } }}
+            style={{ padding: '6px 14px', borderRadius: 7, border: '1px solid #6b5836', background: 'transparent', color: '#a59886', cursor: 'pointer' }}
+          >
+            Начать заново
+          </button>
+        </div>
+      )}
       <div className="forge-header sheet-header-bar forge-header-layout">
         <div className="forge-header-spacer" aria-hidden />
         <span className="forge-header-title">Создание персонажа</span>

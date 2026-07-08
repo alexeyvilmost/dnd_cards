@@ -48,6 +48,7 @@ import ResourceCreator from './pages/ResourceCreator';
 import VariableCreator from './pages/VariableCreator';
 import ConceptCreator from './pages/ConceptCreator';
 import ImageStudio from './pages/ImageStudio';
+import NotFound from './pages/NotFound';
 
 function App() {
   // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
@@ -343,6 +344,9 @@ function App() {
             </Layout>
           </ProtectedRoute>
         } />
+
+        {/* Любой неизвестный URL — страница «не найдено» (иначе белый экран) */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
         </EntityDetailProvider>
         </PinModeProvider>
