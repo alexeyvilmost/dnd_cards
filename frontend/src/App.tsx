@@ -27,8 +27,6 @@ import AddItemToInventory from './pages/AddItemToInventory';
 import CharacterForge from './pages/CharacterForge';
 import CharacterSheetMVP from './pages/CharacterSheetMVP';
 import CharactersForgeList from './pages/CharactersForgeList';
-import DiceRoller from './pages/DiceRoller';
-import DiceTest from './pages/DiceTest';
 import InitiativeTracker from './pages/InitiativeTracker';
 import CardTypeSelection from './pages/CardTypeSelection';
 import WeaponSelection from './pages/WeaponSelection';
@@ -228,24 +226,6 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Settings />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        {/* Dice Roller route */}
-        <Route path="/dice" element={
-          <ProtectedRoute>
-            <Layout>
-              <DiceRoller />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Dice Test route */}
-        <Route path="/dice-test" element={
-          <ProtectedRoute>
-            <Layout>
-              <DiceTest />
             </Layout>
           </ProtectedRoute>
         } />
