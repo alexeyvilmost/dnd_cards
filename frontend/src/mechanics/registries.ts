@@ -34,6 +34,20 @@ export const SKILLS: RegistryItem[] = [
 
 export const SAVING_THROWS = ABILITIES;
 
+// Музыкальные инструменты (PHB 2024) — домен выбора для черты «Музыкант» и т.п.
+export const MUSICAL_INSTRUMENTS: RegistryItem[] = [
+  { id: 'bagpipes', label: 'Волынка' },
+  { id: 'drum', label: 'Барабан' },
+  { id: 'dulcimer', label: 'Цимбалы' },
+  { id: 'flute', label: 'Флейта' },
+  { id: 'lute', label: 'Лютня' },
+  { id: 'lyre', label: 'Лира' },
+  { id: 'horn', label: 'Рожок' },
+  { id: 'pan_flute', label: 'Пан-флейта' },
+  { id: 'shawm', label: 'Шалмей' },
+  { id: 'viol', label: 'Виола' },
+];
+
 export const CONDITIONS: RegistryItem[] = [
   { id: 'charmed', label: 'Очарован' },
   { id: 'frightened', label: 'Испуган' },
@@ -156,6 +170,8 @@ export function optionsForChoiceSource(source: string): RegistryItem[] {
   switch (source) {
     case 'ability':
       return ABILITIES;
+    case 'instrument':
+      return MUSICAL_INSTRUMENTS;
     case 'skill':
       return SKILLS;
     case 'tool':
