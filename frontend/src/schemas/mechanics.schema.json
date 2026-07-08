@@ -137,7 +137,8 @@
         "options": { "type": "object" },
         "grant": { "$ref": "#/$defs/payload" },
         "resolution": { "enum": ["on_acquire", "immediate"] },
-        "recommended": { "type": "array", "items": { "type": "string" } }
+        "recommended": { "type": "array", "items": { "type": "string" } },
+        "context": { "enum": ["build", "level_up", "in_play"] }
       }
     },
 
@@ -350,7 +351,8 @@
         },
         "recommended": { "type": "array", "items": { "type": "string" } },
         "grant": { "$ref": "#/$defs/payload" },
-        "resolution": { "enum": ["on_acquire", "immediate"] }
+        "resolution": { "enum": ["on_acquire", "immediate"] },
+        "context": { "enum": ["build", "level_up", "in_play"], "description": "Где разрешается выбор: build/level_up (кузня) или in_play (лист во время игры)." }
       }
     },
 

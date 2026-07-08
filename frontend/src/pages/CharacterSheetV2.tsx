@@ -21,6 +21,8 @@ import CollapsibleSection from '../components/CollapsibleSection';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
+import SheetChoicesPanel from '../components/SheetChoicesPanel';
+import type { PendingChoice } from '../mechanics/collectChoices';
 import SheetHpDialog from '../components/SheetHpDialog';
 import SheetRestButtons from '../components/SheetRestButtons';
 import './CharacterSheetV2.css';
@@ -60,6 +62,7 @@ interface Props {
   speedBreakdown: ValueBreakdown | null;
   spellsByLevel: [number, Spell[]][];
   lineageName: string | null;
+  inPlayChoices: PendingChoice[];
   onUpdated: (c: ForgeCharacter) => void;
   onEvents: (events: EngineEvent[]) => void;
 }
@@ -67,7 +70,7 @@ interface Props {
 const CharacterSheetV2 = ({
   character, assembled, ruleState, draft, sheetCtx, runtimeState, passives, equipCards,
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown,
-  lineageName, onUpdated, onEvents,
+  lineageName, inPlayChoices, onUpdated, onEvents,
 }: Props) => {
   const [hpOpen, setHpOpen] = useState(false);
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
@@ -283,6 +286,14 @@ const CharacterSheetV2 = ({
 
         {/* ЦЕНТР: инвентарь, черты и способности */}
         <div className="csheet-col">
+          {inPlayChoices.length > 0 && (
+            <SheetChoicesPanel
+              character={character}
+              choices={inPlayChoices}
+              resolved={draft.resolvedChoices}
+              onUpdated={onUpdated}
+            />
+          )}
           <CollapsibleSection title="Инвентарь и экипировка">
             <SheetEquipmentPanel
               character={character}

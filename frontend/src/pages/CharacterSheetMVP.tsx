@@ -32,6 +32,7 @@ import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
+import SheetChoicesPanel from '../components/SheetChoicesPanel';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CharacterSheetV2 from './CharacterSheetV2';
 import { rollEvent } from '../engine/events';
@@ -284,6 +285,8 @@ const CharacterSheetMVP = () => {
   const ac = acBreakdown?.value ?? ruleState.armorClass;
   const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;
   const spellcasting = ruleState.spellcasting;
+  // Слайс 5: выборы «в игре» (context:'in_play') — разрешаются на листе, а не в кузне.
+  const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
 
   const rollInitiative = async () => {
     if (!id || rollingInit) return;
@@ -436,6 +439,7 @@ const CharacterSheetMVP = () => {
           speedBreakdown={speedBreakdown}
           spellsByLevel={spellsByLevel}
           lineageName={lineageName}
+          inPlayChoices={inPlayChoices}
           onUpdated={setCharacter}
           onEvents={appendRuntimeEvents}
         />
@@ -460,6 +464,13 @@ const CharacterSheetMVP = () => {
             onTargetAcChange={setTargetAc}
             targetSaveMod={targetSaveMod}
             onTargetSaveModChange={setTargetSaveMod}
+          />
+
+          <SheetChoicesPanel
+            character={character}
+            choices={inPlayChoices}
+            resolved={draft.resolvedChoices}
+            onUpdated={setCharacter}
           />
 
           <SheetEquipmentPanel

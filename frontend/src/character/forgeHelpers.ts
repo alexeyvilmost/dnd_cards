@@ -55,6 +55,13 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   for (const [key, vals] of Object.entries(stored)) {
     if (!key.startsWith('builder:')) resolvedChoices[key] = vals;
   }
+  // Выборы, сделанные на ЛИСТЕ во время игры (choice context:'in_play'), хранятся в
+  // turn_state.inPlayChoices (патчатся runtime-эндпоинтом, без изменений схемы БД) и
+  // подмешиваются к resolvedChoices — резолвер применяет их так же, как выборы кузни.
+  const inPlay = (c.turn_state?.inPlayChoices as Record<string, string[]> | undefined) || {};
+  for (const [key, vals] of Object.entries(inPlay)) {
+    if (Array.isArray(vals)) resolvedChoices[key] = vals;
+  }
   const abilityMethod = stored[METHOD_KEY]?.[0] === 'manual' ? 'manual' as const : 'point_buy' as const;
   const equipmentOption = stored[EQUIPMENT_OPTION_KEY]?.[0] === 'b' ? 'b' as const : 'a' as const;
   const storedClassOpt = stored[CLASS_EQUIPMENT_OPTION_KEY]?.[0];
@@ -161,6 +168,7 @@ export function requiredChoiceIssues(draft: CharacterDraft, assembled: Assembled
     issues.push(`Навыки класса: выберите ${sc.count} (выбрано ${draft.classSkillChoices.length})`);
   }
   for (const pc of assembled.pendingChoices) {
+    if (pc.context === 'in_play') continue; // выборы «в игре» разрешаются на листе, не блокируют создание
     const sel = draft.resolvedChoices[pc.id] || [];
     if (sel.length < pc.count) {
       issues.push(`«${pc.prompt}»: выберите ${pc.count} (выбрано ${sel.length})`);

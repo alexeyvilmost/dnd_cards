@@ -24,6 +24,8 @@ export type PendingChoice = {
   recommended?: string[];
   items?: Array<{ id: string; name: string }>; // для source=subfeature
   origin: ChoiceOrigin;
+  /** Где разрешается выбор: 'in_play' — на листе во время игры (иначе — создание/левелап). */
+  context?: string;
 };
 
 type Dict = Record<string, unknown>;
@@ -42,6 +44,7 @@ function choiceToPending(ch: Dict, origin: ChoiceOrigin): PendingChoice {
     recommended: ch.recommended as string[] | undefined,
     items: items.map((it) => ({ id: String(it.id), name: String(it.name) })),
     origin,
+    context: ch.context ? String(ch.context) : undefined,
   };
 }
 

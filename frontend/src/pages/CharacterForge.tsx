@@ -216,7 +216,7 @@ const CharacterForge = () => {
     () => resolveCharacterRules({ draft, assembled }),
     [draft, assembled],
   );
-  const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell');
+  const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell' && pc.context !== 'in_play');
 
   const [resolvedGrantedSpells, setResolvedGrantedSpells] = useState<Spell[]>([]);
 
@@ -426,18 +426,20 @@ const CharacterForge = () => {
     }
   };
 
-  // Выборы по источникам / типам
-  const raceChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'race' && pc.source !== 'spell');
+  // Выборы по источникам / типам. context:'in_play' исключаем — они разрешаются на ЛИСТЕ
+  // во время игры (слайс 5), кузню не касаются.
+  const buildChoices = assembled.pendingChoices.filter((pc) => pc.context !== 'in_play');
+  const raceChoices = buildChoices.filter((pc) => pc.origin.kind === 'race' && pc.source !== 'spell');
   const raceOtherChoices = raceChoices.filter((pc) => pc.source !== 'subfeature');
   const raceSubChoices = raceChoices.filter((pc) => pc.source === 'subfeature');
-  const classChoices = assembled.pendingChoices.filter((pc) => pc.origin.kind === 'class' && pc.source !== 'spell');
+  const classChoices = buildChoices.filter((pc) => pc.origin.kind === 'class' && pc.source !== 'spell');
   const classOtherChoices = classChoices.filter((pc) => pc.source !== 'subfeature');
   const classSubChoices = classChoices.filter((pc) => pc.source === 'subfeature');
-  const featChoices = assembled.pendingChoices.filter((pc) => pc.source === 'feat');
+  const featChoices = buildChoices.filter((pc) => pc.source === 'feat');
   // Собственные выборы черты (навык/характеристика/язык и т.п. — origin 'feat', но НЕ
   // выбор самой черты и НЕ заклинания). Раньше не попадали ни в одну вкладку → «Одарённый»
   // молча не предлагал 3 навыка, ASI не предлагал характеристику. Теперь живут во вкладке черт.
-  const featOwnChoices = assembled.pendingChoices.filter(
+  const featOwnChoices = buildChoices.filter(
     (pc) => pc.origin.kind === 'feat' && pc.source !== 'feat' && pc.source !== 'spell',
   );
 
@@ -513,7 +515,7 @@ const CharacterForge = () => {
     const newEffects = assembled.effects.filter((e) => !prevRefs || !prevRefs.effects.has(e.effect.id));
     const newActions = assembled.actions.filter((a) => !prevRefs || !prevRefs.actions.has(a.action.id));
     const unresolved = assembled.pendingChoices.filter(
-      (pc) => (draft.resolvedChoices[pc.id] || []).length < pc.count,
+      (pc) => pc.context !== 'in_play' && (draft.resolvedChoices[pc.id] || []).length < pc.count,
     );
     const unresolvedSpells = unresolved.filter((pc) => pc.source === 'spell');
     const unresolvedOther = unresolved.filter((pc) => pc.source !== 'spell');
