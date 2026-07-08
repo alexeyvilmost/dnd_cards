@@ -1760,8 +1760,8 @@ const CardLibrary = () => {
                       className={`w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50 border-l-4 ${getRarityBorderColor(card.rarity)}`}
                     >
                       <div className="flex items-center space-x-3">
-                        {/* Маленькая картинка слева */}
-                        <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 overflow-hidden">
+                        {/* Картинка слева: без рамки, крупнее относительно строки */}
+                        <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden">
                           {card.image_url && card.image_url.trim() !== '' ? (
                             <img
                               src={card.image_url}
