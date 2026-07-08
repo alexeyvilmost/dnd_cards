@@ -134,6 +134,21 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
     });
   };
 
+  // Открыть меню ссылки. Если есть выделение — подставляем его в строку поиска
+  // (и оно же станет подписью ссылки через caretRef, insertLink).
+  const openLinkMenu = () => {
+    const textarea = textareaRef.current;
+    let caret = caretRef.current;
+    if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+      caret = { start: textarea.selectionStart, end: textarea.selectionEnd };
+      caretRef.current = caret; // держим поиск и подпись согласованными
+    }
+    const selectedText = caret ? value.substring(caret.start, caret.end).trim() : '';
+    setLinkResults([]);
+    setLinkQuery(selectedText);
+    setMenu('link');
+  };
+
   const btnCls =
     'p-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 
@@ -223,7 +238,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
           <button
             type="button"
             title="Вставить ссылку на сущность (предмет/заклинание/действие/эффект/понятие)"
-            onClick={() => { setMenu(menu === 'link' ? null : 'link'); setLinkQuery(''); setLinkResults([]); }}
+            onClick={() => { if (menu === 'link') setMenu(null); else openLinkMenu(); }}
             className={btnCls}
           >
             <LinkIcon size={16} />
@@ -234,6 +249,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
                 autoFocus
                 value={linkQuery}
                 onChange={(e) => setLinkQuery(e.target.value)}
+                onFocus={(e) => e.currentTarget.select()}
                 placeholder="Поиск: предмет, заклинание, понятие…"
                 className="w-full px-2 py-1.5 border border-gray-300 rounded mb-2 text-sm"
               />

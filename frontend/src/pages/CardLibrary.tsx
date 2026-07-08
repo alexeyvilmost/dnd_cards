@@ -1,8 +1,8 @@
 import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { Search, Filter, Plus, Grid3X3, List, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi } from '../api/client';
-import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition } from '../types';
+import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, conceptsApi } from '../api/client';
+import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Concept } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
@@ -21,6 +21,10 @@ import FeatDetailModal from '../components/FeatDetailModal';
 import BackgroundDetailModal from '../components/BackgroundDetailModal';
 import RaceDetailModal from '../components/RaceDetailModal';
 import ClassDetailModal from '../components/ClassDetailModal';
+import ConceptPreview from '../components/ConceptPreview';
+import ConceptDetailModal from '../components/ConceptDetailModal';
+import { evictEntity } from '../components/EntityRefRegistry';
+import { FormattedText } from '../utils/formattedText';
 import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
@@ -152,6 +156,7 @@ const CardLibrary = () => {
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<CharacterClass[]>([]);
   const [resources, setResources] = useState<ResourceDefinition[]>([]);
+  const [concepts, setConcepts] = useState<Concept[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -197,6 +202,9 @@ const CardLibrary = () => {
   const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [hoveredClass, setHoveredClass] = useState<CharacterClass | null>(null);
+  const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
+  const [isConceptModalOpen, setIsConceptModalOpen] = useState(false);
+  const [hoveredConcept, setHoveredConcept] = useState<Concept | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
@@ -613,6 +621,32 @@ const CardLibrary = () => {
     }
   };
 
+  const loadConcepts = async () => {
+    try {
+      setLoading(true);
+      const response = await conceptsApi.getConcepts();
+      const list = response.concepts || [];
+      const normalizedSearch = search.trim().toLowerCase();
+      const filtered = normalizedSearch
+        ? list.filter((concept) =>
+            [concept.name, concept.concept_id, concept.description || '']
+              .join(' ')
+              .toLowerCase()
+              .includes(normalizedSearch))
+        : list;
+      setConcepts(filtered);
+      setTotalCards(filtered.length);
+      setHasMore(false);
+      setCurrentPage(1);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки понятий');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
     setCards([]);
@@ -624,6 +658,7 @@ const CardLibrary = () => {
     setRaces([]);
     setClasses([]);
     setResources([]);
+    setConcepts([]);
     if (contentType === 'cards') {
       loadCards(1, false);
     } else if (contentType === 'effects') {
@@ -642,6 +677,8 @@ const CardLibrary = () => {
       loadClasses(1, false);
     } else if (contentType === 'resources') {
       loadResources();
+    } else if (contentType === 'concepts') {
+      loadConcepts();
     }
   }, [contentType, search, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
@@ -1013,6 +1050,24 @@ const CardLibrary = () => {
       if (contentType === 'resources') loadResources();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления ресурса');
+    }
+  };
+
+  const handleConceptClick = (concept: Concept) => {
+    setSelectedConcept(concept);
+    setIsConceptModalOpen(true);
+  };
+
+  const handleDeleteConcept = async (conceptId: string) => {
+    if (!confirm('Удалить понятие?')) return;
+    try {
+      await conceptsApi.deleteConcept(conceptId);
+      evictEntity('concept', conceptId);
+      setIsConceptModalOpen(false);
+      setSelectedConcept(null);
+      if (contentType === 'concepts') loadConcepts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления понятия');
     }
   };
 
@@ -1564,17 +1619,84 @@ const CardLibrary = () => {
         </div>
       )}
 
-      {contentType === 'concepts' && (
+      {!loading && contentType === 'concepts' && concepts.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg mb-2">Понятия (глоссарий) для ссылок в текстах</p>
           <p className="text-gray-400 text-sm mb-4 max-w-xl mx-auto">
             Понятие — это пояснение, не выражаемое отдельной сущностью (напр. «Спасбросок»).
-            На него ссылаются из любого текста. Библиотека и конструктор — на отдельной странице.
+            На него ссылаются из любого текста: <code>[[Спасбросок|concept:saving_throw]]</code>.
           </p>
           <Link to="/concept-creator" className="btn-primary inline-block">
-            Открыть библиотеку понятий
+            Создать понятие
           </Link>
         </div>
+      )}
+
+      {!loading && contentType === 'concepts' && concepts.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {concepts.length} из {totalCards} понятий
+          </div>
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+              {concepts.map((concept) => (
+                <div key={concept.concept_id} className="flex justify-center">
+                  <ConceptPreview concept={concept} onClick={() => handleConceptClick(concept)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {concepts.map((concept) => (
+                  <div
+                    key={concept.concept_id}
+                    onClick={() => handleConceptClick(concept)}
+                    onMouseEnter={() => setHoveredConcept(concept)}
+                    onMouseLeave={leaveHover(() => setHoveredConcept(null))}
+                    onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                    className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      {concept.image_url?.trim() && (
+                        <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
+                          <img
+                            src={concept.image_url}
+                            alt=""
+                            className="w-9 h-9 object-contain"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate text-gray-900">{concept.name}</div>
+                        <div className="text-xs font-mono text-gray-500 truncate">{concept.concept_id}</div>
+                        {concept.description?.trim() && (
+                          <div className="text-xs text-gray-500 line-clamp-2 mt-0.5">
+                            <FormattedText text={concept.description} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {hoveredConcept && (
+                <div
+                  className="fixed z-50"
+                  style={previewStyle({
+                    left: Math.min(mousePosition.x + 16, window.innerWidth - 320),
+                    top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20),
+                    transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+                  })}
+                >
+                  <ConceptPreview concept={hoveredConcept} disableHover />
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {!loading && contentType === 'cards' && cards.length > 0 && (
@@ -2483,6 +2605,13 @@ const CardLibrary = () => {
         isOpen={isClassModalOpen}
         onClose={() => { setIsClassModalOpen(false); setSelectedClass(null); }}
         onDelete={handleDeleteClass}
+      />
+
+      <ConceptDetailModal
+        concept={selectedConcept}
+        isOpen={isConceptModalOpen}
+        onClose={() => { setIsConceptModalOpen(false); setSelectedConcept(null); }}
+        onDelete={handleDeleteConcept}
       />
     </div>
   );
