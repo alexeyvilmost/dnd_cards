@@ -244,6 +244,78 @@ describe('resolveCharacterRules — choice (выбор до разрешения
   });
 });
 
+describe('resolveCharacterRules — вложенные выборы (фундамент ASI)', () => {
+  // Черта «Улучшение характеристик»: внешний выбор режима, у каждого режима в grants —
+  // вложенный choice характеристики. Ключи вложенных выборов = source эффекта + их id.
+  const ASI_ORIGIN: ChoiceOrigin = { kind: 'feat', id: 'asi', name: 'Улучшение характеристик' };
+  const asiChoice: Mech = {
+    kind: 'choice', id: 'asi_mode',
+    options: {
+      source: 'subfeature',
+      items: [
+        { id: 'plus2', grants: [
+          { kind: 'choice', id: 'asi_p2', apply: { kind: 'grant_ability_score', amount: 2 }, options: { source: 'ability' } },
+        ] },
+        { id: 'plus1x2', grants: [
+          { kind: 'choice', id: 'asi_p1', count: 2, apply: { kind: 'grant_ability_score', amount: 1 }, options: { source: 'ability' } },
+        ] },
+      ],
+    },
+  };
+  const asiEffects = [fx('asi_fx', { effects: [asiChoice] }, ASI_ORIGIN)];
+
+  it('режим «+2 к одной»: вложенный выбор характеристики доходит до прироста', () => {
+    const rs = build({
+      effects: asiEffects,
+      draft: { resolvedChoices: {
+        'feat:asi:asi_fx:asi_mode': ['plus2'],
+        'feat:asi:asi_fx:asi_p2': ['str'],
+      } },
+    });
+    expect(rs.abilities.str).toBe(STD.str + 2);
+    expect(rs.abilityMods.str).toBe(abilityMod(STD.str + 2));
+  });
+
+  it('режим «+1 к двум»: обе выбранные характеристики получают +1', () => {
+    const rs = build({
+      effects: asiEffects,
+      draft: { resolvedChoices: {
+        'feat:asi:asi_fx:asi_mode': ['plus1x2'],
+        'feat:asi:asi_fx:asi_p1': ['str', 'dex'],
+      } },
+    });
+    expect(rs.abilities.str).toBe(STD.str + 1);
+    expect(rs.abilities.dex).toBe(STD.dex + 1);
+    expect(rs.abilities.con).toBe(STD.con); // не затронута
+  });
+
+  it('пока внешний выбор режима не сделан — прироста нет', () => {
+    const rs = build({ effects: asiEffects, draft: { resolvedChoices: {} } });
+    expect(rs.abilities.str).toBe(STD.str);
+    expect(rs.abilities.dex).toBe(STD.dex);
+  });
+
+  it('вложенный выбор владения (не характеристики) тоже разрешается рекурсивно', () => {
+    // Не-ASI кейс: режим → выбор навыка через grant-шаблон. Проверяет общий путь applyPayload.
+    const nested: Mech = {
+      kind: 'choice', id: 'mode',
+      options: { source: 'subfeature', items: [
+        { id: 'skills', grants: [
+          { kind: 'choice', id: 'pick_skill', grant: { kind: 'grant_proficiency', prof: 'skill' }, options: { source: 'skill' } },
+        ] },
+      ] },
+    };
+    const rs = build({
+      effects: [fx('nested_fx', { effects: [nested] }, { kind: 'feat', id: 'nf', name: 'Вложенный' })],
+      draft: { resolvedChoices: {
+        'feat:nf:nested_fx:mode': ['skills'],
+        'feat:nf:nested_fx:pick_skill': ['stealth'],
+      } },
+    });
+    expect(rs.proficiencies.skills).toContain('stealth');
+  });
+});
+
 describe('resolveCharacterRules — экспертиза и конфликты дублей', () => {
   it('экспертиза поверх владения удваивает БМ в бонусе навыка', () => {
     const rs = build({

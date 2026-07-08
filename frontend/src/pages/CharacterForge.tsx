@@ -434,6 +434,12 @@ const CharacterForge = () => {
   const classOtherChoices = classChoices.filter((pc) => pc.source !== 'subfeature');
   const classSubChoices = classChoices.filter((pc) => pc.source === 'subfeature');
   const featChoices = assembled.pendingChoices.filter((pc) => pc.source === 'feat');
+  // Собственные выборы черты (навык/характеристика/язык и т.п. — origin 'feat', но НЕ
+  // выбор самой черты и НЕ заклинания). Раньше не попадали ни в одну вкладку → «Одарённый»
+  // молча не предлагал 3 навыка, ASI не предлагал характеристику. Теперь живут во вкладке черт.
+  const featOwnChoices = assembled.pendingChoices.filter(
+    (pc) => pc.origin.kind === 'feat' && pc.source !== 'feat' && pc.source !== 'spell',
+  );
 
   // Подвиды — отдельные виды-сущности с parent_race_id текущего вида
   const subraces = draft.raceId ? races.filter((r) => r.parent_race_id === draft.raceId) : [];
@@ -450,7 +456,7 @@ const CharacterForge = () => {
   // Условия появления вкладок
   const hasSubclass = classSubChoices.length > 0;
   const hasSpells = spellChoices.length > 0 || grantedSpells.length > 0;
-  const hasFeatTab = !!draft.swapFeat || featChoices.length > 0;
+  const hasFeatTab = !!draft.swapFeat || featChoices.length > 0 || featOwnChoices.length > 0;
 
   // Статусы завершённости
   const abilitiesDone = ABILITY_KEYS.every((k) => typeof draft.abilities[k] === 'number');
@@ -462,7 +468,8 @@ const CharacterForge = () => {
     && raceOtherChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count)
     && raceSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
   const subclassDone = classSubChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
-  const featDone = featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
+  const featDone = featChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count)
+    && featOwnChoices.every((pc) => (draft.resolvedChoices[pc.id]?.length ?? 0) >= pc.count);
 
   const lineageName = resolveLineageName(draft.lineageId, {
     subraces,
@@ -763,7 +770,7 @@ const CharacterForge = () => {
               )}
               {act === 'feat' && (
                 <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} swapFeat={!!draft.swapFeat}
-                  choices={featChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
+                  choices={featChoices} ownChoices={featOwnChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
               )}
               {act === 'abilities' && (
                 <AbilityAssigner
@@ -1155,7 +1162,7 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, feats, on
   );
 }
 
-function FeatSection({ feats, draft, onToggle, swapFeat, choices, resolved, setResolved, ruleState }: any) {
+function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, resolved, setResolved, ruleState }: any) {
   // В сетке смены черты предыстории — только черты происхождения;
   // полный список нужен ChoiceResolver-у для choice(source:"feat").
   const originFeats = (feats as Feat[]).filter((f) => f.category === 'origin');
@@ -1173,6 +1180,8 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, resolved, setR
         </div>
       )}
       <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} title="Выбор черты" />
+      {/* Собственные выборы выбранных черт (навыки «Одарённого», характеристика ASI и т.п.). */}
+      <ChoiceList choices={ownChoices || []} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} title="Параметры черт" />
     </div>
   );
 }

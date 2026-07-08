@@ -12,6 +12,7 @@ import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spe
 import { collectVariablesFromEffects } from './variables';
 import type { VariableValue } from '../engine/formula';
 import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechanics/collectChoices';
+import { choiceKey } from '../mechanics/choiceKey';
 import { createRegistry } from '../engine/registry';
 import { createApiResolver } from '../engine/apiResolver';
 import { isEntityUuid } from '../engine/ids';
@@ -139,10 +140,10 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
 
   const pendingChoices: PendingChoice[] = [];
   for (const { effect, origin } of bundle.effects) {
-    pendingChoices.push(...collectChoices(effect.mechanics, { ...origin, featureId: effect.id, featureName: effect.name }));
+    pendingChoices.push(...collectChoices(effect.mechanics, { ...origin, featureId: effect.id, featureName: effect.name }, draft.resolvedChoices));
   }
   for (const { action, origin } of bundle.actions) {
-    pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: action.id, featureName: action.name }));
+    pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: action.id, featureName: action.name }, draft.resolvedChoices));
   }
 
   const abilityMods = Object.fromEntries(
@@ -341,7 +342,7 @@ export function collectEffectGrantRefs(
       const opts = (payload.options || {}) as RefDict;
       if (String(opts.source) !== 'effect') return;
       const rawChoiceId = String(payload.id ?? 'choice');
-      const instanceId = `${origin.kind}:${origin.id}:${effectId}:${rawChoiceId}`;
+      const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: effectId }, rawChoiceId);
       const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
       const items = Array.isArray(opts.items) ? (opts.items as RefDict[]) : [];
       for (const sel of selected) {
@@ -377,7 +378,7 @@ export function collectFeatChoiceRefs(
     const opts = (payload.options || {}) as RefDict;
     if (String(opts.source) !== 'feat') return;
     const rawChoiceId = String(payload.id ?? 'choice');
-    const instanceId = `${origin.kind}:${origin.id}:${effectId}:${rawChoiceId}`;
+    const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: effectId }, rawChoiceId);
     const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
     for (const sel of selected) {
       if (typeof sel === 'string' && sel) refs.push(sel);

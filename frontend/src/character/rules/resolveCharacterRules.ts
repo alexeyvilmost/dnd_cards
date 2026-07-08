@@ -5,6 +5,7 @@ import { armorClassValue } from '../../engine/ac';
 import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
+import { sourceKey } from '../../mechanics/choiceKey';
 import { ABILITY_KEYS, type AbilityKey } from '../types';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
 import type {
@@ -33,11 +34,16 @@ const emptySetMap = () => ({
 
 const sourceFromOrigin = (origin: { kind: string; id: string; name: string }, feature?: { id: string; name: string }): RuleSource => ({
   type: origin.kind === 'race' ? 'species' : (origin.kind as RuleSourceType),
-  id: `${origin.kind}:${origin.id}:${feature?.id || 'base'}`,
+  id: sourceKey(origin.kind, origin.id, feature?.id),
   name: feature ? `${origin.name}: ${feature.name}` : origin.name,
 });
 
+// source.id уже равен sourceKey(...), поэтому instance-id = `${source.id}:${choiceId}`
+// совпадает с choiceKey(origin, choiceId), по которому форге пишет resolvedChoices.
 const choiceInstanceId = (source: RuleSource, rawChoiceId: string) => `${source.id}:${rawChoiceId}`;
+
+// Предел вложенности выборов (item.grants → choice → …), защита от циклов в контенте.
+const MAX_CHOICE_DEPTH = 6;
 
 const grantId = (grant: Omit<AppliedGrant, 'id'>) =>
   `${grant.source.type}:${grant.source.id}:${grant.kind}:${grant.mode}:${grant.value}:${grant.choiceId || ''}`;
@@ -72,7 +78,8 @@ function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[] {
       continue;
     }
 
-    const template = (choice.grant || {}) as Dict;
+    // `apply` — новое имя grant-шаблона (унифицированные выборы); `grant` — легаси-алиас.
+    const template = (choice.apply || choice.grant || {}) as Dict;
     if (template.kind) {
       out.push({ ...template, value });
       continue;
@@ -286,9 +293,15 @@ type SenseEntry = { sense: string; range: number };
  *  модов: прирост должен дойти до maxHP/спасбросков/заклинательства/навыков). */
 function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
   if (String(payload.kind ?? '') !== 'grant_ability_score') return;
-  const ability = String(payload.ability ?? '').toLowerCase();
+  // Прямой грант: ability задан, amount/value — прибавка. Выбор характеристики: apply-шаблон
+  // `{kind:'grant_ability_score', amount:N}`, выбранная характеристика приходит в value —
+  // поэтому ability берём из ability ИЛИ value, а прибавку строго из amount (value занят id).
+  const hasExplicitAbility = payload.ability != null && payload.ability !== '';
+  const ability = String((hasExplicitAbility ? payload.ability : payload.value) ?? '').toLowerCase();
   if (!(ABILITY_KEYS as readonly string[]).includes(ability)) return;
-  const amount = Number(payload.amount ?? payload.value ?? 0);
+  const amount = hasExplicitAbility
+    ? Number(payload.amount ?? payload.value ?? 0)
+    : Number(payload.amount ?? 0);
   if (!Number.isNaN(amount) && amount !== 0) deltas[ability as AbilityKey] += amount;
 }
 
@@ -301,14 +314,15 @@ function collectAbilityDeltas(
 ): Record<AbilityKey, number> {
   const deltas = Object.fromEntries(ABILITY_KEYS.map((a) => [a, 0])) as Record<AbilityKey, number>;
   const level = input.draft.level ?? 1;
-  const walk = (payload: Dict, source: RuleSource) => {
+  const walk = (payload: Dict, source: RuleSource, depth = 0) => {
     if (payload.kind === 'choice') {
+      if (depth >= MAX_CHOICE_DEPTH) return;
       const rawChoiceId = String(payload.id || 'choice');
       const choiceId = choiceInstanceId(source, rawChoiceId);
       const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
-      for (const sp of selectedChoicePayloads(payload, selected)) {
-        if (passesLevelGate(sp, level)) applyAbilityDelta(sp, deltas);
-      }
+      // Рекурсия зеркалит applyPayload: вложенный choice (ASI: режим → характеристика)
+      // разворачивается, grant_ability_score из его item.grants доходит до дельт.
+      for (const sp of selectedChoicePayloads(payload, selected)) walk(sp, source, depth + 1);
       return;
     }
     if (passesLevelGate(payload, level)) applyAbilityDelta(payload, deltas);
@@ -365,13 +379,21 @@ function applyPayload(
   repeatableFeats: Set<string>,
   senses: SenseEntry[],
   speeds: Record<string, number>,
+  depth = 0,
 ) {
   const level = input.draft.level ?? 1;
   if (payload.kind === 'choice') {
+    if (depth >= MAX_CHOICE_DEPTH) return;
     const rawChoiceId = String(payload.id || 'choice');
     const choiceId = choiceInstanceId(source, rawChoiceId);
     const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
     for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
+      // Вложенный choice (напр. item.grants выбранного режима ASI → выбор характеристики):
+      // разворачиваем рекурсивно тем же путём, ключ вложенного выбора считается по его id.
+      if (selectedPayload.kind === 'choice') {
+        applyPayload(selectedPayload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, depth + 1);
+        continue;
+      }
       if (!passesLevelGate(selectedPayload, level)) continue;
       collectNumericModifier(selectedPayload, formulaCtx, numericMods);
       collectSenseSpeed(selectedPayload, formulaCtx, numericMods, senses, speeds);
