@@ -31,6 +31,7 @@ const STD: AbilityScores = { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8
 
 function build(opts: {
   klass?: Mech | null;
+  subclass?: Mech | null;
   background?: Mech | null;
   race?: Mech | null;
   effects?: OriginEffect[];
@@ -41,6 +42,7 @@ function build(opts: {
   const assembled = {
     race: opts.race === undefined ? { id: 'elf', name: 'Эльф', speed: 30 } : opts.race,
     klass: opts.klass ?? null,
+    subclass: opts.subclass ?? null,
     background: opts.background ?? null,
     feats: [],
     effects: opts.effects ?? [],
@@ -91,6 +93,40 @@ describe('resolveCharacterRules — базовые владения и прои�
     expect(rs.initiativeBonus).toBe(abilityMod(STD.dex));
     expect(rs.armorClass).toBe(10 + abilityMod(STD.dex));
     expect(rs.passivePerception).toBe(10 + rs.skillBonuses.perception);
+  });
+});
+
+describe('resolveCharacterRules — единый КЗ (C9) и заклинательство подкласса', () => {
+  it('set_value ac_base (Защита без доспехов) попадает в персистируемый КЗ', () => {
+    const rs = build({
+      klass: { id: 'barb', name: 'Варвар', hit_die: 'd12' },
+      effects: [fx('unarmored', auto({ kind: 'set_value', target: 'ac_base', formula: '10+dex+con' }))],
+    });
+    // 10 + ЛВК(+2) + ТЕЛ(+1) = 13 — метод-кандидат больше базовых 10+ЛВК(12).
+    expect(rs.armorClass).toBe(10 + abilityMod(STD.dex) + abilityMod(STD.con));
+  });
+
+  it('modifier ac БЕЗ resolution:auto (стиль «Оборона») теперь учитывается в КЗ билда', () => {
+    // Раньше numericMods.ac брал только auto-payload → сводка кузницы теряла +1.
+    const rs = build({
+      effects: [fx('defense', { effects: [{ result: [{ kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value: '+1' }] }] })],
+    });
+    expect(rs.armorClass).toBe(10 + abilityMod(STD.dex) + 1);
+  });
+
+  it('подкласс-кастер (Мистический рыцарь) даёт заклинательство от ИНТ', () => {
+    const rs = build({
+      klass: { id: 'fighter', name: 'Воин', hit_die: 'd10' },
+      subclass: { id: 'ek', name: 'Мистический рыцарь' },
+    });
+    expect(rs.spellcasting).not.toBeNull();
+    expect(rs.spellcasting?.ability).toBe('int');
+    expect(rs.spellcasting?.saveDC).toBe(8 + rs.proficiencyBonus + abilityMod(STD.int));
+  });
+
+  it('у не-кастера без кастующего подкласса заклинательства нет', () => {
+    const rs = build({ klass: { id: 'fighter', name: 'Воин', hit_die: 'd10' } });
+    expect(rs.spellcasting).toBeNull();
   });
 });
 

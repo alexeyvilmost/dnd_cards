@@ -109,11 +109,13 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     expect(ruleState.appliedGrants.some((g) => g.kind === 'feat' && g.value === defenseFeat!.id)).toBe(true);
     expect(ruleState.conflicts.filter((c) => c.severity === 'error')).toHaveLength(0);
 
-    // 4) КЗ листа учитывает +1 от стиля (модификатор в пассивках).
+    // 4) КЗ листа учитывает +1 от стиля (модификатор в пассивках). После C9 тот же +1
+    // попадает и в ruleState.armorClass (единый примитив armorClassValue) → значения РАВНЫ
+    // (раньше резолв билда терял modifier-ac без resolution:'auto', отсюда был «+1»).
     const passives = collectPassiveMechanics(assembled);
     const ctx = buildCharacterContext(ruleState, draft as { level: number; abilities: Record<string, number> }, [], assembled.klass);
     const ac = breakdownValue('ac', ctx, emptyRuntime(), passives);
-    expect(ac.value).toBe(ruleState.armorClass + 1);
+    expect(ac.value).toBe(ruleState.armorClass);
     expect(ac.parts.some((p) => p.value === 1 && p.reason === 'эффект')).toBe(true);
 
     // eslint-disable-next-line no-console

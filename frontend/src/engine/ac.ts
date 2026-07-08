@@ -7,6 +7,7 @@ import type { RollModifier } from '../mvp/contracts';
 import { evaluate } from './formula';
 import { getCard } from './cardRegistry';
 import { pickBestMethod, type ValueMethod } from './derivedValue';
+import { collectModifiers } from './modifiers';
 
 type Dict = Record<string, unknown>;
 
@@ -145,4 +146,39 @@ export function computeAC(
   }
 
   return pickBestMethod(methods, additive);
+}
+
+/**
+ * Полный КЗ = базовый метод (computeAC: броня/Unarmored Defense/set_value ac_base + щит)
+ * плюс числовые modifier-эффекты роли 'ac' (formula-aware collectModifiers — ловит и
+ * modifier-payload'ы без resolution:'auto', напр. стиль «Оборона» +1).
+ *
+ * ЕДИНЫЙ источник истины КЗ: и лист (breakdown.ts:breakdownAC), и резолв билда
+ * (character/rules/resolveCharacterRules) зовут именно его, чтобы КД в кузне, в БД и на
+ * листе не расходились (C9).
+ */
+export function armorClassValue(
+  character: CharacterContext,
+  state: RuntimeState,
+  passives: Dict[],
+): ValueBreakdown {
+  const base = computeAC(character, state, passives);
+  const fx = collectModifiers(state, passives, {
+    roll: 'ac',
+    formulaCtx: {
+      abilityMods: character.abilityMods,
+      profBonus: character.profBonus,
+      selfLevel: character.level,
+      classLevels: character.classLevels,
+      spellcastingMod: character.spellcastingMod,
+      characterSpeed: character.characterSpeed,
+      variables: character.variables,
+    },
+  }).modifiers;
+  const fxSum = fx.reduce((s, p) => s + p.value, 0);
+  return {
+    value: base.value + fxSum,
+    parts: [...base.parts, ...fx],
+    ...(base.rejected ? { rejected: base.rejected } : {}),
+  };
 }

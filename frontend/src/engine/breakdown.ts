@@ -7,7 +7,7 @@
  * отображались на листе).
  */
 import type { CharacterContext, RollModifier, RuntimeState, ValueBreakdown } from '../mvp/contracts';
-import { computeAC } from './ac';
+import { armorClassValue } from './ac';
 import { hitDieMax } from '../character/derive';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { collectModifiers } from './modifiers';
@@ -69,14 +69,8 @@ function breakdownAC(
   state: RuntimeState,
   passives: Dict[],
 ): ValueBreakdown {
-  const base = computeAC(character, state, passives);
-  const fxParts = effectModifiers('ac', undefined, character, state, passives);
-  const fxSum = fxParts.reduce((s, p) => s + p.value, 0);
-  return {
-    value: base.value + fxSum,
-    parts: [...base.parts, ...fxParts],
-    ...(base.rejected ? { rejected: base.rejected } : {}),
-  };
+  // Единый примитив (engine/ac.ts): та же формула КЗ, что персистит резолв билда (C9).
+  return armorClassValue(character, state, passives);
 }
 
 function breakdownMaxHp(character: CharacterContext, state: RuntimeState, passives: Dict[]): ValueBreakdown {

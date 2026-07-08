@@ -1,6 +1,8 @@
 import type { Action, PassiveEffect } from '../../types';
 import type { OriginAction, OriginEffect } from '../assemble';
 import { computeMaxHP, spellcasting } from '../derive';
+import { armorClassValue } from '../../engine/ac';
+import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
 import { ABILITY_KEYS, type AbilityKey } from '../types';
@@ -256,7 +258,9 @@ function passesLevelGate(payload: Dict, level: number): boolean {
 // Роли числовых значений листа, на которые ВЛИЯЮТ modifier-пассивки эффектов.
 // Фундаментально: любой эффект с числовым self-модификатором (Крепкий → max_hp,
 // Оборона → ac, сапоги скорости → speed) вливается в производное значение.
-const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative', 'ac']);
+// 'ac' здесь НЕТ намеренно: КЗ считается единым примитивом armorClassValue (C9),
+// который сам собирает modifier-эффекты роли 'ac' — иначе двойной учёт.
+const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative']);
 
 /** Собирает числовой self-modifier из payload в аккумулятор numericMods. */
 function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>) {
@@ -403,6 +407,12 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const pb = proficiencyBonusForLevel(draft.level);
   const abilityMods = abilityMods0;
 
+  // Заклинательство считаем ДО производных: (а) подкласс-кастеры (Мистический рыцарь/
+  // Ловкач) — проброс subclassName, иначе spellcasting=null и лист не показывает СЛ/атаку;
+  // (б) spellcastingMod нужен formulaCtx AC-формул (редкие формулы КЗ от заклинательства).
+  const spellDerived = spellcasting(assembled.klass?.name, scores, pb, assembled.subclass?.name);
+  const spellcastingMod = spellDerived ? abilityMods[spellDerived.ability] : undefined;
+
   const skillBonuses = Object.fromEntries(SKILL_IDS.map((skill) => {
     const base = abilityMod(scores[abilityOfSkill(skill)]);
     const proficient = maps.skill.has(skill);
@@ -418,7 +428,24 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   // Числовые модификаторы эффектов вливаются в производные значения листа
   // (фундаментально, единообразно с расчётом КЗ через breakdown).
   const maxHP = computeMaxHP(assembled.klass?.hit_die, scores.con, draft.level) + (numericMods.max_hp ?? 0);
-  const armorClass = 10 + abilityMod(scores.dex) + (numericMods.ac ?? 0);
+  // Единый КЗ (C9): тот же примитив, что на листе (armorClassValue). На этапе резолва
+  // билда экипировки нет (стартовое снаряжение уходит в inventory уже после создания) —
+  // считается «голый» КЗ: база / Unarmored Defense / set_value ac_base + modifier-эффекты
+  // (стиль «Оборона» +1 и т.п.); броню лист учтёт позже сам через breakdownValue('ac').
+  const acPassives: Dict[] = [
+    ...(assembled.effects as OriginEffect[]).map((e) => e.effect.mechanics),
+    ...(assembled.actions as OriginAction[]).map((a) => a.action.mechanics),
+    ...(input.runtimeSources || []).map((r) => r.mechanics),
+  ].filter((m): m is Dict => !!m && typeof m === 'object');
+  const acCharacter: CharacterContext = {
+    abilityMods,
+    profBonus: pb,
+    level: draft.level,
+    classLevels: formulaCtx.classLevels,
+    variables: assembled.variables,
+    spellcastingMod,
+  };
+  const armorClass = armorClassValue(acCharacter, { equipment: {}, activeEffects: [] } as unknown as RuntimeState, acPassives).value;
   const speed = (assembled.race?.speed ?? 30) + (numericMods.speed ?? 0);
   const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
 
@@ -451,7 +478,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     speed,
     initiativeBonus,
     passivePerception: 10 + (skillBonuses.perception ?? abilityMod(scores.wis)),
-    spellcasting: spellcasting(assembled.klass?.name, scores, pb),
+    spellcasting: spellDerived,
     appliedGrants,
     conflicts,
     variables: assembled.variables ?? {},
