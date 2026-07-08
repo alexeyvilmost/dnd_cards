@@ -160,14 +160,16 @@ func main() {
 		api.GET("/actions", OptionalAuthMiddleware(authService), actionController.GetActions)
 		api.GET("/actions/:id", OptionalAuthMiddleware(authService), actionController.GetAction)
 		api.POST("/actions", AuthMiddleware(authService), actionController.CreateAction)
-		api.PUT("/actions/:id", AuthMiddleware(authService), actionController.UpdateAction)
+		// PUT публичный (как у заклинаний): контент глобальный, нужен для смены изображения из детального окна.
+		api.PUT("/actions/:id", OptionalAuthMiddleware(authService), actionController.UpdateAction)
 		api.DELETE("/actions/:id", AuthMiddleware(authService), actionController.DeleteAction)
 
 		// Эффекты (публичные, но с опциональной авторизацией)
 		api.GET("/effects", OptionalAuthMiddleware(authService), effectController.GetEffects)
 		api.GET("/effects/:id", OptionalAuthMiddleware(authService), effectController.GetEffect)
 		api.POST("/effects", AuthMiddleware(authService), effectController.CreateEffect)
-		api.PUT("/effects/:id", AuthMiddleware(authService), effectController.UpdateEffect)
+		// PUT публичный (как у заклинаний): нужен для смены изображения из детального окна.
+		api.PUT("/effects/:id", OptionalAuthMiddleware(authService), effectController.UpdateEffect)
 		api.DELETE("/effects/:id", AuthMiddleware(authService), effectController.DeleteEffect)
 
 		// Заклинания (публичные, но с опциональной авторизацией)
@@ -190,7 +192,8 @@ func main() {
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
 		api.GET("/feats/:id", OptionalAuthMiddleware(authService), featController.GetFeat)
 		api.POST("/feats", AuthMiddleware(authService), featController.CreateFeat)
-		api.PUT("/feats/:id", AuthMiddleware(authService), featController.UpdateFeat)
+		// PUT публичный (как у заклинаний): нужен для смены изображения из детального окна.
+		api.PUT("/feats/:id", OptionalAuthMiddleware(authService), featController.UpdateFeat)
 		api.DELETE("/feats/:id", AuthMiddleware(authService), featController.DeleteFeat)
 
 		// Предыстории (публичные, но с опциональной авторизацией)
