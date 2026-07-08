@@ -174,6 +174,9 @@ export interface ExecuteResult {
   events: EngineEvent[];
   /** Реакции/триггеры со стоимостью, требующие решения игрока (фаза A). */
   pendingReactions?: ReactionOffer[];
+  /** Состояние ЦЕЛИ после payload-ов who:'target' (фаза E/C2). undefined — цель без
+   *  runtimeState или без изменений (лист персистит только при наличии). */
+  targetState?: RuntimeState;
 }
 
 export interface WeaponContext {

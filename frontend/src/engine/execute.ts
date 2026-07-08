@@ -468,6 +468,42 @@ function resolveDamageAmounts(
  * Единый роутер payload-ов (§6.5 схемы): исполняет список исходов
  * on_hit / on_crit / on_fail / on_success / result.
  */
+/** Холдер состояния ЦЕЛИ (C2). payload-ы who:'target' мутируют его, а не состояние
+ *  исполнителя; state undefined → цель без runtimeState, всё идёт в self (обратная совм.). */
+type TargetRef = { state?: RuntimeState; mutated: boolean };
+
+/** «Талон» (Вдохновение барда): чип-эффект с костью, снимается вручную; кость вводится
+ *  диалогом бросков получателя. Вынесен в хелпер, чтобы who:'target' мог класть его цели. */
+function applyBoon(state: RuntimeState, p: Dict, source: string, events: EngineEvent[]): RuntimeState {
+  const die = String(p.die ?? 'к6').replace(/d/i, 'к');
+  const name = `Талон ${die}${p.id ? ` (${source})` : ''}`;
+  const entry: ActiveEffectEntry = {
+    id: `boon-${state.activeEffects.length}-${Date.now()}`, name, mechanics: p, expiry: 'manual', source,
+  };
+  const next = { ...state, activeEffects: [...state.activeEffects, entry] };
+  events.push({ type: 'effect_applied', name, sourceAction: source });
+  events.push(narrativeEvent(
+    `Талон ${die}: получатель добавляет ${die} к броску атаки, проверке или спасброску`
+    + `${p.expires ? ` (истекает: ${p.expires})` : ''}. Снимите эффект при использовании.`,
+  ));
+  return next;
+}
+
+/** Превращение (Дикий облик): облик как активный эффект-чип; стат-блок зверя — по бестиарию. */
+function applyTransform(state: RuntimeState, p: Dict, source: string, events: EngineEvent[]): RuntimeState {
+  const formName = String(p.form ?? p.value ?? 'Дикий облик');
+  const entry: ActiveEffectEntry = {
+    id: `form-${state.activeEffects.length}-${Date.now()}`, name: `Облик: ${formName}`, mechanics: p, expiry: 'manual', source,
+  };
+  const next = { ...state, activeEffects: [...state.activeEffects, entry] };
+  events.push({ type: 'effect_applied', name: entry.name, sourceAction: source });
+  events.push(narrativeEvent(
+    `Превращение (${source}): используйте стат-блок зверя${p.max_cr != null ? ` (ПО ≤ ${p.max_cr})` : ''}; `
+    + 'ментальные характеристики и спасброски МДР/ИНТ/ХАР — ваши. Снимите эффект при возврате.',
+  ));
+  return next;
+}
+
 function applyPayloads(
   payloads: Dict[],
   state: RuntimeState,
@@ -476,8 +512,21 @@ function applyPayloads(
   source: string,
   hand: 'main' | 'off',
   halfDamage = false,
+  whoTarget = false,
+  targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
   let next = state;
+  // Роутер мутации (C2): who:'target' с переданным состоянием цели пишет в ЦЕЛЬ и метит
+  // mutated; иначе — в состояние исполнителя (self). Урон/перемещение/переброс/нарратив —
+  // только события, состояние не трогают, поэтому маршрутизации не требуют.
+  const route = (mutate: (s: RuntimeState) => RuntimeState) => {
+    if (whoTarget && targetRef.state) {
+      targetRef.state = mutate(targetRef.state);
+      targetRef.mutated = true;
+    } else {
+      next = mutate(next);
+    }
+  };
   for (const p of payloads) {
     const kind = String(p.kind ?? '');
     switch (kind) {
@@ -490,71 +539,24 @@ function applyPayloads(
         }
         break;
       }
-      case 'healing':
-        next = applyHealing(next, p, ctx, events);
-        break;
-      case 'temp_hp':
-        next = applyTempHp(next, p, ctx, events);
-        break;
-      case 'condition':
-        next = applyCondition(next, p, source, events);
-        break;
-      case 'resource':
-        next = applyResource(next, p, events);
-        break;
-      case 'modifier':
-        next = applyModifierPayload(next, p, source, events);
-        break;
+      case 'healing': route((s) => applyHealing(s, p, ctx, events)); break;
+      case 'temp_hp': route((s) => applyTempHp(s, p, ctx, events)); break;
+      case 'condition': route((s) => applyCondition(s, p, source, events)); break;
+      case 'resource': route((s) => applyResource(s, p, events)); break;
+      case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
       case 'movement':
         events.push(narrativeEvent(`Перемещение: ${p.value} ${p.distance ?? ''} фт`));
         break;
-      case 'boon': {
-        // «Талон» (Вдохновение барда): чип-эффект с костью, снимается вручную
-        // при использовании; кость вводится диалогом бросков получателя.
-        const die = String(p.die ?? 'к6').replace(/d/i, 'к');
-        const name = `Талон ${die}${p.id ? ` (${source})` : ''}`;
-        const entry: ActiveEffectEntry = {
-          id: `boon-${next.activeEffects.length}-${Date.now()}`,
-          name,
-          mechanics: p,
-          expiry: 'manual',
-          source,
-        };
-        next = { ...next, activeEffects: [...next.activeEffects, entry] };
-        events.push({ type: 'effect_applied', name, sourceAction: source });
-        events.push(narrativeEvent(
-          `Талон ${die}: получатель добавляет ${die} к броску атаки, проверке или спасброску`
-          + `${p.expires ? ` (истекает: ${p.expires})` : ''}. Снимите эффект при использовании.`,
-        ));
-        break;
-      }
+      case 'boon': route((s) => applyBoon(s, p, source, events)); break;
       case 'reroll': {
-        // Переброс (Везунчик): архитектурно бросок уже совершён — движок
-        // фиксирует право переброса, значение вводится диалогом кубов.
+        // Переброс (Везунчик): архитектурно бросок уже совершён — движок фиксирует
+        // право переброса, значение вводится диалогом кубов.
         const which = String(p.which ?? 'd20').replace(/d/i, 'к');
         const keep = p.keep === 'either' ? 'оставьте любой из двух результатов' : 'используйте новый результат';
         events.push(narrativeEvent(`Переброс ${which}: перебросьте кость — ${keep}.`));
         break;
       }
-      case 'transform': {
-        // Превращение (Дикий облик): облик как активный эффект-чип; стат-блок
-        // зверя ведётся по бестиарию, лист напоминает об ограничениях.
-        const formName = String(p.form ?? p.value ?? 'Дикий облик');
-        const entry: ActiveEffectEntry = {
-          id: `form-${next.activeEffects.length}-${Date.now()}`,
-          name: `Облик: ${formName}`,
-          mechanics: p,
-          expiry: 'manual',
-          source,
-        };
-        next = { ...next, activeEffects: [...next.activeEffects, entry] };
-        events.push({ type: 'effect_applied', name: entry.name, sourceAction: source });
-        events.push(narrativeEvent(
-          `Превращение (${source}): используйте стат-блок зверя${p.max_cr != null ? ` (ПО ≤ ${p.max_cr})` : ''}; `
-          + 'ментальные характеристики и спасброски МДР/ИНТ/ХАР — ваши. Снимите эффект при возврате.',
-        ));
-        break;
-      }
+      case 'transform': route((s) => applyTransform(s, p, source, events)); break;
       case 'narrative':
         events.push(narrativeEvent(String(p.description ?? p.text ?? '')));
         break;
@@ -572,7 +574,9 @@ function runAttackRoll(
   events: EngineEvent[],
   source: string,
   pending: ReactionOffer[],
+  targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
+  const whoTarget = String(effect.who ?? 'self') === 'target' && !!targetRef.state;
   const hand = resolveHand(effect);
   const ac = ctx.target?.ac ?? 10;
   const passives = passivesFromCtx(ctx);
@@ -600,18 +604,18 @@ function runAttackRoll(
       ? effect.on_crit
       : effect.on_hit) as Dict[] | undefined;
     if (Array.isArray(payloads)) {
-      next = applyPayloads(payloads, next, ctx, events, source, hand);
+      next = applyPayloads(payloads, next, ctx, events, source, hand, false, whoTarget, targetRef);
     }
     // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
     // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
-    next = emitEvent({ kind: 'hit', source: 'self' }, next, ctx, events, pending);
-    if (roll.outcome === 'crit') next = emitEvent({ kind: 'crit', source: 'self' }, next, ctx, events, pending);
+    next = emitEvent({ kind: 'hit', source: 'self' }, next, ctx, events, pending, targetRef);
+    if (roll.outcome === 'crit') next = emitEvent({ kind: 'crit', source: 'self' }, next, ctx, events, pending, targetRef);
   } else {
     // Промах: on_miss-райдеры (Graze/Vex — оружейное мастерство 2024) + событие miss.
     if (Array.isArray(effect.on_miss)) {
-      next = applyPayloads(effect.on_miss as Dict[], next, ctx, events, source, hand);
+      next = applyPayloads(effect.on_miss as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
     }
-    next = emitEvent({ kind: 'miss', source: 'self' }, next, ctx, events, pending);
+    next = emitEvent({ kind: 'miss', source: 'self' }, next, ctx, events, pending, targetRef);
   }
   return next;
 }
@@ -622,7 +626,9 @@ function runSave(
   ctx: ExecuteContext,
   events: EngineEvent[],
   source: string,
+  targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
+  const whoTarget = String(effect.who ?? 'self') === 'target' && !!targetRef.state;
   const dcFormula = String(effect.dc ?? '10');
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability ?? 'dex') as AbilityKey;
@@ -649,7 +655,7 @@ function runSave(
   if (!Array.isArray(payloads)) return state;
 
   const half = success && payloads.some((p) => p.on_success === 'half');
-  return applyPayloads(payloads, state, ctx, events, source, 'main', half);
+  return applyPayloads(payloads, state, ctx, events, source, 'main', half, whoTarget, targetRef);
 }
 
 function runAbilityCheck(
@@ -715,6 +721,7 @@ function runMechanicEffects(
   events: EngineEvent[],
   sourceName: string,
   pending: ReactionOffer[],
+  targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
   let next = state;
   for (const eff of effects) {
@@ -724,11 +731,14 @@ function runMechanicEffects(
     try {
       if (resolution === 'auto') {
         const results = (eff.result ?? eff.results) as Dict[] | undefined;
-        if (Array.isArray(results)) next = applyPayloads(results, next, ctx, events, sourceName, 'main');
+        if (Array.isArray(results)) {
+          const whoTarget = String(eff.who ?? 'self') === 'target' && !!targetRef.state;
+          next = applyPayloads(results, next, ctx, events, sourceName, 'main', false, whoTarget, targetRef);
+        }
         continue;
       }
-      if (resolution === 'attack_roll') { next = runAttackRoll(eff, next, ctx, events, sourceName, pending); continue; }
-      if (resolution === 'save') { next = runSave(eff, next, ctx, events, sourceName); continue; }
+      if (resolution === 'attack_roll') { next = runAttackRoll(eff, next, ctx, events, sourceName, pending, targetRef); continue; }
+      if (resolution === 'save') { next = runSave(eff, next, ctx, events, sourceName, targetRef); continue; }
       if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events); continue; }
       events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
     } catch (e) {
@@ -778,6 +788,7 @@ export function emitEvent(
   ctx: ExecuteContext,
   events: EngineEvent[],
   pending: ReactionOffer[],
+  targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
   const listeners = collectListeners(ev, state, passivesFromCtx(ctx), evalCtxOf(state, ctx));
   if (!listeners.length) return state;
@@ -792,7 +803,7 @@ export function emitEvent(
       const effs = (lm.mechanics.effects as Dict[]) ?? [];
       if (effs.length) {
         events.push(narrativeEvent(`Сработало: ${lm.name}`));
-        next = runMechanicEffects(effs, next, ctx, events, lm.name, pending);
+        next = runMechanicEffects(effs, next, ctx, events, lm.name, pending, targetRef);
       }
       if (lm.usesPer === 'turn') { fired.add(lm.id); firedChanged = true; }
     } else {
@@ -812,6 +823,12 @@ export function executeAction(
   let next = cloneState(state);
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
+  // Состояние ЦЕЛИ (C2): клон (не мутируем объект вызывающего). payload-ы who:'target'
+  // пишут сюда; если цель без runtimeState — state undefined и всё идёт в self.
+  const targetRef: TargetRef = {
+    state: ctx.target?.runtimeState ? cloneState(ctx.target.runtimeState) : undefined,
+    mutated: false,
+  };
 
   const activation = mechanics.activation as Dict | undefined;
   const cost = (activation?.cost as Dict[]) ?? [];
@@ -827,7 +844,7 @@ export function executeAction(
   if (!Array.isArray(effects)) return { state: next, events };
 
   const sourceName = String(mechanics.name ?? 'действие');
-  next = runMechanicEffects(effects, next, ctx, events, sourceName, pending);
+  next = runMechanicEffects(effects, next, ctx, events, sourceName, pending, targetRef);
 
   // Событие «сотворено заклинание» → триггеры на каст (напр. отклик оружия/предмета).
   // Активируется, когда лист/кузня передают ctx.spell (пикер уровня слота — D1 слайс 2);
@@ -835,12 +852,17 @@ export function executeAction(
   if (ctx.spell) {
     next = emitEvent(
       { kind: 'spell_cast', source: 'self', data: { level: ctx.spell.castLevel ?? ctx.spell.baseLevel } },
-      next, ctx, events, pending,
+      next, ctx, events, pending, targetRef,
     );
   }
 
   void (ctx.character as CharacterContext);
-  return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
+  return {
+    state: next,
+    events,
+    ...(pending.length ? { pendingReactions: pending } : {}),
+    ...(targetRef.mutated ? { targetState: targetRef.state } : {}),
+  };
 }
 
 /**

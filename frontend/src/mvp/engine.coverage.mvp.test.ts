@@ -137,21 +137,34 @@ describe('executeAction — маршрутизация и устойчивост
 describe('payload-ы исполнителя: condition / temp_hp / resource / scaling', () => {
   const noCost = { mode: 'active', cost: [] };
 
-  it('save.on_fail: наложение состояния condition (ошеломление)', () => {
-    const mech: Mech = {
-      activation: noCost,
-      effects: [{
-        resolution: 'save', ability: 'con', dc: '30', who: 'target',
-        on_fail: [{ kind: 'condition', value: 'stunned', op: 'apply', duration: { type: 'rounds', amount: 1 } }],
-      }],
-    };
-    const { state: next, events } = executeAction(freshFighterState(), mech, {
+  const stunMech: Mech = {
+    activation: noCost,
+    effects: [{
+      resolution: 'save', ability: 'con', dc: '30', who: 'target',
+      on_fail: [{ kind: 'condition', value: 'stunned', op: 'apply', duration: { type: 'rounds', amount: 1 } }],
+    }],
+  };
+
+  it('save.on_fail who:target — состояние ложится в ЦЕЛЬ (targetState), не в кастера (C2)', () => {
+    const { state: next, targetState, events } = executeAction(freshFighterState(), stunMech, {
+      character: FIGHTER_CTX, target: { saveMods: { con: 0 }, runtimeState: freshFighterState() }, rng: seededRng(7),
+    });
+    expect(events.some((e) => e.type === 'condition_applied' && e.condition === 'stunned')).toBe(true);
+    // на кастере состояния НЕТ:
+    expect(next.activeEffects.find((e) => e.name === 'stunned')).toBeFalsy();
+    // на ЦЕЛИ — есть, с длительностью:
+    const onTarget = targetState?.activeEffects.find((e) => e.name === 'stunned');
+    expect(onTarget).toBeTruthy();
+    expect(onTarget?.roundsLeft).toBe(1);
+  });
+
+  it('save.on_fail who:target БЕЗ runtimeState цели — обратная совместимость: состояние на кастере', () => {
+    const { state: next, targetState, events } = executeAction(freshFighterState(), stunMech, {
       character: FIGHTER_CTX, target: { saveMods: { con: 0 } }, rng: seededRng(7),
     });
     expect(events.some((e) => e.type === 'condition_applied' && e.condition === 'stunned')).toBe(true);
-    const entry = next.activeEffects.find((e) => e.name === 'stunned');
-    expect(entry).toBeTruthy();
-    expect(entry?.roundsLeft).toBe(1);
+    expect(next.activeEffects.find((e) => e.name === 'stunned')).toBeTruthy();
+    expect(targetState).toBeUndefined();
   });
 
   it('auto: temp_hp применяются к hp.temp и не суммируются (остаётся большее)', () => {
