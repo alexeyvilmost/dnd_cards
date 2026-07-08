@@ -881,6 +881,13 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, title = 
               : (existing ? grantReason(existing) : undefined);
             return [skill.id, unavailable ? reason : undefined];
           }).filter(([, reason]) => !!reason)) as Record<string, string>
+          // Предел характеристики 2024: уже достигшую 20 нельзя повышать (ASI).
+          : pc.source === 'ability'
+          ? Object.fromEntries(ABILITIES.map((ab) => {
+            const score = ruleState.abilities?.[ab.id as AbilityKey] ?? 0;
+            const capped = score >= 20 && !value.includes(ab.id);
+            return [ab.id, capped ? 'Максимум 20' : undefined];
+          }).filter(([, reason]) => !!reason)) as Record<string, string>
           : undefined;
         return (
           <ChoiceResolver key={pc.id} choice={pc} value={value} unavailableOptions={unavailableOptions} feats={feats} onChange={(v) => setResolved(pc.id, v)} />

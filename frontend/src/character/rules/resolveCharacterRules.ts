@@ -478,7 +478,15 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
   const abilityDeltas = collectAbilityDeltas(input, assembled.effects as OriginEffect[], assembled.actions as OriginAction[]);
   const scoresFinal = Object.fromEntries(
-    ABILITY_KEYS.map((a) => [a, Math.max(1, (draft.abilities[a] ?? 10) + (abilityDeltas[a] ?? 0))]),
+    ABILITY_KEYS.map((a) => {
+      const base = draft.abilities[a] ?? 10;
+      const delta = abilityDeltas[a] ?? 0;
+      // Предел 2024: прирост (ASI и т.п.) не поднимает характеристику выше 20; уже-высокую
+      // базу (ручной ввод/особые источники) не режем. Уменьшения (drain) не ограничиваем.
+      const ceiling = Math.max(base, 20);
+      const final = delta > 0 ? Math.min(base + delta, ceiling) : base + delta;
+      return [a, Math.max(1, final)];
+    }),
   ) as Record<AbilityKey, number>;
 
   const scores0 = scoresFinal;

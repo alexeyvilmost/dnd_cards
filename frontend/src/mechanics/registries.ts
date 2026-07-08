@@ -154,6 +154,8 @@ export const abilityOfSkill = (skill: string): string => SKILL_ABILITY[skill] ||
 
 export function optionsForChoiceSource(source: string): RegistryItem[] {
   switch (source) {
+    case 'ability':
+      return ABILITIES;
     case 'skill':
       return SKILLS;
     case 'tool':
