@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateMechanics } from './validateMechanics';
+import schema from '../schemas/mechanics.schema.json';
 
 describe('validateMechanics', () => {
   it('пустая механика — валидна', () => {
@@ -24,5 +25,36 @@ describe('validateMechanics', () => {
     );
     expect(result.valid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
+  });
+});
+
+// C13: контракт полноты payload.kind в обе стороны (валидатор ↔ рантайм).
+// Ловит регрессию, когда рантайм начинает исполнять kind, забытый в схеме
+// (валидатор молча бракует рабочий контент), и наоборот — kind в схеме без
+// исполнителя и без пометки planned.
+describe('C13: контракт схема ↔ рантайм (payload.kind)', () => {
+  const schemaKinds = (schema as unknown as {
+    $defs: { payload: { properties: { kind: { enum: string[] } } } };
+  }).$defs.payload.properties.kind.enum;
+
+  // Kind-ы, которые движок/сборка РЕАЛЬНО исполняют.
+  const HANDLED = [
+    'damage', 'healing', 'temp_hp', 'condition', 'resource', 'modifier', 'movement',
+    'boon', 'reroll', 'transform', 'narrative',        // execute.ts applyPayloads
+    'resistance', 'set_value',                          // разрешение урона / расчёт AC
+    'variable', 'grant_effect', 'grant_language', 'grant_expertise',
+    'grant_proficiency', 'grant_feat', 'grant_spell',   // сборка персонажа
+    'choice',                                           // мета-kind (ChoiceResolver)
+  ];
+  // Kind-ы схемы, ещё НЕ исполняемые — осознанный allowlist (grant_ability_score/
+  // grant_sense/grant_speed чинит D3; set_die/grant_action — it.todo).
+  const PLANNED = ['grant_action', 'set_die', 'grant_ability_score', 'grant_sense', 'grant_speed'];
+
+  it('каждый исполняемый kind есть в схеме (иначе валидатор бракует рабочий контент)', () => {
+    expect(HANDLED.filter((k) => !schemaKinds.includes(k))).toEqual([]);
+  });
+
+  it('каждый kind схемы либо исполняется, либо в явном planned-allowlist', () => {
+    expect(schemaKinds.filter((k) => !HANDLED.includes(k) && !PLANNED.includes(k))).toEqual([]);
   });
 });

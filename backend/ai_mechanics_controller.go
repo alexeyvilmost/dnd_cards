@@ -60,12 +60,13 @@ payload-ы (kind СТРОГО из этого списка):
 - {"kind":"set_value","target":"ac_base","formula":"13 + dex"} — базовый КЗ (Доспехи мага и т.п.)
 - {"kind":"movement","value":"push|pull|teleport|extra_speed|double|knock_prone","distance":N}
 - {"kind":"grant_speed","mode":"walk"|"fly"|"swim"|"climb","value":N} / {"kind":"grant_sense","sense":"darkvision","range":N}
-- {"kind":"grant_proficiency","prof":"skill|tool|saving_throw|weapon|armor|language","value":"..."} / {"kind":"grant_spell","value":"slug"}
+- {"kind":"grant_proficiency","prof":"skill|tool|saving_throw|weapon|armor|language","value":"..."} / {"kind":"grant_spell","value":"slug"} / {"kind":"grant_feat","value":"slug"} / {"kind":"grant_language","value":"..."} / {"kind":"grant_expertise","value":"skill"}
 - {"kind":"narrative","description":"..."} — всё, что движок не исполняет.
 
 ## Правила
 - Формулы: числа, кости NdM, str..cha, prof, spellcasting, self_level, min(), max(), + - * /.
 - uses.per СТРОГО: "turn"|"round"|"short_rest"|"long_rest"|"day".
+- cost.resource — id ресурса, не закрытый список (частые: action, bonus_action, reaction, movement, spell_slot, rage, focus, superiority_die); допустим любой ресурс из справочника.
 - trigger.event СТРОГО: attack_roll_made|hit|miss|crit|damage_dealt|damage_taken|saving_throw_made|ability_check_made|reduced_to_0_hp|turn_start|turn_end|spell_cast|short_rest|long_rest.
 - resolution СТРОГО: attack_roll|save|ability_check|auto. Каждый элемент effects — объект interaction, не строка.
 - Кости в модификаторах (например «+1к4 к атакам») НЕ поддерживаются → narrative.

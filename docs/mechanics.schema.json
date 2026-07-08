@@ -50,7 +50,7 @@
       "type": "object",
       "required": ["resource"],
       "properties": {
-        "resource": { "enum": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die"] },
+        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die"] },
         "amount": { "$ref": "#/$defs/formula" },
         "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" }
       }
@@ -178,7 +178,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative", "grant_proficiency", "grant_feat", "grant_spell", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
+        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
       },
       "allOf": [
         {
