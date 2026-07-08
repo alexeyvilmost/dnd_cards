@@ -83,11 +83,15 @@ function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[]
   if (choice.source === 'subfeature' || choice.source === 'explicit' || choice.source === 'effect') {
     return (choice.items || []).map((it) => ({ id: it.id, label: it.name }));
   }
-  // Черты (боевые стили, черты происхождения): варианты — реальные черты
-  // из справочника, суженные по категории из filter.
+  // Черты (боевые стили, черты происхождения, «Получение черты» на ASI-уровнях):
+  // варианты — реальные черты из справочника, суженные по категории из filter или
+  // по списку категорий options.categories (напр. ['origin','general'] для level-up).
   if (choice.source === 'feat' && feats?.length) {
+    const cats = (choice.options?.categories as string[] | undefined);
     let pool = feats;
-    if (Array.isArray(choice.filter)) {
+    if (Array.isArray(cats) && cats.length) {
+      pool = feats.filter((f) => cats.includes(f.category as string));
+    } else if (Array.isArray(choice.filter)) {
       const allow = choice.filter as string[];
       pool = feats.filter((f) => allow.includes(f.id) || allow.includes(f.card_number));
     } else if (typeof choice.filter === 'string' && choice.filter && choice.filter !== 'all') {
@@ -504,12 +508,16 @@ export function SummaryPanel({
 
       <div className="sum-abilities">
         {ABILITY_KEYS.map((k) => {
-          const v = draft.abilities[k];
+          // Показываем ИТОГОВОЕ значение из ruleState (с приростом ASI/вида/предыстории),
+          // а не базу draft; но не назначенную характеристику оставляем «—».
+          const base = draft.abilities[k];
+          const v = typeof base === 'number' ? (ruleState?.abilities?.[k] ?? base) : undefined;
           const m = typeof v === 'number' ? abilityMod(v) : null;
+          const boosted = typeof v === 'number' && typeof base === 'number' && v !== base;
           return (
             <div key={k} className="sum-ab">
               <div className="k">{ABILITY_LABEL_RU[k].slice(0, 3).toUpperCase()}</div>
-              <div className="v">{typeof v === 'number' ? v : '—'}</div>
+              <div className="v" title={boosted ? `База ${base}` : undefined} style={boosted ? { color: 'var(--forge-gold, #c9a227)' } : undefined}>{typeof v === 'number' ? v : '—'}</div>
               <div className="m">{m === null ? '' : m >= 0 ? `+${m}` : m}</div>
             </div>
           );
