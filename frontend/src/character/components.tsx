@@ -155,6 +155,8 @@ export function ChoiceResolver({
               name={f.name}
               imageUrl={f.image_url}
               selected={value.includes(f.id)}
+              disabled={!!unavailableOptions[f.id] && !value.includes(f.id)}
+              disabledReason={unavailableOptions[f.id]}
               onClick={() => toggle(f.id)}
               preview={<FeatPreview feat={f} disableHover />}
             />

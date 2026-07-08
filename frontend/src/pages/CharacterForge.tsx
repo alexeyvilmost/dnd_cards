@@ -747,12 +747,12 @@ const CharacterForge = () => {
                   subraces={subraces} subraceUnlocked={subraceUnlocked} subraceLevel={subraceLevel}
                   onPickSubrace={(id: string) => patch({ lineageId: draft.lineageId === id ? null : id })}
                   choices={raceOtherChoices} subChoices={raceSubChoices}
-                  resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} allFeats={feats} />
+                  resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} allFeats={feats} activeFeats={assembled.feats} />
               )}
               {act === 'class' && (
                 <ClassSection classes={classes} draft={draft} onSelect={selectClass} assembled={assembled}
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} resolved={draft.resolvedChoices}
-                  setResolved={setResolved} ruleState={ruleState} allFeats={feats}
+                  setResolved={setResolved} ruleState={ruleState} allFeats={feats} activeFeats={assembled.feats}
                   subclasses={subclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
                   onPickSubclass={(id: string) => patch({ subclassId: draft.subclassId === id ? null : id })}
                   onEquipmentOption={(opt: 'a' | 'b' | 'c') => patch({ classEquipmentOption: opt })} />
@@ -770,7 +770,7 @@ const CharacterForge = () => {
               )}
               {act === 'feat' && (
                 <FeatSection feats={feats} draft={draft} onToggle={toggleFeat} swapFeat={!!draft.swapFeat}
-                  choices={featChoices} ownChoices={featOwnChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} />
+                  choices={featChoices} ownChoices={featOwnChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} activeFeats={assembled.feats} />
               )}
               {act === 'abilities' && (
                 <AbilityAssigner
@@ -856,12 +856,15 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
 
 // ─── Общий список выборов ────────────────────────────────────────────────────
 
-function ChoiceList({ choices, resolved, setResolved, ruleState, feats, title = 'Выборы' }: {
+function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFeats, title = 'Выборы' }: {
   choices: PendingChoice[];
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
-  ruleState: CharacterRuleState; feats?: Feat[]; title?: string;
+  ruleState: CharacterRuleState; feats?: Feat[]; activeFeats?: Feat[]; title?: string;
 }) {
   if (!choices.length) return null;
+  // Правило «два эффекта с одним названием не складываются»: неповторяемые черты,
+  // уже действующие на персонажа, недоступны в пикере (повторяемые — остаются).
+  const activeNonRepeatable = new Set((activeFeats || []).filter((f) => !f.repeatable).map((f) => f.name));
   return (
     <div className="forge-block">
       <div className="forge-section-h">{title}</div>
@@ -888,6 +891,11 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, title = 
             const capped = score >= 20 && !value.includes(ab.id);
             return [ab.id, capped ? 'Максимум 20' : undefined];
           }).filter(([, reason]) => !!reason)) as Record<string, string>
+          // Черты: уже-активные неповторяемые недоступны (dedup по названию).
+          : pc.source === 'feat'
+          ? Object.fromEntries((feats || [])
+            .filter((f) => activeNonRepeatable.has(f.name) && !value.includes(f.id))
+            .map((f) => [f.id, 'Уже получена — черта не повторяется'])) as Record<string, string>
           : undefined;
         return (
           <ChoiceResolver key={pc.id} choice={pc} value={value} unavailableOptions={unavailableOptions} feats={feats} onChange={(v) => setResolved(pc.id, v)} />
@@ -899,7 +907,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, title = 
 
 // ─── Секции ────────────────────────────────────────────────────────────────
 
-function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState, allFeats }: any) {
+function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, subChoices, resolved, setResolved, ruleState, allFeats, activeFeats }: any) {
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
@@ -990,12 +998,12 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
         </div>
       )}
 
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />
     </div>
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, allFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption }: any) {
   const sc = classSkillChoice(assembled);
   const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
@@ -1093,7 +1101,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           </div>
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />
     </div>
   );
 }
@@ -1169,7 +1177,7 @@ function BackgroundSection({ backgrounds, draft, onSelect, background, feats, on
   );
 }
 
-function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, resolved, setResolved, ruleState }: any) {
+function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, resolved, setResolved, ruleState, activeFeats }: any) {
   // В сетке смены черты предыстории — только черты происхождения;
   // полный список нужен ChoiceResolver-у для choice(source:"feat").
   const originFeats = (feats as Feat[]).filter((f) => f.category === 'origin');
@@ -1186,9 +1194,9 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, re
           </div>
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} title="Выбор черты" />
+      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} activeFeats={activeFeats} title="Выбор черты" />
       {/* Собственные выборы выбранных черт (навыки «Одарённого», характеристика ASI и т.п.). */}
-      <ChoiceList choices={ownChoices || []} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} title="Параметры черт" />
+      <ChoiceList choices={ownChoices || []} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={feats} activeFeats={activeFeats} title="Параметры черт" />
     </div>
   );
 }

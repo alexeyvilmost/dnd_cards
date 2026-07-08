@@ -6,9 +6,13 @@ type EntitySquareCardProps = {
   selected?: boolean;
   onClick?: () => void;
   preview?: ReactNode;
+  /** Визуально недоступен (напр. неповторяемая черта уже действует). Превью при наведении
+   *  сохраняется (парадигма «превью везде, даже при disabled»); клик блокируется. */
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
-const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview }: EntitySquareCardProps) => {
+const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled, disabledReason }: EntitySquareCardProps) => {
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -27,8 +31,10 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview }: Entity
     <>
       <button
         type="button"
-        className={`forge-square-card ${selected ? 'selected' : ''}`}
-        onClick={onClick}
+        className={`forge-square-card ${selected ? 'selected' : ''}${disabled ? ' disabled' : ''}`}
+        style={disabled ? { opacity: 0.4, filter: 'grayscale(1)' } : undefined}
+        title={disabled ? disabledReason : undefined}
+        onClick={disabled ? undefined : onClick}
         onMouseEnter={onEnter}
         onMouseLeave={() => setHover(false)}
         onMouseMove={(e) => preview && setPos({ x: e.clientX, y: e.clientY })}
