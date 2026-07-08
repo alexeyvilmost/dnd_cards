@@ -1,0 +1,32 @@
+{
+  "startedAt": "2026-07-08T05:54:50.937Z",
+  "api": "https://backend-production-41c3.up.railway.app",
+  "dryRun": false,
+  "byType": {
+    "spells": {
+      "total": 393,
+      "base64": 233,
+      "migrated": 233,
+      "failed": []
+    },
+    "actions": {
+      "total": 25,
+      "base64": 25,
+      "migrated": 25,
+      "failed": []
+    },
+    "feats": {
+      "total": 77,
+      "base64": 25,
+      "migrated": 25,
+      "failed": []
+    },
+    "effects": {
+      "total": 432,
+      "base64": 75,
+      "migrated": 75,
+      "failed": []
+    }
+  },
+  "finishedAt": "2026-07-08T05:56:45.901Z"
+}
