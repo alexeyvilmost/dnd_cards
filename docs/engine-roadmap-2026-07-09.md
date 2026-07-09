@@ -158,7 +158,20 @@ upgrade/set/add). Гейты tsc 0 / 358 vitest / 83 mvp. **Осознанные
 - **2.3 (исходный план) C5 — алгебра модификаторов: `mode` + `priority`** (M, Foundry-модель). `collectFromPayload` понимает
   только advantage/disadvantage/add; `op set/multiply/reroll` молча отбрасываются, нет Upgrade/Downgrade →
   «Пояс силы огра» (флагман парадигмы №3) невыразим данными. `modifiers.ts`.
-- **2.4 `set_value` / `variable` в роутере** (M, БЕЗ `grant_action` — см. ниже). `set_value` (диспетч по
+**2.4 ✅ СДЕЛАНО. ЯРУС 2 ЗАВЕРШЁН.** `case 'set_value'` в роутере `applyPayloads`: `applySetValue` диспетчит
+по target — `hp/current_hp` (клампится в [0,max]), `temp_hp`, `max_hp/hp_max` (клампит current), известный
+ресурс; `ac_base` → нарратив (пассивный метод КЗ). formula-aware; при `who:'target'` значение считается по
+статам ЦЕЛИ (`targetFormulaCtx`). Флагман **Неумолимая стойкость** (`triggered reduced_to_0_hp → set_value
+hp=1`) работает end-to-end. `case 'variable'` — нарратив-заглушка (рантайм-переменных нет). Правки ревью:
+(1) HIGH — гейт «раз за отдых»: добавлен `RuntimeState.firedThisRest` (сброс в `longRest`), иначе
+Неумолимая стойкость спасала бы БЕСКОНЕЧНО (шина гейтила только `uses.per:'turn'`); (2) HIGH — неизвестный
+target больше НЕ создаёт фантомный ресурс молча (ловит опечатку `hp→hpp` и `set_value str` Пояса силы огра),
+а даёт нарратив; (3) битая формула/не-число логируется (мягкая деградация). Тесты `engine/setValue.test.ts`
+(9). Гейты tsc 0 / 367 vitest / 83 mvp. **Отложено:** рантайм-мутация переменных (нужны `RuntimeState.variables`
++ наложение на `formulaCtx`); точный сброс short_rest-триггеров (сейчас `firedThisRest` сбрасывается только в
+`longRest` — безопасно-строго для редких авто-short_rest); `grant_action` (нужен UI) — ярус 3.3.
+
+- **2.4 (исходный план) `set_value` / `variable` в роутере** (M, БЕЗ `grant_action` — см. ниже). `set_value` (диспетч по
   target hp/ac_base/переменная), `variable` (мутация). Закрывает разрыв нормализатор↔интерпретатор для
   Неумолимой стойкости (`set_value hp=1`). `execute.ts:534-566`.
 

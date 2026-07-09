@@ -106,6 +106,9 @@ export interface RuntimeState {
   activeEffects: ActiveEffectEntry[];
   /** Id triggered-эффектов, сработавших за этот ход (для uses.per:"turn"); сброс в startTurn. */
   firedThisTurn?: string[];
+  /** Id triggered-эффектов, сработавших с последнего долгого отдыха (uses.per: long_rest/short_rest/…),
+   *  чтобы «раз за отдых»-триггеры (Неумолимая стойкость) не срабатывали бесконечно; сброс в longRest. */
+  firedThisRest?: string[];
 }
 
 export interface CharacterContext {

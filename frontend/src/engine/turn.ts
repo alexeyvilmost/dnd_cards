@@ -210,6 +210,7 @@ export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteRes
   next.hp.current = next.hp.max;
   next.hp.temp = 0; // C6: временные хиты спадают после длинного отдыха (RAW 2024)
   next.activeEffects = [];
+  next.firedThisRest = []; // 2.4: сброс гейта «раз за отдых»-триггеров (Неумолимая стойкость и т.п.)
 
   // КРИТИЧНО (C3): эмитим long_rest ДО сплошного восстановления. applyResource op:'grant'
   // = current+amount; если эмитить ПОСЛЕ restore-к-max, гранты (heroic_inspiration от

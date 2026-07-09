@@ -51,6 +51,7 @@ function cloneState(state: RuntimeState): RuntimeState {
     inventory: state.inventory.map((r) => ({ ...r })),
     activeEffects: state.activeEffects.map((e) => ({ ...e })),
     firedThisTurn: state.firedThisTurn ? [...state.firedThisTurn] : undefined,
+    firedThisRest: state.firedThisRest ? [...state.firedThisRest] : undefined,
   };
 }
 
@@ -362,6 +363,68 @@ function applyResistancePayload(
   return stackApply(state, entry, payload);
 }
 
+/**
+ * 2.4: set_value — установить поле состояния значением/формулой. target: hp|current_hp (клампится
+ * в [0,max] — Неумолимая стойкость hp=1), temp_hp, max_hp|hp_max, иначе id ресурса. ac_base —
+ * пассивное понятие (метод КЗ, acBaseOverrides), в рантайме не хранится. Формула — formula|value.
+ */
+function applySetValue(state: RuntimeState, payload: Dict, fctx: FormulaContext, events: EngineEvent[]): RuntimeState {
+  const target = String(payload.target ?? '');
+  const raw = String(payload.formula ?? payload.value ?? '').replace(/\s+/g, '');
+  if (!raw) return state;
+  // formula-aware: fctx выбирается вызывающим (для who:'target' — контекст ЦЕЛИ, а не исполнителя).
+  let val: number;
+  try {
+    const r = evaluate(raw, fctx);
+    if (typeof r !== 'number' || Number.isNaN(r)) {
+      events.push(narrativeEvent(`set_value «${target}»: формула «${raw}» не число — пропущено.`));
+      return state;
+    }
+    val = Math.floor(r);
+  } catch {
+    events.push(narrativeEvent(`set_value «${target}»: формула «${raw}» не вычислена — пропущено.`));
+    return state;
+  }
+
+  const next = cloneState(state);
+  switch (target) {
+    case 'hp':
+    case 'current_hp':
+      next.hp.current = Math.max(0, Math.min(next.hp.max, val));
+      events.push(narrativeEvent(`Хиты установлены: ${next.hp.current}`));
+      break;
+    case 'temp_hp':
+      next.hp.temp = Math.max(0, val);
+      events.push(tempHpEvent(next.hp.temp));
+      break;
+    case 'max_hp':
+    case 'hp_max':
+      next.hp.max = Math.max(1, val);
+      if (next.hp.current > next.hp.max) next.hp.current = next.hp.max;
+      events.push(narrativeEvent(`Макс. хиты установлены: ${next.hp.max}`));
+      break;
+    case 'ac_base':
+      events.push(narrativeEvent('set_value ac_base — вычисляется как метод КЗ (armorClassValue), не рантайм-мутация.'));
+      break;
+    default: {
+      // Только ИЗВЕСТНЫЙ ресурс. Иначе — ГРОМКО (narrative), а не тихо создаём фантомный ресурс:
+      // это ловит опечатки target ('hp'→'hpp') и не-рантаймовые target ('str' у Пояса силы огра →
+      // это value_method характеристики, C8), которые раньше были видны как NOT_IMPLEMENTED.
+      if (target && (target in next.maxResources || target in next.resources)) {
+        const before = next.resources[target] ?? 0;
+        next.resources[target] = Math.max(0, val);
+        const delta = next.resources[target] - before;
+        events.push(delta > 0
+          ? resourceRestoredEvent(target, delta, next.resources[target])
+          : narrativeEvent(`Ресурс «${target}» установлен: ${next.resources[target]}`));
+      } else {
+        events.push(narrativeEvent(`set_value: неизвестный target «${target}» — пропущено (ожидался hp/temp_hp/max_hp/известный ресурс).`));
+      }
+    }
+  }
+  return next;
+}
+
 function applyHealing(
   state: RuntimeState,
   payload: Dict,
@@ -618,6 +681,18 @@ function applyPayloads(
       case 'resource': route((s) => applyResource(s, p, events)); break;
       case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
       case 'resistance': route((s) => applyResistancePayload(s, p, source, events)); break;
+      case 'set_value': {
+        // Значение считаем в контексте того, КОГО меняем: при who:'target' — по статам ЦЕЛИ
+        // (targetFormulaCtx), иначе исполнителя. Для литералов (hp=1) неважно; для формул — критично.
+        const fctx = (whoTarget && targetRef.state) ? (targetFormulaCtx(ctx.target) ?? formulaCtx(ctx)) : formulaCtx(ctx);
+        route((s) => applySetValue(s, p, fctx, events));
+        break;
+      }
+      case 'variable':
+        // 2.4: рантайм-мутация переменной пока не поддержана — нет RuntimeState.variables и наложения
+        // на formulaCtx (мутация была бы инертна для формул). Ждёт слайса «рантайм-переменные».
+        events.push(narrativeEvent(`Переменная «${p.id ?? p.target ?? ''}» — рантайм-мутация переменных пока не реализована.`));
+        break;
       case 'choice': {
         // Ярус 1.2: выбор в момент исполнения. Решение игрока собрано предпроходом на клике
         // действия в ctx.choices[<сырой id выбора>] (fallback 'choice' — как в коллекторе).
@@ -937,15 +1012,21 @@ export function emitEvent(
   let next = state;
   for (const lm of listeners) {
     if (!isAuto(lm)) { pending.push(toOffer(lm, ev)); continue; }
-    // firedThisTurn читаем СВЕЖИМ на каждой итерации — чтобы отметки, поставленные ВЛОЖЕННЫМ
-    // каскадом (механика предыдущего слушателя → emitEvent), не затирались стаявшим снимком.
-    const fired = new Set(next.firedThisTurn ?? []);
-    if (lm.usesPer === 'turn' && fired.has(lm.id)) continue;
-    // C4: помечаем сработавшим и коммитим ДО запуска механики — чтобы вложенный emitEvent (напр. hit
-    // от собственной атаки слушателя) не перезапустил его же в этом каскаде.
-    if (lm.usesPer === 'turn') {
-      fired.add(lm.id);
-      next = { ...next, firedThisTurn: [...fired] };
+    const per = lm.usesPer;
+    // Гейт «уже сработал в этом периоде»: per:'turn' — firedThisTurn (сброс в startTurn); любой иной
+    // период (long_rest/short_rest/day/…) — firedThisRest (сброс в longRest), иначе «раз за отдых»-триггер
+    // (Неумолимая стойкость → hp=1) срабатывал бы бесконечно. firedThisTurn/Rest читаем СВЕЖИМ на каждой
+    // итерации (C4: вложенный каскад мог обновить), помечаем и коммитим ДО запуска механики.
+    const firedTurn = new Set(next.firedThisTurn ?? []);
+    const firedRest = new Set(next.firedThisRest ?? []);
+    if (per === 'turn' && firedTurn.has(lm.id)) continue;
+    if (per && per !== 'turn' && firedRest.has(lm.id)) continue;
+    if (per === 'turn') {
+      firedTurn.add(lm.id);
+      next = { ...next, firedThisTurn: [...firedTurn] };
+    } else if (per) {
+      firedRest.add(lm.id);
+      next = { ...next, firedThisRest: [...firedRest] };
     }
     const effs = (lm.mechanics.effects as Dict[]) ?? [];
     if (effs.length) {
