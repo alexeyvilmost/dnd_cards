@@ -55,6 +55,7 @@ export type EngineEvent =
   | { type: 'temp_hp'; amount: number }
   | { type: 'resource_spent'; resource: string; amount: number; remaining: number }
   | { type: 'resource_restored'; resource: string; amount: number; current: number }
+  | { type: 'item_consumed'; cardId: string; amount: number; remaining: number; name?: string }
   | { type: 'effect_applied'; name: string; sourceAction?: string }
   | { type: 'effect_expired'; name: string }
   | { type: 'condition_applied'; condition: string }

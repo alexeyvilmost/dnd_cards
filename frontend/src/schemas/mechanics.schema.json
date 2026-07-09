@@ -50,9 +50,10 @@
       "type": "object",
       "required": ["resource"],
       "properties": {
-        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die"] },
+        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die", "item"] },
         "amount": { "$ref": "#/$defs/formula" },
-        "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" }
+        "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" },
+        "card_id": { "type": "string", "description": "S4: для resource:'item' — id расходуемой карты (боеприпас/зелье)" }
       }
     },
 
@@ -62,6 +63,7 @@
       "properties": {
         "mode": { "enum": ["active", "passive", "reaction", "triggered"] },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
+        "consumes_self": { "type": "boolean", "description": "S4: действие расходует сам предмет из инвентаря (зелье). Впрыскивает cost {resource:'item', card_id:self}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
         "trigger": { "$ref": "#/$defs/trigger" },
         "casting_time": { "type": "string" },

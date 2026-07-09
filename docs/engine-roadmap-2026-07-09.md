@@ -212,6 +212,12 @@ target больше НЕ создаёт фантомный ресурс молч
     а маршрутизируется как item-источник (runtimeSources + passives) — наследует item-семантику слайса 1. Async
     (эффект грузится по id) с sync-предчеком `collectEffectGrantRefs`; прокинут в панель действий как
     `itemGrantedPassives`. Тесты `itemGrantedEffects.test.ts` (3).
+  - **предмет-действие + саморасход + персист ✅ СДЕЛАНО (слайс 4).** `canPay/pay` (cost.ts) полиморфны:
+    `{resource:'item', card_id}` тратит предмет из инвентаря (эмит `item_consumed`), иначе прежняя ветка resources.
+    `applyItemConsumeCost` впрыскивает саморасход зелья (`activation.consumes_self`); `fromItems` применяет его на
+    item-действии. Доступность гейтится тем же `canPay` (нет зелья → кнопка недоступна; исполнение → throw ловится).
+    Персист: `persistPayload` += `inventory_items` — **бэкенд УЖЕ принимал** (character_v3_controller.go:405), правок
+    Go нет. Схема: `cost.card_id` + `activation.consumes_self`. Тесты `itemCost.test.ts` (12, вкл. интеграцию зелья).
   - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
     сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
     value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).

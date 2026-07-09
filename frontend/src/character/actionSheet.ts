@@ -1,5 +1,6 @@
 import type { AssembledCharacter } from './assemble';
 import { actionUsesKey, applyActionUsesCost, usesFromMechanics } from '../engine/actionUses';
+import { applyItemConsumeCost } from '../engine/cost';
 import type { Action, PassiveEffect, Spell } from '../types';
 
 type Dict = Record<string, unknown>;
@@ -164,10 +165,13 @@ export function collectSheetActions(
     .map(({ card, mechanics }): SheetAction | null => {
       const activation = mechanics.activation as Record<string, unknown> | undefined;
       if (!activation || activation.mode === 'passive') return null;
+      // S4: саморасходуемый предмет (зелье) тратит себя из инвентаря при использовании
+      // (consumes_self → cost {resource:'item', card_id:self}; canPay/pay из коробки).
+      const mechanics2 = applyItemConsumeCost({ ...mechanics, name: card.name }, card.id);
       return {
         id: `item-${card.id}`,
         name: card.name,
-        mechanics: { ...mechanics, name: card.name },
+        mechanics: mechanics2,
         group: 'item' as const,
         imageUrl: card.image_url,
         sourceLabel: 'Предмет',

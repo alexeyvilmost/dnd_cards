@@ -103,13 +103,17 @@ export function payableWithUpcast(runtime: RuntimeState, cost: Record<string, un
   return true;
 }
 
-function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined) {
+function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined, includeInventory: boolean) {
   return {
     current_hp: state.hp.current,
     max_hp: state.hp.max,
     resources: state.resources,
     max_resources: state.maxResources,
     active_effects: state.activeEffects,
+    // S4: инвентарь персистим ТОЛЬКО когда действие реально израсходовало предмет — иначе каждое
+    // действие затирало бы inventory_items локальным снимком и могло откатить параллельное изменение
+    // сумки (экипировка/покупка/расход в другой вкладке). Бэкенд уже принимает inventory_items.
+    ...(includeInventory ? { inventory_items: state.inventory.map((r) => ({ card_id: r.cardId, qty: r.qty })) } : {}),
     // temp_hp обновляем, остальные поля turn_state (спасброски смерти) сохраняем
     turn_state: { ...(prevTurnState ?? {}), temp_hp: state.hp.temp },
   };
@@ -216,7 +220,8 @@ export default function SheetActionsPanel({
     setBusy(true);
     setError(null);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, character.turn_state));
+      const consumedItem = events.some((e) => e.type === 'item_consumed');
+      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, character.turn_state, consumedItem));
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {
