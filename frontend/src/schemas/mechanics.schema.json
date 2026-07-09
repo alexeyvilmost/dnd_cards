@@ -189,7 +189,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
+        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -264,6 +264,16 @@
               "value": { "type": "string", "description": "slug действия из библиотеки (даёт доступ к нему)" },
               "values": { "type": "array", "items": { "type": "string" }, "description": "несколько slug'ов действий" },
               "level_gate": { "type": "integer" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "add_item" } } },
+          "then": {
+            "properties": {
+              "card_id": { "type": "string", "description": "id карты предмета, выдаваемой в инвентарь" },
+              "qty": { "type": "integer", "minimum": 1, "description": "количество (по умолчанию 1)" },
+              "name": { "type": "string", "description": "имя для события/тоста (опционально)" }
             }
           }
         },

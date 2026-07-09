@@ -47,6 +47,10 @@ export function itemConsumedEvent(cardId: string, amount: number, remaining: num
   return { type: 'item_consumed', cardId, amount, remaining, ...(name ? { name } : {}) };
 }
 
+export function itemAddedEvent(cardId: string, qty: number, total: number, name?: string): EngineEvent {
+  return { type: 'item_added', cardId, qty, total, ...(name ? { name } : {}) };
+}
+
 export function conditionAppliedEvent(condition: string): EngineEvent {
   return { type: 'condition_applied', condition };
 }
@@ -132,6 +136,8 @@ export function describeEngineEvent(event: EngineEvent): string {
       return `Восстановлено ${event.resource}: +${event.amount} (сейчас ${event.current})`;
     case 'item_consumed':
       return `Израсходован${event.name ? `: ${event.name}` : ' предмет'} (осталось ${event.remaining})`;
+    case 'item_added':
+      return `Получен предмет${event.name ? `: ${event.name}` : ''}${event.qty > 1 ? ` ×${event.qty}` : ''}`;
     case 'effect_applied':
       return `Эффект: ${event.name}${event.sourceAction ? ` (${event.sourceAction})` : ''}`;
     case 'effect_expired':

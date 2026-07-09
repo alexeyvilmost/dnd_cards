@@ -248,8 +248,9 @@ export default function SheetActionsPanel({
     setBusy(true);
     setError(null);
     try {
-      const consumedItem = events.some((e) => e.type === 'item_consumed');
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, character.turn_state, consumedItem));
+      // Инвентарь персистим при любом его изменении: расход (item_consumed) ИЛИ выдача (item_added, S1 контейнеры).
+      const inventoryChanged = events.some((e) => e.type === 'item_consumed' || e.type === 'item_added');
+      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, character.turn_state, inventoryChanged));
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {

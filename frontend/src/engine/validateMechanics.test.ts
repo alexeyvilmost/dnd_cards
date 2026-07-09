@@ -40,7 +40,7 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
   // Kind-ы, которые движок/сборка РЕАЛЬНО исполняют.
   const HANDLED = [
     'damage', 'healing', 'temp_hp', 'condition', 'resource', 'modifier', 'movement',
-    'boon', 'reroll', 'transform', 'narrative',        // execute.ts applyPayloads
+    'boon', 'reroll', 'transform', 'narrative', 'add_item', // execute.ts applyPayloads (add_item: S1 контейнеры)
     'resistance', 'set_value',                          // разрешение урона / расчёт AC / рантайм-роутер (2.4)
     'value_method',                                     // сборка: value_method характеристик (C8, Пояс силы огра)
     'variable', 'grant_effect', 'grant_language', 'grant_expertise',

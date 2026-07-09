@@ -14,7 +14,7 @@ import type {
 } from '../mvp/contracts';
 import { canPay, pay } from './cost';
 import {
-  conditionAppliedEvent, damageEvent, healingEvent, narrativeEvent,
+  conditionAppliedEvent, damageEvent, healingEvent, itemAddedEvent, narrativeEvent,
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
@@ -640,6 +640,18 @@ function applyTransform(state: RuntimeState, p: Dict, source: string, events: En
   return next;
 }
 
+// Инлайн инвентарных хелперов (как в cost.ts) — избегаем cross-layer импорта character/runtime.
+function invQtyOf(state: RuntimeState, cardId: string): number {
+  return state.inventory.find((r) => r.cardId === cardId)?.qty ?? 0;
+}
+function addItemToInventory(state: RuntimeState, cardId: string, qty: number): RuntimeState {
+  const inventory = state.inventory.map((r) => ({ ...r }));
+  const row = inventory.find((r) => r.cardId === cardId);
+  if (row) row.qty += qty;
+  else inventory.push({ cardId, qty });
+  return { ...state, inventory };
+}
+
 function applyPayloads(
   payloads: Dict[],
   state: RuntimeState,
@@ -710,6 +722,24 @@ function applyPayloads(
             .map(normalizeChoicePayload)
             .filter((sp) => !String(sp.kind).startsWith('grant_'));
           next = applyPayloads(sub, next, ctx, events, source, hand, halfDamage, whoTarget, targetRef);
+        }
+        break;
+      }
+      case 'add_item': {
+        // Контейнеры (S1): рантайм-выдача предмета в инвентарь ИСПОЛНИТЕЛЯ (self, не target —
+        // контейнер наполняет сумку носителя). Имя вне grant_-неймспейса намеренно: in-play choice
+        // вырезает grant_* (см. case 'choice'). Персист включает item_added-гейт (панель).
+        const cardId = String(p.card_id ?? p.value ?? '');
+        const qty = Math.max(1, Math.floor(Number(p.qty ?? p.amount ?? 1)) || 1);
+        if (cardId) {
+          next = addItemToInventory(next, cardId, qty);
+          const name = typeof p.name === 'string' ? p.name : undefined;
+          events.push(itemAddedEvent(cardId, qty, invQtyOf(next, cardId), name));
+        } else {
+          // Диагностика (ревью S1): пустой card_id И value — обычно опечатка имени поля (item_id/card).
+          // Схему ужесточить нельзя: S3-форма выбора {kind:'add_item'} получает value из выбранного
+          // варианта в рантайме, поэтому сигналим здесь, а не required в схеме.
+          events.push(narrativeEvent('add_item: не указан card_id/value — предмет не выдан (проверьте имя поля card_id).'));
         }
         break;
       }

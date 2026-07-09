@@ -87,6 +87,7 @@ function payloadPhrase(p: Dict): string {
     }
     case 'resource': return String(p.op) === 'restore' ? `восстанавливает ${p.id}` : `выдаёт ${p.amount ?? 1} ${p.id}`;
     case 'movement': return `${p.value ?? 'перемещение'} ${p.distance ?? ''} фт`.trim();
+    case 'add_item': return `выдаёт предмет${p.qty && Number(p.qty) > 1 ? ` ×${p.qty}` : ''} в инвентарь`;
     case 'grant_action': {
       const vals = Array.isArray(p.values) ? (p.values as string[]) : (p.value != null ? [String(p.value)] : []);
       return `даёт действие: ${vals.join(', ')}`;

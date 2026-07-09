@@ -6,7 +6,7 @@ type Dict = Record<string, unknown>;
 const PAYLOAD_KINDS = new Set([
   'modifier', 'damage', 'healing', 'resource', 'condition', 'movement',
   'narrative', 'temp_hp', 'set_value', 'boon', 'transform', 'reroll',
-  'grant_action', 'resistance', 'variable',
+  'grant_action', 'resistance', 'variable', 'add_item',
 ]);
 
 function isPayload(obj: Dict): boolean {
