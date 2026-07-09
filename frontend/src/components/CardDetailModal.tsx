@@ -4,7 +4,7 @@ import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download } from 'lu
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
-import { RelatedCardsList } from './RelatedItems';
+import { RelatedCardsList, useContainerTotals } from './RelatedItems';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
 import { imagesApi } from '../api/imagesApi';
@@ -36,6 +36,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   inventoryItem,
   onEquip
 }) => {
+  const containerSum = useContainerTotals(card); // S6: сумма веса/цены содержимого контейнера
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
@@ -308,6 +309,13 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <div className="text-gray-100">
                 <RelatedCardsList refs={card.contents} />
               </div>
+              {/* S6: контейнер = сумма веса/цены вложенного (деривация; stored-скаляр карты — рядом/как fallback). */}
+              {containerSum && (containerSum.weight > 0 || containerSum.gold > 0) && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Содержимое: {Math.round(containerSum.weight * 100) / 100} фунт.
+                  {' · '}{Math.round(containerSum.gold * 100) / 100} ЗМ
+                </p>
+              )}
             </div>
           )}
 

@@ -1,7 +1,21 @@
 import { useEffect, useState } from 'react';
 import type { Card, CardRef } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
+import { containerTotals } from '../utils/containerTotals';
 import CardPreview from './CardPreview';
+
+/** S6 контейнеры: суммарные вес (фунты) и цена (ЗМ) содержимого контейнера, деривация над card.contents
+ *  через общий индекс карт (рекурсия+cycle-guard). null — если карта не контейнер / без содержимого. */
+export function useContainerTotals(card: Card | null | undefined): { weight: number; gold: number } | null {
+  const [index, setIndex] = useState<Map<string, Card>>(new Map());
+  useEffect(() => {
+    let alive = true;
+    getCardsIndex().then((m) => alive && setIndex(m));
+    return () => { alive = false; };
+  }, []);
+  if (!card || !Array.isArray(card.contents) || !card.contents.length) return null;
+  return containerTotals(card, (id) => index.get(id));
+}
 
 function useResolved(refs: CardRef[]) {
   const [index, setIndex] = useState<Map<string, Card>>(new Map());
