@@ -181,7 +181,22 @@ target больше НЕ создаёт фантомный ресурс молч
   (Exhaustion/Petrified и «сильные половины»: авто-провал спаса, скорость 0, авто-крит вблизи — сейчас в
   note-тексте, ошеломлённый персонаж спокойно действует). Зависит: D4←C4; D5←C5+C6. Плюс опечатка «Засada»
   в `EFF-cunning-action`.
-- **3.2 C8 — обобщить методы расчёта (`value_method`) за пределы КЗ** (L). `pickBestMethod`
+**3.2 C8 — value_method характеристик ✅ СДЕЛАНО (первый слайс).** Введён `kind:'value_method'{target,formula}`
+(схема + C13-allowlist). `collectAbilityDeltas` теперь собирает и аддитивные дельты, и value_method-кандидаты;
+`scoresFinal[a] = max(база+ASI [клампится 20], ...value_method)` — методы НЕ режутся потолком 20 (магия). Флагман
+семантика **Пояс силы огра** (СИЛ=max(база,19)) верна и покрыта тестами `valueMethod.test.ts` (7). Регресс исключён
+(без методов `max(additive)===additive`). preFctx для формул = selfLevel/classLevels/переменные (не характеристики —
+циклично). Гейты tsc 0 / 373 vitest / 83 mvp. **ГРАНИЦЫ (по ревью):**
+  - **item→резолвер (HIGH, отдельный слайс):** value_method (и `grant_ability_score`!) от ПРЕДМЕТА пока НЕ доходят —
+    механики предметов идут только в `passives→breakdownValue`, а тот не трогает характеристики; `runtimeSources`
+    вообще не заполняется. Т.е. флагман-Пояс как ПРЕДМЕТ мёртв; работают value_method в ЭФФЕКТАХ (черта/класс/раса).
+    Фикс — маршрутизировать `collectItemMechanics`→`resolveCharacterRules` (гейт настройки прилетит бесплатно через
+    `itemMechanicsActive`); чинит ОБА пути (аддитивный и методный) от предмета. Осторожно: persisted vs live rule_state.
+  - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
+    сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
+    value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).
+
+- **3.2 (исходный план) C8 — обобщить методы расчёта (`value_method`) за пределы КЗ** (L). `pickBestMethod`
   (`derivedValue.ts:28`) вкручен ТОЛЬКО в `ac_base` (`ac.ts:148`); СЛ спасов, инициатива, скорость,
   характеристики идут прямой суммой. Ввести `kind:'value_method'{target,formula,requirements}`, кормить
   `pickBestMethod` для save_dc/speed/initiative/характеристик. Зависит: C5 (set-режим).

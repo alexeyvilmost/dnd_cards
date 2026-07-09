@@ -41,7 +41,8 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
   const HANDLED = [
     'damage', 'healing', 'temp_hp', 'condition', 'resource', 'modifier', 'movement',
     'boon', 'reroll', 'transform', 'narrative',        // execute.ts applyPayloads
-    'resistance', 'set_value',                          // разрешение урона / расчёт AC
+    'resistance', 'set_value',                          // разрешение урона / расчёт AC / рантайм-роутер (2.4)
+    'value_method',                                     // сборка: value_method характеристик (C8, Пояс силы огра)
     'variable', 'grant_effect', 'grant_language', 'grant_expertise',
     'grant_proficiency', 'grant_feat', 'grant_spell',   // сборка персонажа
     'choice',                                           // мета-kind (ChoiceResolver)

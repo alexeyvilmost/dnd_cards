@@ -261,15 +261,44 @@ function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
   if (!Number.isNaN(amount) && amount !== 0) deltas[ability as AbilityKey] += amount;
 }
 
-/** Пред-скан дельт характеристик по всем источникам (эффекты/действия/runtime), с
- *  разворачиванием choice и уровневым гейтом — зеркалит обход applyPayload. */
+/** C8: value_method характеристики (парадигма №3) — кандидат-значение для СИЛ/ЛВК/… «Пояс силы огра» =
+ *  value_method{target:'str', formula:'19'} → СИЛ = максимум(база+ASI, 19). Вычисляется ДО модов, поэтому
+ *  формула не должна ссылаться на характеристики (циклично → тихий 0). ГРАНИЦЫ (роадмап): source — только
+ *  эффекты/действия (черта/класс/раса); value_method от ПРЕДМЕТА пока НЕ доходит (предметы не вливаются в
+ *  collectAbilityDeltas — отдельный слайс item→резолвер, чинит и grant_ability_score от предмета). target —
+ *  только характеристики (speed/save_dc/ac — продолжение). Уменьшение (drain «СИЛ=3») невыразимо (max). */
+function applyAbilityMethod(payload: Dict, methods: Record<AbilityKey, number[]>, fctx: FormulaContext) {
+  if (String(payload.kind ?? '') !== 'value_method') return;
+  const target = String(payload.target ?? '').toLowerCase();
+  if (!(ABILITY_KEYS as readonly string[]).includes(target)) return; // C8: пока только характеристики
+  const raw = String(payload.formula ?? payload.value ?? '').replace(/^\+/, '');
+  if (!raw) return;
+  let v: number;
+  try { const r = evaluate(raw, fctx); v = typeof r === 'number' ? r : NaN; }
+  catch { v = NaN; }
+  if (!Number.isNaN(v)) methods[target as AbilityKey].push(v);
+}
+
+/** Пред-скан характеристик по всем источникам (эффекты/действия/runtime), с разворачиванием choice и
+ *  уровневым гейтом — зеркалит обход applyPayload. Собирает и аддитивные дельты (grant_ability_score),
+ *  и value_method-кандидаты (C8). */
 function collectAbilityDeltas(
   input: RuleInput,
   effects: OriginEffect[],
   actions: OriginAction[],
-): Record<AbilityKey, number> {
+): { deltas: Record<AbilityKey, number>; methods: Record<AbilityKey, number[]> } {
   const deltas = Object.fromEntries(ABILITY_KEYS.map((a) => [a, 0])) as Record<AbilityKey, number>;
+  const methods = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as number[]])) as Record<AbilityKey, number[]>;
   const level = input.draft.level ?? 1;
+  // C8: ctx для value_method-формул на пред-скане. selfLevel/classLevels/переменные доступны;
+  // характеристики (abilityMods) НАМЕРЕННО нет — они и вычисляются здесь (цикличность), поэтому
+  // формула value_method не должна ссылаться на характеристики (иначе тихо резолвится в 0).
+  const preFctx: FormulaContext = {
+    selfLevel: level,
+    profBonus: proficiencyBonusForLevel(level),
+    classLevels: input.assembled.klass?.name ? { [input.assembled.klass.name.toLowerCase()]: level } : {},
+    variables: input.assembled.variables,
+  };
   const walk = (payload: Dict, source: RuleSource, depth = 0) => {
     if (payload.kind === 'choice') {
       if (depth >= MAX_CHOICE_DEPTH) return;
@@ -281,7 +310,10 @@ function collectAbilityDeltas(
       for (const sp of selectedChoicePayloads(payload, selected)) walk(sp, source, depth + 1);
       return;
     }
-    if (passesLevelGate(payload, level)) applyAbilityDelta(payload, deltas);
+    if (passesLevelGate(payload, level)) {
+      applyAbilityDelta(payload, deltas);
+      applyAbilityMethod(payload, methods, preFctx);
+    }
   };
   for (const { effect, origin } of effects) {
     for (const p of payloadsFromMechanics(effect.mechanics)) walk(p, sourceFromOrigin(origin, effect));
@@ -292,7 +324,7 @@ function collectAbilityDeltas(
   for (const runtime of input.runtimeSources || []) {
     for (const p of payloadsFromMechanics(runtime.mechanics)) walk(p, runtime.source);
   }
-  return deltas;
+  return { deltas, methods };
 }
 
 /** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.speed). */
@@ -432,7 +464,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   // D3: grant_ability_score — пред-скан ДО расчёта модов, чтобы прирост дошёл до ВСЕХ
   // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
-  const abilityDeltas = collectAbilityDeltas(input, assembled.effects as OriginEffect[], assembled.actions as OriginAction[]);
+  const { deltas: abilityDeltas, methods: abilityMethods } = collectAbilityDeltas(input, assembled.effects as OriginEffect[], assembled.actions as OriginAction[]);
   const scoresFinal = Object.fromEntries(
     ABILITY_KEYS.map((a) => {
       const base = draft.abilities[a] ?? 10;
@@ -440,7 +472,10 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
       // Предел 2024: прирост (ASI и т.п.) не поднимает характеристику выше 20; уже-высокую
       // базу (ручной ввод/особые источники) не режем. Уменьшения (drain) не ограничиваем.
       const ceiling = Math.max(base, 20);
-      const final = delta > 0 ? Math.min(base + delta, ceiling) : base + delta;
+      const additive = delta > 0 ? Math.min(base + delta, ceiling) : base + delta;
+      // C8: value_method-кандидаты (Пояс силы огра СИЛ=19) — берём МАКСИМУМ(аддитив, ...методы).
+      // Методы НЕ режутся потолком 20 (магия: Пояс силы великана 25). Пустой список → аддитив.
+      const final = Math.max(additive, ...abilityMethods[a]);
       return [a, Math.max(1, final)];
     }),
   ) as Record<AbilityKey, number>;

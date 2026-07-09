@@ -693,6 +693,10 @@ function applyPayloads(
         // на formulaCtx (мутация была бы инертна для формул). Ждёт слайса «рантайм-переменные».
         events.push(narrativeEvent(`Переменная «${p.id ?? p.target ?? ''}» — рантайм-мутация переменных пока не реализована.`));
         break;
+      case 'value_method':
+        // C8: value_method — build-only (расчёт характеристик в resolveCharacterRules). В рантайме
+        // это no-op (не мусорим NOT_IMPLEMENTED), как build-гранты grant_*.
+        break;
       case 'choice': {
         // Ярус 1.2: выбор в момент исполнения. Решение игрока собрано предпроходом на клике
         // действия в ctx.choices[<сырой id выбора>] (fallback 'choice' — как в коллекторе).
