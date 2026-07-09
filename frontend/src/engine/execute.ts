@@ -876,6 +876,32 @@ export const PLANNED_EVENTS = [
   'condition_applied', 'initiative_roll', 'on_acquire', 'level_gained',
 ] as const;
 
+// C4: страховка каскада событий (emitEvent → механика слушателя → снова emitEvent). Бюджет на ОДНО
+// верхнеуровневое действие / получение урона; при превышении дальнейшие триггеры не запускаются — это
+// жёстко исключает стек-оверфлоу от зацикленного on-hit-контента (напр. слушатель, атакующий по своему
+// же hit). Ключ — объект ctx (свой на каждое действие); beginCascade обнуляет на входе (защита от
+// переиспользования ctx между вызовами). Бюджет по СУММЕ эмиссий ⇒ ограничивает и глубину рекурсии.
+const MAX_EVENT_CASCADE = 16;
+const cascadeBudget = new WeakMap<object, { n: number; warned: boolean }>();
+
+function beginCascade(ctx: ExecuteContext): void {
+  cascadeBudget.set(ctx, { n: 0, warned: false });
+}
+
+function cascadeAllows(ctx: ExecuteContext, events: EngineEvent[]): boolean {
+  let b = cascadeBudget.get(ctx);
+  if (!b) { b = { n: 0, warned: false }; cascadeBudget.set(ctx, b); }
+  b.n += 1;
+  if (b.n > MAX_EVENT_CASCADE) {
+    if (!b.warned) {
+      b.warned = true;
+      events.push(narrativeEvent(`Каскад событий превысил лимит (${MAX_EVENT_CASCADE}) — дальнейшие триггеры остановлены во избежание зацикливания.`));
+    }
+    return false;
+  }
+  return true;
+}
+
 export function emitEvent(
   ev: DomainEvent,
   state: RuntimeState,
@@ -885,27 +911,30 @@ export function emitEvent(
   targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
   const listeners = collectListeners(ev, state, passivesFromCtx(ctx), evalCtxOf(state, ctx));
-  if (!listeners.length) return state;
+  if (!listeners.length) return state; // нет слушателей → рекурсии быть не может → бюджет не тратим
+  // C4: бюджет жжём только на эмиссии СО слушателями (лишь они способны углубить рекурсию), иначе
+  // широкое линейное действие (многолучевое заклинание без триггеров) ловило бы ложный лимит.
+  if (!cascadeAllows(ctx, events)) return state;
 
   let next = state;
-  const fired = new Set(next.firedThisTurn ?? []);
-  let firedChanged = false;
-
   for (const lm of listeners) {
-    if (isAuto(lm)) {
-      if (lm.usesPer === 'turn' && fired.has(lm.id)) continue;
-      const effs = (lm.mechanics.effects as Dict[]) ?? [];
-      if (effs.length) {
-        events.push(narrativeEvent(`Сработало: ${lm.name}`));
-        next = runMechanicEffects(effs, next, ctx, events, lm.name, pending, targetRef);
-      }
-      if (lm.usesPer === 'turn') { fired.add(lm.id); firedChanged = true; }
-    } else {
-      pending.push(toOffer(lm, ev));
+    if (!isAuto(lm)) { pending.push(toOffer(lm, ev)); continue; }
+    // firedThisTurn читаем СВЕЖИМ на каждой итерации — чтобы отметки, поставленные ВЛОЖЕННЫМ
+    // каскадом (механика предыдущего слушателя → emitEvent), не затирались стаявшим снимком.
+    const fired = new Set(next.firedThisTurn ?? []);
+    if (lm.usesPer === 'turn' && fired.has(lm.id)) continue;
+    // C4: помечаем сработавшим и коммитим ДО запуска механики — чтобы вложенный emitEvent (напр. hit
+    // от собственной атаки слушателя) не перезапустил его же в этом каскаде.
+    if (lm.usesPer === 'turn') {
+      fired.add(lm.id);
+      next = { ...next, firedThisTurn: [...fired] };
+    }
+    const effs = (lm.mechanics.effects as Dict[]) ?? [];
+    if (effs.length) {
+      events.push(narrativeEvent(`Сработало: ${lm.name}`));
+      next = runMechanicEffects(effs, next, ctx, events, lm.name, pending, targetRef);
     }
   }
-
-  if (firedChanged) next = { ...next, firedThisTurn: [...fired] };
   return next;
 }
 
@@ -914,6 +943,7 @@ export function executeAction(
   mechanics: Dict,
   ctx: ExecuteContext,
 ): ExecuteResult {
+  beginCascade(ctx); // C4: свежий бюджет каскада событий на это действие
   let next = cloneState(state);
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
@@ -970,6 +1000,7 @@ export function applyIncomingDamage(
   ctx: ExecuteContext,
   opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number },
 ): ExecuteResult {
+  beginCascade(ctx); // C4: свежий бюджет каскада событий на это получение урона
   let next = cloneState(state);
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
