@@ -233,9 +233,22 @@ export default function SheetActionsPanel({
     return () => { stale = true; };
   }, [itemMechs, spellsOnly]);
 
+  // S2 контейнеры: носимые карты-контейнеры mode='all' → действие «Распаковать».
+  const containerCards = useMemo(() => {
+    const ids = new Set<string>();
+    for (const r of runtime.inventory) ids.add(r.cardId);
+    for (const id of Object.values(runtime.equipment)) if (id) ids.add(id);
+    const out: Card[] = [];
+    for (const id of ids) {
+      const card = equipCards.get(id);
+      if (card && card.container_mode === 'all' && Array.isArray(card.contents) && card.contents.length) out.push(card);
+    }
+    return out;
+  }, [runtime.inventory, runtime.equipment, equipCards]);
+
   const actions = useMemo(
-    () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions),
-    [assembled, itemMechs, basicActions, grantedActions],
+    () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions, containerCards, (id) => equipCards.get(id)?.name),
+    [assembled, itemMechs, basicActions, grantedActions, containerCards, equipCards],
   );
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();

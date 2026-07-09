@@ -1,7 +1,7 @@
 import type { AssembledCharacter } from './assemble';
 import { actionUsesKey, applyActionUsesCost, usesFromMechanics } from '../engine/actionUses';
 import { applyItemConsumeCost } from '../engine/cost';
-import type { Action, PassiveEffect, Spell } from '../types';
+import type { Action, Card, PassiveEffect, Spell } from '../types';
 
 type Dict = Record<string, unknown>;
 
@@ -110,6 +110,39 @@ export function collectGrantActionSlugs(mechanics: Record<string, unknown> | nul
 /** Действие, выданное через grant_action (уже загруженное по slug), для collectSheetActions. */
 export interface GrantedAction { action: Action; sourceLabel: string; group: SheetAction['group']; }
 
+/**
+ * S2 контейнеры: действие «Распаковать» для контейнера mode='all' (Набор артиста) — кладёт ВСЁ
+ * содержимое в инвентарь (add_item ×N из card.contents) и расходует сам контейнер (consumes_self).
+ * Режим и состав — ДАННЫЕ карты (container_mode+contents), поведение не хардкодится. Cycle-guard:
+ * пропускаем само-ссылку (дата-баг). mode='choice' здесь → null (одноразовый выбор — отдельный слайс).
+ */
+export function containerUnpackAction(card: Card, nameOf?: (id: string) => string | undefined): SheetAction | null {
+  if (card.container_mode !== 'all') return null;
+  const contents = Array.isArray(card.contents) ? card.contents : [];
+  const result = contents
+    .filter((c) => c && c.card_id && c.card_id !== card.id) // guard: контейнер не содержит сам себя
+    .map((c) => {
+      // Имя (best-effort, для журнала «Получен: <имя>»); нет карты в кэше → тихо без имени.
+      const nm = nameOf?.(c.card_id);
+      return { kind: 'add_item', card_id: c.card_id, qty: Math.max(1, Math.floor(Number(c.quantity)) || 1), ...(nm ? { name: nm } : {}) };
+    });
+  if (!result.length) return null;
+  // consumes_self впрыскивает cost {resource:'item', card_id:self} → расход самого набора при использовании.
+  const mechanics = applyItemConsumeCost({
+    name: card.name,
+    activation: { mode: 'active', consumes_self: true, cost: [] },
+    effects: [{ resolution: 'auto', result }],
+  }, card.id);
+  return {
+    id: `container-${card.id}`,
+    name: `Распаковать: ${card.name}`,
+    mechanics,
+    group: 'item',
+    imageUrl: card.image_url,
+    sourceLabel: card.name,
+  };
+}
+
 export function collectSheetActions(
   assembled: AssembledCharacter,
   /** Механики надетых предметов (уже с учётом настройки) — активируемые попадают в действия. */
@@ -118,6 +151,10 @@ export function collectSheetActions(
   basicActions: Action[] = [],
   /** S6: действия, выданные через grant_action (загружены по slug на листе). */
   grantedActions: GrantedAction[] = [],
+  /** S2 контейнеры: носимые карты-контейнеры (mode='all') → действие «Распаковать». */
+  containerCards: Card[] = [],
+  /** S2: резолвер имени карты по id (для журнала распаковки); best-effort. */
+  nameOf?: (id: string) => string | undefined,
 ): SheetAction[] {
   const basic: SheetAction[] = basicActions
     .map((action): SheetAction | null => {
@@ -228,7 +265,12 @@ export function collectSheetActions(
     })
     .filter((a): a is SheetAction => a != null);
 
-  return [...basic, ...fromRace, ...fromClass, ...fromItems, ...fromGranted, ...spells];
+  // S2: распаковка контейнеров mode='all' (Набор артиста → всё в инвентарь + расход набора).
+  const fromContainers: SheetAction[] = containerCards
+    .map((c) => containerUnpackAction(c, nameOf))
+    .filter((a): a is SheetAction => a != null);
+
+  return [...basic, ...fromRace, ...fromClass, ...fromItems, ...fromGranted, ...fromContainers, ...spells];
 }
 
 export type ActionUsesPool = { key: string; count: number | string; per?: string };
