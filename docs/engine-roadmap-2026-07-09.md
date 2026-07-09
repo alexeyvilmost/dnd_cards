@@ -64,7 +64,18 @@ data-driven контент:**
 `choice-разворот` (~7); первенство разворота — в том, что это ФУНДАМЕНТ под весь будущий data-driven
 контент с выбором, а не в сиюминутном охвате.
 
-- **1.1 Разворот выбранной `choice`-ветки в `collectPassiveMechanics`** (M). Оживляет ~7 эффектов
+**1.1 ✅ СДЕЛАНО.** Общие helpers ключа/выбора вынесены в `mechanics/expandChoices.ts` (резолвер
+импортирует их — ключ провабельно идентичен: `passiveSourceId` == `sourceFromOrigin(...).id` == `choiceKey`
+форге, подтверждено ревью). `collectPassiveMechanics(assembled, resolvedChoices)` эмитит выбранные
+рантайм-пейлоады синтетической `auto`-механикой (её уже читает `payloadsOf`). Набор пассивных kind
+СУЖЕН до реально потребляемых `{modifier, resistance, set_value}` (resource/variable/condition убраны —
+нет потребителя на пути пассивов). Правка ревью: apply-шаблон `damage_type` (`{kind:'resistance',
+value:тип}`) нормализуется в рабочую форму (`damage_type`+уровень). Тесты `mechanics/expandChoices.test.ts`
+(13, вкл. сквозной choice→resistanceLevelFor→урон вдвое, modifier→collectModifiers, вложенный choice,
+рассинхрон ключа). Гейты tsc 0 / 320 vitest / 83 mvp. **ЧТОБЫ ОЖИВИТЬ ~7 эффектов** — их надо
+конвертировать narrative→choice (контент-задача группы A свипа); движок теперь готов их применить.
+
+- **1.1 (исходный план) Разворот выбранной `choice`-ветки в `collectPassiveMechanics`** (M). Оживляет ~7 эффектов
   сопротивления из выбора сразу (аасимар/тифлинг, EFFECT-0235/0139/0160/0092) + задел под ~37
   отложенных группы A. Вынести `selectedChoicePayloads/choiceInstanceId/sourceFromOrigin` из
   `resolveCharacterRules.ts:71-97,35-45` в новый `mechanics/expandChoices.ts` и звать ВЕРБАТИМ (иначе

@@ -34,7 +34,7 @@ export default function SheetRestButtons({
   const [busy, setBusy] = useState(false);
   const syncAttempted = useRef(false);
 
-  const passives = useMemo(() => collectPassiveMechanics(assembled), [assembled]);
+  const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
 
   // Ресурсы класса + виртуальные пулы использований действий (uses_<key> → per).
   const resourceRecharge = useMemo(

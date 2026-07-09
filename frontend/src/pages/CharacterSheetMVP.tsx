@@ -204,7 +204,7 @@ const CharacterSheetMVP = () => {
 
   // Пассивки персонажа + механики надетых предметов (с учётом настройки).
   const passives = useMemo(() => {
-    const base = assembled ? collectPassiveMechanics(assembled) : [];
+    const base = assembled ? collectPassiveMechanics(assembled, character?.resolved_choices ?? {}) : [];
     if (!character) return base;
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state)
       .map((im) => im.mechanics);

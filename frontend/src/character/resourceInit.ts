@@ -5,13 +5,30 @@ import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
 import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
+import { expandPassiveChoicePayloads, passiveSourceId } from '../mechanics/expandChoices';
 
 type Dict = Record<string, unknown>;
 
-export function collectPassiveMechanics(assembled: AssembledCharacter): Dict[] {
-  return assembled.effects
-    .map(({ effect }) => effect.mechanics)
-    .filter((m): m is Dict => !!m && typeof m === 'object');
+/**
+ * Пассивные механики персонажа для листа/боя. Помимо самих механик эффектов (как есть),
+ * Ярус 1.1: разворачивает выбранные через choice РАНТАЙМ-пейлоады (сопротивление/модификатор/
+ * set_value/…) в синтетическую auto-механику — чтобы payloadsOf / collectModifiers /
+ * resistanceLevelFor их увидели. Ключ выбора совпадает с резолвером (общий expandChoices).
+ * resolvedChoices по умолчанию пуст → поведение как раньше (обратная совместимость).
+ */
+export function collectPassiveMechanics(
+  assembled: AssembledCharacter,
+  resolvedChoices: Record<string, string[]> = {},
+): Dict[] {
+  const out: Dict[] = [];
+  for (const { effect, origin } of assembled.effects) {
+    const m = effect.mechanics;
+    if (!m || typeof m !== 'object') continue;
+    out.push(m as Dict);
+    const chosen = expandPassiveChoicePayloads(m as Dict, passiveSourceId(origin, effect), resolvedChoices);
+    if (chosen.length) out.push({ name: (m as Dict).name, effects: [{ resolution: 'auto', result: chosen }] });
+  }
+  return out;
 }
 
 /** Гранты ресурсов из пассивных/триггерных механик (max-пул при инициализации). */

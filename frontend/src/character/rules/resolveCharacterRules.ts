@@ -6,6 +6,7 @@ import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
 import { sourceKey, instanceFeatureId } from '../../mechanics/choiceKey';
+import { MAX_CHOICE_DEPTH, choiceInstanceId, selectedChoicePayloads, payloadsFromMechanics } from '../../mechanics/expandChoices';
 import { ABILITY_KEYS, type AbilityKey } from '../types';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
 import type {
@@ -40,61 +41,14 @@ const sourceFromOrigin = (origin: { kind: string; id: string; name: string; inst
   name: feature ? `${origin.name}: ${feature.name}` : origin.name,
 });
 
-// source.id уже равен sourceKey(...), поэтому instance-id = `${source.id}:${choiceId}`
-// совпадает с choiceKey(origin, choiceId), по которому форге пишет resolvedChoices.
-const choiceInstanceId = (source: RuleSource, rawChoiceId: string) => `${source.id}:${rawChoiceId}`;
-
-// Предел вложенности выборов (item.grants → choice → …), защита от циклов в контенте.
-const MAX_CHOICE_DEPTH = 6;
+// Ключ выбора (choiceInstanceId), MAX_CHOICE_DEPTH, selectedChoicePayloads и payloadsFromMechanics
+// вынесены в mechanics/expandChoices.ts и переиспользуются пассивами листа — единый ключ, без рассинхрона.
 
 const grantId = (grant: Omit<AppliedGrant, 'id'>) =>
   `${grant.source.type}:${grant.source.id}:${grant.kind}:${grant.mode}:${grant.value}:${grant.choiceId || ''}`;
 
 const normalizedValue = (kind: AppliedGrant['kind'], value: string) =>
   kind === 'skill' ? normalizeSkillId(value) : value;
-
-function payloadsFromMechanics(mechanics: Record<string, unknown> | null | undefined): Dict[] {
-  if (!mechanics || typeof mechanics !== 'object') return [];
-  const effects = (mechanics as Dict).effects;
-  if (!Array.isArray(effects)) return [];
-  const out: Dict[] = [];
-  for (const item of effects as Dict[]) {
-    if (item?.kind) {
-      out.push(item);
-    } else if (item?.resolution === 'auto' && Array.isArray(item.result)) {
-      out.push(...(item.result as Dict[]));
-    }
-  }
-  return out;
-}
-
-function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[] {
-  const out: Dict[] = [];
-  const opts = (choice.options || {}) as Dict;
-  const items = Array.isArray(opts.items) ? (opts.items as Dict[]) : [];
-
-  for (const value of selected) {
-    const item = items.find((it) => String(it.id) === value);
-    if (item && Array.isArray(item.grants)) {
-      out.push(...(item.grants as Dict[]));
-      continue;
-    }
-
-    // `apply` — новое имя grant-шаблона (унифицированные выборы); `grant` — легаси-алиас.
-    const template = (choice.apply || choice.grant || {}) as Dict;
-    if (template.kind) {
-      out.push({ ...template, value });
-      continue;
-    }
-
-    // choice(source:"feat") без grant-шаблона: выбранное значение — id черты.
-    if (String(opts.source) === 'feat') {
-      out.push({ kind: 'grant_feat', value });
-    }
-  }
-
-  return out;
-}
 
 function addGrant(
   grant: Omit<AppliedGrant, 'id'>,
@@ -320,7 +274,7 @@ function collectAbilityDeltas(
     if (payload.kind === 'choice') {
       if (depth >= MAX_CHOICE_DEPTH) return;
       const rawChoiceId = String(payload.id || 'choice');
-      const choiceId = choiceInstanceId(source, rawChoiceId);
+      const choiceId = choiceInstanceId(source.id, rawChoiceId);
       const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
       // Рекурсия зеркалит applyPayload: вложенный choice (ASI: режим → характеристика)
       // разворачивается, grant_ability_score из его item.grants доходит до дельт.
@@ -387,7 +341,7 @@ function applyPayload(
   if (payload.kind === 'choice') {
     if (depth >= MAX_CHOICE_DEPTH) return;
     const rawChoiceId = String(payload.id || 'choice');
-    const choiceId = choiceInstanceId(source, rawChoiceId);
+    const choiceId = choiceInstanceId(source.id, rawChoiceId);
     const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
     for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
       // Вложенный choice (напр. item.grants выбранного режима ASI → выбор характеристики):

@@ -156,8 +156,8 @@ export default function SheetActionsPanel({
   const passives = useMemo(() => {
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state)
       .map((im) => im.mechanics);
-    return [...collectPassiveMechanics(assembled), ...items];
-  }, [assembled, character.equipment, character.turn_state, equipCards]);
+    return [...collectPassiveMechanics(assembled, character.resolved_choices ?? {}), ...items];
+  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards]);
 
   const equippedCards = useMemo(() => {
     const out: Card[] = [];
