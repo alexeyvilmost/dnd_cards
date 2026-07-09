@@ -218,6 +218,11 @@ target больше НЕ создаёт фантомный ресурс молч
     item-действии. Доступность гейтится тем же `canPay` (нет зелья → кнопка недоступна; исполнение → throw ловится).
     Персист: `persistPayload` += `inventory_items` — **бэкенд УЖЕ принимал** (character_v3_controller.go:405), правок
     Go нет. Схема: `cost.card_id` + `activation.consumes_self`. Тесты `itemCost.test.ts` (12, вкл. интеграцию зелья).
+  - **предмет как ресурс (стрелы) ✅ СДЕЛАНО (слайс 5).** `weaponAmmoCost` (weapon.ts): дальнобойное оружие
+    декларирует `mechanics.ammo` (card_id или {card_id,name}) → cost `{resource:'item', card_id}`, который тратит/гейтит
+    штатный canPay/pay (слайс 4). Панель: runAction впрыскивает боеприпас (`appendActivationCost`), disabledInfo даёт
+    внятную причину `Нет: <имя>` при нехватке предмета-стоимости (боеприпас/зелье). Схема: `mechanics.ammo`. Тесты
+    `weaponAmmo.test.ts` (6).
   - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
     сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
     value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).

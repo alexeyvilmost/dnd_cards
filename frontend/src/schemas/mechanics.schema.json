@@ -20,7 +20,14 @@
     "targeting": { "$ref": "#/$defs/targeting" },
     "interactions": { "type": "array", "items": { "$ref": "#/$defs/effectItem" } },
     "duration": { "$ref": "#/$defs/duration" },
-    "uses": { "$ref": "#/$defs/uses" }
+    "uses": { "$ref": "#/$defs/uses" },
+    "ammo": {
+      "description": "S5: боеприпас оружия — id карты или {card_id,name}. Дальнобойная атака тратит его из инвентаря ({resource:'item',card_id}).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "properties": { "card_id": { "type": "string" }, "name": { "type": "string" } }, "required": ["card_id"] }
+      ]
+    }
   },
 
   "$defs": {

@@ -201,6 +201,37 @@ export function weaponActionAvailability(
     : { available: false, reason: 'Нет оружия во второй руке' };
 }
 
+/**
+ * S5 «предмет=эффект»: боеприпас, который тратит оружейное действие. Оружие в соответствующей
+ * руке объявляет боеприпас данными — `mechanics.ammo` (id карты, либо {card_id, name}). Возвращает
+ * cost-запись {resource:'item', card_id, name?, amount:1} (тратится/гейтится штатным canPay/pay из
+ * слайса 4) или null (не оружейное действие / оружие без ammo). «Дальнобойная атака (стрелы)».
+ * ФОРМА ОБЪЕКТА {card_id,name} предпочтительна: имя живёт на карте оружия и показывается в причине
+ * «Нет: <имя>» даже когда боеприпас кончился (строка-card_id: при qty 0 карта боеприпаса выгружается
+ * из инвентаря → причина деградирует до «Нет: боеприпас»).
+ */
+export function weaponAmmoCost(
+  mechanics: Dict | null | undefined,
+  equipment: Record<string, string | null | undefined> | undefined,
+  cardsById: Map<string, Card>,
+): Dict | null {
+  const kind = weaponAttackKind(mechanics);
+  if (kind !== 'main' && kind !== 'off') return null;
+  const slotId = kind === 'main' ? equipment?.main_hand : equipment?.off_hand;
+  const weapon = slotId ? cardsById.get(slotId) : undefined;
+  const ammo = weapon?.mechanics ? (weapon.mechanics as Dict).ammo : undefined;
+  let cardId = '';
+  let name: string | undefined;
+  if (typeof ammo === 'string') cardId = ammo;
+  else if (ammo && typeof ammo === 'object') {
+    cardId = String((ammo as Dict).card_id ?? '');
+    const n = (ammo as Dict).name;
+    if (typeof n === 'string') name = n;
+  }
+  if (!cardId) return null;
+  return { resource: 'item', card_id: cardId, amount: 1, ...(name ? { name } : {}) };
+}
+
 // ─── Предпросмотр атаки/урона (парадигма №2) ────────────────────────────────
 
 export interface WeaponAttackPreview {

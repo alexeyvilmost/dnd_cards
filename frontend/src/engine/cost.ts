@@ -6,7 +6,7 @@ import { itemConsumedEvent, resourceSpentEvent } from './events';
 
 type Dict = Record<string, unknown>;
 
-function costAmount(entry: Dict): number {
+export function costAmount(entry: Dict): number {
   const raw = entry.amount;
   if (raw == null) return 1;
   // Неотрицательное целое: отрицательная стоимость-предмет иначе НАРАЩИВАЛА бы инвентарь
@@ -84,6 +84,15 @@ export function pay(state: RuntimeState, cost: Dict[]): { state: RuntimeState; e
   }
 
   return { state: { ...next, resources }, events };
+}
+
+/** Добавляет запись стоимости в activation.cost (S5: боеприпас оружия). Не мутирует вход. */
+export function appendActivationCost(mech: Dict, entry: Dict): Dict {
+  const act: Dict = { ...((mech.activation as Dict | undefined) ?? { mode: 'active' }) };
+  const cost = Array.isArray(act.cost) ? [...(act.cost as Dict[])] : [];
+  cost.push(entry);
+  act.cost = cost;
+  return { ...mech, activation: act };
 }
 
 /**

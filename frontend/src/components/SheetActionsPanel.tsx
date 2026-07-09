@@ -15,7 +15,9 @@ import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeAction, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
-import { weaponActionAvailability, weaponAttackPreview } from '../engine/weapon';
+import { weaponActionAvailability, weaponAmmoCost, weaponAttackPreview } from '../engine/weapon';
+import { appendActivationCost, costAmount } from '../engine/cost';
+import { inventoryQty } from '../character/inventory';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
@@ -234,6 +236,10 @@ export default function SheetActionsPanel({
 
   const runAction = async (action: SheetAction) => {
     let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
+    // S5: дальнобойное оружие тратит боеприпас из инвентаря (оружие декларирует mechanics.ammo).
+    // Добавляем cost {resource:'item', card_id} — расход/гейт штатным canPay/pay из слайса 4.
+    const ammo = weaponAmmoCost(mech, runtime.equipment, equipCards);
+    if (ammo) mech = appendActivationCost(mech, ammo);
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
     if (cost.length && !payableWithUpcast(runtime, cost)) return;
@@ -356,10 +362,23 @@ export default function SheetActionsPanel({
     const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards);
     if (!avail.available) return { disabled: true, reason: avail.reason };
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
-    const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
+    const baseCost = (activation?.cost as Record<string, unknown>[]) ?? [];
+    // S5: дальнобойное оружие требует боеприпас — добавляем его к проверяемой стоимости.
+    const ammo = weaponAmmoCost(action.mechanics, runtime.equipment, equipCards);
+    const cost = ammo ? [...baseCost, ammo] : baseCost;
     // Апкаст: спелл доступен при любом слоте ≥ базового круга (не только базовом).
     const payable = !cost.length || payableWithUpcast(runtime, cost);
-    if (!payable) return { disabled: true, reason: 'Недостаточно ресурсов' };
+    if (!payable) {
+      // Внятная причина для нехватки предмета-стоимости (боеприпас/зелье): показываем имя.
+      const miss = cost.find((c) => String(c.resource ?? '') === 'item'
+        && inventoryQty(runtime, String(c.card_id ?? '')) < costAmount(c));
+      if (miss) {
+        const name = (typeof miss.name === 'string' && miss.name)
+          || equipCards.get(String(miss.card_id ?? ''))?.name || 'боеприпас';
+        return { disabled: true, reason: `Нет: ${name}` };
+      }
+      return { disabled: true, reason: 'Недостаточно ресурсов' };
+    }
     return { disabled: busy };
   };
 
