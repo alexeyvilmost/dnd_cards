@@ -4,8 +4,7 @@ import { RARITY_OPTIONS, getEquipmentSlotLabel } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import { getDamageLabel, getDamageColorOnDark, getDamageIconPath } from '../utils/damageTypes';
-import { getCurrencyInfo, formatPriceAmount } from '../utils/currencies';
-import { getRaritySymbol } from '../utils/raritySymbols';
+import { getCurrencyIconPath, currencyIconStyle, formatPriceAmount } from '../utils/currencies';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
@@ -30,6 +29,20 @@ const rarityColor = (card: Card): string | undefined =>
     : (RARITY_OPTIONS.find((o) => o.value === card.rarity)?.color || undefined);
 const diceRu = (v: string) => String(v).replace(/(\d)[dд](\d)/gi, '$1к$2');
 const fmtWeight = (w: number) => `${Math.round(w * 100) / 100} фунт.`;
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+// Вертикальный градиент цвета редкости поверх тёмного фона стат-блока (как в BG3). Обычные
+// (common) — без градиента; невалидный/именованный цвет — тоже без (нужен #rrggbb для rgba).
+const rarityGradient = (accent: string | undefined, rarity?: string | null): string | undefined => {
+  if (!accent || rarity === 'common') return undefined;
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(accent);
+  if (!m) return undefined;
+  const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16));
+  const rgba = (a: number) => `rgba(${r},${g},${b},${a})`;
+  return `linear-gradient(to bottom, ${rgba(0.3)}, ${rgba(0)} 55%), linear-gradient(160deg,#2b2520,#191410)`;
+};
+
+type MetaEntry = { img?: string; imgStyle?: React.CSSProperties; emoji?: string; label: string };
 
 const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disableHover = false, onClick }) => {
   const containerSum = useContainerTotals(card);
@@ -50,24 +63,24 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
   const defenseBonus = (card.bonus_type === 'defense' && card.bonus_value) ? String(card.bonus_value) : null;
   const hasStats = mstats.attack || mstats.save || dmgEntries.length > 0 || healEntries.length > 0 || !!defenseBonus;
 
-  // Мета-строки (только релевантные).
-  const meta: Array<[string, string]> = [];
+  // Мета-строки (только релевантные). Цена/вес — реальными иконками; остальное — эмодзи.
+  const meta: MetaEntry[] = [];
   if (card.price != null && card.price > 0) {
-    const cur = getCurrencyInfo(card.price_currency);
-    meta.push(['💰', `${formatPriceAmount(card.price, card.price_abbreviated !== false)} ${cur.short}`]);
+    meta.push({ img: getCurrencyIconPath(card.price_currency), imgStyle: currencyIconStyle, label: formatPriceAmount(card.price, card.price_abbreviated !== false) });
   }
-  if (card.weight != null) meta.push(['⚖', fmtWeight(card.weight)]);
-  if (card.slot) meta.push(['🎽', getEquipmentSlotLabel(card.slot)]);
-  if (card.range) meta.push(['🎯', card.range]);
-  if (card.properties && card.properties.length) meta.push(['✦', card.properties.map((p) => getPropertyLabel(p)).join(', ')]);
+  if (card.weight != null) meta.push({ img: '/icons/weight.png', label: fmtWeight(card.weight) });
+  if (card.slot) meta.push({ emoji: '🎽', label: getEquipmentSlotLabel(card.slot) });
+  if (card.range) meta.push({ emoji: '🎯', label: card.range });
+  if (card.properties && card.properties.length) meta.push({ emoji: '✦', label: card.properties.map((p) => getPropertyLabel(p)).join(', ') });
 
   const accent = rarityColor(card);
+  const bgGradient = rarityGradient(accent, card.rarity);
 
   return (
     <div
       className={`sp-tip ${disableHover ? '' : 'sp-hoverable'} ${className}`}
       onClick={onClick}
-      style={{ ...(onClick ? { cursor: 'pointer' } : {}), ...(accent ? ({ '--sp-accent': accent } as React.CSSProperties) : {}) }}
+      style={{ ...(onClick ? { cursor: 'pointer' } : {}), ...(bgGradient ? { background: bgGradient } : {}) }}
     >
       <style>{SPELL_CARD_CSS}</style>
 
@@ -80,10 +93,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
         />
       )}
 
-      <h3>
-        <span className="sp-rarity-glyph" title={rarityLabel(card.rarity)} style={accent ? { color: accent } : undefined}>{getRaritySymbol(card.rarity)}</span>
-        {' '}{card.name || 'Название предмета'}
-      </h3>
+      <h3>{card.name || 'Название предмета'}</h3>
       <div className="sp-subtype">{subtype || 'Предмет'}</div>
 
       {hasStats && (
@@ -135,7 +145,12 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           ))}
           {containerSum && (containerSum.weight > 0 || containerSum.gold > 0) && (
             <div className="sp-meta" style={{ marginTop: 4 }}>
-              <span><i>Σ</i>{Math.round(containerSum.weight * 100) / 100} фунт. · {Math.round(containerSum.gold * 100) / 100} ЗМ</span>
+              <span>
+                <i>Σ</i>
+                <img className="sp-metaicon" src="/icons/weight.png" alt="" />{round2(containerSum.weight)}
+                <span className="sp-dmgsep">·</span>
+                <img className="sp-metaicon" src={getCurrencyIconPath('gold')} alt="" style={currencyIconStyle} />{round2(containerSum.gold)}
+              </span>
             </div>
           )}
         </div>
@@ -147,7 +162,14 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
 
       {meta.length > 0 ? (
         <div className="sp-meta">
-          {meta.map(([icon, label], i) => (<span key={i}><i>{icon}</i>{label}</span>))}
+          {meta.map((m, i) => (
+            <span key={i}>
+              {m.img
+                ? <img className="sp-metaicon" src={m.img} alt="" style={m.imgStyle} />
+                : <i>{m.emoji}</i>}
+              {m.label}
+            </span>
+          ))}
         </div>
       ) : (
         <div className="sp-spacer" />

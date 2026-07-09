@@ -3,19 +3,24 @@
  */
 import { useEffect, useState } from 'react';
 
-/** Режим отображения карточных сущностей: плитка-иконка, строка с мелкой иконкой или (только для
- *  предметов) «интерфейс» — стат-блок в стиле превью заклинания. */
-export type EntityDisplayMode = 'icon' | 'row' | 'interface';
+/** Режим отображения карточных сущностей: плитка-иконка или строка с мелкой иконкой. */
+export type EntityDisplayMode = 'icon' | 'row';
 
 export type EntityDisplayKind = 'spells' | 'actions' | 'effects' | 'items';
 
 export type EntityDisplaySettings = Record<EntityDisplayKind, EntityDisplayMode>;
 
+/** Вид превью предмета при наведении: обычная карточка или «интерфейс» — тёмный стат-блок
+ *  в стиле превью заклинания. Отдельная настройка (не путать с раскладкой строка/иконка). */
+export type ItemPreviewStyle = 'card' | 'interface';
+
 export interface SiteSettings {
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
   diceDialog: boolean;
-  /** Как отображать заклинания/действия/эффекты/предметы в меню и на листе. */
+  /** Как отображать заклинания/действия/эффекты/предметы в меню и на листе (раскладка). */
   entityDisplay: EntityDisplaySettings;
+  /** Вид превью предмета при наведении (инвентарь листа, библиотека): карточка или интерфейс. */
+  itemPreview: ItemPreviewStyle;
   /** Режим игрока: превью/лист прячут авто-описание механики и сырые id, оставляя
    *  человеческое описание, чипы стоимости и боевые статы. Мастер выключает — видит всё. */
   playerMode: boolean;
@@ -32,6 +37,7 @@ const DEFAULTS: SiteSettings = {
     effects: 'row',
     items: 'row',
   },
+  itemPreview: 'card',
   playerMode: false,
 };
 
@@ -42,11 +48,18 @@ export function getSettings(): SiteSettings {
     const parsed = JSON.parse(raw) as Partial<SiteSettings>;
     // Мердж с дефолтами: вложенный entityDisplay тоже мерджим по ключам,
     // чтобы старый localStorage без новых полей не ломал настройки.
-    return {
+    const merged: SiteSettings = {
       ...DEFAULTS,
       ...parsed,
       entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
     };
+    // Миграция: раньше 'interface' было третьим значением entityDisplay.items (раскладка);
+    // теперь это отдельная настройка itemPreview. Переносим старое значение.
+    if ((merged.entityDisplay.items as string) === 'interface') {
+      merged.entityDisplay = { ...merged.entityDisplay, items: 'row' };
+      if (!parsed.itemPreview) merged.itemPreview = 'interface';
+    }
+    return merged;
   } catch {
     return { ...DEFAULTS, entityDisplay: { ...DEFAULTS.entityDisplay } };
   }

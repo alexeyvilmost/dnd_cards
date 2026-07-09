@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { Dices, LayoutGrid, List, LayoutTemplate, X } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, X } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
   useSiteSettings,
   type EntityDisplayKind,
   type EntityDisplayMode,
+  type ItemPreviewStyle,
 } from '../settings';
 
 // Тёмная модалка настроек отображения на листе персонажа — те же настройки, что
@@ -18,15 +19,15 @@ const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string 
   { kind: 'items', label: 'Предметы', hint: 'Инвентарь и слоты' },
 ];
 
-type ModeOption = { mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid };
-const BASE_MODES: ModeOption[] = [
+const MODE_OPTIONS: Array<{ mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid }> = [
   { mode: 'icon', label: 'Иконки', icon: LayoutGrid },
   { mode: 'row', label: 'Список', icon: List },
 ];
-// «Интерфейс» — стат-блок в стиле превью заклинания — пока только для предметов.
-const INTERFACE_MODE: ModeOption = { mode: 'interface', label: 'Интерфейс', icon: LayoutTemplate };
-const modeOptionsFor = (kind: EntityDisplayKind): ModeOption[] =>
-  kind === 'items' ? [...BASE_MODES, INTERFACE_MODE] : BASE_MODES;
+
+const ITEM_PREVIEW_OPTIONS: Array<{ mode: ItemPreviewStyle; label: string; icon: typeof LayoutGrid }> = [
+  { mode: 'card', label: 'Карточка', icon: CreditCard },
+  { mode: 'interface', label: 'Интерфейс', icon: LayoutTemplate },
+];
 
 export default function SheetSettingsDialog({ onClose }: { onClose: () => void }) {
   const settings = useSiteSettings();
@@ -68,7 +69,7 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
                   <div className="sheet-settings-hint">{hint}</div>
                 </div>
                 <div className="sheet-settings-toggle" role="radiogroup" aria-label={label}>
-                  {modeOptionsFor(kind).map(({ mode, label: modeLabel, icon: Icon }) => {
+                  {MODE_OPTIONS.map(({ mode, label: modeLabel, icon: Icon }) => {
                     const active = settings.entityDisplay[kind] === mode;
                     return (
                       <button
@@ -86,6 +87,36 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="sheet-settings-section">
+          <div className="sheet-settings-row-label"><LayoutTemplate size={16} /> Превью предмета при наведении</div>
+          <p className="sheet-settings-hint">«Карточка» — обычная карточка. «Интерфейс» — тёмный стат-блок. Не зависит от раскладки.</p>
+          <div className="sheet-settings-list">
+            <div className="sheet-settings-item">
+              <div className="sheet-settings-item-labels">
+                <div className="sheet-settings-item-name">Вид превью</div>
+                <div className="sheet-settings-hint">Только для предметов</div>
+              </div>
+              <div className="sheet-settings-toggle" role="radiogroup" aria-label="Превью предмета">
+                {ITEM_PREVIEW_OPTIONS.map(({ mode, label: modeLabel, icon: Icon }) => {
+                  const active = settings.itemPreview === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      className={`sheet-settings-mode${active ? ' is-active' : ''}`}
+                      onClick={() => setSetting('itemPreview', mode)}
+                    >
+                      <Icon size={13} /> {modeLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>

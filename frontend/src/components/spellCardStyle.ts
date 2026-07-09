@@ -43,6 +43,7 @@ export const SPELL_CARD_CSS = `
     border-top:1px solid rgba(58,49,39,.5); color:#a59886; font-size:.84rem;}
   .sp-tip .sp-meta span{display:inline-flex; align-items:center; gap:.35rem;}
   .sp-tip .sp-meta i{opacity:.85; font-style:normal;}
+  .sp-tip .sp-meta img.sp-metaicon{height:15px; width:15px; object-fit:contain; flex:0 0 auto;}
   .sp-tip .sp-costbar{display:flex; gap:.6rem; flex-wrap:wrap; margin:0 -18px; padding:.6rem 18px;
     background:linear-gradient(#221b15,#1a140f); border-top:1px solid #4a3f35; border-radius:0 0 12px 12px;}
   .sp-cost{display:inline-flex; align-items:center; gap:.35rem; font-size:.84rem; color:#ece3d4;}

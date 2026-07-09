@@ -78,7 +78,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<Card[]>([]);
   const [searching, setSearching] = useState(false);
-  const { entityDisplay } = useSiteSettings();
+  const { entityDisplay, itemPreview } = useSiteSettings();
   const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -143,10 +143,9 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const weight = totalWeight(runtime, cardMap);
   const strScore = character.abilities?.str ?? 10;
   const capacity = carryingCapacity(strScore);
-  // 'icon' → плитки; 'row' и 'interface' → строки. В режиме 'interface' наведение показывает
-  // не карту, а стат-блок (ItemPreview) — тот же, что в библиотеке/настройке «Интерфейс».
-  const itemMode = entityDisplay.items;
-  const asIcons = itemMode === 'icon';
+  const asIcons = entityDisplay.items === 'icon';
+  // Отдельная настройка: при наведении показывать стат-блок (ItemPreview) вместо карточки.
+  const previewInterface = itemPreview === 'interface';
 
   const persist = useCallback(async (next: RuntimeState) => {
     setBusy(true);
@@ -509,12 +508,12 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
         <div
           className="fixed z-50 pointer-events-none"
           style={{
-            left: Math.min(itemMouse.x + 16, window.innerWidth - (itemMode === 'interface' ? 360 : 220)),
+            left: Math.min(itemMouse.x + 16, window.innerWidth - (previewInterface ? 360 : 220)),
             top: Math.min(Math.max(itemMouse.y - 40, 10), window.innerHeight - 20),
             transform: itemMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
           }}
         >
-          {itemMode === 'interface'
+          {previewInterface
             ? <ItemPreview card={hoveredItem} disableHover />
             : <CardPreview card={hoveredItem} disableHover />}
         </div>

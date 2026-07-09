@@ -38,7 +38,7 @@ import {
   parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
 import ItemPreview from '../components/ItemPreview';
-import { getSettings, type EntityDisplayKind } from '../settings';
+import { getSettings, useSiteSettings, type EntityDisplayKind } from '../settings';
 
 /** Тип библиотеки → ключ настройки «Отображение сущностей». */
 const ENTITY_DISPLAY_KEY: Partial<Record<LibraryContentType, EntityDisplayKind>> = {
@@ -52,8 +52,8 @@ const ENTITY_DISPLAY_KEY: Partial<Record<LibraryContentType, EntityDisplayKind>>
 function settingsViewFor(type: LibraryContentType): LibraryViewMode | null {
   const key = ENTITY_DISPLAY_KEY[type];
   if (!key) return null;
-  const mode = getSettings().entityDisplay[key];
-  return mode === 'icon' ? 'grid' : mode === 'interface' ? 'interface' : 'list';
+  // «Интерфейс» — отдельная настройка превью (не раскладка), библиотечный тумблер задаёт его вручную.
+  return getSettings().entityDisplay[key] === 'icon' ? 'grid' : 'list';
 }
 
 /** «Интерфейс» рисуем только для предметов; для прочих типов (в т.ч. из ссылки) — «Список». */
@@ -221,6 +221,8 @@ const CardLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  // Отдельная настройка: превью предмета при наведении — карточка или интерфейс (стат-блок).
+  const { itemPreview } = useSiteSettings();
   // Явный ?view= в URL важнее; без него — режим из настройки «Отображение сущностей».
   const [viewMode, setViewMode] = useState<LibraryViewMode>(() => clampView(
     searchParams.get('view')
@@ -1905,17 +1907,21 @@ const CardLibrary = () => {
               
               {/* Показ карточки при наведении */}
               {hoveredCard && (
-                <div 
+                <div
                   className="fixed z-50"
                   style={previewStyle({
-                    left: Math.min(mousePosition.x + 10, window.innerWidth - 220),
+                    left: Math.min(mousePosition.x + 10, window.innerWidth - (itemPreview === 'interface' ? 360 : 220)),
                     top: Math.max(mousePosition.y - 10, 10),
                     transform: mousePosition.y < 300 ? 'translateY(0)' : 'translateY(-100%)'
                   })}
                 >
-                  <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
-                    <CardPreview card={hoveredCard} />
-                  </div>
+                  {itemPreview === 'interface' ? (
+                    <ItemPreview card={hoveredCard} disableHover />
+                  ) : (
+                    <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2">
+                      <CardPreview card={hoveredCard} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
