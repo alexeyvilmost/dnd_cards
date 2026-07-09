@@ -138,6 +138,63 @@ export const USES_PER: RegistryItem[] = [
   { id: 'short_rest', label: 'Короткий отдых' },
 ];
 
+// События триггера ($defs/trigger.event). Помечаем ⏳ те, что движок пока НЕ эмитит
+// (в JSON допустимы, но слушатель никогда не сработает) — см. execute.EMITTED_EVENTS.
+const EMITTED_EVENTS = new Set([
+  'hit', 'crit', 'miss', 'damage_taken', 'spell_cast', 'reduced_to_0_hp',
+  'turn_start', 'turn_end', 'short_rest', 'long_rest',
+]);
+const RAW_TRIGGER_EVENTS: RegistryItem[] = [
+  { id: 'hit', label: 'Попадание (вы попали)' },
+  { id: 'crit', label: 'Критическое попадание' },
+  { id: 'miss', label: 'Промах' },
+  { id: 'damage_taken', label: 'Получен урон' },
+  { id: 'damage_dealt', label: 'Нанесён урон' },
+  { id: 'attack_roll_made', label: 'Сделан бросок атаки' },
+  { id: 'saving_throw_made', label: 'Сделан спасбросок' },
+  { id: 'forced_save', label: 'Вынужденный спасбросок' },
+  { id: 'ability_check_made', label: 'Сделана проверка' },
+  { id: 'reduced_to_0_hp', label: 'Падение до 0 хитов' },
+  { id: 'creature_enters_reach', label: 'Существо входит в досягаемость' },
+  { id: 'creature_leaves_reach', label: 'Существо выходит из досягаемости' },
+  { id: 'creature_moves', label: 'Существо перемещается' },
+  { id: 'turn_start', label: 'Начало хода' },
+  { id: 'turn_end', label: 'Конец хода' },
+  { id: 'spell_cast', label: 'Заклинание сотворено' },
+  { id: 'condition_applied', label: 'Наложено состояние' },
+  { id: 'initiative_roll', label: 'Бросок инициативы' },
+  { id: 'short_rest', label: 'Короткий отдых' },
+  { id: 'long_rest', label: 'Длинный отдых' },
+  { id: 'on_acquire', label: 'При получении' },
+  { id: 'level_gained', label: 'Получен уровень' },
+];
+export const TRIGGER_EVENTS: RegistryItem[] = RAW_TRIGGER_EVENTS.map((e) =>
+  EMITTED_EVENTS.has(e.id) ? e : { ...e, label: `${e.label} ⏳` },
+);
+
+export const TRIGGER_TIMINGS: RegistryItem[] = [
+  { id: 'before', label: 'До' },
+  { id: 'during', label: 'Во время' },
+  { id: 'after', label: 'После' },
+  { id: 'replaces', label: 'Вместо (замена)' },
+];
+
+// Субъект триггера. Движок пока НЕ фильтрует по subject (dispatch.ts) — помечаем ⏳.
+export const TRIGGER_SUBJECTS: RegistryItem[] = [
+  { id: '', label: 'Любой' },
+  { id: 'self', label: 'Вы ⏳' },
+  { id: 'ally', label: 'Союзник ⏳' },
+  { id: 'enemy', label: 'Враг ⏳' },
+  { id: 'attacker', label: 'Атакующий ⏳' },
+  { id: 'target', label: 'Цель ⏳' },
+  { id: 'any_creature', label: 'Любое существо ⏳' },
+];
+
+export const TRIGGER_MODES: RegistryItem[] = [
+  { id: 'triggered', label: 'Срабатывает автоматически' },
+  { id: 'reaction', label: 'Реакция (ответное действие)' },
+];
+
 export const ROLL_TARGETS: RegistryItem[] = [
   { id: 'attack_roll', label: 'Бросок атаки' },
   { id: 'ability_check', label: 'Проверка характеристики' },

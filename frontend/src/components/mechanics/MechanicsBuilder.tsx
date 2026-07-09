@@ -370,7 +370,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
         {BLOCK_MAP[triggerId]?.fields.length ? (
           <div className="grid grid-cols-2 gap-2">
             {BLOCK_MAP[triggerId].fields.map((f) => (
-              <div key={f.key}>
+              <div key={f.key} className={f.type === 'when' ? 'col-span-2' : ''}>
                 <label className="block text-xs text-gray-600 mb-1">{f.label}</label>
                 {renderField(f, triggerValues, (k, v) => {
                   markDirty();

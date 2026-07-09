@@ -13,6 +13,10 @@ import {
   SENSES,
   SKILLS,
   SPEED_MODES,
+  TRIGGER_EVENTS,
+  TRIGGER_MODES,
+  TRIGGER_SUBJECTS,
+  TRIGGER_TIMINGS,
   USES_PER,
   labelOf,
 } from './registries';
@@ -142,6 +146,32 @@ export const TRIGGER_BLOCKS: Block[] = [
     defaults: { min_level: 3 },
     build: (v) => ({ requirements: [{ type: 'level', min_level: Number(v.min_level) || 1 }] }),
     summary: (v) => `С уровня ${v.min_level ?? 1}`,
+  },
+  {
+    id: 'trg_custom',
+    label: 'Триггер по событию (продвинутый)',
+    group: 'trigger',
+    fields: [
+      { key: 'mode', label: 'Режим', type: 'select', options: TRIGGER_MODES, default: 'triggered' },
+      { key: 'event', label: 'Событие (⏳ — движок пока не эмитит)', type: 'select', options: TRIGGER_EVENTS, default: 'hit' },
+      { key: 'timing', label: 'Момент', type: 'select', options: TRIGGER_TIMINGS, default: 'after' },
+      { key: 'subject', label: 'Субъект (⏳ — не фильтруется)', type: 'select', options: TRIGGER_SUBJECTS, default: '' },
+      { key: 'uses_count', label: 'Использований (пусто — без лимита)', type: 'text', default: '' },
+      { key: 'uses_per', label: 'За период', type: 'select', options: USES_PER, default: 'long_rest' },
+      { key: 'circumstances', label: 'Условия срабатывания', type: 'when' },
+    ],
+    defaults: { mode: 'triggered', event: 'hit', timing: 'after', subject: '', uses_count: '', uses_per: 'long_rest' },
+    build: (v) => {
+      const circ = whenOf(v.circumstances);
+      const trigger: Record<string, unknown> = { event: v.event || 'hit', timing: v.timing || 'after' };
+      if (v.subject) trigger.subject = v.subject;
+      if (circ.length) trigger.circumstances = circ;
+      const out: Record<string, unknown> = { mode: v.mode === 'reaction' ? 'reaction' : 'triggered', trigger };
+      const uc = String(v.uses_count ?? '').trim();
+      if (uc) out.uses = { count: /^\d+$/.test(uc) ? Number(uc) : uc, per: v.uses_per || 'long_rest' };
+      return out;
+    },
+    summary: (v) => `${v.mode === 'reaction' ? 'Реакция' : 'Триггер'}: ${labelOf(TRIGGER_EVENTS, String(v.event))}${whenOf(v.circumstances).length ? ' (при условии)' : ''}`,
   },
 ];
 
@@ -619,25 +649,48 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   const uses = (m.uses || {}) as Dict;
   let triggerId = 'trg_passive';
   const tv: Dict = {};
+  // Разбор в trg_custom (продвинутый): любое событие/реакция с субъектом/условиями,
+  // которое простые блоки не могут представить без потерь.
+  const toCustom = (tr: Dict) => {
+    triggerId = 'trg_custom';
+    tv.mode = act.mode === 'reaction' ? 'reaction' : 'triggered';
+    tv.event = tr.event ?? 'hit';
+    tv.timing = tr.timing ?? 'after';
+    tv.subject = tr.subject ?? '';
+    tv.circumstances = normalizeWhen(tr.circumstances);
+    tv.uses_count = uses.count != null ? String(uses.count) : '';
+    tv.uses_per = uses.per ?? 'long_rest';
+  };
   if (act.mode === 'active') {
     triggerId = 'trg_active';
     const cost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
     tv.resources = cost.length ? cost.map((c) => c.resource).filter(Boolean) : [((act.cost as Dict[])?.[0]?.resource) ?? 'action'];
     tv.uses_count = uses.count ?? 'prof_bonus';
     tv.uses_per = uses.per ?? 'long_rest';
+  } else if (act.mode === 'reaction') {
+    toCustom((act.trigger || {}) as Dict);
   } else if (act.mode === 'triggered') {
     const tr = (act.trigger || {}) as Dict;
     const ev = tr.event;
-    if (ev === 'on_acquire') triggerId = 'trg_on_acquire';
-    else if (ev === 'long_rest') triggerId = 'trg_long_rest';
-    else if (ev === 'short_rest') triggerId = 'trg_short_rest';
-    else if (ev === 'reduced_to_0_hp') {
+    const circ = Array.isArray(tr.circumstances) ? (tr.circumstances as Dict[]) : [];
+    const hasSubject = !!tr.subject;
+    // Точный паттерн trg_d20_one: timing:replaces + circumstances=[d20_equals:1] на 3 видах броска.
+    const isD20One = tr.timing === 'replaces' && circ.length === 1
+      && circ[0]?.kind === 'd20_equals' && Number(circ[0]?.value) === 1
+      && ['attack_roll_made', 'ability_check_made', 'saving_throw_made'].includes(String(ev));
+    const simple = !hasSubject && circ.length === 0;
+    if (isD20One && !hasSubject) {
+      triggerId = 'trg_d20_one';
+      tv.event = ev;
+    } else if (ev === 'on_acquire' && simple) triggerId = 'trg_on_acquire';
+    else if (ev === 'long_rest' && simple) triggerId = 'trg_long_rest';
+    else if (ev === 'short_rest' && simple) triggerId = 'trg_short_rest';
+    else if (ev === 'reduced_to_0_hp' && !hasSubject && circ.length === 0) {
       triggerId = 'trg_zero_hp';
       tv.uses_count = uses.count ?? 1;
       tv.uses_per = uses.per ?? 'long_rest';
-    } else if (tr.timing === 'replaces') {
-      triggerId = 'trg_d20_one';
-      tv.event = ev;
+    } else {
+      toCustom(tr);
     }
   }
 
