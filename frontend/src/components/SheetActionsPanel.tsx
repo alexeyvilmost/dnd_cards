@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
+import { actionsApi } from '../api/client';
 import type { AssembledCharacter } from '../character/assemble';
-import { actionNeedsTarget, collectSheetActions, type SheetAction } from '../character/actionSheet';
+import { actionNeedsTarget, collectSheetActions, collectGrantActionSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -207,9 +208,34 @@ export default function SheetActionsPanel({
     [character.equipment, character.turn_state, equipCards, runtime.inventory],
   );
   const basicActions = useBasicActions();
+
+  // S6: действия, ВЫДАННЫЕ предметами через grant_action (приёмы оружия BG3). Резолвим action по slug
+  // (кэш getAction). Карта действия несёт экономику/поведение; здесь только доступ к нему на листе.
+  const [grantedActions, setGrantedActions] = useState<GrantedAction[]>([]);
+  useEffect(() => {
+    if (spellsOnly) { setGrantedActions((p) => (p.length ? [] : p)); return; }
+    const refs: { slug: string; sourceLabel: string }[] = [];
+    const seen = new Set<string>();
+    for (const im of itemMechs) {
+      for (const slug of collectGrantActionSlugs(im.card.mechanics, character.level)) {
+        if (seen.has(slug)) continue;
+        seen.add(slug);
+        refs.push({ slug, sourceLabel: im.card.name });
+      }
+    }
+    if (!refs.length) { setGrantedActions((p) => (p.length ? [] : p)); return; }
+    let stale = false;
+    Promise.all(refs.map((r): Promise<GrantedAction | null> => actionsApi.getAction(r.slug)
+      .then((action): GrantedAction => ({ action, sourceLabel: r.sourceLabel, group: 'item' }))
+      .catch(() => null)))
+      .then((list) => { if (!stale) setGrantedActions(list.filter((x): x is GrantedAction => x !== null)); })
+      .catch(() => { if (!stale) setGrantedActions((p) => (p.length ? [] : p)); });
+    return () => { stale = true; };
+  }, [itemMechs, spellsOnly]);
+
   const actions = useMemo(
-    () => collectSheetActions(assembled, itemMechs, basicActions),
-    [assembled, itemMechs, basicActions],
+    () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions),
+    [assembled, itemMechs, basicActions, grantedActions],
   );
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();

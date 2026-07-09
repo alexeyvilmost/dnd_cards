@@ -261,8 +261,9 @@
           "if": { "properties": { "kind": { "const": "grant_action" } } },
           "then": {
             "properties": {
-              "as": { "enum": ["action", "bonus_action", "reaction"] },
-              "options": { "type": "array", "items": { "type": "string" } }
+              "value": { "type": "string", "description": "slug действия из библиотеки (даёт доступ к нему)" },
+              "values": { "type": "array", "items": { "type": "string" }, "description": "несколько slug'ов действий" },
+              "level_gate": { "type": "integer" }
             }
           }
         },

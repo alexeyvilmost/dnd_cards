@@ -329,7 +329,7 @@ export const EFFECT_BLOCKS: Block[] = [
     label: 'Рывок/перемещение',
     group: 'effect',
     fields: [],
-    build: () => ({ kind: 'grant_action', as: 'bonus_action', options: ['dash'] }),
+    build: () => ({ kind: 'grant_action', value: 'dash' }),
     summary: () => 'Рывок (бонусное действие)',
   },
   {
@@ -572,9 +572,11 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     case 'set_value': return { blockId: 'eff_set_value', values: { target: p.target, formula: p.formula } };
     case 'narrative': return { blockId: 'eff_narrative', values: { description: p.description } };
     case 'grant_action': {
-      const opts = p.options as unknown[];
-      return Array.isArray(opts) && opts.length === 1 && opts[0] === 'dash'
-        ? { blockId: 'eff_dash', values: {} } : raw();
+      // value | values — канон; options — легаси (до слайса 6), принимаем для обратной десериализации.
+      const vals = Array.isArray(p.values) ? (p.values as unknown[])
+        : p.value != null ? [p.value]
+          : Array.isArray(p.options) ? (p.options as unknown[]) : [];
+      return vals.length === 1 && vals[0] === 'dash' ? { blockId: 'eff_dash', values: {} } : raw();
     }
     case 'modifier': {
       const at = (p.applies_to || {}) as Dict;

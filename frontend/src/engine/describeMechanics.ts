@@ -87,7 +87,10 @@ function payloadPhrase(p: Dict): string {
     }
     case 'resource': return String(p.op) === 'restore' ? `восстанавливает ${p.id}` : `выдаёт ${p.amount ?? 1} ${p.id}`;
     case 'movement': return `${p.value ?? 'перемещение'} ${p.distance ?? ''} фт`.trim();
-    case 'grant_action': return `даёт бонусное действие: ${(p.options as string[] ?? []).join(', ')}`;
+    case 'grant_action': {
+      const vals = Array.isArray(p.values) ? (p.values as string[]) : (p.value != null ? [String(p.value)] : []);
+      return `даёт действие: ${vals.join(', ')}`;
+    }
     case 'boon': return `талон ${diceRu(String(p.die ?? ''))}`;
     case 'set_value': return `устанавливает ${p.target}=${p.formula ?? p.value}`;
     case 'reroll': return 'переброс';

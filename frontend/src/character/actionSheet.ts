@@ -59,7 +59,7 @@ function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> |
   return normalizeActiveMechanics(mech as Record<string, unknown>, 'action', effectUsesRef(effect));
 }
 
-function actionMechanics(action: Action): Record<string, unknown> | null {
+function actionMechanics(action: Action, withUses = true): Record<string, unknown> | null {
   const mech = action.mechanics;
   if (!mech || typeof mech !== 'object') {
     if (!action.resource) return null;
@@ -74,7 +74,7 @@ function actionMechanics(action: Action): Record<string, unknown> | null {
   }
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(mech as Record<string, unknown>, action.resource, actionUsesRef(action));
+  return normalizeActiveMechanics(mech as Record<string, unknown>, action.resource, withUses ? actionUsesRef(action) : undefined);
 }
 
 function spellMechanics(spell: Spell): Record<string, unknown> | null {
@@ -85,12 +85,39 @@ function spellMechanics(spell: Spell): Record<string, unknown> | null {
   return mech as Record<string, unknown>;
 }
 
+/** S6 «предмет=эффект»: slug'и действий, ВЫДАННЫХ через grant_action (даёт доступ к библиотечному
+ *  действию; экономика/поведение — на самой карте действия). Читает value | values, форму effects[]. */
+export function collectGrantActionSlugs(mechanics: Record<string, unknown> | null | undefined, level = Infinity): string[] {
+  if (!mechanics || typeof mechanics !== 'object') return [];
+  const effects = (mechanics as Dict).effects;
+  if (!Array.isArray(effects)) return [];
+  const out: string[] = [];
+  const scan = (p: Dict) => {
+    if (!p || p.kind !== 'grant_action') return;
+    // Уровневый гейт (как grant_spell): приём доступен только с нужного уровня персонажа.
+    const g = p.level_gate ?? p.min_level;
+    if (g != null && !Number.isNaN(Number(g)) && level < Number(g)) return;
+    if (typeof p.value === 'string' && p.value) out.push(p.value);
+    if (Array.isArray(p.values)) for (const v of p.values) if (typeof v === 'string' && v) out.push(v);
+  };
+  for (const it of effects as Dict[]) {
+    if (it?.kind) scan(it);
+    else if (it?.resolution === 'auto' && Array.isArray(it.result)) for (const p of it.result as Dict[]) scan(p);
+  }
+  return out;
+}
+
+/** Действие, выданное через grant_action (уже загруженное по slug), для collectSheetActions. */
+export interface GrantedAction { action: Action; sourceLabel: string; group: SheetAction['group']; }
+
 export function collectSheetActions(
   assembled: AssembledCharacter,
   /** Механики надетых предметов (уже с учётом настройки) — активируемые попадают в действия. */
   itemMechanics: Array<{ card: import('../types').Card; mechanics: Record<string, unknown> }> = [],
   /** Базовые действия — сущности Action (type='basic') из библиотеки, грузятся отдельно. */
   basicActions: Action[] = [],
+  /** S6: действия, выданные через grant_action (загружены по slug на листе). */
+  grantedActions: GrantedAction[] = [],
 ): SheetAction[] {
   const basic: SheetAction[] = basicActions
     .map((action): SheetAction | null => {
@@ -179,7 +206,29 @@ export function collectSheetActions(
     })
     .filter((a): a is SheetAction => a != null);
 
-  return [...basic, ...fromRace, ...fromClass, ...fromItems, ...spells];
+  // S6: действия, выданные grant_action (приёмы оружия BG3). Карта действия несёт свою экономику
+  // (activation) и поведение — здесь только оборачиваем в строку листа с источником.
+  const fromGranted: SheetAction[] = grantedActions
+    .map(({ action, sourceLabel, group }): SheetAction | null => {
+      // withUses=false: пул использований выданных действий пока НЕ сидируется (грант резолвится на
+      // рендере, а не на init/rest), поэтому не гейтим по uses — иначе действие с mechanics.uses было
+      // бы навсегда недоступно. Экономика действия (bonus_action и т.п.) сохраняется. Полноценный uses
+      // для грантов (сид+перезарядка) — отдельная задача.
+      const mechanics = actionMechanics(action, false);
+      if (!mechanics) return null;
+      return {
+        id: `granted-${action.id}`,
+        name: action.name,
+        mechanics: { ...mechanics, name: action.name },
+        group,
+        imageUrl: action.image_url,
+        sourceLabel,
+        actionRef: action,
+      };
+    })
+    .filter((a): a is SheetAction => a != null);
+
+  return [...basic, ...fromRace, ...fromClass, ...fromItems, ...fromGranted, ...spells];
 }
 
 export type ActionUsesPool = { key: string; count: number | string; per?: string };
