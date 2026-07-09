@@ -208,6 +208,7 @@ export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteRes
   const pending: ReactionOffer[] = [];
 
   next.hp.current = next.hp.max;
+  next.hp.temp = 0; // C6: временные хиты спадают после длинного отдыха (RAW 2024)
   next.activeEffects = [];
 
   // КРИТИЧНО (C3): эмитим long_rest ДО сплошного восстановления. applyResource op:'grant'

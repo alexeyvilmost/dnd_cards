@@ -192,6 +192,27 @@ function expiryFromDuration(duration: Dict | undefined): string | undefined {
 }
 
 /**
+ * C6: единый резолвер длительности «стоячего» эффекта → { roundsLeft, expiry }. Общий для
+ * condition / modifier / resistance (раньше логика дублировалась, а у modifier её вовсе не было —
+ * бафф «+2 на 3 раунда» висел вечно). duration.rounds → roundsLeft (тикает на начале хода в
+ * expireStartOfTurnEffects); until_start/end_of_turn → expiry-метка; без длительности → 'manual'
+ * (снимается вручную/до отдыха, как чип Ярости).
+ */
+function resolveDuration(duration: Dict | undefined): { roundsLeft?: number; expiry?: string } {
+  if (duration?.type === 'rounds') {
+    // Целое число раундов → тикающий эффект. Невалидный amount (0/отрицательное/дробное/NaN, а
+    // также формульное '1d4' — Number()→NaN) НЕ делаем вечным: даём 1 раунд (истечёт на следующем
+    // ходу), иначе временный эффект тихо стал бы постоянным. Формульные длительности через evaluate —
+    // отдельная фича (нужен ctx/rng здесь), пока усекаются до 1 раунда.
+    const n = Math.floor(Number(duration.amount));
+    return { roundsLeft: Number.isFinite(n) && n > 0 ? n : 1 };
+  }
+  // Нет длительности / until_*-метка: expiry ('start_of_next_turn'|'end_of_turn') либо 'manual'
+  // (стоячий до ручного снятия/отдыха — Ярость и т.п.).
+  return { expiry: expiryFromDuration(duration) ?? 'manual' };
+}
+
+/**
  * Скейлинг формулы урона/лечения (E5):
  * - per: 'spell_slot_above' — апкаст: +dice за каждый уровень слота выше базового;
  * - per: 'character_level' | 'cantrip' — рост заговора на уровнях персонажа 5/11/17.
@@ -304,11 +325,13 @@ function applyModifierPayload(
   source: string,
   events: EngineEvent[],
 ): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
   const entry: ActiveEffectEntry = {
     id: `fx-${state.activeEffects.length}-${Date.now()}`,
     name: source,
     mechanics: payload,
-    expiry: expiryFromDuration(payload.duration as Dict | undefined),
+    roundsLeft, // C6: раньше не выставлялся — модификатор с duration.rounds не истекал
+    expiry,
     source,
   };
   events.push({ type: 'effect_applied', name: source });
@@ -326,17 +349,13 @@ function applyResistancePayload(
   source: string,
   events: EngineEvent[],
 ): RuntimeState {
-  // Длительность как у applyCondition: duration.rounds → roundsLeft (тик хода снимет по истечении);
-  // иначе expiry из duration или 'manual' (снимается вручную — как чип-модификатор Ярости).
-  // Полноценный единый резолвер длительностей — C6 (роадмап 2.2).
-  const duration = payload.duration as Dict | undefined;
-  const rounds = duration?.type === 'rounds' ? Number(duration.amount) || undefined : undefined;
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
   const entry: ActiveEffectEntry = {
     id: `res-${state.activeEffects.length}-${Date.now()}`,
     name: source,
     mechanics: payload,
-    roundsLeft: rounds,
-    expiry: expiryFromDuration(duration) ?? (rounds ? undefined : 'manual'),
+    roundsLeft,
+    expiry,
     source,
   };
   events.push({ type: 'effect_applied', name: source });
@@ -400,14 +419,13 @@ function applyCondition(
     return { ...state, activeEffects: kept };
   }
 
-  const duration = payload.duration as Dict | undefined;
-  const rounds = duration?.type === 'rounds' ? Number(duration.amount) || undefined : undefined;
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
   const entry: ActiveEffectEntry = {
     id: `cond-${state.activeEffects.length}-${Date.now()}`,
     name: condition,
     mechanics: payload,
-    roundsLeft: rounds,
-    expiry: expiryFromDuration(duration) ?? (rounds ? undefined : 'manual'),
+    roundsLeft,
+    expiry,
     source,
   };
   events.push(conditionAppliedEvent(condition));

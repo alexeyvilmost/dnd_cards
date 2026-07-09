@@ -127,7 +127,18 @@ id); триггерные/реакционные выборы (при Ярост
   `emitEvent→runMechanicEffects→runAttackRoll→emitEvent` без лимита; при `PLANNING_RNG=0.94` on-hit-райдер
   зацикливается детерминированно, а Скрытая атака УЖЕ авто-триггерит on-hit. FIFO-очередь + лимит каскада
   ~8 событий/действие + правило «слушатель не реагирует на своё событие» + `fired.add` ДО запуска. `execute.ts:791`.
-- **2.2 C6 — единый резолвер длительностей пейлоадов** (M). `applyModifierPayload` не ставит `roundsLeft`
+**2.2 C6 ✅ СДЕЛАНО.** Единый `resolveDuration(duration)→{roundsLeft,expiry}` для condition/modifier/
+resistance (раньше логика дублировалась, а у `applyModifierPayload` `roundsLeft` не выставлялся вовсе →
+бафф «+2 на 3 раунда» висел вечно). Тик `roundsLeft` уже был в `expireStartOfTurnEffects` (начало хода) —
+теперь модификаторы в нём участвуют. `longRest` обнуляет `hp.temp` (RAW). Правка ревью (HIGH): невалидный
+`amount` (0/отрицательный/дробный/формула `'1d4'` → `Number()`=NaN) больше НЕ делает эффект вечным —
+`Math.floor`+`>0`-гейт, иначе 1 раунд (не `'manual'`). Тесты `engine/duration.test.ts` (7: модификатор
+истекает/сохраняется, longRest temp=0, регресс condition/resistance, невалидный amount, дробный floor).
+Гейты tsc 0 / 346 vitest / 83 mvp. **Отложено (LOW):** формульные длительности (`'1d4'`) через `evaluate`
+(нужен ctx/rng в resolveDuration — пока усечены до 1 раунда); additive-стек не сливает `expiry` (редко);
+`roundsLeft` на цели (`who:'target'`) не тикает — нет хода цели (мультиактор/EncounterState PLANNED).
+
+- **2.2 (исходный план) C6 — единый резолвер длительностей пейлоадов** (M). `applyModifierPayload` не ставит `roundsLeft`
   из `duration.rounds` (в отличие от `applyCondition`) → бафф «+2 на 3 раунда» висит вечно. `resolveDuration()`
   для ВСЕХ payload-kind + тик в start/endTurn (`turn.ts:144` уже есть) + longRest обнуляет `hp.temp`.
 - **2.3 C5 — алгебра модификаторов: `mode` + `priority`** (M, Foundry-модель). `collectFromPayload` понимает
