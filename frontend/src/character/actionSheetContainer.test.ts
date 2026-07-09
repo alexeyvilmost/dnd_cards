@@ -4,7 +4,8 @@
  * (расход самого набора). Поведение не хардкодится, различается только данными. Cycle-guard само-ссылки.
  */
 import { describe, expect, it } from 'vitest';
-import { collectSheetActions, containerUnpackAction } from './actionSheet';
+import { collectSheetActions, containerUnpackAction, containerChoiceAction } from './actionSheet';
+import { selectedChoicePayloads } from '../mechanics/expandChoices';
 import { executeAction } from '../engine/execute';
 import type { AssembledCharacter } from './assemble';
 import type { Card } from '../types';
@@ -61,5 +62,46 @@ describe('S2 — containerUnpackAction (распаковка mode=all)', () => {
     expect(r.state.inventory.find((i) => i.cardId === 'lute')?.qty).toBe(1);
     expect(r.state.inventory.find((i) => i.cardId === 'costume')?.qty).toBe(2);
     expect(r.state.inventory.find((i) => i.cardId === 'pack')).toBeUndefined(); // набор израсходован
+  });
+});
+
+const CHAR: CharacterContext = { abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 5 };
+const bag = (contents: { card_id: string; quantity: number }[]): Card => container('choice', contents, 'bag');
+
+describe('S3 — контейнер-выбор mode=choice (containerChoiceAction)', () => {
+  it('деривирует «Достать» с choice source:item из содержимого + consumes_self', () => {
+    const a = containerChoiceAction(bag([{ card_id: 'hammer', quantity: 1 }, { card_id: 'rope', quantity: 2 }]), (id) => (id === 'hammer' ? 'Молот' : 'Верёвка'))!;
+    const choice = (a.mechanics.effects as { result: Record<string, unknown>[] }[])[0].result[0] as Record<string, unknown>;
+    expect(choice.kind).toBe('choice');
+    expect(choice.context).toBe('in_play');
+    const opts = choice.options as { source: string; items: { id: string; name: string; qty: number }[] };
+    expect(opts.source).toBe('item');
+    expect(opts.items.map((i) => i.id)).toEqual(['hammer', 'rope']);
+    expect(opts.items[0].name).toBe('Молот');
+    const cost = (a.mechanics.activation as { cost: Record<string, unknown>[] }).cost;
+    expect(cost.some((c) => c.resource === 'item' && c.card_id === 'bag')).toBe(true);
+    expect(a.name).toContain('Достать');
+  });
+
+  it('cycle-guard само-ссылки; mode=all → null', () => {
+    expect(containerChoiceAction(container('all', [{ card_id: 'x', quantity: 1 }]))).toBeNull();
+    const a = containerChoiceAction(bag([{ card_id: 'bag', quantity: 1 }, { card_id: 'hammer', quantity: 1 }]))!;
+    expect(((a.mechanics.effects as { result: Record<string, unknown>[] }[])[0].result[0].options as { items: { id: string }[] }).items.map((i) => i.id)).toEqual(['hammer']);
+  });
+
+  it('selectedChoicePayloads source:item → add_item выбранного (qty из варианта)', () => {
+    const choice = { kind: 'choice', options: { source: 'item', items: [{ id: 'hammer', name: 'Молот' }, { id: 'rope', name: 'Верёвка', qty: 2 }] } };
+    expect(selectedChoicePayloads(choice, ['hammer'])).toEqual([{ kind: 'add_item', card_id: 'hammer', qty: 1 }]);
+    expect(selectedChoicePayloads(choice, ['rope'])).toEqual([{ kind: 'add_item', card_id: 'rope', qty: 2 }]);
+  });
+
+  it('ИНТЕГРАЦИЯ: выбор предмета → в инвентарь, мешок израсходован, невыбранное не добавлено', () => {
+    const a = containerChoiceAction(bag([{ card_id: 'hammer', quantity: 1 }, { card_id: 'saw', quantity: 1 }]))!;
+    const s = { hp: { current: 10, max: 10, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [{ cardId: 'bag', qty: 1 }], activeEffects: [] } as unknown as RuntimeState;
+    const ctx = { character: CHAR, rng: () => 0.5, choices: { container: ['hammer'] } } as unknown as ExecuteContext;
+    const r = executeAction(s, a.mechanics as Record<string, unknown>, ctx);
+    expect(r.state.inventory.find((i) => i.cardId === 'hammer')?.qty).toBe(1);
+    expect(r.state.inventory.find((i) => i.cardId === 'bag')).toBeUndefined(); // мешок израсходован
+    expect(r.state.inventory.find((i) => i.cardId === 'saw')).toBeUndefined(); // невыбранное — нет
   });
 });

@@ -60,9 +60,14 @@ export function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[]
       continue;
     }
 
-    // choice(source:"feat") без grant-шаблона: выбранное значение — id черты.
+    // choice(source:"feat"/"item") без grant-шаблона: выбранное значение — id сущности.
     if (String(opts.source) === 'feat') {
       out.push({ kind: 'grant_feat', value });
+    } else if (String(opts.source) === 'item') {
+      // S3 контейнеры / выбор-в-моменте предмета: выбранный предмет → в инвентарь (add_item, S1).
+      // qty — из варианта (контейнер несёт quantity в options.items), иначе 1.
+      const q = item && (item as Dict).qty != null ? Number((item as Dict).qty) : 1;
+      out.push({ kind: 'add_item', card_id: value, qty: Math.max(1, Math.floor(q) || 1) });
     }
   }
 

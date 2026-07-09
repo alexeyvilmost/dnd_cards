@@ -143,6 +143,38 @@ export function containerUnpackAction(card: Card, nameOf?: (id: string) => strin
   };
 }
 
+/**
+ * S3 контейнеры: действие «Достать» для контейнера mode='choice' (Мешок инструментов) — диалог выбора
+ * ОДНОГО предмета из содержимого (choice source:'item', context:'in_play' — тот же примитив, что выбор
+ * «Сглаза»); выбранный → в инвентарь (add_item), сам мешок расходуется (consumes_self, одноразовый).
+ * Общее решение: выбор предмета обрабатывается source:'item' в selectedChoicePayloads, не спец-логикой.
+ * Cycle-guard само-ссылки; qty из quantity содержимого.
+ */
+export function containerChoiceAction(card: Card, nameOf?: (id: string) => string | undefined): SheetAction | null {
+  if (card.container_mode !== 'choice') return null;
+  const contents = Array.isArray(card.contents) ? card.contents : [];
+  const items = contents
+    .filter((c) => c && c.card_id && c.card_id !== card.id)
+    .map((c) => ({ id: c.card_id, name: nameOf?.(c.card_id) ?? c.card_id, qty: Math.max(1, Math.floor(Number(c.quantity)) || 1) }));
+  if (!items.length) return null;
+  const mechanics = applyItemConsumeCost({
+    name: card.name,
+    activation: { mode: 'active', consumes_self: true, cost: [] },
+    effects: [{
+      resolution: 'auto',
+      result: [{ kind: 'choice', context: 'in_play', id: 'container', prompt: `Выберите предмет: ${card.name}`, count: 1, options: { source: 'item', items } }],
+    }],
+  }, card.id);
+  return {
+    id: `container-${card.id}`,
+    name: `Достать: ${card.name}`,
+    mechanics,
+    group: 'item',
+    imageUrl: card.image_url,
+    sourceLabel: card.name,
+  };
+}
+
 export function collectSheetActions(
   assembled: AssembledCharacter,
   /** Механики надетых предметов (уже с учётом настройки) — активируемые попадают в действия. */
@@ -267,7 +299,7 @@ export function collectSheetActions(
 
   // S2: распаковка контейнеров mode='all' (Набор артиста → всё в инвентарь + расход набора).
   const fromContainers: SheetAction[] = containerCards
-    .map((c) => containerUnpackAction(c, nameOf))
+    .map((c) => (c.container_mode === 'choice' ? containerChoiceAction(c, nameOf) : containerUnpackAction(c, nameOf)))
     .filter((a): a is SheetAction => a != null);
 
   return [...basic, ...fromRace, ...fromClass, ...fromItems, ...fromGranted, ...fromContainers, ...spells];

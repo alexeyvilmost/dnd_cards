@@ -80,7 +80,8 @@ function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[]
   // subfeature (подвиды/наследия), explicit (дар договора, «навык А или Б»)
   // и effect (выбор эффектов-бусин) несут варианты прямо в options.items —
   // берём их оттуда.
-  if (choice.source === 'subfeature' || choice.source === 'explicit' || choice.source === 'effect') {
+  // 'item' (S3 контейнер-выбор / выбор предмета-в-моменте) тоже несёт варианты прямо в options.items.
+  if (choice.source === 'subfeature' || choice.source === 'explicit' || choice.source === 'effect' || choice.source === 'item') {
     return (choice.items || []).map((it) => ({ id: it.id, label: it.name }));
   }
   // Черты (боевые стили, черты происхождения, «Получение черты» на ASI-уровнях):

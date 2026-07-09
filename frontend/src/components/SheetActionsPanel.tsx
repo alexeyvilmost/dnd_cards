@@ -233,7 +233,7 @@ export default function SheetActionsPanel({
     return () => { stale = true; };
   }, [itemMechs, spellsOnly]);
 
-  // S2 контейнеры: носимые карты-контейнеры mode='all' → действие «Распаковать».
+  // S2/S3 контейнеры: носимые карты-контейнеры → действие «Распаковать» (mode='all') или «Достать» (mode='choice').
   const containerCards = useMemo(() => {
     const ids = new Set<string>();
     for (const r of runtime.inventory) ids.add(r.cardId);
@@ -241,7 +241,7 @@ export default function SheetActionsPanel({
     const out: Card[] = [];
     for (const id of ids) {
       const card = equipCards.get(id);
-      if (card && card.container_mode === 'all' && Array.isArray(card.contents) && card.contents.length) out.push(card);
+      if (card && (card.container_mode === 'all' || card.container_mode === 'choice') && Array.isArray(card.contents) && card.contents.length) out.push(card);
     }
     return out;
   }, [runtime.inventory, runtime.equipment, equipCards]);
