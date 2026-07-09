@@ -858,6 +858,20 @@ func IsValidElementalDamageType(damageType string) bool {
 	}
 }
 
+// IsValidDamageType - проверяет основной тип урона предмета (damage_type).
+// В отличие от старого CHECK-констрейнта БД (только физические), поле может нести
+// как физический, так и чисто стихийный урон (флакон кислоты, алхимический огонь).
+// Единый источник 13 типов — frontend/src/utils/damageTypes.ts.
+func IsValidDamageType(damageType string) bool {
+	switch damageType {
+	case "slashing", "piercing", "bludgeoning",
+		"fire", "cold", "acid", "poison", "necrotic", "lightning", "psychic", "radiant", "thunder", "force":
+		return true
+	default:
+		return false
+	}
+}
+
 // IsValidProperty - проверяет, является ли свойство допустимым
 func IsValidProperty(property string) bool {
 	switch property {

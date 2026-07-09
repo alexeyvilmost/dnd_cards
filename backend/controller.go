@@ -378,6 +378,11 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		return
 	}
 
+	if req.DamageType != nil && *req.DamageType != "" && !IsValidDamageType(*req.DamageType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип урона"})
+		return
+	}
+
 	if !ValidateProperties(req.Properties) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
 		return
@@ -499,6 +504,11 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 
 	if req.ElementalDamageType != nil && *req.ElementalDamageType != "" && !IsValidElementalDamageType(*req.ElementalDamageType) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип стихийного урона"})
+		return
+	}
+
+	if req.DamageType != nil && *req.DamageType != "" && !IsValidDamageType(*req.DamageType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип урона"})
 		return
 	}
 

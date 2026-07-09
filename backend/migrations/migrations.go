@@ -429,8 +429,50 @@ func GetAllMigrations() []Migration {
 			Up:          createConceptsTable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("DROP TABLE IF EXISTS concepts CASCADE"); return err },
 		},
+		{
+			Version:     "071_widen_cards_damage_type_check",
+			Description: "Расширить cards_damage_type_check: разрешить стихийные типы (acid/fire/…) как основной damage_type",
+			Up:          widenCardsDamageTypeCheck,
+			Down:        restoreCardsDamageTypeCheck,
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// cardDamageTypeCheckValues — все 13 типов урона (физические + стихийные). Единый
+// источник — frontend/src/utils/damageTypes.ts и Go-функция IsValidDamageType.
+const cardDamageTypeCheckValues = "'bludgeoning', 'piercing', 'slashing', 'acid', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'poison', 'psychic', 'radiant', 'thunder'"
+
+// widenCardsDamageTypeCheck расширяет устаревший CHECK cards_damage_type_check,
+// который разрешал только физические типы (slashing/piercing/bludgeoning). Из-за него
+// сохранение предмета со стихийным основным уроном (флакон кислоты, алхимический огонь)
+// падало с 500. Теперь damage_type принимает все 13 типов урона либо NULL.
+func widenCardsDamageTypeCheck(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_damage_type_check",
+		fmt.Sprintf("ALTER TABLE cards ADD CONSTRAINT cards_damage_type_check CHECK (damage_type IN (%s) OR damage_type IS NULL)", cardDamageTypeCheckValues),
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// restoreCardsDamageTypeCheck возвращает исходный узкий CHECK (только физические типы).
+// Откат сработает лишь если в damage_type нет стихийных значений на этот момент.
+func restoreCardsDamageTypeCheck(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_damage_type_check",
+		"ALTER TABLE cards ADD CONSTRAINT cards_damage_type_check CHECK (damage_type IN ('slashing', 'piercing', 'bludgeoning') OR damage_type IS NULL)",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
 }
 
 // createConceptsTable заводит справочник «понятий» (глоссарий): пояснения, которые не
