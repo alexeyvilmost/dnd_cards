@@ -196,6 +196,16 @@ target больше НЕ создаёт фантомный ресурс молч
     rule_state (кузня) остаётся «голым» — downstream (2D-бой/кампания) видит предметы через live-резолвер (решение
     владельца). Тесты `itemRuntimeSources.test.ts` (8). **Часть большей инициативы «предметы как эффекты»** (5 примитивов,
     6 слайсов: S2 гейт данными+carried, S3 grant_effect, S4 предмет-действие+саморасход, S5 предмет-ресурс, S6 grant_action).
+  - **гейт данными + carried ✅ СДЕЛАНО (слайс 2).** `itemMechanicsActive`→`itemGate(card, {equipment,inventory,attuned})`,
+    читающий `activation.while ∈ {equipped|carried|attuned}` (или top-level `mechanics.while`); нет → equipped (обр.
+    совместимость). Настройка — жёсткое требование поверх локации. `collectItemMechanics` теперь сканирует и СУМКУ
+    (carried), фильтруя каждую механику её гейтом (дедуп по id). Добавлены roll-time предикаты `item_equipped`/
+    `item_carried`/`attuned` в `evaluateCondition` (субстрат для S6; enforced где collectModifiers получает evalCtx).
+    Схема: `activation.while` + предикаты в examples. Тесты `itemGate.test.ts` (17). Ревью (10 агентов): 1 подтв.
+    (MED, латентный/пре-существующий) + hardening. **ГРАНИЦЫ:** (1) roll-time when-предикаты enforced лишь где
+    collectModifiers получает evalCtx (бой), а лист (breakdown/AC) evalCtx не передаёт → when там не блокирует —
+    касается ВСЕХ when-предикатов, латентно (контент не использует); сквозной evalCtx на лист = задача #27 (к S6,
+    меняет поведение всех условных модификаторов). (2) UI-селектор `while` в конструкторе — задача #26 (пока JSON).
   - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
     сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
     value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).

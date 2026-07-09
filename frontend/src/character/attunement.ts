@@ -28,14 +28,49 @@ export function toggleAttuned(attuned: string[], cardId: string): string[] {
     : [...attuned, cardId];
 }
 
+export type ItemGateMode = 'equipped' | 'carried' | 'attuned';
+type Dict = Record<string, unknown>;
+
 /**
- * Механика предмета действует, когда он надет И (если требует настройки)
- * на него настроены.
+ * Условие применимости механики предмета (данными, не хардкодом): equipped | carried | attuned.
+ * Хранится в mechanics.activation.while или top-level mechanics.while (для пассивных предметов без
+ * блока activation). Нераспознанное/отсутствует → undefined (прежнее поведение = equipped).
  */
-export function itemMechanicsActive(card: Card, attuned: string[]): boolean {
+export function itemWhile(card: Card): ItemGateMode | undefined {
+  const m = card.mechanics as Dict | null;
+  if (!m || typeof m !== 'object') return undefined;
+  const act = m.activation as Dict | undefined;
+  // `||`, не `??`: пустая/невалидная activation.while ('') не должна затенять top-level mechanics.while.
+  const raw = (act && typeof act === 'object' ? act.while : undefined) || m.while;
+  const s = String(raw ?? '').toLowerCase();
+  return s === 'equipped' || s === 'carried' || s === 'attuned' ? s : undefined;
+}
+
+export interface ItemGateContext {
+  equipment: Record<string, string | null | undefined>;
+  inventory: ReadonlyArray<{ cardId: string; qty: number }>;
+  attuned: string[];
+}
+
+const isEquipped = (equipment: ItemGateContext['equipment'], id: string): boolean =>
+  Object.values(equipment).some((v) => v === id);
+const isCarried = (ctx: ItemGateContext, id: string): boolean =>
+  isEquipped(ctx.equipment, id) || (ctx.inventory.find((r) => r.cardId === id)?.qty ?? 0) > 0;
+
+/**
+ * Единый гейт применимости предмета (данными). Настройка — ЖЁСТКОЕ требование независимо от локации
+ * (PHB: без настройки магия молчит). Локационная ось из `while`:
+ *  • нет / equipped → активна, пока предмет НАДЕТ (прежнее поведение, обратная совместимость);
+ *  • carried → пока НАДЕТ ИЛИ ЛЕЖИТ В СУМКЕ (equipped ⊆ carried);
+ *  • attuned → пока на предмет настроены.
+ */
+export function itemGate(card: Card, ctx: ItemGateContext): boolean {
   if (!card.mechanics || typeof card.mechanics !== 'object') return false;
-  if (card.requires_attunement) return attuned.includes(card.id);
-  return true;
+  if (card.requires_attunement && !ctx.attuned.includes(card.id)) return false;
+  const w = itemWhile(card);
+  if (w === 'carried') return isCarried(ctx, card.id);
+  if (w === 'attuned') return ctx.attuned.includes(card.id);
+  return isEquipped(ctx.equipment, card.id);
 }
 
 export interface ItemMechanic {
@@ -43,24 +78,26 @@ export interface ItemMechanic {
   mechanics: Record<string, unknown>;
 }
 
-/** Механики надетых предметов с учётом настройки (для passives-потока). */
+/**
+ * Механики предметов, прошедших гейт (для passives/runtimeSources/действий). Кандидаты — надетые
+ * (слоты) + носимые (сумка); каждая механика фильтруется своим itemGate. Дедуп по id. Инвентарь
+ * необязателен: без него — только надетые (обратная совместимость).
+ */
 export function collectItemMechanics(
   equipment: Record<string, string | null | undefined>,
   cardMap: Map<string, Card>,
   turnState: Record<string, unknown> | null | undefined,
+  inventory: ReadonlyArray<{ cardId: string; qty: number }> = [],
 ): ItemMechanic[] {
-  const attuned = readAttunedIds(turnState);
+  const ctx: ItemGateContext = { equipment, inventory, attuned: readAttunedIds(turnState) };
   const seen = new Set<string>();
   const out: ItemMechanic[] = [];
-  for (const id of Object.values(equipment)) {
+  for (const id of [...Object.values(equipment), ...inventory.map((r) => r.cardId)]) {
     if (!id || seen.has(id)) continue;
     seen.add(id);
     const card = cardMap.get(id);
-    if (!card || !itemMechanicsActive(card, attuned)) continue;
-    out.push({
-      card,
-      mechanics: { name: card.name, ...(card.mechanics as Record<string, unknown>) },
-    });
+    if (!card || !itemGate(card, ctx)) continue;
+    out.push({ card, mechanics: { name: card.name, ...(card.mechanics as Record<string, unknown>) } });
   }
   return out;
 }

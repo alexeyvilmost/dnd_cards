@@ -11,6 +11,8 @@ export type Activation = {
   cost?: Array<{ resource?: string }>;
   trigger?: Trigger;
   requirements?: Requirement[];
+  /** Гейт применимости предмета (S2 «предмет=эффект»): equipped(по умолч.) | carried | attuned. */
+  while?: 'equipped' | 'carried' | 'attuned';
 };
 
 export type Trigger = {

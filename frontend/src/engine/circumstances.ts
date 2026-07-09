@@ -55,6 +55,26 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       const of = cond.of as Dict | undefined;
       return of ? !evaluateCondition(of, ctx) : true;
     }
+    // ПРЕДМЕТНЫЕ ПРЕДИКАТЫ (S2). id из cond.id | cond.value. Оживляют when-гейты «пока предмет X
+    // надет/в сумке/настроен» (S2/S6). ВАЖНО: enforced лишь там, где collectModifiers получает evalCtx
+    // (боевые броски — execute/turn). Лист (breakdown/AC/ручной бросок) evalCtx пока не передаёт → when
+    // там не блокирует (пре-существующее поведение ВСЕХ when-предикатов; сквозной evalCtx — отдельная
+    // задача к S6). Closed-by-default: нет id/state → false, и НИКОГДА не бросаем (мягкие guard'ы).
+    case 'item_equipped': {
+      const id = String(cond.id ?? cond.value ?? '');
+      if (!id || !ctx.state) return false;
+      return Object.values(ctx.state.equipment ?? {}).some((v) => v === id);
+    }
+    case 'item_carried': {
+      const id = String(cond.id ?? cond.value ?? '');
+      if (!id || !ctx.state) return false;
+      if (Object.values(ctx.state.equipment ?? {}).some((v) => v === id)) return true;
+      return ((ctx.state.inventory ?? []).find((r) => r.cardId === id)?.qty ?? 0) > 0;
+    }
+    case 'attuned': {
+      const id = String(cond.id ?? cond.value ?? '');
+      return !!id && (ctx.character?.attunedIds?.includes(id) ?? false);
+    }
     case 'you_have_condition':
       return ctx.activeConditions?.has(String(cond.value)) ?? false;
     case 'target_has_condition':

@@ -157,10 +157,10 @@ export default function SheetActionsPanel({
   );
   // Пассивки персонажа + механики надетых предметов (с учётом настройки).
   const passives = useMemo(() => {
-    const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state)
+    const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory)
       .map((im) => im.mechanics);
     return [...collectPassiveMechanics(assembled, character.resolved_choices ?? {}), ...items];
-  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards]);
+  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards, runtime.inventory]);
 
   const equippedCards = useMemo(() => {
     const out: Card[] = [];
@@ -189,8 +189,8 @@ export default function SheetActionsPanel({
   );
 
   const itemMechs = useMemo(
-    () => collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state),
-    [character.equipment, character.turn_state, equipCards],
+    () => collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory),
+    [character.equipment, character.turn_state, equipCards, runtime.inventory],
   );
   const basicActions = useBasicActions();
   const actions = useMemo(

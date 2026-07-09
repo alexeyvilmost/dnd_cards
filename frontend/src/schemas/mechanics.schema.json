@@ -61,6 +61,7 @@
       "required": ["mode"],
       "properties": {
         "mode": { "enum": ["active", "passive", "reaction", "triggered"] },
+        "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
         "trigger": { "$ref": "#/$defs/trigger" },
         "casting_time": { "type": "string" },
@@ -92,7 +93,7 @@
       "required": ["kind"],
       "description": "Предикат-обстоятельство. any_of/all_of позволяют группировать через поле of.",
       "properties": {
-        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "any_of", "all_of", "narrative"] },
+        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "item_equipped", "item_carried", "attuned", "any_of", "all_of", "narrative"] },
         "value": {},
         "range": { "type": "number" },
         "of": {},

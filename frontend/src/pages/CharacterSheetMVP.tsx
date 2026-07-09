@@ -203,8 +203,8 @@ const CharacterSheetMVP = () => {
   //  • passives → breakdown листа (числовые роли: КЗ/хиты/скорость/инициатива/спасброски/навыки);
   //  • runtimeSources → resolveCharacterRules (характеристики/владения/чувства/заклинания предметов).
   const itemMechanics = useMemo(
-    () => (character ? collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state) : []),
-    [character, equipCards],
+    () => (character ? collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtimeState?.inventory ?? []) : []),
+    [character, equipCards, runtimeState],
   );
 
   // Слайс 1 «предмет = эффект»: механики надетых/настроенных предметов доходят до резолвера правил.
