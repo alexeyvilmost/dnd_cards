@@ -13,6 +13,8 @@ import {
 import {
   characterCurrency,
   equipCardSwapping,
+  moveOutOfContainer,
+  moveToContainer,
   unequipToInventory,
 } from '../character/inventory';
 import type { ForgeCharacter } from '../character/types';
@@ -80,6 +82,14 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [attuneOpen, setAttuneOpen] = useState(false);
+  // S5 контейнеры: какие контейнеры раскрыты (показывают содержимое) в инвентаре.
+  const [expandedContainers, setExpandedContainers] = useState<Set<string>>(new Set());
+  const toggleContainer = (cardId: string) =>
+    setExpandedContainers((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) next.delete(cardId); else next.add(cardId);
+      return next;
+    });
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
   void passives; void ruleState; // КД/оружие считаются в шапке листа
@@ -152,6 +162,10 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
       setBusy(false);
     }
   }, [character.id, onUpdated]);
+
+  // S5 контейнеры: положить предмет в контейнер / достать обратно (хелперы S4 + общий persist).
+  const putInContainer = (cardId: string, containerCardId: string) => persist(moveToContainer(runtime, cardId, containerCardId, 1));
+  const takeFromContainer = (cardId: string, containerCardId: string) => persist(moveOutOfContainer(runtime, cardId, containerCardId, 1));
 
   const attuned = readAttunedIds(character.turn_state);
   const canChangeAttunement = attunementUnlocked(character.turn_state);
@@ -286,14 +300,23 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   // ── Инвентарь ──
   const renderInventory = () => {
     const rows = character.inventory_items ?? [];
+    // S4/S5: верхний уровень (без container_id) + содержимое по контейнерам; ключ = card_id+container_id
+    // (в одном card_id теперь может быть несколько стопок в разных локациях).
+    const topLevel = rows.filter((r) => !r.container_id);
+    const nested = new Map<string, typeof rows>();
+    for (const r of rows) if (r.container_id) { const arr = nested.get(r.container_id) ?? []; arr.push(r); nested.set(r.container_id, arr); }
+    // Контейнеры-цели «положить в»: носимые предметы type='container' на верхнем уровне.
+    const containerTargets = topLevel.map((r) => cardMap.get(r.card_id)).filter((c): c is Card => !!c && c.type === 'container');
+
     if (asIcons) {
+      // Иконочный режим: только верхний уровень (вложенность — в списочном режиме).
       return (
         <div className="forge-spell-icon-grid sheet-inv-icon-grid">
-          {rows.map((row) => {
+          {topLevel.map((row) => {
             const card = cardMap.get(row.card_id);
             return (
               <button
-                key={row.card_id}
+                key={`${row.card_id}|${row.container_id ?? ''}`}
                 type="button"
                 className="forge-spell-icon ready sheet-inv-tile-icon"
                 title={card?.name ?? row.card_id}
@@ -314,17 +337,59 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
     }
     return (
       <div className="sheet-item-cols">
-        {rows.map((row) => {
+        {topLevel.map((row) => {
           const card = cardMap.get(row.card_id);
           if (!card) return null;
+          const isContainer = card.type === 'container';
+          const contents = isContainer ? (nested.get(row.card_id) ?? []) : [];
+          const open = expandedContainers.has(row.card_id);
+          // Контейнеры, в которые можно положить ЭТОТ предмет (не он сам).
+          const targets = containerTargets.filter((c) => c.id !== row.card_id);
           return (
-            <SheetItemRow
-              key={row.card_id}
-              card={card}
-              qty={row.qty}
-              onClick={() => openInventoryItem(card)}
-              {...hoverHandlers(card)}
-            />
+            <div key={`${row.card_id}|${row.container_id ?? ''}`}>
+              <SheetItemRow
+                card={card}
+                qty={row.qty}
+                onClick={() => openInventoryItem(card)}
+                right={
+                  isContainer ? (
+                    <button type="button" className="sheet-inv-move" disabled={busy}
+                      onClick={(e) => { e.stopPropagation(); toggleContainer(row.card_id); }}>
+                      {open ? '▾' : '▸'} {contents.length}
+                    </button>
+                  ) : targets.length ? (
+                    <select className="sheet-inv-move" value="" disabled={busy}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => { if (e.target.value) putInContainer(row.card_id, e.target.value); }}>
+                      <option value="">в контейнер…</option>
+                      {targets.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  ) : undefined
+                }
+                {...hoverHandlers(card)}
+              />
+              {isContainer && open && contents.map((cr) => {
+                const cc = cardMap.get(cr.card_id);
+                if (!cc) return null;
+                return (
+                  <div key={`${cr.card_id}|${cr.container_id}`} className="sheet-inv-nested">
+                    <SheetItemRow
+                      card={cc}
+                      qty={cr.qty}
+                      dimmed
+                      onClick={() => openInventoryItem(cc)}
+                      right={
+                        <button type="button" className="sheet-inv-move" disabled={busy}
+                          onClick={(e) => { e.stopPropagation(); takeFromContainer(cr.card_id, row.card_id); }}>
+                          достать
+                        </button>
+                      }
+                      {...hoverHandlers(cc)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           );
         })}
       </div>

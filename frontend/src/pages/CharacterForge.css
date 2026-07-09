@@ -454,6 +454,15 @@
   display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
   gap: 6px; margin-top: 8px;
 }
+/* S5 контейнеры: вложенное содержимое и контролы «положить/достать». */
+.sheet-inv-nested { margin-left: 18px; border-left: 2px solid rgba(231, 221, 199, 0.18); padding-left: 6px; margin-top: 4px; }
+.sheet-inv-move {
+  font-size: 11px; padding: 2px 6px; border-radius: 6px; cursor: pointer;
+  background: rgba(231, 221, 199, 0.08); color: #cbc3b1;
+  border: 1px solid rgba(231, 221, 199, 0.22);
+}
+.sheet-inv-move:hover:not(:disabled) { background: rgba(231, 221, 199, 0.16); }
+.sheet-inv-move:disabled { opacity: 0.5; cursor: default; }
 
 /* Ряд-предмет в стиле библиотеки (тёмная тема) */
 .sheet-item-row {
