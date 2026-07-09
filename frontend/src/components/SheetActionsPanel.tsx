@@ -116,7 +116,7 @@ function persistPayload(state: RuntimeState, prevTurnState: Record<string, unkno
     // S4: инвентарь персистим ТОЛЬКО когда действие реально израсходовало предмет — иначе каждое
     // действие затирало бы inventory_items локальным снимком и могло откатить параллельное изменение
     // сумки (экипировка/покупка/расход в другой вкладке). Бэкенд уже принимает inventory_items.
-    ...(includeInventory ? { inventory_items: state.inventory.map((r) => ({ card_id: r.cardId, qty: r.qty })) } : {}),
+    ...(includeInventory ? { inventory_items: state.inventory.map((r) => ({ card_id: r.cardId, qty: r.qty, ...(r.containerId ? { container_id: r.containerId } : {}) })) } : {}),
     // temp_hp обновляем, остальные поля turn_state (спасброски смерти) сохраняем
     turn_state: { ...(prevTurnState ?? {}), temp_hp: state.hp.temp },
   };

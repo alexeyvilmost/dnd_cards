@@ -20,11 +20,24 @@ function isItemCost(entry: Dict): boolean {
   return String(entry.resource ?? '') === 'item';
 }
 function inventoryQty(state: RuntimeState, cardId: string): number {
-  return state.inventory.find((r) => r.cardId === cardId)?.qty ?? 0;
+  return state.inventory.reduce((s, r) => (r.cardId === cardId ? s + r.qty : s), 0); // S4: сумма по всем локациям
 }
 function spendInventory(state: RuntimeState, cardId: string, qty: number): RuntimeState {
+  // S4: тратим ВСЕГО qty, предпочитая верхний уровень (стопки могут быть в разных контейнерах).
+  let remaining = qty;
+  const order = state.inventory
+    .map((r, i) => ({ r, i }))
+    .filter((x) => x.r.cardId === cardId)
+    .sort((a, b) => ((a.r.containerId ? 1 : 0) - (b.r.containerId ? 1 : 0)) || (a.i - b.i));
+  const take = new Map<number, number>();
+  for (const { r, i } of order) {
+    if (remaining <= 0) break;
+    const t = Math.min(r.qty, remaining);
+    take.set(i, t);
+    remaining -= t;
+  }
   const inventory = state.inventory
-    .map((row) => (row.cardId === cardId ? { ...row, qty: row.qty - qty } : { ...row }))
+    .map((row, i) => (take.has(i) ? { ...row, qty: row.qty - (take.get(i) ?? 0) } : { ...row }))
     .filter((row) => row.qty > 0);
   return { ...state, inventory };
 }

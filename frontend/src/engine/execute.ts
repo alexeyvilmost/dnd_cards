@@ -646,7 +646,8 @@ function invQtyOf(state: RuntimeState, cardId: string): number {
 }
 function addItemToInventory(state: RuntimeState, cardId: string, qty: number): RuntimeState {
   const inventory = state.inventory.map((r) => ({ ...r }));
-  const row = inventory.find((r) => r.cardId === cardId);
+  // S4: add_item кладёт на ВЕРХНИЙ уровень (containerId пусто), не в стопку внутри контейнера.
+  const row = inventory.find((r) => r.cardId === cardId && r.containerId == null);
   if (row) row.qty += qty;
   else inventory.push({ cardId, qty });
   return { ...state, inventory };

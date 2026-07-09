@@ -161,9 +161,12 @@ type PatchCharacterRuntimeRequest struct {
 }
 
 // InventoryItemRow — строка инвентаря персонажа v3.
+// S4 контейнеры: ContainerID — card_id контейнера, в котором лежит предмет (пусто = верхний уровень).
+// Поле jsonb, миграция не требуется (колонка inventory_items уже JSONB).
 type InventoryItemRow struct {
-	CardID string `json:"card_id"`
-	Qty    int    `json:"qty"`
+	CardID      string `json:"card_id"`
+	Qty         int    `json:"qty"`
+	ContainerID string `json:"container_id,omitempty"`
 }
 
 // InventoryItemRows — jsonb-массив инвентаря.

@@ -45,7 +45,7 @@ export interface ForgeCharacter {
   passive_perception?: number;
 
   equipment?: Record<string, string | null> | null;
-  inventory_items?: Array<{ card_id: string; qty: number }> | null;
+  inventory_items?: Array<{ card_id: string; qty: number; container_id?: string }> | null;
   resources?: Record<string, number> | null;
   max_resources?: Record<string, number> | null;
   active_effects?: unknown[] | null;

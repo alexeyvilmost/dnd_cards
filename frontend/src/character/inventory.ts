@@ -4,8 +4,63 @@ import { equipItem, planEquip, unequipSlot } from '../engine/equipment';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 
+/** Всего предмета в инвентаре (S4: сумма по ВСЕМ локациям — верхний уровень + все контейнеры). */
 export function inventoryQty(state: RuntimeState, cardId: string): number {
-  return state.inventory.find((r) => r.cardId === cardId)?.qty ?? 0;
+  return state.inventory.reduce((s, r) => (r.cardId === cardId ? s + r.qty : s), 0);
+}
+
+/** Содержимое контейнера (S4): строки инвентаря с containerId === cardId контейнера. */
+export function containerContents(state: RuntimeState, containerCardId: string): RuntimeState['inventory'] {
+  return state.inventory.filter((r) => r.containerId === containerCardId);
+}
+
+/**
+ * Суммарный вес содержимого контейнера (S4/S6): Σ weightOf(cardId)*qty, рекурсивно по вложенным
+ * контейнерам, с guard'ом от циклов (контейнер А внутри Б внутри А). weightOf best-effort (нет карты → 0).
+ */
+export function containerWeight(
+  state: RuntimeState,
+  containerCardId: string,
+  weightOf: (cardId: string) => number,
+  seen: Set<string> = new Set(),
+): number {
+  if (seen.has(containerCardId)) return 0; // цикл вложенности
+  seen.add(containerCardId);
+  let total = 0;
+  for (const r of containerContents(state, containerCardId)) {
+    total += (weightOf(r.cardId) || 0) * r.qty;
+    total += containerWeight(state, r.cardId, weightOf, seen) * r.qty; // вложенный контейнер
+  }
+  return total;
+}
+
+/** Перенести qty предмета с ВЕРХНЕГО уровня внутрь контейнера (S4). Нельзя вложить контейнер в себя. */
+export function moveToContainer(state: RuntimeState, cardId: string, containerCardId: string, qty = 1): RuntimeState {
+  if (!cardId || !containerCardId || cardId === containerCardId) return state;
+  const need = Math.max(1, Math.floor(qty) || 1);
+  const src = state.inventory.find((r) => r.cardId === cardId && r.containerId == null);
+  if (!src || src.qty < need) return state; // недостаточно на верхнем уровне
+  const inventory = state.inventory
+    .map((r) => (r === src ? { ...r, qty: r.qty - need } : { ...r }))
+    .filter((r) => r.qty > 0);
+  const dst = inventory.find((r) => r.cardId === cardId && r.containerId === containerCardId);
+  if (dst) dst.qty += need;
+  else inventory.push({ cardId, qty: need, containerId: containerCardId });
+  return { ...state, inventory };
+}
+
+/** Достать qty предмета из контейнера на верхний уровень (S4). */
+export function moveOutOfContainer(state: RuntimeState, cardId: string, containerCardId: string, qty = 1): RuntimeState {
+  const need = Math.max(1, Math.floor(qty) || 1);
+  const src = state.inventory.find((r) => r.cardId === cardId && r.containerId === containerCardId);
+  if (!src || src.qty < need) return state;
+  const inventory = state.inventory
+    .map((r) => (r === src ? { ...r, qty: r.qty - need } : { ...r }))
+    .filter((r) => r.qty > 0);
+  const dst = inventory.find((r) => r.cardId === cardId && r.containerId == null);
+  if (dst) dst.qty += need;
+  else inventory.push({ cardId, qty: need });
+  return { ...state, inventory };
 }
 
 function displacedItemIds(before: RuntimeState['equipment'], after: RuntimeState['equipment']): string[] {

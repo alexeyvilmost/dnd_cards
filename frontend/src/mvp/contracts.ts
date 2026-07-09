@@ -104,7 +104,9 @@ export interface RuntimeState {
   maxResources: Record<string, number>;
   /** slot → card id (null = пусто). Слоты из EquipmentSlot. */
   equipment: Record<string, string | null>;
-  inventory: Array<{ cardId: string; qty: number }>;
+  /** S4 контейнеры: containerId = cardId контейнера, в котором лежит предмет (undefined = верхний уровень).
+   *  Стопка различается по cardId+containerId. Идентичные контейнеры пока пулятся (без instance-id). */
+  inventory: Array<{ cardId: string; qty: number; containerId?: string }>;
   activeEffects: ActiveEffectEntry[];
   /** Id triggered-эффектов, сработавших за этот ход (для uses.per:"turn"); сброс в startTurn. */
   firedThisTurn?: string[];

@@ -21,6 +21,7 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
   const inv = (c.inventory_items ?? []).map((row) => ({
     cardId: row.card_id,
     qty: row.qty,
+    ...(row.container_id ? { containerId: row.container_id } : {}),
   }));
   return {
     hp: {
@@ -42,7 +43,7 @@ function parseActiveEffects(raw: unknown): RuntimeState['activeEffects'] {
 }
 
 export function runtimeInventoryPayload(state: RuntimeState) {
-  return state.inventory.map((row) => ({ card_id: row.cardId, qty: row.qty }));
+  return state.inventory.map((row) => ({ card_id: row.cardId, qty: row.qty, ...(row.containerId ? { container_id: row.containerId } : {}) }));
 }
 
 export function classLevelKey(klass: CharacterClass | null): string | null {
@@ -100,15 +101,30 @@ export function carryingCapacity(strScore: number): number {
 
 export function addToInventory(state: RuntimeState, cardId: string, qty = 1): RuntimeState {
   const inventory = state.inventory.map((row) => ({ ...row }));
-  const row = inventory.find((r) => r.cardId === cardId);
+  // S4: добавляем на ВЕРХНИЙ уровень (containerId пусто) — не в стопку внутри контейнера.
+  const row = inventory.find((r) => r.cardId === cardId && r.containerId == null);
   if (row) row.qty += qty;
   else inventory.push({ cardId, qty });
   return { ...state, inventory };
 }
 
 export function removeFromInventory(state: RuntimeState, cardId: string, qty = 1): RuntimeState {
+  // S4: списываем ВСЕГО qty, предпочитая верхний уровень (потом из контейнеров) — стопки предмета
+  // теперь могут быть в разных локациях, наивный decrement-по-cardId списал бы каждую.
+  let remaining = Math.max(0, Math.floor(qty) || 0);
+  const order = state.inventory
+    .map((r, i) => ({ r, i }))
+    .filter((x) => x.r.cardId === cardId)
+    .sort((a, b) => ((a.r.containerId ? 1 : 0) - (b.r.containerId ? 1 : 0)) || (a.i - b.i));
+  const take = new Map<number, number>();
+  for (const { r, i } of order) {
+    if (remaining <= 0) break;
+    const t = Math.min(r.qty, remaining);
+    take.set(i, t);
+    remaining -= t;
+  }
   const inventory = state.inventory
-    .map((row) => (row.cardId === cardId ? { ...row, qty: row.qty - qty } : { ...row }))
-    .filter((row) => row.qty > 0);
+    .map((r, i) => (take.has(i) ? { ...r, qty: r.qty - (take.get(i) ?? 0) } : { ...r }))
+    .filter((r) => r.qty > 0);
   return { ...state, inventory };
 }
