@@ -26,6 +26,7 @@ import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 import { useSiteSettings } from '../settings';
 import CardPreview from './CardPreview';
+import ItemPreview from './ItemPreview';
 import SheetItemRow from './SheetItemRow';
 import EquipItemDialog from './EquipItemDialog';
 import SheetAttunementDialog from './SheetAttunementDialog';
@@ -142,7 +143,10 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const weight = totalWeight(runtime, cardMap);
   const strScore = character.abilities?.str ?? 10;
   const capacity = carryingCapacity(strScore);
-  const asIcons = entityDisplay.items === 'icon';
+  // 'icon' → плитки; 'row' и 'interface' → строки. В режиме 'interface' наведение показывает
+  // не карту, а стат-блок (ItemPreview) — тот же, что в библиотеке/настройке «Интерфейс».
+  const itemMode = entityDisplay.items;
+  const asIcons = itemMode === 'icon';
 
   const persist = useCallback(async (next: RuntimeState) => {
     setBusy(true);
@@ -505,12 +509,14 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
         <div
           className="fixed z-50 pointer-events-none"
           style={{
-            left: Math.min(itemMouse.x + 16, window.innerWidth - 220),
+            left: Math.min(itemMouse.x + 16, window.innerWidth - (itemMode === 'interface' ? 360 : 220)),
             top: Math.min(Math.max(itemMouse.y - 40, 10), window.innerHeight - 20),
             transform: itemMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
           }}
         >
-          <CardPreview card={hoveredItem} disableHover />
+          {itemMode === 'interface'
+            ? <ItemPreview card={hoveredItem} disableHover />
+            : <CardPreview card={hoveredItem} disableHover />}
         </div>
       )}
 

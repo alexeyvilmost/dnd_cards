@@ -3,8 +3,9 @@
  */
 import { useEffect, useState } from 'react';
 
-/** Режим отображения карточных сущностей: плитка-иконка или строка с мелкой иконкой. */
-export type EntityDisplayMode = 'icon' | 'row';
+/** Режим отображения карточных сущностей: плитка-иконка, строка с мелкой иконкой или (только для
+ *  предметов) «интерфейс» — стат-блок в стиле превью заклинания. */
+export type EntityDisplayMode = 'icon' | 'row' | 'interface';
 
 export type EntityDisplayKind = 'spells' | 'actions' | 'effects' | 'items';
 

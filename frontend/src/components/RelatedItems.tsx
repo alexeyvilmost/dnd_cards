@@ -17,7 +17,8 @@ export function useContainerTotals(card: Card | null | undefined): { weight: num
   return containerTotals(card, (id) => index.get(id));
 }
 
-function useResolved(refs: CardRef[]) {
+/** Резолвит CardRef[] в пары {ref, card} по общему индексу карт (нерезолвленные отбрасываются). */
+export function useResolvedRefs(refs: CardRef[]) {
   const [index, setIndex] = useState<Map<string, Card>>(new Map());
   useEffect(() => {
     let alive = true;
@@ -31,7 +32,7 @@ function useResolved(refs: CardRef[]) {
 
 // Ряд иконок привязанных предметов (для нижней части карточки предыстории)
 export const ItemIconRow: React.FC<{ refs: CardRef[]; size?: number }> = ({ refs, size = 22 }) => {
-  const resolved = useResolved(refs);
+  const resolved = useResolvedRefs(refs);
   if (resolved.length === 0) return null;
   return (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -61,7 +62,7 @@ export const RelatedCardsList: React.FC<{ refs: CardRef[]; title?: string }> = (
   refs,
   title = 'Связанные карты',
 }) => {
-  const resolved = useResolved(refs);
+  const resolved = useResolvedRefs(refs);
   const [hovered, setHovered] = useState<Card | null>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
 

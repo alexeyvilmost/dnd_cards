@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Dices, LayoutGrid, List, X } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, X } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -18,10 +18,15 @@ const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string 
   { kind: 'items', label: 'Предметы', hint: 'Инвентарь и слоты' },
 ];
 
-const MODE_OPTIONS: Array<{ mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid }> = [
+type ModeOption = { mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid };
+const BASE_MODES: ModeOption[] = [
   { mode: 'icon', label: 'Иконки', icon: LayoutGrid },
   { mode: 'row', label: 'Список', icon: List },
 ];
+// «Интерфейс» — стат-блок в стиле превью заклинания — пока только для предметов.
+const INTERFACE_MODE: ModeOption = { mode: 'interface', label: 'Интерфейс', icon: LayoutTemplate };
+const modeOptionsFor = (kind: EntityDisplayKind): ModeOption[] =>
+  kind === 'items' ? [...BASE_MODES, INTERFACE_MODE] : BASE_MODES;
 
 export default function SheetSettingsDialog({ onClose }: { onClose: () => void }) {
   const settings = useSiteSettings();
@@ -63,7 +68,7 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
                   <div className="sheet-settings-hint">{hint}</div>
                 </div>
                 <div className="sheet-settings-toggle" role="radiogroup" aria-label={label}>
-                  {MODE_OPTIONS.map(({ mode, label: modeLabel, icon: Icon }) => {
+                  {modeOptionsFor(kind).map(({ mode, label: modeLabel, icon: Icon }) => {
                     const active = settings.entityDisplay[kind] === mode;
                     return (
                       <button

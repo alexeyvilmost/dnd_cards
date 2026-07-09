@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
-import { Search, Filter, Plus, Grid3X3, List, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, Grid3X3, List, LayoutTemplate, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, conceptsApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Concept } from '../types';
@@ -34,8 +34,10 @@ import { hasElementalDamage } from '../utils/elementalDamage';
 import {
   buildLibrarySearchParams,
   type LibraryContentType,
+  type LibraryViewMode,
   parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
+import ItemPreview from '../components/ItemPreview';
 import { getSettings, type EntityDisplayKind } from '../settings';
 
 /** Тип библиотеки → ключ настройки «Отображение сущностей». */
@@ -47,11 +49,16 @@ const ENTITY_DISPLAY_KEY: Partial<Record<LibraryContentType, EntityDisplayKind>>
 };
 
 /** Начальный режим просмотра из настроек сайта (null — тип без настройки). */
-function settingsViewFor(type: LibraryContentType): 'grid' | 'list' | null {
+function settingsViewFor(type: LibraryContentType): LibraryViewMode | null {
   const key = ENTITY_DISPLAY_KEY[type];
   if (!key) return null;
-  return getSettings().entityDisplay[key] === 'icon' ? 'grid' : 'list';
+  const mode = getSettings().entityDisplay[key];
+  return mode === 'icon' ? 'grid' : mode === 'interface' ? 'interface' : 'list';
 }
+
+/** «Интерфейс» рисуем только для предметов; для прочих типов (в т.ч. из ссылки) — «Список». */
+const clampView = (v: LibraryViewMode, type: LibraryContentType): LibraryViewMode =>
+  v === 'interface' && type !== 'cards' ? 'list' : v;
 
 const RESOURCE_CATEGORY_OPTIONS = [
   { value: 'action_cost', label: 'Стоимость действия' },
@@ -215,10 +222,11 @@ const CardLibrary = () => {
   const [totalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   // Явный ?view= в URL важнее; без него — режим из настройки «Отображение сущностей».
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (
+  const [viewMode, setViewMode] = useState<LibraryViewMode>(() => clampView(
     searchParams.get('view')
       ? initialFilters.viewMode
-      : settingsViewFor(initialFilters.contentType) ?? initialFilters.viewMode
+      : settingsViewFor(initialFilters.contentType) ?? initialFilters.viewMode,
+    initialFilters.contentType,
   ));
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
@@ -771,9 +779,12 @@ const CardLibrary = () => {
     setArmorTypeFilter(parsed.armorType);
     setResourceCategoryFilter(parsed.resourceCategory);
     setSortBy(parsed.sortBy);
-    setViewMode(searchParams.get('view')
-      ? parsed.viewMode
-      : settingsViewFor(parsed.contentType) ?? parsed.viewMode);
+    setViewMode(clampView(
+      searchParams.get('view')
+        ? parsed.viewMode
+        : settingsViewFor(parsed.contentType) ?? parsed.viewMode,
+      parsed.contentType,
+    ));
     lastWrittenParamsRef.current = currentStr;
   }, [searchParams]);
 
@@ -1196,6 +1207,8 @@ const CardLibrary = () => {
                 // Начальный режим вкладки — из настройки; ручной переключатель работает поверх.
                 const preferred = settingsViewFor(next);
                 if (preferred) setViewMode(preferred);
+                // «Интерфейс» есть только у предметов — при уходе на другой тип сбрасываем в «Список».
+                else if (next !== 'cards') setViewMode((v) => (v === 'interface' ? 'list' : v));
               }}
               className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
             >
@@ -1243,14 +1256,27 @@ const CardLibrary = () => {
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg border ${
-                viewMode === 'list' 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                viewMode === 'list'
+                  ? 'bg-blue-100 border-blue-300 text-blue-700'
                   : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
               }`}
               title="Список"
             >
               <List size={18} />
             </button>
+            {contentType === 'cards' && (
+              <button
+                onClick={() => setViewMode('interface')}
+                className={`p-2 rounded-lg border ${
+                  viewMode === 'interface'
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Интерфейс (стат-блок)"
+              >
+                <LayoutTemplate size={18} />
+              </button>
+            )}
           </div>
 
           {/* Кнопка фильтров */}
@@ -1742,6 +1768,23 @@ const CardLibrary = () => {
                   </div>
               );
               })}
+            </div>
+          ) : viewMode === 'interface' ? (
+            /* Стат-блок в стиле превью заклинания (только предметы) */
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-10 pt-7">
+              {cards.map((card) => (
+                <div key={card.id} className="flex justify-center">
+                  <ItemPreview card={card} onClick={() => handleCardClick(card)} />
+                </div>
+              ))}
+              {loadingMore && (
+                <div className="col-span-full mt-2 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Загрузка карт...
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* Список названий */

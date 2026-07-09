@@ -1,4 +1,4 @@
-import { Dices, LayoutGrid, List, Eye } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, Eye } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -14,10 +14,15 @@ const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string 
   { kind: 'items', label: 'Предметы', hint: 'Инвентарь на листе, библиотека, магазин' },
 ];
 
-const MODE_OPTIONS: Array<{ mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid }> = [
+type ModeOption = { mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid };
+const BASE_MODES: ModeOption[] = [
   { mode: 'icon', label: 'Иконки', icon: LayoutGrid },
   { mode: 'row', label: 'Список', icon: List },
 ];
+// «Интерфейс» — стат-блок в стиле превью заклинания — пока реализован только для предметов.
+const INTERFACE_MODE: ModeOption = { mode: 'interface', label: 'Интерфейс', icon: LayoutTemplate };
+const modeOptionsFor = (kind: EntityDisplayKind): ModeOption[] =>
+  kind === 'items' ? [...BASE_MODES, INTERFACE_MODE] : BASE_MODES;
 
 /** Общие настройки сайта (хранятся локально в браузере). */
 const Settings = () => {
@@ -75,7 +80,8 @@ const Settings = () => {
           </div>
           <p className="text-sm text-gray-500 mt-1 mb-4">
             «Иконки» — квадратные плитки с карточкой при наведении. «Список» — строки с маленькой
-            иконкой и текстом. Настройка действует на лист персонажа, кузницу, библиотеку и магазин.
+            иконкой и текстом. «Интерфейс» (только предметы) — стат-блок в стиле превью заклинания.
+            Настройка действует на лист персонажа, кузницу, библиотеку и магазин.
           </p>
           <div className="space-y-3">
             {ENTITY_ROWS.map(({ kind, label, hint }) => (
@@ -85,7 +91,7 @@ const Settings = () => {
                   <div className="text-xs text-gray-500 truncate">{hint}</div>
                 </div>
                 <div className="flex rounded-lg border border-gray-300 overflow-hidden shrink-0" role="radiogroup" aria-label={label}>
-                  {MODE_OPTIONS.map(({ mode, label: modeLabel, icon: Icon }) => {
+                  {modeOptionsFor(kind).map(({ mode, label: modeLabel, icon: Icon }) => {
                     const active = settings.entityDisplay[kind] === mode;
                     return (
                       <button

@@ -1,5 +1,6 @@
 export type LibraryContentType = 'cards' | 'effects' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes' | 'resources' | 'variables' | 'concepts';
-export type LibraryViewMode = 'grid' | 'list';
+// 'interface' — стат-блок в стиле превью заклинания; доступен только для предметов (type='cards').
+export type LibraryViewMode = 'grid' | 'list' | 'interface';
 
 export interface LibraryFilters {
   contentType: LibraryContentType;
@@ -35,7 +36,7 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
     armorType: params.get('armor') ?? '',
     resourceCategory: params.get('resource') ?? '',
     sortBy: params.get('sort') ?? 'created_desc',
-    viewMode: view === 'grid' ? 'grid' : 'list',
+    viewMode: view === 'grid' ? 'grid' : view === 'interface' ? 'interface' : 'list',
   };
 }
 
@@ -81,6 +82,8 @@ export function buildLibrarySearchParams(
   }
   if (filters.viewMode === 'grid') {
     params.set('view', 'grid');
+  } else if (filters.viewMode === 'interface') {
+    params.set('view', 'interface');
   }
 
   return params;
