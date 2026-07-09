@@ -525,6 +525,29 @@ export async function expandEffectGrants(
   return result;
 }
 
+/**
+ * S3 «предмет=эффект»: разворачивает `grant_effect` ПРЕДМЕТОВ (прошедших гейт) в самостоятельные
+ * эффекты-бусины ТОЙ ЖЕ машинерией, что и эффекты класса/черт (повязка → эффект «Тёмное зрение»,
+ * пока надета). Вход — прошедшие гейт предметы; выход — ТОЛЬКО загруженные выданные эффекты (без
+ * самих предметов). Роль источника 'item' навешивается на листе через RuntimeRuleSource — так
+ * выданный эффект наследует item-семантику (подавление числовых ролей, фильтр КЗ) из слайса 1.
+ */
+export async function expandItemGrantedEffects(
+  items: { id: string; name: string; mechanics: Record<string, unknown> | null | undefined }[],
+  draft: CharacterDraft,
+): Promise<PassiveEffect[]> {
+  if (!items.length) return [];
+  const pseudo: OriginEffect[] = items.map((it) => ({
+    effect: { id: it.id, name: it.name, mechanics: it.mechanics, card_number: '' } as PassiveEffect,
+    origin: { kind: 'other', id: it.id, name: it.name },
+  }));
+  const resolveEffect: EffectResolver = (slug) =>
+    entityRegistry.resolve<PassiveEffect>('effect', slug).catch(() => null);
+  const expanded = await expandEffectGrants(pseudo, draft, resolveEffect);
+  const pseudoIds = new Set(pseudo.map((p) => p.effect.id));
+  return expanded.filter((oe) => !pseudoIds.has(oe.effect.id)).map((oe) => oe.effect);
+}
+
 // Загружает все сущности черновика (включая заклинания) и собирает персонажа.
 export async function loadAssembly(draft: CharacterDraft): Promise<AssembledCharacter> {
   const bundle = await loadBundle(draft);

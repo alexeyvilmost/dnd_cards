@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
-import { loadAssembly, type AssembledCharacter } from '../character/assemble';
+import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -19,7 +19,7 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
-import { type Card } from '../types';
+import { type Card, type PassiveEffect } from '../types';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SheetEntityRow from '../components/SheetEntityRow';
@@ -207,16 +207,53 @@ const CharacterSheetMVP = () => {
     [character, equipCards, runtimeState],
   );
 
+  // S3 «предмет=эффект»: grant_effect предметов (повязка → эффект «Тёмное зрение», пока надета).
+  // Разворачиваем выданные эффекты ТОЙ ЖЕ машинерией, что эффекты класса/черт, и подмешиваем как
+  // item-источник (наследует item-семантику слайса 1: подавление числовых ролей, фильтр КЗ). Async —
+  // эффект грузится по id; sync-предчек отсекает случай «ни у одного предмета нет grant_effect».
+  const [itemGrantedEffects, setItemGrantedEffects] = useState<PassiveEffect[]>([]);
+  useEffect(() => {
+    if (!draft || !itemMechanics.length) { setItemGrantedEffects((p) => (p.length ? [] : p)); return; }
+    const items = itemMechanics.map((im) => ({ id: im.card.id, name: im.card.name, mechanics: im.card.mechanics }));
+    const hasGrants = items.some((it) => collectEffectGrantRefs(it.mechanics, it.id, { kind: 'other', id: it.id, name: it.name }, draft).length);
+    if (!hasGrants) { setItemGrantedEffects((p) => (p.length ? [] : p)); return; }
+    let stale = false;
+    expandItemGrantedEffects(items, draft)
+      .then((effs) => { if (!stale) setItemGrantedEffects(effs); })
+      .catch(() => { if (!stale) setItemGrantedEffects((p) => (p.length ? [] : p)); });
+    return () => { stale = true; };
+  }, [itemMechanics, draft]);
+
+  // Дедуп: если тот же эффект уже выдан классом/чертой (в assembled.effects), НЕ дублируем его в
+  // числовом канале (иначе modifier-роль эффекта задвоится; чувства идемпотентны, а числа — нет).
+  // Внутри одного expand-прохода дедуп уже есть; здесь закрываем межпроходный зазор (предмет vs класс).
+  const itemGrantedEffects2 = useMemo(() => {
+    if (!itemGrantedEffects.length) return itemGrantedEffects;
+    const seen = new Set<string>();
+    for (const { effect } of (assembled?.effects ?? [])) {
+      seen.add(effect.id);
+      if (effect.card_number) seen.add(effect.card_number);
+    }
+    return itemGrantedEffects.filter((e) => !seen.has(e.id) && !(e.card_number && seen.has(e.card_number)));
+  }, [itemGrantedEffects, assembled]);
+
   // Слайс 1 «предмет = эффект»: механики надетых/настроенных предметов доходят до резолвера правил.
   // Раньше ветка runtimeSources была пуста → бонусы характеристик/владений/чувств от предметов не
   // работали. Гейт настройки/ношения уже применён в collectItemMechanics. persisted rule_state (кузня)
   // остаётся «голым» — влияние предметов живёт только в live-рендере (владелец: downstream через live-резолвер).
   const itemRuntimeSources = useMemo<RuntimeRuleSource[]>(
-    () => itemMechanics.map((im) => ({
-      source: { type: 'item' as const, id: im.card.id, name: im.card.name },
-      mechanics: im.mechanics,
-    })),
-    [itemMechanics],
+    () => [
+      ...itemMechanics.map((im) => ({
+        source: { type: 'item' as const, id: im.card.id, name: im.card.name },
+        mechanics: im.mechanics,
+      })),
+      // S3: выданные предметами эффекты — как item-источник (одна семантика с механиками предмета).
+      ...itemGrantedEffects2.map((eff) => ({
+        source: { type: 'item' as const, id: eff.id, name: eff.name },
+        mechanics: eff.mechanics ?? null,
+      })),
+    ],
+    [itemMechanics, itemGrantedEffects2],
   );
 
   const ruleState = useMemo(
@@ -224,11 +261,17 @@ const CharacterSheetMVP = () => {
     [draft, assembled, itemRuntimeSources],
   );
 
-  // Пассивки персонажа + механики надетых предметов (числовой канал листа).
+  // Механики выданных предметами эффектов для числового канала (breakdown листа + панель действий).
+  const itemGrantedPassives = useMemo(
+    () => itemGrantedEffects2.map((eff) => eff.mechanics).filter((m): m is Record<string, unknown> => !!m),
+    [itemGrantedEffects2],
+  );
+
+  // Пассивки персонажа + механики надетых предметов + выданные эффекты предметов (числовой канал листа).
   const passives = useMemo(() => {
     const base = assembled ? collectPassiveMechanics(assembled, character?.resolved_choices ?? {}) : [];
-    return [...base, ...itemMechanics.map((im) => im.mechanics)];
-  }, [assembled, character, itemMechanics]);
+    return [...base, ...itemMechanics.map((im) => im.mechanics), ...itemGrantedPassives];
+  }, [assembled, character, itemMechanics, itemGrantedPassives]);
 
   const sheetCtx = useMemo(() => {
     if (!ruleState || !draft || !runtimeState) return null;
@@ -480,6 +523,7 @@ const CharacterSheetMVP = () => {
             showResources={false}
             showEffects={false}
             equipCards={equipCards}
+            itemGrantedPassives={itemGrantedPassives}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
             targetAc={targetAc}
@@ -797,6 +841,7 @@ const CharacterSheetMVP = () => {
                 assembled={assembled}
                 ruleState={ruleState}
                 equipCards={equipCards}
+                itemGrantedPassives={itemGrantedPassives}
                 onUpdated={setCharacter}
                 onEvents={appendRuntimeEvents}
                 embedded

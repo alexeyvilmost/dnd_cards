@@ -206,6 +206,12 @@ target больше НЕ создаёт фантомный ресурс молч
     collectModifiers получает evalCtx (бой), а лист (breakdown/AC) evalCtx не передаёт → when там не блокирует —
     касается ВСЕХ when-предикатов, латентно (контент не использует); сквозной evalCtx на лист = задача #27 (к S6,
     меняет поведение всех условных модификаторов). (2) UI-селектор `while` в конструкторе — задача #26 (пока JSON).
+  - **grant_effect от предмета ✅ СДЕЛАНО (слайс 3).** `expandItemGrantedEffects` (assemble.ts) разворачивает
+    `grant_effect` предметов в эффекты-бусины ТОЙ ЖЕ машинерией (`expandEffectGrants`), что класс/черты (повязка →
+    эффект «Тёмное зрение», пока надета). Выданный эффект НЕ идёт в `assembled.effects` (иначе `acPassives` задвоит),
+    а маршрутизируется как item-источник (runtimeSources + passives) — наследует item-семантику слайса 1. Async
+    (эффект грузится по id) с sync-предчеком `collectEffectGrantRefs`; прокинут в панель действий как
+    `itemGrantedPassives`. Тесты `itemGrantedEffects.test.ts` (3).
   - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
     сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
     value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).

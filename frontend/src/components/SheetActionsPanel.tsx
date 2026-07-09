@@ -34,6 +34,8 @@ interface Props {
   assembled: AssembledCharacter;
   ruleState: CharacterRuleState;
   equipCards: Map<string, Card>;
+  /** S3: механики эффектов, ВЫДАННЫХ предметами (grant_effect), для числового канала действий. */
+  itemGrantedPassives?: Record<string, unknown>[];
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
   embedded?: boolean;
@@ -115,6 +117,7 @@ export default function SheetActionsPanel({
   assembled,
   ruleState,
   equipCards,
+  itemGrantedPassives,
   onUpdated,
   onEvents,
   embedded,
@@ -159,8 +162,9 @@ export default function SheetActionsPanel({
   const passives = useMemo(() => {
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory)
       .map((im) => im.mechanics);
-    return [...collectPassiveMechanics(assembled, character.resolved_choices ?? {}), ...items];
-  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards, runtime.inventory]);
+    // S3: выданные предметами эффекты (grant_effect) — тот же числовой канал, что и механики предметов.
+    return [...collectPassiveMechanics(assembled, character.resolved_choices ?? {}), ...items, ...(itemGrantedPassives ?? [])];
+  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards, runtime.inventory, itemGrantedPassives]);
 
   const equippedCards = useMemo(() => {
     const out: Card[] = [];
