@@ -204,6 +204,20 @@ export const ROLL_TARGETS: RegistryItem[] = [
   { id: 'speed', label: 'Скорость' },
 ];
 
+// Типы требований ($defs/requirement.type) кроме level (тот задаётся полем «Мин. уровень»).
+// Движок пока НЕ проверяет requirements[] в рантайме — это словарь для будущей реализации.
+export const REQUIREMENT_TYPES: RegistryItem[] = [
+  { id: 'class', label: 'Класс' },
+  { id: 'subclass', label: 'Подкласс' },
+  { id: 'species', label: 'Вид' },
+  { id: 'feat', label: 'Черта' },
+  { id: 'ability_score', label: 'Значение характеристики' },
+  { id: 'proficiency', label: 'Владение' },
+  { id: 'equipment', label: 'Снаряжение' },
+  { id: 'resource', label: 'Ресурс' },
+  { id: 'state', label: 'Состояние' },
+];
+
 export const CHOICE_SOURCES: RegistryItem[] = [
   { id: 'skill', label: 'Навык' },
   { id: 'tool', label: 'Инструмент' },

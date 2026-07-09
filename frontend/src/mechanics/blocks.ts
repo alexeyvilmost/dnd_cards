@@ -63,6 +63,31 @@ export const costRowsToCost = (rows: CostRow[]): Record<string, unknown>[] => ro
     };
   });
 
+// ─── Требования (activation.requirements[]) кроме level (тот — поле «Мин. уровень») ───
+export type ReqRow = { type: string; value?: string; ability?: string; min?: string };
+
+const requirementsToRows = (reqs: Record<string, unknown>[]): ReqRow[] => reqs
+  .filter((r) => r.type !== 'level')
+  .map((r) => ({
+    type: String(r.type ?? 'class'),
+    ...(r.value != null ? { value: String(r.value) } : {}),
+    ...(r.ability != null ? { ability: String(r.ability) } : {}),
+    ...(r.min != null ? { min: String(r.min) } : {}),
+  }));
+
+export const reqRowsToRequirements = (rows: ReqRow[]): Record<string, unknown>[] => rows
+  .filter((r) => r.type)
+  .map((r) => {
+    const out: Record<string, unknown> = { type: r.type };
+    if (r.type === 'ability_score') {
+      if (r.ability) out.ability = r.ability;
+      if (String(r.min ?? '').trim()) out.min = Number(r.min);
+    } else if ((r.value ?? '').trim()) {
+      out.value = (r.value ?? '').trim();
+    }
+    return out;
+  });
+
 export type Block = {
   id: string;
   label: string;
@@ -693,6 +718,7 @@ export type DeserializedMechanics = {
   ammo: string;
   recharge: string;
   extraCost: CostRow[];
+  requirements: ReqRow[];
   effectEntries: Array<{ id: string; blockId: string; values: Dict }>;
 };
 
@@ -753,6 +779,8 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   const reqs = (act.requirements as Dict[]) || [];
   const lr = reqs.find((r) => r.type === 'level');
   if (lr?.min_level) minLevel = lr.min_level as number;
+  // Прочие требования (не level) round-trip'ятся через RequirementsEditor (раньше терялись).
+  const requirements = requirementsToRows(reqs);
 
   // Гейты-разрешения (S3): while / consumes_self / ammo / uses.recharge / доп. стоимость.
   const whileVal = String(act.while ?? m.while ?? '');
@@ -783,7 +811,7 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
       entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
     }
   }
-  return { triggerId, triggerValues: tv, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, effectEntries: entries };
+  return { triggerId, triggerValues: tv, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements, effectEntries: entries };
 }
 
 // Опции для multiselect по source выбора

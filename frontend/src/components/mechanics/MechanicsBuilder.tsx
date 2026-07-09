@@ -11,14 +11,17 @@ import {
   defaultValuesForBlock,
   deserializeMechanics,
   costRowsToCost,
+  reqRowsToRequirements,
   type Field,
   type CostRow,
+  type ReqRow,
 } from '../../mechanics/blocks';
 import { DAMAGE_TYPE_OPTIONS } from '../../mechanics/registries';
 import type { Cond } from '../../mechanics/predicates';
 import ChoiceEditor, { choiceFormToOptions, type ChoiceFormValue } from './ChoiceEditor';
 import WhenEditor from './WhenEditor';
 import CostEditor from './CostEditor';
+import RequirementsEditor from './RequirementsEditor';
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
@@ -54,6 +57,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   const [ammo, setAmmo] = useState('');
   const [recharge, setRecharge] = useState('');
   const [extraCost, setExtraCost] = useState<CostRow[]>([]);
+  const [requirements, setRequirements] = useState<ReqRow[]>([]);
   const [mode, setMode] = useState<'blocks' | 'json'>('blocks');
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -75,6 +79,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       setAmmo('');
       setRecharge('');
       setExtraCost([]);
+      setRequirements([]);
       return;
     }
     setTriggerId(d.triggerId);
@@ -85,6 +90,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     setAmmo(d.ammo);
     setRecharge(d.recharge);
     setExtraCost(d.extraCost);
+    setRequirements(d.requirements);
     setEffectEntries(d.effectEntries.map((e) => ({ id: newEntryId(), blockId: e.blockId, values: e.values })));
   };
 
@@ -106,10 +112,10 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     })));
     if (!base) return null;
     const act = base.activation as Record<string, unknown>;
-    if (minLevel !== '' && Number(minLevel) > 0) {
-      const reqs = (act.requirements as unknown[]) || [];
-      act.requirements = [...reqs, { type: 'level', min_level: Number(minLevel) }];
-    }
+    const reqs = [...((act.requirements as unknown[]) || [])];
+    if (minLevel !== '' && Number(minLevel) > 0) reqs.push({ type: 'level', min_level: Number(minLevel) });
+    reqs.push(...reqRowsToRequirements(requirements));
+    if (reqs.length) act.requirements = reqs;
     // S3-гейты вплетаем в собранную механику.
     if (itemWhile) act.while = itemWhile;
     if (consumesSelf) act.consumes_self = true;
@@ -120,7 +126,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     }
     if (ammo.trim()) base.ammo = ammo.trim();
     return base;
-  }, [triggerId, triggerValues, effectEntries, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost]);
+  }, [triggerId, triggerValues, effectEntries, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements]);
 
   const summary = useMemo(
     () => summarizeMechanics(triggerId, triggerValues, effectEntries.map((e) => ({ blockId: e.blockId, values: e.values }))),
@@ -472,6 +478,11 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
         <div className="mt-3">
           <label className="block text-xs text-gray-600 mb-1">Доп. стоимость (ресурсы: слот, хиты, предмет…)</label>
           <CostEditor value={extraCost} onChange={(c) => { markDirty(); setExtraCost(c); }} />
+        </div>
+        <div className="mt-3">
+          <label className="block text-xs text-gray-600 mb-1">Требования (класс, вид, характеристика…)</label>
+          <p className="text-xs text-amber-600 mb-1">⚠ Движок пока не проверяет требования в бою — только «Мин. уровень» действует на выдачу способностей.</p>
+          <RequirementsEditor value={requirements} onChange={(r) => { markDirty(); setRequirements(r); }} />
         </div>
       </div>
 
