@@ -10,12 +10,15 @@ import {
   summarizeMechanics,
   defaultValuesForBlock,
   deserializeMechanics,
+  costRowsToCost,
   type Field,
+  type CostRow,
 } from '../../mechanics/blocks';
 import { DAMAGE_TYPE_OPTIONS } from '../../mechanics/registries';
 import type { Cond } from '../../mechanics/predicates';
 import ChoiceEditor, { choiceFormToOptions, type ChoiceFormValue } from './ChoiceEditor';
 import WhenEditor from './WhenEditor';
+import CostEditor from './CostEditor';
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
@@ -45,6 +48,12 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   const [triggerValues, setTriggerValues] = useState<Record<string, unknown>>({});
   const [effectEntries, setEffectEntries] = useState<EffectEntry[]>([]);
   const [minLevel, setMinLevel] = useState<number | ''>('');
+  // S3: гейты-разрешения (доступность). Хранятся отдельно, вплетаются в собранную механику.
+  const [itemWhile, setItemWhile] = useState<'' | 'equipped' | 'carried' | 'attuned'>('');
+  const [consumesSelf, setConsumesSelf] = useState(false);
+  const [ammo, setAmmo] = useState('');
+  const [recharge, setRecharge] = useState('');
+  const [extraCost, setExtraCost] = useState<CostRow[]>([]);
   const [mode, setMode] = useState<'blocks' | 'json'>('blocks');
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -61,11 +70,21 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       setTriggerValues({});
       setEffectEntries([]);
       setMinLevel('');
+      setItemWhile('');
+      setConsumesSelf(false);
+      setAmmo('');
+      setRecharge('');
+      setExtraCost([]);
       return;
     }
     setTriggerId(d.triggerId);
     setTriggerValues(d.triggerValues);
     setMinLevel(d.minLevel);
+    setItemWhile(d.itemWhile);
+    setConsumesSelf(d.consumesSelf);
+    setAmmo(d.ammo);
+    setRecharge(d.recharge);
+    setExtraCost(d.extraCost);
     setEffectEntries(d.effectEntries.map((e) => ({ id: newEntryId(), blockId: e.blockId, values: e.values })));
   };
 
@@ -86,13 +105,22 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       values: e.values,
     })));
     if (!base) return null;
+    const act = base.activation as Record<string, unknown>;
     if (minLevel !== '' && Number(minLevel) > 0) {
-      const act = base.activation as Record<string, unknown>;
       const reqs = (act.requirements as unknown[]) || [];
       act.requirements = [...reqs, { type: 'level', min_level: Number(minLevel) }];
     }
+    // S3-гейты вплетаем в собранную механику.
+    if (itemWhile) act.while = itemWhile;
+    if (consumesSelf) act.consumes_self = true;
+    const extra = costRowsToCost(extraCost);
+    if (extra.length) act.cost = [...((act.cost as unknown[]) || []), ...extra];
+    if (recharge.trim()) {
+      base.uses = { ...((base.uses as Record<string, unknown>) || {}), recharge: recharge.trim() };
+    }
+    if (ammo.trim()) base.ammo = ammo.trim();
     return base;
-  }, [triggerId, triggerValues, effectEntries, minLevel]);
+  }, [triggerId, triggerValues, effectEntries, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost]);
 
   const summary = useMemo(
     () => summarizeMechanics(triggerId, triggerValues, effectEntries.map((e) => ({ blockId: e.blockId, values: e.values }))),
@@ -393,6 +421,57 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
             }}
             placeholder="—"
           />
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-sm font-semibold text-gray-800 mb-2">Разрешения / доступность</h3>
+        <p className="text-xs text-gray-500 mb-3">Когда механика применима и что расходует. «Мин. уровень» — выше.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Гейт предмета (while)</label>
+            <select
+              className="w-full px-2 py-1 border rounded text-sm"
+              value={itemWhile}
+              onChange={(e) => { markDirty(); setItemWhile(e.target.value as typeof itemWhile); }}
+            >
+              <option value="">— (по умолчанию: пока надет)</option>
+              <option value="equipped">Пока надет</option>
+              <option value="carried">Пока при себе (надет или в сумке)</option>
+              <option value="attuned">Пока настроен</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Боеприпас (ammo — id/слаг)</label>
+            <input
+              className="w-full px-2 py-1 border rounded text-sm"
+              value={ammo}
+              placeholder="напр. arrow"
+              onChange={(e) => { markDirty(); setAmmo(e.target.value); }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Перезарядка uses (recharge)</label>
+            <input
+              className="w-full px-2 py-1 border rounded text-sm"
+              value={recharge}
+              placeholder="напр. 5-6, dawn"
+              onChange={(e) => { markDirty(); setRecharge(e.target.value); }}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-700 self-end pb-1 cursor-pointer">
+            <input
+              type="checkbox"
+              className="w-4 h-4"
+              checked={consumesSelf}
+              onChange={(e) => { markDirty(); setConsumesSelf(e.target.checked); }}
+            />
+            Саморасход (тратит сам предмет)
+          </label>
+        </div>
+        <div className="mt-3">
+          <label className="block text-xs text-gray-600 mb-1">Доп. стоимость (ресурсы: слот, хиты, предмет…)</label>
+          <CostEditor value={extraCost} onChange={(c) => { markDirty(); setExtraCost(c); }} />
         </div>
       </div>
 

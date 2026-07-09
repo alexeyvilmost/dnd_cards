@@ -34,6 +34,35 @@ export type Field =
 /** Собрать массив условий из значения блока (undefined → []). */
 const whenOf = (v: unknown): Cond[] => (Array.isArray(v) ? (v as Cond[]) : []);
 
+// ─── Стоимость (activation.cost[]) — полная запись {resource, amount?, level?, card_id?} ───
+export type CostRow = { resource: string; amount?: string; level?: string; card_id?: string };
+
+const ACTIVE_RESOURCE_IDS = new Set(ACTIVE_RESOURCES.map((r) => r.id));
+
+/** Простая экономическая стоимость (action/bonus/…), которую задаёт мультиселект trg_active. */
+const isPlainActiveCost = (c: Record<string, unknown>): boolean =>
+  typeof c.resource === 'string' && ACTIVE_RESOURCE_IDS.has(c.resource) &&
+  c.amount == null && c.level == null && c.card_id == null;
+
+const costToRows = (cost: Record<string, unknown>[]): CostRow[] => cost.map((c) => ({
+  resource: String(c.resource ?? ''),
+  ...(c.amount != null ? { amount: String(c.amount) } : {}),
+  ...(c.level != null ? { level: String(c.level) } : {}),
+  ...(c.card_id != null ? { card_id: String(c.card_id) } : {}),
+}));
+
+export const costRowsToCost = (rows: CostRow[]): Record<string, unknown>[] => rows
+  .filter((r) => r.resource && r.resource.trim())
+  .map((r) => {
+    const amount = (r.amount ?? '').trim();
+    return {
+      resource: r.resource.trim(),
+      ...(amount ? { amount: /^\d+$/.test(amount) ? Number(amount) : amount } : {}),
+      ...(String(r.level ?? '').trim() ? { level: Number(r.level) } : {}),
+      ...((r.card_id ?? '').trim() ? { card_id: (r.card_id ?? '').trim() } : {}),
+    };
+  });
+
 export type Block = {
   id: string;
   label: string;
@@ -129,8 +158,9 @@ export const TRIGGER_BLOCKS: Block[] = [
     defaults: { resources: ['action'], uses_count: 'prof_bonus', uses_per: 'long_rest' },
     build: (v) => ({
       mode: 'active',
-      cost: ((Array.isArray(v.resources) && v.resources.length ? v.resources : [v.resource || 'action']) as unknown[])
-        .map((resource) => ({ resource })),
+      // Экономическая стоимость — из мультиселекта; доп. ресурсы (слот/хиты/предмет) задаёт
+      // отдельный редактор «Доп. стоимость» и дописываются в MechanicsBuilder.
+      cost: ((Array.isArray(v.resources) ? v.resources : []) as unknown[]).map((resource) => ({ resource })),
       uses: { count: v.uses_count || 'prof_bonus', per: v.uses_per || 'long_rest' },
     }),
     summary: (v) => {
@@ -369,6 +399,21 @@ export const EFFECT_BLOCKS: Block[] = [
     fields: [],
     build: () => ({ kind: 'grant_action', value: 'dash' }),
     summary: () => 'Рывок (бонусное действие)',
+  },
+  {
+    id: 'eff_grant_action',
+    label: 'Дать действие (по id)',
+    group: 'effect',
+    fields: [
+      { key: 'value', label: 'ID действия (слаг)', type: 'text' },
+      { key: 'level_gate', label: 'Доступно с уровня (0 — без гейта)', type: 'number', default: 0 },
+    ],
+    defaults: { level_gate: 0 },
+    build: (v) => {
+      const lg = Number(v.level_gate) || 0;
+      return { kind: 'grant_action', value: v.value, ...(lg > 0 ? { level_gate: lg } : {}) };
+    },
+    summary: (v) => `Действие: ${v.value || '—'}${Number(v.level_gate) > 0 ? ` (с ур.${v.level_gate})` : ''}`,
   },
   {
     id: 'eff_save_damage',
@@ -614,7 +659,11 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
       const vals = Array.isArray(p.values) ? (p.values as unknown[])
         : p.value != null ? [p.value]
           : Array.isArray(p.options) ? (p.options as unknown[]) : [];
-      return vals.length === 1 && vals[0] === 'dash' ? { blockId: 'eff_dash', values: {} } : raw();
+      if (vals.length === 1 && vals[0] === 'dash') return { blockId: 'eff_dash', values: {} };
+      if (vals.length === 1 && typeof vals[0] === 'string') {
+        return { blockId: 'eff_grant_action', values: { value: vals[0], level_gate: p.level_gate ?? p.min_level ?? 0 } };
+      }
+      return raw();
     }
     case 'modifier': {
       const at = (p.applies_to || {}) as Dict;
@@ -639,6 +688,11 @@ export type DeserializedMechanics = {
   triggerId: string;
   triggerValues: Dict;
   minLevel: number | '';
+  itemWhile: '' | 'equipped' | 'carried' | 'attuned';
+  consumesSelf: boolean;
+  ammo: string;
+  recharge: string;
+  extraCost: CostRow[];
   effectEntries: Array<{ id: string; blockId: string; values: Dict }>;
 };
 
@@ -664,7 +718,8 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   if (act.mode === 'active') {
     triggerId = 'trg_active';
     const cost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
-    tv.resources = cost.length ? cost.map((c) => c.resource).filter(Boolean) : [((act.cost as Dict[])?.[0]?.resource) ?? 'action'];
+    // В мультиселект — только простая экономика; доп. ресурсы уходят в extraCost (ниже).
+    tv.resources = cost.filter(isPlainActiveCost).map((c) => c.resource);
     tv.uses_count = uses.count ?? 'prof_bonus';
     tv.uses_per = uses.per ?? 'long_rest';
   } else if (act.mode === 'reaction') {
@@ -699,6 +754,17 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   const lr = reqs.find((r) => r.type === 'level');
   if (lr?.min_level) minLevel = lr.min_level as number;
 
+  // Гейты-разрешения (S3): while / consumes_self / ammo / uses.recharge / доп. стоимость.
+  const whileVal = String(act.while ?? m.while ?? '');
+  const itemWhile = (['equipped', 'carried', 'attuned'].includes(whileVal) ? whileVal : '') as DeserializedMechanics['itemWhile'];
+  const consumesSelf = act.consumes_self === true || m.consumes_self === true;
+  const ammoRaw = m.ammo;
+  const ammo = typeof ammoRaw === 'string' ? ammoRaw
+    : (ammoRaw && typeof ammoRaw === 'object' ? String((ammoRaw as Dict).card_id ?? '') : '');
+  const recharge = uses.recharge != null ? String(uses.recharge) : '';
+  const allCost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
+  const extraCost = costToRows(act.mode === 'active' ? allCost.filter((c) => !isPlainActiveCost(c)) : allCost);
+
   const entries: DeserializedMechanics['effectEntries'] = [];
   let c = 0;
   for (const it of ((m.effects as Dict[]) || [])) {
@@ -717,7 +783,7 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
       entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
     }
   }
-  return { triggerId, triggerValues: tv, minLevel, effectEntries: entries };
+  return { triggerId, triggerValues: tv, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, effectEntries: entries };
 }
 
 // Опции для multiselect по source выбора
