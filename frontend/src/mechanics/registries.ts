@@ -34,6 +34,27 @@ export const SKILLS: RegistryItem[] = [
 
 export const SAVING_THROWS = ABILITIES;
 
+// Ремесленные инструменты (PHB 2024) — домен выбора для «Ремесленника» и т.п.
+export const ARTISAN_TOOLS: RegistryItem[] = [
+  { id: 'alchemist', label: 'Инструменты алхимика' },
+  { id: 'brewer', label: 'Пивоварные принадлежности' },
+  { id: 'calligrapher', label: 'Инструменты каллиграфа' },
+  { id: 'carpenter', label: 'Инструменты плотника' },
+  { id: 'cartographer', label: 'Инструменты картографа' },
+  { id: 'cobbler', label: 'Инструменты сапожника' },
+  { id: 'cook', label: 'Кухонная утварь' },
+  { id: 'glassblower', label: 'Инструменты стеклодува' },
+  { id: 'jeweler', label: 'Инструменты ювелира' },
+  { id: 'leatherworker', label: 'Инструменты кожевника' },
+  { id: 'mason', label: 'Инструменты каменщика' },
+  { id: 'painter', label: 'Инструменты художника' },
+  { id: 'potter', label: 'Инструменты гончара' },
+  { id: 'smith', label: 'Инструменты кузнеца' },
+  { id: 'tinker', label: 'Инструменты жестянщика' },
+  { id: 'weaver', label: 'Инструменты ткача' },
+  { id: 'woodcarver', label: 'Инструменты резчика' },
+];
+
 // Музыкальные инструменты (PHB 2024) — домен выбора для черты «Музыкант» и т.п.
 export const MUSICAL_INSTRUMENTS: RegistryItem[] = [
   { id: 'bagpipes', label: 'Волынка' },
@@ -172,6 +193,8 @@ export function optionsForChoiceSource(source: string): RegistryItem[] {
       return ABILITIES;
     case 'instrument':
       return MUSICAL_INSTRUMENTS;
+    case 'artisan_tool':
+      return ARTISAN_TOOLS;
     case 'skill':
       return SKILLS;
     case 'tool':

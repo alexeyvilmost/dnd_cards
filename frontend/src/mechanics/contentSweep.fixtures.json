@@ -1,0 +1,78 @@
+[
+  {
+    "card": "EFFECT-0060",
+    "name": "Дополнительный Боевой стиль",
+    "effectId": "sweep-fstyle",
+    "was": "narrative («ещё одну черту Боевого стиля по вашему выбору»)",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        { "kind": "choice", "id": "extra_fighting_style", "prompt": "Дополнительный боевой стиль",
+          "grant": { "kind": "grant_feat" }, "options": { "source": "feat", "filter": "fighting_style" } }
+      ]
+    },
+    "test": { "choiceId": "extra_fighting_style", "source": "feat", "pick": ["fs-defense"], "assert": { "type": "feat", "values": ["fs-defense"] } }
+  },
+  {
+    "card": "EFFECT-0013",
+    "name": "Магические открытия",
+    "effectId": "sweep-magdisc",
+    "was": "narrative («изучите два заклинания по вашему выбору»)",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        { "kind": "choice", "id": "magical_discoveries", "prompt": "Магические открытия: два заклинания", "count": 2,
+          "grant": { "kind": "grant_spell" }, "options": { "source": "spell", "filter": { "classes": ["wizard", "druid", "cleric"] } } }
+      ]
+    },
+    "test": { "choiceId": "magical_discoveries", "source": "spell", "pick": ["light", "cure_wounds"], "assert": { "type": "spell", "values": ["light", "cure_wounds"] } }
+  },
+  {
+    "card": "EFF-feat-crafter-tools",
+    "name": "Владение инструментами (Ремесленник)",
+    "effectId": "sweep-crafter",
+    "was": "narrative («три Ремесленных инструмента по вашему выбору»)",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        { "kind": "choice", "id": "crafter_tools", "prompt": "Три ремесленных инструмента", "count": 3,
+          "grant": { "kind": "grant_proficiency", "prof": "tool" }, "options": { "source": "artisan_tool" } }
+      ]
+    },
+    "test": { "choiceId": "crafter_tools", "source": "artisan_tool", "pick": ["smith", "cook", "mason"], "assert": { "type": "tool", "values": ["smith", "cook", "mason"] } }
+  },
+  {
+    "card": "EFF-feat-music-training",
+    "name": "Музыкант — обученность инструментам",
+    "effectId": "sweep-music",
+    "was": "narrative → choice (сделано в слайсе 4; здесь регрессия)",
+    "seeded": true,
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        { "kind": "choice", "id": "music_instruments", "prompt": "Выберите 3 музыкальных инструмента", "count": 3,
+          "grant": { "kind": "grant_proficiency", "prof": "tool" }, "options": { "source": "instrument" } }
+      ]
+    },
+    "test": { "choiceId": "music_instruments", "source": "instrument", "pick": ["lute", "flute", "drum"], "assert": { "type": "tool", "values": ["lute", "flute", "drum"] } }
+  },
+  {
+    "card": "EFFECT-0029",
+    "name": "Аспект дикой природы (in-play)",
+    "effectId": "sweep-wild",
+    "was": "narrative → choice context:in_play (сделано в слайсе 5; здесь регрессия)",
+    "seeded": true,
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        { "kind": "choice", "id": "wild_aspect", "context": "in_play", "count": 1, "prompt": "Аспект дикой природы",
+          "options": { "source": "explicit", "items": [
+            { "id": "owl", "name": "Сова — тёмное зрение 60 фт", "grants": [{ "kind": "grant_sense", "sense": "darkvision", "range": 60 }] },
+            { "id": "panther", "name": "Пантера — скорость лазания 30", "grants": [{ "kind": "grant_speed", "mode": "climb", "value": 30 }] },
+            { "id": "salmon", "name": "Лосось — скорость плавания 30", "grants": [{ "kind": "grant_speed", "mode": "swim", "value": 30 }] }
+          ] } }
+      ]
+    },
+    "test": { "choiceId": "wild_aspect", "source": "explicit", "pick": ["owl"], "assert": { "type": "sense", "values": ["darkvision"] } }
+  }
+]
