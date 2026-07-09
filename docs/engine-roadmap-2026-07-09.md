@@ -223,6 +223,12 @@ target больше НЕ создаёт фантомный ресурс молч
     штатный canPay/pay (слайс 4). Панель: runAction впрыскивает боеприпас (`appendActivationCost`), disabledInfo даёт
     внятную причину `Нет: <имя>` при нехватке предмета-стоимости (боеприпас/зелье). Схема: `mechanics.ammo`. Тесты
     `weaponAmmo.test.ts` (6).
+  - **collector grant_action (приёмы оружия BG3) ✅ СДЕЛАНО (слайс 6, финал).** grant_action переосмыслен: даёт
+    ДОСТУП к библиотечному действию (value|values slug'и, как grant_effect/grant_spell); экономика/поведение — на
+    карте действия, НЕ в grant_action (владелец). `collectGrantActionSlugs(mechanics, level)` + `collectSheetActions.
+    fromGranted`; SheetActionsPanel резолвит action по slug (кэш). level_gate энфорсится; выданные uses пока не
+    гейтятся (пул не сидируется — задача #28). Тесты `actionSheetGrant.test.ts` (6). **Все 5 пунктов видения
+    «предмет=эффект» закрыты.**
   - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
     сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
     value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).
