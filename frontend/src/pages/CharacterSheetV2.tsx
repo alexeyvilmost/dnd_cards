@@ -284,7 +284,48 @@ const CharacterSheetV2 = ({
           </CollapsibleSection>
         </div>
 
-        {/* ЦЕНТР: инвентарь, черты и способности */}
+        {/* ЦЕНТР: действия и заклинания — игрок обращается к ним чаще всего, потому в центре. */}
+        <div className="csheet-col csheet-col--ctrl">
+          <CollapsibleSection title="Действия">
+            <SheetActionsPanel
+              character={character}
+              assembled={assembled}
+              ruleState={ruleState}
+              equipCards={equipCards}
+              onUpdated={onUpdated}
+              onEvents={onEvents}
+              embedded
+              targetAc={targetAc}
+              onTargetAcChange={setTargetAc}
+              targetSaveMod={targetSaveMod}
+              onTargetSaveModChange={setTargetSaveMod}
+            />
+          </CollapsibleSection>
+
+          {assembled.spells.length > 0 && (
+            <CollapsibleSection title="Заклинания">
+              {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel/
+                  SheetActionLine (одна модель отображения строк и иконок), только
+                  сгруппировано по кругам. Общий targetAc — поле не дублируется. */}
+              <SheetActionsPanel
+                character={character}
+                assembled={assembled}
+                ruleState={ruleState}
+                equipCards={equipCards}
+                onUpdated={onUpdated}
+                onEvents={onEvents}
+                embedded
+                spellsOnly
+                targetAc={targetAc}
+                onTargetAcChange={setTargetAc}
+                targetSaveMod={targetSaveMod}
+                onTargetSaveModChange={setTargetSaveMod}
+              />
+            </CollapsibleSection>
+          )}
+        </div>
+
+        {/* ПРАВАЯ: инвентарь, черты и способности, выборы «в игре» */}
         <div className="csheet-col">
           {inPlayChoices.length > 0 && (
             <SheetChoicesPanel
@@ -336,47 +377,6 @@ const CharacterSheetV2 = ({
               <p className="cs-hook-note">Нет привязанных способностей.</p>
             )}
           </CollapsibleSection>
-        </div>
-
-        {/* ПРАВАЯ: действия, заклинания */}
-        <div className="csheet-col csheet-col--ctrl">
-          <CollapsibleSection title="Действия">
-            <SheetActionsPanel
-              character={character}
-              assembled={assembled}
-              ruleState={ruleState}
-              equipCards={equipCards}
-              onUpdated={onUpdated}
-              onEvents={onEvents}
-              embedded
-              targetAc={targetAc}
-              onTargetAcChange={setTargetAc}
-              targetSaveMod={targetSaveMod}
-              onTargetSaveModChange={setTargetSaveMod}
-            />
-          </CollapsibleSection>
-
-          {assembled.spells.length > 0 && (
-            <CollapsibleSection title="Заклинания">
-              {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel/
-                  SheetActionLine (одна модель отображения строк и иконок), только
-                  сгруппировано по кругам. Общий targetAc — поле не дублируется. */}
-              <SheetActionsPanel
-                character={character}
-                assembled={assembled}
-                ruleState={ruleState}
-                equipCards={equipCards}
-                onUpdated={onUpdated}
-                onEvents={onEvents}
-                embedded
-                spellsOnly
-                targetAc={targetAc}
-                onTargetAcChange={setTargetAc}
-                targetSaveMod={targetSaveMod}
-                onTargetSaveModChange={setTargetSaveMod}
-              />
-            </CollapsibleSection>
-          )}
         </div>
       </div>
 
