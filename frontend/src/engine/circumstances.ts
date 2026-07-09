@@ -39,7 +39,7 @@ export function activeConditionsOf(state: RuntimeState | undefined): Set<string>
   return out;
 }
 
-/** Вычислить один предикат обстоятельства. Неизвестный предикат → true (не блокируем). */
+/** Вычислить один предикат обстоятельства. Нераспознанный гейт → false (closed-by-default); narrative → true. */
 export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
   const kind = String(cond.kind ?? '');
   switch (kind) {
