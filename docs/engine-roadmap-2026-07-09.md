@@ -187,11 +187,15 @@ target больше НЕ создаёт фантомный ресурс молч
 семантика **Пояс силы огра** (СИЛ=max(база,19)) верна и покрыта тестами `valueMethod.test.ts` (7). Регресс исключён
 (без методов `max(additive)===additive`). preFctx для формул = selfLevel/classLevels/переменные (не характеристики —
 циклично). Гейты tsc 0 / 373 vitest / 83 mvp. **ГРАНИЦЫ (по ревью):**
-  - **item→резолвер (HIGH, отдельный слайс):** value_method (и `grant_ability_score`!) от ПРЕДМЕТА пока НЕ доходят —
-    механики предметов идут только в `passives→breakdownValue`, а тот не трогает характеристики; `runtimeSources`
-    вообще не заполняется. Т.е. флагман-Пояс как ПРЕДМЕТ мёртв; работают value_method в ЭФФЕКТАХ (черта/класс/раса).
-    Фикс — маршрутизировать `collectItemMechanics`→`resolveCharacterRules` (гейт настройки прилетит бесплатно через
-    `itemMechanicsActive`); чинит ОБА пути (аддитивный и методный) от предмета. Осторожно: persisted vs live rule_state.
+  - **item→резолвер ✅ СДЕЛАНО (слайс 1 «предмет=эффект»).** `collectItemMechanics`→`itemRuntimeSources`→
+    `resolveCharacterRules({runtimeSources})` на живом листе (`CharacterSheetMVP.tsx`). Теперь value_method И
+    `grant_ability_score` от ПРЕДМЕТА доходят (флагман-Пояс как предмет ожил), + владения/чувства/заклинания предмета.
+    Гейт настройки прилетел бесплатно через `itemMechanicsActive` (обобщён на все предметы — решение владельца).
+    Анти-задвоение: числовые роли (max_hp/speed/init) и КЗ от предметов остаются за `breakdown`/`passives`
+    (`collectNumericModifier` early-return для `source.type==='item'`; `acPassives` фильтрует item). persisted
+    rule_state (кузня) остаётся «голым» — downstream (2D-бой/кампания) видит предметы через live-резолвер (решение
+    владельца). Тесты `itemRuntimeSources.test.ts` (8). **Часть большей инициативы «предметы как эффекты»** (5 примитивов,
+    6 слайсов: S2 гейт данными+carried, S3 grant_effect, S4 предмет-действие+саморасход, S5 предмет-ресурс, S6 grant_action).
   - **target — только характеристики**; speed/save_dc/initiative/ac через value_method — продолжение (не-характеристика
     сейчас тихий no-op, без сигнала). `requirements` (per-payload гейт) не читаются. Уменьшение (drain «СИЛ=3») невыразимо (max).
     value_method в рантайм-роутере — тихий no-op (не NOT_IMPLEMENTED).

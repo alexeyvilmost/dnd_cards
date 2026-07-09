@@ -226,8 +226,13 @@ function passesLevelGate(payload: Dict, level: number): boolean {
 const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative']);
 
 /** Собирает числовой self-modifier из payload в аккумулятор numericMods. */
-function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>) {
+function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>, source: RuleSource) {
   if (payload.kind !== 'modifier') return;
+  // Числовые роли предметов (max_hp/speed/initiative) считает канал breakdown/passives листа —
+  // там предметы уже присутствуют. Здесь их пропускаем, иначе значение задвоится (Решение 2а:
+  // ruleState остаётся «голым» по числовым ролям, единый источник — breakdown). Гранты
+  // (grant_ability_score/grant_sense/grant_speed) breakdown НЕ трогает — они идут своим путём.
+  if (source.type === 'item') return;
   const roll = String((payload.applies_to as Dict | undefined)?.roll ?? '');
   if (!NUMERIC_ROLLS.has(roll)) return;
   if (payload.op != null && payload.op !== 'add') return; // advantage/disadvantage — не числовые
@@ -263,10 +268,10 @@ function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
 
 /** C8: value_method характеристики (парадигма №3) — кандидат-значение для СИЛ/ЛВК/… «Пояс силы огра» =
  *  value_method{target:'str', formula:'19'} → СИЛ = максимум(база+ASI, 19). Вычисляется ДО модов, поэтому
- *  формула не должна ссылаться на характеристики (циклично → тихий 0). ГРАНИЦЫ (роадмап): source — только
- *  эффекты/действия (черта/класс/раса); value_method от ПРЕДМЕТА пока НЕ доходит (предметы не вливаются в
- *  collectAbilityDeltas — отдельный слайс item→резолвер, чинит и grant_ability_score от предмета). target —
- *  только характеристики (speed/save_dc/ac — продолжение). Уменьшение (drain «СИЛ=3») невыразимо (max). */
+ *  формула не должна ссылаться на характеристики (циклично → тихий 0). ГРАНИЦЫ (роадмап): source —
+ *  эффекты/действия (черта/класс/раса) И предметы через runtimeSources (слайс 1 «предмет=эффект»: надетый/
+ *  настроенный Пояс силы огра теперь поднимает СИЛ на живом листе). target — только характеристики
+ *  (speed/save_dc/ac — продолжение). Уменьшение (drain «СИЛ=3») невыразимо (max). */
 function applyAbilityMethod(payload: Dict, methods: Record<AbilityKey, number[]>, fctx: FormulaContext) {
   if (String(payload.kind ?? '') !== 'value_method') return;
   const target = String(payload.target ?? '').toLowerCase();
@@ -383,7 +388,7 @@ function applyPayload(
         continue;
       }
       if (!passesLevelGate(selectedPayload, level)) continue;
-      collectNumericModifier(selectedPayload, formulaCtx, numericMods);
+      collectNumericModifier(selectedPayload, formulaCtx, numericMods, source);
       collectSenseSpeed(selectedPayload, formulaCtx, numericMods, senses, speeds);
       const grant = grantFromPayload(selectedPayload, source, choiceId);
       if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
@@ -392,7 +397,7 @@ function applyPayload(
   }
 
   if (!passesLevelGate(payload, level)) return;
-  collectNumericModifier(payload, formulaCtx, numericMods);
+  collectNumericModifier(payload, formulaCtx, numericMods, source);
   collectSenseSpeed(payload, formulaCtx, numericMods, senses, speeds);
   const grant = grantFromPayload(payload, source);
   if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
@@ -543,7 +548,10 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const acPassives: Dict[] = [
     ...(assembled.effects as OriginEffect[]).map((e) => e.effect.mechanics),
     ...(assembled.actions as OriginAction[]).map((a) => a.action.mechanics),
-    ...(input.runtimeSources || []).map((r) => r.mechanics),
+    // Предметы в КЗ резолвера НЕ вливаем: ruleState.armorClass — «голый» билд-КЗ (см. выше),
+    // а КЗ от предметов лист считает через breakdown('ac')/passives (там предметы уже есть).
+    // Не-предметные runtimeSources (врем. эффекты/условия из боя) в КЗ по-прежнему участвуют.
+    ...(input.runtimeSources || []).filter((r) => r.source.type !== 'item').map((r) => r.mechanics),
   ].filter((m): m is Dict => !!m && typeof m === 'object');
   const acCharacter: CharacterContext = {
     abilityMods,

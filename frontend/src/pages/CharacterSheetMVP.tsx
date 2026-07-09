@@ -11,6 +11,7 @@ import { collectItemMechanics } from '../character/attunement';
 import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
 import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
+import type { RuntimeRuleSource } from '../character/rules/types';
 import { abilityOfSkill } from '../character/rules/foundation';
 import {
   ABILITY_KEYS,
@@ -166,10 +167,6 @@ const CharacterSheetMVP = () => {
   }, [id, loadJournal]);
 
   const draft = useMemo(() => (character ? characterToDraft(character) : null), [character]);
-  const ruleState = useMemo(
-    () => (draft && assembled ? resolveCharacterRules({ draft, assembled }) : null),
-    [draft, assembled],
-  );
 
   const equipCardIds = useMemo(() => {
     if (!character) return [];
@@ -202,14 +199,36 @@ const CharacterSheetMVP = () => {
     [character],
   );
 
-  // Пассивки персонажа + механики надетых предметов (с учётом настройки).
+  // Механики предметов с учётом настройки — ОБЩИЙ источник двух каналов:
+  //  • passives → breakdown листа (числовые роли: КЗ/хиты/скорость/инициатива/спасброски/навыки);
+  //  • runtimeSources → resolveCharacterRules (характеристики/владения/чувства/заклинания предметов).
+  const itemMechanics = useMemo(
+    () => (character ? collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state) : []),
+    [character, equipCards],
+  );
+
+  // Слайс 1 «предмет = эффект»: механики надетых/настроенных предметов доходят до резолвера правил.
+  // Раньше ветка runtimeSources была пуста → бонусы характеристик/владений/чувств от предметов не
+  // работали. Гейт настройки/ношения уже применён в collectItemMechanics. persisted rule_state (кузня)
+  // остаётся «голым» — влияние предметов живёт только в live-рендере (владелец: downstream через live-резолвер).
+  const itemRuntimeSources = useMemo<RuntimeRuleSource[]>(
+    () => itemMechanics.map((im) => ({
+      source: { type: 'item' as const, id: im.card.id, name: im.card.name },
+      mechanics: im.mechanics,
+    })),
+    [itemMechanics],
+  );
+
+  const ruleState = useMemo(
+    () => (draft && assembled ? resolveCharacterRules({ draft, assembled, runtimeSources: itemRuntimeSources }) : null),
+    [draft, assembled, itemRuntimeSources],
+  );
+
+  // Пассивки персонажа + механики надетых предметов (числовой канал листа).
   const passives = useMemo(() => {
     const base = assembled ? collectPassiveMechanics(assembled, character?.resolved_choices ?? {}) : [];
-    if (!character) return base;
-    const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state)
-      .map((im) => im.mechanics);
-    return [...base, ...items];
-  }, [assembled, character, equipCards]);
+    return [...base, ...itemMechanics.map((im) => im.mechanics)];
+  }, [assembled, character, itemMechanics]);
 
   const sheetCtx = useMemo(() => {
     if (!ruleState || !draft || !runtimeState) return null;
@@ -594,7 +613,10 @@ const CharacterSheetMVP = () => {
                     <span className="sheet-roll-cell">
                       {saveBd ? (
                         <ValueBreakdownTip breakdown={saveBd} label={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
-                          <span>{fmtMod(bonus)}</span>
+                          {/* Заголовочное число = полная разбивка (база+владение+модификаторы эффектов/
+                              предметов), как в тултипе и в реальном броске. ruleState.savingThrowBonuses —
+                              только база+владение (эффект-модификаторы туда не входят) → был недосчёт. */}
+                          <span>{fmtMod(saveBd.value)}</span>
                         </ValueBreakdownTip>
                       ) : (
                         <span>{fmtMod(bonus)}</span>
@@ -639,7 +661,8 @@ const CharacterSheetMVP = () => {
                     <span className="sheet-roll-cell">
                       {skillBd ? (
                         <ValueBreakdownTip breakdown={skillBd} label={skill.label}>
-                          <span>{fmtMod(bonus)}</span>
+                          {/* Заголовочное число навыка = полная разбивка (см. спасброски выше). */}
+                          <span>{fmtMod(skillBd.value)}</span>
                         </ValueBreakdownTip>
                       ) : (
                         <span>{fmtMod(bonus)}</span>
