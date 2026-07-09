@@ -112,10 +112,17 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     })));
     if (!base) return null;
     const act = base.activation as Record<string, unknown>;
-    const reqs = [...((act.requirements as unknown[]) || [])];
-    if (minLevel !== '' && Number(minLevel) > 0) reqs.push({ type: 'level', min_level: Number(minLevel) });
-    reqs.push(...reqRowsToRequirements(requirements));
-    if (reqs.length) act.requirements = reqs;
+    // Не более одного требования level: поле «Мин. уровень» имеет приоритет над блоком trg_level.
+    const existing = (act.requirements as Array<Record<string, unknown>>) || [];
+    const levelReq = (minLevel !== '' && Number(minLevel) > 0)
+      ? { type: 'level', min_level: Number(minLevel) }
+      : existing.find((r) => r.type === 'level');
+    const reqs = [
+      ...(levelReq ? [levelReq] : []),
+      ...existing.filter((r) => r.type !== 'level'),
+      ...reqRowsToRequirements(requirements),
+    ];
+    if (reqs.length) act.requirements = reqs; else delete act.requirements;
     // S3-гейты вплетаем в собранную механику.
     if (itemWhile) act.while = itemWhile;
     if (consumesSelf) act.consumes_self = true;
@@ -134,11 +141,12 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   );
 
   const emit = (next: typeof built) => {
-    if (!next && effectEntries.length === 0 && triggerId === 'trg_passive') {
-      onChange(null);
-      return;
-    }
-    onChange(next);
+    // Пустой конструктор (пассив без эффектов, гейтов и требований) → очищаем механику (null),
+    // а не сохраняем «пустой» {activation:{mode:passive},effects:[]}.
+    const empty = triggerId === 'trg_passive' && effectEntries.length === 0
+      && minLevel === '' && !itemWhile && !consumesSelf && !ammo.trim() && !recharge.trim()
+      && extraCost.length === 0 && requirements.length === 0;
+    onChange(empty ? null : next);
   };
 
   // В режиме блоков отдаём собранную механику — только после правок пользователя,
@@ -457,13 +465,14 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Перезарядка uses (recharge)</label>
+            <label className="block text-xs text-gray-600 mb-1">Перезарядка uses (recharge) ⏳</label>
             <input
               className="w-full px-2 py-1 border rounded text-sm"
               value={recharge}
               placeholder="напр. 5-6, dawn"
               onChange={(e) => { markDirty(); setRecharge(e.target.value); }}
             />
+            <p className="text-[11px] text-amber-600 mt-0.5">⏳ Движок пока перезаряжает по «За период» (uses.per), поле recharge не читается.</p>
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-700 self-end pb-1 cursor-pointer">
             <input

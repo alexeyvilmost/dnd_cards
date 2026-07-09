@@ -58,13 +58,24 @@ export const PREDICATE_KIND_MAP: Record<string, PredKind> = Object.fromEntries(
   ALL_PREDICATE_KINDS.map((k) => [k.id, k]),
 );
 
-/** Нормализуем легаси-предикат старого блока eff_adv `{kind:'condition', id}` (движок его НЕ
- *  распознаёт ⇒ модификатор молча не срабатывал) к `you_have_condition` — самый вероятный смысл. */
+const ITEM_PREDICATES = new Set(['item_equipped', 'item_carried', 'attuned']);
+
+/** Нормализуем предикаты (рекурсивно по вложенным `of`):
+ *  - легаси-блок eff_adv `{kind:'condition', id}` (движок НЕ распознаёт ⇒ молча ложь) → you_have_condition;
+ *  - предметные виды с ключом `id` → переносим в `value` (движок читает `id ?? value`, id имеет приоритет —
+ *    иначе правка `value` в редакторе молча перекрывалась бы старым `id`). */
 export function normalizeCond(cond: Cond): Cond {
-  if (cond && cond.kind === 'condition' && (cond.id != null || cond.value != null)) {
-    return { kind: 'you_have_condition', value: cond.id ?? cond.value };
+  if (!cond || typeof cond !== 'object') return cond;
+  let c: Cond = cond;
+  if (c.kind === 'condition' && (c.id != null || c.value != null)) {
+    c = { kind: 'you_have_condition', value: c.id ?? c.value };
+  } else if (ITEM_PREDICATES.has(c.kind) && c.id != null) {
+    const { id, ...rest } = c;
+    c = { ...rest, value: rest.value ?? id };
   }
-  return cond;
+  if (Array.isArray(c.of)) c = { ...c, of: (c.of as Cond[]).map(normalizeCond) };
+  else if (c.of && typeof c.of === 'object') c = { ...c, of: normalizeCond(c.of as Cond) };
+  return c;
 }
 
 export const normalizeWhen = (when: unknown): Cond[] =>

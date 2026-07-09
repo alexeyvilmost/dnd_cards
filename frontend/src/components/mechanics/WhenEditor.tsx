@@ -85,7 +85,17 @@ function CondRow({
         <select
           className="flex-1 px-2 py-1 border rounded text-sm bg-white"
           value={isRaw ? '__raw__' : cond.kind}
-          onChange={(e) => { if (e.target.value !== '__raw__') onChange(emptyCond(e.target.value)); }}
+          onChange={(e) => {
+            const k = e.target.value;
+            if (k === '__raw__') return;
+            const next = emptyCond(k);
+            const nextSpec = PREDICATE_KIND_MAP[k];
+            // Переносим совместимые поля при смене вида (value/description/вложенные of групп).
+            if (cond.value != null && nextSpec?.fields.some((f) => f.key === 'value')) next.value = cond.value;
+            if (cond.description != null && nextSpec?.fields.some((f) => f.key === 'description')) next.description = cond.description;
+            if (nextSpec?.group === 'many' && Array.isArray(cond.of)) next.of = cond.of;
+            onChange(next);
+          }}
         >
           {ALL_PREDICATE_KINDS.map((k) => (
             <option key={k.id} value={k.id}>{k.label}{k.inert ? ' ⚠' : ''}</option>

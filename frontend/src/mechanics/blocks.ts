@@ -80,7 +80,7 @@ export const reqRowsToRequirements = (rows: ReqRow[]): Record<string, unknown>[]
   .map((r) => {
     const out: Record<string, unknown> = { type: r.type };
     if (r.type === 'ability_score') {
-      if (r.ability) out.ability = r.ability;
+      out.ability = r.ability || 'str'; // редактор показывает «Сила» по умолчанию — пишем то же
       if (String(r.min ?? '').trim()) out.min = Number(r.min);
     } else if ((r.value ?? '').trim()) {
       out.value = (r.value ?? '').trim();
@@ -759,16 +759,19 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
     const isD20One = tr.timing === 'replaces' && circ.length === 1
       && circ[0]?.kind === 'd20_equals' && Number(circ[0]?.value) === 1
       && ['attack_roll_made', 'ability_check_made', 'saving_throw_made'].includes(String(ev));
-    const simple = !hasSubject && circ.length === 0;
-    if (isD20One && !hasSubject) {
+    // Простые блоки НЕ несут uses/subject/circumstances/произвольный timing — берём их только
+    // когда триггер точно им соответствует, иначе теряли бы данные (→ trg_custom).
+    const noUses = uses.count == null;
+    const simple = !hasSubject && circ.length === 0 && noUses;
+    if (isD20One && !hasSubject && noUses) {
       triggerId = 'trg_d20_one';
       tv.event = ev;
     } else if (ev === 'on_acquire' && simple) triggerId = 'trg_on_acquire';
     else if (ev === 'long_rest' && simple) triggerId = 'trg_long_rest';
     else if (ev === 'short_rest' && simple) triggerId = 'trg_short_rest';
-    else if (ev === 'reduced_to_0_hp' && !hasSubject && circ.length === 0) {
+    else if (ev === 'reduced_to_0_hp' && !hasSubject && circ.length === 0 && tr.timing === 'replaces' && uses.count != null) {
       triggerId = 'trg_zero_hp';
-      tv.uses_count = uses.count ?? 1;
+      tv.uses_count = uses.count;
       tv.uses_per = uses.per ?? 'long_rest';
     } else {
       toCustom(tr);
@@ -797,8 +800,20 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   let c = 0;
   for (const it of ((m.effects as Dict[]) || [])) {
     if (it?.resolution === 'save') {
-      const dmg = ((it.on_fail as Dict[]) || []).find((p) => p.kind === 'damage') || {};
-      entries.push({ id: `d_${++c}`, blockId: 'eff_save_damage', values: { ability: it.ability, dc: it.dc, dice: dmg.dice ?? '1d10', damage_type: dmg.type ?? 'fire' } });
+      // eff_save_damage жёстко задаёт who:'target', один урон на провал и «половину» на успех.
+      // Точно представимо только это; иначе (save-без-урона, доп. эффекты, custom on_success) → сырой JSON.
+      const onFail = Array.isArray(it.on_fail) ? (it.on_fail as Dict[]) : [];
+      const onSucc = Array.isArray(it.on_success) ? (it.on_success as Dict[]) : [];
+      const dmg = onFail[0];
+      const faithful = it.who === 'target'
+        && onFail.length === 1 && dmg?.kind === 'damage'
+        && onSucc.length === 1 && onSucc[0]?.kind === 'damage'
+        && onSucc[0]?.dice === dmg?.dice && onSucc[0]?.type === dmg?.type && onSucc[0]?.on_success === 'half';
+      if (faithful) {
+        entries.push({ id: `d_${++c}`, blockId: 'eff_save_damage', values: { ability: it.ability, dc: it.dc, dice: dmg!.dice, damage_type: dmg!.type } });
+      } else {
+        entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
+      }
     } else if (it?.resolution === 'auto') {
       for (const p of ((it.result as Dict[]) || [])) {
         const e = payloadToEntry(p);
