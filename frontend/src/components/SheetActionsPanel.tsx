@@ -18,6 +18,8 @@ import { describeMechanicsLine } from '../engine/describeMechanics';
 import { weaponActionAvailability, weaponAttackPreview } from '../engine/weapon';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
+import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
 import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card } from '../types';
@@ -146,6 +148,7 @@ export default function SheetActionsPanel({
     else setLocalTargetSaveMod(n);
   };
   const diceDialog = useDiceDialog();
+  const choiceDialog = useChoiceDialog();
   const reactionPrompt = useReactionPrompt();
 
   const runtime = useMemo(
@@ -262,8 +265,8 @@ export default function SheetActionsPanel({
 
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
-    const execCtx = (rng: () => number, planning = false) =>
-      ({ character: ctx, target, rng, passives, planning, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
+    const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}) =>
+      ({ character: ctx, target, rng, passives, planning, choices, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
     const previewFor = (a: SheetAction): ReactNode => {
@@ -285,11 +288,20 @@ export default function SheetActionsPanel({
       title: string,
       preview?: ReactNode,
     ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[] } | null> => {
-      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true)).events);
+      // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
+      // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
+      const inPlay = collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title });
+      const choices: Record<string, string[]> = {};
+      if (inPlay.length) {
+        const picked = await choiceDialog.request(inPlay, title);
+        if (!picked) return null; // отмена выбора = отмена действия
+        for (const [k, v] of Object.entries(picked)) if (v.length) choices[k] = v;
+      }
+      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events);
       const decision = await diceDialog.request(plan, title, preview);
       if (decision.mode === 'cancel') return null;
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
-      const r = executeAction(baseState, m, execCtx(rng));
+      const r = executeAction(baseState, m, execCtx(rng, false, choices));
       return { state: r.state, events: r.events, pending: r.pendingReactions ?? [] };
     };
 

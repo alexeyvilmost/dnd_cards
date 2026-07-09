@@ -95,3 +95,27 @@ export function collectChoices(
   }
   return out;
 }
+
+/**
+ * Ярус 1.2: выборы context:'in_play' ВНУТРИ действия — для предпрохода на клике действия.
+ * PendingChoice.id = СЫРОЙ choice.id (ключ ctx.choices на одно исполнение), а НЕ choiceKey:
+ * движок читает ctx.choices[String(p.id)] напрямую, без origin. Топ-уровень + resolution:'auto'.
+ */
+export function collectInPlayActionChoices(
+  mechanics: Record<string, unknown> | null | undefined,
+  origin: ChoiceOrigin,
+): PendingChoice[] {
+  if (!mechanics || typeof mechanics !== 'object') return [];
+  const effects = (mechanics as Dict).effects;
+  if (!Array.isArray(effects)) return [];
+  const raw: Dict[] = [];
+  for (const it of effects as Dict[]) {
+    if (it?.kind === 'choice') raw.push(it);
+    else if (it?.resolution === 'auto' && Array.isArray(it.result)) {
+      for (const p of it.result as Dict[]) if (p?.kind === 'choice') raw.push(p);
+    }
+  }
+  return raw
+    .filter((ch) => String(ch.context ?? '') === 'in_play')
+    .map((ch) => ({ ...choiceToPending(ch, origin), id: String(ch.id ?? 'choice') }));
+}

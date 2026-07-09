@@ -87,7 +87,7 @@ const RESIST_LEVELS = new Set(['immunity', 'resistance', 'vulnerability']);
  * сматчит. Приводим к рабочей форме: тип урона → damage_type, уровень по умолчанию 'resistance'.
  * items-форма (damage_type уже задан) и явный уровень (value ∈ RESIST_LEVELS) не трогаются.
  */
-function normalizePassivePayload(p: Dict): Dict {
+export function normalizeChoicePayload(p: Dict): Dict {
   if (p.kind === 'resistance' && p.damage_type == null && p.value != null && !RESIST_LEVELS.has(String(p.value))) {
     return { ...p, damage_type: p.value, value: 'resistance' };
   }
@@ -111,7 +111,7 @@ export function expandPassiveChoicePayloads(
     const selected = resolvedChoices[choiceInstanceId(sourceId, rawId)] || resolvedChoices[rawId] || [];
     for (const sp of selectedChoicePayloads(choice, selected)) {
       if (sp.kind === 'choice') { walk(sp, depth + 1); continue; }
-      const norm = normalizePassivePayload(sp);
+      const norm = normalizeChoicePayload(sp);
       if (PASSIVE_PAYLOAD_KINDS.has(String(norm.kind))) out.push(norm);
     }
   };

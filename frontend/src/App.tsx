@@ -4,6 +4,7 @@ import { loadConditions } from './api/conditionsApi';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DiceDialogProvider } from './contexts/DiceDialogContext';
+import { ChoiceDialogProvider } from './contexts/ChoiceDialogContext';
 import { ReactionPromptProvider } from './contexts/ReactionPromptContext';
 import { PinModeProvider } from './hooks/usePinMode';
 import { EntityDetailProvider } from './components/EntityDetailProvider';
@@ -59,6 +60,7 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <DiceDialogProvider>
+        <ChoiceDialogProvider>
         <ReactionPromptProvider>
         <PinModeProvider>
         <EntityDetailProvider>
@@ -355,6 +357,7 @@ function App() {
         </EntityDetailProvider>
         </PinModeProvider>
         </ReactionPromptProvider>
+        </ChoiceDialogProvider>
         </DiceDialogProvider>
       </ToastProvider>
     </AuthProvider>

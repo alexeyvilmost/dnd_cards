@@ -22,6 +22,7 @@ import { collectModifiers, foldAdvantage } from './modifiers';
 import { activeConditionsOf, type EvalContext } from './circumstances';
 import { conditionModifierPayloads } from './conditions';
 import { payloadsOf } from './mechanicsView';
+import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/expandChoices';
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
 import { rollD20 } from './roll';
@@ -599,6 +600,22 @@ function applyPayloads(
       case 'resource': route((s) => applyResource(s, p, events)); break;
       case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
       case 'resistance': route((s) => applyResistancePayload(s, p, source, events)); break;
+      case 'choice': {
+        // Ярус 1.2: выбор в момент исполнения. Решение игрока собрано предпроходом на клике
+        // действия в ctx.choices[<сырой id выбора>] (fallback 'choice' — как в коллекторе).
+        // Разворачиваем выбранные ветки тем же роутером (вложенный choice → снова сюда).
+        // Нормализуем форму (resistance из apply-шаблона) и НЕ пропускаем build-гранты (grant_* —
+        // их применяет резолвер сборки, здесь они лишь замусорили бы журнал NOT_IMPLEMENTED).
+        const raw = ctx.choices?.[String(p.id ?? 'choice')];
+        const vals = raw == null ? [] : Array.isArray(raw) ? raw : [raw];
+        if (vals.length) {
+          const sub = selectedChoicePayloads(p, vals)
+            .map(normalizeChoicePayload)
+            .filter((sp) => !String(sp.kind).startsWith('grant_'));
+          next = applyPayloads(sub, next, ctx, events, source, hand, halfDamage, whoTarget, targetRef);
+        }
+        break;
+      }
       case 'movement':
         events.push(narrativeEvent(`Перемещение: ${p.value} ${p.distance ?? ''} фт`));
         break;
@@ -799,6 +816,13 @@ function runMechanicEffects(
     // Мягкая деградация: если формула эффекта ссылается на недоступную переменную,
     // эффект пропускается с логом, а не роняет всё действие (см. docs/variables.md).
     try {
+      // Ярус 1.2: choice как самостоятельная интеракция действия — через общий роутер payload-ов
+      // (там case 'choice' развернёт выбор из ctx.choices). Иначе бы упал в NOT_IMPLEMENTED resolution.
+      if (eff.kind === 'choice') {
+        const whoTarget = String(eff.who ?? 'self') === 'target' && !!targetRef.state;
+        next = applyPayloads([eff], next, ctx, events, sourceName, 'main', false, whoTarget, targetRef);
+        continue;
+      }
       if (resolution === 'auto') {
         const results = (eff.result ?? eff.results) as Dict[] | undefined;
         if (Array.isArray(results)) {

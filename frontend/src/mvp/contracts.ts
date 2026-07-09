@@ -149,8 +149,9 @@ export interface ExecuteContext {
   character: CharacterContext;
   target?: TargetContext;
   rng: () => number;
-  /** Выборы игрока внутри действия (напр. вариант Толчка). */
-  choices?: Record<string, string>;
+  /** Выборы игрока внутри действия (напр. вариант Толчка). Ключ — сырой choice.id;
+   *  значение — одна опция или массив (для count>1). Собирается предпроходом на клике. */
+  choices?: Record<string, string | string[]>;
   /** Контекст каста заклинания (E5): базовый уровень и уровень слота для апкаста. */
   spell?: { baseLevel: number; castLevel?: number };
   /** Планирующий прогон для плана кубов: спасброски берут ветку провала, чтобы кости
