@@ -219,12 +219,14 @@
   color: #ffb4a2; background: #2a0d08;
   border: 1px solid #c0442a; border-radius: 6px;
 }
+/* Уровень заклинания — белой римской цифрой с чёрным контуром в правом нижнем углу (без плашки). */
 .cs-action-tile-lvl {
-  position: absolute; top: -5px; right: -5px; z-index: 2;
-  min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box;
-  font-size: 10px; line-height: 13px; font-weight: 800; text-align: center;
-  color: var(--forge-gold, #d8b978); background: #0e0b07;
-  border: 1px solid var(--forge-gold-dim, #8a7320); border-radius: 8px;
+  position: absolute; bottom: 0; right: 4px; z-index: 2;
+  font-size: 16px; line-height: 1.1; font-weight: 800; text-align: center;
+  color: #fff;
+  -webkit-text-stroke: 0.6px #000; paint-order: stroke fill;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
 }
 
 /* ── Конфликты ── */

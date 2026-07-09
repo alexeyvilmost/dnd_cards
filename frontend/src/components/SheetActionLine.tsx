@@ -8,6 +8,9 @@ import ActionHoverCard from './forge/ActionHoverCard';
 import SpellPreview from './SpellPreview';
 import SheetEntityRow from './SheetEntityRow';
 
+// Уровень заклинания в углу иконки — римской цифрой (I..IX).
+const TILE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+
 type Props = {
   name: string;
   imageUrl?: string | null;
@@ -76,9 +79,9 @@ const SheetActionLine = ({
           onMouseLeave={onLeave}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
-          <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} size={40} />
+          <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} fill />
           {level != null && (
-            <span className="cs-action-tile-lvl">{level === 0 ? 'З' : level}</span>
+            <span className="cs-action-tile-lvl">{level === 0 ? 'З' : (TILE_ROMAN[level - 1] ?? level)}</span>
           )}
         </button>
       ) : (
