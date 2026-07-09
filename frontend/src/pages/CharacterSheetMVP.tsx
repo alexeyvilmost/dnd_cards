@@ -335,6 +335,9 @@ const CharacterSheetMVP = () => {
     rollKind: 'saving_throw' | 'ability_check',
     filter?: Record<string, unknown>,
   ) => {
+    // C14: числовые модификаторы эффектов УЖЕ входят в parts (breakdownSave/Skill добавляют
+    // effectModifiers). collected нужен только для advantage — его модификаторы НЕ подмешиваем,
+    // иначе литеральные бонусы задваивались бы (parts + collected).
     const collected = runtimeState
       ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
       : { advantage: 'none' as const, modifiers: [] };
@@ -349,7 +352,7 @@ const CharacterSheetMVP = () => {
       : () => Math.random();
     const roll = rollD20({
       advantage: collected.advantage,
-      modifiers: [...parts, ...collected.modifiers],
+      modifiers: [...parts],
       rng,
     });
     await appendRuntimeEvents([rollEvent(label, roll)]);

@@ -69,12 +69,30 @@ function formulaCtx(ctx: ExecuteContext): FormulaContext {
   };
 }
 
+/** Контекст формул ЦЕЛИ (её характеристики/уровень/переменные) — для formula-aware
+ *  вычисления проецируемых цель→атакующий модификаторов. null, если цель обобщённая. */
+function targetFormulaCtx(target: ExecuteContext['target']): FormulaContext | null {
+  const cc = target?.characterContext;
+  if (!cc) return null;
+  return {
+    abilityMods: cc.abilityMods,
+    profBonus: cc.profBonus,
+    selfLevel: cc.level,
+    classLevels: cc.classLevels,
+    spellcastingMod: cc.spellcastingMod,
+    variables: cc.variables,
+  };
+}
+
 function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
   return {
     character: ctx.character,
     state,
     target: ctx.target,
     activeConditions: activeConditionsOf(state),
+    // C10: состояния ЦЕЛИ — чтобы предикат target_has_condition («преимущество, пока цель
+    // распластана/опутана») гейтился данными, а не молча давал false. Пустое множество, если цели нет.
+    targetConditions: activeConditionsOf(ctx.target?.runtimeState),
   };
 }
 
@@ -93,6 +111,9 @@ function projectedAgainst(
   const st = target?.runtimeState;
   if (!st) return out;
 
+  // C14-родственник: значение проецируемого модификатора вычисляем formula-aware в контексте
+  // ЦЕЛИ (её характеристики/переменные), а не голым Number() — иначе формульные моды теряются.
+  const tctx = targetFormulaCtx(target);
   const consider = (m: Dict, source: string): void => {
     if (String(m.scope ?? 'self') !== 'target') return;
     const applies = m.applies_to as Dict | undefined;
@@ -102,8 +123,11 @@ function projectedAgainst(
       if (op === 'advantage') out.hasAdvantage = true; else out.hasDisadvantage = true;
       out.advantage = foldAdvantage(out.hasAdvantage, out.hasDisadvantage);
     } else if (op === 'add' && m.value != null) {
-      const v = Number(String(m.value).replace(/^\+/, ''));
-      if (!Number.isNaN(v)) out.modifiers.push({ value: v, source });
+      const raw = String(m.value).replace(/^\+/, '');
+      let v: number | undefined;
+      try { const r = evaluate(raw, tctx ?? {}); v = typeof r === 'number' ? r : undefined; }
+      catch { v = undefined; }
+      if (v != null && !Number.isNaN(v) && v !== 0) out.modifiers.push({ value: v, source });
     }
   };
 
@@ -284,6 +308,34 @@ function applyModifierPayload(
     name: source,
     mechanics: payload,
     expiry: expiryFromDuration(payload.duration as Dict | undefined),
+    source,
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
+/**
+ * resistance/immunity/vulnerability, выданные действием (Ярость), — как «стоячий» активный
+ * эффект: кладём payload в activeEffects через stackApply, чтобы resistanceLevelFor нашёл его
+ * при получении урона. Зеркало applyModifierPayload; разница только в kind полезной нагрузки.
+ */
+function applyResistancePayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+): RuntimeState {
+  // Длительность как у applyCondition: duration.rounds → roundsLeft (тик хода снимет по истечении);
+  // иначе expiry из duration или 'manual' (снимается вручную — как чип-модификатор Ярости).
+  // Полноценный единый резолвер длительностей — C6 (роадмап 2.2).
+  const duration = payload.duration as Dict | undefined;
+  const rounds = duration?.type === 'rounds' ? Number(duration.amount) || undefined : undefined;
+  const entry: ActiveEffectEntry = {
+    id: `res-${state.activeEffects.length}-${Date.now()}`,
+    name: source,
+    mechanics: payload,
+    roundsLeft: rounds,
+    expiry: expiryFromDuration(duration) ?? (rounds ? undefined : 'manual'),
     source,
   };
   events.push({ type: 'effect_applied', name: source });
@@ -546,6 +598,7 @@ function applyPayloads(
       case 'condition': route((s) => applyCondition(s, p, source, events)); break;
       case 'resource': route((s) => applyResource(s, p, events)); break;
       case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
+      case 'resistance': route((s) => applyResistancePayload(s, p, source, events)); break;
       case 'movement':
         events.push(narrativeEvent(`Перемещение: ${p.value} ${p.distance ?? ''} фт`));
         break;
@@ -669,10 +722,19 @@ function runAbilityCheck(
   state: RuntimeState,
   ctx: ExecuteContext,
   events: EngineEvent[],
+  source: string,
+  targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
   const ability = String(effect.ability ?? 'str') as AbilityKey;
   const skill = String(effect.skill ?? '');
-  const attackerTotal = (ctx.character.abilityMods[ability] ?? 0) + ctx.character.profBonus;
+  // C12: бонус мастерства — ТОЛЬКО при владении навыком (экспертиза ×2). «Голая» проверка
+  // характеристики (без skill) бонус мастерства не получает — раньше он прибавлялся безусловно.
+  const prof = skill && ctx.character.skillExpertise?.includes(skill)
+    ? ctx.character.profBonus * 2
+    : skill && ctx.character.skillProficiencies?.includes(skill)
+      ? ctx.character.profBonus
+      : 0;
+  const attackerTotal = (ctx.character.abilityMods[ability] ?? 0) + prof;
   const collected = collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'ability_check',
     filter: skill ? { skill } : { ability },
@@ -689,30 +751,32 @@ function runAbilityCheck(
   });
   events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
 
-  const contestVs = (effect.contest_vs as string[]) ?? ['athletics'];
-  let bestDef = -Infinity;
-  for (const defSkill of contestVs) {
+  // Исход: против фиксированной СЛ (mode:dc) ИЛИ состязание (contest_vs, по умолчанию Атлетика).
+  let success: boolean;
+  if (effect.dc != null) {
+    success = attRoll.total >= evalDc(String(effect.dc), ctx);
+  } else {
+    // RAW 2024: цель ВЫБИРАЕТ одну защитную характеристику (Атлетика ИЛИ Акробатика) — берёт
+    // выгоднейшую по модификатору — и совершает ОДИН бросок (не максимум из нескольких d20,
+    // что раньше давало защите фактическое преимущество).
+    const contestVs = (effect.contest_vs as string[]) ?? ['athletics'];
+    const defSkill = contestVs.reduce(
+      (best, s) => ((ctx.target?.checkMods?.[s] ?? 0) > (ctx.target?.checkMods?.[best] ?? 0) ? s : best),
+      contestVs[0] ?? 'athletics',
+    );
     const defMod = ctx.target?.checkMods?.[defSkill] ?? 0;
-    const defRoll = rollD20({
-      modifiers: [{ value: defMod, source: defSkill }],
-      rng: ctx.rng,
-    });
+    const defRoll = rollD20({ modifiers: [{ value: defMod, source: defSkill }], rng: ctx.rng });
     events.push(rollEvent(`Ответ (${defSkill})`, { ...defRoll, kind: 'check' }));
-    if (defRoll.total > bestDef) bestDef = defRoll.total;
+    success = attRoll.total > defRoll.total;
   }
 
-  if (attRoll.total > bestDef) {
-    const onSuccess = effect.on_success as Dict[] | undefined;
-    if (Array.isArray(onSuccess)) {
-      let next = state;
-      for (const r of onSuccess) {
-        if (r.kind === 'narrative') events.push(narrativeEvent(String(r.description ?? '')));
-        if (r.kind === 'movement') events.push(narrativeEvent(`Перемещение: ${r.value} ${r.distance ?? ''} фт`));
-      }
-      return next;
-    }
-  }
-  return state;
+  if (!success) return state;
+  // C12: исход успеха идёт через общий роутер payload-ов — состояние (Толчок → prone),
+  // перемещение, нарратив. who:'target' направляет состояние ЦЕЛИ, а не исполнителю.
+  const onSuccess = effect.on_success as Dict[] | undefined;
+  if (!Array.isArray(onSuccess)) return state;
+  const whoTarget = String(effect.who ?? 'self') === 'target' && !!targetRef.state;
+  return applyPayloads(onSuccess, state, ctx, events, source, 'main', false, whoTarget, targetRef);
 }
 
 /**
@@ -745,7 +809,7 @@ function runMechanicEffects(
       }
       if (resolution === 'attack_roll') { next = runAttackRoll(eff, next, ctx, events, sourceName, pending, targetRef); continue; }
       if (resolution === 'save') { next = runSave(eff, next, ctx, events, sourceName, targetRef); continue; }
-      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events); continue; }
+      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events, sourceName, targetRef); continue; }
       events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
     } catch (e) {
       if (e instanceof MissingVariableError) {

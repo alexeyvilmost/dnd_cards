@@ -43,8 +43,12 @@ describe('circumstances', () => {
     expect(evaluateCondition({ kind: 'not', of: hasnt }, ctx)).toBe(true);
   });
 
-  it('неизвестный/текстовый предикат → true (мягкая деградация)', () => {
-    expect(evaluateCondition({ kind: 'totally_unknown' }, {})).toBe(true);
+  it('нераспознанный предикат-гейт → false (closed-by-default); narrative → true (ГМ)', () => {
+    // Явный гейт, который движок не умеет проверить, НЕ должен молча включать модификатор-ограничитель.
+    expect(evaluateCondition({ kind: 'totally_unknown' }, {})).toBe(false);
+    // Текстовое условие — на усмотрение ГМ, движок не блокирует.
     expect(evaluateCondition({ kind: 'narrative', description: '...' }, {})).toBe(true);
+    // not(неизвестный гейт) → not(false) → true.
+    expect(evaluateCondition({ kind: 'not', of: { kind: 'totally_unknown' } }, {})).toBe(true);
   });
 });
