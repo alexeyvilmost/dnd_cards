@@ -366,8 +366,9 @@
             "filter": { "type": "object" }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade"] },
         "value": { "$ref": "#/$defs/formula" },
+        "priority": { "type": "number" },
         "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
         "duration": { "$ref": "#/$defs/duration" }
       }

@@ -42,13 +42,24 @@ export function foldAdvantage(hasAdvantage: boolean, hasDisadvantage: boolean): 
   return 'none';
 }
 
+/** C5: не-аддитивная операция над ЗНАЧЕНИЕМ (Foundry-модель). set — override; multiply — ×;
+ *  upgrade — «не ниже» (max); downgrade — «не выше» (min). priority упорядочивает применение. */
+export interface ModifierOp {
+  op: 'set' | 'multiply' | 'upgrade' | 'downgrade';
+  value: number;
+  priority: number;
+  source: string;
+}
+
 /** Аккумулятор сбора: помимо свёрнутого advantage несёт флаги наличия — чтобы
- *  межпроходное объединение (collected + projected) тоже было порядко-независимым (C7). */
+ *  межпроходное объединение (collected + projected) тоже было порядко-независимым (C7).
+ *  ops (C5) — не-аддитивные операции над значением (скорость/КЗ/…); в d20-бросках не применяются. */
 export interface CollectResult {
   modifiers: RollModifier[];
   advantage: AdvantageState;
   hasAdvantage: boolean;
   hasDisadvantage: boolean;
+  ops: ModifierOp[];
 }
 
 /** Ключ фильтра эффекта, отсутствующий в запросе = НЕ матч (R2). */
@@ -100,6 +111,20 @@ function collectFromPayload(
     if (value != null && !Number.isNaN(value) && value !== 0) {
       out.modifiers.push({ value, source: String(payload.source ?? sourceName) });
     }
+    return;
+  }
+  // C5: не-аддитивная алгебра над значением (скорость 0 у Схвачен, ×2 скорость Ускорения, «КЗ не ниже N»).
+  if (payload.op === 'set' || payload.op === 'multiply' || payload.op === 'upgrade' || payload.op === 'downgrade') {
+    if (payload.value == null) return;
+    let value: number | undefined;
+    try {
+      const r = evaluate(String(payload.value).replace(/^\+/, ''), opts.formulaCtx ?? {});
+      value = typeof r === 'number' ? r : undefined;
+    } catch {
+      value = undefined;
+    }
+    if (value == null || Number.isNaN(value)) return;
+    out.ops.push({ op: payload.op, value, priority: Number(payload.priority ?? 0) || 0, source: String(payload.source ?? sourceName) });
   }
 }
 
@@ -116,6 +141,7 @@ export function collectModifiers(
     advantage: 'none',
     hasAdvantage: false,
     hasDisadvantage: false,
+    ops: [],
   };
 
   for (const effect of state.activeEffects) {
@@ -139,6 +165,32 @@ export function collectModifiers(
   }
 
   return out;
+}
+
+const OP_REASON: Record<ModifierOp['op'], string> = {
+  multiply: 'множитель', downgrade: 'не выше', upgrade: 'не ниже', set: 'установлено',
+};
+const OP_ORDER: Record<ModifierOp['op'], number> = { multiply: 0, downgrade: 1, upgrade: 2, set: 3 };
+
+/**
+ * C5: свести ЗНАЧЕНИЕ с учётом не-аддитивной алгебры. Порядок (Foundry): base + аддитивы, затем
+ * multiply (×), downgrade (min), upgrade (max), set (override); внутри группы — по возрастанию
+ * priority (наибольший priority применяется последним и перекрывает для set/min/max). Возвращает
+ * итог и op-части (дельты) для popover. Для d20-бросков НЕ применяется — там модификаторы аддитивны.
+ */
+export function foldModifiers(base: number, result: CollectResult): { value: number; parts: RollModifier[] } {
+  const parts: RollModifier[] = [...result.modifiers];
+  let value = base + result.modifiers.reduce((s, m) => s + m.value, 0);
+  const ops = [...result.ops].sort((a, b) => (OP_ORDER[a.op] - OP_ORDER[b.op]) || (a.priority - b.priority));
+  for (const op of ops) {
+    const before = value;
+    if (op.op === 'multiply') value = Math.trunc(value * op.value);
+    else if (op.op === 'downgrade') value = Math.min(value, op.value);
+    else if (op.op === 'upgrade') value = Math.max(value, op.value);
+    else value = op.value; // set (override)
+    if (value !== before) parts.push({ value: value - before, source: op.source, reason: OP_REASON[op.op] });
+  }
+  return { value, parts };
 }
 
 /**

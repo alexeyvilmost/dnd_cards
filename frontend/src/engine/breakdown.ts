@@ -46,9 +46,12 @@ function formulaCtxOf(character: CharacterContext): FormulaContext {
 }
 
 /**
- * Числовые модификаторы эффектов для роли (ac/max_hp/speed/saving_throw/…) — единым
- * сборщиком collectModifiers (formula-aware). Advantage игнорируется: разбивка листа
- * показывает только числовые слагаемые.
+ * Числовые (аддитивные) модификаторы эффектов для роли (max_hp/speed/save/skill/…) — единым
+ * formula-aware сборщиком collectModifiers. Advantage игнорируется (разбивка показывает только числа).
+ * Не-аддитивная алгебра (C5 set/multiply/upgrade/downgrade) здесь НЕ применяется: эти значения имеют
+ * отдельный аддитивный расчёт в resolveCharacterRules/бою, и свёртка только на листе разошлась бы с
+ * реальным значением. Единственное значение с общим источником — КЗ (armorClassValue) — свёртку C5
+ * применяет там. Обобщение алгебры на скорость/хиты/спасброски — вместе с C8 (value_method).
  */
 function effectModifiers(
   roll: string,

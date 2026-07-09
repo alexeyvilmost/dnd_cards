@@ -7,7 +7,7 @@ import type { RollModifier } from '../mvp/contracts';
 import { evaluate } from './formula';
 import { getCard } from './cardRegistry';
 import { pickBestMethod, type ValueMethod } from './derivedValue';
-import { collectModifiers } from './modifiers';
+import { collectModifiers, foldModifiers } from './modifiers';
 
 type Dict = Record<string, unknown>;
 
@@ -174,11 +174,13 @@ export function armorClassValue(
       characterSpeed: character.characterSpeed,
       variables: character.variables,
     },
-  }).modifiers;
-  const fxSum = fx.reduce((s, p) => s + p.value, 0);
+  });
+  // C5: КЗ — ЗНАЧЕНИЕ, поэтому применяем полную алгебру (аддитивы + set/multiply/upgrade/downgrade),
+  // а не только сумму, иначе «КЗ не ниже 13»/«установить КЗ» из валидного контента тихо терялись бы.
+  const folded = foldModifiers(base.value, fx);
   return {
-    value: base.value + fxSum,
-    parts: [...base.parts, ...fx],
+    value: folded.value,
+    parts: [...base.parts, ...folded.parts],
     ...(base.rejected ? { rejected: base.rejected } : {}),
   };
 }

@@ -141,7 +141,21 @@ resistance (раньше логика дублировалась, а у `applyMo
 - **2.2 (исходный план) C6 — единый резолвер длительностей пейлоадов** (M). `applyModifierPayload` не ставит `roundsLeft`
   из `duration.rounds` (в отличие от `applyCondition`) → бафф «+2 на 3 раунда» висит вечно. `resolveDuration()`
   для ВСЕХ payload-kind + тик в start/endTurn (`turn.ts:144` уже есть) + longRest обнуляет `hp.temp`.
-- **2.3 C5 — алгебра модификаторов: `mode` + `priority`** (M, Foundry-модель). `collectFromPayload` понимает
+**2.3 C5 ✅ СДЕЛАНО.** Алгебра модификаторов значения (Foundry-модель): `collectFromPayload` захватывает
+`op:set/multiply/upgrade/downgrade` (+`priority`) в `CollectResult.ops`; `foldModifiers(base, result)`
+сводит — base + аддитивы, затем multiply(×)→downgrade(min)→upgrade(max)→set(override). Схема: op-enum
++upgrade/downgrade, +поле `priority`. **Подключено к КЗ** (`armorClassValue`) — ЕДИНСТВЕННОЕ значение с
+общим источником (и лист, и рантайм-резолв, C9), поэтому свёртка без расхождения. Флагман (работает
+end-to-end): **Барскин «КЗ не ниже 16»** = `{roll:'ac', op:'upgrade', value:16}`; также `set` (Доспех мага),
+`multiply`. Тесты `engine/modifierAlgebra.test.ts` (12: алгебра set/mult/up/down/priority/порядок + КЗ
+upgrade/set/add). Гейты tsc 0 / 358 vitest / 83 mvp. **Осознанные границы (по ревью):** свёртка НЕ применяется
+к скорость/хиты/спас/навык/инициатива — у них отдельный аддитивный расчёт в `resolveCharacterRules`/бою, и
+свёртка только на листе разошлась бы с реальным значением; их обобщение — вместе с **C8** (`value_method`,
+куда пойдёт и «Пояс силы огра» как метод СИЛ, и «скорость 0» у Схвачен). d20-броски остаются аддитивными
+(set/mult на кости бессмысленны). LOW: тай-брейк равных priority по порядку контента; upgrade всегда бьёт
+конфликтующий downgrade (Foundry-порядок); op-дельта в popover.
+
+- **2.3 (исходный план) C5 — алгебра модификаторов: `mode` + `priority`** (M, Foundry-модель). `collectFromPayload` понимает
   только advantage/disadvantage/add; `op set/multiply/reroll` молча отбрасываются, нет Upgrade/Downgrade →
   «Пояс силы огра» (флагман парадигмы №3) невыразим данными. `modifiers.ts`.
 - **2.4 `set_value` / `variable` в роутере** (M, БЕЗ `grant_action` — см. ниже). `set_value` (диспетч по
