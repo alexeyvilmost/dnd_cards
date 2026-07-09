@@ -82,7 +82,11 @@ export interface CharacterRuleState {
   savingThrowBonuses: Record<AbilityKey, number>;
   maxHP: number;
   armorClass: number;
+  /** Итоговая скорость (раса + grant_speed walk + modifier-speed) — для формул/движка/downstream. */
   speed: number;
+  /** Базовая скорость (раса + grant_speed walk, БЕЗ modifier-speed) — база для breakdown('speed'),
+   *  который сам добавляет modifier-speed из passives один раз (иначе двойной учёт). */
+  baseSpeed: number;
   /** Особые чувства (grant_sense): darkvision/tremorsense/blindsight/truesight + радиус (фт).
    *  При нескольких источниках одного чувства берётся больший радиус. */
   senses: { sense: string; range: number }[];

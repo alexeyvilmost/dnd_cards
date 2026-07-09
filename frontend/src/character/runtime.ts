@@ -67,6 +67,7 @@ export function buildCharacterContext(
     classLevels: classKey ? { [classKey]: draft.level } : undefined,
     variables: ruleState.variables,
     characterSpeed: ruleState.speed,
+    baseSpeed: ruleState.baseSpeed,
     hitDie: klass?.hit_die ?? null,
     equippedCards,
     knownCards: equippedCards,

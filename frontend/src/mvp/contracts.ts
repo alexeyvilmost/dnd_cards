@@ -117,7 +117,11 @@ export interface CharacterContext {
   level: number;
   classLevels?: Record<string, number>;
   spellcastingMod?: number;
+  /** Итоговая скорость (все прибавки) — для формул (character_speed) и движка. */
   characterSpeed?: number;
+  /** Базовая скорость (раса + grant_speed walk, без modifier-speed) — база breakdown('speed'),
+   *  добавляющего modifier-speed из passives один раз. Фолбэк на characterSpeed, если не задана. */
+  baseSpeed?: number;
   /** Переменные персонажа (martial_arts_die и т.п.) для формул; см. docs/variables.md. */
   variables?: Record<string, number | { sides: number; count: number }>;
   /** Карточки экипированных предметов (для weapon/AC-конвейеров). */

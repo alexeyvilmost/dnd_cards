@@ -156,7 +156,10 @@ export function breakdownValue(
     return { value: parts.reduce((s, p) => s + p.value, 0), parts };
   }
   if (what === 'speed') {
-    const base = character.characterSpeed ?? 30;
+    // База = baseSpeed (раса + grant_speed walk, БЕЗ modifier-speed), затем modifier-speed из passives
+    // добавляется ОДИН раз. Фолбэк на characterSpeed для контекстов без baseSpeed (тесты/бой). Иначе
+    // (при базе=characterSpeed=итог) modifier-speed считался бы дважды — как база и как fxPart.
+    const base = character.baseSpeed ?? character.characterSpeed ?? 30;
     const fxParts = effectModifiers('speed', undefined, character, state, passives);
     const parts = [{ value: base, source: 'скорость', reason: 'базовая' }, ...fxParts];
     return { value: parts.reduce((s, p) => s + p.value, 0), parts };

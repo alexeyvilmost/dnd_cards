@@ -332,7 +332,8 @@ function collectAbilityDeltas(
   return { deltas, methods };
 }
 
-/** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.speed). */
+/** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.walk_grant,
+ *  входит в базовую скорость; non-walk режимы fly/swim/climb → speeds). */
 function collectSenseSpeed(
   payload: Dict, formulaCtx: FormulaContext,
   numericMods: Record<string, number>, senses: SenseEntry[], speeds: Record<string, number>,
@@ -354,7 +355,10 @@ function collectSenseSpeed(
     try { const r = evaluate(raw, formulaCtx); v = typeof r === 'number' ? r : Number(raw); }
     catch { v = Number(raw); } // формульный value (напр. 'walk_speed') без резолва → NaN → мягкий пропуск
     if (Number.isNaN(v) || v === 0) return;
-    if (mode === 'walk') numericMods.speed = (numericMods.speed ?? 0) + v; // прибавка к наземной скорости
+    // grant_speed walk → БАЗОВАЯ скорость (breakdown НЕ добавляет grant_speed повторно, только
+    // modifier). Отдельный аккумулятор от numericMods.speed (там modifier-speed, который breakdown
+    // повторяет из passives) — иначе база breakdown содержала бы modifier дважды. См. baseSpeed ниже.
+    if (mode === 'walk') numericMods.walk_grant = (numericMods.walk_grant ?? 0) + v;
     else speeds[mode] = Math.max(speeds[mode] ?? 0, v); // абсолютная скорость режима (fly/swim/climb)
   }
 }
@@ -562,7 +566,11 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     spellcastingMod,
   };
   const armorClass = armorClassValue(acCharacter, { equipment: {}, activeEffects: [] } as unknown as RuntimeState, acPassives).value;
-  const speed = (assembled.race?.speed ?? 30) + (numericMods.speed ?? 0);
+  // baseSpeed = раса + прибавки grant_speed(walk); БЕЗ modifier-speed. Разбивка листа
+  // (breakdown('speed')) берёт baseSpeed за базу и добавляет modifier-speed из passives ОДИН раз
+  // (иначе modifier считался бы дважды, т.к. characterSpeed=ruleState.speed уже его содержит).
+  const baseSpeed = (assembled.race?.speed ?? 30) + (numericMods.walk_grant ?? 0);
+  const speed = baseSpeed + (numericMods.speed ?? 0); // итог (для формул/движка): все прибавки
   const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
 
   return {
@@ -592,6 +600,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     maxHP,
     armorClass,
     speed,
+    baseSpeed,
     senses,
     speeds,
     initiativeBonus,
