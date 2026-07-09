@@ -1,10 +1,10 @@
 import type { ChoiceOptions, Payload } from './types';
 import type { RegistryItem } from './registries';
+import { normalizeWhen, type Cond } from './predicates';
 import {
   ABILITIES,
   ACTIVE_RESOURCES,
   CHOICE_SOURCES,
-  CONDITIONS,
   DAMAGE_TYPE_OPTIONS,
   LANGUAGES,
   ORIGIN_FEATS,
@@ -24,7 +24,11 @@ export type Field =
   | { key: string; label: string; type: 'text'; default?: string }
   | { key: string; label: string; type: 'formula'; default?: string }
   | { key: string; label: string; type: 'choice-source' }
+  | { key: string; label: string; type: 'when'; hint?: string }
   | { key: string; label: string; type: 'damage-type'; default?: string };
+
+/** Собрать массив условий из значения блока (undefined → []). */
+const whenOf = (v: unknown): Cond[] => (Array.isArray(v) ? (v as Cond[]) : []);
 
 export type Block = {
   id: string;
@@ -268,16 +272,16 @@ export const EFFECT_BLOCKS: Block[] = [
         { id: 'advantage', label: 'Преимущество' },
         { id: 'disadvantage', label: 'Помеха' },
       ], default: 'advantage' },
-      { key: 'condition', label: 'Условие (id)', type: 'select', options: CONDITIONS },
+      { key: 'when', label: 'Условия (когда действует)', type: 'when' },
     ],
     defaults: { roll: 'saving_throw', op: 'advantage' },
     build: (v) => ({
       kind: 'modifier',
       applies_to: { roll: v.roll },
       op: v.op,
-      when: v.condition ? [{ kind: 'condition', id: v.condition }] : [],
+      when: whenOf(v.when),
     }),
-    summary: (v) => `${v.op === 'advantage' ? 'Преим.' : 'Помеха'} на ${labelOf(ROLL_TARGETS, String(v.roll))}`,
+    summary: (v) => `${v.op === 'advantage' ? 'Преим.' : 'Помеха'} на ${labelOf(ROLL_TARGETS, String(v.roll))}${whenOf(v.when).length ? ' (при условии)' : ''}`,
   },
   {
     id: 'eff_bonus',
@@ -286,10 +290,14 @@ export const EFFECT_BLOCKS: Block[] = [
     fields: [
       { key: 'roll', label: 'Цель', type: 'select', options: ROLL_TARGETS, default: 'max_hp' },
       { key: 'value', label: 'Формула/значение', type: 'formula', default: 'self_level' },
+      { key: 'when', label: 'Условия (когда действует)', type: 'when' },
     ],
     defaults: { roll: 'max_hp', value: 'self_level' },
-    build: (v) => ({ kind: 'modifier', applies_to: { roll: v.roll }, op: 'add', value: v.value }),
-    summary: (v) => `+${v.value} к ${labelOf(ROLL_TARGETS, String(v.roll))}`,
+    build: (v) => {
+      const when = whenOf(v.when);
+      return { kind: 'modifier', applies_to: { roll: v.roll }, op: 'add', value: v.value, ...(when.length ? { when } : {}) };
+    },
+    summary: (v) => `+${v.value} к ${labelOf(ROLL_TARGETS, String(v.roll))}${whenOf(v.when).length ? ' (при условии)' : ''}`,
   },
   {
     id: 'eff_resistance',
@@ -581,14 +589,14 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     case 'modifier': {
       const at = (p.applies_to || {}) as Dict;
       const hasFilter = !!at.filter && Object.keys(at.filter as Dict).length > 0;
-      const when = Array.isArray(p.when) ? (p.when as Dict[]) : [];
+      // Любой набор условий `when` теперь round-trip'ится через WhenEditor (легаси
+      // {kind:'condition'} нормализуется в you_have_condition). Фильтр applies_to пока → сырой JSON.
+      const when = normalizeWhen(p.when);
       if (p.op === 'advantage' || p.op === 'disadvantage') {
-        const cond = when.length === 1 && when[0]?.kind === 'condition' ? (when[0].id as string) : undefined;
-        const faithful = !hasFilter && (when.length === 0 || (when.length === 1 && cond !== undefined));
-        return faithful ? { blockId: 'eff_adv', values: { roll: at.roll, op: p.op, condition: cond } } : raw();
+        return hasFilter ? raw() : { blockId: 'eff_adv', values: { roll: at.roll, op: p.op, when } };
       }
-      if (p.op === 'add' && !hasFilter && when.length === 0) {
-        return { blockId: 'eff_bonus', values: { roll: at.roll, value: p.value } };
+      if (p.op === 'add') {
+        return hasFilter ? raw() : { blockId: 'eff_bonus', values: { roll: at.roll, value: p.value, when } };
       }
       return raw();
     }
