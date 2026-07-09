@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { actionsApi } from '../api/client';
+import { getCardsIndex } from '../utils/cardsIndex';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionNeedsTarget, collectSheetActions, collectGrantActionSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
@@ -233,6 +234,15 @@ export default function SheetActionsPanel({
     return () => { stale = true; };
   }, [itemMechs, spellsOnly]);
 
+  // S3-полировка (#32): общий индекс карт — резолвер имён СОДЕРЖИМОГО контейнера (его карты не в
+  // equipCards, т.к. лежат внутри мешка) для диалога выбора «Достать» и журнала распаковки.
+  const [cardsIndex, setCardsIndex] = useState<Map<string, Card>>(new Map());
+  useEffect(() => {
+    let alive = true;
+    getCardsIndex().then((m) => alive && setCardsIndex(m));
+    return () => { alive = false; };
+  }, []);
+
   // S2/S3 контейнеры: носимые карты-контейнеры → действие «Распаковать» (mode='all') или «Достать» (mode='choice').
   const containerCards = useMemo(() => {
     const ids = new Set<string>();
@@ -247,8 +257,9 @@ export default function SheetActionsPanel({
   }, [runtime.inventory, runtime.equipment, equipCards]);
 
   const actions = useMemo(
-    () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions, containerCards, (id) => equipCards.get(id)?.name),
-    [assembled, itemMechs, basicActions, grantedActions, containerCards, equipCards],
+    () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions, containerCards,
+      (id) => equipCards.get(id)?.name ?? cardsIndex.get(id)?.name),
+    [assembled, itemMechs, basicActions, grantedActions, containerCards, equipCards, cardsIndex],
   );
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();
