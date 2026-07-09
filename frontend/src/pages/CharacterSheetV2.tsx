@@ -295,6 +295,7 @@ const CharacterSheetV2 = ({
               assembled={assembled}
               ruleState={ruleState}
               equipCards={equipCards}
+              maxHp={maxHP}
               onUpdated={onUpdated}
               onEvents={onEvents}
               embedded

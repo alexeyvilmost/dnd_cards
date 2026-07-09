@@ -36,6 +36,9 @@ interface Props {
   equipCards: Map<string, Card>;
   /** S3: механики эффектов, ВЫДАННЫХ предметами (grant_effect), для числового канала действий. */
   itemGrantedPassives?: Record<string, unknown>[];
+  /** Истинный максимум HP (breakdown, с бонусами предметов/эффектов). Без него боевой кэп берёт
+   *  «голый» ruleState.maxHP и, если предмет поднимает максимум, действие срезало бы HP до него. */
+  maxHp?: number;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
   embedded?: boolean;
@@ -118,6 +121,7 @@ export default function SheetActionsPanel({
   ruleState,
   equipCards,
   itemGrantedPassives,
+  maxHp,
   onUpdated,
   onEvents,
   embedded,
@@ -155,8 +159,8 @@ export default function SheetActionsPanel({
   const reactionPrompt = useReactionPrompt();
 
   const runtime = useMemo(
-    () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
-    [character, ruleState.maxHP],
+    () => alignRuntimeHp(forgeToRuntimeState(character), maxHp ?? ruleState.maxHP),
+    [character, maxHp, ruleState.maxHP],
   );
   // Пассивки персонажа + механики надетых предметов (с учётом настройки).
   const passives = useMemo(() => {

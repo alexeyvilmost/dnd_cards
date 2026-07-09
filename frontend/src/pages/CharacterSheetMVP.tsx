@@ -524,6 +524,7 @@ const CharacterSheetMVP = () => {
             showEffects={false}
             equipCards={equipCards}
             itemGrantedPassives={itemGrantedPassives}
+            maxHp={maxHP}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
             targetAc={targetAc}
@@ -842,6 +843,7 @@ const CharacterSheetMVP = () => {
                 ruleState={ruleState}
                 equipCards={equipCards}
                 itemGrantedPassives={itemGrantedPassives}
+                maxHp={maxHP}
                 onUpdated={setCharacter}
                 onEvents={appendRuntimeEvents}
                 embedded
