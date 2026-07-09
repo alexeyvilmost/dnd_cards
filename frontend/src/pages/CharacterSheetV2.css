@@ -206,8 +206,9 @@
   position: relative; width: 52px; height: 52px; box-sizing: border-box;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 8px; cursor: pointer; padding: 0;
-  background: var(--forge-panel-2, rgba(255,255,255,0.05));
-  border: 1px solid var(--forge-border, rgba(255,255,255,0.14));
+  /* Фон и золотая граница — как у иконок предметов/эффектов (.forge-spell-icon). */
+  background: radial-gradient(circle at 50% 38%, #3a3027, #221a14);
+  border: 1px solid var(--forge-gold-dim, #8a7320);
   transition: border-color .15s, transform .1s;
 }
 .cs-action-tile:hover:not(:disabled) { border-color: var(--forge-gold, #c9a227); transform: translateY(-1px); }

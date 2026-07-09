@@ -80,8 +80,8 @@ const SheetActionLine = ({
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
           <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} fill />
-          {level != null && (
-            <span className="cs-action-tile-lvl">{level === 0 ? 'З' : (TILE_ROMAN[level - 1] ?? level)}</span>
+          {level != null && level > 0 && (
+            <span className="cs-action-tile-lvl">{TILE_ROMAN[level - 1] ?? level}</span>
           )}
         </button>
       ) : (
