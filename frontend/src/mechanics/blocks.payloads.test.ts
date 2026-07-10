@@ -14,19 +14,17 @@ const backBlock = (payload: Record<string, unknown>) =>
   deserializeMechanics({ activation: { mode: 'passive' }, effects: [{ resolution: 'auto', result: [payload] }] })?.effectEntries[0];
 
 describe('eff_damage', () => {
-  it('build кубы+тип+модификатор', () => {
-    expect(build1('eff_damage', { dice: '2d6', damage_type: 'fire', ability: 'int' }))
-      .toEqual({ kind: 'damage', dice: '2d6', type: 'fire', ability: 'int' });
-  });
-  it('ability=none не пишется', () => {
-    expect(build1('eff_damage', { dice: '1d4', damage_type: 'cold', ability: 'none' }))
-      .toEqual({ kind: 'damage', dice: '1d4', type: 'cold' });
+  it('build кубы+тип', () => {
+    expect(build1('eff_damage', { dice: '2d6', damage_type: 'fire' })).toEqual({ kind: 'damage', dice: '2d6', type: 'fire' });
   });
   it('round-trip простого урона', () => {
     expect(backBlock({ kind: 'damage', dice: '2d6', type: 'fire' })?.blockId).toBe('eff_damage');
   });
   it('урон со scaling → сырой JSON (без потерь)', () => {
     expect(backBlock({ kind: 'damage', dice: '1d6', type: 'fire', scaling: { dice: '1d6', per: 'spell_slot_above' } })?.blockId).toBe('eff_raw_json');
+  });
+  it('урон с ability (фильтр Rage) → сырой JSON', () => {
+    expect(backBlock({ kind: 'damage', dice: '1d6', type: 'necrotic', ability: 'cha' })?.blockId).toBe('eff_raw_json');
   });
 });
 
@@ -39,6 +37,9 @@ describe('eff_condition', () => {
   });
   it('состояние с save_ends → сырой JSON', () => {
     expect(backBlock({ kind: 'condition', value: 'poisoned', save_ends: { ability: 'con', dc: '13' } })?.blockId).toBe('eff_raw_json');
+  });
+  it('состояние с stack_priority → сырой JSON (влияет на стекинг)', () => {
+    expect(backBlock({ kind: 'condition', value: 'frightened', op: 'apply', stack_priority: 2 })?.blockId).toBe('eff_raw_json');
   });
 });
 
@@ -74,8 +75,9 @@ describe('прочие payload-блоки', () => {
     expect(build1('eff_variable', { id: 'rage_used', value: '' })).toEqual({ kind: 'variable', id: 'rage_used' });
     expect(backBlock({ kind: 'variable', id: 'rage_used' })?.blockId).toBe('eff_variable');
   });
-  it('eff_transform эмитит настоящий transform (не narrative)', () => {
-    expect(build1('eff_transform', { into: 'wolf', max_cr: '1' })).toEqual({ kind: 'transform', into: 'wolf', max_cr: '1' });
+  it('eff_transform эмитит form (движок читает form, не into), round-trip', () => {
+    expect(build1('eff_transform', { into: 'wolf', max_cr: '1' })).toEqual({ kind: 'transform', form: 'wolf', max_cr: '1' });
+    expect(backBlock({ kind: 'transform', form: 'wolf' })?.blockId).toBe('eff_transform');
     expect(backBlock({ kind: 'transform', into: 'wolf' })?.blockId).toBe('eff_transform');
   });
 });
@@ -124,6 +126,10 @@ describe('eff_attack_damage (attack_roll)', () => {
   });
   it('attack с on_crit → сырой JSON (без потерь)', () => {
     const d = deserializeMechanics({ activation: { mode: 'passive' }, effects: [{ resolution: 'attack_roll', ability: 'auto', on_hit: [{ kind: 'damage', dice: '1d8', type: 'slashing' }], on_crit: [{ kind: 'damage', dice: '2d8', type: 'slashing' }] }] });
+    expect(d?.effectEntries[0].blockId).toBe('eff_raw_json');
+  });
+  it('attack с inner scaling (каст-атака) → сырой JSON (не теряет масштабирование)', () => {
+    const d = deserializeMechanics({ activation: { mode: 'passive' }, effects: [{ resolution: 'attack_roll', ability: 'spellcasting', on_hit: [{ kind: 'damage', dice: '1d10', type: 'fire', scaling: { per: 'character_level', dice: '1d10' } }] }] });
     expect(d?.effectEntries[0].blockId).toBe('eff_raw_json');
   });
 });

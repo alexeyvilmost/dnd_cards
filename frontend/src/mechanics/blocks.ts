@@ -588,10 +588,9 @@ export const EFFECT_BLOCKS: Block[] = [
     fields: [
       { key: 'dice', label: 'Кубы/формула', type: 'text', default: '1d6' },
       { key: 'damage_type', label: 'Тип урона', type: 'damage-type', default: 'fire' },
-      { key: 'ability', label: 'Добавить модификатор', type: 'select', options: [{ id: 'none', label: '—' }, ...ABILITIES], default: 'none' },
     ],
-    defaults: { dice: '1d6', damage_type: 'fire', ability: 'none' },
-    build: (v) => ({ kind: 'damage', dice: v.dice, type: v.damage_type, ...(v.ability && v.ability !== 'none' ? { ability: v.ability } : {}) }),
+    defaults: { dice: '1d6', damage_type: 'fire' },
+    build: (v) => ({ kind: 'damage', dice: v.dice, type: v.damage_type }),
     summary: (v) => `Урон: ${v.dice} ${labelOf(DAMAGE_TYPE_OPTIONS, String(v.damage_type))}`,
   },
   {
@@ -701,7 +700,8 @@ export const EFFECT_BLOCKS: Block[] = [
       { key: 'into', label: 'Форма (id/имя)', type: 'text' },
       { key: 'max_cr', label: 'Макс. ПО (CR, необяз.)', type: 'text', default: '' },
     ],
-    build: (v) => ({ kind: 'transform', into: v.into, ...(String(v.max_cr || '').trim() ? { max_cr: v.max_cr } : {}) }),
+    // Движок (applyTransform) читает `form`, не `into`, — эмитим form, чтобы имя формы применялось.
+    build: (v) => ({ kind: 'transform', form: v.into, ...(String(v.max_cr || '').trim() ? { max_cr: v.max_cr } : {}) }),
     summary: (v) => `Преображение: ${v.into || '…'}`,
   },
   {
@@ -887,15 +887,16 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     case 'set_value': return { blockId: 'eff_set_value', values: { target: p.target, formula: p.formula } };
     case 'narrative': return { blockId: 'eff_narrative', values: { description: p.description } };
     case 'damage': {
-      // Простой урон (кубы+тип[+модификатор]); scaling/on_success/bonus/per_dart/formula → сырой JSON.
-      const simple = p.scaling == null && p.on_success == null && p.bonus == null && p.per_dart == null && p.formula == null;
+      // Простой урон (кубы+тип); scaling/on_success/bonus/per_dart/formula/ability → сырой JSON
+      // (ability на плоском уроне работает как фильтр Rage, блок его не представляет).
+      const simple = p.scaling == null && p.on_success == null && p.bonus == null && p.per_dart == null && p.formula == null && p.ability == null;
       return simple
-        ? { blockId: 'eff_damage', values: { dice: p.dice ?? p.amount, damage_type: p.type ?? p.damage_type ?? 'fire', ability: p.ability ?? 'none' } }
+        ? { blockId: 'eff_damage', values: { dice: p.dice ?? p.amount, damage_type: p.type ?? p.damage_type ?? 'fire' } }
         : raw();
     }
     case 'condition': {
-      // Простое наложение/снятие; duration/save_ends/стек-поля → сырой JSON.
-      const simple = p.duration == null && p.save_ends == null && p.stack_id == null && p.stack_type == null;
+      // Простое наложение/снятие; duration/save_ends/стек-поля (вкл. stack_priority) → сырой JSON.
+      const simple = p.duration == null && p.save_ends == null && p.stack_id == null && p.stack_type == null && p.stack_priority == null;
       return simple ? { blockId: 'eff_condition', values: { value: p.value, op: p.op ?? 'apply' } } : raw();
     }
     case 'movement': return { blockId: 'eff_movement', values: { value: p.value, distance: p.distance ?? '' } };
@@ -1047,10 +1048,13 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
         entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
       }
     } else if (it?.resolution === 'attack_roll') {
-      // eff_attack_damage: только один урон на попадание; on_crit/on_miss/доп. payload'ы → сырой JSON.
+      // eff_attack_damage: один ПРОСТОЙ урон на попадание (только dice+type); scaling/ability/
+      // on_crit/on_miss/доп. payload'ы → сырой JSON (иначе теряли бы масштабирование каст-атак).
       const onHit = Array.isArray(it.on_hit) ? (it.on_hit as Dict[]) : [];
       const dmg = onHit[0];
-      const faithful = onHit.length === 1 && dmg?.kind === 'damage'
+      const dmgSimple = !!dmg && dmg.kind === 'damage'
+        && Object.keys(dmg).every((k) => k === 'kind' || k === 'dice' || k === 'type');
+      const faithful = onHit.length === 1 && dmgSimple
         && it.on_crit == null && it.on_miss == null && it.on_success == null && it.on_fail == null;
       if (faithful) {
         entries.push({ id: `d_${++c}`, blockId: 'eff_attack_damage', values: { ability: it.ability ?? 'auto', dice: dmg!.dice, damage_type: dmg!.type ?? dmg!.damage_type ?? 'slashing' } });

@@ -627,7 +627,7 @@ function applyBoon(state: RuntimeState, p: Dict, source: string, events: EngineE
 
 /** Превращение (Дикий облик): облик как активный эффект-чип; стат-блок зверя — по бестиарию. */
 function applyTransform(state: RuntimeState, p: Dict, source: string, events: EngineEvent[]): RuntimeState {
-  const formName = String(p.form ?? p.value ?? 'Дикий облик');
+  const formName = String(p.form ?? p.value ?? p.into ?? 'Дикий облик');
   const entry: ActiveEffectEntry = {
     id: `form-${state.activeEffects.length}-${Date.now()}`, name: `Облик: ${formName}`, mechanics: p, expiry: 'manual', source,
   };
