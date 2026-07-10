@@ -5,8 +5,10 @@ import {
   ABILITIES,
   ACTIVE_RESOURCES,
   CHOICE_SOURCES,
+  CONDITIONS,
   DAMAGE_TYPE_OPTIONS,
   LANGUAGES,
+  MOVEMENT_KINDS,
   ORIGIN_FEATS,
   RESOURCES,
   ROLL_TARGETS,
@@ -482,7 +484,11 @@ export const EFFECT_BLOCKS: Block[] = [
     label: 'Установить значение',
     group: 'effect',
     fields: [
-      { key: 'target', label: 'Цель', type: 'select', options: [{ id: 'hp', label: 'Хиты' }], default: 'hp' },
+      { key: 'target', label: 'Цель', type: 'select', options: [
+        { id: 'hp', label: 'Текущие хиты' },
+        { id: 'temp_hp', label: 'Временные хиты' },
+        { id: 'max_hp', label: 'Макс. хиты' },
+      ], default: 'hp' },
       { key: 'formula', label: 'Значение', type: 'formula', default: '1' },
     ],
     defaults: { target: 'hp', formula: '1' },
@@ -490,12 +496,127 @@ export const EFFECT_BLOCKS: Block[] = [
     summary: (v) => `${v.target} = ${v.formula}`,
   },
   {
-    id: 'eff_transform',
-    label: 'Преображение',
+    id: 'eff_damage',
+    label: 'Урон (авто, себе)',
     group: 'effect',
-    fields: [{ key: 'description', label: 'Описание', type: 'text' }],
-    build: (v) => ({ kind: 'narrative', description: v.description || 'Преображение' }),
-    summary: (v) => `Преображение: ${v.description || '…'}`,
+    fields: [
+      { key: 'dice', label: 'Кубы/формула', type: 'text', default: '1d6' },
+      { key: 'damage_type', label: 'Тип урона', type: 'damage-type', default: 'fire' },
+      { key: 'ability', label: 'Добавить модификатор', type: 'select', options: [{ id: 'none', label: '—' }, ...ABILITIES], default: 'none' },
+    ],
+    defaults: { dice: '1d6', damage_type: 'fire', ability: 'none' },
+    build: (v) => ({ kind: 'damage', dice: v.dice, type: v.damage_type, ...(v.ability && v.ability !== 'none' ? { ability: v.ability } : {}) }),
+    summary: (v) => `Урон: ${v.dice} ${labelOf(DAMAGE_TYPE_OPTIONS, String(v.damage_type))}`,
+  },
+  {
+    id: 'eff_condition',
+    label: 'Состояние (наложить/снять)',
+    group: 'effect',
+    fields: [
+      { key: 'value', label: 'Состояние', type: 'select', options: CONDITIONS, default: 'poisoned' },
+      { key: 'op', label: 'Действие', type: 'select', options: [{ id: 'apply', label: 'Наложить' }, { id: 'remove', label: 'Снять' }], default: 'apply' },
+    ],
+    defaults: { value: 'poisoned', op: 'apply' },
+    build: (v) => ({ kind: 'condition', value: v.value, op: v.op }),
+    summary: (v) => `${v.op === 'remove' ? 'Снять' : 'Наложить'}: ${labelOf(CONDITIONS, String(v.value))}`,
+  },
+  {
+    id: 'eff_movement',
+    label: 'Перемещение',
+    group: 'effect',
+    fields: [
+      { key: 'value', label: 'Тип', type: 'select', options: MOVEMENT_KINDS, default: 'push' },
+      { key: 'distance', label: 'Дистанция (фт)', type: 'text', default: '10' },
+    ],
+    defaults: { value: 'push', distance: '10' },
+    build: (v) => ({ kind: 'movement', value: v.value, distance: v.distance }),
+    summary: (v) => `${labelOf(MOVEMENT_KINDS, String(v.value))} ${v.distance} фт`,
+  },
+  {
+    id: 'eff_add_item',
+    label: 'Выдать предмет',
+    group: 'effect',
+    fields: [
+      { key: 'card_id', label: 'ID предмета', type: 'text' },
+      { key: 'qty', label: 'Количество', type: 'number', default: 1 },
+      { key: 'name', label: 'Имя (необяз.)', type: 'text', default: '' },
+    ],
+    defaults: { qty: 1 },
+    build: (v) => ({ kind: 'add_item', card_id: v.card_id, qty: Number(v.qty) || 1, ...(String(v.name || '').trim() ? { name: v.name } : {}) }),
+    summary: (v) => `Предмет: ${v.card_id || '—'}${Number(v.qty) > 1 ? ` ×${v.qty}` : ''}`,
+  },
+  {
+    id: 'eff_boon',
+    label: 'Талон (вдохновение/кость)',
+    group: 'effect',
+    fields: [
+      { key: 'id', label: 'ID талона', type: 'text', default: 'bardic_inspiration' },
+      { key: 'die', label: 'Кость', type: 'text', default: '1d6' },
+      { key: 'applies_to', label: 'На что (через запятую)', type: 'text', default: 'ability_check, attack_roll, saving_throw' },
+      { key: 'expires', label: 'Истекает (необяз.)', type: 'text', default: '' },
+    ],
+    defaults: { id: 'bardic_inspiration', die: '1d6', applies_to: 'ability_check, attack_roll, saving_throw' },
+    build: (v) => ({
+      kind: 'boon', id: v.id, die: v.die,
+      applies_to: String(v.applies_to || '').split(/[,\s]+/).filter(Boolean),
+      ...(String(v.expires || '').trim() ? { expires: v.expires } : {}),
+    }),
+    summary: (v) => `Талон ${v.id}: ${v.die}`,
+  },
+  {
+    id: 'eff_grant_expertise',
+    label: 'Дать компетентность',
+    group: 'effect',
+    fields: [
+      { key: 'prof', label: 'Категория', type: 'select', options: [{ id: 'skill', label: 'Навык' }, { id: 'tool', label: 'Инструмент' }], default: 'skill' },
+      { key: 'value', label: 'Значение (id)', type: 'text' },
+    ],
+    defaults: { prof: 'skill' },
+    build: (v) => ({ kind: 'grant_expertise', prof: v.prof, value: v.value }),
+    summary: (v) => `Компетентность ${v.prof}: ${v.value}`,
+  },
+  {
+    id: 'eff_grant_language',
+    label: 'Дать язык',
+    group: 'effect',
+    fields: [{ key: 'value', label: 'Язык', type: 'select', options: LANGUAGES, default: 'common' }],
+    defaults: { value: 'common' },
+    build: (v) => ({ kind: 'grant_language', value: v.value }),
+    summary: (v) => `Язык: ${labelOf(LANGUAGES, String(v.value))}`,
+  },
+  {
+    id: 'eff_value_method',
+    label: 'Метод значения характеристики',
+    group: 'effect',
+    fields: [
+      { key: 'target', label: 'Характеристика', type: 'select', options: ABILITIES, default: 'str' },
+      { key: 'formula', label: 'Формула/значение', type: 'formula', default: '' },
+    ],
+    defaults: { target: 'str' },
+    build: (v) => ({ kind: 'value_method', target: v.target, formula: v.formula }),
+    summary: (v) => `Метод ${labelOf(ABILITIES, String(v.target))} = ${v.formula}`,
+  },
+  {
+    id: 'eff_variable',
+    label: 'Переменная ⏳',
+    group: 'effect',
+    fields: [
+      { key: 'id', label: 'ID переменной', type: 'text' },
+      { key: 'value', label: 'Значение', type: 'text', default: '' },
+    ],
+    build: (v) => ({ kind: 'variable', id: v.id, ...(String(v.value || '').trim() ? { value: v.value } : {}) }),
+    summary: (v) => `Переменная ${v.id} ⏳`,
+  },
+  {
+    id: 'eff_transform',
+    label: 'Преображение (transform)',
+    group: 'effect',
+    fields: [
+      { key: 'into', label: 'Форма (id/имя)', type: 'text' },
+      { key: 'max_cr', label: 'Макс. ПО (CR, необяз.)', type: 'text', default: '' },
+    ],
+    build: (v) => ({ kind: 'transform', into: v.into, ...(String(v.max_cr || '').trim() ? { max_cr: v.max_cr } : {}) }),
+    summary: (v) => `Преображение: ${v.into || '…'}`,
   },
   {
     id: 'eff_choice',
@@ -679,6 +800,26 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     case 'reroll': return { blockId: 'eff_reroll', values: { which: p.which ?? 'd20', keep: p.keep ?? 'either' } };
     case 'set_value': return { blockId: 'eff_set_value', values: { target: p.target, formula: p.formula } };
     case 'narrative': return { blockId: 'eff_narrative', values: { description: p.description } };
+    case 'damage': {
+      // Простой урон (кубы+тип[+модификатор]); scaling/on_success/bonus/per_dart/formula → сырой JSON.
+      const simple = p.scaling == null && p.on_success == null && p.bonus == null && p.per_dart == null && p.formula == null;
+      return simple
+        ? { blockId: 'eff_damage', values: { dice: p.dice ?? p.amount, damage_type: p.type ?? p.damage_type ?? 'fire', ability: p.ability ?? 'none' } }
+        : raw();
+    }
+    case 'condition': {
+      // Простое наложение/снятие; duration/save_ends/стек-поля → сырой JSON.
+      const simple = p.duration == null && p.save_ends == null && p.stack_id == null && p.stack_type == null;
+      return simple ? { blockId: 'eff_condition', values: { value: p.value, op: p.op ?? 'apply' } } : raw();
+    }
+    case 'movement': return { blockId: 'eff_movement', values: { value: p.value, distance: p.distance ?? '' } };
+    case 'add_item': return { blockId: 'eff_add_item', values: { card_id: p.card_id ?? p.value, qty: p.qty ?? p.amount ?? 1, name: p.name ?? '' } };
+    case 'boon': return { blockId: 'eff_boon', values: { id: p.id, die: p.die, applies_to: Array.isArray(p.applies_to) ? (p.applies_to as unknown[]).join(', ') : '', expires: p.expires ?? '' } };
+    case 'grant_expertise': return { blockId: 'eff_grant_expertise', values: { prof: p.prof ?? p.expertise ?? 'skill', value: p.value } };
+    case 'grant_language': return { blockId: 'eff_grant_language', values: { value: p.value } };
+    case 'value_method': return { blockId: 'eff_value_method', values: { target: p.target, formula: p.formula ?? p.value ?? '' } };
+    case 'variable': return { blockId: 'eff_variable', values: { id: p.id ?? p.target, value: p.value ?? '' } };
+    case 'transform': return { blockId: 'eff_transform', values: { into: p.into ?? p.form ?? p.value, max_cr: p.max_cr ?? p.cr_max ?? '' } };
     case 'grant_action': {
       // value | values — канон; options — легаси (до слайса 6), принимаем для обратной десериализации.
       const vals = Array.isArray(p.values) ? (p.values as unknown[])

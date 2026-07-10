@@ -70,12 +70,31 @@ export const MUSICAL_INSTRUMENTS: RegistryItem[] = [
 ];
 
 export const CONDITIONS: RegistryItem[] = [
+  { id: 'blinded', label: 'Ослеплён' },
   { id: 'charmed', label: 'Очарован' },
+  { id: 'deafened', label: 'Оглушён' },
+  { id: 'exhaustion', label: 'Истощение' },
   { id: 'frightened', label: 'Испуган' },
-  { id: 'poisoned', label: 'Отравлен' },
+  { id: 'grappled', label: 'Схвачен' },
+  { id: 'incapacitated', label: 'Недееспособен' },
+  { id: 'invisible', label: 'Невидим' },
   { id: 'paralyzed', label: 'Парализован' },
-  { id: 'stunned', label: 'Ошеломлён' },
+  { id: 'petrified', label: 'Окаменел' },
+  { id: 'poisoned', label: 'Отравлен' },
   { id: 'prone', label: 'Распластан' },
+  { id: 'restrained', label: 'Опутан' },
+  { id: 'stunned', label: 'Ошеломлён' },
+  { id: 'unconscious', label: 'Без сознания' },
+];
+
+// Виды принудительного перемещения (payload.movement.value) — рантайм пока нарративный.
+export const MOVEMENT_KINDS: RegistryItem[] = [
+  { id: 'push', label: 'Толчок' },
+  { id: 'pull', label: 'Притягивание' },
+  { id: 'teleport', label: 'Телепортация' },
+  { id: 'extra_speed', label: 'Доп. скорость' },
+  { id: 'double', label: 'Удвоить скорость' },
+  { id: 'knock_prone', label: 'Сбить с ног' },
 ];
 
 export const LANGUAGES: RegistryItem[] = [
