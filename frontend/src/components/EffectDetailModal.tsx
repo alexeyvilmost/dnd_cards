@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Edit, Trash2 } from 'lucide-react';
+import { X, Edit, Trash2, Copy } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import { effectsApi } from '../api/client';
@@ -143,6 +143,13 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
             >
               <Edit size={18} />
               <span>Редактировать</span>
+            </Link>
+            <Link
+              to={`/effect-creator?template_id=${effect.id}`}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
+            >
+              <Copy size={18} />
+              <span>Использовать как шаблон</span>
             </Link>
             <button
               onClick={() => onDelete(effect.id)}

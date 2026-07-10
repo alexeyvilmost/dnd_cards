@@ -60,6 +60,10 @@ const SpellCreator = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = Boolean(editId);
+  // «Использовать как шаблон»: грузим заклинание-источник в форму, но остаёмся в режиме создания.
+  const templateId = searchParams.get('template_id');
+  const sourceId = editId || templateId;
+  const asTemplate = !editId && !!templateId;
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } =
     useForm<ScalarForm>({
@@ -88,14 +92,14 @@ const SpellCreator = () => {
   const [showPreview, setShowPreview] = useState(true);
 
   useEffect(() => {
-    if (isEditMode && editId) {
+    if (sourceId) {
       const load = async () => {
         try {
           setLoadingSpell(true);
-          const spell = await spellsApi.getSpell(editId);
+          const spell = await spellsApi.getSpell(sourceId);
           reset({
             name: spell.name,
-            card_number: spell.card_number || '',
+            card_number: asTemplate ? '' : (spell.card_number || ''),
             level: spell.level ?? 0,
             school: spell.school || '',
             casting_time: spell.casting_time || '',
@@ -131,7 +135,7 @@ const SpellCreator = () => {
       };
       load();
     }
-  }, [isEditMode, editId, reset]);
+  }, [sourceId, asTemplate, reset]);
 
   const fd = watch();
 

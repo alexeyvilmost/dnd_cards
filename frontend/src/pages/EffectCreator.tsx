@@ -19,6 +19,10 @@ const EffectCreator = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = Boolean(editId);
+  // «Использовать как шаблон»: грузим эффект-источник в форму, но остаёмся в режиме создания.
+  const templateId = searchParams.get('template_id');
+  const sourceId = editId || templateId;
+  const asTemplate = !editId && !!templateId;
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<CreatePassiveEffectRequest>({
     defaultValues: {
@@ -45,11 +49,11 @@ const EffectCreator = () => {
 
   // Загрузка эффекта для редактирования
   useEffect(() => {
-    if (isEditMode && editId) {
+    if (sourceId) {
       const loadEffect = async () => {
         try {
           setLoadingEffect(true);
-          const effect = await effectsApi.getEffect(editId);
+          const effect = await effectsApi.getEffect(sourceId);
           
           // Заполняем форму данными эффекта
           console.log('[EffectCreator] Загружен эффект с бэкенда:', effect);
@@ -61,7 +65,7 @@ const EffectCreator = () => {
             detailed_description: effect.detailed_description || null,
             image_url: effect.image_url || '',
             rarity: effect.rarity || 'common',
-            card_number: effect.card_number || '',
+            card_number: asTemplate ? '' : (effect.card_number || ''),
             effect_type: effect.effect_type || 'passive',
             type: effect.type || null,
             condition_description: effect.condition_description || null,
@@ -88,7 +92,7 @@ const EffectCreator = () => {
       
       loadEffect();
     }
-  }, [isEditMode, editId, reset]);
+  }, [sourceId, asTemplate, reset]);
 
   const formData = watch();
   const previewEffect: PassiveEffect = {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download } from 'lucide-react';
+import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
@@ -423,6 +423,13 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             >
               <Edit size={18} />
               <span>Изменить</span>
+            </Link>
+            <Link
+              to={`/card-creator?template_id=${card.id}`}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
+            >
+              <Copy size={18} />
+              <span>Использовать как шаблон</span>
             </Link>
             <button
               onClick={() => onDelete(card.id)}

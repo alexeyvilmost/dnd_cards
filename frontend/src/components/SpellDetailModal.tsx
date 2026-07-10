@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Edit, Trash2, RefreshCw, ImagePlus } from 'lucide-react';
+import { X, Edit, Trash2, RefreshCw, ImagePlus, Copy } from 'lucide-react';
 import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
@@ -291,6 +291,13 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
             >
               <Edit size={18} />
               <span>Редактировать</span>
+            </Link>
+            <Link
+              to={`/spell-creator?template_id=${spell.id}`}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
+            >
+              <Copy size={18} />
+              <span>Использовать как шаблон</span>
             </Link>
             <button
               onClick={() => onDelete(spell.id)}

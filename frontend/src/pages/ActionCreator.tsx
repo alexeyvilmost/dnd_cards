@@ -16,6 +16,11 @@ const ActionCreator = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = Boolean(editId);
+  // «Использовать как шаблон»: грузим сущность-источник в форму, но остаёмся в режиме создания
+  // (card_number пустой → пользователь задаёт новый id; сабмит идёт по createAction).
+  const templateId = searchParams.get('template_id');
+  const sourceId = editId || templateId;
+  const asTemplate = !editId && !!templateId;
   
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<CreateActionRequest>({
     defaultValues: {
@@ -42,11 +47,11 @@ const ActionCreator = () => {
 
   // Загрузка действия для редактирования
   useEffect(() => {
-    if (isEditMode && editId) {
+    if (sourceId) {
       const loadAction = async () => {
         try {
           setLoadingAction(true);
-          const action = await actionsApi.getAction(editId);
+          const action = await actionsApi.getAction(sourceId);
           
           // Заполняем форму данными действия
           console.log('[ActionCreator] Загружено действие с бэкенда:', action);
@@ -64,7 +69,7 @@ const ActionCreator = () => {
             detailed_description: action.detailed_description || null,
             image_url: action.image_url || '',
             rarity: action.rarity || 'common',
-            card_number: action.card_number || '',
+            card_number: asTemplate ? '' : (action.card_number || ''),
             resources: resourcesArray,
             distance: action.distance || null,
             recharge: action.recharge || null,
@@ -99,7 +104,7 @@ const ActionCreator = () => {
       
       loadAction();
     }
-  }, [isEditMode, editId, reset]);
+  }, [sourceId, asTemplate, reset]);
 
   const previewAction = {
     id: '',
