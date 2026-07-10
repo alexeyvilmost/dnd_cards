@@ -340,6 +340,32 @@ function applyModifierPayload(
 }
 
 /**
+ * set_value ac_base из ДЕЙСТВИЯ/ЗАКЛИНАНИЯ (Доспех мага): ставим «стоячий» активный эффект с
+ * СЫРОЙ формулой — computeAC (ac.ts) сканирует state.activeEffects и берёт его как метод-кандидат
+ * базового КЗ (максимум применимого, только без доспеха). Зеркало applyModifierPayload —
+ * разница лишь в kind полезной нагрузки. Формула НЕ вычисляется здесь: её считает computeAC
+ * в контексте владельца (иначе 13+dex застыло бы на момент каста).
+ */
+function applyAcBaseMethod(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const entry: ActiveEffectEntry = {
+    id: `ac-${state.activeEffects.length}-${Date.now()}`,
+    name: source,
+    mechanics: payload,
+    roundsLeft,
+    expiry,
+    source,
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
+/**
  * resistance/immunity/vulnerability, выданные действием (Ярость), — как «стоячий» активный
  * эффект: кладём payload в activeEffects через stackApply, чтобы resistanceLevelFor нашёл его
  * при получении урона. Зеркало applyModifierPayload; разница только в kind полезной нагрузки.
@@ -695,6 +721,9 @@ function applyPayloads(
       case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
       case 'resistance': route((s) => applyResistancePayload(s, p, source, events)); break;
       case 'set_value': {
+        // ac_base — не рантайм-мутация, а НОВЫЙ метod расчёта КЗ (Доспех мага 13+ЛВК): ставим
+        // «стоячий» активный эффект с сырой формулой, computeAC подберёт его как метод-кандидат.
+        if (p.target === 'ac_base') { route((s) => applyAcBaseMethod(s, p, source, events)); break; }
         // Значение считаем в контексте того, КОГО меняем: при who:'target' — по статам ЦЕЛИ
         // (targetFormulaCtx), иначе исполнителя. Для литералов (hp=1) неважно; для формул — критично.
         const fctx = (whoTarget && targetRef.state) ? (targetFormulaCtx(ctx.target) ?? formulaCtx(ctx)) : formulaCtx(ctx);

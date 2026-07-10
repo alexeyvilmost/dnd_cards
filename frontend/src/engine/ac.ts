@@ -31,21 +31,26 @@ function parseFlatBonus(raw: string): number {
   return m ? Number(m[1]) : 0;
 }
 
-/** Все формулы set_value ac_base из пассивок — каждая станет методом-кандидатом. */
-function acBaseOverrides(passives: Dict[]): string[] {
+/** Все формулы set_value ac_base — каждая станет методом-кандидатом. Источники: пассивки
+ *  (полные mechanics-объекты) И активные эффекты (Доспех мага и т.п.), где mechanics — сам
+ *  payload {kind:'set_value', target:'ac_base', formula}. Обе формы обрабатываем. */
+function acBaseFormulas(mechs: Dict[]): string[] {
   const out: string[] = [];
-  for (const mech of passives) {
+  const consider = (p: Dict | undefined) => {
+    if (p && p.kind === 'set_value' && p.target === 'ac_base') {
+      const f = String(p.formula ?? p.value ?? '');
+      if (f) out.push(f);
+    }
+  };
+  for (const mech of mechs) {
+    if (!mech || typeof mech !== 'object') continue;
+    consider(mech); // активный эффект: mechanics = сам payload set_value
     const effects = (mech.effects ?? mech.interactions) as unknown;
     if (!Array.isArray(effects)) continue;
     for (const eff of effects as Dict[]) {
+      consider(eff); // payload как самостоятельная интеракция
       const results = (eff.result ?? eff.results) as unknown;
-      if (!Array.isArray(results)) continue;
-      for (const r of results as Dict[]) {
-        if (r.kind === 'set_value' && r.target === 'ac_base') {
-          const f = String(r.formula ?? r.value ?? '');
-          if (f) out.push(f);
-        }
-      }
+      if (Array.isArray(results)) for (const r of results as Dict[]) consider(r);
     }
   }
   return out;
@@ -127,8 +132,10 @@ export function computeAC(
     methods.push({ name: 'Без доспеха', value: 10 + dex, parts: baseParts });
 
     // Каждый set_value ac_base — отдельный метод; берётся максимум (Защита без доспехов
-    // 10+ЛВК+ТЕЛ vs Доспех мага 13+ЛВК → больший), а не первый попавшийся.
-    for (const formula of acBaseOverrides(passives)) {
+    // 10+ЛВК+ТЕЛ vs Доспех мага 13+ЛВК → больший), а не первый попавшийся. Сканируем и пассивки,
+    // и активные эффекты (Доспех мага — заклинание, ставящее «стоячий» метод при касте).
+    const acMechs = [...passives, ...state.activeEffects.map((e) => e.mechanics as Dict)];
+    for (const formula of acBaseFormulas(acMechs)) {
       const value = evalNum(formula, character);
       methods.push({
         name: 'Защита без доспехов',

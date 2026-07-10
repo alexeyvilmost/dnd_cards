@@ -574,6 +574,7 @@ export const EFFECT_BLOCKS: Block[] = [
         { id: 'hp', label: 'Текущие хиты' },
         { id: 'temp_hp', label: 'Временные хиты' },
         { id: 'max_hp', label: 'Макс. хиты' },
+        { id: 'ac_base', label: 'Базовый КЗ (метод, без доспеха) — напр. Доспех мага 13+dex' },
       ], default: 'hp' },
       { key: 'formula', label: 'Значение', type: 'formula', default: '1' },
     ],
@@ -884,7 +885,10 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     case 'temp_hp': return { blockId: 'eff_temp_hp', values: { amount: p.amount } };
     case 'healing': return { blockId: 'eff_heal', values: { amount: p.amount } };
     case 'reroll': return { blockId: 'eff_reroll', values: { which: p.which ?? 'd20', keep: p.keep ?? 'either' } };
-    case 'set_value': return { blockId: 'eff_set_value', values: { target: p.target, formula: p.formula } };
+    // duration на самом payload блок не несёт (есть только редактор длительности верхнего уровня) → сырой JSON.
+    case 'set_value': return p.duration != null
+      ? raw()
+      : { blockId: 'eff_set_value', values: { target: p.target, formula: p.formula } };
     case 'narrative': return { blockId: 'eff_narrative', values: { description: p.description } };
     case 'damage': {
       // Простой урон (кубы+тип); scaling/on_success/bonus/per_dart/formula/ability → сырой JSON

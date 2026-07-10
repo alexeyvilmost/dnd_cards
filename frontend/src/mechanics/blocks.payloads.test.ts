@@ -87,6 +87,13 @@ describe('eff_set_value расширенные цели', () => {
     expect(build1('eff_set_value', { target: 'temp_hp', formula: '5' })).toEqual({ kind: 'set_value', target: 'temp_hp', formula: '5' });
     expect(backBlock({ kind: 'set_value', target: 'max_hp', formula: '10' })?.blockId).toBe('eff_set_value');
   });
+  it('#8: ac_base (Доспех мага) авторится блоком', () => {
+    expect(build1('eff_set_value', { target: 'ac_base', formula: '13+dex' })).toEqual({ kind: 'set_value', target: 'ac_base', formula: '13+dex' });
+    expect(backBlock({ kind: 'set_value', target: 'ac_base', formula: '13+dex' })?.blockId).toBe('eff_set_value');
+  });
+  it('set_value с payload-duration → сырой JSON (блок не несёт per-payload длительность)', () => {
+    expect(backBlock({ kind: 'set_value', target: 'ac_base', formula: '13+dex', duration: { type: 'hours', amount: 8 } })?.blockId).toBe('eff_raw_json');
+  });
 });
 
 describe('PC: глубина модификатора (op/scope/filter)', () => {

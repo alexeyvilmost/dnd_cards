@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { executeAction, applyIncomingDamage } from './execute';
+import { computeAC } from './ac';
 import { longRest } from './turn';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
@@ -74,6 +75,17 @@ describe('2.4 — set_value', () => {
     const act: Dict = { name: 'Drain', activation: { cost: [] }, effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'set_value', target: 'hp', value: '1' }] }] };
     const res = executeAction(fresh(), act, { character, rng: () => 0.5, target: { runtimeState: fresh({ current: 10, max: 20, temp: 0 }) } } as unknown as Ctx);
     expect(res.targetState?.hp.current).toBe(1);
+  });
+
+  it('#8 Доспех мага: set_value ac_base ставит стоячий метод КЗ (не NOT_IMPLEMENTED), computeAC берёт 13+ЛВК', () => {
+    const cc: CharacterContext = { abilityMods: { str: 0, dex: 3, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 3 };
+    const c = { character: cc, rng: () => 0.5 } as unknown as Ctx;
+    const mageArmor: Dict = { name: 'Доспех мага', activation: { cost: [] }, effects: [{ resolution: 'auto', who: 'self', result: [{ kind: 'set_value', target: 'ac_base', formula: '13+dex' }] }] };
+    const { state, events } = executeAction(fresh(), mageArmor, c);
+    expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
+    const eff = state.activeEffects.find((e) => (e.mechanics as Dict)?.target === 'ac_base');
+    expect(eff).toBeTruthy();                       // установлен стоячий активный эффект
+    expect(computeAC(cc, state, []).value).toBe(16); // 13+ЛВК(3) без доспеха, перебивает базу 10+3
   });
 
   it('variable → нарратив-заглушка, а не NOT_IMPLEMENTED', () => {

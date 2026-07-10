@@ -55,4 +55,14 @@ describe('computeAC как методы-кандидаты', () => {
   it('без доспеха и без override → 10+ЛВК', () => {
     expect(computeAC(character, freshState(), []).value).toBe(13);
   });
+
+  it('#8: активный эффект ac_base (Доспех мага) — метод-кандидат наравне с пассивками', () => {
+    const state = freshState();
+    state.activeEffects = [{
+      id: 'ac-1', name: 'Доспех мага', source: 'Доспех мага', expiry: 'manual',
+      mechanics: { kind: 'set_value', target: 'ac_base', formula: '13+dex' },
+    }];
+    // 13+3=16 vs база 10+3=13 → 16
+    expect(computeAC(character, state, []).value).toBe(16);
+  });
 });
