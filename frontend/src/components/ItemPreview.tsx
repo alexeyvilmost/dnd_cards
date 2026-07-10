@@ -30,6 +30,8 @@ const rarityColor = (card: Card): string | undefined =>
 const diceRu = (v: string) => String(v).replace(/(\d)[dд](\d)/gi, '$1к$2');
 const fmtWeight = (w: number) => `${Math.round(w * 100) / 100} фунт.`;
 const round2 = (n: number) => Math.round(n * 100) / 100;
+// Чёрная PNG-иконка веса плохо читается на тёмном фоне — тонируем в пергаментный цвет.
+const WEIGHT_ICON_STYLE: React.CSSProperties = { filter: 'brightness(0) invert(0.84) sepia(0.35) saturate(1.6) hue-rotate(-6deg)' };
 
 // Вертикальный градиент цвета редкости поверх тёмного фона стат-блока (как в BG3). Обычные
 // (common) — без градиента; невалидный/именованный цвет — тоже без (нужен #rrggbb для rgba).
@@ -68,7 +70,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
   if (card.price != null && card.price > 0) {
     meta.push({ img: getCurrencyIconPath(card.price_currency), imgStyle: currencyIconStyle, label: formatPriceAmount(card.price, card.price_abbreviated !== false) });
   }
-  if (card.weight != null) meta.push({ img: '/icons/weight.png', label: fmtWeight(card.weight) });
+  if (card.weight != null) meta.push({ img: '/icons/weight.png', imgStyle: WEIGHT_ICON_STYLE, label: fmtWeight(card.weight) });
   if (card.slot) meta.push({ emoji: '🎽', label: getEquipmentSlotLabel(card.slot) });
   if (card.range) meta.push({ emoji: '🎯', label: card.range });
   if (card.properties && card.properties.length) meta.push({ emoji: '✦', label: card.properties.map((p) => getPropertyLabel(p)).join(', ') });
@@ -146,8 +148,8 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           {containerSum && (containerSum.weight > 0 || containerSum.gold > 0) && (
             <div className="sp-meta" style={{ marginTop: 4 }}>
               <span>
-                <i>Σ</i>
-                <img className="sp-metaicon" src="/icons/weight.png" alt="" />{round2(containerSum.weight)}
+                <i style={{ fontStyle: 'normal' }}>Сумма содержимого:</i>
+                <img className="sp-metaicon" src="/icons/weight.png" alt="" style={WEIGHT_ICON_STYLE} />{round2(containerSum.weight)}
                 <span className="sp-dmgsep">·</span>
                 <img className="sp-metaicon" src={getCurrencyIconPath('gold')} alt="" style={currencyIconStyle} />{round2(containerSum.gold)}
               </span>
