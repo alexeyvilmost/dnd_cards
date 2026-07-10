@@ -883,6 +883,7 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'base_action', label: 'Базовое действие' },
   { value: 'class_feature', label: 'Умение класса' },
   { value: 'item_property', label: 'Свойство предмета' },
+  { value: 'species_ability', label: 'Умение вида' },
 ] as const;
 
 // Типы для эффектов

@@ -1565,9 +1565,10 @@ const (
 type ActionType string
 
 const (
-	ActionTypeBaseAction   ActionType = "base_action"   // Базовое действие
-	ActionTypeClassFeature ActionType = "class_feature" // Умение класса
-	ActionTypeItemProperty ActionType = "item_property" // Свойство предмета
+	ActionTypeBaseAction     ActionType = "base_action"     // Базовое действие
+	ActionTypeClassFeature   ActionType = "class_feature"   // Умение класса
+	ActionTypeItemProperty   ActionType = "item_property"   // Свойство предмета
+	ActionTypeSpeciesAbility ActionType = "species_ability" // Умение вида
 )
 
 // Script - JSON скрипт для действий
@@ -1866,6 +1867,8 @@ func (at ActionType) GetLocalizedName() string {
 		return "Умение класса"
 	case ActionTypeItemProperty:
 		return "Свойство предмета"
+	case ActionTypeSpeciesAbility:
+		return "Умение вида"
 	default:
 		return string(at)
 	}

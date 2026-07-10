@@ -435,8 +435,45 @@ func GetAllMigrations() []Migration {
 			Up:          widenCardsDamageTypeCheck,
 			Down:        restoreCardsDamageTypeCheck,
 		},
+		{
+			Version:     "072_widen_actions_action_type_check",
+			Description: "Расширить actions_action_type_check: добавить species_ability (тип действия «Умение вида»)",
+			Up:          widenActionsActionTypeCheck,
+			Down:        restoreActionsActionTypeCheck,
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// widenActionsActionTypeCheck расширяет CHECK actions_action_type_check, добавляя
+// species_ability (тип действия «Умение вида»). Раньше энум был 3-значным, и сохранение
+// действия с новым типом падало 500. Значения синхронны с фронтом ACTION_TYPE_OPTIONS.
+func widenActionsActionTypeCheck(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE actions DROP CONSTRAINT IF EXISTS actions_action_type_check",
+		"ALTER TABLE actions ADD CONSTRAINT actions_action_type_check CHECK (action_type IN ('base_action', 'class_feature', 'item_property', 'species_ability'))",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// restoreActionsActionTypeCheck возвращает исходный 3-значный CHECK. Откат сработает лишь
+// если ни у одного действия нет action_type='species_ability' на этот момент.
+func restoreActionsActionTypeCheck(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE actions DROP CONSTRAINT IF EXISTS actions_action_type_check",
+		"ALTER TABLE actions ADD CONSTRAINT actions_action_type_check CHECK (action_type IN ('base_action', 'class_feature', 'item_property'))",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
 }
 
 // cardDamageTypeCheckValues — все 13 типов урона (физические + стихийные). Единый
