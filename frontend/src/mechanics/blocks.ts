@@ -4,6 +4,7 @@ import { normalizeWhen, type Cond } from './predicates';
 import {
   ABILITIES,
   ACTIVE_RESOURCES,
+  ATTACK_ABILITIES,
   CHOICE_SOURCES,
   CONDITIONS,
   DAMAGE_TYPE_OPTIONS,
@@ -462,6 +463,23 @@ export const EFFECT_BLOCKS: Block[] = [
       on_success: [{ kind: 'damage', dice: v.dice, type: v.damage_type, on_success: 'half' }],
     }),
     summary: (v) => `Save ${labelOf(ABILITIES, String(v.ability))} DC ${v.dc}: ${v.dice} ${v.damage_type}`,
+  },
+  {
+    id: 'eff_attack_damage',
+    label: 'Атака → урон',
+    group: 'effect',
+    fields: [
+      { key: 'ability', label: 'Характеристика атаки', type: 'select', options: ATTACK_ABILITIES, default: 'auto' },
+      { key: 'dice', label: 'Кубы урона', type: 'text', default: '1d8' },
+      { key: 'damage_type', label: 'Тип урона', type: 'damage-type', default: 'slashing' },
+    ],
+    defaults: { ability: 'auto', dice: '1d8', damage_type: 'slashing' },
+    build: (v) => ({
+      resolution: 'attack_roll',
+      ability: v.ability,
+      on_hit: [{ kind: 'damage', dice: v.dice, type: v.damage_type }],
+    }),
+    summary: (v) => `Атака (${labelOf(ATTACK_ABILITIES, String(v.ability))}) → ${v.dice} ${labelOf(DAMAGE_TYPE_OPTIONS, String(v.damage_type))}`,
   },
   {
     id: 'eff_reroll',
@@ -952,6 +970,17 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
         && onSucc[0]?.dice === dmg?.dice && onSucc[0]?.type === dmg?.type && onSucc[0]?.on_success === 'half';
       if (faithful) {
         entries.push({ id: `d_${++c}`, blockId: 'eff_save_damage', values: { ability: it.ability, dc: it.dc, dice: dmg!.dice, damage_type: dmg!.type } });
+      } else {
+        entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
+      }
+    } else if (it?.resolution === 'attack_roll') {
+      // eff_attack_damage: только один урон на попадание; on_crit/on_miss/доп. payload'ы → сырой JSON.
+      const onHit = Array.isArray(it.on_hit) ? (it.on_hit as Dict[]) : [];
+      const dmg = onHit[0];
+      const faithful = onHit.length === 1 && dmg?.kind === 'damage'
+        && it.on_crit == null && it.on_miss == null && it.on_success == null && it.on_fail == null;
+      if (faithful) {
+        entries.push({ id: `d_${++c}`, blockId: 'eff_attack_damage', values: { ability: it.ability ?? 'auto', dice: dmg!.dice, damage_type: dmg!.type ?? dmg!.damage_type ?? 'slashing' } });
       } else {
         entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
       }

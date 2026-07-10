@@ -86,3 +86,22 @@ describe('eff_set_value расширенные цели', () => {
     expect(backBlock({ kind: 'set_value', target: 'max_hp', formula: '10' })?.blockId).toBe('eff_set_value');
   });
 });
+
+describe('eff_attack_damage (attack_roll)', () => {
+  const buildAttack = (values: Record<string, unknown>) => {
+    const m = buildMechanics('trg_passive', {}, [{ blockId: 'eff_attack_damage', values }]);
+    return (m?.effects as Array<Record<string, unknown>>).find((e) => e.resolution === 'attack_roll');
+  };
+  it('build attack_roll + on_hit урон', () => {
+    expect(buildAttack({ ability: 'dex', dice: '1d8', damage_type: 'piercing' }))
+      .toEqual({ resolution: 'attack_roll', ability: 'dex', on_hit: [{ kind: 'damage', dice: '1d8', type: 'piercing' }] });
+  });
+  it('round-trip точного паттерна → eff_attack_damage', () => {
+    const d = deserializeMechanics({ activation: { mode: 'passive' }, effects: [{ resolution: 'attack_roll', ability: 'auto', on_hit: [{ kind: 'damage', dice: '1d8', type: 'slashing' }] }] });
+    expect(d?.effectEntries[0].blockId).toBe('eff_attack_damage');
+  });
+  it('attack с on_crit → сырой JSON (без потерь)', () => {
+    const d = deserializeMechanics({ activation: { mode: 'passive' }, effects: [{ resolution: 'attack_roll', ability: 'auto', on_hit: [{ kind: 'damage', dice: '1d8', type: 'slashing' }], on_crit: [{ kind: 'damage', dice: '2d8', type: 'slashing' }] }] });
+    expect(d?.effectEntries[0].blockId).toBe('eff_raw_json');
+  });
+});

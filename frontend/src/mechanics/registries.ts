@@ -34,6 +34,14 @@ export const SKILLS: RegistryItem[] = [
 
 export const SAVING_THROWS = ABILITIES;
 
+// Характеристика броска атаки (interaction.ability для resolution:'attack_roll').
+export const ATTACK_ABILITIES: RegistryItem[] = [
+  { id: 'auto', label: 'Авто (по оружию)' },
+  { id: 'spellcasting', label: 'Заклинательная' },
+  { id: 'dex_or_str', label: 'Ловкость или Сила' },
+  ...ABILITIES,
+];
+
 // Ремесленные инструменты (PHB 2024) — домен выбора для «Ремесленника» и т.п.
 export const ARTISAN_TOOLS: RegistryItem[] = [
   { id: 'alchemist', label: 'Инструменты алхимика' },
