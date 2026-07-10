@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText } from 'lucide-react';
+import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText, Settings } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -18,6 +18,7 @@ import type { CharacterRuleState } from '../character/rules/types';
 import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
 import { useIsMobile } from '../hooks/useIsMobile';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
+import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import ForgeTraitsBlock from '../components/forge/ForgeTraitsBlock';
 import { useSiteSettings } from '../settings';
@@ -70,6 +71,7 @@ const CharacterForge = () => {
   const [prevRefs, setPrevRefs] = useState<{ effects: Set<string>; actions: Set<string> } | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paper, setPaper] = useState<boolean>(() => {
     try { return localStorage.getItem('forge-theme') === 'paper'; } catch { return false; }
@@ -720,6 +722,15 @@ const CharacterForge = () => {
           <button
             type="button"
             className="sheet-header-btn"
+            onClick={() => setSettingsOpen(true)}
+            title="Настройки отображения"
+          >
+            <Settings size={16} />
+            <span className="sheet-header-btn-label">Настройки</span>
+          </button>
+          <button
+            type="button"
+            className="sheet-header-btn"
             onClick={toggleTheme}
             title={paper ? 'Тёмная тема' : 'Светлая тема'}
           >
@@ -734,6 +745,8 @@ const CharacterForge = () => {
           )}
         </div>
       </div>
+
+      {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
 
       <div className="forge-body">
         <ForgeNav sections={navSections} active={act} onSelect={setActive} />

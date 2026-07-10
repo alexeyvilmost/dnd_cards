@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import type { Card, EquipmentOption } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { getCurrencyIconPath, currencyIconStyle } from '../utils/currencies';
+import { useSiteSettings } from '../settings';
 import CardPreview from './CardPreview';
+import ItemPreview from './ItemPreview';
 
 // Совместим и с предысторией ({a,b}), и с классом ({a,b,c}).
 type EquipOptions = {
@@ -18,6 +20,7 @@ const hasContent = (o?: EquipmentOption | null) => !!o && ((o.items?.length || 0
 const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const asInterface = useSiteSettings().itemPreview === 'interface';
   return (
     <div
       className="bgeq-item"
@@ -35,11 +38,11 @@ const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }
         <div
           style={{
             position: 'fixed', zIndex: 100, pointerEvents: 'none',
-            left: Math.min(pos.x + 14, window.innerWidth - 210),
+            left: Math.min(pos.x + 14, window.innerWidth - (asInterface ? 360 : 210)),
             top: Math.min(Math.max(pos.y - 40, 8), window.innerHeight - 290),
           }}
         >
-          <CardPreview card={card} disableHover />
+          {asInterface ? <ItemPreview card={card} disableHover /> : <CardPreview card={card} disableHover />}
         </div>
       )}
     </div>
