@@ -123,6 +123,17 @@ function persistPayload(state: RuntimeState, prevTurnState: Record<string, unkno
   };
 }
 
+// Ресурсы экономики хода (не «расход» в смысле подтверждения) — их тратит любое действие.
+const TURN_ECONOMY_RESOURCES = new Set(['action', 'bonus_action', 'reaction', 'free_action']);
+/** Действие тратит ОТСЛЕЖИВАЕМЫЙ ресурс (слот заклинания, заряд, очки, расходник) — не только
+ *  экономику хода. Для таких при включённом диалоге кубов показываем «Применить»/«Отмена». */
+function spendsTrackedResource(mech: Record<string, unknown>): boolean {
+  const activation = mech.activation as Record<string, unknown> | undefined;
+  const cost = activation?.cost as Record<string, unknown>[] | undefined;
+  if (!Array.isArray(cost)) return false;
+  return cost.some((c) => { const r = String(c.resource ?? ''); return !!r && !TURN_ECONOMY_RESOURCES.has(r); });
+}
+
 export default function SheetActionsPanel({
   character,
   assembled,
@@ -382,6 +393,7 @@ export default function SheetActionsPanel({
       m: Record<string, unknown>,
       title: string,
       preview?: ReactNode,
+      confirm = false,
     ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[] } | null> => {
       // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
       // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
@@ -393,7 +405,7 @@ export default function SheetActionsPanel({
         for (const [k, v] of Object.entries(picked)) if (v.length) choices[k] = v;
       }
       const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events);
-      const decision = await diceDialog.request(plan, title, preview);
+      const decision = await diceDialog.request(plan, title, preview, { confirm });
       if (decision.mode === 'cancel') return null;
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
       const r = executeAction(baseState, m, execCtx(rng, false, choices));
@@ -401,7 +413,11 @@ export default function SheetActionsPanel({
     };
 
     try {
-      const main = await runViaDialog(runtime, mech, action.name, previewFor(action));
+      // Подтверждение «Применить»/«Отмена» для действий, тратящих ресурсы (слот/заряд/…) или
+      // заклинаний — даже когда кубов нет (при включённом диалоге кубов). Атаки с кубами и так
+      // показывают окно броска.
+      const needsConfirm = spendsTrackedResource(mech) || !!action.spellRef;
+      const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm);
       if (!main) return;
       let { state, events } = main;
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.

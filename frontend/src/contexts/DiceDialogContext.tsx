@@ -16,11 +16,12 @@ export type DiceDecision =
 
 interface DiceDialogApi {
   /**
-   * Запросить решение игрока. Если диалог выключен в настройках или план пуст —
-   * сразу резолвится в {mode:'auto'} без показа окна. preview — карточка действия/
-   * заклинания сбоку (ради чего бросок).
+   * Запросить решение игрока. Диалог выключен в настройках → сразу {mode:'auto'}.
+   * Диалог включён: при непустом плане — окно броска; при ПУСТОМ плане обычно тоже {mode:'auto'},
+   * но если opts.confirm=true (действие тратит ресурсы, в т.ч. заклинание) — окно подтверждения
+   * «Применить»/«Отмена». preview — карточка действия/заклинания сбоку.
    */
-  request: (plan: PlannedDie[], title: string, preview?: ReactNode) => Promise<DiceDecision>;
+  request: (plan: PlannedDie[], title: string, preview?: ReactNode, opts?: { confirm?: boolean }) => Promise<DiceDecision>;
 }
 
 const Ctx = createContext<DiceDialogApi | null>(null);
@@ -35,6 +36,8 @@ interface DialogState {
   plan: PlannedDie[];
   title: string;
   preview?: ReactNode;
+  /** Пустой план + подтверждение расхода ресурсов: окно «Применить»/«Отмена» без кубов. */
+  confirmOnly: boolean;
 }
 
 export function DiceDialogProvider({ children }: { children: ReactNode }) {
@@ -42,14 +45,16 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
   const [values, setValues] = useState<string[]>([]);
   const resolver = useRef<((d: DiceDecision) => void) | null>(null);
 
-  const request = useCallback((plan: PlannedDie[], title: string, preview?: ReactNode): Promise<DiceDecision> => {
-    if (!getSettings().diceDialog || plan.length === 0) {
-      return Promise.resolve({ mode: 'auto' });
-    }
+  const request = useCallback((plan: PlannedDie[], title: string, preview?: ReactNode, opts?: { confirm?: boolean }): Promise<DiceDecision> => {
+    // Диалог выключен в настройках → всегда авто (никаких окон).
+    if (!getSettings().diceDialog) return Promise.resolve({ mode: 'auto' });
+    const confirmOnly = plan.length === 0;
+    // Пустой план и подтверждение не требуется (свободное действие) → авто.
+    if (confirmOnly && !opts?.confirm) return Promise.resolve({ mode: 'auto' });
     return new Promise((resolve) => {
       resolver.current = resolve;
       setValues(plan.map(() => ''));
-      setDialog({ plan, title, preview });
+      setDialog({ plan, title, preview, confirmOnly });
     });
   }, []);
 
@@ -73,48 +78,66 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
         <div className="dice-dialog-backdrop" onClick={() => finish({ mode: 'cancel' })}>
           <div className="dice-dialog-wrap" onClick={(e) => e.stopPropagation()}>
             {dialog.preview && <div className="dice-dialog-preview">{dialog.preview}</div>}
-          <div className="dice-dialog" role="dialog" aria-label="Бросок кубов">
+          <div className="dice-dialog" role="dialog" aria-label={dialog.confirmOnly ? 'Подтверждение действия' : 'Бросок кубов'}>
             <div className="dice-dialog-title">{dialog.title}</div>
-            <div className="dice-dialog-summary">
-              Бросьте: <b>{summarizeDice(dialog.plan)}</b> — или доверьте бросок системе.
-            </div>
-            <div className="dice-dialog-list">
-              {dialog.plan.map((d, i) => (
-                <label key={i} className="dice-dialog-row">
-                  <span className="dice-dialog-die">к{d.sides}</span>
-                  <span className="dice-dialog-label">{d.label}</span>
-                  <input
-                    className="dice-dialog-input"
-                    type="number"
-                    min={1}
-                    max={d.sides}
-                    placeholder={`1–${d.sides}`}
-                    value={values[i]}
-                    onChange={(e) => setValues((prev) => prev.map((v, j) => (j === i ? e.target.value : v)))}
-                  />
-                </label>
-              ))}
-            </div>
-            <div className="dice-dialog-actions">
-              <button type="button" className="dice-dialog-btn primary" onClick={() => finish({ mode: 'auto' })}>
-                Автобросок
-              </button>
-              <button
-                type="button"
-                className="dice-dialog-btn"
-                disabled={!manualReady}
-                title={manualReady ? undefined : 'Заполните значения всех кубов'}
-                onClick={() => finish({ mode: 'manual', values: parsed as number[] })}
-              >
-                Использовать мои кубы
-              </button>
-              <button type="button" className="dice-dialog-btn ghost" onClick={() => finish({ mode: 'cancel' })}>
-                Отмена
-              </button>
-            </div>
-            <p className="dice-dialog-note">
-              Если атака промахнётся, значения костей урона не понадобятся. Окно можно отключить в настройках сайта.
-            </p>
+            {dialog.confirmOnly ? (
+              // Действие тратит ресурсы, но кубов нет — подтверждение расхода.
+              <>
+                <div className="dice-dialog-summary">Потратить ресурсы и применить действие?</div>
+                <div className="dice-dialog-actions">
+                  <button type="button" className="dice-dialog-btn primary" onClick={() => finish({ mode: 'auto' })}>
+                    Применить
+                  </button>
+                  <button type="button" className="dice-dialog-btn ghost" onClick={() => finish({ mode: 'cancel' })}>
+                    Отмена
+                  </button>
+                </div>
+                <p className="dice-dialog-note">Окно можно отключить в настройках сайта.</p>
+              </>
+            ) : (
+              <>
+                <div className="dice-dialog-summary">
+                  Бросьте: <b>{summarizeDice(dialog.plan)}</b> — или доверьте бросок системе.
+                </div>
+                <div className="dice-dialog-list">
+                  {dialog.plan.map((d, i) => (
+                    <label key={i} className="dice-dialog-row">
+                      <span className="dice-dialog-die">к{d.sides}</span>
+                      <span className="dice-dialog-label">{d.label}</span>
+                      <input
+                        className="dice-dialog-input"
+                        type="number"
+                        min={1}
+                        max={d.sides}
+                        placeholder={`1–${d.sides}`}
+                        value={values[i]}
+                        onChange={(e) => setValues((prev) => prev.map((v, j) => (j === i ? e.target.value : v)))}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="dice-dialog-actions">
+                  <button type="button" className="dice-dialog-btn primary" onClick={() => finish({ mode: 'auto' })}>
+                    Автобросок
+                  </button>
+                  <button
+                    type="button"
+                    className="dice-dialog-btn"
+                    disabled={!manualReady}
+                    title={manualReady ? undefined : 'Заполните значения всех кубов'}
+                    onClick={() => finish({ mode: 'manual', values: parsed as number[] })}
+                  >
+                    Использовать мои кубы
+                  </button>
+                  <button type="button" className="dice-dialog-btn ghost" onClick={() => finish({ mode: 'cancel' })}>
+                    Отмена
+                  </button>
+                </div>
+                <p className="dice-dialog-note">
+                  Если атака промахнётся, значения костей урона не понадобятся. Окно можно отключить в настройках сайта.
+                </p>
+              </>
+            )}
           </div>
           </div>
         </div>
