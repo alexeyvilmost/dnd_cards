@@ -995,6 +995,17 @@
 .levelup-footer { display: flex; flex-direction: column; gap: 8px; }
 .levelup-actions { display: flex; gap: 10px; }
 
+/* #2: выданные ресурсы на уровень-апе (ячейки, заряды) */
+.levelup-resources { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.levelup-resource {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--forge-line); border-radius: 10px;
+  background: var(--forge-panel-2); padding: 6px 11px;
+}
+.levelup-resource-icon { width: 20px; height: 20px; object-fit: contain; }
+.levelup-resource-name { font-size: 13.5px; color: var(--forge-text); }
+.levelup-resource-delta { font-size: 13px; font-weight: 700; color: var(--forge-gold); }
+
 /* ═══════════ E6: сквозной нижний таб-бар (≤820px) — кузня ═══════════
    Рейл категорий превращается в фиксированную нижнюю панель (иконка над
    подписью, как в мессенджерах). Правый обзор скрыт — доступен вкладкой
