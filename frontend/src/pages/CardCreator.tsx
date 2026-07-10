@@ -6,6 +6,8 @@ import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
 import type { CreateCardRequest, Properties, Effect } from '../types';
 import CardPreview from '../components/CardPreview';
+import ItemPreview from '../components/ItemPreview';
+import { getSettings, type ItemPreviewStyle } from '../settings';
 import ImageLibraryModal from '../components/ImageLibraryModal';
 import { CardCreatorNavigation } from '../components/CardCreatorNavigation';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
@@ -22,6 +24,8 @@ const CardCreator = () => {
   const [searchParams] = useSearchParams();
   const { id } = useParams<{ id: string }>();
   const [showPreview, setShowPreview] = useState(true);
+  // #4: локальный переключатель вида превью (карточка/интерфейс), посеян из глобальной настройки.
+  const [previewMode, setPreviewMode] = useState<ItemPreviewStyle>(() => getSettings().itemPreview);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -663,13 +667,33 @@ const CardCreator = () => {
         {showPreview && (
           <div className="lg:col-span-5">
             <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Превью карты</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Превью карты</h3>
+                <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+                  {([['card', 'Карточка'], ['interface', 'Интерфейс']] as const).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setPreviewMode(mode)}
+                      className={`px-3 py-1 transition-colors ${previewMode === mode ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {previewCard ? (
+                previewMode === 'interface' ? (
+                  <div className="flex justify-center">
+                    <ItemPreview card={previewCard} disableHover />
+                  </div>
+                ) : (
                 <div className="flex justify-center">
                   <div className="transform scale-130 mt-16">
                     <CardPreview card={previewCard} disableHover={false} />
                   </div>
                 </div>
+                )
               ) : (
                 <div className="text-center text-gray-500 py-8">
                   Заполните название карты для просмотра превью

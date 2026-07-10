@@ -7,6 +7,8 @@ import { getItemTypeLabel } from '../constants/itemTypes';
 import { RelatedCardsList, useContainerTotals } from './RelatedItems';
 import { getEquipmentSlotLabel } from '../types';
 import CardPreview from './CardPreview';
+import ItemPreview from './ItemPreview';
+import { useSiteSettings } from '../settings';
 import { imagesApi } from '../api/imagesApi';
 import { cardsApi } from '../api/client';
 import { toBlob } from 'html-to-image';
@@ -37,6 +39,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   onEquip
 }) => {
   const containerSum = useContainerTotals(card); // S6: сумма веса/цены содержимого контейнера
+  const asInterface = useSiteSettings().itemPreview === 'interface'; // #4: детальное превью как стат-блок
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
@@ -261,7 +264,9 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               />
             )}
             <div className="relative z-10">
-              <CardPreview card={{ ...card, image_url: cardImage }} disableHover={true} />
+              {asInterface
+                ? <ItemPreview card={{ ...card, image_url: cardImage }} disableHover />
+                : <CardPreview card={{ ...card, image_url: cardImage }} disableHover={true} />}
             </div>
           </div>
         </div>
