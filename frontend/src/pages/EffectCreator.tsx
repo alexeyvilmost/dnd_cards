@@ -69,6 +69,7 @@ const EffectCreator = () => {
             effect_type: effect.effect_type || 'passive',
             type: effect.type || null,
             condition_description: effect.condition_description || null,
+            repeatable: effect.repeatable || false,
             is_extended: effect.is_extended || false,
             description_font_size: effect.description_font_size || null,
             text_alignment: effect.text_alignment || null,
@@ -191,6 +192,7 @@ const EffectCreator = () => {
           condition_description: data.condition_description,
           script: data.script || null,
           mechanics: data.mechanics ?? null,
+          repeatable: data.repeatable,
           is_extended: data.is_extended,
           description_font_size: data.description_font_size,
           text_alignment: data.text_alignment,
@@ -405,6 +407,23 @@ const EffectCreator = () => {
                   />
                   <span className="text-sm font-medium text-gray-700">
                     Расширенная карта
+                  </span>
+                </label>
+              </div>
+
+              <div>
+                <label className="flex items-start space-x-2">
+                  <input
+                    {...register('repeatable')}
+                    type="checkbox"
+                    className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Повторяемый
+                    <span className="block text-xs font-normal text-gray-500">
+                      Складывается и накапливается (как Истощение/Отравление); можно выбрать
+                      несколько раз в конструкторе класса, а не блокируется как дубликат.
+                    </span>
                   </span>
                 </label>
               </div>

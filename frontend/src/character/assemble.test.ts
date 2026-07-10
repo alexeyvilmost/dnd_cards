@@ -57,14 +57,17 @@ describe('gatherFeatureRefs — гейт по уровню', () => {
     expect(ids(effectRefs)).toContain('fx-alert-init');
   });
 
-  it('дедупликация: один id из related и level_progression учитывается однажды', () => {
+  it('кратность сохраняется в gatherFeatureRefs (дедуп неповторяемых — после загрузки тел)', () => {
+    // Повторяемые эффекты должны сохранить кратность; т.к. флаг repeatable известен лишь после
+    // загрузки тела эффекта, сам gatherFeatureRefs больше НЕ схлопывает по id — это делает assemble
+    // после загрузки (неповторяемый → 1 раз, повторяемый → по бусине на прикрепление).
     const dupRace = {
       id: 'r', name: 'R',
       related_effects: ['fx-shared'],
       level_progression: { '1': { effects: ['fx-shared'] } },
     } as unknown as Race;
     const { effectRefs } = gatherFeatureRefs(dupRace, null, [], 1);
-    expect(effectRefs.filter((r) => r.id === 'fx-shared')).toHaveLength(1);
+    expect(effectRefs.filter((r) => r.id === 'fx-shared')).toHaveLength(2);
   });
 
   it('без вида и класса — пустые списки', () => {

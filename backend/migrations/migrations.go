@@ -441,8 +441,20 @@ func GetAllMigrations() []Migration {
 			Up:          widenActionsActionTypeCheck,
 			Down:        restoreActionsActionTypeCheck,
 		},
+		{
+			Version:     "073_add_effects_repeatable",
+			Description: "Флаг repeatable у эффектов (повторяемый: складывается, можно выбрать несколько раз в конструкторе)",
+			Up:          addEffectsRepeatable,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE effects DROP COLUMN IF EXISTS repeatable"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addEffectsRepeatable добавляет колонку repeatable к effects (по образцу feats.repeatable).
+func addEffectsRepeatable(db *sql.DB) error {
+	_, err := db.Exec("ALTER TABLE effects ADD COLUMN IF NOT EXISTS repeatable BOOLEAN DEFAULT false")
+	return err
 }
 
 // widenActionsActionTypeCheck расширяет CHECK actions_action_type_check, добавляя

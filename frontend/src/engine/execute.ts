@@ -382,9 +382,17 @@ function applyGrantEffect(
   let next = state;
   for (const slug of slugs) {
     const rec = granted?.[slug];
-    const mech = (rec?.mechanics ?? undefined) as Dict | undefined;
-    if (!mech || typeof mech !== 'object') continue; // не догружен — тихо
-    const name = String(rec?.name ?? (mech as Dict).name ?? slug);
+    const rawMech = (rec?.mechanics ?? undefined) as Dict | undefined;
+    if (!rawMech || typeof rawMech !== 'object') continue; // не догружен — тихо
+    // Ключуем выданный эффект его slug'ом (если автор не задал stack_id): неповторяемый повторный
+    // каст ПЕРЕЗАПИСЫВАЕТ (одна копия), повторяемый — НАКАПЛИВАЕТСЯ (stack_type='stack' → независимые
+    // экземпляры даже для Истощения/Отравления, которые иначе схлопнулись бы).
+    const mech: Dict = {
+      ...rawMech,
+      stack_id: rawMech.stack_id ?? slug,
+      ...(rec?.repeatable ? { stack_type: 'stack' } : {}),
+    };
+    const name = String(rec?.name ?? (rawMech as Dict).name ?? slug);
     const { roundsLeft, expiry } = resolveDuration(mech.duration as Dict | undefined);
     const entry: ActiveEffectEntry = {
       id: `grant-${slug}-${next.activeEffects.length}-${Date.now()}`,

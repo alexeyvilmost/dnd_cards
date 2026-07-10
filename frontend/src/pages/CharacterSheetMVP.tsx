@@ -234,7 +234,8 @@ const CharacterSheetMVP = () => {
       seen.add(effect.id);
       if (effect.card_number) seen.add(effect.card_number);
     }
-    return itemGrantedEffects.filter((e) => !seen.has(e.id) && !(e.card_number && seen.has(e.card_number)));
+    // Повторяемые эффекты не дедупим межпроходно — они намеренно складываются (Истощение и т.п.).
+    return itemGrantedEffects.filter((e) => e.repeatable || (!seen.has(e.id) && !(e.card_number && seen.has(e.card_number))));
   }, [itemGrantedEffects, assembled]);
 
   // Слайс 1 «предмет = эффект»: механики надетых/настроенных предметов доходят до резолвера правил.

@@ -105,6 +105,28 @@ describe('2.4 — set_value', () => {
     expect(computeAC(cc, state, []).value).toBe(16);         // 13 + ЛВК(3)
   });
 
+  it('повторяемый grant_effect (условие) НАКАПЛИВАЕТСЯ: два каста → два экземпляра', () => {
+    const poison: Dict = { name: 'Отравление', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', value: 'EFF-poison' }] }] };
+    const granted = {
+      'EFF-poison': { name: 'Отравление', repeatable: true, mechanics: { effects: [{ resolution: 'auto', result: [{ kind: 'condition', op: 'apply', value: 'poisoned' }] }] } },
+    };
+    const c = { character, rng: () => 0.5, grantedEffects: granted } as unknown as Ctx;
+    const after1 = executeAction(fresh(), poison, c).state;
+    const after2 = executeAction(after1, poison, c).state;
+    expect(after2.activeEffects.length).toBe(2); // складывается (stack_type='stack'), не перезаписывается
+  });
+
+  it('НЕповторяемый grant_effect (условие) НЕ накапливается: два каста → один экземпляр', () => {
+    const curse: Dict = { name: 'Проклятие', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', value: 'EFF-curse' }] }] };
+    const granted = {
+      'EFF-curse': { name: 'Проклятие', mechanics: { effects: [{ resolution: 'auto', result: [{ kind: 'condition', op: 'apply', value: 'cursed' }] }] } },
+    };
+    const c = { character, rng: () => 0.5, grantedEffects: granted } as unknown as Ctx;
+    const after1 = executeAction(fresh(), curse, c).state;
+    const after2 = executeAction(after1, curse, c).state;
+    expect(after2.activeEffects.length).toBe(1); // условие с ключом cond:cursed перезаписывается
+  });
+
   it('grant_effect без предзагрузки (slug не в ctx) — тихо, без NOT_IMPLEMENTED и без эффекта', () => {
     const spell: Dict = { name: 'X', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', value: 'EFFECT-XXX' }] }] };
     const { state, events } = executeAction(fresh(), spell, ctx);

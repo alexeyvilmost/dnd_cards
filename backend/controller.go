@@ -1433,6 +1433,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 		RelatedCards:                 req.RelatedCards,
 		RelatedActions:               req.RelatedActions,
 		RelatedEffects:               req.RelatedEffects,
+		Repeatable:                   req.Repeatable,
 		IsExtended:                   req.IsExtended,
 		DescriptionFontSize:          req.DescriptionFontSize,
 		TextAlignment:                req.TextAlignment,
@@ -1553,6 +1554,9 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 	}
 	if req.RelatedEffects != nil {
 		effect.RelatedEffects = req.RelatedEffects
+	}
+	if req.Repeatable != nil {
+		effect.Repeatable = *req.Repeatable
 	}
 	if req.IsExtended != nil {
 		effect.IsExtended = req.IsExtended

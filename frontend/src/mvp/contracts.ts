@@ -167,8 +167,9 @@ export interface ExecuteContext {
   spell?: { baseLevel: number; castLevel?: number };
   /** Предзагруженные на листе эффекты, выдаваемые кастом через grant_effect: slug → {name, mechanics}.
    *  Движок синхронный, эффект по slug грузит лист; здесь — уже резолвнутая механика для установки
-   *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). */
-  grantedEffects?: Record<string, { name?: string; mechanics?: unknown } | undefined>;
+   *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). repeatable — повторяемый
+   *  эффект накапливается (не перезаписывается) при повторной выдаче. */
+  grantedEffects?: Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean } | undefined>;
   /** Планирующий прогон для плана кубов: спасброски берут ветку провала, чтобы кости
    * урона попали в план (иначе при СЛ-успехе on_fail-урон не запланируется). Не для боя. */
   planning?: boolean;

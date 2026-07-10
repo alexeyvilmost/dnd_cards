@@ -87,7 +87,7 @@ const ClassCreator = () => {
 
   const loadEffects = useCallback(async () => {
     const res = await effectsApi.getEffects({ limit: 200 });
-    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
+    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number, repeatable: e.repeatable }));
   }, []);
 
   const loadActions = useCallback(async () => {

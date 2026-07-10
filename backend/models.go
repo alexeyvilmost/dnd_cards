@@ -1918,6 +1918,7 @@ type Effect struct {
 	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:text[]"`
 	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text[]"`
 	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text[]"`
+	Repeatable                   bool           `json:"repeatable" gorm:"type:boolean;default:false"` // Повторяемый: складывается, можно выбрать несколько раз
 	IsExtended                   *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	DescriptionFontSize          *int           `json:"description_font_size" gorm:"type:int"`
 	TextAlignment                *string        `json:"text_alignment" gorm:"type:varchar(20)"`
@@ -1957,6 +1958,7 @@ type CreateEffectRequest struct {
 	RelatedCards                 *Properties `json:"related_cards"`
 	RelatedActions               *Properties `json:"related_actions"`
 	RelatedEffects               *Properties `json:"related_effects"`
+	Repeatable                   bool        `json:"repeatable"`
 	IsExtended                   *bool       `json:"is_extended"`
 	DescriptionFontSize          *int        `json:"description_font_size"`
 	TextAlignment                *string     `json:"text_alignment"`
@@ -1987,6 +1989,7 @@ type UpdateEffectRequest struct {
 	RelatedCards                 *Properties `json:"related_cards"`
 	RelatedActions               *Properties `json:"related_actions"`
 	RelatedEffects               *Properties `json:"related_effects"`
+	Repeatable                   *bool       `json:"repeatable"`
 	IsExtended                   *bool       `json:"is_extended"`
 	DescriptionFontSize          *int        `json:"description_font_size"`
 	TextAlignment                *string     `json:"text_alignment"`
@@ -2014,6 +2017,7 @@ type EffectResponse struct {
 	Price                        *int        `json:"price"`
 	Weight                       *float64    `json:"weight"`
 	Properties                   *Properties `json:"properties"`
+	Repeatable                   bool        `json:"repeatable"`
 	IsExtended                   *bool       `json:"is_extended"`
 	DescriptionFontSize          *int        `json:"description_font_size"`
 	TextAlignment                *string     `json:"text_alignment"`
@@ -2032,6 +2036,7 @@ func (e Effect) ToEffectResponse() EffectResponse {
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
 		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics,
 		Type: e.Type, Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
+		Repeatable: e.Repeatable,
 		IsExtended: e.IsExtended, DescriptionFontSize: e.DescriptionFontSize, TextAlignment: e.TextAlignment,
 		TextFontSize: e.TextFontSize, ShowDetailedDescription: e.ShowDetailedDescription,
 		DetailedDescriptionAlignment: e.DetailedDescriptionAlignment,

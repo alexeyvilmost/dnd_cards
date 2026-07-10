@@ -41,10 +41,12 @@ export function gatherFeatureRefs(
 ): { effectRefs: Ref[]; actionRefs: Ref[] } {
   const effectRefs: Ref[] = [];
   const actionRefs: Ref[] = [];
-  const seenE = new Set<string>();
   const seenA = new Set<string>();
+  // Эффекты НЕ дедупим по id здесь: повторяемые эффекты (repeatable) должны сохранить кратность
+  // (одно прикрепление = одна бусина). Схлопывание неповторяемых по id делается после загрузки тел
+  // (там известен флаг repeatable). Действия по-прежнему дедупим (repeatable у них нет).
   const pushE = (id: string | undefined, origin: ChoiceOrigin) => {
-    if (id && !seenE.has(id)) { seenE.add(id); effectRefs.push({ id, origin }); }
+    if (id) effectRefs.push({ id, origin });
   };
   const pushA = (id: string | undefined, origin: ChoiceOrigin) => {
     if (id && !seenA.has(id)) { seenA.add(id); actionRefs.push({ id, origin }); }
@@ -224,13 +226,33 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
 
   const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level, subrace, subclass);
 
-  const baseEffects = (
-    await Promise.all(
-      effectRefs.map((r) =>
-        effectsApi.getEffect(r.id).then((effect) => ({ effect, origin: r.origin })).catch(() => null),
-      ),
-    )
-  ).filter((x): x is OriginEffect => !!x);
+  // Тела эффектов грузим по УНИКАЛЬНЫМ id (refs могут дублироваться для повторяемых), затем собираем
+  // список с учётом повторяемости: неповторяемый — 1 раз (дедуп по id); повторяемый — по одной бусине
+  // на каждое прикрепление с РАЗНЫМ instanceKey (стек-ключи и вложенные выборы не сталкиваются).
+  const uniqueEffectIds = [...new Set(effectRefs.map((r) => r.id))];
+  const effBodyById = new Map<string, PassiveEffect>();
+  await Promise.all(
+    uniqueEffectIds.map((id) => effectsApi.getEffect(id).then((e) => { effBodyById.set(id, e); }).catch(() => {})),
+  );
+  const baseEffects: OriginEffect[] = [];
+  {
+    const seenNonRep = new Set<string>();
+    const repN = new Map<string, number>();
+    for (const r of effectRefs) {
+      const effect = effBodyById.get(r.id);
+      if (!effect) continue;
+      if (effect.repeatable) {
+        const n = repN.get(r.id) ?? 0;
+        repN.set(r.id, n + 1);
+        const instanceKey = r.origin.instanceKey ?? `${r.origin.kind}:${r.origin.id}:${r.id}:${n}`;
+        baseEffects.push({ effect, origin: { ...r.origin, instanceKey } });
+      } else {
+        if (seenNonRep.has(r.id)) continue;
+        seenNonRep.add(r.id);
+        baseEffects.push({ effect, origin: r.origin });
+      }
+    }
+  }
 
   // Материализуем choice(source:"effect_type"): выбор N эффектов заданного
   // типа (Дар договора, Мистическое воззвание). Тип разворачивается в обычный

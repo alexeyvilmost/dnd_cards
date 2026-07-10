@@ -922,6 +922,7 @@ export interface PassiveEffect {
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
+  repeatable?: boolean; // Повторяемый: складывается, можно выбрать несколько раз (как черта)
   is_extended?: boolean | null;
   description_font_size?: number | null;
   text_alignment?: string | null;
@@ -954,6 +955,7 @@ export interface CreatePassiveEffectRequest {
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
+  repeatable?: boolean;
   is_extended?: boolean | null;
   description_font_size?: number | null;
   text_alignment?: string | null;
@@ -983,6 +985,7 @@ export interface UpdatePassiveEffectRequest {
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
+  repeatable?: boolean;
   is_extended?: boolean | null;
   description_font_size?: number | null;
   text_alignment?: string | null;

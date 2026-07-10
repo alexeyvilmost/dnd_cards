@@ -32,8 +32,10 @@ const InlineRefSelector = ({
   const [query, setQuery] = useState('');
   const map = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
   const selected = new Set(value);
+  // Повторяемые эффекты можно прикрепить несколько раз — оставляем их в списке даже после выбора.
+  const repeatableIds = useMemo(() => new Set(items.filter((i) => i.repeatable).map((i) => i.id)), [items]);
   const candidates = items
-    .filter((i) => !selected.has(i.id))
+    .filter((i) => repeatableIds.has(i.id) || !selected.has(i.id))
     .filter((i) => !query || i.name.toLowerCase().includes(query.toLowerCase()) || i.card_number?.includes(query))
     .slice(0, 30);
 
@@ -41,13 +43,14 @@ const InlineRefSelector = ({
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
       <div className="space-y-2 mb-2">
-        {value.map((id) => {
+        {value.map((id, idx) => {
           const item = map.get(id);
           return (
-            <div key={id} className="flex items-center gap-2 bg-white border rounded px-2 py-1.5 text-sm">
+            // Ключ по индексу: повторяемый эффект может встречаться в value несколько раз (одинаковый id).
+            <div key={`${id}:${idx}`} className="flex items-center gap-2 bg-white border rounded px-2 py-1.5 text-sm">
               <span className="flex-1 truncate">{item?.name || id}</span>
               {item?.card_number && <span className="text-xs text-gray-400">{item.card_number}</span>}
-              <button type="button" className="text-gray-400 hover:text-red-500" onClick={() => onChange(value.filter((x) => x !== id))}>
+              <button type="button" className="text-gray-400 hover:text-red-500" onClick={() => onChange(value.filter((_, i) => i !== idx))}>
                 <X size={14} />
               </button>
             </div>

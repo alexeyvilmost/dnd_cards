@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 
-export type RefItem = { id: string; name: string; card_number?: string };
+export type RefItem = { id: string; name: string; card_number?: string; repeatable?: boolean };
 
 interface EntityRefSelectorProps {
   label: string;
@@ -45,9 +45,11 @@ const EntityRefSelector = ({ label, value, onChange, loadItems, resolveItems, pl
     return () => { alive = false; };
   }, [resolveItems, loaded, value, map]);
   const selected = new Set(value);
+  // Повторяемые сущности (repeatable) можно добавлять несколько раз — не убираем их из списка.
+  const repeatableIds = useMemo(() => new Set(items.filter((i) => i.repeatable).map((i) => i.id)), [items]);
 
   const candidates = items
-    .filter((i) => !selected.has(i.id))
+    .filter((i) => repeatableIds.has(i.id) || !selected.has(i.id))
     .filter((i) => !query || i.name.toLowerCase().includes(query.toLowerCase()) || i.card_number?.includes(query))
     .slice(0, 30);
 
@@ -55,13 +57,14 @@ const EntityRefSelector = ({ label, value, onChange, loadItems, resolveItems, pl
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
       <div className="space-y-2 mb-2">
-        {value.map((id) => {
+        {value.map((id, idx) => {
           const item = map.get(id);
           return (
-            <div key={id} className="flex items-center gap-2 bg-gray-50 border rounded px-2 py-1.5 text-sm">
+            // Ключ по индексу: повторяемые сущности могут встречаться в value несколько раз (одинаковый id).
+            <div key={`${id}:${idx}`} className="flex items-center gap-2 bg-gray-50 border rounded px-2 py-1.5 text-sm">
               <span className="flex-1 truncate">{item?.name || (loaded ? id : '…')}</span>
               {item?.card_number && <span className="text-xs text-gray-400">{item.card_number}</span>}
-              <button type="button" className="text-gray-400 hover:text-red-500" onClick={() => onChange(value.filter((x) => x !== id))}>
+              <button type="button" className="text-gray-400 hover:text-red-500" onClick={() => onChange(value.filter((_, i) => i !== idx))}>
                 <X size={14} />
               </button>
             </div>
