@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 import type { LevelProgression } from '../types';
 import type { RefItem } from './EntityRefSelector';
@@ -8,6 +8,9 @@ interface LevelProgressionEditorProps {
   onChange: (value: LevelProgression) => void;
   loadEffects: () => Promise<RefItem[]>;
   loadActions: () => Promise<RefItem[]>;
+  /** Догрузка имён привязанных id вне окна loadEffects/loadActions (иначе — сырой UUID). */
+  resolveEffects?: (ids: string[]) => Promise<RefItem[]>;
+  resolveActions?: (ids: string[]) => Promise<RefItem[]>;
   showAllLevels?: boolean;
   maxLevel?: number;
 }
@@ -94,6 +97,8 @@ const LevelProgressionEditor = ({
   onChange,
   loadEffects,
   loadActions,
+  resolveEffects,
+  resolveActions,
   showAllLevels = false,
   maxLevel = 20,
 }: LevelProgressionEditorProps) => {
@@ -105,6 +110,32 @@ const LevelProgressionEditor = ({
     loadEffects().then(setEffects).catch(() => setEffects([]));
     loadActions().then(setActions).catch(() => setActions([]));
   }, [loadActions, loadEffects]);
+
+  // Догружаем недостающие имена привязанных id (вне окна limit:200) — по одному разу на id.
+  const effectIds = useMemo(() => [...new Set(Object.values(value).flatMap((v) => v?.effects || []))], [value]);
+  const actionIds = useMemo(() => [...new Set(Object.values(value).flatMap((v) => v?.actions || []))], [value]);
+  const attemptedEff = useRef<Set<string>>(new Set());
+  const attemptedAct = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const merge = async (
+      ids: string[], known: RefItem[], attempted: React.MutableRefObject<Set<string>>,
+      resolver: ((ids: string[]) => Promise<RefItem[]>) | undefined, setter: React.Dispatch<React.SetStateAction<RefItem[]>>,
+    ) => {
+      if (!resolver) return;
+      const knownIds = new Set(known.map((i) => i.id));
+      const missing = ids.filter((id) => !knownIds.has(id) && !attempted.current.has(id));
+      if (!missing.length) return;
+      missing.forEach((id) => attempted.current.add(id));
+      const extra = await resolver(missing).catch(() => [] as RefItem[]);
+      if (extra.length) setter((prev) => {
+        const k = new Set(prev.map((i) => i.id));
+        const add = extra.filter((e) => e && !k.has(e.id));
+        return add.length ? [...prev, ...add] : prev;
+      });
+    };
+    merge(effectIds, effects, attemptedEff, resolveEffects, setEffects);
+    merge(actionIds, actions, attemptedAct, resolveActions, setActions);
+  }, [effectIds, actionIds, effects, actions, resolveEffects, resolveActions]);
 
   const visibleLevels = useMemo(() => {
     if (showAllLevels) {

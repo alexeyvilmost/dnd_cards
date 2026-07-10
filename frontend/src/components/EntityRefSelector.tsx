@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 
 export type RefItem = { id: string; name: string; card_number?: string };
@@ -8,10 +8,13 @@ interface EntityRefSelectorProps {
   value: string[];
   onChange: (ids: string[]) => void;
   loadItems: () => Promise<RefItem[]>;
+  /** Догрузить имена для уже привязанных id, которых нет в списке loadItems (напр. сущности
+   *  вне окна limit:200) — иначе они показываются сырым UUID. Каждый id резолвится один раз. */
+  resolveItems?: (ids: string[]) => Promise<RefItem[]>;
   placeholder?: string;
 }
 
-const EntityRefSelector = ({ label, value, onChange, loadItems, placeholder }: EntityRefSelectorProps) => {
+const EntityRefSelector = ({ label, value, onChange, loadItems, resolveItems, placeholder }: EntityRefSelectorProps) => {
   const [items, setItems] = useState<RefItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
@@ -22,6 +25,25 @@ const EntityRefSelector = ({ label, value, onChange, loadItems, placeholder }: E
   }, [loadItems]);
 
   const map = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+
+  // Догружаем недостающие привязанные id (вне окна loadItems), чтобы показать имя, а не UUID.
+  const attempted = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!resolveItems || !loaded) return;
+    const missing = value.filter((id) => !map.has(id) && !attempted.current.has(id));
+    if (!missing.length) return;
+    missing.forEach((id) => attempted.current.add(id));
+    let alive = true;
+    resolveItems(missing).then((extra) => {
+      if (!alive || !extra?.length) return;
+      setItems((prev) => {
+        const known = new Set(prev.map((i) => i.id));
+        const add = extra.filter((e) => e && !known.has(e.id));
+        return add.length ? [...prev, ...add] : prev;
+      });
+    }).catch(() => { /* удалённые id остаются сырым fallback */ });
+    return () => { alive = false; };
+  }, [resolveItems, loaded, value, map]);
   const selected = new Set(value);
 
   const candidates = items

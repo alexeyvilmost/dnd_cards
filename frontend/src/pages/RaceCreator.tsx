@@ -94,6 +94,16 @@ const RaceCreator = () => {
     return res.actions.map((a) => ({ id: a.id, name: a.name, card_number: a.card_number }));
   }, []);
 
+  // Догрузка имён для привязанных эффектов/действий вне окна limit:200 (иначе показывались бы UUID).
+  const resolveEffects = useCallback(async (ids: string[]) => {
+    const got = await Promise.all(ids.map((id) => effectsApi.getEffect(id).then((e) => ({ id: e.id, name: e.name, card_number: e.card_number })).catch(() => null)));
+    return got.filter((x): x is NonNullable<typeof x> => x != null);
+  }, []);
+  const resolveActions = useCallback(async (ids: string[]) => {
+    const got = await Promise.all(ids.map((id) => actionsApi.getAction(id).then((a) => ({ id: a.id, name: a.name, card_number: a.card_number })).catch(() => null)));
+    return got.filter((x): x is NonNullable<typeof x> => x != null);
+  }, []);
+
   useEffect(() => {
     if (isEditMode && editId) {
       const load = async () => {
@@ -331,12 +341,14 @@ const RaceCreator = () => {
                     value={relatedEffects}
                     onChange={setRelatedEffects}
                     loadItems={loadEffects}
+                    resolveItems={resolveEffects}
                   />
                   <EntityRefSelector
                     label="Действия"
                     value={relatedActions}
                     onChange={setRelatedActions}
                     loadItems={loadActions}
+                    resolveItems={resolveActions}
                   />
                 </div>
 
@@ -348,6 +360,8 @@ const RaceCreator = () => {
                     onChange={setLevelProgression}
                     loadEffects={loadEffects}
                     loadActions={loadActions}
+                    resolveEffects={resolveEffects}
+                    resolveActions={resolveActions}
                   />
                 </div>
 
