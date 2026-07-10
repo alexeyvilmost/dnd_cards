@@ -20,6 +20,8 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
+import SheetEntityRow from '../components/SheetEntityRow';
+import { spellDetail } from '../components/forge/ForgeSpellIconGrid';
 import ForgeTraitsBlock from '../components/forge/ForgeTraitsBlock';
 import { useSiteSettings } from '../settings';
 import ForgeOriginAbilities from '../components/forge/ForgeOriginAbilities';
@@ -1281,17 +1283,18 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
           <div className="forge-section-h">Получено от вида, класса или черты</div>
           <p className="forge-note">Эти заклинания выдаются автоматически и не требуют выбора.</p>
           {spellRows ? (
-            <div className="forge-spell-rows">
+            <div className="sheet-item-cols">
               {grantedFiltered.map((spell) => (
-                <div key={spell.id} className="forge-spell-row" title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                <SheetEntityRow
+                  key={spell.id}
+                  imageUrl={spell.image_url}
+                  name={spell.name}
+                  detail={spellDetail(spell)}
+                  title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
                   onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
                   onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
-                  onMouseLeave={() => setHovered(null)}>
-                  <img className="forge-spell-row-img" src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
-                  <span className="forge-spell-row-name">{spell.name}</span>
-                  <span className="forge-spell-row-meta">{getSpellLevelLabel(spell.level)}</span>
-                </div>
+                  onMouseLeave={() => setHovered(null)}
+                />
               ))}
             </div>
           ) : (
@@ -1323,7 +1326,7 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
           <div className="forge-block" key={choice.id}>
             <div className="forge-section-h">{choice.prompt}</div>
             <div className={`choice-count ${done ? 'done' : ''}`}>Выбрано {selected.length} из {choice.count}</div>
-            <div className={spellRows ? 'forge-spell-rows' : 'forge-spell-icon-grid'}>
+            <div className={spellRows ? 'sheet-item-cols' : 'forge-spell-icon-grid'}>
               {filtered.map((spell) => {
                 const isSelected = selected.includes(spell.id);
                 const owner = selectedSpellOwners.get(spell.id);
@@ -1336,15 +1339,17 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
                 };
                 if (spellRows) {
                   return (
-                    <button key={spell.id} type="button"
-                      className={`forge-spell-row ${isSelected ? 'selected' : disabled ? 'disabled' : ''}`}
-                      disabled={disabled} onClick={() => toggleChoiceSpell(choice, spell.id)}
-                      {...hoverHandlers} title={title}>
-                      <img className="forge-spell-row-img" src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
-                      <span className="forge-spell-row-name">{spell.name}</span>
-                      <span className="forge-spell-row-meta">{getSpellLevelLabel(spell.level)}</span>
-                    </button>
+                    <SheetEntityRow
+                      key={spell.id}
+                      imageUrl={spell.image_url}
+                      name={spell.name}
+                      detail={spellDetail(spell)}
+                      selected={isSelected}
+                      disabled={disabled}
+                      onClick={() => toggleChoiceSpell(choice, spell.id)}
+                      {...hoverHandlers}
+                      title={title}
+                    />
                   );
                 }
                 return (

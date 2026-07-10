@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import type { Spell } from '../../types';
-import { getSpellLevelLabel } from '../../types';
+import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS } from '../../types';
 import { useSiteSettings } from '../../settings';
 import SpellPreview from '../SpellPreview';
+import SheetEntityRow from '../SheetEntityRow';
 
 type Props = {
   spells: Spell[];
   className?: string;
+};
+
+// Вторая строка ряда заклинания — как на листе (SheetActionsPanel.actionDetail):
+// «Заговор»/«N уровень» + школа.
+const spellSchoolLabel = (s?: string | null) => SPELL_SCHOOL_OPTIONS.find((o) => o.value === s)?.label || s || '';
+export const spellDetail = (spell: Spell): string => {
+  const lvl = spell.level ?? 0;
+  const base = lvl === 0 ? 'Заговор' : `${lvl} уровень`;
+  return spell.school ? `${base} · ${spellSchoolLabel(spell.school)}` : base;
 };
 
 /**
@@ -29,24 +39,16 @@ const ForgeSpellIconGrid = ({ spells, className }: Props) => {
   return (
     <>
       {entityDisplay.spells === 'row' ? (
-        <div className="forge-spell-rows">
+        <div className="sheet-item-cols">
           {spells.map((spell) => (
-            <button
+            <SheetEntityRow
               key={spell.id}
-              type="button"
-              className="forge-spell-row"
+              imageUrl={spell.image_url}
+              name={spell.name}
+              detail={spellDetail(spell)}
               title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
               {...hoverProps(spell)}
-            >
-              <img
-                className="forge-spell-row-img"
-                src={spell.image_url?.trim() || '/default_image.png'}
-                alt={spell.name}
-                onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
-              />
-              <span className="forge-spell-row-name">{spell.name}</span>
-              <span className="forge-spell-row-meta">{getSpellLevelLabel(spell.level)}</span>
-            </button>
+            />
           ))}
         </div>
       ) : (

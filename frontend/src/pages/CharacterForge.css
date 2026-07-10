@@ -333,73 +333,8 @@
   justify-content: center;
 }
 
-/* ── Режим «список»: строка с маленькой иконкой и текстом (настройка сайта) ── */
-.forge-spell-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-top: 10px;
-}
-.forge-spell-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 4px 8px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: none;
-  color: var(--forge-text);
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-  transition: background .12s, border-color .12s;
-}
-.forge-spell-row:hover:not(.disabled) {
-  background: var(--forge-panel-2);
-  border-color: var(--forge-gold-dim);
-}
-.forge-spell-row.selected {
-  border-color: var(--forge-gold);
-  background: var(--forge-panel-2);
-  box-shadow: inset 0 0 0 1px var(--forge-gold);
-}
-.forge-spell-row.disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-.forge-spell-row-img {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6));
-}
-.forge-spell-row-fallback {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--forge-gold-dim);
-  border-radius: 6px;
-  color: var(--forge-gold);
-  font-size: 12px;
-  font-weight: 700;
-}
-.forge-spell-row-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.forge-spell-row-meta {
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--forge-text-dim);
-}
+/* Режим «список» заклинаний использует общий ряд .sheet-item-row (SheetEntityRow),
+   как на листе персонажа — паритет отображения (фидбэк #6). */
 
 /* ── Режим «иконки» для инвентаря на листе персонажа ── */
 .sheet-inv-icon-grid { justify-content: flex-start; }
