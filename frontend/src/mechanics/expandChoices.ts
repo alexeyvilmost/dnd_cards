@@ -54,9 +54,15 @@ export function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[]
     }
 
     // `apply` — новое имя grant-шаблона (унифицированные выборы); `grant` — легаси-алиас.
+    // `value_into` (опц.) — в КАКОЕ поле шаблона положить выбранное значение (по умолч. `value`).
+    // Напр. «Цветной шарик»: apply:{kind:'damage',dice:'1d6',value_into:'type'} + choice источника
+    // damage_type → выбор «огонь» даёт {kind:'damage',dice:'1d6',type:'fire'} (иначе value:'fire'
+    // игнорился бы, и урон падал бы к дефолту). Директиву value_into в сам пейлоад НЕ пишем.
     const template = (choice.apply || choice.grant || {}) as Dict;
     if (template.kind) {
-      out.push({ ...template, value });
+      const { value_into, ...rest } = template;
+      const field = typeof value_into === 'string' && value_into ? value_into : 'value';
+      out.push({ ...rest, [field]: value });
       continue;
     }
 
