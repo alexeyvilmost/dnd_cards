@@ -849,7 +849,9 @@ type Dict = Record<string, unknown>;
 export function optionsToChoiceForm(choice: Dict): Dict {
   const opts = (choice.options || {}) as Dict;
   const items = (opts.items as Array<Dict>) || [];
-  // Объектный фильтр only_available_slots → чекбокс формы (строковый select его не представит).
+  // Объектный фильтр ({classes,levels,only_available_slots}) сохраняем ДОСЛОВНО в form.filter (строковый
+  // select его не редактирует, но lossless round-trip обязателен — иначе правка другого поля выборки
+  // затёрла бы ограничение). Флаг only_available_slots дублируем в чекбокс.
   const rawFilter = opts.filter;
   const onlyAvailableSlots = !!(rawFilter && typeof rawFilter === 'object' && !Array.isArray(rawFilter)
     && (rawFilter as Dict).only_available_slots);
@@ -858,7 +860,7 @@ export function optionsToChoiceForm(choice: Dict): Dict {
     prompt: choice.prompt,
     count: choice.count ?? 1,
     source: opts.source || 'skill',
-    filter: typeof rawFilter === 'string' || Array.isArray(rawFilter) ? rawFilter : 'all',
+    filter: rawFilter ?? 'all',
     onlyAvailableSlots,
     recommended: choice.recommended,
     resolution: choice.resolution || 'on_acquire',

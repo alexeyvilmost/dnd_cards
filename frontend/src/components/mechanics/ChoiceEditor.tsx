@@ -11,7 +11,9 @@ export type ChoiceFormValue = {
   prompt?: string;
   count?: number;
   source?: string;
-  filter?: string | string[];
+  // Объектная форма ({classes,levels,only_available_slots}) не редактируется строковым select'ом, но
+  // сохраняется здесь дословно для lossless round-trip (иначе правка другого поля стёрла бы ограничение).
+  filter?: string | string[] | Record<string, unknown>;
   /** source='spell': предлагать только круги, ячейки которых доступны персонажу (1..макс. слот). */
   onlyAvailableSlots?: boolean;
   recommended?: string[];
@@ -222,7 +224,18 @@ export function choiceFormToOptions(value: ChoiceFormValue) {
       }),
     };
   }
-  // source='spell' + «только доступные круги» → объектный фильтр (движок читает only_available_slots).
+  const raw = value.filter;
+  // Объектный фильтр ({classes,levels,...}) сохраняем дословно, лишь накладывая чекбокс
+  // only_available_slots (иначе класс/уровневые ограничения сид-контента терялись бы при правке).
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const obj: Record<string, unknown> = { ...(raw as Record<string, unknown>) };
+    if (value.source === 'spell') {
+      if (value.onlyAvailableSlots) obj.only_available_slots = true;
+      else delete obj.only_available_slots;
+    }
+    return { source: value.source || 'skill', filter: obj };
+  }
+  // Строковый/массивный фильтр + чекбокс only_available_slots (без объектных ограничений).
   if (value.source === 'spell' && value.onlyAvailableSlots) {
     return { source: 'spell', filter: { only_available_slots: true } };
   }
