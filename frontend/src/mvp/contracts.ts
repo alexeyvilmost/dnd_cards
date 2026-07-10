@@ -165,6 +165,10 @@ export interface ExecuteContext {
   choices?: Record<string, string | string[]>;
   /** Контекст каста заклинания (E5): базовый уровень и уровень слота для апкаста. */
   spell?: { baseLevel: number; castLevel?: number };
+  /** Предзагруженные на листе эффекты, выдаваемые кастом через grant_effect: slug → {name, mechanics}.
+   *  Движок синхронный, эффект по slug грузит лист; здесь — уже резолвнутая механика для установки
+   *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). */
+  grantedEffects?: Record<string, { name?: string; mechanics?: unknown } | undefined>;
   /** Планирующий прогон для плана кубов: спасброски берут ветку провала, чтобы кости
    * урона попали в план (иначе при СЛ-успехе on_fail-урон не запланируется). Не для боя. */
   planning?: boolean;

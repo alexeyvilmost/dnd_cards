@@ -366,6 +366,41 @@ function applyAcBaseMethod(
 }
 
 /**
+ * grant_effect из ДЕЙСТВИЯ/ЗАКЛИНАНИЯ (Доспехи мага → EFFECT-0256): каст выдаёт ОТДЕЛЬНЫЙ эффект,
+ * механику которого лист предзагрузил в ctx.grantedEffects[slug]. Ставим её «стоячим» активным
+ * эффектом — так его непрерывные роли (set_value ac_base, modifier, resistance) начинают влиять
+ * на лист/бой ровно как у пассивок. Длительность берём из механики выданного эффекта (until_long_rest
+ * и т.п.). Если лист не резолвнул slug — тихо пропускаем (грант валиден, просто не догружен), НЕ мусорим
+ * NOT_IMPLEMENTED. Наносится ИСПОЛНИТЕЛЮ (single-character лист): цель каста = сам носитель.
+ */
+function applyGrantEffect(
+  state: RuntimeState,
+  slugs: string[],
+  granted: ExecuteContext['grantedEffects'],
+  events: EngineEvent[],
+): RuntimeState {
+  let next = state;
+  for (const slug of slugs) {
+    const rec = granted?.[slug];
+    const mech = (rec?.mechanics ?? undefined) as Dict | undefined;
+    if (!mech || typeof mech !== 'object') continue; // не догружен — тихо
+    const name = String(rec?.name ?? (mech as Dict).name ?? slug);
+    const { roundsLeft, expiry } = resolveDuration(mech.duration as Dict | undefined);
+    const entry: ActiveEffectEntry = {
+      id: `grant-${slug}-${next.activeEffects.length}-${Date.now()}`,
+      name,
+      mechanics: mech,
+      roundsLeft,
+      expiry,
+      source: name,
+    };
+    events.push({ type: 'effect_applied', name });
+    next = stackApply(next, entry, mech);
+  }
+  return next;
+}
+
+/**
  * resistance/immunity/vulnerability, выданные действием (Ярость), — как «стоячий» активный
  * эффект: кладём payload в activeEffects через stackApply, чтобы resistanceLevelFor нашёл его
  * при получении урона. Зеркало applyModifierPayload; разница только в kind полезной нагрузки.
@@ -728,6 +763,15 @@ function applyPayloads(
         // (targetFormulaCtx), иначе исполнителя. Для литералов (hp=1) неважно; для формул — критично.
         const fctx = (whoTarget && targetRef.state) ? (targetFormulaCtx(ctx.target) ?? formulaCtx(ctx)) : formulaCtx(ctx);
         route((s) => applySetValue(s, p, fctx, events));
+        break;
+      }
+      case 'grant_effect': {
+        // Каст выдаёт отдельный эффект (Доспехи мага → EFFECT-0256): ставим его механику стоячим
+        // активным эффектом (лист предзагрузил её в ctx.grantedEffects). Раньше падало в NOT_IMPLEMENTED.
+        const slugs: string[] = [];
+        if (typeof p.value === 'string' && p.value) slugs.push(p.value);
+        if (Array.isArray(p.values)) for (const v of p.values) if (typeof v === 'string' && v) slugs.push(v);
+        next = applyGrantEffect(next, slugs, ctx.grantedEffects, events);
         break;
       }
       case 'variable':

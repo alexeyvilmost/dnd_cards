@@ -88,6 +88,30 @@ describe('2.4 — set_value', () => {
     expect(computeAC(cc, state, []).value).toBe(16); // 13+ЛВК(3) без доспеха, перебивает базу 10+3
   });
 
+  it('#8 (реальный кейс) Доспехи мага через grant_effect: каст ставит выданный эффект → КЗ 13+ЛВК', () => {
+    const cc: CharacterContext = { abilityMods: { str: 0, dex: 3, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 3 };
+    // Заклинание выдаёт ОТДЕЛЬНЫЙ эффект (как EFFECT-0256) — механику лист кладёт в grantedEffects.
+    const spell: Dict = { name: 'Доспехи мага', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', values: ['EFFECT-0256'] }] }] };
+    const granted = {
+      'EFFECT-0256': {
+        name: 'Доспехи мага',
+        mechanics: { activation: { mode: 'passive' }, duration: { type: 'until_long_rest' }, effects: [{ resolution: 'auto', result: [{ kind: 'set_value', target: 'ac_base', formula: '13 + dex' }] }] },
+      },
+    };
+    const c = { character: cc, rng: () => 0.5, grantedEffects: granted } as unknown as Ctx;
+    const { state, events } = executeAction(fresh(), spell, c);
+    expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
+    expect(state.activeEffects.length).toBe(1);              // выданный эффект установлен
+    expect(computeAC(cc, state, []).value).toBe(16);         // 13 + ЛВК(3)
+  });
+
+  it('grant_effect без предзагрузки (slug не в ctx) — тихо, без NOT_IMPLEMENTED и без эффекта', () => {
+    const spell: Dict = { name: 'X', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', value: 'EFFECT-XXX' }] }] };
+    const { state, events } = executeAction(fresh(), spell, ctx);
+    expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
+    expect(state.activeEffects.length).toBe(0);
+  });
+
   it('variable → нарратив-заглушка, а не NOT_IMPLEMENTED', () => {
     const { events } = executeAction(fresh(), { name: 'V', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'variable', id: 'x', op: 'set', value: '1' }] }] }, ctx);
     expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);

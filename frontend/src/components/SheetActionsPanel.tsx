@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
-import { actionsApi } from '../api/client';
+import { actionsApi, effectsApi } from '../api/client';
 import { getCardsIndex } from '../utils/cardsIndex';
 import type { AssembledCharacter } from '../character/assemble';
-import { actionNeedsTarget, collectSheetActions, collectGrantActionSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
+import { actionNeedsTarget, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -261,6 +261,31 @@ export default function SheetActionsPanel({
       (id) => equipCards.get(id)?.name ?? cardsIndex.get(id)?.name),
     [assembled, itemMechs, basicActions, grantedActions, containerCards, equipCards, cardsIndex],
   );
+
+  // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
+  // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,
+  // чтобы applyGrantEffect поставил стоячий активный эффект (set_value ac_base → КЗ обновится).
+  const [grantedEffectsBySlug, setGrantedEffectsBySlug] = useState<Record<string, { name?: string; mechanics?: unknown }>>({});
+  const grantEffectSlugs = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of actions) for (const slug of collectGrantEffectSlugs(a.mechanics)) set.add(slug);
+    return [...set];
+  }, [actions]);
+  useEffect(() => {
+    if (!grantEffectSlugs.length) { setGrantedEffectsBySlug((p) => (Object.keys(p).length ? {} : p)); return; }
+    let stale = false;
+    Promise.all(grantEffectSlugs.map((slug) => effectsApi.getEffect(slug)
+      .then((eff) => [slug, { name: eff.name, mechanics: eff.mechanics }] as const)
+      .catch(() => null)))
+      .then((pairs) => {
+        if (stale) return;
+        const map: Record<string, { name?: string; mechanics?: unknown }> = {};
+        for (const p of pairs) if (p) map[p[0]] = p[1];
+        setGrantedEffectsBySlug(map);
+      })
+      .catch(() => { if (!stale) setGrantedEffectsBySlug((p) => (Object.keys(p).length ? {} : p)); });
+    return () => { stale = true; };
+  }, [grantEffectSlugs.join('|')]);
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();
   const actionsAsIcons = entityDisplay.actions === 'icon';
@@ -336,7 +361,7 @@ export default function SheetActionsPanel({
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
     const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}) =>
-      ({ character: ctx, target, rng, passives, planning, choices, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
+      ({ character: ctx, target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
     const previewFor = (a: SheetAction): ReactNode => {

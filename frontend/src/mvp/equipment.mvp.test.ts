@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { computeAC, equipItem, totalWeight, unequipSlot, weaponContext } from './contracts';
+import type { RuntimeState } from './contracts';
 import {
   ALL_CARDS, CARD_CHAIN_MAIL, CARD_GREATAXE, CARD_LEATHER_ARMOR,
   CARD_LONGSWORD, CARD_SHIELD, FIGHTER_CTX, FIGHTER_CTX_EQUIPPED, freshFighterState,
@@ -79,6 +80,36 @@ describe('C4: КЗ-конвейер с разбивкой', () => {
     };
     const bd = computeAC(FIGHTER_CTX, freshFighterState(), [unarmoredDefense]);
     expect(bd.value).toBe(13); // 10 + 2 (ЛВК) + 1 (ТЕЛ)
+  });
+});
+
+describe('#8/повтор: одежда в слоте тела ≠ доспех (Доспех мага работает)', () => {
+  // «Отличная одежда»: ткань, плоская защита 10 (= без доспеха). По RAW не мешает
+  // безоружным методам КЗ и не подменяет ЛВК-базу.
+  const CLOTHING = {
+    id: 'card-fine-clothes', name: 'Отличная одежда', type: 'chest', slot: 'body', weight: 1,
+    bonus_type: 'defense', bonus_value: '10', defense_type: 'light',
+    properties: ['cloth'], description: '', rarity: 'common', card_number: '', is_template: 'false',
+  } as unknown as import('../types').Card;
+  const ctx = { ...FIGHTER_CTX, equippedCards: [CLOTHING] };
+  const clothed = () => { const s = freshFighterState(); s.equipment = { ...s.equipment, body: CLOTHING.id }; return s; };
+
+  it('одежда прозрачна для КЗ: 10 + ЛВК (не плоские 10)', () => {
+    expect(computeAC(ctx, clothed(), []).value).toBe(12); // 10 + 2 ЛВК
+  });
+
+  it('Доспех мага (активный set_value ac_base 13+dex) применяется поверх одежды', () => {
+    const s = clothed();
+    s.activeEffects = [{
+      id: 'ac-1', name: 'Доспех мага', source: 'Доспех мага',
+      mechanics: { kind: 'set_value', target: 'ac_base', formula: '13+dex' },
+    } as unknown as RuntimeState['activeEffects'][number]];
+    expect(computeAC(ctx, s, []).value).toBe(15); // max(10+ЛВК, 13+ЛВК) = 15
+  });
+
+  it('настоящий доспех (11+dex) по-прежнему считается доспехом', () => {
+    const s = freshFighterState(); s.equipment = { ...s.equipment, body: CARD_LEATHER_ARMOR.id };
+    expect(computeAC(FIGHTER_CTX_EQUIPPED, s, []).value).toBe(13); // 11 + 2 ЛВК
   });
 });
 

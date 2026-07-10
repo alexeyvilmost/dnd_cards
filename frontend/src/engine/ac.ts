@@ -67,10 +67,29 @@ function resolveCard(id: string, cards: Card[]): Card | undefined {
   return cards.find((c) => c.id === id) ?? getCard(id);
 }
 
+/**
+ * Одежда/ткань — НЕ доспех по RAW 2024: она не «носится как доспех», поэтому не блокирует
+ * безоружные методы КЗ (Защита без доспехов варвара/монаха, Доспех мага 13+ЛВК) и не подменяет
+ * ЛВК-базу плоской десяткой. Сигналы: тег 'cloth' в свойствах ИЛИ формула защиты не даёт ничего
+ * сверх базовых 10 (нет dex-масштабирования и плоская база ≤10). Реальный доспех всегда ≥11 базы
+ * или с dex (лёгкий/средний), поэтому под это условие не попадает.
+ */
+function isNonArmorBody(card: Card): boolean {
+  const props = (card.properties ?? []).map((p) => String(p).toLowerCase());
+  if (props.includes('cloth') || props.includes('clothing')) return true;
+  const raw = String(card.bonus_value ?? '').trim();
+  if (!raw) return true; // нет формулы защиты — не доспех
+  if (/dex/i.test(raw)) return false; // dex-масштабирование → лёгкий/средний доспех
+  return parseFlatBonus(raw) <= 10; // плоская защита ≤10 = не лучше безоружного
+}
+
 function armorFromState(state: RuntimeState, cards: Card[]): Card | undefined {
   const bodyId = state.equipment.body;
   if (!bodyId) return undefined;
-  return resolveCard(bodyId, cards);
+  const card = resolveCard(bodyId, cards);
+  // Одежда в слоте тела = «без доспеха» для расчёта КЗ (иначе клобучил бы Доспех мага и ЛВК-базу).
+  if (!card || isNonArmorBody(card)) return undefined;
+  return card;
 }
 
 function shieldFromState(state: RuntimeState, cards: Card[]): Card | undefined {
