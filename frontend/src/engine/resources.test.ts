@@ -4,7 +4,7 @@
  * т.е. заклинания 2+ круга перестают быть серыми (costKey spell_slot_N существует).
  */
 import { describe, expect, it } from 'vitest';
-import { initResources, resolveByLevel } from './resources';
+import { initResources, resolveByLevel, maxAvailableSpellSlotLevel } from './resources';
 import type { CharacterContext } from '../mvp/contracts';
 
 // Сетка полного кастера PHB 2024 (как залито классам Бард/Жрец/Друид/Чародей/Волшебник).
@@ -47,5 +47,23 @@ describe('D1 — слоты полного кастера by_level', () => {
   it('L17: slot9=1 (заклинание 9 круга кастуемо)', () => {
     const { maxResources } = initResources(ctxAt(17), FULL_CASTER, []);
     expect(maxResources.spell_slot_9).toBe(1);
+  });
+});
+
+describe('maxAvailableSpellSlotLevel (grant_spells only_available_slots)', () => {
+  it('берёт наибольший spell_slot_N с count>0', () => {
+    expect(maxAvailableSpellSlotLevel(initResources(ctxAt(1), FULL_CASTER, []).maxResources)).toBe(1);
+    expect(maxAvailableSpellSlotLevel(initResources(ctxAt(5), FULL_CASTER, []).maxResources)).toBe(3);
+    expect(maxAvailableSpellSlotLevel(initResources(ctxAt(17), FULL_CASTER, []).maxResources)).toBe(9);
+  });
+
+  it('нулевые/отсутствующие ячейки не считаются', () => {
+    expect(maxAvailableSpellSlotLevel({ spell_slot_1: 0, action: 1 })).toBe(0);
+    expect(maxAvailableSpellSlotLevel({ action: 1, bonus_action: 1 })).toBe(0);
+  });
+
+  it('колдунские пактовые ячейки тоже учитываются (нативная поддержка)', () => {
+    expect(maxAvailableSpellSlotLevel({ warlock_spell_slot_3: 2 })).toBe(3);
+    expect(maxAvailableSpellSlotLevel({ pact_slot_2: 2, spell_slot_1: 4 })).toBe(2);
   });
 });

@@ -849,12 +849,17 @@ type Dict = Record<string, unknown>;
 export function optionsToChoiceForm(choice: Dict): Dict {
   const opts = (choice.options || {}) as Dict;
   const items = (opts.items as Array<Dict>) || [];
+  // Объектный фильтр only_available_slots → чекбокс формы (строковый select его не представит).
+  const rawFilter = opts.filter;
+  const onlyAvailableSlots = !!(rawFilter && typeof rawFilter === 'object' && !Array.isArray(rawFilter)
+    && (rawFilter as Dict).only_available_slots);
   return {
     id: choice.id,
     prompt: choice.prompt,
     count: choice.count ?? 1,
     source: opts.source || 'skill',
-    filter: opts.filter ?? 'all',
+    filter: typeof rawFilter === 'string' || Array.isArray(rawFilter) ? rawFilter : 'all',
+    onlyAvailableSlots,
     recommended: choice.recommended,
     resolution: choice.resolution || 'on_acquire',
     items: items.map((it) => ({ id: it.id, name: it.name, grantsJson: JSON.stringify(it.grants ?? []) })),

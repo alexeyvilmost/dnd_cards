@@ -12,6 +12,8 @@ export type ChoiceFormValue = {
   count?: number;
   source?: string;
   filter?: string | string[];
+  /** source='spell': предлагать только круги, ячейки которых доступны персонажу (1..макс. слот). */
+  onlyAvailableSlots?: boolean;
   recommended?: string[];
   resolution?: 'on_acquire' | 'immediate';
   items?: Array<{ id: string; name: string; grantsJson: string }>;
@@ -113,8 +115,9 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
             Фильтр ({labelOf(CHOICE_SOURCES, value.source)})
           </label>
           <select
-            className="w-full px-2 py-1 border rounded text-sm"
+            className="w-full px-2 py-1 border rounded text-sm disabled:bg-gray-100 disabled:text-gray-400"
             value={typeof value.filter === 'string' ? value.filter : 'all'}
+            disabled={value.source === 'spell' && !!value.onlyAvailableSlots}
             onChange={(e) => set({ filter: e.target.value === 'all' ? 'all' : e.target.value })}
           >
             <option value="all">Все</option>
@@ -123,6 +126,24 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
             ))}
           </select>
         </div>
+      )}
+
+      {value.source === 'spell' && (
+        <label className="flex items-start gap-2 text-xs text-gray-700">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={!!value.onlyAvailableSlots}
+            onChange={(e) => set({ onlyAvailableSlots: e.target.checked })}
+          />
+          <span>
+            Только доступные круги ячеек
+            <span className="block text-gray-500">
+              Предлагать заклинания кругов 1..максимальный доступный слот персонажа (нативно для
+              колдунов). Заговоры не входят — для них используйте фильтр «Заговор».
+            </span>
+          </span>
+        </label>
       )}
 
       {usesItems && (
@@ -200,6 +221,10 @@ export function choiceFormToOptions(value: ChoiceFormValue) {
         return { id: it.id, name: it.name, grants };
       }),
     };
+  }
+  // source='spell' + «только доступные круги» → объектный фильтр (движок читает only_available_slots).
+  if (value.source === 'spell' && value.onlyAvailableSlots) {
+    return { source: 'spell', filter: { only_available_slots: true } };
   }
   const filter = value.source === 'feat' && !value.filter ? 'origin_feats' : (value.filter || 'all');
   return { source: value.source || 'skill', filter };

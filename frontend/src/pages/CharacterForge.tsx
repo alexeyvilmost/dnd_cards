@@ -6,7 +6,8 @@ import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
 import { charactersV3Api } from '../character/api';
 import { buildCharacterContext } from '../character/runtime';
-import { buildResourceRuntimePatch } from '../character/resourceInit';
+import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
+import { maxAvailableSpellSlotLevel } from '../engine/resources';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, ABILITY_KEYS, type AbilityBonuses, type CharacterDraft, type AbilityKey } from '../character/types';
 import { bonusOf, reapplyBonuses } from '../character/pointBuy';
@@ -221,6 +222,14 @@ const CharacterForge = () => {
     [draft, assembled],
   );
   const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell' && pc.context !== 'in_play');
+  // Максимальный доступный круг ячеек (для choice-фильтра only_available_slots): считаем max-пулы
+  // персонажа и берём наибольший spell_slot_N/warlock_slot. Нативно даёт колдунам их пактовый круг.
+  const maxSlotLevel = useMemo(
+    () => maxAvailableSpellSlotLevel(
+      syncRuntimeResources(buildCharacterContext(ruleState, draft, [], assembled.klass), assembled).maxResources,
+    ),
+    [ruleState, draft, assembled],
+  );
 
   const [resolvedGrantedSpells, setResolvedGrantedSpells] = useState<Spell[]>([]);
 
@@ -628,6 +637,8 @@ const CharacterForge = () => {
                   spells={spells}
                   granted={grantedSpells}
                   choices={unresolvedSpells}
+                  ownerChoices={spellChoices}
+                  maxSlotLevel={maxSlotLevel}
                   resolved={draft.resolvedChoices}
                   setResolved={setResolved}
                 />
@@ -778,7 +789,7 @@ const CharacterForge = () => {
                 <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} allFeats={feats} />
               )}
               {act === 'spells' && (
-                <SpellsSection spells={spells} granted={grantedSpells} choices={spellChoices} resolved={draft.resolvedChoices} setResolved={setResolved} />
+                <SpellsSection spells={spells} granted={grantedSpells} choices={spellChoices} ownerChoices={spellChoices} maxSlotLevel={maxSlotLevel} resolved={draft.resolvedChoices} setResolved={setResolved} />
               )}
               {act === 'background' && (
                 <BackgroundSection backgrounds={backgrounds} draft={draft} onSelect={selectBackground}
@@ -1218,7 +1229,7 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, re
   );
 }
 
-function spellMatchesChoice(spell: Spell, choice: PendingChoice): boolean {
+function spellMatchesChoice(spell: Spell, choice: PendingChoice, maxSlotLevel = 0): boolean {
   const options = (choice.options || {}) as Record<string, unknown>;
   const filter = (options.filter || choice.filter || {}) as Record<string, unknown> | string | string[];
   if (Array.isArray(filter)) return filter.includes(spell.id);
@@ -1227,8 +1238,16 @@ function spellMatchesChoice(spell: Spell, choice: PendingChoice): boolean {
     if (filter === 'cantrip') return spell.level === 0;
     return spell.id === filter;
   }
-  const levels = Array.isArray(filter.levels) ? filter.levels.map(Number) : typeof filter.level === 'number' ? [filter.level] : [];
-  if (levels.length && !levels.includes(spell.level)) return false;
+  // only_available_slots: предлагать только заклинания кругов, ячейки которых доступны персонажу
+  // (1..maxSlotLevel). Нативно покрывает и колдунов (по их пактовым ячейкам). Заговоры (круг 0) не
+  // покрываются ячейками — исключаются; для заговоров используйте filter:'cantrip'. Имеет приоритет
+  // над явными levels. Нет доступных ячеек (maxSlotLevel=0) → не предлагаем ничего.
+  if (filter.only_available_slots) {
+    if (spell.level < 1 || spell.level > maxSlotLevel) return false;
+  } else {
+    const levels = Array.isArray(filter.levels) ? filter.levels.map(Number) : typeof filter.level === 'number' ? [filter.level] : [];
+    if (levels.length && !levels.includes(spell.level)) return false;
+  }
   const classes = Array.isArray(filter.classes) ? filter.classes.map(String) : typeof filter.class === 'string' ? [filter.class] : [];
   if (classes.length) {
     const spellClasses = spell.classes || [];
@@ -1237,8 +1256,13 @@ function spellMatchesChoice(spell: Spell, choice: PendingChoice): boolean {
   return true;
 }
 
-function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
+function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 0, resolved, setResolved }: {
   spells: Spell[]; granted: Spell[]; choices: PendingChoice[];
+  // Полный набор spell-выборов для дедупа (по умолчанию = отображаемые choices). На уровень-апе
+  // сюда передаётся ВЕСЬ набор spell-выборов (включая решённые на прошлых уровнях), а choices —
+  // лишь незавершённые; так уже известные заклинания исключаются из выбора, как в кузне.
+  ownerChoices?: PendingChoice[];
+  maxSlotLevel?: number; // для choice-фильтра only_available_slots
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
 }) {
   const { entityDisplay } = useSiteSettings();
@@ -1254,7 +1278,14 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
 
   const selectedSpellOwners = useMemo(() => {
     const owners = new Map<string, { choiceId: string; label: string }>();
-    for (const choice of choices) {
+    // Автоматически выданные заклинания персонаж уже знает — исключаем из выбора (owner без choiceId
+    // текущего выбора → всегда disabled). choiceId '__granted__' не совпадёт ни с одним реальным.
+    for (const spell of granted) {
+      if (!owners.has(spell.id)) owners.set(spell.id, { choiceId: '__granted__', label: 'Уже получено' });
+    }
+    // Дедуп по ВСЕМ spell-выборам (ownerChoices), а не только отображаемым: на уровень-апе это ловит
+    // заклинания, выбранные на прошлых уровнях (их choices уже решены и в choices не попадают).
+    for (const choice of ownerChoices ?? choices) {
       const origin = [choice.origin.name, choice.origin.featureName].filter(Boolean).join(' · ');
       const label = origin ? `${choice.prompt} (${origin})` : choice.prompt;
       for (const spellId of resolved[choice.id] || []) {
@@ -1262,7 +1293,7 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
       }
     }
     return owners;
-  }, [choices, resolved]);
+  }, [choices, ownerChoices, granted, resolved]);
 
   const toggleChoiceSpell = (choice: PendingChoice, spellId: string) => {
     const value = resolved[choice.id] || [];
@@ -1319,7 +1350,7 @@ function SpellsSection({ spells, granted, choices, resolved, setResolved }: {
       {choices.map((choice) => {
         const selected = resolved[choice.id] || [];
         const filtered = spells
-          .filter((spell) => spellMatchesChoice(spell, choice))
+          .filter((spell) => spellMatchesChoice(spell, choice, maxSlotLevel))
           .filter((spell) => !search || spell.name.toLowerCase().includes(search.toLowerCase()));
         const done = selected.length >= choice.count;
         return (

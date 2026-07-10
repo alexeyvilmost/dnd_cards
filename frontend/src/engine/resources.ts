@@ -99,6 +99,23 @@ export function initResources(
   return { resources, maxResources };
 }
 
+/**
+ * Максимальный круг заклинаний, ячейка которого доступна персонажу (для grant_spells
+ * only_available_slots). Сканирует ячейки в maxResources: spell_slot_N (обычные касты),
+ * warlock_spell_slot_N / pact_slot_N (колдунские пактовые). Возвращает наибольший N с
+ * количеством > 0; 0 — если ячеек нет. Данные-ориентировано (без хардкода классов):
+ * какие круги доступны, определяют ресурсы, а не тип класса.
+ */
+export function maxAvailableSpellSlotLevel(maxResources: Record<string, number>): number {
+  let max = 0;
+  for (const [key, val] of Object.entries(maxResources)) {
+    if (!(Number(val) > 0)) continue;
+    const m = /^(?:spell_slot|warlock_spell_slot|pact_slot)_(\d+)$/.exec(key);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return max;
+}
+
 /** Ресурсы, восстанавливаемые коротким отдыхом (R4: по recharge; без метаданных — legacy). */
 export function resourcesRestoredOnShortRest(
   maxResources: Record<string, number>,
