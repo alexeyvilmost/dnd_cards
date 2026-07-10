@@ -123,15 +123,13 @@ function persistPayload(state: RuntimeState, prevTurnState: Record<string, unkno
   };
 }
 
-// Ресурсы экономики хода (не «расход» в смысле подтверждения) — их тратит любое действие.
-const TURN_ECONOMY_RESOURCES = new Set(['action', 'bonus_action', 'reaction', 'free_action']);
-/** Действие тратит ОТСЛЕЖИВАЕМЫЙ ресурс (слот заклинания, заряд, очки, расходник) — не только
- *  экономику хода. Для таких при включённом диалоге кубов показываем «Применить»/«Отмена». */
-function spendsTrackedResource(mech: Record<string, unknown>): boolean {
+/** Действие тратит ЛЮБОЙ ресурс — основное/бонусное действие, реакцию, слот заклинания, заряд,
+ *  очки, расходник. Для таких при включённом диалоге кубов показываем «Применить»/«Отмена». */
+function spendsResource(mech: Record<string, unknown>): boolean {
   const activation = mech.activation as Record<string, unknown> | undefined;
   const cost = activation?.cost as Record<string, unknown>[] | undefined;
   if (!Array.isArray(cost)) return false;
-  return cost.some((c) => { const r = String(c.resource ?? ''); return !!r && !TURN_ECONOMY_RESOURCES.has(r); });
+  return cost.some((c) => !!String(c.resource ?? ''));
 }
 
 export default function SheetActionsPanel({
@@ -413,10 +411,10 @@ export default function SheetActionsPanel({
     };
 
     try {
-      // Подтверждение «Применить»/«Отмена» для действий, тратящих ресурсы (слот/заряд/…) или
-      // заклинаний — даже когда кубов нет (при включённом диалоге кубов). Атаки с кубами и так
-      // показывают окно броска.
-      const needsConfirm = spendsTrackedResource(mech) || !!action.spellRef;
+      // Подтверждение «Применить»/«Отмена» для действий, тратящих ЛЮБОЙ ресурс (основное/бонусное
+      // действие, реакцию, слот, заряд, …) или заклинаний — даже когда кубов нет (при включённом
+      // диалоге кубов). Атаки с кубами и так показывают окно броска.
+      const needsConfirm = spendsResource(mech) || !!action.spellRef;
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm);
       if (!main) return;
       let { state, events } = main;
