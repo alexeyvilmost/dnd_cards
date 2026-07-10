@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Action, PassiveEffect } from '../../types';
 import type { EntityDisplayMode } from '../../settings';
+import { usePinMode } from '../../hooks/usePinMode';
 import ForgeAbilityLine from './ForgeAbilityLine';
 import EffectHoverCard from './EffectHoverCard';
 import ActionHoverCard from './ActionHoverCard';
@@ -32,6 +33,14 @@ type Props = {
 const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-lines' }: Props) => {
   const [hovered, setHovered] = useState<AbilityEntry | null>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  // Режим закрепления (T): превью не закрывается при уходе мыши и становится интерактивным.
+  const { pinModeActive } = usePinMode();
+  const prevPin = useRef(pinModeActive);
+  useEffect(() => {
+    if (prevPin.current && !pinModeActive) setHovered(null);
+    prevPin.current = pinModeActive;
+  }, [pinModeActive]);
+  const onLeave = () => { if (!pinModeActive) setHovered(null); };
 
   if (!entries.length) return null;
 
@@ -66,7 +75,7 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
               title={entry.name}
               onMouseEnter={(e) => { setHovered(entry); setPos({ x: e.clientX, y: e.clientY }); }}
               onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
-              onMouseLeave={() => setHovered(null)}
+              onMouseLeave={onLeave}
             >
               <img
                 src={url}
@@ -83,7 +92,9 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
           style={{
             left: Math.min(pos.x + 12, window.innerWidth - 320),
             top: Math.min(pos.y + 8, window.innerHeight - 180),
+            pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
+          onMouseLeave={onLeave}
         >
           {hovered.effect && <EffectHoverCard effect={hovered.effect} sourceLabel={hovered.sourceLabel} />}
           {hovered.action && !hovered.effect && (

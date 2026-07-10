@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePinMode } from '../hooks/usePinMode';
 import { Plus, Search, Sparkles } from 'lucide-react';
 import { MAX_ATTUNED, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
 import { cardsApi } from '../api/client';
@@ -231,10 +232,17 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   };
   const openEquipped = (slot: string, card: Card) => setDialog({ card, mode: 'equipped', slot });
 
+  // Режим закрепления (T): превью не закрывается при уходе мыши и становится интерактивным.
+  const { pinModeActive } = usePinMode();
+  const prevPin = useRef(pinModeActive);
+  useEffect(() => {
+    if (prevPin.current && !pinModeActive) setHoveredItem(null);
+    prevPin.current = pinModeActive;
+  }, [pinModeActive]);
   const hoverHandlers = (card?: Card | null) => ({
     onMouseEnter: (e: React.MouseEvent) => { if (card) { setHoveredItem(card); setItemMouse({ x: e.clientX, y: e.clientY }); } },
     onMouseMove: (e: React.MouseEvent) => setItemMouse({ x: e.clientX, y: e.clientY }),
-    onMouseLeave: () => setHoveredItem(null),
+    onMouseLeave: () => { if (!pinModeActive) setHoveredItem(null); },
   });
 
   // ── Слот-ячейка ──
@@ -506,12 +514,14 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
 
       {hoveredItem && !dialog && (
         <div
-          className="fixed z-50 pointer-events-none"
+          className="fixed z-50"
           style={{
             left: Math.min(itemMouse.x + 16, window.innerWidth - (previewInterface ? 360 : 220)),
             top: Math.min(Math.max(itemMouse.y - 40, 10), window.innerHeight - 20),
             transform: itemMouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+            pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
+          onMouseLeave={() => { if (!pinModeActive) setHoveredItem(null); }}
         >
           {previewInterface
             ? <ItemPreview card={hoveredItem} disableHover />
