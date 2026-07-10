@@ -273,6 +273,40 @@ export const CHOICE_SOURCES: RegistryItem[] = [
   { id: 'effect', label: 'Эффект (бусины)' },
 ];
 
+// Наведение (mechanics.targeting) — движок пока НЕ интерпретирует (описательно, ⏳).
+export const TARGETING_SHAPES: RegistryItem[] = [
+  { id: '', label: '—' },
+  { id: 'self', label: 'На себя' },
+  { id: 'single', label: 'Одна цель' },
+  { id: 'multi', label: 'Несколько целей' },
+  { id: 'area', label: 'Область' },
+  { id: 'aura', label: 'Аура' },
+];
+export const AREA_KINDS: RegistryItem[] = [
+  { id: '', label: '—' },
+  { id: 'sphere', label: 'Сфера' },
+  { id: 'cube', label: 'Куб' },
+  { id: 'cone', label: 'Конус' },
+  { id: 'line', label: 'Линия' },
+  { id: 'cylinder', label: 'Цилиндр' },
+  { id: 'emanation', label: 'Эманация' },
+];
+
+// Длительность (mechanics.duration) — rounds/until_*_of_turn движок применяет; прочее описательно (⏳).
+export const DURATION_TYPES: RegistryItem[] = [
+  { id: '', label: '—' },
+  { id: 'instantaneous', label: 'Мгновенная' },
+  { id: 'rounds', label: 'Раунды' },
+  { id: 'minutes', label: 'Минуты ⏳' },
+  { id: 'hours', label: 'Часы ⏳' },
+  { id: 'while_active', label: 'Пока активно ⏳' },
+  { id: 'until_long_rest', label: 'До длинного отдыха ⏳' },
+  { id: 'until_dispelled', label: 'Пока не рассеяно ⏳' },
+  { id: 'permanent', label: 'Постоянная ⏳' },
+  { id: 'until_start_of_next_turn', label: 'До начала след. хода' },
+  { id: 'until_end_of_turn', label: 'До конца хода' },
+];
+
 export const labelOf = (items: RegistryItem[], id?: string) =>
   items.find((i) => i.id === id)?.label || id || '';
 

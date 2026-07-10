@@ -51,6 +51,44 @@ const filterObjToRows = (obj: unknown): FilterRow[] =>
     ? Object.entries(obj as Record<string, unknown>).map(([k, v]) => ({ key: k, value: String(v) }))
     : [];
 
+// ─── Наведение (mechanics.targeting) и длительность (mechanics.duration) — верхний уровень ───
+export type TargetingForm = { shape?: string; range?: string; max_targets?: string; area_kind?: string; area_size?: string; filter?: string };
+export type DurationForm = { type?: string; amount?: string; concentration?: boolean; ends_when?: Cond[]; requires_each_turn?: Cond[] };
+
+const str = (v: unknown): string => (v != null ? String(v) : '');
+
+export function targetingToJson(t: TargetingForm | undefined): Record<string, unknown> | null {
+  if (!t) return null;
+  const out: Record<string, unknown> = {};
+  if (t.shape) out.shape = t.shape;
+  if (t.range?.trim()) out.range = t.range.trim();
+  const mt = str(t.max_targets).trim();
+  if (mt) out.max_targets = /^\d+$/.test(mt) ? Number(mt) : mt;
+  if (t.area_kind) out.area = { kind: t.area_kind, ...(str(t.area_size).trim() ? { size: Number(t.area_size) } : {}) };
+  if (t.filter?.trim()) out.filter = t.filter.trim();
+  return Object.keys(out).length ? out : null;
+}
+export function jsonToTargeting(t: unknown): TargetingForm {
+  const o = (t && typeof t === 'object') ? t as Record<string, unknown> : {};
+  const area = (o.area && typeof o.area === 'object') ? o.area as Record<string, unknown> : {};
+  return { shape: str(o.shape), range: str(o.range), max_targets: str(o.max_targets), area_kind: str(area.kind), area_size: str(area.size), filter: str(o.filter) };
+}
+export function durationToJson(d: DurationForm | undefined): Record<string, unknown> | null {
+  if (!d || !d.type) return null;
+  const out: Record<string, unknown> = { type: d.type };
+  if (str(d.amount).trim()) out.amount = Number(d.amount);
+  if (d.concentration) out.concentration = true;
+  const ew = normalizeWhen(d.ends_when);
+  if (ew.length) out.ends_when = ew;
+  const rt = normalizeWhen(d.requires_each_turn);
+  if (rt.length) out.requires_each_turn = rt;
+  return out;
+}
+export function jsonToDuration(d: unknown): DurationForm {
+  const o = (d && typeof d === 'object') ? d as Record<string, unknown> : {};
+  return { type: str(o.type), amount: str(o.amount), concentration: o.concentration === true, ends_when: normalizeWhen(o.ends_when), requires_each_turn: normalizeWhen(o.requires_each_turn) };
+}
+
 // ─── Стоимость (activation.cost[]) — полная запись {resource, amount?, level?, card_id?} ───
 export type CostRow = { resource: string; amount?: string; level?: string; card_id?: string };
 
@@ -911,6 +949,8 @@ export type DeserializedMechanics = {
   recharge: string;
   extraCost: CostRow[];
   requirements: ReqRow[];
+  targeting: TargetingForm;
+  duration: DurationForm;
   effectEntries: Array<{ id: string; blockId: string; values: Dict }>;
 };
 
@@ -1029,7 +1069,11 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
       entries.push({ id: `d_${++c}`, blockId: 'eff_raw_json', values: { json: JSON.stringify(it) } });
     }
   }
-  return { triggerId, triggerValues: tv, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements, effectEntries: entries };
+  return {
+    triggerId, triggerValues: tv, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements,
+    targeting: jsonToTargeting(m.targeting), duration: jsonToDuration(m.duration),
+    effectEntries: entries,
+  };
 }
 
 // Опции для multiselect по source выбора

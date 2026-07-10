@@ -12,10 +12,14 @@ import {
   deserializeMechanics,
   costRowsToCost,
   reqRowsToRequirements,
+  targetingToJson,
+  durationToJson,
   type Field,
   type CostRow,
   type ReqRow,
   type FilterRow,
+  type TargetingForm,
+  type DurationForm,
 } from '../../mechanics/blocks';
 import { DAMAGE_TYPE_OPTIONS } from '../../mechanics/registries';
 import type { Cond } from '../../mechanics/predicates';
@@ -24,6 +28,8 @@ import WhenEditor from './WhenEditor';
 import CostEditor from './CostEditor';
 import RequirementsEditor from './RequirementsEditor';
 import FilterEditor from './FilterEditor';
+import TargetingEditor from './TargetingEditor';
+import DurationEditor from './DurationEditor';
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
@@ -60,6 +66,8 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   const [recharge, setRecharge] = useState('');
   const [extraCost, setExtraCost] = useState<CostRow[]>([]);
   const [requirements, setRequirements] = useState<ReqRow[]>([]);
+  const [targeting, setTargeting] = useState<TargetingForm>({});
+  const [duration, setDuration] = useState<DurationForm>({});
   const [mode, setMode] = useState<'blocks' | 'json'>('blocks');
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -82,6 +90,8 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       setRecharge('');
       setExtraCost([]);
       setRequirements([]);
+      setTargeting({});
+      setDuration({});
       return;
     }
     setTriggerId(d.triggerId);
@@ -93,6 +103,8 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     setRecharge(d.recharge);
     setExtraCost(d.extraCost);
     setRequirements(d.requirements);
+    setTargeting(d.targeting);
+    setDuration(d.duration);
     setEffectEntries(d.effectEntries.map((e) => ({ id: newEntryId(), blockId: e.blockId, values: e.values })));
   };
 
@@ -134,8 +146,12 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       base.uses = { ...((base.uses as Record<string, unknown>) || {}), recharge: recharge.trim() };
     }
     if (ammo.trim()) base.ammo = ammo.trim();
+    const tgt = targetingToJson(targeting);
+    if (tgt) base.targeting = tgt;
+    const dur = durationToJson(duration);
+    if (dur) base.duration = dur;
     return base;
-  }, [triggerId, triggerValues, effectEntries, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements]);
+  }, [triggerId, triggerValues, effectEntries, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements, targeting, duration]);
 
   const summary = useMemo(
     () => summarizeMechanics(triggerId, triggerValues, effectEntries.map((e) => ({ blockId: e.blockId, values: e.values }))),
@@ -147,7 +163,8 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     // а не сохраняем «пустой» {activation:{mode:passive},effects:[]}.
     const empty = triggerId === 'trg_passive' && effectEntries.length === 0
       && minLevel === '' && !itemWhile && !consumesSelf && !ammo.trim() && !recharge.trim()
-      && extraCost.length === 0 && requirements.length === 0;
+      && extraCost.length === 0 && requirements.length === 0
+      && !targetingToJson(targeting) && !durationToJson(duration);
     onChange(empty ? null : next);
   };
 
@@ -501,6 +518,20 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
           <label className="block text-xs text-gray-600 mb-1">Требования (класс, вид, характеристика…)</label>
           <p className="text-xs text-amber-600 mb-1">⚠ Движок пока не проверяет требования в бою — только «Мин. уровень» действует на выдачу способностей.</p>
           <RequirementsEditor value={requirements} onChange={(r) => { markDirty(); setRequirements(r); }} />
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-sm font-semibold text-gray-800 mb-2">Цель и длительность</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div className="text-xs font-medium text-gray-600 mb-1">Наведение (targeting)</div>
+            <TargetingEditor value={targeting} onChange={(t) => { markDirty(); setTargeting(t); }} />
+          </div>
+          <div>
+            <div className="text-xs font-medium text-gray-600 mb-1">Длительность (duration)</div>
+            <DurationEditor value={duration} onChange={(d) => { markDirty(); setDuration(d); }} />
+          </div>
         </div>
       </div>
 
