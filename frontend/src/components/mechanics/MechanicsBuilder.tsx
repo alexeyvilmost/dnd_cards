@@ -15,6 +15,7 @@ import {
   type Field,
   type CostRow,
   type ReqRow,
+  type FilterRow,
 } from '../../mechanics/blocks';
 import { DAMAGE_TYPE_OPTIONS } from '../../mechanics/registries';
 import type { Cond } from '../../mechanics/predicates';
@@ -22,6 +23,7 @@ import ChoiceEditor, { choiceFormToOptions, type ChoiceFormValue } from './Choic
 import WhenEditor from './WhenEditor';
 import CostEditor from './CostEditor';
 import RequirementsEditor from './RequirementsEditor';
+import FilterEditor from './FilterEditor';
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
@@ -294,6 +296,13 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
             value={values[field.key] as Cond[] | undefined}
             hint={field.hint}
             onChange={(w) => onField(field.key, w)}
+          />
+        );
+      case 'kvfilter':
+        return (
+          <FilterEditor
+            value={values[field.key] as FilterRow[] | undefined}
+            onChange={(f) => onField(field.key, f)}
           />
         );
       default:

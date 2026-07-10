@@ -9,6 +9,8 @@ import {
   CONDITIONS,
   DAMAGE_TYPE_OPTIONS,
   LANGUAGES,
+  MODIFIER_OPS,
+  MODIFIER_SCOPES,
   MOVEMENT_KINDS,
   ORIGIN_FEATS,
   RESOURCES,
@@ -32,10 +34,22 @@ export type Field =
   | { key: string; label: string; type: 'formula'; default?: string }
   | { key: string; label: string; type: 'choice-source' }
   | { key: string; label: string; type: 'when'; hint?: string }
+  | { key: string; label: string; type: 'kvfilter' }
   | { key: string; label: string; type: 'damage-type'; default?: string };
 
 /** Собрать массив условий из значения блока (undefined → []). */
 const whenOf = (v: unknown): Cond[] => (Array.isArray(v) ? (v as Cond[]) : []);
+
+// ─── Фильтр модификатора (applies_to.filter) — пары ключ:значение ───
+export type FilterRow = { key: string; value: string };
+const filterRowsToObj = (rows: unknown): Record<string, string> =>
+  Object.fromEntries((Array.isArray(rows) ? (rows as FilterRow[]) : [])
+    .filter((r) => r.key && r.key.trim())
+    .map((r) => [r.key.trim(), r.value]));
+const filterObjToRows = (obj: unknown): FilterRow[] =>
+  obj && typeof obj === 'object'
+    ? Object.entries(obj as Record<string, unknown>).map(([k, v]) => ({ key: k, value: String(v) }))
+    : [];
 
 // ─── Стоимость (activation.cost[]) — полная запись {resource, amount?, level?, card_id?} ───
 export type CostRow = { resource: string; amount?: string; level?: string; card_id?: string };
@@ -360,32 +374,48 @@ export const EFFECT_BLOCKS: Block[] = [
         { id: 'advantage', label: 'Преимущество' },
         { id: 'disadvantage', label: 'Помеха' },
       ], default: 'advantage' },
+      { key: 'scope', label: 'Область', type: 'select', options: MODIFIER_SCOPES, default: 'self' },
+      { key: 'filter', label: 'Фильтр (когда применять)', type: 'kvfilter' },
       { key: 'when', label: 'Условия (когда действует)', type: 'when' },
     ],
-    defaults: { roll: 'saving_throw', op: 'advantage' },
-    build: (v) => ({
-      kind: 'modifier',
-      applies_to: { roll: v.roll },
-      op: v.op,
-      when: whenOf(v.when),
-    }),
+    defaults: { roll: 'saving_throw', op: 'advantage', scope: 'self' },
+    build: (v) => {
+      const when = whenOf(v.when);
+      const filter = filterRowsToObj(v.filter);
+      const applies_to: Record<string, unknown> = { roll: v.roll };
+      if (Object.keys(filter).length) applies_to.filter = filter;
+      return {
+        kind: 'modifier', applies_to, op: v.op, when,
+        ...(v.scope === 'target' ? { scope: 'target' } : {}),
+      };
+    },
     summary: (v) => `${v.op === 'advantage' ? 'Преим.' : 'Помеха'} на ${labelOf(ROLL_TARGETS, String(v.roll))}${whenOf(v.when).length ? ' (при условии)' : ''}`,
   },
   {
     id: 'eff_bonus',
-    label: 'Числовой бонус',
+    label: 'Модификатор (число)',
     group: 'effect',
     fields: [
       { key: 'roll', label: 'Цель', type: 'select', options: ROLL_TARGETS, default: 'max_hp' },
+      { key: 'op', label: 'Операция', type: 'select', options: MODIFIER_OPS, default: 'add' },
       { key: 'value', label: 'Формула/значение', type: 'formula', default: 'self_level' },
+      { key: 'scope', label: 'Область', type: 'select', options: MODIFIER_SCOPES, default: 'self' },
+      { key: 'filter', label: 'Фильтр (когда применять)', type: 'kvfilter' },
       { key: 'when', label: 'Условия (когда действует)', type: 'when' },
     ],
-    defaults: { roll: 'max_hp', value: 'self_level' },
+    defaults: { roll: 'max_hp', op: 'add', value: 'self_level', scope: 'self' },
     build: (v) => {
       const when = whenOf(v.when);
-      return { kind: 'modifier', applies_to: { roll: v.roll }, op: 'add', value: v.value, ...(when.length ? { when } : {}) };
+      const filter = filterRowsToObj(v.filter);
+      const applies_to: Record<string, unknown> = { roll: v.roll };
+      if (Object.keys(filter).length) applies_to.filter = filter;
+      return {
+        kind: 'modifier', applies_to, op: v.op || 'add', value: v.value,
+        ...(v.scope === 'target' ? { scope: 'target' } : {}),
+        ...(when.length ? { when } : {}),
+      };
     },
-    summary: (v) => `+${v.value} к ${labelOf(ROLL_TARGETS, String(v.roll))}${whenOf(v.when).length ? ' (при условии)' : ''}`,
+    summary: (v) => `${labelOf(MODIFIER_OPS, String(v.op || 'add'))} ${v.value} к ${labelOf(ROLL_TARGETS, String(v.roll))}${whenOf(v.when).length ? ' (при условии)' : ''}`,
   },
   {
     id: 'eff_resistance',
@@ -851,15 +881,18 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     }
     case 'modifier': {
       const at = (p.applies_to || {}) as Dict;
-      const hasFilter = !!at.filter && Object.keys(at.filter as Dict).length > 0;
-      // Любой набор условий `when` теперь round-trip'ится через WhenEditor (легаси
-      // {kind:'condition'} нормализуется в you_have_condition). Фильтр applies_to пока → сырой JSON.
       const when = normalizeWhen(p.when);
+      const filter = filterObjToRows(at.filter);
+      const scope = p.scope === 'target' ? 'target' : 'self';
+      // Незнакомые поля (priority/source/duration/…) или лишние ключи applies_to → сырой JSON (без потерь).
+      const KNOWN = new Set(['kind', 'applies_to', 'op', 'value', 'when', 'scope']);
+      const atExtra = Object.keys(at).some((k) => k !== 'roll' && k !== 'filter');
+      if (Object.keys(p).some((k) => !KNOWN.has(k)) || atExtra) return raw();
       if (p.op === 'advantage' || p.op === 'disadvantage') {
-        return hasFilter ? raw() : { blockId: 'eff_adv', values: { roll: at.roll, op: p.op, when } };
+        return { blockId: 'eff_adv', values: { roll: at.roll, op: p.op, scope, filter, when } };
       }
-      if (p.op === 'add') {
-        return hasFilter ? raw() : { blockId: 'eff_bonus', values: { roll: at.roll, value: p.value, when } };
+      if (['add', 'set', 'multiply', 'upgrade', 'downgrade', undefined].includes(p.op as string | undefined)) {
+        return { blockId: 'eff_bonus', values: { roll: at.roll, op: p.op ?? 'add', value: p.value, scope, filter, when } };
       }
       return raw();
     }

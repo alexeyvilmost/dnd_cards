@@ -63,13 +63,22 @@ describe('predicate when — deserialize round-trip', () => {
     expect(d?.effectEntries[0].values.when).toEqual([{ kind: 'target_has_condition', value: 'prone' }]);
   });
 
-  it('фильтрованный модификатор остаётся сырым JSON', () => {
+  it('фильтрованный модификатор → eff_bonus с сохранением фильтра (PC)', () => {
     const legacy = {
       activation: { mode: 'passive' },
       effects: [{ resolution: 'auto', result: [{ kind: 'modifier', applies_to: { roll: 'attack', filter: { hand: 'main' } }, op: 'add', value: '1' }] }],
     };
     const d = deserializeMechanics(legacy);
-    expect(d?.effectEntries[0].blockId).toBe('eff_raw_json');
+    expect(d?.effectEntries[0].blockId).toBe('eff_bonus');
+    expect(d?.effectEntries[0].values.filter).toEqual([{ key: 'hand', value: 'main' }]);
+  });
+
+  it('модификатор с незнакомым полем (priority) → сырой JSON', () => {
+    const legacy = {
+      activation: { mode: 'passive' },
+      effects: [{ resolution: 'auto', result: [{ kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value: '1', priority: 5 }] }],
+    };
+    expect(deserializeMechanics(legacy)?.effectEntries[0].blockId).toBe('eff_raw_json');
   });
 });
 

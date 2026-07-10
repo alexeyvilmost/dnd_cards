@@ -245,6 +245,21 @@ export const REQUIREMENT_TYPES: RegistryItem[] = [
   { id: 'state', label: 'Состояние' },
 ];
 
+// Операции модификатора (payload.modifier.op) — алгебра C5 (foldModifiers).
+export const MODIFIER_OPS: RegistryItem[] = [
+  { id: 'add', label: 'Прибавить (+)' },
+  { id: 'set', label: 'Установить (=)' },
+  { id: 'multiply', label: 'Умножить (×)' },
+  { id: 'upgrade', label: 'Повысить (не ниже)' },
+  { id: 'downgrade', label: 'Понизить (не выше)' },
+];
+
+// Область модификатора (payload.modifier.scope): себе или проекция против атакующего цель.
+export const MODIFIER_SCOPES: RegistryItem[] = [
+  { id: 'self', label: 'Себе' },
+  { id: 'target', label: 'Против цели (проецируется)' },
+];
+
 export const CHOICE_SOURCES: RegistryItem[] = [
   { id: 'skill', label: 'Навык' },
   { id: 'tool', label: 'Инструмент' },

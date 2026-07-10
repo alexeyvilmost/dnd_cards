@@ -87,6 +87,28 @@ describe('eff_set_value расширенные цели', () => {
   });
 });
 
+describe('PC: глубина модификатора (op/scope/filter)', () => {
+  it('eff_bonus: op multiply + scope target + filter', () => {
+    const p = build1('eff_bonus', { roll: 'attack_roll', op: 'multiply', value: '2', scope: 'target', filter: [{ key: 'hand', value: 'main' }] });
+    expect(p).toEqual({ kind: 'modifier', applies_to: { roll: 'attack_roll', filter: { hand: 'main' } }, op: 'multiply', value: '2', scope: 'target' });
+  });
+  it('eff_bonus: пустой фильтр не пишет applies_to.filter', () => {
+    const p = build1('eff_bonus', { roll: 'ac', op: 'add', value: '1', scope: 'self', filter: [] });
+    expect(p).toEqual({ kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value: '1' });
+  });
+  it('round-trip: set + filter + scope → eff_bonus', () => {
+    const back = backBlock({ kind: 'modifier', applies_to: { roll: 'ac', filter: { ability: 'dex' } }, op: 'set', value: '13', scope: 'target' });
+    expect(back?.blockId).toBe('eff_bonus');
+    expect(back?.values.op).toBe('set');
+    expect(back?.values.scope).toBe('target');
+    expect(back?.values.filter).toEqual([{ key: 'ability', value: 'dex' }]);
+  });
+  it('eff_adv с scope target', () => {
+    const p = build1('eff_adv', { roll: 'attack_roll', op: 'disadvantage', scope: 'target', filter: [] });
+    expect(p).toEqual({ kind: 'modifier', applies_to: { roll: 'attack_roll' }, op: 'disadvantage', when: [], scope: 'target' });
+  });
+});
+
 describe('eff_attack_damage (attack_roll)', () => {
   const buildAttack = (values: Record<string, unknown>) => {
     const m = buildMechanics('trg_passive', {}, [{ blockId: 'eff_attack_damage', values }]);
