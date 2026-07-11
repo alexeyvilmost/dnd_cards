@@ -141,6 +141,17 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
+    // self_level [/ делитель] dN → бросок «уровень персонажа [/делитель]» раз кости dN (по образцу
+    // class_level). Требует пробел + dN; без него «self_level» остаётся обычным скаляром-слагаемым.
+    const selfScalingMatch = s.slice(i).match(/^self_level(?:\s*\/\s*(\d+))?\s+d(\d+)/i);
+    if (selfScalingMatch) {
+      const divisor = Number(selfScalingMatch[1] || 1);
+      const sides = Number(selfScalingMatch[2]);
+      tokens.push({ t: 'id', v: `__scaling_self__:${divisor}:${sides}` });
+      i += selfScalingMatch[0].length;
+      continue;
+    }
+
     const idMatch = s.slice(i).match(/^[a-zA-Z_][a-zA-Z0-9_:]*/);
     if (idMatch) {
       tokens.push({ t: 'id', v: idMatch[0] });
@@ -186,6 +197,13 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
   if (lower.startsWith('__scaling__:')) {
     const [, classId, divStr, sidesStr] = lower.split(':');
     const level = ctx.classLevels?.[classId] ?? 0;
+    const count = Math.ceil(level / Number(divStr));
+    return rollDice(count, Number(sidesStr), sink);
+  }
+
+  if (lower.startsWith('__scaling_self__:')) {
+    const [, divStr, sidesStr] = lower.split(':');
+    const level = ctx.selfLevel ?? 0;
     const count = Math.ceil(level / Number(divStr));
     return rollDice(count, Number(sidesStr), sink);
   }
