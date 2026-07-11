@@ -447,8 +447,54 @@ func GetAllMigrations() []Migration {
 			Up:          addEffectsRepeatable,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE effects DROP COLUMN IF EXISTS repeatable"); return err },
 		},
+		{
+			Version:     "074_create_encounters",
+			Description: "Серверная сущность боя (encounters) + журнал изменений (encounter_events) для онлайн-синхронизации через SSE/LISTEN-NOTIFY",
+			Up:          createEncounterTables,
+			Down:        dropEncounterTables,
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// createEncounterTables — таблицы боя и его append-only журнала (см. models_encounter.go).
+func createEncounterTables(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS encounters (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL DEFAULT 'Бой',
+			owner_user_id UUID NOT NULL,
+			member_user_ids JSONB,
+			state JSONB,
+			seq BIGINT NOT NULL DEFAULT 0,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS encounter_events (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			encounter_id UUID NOT NULL,
+			seq BIGINT NOT NULL,
+			payload JSONB,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)`,
+		"CREATE INDEX IF NOT EXISTS idx_encounter_events_enc_seq ON encounter_events(encounter_id, seq)",
+		"CREATE INDEX IF NOT EXISTS idx_encounters_owner ON encounters(owner_user_id)",
+	}
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("createEncounterTables: %w", err)
+		}
+	}
+	return nil
+}
+
+func dropEncounterTables(db *sql.DB) error {
+	for _, q := range []string{"DROP TABLE IF EXISTS encounter_events", "DROP TABLE IF EXISTS encounters"} {
+		if _, err := db.Exec(q); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // addEffectsRepeatable добавляет колонку repeatable к effects (по образцу feats.repeatable).

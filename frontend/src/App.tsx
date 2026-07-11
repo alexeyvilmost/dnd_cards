@@ -53,6 +53,8 @@ const VariableCreator = lazy(() => import('./pages/VariableCreator'));
 const ConceptCreator = lazy(() => import('./pages/ConceptCreator'));
 const ImageStudio = lazy(() => import('./pages/ImageStudio'));
 const MechanicsGuide = lazy(() => import('./pages/MechanicsGuide'));
+const EncounterList = lazy(() => import('./pages/EncounterList'));
+const EncounterBoard = lazy(() => import('./pages/EncounterBoard'));
 
 function App() {
   // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
@@ -90,6 +92,20 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <MechanicsGuide />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/encounters" element={
+          <ProtectedRoute>
+            <Layout>
+              <EncounterList />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/encounter/:id" element={
+          <ProtectedRoute>
+            <Layout>
+              <EncounterBoard />
             </Layout>
           </ProtectedRoute>
         } />

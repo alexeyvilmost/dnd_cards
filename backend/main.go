@@ -50,8 +50,9 @@ func main() {
 	// Настройка Gin
 	r := gin.Default()
 
-	// gzip ответов (списки справочников после B1 сжимаются на ~85%)
-	r.Use(gzip.Gzip(gzip.DefaultCompression))
+	// gzip ответов (списки справочников после B1 сжимаются на ~85%).
+	// SSE-потоки боёв (/stream) исключаем — gzip буферизирует и ломает realtime.
+	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPathsRegexs([]string{`.*/stream$`})))
 
 	// CORS настройки
 	config := cors.DefaultConfig()
@@ -101,6 +102,11 @@ func main() {
 	resourceController := NewResourceController(db)
 	variableController := NewVariableController(db)
 	conceptController := NewConceptController(db)
+
+	// Онлайн-бои: серверная истина + realtime-рассылка (SSE + Postgres LISTEN/NOTIFY).
+	encounterHub := NewEncounterHub(dbConfig.GetDSN())
+	encounterHub.StartListener(db)
+	encounterController := NewEncounterController(db, encounterHub)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
@@ -236,6 +242,15 @@ func main() {
 		api.POST("/variables", AuthMiddleware(authService), variableController.CreateVariable)
 		api.PUT("/variables/:id", AuthMiddleware(authService), variableController.UpdateVariable)
 		api.DELETE("/variables/:id", AuthMiddleware(authService), variableController.DeleteVariable)
+
+		// Онлайн-бои (encounters): серверная истина боя + SSE-поток изменений всем клиентам.
+		// OptionalAuth: SSE из браузерного EventSource не шлёт заголовок Authorization.
+		api.POST("/encounters", OptionalAuthMiddleware(authService), encounterController.Create)
+		api.GET("/encounters", OptionalAuthMiddleware(authService), encounterController.List)
+		api.GET("/encounters/:id", OptionalAuthMiddleware(authService), encounterController.Get)
+		api.POST("/encounters/:id/join", OptionalAuthMiddleware(authService), encounterController.Join)
+		api.POST("/encounters/:id/apply", OptionalAuthMiddleware(authService), encounterController.Apply)
+		api.GET("/encounters/:id/stream", encounterController.Stream) // SSE, без middleware-обёрток
 
 		// Понятия (глоссарий): пояснения, не выражаемые отдельной сущностью.
 		// Общий справочник без авторизации (создание/правка/удаление доступны всем).
