@@ -550,7 +550,7 @@ const CharacterSheetMVP = () => {
       {useV2 ? (
         <CharacterSheetV2
           character={character}
-          assembled={assembled}
+          assembled={assembledForActions ?? assembled}
           ruleState={ruleState}
           draft={draft}
           sheetCtx={sheetCtx}
@@ -617,7 +617,7 @@ const CharacterSheetMVP = () => {
           {inSec('combat') && (
           <SheetRuntimePanel
             character={character}
-            assembled={assembled}
+            assembled={assembledForActions ?? assembled}
             ruleState={ruleState}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}

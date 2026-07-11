@@ -895,7 +895,17 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
     };
     case 'grant_proficiency': return { blockId: 'eff_grant_prof', values: { prof: p.prof, value: p.value } };
     case 'grant_feat': return { blockId: 'eff_grant_feat', values: { value: p.value } };
-    case 'grant_spell': return { blockId: 'eff_grant_spell', values: { value: p.value, ability: p.ability, level_gate: p.level_gate ?? 1 } };
+    case 'grant_spell': {
+      const fu = p.freeuse as Dict | number | boolean | undefined;
+      const fuObj = fu && typeof fu === 'object' ? fu : null;
+      const freeuse_count = fuObj ? Number(fuObj.count ?? 1) : fu === true ? 1 : typeof fu === 'number' ? fu : 0;
+      return { blockId: 'eff_grant_spell', values: {
+        value: p.value, ability: p.ability, level_gate: p.level_gate ?? 1,
+        freeuse_count,
+        freeuse_recharge: (fuObj && typeof fuObj.recharge === 'string' ? fuObj.recharge : 'long_rest'),
+        freeuse_level: fuObj && typeof fuObj.level === 'number' ? fuObj.level : 0,
+      } };
+    }
     case 'grant_sense': return { blockId: 'eff_grant_sense', values: { sense: p.sense, range: p.range ?? 60 } };
     case 'grant_speed': return { blockId: 'eff_grant_speed', values: { mode: p.mode, value: p.value } };
     case 'grant_ability_score': return { blockId: 'eff_grant_ability', values: { ability: p.ability, amount: p.amount ?? 1 } };
