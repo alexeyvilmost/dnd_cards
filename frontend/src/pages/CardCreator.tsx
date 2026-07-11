@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import {
+  Save, Eye, EyeOff, ArrowLeft, FileText, Image as ImageIcon, Type, Sword, Sparkles, Cog,
+} from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import { imagesApi } from '../api/imagesApi';
@@ -9,7 +11,8 @@ import CardPreview from '../components/CardPreview';
 import ItemPreview from '../components/ItemPreview';
 import { getSettings, type ItemPreviewStyle } from '../settings';
 import ImageLibraryModal from '../components/ImageLibraryModal';
-import { CardCreatorNavigation } from '../components/CardCreatorNavigation';
+import NavRail, { type NavRailItem } from '../components/NavRail';
+import { useIsMobile } from '../hooks/useIsMobile';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { MainSection } from '../components/cardCreator/MainSection';
 import { ImageSection } from '../components/cardCreator/ImageSection';
@@ -38,6 +41,19 @@ const CardCreator = () => {
   const [activeSection, setActiveSection] = useState('main'); // Активная секция навигации
   const [effects, setEffects] = useState<Effect[]>([]); // Эффекты предмета
   const [mechanics, setMechanics] = useState<Record<string, unknown> | null>(null); // Унифицированная механика
+
+  const isMobile = useIsMobile();
+
+  // Секции конструктора для сквозного рейла (десктоп — вертикальный, ≤820px — нижний таб-бар).
+  const cardSections: NavRailItem[] = [
+    { id: 'main', label: 'Основное', icon: <FileText size={18} /> },
+    { id: 'image', label: 'Изображение', icon: <ImageIcon size={18} /> },
+    { id: 'text', label: 'Текст', icon: <Type size={18} /> },
+    { id: 'equipment', label: 'Снаряжение', icon: <Sword size={18} /> },
+    { id: 'effects', label: 'Эффекты', icon: <Sparkles size={18} /> },
+    { id: 'engine', label: 'Движок', icon: <Cog size={18} /> },
+    { id: 'privacy', label: 'Приватность', icon: <Eye size={18} /> },
+  ];
 
   // Определяем, находимся ли мы в режиме редактирования
   const isEditMode = !!id;
@@ -537,19 +553,21 @@ const CardCreator = () => {
           </div>
         )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4">
-        {/* Навигация */}
-        <div className="lg:col-span-1">
-          <CardCreatorNavigation 
-            activeSection={activeSection}
-            onSectionChange={(section) => {
-              setActiveSection(section);
-            }}
-          />
-        </div>
+      <div className={`flex gap-3 sm:gap-4 has-navrail-bottom ${isMobile ? 'flex-col' : 'flex-row'}`}>
+        {/* Навигация — сквозной рейл (вертикальный на десктопе, нижний таб-бар на мобильных) */}
+        <NavRail
+          items={cardSections}
+          active={activeSection}
+          onSelect={setActiveSection}
+          layout="compact"
+          variant="light"
+          mobileDock="bottom"
+          ariaLabel="Разделы конструктора карты"
+          className="creator-rail"
+        />
 
         {/* Форма */}
-        <div className="lg:col-span-6">
+        <div className="flex-1 min-w-0">
           <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Рендер активной секции */}
@@ -665,8 +683,8 @@ const CardCreator = () => {
 
         {/* Превью */}
         {showPreview && (
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-lg shadow p-6 sticky top-6">
+          <div className={isMobile ? 'w-full' : 'w-[420px] flex-none'}>
+            <div className="bg-white rounded-lg shadow p-6 lg:sticky lg:top-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Превью карты</h3>
                 <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">

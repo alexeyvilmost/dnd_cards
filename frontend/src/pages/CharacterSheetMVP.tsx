@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
+import {
+  ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon,
+  Swords, Sparkles, Backpack, ScrollText, Zap, LayoutGrid,
+} from 'lucide-react';
+import NavRail, { type NavRailItem } from '../components/NavRail';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
@@ -102,6 +107,10 @@ const CharacterSheetMVP = () => {
   const { toasts, push: pushToast } = useSheetToasts();
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
+  // Мобильная секционная навигация (≤820px): длинный лист делится на вкладки
+  // нижнего таб-бара (паттерн D&D Beyond). На десктопе — прежний единый скролл.
+  const isMobile = useIsMobile();
+  const [sheetSection, setSheetSection] = useState('combat');
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
   // E4: единое «КЗ цели» на весь лист — оба инстанса SheetActionsPanel
@@ -428,8 +437,25 @@ const CharacterSheetMVP = () => {
     assembled.background?.name,
   ].filter(Boolean).join(' · ');
 
+  // Секции листа для мобильного нижнего таб-бара. «Заклинания» — только у
+  // заклинателей (скрываемая вкладка). Порядок и состав каждой вкладки
+  // совпадают с DOM-порядком панелей ниже (десктоп рендерит их все сразу).
+  const hasSpellsTab = assembled.spells.length > 0;
+  const sheetSections: (NavRailItem & { id: string })[] = [
+    { id: 'combat', label: 'Бой', icon: <Swords size={19} /> },
+    { id: 'stats', label: 'Статы', icon: <Zap size={19} /> },
+    ...(hasSpellsTab ? [{ id: 'spells', label: 'Заклинания', icon: <Sparkles size={19} /> }] : []),
+    { id: 'inventory', label: 'Инвентарь', icon: <Backpack size={19} /> },
+    { id: 'features', label: 'Способности', icon: <ScrollText size={19} /> },
+  ];
+  const activeSec = sheetSections.some((s) => s.id === sheetSection) ? sheetSection : 'combat';
+  // Секционируем только на мобильном классическом листе (V2 — свой макет).
+  const mobileSectioned = isMobile && !useV2;
+  // На десктопе показываем все секции; на мобильном — только активную.
+  const inSec = (s: string) => !mobileSectioned || activeSec === s;
+
   return (
-    <div className={rootCls}>
+    <div className={`${rootCls}${!useV2 ? ' sheet-has-bottomnav' : ''}`}>
       <div className="forge-header sheet-header-bar">
         <button type="button" className="sheet-back" onClick={() => navigate(-1)} title="Назад">
           <ArrowLeft size={18} />
@@ -454,6 +480,7 @@ const CharacterSheetMVP = () => {
             onClick={toggleLayout}
             title={useV2 ? 'Классический макет' : 'Новый макет (кокпит)'}
           >
+            <LayoutGrid size={16} />
             <span className="sheet-header-btn-label">{useV2 ? 'Классический' : '✦ Новый'}</span>
           </button>
           <button
@@ -511,12 +538,15 @@ const CharacterSheetMVP = () => {
         />
       ) : (
       <div className="sheet-scroll">
-        <section className="sheet-hero">
-          <h1 className="sheet-name">{character.name}</h1>
-          <p className="sheet-subtitle">{headerLine || '—'}</p>
-        </section>
+        {!isMobile && (
+          <section className="sheet-hero">
+            <h1 className="sheet-name">{character.name}</h1>
+            <p className="sheet-subtitle">{headerLine || '—'}</p>
+          </section>
+        )}
 
         <div className="sheet-grid">
+          {inSec('combat') && (
           <SheetActionsPanel
             character={character}
             assembled={assembled}
@@ -533,21 +563,27 @@ const CharacterSheetMVP = () => {
             targetSaveMod={targetSaveMod}
             onTargetSaveModChange={setTargetSaveMod}
           />
+          )}
 
+          {inSec('combat') && (
           <SheetChoicesPanel
             character={character}
             choices={inPlayChoices}
             resolved={draft.resolvedChoices}
             onUpdated={setCharacter}
           />
+          )}
 
+          {inSec('inventory') && (
           <SheetEquipmentPanel
             character={character}
             ruleState={ruleState}
             onUpdated={setCharacter}
             passives={passives}
           />
+          )}
 
+          {inSec('combat') && (
           <SheetRuntimePanel
             character={character}
             assembled={assembled}
@@ -555,7 +591,9 @@ const CharacterSheetMVP = () => {
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
           />
+          )}
 
+          {inSec('combat') && (
           <SheetHpPanel
             character={character}
             maxHp={maxHP}
@@ -566,13 +604,17 @@ const CharacterSheetMVP = () => {
             sheetCtx={sheetCtx}
             passives={passives}
           />
+          )}
 
+          {inSec('combat') && (
           <SheetConditionsPanel
             character={character}
             onUpdated={setCharacter}
             onEvents={appendRuntimeEvents}
           />
+          )}
 
+          {inSec('stats') && (
           <section className="sheet-panel">
             <h2 className="sheet-h2">Характеристики</h2>
             <div className="sheet-abilities">
@@ -589,7 +631,9 @@ const CharacterSheetMVP = () => {
               })}
             </div>
           </section>
+          )}
 
+          {inSec('combat') && (
           <section className="sheet-panel">
             <h2 className="sheet-h2">Бой</h2>
             <div className="sheet-stats">
@@ -641,7 +685,9 @@ const CharacterSheetMVP = () => {
               </div>
             )}
           </section>
+          )}
 
+          {inSec('stats') && (
           <section className="sheet-panel">
             <h2 className="sheet-h2">Спасброски</h2>
             <ul className="sheet-list">
@@ -681,7 +727,9 @@ const CharacterSheetMVP = () => {
               })}
             </ul>
           </section>
+          )}
 
+          {inSec('stats') && (
           <section className="sheet-panel sheet-panel-wide">
             <h2 className="sheet-h2">Навыки</h2>
             <ul className="sheet-list sheet-skills">
@@ -727,7 +775,9 @@ const CharacterSheetMVP = () => {
               })}
             </ul>
           </section>
+          )}
 
+          {inSec('features') && (
           <section className="sheet-panel sheet-panel-wide">
             <h2 className="sheet-h2">Черты и способности</h2>
             {assembled.feats.length > 0 && (
@@ -783,8 +833,9 @@ const CharacterSheetMVP = () => {
               <p className="forge-note">Нет привязанных способностей.</p>
             )}
           </section>
+          )}
 
-          {ruleState.conflicts.length > 0 && (
+          {inSec('features') && ruleState.conflicts.length > 0 && (
             <section className="sheet-panel sheet-panel-wide">
               <h2 className="sheet-h2">Конфликты правил</h2>
               <ul className="issues">
@@ -793,7 +844,7 @@ const CharacterSheetMVP = () => {
             </section>
           )}
 
-          {(ruleState.proficiencies.languages.length || ruleState.proficiencies.tools.length
+          {inSec('features') && (ruleState.proficiencies.languages.length || ruleState.proficiencies.tools.length
             || ruleState.proficiencies.armor.length || ruleState.proficiencies.weapons.length) ? (
             <section className="sheet-panel">
               <h2 className="sheet-h2">Владения</h2>
@@ -832,7 +883,7 @@ const CharacterSheetMVP = () => {
             </section>
           ) : null}
 
-          {assembled.spells.length > 0 && (
+          {inSec('spells') && assembled.spells.length > 0 && (
             <section className="sheet-panel sheet-panel-wide">
               <h2 className="sheet-h2">Заклинания</h2>
               {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel,
@@ -859,6 +910,18 @@ const CharacterSheetMVP = () => {
 
         </div>
       </div>
+      )}
+
+      {mobileSectioned && (
+        <NavRail
+          items={sheetSections}
+          active={activeSec}
+          onSelect={setSheetSection}
+          layout="wide"
+          variant="dark"
+          mobileDock="bottom"
+          ariaLabel="Разделы листа"
+        />
       )}
 
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}

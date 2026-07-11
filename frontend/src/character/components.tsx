@@ -13,6 +13,7 @@ import {
   POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN,
   baseOf, bonusOf, pointCost, pointsRemaining, reapplyBonuses,
 } from './pointBuy';
+import NavRail from '../components/NavRail';
 import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
 import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import ForgeSpellIconGrid from '../components/forge/ForgeSpellIconGrid';
@@ -32,23 +33,19 @@ export type ForgeSectionDef = {
 export function ForgeNav({
   sections, active, onSelect,
 }: { sections: ForgeSectionDef[]; active: string; onSelect: (id: string) => void }) {
+  // Сквозной навигационный примитив (десктоп — вертикальный рейл, ≤820px — нижний
+  // таб-бар). Единый язык с листом персонажа, конструкторами и библиотекой.
   return (
-    <nav className="forge-rail">
-      {sections.map((s) => (
-        <button
-          key={s.id}
-          className={`rail-step ${active === s.id ? 'active' : ''} ${s.status === 'todo' ? 'todo' : ''}`}
-          onClick={() => onSelect(s.id)}
-          type="button"
-        >
-          <span className={`rail-medal ${s.status === 'ok' ? 'ok' : ''}`}>{s.icon}</span>
-          <span className="rail-txt">
-            <span className="rail-label">{s.label}</span>
-            {s.sub && <span className="rail-sub">{s.sub}</span>}
-          </span>
-        </button>
-      ))}
-    </nav>
+    <NavRail
+      className="forge-rail"
+      items={sections}
+      active={active}
+      onSelect={onSelect}
+      layout="wide"
+      variant="dark"
+      mobileDock="bottom"
+      ariaLabel="Этапы создания персонажа"
+    />
   );
 }
 

@@ -188,3 +188,70 @@
   text-decoration-style: solid;
   color: #d8b978;
 }
+
+/* ═══════════ Библиотека: рейл категорий + нижний лист фильтров ═══════════ */
+/* Липкий вертикальный рейл категорий на десктопе. */
+@media (min-width: 821px) {
+  .navrail.lib-rail {
+    position: sticky;
+    top: 16px;
+    align-self: flex-start;
+    max-height: calc(100vh - 32px);
+  }
+}
+
+/* Фильтры как нижний лист (bottom sheet) на мобильных. */
+.lib-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(15, 12, 8, 0.45);
+  -webkit-backdrop-filter: blur(1px);
+  backdrop-filter: blur(1px);
+}
+.lib-filters-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.28);
+  padding: 6px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+.lib-filters-sheet::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 6px auto 8px;
+  border-radius: 2px;
+  background: #d8d0bf;
+}
+.lib-filters-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #ece5d6;
+  background: #ffffff;
+}
+.lib-filters-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #ece5d6;
+  background: #ffffff;
+}

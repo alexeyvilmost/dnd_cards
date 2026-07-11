@@ -1,6 +1,11 @@
 import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
-import { Search, Filter, Plus, Grid3X3, List, LayoutTemplate, Trash2 } from 'lucide-react';
+import {
+  Search, Filter, Plus, Grid3X3, List, LayoutTemplate, Trash2, X,
+  Package, Sparkles, Zap, Wand2, Star, ScrollText, Users, Shield, Gem, Variable, Lightbulb,
+} from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import NavRail, { type NavRailItem } from '../components/NavRail';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, conceptsApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Concept } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
@@ -149,6 +154,7 @@ const CardLibrary = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
   const resourceOptions = useResourceOptions();
+  const isMobile = useIsMobile();
   const urlInitialized = useRef(false);
   const skipFilterUrlSync = useRef(false);
   const openingCardFromUrl = useRef(false);
@@ -1180,8 +1186,70 @@ const CardLibrary = () => {
   };
   const createTarget = createTargetByType[contentType];
 
+  // Категории контента как сквозной рейл (десктоп — вертикальный слева,
+  // ≤820px — горизонтальная лента сверху). Заменяет выпадающий список.
+  const contentTypeItems: NavRailItem[] = [
+    { id: 'cards', label: 'Предметы', icon: <Package size={18} /> },
+    { id: 'effects', label: 'Эффекты', icon: <Sparkles size={18} /> },
+    { id: 'actions', label: 'Действия', icon: <Zap size={18} /> },
+    { id: 'spells', label: 'Заклинания', icon: <Wand2 size={18} /> },
+    { id: 'feats', label: 'Черты', icon: <Star size={18} /> },
+    { id: 'backgrounds', label: 'Предыстории', icon: <ScrollText size={18} /> },
+    { id: 'races', label: 'Виды', icon: <Users size={18} /> },
+    { id: 'classes', label: 'Классы', icon: <Shield size={18} /> },
+    { id: 'resources', label: 'Ресурсы', icon: <Gem size={18} /> },
+    { id: 'variables', label: 'Переменные', icon: <Variable size={18} /> },
+    { id: 'concepts', label: 'Понятия', icon: <Lightbulb size={18} /> },
+  ];
+  const handleContentTypeChange = (next: LibraryContentType) => {
+    setContentType(next);
+    // Начальный режим вкладки — из настройки; ручной переключатель работает поверх.
+    const preferred = settingsViewFor(next);
+    if (preferred) setViewMode(preferred);
+    // «Интерфейс» есть только у предметов — при уходе на другой тип сбрасываем в «Список».
+    else if (next !== 'cards') setViewMode((v) => (v === 'interface' ? 'list' : v));
+  };
+  // Счётчик активных фильтров — бейдж на кнопке «Фильтры». (Тип шаблона и
+  // сортировка всегда заданы, поэтому в счётчик не входят.)
+  const activeFilterCount = [
+    rarityFilter, effectTypeFilter, propertiesFilter, slotFilter,
+    armorTypeFilter, resourceCategoryFilter, spellLevel, spellClass, spellSubclass,
+    spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable,
+    featAbility, bgAbility, bgSkill,
+  ].filter(Boolean).length;
+  const resetFilters = () => {
+    setRarityFilter('');
+    setEffectTypeFilter('');
+    setPropertiesFilter('');
+    setSlotFilter('');
+    setArmorTypeFilter('');
+    setResourceCategoryFilter('');
+    setSpellLevel('');
+    setSpellClass('');
+    setSpellSubclass('');
+    setSpellSchool('');
+    setSpellConcentration('');
+    setSpellRitual('');
+    setFeatCategory('');
+    setFeatRepeatable('');
+    setFeatAbility('');
+    setBgAbility('');
+    setBgSkill('');
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={isMobile ? 'flex flex-col gap-3' : 'flex flex-row gap-4 items-start'}>
+      <NavRail
+        items={contentTypeItems}
+        active={contentType}
+        onSelect={(id) => handleContentTypeChange(id as LibraryContentType)}
+        layout="compact"
+        variant="light"
+        mobileDock="top"
+        ariaLabel="Тип содержимого"
+        className="lib-rail"
+      />
+      <div className="flex-1 min-w-0 space-y-4 sm:space-y-6">
       {/* Заголовок */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">
@@ -1197,37 +1265,8 @@ const CardLibrary = () => {
       </div>
 
       {/* Поиск и фильтры */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+      <div className="lib-toolbar bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          {/* Выпадающий список типов сущностей */}
-          <div className="flex-shrink-0">
-            <select
-              value={contentType}
-              onChange={(e) => {
-                const next = e.target.value as typeof contentType;
-                setContentType(next);
-                // Начальный режим вкладки — из настройки; ручной переключатель работает поверх.
-                const preferred = settingsViewFor(next);
-                if (preferred) setViewMode(preferred);
-                // «Интерфейс» есть только у предметов — при уходе на другой тип сбрасываем в «Список».
-                else if (next !== 'cards') setViewMode((v) => (v === 'interface' ? 'list' : v));
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
-            >
-              <option value="cards">Предметы</option>
-              <option value="effects">Эффекты</option>
-              <option value="actions">Действия</option>
-              <option value="spells">Заклинания</option>
-              <option value="feats">Черты</option>
-              <option value="backgrounds">Предыстории</option>
-              <option value="races">Виды</option>
-              <option value="classes">Классы</option>
-              <option value="resources">Ресурсы</option>
-              <option value="variables">Переменные</option>
-              <option value="concepts">Понятия</option>
-            </select>
-          </div>
-
           {/* Поиск */}
           <div className="flex-1">
             <div className="relative">
@@ -1288,12 +1327,34 @@ const CardLibrary = () => {
           >
             <Filter size={18} />
             <span>Фильтры</span>
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
 
-        {/* Панель фильтров */}
+        {/* Панель фильтров — на мобильных нижний лист (bottom sheet) со сценой */}
+        {isMobile && showFilters && (
+          <div className="lib-scrim" onClick={() => setShowFilters(false)} />
+        )}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={isMobile ? 'lib-filters-sheet' : 'mt-4 pt-4 border-t border-gray-200'}>
+            {isMobile && (
+              <div className="lib-filters-head">
+                <span className="text-base font-semibold text-gray-800">Фильтры</span>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(false)}
+                  className="p-1 text-gray-500 hover:text-gray-800"
+                  aria-label="Закрыть фильтры"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Фильтр по редкости - не для заклинаний */}
             {contentType !== 'spells' && contentType !== 'resources' && (
               <div>
@@ -1583,6 +1644,17 @@ const CardLibrary = () => {
                 <option value="price_desc">По стоимости (дорогие)</option>
               </select>
             </div>
+            )}
+            </div>
+            {isMobile && (
+              <div className="lib-filters-foot">
+                <button type="button" onClick={resetFilters} className="btn-secondary flex-1">
+                  Сбросить
+                </button>
+                <button type="button" onClick={() => setShowFilters(false)} className="btn-primary flex-1">
+                  Показать
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -2674,6 +2746,7 @@ const CardLibrary = () => {
         onClose={() => { setIsConceptModalOpen(false); setSelectedConcept(null); }}
         onDelete={handleDeleteConcept}
       />
+      </div>
     </div>
   );
 };

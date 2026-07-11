@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, FileText, ShieldHalf, Puzzle } from 'lucide-react';
 import { effectsApi } from '../api/client';
 import type { CreatePassiveEffectRequest, UpdatePassiveEffectRequest, PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import EffectPreview from '../components/EffectPreview';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import ImageUploader from '../components/ImageUploader';
-import { EffectCreatorNavigation } from '../components/EffectCreatorNavigation';
+import NavRail, { type NavRailItem } from '../components/NavRail';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { PropertiesSection } from '../components/effectCreator/PropertiesSection';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { registryItems, useResourceOptions } from '../utils/resources';
@@ -38,6 +39,14 @@ const EffectCreator = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [knownTypes, setKnownTypes] = useState<string[]>([]);
   const resourceOptions = useResourceOptions();
+  const isMobile = useIsMobile();
+
+  // Секции конструктора эффекта для сквозного рейла.
+  const effectSections: NavRailItem[] = [
+    { id: 'main', label: 'Основное', icon: <FileText size={18} /> },
+    { id: 'properties', label: 'Свойства', icon: <ShieldHalf size={18} /> },
+    { id: 'mechanics', label: 'Механика', icon: <Puzzle size={18} /> },
+  ];
 
   // Существующие пользовательские типы эффектов — для подсказки-datalist.
   useEffect(() => {
@@ -273,19 +282,21 @@ const EffectCreator = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4">
-          {/* Навигация */}
-          <div className="lg:col-span-1">
-            <EffectCreatorNavigation 
-              activeSection={activeSection}
-              onSectionChange={(section) => {
-                setActiveSection(section);
-              }}
-            />
-          </div>
+        <div className={`flex gap-3 sm:gap-4 has-navrail-bottom ${isMobile ? 'flex-col' : 'flex-row'}`}>
+          {/* Навигация — сквозной рейл (вертикальный на десктопе, нижний таб-бар на мобильных) */}
+          <NavRail
+            items={effectSections}
+            active={activeSection}
+            onSelect={setActiveSection}
+            layout="compact"
+            variant="light"
+            mobileDock="bottom"
+            ariaLabel="Разделы конструктора эффекта"
+            className="creator-rail"
+          />
 
           {/* Форма */}
-          <div className="lg:col-span-6">
+          <div className="flex-1 min-w-0">
             <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {activeSection === 'main' && (
@@ -503,8 +514,8 @@ const EffectCreator = () => {
 
           {/* Правая колонка - превью */}
           {showPreview && (
-            <div className="lg:col-span-5">
-              <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 sticky top-6">
+            <div className={isMobile ? 'w-full' : 'w-[420px] flex-none'}>
+              <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 lg:sticky lg:top-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Превью эффекта</h3>
                 <div className="flex justify-center">
                   <EffectPreview effect={previewEffect} disableHover={true} />
