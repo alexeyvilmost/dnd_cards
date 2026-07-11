@@ -70,7 +70,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
   };
 
   return (
-    <div className="flex flex-col items-center pt-6 gap-3">
+    <>
       {renderPreview(imageUrl)}
       <div className="w-full max-w-xs space-y-2">
         <div className="flex gap-2">
@@ -79,7 +79,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
               type="button"
               onClick={handleGenerate}
               disabled={busy !== null}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-2 rounded flex items-center justify-center gap-2 text-sm"
+              className="edm-btn edm-btn--sm edm-btn--grow"
               title="Сгенерировать иконку (ИИ)"
             >
               <RefreshCw size={16} className={busy === 'gen' ? 'animate-spin' : ''} />
@@ -90,17 +90,17 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
             type="button"
             onClick={() => setShowUpload((v) => !v)}
             disabled={busy !== null}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white px-3 py-2 rounded flex items-center justify-center gap-2 text-sm"
+            className="edm-btn edm-btn--sm edm-btn--grow"
             title="Загрузить своё изображение"
           >
             <ImagePlus size={16} />
             <span>Загрузить</span>
           </button>
         </div>
-        {busy === 'save' && <p className="text-xs text-gray-500 text-center">Сохранение…</p>}
-        {error && <p className="text-xs text-red-600 text-center">{error}</p>}
+        {busy === 'save' && <p className="edm-hint">Сохранение…</p>}
+        {error && <p className="edm-hint edm-hint--error">{error}</p>}
         {showUpload && <ImageUploader onImageUpload={(url) => applyImage(url)} />}
       </div>
-    </div>
+    </>
   );
 }

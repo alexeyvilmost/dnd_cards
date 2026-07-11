@@ -1,0 +1,221 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Единое детальное окно сущности (EntityDetailShell) — БЕЗ рамки диалога:
+   как у предметов (CardDetailModal). Превью-карточка слева, детали справа
+   прямо поверх затемнённого фона, одной колонкой, без видимого скролл-бара,
+   описание — с интерпретацией ссылок/разметки (FormattedText).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.edm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 4, 2, 0.76);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* Каркас без фона/рамки — контент «плавает» на затемнении. */
+.edm-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 92vh;
+  overflow-y: auto;
+  color: #ece3d4;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  scrollbar-width: none;
+}
+.edm-shell::-webkit-scrollbar { display: none; }
+
+.edm-preview {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  /* Крупная иконка превью (.sp-bigicon: top:-26px; right:-18px) выступает за
+     угол карточки — даём отступ, чтобы каркас/скролл её не обрезали. */
+  padding: 32px 24px 10px;
+  box-sizing: border-box;
+}
+
+.edm-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Заголовок + закрытие (в потоке инфо-колонки, без шапки-бара). */
+.edm-titlerow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.edm-title {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.9rem;
+  line-height: 1.15;
+  color: #f3ead4;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.edm-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #a89a83;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+.edm-close:hover { color: #f3ead4; background: rgba(216, 185, 120, 0.12); }
+
+/* Ведущее описание — крупнее, с форматированием. */
+.edm-desc {
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: #e6dcc8;
+  white-space: pre-wrap;
+}
+.edm-desc b, .edm-desc strong, .edm-desc .font-bold { color: #f0d98a; font-weight: 600; }
+.edm-desc a, .edm-desc .ft-link { color: #e8c877; }
+
+/* Столбец коротких полей «Метка: значение» друг под другом. */
+.edm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.edm-field {
+  font-size: 0.96rem;
+  line-height: 1.5;
+  color: #ece3d4;
+}
+.edm-flabel {
+  color: #cdbf9a;
+  font-weight: 700;
+  margin-right: 6px;
+}
+.edm-fval--mono { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.86rem; color: #bdb096; }
+
+/* Многострочный блок (доп. описание, усиление и т.п.). */
+.edm-block { }
+.edm-blabel {
+  display: block;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a59886;
+  margin-bottom: 3px;
+}
+.edm-bval {
+  font-size: 0.96rem;
+  line-height: 1.5;
+  color: #e6dcc8;
+  white-space: pre-wrap;
+}
+.edm-bval b, .edm-bval strong, .edm-bval .font-bold { color: #f0d98a; font-weight: 600; }
+.edm-bval a, .edm-bval .ft-link { color: #e8c877; }
+
+/* Теги-пилюли. */
+.edm-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.edm-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid #6b5836;
+  color: #e7cf9a;
+  background: rgba(216, 185, 120, 0.1);
+}
+
+/* Действия — в потоке, внизу инфо-колонки. */
+.edm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.edm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid #6b5836;
+  background: rgba(216, 185, 120, 0.1);
+  color: #ece3d4;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.13s, border-color 0.13s, color 0.13s, opacity 0.13s;
+}
+.edm-btn:hover { background: rgba(216, 185, 120, 0.2); border-color: #d8b978; color: #f3ead4; }
+.edm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.edm-btn--primary { background: #d8b978; border-color: #d8b978; color: #241d16; }
+.edm-btn--primary:hover { background: #e7cf9a; border-color: #e7cf9a; color: #201b12; }
+.edm-btn--danger {
+  color: #ee9f80;
+  border-color: rgba(210, 90, 70, 0.5);
+  background: rgba(200, 70, 50, 0.1);
+}
+.edm-btn--danger:hover { background: rgba(200, 70, 50, 0.22); border-color: #d2694a; color: #f2b49c; }
+.edm-btn--sm { padding: 7px 12px; font-size: 0.84rem; }
+.edm-btn--grow { flex: 1 1 0; justify-content: center; }
+
+.edm-hint { font-size: 0.78rem; color: #a59886; text-align: center; margin: 0; }
+.edm-hint--error { color: #ee9f80; }
+
+/* Тёмная тема для «Связанных карт» (RelatedCardsList несёт светлые
+   tailwind-цвета — на затемнённом фоне они нечитаемы). */
+.edm-related h4 { color: #a59886; }
+.edm-related span, .edm-related li, .edm-related a { color: #e8c877; }
+
+/* Десктоп: превью слева и детали справа скроллятся независимо, без бара.
+   Оба контейнера имеют собственный скролл (иначе высокая колонка — напр.
+   раскрытый загрузчик изображения — обрезалась бы). Выравнивание по началу,
+   чтобы заголовок и начало описания не уходили выше scrollTop=0. */
+@media (min-width: 861px) {
+  .edm-shell {
+    flex-direction: row;
+    align-items: center;
+    gap: 34px;
+    overflow: hidden;
+  }
+  .edm-preview {
+    align-self: center;
+    max-height: 92vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .edm-preview::-webkit-scrollbar { display: none; }
+  .edm-info {
+    max-height: 92vh;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: none;
+  }
+  .edm-info::-webkit-scrollbar { display: none; }
+}

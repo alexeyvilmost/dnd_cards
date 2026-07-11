@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, Edit, Trash2, Copy } from 'lucide-react';
+import { Edit, Trash2, Copy } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import { effectsApi } from '../api/client';
 import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
 import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
+import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
 
 interface EffectDetailModalProps {
   effect: PassiveEffect | null;
@@ -23,147 +24,54 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
   onDelete,
   onUpdated,
 }) => {
-  // Обработчик для закрытия по Esc
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
-
   if (!isOpen || !effect) return null;
 
-  const getEffectTypeLabel = (effectType: string) => {
-    return PASSIVE_EFFECT_TYPE_OPTIONS.find(opt => opt.value === effectType)?.label || effectType;
-  };
+  const typeLabel = PASSIVE_EFFECT_TYPE_OPTIONS.find((o) => o.value === effect.effect_type)?.label || effect.effect_type;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Затемнение фона */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
-      
-      {/* Модальное окно */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Заголовок */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-bold text-gray-900">{effect.name}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={24} />
+    <EntityDetailShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title={effect.name}
+      preview={(
+        <EntityImageEditor
+          entityId={effect.id}
+          initialUrl={effect.image_url || ''}
+          persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
+          generateReq={{ style: 'spell_icon', subject: effect.name, quality: 'medium', extra: ICON_EXTRA }}
+          renderPreview={(url) => <EffectPreview effect={{ ...effect, image_url: url }} disableHover />}
+          onUpdated={() => onUpdated?.()}
+        />
+      )}
+      actions={(
+        <>
+          <Link to={`/effect-creator?edit=${effect.id}`} className="edm-btn">
+            <Edit size={18} /><span>Редактировать</span>
+          </Link>
+          <Link to={`/effect-creator?template_id=${effect.id}`} className="edm-btn">
+            <Copy size={18} /><span>Использовать как шаблон</span>
+          </Link>
+          <button type="button" onClick={() => onDelete(effect.id)} className="edm-btn edm-btn--danger">
+            <Trash2 size={18} /><span>Удалить</span>
           </button>
-        </div>
+        </>
+      )}
+    >
+      <EdmDesc><FormattedText text={effect.description || ''} emptyText="—" /></EdmDesc>
 
-        {/* Содержимое */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Левая колонка - превью карточки + смена изображения */}
-            <EntityImageEditor
-              entityId={effect.id}
-              initialUrl={effect.image_url || ''}
-              persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
-              generateReq={{ style: 'spell_icon', subject: effect.name, quality: 'medium', extra: ICON_EXTRA }}
-              renderPreview={(url) => <EffectPreview effect={{ ...effect, image_url: url }} disableHover />}
-              onUpdated={() => onUpdated?.()}
-            />
+      <EdmFields>
+        <EdmField label="Тип эффекта">{typeLabel}</EdmField>
+        <EdmField label="Условие" hidden={!effect.condition_description}>{effect.condition_description}</EdmField>
+        <EdmField label="Автор" hidden={!effect.author}>{effect.author}</EdmField>
+        <EdmField label="Источник" hidden={!effect.source}>{effect.source}</EdmField>
+        <EdmField label="ID эффекта" hidden={!effect.card_number} mono>{effect.card_number}</EdmField>
+      </EdmFields>
 
-            {/* Правая колонка - детальная информация */}
-            <div className="space-y-4">
-              {/* Тип эффекта */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">Тип эффекта</h3>
-                <p className="text-gray-900">{getEffectTypeLabel(effect.effect_type)}</p>
-              </div>
-
-              {/* Описание */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">Описание</h3>
-                <p className="text-gray-900 whitespace-pre-wrap"><FormattedText text={effect.description || ''} emptyText="—" /></p>
-              </div>
-
-              {/* Детальное описание */}
-              {effect.detailed_description && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Детальное описание</h3>
-                  <p className="text-gray-900 whitespace-pre-wrap"><FormattedText text={effect.detailed_description} emptyText="" /></p>
-                </div>
-              )}
-
-              {/* Условие */}
-              {effect.condition_description && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Условие</h3>
-                  <p className="text-gray-900">{effect.condition_description}</p>
-                </div>
-              )}
-
-              {/* ID эффекта */}
-              {effect.card_number && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">ID эффекта</h3>
-                  <p className="text-gray-900 font-mono">{effect.card_number}</p>
-                </div>
-              )}
-
-              {/* Автор */}
-              {effect.author && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Автор</h3>
-                  <p className="text-gray-900">{effect.author}</p>
-                </div>
-              )}
-
-              {/* Источник */}
-              {effect.source && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Источник</h3>
-                  <p className="text-gray-900">{effect.source}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Кнопки действий */}
-          <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-200">
-            <Link
-              to={`/effect-creator?edit=${effect.id}`}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
-            >
-              <Edit size={18} />
-              <span>Редактировать</span>
-            </Link>
-            <Link
-              to={`/effect-creator?template_id=${effect.id}`}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
-            >
-              <Copy size={18} />
-              <span>Использовать как шаблон</span>
-            </Link>
-            <button
-              onClick={() => onDelete(effect.id)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2"
-            >
-              <Trash2 size={18} />
-              <span>Удалить</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      {effect.detailed_description && (
+        <EdmBlock label="Детальное описание"><FormattedText text={effect.detailed_description} emptyText="" /></EdmBlock>
+      )}
+    </EntityDetailShell>
   );
 };
 
 export default EffectDetailModal;
-

@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import type { Feat } from '../types';
 import { getFeatCategoryLabel, getAbilityLabel } from '../types';
 import { featsApi } from '../api/client';
+import { FormattedText } from '../utils/formattedText';
 import FeatPreview from './FeatPreview';
 import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
+import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock, EdmTag } from './EntityDetailShell';
 
 interface FeatDetailModalProps {
   feat: Feat | null;
@@ -16,84 +18,55 @@ interface FeatDetailModalProps {
 }
 
 const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose, onDelete, onUpdated }) => {
-  useEffect(() => {
-    if (!isOpen) return;
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [isOpen, onClose]);
-
   if (!isOpen || !feat) return null;
 
+  const abilityText = feat.ability_increase && feat.ability_increase.length > 0
+    ? `${feat.ability_increase.map(getAbilityLabel).join(', ')} +1`
+    : null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-bold text-gray-900">{feat.name}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={24} /></button>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <EntityImageEditor
-              entityId={feat.id}
-              initialUrl={feat.image_url || ''}
-              persist={async (id, url) => (await featsApi.updateFeat(id, { image_url: url })).image_url || url}
-              generateReq={{ style: 'spell_icon', subject: feat.name, quality: 'medium', extra: ICON_EXTRA }}
-              renderPreview={(url) => <FeatPreview feat={{ ...feat, image_url: url }} disableHover />}
-              onUpdated={() => onUpdated?.()}
-            />
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">Категория</h3>
-                <p className="text-gray-900">{getFeatCategoryLabel(feat.category)}</p>
-              </div>
-              {feat.prerequisite && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Требования</h3>
-                  <p className="text-gray-900">{feat.prerequisite}</p>
-                </div>
-              )}
-              {feat.ability_increase && feat.ability_increase.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Повышение характеристики</h3>
-                  <p className="text-gray-900">{feat.ability_increase.map(getAbilityLabel).join(', ')} +1</p>
-                </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {feat.repeatable && (
-                  <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded">Повторяемая</span>
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">Описание</h3>
-                <p className="text-gray-900 whitespace-pre-wrap">{feat.description}</p>
-              </div>
-              {feat.detailed_description && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Дополнительное описание</h3>
-                  <p className="text-gray-900 whitespace-pre-wrap">{feat.detailed_description}</p>
-                </div>
-              )}
-              {feat.card_number && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">ID черты</h3>
-                  <p className="text-gray-900 font-mono">{feat.card_number}</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-200">
-            <Link to={`/feat-creator?edit=${feat.id}`} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2">
-              <Edit size={18} /><span>Редактировать</span>
-            </Link>
-            <button onClick={() => onDelete(feat.id)} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2">
-              <Trash2 size={18} /><span>Удалить</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <EntityDetailShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title={feat.name}
+      preview={(
+        <EntityImageEditor
+          entityId={feat.id}
+          initialUrl={feat.image_url || ''}
+          persist={async (id, url) => (await featsApi.updateFeat(id, { image_url: url })).image_url || url}
+          generateReq={{ style: 'spell_icon', subject: feat.name, quality: 'medium', extra: ICON_EXTRA }}
+          renderPreview={(url) => <FeatPreview feat={{ ...feat, image_url: url }} disableHover />}
+          onUpdated={() => onUpdated?.()}
+        />
+      )}
+      actions={(
+        <>
+          <Link to={`/feat-creator?edit=${feat.id}`} className="edm-btn">
+            <Edit size={18} /><span>Редактировать</span>
+          </Link>
+          <button type="button" onClick={() => onDelete(feat.id)} className="edm-btn edm-btn--danger">
+            <Trash2 size={18} /><span>Удалить</span>
+          </button>
+        </>
+      )}
+    >
+      <EdmDesc><FormattedText text={feat.description || ''} emptyText="—" /></EdmDesc>
+
+      {feat.repeatable && (
+        <div className="edm-tags"><EdmTag>Повторяемая</EdmTag></div>
+      )}
+
+      <EdmFields>
+        <EdmField label="Категория">{getFeatCategoryLabel(feat.category)}</EdmField>
+        <EdmField label="Требования" hidden={!feat.prerequisite}>{feat.prerequisite}</EdmField>
+        <EdmField label="Повышение характеристики" hidden={!abilityText}>{abilityText}</EdmField>
+        <EdmField label="ID черты" hidden={!feat.card_number} mono>{feat.card_number}</EdmField>
+      </EdmFields>
+
+      {feat.detailed_description && (
+        <EdmBlock label="Дополнительное описание"><FormattedText text={feat.detailed_description} emptyText="" /></EdmBlock>
+      )}
+    </EntityDetailShell>
   );
 };
 
