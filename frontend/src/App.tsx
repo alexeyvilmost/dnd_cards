@@ -52,6 +52,7 @@ const ResourceCreator = lazy(() => import('./pages/ResourceCreator'));
 const VariableCreator = lazy(() => import('./pages/VariableCreator'));
 const ConceptCreator = lazy(() => import('./pages/ConceptCreator'));
 const ImageStudio = lazy(() => import('./pages/ImageStudio'));
+const MechanicsGuide = lazy(() => import('./pages/MechanicsGuide'));
 
 function App() {
   // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
@@ -82,6 +83,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <CardLibrary />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/docs/mechanics" element={
+          <ProtectedRoute>
+            <Layout>
+              <MechanicsGuide />
             </Layout>
           </ProtectedRoute>
         } />
