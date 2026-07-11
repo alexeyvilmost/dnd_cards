@@ -20,7 +20,14 @@
     "targeting": { "$ref": "#/$defs/targeting" },
     "interactions": { "type": "array", "items": { "$ref": "#/$defs/effectItem" } },
     "duration": { "$ref": "#/$defs/duration" },
-    "uses": { "$ref": "#/$defs/uses" }
+    "uses": { "$ref": "#/$defs/uses" },
+    "ammo": {
+      "description": "S5: боеприпас оружия — id карты или {card_id,name}. Дальнобойная атака тратит его из инвентаря ({resource:'item',card_id}).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "properties": { "card_id": { "type": "string" }, "name": { "type": "string" } }, "required": ["card_id"] }
+      ]
+    }
   },
 
   "$defs": {
@@ -50,9 +57,10 @@
       "type": "object",
       "required": ["resource"],
       "properties": {
-        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die"] },
+        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die", "item"] },
         "amount": { "$ref": "#/$defs/formula" },
-        "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" }
+        "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" },
+        "card_id": { "type": "string", "description": "S4: для resource:'item' — id расходуемой карты (боеприпас/зелье)" }
       }
     },
 
@@ -61,6 +69,8 @@
       "required": ["mode"],
       "properties": {
         "mode": { "enum": ["active", "passive", "reaction", "triggered"] },
+        "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
+        "consumes_self": { "type": "boolean", "description": "S4: действие расходует сам предмет из инвентаря (зелье). Впрыскивает cost {resource:'item', card_id:self}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
         "trigger": { "$ref": "#/$defs/trigger" },
         "casting_time": { "type": "string" },
@@ -92,7 +102,7 @@
       "required": ["kind"],
       "description": "Предикат-обстоятельство. any_of/all_of позволяют группировать через поле of.",
       "properties": {
-        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "any_of", "all_of", "narrative"] },
+        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "item_equipped", "item_carried", "attuned", "any_of", "all_of", "narrative"] },
         "value": {},
         "range": { "type": "number" },
         "of": {},
@@ -137,7 +147,8 @@
         "options": { "type": "object" },
         "grant": { "$ref": "#/$defs/payload" },
         "resolution": { "enum": ["on_acquire", "immediate"] },
-        "recommended": { "type": "array", "items": { "type": "string" } }
+        "recommended": { "type": "array", "items": { "type": "string" } },
+        "context": { "enum": ["build", "level_up", "in_play"] }
       }
     },
 
@@ -178,7 +189,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice"] }
+        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -257,6 +268,16 @@
           }
         },
         {
+          "if": { "properties": { "kind": { "const": "add_item" } } },
+          "then": {
+            "properties": {
+              "card_id": { "type": "string", "description": "id карты предмета, выдаваемой в инвентарь" },
+              "qty": { "type": "integer", "minimum": 1, "description": "количество (по умолчанию 1)" },
+              "name": { "type": "string", "description": "имя для события/тоста (опционально)" }
+            }
+          }
+        },
+        {
           "if": { "properties": { "kind": { "const": "boon" } } },
           "then": {
             "properties": {
@@ -299,13 +320,32 @@
             "properties": {
               "value": { "type": "string" },
               "level_gate": { "type": "integer" },
-              "ability": { "$ref": "#/$defs/ability" }
+              "ability": { "$ref": "#/$defs/ability" },
+              "freeuse": {
+                "description": "Бесплатные использования: каст без ячейки из пула freeuse-<value>. true = 1×/долгий отдых; число = столько раз/долгий отдых; объект — полная настройка. Работает и в choice.grant, и нативно.",
+                "oneOf": [
+                  { "type": "boolean" },
+                  { "type": "integer", "minimum": 1 },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "count": { "description": "Макс. бесплатных использований (число или формула).", "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "string" }] },
+                      "recharge": { "enum": ["long_rest", "short_rest", "day"], "description": "Когда перезаряжается (по умолчанию long_rest)." },
+                      "level": { "type": "integer", "minimum": 1, "description": "Фиксированный круг бесплатного каста; не задан → базовый круг заклинания." }
+                    }
+                  }
+                ]
+              }
             }
           }
         },
         {
           "if": { "properties": { "kind": { "const": "grant_ability_score" } } },
           "then": { "properties": { "ability": { "$ref": "#/$defs/ability" }, "amount": { "type": "number" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "value_method" } } },
+          "then": { "properties": { "target": { "type": "string" }, "formula": { "$ref": "#/$defs/formula" }, "value": { "$ref": "#/$defs/formula" } } }
         },
         {
           "if": { "properties": { "kind": { "const": "grant_sense" } } },
@@ -333,8 +373,9 @@
           "type": "object",
           "required": ["source"],
           "properties": {
-            "source": { "enum": ["skill", "tool", "saving_throw", "language", "feat", "spell", "damage_type", "subfeature", "explicit"] },
+            "source": { "enum": ["ability", "skill", "tool", "instrument", "artisan_tool", "saving_throw", "language", "feat", "spell", "damage_type", "subfeature", "explicit"] },
             "filter": {},
+            "categories": { "type": "array", "items": { "type": "string" }, "description": "Для source:feat — категории черт (origin/general/…), из которых можно выбирать." },
             "items": {
               "type": "array",
               "items": {
@@ -350,7 +391,8 @@
         },
         "recommended": { "type": "array", "items": { "type": "string" } },
         "grant": { "$ref": "#/$defs/payload" },
-        "resolution": { "enum": ["on_acquire", "immediate"] }
+        "resolution": { "enum": ["on_acquire", "immediate"] },
+        "context": { "enum": ["build", "level_up", "in_play"], "description": "Где разрешается выбор: build/level_up (кузня) или in_play (лист во время игры)." }
       }
     },
 
@@ -364,8 +406,9 @@
             "filter": { "type": "object" }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade"] },
         "value": { "$ref": "#/$defs/formula" },
+        "priority": { "type": "number" },
         "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
         "duration": { "$ref": "#/$defs/duration" }
       }

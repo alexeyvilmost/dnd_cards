@@ -3,6 +3,7 @@ import { Hourglass, Moon, Sun, Swords } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { collectActionUsesRecharge } from '../character/actionSheet';
 import type { AssembledCharacter } from '../character/assemble';
+import { collectFreeuseRecharge } from '../engine/freeuse';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
@@ -36,13 +37,14 @@ export default function SheetRestButtons({
 
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
 
-  // Ресурсы класса + виртуальные пулы использований действий (uses_<key> → per).
+  // Ресурсы класса + виртуальные пулы использований действий + пулы freeuse (ключ → per).
   const resourceRecharge = useMemo(
     () => ({
       ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
       ...collectActionUsesRecharge(assembled),
+      ...collectFreeuseRecharge(ruleState.freeuseSpells),
     }),
-    [assembled],
+    [assembled, ruleState.freeuseSpells],
   );
 
   const ctx = useMemo(
@@ -93,7 +95,7 @@ export default function SheetRestButtons({
   }, [character.id, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP);
+    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
     if (!patch) return;
     setBusy(true);
     try {

@@ -1,5 +1,6 @@
 import type { AbilityKey, AbilityScores, CharacterDraft } from '../types';
 import type { AssembledCharacter } from '../assemble';
+import type { FreeuseSpec } from '../../engine/freeuse';
 
 export type RuleSourceType =
   | 'character_base'
@@ -32,6 +33,8 @@ export interface AppliedGrant {
   mode: GrantMode;
   choiceId?: string;
   label?: string;
+  /** Только для kind:'spell' — бесплатные использования (каст без ячейки). */
+  freeuse?: Omit<FreeuseSpec, 'spell'>;
 }
 
 export interface RuleConflict {
@@ -100,4 +103,6 @@ export interface CharacterRuleState {
   conflicts: RuleConflict[];
   /** Переменные персонажа (martial_arts_die и т.п.) для формул листа/боя. */
   variables: Record<string, number | { sides: number; count: number }>;
+  /** Заклинания с бесплатными использованиями (freeuse-пулы). Сид ресурсов + витрина листа. */
+  freeuseSpells: FreeuseSpec[];
 }

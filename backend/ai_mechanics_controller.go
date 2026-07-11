@@ -61,6 +61,7 @@ payload-ы (kind СТРОГО из этого списка):
 - {"kind":"movement","value":"push|pull|teleport|extra_speed|double|knock_prone","distance":N}
 - {"kind":"grant_speed","mode":"walk"|"fly"|"swim"|"climb","value":N} / {"kind":"grant_sense","sense":"darkvision","range":N}
 - {"kind":"grant_proficiency","prof":"skill|tool|saving_throw|weapon|armor|language","value":"..."} / {"kind":"grant_spell","value":"slug"} / {"kind":"grant_feat","value":"slug"} / {"kind":"grant_language","value":"..."} / {"kind":"grant_expertise","value":"skill"}
+- grant_spell.freeuse — «раз в день/отдых бесплатно, без ячейки»: {"kind":"grant_spell","value":"slug","freeuse":{"count":1,"recharge":"long_rest"}} (или freeuse:true = 1×/long_rest; count — число; level — фикс. круг бесплатного каста). Работает и внутри choice.grant.
 - {"kind":"narrative","description":"..."} — всё, что движок не исполняет.
 
 ## Правила

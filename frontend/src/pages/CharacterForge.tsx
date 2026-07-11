@@ -228,7 +228,7 @@ const CharacterForge = () => {
   // персонажа и берём наибольший spell_slot_N/warlock_slot. Нативно даёт колдунам их пактовый круг.
   const maxSlotLevel = useMemo(
     () => maxAvailableSpellSlotLevel(
-      syncRuntimeResources(buildCharacterContext(ruleState, draft, [], assembled.klass), assembled).maxResources,
+      syncRuntimeResources(buildCharacterContext(ruleState, draft, [], assembled.klass), assembled, undefined, ruleState.freeuseSpells).maxResources,
     ),
     [ruleState, draft, assembled],
   );
@@ -408,7 +408,7 @@ const CharacterForge = () => {
         ? await charactersV3Api.update(draft.id, payload)
         : await charactersV3Api.create(payload);
       const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
-      const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true) ?? {};
+      const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true, undefined, ruleState.freeuseSpells) ?? {};
       // Стартовое снаряжение и деньги предыстории и класса — только при создании,
       // чтобы не перезаписать инвентарь существующего персонажа.
       if (isCreate) {

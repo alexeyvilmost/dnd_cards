@@ -344,10 +344,25 @@ export const EFFECT_BLOCKS: Block[] = [
       { key: 'value', label: 'ID заклинания', type: 'text' },
       { key: 'ability', label: 'Характеристика', type: 'select', options: ABILITIES, default: 'int' },
       { key: 'level_gate', label: 'С уровня', type: 'number', default: 1 },
+      { key: 'freeuse_count', label: 'Бесплатных использований (0 = нет)', type: 'number', default: 0 },
+      { key: 'freeuse_recharge', label: 'Перезарядка freeuse', type: 'select', options: [
+        { id: 'long_rest', label: 'Долгий отдых' }, { id: 'short_rest', label: 'Короткий отдых' }, { id: 'day', label: 'В день' },
+      ], default: 'long_rest' },
+      { key: 'freeuse_level', label: 'Круг бесплатного каста (0 = базовый)', type: 'number', default: 0 },
     ],
-    defaults: { ability: 'int', level_gate: 1 },
-    build: (v) => ({ kind: 'grant_spell', value: v.value, ability: v.ability, level_gate: Number(v.level_gate) || 1 }),
-    summary: (v) => `Заклинание ${v.value} (ур.${v.level_gate}, ${labelOf(ABILITIES, String(v.ability))})`,
+    defaults: { ability: 'int', level_gate: 1, freeuse_count: 0, freeuse_recharge: 'long_rest', freeuse_level: 0 },
+    build: (v) => {
+      const out: Record<string, unknown> = { kind: 'grant_spell', value: v.value, ability: v.ability, level_gate: Number(v.level_gate) || 1 };
+      const count = Number(v.freeuse_count) || 0;
+      if (count > 0) {
+        const fu: Record<string, unknown> = { count, recharge: v.freeuse_recharge || 'long_rest' };
+        const lvl = Number(v.freeuse_level) || 0;
+        if (lvl > 0) fu.level = lvl;
+        out.freeuse = fu;
+      }
+      return out;
+    },
+    summary: (v) => `Заклинание ${v.value} (ур.${v.level_gate}, ${labelOf(ABILITIES, String(v.ability))})${Number(v.freeuse_count) > 0 ? ` · freeuse ${v.freeuse_count}` : ''}`,
   },
   {
     id: 'eff_grant_sense',

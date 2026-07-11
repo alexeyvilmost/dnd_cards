@@ -1,6 +1,7 @@
 import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools } from './actionSheet';
 import { initResources, resolveCount } from '../engine/resources';
+import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
@@ -53,6 +54,7 @@ export function syncRuntimeResources(
   ctx: CharacterContext,
   assembled: AssembledCharacter,
   existing?: RuntimeState,
+  freeuseSpells: FreeuseSpec[] = [],
 ): { resources: Record<string, number>; maxResources: Record<string, number> } {
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
   const grants = collectResourceGrantPayloads(collectPassiveMechanics(assembled));
@@ -64,6 +66,16 @@ export function syncRuntimeResources(
     if (count > 0) {
       fresh.maxResources[pool.key] = count;
       fresh.resources[pool.key] = count;
+    }
+  }
+
+  // Пулы бесплатных использований заклинаний (grant_spell.freeuse → freeuse-<spell>).
+  for (const spec of freeuseSpells) {
+    const count = resolveCount(spec.count, ctx);
+    if (count > 0) {
+      const key = freeuseKey(spec.spell);
+      fresh.maxResources[key] = count;
+      fresh.resources[key] = count;
     }
   }
 
@@ -102,12 +114,13 @@ export function buildResourceRuntimePatch(
   assembled: AssembledCharacter,
   force = false,
   computedMaxHp?: number,
+  freeuseSpells: FreeuseSpec[] = [],
 ): PatchCharacterRuntimeRequest | null {
   const existing = forgeToRuntimeState(character);
   const hpBase = computedMaxHp && computedMaxHp > 0
     ? alignRuntimeHp(existing, computedMaxHp)
     : existing;
-  const synced = syncRuntimeResources(ctx, assembled, hpBase);
+  const synced = syncRuntimeResources(ctx, assembled, hpBase, freeuseSpells);
   const maxChanged = JSON.stringify(synced.maxResources) !== JSON.stringify(existing.maxResources);
   const hpChanged = hpBase.hp.max !== existing.hp.max
     || hpBase.hp.current !== (character.current_hp ?? existing.hp.current);

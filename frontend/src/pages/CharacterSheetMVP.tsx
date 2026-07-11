@@ -24,7 +24,8 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
-import { type Card, type PassiveEffect } from '../types';
+import { type Card, type PassiveEffect, type Spell } from '../types';
+import { spellsApi } from '../api/client';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SheetEntityRow from '../components/SheetEntityRow';
@@ -276,6 +277,36 @@ const CharacterSheetMVP = () => {
     () => itemGrantedEffects2.map((eff) => eff.mechanics).filter((m): m is Record<string, unknown> => !!m),
     [itemGrantedEffects2],
   );
+
+  // Мост «предмет выдаёт КАСТУЕМОЕ заклинание»: item grant_spell даёт заклинание в
+  // ruleState.spells.known (через runtimeSources), но assembled.spells (кастуемый список)
+  // строится в assemble БЕЗ предметов. Резолвим заклинания предметов в тела и подмешиваем —
+  // тогда они становятся действиями (и получают freeuse-пул из ruleState.freeuseSpells).
+  const [itemGrantedSpells, setItemGrantedSpells] = useState<Spell[]>([]);
+  useEffect(() => {
+    const values = ruleState
+      ? [...new Set(ruleState.appliedGrants.filter((g) => g.kind === 'spell' && g.source.type === 'item').map((g) => g.value))]
+      : [];
+    if (!values.length) { setItemGrantedSpells((p) => (p.length ? [] : p)); return; }
+    let stale = false;
+    (async () => {
+      const byId = new Map<string, Spell>();
+      for (const v of values) {
+        try { const s = await spellsApi.getSpell(v); if (s?.id) byId.set(s.id, s); } catch { /* заклинание не найдено */ }
+      }
+      if (!stale) setItemGrantedSpells([...byId.values()]);
+    })();
+    return () => { stale = true; };
+  }, [ruleState]);
+
+  // assembled + кастуемые заклинания предметов (дедуп по id/card_number, чтобы дубль-грант не задваивал).
+  const assembledForActions = useMemo(() => {
+    if (!assembled || !itemGrantedSpells.length) return assembled;
+    const seen = new Set<string>();
+    for (const s of assembled.spells) { seen.add(s.id); if (s.card_number) seen.add(s.card_number); }
+    const extra = itemGrantedSpells.filter((s) => !seen.has(s.id) && !(s.card_number && seen.has(s.card_number)));
+    return extra.length ? { ...assembled, spells: [...assembled.spells, ...extra] } : assembled;
+  }, [assembled, itemGrantedSpells]);
 
   // Пассивки персонажа + механики надетых предметов + выданные эффекты предметов (числовой канал листа).
   const passives = useMemo(() => {
@@ -549,7 +580,7 @@ const CharacterSheetMVP = () => {
           {inSec('combat') && (
           <SheetActionsPanel
             character={character}
-            assembled={assembled}
+            assembled={assembledForActions ?? assembled}
             ruleState={ruleState}
             showResources={false}
             showEffects={false}
@@ -883,7 +914,7 @@ const CharacterSheetMVP = () => {
             </section>
           ) : null}
 
-          {inSec('spells') && assembled.spells.length > 0 && (
+          {inSec('spells') && (assembledForActions ?? assembled).spells.length > 0 && (
             <section className="sheet-panel sheet-panel-wide">
               <h2 className="sheet-h2">Заклинания</h2>
               {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel,
@@ -891,7 +922,7 @@ const CharacterSheetMVP = () => {
                   только сгруппировано по кругам. */}
               <SheetActionsPanel
                 character={character}
-                assembled={assembled}
+                assembled={assembledForActions ?? assembled}
                 ruleState={ruleState}
                 equipCards={equipCards}
                 itemGrantedPassives={itemGrantedPassives}

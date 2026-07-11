@@ -12,7 +12,9 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
+import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
+import FreeuseSpellsRow from './FreeuseSpellsRow';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import { findResource, useResourceOptions } from '../utils/resources';
 import type { ResourceOption } from '../utils/resources';
@@ -185,8 +187,11 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   const resourceOptions = useResourceOptions();
 
   const resourceRecharge = useMemo(
-    () => buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
-    [assembled.klass?.resources],
+    () => ({
+      ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+      ...collectFreeuseRecharge(ruleState.freeuseSpells),
+    }),
+    [assembled.klass?.resources, ruleState.freeuseSpells],
   );
 
   const ctx = useMemo(
@@ -234,7 +239,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   }, [character.id, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP);
+    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
     if (!patch) return;
     setBusy(true);
     setError(null);
@@ -255,10 +260,11 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     syncResources();
   }, [character, ruleState.maxHP, syncResources]);
 
-  // Скрываем пустые пулы и внутренние счётчики использований действий (uses_*).
+  // Скрываем пустые пулы, счётчики использований действий (uses_*) и пулы freeuse
+  // (freeuse-<spell>, рисуются витриной FreeuseSpellsRow; freeuse-spells не пул).
   const resourceKeys = useMemo(
     () => Object.keys(runtime.maxResources)
-      .filter((k) => runtime.maxResources[k] > 0 && !k.startsWith('uses_'))
+      .filter((k) => runtime.maxResources[k] > 0 && !k.startsWith('uses_') && !isFreeusePoolKey(k))
       .sort((a, b) => tileOrder(a, resourceOptions) - tileOrder(b, resourceOptions) || a.localeCompare(b)),
     [runtime.maxResources, resourceOptions],
   );
@@ -292,6 +298,13 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           </p>
         )}
       </div>
+
+      <FreeuseSpellsRow
+        runtime={runtime}
+        freeuseSpells={ruleState.freeuseSpells}
+        spells={assembled.spells}
+        resourceOptions={resourceOptions}
+      />
 
       <SheetRestButtons
         character={character}

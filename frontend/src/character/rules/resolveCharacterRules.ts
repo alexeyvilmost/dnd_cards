@@ -4,6 +4,7 @@ import { computeMaxHP, spellcasting } from '../derive';
 import { armorClassValue } from '../../engine/ac';
 import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
+import { parseFreeuse, type FreeuseSpec } from '../../engine/freeuse';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
 import { sourceKey, instanceFeatureId } from '../../mechanics/choiceKey';
 import { MAX_CHOICE_DEPTH, choiceInstanceId, selectedChoicePayloads, payloadsFromMechanics } from '../../mechanics/expandChoices';
@@ -194,6 +195,8 @@ function grantFromPayload(payload: Dict, source: RuleSource, choiceId?: string):
       mode: 'proficiency',
       choiceId,
       label: typeof payload.label === 'string' ? payload.label : undefined,
+      // freeuse: каст без ячейки из пула freeuse-<value> (native и через choice — общая точка).
+      freeuse: parseFreeuse(payload.freeuse),
     };
   }
 
@@ -595,6 +598,9 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
       cantrips: [...maps.spell.values()].filter((g) => g.label === 'cantrip').map((g) => g.value),
       leveled: [...maps.spell.values()].filter((g) => g.label !== 'cantrip').map((g) => g.value),
     },
+    freeuseSpells: [...maps.spell.values()]
+      .filter((g) => g.freeuse)
+      .map((g): FreeuseSpec => ({ spell: g.value, ...g.freeuse! })),
     skillBonuses,
     savingThrowBonuses,
     maxHP,

@@ -12,6 +12,7 @@ import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../c
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
+import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } from '../engine/freeuse';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
@@ -31,6 +32,7 @@ import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '.
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
+import FreeuseSpellsRow from './FreeuseSpellsRow';
 import ActionHoverCard from './forge/ActionHoverCard';
 
 interface Props {
@@ -89,6 +91,9 @@ const RESOURCE_ICONS: Record<string, string> = {
   spell_slot: '/icons/resources/spell_slot.png',
   warlock_spell_slot: '/icons/resources/warlock_spell_slot.png',
 };
+
+/** Выбор источника оплаты каста: за ячейку уровня level или бесплатно (freeuse-пул). */
+type CastChoice = { via: 'slot'; level: number } | { via: 'free' };
 
 /** Апкаст (D1): заклинание со стоимостью spell_slot уровня N доступно, если есть ЛЮБОЙ
  *  слот уровня ≥ N (не только базового) — иначе кастер со свободным старшим слотом, но
@@ -152,11 +157,17 @@ export default function SheetActionsPanel({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Пикер уровня слота (D1 апкаст): промис-модалка без нового провайдера.
-  const [slotPick, setSlotPick] = useState<{ baseLevel: number; options: number[]; resolve: (v: number | null) => void } | null>(null);
-  const requestSlotLevel = (baseLevel: number, options: number[]) =>
-    new Promise<number | null>((resolve) => setSlotPick({ baseLevel, options, resolve }));
-  const resolveSlotPick = (v: number | null) => { slotPick?.resolve(v); setSlotPick(null); };
+  // Пикер источника оплаты каста (D1 апкаст + freeuse): промис-модалка без нового провайдера.
+  // via:'slot' — за ячейку уровня level; via:'free' — из пула бесплатных использований.
+  const [slotPick, setSlotPick] = useState<{
+    baseLevel: number;
+    options: number[];
+    freeuse?: { current: number; max: number; level: number };
+    resolve: (v: CastChoice | null) => void;
+  } | null>(null);
+  const requestCastChoice = (baseLevel: number, options: number[], freeuse?: { current: number; max: number; level: number }) =>
+    new Promise<CastChoice | null>((resolve) => setSlotPick({ baseLevel, options, freeuse, resolve }));
+  const resolveCast = (v: CastChoice | null) => { slotPick?.resolve(v); setSlotPick(null); };
   const [localTargetAc, setLocalTargetAc] = useState(10);
   // E4: если родитель управляет «КЗ цели» — используем его; иначе локальный стейт.
   const targetAc = targetAcProp ?? localTargetAc;
@@ -298,9 +309,10 @@ export default function SheetActionsPanel({
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();
   const actionsAsIcons = entityDisplay.actions === 'icon';
-  // uses_<key> — пулы использований действий: не плитки-ресурсы, остаток на строке действия.
+  // uses_<key> и freeuse-<spell> — виртуальные пулы: не плитки-ресурсы (freeuse рисуется
+  // отдельной витриной FreeuseSpellsRow, uses — на строке действия).
   const resourceKeys = Object.keys(runtime.maxResources)
-    .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k));
+    .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k) && !isFreeusePoolKey(k));
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
     setBusy(true);
@@ -319,6 +331,17 @@ export default function SheetActionsPanel({
     }
   }, [character.id, onUpdated, onEvents]);
 
+  // freeuse-пул заклинания-действия (каст без ячейки) с текущим/макс. запасом и
+  // фиксированным кругом бесплатного каста (spec.level или базовый круг). null — нет пула/зарядов.
+  const freeuseFor = (action: SheetAction): { key: string; current: number; max: number; level: number } | null => {
+    if (!action.spellRef) return null;
+    const key = findFreeusePoolKey(runtime.resources, { cardNumber: action.spellRef.card_number, id: action.spellRef.id });
+    if (!key || (runtime.resources[key] ?? 0) <= 0) return null;
+    const spec = ruleState.freeuseSpells.find((s) => freeuseKey(s.spell) === key);
+    const base = action.spellRef.level ?? action.level ?? 0;
+    return { key, current: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0, level: spec?.level ?? base };
+  };
+
   const runAction = async (action: SheetAction) => {
     let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
     // S5: дальнобойное оружие тратит боеприпас из инвентаря (оружие декларирует mechanics.ammo).
@@ -327,34 +350,56 @@ export default function SheetActionsPanel({
     if (ammo) mech = appendActivationCost(mech, ammo);
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    if (cost.length && !payableWithUpcast(runtime, cost)) return;
+    // freeuse: заклинание с пулом бесплатных использований (каст без ячейки). Считаем ДО гейта —
+    // персонаж без ячеек (напр. предмет-каст) всё равно может кастовать бесплатно.
+    const freeuse = freeuseFor(action);
+    if (cost.length && !payableWithUpcast(runtime, cost) && !freeuse) return;
     // Оружейное действие без нужного оружия в руке — не запускаем.
     if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
 
-    // Апкаст (D1): если действие тратит spell_slot уровня N — выбрать уровень слота N..9
-    // (пикер при >1 доступном; авто при одном). castLevel в mech.cost и в ctx.spell включает
+    // Апкаст (D1) + freeuse: если действие тратит spell_slot уровня N — выбрать уровень слота N..9
+    // и/или источник оплаты (ячейка/бесплатно). castLevel в mech.cost и в ctx.spell включает
     // апкаст-скейлинг (withScaling) и эмиссию spell_cast. Заговоры/spellRef без слота тоже
     // помечаем ctx.spell (для триггеров каста), castLevel не задаём.
     let spellCtx: { baseLevel: number; castLevel?: number } | undefined;
     const slotIdx = cost.findIndex((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
-    if (slotIdx >= 0) {
-      const slotEntry = cost[slotIdx];
-      const baseLevel = Number(slotEntry.level) || 0;
-      const need = Number(slotEntry.amount ?? 1) || 1;
+    if (slotIdx >= 0 || freeuse) {
+      const slotEntry = slotIdx >= 0 ? cost[slotIdx] : null;
+      const baseLevel = slotEntry ? Number(slotEntry.level) || 0 : (action.spellRef?.level ?? action.level ?? 0);
+      const need = slotEntry ? Number(slotEntry.amount ?? 1) || 1 : 1;
       const options: number[] = [];
-      for (let L = baseLevel; L <= 9; L++) if ((runtime.resources[`spell_slot_${L}`] ?? 0) >= need) options.push(L);
-      if (options.length === 0) return;
-      let castLevel = options[0];
-      if (options.length > 1) {
-        const picked = await requestSlotLevel(baseLevel, options);
-        if (picked == null) return; // отмена
-        castLevel = picked;
+      if (slotEntry) for (let L = baseLevel; L <= 9; L++) if ((runtime.resources[`spell_slot_${L}`] ?? 0) >= need) options.push(L);
+
+      // Выбор источника оплаты: меню при (freeuse И есть ячейки) или (>1 круга ячеек); иначе авто.
+      let choice: CastChoice;
+      if (freeuse && options.length > 0) {
+        const picked = await requestCastChoice(baseLevel, options, freeuse);
+        if (!picked) return; // отмена
+        choice = picked;
+      } else if (freeuse) {
+        choice = { via: 'free' };
+      } else if (options.length === 0) {
+        return; // ни ячейки, ни freeuse (гейт пропустил бы только с freeuse)
+      } else if (options.length === 1) {
+        choice = { via: 'slot', level: options[0] };
+      } else {
+        const picked = await requestCastChoice(baseLevel, options, undefined);
+        if (!picked) return;
+        choice = picked;
       }
-      if (castLevel !== baseLevel) {
-        const newCost = cost.map((c, i) => (i === slotIdx ? { ...c, level: castLevel } : c));
-        mech = { ...mech, activation: { ...(activation ?? {}), cost: newCost } };
+
+      if (choice.via === 'free') {
+        // Подменяем оплату ячейкой на трату freeuse-пула; действие (bonus/action) остаётся.
+        mech = applyFreeuseCost(mech, freeuse!.key);
+        spellCtx = { baseLevel, castLevel: freeuse!.level }; // фикс. круг бесплатного каста
+      } else {
+        const castLevel = choice.level;
+        if (slotEntry && castLevel !== baseLevel) {
+          const newCost = cost.map((c, i) => (i === slotIdx ? { ...c, level: castLevel } : c));
+          mech = { ...mech, activation: { ...(activation ?? {}), cost: newCost } };
+        }
+        spellCtx = { baseLevel, castLevel };
       }
-      spellCtx = { baseLevel, castLevel };
     } else if (action.spellRef) {
       spellCtx = { baseLevel: action.spellRef.level ?? action.level ?? 0 };
     }
@@ -456,8 +501,9 @@ export default function SheetActionsPanel({
     // S5: дальнобойное оружие требует боеприпас — добавляем его к проверяемой стоимости.
     const ammo = weaponAmmoCost(action.mechanics, runtime.equipment, equipCards);
     const cost = ammo ? [...baseCost, ammo] : baseCost;
-    // Апкаст: спелл доступен при любом слоте ≥ базового круга (не только базовом).
-    const payable = !cost.length || payableWithUpcast(runtime, cost);
+    // Апкаст: спелл доступен при любом слоте ≥ базового круга; freeuse — при наличии пула
+    // (даже без ячеек, напр. предмет-каст у не-кастера).
+    const payable = !cost.length || payableWithUpcast(runtime, cost) || !!freeuseFor(action);
     if (!payable) {
       // Внятная причина для нехватки предмета-стоимости (боеприпас/зелье): показываем имя.
       const miss = cost.find((c) => String(c.resource ?? '') === 'item'
@@ -536,6 +582,15 @@ export default function SheetActionsPanel({
         </div>
       )}
 
+      {showResources && !spellsOnly && (
+        <FreeuseSpellsRow
+          runtime={runtime}
+          freeuseSpells={ruleState.freeuseSpells}
+          spells={assembled.spells}
+          resourceOptions={resourceOptions}
+        />
+      )}
+
       {/* «КЗ/Спас цели» — только в основной панели действий; блок «Заклинания»
           (spellsOnly) переиспользует общий таргет родителя, поле не дублирует. */}
       {!spellsOnly && (
@@ -601,16 +656,26 @@ export default function SheetActionsPanel({
       ))}
 
       {slotPick && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Выбор уровня слота заклинания">
-          <div className="absolute inset-0 bg-black/50" onClick={() => resolveSlotPick(null)} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Выбор источника оплаты заклинания">
+          <div className="absolute inset-0 bg-black/50" onClick={() => resolveCast(null)} />
           <div className="relative rounded-lg border border-[#8a7320] bg-[#1c1813] text-[#e8e0d0] shadow-xl p-4 w-72 max-w-[90vw]">
-            <div className="text-sm mb-3" style={{ color: '#d8b978' }}>На каком уровне сотворить?</div>
+            <div className="text-sm mb-3" style={{ color: '#d8b978' }}>Как сотворить?</div>
             <div className="flex flex-col gap-1">
+              {slotPick.freeuse && (
+                <button
+                  type="button"
+                  onClick={() => resolveCast({ via: 'free' })}
+                  className="flex items-center justify-between px-3 py-2 rounded border border-[#8a7320] bg-[#241f16] hover:bg-[#2b2520] text-sm text-left"
+                >
+                  <span>Бесплатно{slotPick.freeuse.level > slotPick.baseLevel ? ` · ${getSpellLevelLabel(slotPick.freeuse.level)}` : ''}</span>
+                  <span className="text-[#d8b978] text-xs">{slotPick.freeuse.current}/{slotPick.freeuse.max}</span>
+                </button>
+              )}
               {slotPick.options.map((L) => (
                 <button
                   key={L}
                   type="button"
-                  onClick={() => resolveSlotPick(L)}
+                  onClick={() => resolveCast({ via: 'slot', level: L })}
                   className="flex items-center justify-between px-3 py-2 rounded border border-[#6b5836] hover:bg-[#2b2520] text-sm text-left"
                 >
                   <span>{getSpellLevelLabel(L)}{L > slotPick.baseLevel ? ' · апкаст' : ''}</span>
@@ -620,7 +685,7 @@ export default function SheetActionsPanel({
             </div>
             <button
               type="button"
-              onClick={() => resolveSlotPick(null)}
+              onClick={() => resolveCast(null)}
               className="mt-3 w-full px-3 py-1.5 rounded border border-[#6b5836] text-xs text-[#a99f8b] hover:bg-[#2b2520]"
             >
               Отмена

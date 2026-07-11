@@ -320,7 +320,22 @@
             "properties": {
               "value": { "type": "string" },
               "level_gate": { "type": "integer" },
-              "ability": { "$ref": "#/$defs/ability" }
+              "ability": { "$ref": "#/$defs/ability" },
+              "freeuse": {
+                "description": "Бесплатные использования: каст без ячейки из пула freeuse-<value>. true = 1×/долгий отдых; число = столько раз/долгий отдых; объект — полная настройка. Работает и в choice.grant, и нативно.",
+                "oneOf": [
+                  { "type": "boolean" },
+                  { "type": "integer", "minimum": 1 },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "count": { "description": "Макс. бесплатных использований (число или формула).", "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "string" }] },
+                      "recharge": { "enum": ["long_rest", "short_rest", "day"], "description": "Когда перезаряжается (по умолчанию long_rest)." },
+                      "level": { "type": "integer", "minimum": 1, "description": "Фиксированный круг бесплатного каста; не задан → базовый круг заклинания." }
+                    }
+                  }
+                ]
+              }
             }
           }
         },
