@@ -14,7 +14,7 @@ import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
-import FreeuseSpellsRow from './FreeuseSpellsRow';
+import FreeuseSpellsTile from './FreeuseSpellsTile';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import { findResource, useResourceOptions } from '../utils/resources';
 import type { ResourceOption } from '../utils/resources';
@@ -289,6 +289,12 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
             max={runtime.maxResources[key]}
           />
         ))}
+        <FreeuseSpellsTile
+          runtime={runtime}
+          freeuseSpells={ruleState.freeuseSpells}
+          spells={assembled.spells}
+          resourceOptions={resourceOptions}
+        />
         {!resourceKeys.length && (
           <p className="forge-note">
             Ресурсы не инициализированы.{' '}
@@ -298,13 +304,6 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           </p>
         )}
       </div>
-
-      <FreeuseSpellsRow
-        runtime={runtime}
-        freeuseSpells={ruleState.freeuseSpells}
-        spells={assembled.spells}
-        resourceOptions={resourceOptions}
-      />
 
       <SheetRestButtons
         character={character}

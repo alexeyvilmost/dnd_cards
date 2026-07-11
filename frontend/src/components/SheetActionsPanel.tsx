@@ -32,7 +32,7 @@ import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '.
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
-import FreeuseSpellsRow from './FreeuseSpellsRow';
+import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionHoverCard from './forge/ActionHoverCard';
 
 interface Props {
@@ -579,16 +579,13 @@ export default function SheetActionsPanel({
               </div>
             );
           })}
+          <FreeuseSpellsTile
+            runtime={runtime}
+            freeuseSpells={ruleState.freeuseSpells}
+            spells={assembled.spells}
+            resourceOptions={resourceOptions}
+          />
         </div>
-      )}
-
-      {showResources && !spellsOnly && (
-        <FreeuseSpellsRow
-          runtime={runtime}
-          freeuseSpells={ruleState.freeuseSpells}
-          spells={assembled.spells}
-          resourceOptions={resourceOptions}
-        />
       )}
 
       {/* «КЗ/Спас цели» — только в основной панели действий; блок «Заклинания»
