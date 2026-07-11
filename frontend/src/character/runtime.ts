@@ -1,5 +1,5 @@
 import type { ForgeCharacter } from './types';
-import type { CharacterContext, RuntimeState } from '../mvp/contracts';
+import type { CharacterContext, RuntimeState, TargetContext } from '../mvp/contracts';
 import type { Card } from '../types';
 import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
@@ -40,6 +40,31 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
 function parseActiveEffects(raw: unknown): RuntimeState['activeEffects'] {
   if (!Array.isArray(raw)) return [];
   return raw.filter((e) => e && typeof e === 'object') as RuntimeState['activeEffects'];
+}
+
+/**
+ * «Богатая» цель из уже-персистнутого персонажа — БЕЗ пересборки (assemble/resolveCharacterRules).
+ * AC/спасброски/навыки берём из снимка rule_state; hp/состояния/сопротивления/ресурсы — из
+ * forgeToRuntimeState. Движок применяет к target.runtimeState урон/лечение/эффекты (who:'target')
+ * и возвращает мутированную копию в ExecuteResult.targetState (её лист персистит выбранному персонажу).
+ */
+export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
+  const rs = c.rule_state as CharacterRuleState | undefined;
+  const characterContext: CharacterContext | undefined = rs ? {
+    abilityMods: rs.abilityMods,
+    profBonus: rs.proficiencyBonus,
+    level: c.level ?? 1,
+    variables: rs.variables,
+    saveProficiencies: rs.proficiencies?.savingThrows,
+    skillProficiencies: rs.proficiencies?.skills,
+    skillExpertise: rs.expertise?.skills,
+  } : undefined;
+  return {
+    ac: rs?.armorClass ?? c.armor_class ?? 10,
+    checkMods: rs?.skillBonuses,          // для состязаний (Толчок/Подножка): навыки цели
+    characterContext,
+    runtimeState: forgeToRuntimeState(c),
+  };
 }
 
 export function runtimeInventoryPayload(state: RuntimeState) {

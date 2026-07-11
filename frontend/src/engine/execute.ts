@@ -751,9 +751,23 @@ function applyPayloads(
       case 'damage': {
         // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
-        for (const dmg of resolveDamageAmounts(p, ctx, next, hand)) {
-          const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
-          events.push(damageEvent(amount, dmg.damageType, dmg.roll));
+        if (whoTarget && targetRef.state) {
+          // C2/фаза E: урон по ВЫБРАННОЙ цели реально списывает её HP через applyIncomingDamage
+          // (сопротивление/иммунитет/уязвимость цели, temp→current, авто-проверка концентрации).
+          // Величину урона считаем статами АТАКУЮЩЕГО, применяем — на состоянии ЦЕЛИ с её контекстом.
+          const tctx: ExecuteContext = { ...ctx, character: ctx.target?.characterContext ?? ctx.character };
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand)) {
+            const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
+            const res = applyIncomingDamage(targetRef.state, amount, tctx, { damageType: dmg.damageType });
+            targetRef.state = res.state;
+            targetRef.mutated = true;
+            events.push(...res.events);
+          }
+        } else {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand)) {
+            const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
+            events.push(damageEvent(amount, dmg.damageType, dmg.roll));
+          }
         }
         break;
       }
@@ -857,7 +871,7 @@ function runAttackRoll(
   pending: ReactionOffer[],
   targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
-  const whoTarget = String(effect.who ?? 'self') === 'target' && !!targetRef.state;
+  const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
   const hand = resolveHand(effect);
   const ac = ctx.target?.ac ?? 10;
   const passives = passivesFromCtx(ctx);
@@ -913,7 +927,7 @@ function runSave(
   source: string,
   targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
-  const whoTarget = String(effect.who ?? 'self') === 'target' && !!targetRef.state;
+  const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
   const dcFormula = String(effect.dc ?? '10');
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability ?? 'dex') as AbilityKey;
@@ -1001,7 +1015,7 @@ function runAbilityCheck(
   // перемещение, нарратив. who:'target' направляет состояние ЦЕЛИ, а не исполнителю.
   const onSuccess = effect.on_success as Dict[] | undefined;
   if (!Array.isArray(onSuccess)) return state;
-  const whoTarget = String(effect.who ?? 'self') === 'target' && !!targetRef.state;
+  const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
   return applyPayloads(onSuccess, state, ctx, events, source, 'main', false, whoTarget, targetRef);
 }
 

@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { actionsApi, effectsApi } from '../api/client';
 import { getCardsIndex } from '../utils/cardsIndex';
 import type { AssembledCharacter } from '../character/assemble';
-import { actionNeedsTarget, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
+import { actionNeedsTarget, actionInteractsWithTarget, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
-import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
+import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState, buildTargetFromCharacter } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
@@ -28,7 +28,8 @@ import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
 import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card } from '../types';
-import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState } from '../mvp/contracts';
+import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState, TargetContext } from '../mvp/contracts';
+import { getSettings } from '../settings';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
@@ -345,6 +346,33 @@ export default function SheetActionsPanel({
     return { key, current: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0, level: spec?.level ?? base };
   };
 
+  // Кандидаты-цели (все персонажи, кроме себя) — для пикера в диалоге кубов. Кэш на панель.
+  const targetCharsRef = useRef<ForgeCharacter[] | null>(null);
+  const loadTargetChars = useCallback(async (): Promise<ForgeCharacter[]> => {
+    if (targetCharsRef.current) return targetCharsRef.current;
+    try {
+      const list = await charactersV3Api.list();
+      targetCharsRef.current = list;
+      return list;
+    } catch { return []; }
+  }, []);
+
+  // Персист изменённого состояния ЦЕЛИ выбранному персонажу (урон/лечение/эффекты).
+  // turn_state сливаем с ЦЕЛЬЮ (не носителем!), чтобы не затереть её спасброски смерти.
+  const persistTarget = useCallback(async (targetChar: ForgeCharacter, ts: RuntimeState) => {
+    try {
+      await charactersV3Api.patchRuntime(targetChar.id, {
+        current_hp: ts.hp.current,
+        max_hp: ts.hp.max,
+        active_effects: ts.activeEffects,
+        turn_state: { ...(targetChar.turn_state ?? {}), temp_hp: ts.hp.temp },
+      });
+      // Освежаем кэш локально, чтобы повторные касты по той же цели шли от нового HP.
+      targetCharsRef.current = (targetCharsRef.current ?? []).map((c) =>
+        c.id === targetChar.id ? { ...c, current_hp: ts.hp.current, active_effects: ts.activeEffects } : c);
+    } catch (e) { console.error('Не удалось применить к цели', e); }
+  }, []);
+
   const runAction = async (action: SheetAction) => {
     let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
     // S5: дальнобойное оружие тратит боеприпас из инвентаря (оружие декларирует mechanics.ammo).
@@ -417,8 +445,9 @@ export default function SheetActionsPanel({
 
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
-    const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}) =>
-      ({ character: ctx, target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
+    // targetOverride — богатая цель из выбранного персонажа (иначе dummy {ac, saveMods}).
+    const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}, targetOverride?: TargetContext) =>
+      ({ character: ctx, target: targetOverride ?? target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
     const previewFor = (a: SheetAction): ReactNode => {
@@ -433,14 +462,15 @@ export default function SheetActionsPanel({
       return null;
     };
 
-    // Прогон механики через диалог кубов: план кубов → вопрос игроку → реальный бросок.
+    // Прогон механики через диалог кубов: план кубов → вопрос игроку (+ выбор цели) → реальный бросок.
     const runViaDialog = async (
       baseState: RuntimeState,
       m: Record<string, unknown>,
       title: string,
       preview?: ReactNode,
       confirm = false,
-    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[] } | null> => {
+      targetOpts?: { targets?: { id: string; name: string }[]; needsTarget?: boolean },
+    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; targetChar?: ForgeCharacter } | null> => {
       // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
       // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
       const inPlay = collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title });
@@ -451,11 +481,14 @@ export default function SheetActionsPanel({
         for (const [k, v] of Object.entries(picked)) if (v.length) choices[k] = v;
       }
       const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events);
-      const decision = await diceDialog.request(plan, title, preview, { confirm });
+      const decision = await diceDialog.request(plan, title, preview, { confirm, targets: targetOpts?.targets, needsTarget: targetOpts?.needsTarget });
       if (decision.mode === 'cancel') return null;
+      // Выбранный противник → богатая цель (иначе dummy self-путь, как при выключенном диалоге).
+      const targetChar = decision.targetId ? (targetCharsRef.current ?? []).find((c) => c.id === decision.targetId) : undefined;
+      const richTarget = targetChar ? buildTargetFromCharacter(targetChar) : undefined;
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
-      const r = executeAction(baseState, m, execCtx(rng, false, choices));
-      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [] };
+      const r = executeAction(baseState, m, execCtx(rng, false, choices, richTarget));
+      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, targetChar };
     };
 
     try {
@@ -463,9 +496,20 @@ export default function SheetActionsPanel({
       // действие, реакцию, слот, заряд, …) или заклинаний — даже когда кубов нет (при включённом
       // диалоге кубов). Атаки с кубами и так показывают окно броска.
       const needsConfirm = spendsResource(mech) || !!action.spellRef;
-      const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm);
+      // Действие взаимодействует с другим персонажем → предложить выбор цели в окне (при включённом
+      // диалоге кубов). Список всех персонажей, кроме себя. При выключенном диалоге — dummy, как раньше.
+      const interactsWithTarget = actionInteractsWithTarget(mech);
+      let targetOptions: { id: string; name: string }[] | undefined;
+      if (interactsWithTarget && getSettings().diceDialog) {
+        const chars = await loadTargetChars();
+        targetOptions = chars.filter((c) => c.id !== character.id).map((c) => ({ id: c.id, name: c.name }));
+      }
+      const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
+        { targets: targetOptions, needsTarget: interactsWithTarget });
       if (!main) return;
       let { state, events } = main;
+      // Применённое к цели состояние (урон/лечение/эффекты) — сохраняем выбранному персонажу.
+      if (main.targetChar && main.targetState) await persistTarget(main.targetChar, main.targetState);
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
       if (action.spellRef?.concentration) {
         const conc = startConcentration(state, action.name);

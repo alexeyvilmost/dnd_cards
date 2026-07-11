@@ -365,6 +365,17 @@ export function collectActionUsesRecharge(assembled: AssembledCharacter): Record
   return out;
 }
 
+/** Действие ВЗАИМОДЕЙСТВУЕТ с другим персонажем (для пикера цели): бросок против цели
+ *  (атака/спас) ИЛИ явный who:'target' (лечение/бафф/дебафф на цель). */
+export function actionInteractsWithTarget(mechanics: Record<string, unknown>): boolean {
+  const effects = mechanics.effects as Record<string, unknown>[] | undefined;
+  if (!Array.isArray(effects)) return false;
+  return effects.some((e) => {
+    const res = String(e.resolution ?? '');
+    return res === 'attack_roll' || res === 'save' || String(e.who ?? '') === 'target';
+  });
+}
+
 export function actionNeedsTarget(mechanics: Record<string, unknown>): boolean {
   const effects = mechanics.effects as Record<string, unknown>[] | undefined;
   if (!Array.isArray(effects)) return false;
