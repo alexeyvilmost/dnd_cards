@@ -97,12 +97,15 @@ type CastChoice = { via: 'slot'; level: number } | { via: 'free' };
 
 /** Апкаст (D1): заклинание со стоимостью spell_slot уровня N доступно, если есть ЛЮБОЙ
  *  слот уровня ≥ N (не только базового) — иначе кастер со свободным старшим слотом, но
- *  потраченным базовым, не смог бы кастовать. Прочие ресурсы стоимости — обычной проверкой. */
-export function payableWithUpcast(runtime: RuntimeState, cost: Record<string, unknown>[]): boolean {
+ *  потраченным базовым, не смог бы кастовать. Прочие ресурсы стоимости — обычной проверкой.
+ *  freeuseAvailable снимает ТОЛЬКО требование ячейки (каст из пула бесплатных использований),
+ *  но НЕ экономику действий: не-слотовые косты (основное/бонусное действие, реакция, предмет)
+ *  проверяются всегда — без свободного действия заклинание недоступно даже при freeuse. */
+export function payableWithUpcast(runtime: RuntimeState, cost: Record<string, unknown>[], freeuseAvailable = false): boolean {
   const slot = cost.find((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
   const nonSlot = cost.filter((c) => c !== slot);
   if (nonSlot.length && !canPay(runtime, nonSlot).ok) return false;
-  if (slot) {
+  if (slot && !freeuseAvailable) {
     const base = Number(slot.level) || 0;
     const need = Number(slot.amount ?? 1) || 1;
     let ok = false;
@@ -353,7 +356,7 @@ export default function SheetActionsPanel({
     // freeuse: заклинание с пулом бесплатных использований (каст без ячейки). Считаем ДО гейта —
     // персонаж без ячеек (напр. предмет-каст) всё равно может кастовать бесплатно.
     const freeuse = freeuseFor(action);
-    if (cost.length && !payableWithUpcast(runtime, cost) && !freeuse) return;
+    if (cost.length && !payableWithUpcast(runtime, cost, !!freeuse)) return;
     // Оружейное действие без нужного оружия в руке — не запускаем.
     if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
 
@@ -501,9 +504,9 @@ export default function SheetActionsPanel({
     // S5: дальнобойное оружие требует боеприпас — добавляем его к проверяемой стоимости.
     const ammo = weaponAmmoCost(action.mechanics, runtime.equipment, equipCards);
     const cost = ammo ? [...baseCost, ammo] : baseCost;
-    // Апкаст: спелл доступен при любом слоте ≥ базового круга; freeuse — при наличии пула
-    // (даже без ячеек, напр. предмет-каст у не-кастера).
-    const payable = !cost.length || payableWithUpcast(runtime, cost) || !!freeuseFor(action);
+    // Апкаст: спелл доступен при любом слоте ≥ базового круга; freeuse снимает требование
+    // ячейки (не действия) — заклинание всё равно требует свободного действия/бонуса.
+    const payable = !cost.length || payableWithUpcast(runtime, cost, !!freeuseFor(action));
     if (!payable) {
       // Внятная причина для нехватки предмета-стоимости (боеприпас/зелье): показываем имя.
       const miss = cost.find((c) => String(c.resource ?? '') === 'item'
