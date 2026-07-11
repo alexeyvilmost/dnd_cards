@@ -1,0 +1,62 @@
+[
+  {
+    "created_at": "2026-07-07T03:59:42.037773Z",
+    "default_value": "1d6",
+    "description": "Кость безоружных ударов и приёмов монаха. Значение задаёт монах (1 ур. d6, далее растёт).",
+    "id": "133a552f-378a-42d1-8cae-17551c2c1538",
+    "image_url": "",
+    "name": "Кость боевых искусств",
+    "sort_order": 10,
+    "updated_at": "2026-07-07T03:59:42.037773Z",
+    "var_type": "dice",
+    "variable_id": "martial_arts_die"
+  },
+  {
+    "created_at": "2026-07-07T03:59:42.037773Z",
+    "default_value": "4",
+    "description": "Сколько костей превосходства доступно Мастеру боя. Значение задаёт подкласс.",
+    "id": "2d93a679-d199-49ed-ac36-00050520fa89",
+    "image_url": "",
+    "name": "Число костей превосходства",
+    "sort_order": 41,
+    "updated_at": "2026-07-07T03:59:42.037773Z",
+    "var_type": "number",
+    "variable_id": "superiority_dice_count"
+  },
+  {
+    "created_at": "2026-07-07T03:59:42.037773Z",
+    "default_value": "1d8",
+    "description": "Кость приёмов Мастера боя. Значение задаёт подкласс (3 ур. d8, далее растёт).",
+    "id": "5f0c41b3-1cad-497a-9c23-463845c238c4",
+    "image_url": "",
+    "name": "Кость превосходства",
+    "sort_order": 40,
+    "updated_at": "2026-07-07T03:59:42.037773Z",
+    "var_type": "dice",
+    "variable_id": "superiority_die"
+  },
+  {
+    "created_at": "2026-07-07T03:59:42.037773Z",
+    "default_value": "2",
+    "description": "Доп. урон рукопашных атак Силой в Ярости. Значение задаёт варвар (1 ур. 2, далее растёт).",
+    "id": "618d8466-c5dc-443b-9a39-7558cf43f703",
+    "image_url": "",
+    "name": "Бонус урона Ярости",
+    "sort_order": 20,
+    "updated_at": "2026-07-07T03:59:42.037773Z",
+    "var_type": "number",
+    "variable_id": "rage_damage_modifier"
+  },
+  {
+    "created_at": "2026-07-07T03:59:42.037773Z",
+    "default_value": "1d6",
+    "description": "Кость Вдохновения барда. Значение задаёт бард (1 ур. d6, далее растёт).",
+    "id": "71ee1df4-d342-4e3c-97bc-2b0e7a65a70a",
+    "image_url": "",
+    "name": "Кость Вдохновения барда",
+    "sort_order": 30,
+    "updated_at": "2026-07-07T03:59:42.037773Z",
+    "var_type": "dice",
+    "variable_id": "bardic_inspiration_die"
+  }
+]

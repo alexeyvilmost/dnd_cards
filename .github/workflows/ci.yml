@@ -1,0 +1,77 @@
+name: CI
+
+# Гейты покрытия правил (docs/rules-coverage-plan-2026-07-11.md, этап 0.4).
+# PR/пуш — быстрый ОФФЛАЙН-гейт (детерминированный, без сети): tsc + оба vitest-набора
+#   (обычный + MVP-оффлайн). Сюда входят пилот покрытия (canon) и контракт схема↔рантайм.
+# Ночь — ЖИВОЙ прод: MVP_CONTENT-тесты + lint-mechanics + рефреш снапшота с диффом дрейфа
+#   (контент правят в UI прод-БД без коммитов — ночной дифф это ловит).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 3 * * *'   # ежедневно 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  offline:
+    name: Оффлайн-гейт (tsc + vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Установка зависимостей
+        working-directory: frontend
+        run: npm ci
+      - name: Проверка типов
+        working-directory: frontend
+        run: ./node_modules/.bin/tsc --noEmit
+      - name: Тесты (обычный набор + пилот покрытия)
+        working-directory: frontend
+        run: npm test
+      - name: Тесты MVP (оффлайн-часть)
+        working-directory: frontend
+        run: npm run test:mvp
+
+  live-content:
+    name: Живой прод (ночью / вручную)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      MVP_CONTENT: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Установка зависимостей
+        working-directory: frontend
+        run: npm ci
+      - name: Живые MVP-тесты (прод-контент)
+        working-directory: frontend
+        run: npm run test:mvp
+      - name: Линт механик (схема по всей прод-БД)
+        run: node scripts/lint-mechanics.mjs
+      - name: Рефреш снапшота прод-контента
+        run: node scripts/content/export-prod.mjs
+      - name: Дифф дрейфа контента (снапшот vs прод)
+        run: |
+          if ! git diff --quiet officials/canon/prod-snapshot; then
+            echo "::warning::Прод-контент разошёлся со снапшотом в git (правка в UI?). Дифф ниже."
+            git --no-pager diff --stat officials/canon/prod-snapshot
+          else
+            echo "Снапшот совпадает с продом."
+          fi
+      - name: Артефакт свежего снапшота
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-snapshot
+          path: officials/canon/prod-snapshot

@@ -31,31 +31,54 @@ describe('validateMechanics', () => {
 // C13: контракт полноты payload.kind в обе стороны (валидатор ↔ рантайм).
 // Ловит регрессию, когда рантайм начинает исполнять kind, забытый в схеме
 // (валидатор молча бракует рабочий контент), и наоборот — kind в схеме без
-// исполнителя и без пометки planned.
+// исполнителя и без явной пометки.
+//
+// Три категории — «карта поддержки» для классификатора покрытия правил
+// (docs/rules-coverage-plan-2026-07-11.md §2). Держать в синхроне с матрицей
+// движка (frontend/src/engine/execute.ts applyPayloads + resolveCharacterRules).
 describe('C13: контракт схема ↔ рантайм (payload.kind)', () => {
   const schemaKinds = (schema as unknown as {
     $defs: { payload: { properties: { kind: { enum: string[] } } } };
   }).$defs.payload.properties.kind.enum;
 
-  // Kind-ы, которые движок/сборка РЕАЛЬНО исполняют.
+  // ПОЛНОСТЬЮ исполняемые: рантайм-роутер меняет состояние либо сборка применяет грант.
   const HANDLED = [
-    'damage', 'healing', 'temp_hp', 'condition', 'resource', 'modifier', 'movement',
-    'boon', 'reroll', 'transform', 'narrative', 'add_item', // execute.ts applyPayloads (add_item: S1 контейнеры)
-    'resistance', 'set_value',                          // разрешение урона / расчёт AC / рантайм-роутер (2.4)
-    'value_method',                                     // сборка: value_method характеристик (C8, Пояс силы огра)
-    'variable', 'grant_effect', 'grant_language', 'grant_expertise',
+    'damage', 'healing', 'temp_hp', 'condition', 'resource', 'modifier',
+    'resistance', 'set_value',                          // урон/AC-метод/рантайм-роутер (ярус 2.4)
+    'value_method',                                     // сборка: методы характеристик (C8, Пояс силы огра)
+    'narrative', 'add_item',                            // add_item: S1 контейнеры
+    'grant_effect', 'grant_language', 'grant_expertise',
     'grant_proficiency', 'grant_feat', 'grant_spell',   // сборка персонажа
-    'choice',                                           // мета-kind (ChoiceResolver)
+    'grant_ability_score', 'grant_sense', 'grant_speed',// D3: применяются резолвером (resolveCharacterRules.ts:253-364)
+    'choice',                                           // мета-kind (ChoiceResolver / expandChoices)
   ];
-  // Kind-ы схемы, ещё НЕ исполняемые — осознанный allowlist (grant_ability_score/
-  // grant_sense/grant_speed чинит D3; set_die/grant_action — it.todo).
-  const PLANNED = ['grant_action', 'set_die', 'grant_ability_score', 'grant_sense', 'grant_speed'];
+  // ЧАСТИЧНО: kind исполняется, но не полностью (чип+нарратив, один путь, лог-only).
+  // Для классификатора покрытия такие фичи — категория «partial» / «needs_engine».
+  const PARTIAL = [
+    'boon',        // execute.ts: чип+нарратив, кость вводится диалогом кубов вручную
+    'reroll',      // execute.ts: только нарратив (переброс — в диалоге кубов)
+    'transform',   // execute.ts: чип+нарратив, стат-блок зверя не подменяется
+    'movement',    // execute.ts: лог-only (нет модели позиций → ярус 4 EncounterState)
+    'grant_action',// работает на ЛИСТЕ (доступ к действию по slug), НЕ в рантайм-роутере (#28)
+  ];
+  // НЕ реализованы: no-op/заглушка. Category needs_engine (ENG-01/ENG-02).
+  const PLANNED = [
+    'variable',    // no-op с нарративом «не реализована» (нет RuntimeState.variables) — ENG-01
+    'set_die',     // it.todo (engine.coverage.mvp.test.ts) — ENG-02
+  ];
 
-  it('каждый исполняемый kind есть в схеме (иначе валидатор бракует рабочий контент)', () => {
-    expect(HANDLED.filter((k) => !schemaKinds.includes(k))).toEqual([]);
+  it('категории не пересекаются', () => {
+    const all = [...HANDLED, ...PARTIAL, ...PLANNED];
+    expect(all.length).toBe(new Set(all).size);
   });
 
-  it('каждый kind схемы либо исполняется, либо в явном planned-allowlist', () => {
-    expect(schemaKinds.filter((k) => !HANDLED.includes(k) && !PLANNED.includes(k))).toEqual([]);
+  it('каждый исполняемый/частичный kind есть в схеме (иначе валидатор бракует рабочий контент)', () => {
+    expect([...HANDLED, ...PARTIAL].filter((k) => !schemaKinds.includes(k))).toEqual([]);
+  });
+
+  it('каждый kind схемы категоризирован (handled | partial | planned)', () => {
+    expect(schemaKinds.filter((k) =>
+      !HANDLED.includes(k) && !PARTIAL.includes(k) && !PLANNED.includes(k),
+    )).toEqual([]);
   });
 });

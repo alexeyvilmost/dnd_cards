@@ -240,10 +240,18 @@
 `execute.ts:633` прибавляет profBonus безусловно (поле ctx.character.skillProficiencies есть — contracts.ts:130); on_success исполняет только narrative/movement — condition:prone от Толчка через общий applyPayloads не применится; mode:'dc' из схемы не реализован (только contest).
 Сделать: гейт БМ по владению навыком; on_success через общий applyPayloads; поддержать mode:'dc'.
 
-### C13. Синхронизация схема ↔ рантайм (P0, S) — валидатор бракует рабочий контент
+### C13. Синхронизация схема ↔ рантайм (P0, S) — ЗАКРЫТО ✅ (контракт-тест есть)
+> **⚠️ Направление синка ИЗМЕНЕНО (2026-07-11).** КАНОН схемы теперь
+> `frontend/src/schemas/mechanics.schema.json` (её импортируют движок/валидатор/линт,
+> и вся работа конструктора шла в неё — docs-копия отстала). `scripts/sync-mechanics-schema.mjs`
+> копирует **frontend → docs** (docs — зеркало). НЕ править docs-копию и НЕ гонять старый
+> синк docs→frontend: это откатит боевую схему (`ammo/while/consumes_self/value_method/
+> add_item/in_play/upgrade/downgrade` есть только во frontend). Контракт-тест —
+> `frontend/src/engine/validateMechanics.test.ts` (обновлён: HANDLED/PLANNED/PARTIAL).
+
 Enum payload.kind (mechanics.schema.json:181) не знает `variable` (исполняется: variables.ts:37), `grant_effect` (assemble.ts:335), `grant_language`/`grant_expertise` (resolveCharacterRules.ts:203-213) — validateMechanics блокирует сохранение в креаторах (ActionCreator.tsx:195-199), lint-mechanics бракует сид переменных. Обратно: set_die/grant_action в enum есть, но не исполняются (it.todo); grant_ability_score/sense/speed валидны и молча игнорируются. cost.resource — закрытый enum 22 строк против data-driven справочника /api/resources (нарушение №1).
 Сделать:
-- дополнить enum недостающими kind; править В ОРИГИНАЛЕ `docs/mechanics.schema.json` и прогнать `scripts/sync-mechanics-schema.mjs` (схема в двух копиях!);
+- дополнить enum недостающими kind; править **`frontend/src/schemas/mechanics.schema.json`** (канон) и прогнать `scripts/sync-mechanics-schema.mjs` (обновит docs-зеркало);
 - cost.resource → type:string + examples (существование валидировать по справочнику ресурсов);
 - контрактный тест двусторонней полноты: каждый kind рантайма есть в схеме; каждый kind схемы либо исполняется, либо в явном allowlist planned;
 - резолверу — narrative-конфликт «payload не поддержан» вместо молчания (честная деградация; см. также D3);

@@ -1,0 +1,213 @@
+{
+  "unit": "class:barbarian",
+  "names": { "ru": "Варвар", "en": "Barbarian" },
+  "source": { "ru_pages": [61, 68], "en_pages": [49, 56] },
+  "match": { "class_name": "Варвар" },
+  "verified_by": "kb phb-2024-ru/pages page-062..069 (имена фич), числа — ручная сверка EN print/SRD 5.2",
+
+  "core_traits": {
+    "hit_die": "d12",
+    "saving_throws": ["str", "con"],
+    "armor_training": ["light", "medium", "shields"],
+    "weapon_proficiencies": ["simple", "martial"],
+    "skill_choices": { "count": 2, "from": ["animal_handling", "athletics", "intimidation", "nature", "perception", "survival"] }
+  },
+
+  "spell_list": null,
+
+  "progression_tables": {
+    "rage_uses":      { "1": 2, "3": 3, "6": 4, "12": 5, "17": 6 },
+    "rage_damage":    { "1": 2, "9": 3, "16": 4 },
+    "weapon_mastery": { "1": 2, "4": 3, "10": 4 },
+    "verified_by": "manual — сверить по печатному PHB 2024 / SRD 5.2 (kb-таблицы Варвара повреждены в RU и EN)"
+  },
+
+  "features": [
+    {
+      "id": "rage", "level": 1, "name_ru": "Ярость", "name_en": "Rage",
+      "match": { "action": "ACT-rage" },
+      "status": "partial",
+      "aspects": [
+        { "text": "бонус к урону ближнего оружия от Силы (по таблице rage_damage)", "status": "full" },
+        { "text": "сопротивление дробящему/колющему/рубящему", "status": "needs_content", "note": "движок resistance умеет (ярус 0.4), но ACT-rage моделирует сопротивление ТОЛЬКО narrative-текстом — payload resistance отсутствует. Добавить 3 resistance-payload." },
+        { "text": "преимущество на проверки и спасброски Силы", "status": "needs_content", "note": "тоже только в narrative-тексте ACT-rage; выразимо modifier op:advantage" },
+        { "text": "нельзя концентрироваться и читать заклинания во время Ярости", "status": "needs_engine", "engine_ref": "ENG-15" },
+        { "text": "число Яростей в день по таблице (long rest / частично short rest на 20 ур.)", "status": "needs_content", "note": "прод: rage_charge фиксировано 2, не растёт по уровню — БАГ" }
+      ],
+      "checks": [
+        { "type": "variable", "at_level": 1, "name": "rage_damage_modifier", "expect": 2 },
+        { "type": "variable", "at_level": 9, "name": "rage_damage_modifier", "expect": 3 },
+        { "type": "variable", "at_level": 16, "name": "rage_damage_modifier", "expect": 4 },
+        { "type": "payload_kinds", "match": "ACT-rage", "expect": ["modifier"], "watch": ["resistance"] },
+        { "type": "resource_scaling", "resource": "rage_charge", "table": "rage_uses", "known_bug": true }
+      ]
+    },
+    {
+      "id": "unarmored-defense", "level": 1, "name_ru": "Защита без доспехов", "name_en": "Unarmored Defense",
+      "match": { "effect": "EFF-barbarian-unarmored" },
+      "status": "needs_engine",
+      "aspects": [
+        { "text": "без доспеха КЗ = 10 + мод.Лов + мод.Тел (можно со щитом)", "status": "needs_engine", "engine_ref": "ENG-04", "note": "метод расчёта КЗ по формуле с двумя модификаторами; сейчас эффект narrative → инертен" }
+      ]
+    },
+    {
+      "id": "weapon-mastery", "level": 1, "name_ru": "Искусное владение оружием", "name_en": "Weapon Mastery",
+      "match": null,
+      "status": "needs_content",
+      "aspects": [
+        { "text": "свойства мастерства для N видов оружия (таблица weapon_mastery)", "status": "needs_content", "note": "8 эффектов-мастерств существуют, но не привязаны к классу и без выбора; нужен choice(source:weapon-mastery) + число по уровню" }
+      ]
+    },
+    {
+      "id": "danger-sense", "level": 2, "name_ru": "Чувство опасности", "name_en": "Danger Sense",
+      "match": { "effect": "EFF-danger-sense" },
+      "status": "needs_engine",
+      "aspects": [
+        { "text": "преимущество на спасброски Ловкости против видимых эффектов (не при недееспособности)", "status": "needs_engine", "engine_ref": "ENG-09", "note": "выразимо modifier op:advantage roll:saving_throw when-условия; сейчас narrative" }
+      ]
+    },
+    {
+      "id": "reckless-attack", "level": 2, "name_ru": "Безрассудная атака", "name_en": "Reckless Attack",
+      "match": { "effect": "EFF-reckless-attack" },
+      "status": "needs_engine",
+      "aspects": [
+        { "text": "преимущество на броски атаки Силой в ближнем бою в свой ход", "status": "needs_engine", "engine_ref": "ENG-08", "note": "нужен управляемый выбор в ход + проекция" },
+        { "text": "атаки по вам получают преимущество до вашего следующего хода", "status": "needs_engine", "engine_ref": "ENG-14" }
+      ]
+    },
+    {
+      "id": "primal-knowledge", "level": 3, "name_ru": "Первобытные знания", "name_en": "Primal Knowledge",
+      "match": { "effect": "EFF-primal-knowledge" },
+      "status": "partial",
+      "aspects": [
+        { "text": "владение ещё одним навыком из списка Варвара", "status": "full" },
+        { "text": "во время Ярости можно использовать некоторые проверки Силой вместо др. характеристики", "status": "needs_engine", "engine_ref": "ENG-04" }
+      ],
+      "note": "ПЛЕЙСМЕНТ: канон PHB 2024 — уровень 3; прод привязал EFF-primal-knowledge к УРОВНЮ 1. Проверить/исправить.",
+      "checks": [
+        { "type": "grant_kind", "at_level": 3, "kind": "grant_proficiency" }
+      ]
+    },
+    {
+      "id": "subclass", "level": 3, "name_ru": "Подкласс Варвара", "name_en": "Barbarian Subclass",
+      "match": null, "structural": true,
+      "status": "full",
+      "aspects": [{ "text": "выбор подкласса (Путь…)", "status": "full" }],
+      "checks": [{ "type": "subclass_choice", "at_level": 3 }]
+    },
+    { "id": "asi-4", "level": 4, "name_ru": "Увеличение характеристик", "name_en": "Ability Score Improvement",
+      "match": { "effect": "pf_1" }, "status": "full",
+      "aspects": [{ "text": "ASI +2/+1 или черта", "status": "full" }],
+      "checks": [{ "type": "feat_slot", "at_level": 4 }] },
+    {
+      "id": "extra-attack", "level": 5, "name_ru": "Дополнительная атака", "name_en": "Extra Attack",
+      "match": null,
+      "status": "needs_engine",
+      "aspects": [{ "text": "две атаки вместо одной действием Атака", "status": "needs_engine", "engine_ref": "ENG-06", "note": "экономика действий/мультиатака; сейчас не представлена" }]
+    },
+    {
+      "id": "fast-movement", "level": 5, "name_ru": "Быстрое передвижение", "name_en": "Fast Movement",
+      "match": null,
+      "status": "needs_content",
+      "aspects": [{ "text": "+10 фт скорости без тяжёлого доспеха", "status": "full", "note": "выразимо modifier speed +10 с when:not(heavy armor); эффекта в проде нет" }]
+    },
+    { "id": "subclass-6", "level": 6, "name_ru": "Умение подкласса", "name_en": "Subclass feature", "match": null, "structural": true, "status": "full", "aspects": [{ "text": "фича подкласса 6 ур.", "status": "full" }] },
+    {
+      "id": "feral-instinct", "level": 7, "name_ru": "Дикий инстинкт", "name_en": "Feral Instinct",
+      "match": null, "status": "needs_content",
+      "aspects": [{ "text": "преимущество на инициативу", "status": "full", "note": "modifier op:advantage roll:initiative; эффекта в проде нет" }]
+    },
+    {
+      "id": "instinctive-pounce", "level": 7, "name_ru": "Инстинктивный бросок", "name_en": "Instinctive Pounce",
+      "match": null, "status": "needs_engine",
+      "aspects": [{ "text": "при входе в Ярость перемещение на полскорости", "status": "needs_engine", "engine_ref": "ENG-03" }]
+    },
+    { "id": "asi-8", "level": 8, "name_ru": "Увеличение характеристик", "name_en": "ASI", "match": { "effect": "pf_2" }, "status": "full", "aspects": [{ "text": "ASI/черта", "status": "full" }], "checks": [{ "type": "feat_slot", "at_level": 8 }] },
+    {
+      "id": "brutal-strike", "level": 9, "name_ru": "Жестокий удар", "name_en": "Brutal Strike",
+      "match": null, "status": "needs_engine",
+      "aspects": [{ "text": "отказ от преимущества → +доп. урон и эффект (Толчок/Обессиливающий удар)", "status": "needs_engine", "engine_ref": "ENG-08" }]
+    },
+    { "id": "subclass-10", "level": 10, "name_ru": "Умение подкласса", "name_en": "Subclass feature", "match": null, "structural": true, "status": "full", "aspects": [{ "text": "фича подкласса 10 ур.", "status": "full" }] },
+    {
+      "id": "relentless-rage", "level": 11, "name_ru": "Неукротимая ярость", "name_en": "Relentless Rage",
+      "match": null, "status": "needs_engine",
+      "aspects": [{ "text": "при падении до 0 хитов в Ярости — спас Тел СЛ 10 (растёт) чтобы остаться на 1 хите", "status": "needs_engine", "engine_ref": "ENG-15", "note": "set_value hp=1 движок умеет (Неумолимая стойкость), но триггер/спас-гейт нужен" }]
+    },
+    { "id": "asi-12", "level": 12, "name_ru": "Увеличение характеристик", "name_en": "ASI", "match": { "effect": "pf_3" }, "status": "full", "aspects": [{ "text": "ASI/черта", "status": "full" }], "checks": [{ "type": "feat_slot", "at_level": 12 }] },
+    {
+      "id": "improved-brutal-strike-13", "level": 13, "name_ru": "Улучшенный жестокий удар", "name_en": "Improved Brutal Strike",
+      "match": null, "status": "needs_engine",
+      "aspects": [{ "text": "дополнительный эффект к Жестокому удару", "status": "needs_engine", "engine_ref": "ENG-08" }]
+    },
+    { "id": "subclass-14", "level": 14, "name_ru": "Умение подкласса", "name_en": "Subclass feature", "match": null, "structural": true, "status": "full", "aspects": [{ "text": "фича подкласса 14 ур.", "status": "full" }] },
+    {
+      "id": "persistent-rage", "level": 15, "name_ru": "Непрерывная ярость", "name_en": "Persistent Rage",
+      "match": null, "status": "needs_engine",
+      "aspects": [{ "text": "Ярость не заканчивается досрочно (кроме недееспособности/добровольной)", "status": "needs_engine", "engine_ref": "ENG-15" }]
+    },
+    { "id": "asi-16", "level": 16, "name_ru": "Увеличение характеристик", "name_en": "ASI", "match": { "effect": "pf_4" }, "status": "full", "aspects": [{ "text": "ASI/черта", "status": "full" }], "checks": [{ "type": "feat_slot", "at_level": 16 }] },
+    {
+      "id": "improved-brutal-strike-17", "level": 17, "name_ru": "Улучшенный жестокий удар", "name_en": "Improved Brutal Strike",
+      "match": null, "status": "needs_engine",
+      "aspects": [{ "text": "второй дополнительный эффект Жестокого удара", "status": "needs_engine", "engine_ref": "ENG-08" }]
+    },
+    {
+      "id": "indomitable-might", "level": 18, "name_ru": "Неукротимая мощь", "name_en": "Indomitable Might",
+      "match": null, "status": "needs_content",
+      "aspects": [{ "text": "если итог проверки Силы < значения Силы — используешь значение Силы", "status": "full", "note": "выразимо modifier roll:ability_check op:upgrade formula по СИЛ; эффекта нет" }]
+    },
+    {
+      "id": "epic-boon", "level": 19, "name_ru": "Эпический дар", "name_en": "Epic Boon",
+      "match": { "effect": "pf_5" }, "status": "full",
+      "aspects": [{ "text": "черта категории «эпический дар»", "status": "full" }],
+      "checks": [{ "type": "feat_slot", "at_level": 19 }]
+    },
+    {
+      "id": "primal-champion", "level": 20, "name_ru": "Дикий чемпион", "name_en": "Primal Champion",
+      "match": null, "status": "needs_content",
+      "aspects": [{ "text": "Сила и Телосложение +4, максимум увеличивается до 25", "status": "full", "note": "grant_ability_score str+4/con+4 + подъём потолка; эффекта нет" }]
+    }
+  ],
+
+  "subclasses": [
+    {
+      "unit": "subclass:berserker", "names": { "ru": "Путь берсерка", "en": "Path of the Berserker" }, "match": { "class_name": "Путь берсерка" }, "subclass_level": 3,
+      "features": [
+        { "id": "frenzy", "level": 3, "name_ru": "Бешенство", "name_en": "Frenzy", "match": { "effect": "EFFECT-0023" }, "status": "needs_engine", "aspects": [{ "text": "доп. урон костью при Безрассудной атаке в Ярости", "status": "needs_engine", "engine_ref": "ENG-08" }] },
+        { "id": "mindless-rage", "level": 6, "name_ru": "Бездумная ярость", "name_en": "Mindless Rage", "match": { "effect": "EFFECT-0024" }, "status": "needs_engine", "aspects": [{ "text": "иммунитет к Очарованию и Испугу во время Ярости", "status": "needs_engine", "engine_ref": "ENG-15", "note": "условная невосприимчивость к состояниям, гейт по Ярости" }] },
+        { "id": "retaliation", "level": 10, "name_ru": "Ответный удар", "name_en": "Retaliation", "match": { "effect": "EFFECT-0025" }, "status": "needs_engine", "aspects": [{ "text": "реакцией атака по нанёсшему урон в пределах 5 фт", "status": "needs_engine", "engine_ref": "ENG-08" }] },
+        { "id": "intimidating-presence", "level": 14, "name_ru": "Пугающее присутствие", "name_en": "Intimidating Presence", "match": { "effect": "EFFECT-0026" }, "status": "partial", "aspects": [{ "text": "действием наложить Испуг (спас Мдр)", "status": "partial", "note": "condition applied есть; area/множественные цели — ENG-06" }] }
+      ]
+    },
+    {
+      "unit": "subclass:wild-heart", "names": { "ru": "Путь дикого сердца", "en": "Path of the Wild Heart" }, "match": { "class_name": "Путь дикого сердца" }, "subclass_level": 3,
+      "features": [
+        { "id": "animal-speaker", "level": 3, "name_ru": "Говорящий с животными", "name_en": "Animal Speaker", "match": { "effect": "EFFECT-0027" }, "status": "partial", "aspects": [{ "text": "ритуальные заклинания общения с животными", "status": "partial" }] },
+        { "id": "rage-of-wilds", "level": 3, "name_ru": "Ярость дикой природы", "name_en": "Rage of the Wilds", "match": { "effect": "EFFECT-0028" }, "status": "needs_engine", "aspects": [{ "text": "выбор облика при Ярости (Медведь/Орёл/Волк)", "status": "needs_engine", "engine_ref": "ENG-14" }] },
+        { "id": "aspect-of-wilds", "level": 6, "name_ru": "Аспект дикой природы", "name_en": "Aspect of the Wilds", "match": { "effect": "EFFECT-0029" }, "status": "partial", "aspects": [{ "text": "выбор аспекта → чувство/скорость", "status": "full", "note": "choice+grant_sense/grant_speed реализовано" }] },
+        { "id": "nature-speaker", "level": 10, "name_ru": "Говорящий с природой", "name_en": "Nature Speaker", "match": { "effect": "EFFECT-0030" }, "status": "partial", "aspects": [{ "text": "ритуал разговора с растениями/природой", "status": "partial" }] },
+        { "id": "power-of-wilds", "level": 14, "name_ru": "Сила дикой природы", "name_en": "Power of the Wilds", "match": { "effect": "EFFECT-0031" }, "status": "needs_engine", "aspects": [{ "text": "бонусы по выбранному при Ярости облику (полёт/сопротивление)", "status": "needs_engine", "engine_ref": "ENG-14" }] }
+      ]
+    },
+    {
+      "unit": "subclass:world-tree", "names": { "ru": "Путь Мирового Древа", "en": "Path of the World Tree" }, "match": { "class_name": "Путь Мирового Древа" }, "subclass_level": 3,
+      "features": [
+        { "id": "vitality-of-tree", "level": 3, "name_ru": "Жизненная сила Древа", "name_en": "Vitality of the Tree", "match": { "effect": "EFFECT-0032" }, "status": "needs_content", "aspects": [{ "text": "врем. хиты при Ярости + кости на союзников", "status": "full", "note": "temp_hp движок умеет; эффект narrative" }] },
+        { "id": "branches-of-tree", "level": 6, "name_ru": "Ветви Древа", "name_en": "Branches of the Tree", "match": { "effect": "EFFECT-0033" }, "status": "needs_engine", "aspects": [{ "text": "реакцией притянуть/остановить существо", "status": "needs_engine", "engine_ref": "ENG-03" }] },
+        { "id": "battering-roots", "level": 10, "name_ru": "Колотящие корни", "name_en": "Battering Roots", "match": { "effect": "EFFECT-0034" }, "status": "needs_engine", "aspects": [{ "text": "досягаемость и Толчок/Захват оружием ближнего боя", "status": "needs_engine", "engine_ref": "ENG-06" }] },
+        { "id": "travel-along-tree", "level": 14, "name_ru": "Путешествие по Древу", "name_en": "Travel along the Tree", "match": { "effect": "EFFECT-0035" }, "status": "needs_engine", "aspects": [{ "text": "телепортация при Ярости + перенос союзников", "status": "needs_engine", "engine_ref": "ENG-03" }] }
+      ]
+    },
+    {
+      "unit": "subclass:zealot", "names": { "ru": "Путь фанатика", "en": "Path of the Zealot" }, "match": { "class_name": "Путь фанатика" }, "subclass_level": 3,
+      "features": [
+        { "id": "divine-fury", "level": 3, "name_ru": "Божественный гнев", "name_en": "Divine Fury", "match": { "effect": "EFFECT-0036" }, "status": "needs_content", "aspects": [{ "text": "первое попадание в ход в Ярости: +1к6+половина уровня некрот/излуч", "status": "full", "note": "damage-райдер on_hit; эффект narrative" }] },
+        { "id": "warrior-of-gods", "level": 3, "name_ru": "Воин богов", "name_en": "Warrior of the Gods", "match": { "effect": "EFFECT-0037" }, "status": "needs_content", "aspects": [{ "text": "пул костей для самолечения/возврата к жизни", "status": "full", "note": "ресурс d12-пул; эффект narrative" }] },
+        { "id": "fanatical-focus", "level": 6, "name_ru": "Концентрация фанатика", "name_en": "Fanatical Focus", "match": { "effect": "EFFECT-0038" }, "status": "needs_engine", "aspects": [{ "text": "раз в Ярость перебросить проваленный спасбросок", "status": "needs_engine", "engine_ref": "ENG-08" }] },
+        { "id": "zealous-presence", "level": 10, "name_ru": "Фанатичное присутствие", "name_en": "Zealous Presence", "match": { "effect": "EFFECT-0039" }, "status": "needs_engine", "aspects": [{ "text": "бонусным действием дать 10 союзникам преимущество на атаки/спасы", "status": "needs_engine", "engine_ref": "ENG-14" }] },
+        { "id": "rage-of-gods", "level": 14, "name_ru": "Ярость богов", "name_en": "Rage of the Gods", "match": { "effect": "EFFECT-0040" }, "status": "needs_engine", "aspects": [{ "text": "облик божества: сопротивления, полёт, оживление союзников", "status": "needs_engine", "engine_ref": "ENG-06" }] }
+      ]
+    }
+  ]
+}

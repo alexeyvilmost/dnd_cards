@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "actions": {
+      "count": 28,
+      "with_mechanics": 25
+    },
+    "backgrounds": {
+      "count": 16,
+      "with_mechanics": 0
+    },
+    "cards": {
+      "count": 761,
+      "with_mechanics": 152
+    },
+    "classes": {
+      "count": 60,
+      "with_mechanics": 0
+    },
+    "effects": {
+      "count": 453,
+      "with_mechanics": 422
+    },
+    "feats": {
+      "count": 77,
+      "with_mechanics": 0
+    },
+    "races": {
+      "count": 39,
+      "with_mechanics": 0
+    },
+    "resources": {
+      "count": 24,
+      "with_mechanics": 0
+    },
+    "spells": {
+      "count": 393,
+      "with_mechanics": 393
+    },
+    "variables": {
+      "count": 5,
+      "with_mechanics": 0
+    }
+  },
+  "source": "https://backend-production-41c3.up.railway.app"
+}
