@@ -10,50 +10,79 @@ import { charactersV3Api } from '../character/api';
 import type { ForgeCharacter } from '../character/types';
 import { useEncounterStream } from '../battle/useEncounterStream';
 import { encountersApi, type ApplyOp } from '../battle/encountersApi';
-import type { Combatant } from '../battle/encounterTypes';
+import type { Combatant, BattleLogEntry } from '../battle/encounterTypes';
+import type { EngineEvent } from '../mvp/contracts';
+import { conditionOptions } from '../engine/conditions';
 
-const CONDITIONS = ['Отравлен', 'Испуган', 'Схвачен', 'Опрокинут', 'Ошеломлён', 'Ослеплён', 'Очарован', 'Оглох', 'Парализован', 'Опутан', 'Без сознания', 'Невидим'];
+// Состояния берём из реестра движка (канонические id + метки), чтобы наложенное с доски
+// состояние было валидно и на листе персонажа (mechanics.value = id из реестра).
+const CONDITIONS = conditionOptions();
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
 
 export default function EncounterBoard() {
   const { id } = useParams<{ id: string }>();
-  const { meta, state, connected, error } = useEncounterStream(id);
+  const { meta, state, connected, error, log } = useEncounterStream(id);
   const [chars, setChars] = useState<ForgeCharacter[] | null>(null);
   const [addingChar, setAddingChar] = useState(false);
   const [manualName, setManualName] = useState('');
   const [manualHp, setManualHp] = useState('10');
   const [manualAc, setManualAc] = useState('12');
   const [notice, setNotice] = useState<string | null>(null);
+  const [showLog, setShowLog] = useState(false);
 
   const apply = useCallback((op: ApplyOp) => {
     if (id) encountersApi.apply(id, op).catch((e) => console.error('apply error', e));
   }, [id]);
 
-  const patch = useCallback((actorId: string, set: Record<string, unknown>, events?: unknown[]) =>
-    apply({ patches: [{ actor_id: actorId, set }], events }), [apply]);
+  // Запись журнала боя: message → общий журнал; для персонажа (characterId) — ещё и в его лист.
+  const logEntry = (c: Combatant, ev: EngineEvent, message: string): BattleLogEntry => ({
+    message, type: ev.type, payload: ev, ...(c.characterId ? { targetCharacterId: c.characterId } : {}),
+  });
 
   const damage = (c: Combatant, amt: number) => {
     const temp = c.temp ?? 0;
     const absorbed = Math.min(temp, amt);
     const hp = Math.max(0, c.hp - (amt - absorbed));
-    patch(c.actorId, { hp, temp: temp - absorbed }, [`урон ${amt} по ${c.name}`]);
+    apply({
+      patches: [{ actor_id: c.actorId, set: { hp, temp: temp - absorbed } }],
+      log: [logEntry(c, { type: 'damage', amount: amt, damageType: 'прямой' }, `Урон ${amt} → ${c.name}`)],
+    });
   };
-  const heal = (c: Combatant, amt: number) => patch(c.actorId, { hp: Math.min(c.maxHp, c.hp + amt) }, [`лечение ${amt} на ${c.name}`]);
-  const addCondition = (c: Combatant, name: string) => {
+  const heal = (c: Combatant, amt: number) => {
+    const hp = Math.min(c.maxHp, c.hp + amt);
+    apply({
+      patches: [{ actor_id: c.actorId, set: { hp } }],
+      log: [logEntry(c, { type: 'healing', amount: amt }, `Лечение ${amt} → ${c.name}`)],
+    });
+  };
+  const addCondition = (c: Combatant, opt: { id: string; label: string }) => {
     const eff = [...(c.activeEffects ?? [])];
-    if (eff.some((e) => e.name === name)) return;
-    patch(c.actorId, { activeEffects: [...eff, { id: uid(), name }] });
+    if (eff.some((e) => (e as { mechanics?: { value?: string } }).mechanics?.value === opt.id || e.name === opt.label)) return;
+    // Богатая запись — валидна и как combatant.activeEffect, и как состояние листа (SheetConditionsPanel).
+    const entry = { id: uid(), name: opt.label, mechanics: { kind: 'condition', value: opt.id, op: 'apply' }, expiry: 'manual', source: 'бой' };
+    apply({
+      patches: [{ actor_id: c.actorId, set: { activeEffects: [...eff, entry] } }],
+      log: [logEntry(c, { type: 'condition_applied', condition: opt.label }, `Состояние «${opt.label}» → ${c.name}`)],
+    });
   };
-  const removeCondition = (c: Combatant, effId: string) =>
-    patch(c.actorId, { activeEffects: (c.activeEffects ?? []).filter((e) => e.id !== effId) });
+  const removeCondition = (c: Combatant, effId: string) => {
+    const removed = (c.activeEffects ?? []).find((e) => e.id === effId);
+    const name = (removed as { name?: string })?.name ?? 'эффект';
+    apply({
+      patches: [{ actor_id: c.actorId, set: { activeEffects: (c.activeEffects ?? []).filter((e) => e.id !== effId) } }],
+      log: [logEntry(c, { type: 'effect_expired', name }, `Снято «${name}» с ${c.name}`)],
+    });
+  };
   const removeCombatant = (actorId: string) => apply({ remove: [actorId] });
 
   const nextTurn = () => {
     const n = state.combatants.length;
     if (!n) return;
     const next = (state.activeIndex + 1) % n;
-    apply({ active_index: next, round: next === 0 ? state.round + 1 : state.round });
+    const round = next === 0 ? state.round + 1 : state.round;
+    const msg = next === 0 ? `— Раунд ${round} —` : `Ход: ${state.combatants[next]?.name ?? ''}`;
+    apply({ active_index: next, round, log: [{ message: msg }] });
   };
 
   const addCombatant = (c: Combatant) => apply({ add: [c] });
@@ -142,7 +171,7 @@ export default function EncounterBoard() {
               <RowActions
                 onDamage={(n) => damage(c, n)}
                 onHeal={(n) => heal(c, n)}
-                onCondition={(name) => addCondition(c, name)}
+                onCondition={(opt) => addCondition(c, opt)}
               />
             </div>
           );
@@ -169,11 +198,27 @@ export default function EncounterBoard() {
           {chars?.length === 0 && <p style={{ color: '#a99f8b' }}>Персонажей нет.</p>}
         </div>
       )}
+
+      {/* Общий журнал боя — все события этого боя (урон/лечение/состояния/ход), live из SSE. */}
+      <div style={{ marginTop: 16 }}>
+        <button onClick={() => setShowLog((v) => !v)} style={{ ...btnGhost, width: '100%', textAlign: 'left' }}>
+          {showLog ? '▾' : '▸'} Журнал боя{log.length ? ` (${log.length})` : ''}
+        </button>
+        {showLog && (
+          <div style={{ marginTop: 6, border: '1px solid #3a332a', borderRadius: 8, padding: 8, background: '#161210', maxHeight: 240, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {log.length ? log.map((l, i) => (
+              <div key={`${l.seq}-${i}`} style={{ fontSize: 12.5, color: '#c9b98a', lineHeight: 1.5 }}>
+                <span style={{ color: '#6b5f4a', marginRight: 6 }}>#{l.seq}</span>{l.text}
+              </div>
+            )) : <span style={{ color: '#a99f8b', fontSize: 13 }}>Событий пока нет.</span>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function RowActions({ onDamage, onHeal, onCondition }: { onDamage: (n: number) => void; onHeal: (n: number) => void; onCondition: (name: string) => void }) {
+function RowActions({ onDamage, onHeal, onCondition }: { onDamage: (n: number) => void; onHeal: (n: number) => void; onCondition: (opt: { id: string; label: string }) => void }) {
   const [amt, setAmt] = useState('');
   const n = Math.max(0, parseInt(amt, 10) || 0);
   return (
@@ -181,9 +226,9 @@ function RowActions({ onDamage, onHeal, onCondition }: { onDamage: (n: number) =
       <input value={amt} onChange={(e) => setAmt(e.target.value)} type="number" placeholder="кол-во" style={{ ...input, width: 70 }} />
       <button onClick={() => n && onDamage(n)} style={{ ...btn, background: '#5a2b2b' }}>Урон</button>
       <button onClick={() => n && onHeal(n)} style={{ ...btn, background: '#2b4a2b' }}>Лечение</button>
-      <select onChange={(e) => { if (e.target.value) { onCondition(e.target.value); e.target.value = ''; } }} defaultValue="" style={{ ...input, width: 150 }}>
+      <select onChange={(e) => { const opt = CONDITIONS.find((c) => c.id === e.target.value); if (opt) onCondition(opt); e.target.value = ''; }} defaultValue="" style={{ ...input, width: 150 }}>
         <option value="">+ состояние…</option>
-        {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+        {CONDITIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
       </select>
     </div>
   );

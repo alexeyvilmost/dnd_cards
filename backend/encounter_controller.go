@@ -152,6 +152,104 @@ func (ec *EncounterController) encounterConflict(cid string, thisEnc uuid.UUID) 
 	return "", false // персонажа там уже нет — ссылка устарела
 }
 
+// syncCombatantsToCharacters — write-through боевого состояния персонажей-комбатантов в их запись
+// characters_v3: current_hp (из hp), turn_state.temp_hp (из temp, merge), active_effects (из
+// activeEffects). ПОЛЕВОЙ write-through: пишем только те поля, что этот op реально менял (changed
+// по actorId), — иначе патч, менявший лишь состояния, затирал бы current_hp значением комбатанта
+// (которое могло разойтись с листом). max_hp НЕ трогаем — заморожен при добавлении. Монстры (без
+// characterId) и не найденные персонажи пропускаются.
+func syncCombatantsToCharacters(tx *gorm.DB, state map[string]interface{}, changed map[string]map[string]bool) {
+	raw, ok := state["combatants"].([]interface{})
+	if !ok {
+		return
+	}
+	for _, it := range raw {
+		m, ok := it.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		aid, _ := m["actorId"].(string)
+		fields := changed[aid]
+		if fields == nil {
+			continue
+		}
+		cid, _ := m["characterId"].(string)
+		if cid == "" {
+			continue
+		}
+		u, e := uuid.Parse(cid)
+		if e != nil {
+			continue
+		}
+		upd := map[string]interface{}{}
+		if fields["hp"] {
+			if hp, ok := m["hp"].(float64); ok {
+				upd["current_hp"] = int(hp)
+			}
+		}
+		if fields["activeEffects"] {
+			if ae, ok := m["activeEffects"].([]interface{}); ok {
+				var eff ActiveEffectRows
+				b, _ := json.Marshal(ae)
+				_ = json.Unmarshal(b, &eff)
+				upd["active_effects"] = &eff
+			}
+		}
+		if fields["temp"] {
+			if t, ok := m["temp"].(float64); ok {
+				// turn_state — read-merge-write только ключа temp_hp (не затираем death_saves/attuned_ids).
+				var cur CharacterV3
+				if e := tx.Select("turn_state").First(&cur, "id = ?", u).Error; e != nil {
+					continue // персонажа нет (монстр/чужой/устаревший id) — пропуск
+				}
+				ts := JSONMap{}
+				if cur.TurnState != nil {
+					ts = *cur.TurnState
+				}
+				ts["temp_hp"] = int(t)
+				upd["turn_state"] = &ts
+			}
+		}
+		if len(upd) == 0 {
+			continue
+		}
+		if e := tx.Model(&CharacterV3{}).Where("id = ?", u).Updates(upd).Error; e != nil {
+			log.Printf("encounter write-through для персонажа %s: %v", cid, e)
+		}
+	}
+}
+
+// writeCharacterJournal — пишет адресные записи журнала боя в журналы персонажей (character_events),
+// чтобы всё, что произошло с персонажем (даже с другого устройства/аккаунта), было у него в журнале.
+// Best-effort: ошибка одной записи (битый FK/парс) не рушит транзакцию боя.
+func writeCharacterJournal(tx *gorm.DB, entries []BattleLogEntry) {
+	now := time.Now()
+	for _, le := range entries {
+		if le.TargetCharacterID == "" || le.Payload == nil {
+			continue
+		}
+		u, e := uuid.Parse(le.TargetCharacterID)
+		if e != nil {
+			continue
+		}
+		typ := le.Type
+		if typ == "" {
+			if t, ok := le.Payload["type"].(string); ok {
+				typ = t
+			}
+		}
+		if typ == "" {
+			continue
+		}
+		ev := CharacterEvent{CharacterID: u, Ts: now, Type: typ, Payload: le.Payload}
+		if e := tx.Create(&ev).Error; e != nil {
+			// Мирроринг журнала — best-effort (событие боя durable в encounter_events);
+			// логируем, чтобы потеря записи журнала персонажа при сбое БД была видна.
+			log.Printf("encounter журнал персонажа %s: %v", le.TargetCharacterID, e)
+		}
+	}
+}
+
 // --- CRUD ---
 
 func (ec *EncounterController) Create(c *gin.Context) {
@@ -192,6 +290,32 @@ func (ec *EncounterController) Get(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, enc)
+}
+
+// Events — последние N событий боя (общий журнал боя) для бэкскролла на доске.
+// Каждый EncounterEvent несёт seq + payload (в payload — log/events операции). Отдаём в
+// хронологическом порядке (старые→новые), как ждёт панель журнала.
+func (ec *EncounterController) Events(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный id"})
+		return
+	}
+	limit := 100
+	if s := c.Query("limit"); s != "" {
+		if v, e := strconv.Atoi(s); e == nil && v > 0 && v <= 500 {
+			limit = v
+		}
+	}
+	var events []EncounterEvent
+	if err := ec.db.Where("encounter_id = ?", id).Order("seq desc").Limit(limit).Find(&events).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка загрузки"})
+		return
+	}
+	for i, j := 0, len(events)-1; i < j; i, j = i+1, j-1 {
+		events[i], events[j] = events[j], events[i]
+	}
+	c.JSON(http.StatusOK, gin.H{"events": events})
 }
 
 func (ec *EncounterController) Join(c *gin.Context) {
@@ -251,6 +375,29 @@ func (ec *EncounterController) Apply(c *gin.Context) {
 	newState := JSONMap(applyOps(state, req))
 	after := characterIDsInState(newState)
 
+	// Изменённые поля комбатантов (actorId → набор ключей patch.Set / add) — для ПОЛЕВОГО
+	// write-through: пишем в лист только те поля, что реально менял этот op, иначе патч только
+	// состояния (без hp) затирал бы current_hp листа значением из комбатанта. Removes исключаем.
+	changed := map[string]map[string]bool{}
+	mark := func(aid, key string) {
+		if changed[aid] == nil {
+			changed[aid] = map[string]bool{}
+		}
+		changed[aid][key] = true
+	}
+	for _, p := range req.Patches {
+		for k := range p.Set {
+			mark(p.ActorID, k)
+		}
+	}
+	for _, a := range req.Add {
+		if s, ok := a["actorId"].(string); ok {
+			for k := range a {
+				mark(s, k)
+			}
+		}
+	}
+
 	// Правило «один бой на персонажа»: если добавляемый персонаж уже в другом бою — отказ.
 	for cid := range after {
 		if !before[cid] {
@@ -298,6 +445,13 @@ func (ec *EncounterController) Apply(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось применить"})
 		return
 	}
+	// Пост-коммит best-effort: синк состояния в листы + журналы персонажей. Отдельными
+	// операциями (не в транзакции боя), чтобы сбой листа/журнала не откатывал сам бой; обе
+	// идемпотентны (перезапишутся на следующем применении). Write-through: боевое HP/temp/
+	// состояния затронутых персонажей → в их лист (лист верен даже при уроне с другого
+	// устройства). Журнал персонажей: адресные события — «всё с персонажем логируется у него».
+	syncCombatantsToCharacters(ec.db, newState, changed)
+	writeCharacterJournal(ec.db, req.Log)
 	// Дверной звонок всем инстансам (включая свой) — listener загрузит событие и разошлёт.
 	ec.hub.notify(ec.db, id.String(), newSeq)
 	c.JSON(http.StatusOK, gin.H{"seq": newSeq, "state": enc.State})

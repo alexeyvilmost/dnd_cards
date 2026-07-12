@@ -139,6 +139,29 @@ func TestCharacterLinkDiff(t *testing.T) {
 	}
 }
 
+func TestOpPayload_Log(t *testing.T) {
+	// Структурированный журнал (Log) должен попасть в payload события боя (общий журнал + основа
+	// журналов персонажей на сервере).
+	m := opPayload(ApplyRequest{Log: []BattleLogEntry{{
+		Message:           "Тест нанёс урон 6 (яд) по ПУ",
+		TargetCharacterID: "char-pu",
+		Type:              "damage",
+		Payload:           JSONMap{"type": "damage", "amount": float64(6), "damageType": "poison", "source": "Тест"},
+	}}})
+	raw, ok := m["log"].([]interface{})
+	if !ok || len(raw) != 1 {
+		t.Fatalf("log не сериализовался в payload: %+v", m["log"])
+	}
+	entry := raw[0].(map[string]interface{})
+	if entry["message"] != "Тест нанёс урон 6 (яд) по ПУ" || entry["targetCharacterId"] != "char-pu" {
+		t.Fatalf("поля log потеряны: %+v", entry)
+	}
+	pl := entry["payload"].(map[string]interface{})
+	if pl["type"] != "damage" || pl["source"] != "Тест" {
+		t.Fatalf("EngineEvent payload потерян: %+v", pl)
+	}
+}
+
 func TestOpPayload_Roundtrip(t *testing.T) {
 	r := 4
 	m := opPayload(ApplyRequest{Round: &r, Remove: []string{"x"}, Events: []interface{}{"hit"}})

@@ -48,18 +48,20 @@ export interface RollLog {
   text: string;
 }
 
+// `source` — необязательная атрибуция «кто это сделал» (напр. имя атакующего в бою). Используется
+// в журнале ЦЕЛИ, чтобы показать «Тест: Урон 6 (яд)». Не влияет на механику, только на текст.
 export type EngineEvent =
   | { type: 'roll'; label: string; roll: RollLog }
-  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog }
-  | { type: 'healing'; amount: number; roll?: RollLog }
-  | { type: 'temp_hp'; amount: number }
+  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string }
+  | { type: 'healing'; amount: number; roll?: RollLog; source?: string }
+  | { type: 'temp_hp'; amount: number; source?: string }
   | { type: 'resource_spent'; resource: string; amount: number; remaining: number }
   | { type: 'resource_restored'; resource: string; amount: number; current: number }
   | { type: 'item_consumed'; cardId: string; amount: number; remaining: number; name?: string }
   | { type: 'item_added'; cardId: string; qty: number; total: number; name?: string }
-  | { type: 'effect_applied'; name: string; sourceAction?: string }
+  | { type: 'effect_applied'; name: string; sourceAction?: string; source?: string }
   | { type: 'effect_expired'; name: string }
-  | { type: 'condition_applied'; condition: string }
+  | { type: 'condition_applied'; condition: string; source?: string }
   | { type: 'turn_started' }
   | { type: 'turn_ended' }
   | { type: 'short_rest' }

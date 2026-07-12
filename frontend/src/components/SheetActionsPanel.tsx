@@ -10,7 +10,8 @@ import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState, buildTargetFromCharacter } from '../character/runtime';
 import { encountersApi } from '../battle/encountersApi';
-import type { Combatant } from '../battle/encounterTypes';
+import type { Combatant, BattleLogEntry } from '../battle/encounterTypes';
+import { describeEngineEvent } from '../engine/events';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
@@ -416,18 +417,48 @@ export default function SheetActionsPanel({
   }, [loadTargetChars, targetAc, targetSaveMod]);
 
   // Применяем итоговое состояние цели к комбатанту (патч hp/temp/состояния) — сервер разошлёт
-  // на доску и все устройства. maxHp не трогаем (попадание не меняет максимум).
-  const applyToEncounterTarget = useCallback(async (cb: Combatant, ts: RuntimeState) => {
+  // на доску и все устройства, сделает write-through в лист цели и запишет журналы. maxHp не трогаем.
+  // Журнал строим по ДЕЛЬТЕ состояния ЦЕЛИ (before=cb, after=ts), а не фильтром r.events: движок
+  // кладёт self- и target-события в один массив без атрибуции, и фильтр по типу залогировал бы
+  // само-лечение каста (напр. Вампирское касание) в журнал цели. events нужен лишь для типа урона.
+  const applyToEncounterTarget = useCallback(async (cb: Combatant, ts: RuntimeState, events: EngineEvent[]) => {
     if (!encounterId) return;
+    const src = character.name;
+    const log: BattleLogEntry[] = [];
+    const add = (e: EngineEvent) => log.push({
+      message: `${src} → ${cb.name}: ${describeEngineEvent(e)}`,
+      type: e.type,
+      payload: { ...e, source: src } as EngineEvent, // журнал цели: «Тест: Урон 6 (яд)»
+      ...(cb.characterId ? { targetCharacterId: cb.characterId } : {}),
+    });
+    const hpLost = cb.hp - ts.hp.current;               // >0 — урон по hp
+    const tempLost = (cb.temp ?? 0) - (ts.hp.temp ?? 0); // >0 — израсходованы врем. хиты (поглощение)
+    const damage = Math.max(0, hpLost) + Math.max(0, tempLost);
+    const healed = Math.max(0, -hpLost);
+    const tempGained = Math.max(0, -tempLost);
+    if (damage > 0) {
+      const dt = (events.find((e) => e.type === 'damage') as { damageType?: string } | undefined)?.damageType ?? 'урон';
+      add({ type: 'damage', amount: damage, damageType: dt });
+    }
+    if (healed > 0) add({ type: 'healing', amount: healed });
+    if (tempGained > 0) add({ type: 'temp_hp', amount: tempGained });
+    const prevIds = new Set((cb.activeEffects ?? []).map((e) => e.id));
+    for (const e of ts.activeEffects ?? []) {
+      const eff = e as { id?: string; name?: string; mechanics?: { kind?: string; value?: string } };
+      if (eff.id && prevIds.has(eff.id)) continue; // уже был — не новое
+      if (eff.mechanics?.kind === 'condition') add({ type: 'condition_applied', condition: eff.name ?? eff.mechanics.value ?? 'состояние' });
+      else add({ type: 'effect_applied', name: eff.name ?? 'эффект' });
+    }
+    if (!log.length) log.push({ message: `${src} → ${cb.name}: без изменений` });
     try {
       await encountersApi.apply(encounterId, {
         patches: [{ actor_id: cb.actorId, set: { hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects } }],
-        events: [`${cb.name}: HP ${ts.hp.current}/${cb.maxHp}`],
+        log,
       });
       encCombatantsRef.current = encCombatantsRef.current.map((c) =>
         c.actorId === cb.actorId ? { ...c, hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects as unknown as Combatant['activeEffects'] } : c);
     } catch (e) { console.error('Не удалось применить к цели в бою', e); }
-  }, [encounterId]);
+  }, [encounterId, character.name]);
 
   const runAction = async (action: SheetAction) => {
     let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
@@ -539,22 +570,28 @@ export default function SheetActionsPanel({
       const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events);
       const decision = await diceDialog.request(plan, title, preview, { confirm, targets: targetOpts?.targets, needsTarget: targetOpts?.needsTarget });
       if (decision.mode === 'cancel') return null;
-      // Выбранная цель → богатая цель + замыкание применения результата. В бою цель — комбатант
-      // (по actorId), применяем патчем на сервер (синк доски); иначе — персонаж (по id) в его запись.
+      // Выбранная цель → богатая цель. В бою цель — комбатант (по actorId), применяем патчем на
+      // сервер (синк доски + write-through в лист + журналы); иначе — персонаж (по id) в его запись.
       let richTarget: TargetContext | undefined;
-      let commit: ((ts: RuntimeState) => Promise<void>) | undefined;
+      let targetCb: Combatant | undefined;
+      let targetChar: ForgeCharacter | undefined;
       if (decision.targetId) {
         if (encounterId) {
-          const cb = encCombatantsRef.current.find((c) => c.actorId === decision.targetId);
-          if (cb) { richTarget = await buildEncounterTarget(cb); commit = (ts) => applyToEncounterTarget(cb, ts); }
+          targetCb = encCombatantsRef.current.find((c) => c.actorId === decision.targetId);
+          if (targetCb) richTarget = await buildEncounterTarget(targetCb);
         } else {
-          const targetChar = (targetCharsRef.current ?? []).find((c) => c.id === decision.targetId);
-          if (targetChar) { richTarget = buildTargetFromCharacter(targetChar); commit = (ts) => persistTarget(targetChar, ts); }
+          targetChar = (targetCharsRef.current ?? []).find((c) => c.id === decision.targetId);
+          if (targetChar) richTarget = buildTargetFromCharacter(targetChar);
         }
       }
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
       const r = executeAction(baseState, m, execCtx(rng, false, choices, richTarget));
-      const commitTarget = commit && r.targetState ? () => commit!(r.targetState!) : undefined;
+      let commitTarget: (() => Promise<void>) | undefined;
+      if (r.targetState) {
+        const tstate = r.targetState;
+        if (targetCb) commitTarget = () => applyToEncounterTarget(targetCb!, tstate, r.events);
+        else if (targetChar) commitTarget = () => persistTarget(targetChar!, tstate);
+      }
       return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, commitTarget };
     };
 

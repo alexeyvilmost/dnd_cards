@@ -248,6 +248,7 @@ func main() {
 		api.POST("/encounters", OptionalAuthMiddleware(authService), encounterController.Create)
 		api.GET("/encounters", OptionalAuthMiddleware(authService), encounterController.List)
 		api.GET("/encounters/:id", OptionalAuthMiddleware(authService), encounterController.Get)
+		api.GET("/encounters/:id/events", OptionalAuthMiddleware(authService), encounterController.Events)
 		api.POST("/encounters/:id/join", OptionalAuthMiddleware(authService), encounterController.Join)
 		api.POST("/encounters/:id/apply", OptionalAuthMiddleware(authService), encounterController.Apply)
 		api.GET("/encounters/:id/stream", encounterController.Stream) // SSE, без middleware-обёрток

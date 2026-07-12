@@ -1,6 +1,6 @@
 /** REST-клиент онлайн-боёв + базовый URL для SSE-потока (EventSource). */
 import { apiClient } from '../api/client';
-import type { Encounter, EncounterState, Combatant } from './encounterTypes';
+import type { Encounter, EncounterState, Combatant, EncounterEvent, BattleLogEntry } from './encounterTypes';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-production-41c3.up.railway.app';
 
@@ -11,6 +11,8 @@ export interface ApplyOp {
   round?: number;
   active_index?: number;
   events?: unknown[];
+  /** Структурированный журнал: строки боя + адресные записи в журналы персонажей. */
+  log?: BattleLogEntry[];
 }
 
 export const encountersApi = {
@@ -25,6 +27,12 @@ export const encountersApi = {
   async get(id: string): Promise<Encounter> {
     const r = await apiClient.get<Encounter>(`/api/encounters/${id}`);
     return r.data;
+  },
+  /** Последние события боя (общий журнал) для бэкскролла на доске — хронологический порядок. */
+  async getEvents(id: string, limit = 100): Promise<EncounterEvent[]> {
+    const r = await apiClient.get<{ events: { seq: number; payload?: EncounterEvent }[] }>(`/api/encounters/${id}/events?limit=${limit}`);
+    // Сервер отдаёт EncounterEvent-строки {seq, payload}; разворачиваем payload в плоское событие.
+    return (r.data.events ?? []).map((e) => ({ ...(e.payload ?? {}), seq: e.seq } as EncounterEvent));
   },
   async join(id: string): Promise<Encounter> {
     const r = await apiClient.post<Encounter>(`/api/encounters/${id}/join`, {});

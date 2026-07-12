@@ -34,6 +34,15 @@ export interface Encounter {
   seq: number;
 }
 
+/** Запись журнала боя: message — строка для общего журнала; targetCharacterId+payload —
+ *  для журнала конкретного персонажа (пишет сервер). type/payload — EngineEvent. */
+export interface BattleLogEntry {
+  message: string;
+  targetCharacterId?: string;
+  type?: string;
+  payload?: import('../mvp/contracts').EngineEvent;
+}
+
 /** Событие боя из SSE-потока (совпадает с payload op на сервере + seq). */
 export interface EncounterEvent {
   seq: number;
@@ -43,6 +52,7 @@ export interface EncounterEvent {
   round?: number;
   active_index?: number;
   events?: unknown[];
+  log?: BattleLogEntry[];
 }
 
 export function emptyEncounterState(): EncounterState {

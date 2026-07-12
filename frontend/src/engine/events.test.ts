@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   damageEvent,
+  describeEngineEvent,
   deserializeEngineEvent,
   deserializeStoredEvent,
   narrativeEvent,
@@ -8,6 +9,7 @@ import {
   serializeEngineEvent,
   serializeStoredEvent,
 } from './events';
+import type { EngineEvent } from '../mvp/contracts';
 import { rollD20 } from './roll';
 import { seededRng } from '../mvp/fixtures';
 
@@ -31,5 +33,13 @@ describe('events serialization', () => {
   it('narrative event', () => {
     const e = narrativeEvent('Тест');
     expect(deserializeEngineEvent(serializeEngineEvent(e))).toEqual(e);
+  });
+
+  it('source-атрибуция: журнал цели показывает «кто» (для боя)', () => {
+    const withSrc: EngineEvent = { type: 'damage', amount: 6, damageType: 'яд', source: 'Тест' };
+    expect(describeEngineEvent(withSrc)).toBe('Тест: Урон 6 (яд)');
+    // без source — как раньше (журнал кастующего)
+    expect(describeEngineEvent({ type: 'damage', amount: 6, damageType: 'яд' })).toBe('Урон 6 (яд)');
+    expect(describeEngineEvent({ type: 'condition_applied', condition: 'Отравлен', source: 'Тест' })).toBe('Тест: Состояние: Отравлен');
   });
 });

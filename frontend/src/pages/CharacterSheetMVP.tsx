@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon,
@@ -9,6 +9,8 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { encountersApi } from '../battle/encountersApi';
+import { useEncounterStream } from '../battle/useEncounterStream';
+import type { Combatant } from '../battle/encounterTypes';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
@@ -119,10 +121,17 @@ const CharacterSheetMVP = () => {
   // (действия и заклинания) целятся в один и тот же AC.
   const [targetAc, setTargetAc] = useState(10);
   const [targetSaveMod, setTargetSaveMod] = useState(0);
-  // Онлайн-бой: если у персонажа проставлена связь current_encounter_id — подтягиваем название
-  // боя для индикатора «в бою» в шапке и прокидываем id боя в панели действий (цели = комбатанты).
+  // Онлайн-бой: если персонаж в бою (current_encounter_id) — подписываемся на общий стол боя,
+  // чтобы (а) показывать индикатор «в бою», (б) отражать боевое HP/temp/состояния на листе в
+  // реальном времени (даже если урон нанесли с другого устройства), (в) синхронизировать
+  // собственные изменения листа обратно в комбатант. id боя также идёт в панели действий.
   const encId = character?.current_encounter_id ?? null;
-  const [activeEncounter, setActiveEncounter] = useState<{ id: string; name: string } | null>(null);
+  const { meta: encMeta, state: encState, seq: encSeq } = useEncounterStream(encId ?? undefined);
+  const activeEncounter = encId ? { id: encId, name: encMeta?.name ?? 'Бой' } : null;
+  const encStateRef = useRef(encState);
+  encStateRef.current = encState;
+  const ownSigRef = useRef('');            // последняя применённая на лист боевая сигнатура
+  const pendingSelfRef = useRef<string | null>(null); // ожидаемая сигнатура после собственного пуша
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-theme') === 'paper'; } catch { return false; }
   });
@@ -181,15 +190,73 @@ const CharacterSheetMVP = () => {
     return () => { stale = true; };
   }, [id, loadJournal]);
 
-  // Название текущего боя для индикатора. Если бой удалён/недоступен — прячем индикатор.
+  // Сигнатура боевого состояния для сравнения. НЕ используем JSON.stringify(activeEffects):
+  // Go отдаёт ключи jsonb в алфавитном порядке, а лист — в порядке полей структуры, поэтому
+  // строки не совпали бы и сравнение всегда ложно-«изменилось». Берём стабильный порядок —
+  // отсортированные id:name эффектов (достаточно для детекта добавления/снятия).
+  const combatantSig = (c: { hp: number; temp?: number; activeEffects?: unknown[] }) => {
+    const eff = (c.activeEffects ?? [])
+      .map((e) => { const o = e as { id?: string; name?: string }; return `${o?.id ?? ''}:${o?.name ?? ''}`; })
+      .sort().join('|');
+    return `${c.hp}|${c.temp ?? 0}|${eff}`;
+  };
+
+  // Room→sheet (live): на каждое событие боя сверяем свой комбатант и, если боевое HP/temp/
+  // состояния изменились, отражаем их на листе и подтягиваем журнал (мог получить серверные
+  // записи об уроне извне). Читаем истину из комбатанта, поэтому лист верен даже если запись
+  // персонажа ещё не догнали write-through'ом. pendingSelfRef — не откатывать оптимистичное
+  // собственное изменение, пока наш пуш не долетел (иначе чужое событие в зазоре мигнёт старым HP).
   useEffect(() => {
-    if (!encId) { setActiveEncounter(null); return; }
-    let stale = false;
-    encountersApi.get(encId)
-      .then((enc) => { if (!stale) setActiveEncounter({ id: enc.id, name: enc.name }); })
-      .catch(() => { if (!stale) setActiveEncounter(null); });
-    return () => { stale = true; };
-  }, [encId]);
+    if (!encId || !id) return;
+    const own = encState.combatants.find((c) => c.characterId === id);
+    if (!own) return;
+    const sig = combatantSig(own);
+    if (pendingSelfRef.current) {
+      if (sig === pendingSelfRef.current) pendingSelfRef.current = null; // наш пуш долетел
+      else return; // ждём собственный пуш — не трогаем лист
+    }
+    if (sig === ownSigRef.current) return;
+    ownSigRef.current = sig;
+    setCharacter((prev) => prev ? {
+      ...prev,
+      current_hp: own.hp,
+      active_effects: (own.activeEffects ?? []) as unknown[],
+      turn_state: { ...(prev.turn_state ?? {}), temp_hp: own.temp ?? 0 },
+    } : prev);
+    loadJournal(id);
+  }, [encSeq, encId, id, encState, loadJournal]);
+
+  // Sheet→room (self-sync): собственные изменения листа (само-лечение/урон/эффекты) — в свой
+  // комбатант в бою, чтобы доска и другие участники видели их. Пушим только при отличии; ставим
+  // pendingSelfRef, чтобы live-эффект не откатил оптимистичное значение до прихода эха.
+  const syncSelfToEncounter = useCallback((next: ForgeCharacter) => {
+    const eid = next.current_encounter_id;
+    if (!eid) return;
+    const own = encStateRef.current.combatants.find((c) => c.characterId === next.id);
+    if (!own) return;
+    const hp = next.current_hp ?? 0;
+    const temp = Number(next.turn_state?.temp_hp ?? 0);
+    const activeEffects = (next.active_effects ?? []) as Combatant['activeEffects'];
+    const sig = combatantSig({ hp, temp, activeEffects: activeEffects ?? [] });
+    if (sig === combatantSig(own)) return; // ничего не изменилось
+    pendingSelfRef.current = sig;
+    ownSigRef.current = sig; // лист уже показывает next
+    encountersApi.apply(eid, {
+      patches: [{ actor_id: own.actorId, set: { hp, temp, activeEffects } }],
+      log: [{ message: `${next.name}: HP ${hp}/${next.max_hp ?? own.maxHp}` }],
+    }).catch(() => {
+      // Пуш не прошёл: комбатант остался устаревшим, но лист уже персистнут в запись персонажа.
+      // Не откатываем лист к устаревшему комбатанту — считаем его сигнатуру «применённой».
+      pendingSelfRef.current = null;
+      ownSigRef.current = combatantSig(own);
+    });
+  }, []);
+
+  // Обёртка onUpdated: применяем изменение к листу и синхроним себя в бой (если в бою).
+  const handleCharacterUpdated = useCallback((next: ForgeCharacter) => {
+    setCharacter(next);
+    syncSelfToEncounter(next);
+  }, [syncSelfToEncounter]);
 
   const draft = useMemo(() => (character ? characterToDraft(character) : null), [character]);
 
@@ -585,7 +652,7 @@ const CharacterSheetMVP = () => {
           spellsByLevel={spellsByLevel}
           lineageName={lineageName}
           inPlayChoices={inPlayChoices}
-          onUpdated={setCharacter}
+          onUpdated={handleCharacterUpdated}
           onEvents={appendRuntimeEvents}
         />
       ) : (
@@ -608,7 +675,7 @@ const CharacterSheetMVP = () => {
             equipCards={equipCards}
             itemGrantedPassives={itemGrantedPassives}
             maxHp={maxHP}
-            onUpdated={setCharacter}
+            onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
             targetAc={targetAc}
             onTargetAcChange={setTargetAc}
@@ -623,7 +690,7 @@ const CharacterSheetMVP = () => {
             character={character}
             choices={inPlayChoices}
             resolved={draft.resolvedChoices}
-            onUpdated={setCharacter}
+            onUpdated={handleCharacterUpdated}
           />
           )}
 
@@ -631,7 +698,7 @@ const CharacterSheetMVP = () => {
           <SheetEquipmentPanel
             character={character}
             ruleState={ruleState}
-            onUpdated={setCharacter}
+            onUpdated={handleCharacterUpdated}
             passives={passives}
           />
           )}
@@ -641,7 +708,7 @@ const CharacterSheetMVP = () => {
             character={character}
             assembled={assembledForActions ?? assembled}
             ruleState={ruleState}
-            onUpdated={setCharacter}
+            onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
           />
           )}
@@ -651,7 +718,7 @@ const CharacterSheetMVP = () => {
             character={character}
             maxHp={maxHP}
             maxHpBreakdown={maxHpBreakdown}
-            onUpdated={setCharacter}
+            onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
             conSaveBonus={ruleState.savingThrowBonuses.con}
             sheetCtx={sheetCtx}
@@ -662,7 +729,7 @@ const CharacterSheetMVP = () => {
           {inSec('combat') && (
           <SheetConditionsPanel
             character={character}
-            onUpdated={setCharacter}
+            onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
           />
           )}
@@ -949,7 +1016,7 @@ const CharacterSheetMVP = () => {
                 equipCards={equipCards}
                 itemGrantedPassives={itemGrantedPassives}
                 maxHp={maxHP}
-                onUpdated={setCharacter}
+                onUpdated={handleCharacterUpdated}
                 onEvents={appendRuntimeEvents}
                 embedded
                 spellsOnly

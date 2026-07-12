@@ -47,14 +47,27 @@ type CombatantPatch struct {
 	Set     JSONMap `json:"set"`
 }
 
+// BattleLogEntry — структурированная запись журнала боя. Message идёт в общий журнал боя
+// (панель на доске). Если задан TargetCharacterID — сервер пишет Payload (EngineEvent) в
+// журнал персонажа (character_events), чтобы «всё, что взаимодействует с персонажем, даже
+// извне, логировалось у него». Payload.type должен совпадать с Type (контракт describeEngineEvent).
+type BattleLogEntry struct {
+	Message           string  `json:"message"`
+	TargetCharacterID string  `json:"targetCharacterId"`
+	Type              string  `json:"type"`
+	Payload           JSONMap `json:"payload"`
+}
+
 // ApplyRequest — атомарная операция над боем (client-authoritative-relay).
-// Патчи/добавления/удаления комбатантов + смена раунда/хода + произвольные события
-// (EngineEvent-ы для журнала/анимации). Сервер применяет всё, бампит seq, шлёт подписчикам.
+// Патчи/добавления/удаления комбатантов + смена раунда/хода + журнал.
+// Сервер применяет всё, бампит seq, write-through боевого состояния в листы персонажей,
+// пишет журналы (боя + персонажей) и шлёт подписчикам.
 type ApplyRequest struct {
 	Patches     []CombatantPatch         `json:"patches"`
 	Add         []map[string]interface{} `json:"add"`
 	Remove      []string                 `json:"remove"`
 	Round       *int                     `json:"round"`
 	ActiveIndex *int                     `json:"active_index"`
-	Events      []interface{}            `json:"events"`
+	Events      []interface{}            `json:"events"` // legacy: свободные строки журнала боя
+	Log         []BattleLogEntry         `json:"log"`    // структурированный журнал (боя + персонажей)
 }

@@ -121,15 +121,17 @@ export function formatRollBreakdown(roll: RollLog): string {
 
 /** Текстовое описание события для UI журнала. */
 export function describeEngineEvent(event: EngineEvent): string {
+  // Атрибуция «кто сделал» (в журнале цели): «Тест: Урон 6 (яд)».
+  const src = 'source' in event && event.source ? `${event.source}: ` : '';
   switch (event.type) {
     case 'roll':
       return `${event.label}: ${event.roll.text}`;
     case 'damage':
-      return `Урон ${event.amount} (${event.damageType})${event.roll ? ` · ${event.roll.text}` : ''}`;
+      return `${src}Урон ${event.amount} (${event.damageType})${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'healing':
-      return `Лечение ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
+      return `${src}Лечение ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'temp_hp':
-      return `Временные HP +${event.amount}`;
+      return `${src}Временные HP +${event.amount}`;
     case 'resource_spent':
       return `Потрачено ${event.resource}: ${event.amount} (осталось ${event.remaining})`;
     case 'resource_restored':
@@ -139,11 +141,11 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'item_added':
       return `Получен предмет${event.name ? `: ${event.name}` : ''}${event.qty > 1 ? ` ×${event.qty}` : ''}`;
     case 'effect_applied':
-      return `Эффект: ${event.name}${event.sourceAction ? ` (${event.sourceAction})` : ''}`;
+      return `${src}Эффект: ${event.name}${event.sourceAction ? ` (${event.sourceAction})` : ''}`;
     case 'effect_expired':
       return `Эффект снят: ${event.name}`;
     case 'condition_applied':
-      return `Состояние: ${event.condition}`;
+      return `${src}Состояние: ${event.condition}`;
     case 'turn_started':
       return 'Начало хода';
     case 'turn_ended':
