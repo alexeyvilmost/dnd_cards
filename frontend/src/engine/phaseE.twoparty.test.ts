@@ -136,10 +136,50 @@ describe('Спасбросок бросает цель (онлайн-бой): fo
     expect(dmgOk).toBe(Math.floor(dmgFail / 2)); // успех = половина от урона провала (те же кости)
   });
 
-  it('readTargetSave — извлекает ability/dc/half из механики', () => {
+  it('readTargetSave — извлекает ability/dc/half/avoidsConditions из механики', () => {
     const s = readTargetSave(halfSaveAction, { character, rng: HIT } as Ctx);
-    expect(s).toEqual({ ability: 'dex', dc: 15, half: true });
+    expect(s).toEqual({ ability: 'dex', dc: 15, half: true, avoidsConditions: [] });
     // действие без спаса цели → null
     expect(readTargetSave(attackAction, { character, rng: HIT } as Ctx)).toBeNull();
+    // спас, налагающий состояние → avoidsConditions несёт его id
+    const charmAction: Dict = { name: 'Очарование', activation: { cost: [] },
+      effects: [{ resolution: 'save', ability: 'wis', dc: '13', on_fail: [{ kind: 'condition', value: 'charmed', op: 'apply' }] }] };
+    expect(readTargetSave(charmAction, { character, rng: HIT } as Ctx)!.avoidsConditions).toEqual(['charmed']);
+  });
+});
+
+describe('save_avoids_condition — condition-scoped модификатор спасброска (Происхождение фей)', () => {
+  const charmAction: Dict = {
+    name: 'Очарование', activation: { cost: [] },
+    effects: [{ resolution: 'save', ability: 'wis', dc: '13', on_fail: [{ kind: 'condition', value: 'charmed', op: 'apply' }] }],
+  };
+  // Пассивка «Происхождение фей»: преимущество на спас против Очарования (charmed).
+  const feyAncestry: ActiveEffectEntry = {
+    id: 'fey', name: 'Происхождение фей',
+    mechanics: { kind: 'modifier', applies_to: { roll: 'saving_throw' }, op: 'advantage', when: [{ kind: 'save_avoids_condition', value: 'charmed' }] },
+    source: 'race',
+  };
+  const targetCC: CharacterContext = { abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 1, cha: 0 }, profBonus: 2, level: 5 };
+
+  it('преимущество на спас против налагаемого состояния', () => {
+    const ctx: Ctx = { character, rng: HIT, target: { ac: 10, characterContext: targetCC, runtimeState: fresh([feyAncestry]) } };
+    const save = rollEv(executeAction(fresh(), charmAction, ctx).events, 'Спасбросок')!;
+    expect(save.roll.advantage).toBe('advantage');
+  });
+
+  it('нет преимущества, если сейв налагает ДРУГОЕ состояние', () => {
+    const poisonAction: Dict = { name: 'Яд', activation: { cost: [] },
+      effects: [{ resolution: 'save', ability: 'wis', dc: '13', on_fail: [{ kind: 'condition', value: 'poisoned', op: 'apply' }] }] };
+    const ctx: Ctx = { character, rng: HIT, target: { ac: 10, characterContext: targetCC, runtimeState: fresh([feyAncestry]) } };
+    const save = rollEv(executeAction(fresh(), poisonAction, ctx).events, 'Спасбросок')!;
+    expect(save.roll.advantage).toBe('none');
+  });
+
+  it('нет преимущества на сейв БЕЗ состояния (только урон)', () => {
+    const damageOnly: Dict = { name: 'Огонь', activation: { cost: [] },
+      effects: [{ resolution: 'save', ability: 'wis', dc: '13', on_fail: [{ kind: 'damage', dice: '2d6', type: 'fire' }] }] };
+    const ctx: Ctx = { character, rng: HIT, target: { ac: 10, characterContext: targetCC, runtimeState: fresh([feyAncestry]) } };
+    const save = rollEv(executeAction(fresh(), damageOnly, ctx).events, 'Спасбросок')!;
+    expect(save.roll.advantage).toBe('none');
   });
 });

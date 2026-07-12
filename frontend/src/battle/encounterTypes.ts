@@ -25,6 +25,7 @@ export interface PendingSave {
   dc: number;           // СЛ
   onFail: SaveOutcome;
   onSuccess: SaveOutcome;
+  avoidsConditions?: string[]; // состояния, налагаемые при провале — цель применит condition-scoped модификаторы спаса
 }
 
 export interface Combatant {

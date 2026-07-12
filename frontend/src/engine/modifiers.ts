@@ -202,7 +202,7 @@ export function foldModifiers(base: number, result: CollectResult): { value: num
 export function collectRollModifiers(
   state: RuntimeState,
   passives: Dict[],
-  appliesTo: { roll: string; filter?: Dict },
+  appliesTo: { roll: string; filter?: Dict; evalCtx?: EvalContext },
 ): { modifiers: RollModifier[]; advantage: AdvantageState } {
   return collectModifiers(state, passives, appliesTo);
 }

@@ -22,6 +22,9 @@ export interface EvalContext {
   activeConditions?: Set<string>;
   /** Состояния на цели (заполнится в фазе E — двусторонний бой). */
   targetConditions?: Set<string>;
+  /** Состояния, которые текущий спасбросок пытается ИЗБЕЖАТЬ (из on_fail эффекта-сейва).
+   *  Для предиката save_avoids_condition — «преимущество/бонус на спас, чтобы не получить X». */
+  savedConditions?: Set<string>;
   /** Преимущество, накопленное к текущему моменту сбора (для has_advantage). */
   advantageSoFar?: AdvantageState;
   /** Результат последнего d20 (для d20_equals). */
@@ -79,6 +82,16 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       return ctx.activeConditions?.has(String(cond.value)) ?? false;
     case 'target_has_condition':
       return ctx.targetConditions?.has(String(cond.value)) ?? false;
+    case 'save_avoids_condition':
+      // «Спасбросок, чтобы ИЗБЕЖАТЬ состояния X» — истинно, когда текущий сейв налагает X при провале
+      // (Происхождение фей: преимущество на спас против Очарования). savedConditions заполняет runSave.
+      return ctx.savedConditions?.has(String(cond.value)) ?? false;
+    case 'condition':
+      // Легаси-форма расовых черт «преимущество на спас против X» ({kind:'condition', id:X}) — движок
+      // раньше её не знал (закрыто-по-умолчанию), а до передачи evalCtx в сейв она применялась БЕЗУСЛОВНО.
+      // Трактуем как save_avoids_condition (эти черты — Дворфская стойкость/Храбрость — про сейв ПРОТИВ
+      // состояния). На не-сейв путях savedConditions пуст → false (как и было). id из cond.id | cond.value.
+      return ctx.savedConditions?.has(String(cond.id ?? cond.value)) ?? false;
     case 'has_advantage':
       return ctx.advantageSoFar === 'advantage';
     case 'd20_equals':

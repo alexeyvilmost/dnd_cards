@@ -553,11 +553,12 @@ export default function SheetActionsPanel({
 
     // В бою действие со спасом цели-ПЕРСОНАЖА: спас бросает САМА цель. Кастер предрассчитывает ОБА
     // исхода (onFail/onSuccess как дельты) и шлёт pending-спас на комбатант цели; применение — у цели.
-    const emitPendingSave = async (cb: Combatant, m: Record<string, unknown>, save: { ability: string; dc: number }, onFail: SaveOutcome, onSuccess: SaveOutcome) => {
+    const emitPendingSave = async (cb: Combatant, m: Record<string, unknown>, save: { ability: string; dc: number; avoidsConditions?: string[] }, onFail: SaveOutcome, onSuccess: SaveOutcome) => {
       if (!encounterId) return;
       const pending: PendingSave = {
         id: uid(), sourceName: character.name, actionName: String(m.name ?? 'Действие'),
         ability: save.ability, dc: save.dc, onFail, onSuccess,
+        ...(save.avoidsConditions?.length ? { avoidsConditions: save.avoidsConditions } : {}),
       };
       const ab = save.ability.toUpperCase();
       await encountersApi.apply(encounterId, {

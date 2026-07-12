@@ -48,6 +48,7 @@ import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CharacterSheetV2 from './CharacterSheetV2';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
+import { activeConditionsOf } from '../engine/circumstances';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
 
@@ -380,7 +381,7 @@ const CharacterSheetMVP = () => {
   // save-заклинание), показываю диалог броска (Бросить/Автобросок) на СВОЁМ листе, катаю d20 со
   // своим модификатором спаса vs СЛ, применяю исход (провал/половина/негейт) к себе и снимаю pending.
   const resolveIncomingSave = async (p: PendingSave) => {
-    if (!ruleState || !encId || !id) return;
+    if (!ruleState || !encId || !id || !runtimeState) return;
     const abilLabel = (ABILITY_LABEL_RU as Record<string, string>)[p.ability] ?? p.ability.toUpperCase();
     const mod = (ruleState.savingThrowBonuses as Record<string, number>)[p.ability] ?? 0;
     const halfLabel = (p.onSuccess.hpDelta ?? 0) < 0 ? ' · успех — половина урона' : '';
@@ -391,10 +392,21 @@ const CharacterSheetMVP = () => {
         Спасбросок {abilLabel}, СЛ {p.dc}{halfLabel}
       </div>
     );
+    // Condition-scoped модификаторы/преимущество (Происхождение фей: преимущество на спас против
+    // Очарования). savedConditions = состояния, налагаемые при провале → предикат save_avoids_condition.
+    // savingThrowBonuses — база (хар-ка+владение), плоские мод-эффекты приходят отсюда (без двойного счёта).
+    const collected = collectRollModifiers(runtimeState, passives, {
+      roll: 'saving_throw', filter: { ability: p.ability },
+      evalCtx: { state: runtimeState, activeConditions: activeConditionsOf(runtimeState), savedConditions: new Set(p.avoidsConditions ?? []) },
+    });
     // Отмена/клик мимо трактуем как автобросок — спас должен разрешиться (нельзя «зависнуть» в бою).
     const decision = await diceDialog.request(plan, `Входящий спасбросок — ${p.actionName}`, preview);
     const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
-    const roll = rollD20({ modifiers: [{ value: mod, source: abilLabel, reason: 'спасбросок' }], target: { type: 'dc', value: p.dc }, rng });
+    const roll = rollD20({
+      advantage: collected.advantage,
+      modifiers: [{ value: mod, source: abilLabel, reason: 'спасбросок' }, ...collected.modifiers],
+      target: { type: 'dc', value: p.dc }, rng,
+    });
     const saved = roll.outcome === 'success';
     const out = saved ? p.onSuccess : p.onFail;
     // Дельту применяем к ТЕКУЩЕМУ комбатанту (боевая истина), а не к снимку на момент каста —

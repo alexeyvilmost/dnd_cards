@@ -68,6 +68,46 @@ describe('collectModifiers (фаза C)', () => {
   });
 });
 
+describe('save_avoids_condition через РЕАЛЬНУЮ прод-механику (вложенный effects[].result[])', () => {
+  // Точная механика «Происхождение фей» (RE-elf-2) с прода ПОСЛЕ пересева — вложенная форма,
+  // а не плоский payload. Проверяем, что payloadsOf разворачивает её и when-предикат срабатывает.
+  const feyProd = {
+    name: 'Происхождение фей',
+    activation: { mode: 'passive' },
+    effects: [{ resolution: 'auto', result: [
+      { applies_to: { roll: 'saving_throw' }, kind: 'modifier', op: 'advantage', when: [{ kind: 'save_avoids_condition', value: 'charmed' }] },
+    ] }],
+  };
+  const advFor = (avoids: string[]) => collectModifiers(stateWith([]), [feyProd], {
+    roll: 'saving_throw', filter: { ability: 'wis' },
+    evalCtx: { savedConditions: new Set(avoids) },
+  }).advantage;
+
+  it('преимущество на спас, когда сейв налагает charmed', () => {
+    expect(advFor(['charmed'])).toBe('advantage');
+  });
+  it('нет преимущества на спас против другого состояния', () => {
+    expect(advFor(['poisoned'])).toBe('none');
+  });
+  it('нет преимущества на спас без налагаемых состояний (только урон)', () => {
+    expect(advFor([])).toBe('none');
+  });
+
+  it('легаси-форма {kind:condition,id} (Дворфская стойкость) — движок трактует как save_avoids', () => {
+    // Прод до пересева / любая не-мигрированная расовая черта: when=[{id:'poisoned',kind:'condition'}].
+    const dwarfLegacy = {
+      name: 'Дворфская стойкость', activation: { mode: 'passive' },
+      effects: [{ resolution: 'auto', result: [
+        { applies_to: { roll: 'saving_throw' }, kind: 'modifier', op: 'advantage', when: [{ id: 'poisoned', kind: 'condition' }] },
+      ] }],
+    };
+    const on = collectModifiers(stateWith([]), [dwarfLegacy], { roll: 'saving_throw', filter: { ability: 'con' }, evalCtx: { savedConditions: new Set(['poisoned']) } });
+    const off = collectModifiers(stateWith([]), [dwarfLegacy], { roll: 'saving_throw', filter: { ability: 'con' }, evalCtx: { savedConditions: new Set(['charmed']) } });
+    expect(on.advantage).toBe('advantage');
+    expect(off.advantage).toBe('none'); // раньше применялось БЕЗУСЛОВНО ко всем сейвам
+  });
+});
+
 describe('C7 — свёртка преимущества/помехи порядко-независима (RAW 2024)', () => {
   const adv = (n: string) => modEffect({ kind: 'modifier', applies_to: { roll: 'attack' }, op: 'advantage' }, n);
   const dis = (n: string) => modEffect({ kind: 'modifier', applies_to: { roll: 'attack' }, op: 'disadvantage' }, n);

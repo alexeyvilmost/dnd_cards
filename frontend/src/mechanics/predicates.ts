@@ -32,6 +32,7 @@ export const PREDICATE_KINDS: PredKind[] = [
   { id: 'attuned', label: 'Настроен на предмет', fields: [{ key: 'value', label: 'ID/слаг предмета', type: 'card' }] },
   { id: 'you_have_condition', label: 'У вас есть состояние', fields: [{ key: 'value', label: 'Состояние', type: 'condition' }] },
   { id: 'target_has_condition', label: 'У цели есть состояние', fields: [{ key: 'value', label: 'Состояние', type: 'condition' }] },
+  { id: 'save_avoids_condition', label: 'Спасбросок против состояния', fields: [{ key: 'value', label: 'Состояние', type: 'condition' }], hint: 'Истинно, когда спасбросок налагает это состояние при провале (напр. преимущество на спас против Очарования).' },
   { id: 'has_advantage', label: 'Уже есть преимущество', fields: [] },
   { id: 'd20_equals', label: 'На d20 выпало значение', fields: [{ key: 'value', label: 'Значение d20', type: 'number' }] },
   { id: 'narrative', label: 'Текстовое условие (на усмотрение мастера)', fields: [{ key: 'description', label: 'Описание', type: 'text' }], hint: 'Всегда истинно — движок доверяет мастеру.' },

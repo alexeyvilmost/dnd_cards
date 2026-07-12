@@ -102,7 +102,7 @@
       "required": ["kind"],
       "description": "Предикат-обстоятельство. any_of/all_of позволяют группировать через поле of.",
       "properties": {
-        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "item_equipped", "item_carried", "attuned", "any_of", "all_of", "narrative"] },
+        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "save_avoids_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "item_equipped", "item_carried", "attuned", "any_of", "all_of", "narrative"] },
         "value": {},
         "range": { "type": "number" },
         "of": {},

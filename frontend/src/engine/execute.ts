@@ -919,6 +919,14 @@ function runAttackRoll(
   return next;
 }
 
+// Состояния, которые сейв пытается ИЗБЕЖАТЬ: значения condition-пейлоадов из on_fail (урон/прочее
+// пропускаем). Нужны предикату save_avoids_condition (напр. преимущество на спас против Очарования).
+function savedConditionsOf(effect: Dict): string[] {
+  const onFail = effect.on_fail;
+  if (!Array.isArray(onFail)) return [];
+  return (onFail as Dict[]).filter((p) => p.kind === 'condition' && p.value != null).map((p) => String(p.value));
+}
+
 function runSave(
   effect: Dict,
   state: RuntimeState,
@@ -934,9 +942,14 @@ function runSave(
   const saveMod = targetSaveMod(ctx.target, ability);
   // Спасбросок совершает ЦЕЛЬ своими модификаторами/преимуществом — НЕ атакующий.
   // Берём эффекты из рантайма цели (богатая цель, фаза E); у обобщённой цели их нет.
+  // evalCtx с savedConditions гейтит модификаторы «преимущество/бонус на спас против состояния X»
+  // (Происхождение фей). Раньше сейв не передавал evalCtx — condition-scoped when не срабатывал.
   const targetState = ctx.target?.runtimeState;
   const collected = targetState
-    ? collectModifiers(targetState, [], { roll: 'saving_throw', filter: { ability } })
+    ? collectModifiers(targetState, [], {
+        roll: 'saving_throw', filter: { ability },
+        evalCtx: { state: targetState, activeConditions: activeConditionsOf(targetState), savedConditions: new Set(savedConditionsOf(effect)) },
+      })
     : { modifiers: [] as RollModifier[], advantage: 'none' as const };
 
   let success: boolean;
@@ -966,7 +979,7 @@ function runSave(
 // readTargetSave — параметры форсируемого спасброска ЦЕЛИ из механики действия (ability, DC, half).
 // DC считается в контексте КАСТЕРА (8 + БМ + модификатор заклинания). Нужен, чтобы передать цели
 // pending-спасбросок в онлайн-бою: цель кинет d20 сама и сравнит со своей СЛ. null — сейва цели нет.
-export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability: string; dc: number; half: boolean } | null {
+export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability: string; dc: number; half: boolean; avoidsConditions: string[] } | null {
   const effects = mechanics.effects as Dict[] | undefined;
   if (!Array.isArray(effects)) return null;
   const eff = effects.find((e) => String(e.resolution ?? '') === 'save' && String(e.who ?? 'target') === 'target');
@@ -974,7 +987,8 @@ export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability:
   const dc = evalDc(String(eff.dc ?? '10'), ctx);
   const ability = String(eff.ability ?? 'dex');
   const half = Array.isArray(eff.on_success) && (eff.on_success as Dict[]).some((p) => p.on_success === 'half');
-  return { ability, dc, half };
+  // Состояния, которые сейв позволяет избежать — цель применит condition-scoped модификаторы (Происхождение фей).
+  return { ability, dc, half, avoidsConditions: savedConditionsOf(eff) };
 }
 
 function runAbilityCheck(
