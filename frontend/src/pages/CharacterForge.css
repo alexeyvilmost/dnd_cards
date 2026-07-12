@@ -572,6 +572,21 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* Индикатор «в бою» в шапке листа — ссылка на онлайн-бой (виден в обоих макетах). */
+.sheet-in-battle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d8b978;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet-in-battle:hover { color: var(--forge-gold); text-decoration: underline; }
 .sheet-back, .sheet-edit {
   position: absolute;
   top: 50%;

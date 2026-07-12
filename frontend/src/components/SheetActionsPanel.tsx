@@ -9,6 +9,8 @@ import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState, buildTargetFromCharacter } from '../character/runtime';
+import { encountersApi } from '../battle/encountersApi';
+import type { Combatant } from '../battle/encounterTypes';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
@@ -62,6 +64,10 @@ interface Props {
    *  (передаётся во все ability; движок берёт нужный по механике действия). */
   targetSaveMod?: number;
   onTargetSaveModChange?: (n: number) => void;
+  /** Онлайн-бой: если персонаж сейчас в бою — id боя. Тогда пикер целей в диалоге кубов
+   *  ограничивается комбатантами этого боя, а урон/лечение/эффекты применяются к комбатанту
+   *  через encountersApi.apply (синк на доску боя и другие устройства), а не в запись персонажа. */
+  encounterId?: string;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -158,6 +164,7 @@ export default function SheetActionsPanel({
   onTargetAcChange,
   targetSaveMod: targetSaveModProp,
   onTargetSaveModChange,
+  encounterId,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -373,6 +380,55 @@ export default function SheetActionsPanel({
     } catch (e) { console.error('Не удалось применить к цели', e); }
   }, []);
 
+  // --- Онлайн-бой: цели = комбатанты боя, применение = патч комбатанта (синк на доску) ---
+  // Свежий снимок комбатантов на каждое целевое действие (доска могла изменить HP из другого
+  // устройства); внутри одного действия переиспользуем через ref.
+  const encCombatantsRef = useRef<Combatant[]>([]);
+  const loadEncounterCombatants = useCallback(async (): Promise<Combatant[]> => {
+    if (!encounterId) return [];
+    try {
+      const enc = await encountersApi.get(encounterId);
+      encCombatantsRef.current = enc.state?.combatants ?? [];
+    } catch { encCombatantsRef.current = []; }
+    return encCombatantsRef.current;
+  }, [encounterId]);
+
+  // Богатая цель из комбатанта: для персонажа — статы из его листа (AC/спасброски/сопротивления),
+  // но HP/состояния СИДИМ из комбатанта (боевая истина, иначе можно стартовать от устаревшего HP);
+  // для монстра — минимальная цель (КЗ и спас-мод берём с доски/ручного поля).
+  const buildEncounterTarget = useCallback(async (cb: Combatant): Promise<TargetContext> => {
+    const battleHp = { current: cb.hp, max: cb.maxHp, temp: cb.temp ?? 0 };
+    const effects = (cb.activeEffects as RuntimeState['activeEffects'] | undefined) ?? [];
+    if (cb.characterId) {
+      const chars = await loadTargetChars();
+      const full = chars.find((c) => c.id === cb.characterId);
+      if (full) {
+        const base = buildTargetFromCharacter(full);
+        const rs = base.runtimeState ?? forgeToRuntimeState(full);
+        return { ...base, runtimeState: { ...rs, hp: battleHp, activeEffects: effects } };
+      }
+    }
+    return {
+      ac: cb.ac ?? targetAc,
+      saveMods: { dex: targetSaveMod, con: targetSaveMod, str: targetSaveMod, int: targetSaveMod, wis: targetSaveMod, cha: targetSaveMod },
+      runtimeState: { hp: battleHp, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: effects },
+    };
+  }, [loadTargetChars, targetAc, targetSaveMod]);
+
+  // Применяем итоговое состояние цели к комбатанту (патч hp/temp/состояния) — сервер разошлёт
+  // на доску и все устройства. maxHp не трогаем (попадание не меняет максимум).
+  const applyToEncounterTarget = useCallback(async (cb: Combatant, ts: RuntimeState) => {
+    if (!encounterId) return;
+    try {
+      await encountersApi.apply(encounterId, {
+        patches: [{ actor_id: cb.actorId, set: { hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects } }],
+        events: [`${cb.name}: HP ${ts.hp.current}/${cb.maxHp}`],
+      });
+      encCombatantsRef.current = encCombatantsRef.current.map((c) =>
+        c.actorId === cb.actorId ? { ...c, hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects as unknown as Combatant['activeEffects'] } : c);
+    } catch (e) { console.error('Не удалось применить к цели в бою', e); }
+  }, [encounterId]);
+
   const runAction = async (action: SheetAction) => {
     let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
     // S5: дальнобойное оружие тратит боеприпас из инвентаря (оружие декларирует mechanics.ammo).
@@ -470,7 +526,7 @@ export default function SheetActionsPanel({
       preview?: ReactNode,
       confirm = false,
       targetOpts?: { targets?: { id: string; name: string }[]; needsTarget?: boolean },
-    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; targetChar?: ForgeCharacter } | null> => {
+    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void> } | null> => {
       // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
       // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
       const inPlay = collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title });
@@ -483,12 +539,23 @@ export default function SheetActionsPanel({
       const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events);
       const decision = await diceDialog.request(plan, title, preview, { confirm, targets: targetOpts?.targets, needsTarget: targetOpts?.needsTarget });
       if (decision.mode === 'cancel') return null;
-      // Выбранный противник → богатая цель (иначе dummy self-путь, как при выключенном диалоге).
-      const targetChar = decision.targetId ? (targetCharsRef.current ?? []).find((c) => c.id === decision.targetId) : undefined;
-      const richTarget = targetChar ? buildTargetFromCharacter(targetChar) : undefined;
+      // Выбранная цель → богатая цель + замыкание применения результата. В бою цель — комбатант
+      // (по actorId), применяем патчем на сервер (синк доски); иначе — персонаж (по id) в его запись.
+      let richTarget: TargetContext | undefined;
+      let commit: ((ts: RuntimeState) => Promise<void>) | undefined;
+      if (decision.targetId) {
+        if (encounterId) {
+          const cb = encCombatantsRef.current.find((c) => c.actorId === decision.targetId);
+          if (cb) { richTarget = await buildEncounterTarget(cb); commit = (ts) => applyToEncounterTarget(cb, ts); }
+        } else {
+          const targetChar = (targetCharsRef.current ?? []).find((c) => c.id === decision.targetId);
+          if (targetChar) { richTarget = buildTargetFromCharacter(targetChar); commit = (ts) => persistTarget(targetChar, ts); }
+        }
+      }
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
       const r = executeAction(baseState, m, execCtx(rng, false, choices, richTarget));
-      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, targetChar };
+      const commitTarget = commit && r.targetState ? () => commit!(r.targetState!) : undefined;
+      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, commitTarget };
     };
 
     try {
@@ -501,15 +568,21 @@ export default function SheetActionsPanel({
       const interactsWithTarget = actionInteractsWithTarget(mech);
       let targetOptions: { id: string; name: string }[] | undefined;
       if (interactsWithTarget && getSettings().diceDialog) {
-        const chars = await loadTargetChars();
-        targetOptions = chars.filter((c) => c.id !== character.id).map((c) => ({ id: c.id, name: c.name }));
+        if (encounterId) {
+          // В бою: цели — комбатанты боя (по actorId, включая монстров), кроме себя.
+          const combatants = await loadEncounterCombatants();
+          targetOptions = combatants.filter((c) => c.characterId !== character.id).map((c) => ({ id: c.actorId, name: c.name }));
+        } else {
+          const chars = await loadTargetChars();
+          targetOptions = chars.filter((c) => c.id !== character.id).map((c) => ({ id: c.id, name: c.name }));
+        }
       }
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
         { targets: targetOptions, needsTarget: interactsWithTarget });
       if (!main) return;
       let { state, events } = main;
-      // Применённое к цели состояние (урон/лечение/эффекты) — сохраняем выбранному персонажу.
-      if (main.targetChar && main.targetState) await persistTarget(main.targetChar, main.targetState);
+      // Применённое к цели состояние (урон/лечение/эффекты) — на комбатанта боя или в запись персонажа.
+      if (main.commitTarget) await main.commitTarget();
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
       if (action.spellRef?.concentration) {
         const conc = startConcentration(state, action.name);

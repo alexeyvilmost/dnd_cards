@@ -24,6 +24,7 @@ export default function EncounterBoard() {
   const [manualName, setManualName] = useState('');
   const [manualHp, setManualHp] = useState('10');
   const [manualAc, setManualAc] = useState('12');
+  const [notice, setNotice] = useState<string | null>(null);
 
   const apply = useCallback((op: ApplyOp) => {
     if (id) encountersApi.apply(id, op).catch((e) => console.error('apply error', e));
@@ -61,16 +62,25 @@ export default function EncounterBoard() {
     addCombatant({ actorId: uid(), name: manualName.trim() || 'Существо', isMonster: true, hp, maxHp: hp, ac: parseInt(manualAc, 10) || 10 });
     setManualName('');
   };
-  const addFromCharacter = (ch: ForgeCharacter) => {
+  const addFromCharacter = async (ch: ForgeCharacter) => {
+    if (!id) return;
     const rs = (ch.rule_state ?? {}) as { armorClass?: number };
-    addCombatant({
+    const c: Combatant = {
       actorId: uid(), name: ch.name, characterId: ch.id,
       hp: ch.current_hp ?? 0, maxHp: ch.max_hp ?? 0, ac: rs.armorClass ?? ch.armor_class ?? 10,
       temp: (ch.turn_state?.temp_hp as number) ?? 0,
       activeEffects: (ch.active_effects as Combatant['activeEffects']) ?? [],
       avatarUrl: ch.avatar_url,
-    });
-    setAddingChar(false);
+    };
+    // Правило «один бой на персонажа»: сервер вернёт 409, если персонаж уже в другом бою.
+    try {
+      await encountersApi.apply(id, { add: [c] });
+      setNotice(null);
+      setAddingChar(false);
+    } catch (e) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setNotice(msg || 'Не удалось добавить персонажа в бой');
+    }
   };
   useEffect(() => {
     if (addingChar && !chars) charactersV3Api.list().then(setChars).catch(() => setChars([]));
@@ -91,6 +101,13 @@ export default function EncounterBoard() {
         <button onClick={nextTurn} style={btn}>Следующий ход →</button>
         <button onClick={copyLink} style={{ ...btnGhost, marginLeft: 'auto' }}>Скопировать ссылку</button>
       </div>
+
+      {notice && (
+        <div style={{ margin: '0 0 12px', padding: '8px 12px', borderRadius: 8, border: '1px solid #7a4a2b', background: '#2b1f16', color: '#e8b98a', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ flex: 1, fontSize: 13 }}>{notice}</span>
+          <button onClick={() => setNotice(null)} style={btnGhost}>✕</button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {state.combatants.map((c, i) => {

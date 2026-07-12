@@ -453,8 +453,22 @@ func GetAllMigrations() []Migration {
 			Up:          createEncounterTables,
 			Down:        dropEncounterTables,
 		},
+		{
+			Version:     "075_character_current_encounter",
+			Description: "Связь персонаж→бой (current_encounter_id) для отображения «в бою» и правила «один бой на персонажа»",
+			Up:          addCharacterCurrentEncounter,
+			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE characters_v3 DROP COLUMN IF EXISTS current_encounter_id"); return err },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// addCharacterCurrentEncounter — nullable-колонка связи персонажа с текущим боем.
+func addCharacterCurrentEncounter(db *sql.DB) error {
+	if _, err := db.Exec("ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS current_encounter_id UUID"); err != nil {
+		return fmt.Errorf("addCharacterCurrentEncounter: %w", err)
+	}
+	return nil
 }
 
 // createEncounterTables — таблицы боя и его append-only журнала (см. models_encounter.go).

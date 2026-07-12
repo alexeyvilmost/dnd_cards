@@ -8,6 +8,7 @@ import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
+import { encountersApi } from '../battle/encountersApi';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
@@ -118,6 +119,10 @@ const CharacterSheetMVP = () => {
   // (действия и заклинания) целятся в один и тот же AC.
   const [targetAc, setTargetAc] = useState(10);
   const [targetSaveMod, setTargetSaveMod] = useState(0);
+  // Онлайн-бой: если у персонажа проставлена связь current_encounter_id — подтягиваем название
+  // боя для индикатора «в бою» в шапке и прокидываем id боя в панели действий (цели = комбатанты).
+  const encId = character?.current_encounter_id ?? null;
+  const [activeEncounter, setActiveEncounter] = useState<{ id: string; name: string } | null>(null);
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-theme') === 'paper'; } catch { return false; }
   });
@@ -175,6 +180,16 @@ const CharacterSheetMVP = () => {
     })();
     return () => { stale = true; };
   }, [id, loadJournal]);
+
+  // Название текущего боя для индикатора. Если бой удалён/недоступен — прячем индикатор.
+  useEffect(() => {
+    if (!encId) { setActiveEncounter(null); return; }
+    let stale = false;
+    encountersApi.get(encId)
+      .then((enc) => { if (!stale) setActiveEncounter({ id: enc.id, name: enc.name }); })
+      .catch(() => { if (!stale) setActiveEncounter(null); });
+    return () => { stale = true; };
+  }, [encId]);
 
   const draft = useMemo(() => (character ? characterToDraft(character) : null), [character]);
 
@@ -493,7 +508,13 @@ const CharacterSheetMVP = () => {
         </button>
         <div className="sheet-header-center">
           <span className="sheet-header-name">{character.name || 'Без имени'}</span>
-          <span className="sheet-header-sub">Лист персонажа</span>
+          {activeEncounter ? (
+            <Link to={`/encounter/${activeEncounter.id}`} className="sheet-in-battle" title="Открыть онлайн-бой">
+              <Swords size={12} /> В бою: {activeEncounter.name}
+            </Link>
+          ) : (
+            <span className="sheet-header-sub">Лист персонажа</span>
+          )}
         </div>
         <div className="sheet-header-actions">
           <button
@@ -593,6 +614,7 @@ const CharacterSheetMVP = () => {
             onTargetAcChange={setTargetAc}
             targetSaveMod={targetSaveMod}
             onTargetSaveModChange={setTargetSaveMod}
+            encounterId={encId ?? undefined}
           />
           )}
 
@@ -935,6 +957,7 @@ const CharacterSheetMVP = () => {
                 onTargetAcChange={setTargetAc}
                 targetSaveMod={targetSaveMod}
                 onTargetSaveModChange={setTargetSaveMod}
+                encounterId={encId ?? undefined}
               />
             </section>
           )}

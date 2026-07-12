@@ -65,6 +65,12 @@ type CharacterV3 struct {
 	TurnState      *JSONMap    `json:"turn_state" gorm:"type:jsonb"`
 	Currency       *JSONMap    `json:"currency" gorm:"type:jsonb"`
 
+	// Онлайн-бой: id текущего боя, в котором участвует персонаж (nil = не в бою).
+	// Ставится/снимается сервером при add/remove комбатанта с этим characterId (см.
+	// encounter_controller.go). Правило «один бой на персонажа» держится на этом поле.
+	// НЕ входит в Update/PatchRuntime DTO — сохраняется как есть при load-then-save.
+	CurrentEncounterID *uuid.UUID `json:"current_encounter_id" gorm:"type:uuid"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 

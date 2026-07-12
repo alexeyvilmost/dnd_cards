@@ -105,6 +105,53 @@ func opPayload(req ApplyRequest) JSONMap {
 	return m
 }
 
+// characterIDsInState — множество characterId среди комбатантов состояния боя
+// (только реальные персонажи; у монстров characterId нет).
+func characterIDsInState(state map[string]interface{}) map[string]bool {
+	out := map[string]bool{}
+	raw, ok := state["combatants"].([]interface{})
+	if !ok {
+		return out
+	}
+	for _, c := range raw {
+		if m, ok := c.(map[string]interface{}); ok {
+			if cid, ok := m["characterId"].(string); ok && cid != "" {
+				out[cid] = true
+			}
+		}
+	}
+	return out
+}
+
+// encounterConflict — правило «один бой на персонажа»: возвращает имя другого боя, если
+// персонаж cid уже реально участвует в ином (существующем) бою. Устаревшую ссылку (бой
+// удалён или персонажа там уже нет) игнорируем, чтобы не залочить персонажа навсегда.
+func (ec *EncounterController) encounterConflict(cid string, thisEnc uuid.UUID) (string, bool) {
+	charUUID, err := uuid.Parse(cid)
+	if err != nil {
+		return "", false
+	}
+	var ch CharacterV3
+	if err := ec.db.Select("id", "current_encounter_id").First(&ch, "id = ?", charUUID).Error; err != nil {
+		return "", false // персонажа нет — не наша забота
+	}
+	if ch.CurrentEncounterID == nil || *ch.CurrentEncounterID == thisEnc {
+		return "", false
+	}
+	var other Encounter
+	if err := ec.db.First(&other, "id = ?", *ch.CurrentEncounterID).Error; err != nil {
+		return "", false // бой удалён — ссылка устарела
+	}
+	otherState := map[string]interface{}{}
+	if other.State != nil {
+		otherState = *other.State
+	}
+	if characterIDsInState(otherState)[cid] {
+		return other.Name, true // реальный конфликт
+	}
+	return "", false // персонажа там уже нет — ссылка устарела
+}
+
 // --- CRUD ---
 
 func (ec *EncounterController) Create(c *gin.Context) {
@@ -200,7 +247,20 @@ func (ec *EncounterController) Apply(c *gin.Context) {
 	if enc.State != nil {
 		state = *enc.State
 	}
+	before := characterIDsInState(state)
 	newState := JSONMap(applyOps(state, req))
+	after := characterIDsInState(newState)
+
+	// Правило «один бой на персонажа»: если добавляемый персонаж уже в другом бою — отказ.
+	for cid := range after {
+		if !before[cid] {
+			if otherName, conflict := ec.encounterConflict(cid, id); conflict {
+				c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("Персонаж уже участвует в бою «%s»", otherName)})
+				return
+			}
+		}
+	}
+
 	newSeq := enc.Seq + 1
 	enc.State = &newState
 	enc.Seq = newSeq
@@ -210,7 +270,30 @@ func (ec *EncounterController) Apply(c *gin.Context) {
 		if e := tx.Save(&enc).Error; e != nil {
 			return e
 		}
-		return tx.Create(&ev).Error
+		if e := tx.Create(&ev).Error; e != nil {
+			return e
+		}
+		// Связь персонаж→бой: проставить добавленным, снять убранным (атомарно с state).
+		for cid := range after {
+			if !before[cid] {
+				if u, e := uuid.Parse(cid); e == nil {
+					if e := tx.Model(&CharacterV3{}).Where("id = ?", u).Update("current_encounter_id", id).Error; e != nil {
+						return e
+					}
+				}
+			}
+		}
+		for cid := range before {
+			if !after[cid] {
+				if u, e := uuid.Parse(cid); e == nil {
+					// снимаем только если ссылка ведёт на этот бой (персонаж мог уже уйти в другой)
+					if e := tx.Model(&CharacterV3{}).Where("id = ? AND current_encounter_id = ?", u, id).Update("current_encounter_id", nil).Error; e != nil {
+						return e
+					}
+				}
+			}
+		}
+		return nil
 	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось применить"})
 		return

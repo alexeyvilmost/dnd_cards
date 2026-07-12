@@ -88,6 +88,57 @@ func TestApplyOps_Combined(t *testing.T) {
 	}
 }
 
+func charCombatant(actorID, charID string, hp int) map[string]interface{} {
+	m := combatant(actorID, hp)
+	m["characterId"] = charID
+	return m
+}
+
+func TestCharacterIDsInState(t *testing.T) {
+	state := map[string]interface{}{"combatants": []interface{}{
+		charCombatant("a1", "char-1", 20),
+		combatant("m1", 15), // монстр без characterId
+		charCombatant("a2", "char-2", 30),
+	}}
+	ids := characterIDsInState(state)
+	if len(ids) != 2 || !ids["char-1"] || !ids["char-2"] {
+		t.Fatalf("ожидались char-1 и char-2, получено: %+v", ids)
+	}
+	if ids["m1"] {
+		t.Fatalf("монстр без characterId не должен попадать в множество")
+	}
+}
+
+func TestCharacterIDsInState_Empty(t *testing.T) {
+	if len(characterIDsInState(nil)) != 0 {
+		t.Fatalf("nil-состояние должно давать пустое множество")
+	}
+	if len(characterIDsInState(map[string]interface{}{})) != 0 {
+		t.Fatalf("состояние без combatants должно давать пустое множество")
+	}
+}
+
+// Диф before/after (логика Apply: added = after-before, removed = before-after)
+// на примере добавления и удаления персонажа-комбатанта.
+func TestCharacterLinkDiff(t *testing.T) {
+	base := map[string]interface{}{"combatants": []interface{}{charCombatant("a1", "char-1", 20)}}
+	before := characterIDsInState(base)
+
+	// добавляем персонажа char-2
+	added := applyOps(base, ApplyRequest{Add: []map[string]interface{}{charCombatant("a2", "char-2", 30)}})
+	after := characterIDsInState(added)
+	if before["char-2"] || !after["char-2"] {
+		t.Fatalf("char-2 должен быть новым (added): before=%v after=%v", before, after)
+	}
+
+	// удаляем персонажа char-1 по actorId
+	removedState := applyOps(added, ApplyRequest{Remove: []string{"a1"}})
+	afterRemove := characterIDsInState(removedState)
+	if !after["char-1"] || afterRemove["char-1"] {
+		t.Fatalf("char-1 должен исчезнуть (removed): after=%v afterRemove=%v", after, afterRemove)
+	}
+}
+
 func TestOpPayload_Roundtrip(t *testing.T) {
 	r := 4
 	m := opPayload(ApplyRequest{Round: &r, Remove: []string{"x"}, Events: []interface{}{"hit"}})

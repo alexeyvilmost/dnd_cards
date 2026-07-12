@@ -52,6 +52,10 @@ export interface ForgeCharacter {
   turn_state?: Record<string, unknown> | null;
   currency?: Record<string, number> | null;
 
+  // Онлайн-бой: id текущего боя (nil = не в бою). Ставит/снимает сервер при add/remove
+  // комбатанта с этим characterId. Основа индикатора «в бою» и правила «один бой на персонажа».
+  current_encounter_id?: string | null;
+
   created_at: string;
   updated_at: string;
 }

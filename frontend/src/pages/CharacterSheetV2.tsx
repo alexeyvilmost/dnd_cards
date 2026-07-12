@@ -303,6 +303,7 @@ const CharacterSheetV2 = ({
               onTargetAcChange={setTargetAc}
               targetSaveMod={targetSaveMod}
               onTargetSaveModChange={setTargetSaveMod}
+              encounterId={character.current_encounter_id ?? undefined}
             />
           </CollapsibleSection>
 
@@ -324,6 +325,7 @@ const CharacterSheetV2 = ({
                 onTargetAcChange={setTargetAc}
                 targetSaveMod={targetSaveMod}
                 onTargetSaveModChange={setTargetSaveMod}
+                encounterId={character.current_encounter_id ?? undefined}
               />
             </CollapsibleSection>
           )}
