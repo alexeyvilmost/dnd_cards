@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { executeAction, applyIncomingDamage } from './execute';
+import { executeAction, applyIncomingDamage, readTargetSave } from './execute';
 import type { ActiveEffectEntry, CharacterContext, EngineEvent, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
 type Dict = Record<string, unknown>;
@@ -105,5 +105,41 @@ describe('Фаза E — динамические спасброски цели'
     const save = rollEv(events, 'Спасбросок')!;
     // мод цели = ЛВК 4 + БМ 2 (владение) = 6
     expect(save.roll.modifiers.some((m) => m.value === 6 && m.source === 'цель')).toBe(true);
+  });
+});
+
+describe('Спасбросок бросает цель (онлайн-бой): forceSaveOutcome + readTargetSave', () => {
+  const halfSaveAction: Dict = {
+    name: 'Огненный шар', activation: { cost: [] },
+    effects: [{ resolution: 'save', ability: 'dex', dc: '15',
+      on_fail: [{ kind: 'damage', dice: '8d6', type: 'fire' }],
+      on_success: [{ kind: 'damage', dice: '8d6', type: 'fire', on_success: 'half' }] }],
+  };
+
+  it('forceSaveOutcome:fail — d20 спаса НЕ катится (нет события), урон применён полностью', () => {
+    const ctx: Ctx = { character, rng: HIT, target: { ac: 10, runtimeState: fresh() }, forceSaveOutcome: 'fail' };
+    const r = executeAction(fresh(), halfSaveAction, ctx);
+    expect(rollEv(r.events, 'Спасбросок'), 'при форсе спас не катится').toBeUndefined();
+    expect(r.targetState!.hp.current).toBeLessThan(20); // урон применён (провал)
+  });
+
+  it('forceSaveOutcome:success + half — цель получает половину урона', () => {
+    // Высокий HP, чтобы урон не упёрся в 0 (иначе половина считалась бы неверно).
+    const big = (): RuntimeState => ({ hp: { current: 200, max: 200, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: [] });
+    const failHp = executeAction(fresh(), halfSaveAction,
+      { character, rng: HIT, target: { ac: 10, runtimeState: big() }, forceSaveOutcome: 'fail' } as Ctx).targetState!.hp.current;
+    const okHp = executeAction(fresh(), halfSaveAction,
+      { character, rng: HIT, target: { ac: 10, runtimeState: big() }, forceSaveOutcome: 'success' } as Ctx).targetState!.hp.current;
+    const dmgFail = 200 - failHp;
+    const dmgOk = 200 - okHp;
+    expect(dmgFail).toBeGreaterThan(0);
+    expect(dmgOk).toBe(Math.floor(dmgFail / 2)); // успех = половина от урона провала (те же кости)
+  });
+
+  it('readTargetSave — извлекает ability/dc/half из механики', () => {
+    const s = readTargetSave(halfSaveAction, { character, rng: HIT } as Ctx);
+    expect(s).toEqual({ ability: 'dex', dc: 15, half: true });
+    // действие без спаса цели → null
+    expect(readTargetSave(attackAction, { character, rng: HIT } as Ctx)).toBeNull();
   });
 });

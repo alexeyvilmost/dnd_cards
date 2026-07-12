@@ -10,7 +10,8 @@ import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { encountersApi } from '../battle/encountersApi';
 import { useEncounterStream } from '../battle/useEncounterStream';
-import type { Combatant } from '../battle/encounterTypes';
+import type { Combatant, PendingSave } from '../battle/encounterTypes';
+import type { EngineEvent } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
@@ -111,6 +112,10 @@ const CharacterSheetMVP = () => {
   const { toasts, push: pushToast } = useSheetToasts();
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
+  // Рефы, чтобы loadJournal оставался стабильным (иначе смена journalOpen/pushToast пересоздавала бы
+  // его и перезапускала тяжёлый эффект загрузки листа при каждом открытии/закрытии журнала).
+  const journalOpenRef = useRef(journalOpen); journalOpenRef.current = journalOpen;
+  const pushToastRef = useRef(pushToast); pushToastRef.current = pushToast;
   // Мобильная секционная навигация (≤820px): длинный лист делится на вкладки
   // нижнего таб-бара (паттерн D&D Beyond). На десктопе — прежний единый скролл.
   const isMobile = useIsMobile();
@@ -132,6 +137,9 @@ const CharacterSheetMVP = () => {
   encStateRef.current = encState;
   const ownSigRef = useRef('');            // последняя применённая на лист боевая сигнатура
   const pendingSelfRef = useRef<string | null>(null); // ожидаемая сигнатура после собственного пуша
+  const handledPendingRef = useRef<Set<string>>(new Set()); // id уже обработанных pending-спасбросков
+  const resolvingSaveRef = useRef(false); // сериализация: один диалог спасброска за раз (единый resolver)
+  const resolvingSaveIdRef = useRef<string | null>(null); // id разрешаемого спаса — ждём его снятия из state
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-theme') === 'paper'; } catch { return false; }
   });
@@ -154,11 +162,25 @@ const CharacterSheetMVP = () => {
     });
   }, []);
 
-  const loadJournal = useCallback(async (characterId: string) => {
+  // Множество id уже виденных записей журнала — чтобы при перечитке из боя всплывающая подсказка
+  // показывалась ТОЛЬКО для новых записей (пришедших из боя), а не для всей истории/своих действий.
+  const seenEventIdsRef = useRef<Set<string>>(new Set());
+  const journalSeededRef = useRef(false); // первая загрузка засеивает seen без тостов (иначе вся история всплыла бы)
+  const loadJournal = useCallback(async (characterId: string, opts?: { toast?: boolean }) => {
     setJournalLoading(true);
     try {
       const rows = await charactersV3Api.getEvents(characterId);
+      // Первая пришедшая загрузка (гонка mount ↔ live-эффект) только засеивает — без тостов.
+      const firstLoad = !journalSeededRef.current;
+      journalSeededRef.current = true;
+      const fresh = rows.filter((r) => !seenEventIdsRef.current.has(r.id));
+      rows.forEach((r) => seenEventIdsRef.current.add(r.id));
       setJournal([...rows].reverse());
+      // Новые записи, пришедшие из боя (урон/эффект от другого персонажа), — тост как для своих.
+      if (opts?.toast && !firstLoad && fresh.length) {
+        pushToastRef.current(fresh.map((r) => r.payload));
+        if (!journalOpenRef.current) setUnseen((u) => u + fresh.length);
+      }
     } catch (e) {
       console.error('journal load', e);
     } finally {
@@ -223,7 +245,7 @@ const CharacterSheetMVP = () => {
       active_effects: (own.activeEffects ?? []) as unknown[],
       turn_state: { ...(prev.turn_state ?? {}), temp_hp: own.temp ?? 0 },
     } : prev);
-    loadJournal(id);
+    loadJournal(id, { toast: true }); // новые боевые записи → всплывающая подсказка
   }, [encSeq, encId, id, encState, loadJournal]);
 
   // Sheet→room (self-sync): собственные изменения листа (само-лечение/урон/эффекты) — в свой
@@ -353,6 +375,92 @@ const CharacterSheetMVP = () => {
     () => (draft && assembled ? resolveCharacterRules({ draft, assembled, runtimeSources: itemRuntimeSources }) : null),
     [draft, assembled, itemRuntimeSources],
   );
+
+  // Спасброски проходятся ЦЕЛЬЮ: когда на мой комбатант пришёл pending-спас (кастер наложил
+  // save-заклинание), показываю диалог броска (Бросить/Автобросок) на СВОЁМ листе, катаю d20 со
+  // своим модификатором спаса vs СЛ, применяю исход (провал/половина/негейт) к себе и снимаю pending.
+  const resolveIncomingSave = async (p: PendingSave) => {
+    if (!ruleState || !encId || !id) return;
+    const abilLabel = (ABILITY_LABEL_RU as Record<string, string>)[p.ability] ?? p.ability.toUpperCase();
+    const mod = (ruleState.savingThrowBonuses as Record<string, number>)[p.ability] ?? 0;
+    const halfLabel = (p.onSuccess.hpDelta ?? 0) < 0 ? ' · успех — половина урона' : '';
+    const plan = [{ sides: 20, label: `Спасбросок ${abilLabel} (СЛ ${p.dc})` }];
+    const preview = (
+      <div style={{ fontSize: 13, color: '#c9b98a', lineHeight: 1.5 }}>
+        <b>{p.sourceName}</b> → «{p.actionName}»<br />
+        Спасбросок {abilLabel}, СЛ {p.dc}{halfLabel}
+      </div>
+    );
+    // Отмена/клик мимо трактуем как автобросок — спас должен разрешиться (нельзя «зависнуть» в бою).
+    const decision = await diceDialog.request(plan, `Входящий спасбросок — ${p.actionName}`, preview);
+    const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+    const roll = rollD20({ modifiers: [{ value: mod, source: abilLabel, reason: 'спасбросок' }], target: { type: 'dc', value: p.dc }, rng });
+    const saved = roll.outcome === 'success';
+    const out = saved ? p.onSuccess : p.onFail;
+    // Дельту применяем к ТЕКУЩЕМУ комбатанту (боевая истина), а не к снимку на момент каста —
+    // иначе затёрли бы урон, прилетевший от другого атакующего, пока открыт диалог.
+    const own = encStateRef.current.combatants.find((c) => c.characterId === id);
+    if (!own) return;
+    const newHp = Math.max(0, own.hp + (out.hpDelta ?? 0));
+    const newTemp = Math.max(0, (own.temp ?? 0) + (out.tempDelta ?? 0));
+    const addEff = out.addEffects ?? [];
+    const newEff = [...(own.activeEffects ?? []), ...addEff];
+    const hpDmg = Math.max(0, -(out.hpDelta ?? 0));
+    // журнал цели: бросок спаса + результат + урон/состояния (атрибуция — кастер)
+    const journal: EngineEvent[] = [
+      { type: 'roll', label: `Спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}`, roll },
+      ...(hpDmg > 0 ? [{ type: 'damage', amount: hpDmg, damageType: out.damageType ?? 'урон', source: p.sourceName } as EngineEvent] : []),
+      ...addEff.map((c) => ({ type: 'condition_applied', condition: c.name, source: p.sourceName } as EngineEvent)),
+    ];
+    pushToast(journal);
+    if (!journalOpen) setUnseen((u) => u + journal.length);
+    try {
+      const savedRows = await charactersV3Api.postEvents(id, journal.map((e) => ({ type: e.type, payload: e })));
+      savedRows.forEach((r) => seenEventIdsRef.current.add(r.id)); // свой бросок — не тостить повторно из боя
+      setJournal((prev) => [...prev, ...savedRows]);
+    } catch { /* журнал best-effort */ }
+    // применяем к себе: лист + комбатант (hp/temp/эффекты) + снимаем pending (+ строка в журнал боя)
+    setCharacter((prev) => prev ? { ...prev, current_hp: newHp, active_effects: newEff as unknown[], turn_state: { ...(prev.turn_state ?? {}), temp_hp: newTemp } } : prev);
+    const sig = combatantSig({ hp: newHp, temp: newTemp, activeEffects: newEff });
+    ownSigRef.current = sig; pendingSelfRef.current = sig; // лист уже показывает исход — не откатывать
+    // remaining — из СВЕЖЕГО own (encStateRef обновлён после диалога); снятие сериализовано эффектом
+    // ниже (ждём эхо снятия), поэтому whole-array RMW не воскрешает соседние pending.
+    const remaining = (own.pendingSaves ?? []).filter((x) => x.id !== p.id);
+    try {
+      await encountersApi.apply(encId, {
+        patches: [{ actor_id: own.actorId, set: { hp: newHp, temp: newTemp, activeEffects: newEff, pendingSaves: remaining } }],
+        log: [{ message: `${character?.name ?? 'Персонаж'}: спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}${hpDmg ? `, урон ${hpDmg}` : ''}` }],
+      });
+    } catch {
+      // Пуш не прошёл — не вешаем очередь спасбросков: освобождаем сериализатор (спас останется
+      // помеченным обработанным, урон уже отражён локально).
+      pendingSelfRef.current = null;
+      resolvingSaveRef.current = false;
+      resolvingSaveIdRef.current = null;
+    }
+  };
+
+  // Обнаружение входящих pending-спасбросков на своём комбатанте. Разрешаем ПО ОДНОМУ (единый
+  // resolver диалога): resolvingSaveRef сериализует; ждём, пока снятие предыдущего отразится в
+  // состоянии (эхо), прежде чем брать следующий (иначе whole-array RMW воскресил бы снятый).
+  useEffect(() => {
+    if (!encId || !id || !ruleState) return;
+    const own = encState.combatants.find((c) => c.characterId === id);
+    const pendings = own?.pendingSaves ?? [];
+    if (resolvingSaveRef.current) {
+      if (resolvingSaveIdRef.current && pendings.some((p) => p.id === resolvingSaveIdRef.current)) return; // ещё не снят — ждём
+      resolvingSaveRef.current = false;
+      resolvingSaveIdRef.current = null;
+    }
+    if (!own) return;
+    const next = pendings.find((p) => !handledPendingRef.current.has(p.id));
+    if (!next) return;
+    handledPendingRef.current.add(next.id); // до await — чтобы тик SSE не перезапустил тот же спас
+    resolvingSaveRef.current = true;
+    resolvingSaveIdRef.current = next.id;
+    void resolveIncomingSave(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encSeq, encState, id, encId, ruleState]);
 
   // Механики выданных предметами эффектов для числового канала (breakdown листа + панель действий).
   const itemGrantedPassives = useMemo(
@@ -507,6 +615,7 @@ const CharacterSheetMVP = () => {
     try {
       const items = events.map((payload) => ({ type: payload.type, payload }));
       const saved = await charactersV3Api.postEvents(id, items);
+      saved.forEach((r) => seenEventIdsRef.current.add(r.id)); // свои действия уже показаны — не тостить повторно
       setJournal((prev) => [...prev, ...saved]);
     } catch (e) {
       console.error('runtime events', e);

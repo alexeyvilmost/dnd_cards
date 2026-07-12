@@ -4,6 +4,29 @@
  * и сервер сходились. Клиент дедуплит по seq: применяет только события новее локального.
  */
 
+/** Исход спасброска, предрассчитанный кастером ДВИЖКОМ (полноценно: урон с сопротивлениями/
+ *  половиной, состояния, on_success-эффекты). Дельты, а не абсолюты — цель применяет их к своему
+ *  ТЕКУЩЕМУ состоянию (иначе абсолют затёр бы параллельный урон от другого атакующего). */
+export interface SaveOutcome {
+  hpDelta: number;      // изменение hp (обычно отрицательное — урон)
+  tempDelta: number;    // изменение временных хитов
+  damageType?: string;  // тип основного урона (для журнала)
+  addEffects?: { id: string; name: string; [k: string]: unknown }[]; // состояния/эффекты, добавляемые в этом исходе
+}
+
+/** Запрос на спасбросок, адресованный цели (онлайн-бой). Кастер предрассчитывает ОБА исхода
+ *  (провал/успех) полноценным прогоном движка; цель кидает d20 сама на своём листе и применяет
+ *  дельты выбранного исхода. Живёт на комбатанте-цели, синкается обычным патчем. */
+export interface PendingSave {
+  id: string;
+  sourceName: string;   // кто наложил (для журнала/диалога)
+  actionName: string;   // название заклинания/действия
+  ability: string;      // спас-характеристика: dex/con/wis/...
+  dc: number;           // СЛ
+  onFail: SaveOutcome;
+  onSuccess: SaveOutcome;
+}
+
 export interface Combatant {
   actorId: string;
   name: string;
@@ -15,6 +38,7 @@ export interface Combatant {
   hp: number;
   temp?: number;
   activeEffects?: { id: string; name: string; [k: string]: unknown }[];
+  pendingSaves?: PendingSave[];
   avatarUrl?: string;
   initiative?: number;
 }

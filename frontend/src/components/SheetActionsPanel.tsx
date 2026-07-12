@@ -4,14 +4,15 @@ import { charactersV3Api } from '../character/api';
 import { actionsApi, effectsApi } from '../api/client';
 import { getCardsIndex } from '../utils/cardsIndex';
 import type { AssembledCharacter } from '../character/assemble';
-import { actionNeedsTarget, actionInteractsWithTarget, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
+import { actionNeedsTarget, actionInteractsWithTarget, actionForcesTargetSave, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState, buildTargetFromCharacter } from '../character/runtime';
 import { encountersApi } from '../battle/encountersApi';
-import type { Combatant, BattleLogEntry } from '../battle/encounterTypes';
+import type { Combatant, BattleLogEntry, PendingSave, SaveOutcome } from '../battle/encounterTypes';
 import { describeEngineEvent } from '../engine/events';
+import { rollD20 } from '../engine/roll';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
@@ -19,7 +20,7 @@ import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } fr
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
-import { executeAction, InsufficientResourcesError } from '../engine/execute';
+import { executeAction, readTargetSave, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
 import { weaponActionAvailability, weaponAmmoCost, weaponAttackPreview } from '../engine/weapon';
 import { appendActivationCost, costAmount } from '../engine/cost';
@@ -31,7 +32,7 @@ import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
 import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card } from '../types';
-import type { EngineEvent, ExecuteContext, ReactionOffer, RuntimeState, TargetContext } from '../mvp/contracts';
+import type { EngineEvent, ExecuteContext, ReactionOffer, RollLog, RuntimeState, TargetContext } from '../mvp/contracts';
 import { getSettings } from '../settings';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
@@ -69,6 +70,20 @@ interface Props {
    *  ограничивается комбатантами этого боя, а урон/лечение/эффекты применяются к комбатанту
    *  через encountersApi.apply (синк на доску боя и другие устройства), а не в запись персонажа. */
   encounterId?: string;
+}
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
+
+// Дельта исхода спасброска: изменение состояния цели после прогона движка относительно БАЗЫ
+// прогона (baseHp/baseTemp). Прогон делается по цели с огромным hp, поэтому дельта несёт ИСТИННЫЙ
+// урон без упора в 0 (ограничит уже цель по своему текущему hp). ts undefined (успешный негейт —
+// движок не мутировал цель) → нулевая дельта.
+function outcomeDelta(baseHp: number, baseTemp: number, prevEffects: { id?: string }[], ts: RuntimeState | undefined): SaveOutcome {
+  if (!ts) return { hpDelta: 0, tempDelta: 0, addEffects: [] };
+  const prevIds = new Set((prevEffects ?? []).map((e) => e.id));
+  const addEffects = ((ts.activeEffects ?? []) as { id?: string; name?: string }[])
+    .filter((e) => !(e.id && prevIds.has(e.id))) as SaveOutcome['addEffects'];
+  return { hpDelta: ts.hp.current - baseHp, tempDelta: (ts.hp.temp ?? 0) - baseTemp, addEffects };
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -533,8 +548,46 @@ export default function SheetActionsPanel({
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
     // targetOverride — богатая цель из выбранного персонажа (иначе dummy {ac, saveMods}).
-    const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}, targetOverride?: TargetContext) =>
-      ({ character: ctx, target: targetOverride ?? target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}) }) as ExecuteContext & { passives: typeof passives };
+    const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}, targetOverride?: TargetContext, forceSaveOutcome?: 'success' | 'fail') =>
+      ({ character: ctx, target: targetOverride ?? target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
+
+    // В бою действие со спасом цели-ПЕРСОНАЖА: спас бросает САМА цель. Кастер предрассчитывает ОБА
+    // исхода (onFail/onSuccess как дельты) и шлёт pending-спас на комбатант цели; применение — у цели.
+    const emitPendingSave = async (cb: Combatant, m: Record<string, unknown>, save: { ability: string; dc: number }, onFail: SaveOutcome, onSuccess: SaveOutcome) => {
+      if (!encounterId) return;
+      const pending: PendingSave = {
+        id: uid(), sourceName: character.name, actionName: String(m.name ?? 'Действие'),
+        ability: save.ability, dc: save.dc, onFail, onSuccess,
+      };
+      const ab = save.ability.toUpperCase();
+      await encountersApi.apply(encounterId, {
+        patches: [{ actor_id: cb.actorId, set: { pendingSaves: [...(cb.pendingSaves ?? []), pending] } }],
+        log: [{
+          message: `${character.name} → ${cb.name}: спасбросок ${ab} СЛ ${save.dc} (${pending.actionName})`,
+          ...(cb.characterId ? { targetCharacterId: cb.characterId, type: 'narrative', payload: { type: 'narrative', text: `Требуется спасбросок ${ab} СЛ ${save.dc} — ${pending.actionName} (от ${character.name})` } } : {}),
+        }],
+      });
+      encCombatantsRef.current = encCombatantsRef.current.map((c) =>
+        c.actorId === cb.actorId ? { ...c, pendingSaves: [...(c.pendingSaves ?? []), pending] } : c);
+    };
+
+    // Монстр (нет листа): кастер сам катит спас и применяет ДЕЛЬТУ выбранного исхода к комбатанту
+    // (к его ТЕКУЩЕМУ hp, а не к абсолюту — предрасчёт делался по огромному hp).
+    const applyMonsterSaveOutcome = async (cb: Combatant, out: SaveOutcome, sroll: RollLog, ability: string) => {
+      if (!encounterId) return;
+      const cur = encCombatantsRef.current.find((c) => c.actorId === cb.actorId) ?? cb;
+      const newHp = Math.max(0, cur.hp + (out.hpDelta ?? 0));
+      const newTemp = Math.max(0, (cur.temp ?? 0) + (out.tempDelta ?? 0));
+      const newEff = [...(cur.activeEffects ?? []), ...(out.addEffects ?? [])];
+      const hpDmg = Math.max(0, -(out.hpDelta ?? 0));
+      const saved = sroll.outcome === 'success';
+      await encountersApi.apply(encounterId, {
+        patches: [{ actor_id: cb.actorId, set: { hp: newHp, temp: newTemp, activeEffects: newEff } }],
+        log: [{ message: `${cb.name}: спасбросок ${ability.toUpperCase()} — ${saved ? 'успех' : 'провал'}${hpDmg ? `, урон ${hpDmg}` : ''}` }],
+      });
+      encCombatantsRef.current = encCombatantsRef.current.map((c) =>
+        c.actorId === cb.actorId ? { ...c, hp: newHp, temp: newTemp, activeEffects: newEff as unknown as Combatant['activeEffects'] } : c);
+    };
 
     // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
     const previewFor = (a: SheetAction): ReactNode => {
@@ -567,7 +620,10 @@ export default function SheetActionsPanel({
         if (!picked) return null; // отмена выбора = отмена действия
         for (const [k, v] of Object.entries(picked)) if (v.length) choices[k] = v;
       }
-      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events);
+      // В бою + действие форсирует спас цели → спас бросит цель сама; из плана кубов кастера
+      // исключаем d20 спасброска (кастер вводит только кости урона).
+      const battleTargetSave = !!encounterId && actionForcesTargetSave(m);
+      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events, battleTargetSave);
       const decision = await diceDialog.request(plan, title, preview, { confirm, targets: targetOpts?.targets, needsTarget: targetOpts?.needsTarget });
       if (decision.mode === 'cancel') return null;
       // Выбранная цель → богатая цель. В бою цель — комбатант (по actorId), применяем патчем на
@@ -585,6 +641,43 @@ export default function SheetActionsPanel({
         }
       }
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+      // Спас цели в бою: предрассчитываем ОБА исхода движком с ОДИНАКОВЫМИ костями урона
+      // (record/replay rng — иначе успех не был бы «половиной» тех же костей). Персонаж бросит спас
+      // сам у себя (pending); монстр без листа — кастер катит его спас и применяет сразу.
+      if (battleTargetSave && targetCb && richTarget) {
+        const save = readTargetSave(m, execCtx(() => 0.5, false, choices, richTarget));
+        // Предрасчёт по цели с ОГРОМНЫМ hp — чтобы урон не упёрся в 0 и дельта несла истинный урон
+        // (ограничит уже цель по своему текущему hp). temp/сопротивления — реальные.
+        const BIGHP = 1e7;
+        const baseTemp = richTarget.runtimeState?.hp.temp ?? 0;
+        const precTarget: TargetContext = richTarget.runtimeState
+          ? { ...richTarget, runtimeState: { ...richTarget.runtimeState, hp: { current: BIGHP, max: BIGHP, temp: baseTemp } } }
+          : richTarget;
+        // Два прогона с ОДИНАКОВЫМИ костями урона (record/replay rng): провал rf и успех rs.
+        const drawn: number[] = [];
+        const recRng = () => { const v = rng(); drawn.push(v); return v; };
+        const rf = executeAction(baseState, m, execCtx(recRng, false, choices, precTarget, 'fail'));
+        let ri = 0;
+        const replayRng = () => (ri < drawn.length ? drawn[ri++] : Math.random());
+        const rs = executeAction(baseState, m, execCtx(replayRng, false, choices, precTarget, 'success'));
+        const damageType = (rf.events.find((e) => e.type === 'damage') as { damageType?: string } | undefined)?.damageType;
+        const prevEff = targetCb.activeEffects ?? [];
+        const onFail: SaveOutcome = { ...outcomeDelta(BIGHP, baseTemp, prevEff, rf.targetState), damageType };
+        const onSuccess: SaveOutcome = { ...outcomeDelta(BIGHP, baseTemp, prevEff, rs.targetState), damageType };
+        if (save && targetCb.characterId) {
+          // Персонаж — цель бросит спас сама. Журнал кастера — как обычный каст (rf.events содержат
+          // и его само-эффекты, и бросок урона); цель отдельно залогирует фактически полученный урон.
+          await emitPendingSave(targetCb, m, save, onFail, onSuccess);
+          const casterEvents: EngineEvent[] = [...rf.events, { type: 'narrative', text: `«${String(m.name ?? action.name)}» → ${targetCb.name}: спасбросок ${save.ability.toUpperCase()} СЛ ${save.dc} (цель бросает у себя)` }];
+          return { state: rf.state, events: casterEvents, pending: rf.pendingReactions ?? [], commitTarget: undefined };
+        }
+        // Монстр (нет листа): кастер катит спас монстра (мод — из поля «Спас цели») и применяет дельту.
+        const sroll = rollD20({ modifiers: [{ value: targetSaveMod, source: 'цель', reason: 'спасбросок' }], target: { type: 'dc', value: save?.dc ?? 10 }, rng: () => Math.random() });
+        const monOut = sroll.outcome === 'success' ? onSuccess : onFail;
+        const saveEvent: EngineEvent = { type: 'roll', label: `Спасбросок ${(save?.ability ?? '').toUpperCase()} цели — ${sroll.outcome === 'success' ? 'успех' : 'провал'}`, roll: sroll };
+        const commitTarget = () => applyMonsterSaveOutcome(targetCb!, monOut, sroll, save?.ability ?? '');
+        return { state: rf.state, events: [saveEvent], pending: rf.pendingReactions ?? [], commitTarget };
+      }
       const r = executeAction(baseState, m, execCtx(rng, false, choices, richTarget));
       let commitTarget: (() => Promise<void>) | undefined;
       if (r.targetState) {

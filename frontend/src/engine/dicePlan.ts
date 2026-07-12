@@ -29,11 +29,13 @@ const DAMAGE_LABEL: Record<string, string> = {
   psychic: 'психический', force: 'силовое поле',
 };
 
-/** Кости из событий одного прогона, в порядке броска. */
-export function extractDiceFromEvents(events: EngineEvent[]): PlannedDie[] {
+/** Кости из событий одного прогона, в порядке броска. skipSave — не включать d20 спасброска
+ *  (онлайн-бой: спас бросает ЦЕЛЬ на своём листе, кастер вводит только кости урона). */
+export function extractDiceFromEvents(events: EngineEvent[], skipSave = false): PlannedDie[] {
   const out: PlannedDie[] = [];
   for (const e of events) {
     if (e.type === 'roll') {
+      if (skipSave && e.roll.kind === 'save') continue;
       for (const d of e.roll.dice) out.push({ sides: d.sides, label: e.label });
     } else if (e.type === 'damage' && e.roll) {
       const t = DAMAGE_LABEL[e.damageType] ?? e.damageType;

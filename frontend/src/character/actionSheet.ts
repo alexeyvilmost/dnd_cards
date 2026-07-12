@@ -384,3 +384,11 @@ export function actionNeedsTarget(mechanics: Record<string, unknown>): boolean {
     return res === 'attack_roll' || res === 'save';
   });
 }
+
+/** Действие ФОРСИРУЕТ спасбросок ЦЕЛИ (resolution:'save', who:'target'). В онлайн-бою такой
+ *  спас бросает сама цель на своём листе; атаки (attack_roll) остаются на стороне кастера. */
+export function actionForcesTargetSave(mechanics: Record<string, unknown>): boolean {
+  const effects = mechanics.effects as Record<string, unknown>[] | undefined;
+  if (!Array.isArray(effects)) return false;
+  return effects.some((e) => String(e.resolution ?? '') === 'save' && String(e.who ?? 'target') === 'target');
+}

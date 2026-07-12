@@ -939,22 +939,42 @@ function runSave(
     ? collectModifiers(targetState, [], { roll: 'saving_throw', filter: { ability } })
     : { modifiers: [] as RollModifier[], advantage: 'none' as const };
 
-  const roll = rollD20({
-    advantage: collected.advantage,
-    modifiers: [{ value: saveMod, source: 'цель' }, ...collected.modifiers],
-    target: { type: 'dc', value: dc },
-    rng: ctx.rng,
-  });
-  events.push(rollEvent('Спасбросок', { ...roll, kind: 'save' }));
-
-  // Планирующий прогон: берём ветку провала, чтобы кости on_fail-урона попали в план кубов
-  // (иначе при высоком PLANNING_RNG цель успевает спастись и урон не планируется → #8).
-  const success = ctx.planning ? false : roll.outcome === 'success';
+  let success: boolean;
+  if (ctx.forceSaveOutcome != null) {
+    // Онлайн-бой: исход форсирован (предрасчёт для передачи цели). d20 НЕ катим — иначе съели бы
+    // из ctx.rng кости урона; событие спасброска не эмитим — бросок сделает цель на своём листе.
+    success = ctx.forceSaveOutcome === 'success';
+  } else {
+    const roll = rollD20({
+      advantage: collected.advantage,
+      modifiers: [{ value: saveMod, source: 'цель' }, ...collected.modifiers],
+      target: { type: 'dc', value: dc },
+      rng: ctx.rng,
+    });
+    events.push(rollEvent('Спасбросок', { ...roll, kind: 'save' }));
+    // Планирующий прогон: берём ветку провала, чтобы кости on_fail-урона попали в план кубов
+    // (иначе при высоком PLANNING_RNG цель успевает спастись и урон не планируется → #8).
+    success = ctx.planning ? false : roll.outcome === 'success';
+  }
   const payloads = (success ? effect.on_success : effect.on_fail) as Dict[] | undefined;
   if (!Array.isArray(payloads)) return state;
 
   const half = success && payloads.some((p) => p.on_success === 'half');
   return applyPayloads(payloads, state, ctx, events, source, 'main', half, whoTarget, targetRef);
+}
+
+// readTargetSave — параметры форсируемого спасброска ЦЕЛИ из механики действия (ability, DC, half).
+// DC считается в контексте КАСТЕРА (8 + БМ + модификатор заклинания). Нужен, чтобы передать цели
+// pending-спасбросок в онлайн-бою: цель кинет d20 сама и сравнит со своей СЛ. null — сейва цели нет.
+export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability: string; dc: number; half: boolean } | null {
+  const effects = mechanics.effects as Dict[] | undefined;
+  if (!Array.isArray(effects)) return null;
+  const eff = effects.find((e) => String(e.resolution ?? '') === 'save' && String(e.who ?? 'target') === 'target');
+  if (!eff) return null;
+  const dc = evalDc(String(eff.dc ?? '10'), ctx);
+  const ability = String(eff.ability ?? 'dex');
+  const half = Array.isArray(eff.on_success) && (eff.on_success as Dict[]).some((p) => p.on_success === 'half');
+  return { ability, dc, half };
 }
 
 function runAbilityCheck(
@@ -1250,7 +1270,10 @@ export function applyIncomingDamage(
 
   // Авто-проверка концентрации при уроне.
   const conc = concentrationEntry(next);
-  if (conc && dmg > 0) {
+  // При предрасчёте исходов боя (forceSaveOutcome) проверку концентрации НЕ катим: она тоже тянет
+  // d20 из ctx.rng и, не будучи в плане кубов, сдвинула бы кости урона. Разрыв концентрации цели —
+  // её отдельная забота (не моделируем в предрасчёте pending-спасброска).
+  if (conc && dmg > 0 && ctx.forceSaveOutcome == null) {
     const dc = concentrationDC(dmg);
     const collected = collectModifiers(next, passivesFromCtx(ctx), {
       roll: 'saving_throw', filter: { ability: 'con' },
