@@ -597,12 +597,23 @@ const CharacterSheetMVP = () => {
     if (!id || rollingInit) return;
     setRollingInit(true);
     try {
-      const decision = await diceDialog.request([{ sides: 20, label: 'Инициатива' }], 'Бросок инициативы');
+      // Состояния влияют на бросок Инициативы (PHB 2024): Невидимый → преимущество,
+      // Недееспособный → помеха. Плоский бонус initiative уже включает числовые модификаторы
+      // (breakdown), поэтому из collected берём только advantage, а не его modifiers.
+      const collected = runtimeState
+        ? collectRollModifiers(runtimeState, passives, { roll: 'initiative' })
+        : { advantage: 'none' as const, modifiers: [] };
+      const plan = Array.from(
+        { length: collected.advantage === 'none' ? 1 : 2 },
+        () => ({ sides: 20, label: 'Инициатива' }),
+      );
+      const decision = await diceDialog.request(plan, 'Бросок инициативы');
       if (decision.mode === 'cancel') return;
       const rng = decision.mode === 'manual'
-        ? plannedValuesRng([{ sides: 20, label: 'Инициатива' }], decision.values)
+        ? plannedValuesRng(plan, decision.values)
         : () => Math.random();
       const roll = rollD20({
+        advantage: collected.advantage,
         modifiers: [{ value: initiative, source: 'инициатива', reason: 'бонус инициативы' }],
         rng,
       });

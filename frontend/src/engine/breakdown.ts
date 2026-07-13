@@ -10,7 +10,7 @@ import type { CharacterContext, RollModifier, RuntimeState, ValueBreakdown } fro
 import { armorClassValue } from './ac';
 import { hitDieMax } from '../character/derive';
 import { abilityOfSkill } from '../character/rules/foundation';
-import { collectModifiers } from './modifiers';
+import { collectModifiers, foldModifiers } from './modifiers';
 import type { FormulaContext } from './formula';
 
 type Dict = Record<string, unknown>;
@@ -160,9 +160,13 @@ export function breakdownValue(
     // добавляется ОДИН раз. Фолбэк на characterSpeed для контекстов без baseSpeed (тесты/бой). Иначе
     // (при базе=characterSpeed=итог) modifier-speed считался бы дважды — как база и как fxPart.
     const base = character.baseSpeed ?? character.characterSpeed ?? 30;
-    const fxParts = effectModifiers('speed', undefined, character, state, passives);
-    const parts = [{ value: base, source: 'скорость', reason: 'базовая' }, ...fxParts];
-    return { value: parts.reduce((s, p) => s + p.value, 0), parts };
+    // Скорость — единственное производное листа, где НУЖНА не-аддитивная алгебра C5: состояния
+    // «Схвачен/Опутан/Парализован/Без сознания» задают Скорость 0 через op:'set' (у Ускорения был
+    // бы ×2). foldModifiers применяет и аддитивные модификаторы, и set/multiply/upgrade/downgrade.
+    const collected = collectModifiers(state, passives, { roll: 'speed', formulaCtx: formulaCtxOf(character) });
+    const folded = foldModifiers(base, collected);
+    const parts = [{ value: base, source: 'скорость', reason: 'базовая' }, ...folded.parts];
+    return { value: Math.max(0, folded.value), parts };
   }
   if (what.startsWith('save:')) {
     return breakdownSave(what.slice(5) as AbilityKey, character, state, passives);

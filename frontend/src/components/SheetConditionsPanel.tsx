@@ -69,11 +69,20 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
   const conditionTip = (value: string): string => {
     const rule = conditionRule(value);
     if (!rule) return '';
+    const ROLL_RU: Record<string, string> = {
+      attack: 'атаки', saving_throw: 'спасброски', ability_check: 'проверки',
+      initiative: 'инициатива', speed: 'скорость',
+    };
     const mods = rule.modifiers.map((m) => {
-      const roll = m.applies_to.roll === 'attack' ? 'атаки'
-        : m.applies_to.roll === 'saving_throw' ? 'спасброски' : 'проверки';
+      const roll = ROLL_RU[m.applies_to.roll] ?? m.applies_to.roll;
       const flt = m.applies_to.filter?.ability ? ` (${String(m.applies_to.filter.ability).toUpperCase()})` : '';
-      return `${m.op === 'disadvantage' ? 'помеха' : m.op === 'advantage' ? 'преимущество' : m.value}: ${roll}${flt}`;
+      const scope = m.scope === 'target' ? ' по вам' : '';
+      // set/multiply/… над значением (Скорость 0) показываем как «скорость = 0», а adv/dis/add — как раньше.
+      if (m.op === 'advantage') return `преимущество: ${roll}${flt}${scope}`;
+      if (m.op === 'disadvantage') return `помеха: ${roll}${flt}${scope}`;
+      if (m.op === 'set') return `${roll} = ${m.value}`;
+      if (m.op === 'multiply') return `${roll} ×${m.value}`;
+      return `${m.value}: ${roll}${flt}`;
     });
     return [...mods, rule.note].filter(Boolean).join('\n');
   };

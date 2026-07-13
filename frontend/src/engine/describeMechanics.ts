@@ -67,6 +67,8 @@ function modifierPhrase(p: Dict): string {
   let core: string;
   if (op === 'advantage') core = `преимущество на ${roll}`;
   else if (op === 'disadvantage') core = `помеха на ${roll}`;
+  else if (op === 'set') core = `${roll} = ${p.value ?? ''}`;
+  else if (op === 'multiply') core = `${roll} ×${p.value ?? ''}`;
   else core = `${p.value ?? ''} к ${roll}`;
   const base = projected ? `атакующим по вам — ${core}` : core;
   const when = p.when as Dict[] | undefined;

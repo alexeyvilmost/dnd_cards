@@ -4,13 +4,19 @@
  * у Схвачен, «×2 скорость» Ускорения). d20-броски остаются аддитивными (здесь не проверяются).
  */
 import { describe, expect, it } from 'vitest';
-import { collectModifiers, foldModifiers, type CollectResult } from './modifiers';
+import { collectModifiers, foldModifiers, collectRollModifiers, type CollectResult } from './modifiers';
 import { breakdownValue } from './breakdown';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 
 type Dict = Record<string, unknown>;
 const fresh = (): RuntimeState => ({ hp: { current: 20, max: 20, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: [] });
-const character: CharacterContext = { abilityMods: { str: 0, dex: 2, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 5, characterSpeed: 30 };
+const character: CharacterContext = { abilityMods: { str: 0, dex: 2, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 5, characterSpeed: 30, baseSpeed: 30 };
+
+/** RuntimeState с наложенным состоянием (kind:'condition') — как на листе/в бою. */
+const withCondition = (value: string): RuntimeState => ({
+  ...fresh(),
+  activeEffects: [{ id: `c-${value}`, name: value, mechanics: { kind: 'condition', value } } as never],
+});
 
 // Пассивка-механика с одним modifier-пейлоадом.
 const mod = (op: string, value: number, roll = 'speed', extra: Dict = {}): Dict =>
@@ -48,9 +54,9 @@ describe('C5 — foldModifiers', () => {
   });
 });
 
-// КЗ — единственное значение с ОБЩИМ источником (armorClassValue: и лист, и рантайм), поэтому
-// свёртка C5 применяется к нему без расхождения. Прочие значения (скорость/хиты/спас) остаются
-// аддитивными (у них отдельный расчёт в resolveCharacterRules/бою) — обобщение вместе с C8.
+// Скорость (breakdown листа) и КЗ (armorClassValue) применяют алгебру C5 (set/multiply/…):
+// состояния «Схвачен/Опутан/…» задают Скорость 0 через op:'set'. Хиты/спасброски остаются
+// аддитивными (отдельный расчёт в resolveCharacterRules) — обобщение вместе с C8.
 describe('C5 — КЗ применяет алгебру (armorClassValue)', () => {
   const acMod = (op: string, value: number): Dict => mod(op, value, 'ac');
   it('база КЗ без модификаторов: 10 + ЛВК (без доспеха)', () => {
@@ -67,5 +73,41 @@ describe('C5 — КЗ применяет алгебру (armorClassValue)', () =
   });
   it('add + upgrade вместе: +1 (13), затем не ниже 16 → 16', () => {
     expect(breakdownValue('ac', character, fresh(), [acMod('add', 1), acMod('upgrade', 16)]).value).toBe(16);
+  });
+});
+
+// Состояния PHB 2024 как ДАННЫЕ (BUILTIN_CONDITION_RULES): движок применяет их из активного
+// эффекта kind:'condition'. Здесь — представимая движком часть (скорость / инициатива / броски).
+describe('Состояния 2024 — механика через движок', () => {
+  it('Схвачен → Скорость 0 (op:set)', () => {
+    expect(breakdownValue('speed', character, withCondition('grappled'), []).value).toBe(0);
+  });
+  it('Опутан / Парализован / Без сознания → Скорость 0', () => {
+    for (const c of ['restrained', 'paralyzed', 'unconscious']) {
+      expect(breakdownValue('speed', character, withCondition(c), []).value).toBe(0);
+    }
+  });
+  it('Скорость 0 виден в разбивке (parts) как «установлено»', () => {
+    const bd = breakdownValue('speed', character, withCondition('grappled'), []);
+    expect(bd.parts.some((p) => p.reason === 'установлено')).toBe(true);
+  });
+  it('Невидимый → преимущество на Инициативу', () => {
+    expect(collectRollModifiers(withCondition('invisible'), [], { roll: 'initiative' }).advantage).toBe('advantage');
+  });
+  it('Недееспособный → помеха на Инициативу', () => {
+    expect(collectRollModifiers(withCondition('incapacitated'), [], { roll: 'initiative' }).advantage).toBe('disadvantage');
+  });
+  it('Отравлен → помеха на атаку и проверку (без изменений)', () => {
+    expect(collectRollModifiers(withCondition('poisoned'), [], { roll: 'attack' }).advantage).toBe('disadvantage');
+    expect(collectRollModifiers(withCondition('poisoned'), [], { roll: 'ability_check' }).advantage).toBe('disadvantage');
+  });
+  it('Опутан → помеха на спасбросок Ловкости (фильтр по характеристике)', () => {
+    expect(collectRollModifiers(withCondition('restrained'), [], { roll: 'saving_throw', filter: { ability: 'dex' } }).advantage).toBe('disadvantage');
+    // спас Силы — без помехи (фильтр не совпал)
+    expect(collectRollModifiers(withCondition('restrained'), [], { roll: 'saving_throw', filter: { ability: 'str' } }).advantage).toBe('none');
+  });
+  it('Скорость 0 НЕ влияет на d20-броски (роль speed ≠ attack)', () => {
+    expect(collectRollModifiers(withCondition('grappled'), [], { roll: 'attack' }).advantage).toBe('disadvantage'); // только помеха атаки
+    expect(breakdownValue('speed', character, withCondition('poisoned'), []).value).toBe(30); // Отравлен скорость не режет
   });
 });

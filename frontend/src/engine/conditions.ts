@@ -12,8 +12,12 @@
 import type { RollModifier } from '../mvp/contracts';
 
 export interface ConditionModifier {
-  applies_to: { roll: 'attack' | 'saving_throw' | 'ability_check'; filter?: Record<string, unknown> };
-  op: 'advantage' | 'disadvantage' | 'add';
+  /** roll — цель модификатора. Помимо d20-бросков (attack/save/check/initiative) сюда входят
+   *  ПРОИЗВОДНЫЕ значения (speed и т.п.): состояние «Схвачен» задаёт скорость через op:'set'. */
+  applies_to: { roll: 'attack' | 'saving_throw' | 'ability_check' | 'initiative' | 'speed'; filter?: Record<string, unknown> };
+  /** advantage/disadvantage — для d20; add — аддитивный бонус; set/multiply/upgrade/downgrade —
+   *  не-аддитивная алгебра над значением (скорость 0 у Схвачен = op:'set', value:'0'). */
+  op: 'advantage' | 'disadvantage' | 'add' | 'set' | 'multiply' | 'upgrade' | 'downgrade';
   value?: string;
   /** 'self' (по умолчанию) — на броски носителя; 'target' — на броски против носителя. */
   scope?: 'self' | 'target';
@@ -32,6 +36,10 @@ const ATTACK = (extra?: Partial<ConditionModifier>): ConditionModifier => ({ app
 /** Преимущество атак ПО носителю (проекция на атакующего) — чистые данные. */
 const ADV_AGAINST: ConditionModifier = { applies_to: { roll: 'attack' }, op: 'advantage', scope: 'target' };
 const DIS_AGAINST: ConditionModifier = { applies_to: { roll: 'attack' }, op: 'disadvantage', scope: 'target' };
+/** Скорость 0 (не может быть увеличена) — Схвачен/Опутан/Парализован/Без сознания. */
+const SPEED0: ConditionModifier = { applies_to: { roll: 'speed' }, op: 'set', value: '0' };
+/** Помеха/преимущество на бросок Инициативы (Недееспособный / Невидимый). */
+const INIT = (op: 'advantage' | 'disadvantage'): ConditionModifier => ({ applies_to: { roll: 'initiative' }, op });
 
 /** 13 встроенных состояний PHB 2024 — offline-сид (совпадает с миграцией). */
 export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
@@ -57,22 +65,22 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   },
   grappled: {
     id: 'grappled', label: 'Схвачен',
-    modifiers: [ATTACK()],
-    note: 'Скорость 0; помеха на атаки по всем, кроме схватившего.',
+    modifiers: [ATTACK(), SPEED0],
+    note: 'Помеха на атаки по всем, кроме схватившего.',
   },
   incapacitated: {
     id: 'incapacitated', label: 'Недееспособен',
-    modifiers: [],
-    note: 'Нет действий/бонусных действий/реакций; концентрация прервана; помеха на инициативу.',
+    modifiers: [INIT('disadvantage')],
+    note: 'Нет действий/бонусных действий/реакций; концентрация прервана; безмолвие.',
   },
   invisible: {
     id: 'invisible', label: 'Невидим',
-    modifiers: [{ applies_to: { roll: 'attack' }, op: 'advantage' }, DIS_AGAINST],
-    note: 'Преимущество на инициативу.',
+    modifiers: [{ applies_to: { roll: 'attack' }, op: 'advantage' }, DIS_AGAINST, INIT('advantage')],
+    note: 'Скрытность: вас не могут видеть без особых средств.',
   },
   paralyzed: {
     id: 'paralyzed', label: 'Парализован',
-    modifiers: [ADV_AGAINST],
+    modifiers: [ADV_AGAINST, SPEED0],
     note: 'Недееспособен; провал спасбросков СИЛ/ЛВК; атаки по вам вблизи — крит.',
   },
   poisoned: {
@@ -86,8 +94,7 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   },
   restrained: {
     id: 'restrained', label: 'Опутан',
-    modifiers: [ATTACK(), { applies_to: { roll: 'saving_throw', filter: { ability: 'dex' } }, op: 'disadvantage' }, ADV_AGAINST],
-    note: 'Скорость 0.',
+    modifiers: [ATTACK(), { applies_to: { roll: 'saving_throw', filter: { ability: 'dex' } }, op: 'disadvantage' }, ADV_AGAINST, SPEED0],
   },
   stunned: {
     id: 'stunned', label: 'Ошеломлён',
@@ -96,7 +103,7 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   },
   unconscious: {
     id: 'unconscious', label: 'Без сознания',
-    modifiers: [ADV_AGAINST],
+    modifiers: [ADV_AGAINST, SPEED0],
     note: 'Недееспособен, распластан; провал СИЛ/ЛВК; атаки по вам вблизи — крит.',
   },
 };
