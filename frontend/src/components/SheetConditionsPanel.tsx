@@ -8,7 +8,7 @@ import { Plus, X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
-import { conditionOptions, conditionLabel, conditionRule, conditionModifierPayloads } from '../engine/conditions';
+import { conditionOptions, conditionLabel, conditionRule, conditionModifierPayloads, conditionLeaves } from '../engine/conditions';
 import type { EngineEvent } from '../mvp/contracts';
 
 interface Props {
@@ -74,10 +74,28 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
   };
 
   const removeCondition = (id: string, name: string) => {
-    persist(
-      runtime.activeEffects.filter((e) => e.id !== id),
-      [{ type: 'effect_expired', name }],
+    const removed = runtime.activeEffects.find((e) => e.id === id);
+    const value = String((removed?.mechanics as Record<string, unknown>)?.value ?? '');
+    let effects = runtime.activeEffects.filter((e) => e.id !== id);
+    const events: EngineEvent[] = [{ type: 'effect_expired', name }];
+    // Остаточные состояния (Без сознания → остаётесь Опрокинутым): добавляем, если ещё нет.
+    const present = new Set(
+      effects
+        .filter((e) => (e.mechanics as Record<string, unknown>)?.kind === 'condition')
+        .map((e) => String((e.mechanics as Record<string, unknown>).value ?? '')),
     );
+    for (const leave of conditionLeaves(value)) {
+      if (present.has(leave)) continue;
+      effects = [...effects, {
+        id: `cond-leave-${Date.now()}-${leave}`,
+        name: conditionLabel(leave),
+        mechanics: { kind: 'condition', value: leave, op: 'apply' },
+        expiry: 'manual',
+        source: `осталось от «${name}»`,
+      }];
+      events.push({ type: 'condition_applied', condition: conditionLabel(leave) });
+    }
+    persist(effects, events);
   };
 
   const conditionTip = (value: string): string => {

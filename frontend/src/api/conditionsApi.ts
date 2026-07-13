@@ -31,9 +31,13 @@ export async function loadConditions(): Promise<void> {
           .filter((m): m is ConditionModifier => m !== null);
         const id = String(e.card_number ?? '').replace(/^COND-/, '');
         // Композиция (F): mechanics.includes — состояния, чью механику носитель наследует.
-        const rawIncludes = (e.mechanics as Record<string, unknown> | undefined)?.includes;
+        const mech = e.mechanics as Record<string, unknown> | undefined;
+        const rawIncludes = mech?.includes;
         const includes = Array.isArray(rawIncludes) ? rawIncludes.map(String) : undefined;
-        return { id, label: e.name, modifiers, ...(includes?.length ? { includes } : {}), note: e.description || undefined };
+        // Остаточные состояния при снятии (Без сознания → Опрокинут).
+        const rawLeaves = mech?.leaves;
+        const leaves = Array.isArray(rawLeaves) ? rawLeaves.map(String) : undefined;
+        return { id, label: e.name, modifiers, ...(includes?.length ? { includes } : {}), ...(leaves?.length ? { leaves } : {}), note: e.description || undefined };
       })
       .filter((d) => d.id);
     if (defs.length) registerConditions(defs);

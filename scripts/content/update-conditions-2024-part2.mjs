@@ -22,9 +22,10 @@ const DENY = (cap) => M({ roll: cap }, 'deny');
 const ADV_AGAINST_MELEE = M({ roll: 'attack' }, 'advantage', { scope: 'target', range: 'melee' });
 const DIS_AGAINST_RANGED = M({ roll: 'attack' }, 'disadvantage', { scope: 'target', range: 'ranged' });
 
-const mech = (result, includes) => ({
+const mech = (result, includes, leaves) => ({
   effects: [{ resolution: 'auto', result }],
   ...(includes ? { includes } : {}),
+  ...(leaves ? { leaves } : {}),
 });
 
 /** Полная целевая механика по card_number. */
@@ -32,7 +33,8 @@ const TARGET = {
   'COND-incapacitated': mech([INIT_DIS, DENY('action'), DENY('bonus_action'), DENY('reaction'), DENY('concentration')]),
   'COND-paralyzed': mech([ADV_AGAINST, SPEED0, AUTOFAIL('str'), AUTOFAIL('dex'), AUTOCRIT_MELEE], ['incapacitated']),
   'COND-stunned': mech([ADV_AGAINST, AUTOFAIL('str'), AUTOFAIL('dex')], ['incapacitated']),
-  'COND-unconscious': mech([ADV_AGAINST, SPEED0, AUTOFAIL('str'), AUTOFAIL('dex'), AUTOCRIT_MELEE], ['incapacitated']),
+  // Без сознания = Опрокинут + Парализован (→ Недееспособен); при снятии остаётся Опрокинутым.
+  'COND-unconscious': mech([], ['prone', 'paralyzed'], ['prone']),
   'COND-prone': mech([ATTACK_DIS, ADV_AGAINST_MELEE, DIS_AGAINST_RANGED]),
 };
 

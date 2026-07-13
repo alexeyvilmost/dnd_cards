@@ -34,9 +34,12 @@ export interface ConditionRule {
   label: string;
   /** Правила состояния как scoped-модификаторы (self + target). */
   modifiers: ConditionModifier[];
-  /** Композиция (PHB 2024): состояния, механика которых наследуется («Без сознания» → Недееспособен …).
+  /** Композиция (PHB 2024): состояния, механика которых наследуется («Без сознания» → Опрокинут, Парализован …).
    *  conditionModifierPayloads раскрывает их транзитивно (со стражем циклов). */
   includes?: string[];
+  /** Остаточные состояния при СНЯТИИ этого («Без сознания» окончилось → остаётесь Опрокинутым).
+   *  При удалении/истечении носителя добавляются как самостоятельные состояния, если их ещё нет. */
+  leaves?: string[];
   /** Напоминание о неисполнимой движком части правила. */
   note?: string;
 }
@@ -121,9 +124,14 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   },
   unconscious: {
     id: 'unconscious', label: 'Без сознания',
-    modifiers: [ADV_AGAINST, SPEED0, AUTOFAIL('str'), AUTOFAIL('dex'), AUTOCRIT_MELEE],
-    includes: ['incapacitated'],
-    note: 'Вы роняете всё, что держите; распластаны.',
+    // PHB 2024: у вас состояния Опрокинут + Парализован (→ Недееспособен). Механика наследуется
+    // целиком из них; собственных модификаторов нет. Ranged-помеха Опрокинутого гасит плоское
+    // преимущество Парализованного (adv+dis = обычный бросок), рукопашные — с преимуществом и автокритом.
+    modifiers: [],
+    includes: ['prone', 'paralyzed'],
+    // Когда «Без сознания» заканчивается — вы остаётесь Опрокинутым.
+    leaves: ['prone'],
+    note: 'Вы роняете всё, что держите.',
   },
 };
 
@@ -158,6 +166,11 @@ export function conditionModifierPayloads(value: string, seen: Set<string> = new
   const out = [...rule.modifiers];
   for (const inc of rule.includes ?? []) out.push(...conditionModifierPayloads(inc, seen));
   return out;
+}
+
+/** Остаточные состояния, которые ОСТАЮТСЯ при снятии данного (Без сознания → Опрокинут). */
+export function conditionLeaves(value: string): string[] {
+  return registry[value]?.leaves ?? [];
 }
 
 /** Множество состояний носителя, раскрытое по композиции (для предикатов you_have/target_has_condition). */

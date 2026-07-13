@@ -20,7 +20,7 @@ import {
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import { collectModifiers, foldAdvantage } from './modifiers';
 import { activeConditionsOf, type EvalContext } from './circumstances';
-import { conditionModifierPayloads } from './conditions';
+import { conditionModifierPayloads, conditionLeaves, conditionLabel } from './conditions';
 import { payloadsOf } from './mechanicsView';
 import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/expandChoices';
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
@@ -557,7 +557,23 @@ function applyCondition(
       if (match) events.push({ type: 'effect_expired', name: e.name });
       return !match;
     });
-    return { ...state, activeEffects: kept };
+    // Остаточные состояния (Без сознания → остаётесь Опрокинутым): добавляем самостоятельными, если их ещё нет.
+    const present = new Set(
+      kept.filter((e) => (e.mechanics as Dict)?.kind === 'condition').map((e) => String((e.mechanics as Dict).value ?? '')),
+    );
+    const additions: ActiveEffectEntry[] = [];
+    for (const leave of conditionLeaves(condition)) {
+      if (present.has(leave)) continue;
+      additions.push({
+        id: `cond-leave-${state.activeEffects.length}-${leave}-${Date.now()}`,
+        name: conditionLabel(leave),
+        mechanics: { kind: 'condition', value: leave, op: 'apply' },
+        expiry: 'manual',
+        source: `осталось от «${condition}»`,
+      });
+      events.push(conditionAppliedEvent(leave));
+    }
+    return { ...state, activeEffects: [...kept, ...additions] };
   }
 
   const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
