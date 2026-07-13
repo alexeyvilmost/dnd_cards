@@ -10,7 +10,9 @@ import { cardsApi } from '../api/client';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { encountersApi } from '../battle/encountersApi';
 import { useEncounterStream } from '../battle/useEncounterStream';
-import type { Combatant, PendingSave } from '../battle/encounterTypes';
+import type { Combatant, PendingSave, PendingAttack } from '../battle/encounterTypes';
+import { useReactionPrompt } from '../contexts/ReactionPromptContext';
+import { executeAction } from '../engine/execute';
 import type { EngineEvent } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
@@ -114,6 +116,7 @@ const CharacterSheetMVP = () => {
   const { toasts, push: pushToast } = useSheetToasts();
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
+  const reactionPrompt = useReactionPrompt();
   // Рефы, чтобы loadJournal оставался стабильным (иначе смена journalOpen/pushToast пересоздавала бы
   // его и перезапускала тяжёлый эффект загрузки листа при каждом открытии/закрытии журнала).
   const journalOpenRef = useRef(journalOpen); journalOpenRef.current = journalOpen;
@@ -140,6 +143,7 @@ const CharacterSheetMVP = () => {
   const ownSigRef = useRef('');            // последняя применённая на лист боевая сигнатура
   const pendingSelfRef = useRef<string | null>(null); // ожидаемая сигнатура после собственного пуша
   const handledPendingRef = useRef<Set<string>>(new Set()); // id уже обработанных pending-спасбросков
+  const handledAttackRef = useRef<Set<string>>(new Set()); // id уже обработанных pending-«атакован» (Щит)
   const resolvingSaveRef = useRef(false); // сериализация: один диалог спасброска за раз (единый resolver)
   const resolvingSaveIdRef = useRef<string | null>(null); // id разрешаемого спаса — ждём его снятия из state
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
@@ -553,6 +557,24 @@ const CharacterSheetMVP = () => {
     return buildCharacterContext(ruleState, draft, equipped, assembled?.klass ?? null);
   }, [ruleState, draft, runtimeState, equipCards, assembled?.klass]);
 
+  // Реакции-слушатели «когда по вам попадают атакой» (Щит): заклинания/эффекты с trigger.event
+  // 'hit_by_attack'. Собираются на СТОРОНЕ ЦЕЛИ — она решает применять ли, когда атакующий доставит
+  // pending-«атакован» (см. resolveIncomingAttack).
+  const incomingReactions = useMemo(() => {
+    const isHitByAttack = (m: Record<string, unknown> | undefined): boolean => {
+      const act = m?.activation as Record<string, unknown> | undefined;
+      const mode = String(act?.mode ?? '');
+      return (act?.trigger as Record<string, unknown> | undefined)?.event === 'hit_by_attack' && (mode === 'reaction' || mode === 'triggered');
+    };
+    const out: { name: string; mechanics: Record<string, unknown> }[] = [];
+    for (const s of assembled?.spells ?? []) {
+      const m = s.mechanics as Record<string, unknown> | undefined;
+      if (m && isHitByAttack(m)) out.push({ name: s.name, mechanics: { ...m, name: s.name } });
+    }
+    for (const m of passives) if (isHitByAttack(m)) out.push({ name: String((m as Record<string, unknown>).name ?? 'Реакция'), mechanics: m });
+    return out;
+  }, [assembled, passives]);
+
   const acBreakdown = useMemo(() => {
     if (!sheetCtx || !runtimeState) return null;
     return breakdownValue('ac', sheetCtx, runtimeState, passives);
@@ -623,6 +645,90 @@ const CharacterSheetMVP = () => {
   const spellcasting = ruleState.spellcasting;
   // Слайс 5: выборы «в игре» (context:'in_play') — разрешаются на листе, а не в кузне.
   const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
+
+  // Входящая реакция «когда по вам попадают» (Щит): атакующий доставил pending-«атакован»; цель на
+  // СВОЁМ листе решает применить ли реакцию. Щит +5 КЗ действует и против вызвавшей атаки — если после
+  // него бросок атаки < КЗ, попадание обращается в промах и урон возвращается.
+  const resolveIncomingAttack = async (pa: PendingAttack) => {
+    if (!encId || !id || !runtimeState || !sheetCtx) return;
+    const own = encStateRef.current.combatants.find((c) => c.characterId === id);
+    if (!own) return;
+    const clearPending = async () => {
+      const remaining = (own.pendingAttacks ?? []).filter((x) => x.id !== pa.id);
+      try { await encountersApi.apply(encId, { patches: [{ actor_id: own.actorId, set: { pendingAttacks: remaining } }] }); } catch { /* best-effort */ }
+    };
+    // Подбираем реакцию (Щит), которую можно оплатить (ячейка); реакцию как ресурс не жёстко требуем.
+    let chosen: { mechanics: Record<string, unknown>; slotIdx: number; level?: number } | null = null;
+    for (const react of incomingReactions) {
+      const cost = ((react.mechanics.activation as Record<string, unknown>)?.cost ?? []) as Record<string, unknown>[];
+      const slotIdx = cost.findIndex((c) => String(c.resource) === 'spell_slot' && c.level != null);
+      let level: number | undefined;
+      if (slotIdx >= 0) {
+        const base = Number(cost[slotIdx].level) || 1;
+        const need = Number(cost[slotIdx].amount ?? 1) || 1;
+        for (let L = base; L <= 9; L += 1) if ((runtimeState.resources[`spell_slot_${L}`] ?? 0) >= need) { level = L; break; }
+        if (level == null) continue; // нет ячеек — не предлагаем
+      }
+      const res = await reactionPrompt.request(
+        { listenerId: react.name, name: react.name, mechanics: react.mechanics, cost, event: { kind: 'hit_by_attack' } },
+        { describe: `${pa.sourceName}: попадание «${pa.attackName}» (бросок ${pa.attackTotal}${pa.crit ? ', крит' : ''}, урон ${pa.damage}).` },
+      );
+      if (res.decision === 'accept') { chosen = { mechanics: react.mechanics, slotIdx, level }; break; }
+    }
+    if (!chosen) { await clearPending(); return; }
+
+    const { mechanics, slotIdx, level } = chosen;
+    const reactName = String(mechanics.name ?? 'Реакция');
+    const cost0 = ((mechanics.activation as Record<string, unknown>)?.cost ?? []) as Record<string, unknown>[];
+    const rmech = slotIdx >= 0 && level != null
+      ? { ...mechanics, name: reactName, activation: { ...(mechanics.activation as Record<string, unknown>), cost: cost0.map((c, i) => (i === slotIdx ? { ...c, level } : c)) } }
+      : { ...mechanics, name: reactName };
+    // Лист может не трекать реакцию как ресурс — гарантируем её, чтобы оплата прошла (реакция тратится).
+    const runtimeForCast: RuntimeState = { ...runtimeState, hp: { ...runtimeState.hp, current: own.hp, temp: own.temp ?? 0 }, resources: { ...runtimeState.resources, reaction: runtimeState.resources.reaction ?? 1 } };
+    let out;
+    try {
+      out = executeAction(runtimeForCast, rmech, { character: sheetCtx, passives, rng: () => Math.random(), selfId: id } as import('../mvp/contracts').ExecuteContext & { passives: typeof passives });
+    } catch { await clearPending(); return; }
+
+    // Рефанд: Щит = +5 КЗ (в т.ч. против вызвавшей атаки). Если теперь бросок < КЗ — промах, урон вернуть.
+    const newAc = ac + 5;
+    const negated = pa.attackTotal < newAc;
+    const finalHp = Math.min(runtimeState.hp.max, own.hp + (negated ? pa.damage : 0));
+    const nextState: RuntimeState = { ...out.state, hp: { ...out.state.hp, current: finalHp } };
+    const journal: EngineEvent[] = [
+      ...out.events,
+      { type: 'narrative', text: negated
+        ? `${reactName}: КЗ ${ac}→${newAc} — атака «${pa.attackName}» (${pa.attackTotal}) промахивается, урон ${pa.damage} возвращён.`
+        : `${reactName}: КЗ ${ac}→${newAc} — атака ${pa.attackTotal} всё же попадает.` },
+    ];
+    pushToast(journal);
+    if (!journalOpen) setUnseen((u) => u + journal.length);
+    try {
+      const saved = await charactersV3Api.postEvents(id, journal.map((e) => ({ type: e.type, payload: e })));
+      saved.forEach((r) => seenEventIdsRef.current.add(r.id));
+      setJournal((prev) => [...prev, ...saved]);
+    } catch { /* журнал best-effort */ }
+    setCharacter((prev) => prev ? { ...prev, current_hp: finalHp, resources: nextState.resources, active_effects: nextState.activeEffects as unknown[] } : prev);
+    try { await charactersV3Api.patchRuntime(id, { current_hp: finalHp, resources: nextState.resources, active_effects: nextState.activeEffects as unknown[] }); } catch { /* best-effort */ }
+    const remaining = (own.pendingAttacks ?? []).filter((x) => x.id !== pa.id);
+    try {
+      await encountersApi.apply(encId, {
+        patches: [{ actor_id: own.actorId, set: { hp: finalHp, activeEffects: nextState.activeEffects, pendingAttacks: remaining } }],
+        log: [{ message: `${character?.name ?? 'Персонаж'}: ${reactName}${negated ? ` — атака отражена, урон ${pa.damage} возвращён` : ''}` }],
+      });
+    } catch { /* best-effort */ }
+  };
+
+  // Обнаружение входящих pending-«атакован» на своём комбатанте (для реакции Щит).
+  useEffect(() => {
+    if (!encId || !id || !ruleState) return;
+    const own = encState.combatants.find((c) => c.characterId === id);
+    const next = (own?.pendingAttacks ?? []).find((p) => !handledAttackRef.current.has(p.id));
+    if (!next) return;
+    handledAttackRef.current.add(next.id);
+    void resolveIncomingAttack(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encSeq, encState, id, encId, ruleState]);
 
   const rollInitiative = async () => {
     if (!id || rollingInit) return;

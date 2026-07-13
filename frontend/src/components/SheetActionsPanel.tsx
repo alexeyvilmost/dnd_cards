@@ -10,7 +10,7 @@ import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState, buildTargetFromCharacter } from '../character/runtime';
 import { encountersApi } from '../battle/encountersApi';
-import type { Combatant, BattleLogEntry, PendingSave, SaveOutcome } from '../battle/encounterTypes';
+import type { Combatant, BattleLogEntry, PendingSave, PendingAttack, SaveOutcome } from '../battle/encounterTypes';
 import { describeEngineEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import type { ForgeCharacter } from '../character/types';
@@ -479,7 +479,7 @@ export default function SheetActionsPanel({
   // Журнал строим по ДЕЛЬТЕ состояния ЦЕЛИ (before=cb, after=ts), а не фильтром r.events: движок
   // кладёт self- и target-события в один массив без атрибуции, и фильтр по типу залогировал бы
   // само-лечение каста (напр. Вампирское касание) в журнал цели. events нужен лишь для типа урона.
-  const applyToEncounterTarget = useCallback(async (cb: Combatant, ts: RuntimeState, events: EngineEvent[]) => {
+  const applyToEncounterTarget = useCallback(async (cb: Combatant, ts: RuntimeState, events: EngineEvent[], pendingAttack?: PendingAttack) => {
     if (!encounterId) return;
     const src = character.name;
     const log: BattleLogEntry[] = [];
@@ -508,13 +508,15 @@ export default function SheetActionsPanel({
       else add({ type: 'effect_applied', name: eff.name ?? 'эффект' });
     }
     if (!log.length) log.push({ message: `${src} → ${cb.name}: без изменений` });
+    // Щит: доставляем цели-персонажу pending-«атакован» — она сможет отреагировать (реакция при попадании).
+    const pendingAttacks = pendingAttack ? [...(cb.pendingAttacks ?? []), pendingAttack] : cb.pendingAttacks;
     try {
       await encountersApi.apply(encounterId, {
-        patches: [{ actor_id: cb.actorId, set: { hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects } }],
+        patches: [{ actor_id: cb.actorId, set: { hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects, ...(pendingAttack ? { pendingAttacks } : {}) } }],
         log,
       });
       encCombatantsRef.current = encCombatantsRef.current.map((c) =>
-        c.actorId === cb.actorId ? { ...c, hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects as unknown as Combatant['activeEffects'] } : c);
+        c.actorId === cb.actorId ? { ...c, hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects as unknown as Combatant['activeEffects'], ...(pendingAttack ? { pendingAttacks } : {}) } : c);
     } catch (e) { console.error('Не удалось применить к цели в бою', e); }
   }, [encounterId, character.name]);
 
@@ -731,8 +733,15 @@ export default function SheetActionsPanel({
       let commitTarget: (() => Promise<void>) | undefined;
       if (r.targetState) {
         const tstate = r.targetState;
-        if (targetCb) commitTarget = () => applyToEncounterTarget(targetCb!, tstate, r.events);
-        else if (targetChar) commitTarget = () => persistTarget(targetChar!, tstate);
+        if (targetCb) {
+          // Щит: если это АТАКА, попавшая по персонаже-комбатанте с уроном — прикладываем pending-«атакован».
+          const atkEv = r.events.find((e) => e.type === 'roll' && e.roll?.kind === 'd20' && (e.roll?.outcome === 'hit' || e.roll?.outcome === 'crit')) as Extract<EngineEvent, { type: 'roll' }> | undefined;
+          const dmg = Math.max(0, targetCb.hp - tstate.hp.current) + Math.max(0, (targetCb.temp ?? 0) - (tstate.hp.temp ?? 0));
+          const pendingAtk: PendingAttack | undefined = targetCb.characterId && atkEv && dmg > 0
+            ? { id: uid(), sourceName: character.name, attackName: String(m.name ?? title), attackTotal: atkEv.roll.total, damage: dmg, damageType: (r.events.find((e) => e.type === 'damage') as { damageType?: string } | undefined)?.damageType, crit: atkEv.roll.outcome === 'crit' }
+            : undefined;
+          commitTarget = () => applyToEncounterTarget(targetCb!, tstate, r.events, pendingAtk);
+        } else if (targetChar) commitTarget = () => persistTarget(targetChar!, tstate);
       }
       return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, commitTarget, targetId };
     };

@@ -28,6 +28,19 @@ export interface PendingSave {
   avoidsConditions?: string[]; // состояния, налагаемые при провале — цель применит condition-scoped модификаторы спаса
 }
 
+/** Входящая атака, ПОПАВШАЯ по цели (онлайн-бой) — доставляется цели, чтобы предложить реакцию
+ *  «когда по вам попадают» (Щит). Цель на своём листе решает; при Щите КЗ+5 может обратить попадание
+ *  в промах — тогда нанесённый урон возвращается (attackTotal < КЗ+5). Живёт на комбатанте-цели. */
+export interface PendingAttack {
+  id: string;
+  sourceName: string;   // кто атаковал (для журнала/диалога)
+  attackName: string;   // название атаки
+  attackTotal: number;  // итог броска атаки (сравнить с КЗ+5 после Щита)
+  damage: number;       // нанесённый урон по hp/temp (вернётся при промахе после Щита)
+  damageType?: string;
+  crit?: boolean;       // было ли критическое попадание
+}
+
 export interface Combatant {
   actorId: string;
   name: string;
@@ -40,6 +53,7 @@ export interface Combatant {
   temp?: number;
   activeEffects?: { id: string; name: string; [k: string]: unknown }[];
   pendingSaves?: PendingSave[];
+  pendingAttacks?: PendingAttack[];
   avatarUrl?: string;
   initiative?: number;
 }

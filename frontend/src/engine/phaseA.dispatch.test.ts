@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { executeAction, applyIncomingDamage } from './execute';
+import { collectModifiers } from './modifiers';
 import { startTurn } from './turn';
 import { startConcentration } from './concentration';
 import type { CharacterContext, EngineEvent, ExecuteContext, RuntimeState } from '../mvp/contracts';
@@ -146,5 +147,18 @@ describe('Фаза A — interrupt-триггеры: optional и ctx.triggers', 
     const ctx = { character, rng: HIT, target: { ac: 1 }, triggers: [smite] } as ExecuteContext & { triggers: Dict[] };
     const res = executeAction(freshState(), attackAction, ctx);
     expect(res.pendingReactions?.map((r) => r.listenerId)).toContain('smite');
+  });
+
+  it('Щит (входящая реакция): исполнение даёт +5 КЗ и тратит реакцию + ячейку', () => {
+    const shield: Dict = {
+      name: 'Щит',
+      activation: { mode: 'reaction', trigger: { event: 'hit_by_attack' }, cost: [{ resource: 'reaction' }, { amount: 1, level: 1, resource: 'spell_slot' }] },
+      effects: [{ resolution: 'auto', result: [{ applies_to: { roll: 'ac' }, duration: { type: 'until_start_of_next_turn' }, kind: 'modifier', op: 'add', value: '+5' }] }],
+    };
+    const res = executeAction(freshState(), shield, { character, rng: HIT });
+    expect(res.state.resources.spell_slot_1).toBe(1); // была 2 → потрачена 1
+    expect(res.state.resources.reaction).toBe(0);
+    const acBonus = collectModifiers(res.state, [], { roll: 'ac' }).modifiers.reduce((s, m) => s + m.value, 0);
+    expect(acBonus).toBe(5); // +5 КЗ действует, пока эффект активен
   });
 });
