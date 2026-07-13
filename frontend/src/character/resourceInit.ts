@@ -25,7 +25,9 @@ export function collectPassiveMechanics(
   for (const { effect, origin } of assembled.effects) {
     const m = effect.mechanics;
     if (!m || typeof m !== 'object') continue;
-    out.push(m as Dict);
+    // Имя эффекта — в механику: диспетчер триггеров/реакций показывает его в окне решения
+    // (иначе «пассивка N»). id — для гейта «раз за ход» (uses.per) по стабильному ключу.
+    out.push({ id: effect.card_number ?? effect.id, ...(m as Dict), name: (m as Dict).name ?? effect.name });
     const chosen = expandPassiveChoicePayloads(m as Dict, passiveSourceId(origin, effect), resolvedChoices);
     if (chosen.length) out.push({ name: (m as Dict).name, effects: [{ resolution: 'auto', result: chosen }] });
   }
