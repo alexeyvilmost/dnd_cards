@@ -44,6 +44,7 @@ import { plannedValuesRng } from '../engine/dicePlan';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
+import SheetSpeedDialog from '../components/SheetSpeedDialog';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import SheetChoicesPanel from '../components/SheetChoicesPanel';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
@@ -107,6 +108,7 @@ const CharacterSheetMVP = () => {
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [speedDialogOpen, setSpeedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
@@ -1062,7 +1064,14 @@ const CharacterSheetMVP = () => {
                 </div>
               )}
               {speedBreakdown && (
-                <div className="sheet-stat">
+                <div
+                  className="sheet-stat sheet-stat--clickable"
+                  role="button"
+                  tabIndex={0}
+                  title="Все скорости перемещения"
+                  onClick={() => setSpeedDialogOpen(true)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSpeedDialogOpen(true); }}
+                >
                   <span>Скорость</span>
                   <ValueBreakdownTip breakdown={speedBreakdown} label="Скорость">
                     <strong>{speed} фт</strong>
@@ -1334,6 +1343,14 @@ const CharacterSheetMVP = () => {
       )}
 
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {speedDialogOpen && (
+        <SheetSpeedDialog
+          speed={speed}
+          speedBreakdown={speedBreakdown}
+          speeds={ruleState.speeds}
+          onClose={() => setSpeedDialogOpen(false)}
+        />
+      )}
 
       <SheetToasts toasts={toasts} />
       <SheetJournalFab

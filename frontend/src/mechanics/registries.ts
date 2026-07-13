@@ -132,6 +132,7 @@ export const SPEED_MODES: RegistryItem[] = [
   { id: 'fly', label: 'Полёт' },
   { id: 'swim', label: 'Плавание' },
   { id: 'climb', label: 'Лазание' },
+  { id: 'burrow', label: 'Копание' },
 ];
 
 export const RESOURCES: RegistryItem[] = [

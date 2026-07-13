@@ -358,7 +358,7 @@
         },
         {
           "if": { "properties": { "kind": { "const": "grant_speed" } } },
-          "then": { "properties": { "mode": { "enum": ["walk", "fly", "swim", "climb"] }, "value": { "$ref": "#/$defs/formula" } } }
+          "then": { "properties": { "mode": { "enum": ["walk", "fly", "swim", "climb", "burrow"] }, "value": { "$ref": "#/$defs/formula" } } }
         },
         {
           "if": { "properties": { "kind": { "const": "choice" } } },

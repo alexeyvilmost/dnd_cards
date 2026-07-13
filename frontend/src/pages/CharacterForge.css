@@ -793,6 +793,8 @@
 .sheet-stat { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px; text-align: center; background: var(--forge-panel-2); }
 .sheet-stat span { display: block; font-size: 11px; color: var(--forge-text-dim); margin-bottom: 4px; }
 .sheet-stat strong { font-size: 18px; color: var(--forge-gold); }
+.sheet-stat--clickable { cursor: pointer; transition: border-color 0.12s; }
+.sheet-stat--clickable:hover { border-color: var(--forge-gold); }
 .sheet-spellcasting { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--forge-line); color: var(--forge-text-dim); font-size: 13px; }
 .sheet-list { list-style: none; padding: 0; margin: 0; }
 .sheet-list li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(107, 88, 54, 0.25); font-size: 14px; }
