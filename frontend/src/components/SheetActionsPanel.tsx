@@ -92,6 +92,7 @@ const RESOURCE_LABELS: Record<string, string> = {
   bonus_action: 'Бонус',
   reaction: 'Реакция',
   heroic_inspiration: 'Вдохновение',
+  giant_legacy: 'Наследие великанов',
 };
 
 const GROUP_DETAIL: Record<SheetAction['group'], string> = {

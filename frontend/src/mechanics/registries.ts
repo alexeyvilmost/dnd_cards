@@ -137,6 +137,7 @@ export const SPEED_MODES: RegistryItem[] = [
 export const RESOURCES: RegistryItem[] = [
   { id: 'heroic_inspiration', label: 'Героическое вдохновение' },
   { id: 'rage_charge', label: 'Заряд ярости' },
+  { id: 'giant_legacy', label: 'Наследие великанов' },
   { id: 'temp_hp', label: 'Временные хиты' },
 ];
 
@@ -158,6 +159,7 @@ export const ACTIVE_RESOURCES: RegistryItem[] = [
   { id: 'bonus_action', label: 'Бонусное действие' },
   { id: 'reaction', label: 'Ответное действие' },
   { id: 'rage_charge', label: 'Заряд ярости' },
+  { id: 'giant_legacy', label: 'Наследие великанов' },
 ];
 
 export const USES_PER: RegistryItem[] = [
