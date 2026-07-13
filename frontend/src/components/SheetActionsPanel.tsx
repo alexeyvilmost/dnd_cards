@@ -39,7 +39,7 @@ import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
-import ActionHoverCard from './forge/ActionHoverCard';
+import ActionPreview from './ActionPreview';
 
 interface Props {
   character: ForgeCharacter;
@@ -650,7 +650,7 @@ export default function SheetActionsPanel({
           ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack } : undefined} />;
       }
       if (a.actionRef) {
-        return <ActionHoverCard action={a.actionRef} sourceLabel={a.sourceLabel}
+        return <ActionPreview action={a.actionRef} sourceLabel={a.sourceLabel} disableHover
           weaponAttackPreview={weaponAttackPreview(a.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined} />;
       }
       return null;

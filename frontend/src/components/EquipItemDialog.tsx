@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { ArrowRight, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowRight, PackagePlus, Sparkles, Trash2, X } from 'lucide-react';
 import type { Card } from '../types';
 import CardPreview from './CardPreview';
 
 // Диалог надевания/снятия предмета. Из инвентаря показывает нашу карточку и,
 // если целевой слот занят, вытесняемый предмет справа (приглушённо) со стрелкой.
+// Отсюда же предмет можно убрать в контейнер (перенесено со строки инвентаря).
 
 interface Props {
   card: Card;
@@ -14,6 +15,9 @@ interface Props {
   needsAttunement?: boolean;
   attuned?: boolean;
   canChangeAttunement?: boolean;
+  /** Носимые контейнеры-цели «убрать в контейнер» (без самого предмета); undefined — вне режима инвентаря. */
+  containerTargets?: Card[];
+  onMoveToContainer?: (containerId: string) => void;
   onEquip: () => void;
   onUnequip: () => void;
   onRemove: () => void;
@@ -24,8 +28,11 @@ interface Props {
 export default function EquipItemDialog({
   card, occupant, mode, busy,
   needsAttunement, attuned, canChangeAttunement,
+  containerTargets, onMoveToContainer,
   onEquip, onUnequip, onRemove, onToggleAttune, onClose,
 }: Props) {
+  const showContainer = mode === 'inventory' && card.type !== 'container'
+    && !!containerTargets && containerTargets.length > 0 && !!onMoveToContainer;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -63,6 +70,21 @@ export default function EquipItemDialog({
               <button type="button" className="forge-btn ghost sheet-equip-danger" disabled={busy} onClick={onRemove}>
                 <Trash2 size={15} /> Удалить
               </button>
+              {showContainer && (
+                <label className="sheet-equip-container" title="Убрать предмет в контейнер">
+                  <PackagePlus size={15} />
+                  <span>В контейнер:</span>
+                  <select
+                    className="sheet-equip-container-sel"
+                    value=""
+                    disabled={busy}
+                    onChange={(e) => { if (e.target.value) onMoveToContainer!(e.target.value); }}
+                  >
+                    <option value="">— выберите —</option>
+                    {containerTargets!.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </label>
+              )}
             </>
           ) : (
             <>

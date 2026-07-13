@@ -3,10 +3,11 @@ import type { Action, PassiveEffect, Spell } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
 import { usePinMode } from '../hooks/usePinMode';
 import ForgeEntityIcon from './forge/ForgeEntityIcon';
-import EffectHoverCard from './forge/EffectHoverCard';
-import ActionHoverCard from './forge/ActionHoverCard';
+import EffectPreview from './EffectPreview';
+import ActionPreview from './ActionPreview';
 import SpellPreview from './SpellPreview';
 import SheetEntityRow from './SheetEntityRow';
+import { SPELL_CARD_CSS } from './spellCardStyle';
 
 // Уровень заклинания в углу иконки — римской цифрой (I..IX).
 const TILE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
@@ -103,22 +104,22 @@ const SheetActionLine = ({
         <div
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 320),
-            top: Math.min(pos.y + 8, window.innerHeight - 180),
+            left: Math.min(pos.x + 12, window.innerWidth - 340),
+            top: Math.min(pos.y + 8, window.innerHeight - 200),
             pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
           onMouseLeave={onLeave}
         >
-          {effectRef && <EffectHoverCard effect={effectRef} sourceLabel={sourceLabel} />}
-          {actionRef && <ActionHoverCard action={actionRef} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} />}
+          {effectRef && <EffectPreview effect={effectRef} sourceLabel={sourceLabel} disableHover />}
+          {actionRef && <ActionPreview action={actionRef} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} disableHover />}
           {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} />}
           {!effectRef && !actionRef && !spellRef && description && (
-            <div className="forge-effect-card">
-              <div className="forge-effect-card-body">
-                <div className="forge-effect-card-title">{name}</div>
-                <div className="forge-effect-card-type">{sourceLabel || 'Базовое действие'}</div>
-                <p className="forge-effect-card-desc">{description}</p>
-              </div>
+            <div className="sp-tip">
+              <style>{SPELL_CARD_CSS}</style>
+              <h3>{name}</h3>
+              <div className="sp-subtype">{sourceLabel || 'Базовое действие'}</div>
+              <div className="sp-desc">{description}</div>
+              <div className="sp-spacer" />
             </div>
           )}
           {disabled && disabledTitle && (

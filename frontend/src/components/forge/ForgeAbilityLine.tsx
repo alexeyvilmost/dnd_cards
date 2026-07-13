@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { PassiveEffect, Action } from '../../types';
 import { usePinMode } from '../../hooks/usePinMode';
-import EffectHoverCard from './EffectHoverCard';
-import ActionHoverCard from './ActionHoverCard';
+import EffectPreview from '../EffectPreview';
+import ActionPreview from '../ActionPreview';
 import SheetEntityRow from '../SheetEntityRow';
 
 type ForgeAbilityLineProps = {
@@ -44,14 +44,14 @@ const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detai
         <div
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 320),
-            top: Math.min(pos.y + 8, window.innerHeight - 180),
+            left: Math.min(pos.x + 12, window.innerWidth - 340),
+            top: Math.min(pos.y + 8, window.innerHeight - 200),
             pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
           onMouseLeave={onLeave}
         >
-          {effect && <EffectHoverCard effect={effect} sourceLabel={sourceLabel} />}
-          {action && <ActionHoverCard action={action} sourceLabel={sourceLabel} />}
+          {effect && <EffectPreview effect={effect} sourceLabel={sourceLabel} disableHover />}
+          {action && <ActionPreview action={action} sourceLabel={sourceLabel} disableHover />}
         </div>
       )}
     </>

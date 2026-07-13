@@ -140,6 +140,15 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   }, [search]);
 
   const cardMap = cards;
+  // Контейнеры-цели «убрать в контейнер»: носимые предметы type='container' на верхнем уровне.
+  // Используются и в списке (индикатор), и в диалоге предмета (перенос «в контейнер»).
+  const containerTargets = useMemo(
+    () => (character.inventory_items ?? [])
+      .filter((r) => !r.container_id)
+      .map((r) => cardMap.get(r.card_id))
+      .filter((c): c is Card => !!c && c.type === 'container'),
+    [character.inventory_items, cardMap],
+  );
   const wallet = characterCurrency(character);
   const weight = totalWeight(runtime, cardMap);
   const strScore = character.abilities?.str ?? 10;
@@ -317,8 +326,6 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
     const topLevel = rows.filter((r) => !r.container_id);
     const nested = new Map<string, typeof rows>();
     for (const r of rows) if (r.container_id) { const arr = nested.get(r.container_id) ?? []; arr.push(r); nested.set(r.container_id, arr); }
-    // Контейнеры-цели «положить в»: носимые предметы type='container' на верхнем уровне.
-    const containerTargets = topLevel.map((r) => cardMap.get(r.card_id)).filter((c): c is Card => !!c && c.type === 'container');
 
     if (asIcons) {
       // Иконочный режим: только верхний уровень (вложенность — в списочном режиме).
@@ -355,8 +362,6 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
           const isContainer = card.type === 'container';
           const contents = isContainer ? (nested.get(row.card_id) ?? []) : [];
           const open = expandedContainers.has(row.card_id);
-          // Контейнеры, в которые можно положить ЭТОТ предмет (не он сам).
-          const targets = containerTargets.filter((c) => c.id !== row.card_id);
           return (
             <div key={`${row.card_id}|${row.container_id ?? ''}`}>
               <SheetItemRow
@@ -369,13 +374,6 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
                       onClick={(e) => { e.stopPropagation(); toggleContainer(row.card_id); }}>
                       {open ? '▾' : '▸'} {contents.length}
                     </button>
-                  ) : targets.length ? (
-                    <select className="sheet-inv-move" value="" disabled={busy}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => { if (e.target.value) putInContainer(row.card_id, e.target.value); }}>
-                      <option value="">в контейнер…</option>
-                      {targets.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
                   ) : undefined
                 }
                 {...hoverHandlers(card)}
@@ -539,6 +537,10 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
           needsAttunement={!!dialog.card.requires_attunement}
           attuned={dialogCardAttuned}
           canChangeAttunement={canChangeAttunement}
+          containerTargets={dialog.mode === 'inventory'
+            ? containerTargets.filter((c) => c.id !== dialog.card.id)
+            : undefined}
+          onMoveToContainer={(containerId) => { putInContainer(dialog.card.id, containerId); setDialog(null); }}
           onEquip={() => handleEquip(dialog.card)}
           onUnequip={() => { if (dialog.mode === 'equipped') handleUnequip(dialog.slot); }}
           onRemove={() => handleRemove(dialog.card.id)}

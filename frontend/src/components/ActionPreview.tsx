@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
-import { getDamageColor, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
+import type { WeaponAttackPreview } from '../engine/weapon';
+import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
@@ -14,12 +15,17 @@ interface ActionPreviewProps {
   disableHover?: boolean;
   onClick?: () => void;
   resources?: ResourceOption[];
+  /** Контекстная подпись источника (лист/кузня): «Вид · Голиаф» и т.п. Замещает тип действия. */
+  sourceLabel?: string;
+  /** Числа оружейной атаки (из оружия в руке): «к20 +N» и строки урона. Парадигма №2. */
+  weaponAttackPreview?: WeaponAttackPreview;
 }
 
 // "2d8" → "2к8" (русский BG3-тултип, как в design_preview)
 const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
+const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 
-const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources }: ActionPreviewProps) => {
+const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources, sourceLabel, weaponAttackPreview: wp }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
   const { playerMode } = useSiteSettings();
@@ -29,10 +35,15 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
     ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
     : '';
 
-  const subtype = [actionTypeLabel, action.distance].filter(Boolean).join(' · ');
+  const subtype = sourceLabel || [actionTypeLabel, action.distance].filter(Boolean).join(' · ');
 
   const stats = parseMechanicsStats(action.mechanics as Record<string, unknown> | null | undefined);
-  const hasStats = stats.attack || stats.save || stats.damage.length > 0 || stats.heal.length > 0;
+  // Контекстные оружейные числа (wp) имеют приоритет над обобщённой механикой для атаки/урона.
+  const showAttack = wp ? true : stats.attack;
+  const dmgEntries = wp && wp.damages.length
+    ? wp.damages.map((d) => ({ value: `${d.dice}${d.bonus !== 0 ? ` ${fmtBonus(d.bonus)}` : ''}`, type: d.type }))
+    : stats.damage;
+  const hasStats = showAttack || stats.save || dmgEntries.length > 0 || stats.heal.length > 0;
 
   // Парадигма №2: описание МЕХАНИКИ из данных (единый describeMechanics), не свободный текст.
   const mechDesc = describeMechanics(action.mechanics as Record<string, unknown> | null | undefined);
@@ -69,10 +80,11 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
 
       {hasStats && (
         <div className="sp-stats">
-          {stats.attack && (
+          {showAttack && (
             <div className="sp-srow">
               <span className="sp-lbl">Атака:</span>
               <div className="sp-die">к20</div>
+              {wp && <span className="sp-bonus">{fmtBonus(wp.attack)}</span>}
             </div>
           )}
           {stats.save && (
@@ -81,16 +93,16 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
               <span className="sp-bonus">{abilityFullRu(stats.saveAbility) || 'спасбросок'}</span>
             </div>
           )}
-          {stats.damage.length > 0 && (
+          {dmgEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Урон:</span>
               <span className="sp-dmgval">
-                {stats.damage.map((d, i) => (
+                {dmgEntries.map((d, i) => (
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
-                    <span className="sp-dmgitem" style={{ color: getDamageColor(d.type) }}>
+                    <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
                       {diceRu(d.value)}
-                      <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" />
+                      <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
                   </React.Fragment>
@@ -102,7 +114,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
               <span className="sp-dmgval">
-                <span className="sp-dmgitem" style={{ color: getDamageColor('healing') }}>
+                <span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>
                   {diceRu(stats.heal.join(' + '))}
                   <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
                   лечение

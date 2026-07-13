@@ -130,26 +130,10 @@
 }
 /* Заполнение квадратной плитки: изображение до границ квадрата, углы как у плитки. */
 .forge-entity-icon--fill { width: 100%; height: 100%; border-radius: 7px; }
+/* Позиционная обёртка ховер-превью (действие/эффект/черта). Ширину задаёт сама карточка
+   превью (.sp-tip = 340px); max-content не даёт max-width:100% схлопнуть её. */
 .forge-effect-popover {
-  position: fixed; z-index: 9999; pointer-events: none; width: 300px;
-}
-.forge-effect-card {
-  background: #1e293b; border: 2px solid #000; border-radius: 8px;
-  padding: 16px 20px 18px; position: relative; overflow: visible;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-}
-.forge-effect-card-art {
-  position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; pointer-events: none;
-}
-.forge-effect-card-art img {
-  width: 100%; height: 100%; object-fit: contain;
-  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
-}
-.forge-effect-card-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
-.forge-effect-card-type { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
-.forge-effect-card-desc {
-  margin: 0; color: #fff; font-size: 14px; line-height: 1.45;
-  white-space: pre-wrap;
+  position: fixed; z-index: 9999; pointer-events: none; width: max-content; max-width: 92vw;
 }
 .sum-divider { border: none; border-top: 1px solid var(--forge-line); margin: 14px 0; }
 .sum-abilities { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
@@ -476,6 +460,16 @@
 .sheet-equip-outgoing-label { text-align: center; font-size: 11px; color: var(--forge-text-dim); margin-bottom: 4px; }
 .sheet-equip-arrow { color: var(--forge-gold); flex: 0 0 auto; display: inline-flex; }
 .sheet-equip-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+/* «Убрать в контейнер» в диалоге предмета (перенесено со строки инвентаря). */
+.sheet-equip-container {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--forge-text-dim);
+  border: 1px solid var(--forge-line); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+.sheet-equip-container-sel {
+  background: var(--forge-panel); color: var(--forge-text); border: 1px solid var(--forge-line);
+  border-radius: 6px; padding: 4px 8px; font-size: 13px; cursor: pointer; max-width: 180px;
+}
+.sheet-equip-container-sel:disabled { opacity: 0.5; cursor: default; }
 .sheet-equip-primary { background: var(--forge-gold-dim); border-color: var(--forge-gold); color: #1a140a; font-weight: 700; }
 .sheet-equip-primary:hover { background: var(--forge-gold); }
 .sheet-equip-danger { color: var(--forge-danger); border-color: rgba(220,80,80,.5); }

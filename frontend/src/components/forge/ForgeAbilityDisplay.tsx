@@ -3,8 +3,8 @@ import type { Action, PassiveEffect } from '../../types';
 import type { EntityDisplayMode } from '../../settings';
 import { usePinMode } from '../../hooks/usePinMode';
 import ForgeAbilityLine from './ForgeAbilityLine';
-import EffectHoverCard from './EffectHoverCard';
-import ActionHoverCard from './ActionHoverCard';
+import EffectPreview from '../EffectPreview';
+import ActionPreview from '../ActionPreview';
 
 export type AbilityEntry = {
   key: string;
@@ -28,7 +28,7 @@ type Props = {
 
 /**
  * Список способностей (эффектов/действий) с переключаемым режимом отображения.
- * Ховер-карточки (EffectHoverCard/ActionHoverCard) работают в обоих режимах.
+ * Ховер-карточки (EffectPreview/ActionPreview) работают в обоих режимах.
  */
 const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-lines' }: Props) => {
   const [hovered, setHovered] = useState<AbilityEntry | null>(null);
@@ -90,15 +90,15 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
         <div
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 320),
-            top: Math.min(pos.y + 8, window.innerHeight - 180),
+            left: Math.min(pos.x + 12, window.innerWidth - 340),
+            top: Math.min(pos.y + 8, window.innerHeight - 200),
             pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
           onMouseLeave={onLeave}
         >
-          {hovered.effect && <EffectHoverCard effect={hovered.effect} sourceLabel={hovered.sourceLabel} />}
+          {hovered.effect && <EffectPreview effect={hovered.effect} sourceLabel={hovered.sourceLabel} disableHover />}
           {hovered.action && !hovered.effect && (
-            <ActionHoverCard action={hovered.action} sourceLabel={hovered.sourceLabel} />
+            <ActionPreview action={hovered.action} sourceLabel={hovered.sourceLabel} disableHover />
           )}
         </div>
       )}
