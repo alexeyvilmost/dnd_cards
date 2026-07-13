@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff, Plus, X } from 'lucide-react';
-import { racesApi, effectsApi, actionsApi } from '../api/client';
+import { racesApi } from '../api/client';
+import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CreateRaceRequest, UpdateRaceRequest, Race, RaceTrait, LevelProgression } from '../types';
 import { CREATURE_TYPE_OPTIONS, RACE_SIZE_OPTIONS } from '../types';
 import RacePreview from '../components/RacePreview';
@@ -84,25 +85,7 @@ const RaceCreator = () => {
     racesApi.getRaces({ limit: 100 }).then((res) => setAllRaces(res.races || [])).catch(() => {});
   }, []);
 
-  const loadEffects = useCallback(async () => {
-    const res = await effectsApi.getEffects({ limit: 200 });
-    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number, repeatable: e.repeatable }));
-  }, []);
-
-  const loadActions = useCallback(async () => {
-    const res = await actionsApi.getActions({ limit: 200 });
-    return res.actions.map((a) => ({ id: a.id, name: a.name, card_number: a.card_number }));
-  }, []);
-
-  // Догрузка имён для привязанных эффектов/действий вне окна limit:200 (иначе показывались бы UUID).
-  const resolveEffects = useCallback(async (ids: string[]) => {
-    const got = await Promise.all(ids.map((id) => effectsApi.getEffect(id).then((e) => ({ id: e.id, name: e.name, card_number: e.card_number })).catch(() => null)));
-    return got.filter((x): x is NonNullable<typeof x> => x != null);
-  }, []);
-  const resolveActions = useCallback(async (ids: string[]) => {
-    const got = await Promise.all(ids.map((id) => actionsApi.getAction(id).then((a) => ({ id: a.id, name: a.name, card_number: a.card_number })).catch(() => null)));
-    return got.filter((x): x is NonNullable<typeof x> => x != null);
-  }, []);
+  const { loadEffects, loadActions, resolveEffects, resolveActions } = useEffectActionLoaders();
 
   useEffect(() => {
     if (isEditMode && editId) {

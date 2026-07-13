@@ -295,63 +295,64 @@ const CardCreator = () => {
     }
   }, [memoizedWatchedValues, cardImage, originalCard]);
 
+  // Единая сборка payload карты из значений формы (+ effects/mechanics из состояния).
+  // Используется и при сохранении, и при создании карты перед генерацией изображения —
+  // чтобы оба пути писали один и тот же набор полей (иначе ветки расходятся и теряют данные).
+  const buildCardPayload = (src: CreateCardRequest): CreateCardRequest => ({
+    name: src.name || 'Название карты',
+    description: src.description || 'Описание эффекта',
+    detailed_description: src.detailed_description || null,
+    rarity: src.rarity || 'common',
+    custom_rarity_color: src.rarity === 'custom' ? (src.custom_rarity_color || null) : null,
+    properties: src.properties && src.properties.length > 0 ? src.properties : null,
+    price: src.price || null,
+    price_currency: src.price_currency || 'gold',
+    price_abbreviated: src.price_abbreviated !== false,
+    weight: src.weight || null,
+    bonus_type: src.bonus_type || null,
+    bonus_value: src.bonus_value || null,
+    damage_type: src.damage_type || null,
+    elemental_damage_value: src.elemental_damage_value?.trim() || null,
+    elemental_damage_type: src.elemental_damage_type || null,
+    enchant_bonus: Number.isFinite(src.enchant_bonus as number) ? src.enchant_bonus : null,
+    defense_type: src.defense_type || null,
+    description_font_size: null,
+    text_alignment: src.text_alignment || null,
+    text_font_size: src.text_font_size || null,
+    show_detailed_description: src.show_detailed_description === true,
+    detailed_description_alignment: src.detailed_description_alignment || null,
+    detailed_description_font_size: src.detailed_description_font_size || null,
+    is_extended: src.is_extended === true,
+    author: src.author || 'Admin',
+    source: src.source || null,
+    type: src.type || null,
+    weapon_type: src.weapon_type || null,
+    related_cards: src.related_cards?.length ? src.related_cards : null,
+    related_actions: src.related_actions?.length ? src.related_actions : null,
+    related_effects: src.related_effects?.length ? src.related_effects : null,
+    attunement: src.attunement || null,
+    requires_attunement: src.requires_attunement === true,
+    range: src.range || null,
+    tags: src.tags && src.tags.length > 0 ? src.tags : null,
+    slot: src.slot || null,
+    is_template: src.is_template || 'false',
+    image_prompt_extra: src.image_prompt_extra || null,
+    battle_profile: src.battle_profile || null,
+    container_mode: src.type === 'container' ? (src.container_mode || null) : null,
+    contents: src.type === 'container' ? (src.contents || null) : null,
+    effects: effects.length > 0
+      ? effects.filter((effect) => effect.targetType && effect.targetSpecific && effect.modifier && effect.value > 0)
+      : null,
+    mechanics: mechanics ?? null,
+  });
+
   // Обработка отправки формы
   const onSubmit = async (data: CreateCardRequest) => {
     try {
       setSaving(true);
       setError(null);
-      
-      // Подготавливаем данные карты
-      const cardData: CreateCardRequest = {
-        name: data.name || 'Название карты',
-        description: data.description || 'Описание эффекта',
-        detailed_description: data.detailed_description || null,
-        rarity: data.rarity || 'common',
-        custom_rarity_color: data.rarity === 'custom' ? (data.custom_rarity_color || null) : null,
-        properties: data.properties && data.properties.length > 0 ? data.properties : null,
-        price: data.price || null,
-        price_currency: data.price_currency || 'gold',
-        price_abbreviated: data.price_abbreviated !== false,
-        weight: data.weight || null,
-        bonus_type: data.bonus_type || null,
-        bonus_value: data.bonus_value || null,
-        damage_type: data.damage_type || null,
-        elemental_damage_value: data.elemental_damage_value?.trim() || null,
-        elemental_damage_type: data.elemental_damage_type || null,
-        enchant_bonus: Number.isFinite(data.enchant_bonus as number) ? data.enchant_bonus : null,
-        defense_type: data.defense_type || null,
-        description_font_size: null,
-        text_alignment: data.text_alignment || null,
-        text_font_size: data.text_font_size || null,
-        show_detailed_description: data.show_detailed_description === true,
-        detailed_description_alignment: data.detailed_description_alignment || null,
-        detailed_description_font_size: data.detailed_description_font_size || null,
-        is_extended: data.is_extended === true,
-        author: data.author || 'Admin',
-        source: data.source || null,
-        type: data.type || null,
-        weapon_type: data.weapon_type || null,
-        related_cards: data.related_cards?.length ? data.related_cards : null,
-        related_actions: data.related_actions?.length ? data.related_actions : null,
-        related_effects: data.related_effects?.length ? data.related_effects : null,
-        attunement: data.attunement || null,
-        requires_attunement: data.requires_attunement === true,
-        range: data.range || null,
-        tags: data.tags && data.tags.length > 0 ? data.tags : null,
-        slot: data.slot || null,
-        is_template: data.is_template || 'false',
-        image_prompt_extra: data.image_prompt_extra || null,
-        battle_profile: data.battle_profile || null,
-        container_mode: data.type === 'container' ? (data.container_mode || null) : null,
-        contents: data.type === 'container' ? (data.contents || null) : null,
-        effects: effects.length > 0 ? effects.filter(effect =>
-          effect.targetType &&
-          effect.targetSpecific &&
-          effect.modifier &&
-          effect.value > 0
-        ) : null,
-        mechanics: mechanics ?? null
-      };
+
+      const cardData = buildCardPayload(data);
 
 
       let cardId: string;
@@ -399,44 +400,7 @@ const CardCreator = () => {
 
   // Функция для создания карты перед генерацией изображения
   const handleCreateCardForGeneration = async (): Promise<string> => {
-    const formData = watch();
-    
-    // Подготавливаем данные карты
-    const cardData: CreateCardRequest = {
-      name: formData.name || 'Название карты',
-      description: formData.description || 'Описание эффекта',
-      detailed_description: formData.detailed_description || null,
-      rarity: formData.rarity || 'common',
-      custom_rarity_color: formData.rarity === 'custom' ? (formData.custom_rarity_color || null) : null,
-      properties: formData.properties && formData.properties.length > 0 ? formData.properties : null,
-      price: formData.price || null,
-      weight: formData.weight || null,
-      bonus_type: formData.bonus_type || null,
-      bonus_value: formData.bonus_value || null,
-      damage_type: formData.damage_type || null,
-      defense_type: formData.defense_type || null,
-      description_font_size: null,
-      text_alignment: formData.text_alignment || null,
-      text_font_size: formData.text_font_size || null,
-      show_detailed_description: formData.show_detailed_description === true,
-      detailed_description_alignment: formData.detailed_description_alignment || null,
-      detailed_description_font_size: formData.detailed_description_font_size || null,
-      is_extended: formData.is_extended === true,
-      author: formData.author || 'Admin',
-      source: formData.source || null,
-      type: formData.type || null,
-      related_cards: formData.related_cards?.length ? formData.related_cards : null,
-      related_actions: formData.related_actions?.length ? formData.related_actions : null,
-      related_effects: formData.related_effects?.length ? formData.related_effects : null,
-      attunement: formData.attunement || null,
-      requires_attunement: formData.requires_attunement === true,
-      range: formData.range || null,
-      tags: formData.tags && formData.tags.length > 0 ? formData.tags : null,
-      slot: formData.slot || null,
-      is_template: formData.is_template || 'false',
-      image_prompt_extra: formData.image_prompt_extra || null,
-      battle_profile: formData.battle_profile || null
-    };
+    const cardData = buildCardPayload(watch());
 
     // Создаем карту
     const newCard = await cardsApi.createCard(cardData);

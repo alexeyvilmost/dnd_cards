@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { actionsApi, classesApi, effectsApi } from '../api/client';
+import { classesApi } from '../api/client';
+import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CharacterClass, ClassEquipmentOptions, CreateClassRequest, EquipmentOption, LevelProgression, UpdateClassRequest } from '../types';
 import ItemRefSelector from '../components/ItemRefSelector';
 import ImageUploader from '../components/ImageUploader';
@@ -84,15 +85,7 @@ const ClassCreator = () => {
     }).catch(() => setParentOptions([]));
   }, [editId]);
 
-  const loadEffects = useCallback(async () => {
-    const res = await effectsApi.getEffects({ limit: 200 });
-    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number, repeatable: e.repeatable }));
-  }, []);
-
-  const loadActions = useCallback(async () => {
-    const res = await actionsApi.getActions({ limit: 200 });
-    return res.actions.map((a) => ({ id: a.id, name: a.name, card_number: a.card_number }));
-  }, []);
+  const { loadEffects, loadActions } = useEffectActionLoaders();
 
   useEffect(() => {
     if (!isEditMode || !editId) return;

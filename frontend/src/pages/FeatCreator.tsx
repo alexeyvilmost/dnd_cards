@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { featsApi, effectsApi, actionsApi } from '../api/client';
+import { featsApi } from '../api/client';
+import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CreateFeatRequest, UpdateFeatRequest, Feat, FeatCategory } from '../types';
 import { FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import FeatPreview from '../components/FeatPreview';
@@ -92,15 +93,7 @@ const FeatCreator = () => {
   const toggleAbility = (v: string) =>
     setAbilityIncrease(abilityIncrease.includes(v) ? abilityIncrease.filter((x) => x !== v) : [...abilityIncrease, v]);
 
-  const loadEffects = useCallback(async () => {
-    const res = await effectsApi.getEffects({ limit: 200 });
-    return res.effects.map((e) => ({ id: e.id, name: e.name, card_number: e.card_number, repeatable: e.repeatable }));
-  }, []);
-
-  const loadActions = useCallback(async () => {
-    const res = await actionsApi.getActions({ limit: 200 });
-    return res.actions.map((a) => ({ id: a.id, name: a.name, card_number: a.card_number }));
-  }, []);
+  const { loadEffects, loadActions } = useEffectActionLoaders();
 
   const onSubmit = async (data: ScalarForm) => {
     setLoading(true);
