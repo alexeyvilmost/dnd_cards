@@ -287,29 +287,34 @@ export default function SheetActionsPanel({
   );
   const basicActions = useBasicActions();
 
-  // S6: действия, ВЫДАННЫЕ предметами через grant_action (приёмы оружия BG3). Резолвим action по slug
-  // (кэш getAction). Карта действия несёт экономику/поведение; здесь только доступ к нему на листе.
+  // grant_action: доступ к библиотечному действию по slug. Источники — ПРЕДМЕТЫ (S6, приёмы оружия
+  // BG3) И ПАССИВКИ-эффекты вида/класса/черты (дыхание Драконорождённого, откровение Аасимара).
+  // Карта действия несёт экономику/поведение; здесь только доступ к нему на листе.
   const [grantedActions, setGrantedActions] = useState<GrantedAction[]>([]);
   useEffect(() => {
     if (spellsOnly) { setGrantedActions((p) => (p.length ? [] : p)); return; }
-    const refs: { slug: string; sourceLabel: string }[] = [];
+    const refs: { slug: string; sourceLabel: string; group: SheetAction['group'] }[] = [];
     const seen = new Set<string>();
-    for (const im of itemMechs) {
-      for (const slug of collectGrantActionSlugs(im.card.mechanics, character.level)) {
+    const collect = (mech: Record<string, unknown> | null | undefined, sourceLabel: string, group: SheetAction['group']) => {
+      for (const slug of collectGrantActionSlugs(mech, character.level)) {
         if (seen.has(slug)) continue;
         seen.add(slug);
-        refs.push({ slug, sourceLabel: im.card.name });
+        refs.push({ slug, sourceLabel, group });
       }
+    };
+    for (const im of itemMechs) collect(im.card.mechanics, im.card.name, 'item');
+    for (const { effect, origin } of assembled.effects) {
+      collect(effect.mechanics as Record<string, unknown>, effect.name, origin.kind === 'race' ? 'race' : 'class');
     }
     if (!refs.length) { setGrantedActions((p) => (p.length ? [] : p)); return; }
     let stale = false;
     Promise.all(refs.map((r): Promise<GrantedAction | null> => actionsApi.getAction(r.slug)
-      .then((action): GrantedAction => ({ action, sourceLabel: r.sourceLabel, group: 'item' }))
+      .then((action): GrantedAction => ({ action, sourceLabel: r.sourceLabel, group: r.group }))
       .catch(() => null)))
       .then((list) => { if (!stale) setGrantedActions(list.filter((x): x is GrantedAction => x !== null)); })
       .catch(() => { if (!stale) setGrantedActions((p) => (p.length ? [] : p)); });
     return () => { stale = true; };
-  }, [itemMechs, spellsOnly]);
+  }, [itemMechs, assembled.effects, character.level, spellsOnly]);
 
   // S3-полировка (#32): общий индекс карт — резолвер имён СОДЕРЖИМОГО контейнера (его карты не в
   // equipCards, т.к. лежат внутри мешка) для диалога выбора «Достать» и журнала распаковки.
