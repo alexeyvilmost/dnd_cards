@@ -142,7 +142,7 @@ function breakdownSkill(
 }
 
 export function breakdownValue(
-  what: 'ac' | 'max_hp' | 'initiative' | 'speed' | `save:${string}` | `skill:${string}`,
+  what: 'ac' | 'max_hp' | 'initiative' | 'speed' | 'size' | `save:${string}` | `skill:${string}`,
   character: CharacterContext,
   state: RuntimeState,
   passives: Dict[],
@@ -166,6 +166,15 @@ export function breakdownValue(
     const collected = collectModifiers(state, passives, { roll: 'speed', formulaCtx: formulaCtxOf(character) });
     const folded = foldModifiers(base, collected);
     const parts = [{ value: base, source: 'скорость', reason: 'базовая' }, ...folded.parts];
+    return { value: Math.max(0, folded.value), parts };
+  }
+  if (what === 'size') {
+    // База = раса; временные модификаторы размера (Большая форма: +1 на 10 раундов) — из активных
+    // эффектов. foldModifiers поддержит и op:'set' (превращение в конкретный размер), и аддитив.
+    const base = character.baseSize ?? 2;
+    const collected = collectModifiers(state, passives, { roll: 'size', formulaCtx: formulaCtxOf(character) });
+    const folded = foldModifiers(base, collected);
+    const parts = [{ value: base, source: 'размер', reason: 'базовый' }, ...folded.parts];
     return { value: Math.max(0, folded.value), parts };
   }
   if (what.startsWith('save:')) {

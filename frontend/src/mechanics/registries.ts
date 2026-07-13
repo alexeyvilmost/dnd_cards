@@ -232,6 +232,8 @@ export const ROLL_TARGETS: RegistryItem[] = [
   { id: 'max_hp', label: 'Макс. хиты' },
   { id: 'ac', label: 'КД' },
   { id: 'speed', label: 'Скорость' },
+  { id: 'size', label: 'Размер' },
+  { id: 'carry', label: 'Грузоподъёмность' },
 ];
 
 // Типы требований ($defs/requirement.type) кроме level (тот задаётся полем «Мин. уровень»).

@@ -196,6 +196,14 @@ export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteRe
     }
   }
 
+  // Короткий отдых = 1 час = 600 раундов: истекают раунд-таймерные эффекты (Большая форма и т.п.).
+  // Эффекты «до короткого отдыха» моделируются длительностью в 600 раундов и снимаются здесь же.
+  const kept = next.activeEffects.filter((e) => e.roundsLeft == null || e.roundsLeft > 600);
+  for (const e of next.activeEffects) {
+    if (e.roundsLeft != null && e.roundsLeft <= 600) events.push({ type: 'effect_expired', name: e.name });
+  }
+  next.activeEffects = kept.map((e) => (e.roundsLeft != null ? { ...e, roundsLeft: e.roundsLeft - 600 } : e));
+
   // Шина: короткий отдых (отклики на отдых как данные, с circumstances/uses-гейтами).
   next = emitEvent({ kind: 'short_rest', source: 'self' }, next, execCtxOf(ctx), events, pending);
 

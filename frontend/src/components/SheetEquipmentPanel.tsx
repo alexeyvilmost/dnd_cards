@@ -143,7 +143,8 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
   const wallet = characterCurrency(character);
   const weight = totalWeight(runtime, cardMap);
   const strScore = character.abilities?.str ?? 10;
-  const capacity = carryingCapacity(strScore);
+  // Грузоподъёмность с учётом размера (Мощное телосложение Голиафа удваивает через carry-модификатор).
+  const capacity = ruleState.carryingCapacity ?? carryingCapacity(strScore, ruleState.size ?? 2);
   const asIcons = entityDisplay.items === 'icon';
   // Отдельная настройка: при наведении показывать стат-блок (ItemPreview) вместо карточки.
   const previewInterface = itemPreview === 'interface';

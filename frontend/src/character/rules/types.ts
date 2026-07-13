@@ -90,6 +90,12 @@ export interface CharacterRuleState {
   /** Базовая скорость (раса + grant_speed walk, БЕЗ modifier-speed) — база для breakdown('speed'),
    *  который сам добавляет modifier-speed из passives один раз (иначе двойной учёт). */
   baseSpeed: number;
+  /** Размер как числовая категория: Крошечный 0, Маленький 1, Средний 2, Большой 3, Огромный 4,
+   *  Громадный 5. База — раса; временные изменения (Большая форма Голиафа) — через breakdown('size'). */
+  size: number;
+  /** Грузоподъёмность (фунты) = Сила×15×множитель размера. Учитывает carry-модификатор
+   *  (Мощное телосложение Голиафа: считается на размер больше). */
+  carryingCapacity: number;
   /** Особые чувства (grant_sense): darkvision/tremorsense/blindsight/truesight + радиус (фт).
    *  При нескольких источниках одного чувства берётся больший радиус. */
   senses: { sense: string; range: number }[];

@@ -137,6 +137,9 @@ export interface CharacterContext {
   /** Базовая скорость (раса + grant_speed walk, без modifier-speed) — база breakdown('speed'),
    *  добавляющего modifier-speed из passives один раз. Фолбэк на characterSpeed, если не задана. */
   baseSpeed?: number;
+  /** Базовый размер (числовая категория, раса). breakdown('size') добавляет временные size-модификаторы
+   *  (Большая форма). Используется для грузоподъёмности (Мощное телосложение) и будущего боя. */
+  baseSize?: number;
   /** Переменные персонажа (martial_arts_die и т.п.) для формул; см. docs/variables.md. */
   variables?: Record<string, number | { sides: number; count: number }>;
   /** Карточки экипированных предметов (для weapon/AC-конвейеров). */

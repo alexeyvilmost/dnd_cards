@@ -77,6 +77,7 @@ const SENSE_LABEL: Record<string, string> = {
 const SPEED_MODE_LABEL: Record<string, string> = {
   fly: 'Полёт', swim: 'Плавание', climb: 'Лазание', burrow: 'Копание',
 };
+const SIZE_LABEL = ['Крошечный', 'Маленький', 'Средний', 'Большой', 'Огромный', 'Громадный'];
 const armorLabel = (v: string) => ARMOR_LABEL_RU[v] || v;
 const weaponLabel = (v: string) => WEAPON_LABEL_RU[v] || v;
 
@@ -610,6 +611,11 @@ const CharacterSheetMVP = () => {
     return breakdownValue('speed', sheetCtx, runtimeState, passives);
   }, [sheetCtx, runtimeState, passives]);
 
+  const sizeBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState) return null;
+    return breakdownValue('size', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives]);
+
   // Имя линиджа: подвид-субрас (lineageId=UUID) → имя субраса; инлайн-линидж → по имени;
   // неразрешённый UUID не показываем (общий резолвер кузни, единый источник правды).
   const lineageName = useMemo(
@@ -1087,6 +1093,14 @@ const CharacterSheetMVP = () => {
                 </div>
               )}
               <div className="sheet-stat"><span>БМ</span><strong>{fmtMod(pb)}</strong></div>
+              {sizeBreakdown && (
+                <div className="sheet-stat">
+                  <span>Размер</span>
+                  <ValueBreakdownTip breakdown={sizeBreakdown} label="Размер">
+                    <strong style={{ fontSize: 14 }}>{SIZE_LABEL[sizeBreakdown.value] ?? sizeBreakdown.value}</strong>
+                  </ValueBreakdownTip>
+                </div>
+              )}
               {/* D3: небазовые скорости (полёт/плавание/лазание) и особые чувства. */}
               {Object.entries(ruleState.speeds).map(([mode, v]) => (
                 <div key={`spd-${mode}`} className="sheet-stat"><span>{SPEED_MODE_LABEL[mode] ?? mode}</span><strong>{v} фт</strong></div>

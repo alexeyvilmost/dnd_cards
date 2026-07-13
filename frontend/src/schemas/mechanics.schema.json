@@ -407,7 +407,7 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "d20"] },
+            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "d20"] },
             "filter": { "type": "object" },
             "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }

@@ -227,11 +227,14 @@ function passesLevelGate(payload: Dict, level: number): boolean {
 // Оборона → ac, сапоги скорости → speed) вливается в производное значение.
 // 'ac' здесь НЕТ намеренно: КЗ считается единым примитивом armorClassValue (C9),
 // который сам собирает modifier-эффекты роли 'ac' — иначе двойной учёт.
-const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative']);
+const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative', 'size', 'carry']);
 
 /** Собирает числовой self-modifier из payload в аккумулятор numericMods. */
 function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>, source: RuleSource) {
   if (payload.kind !== 'modifier') return;
+  // Модификатор с длительностью (Большая форма: size/speed на 10 раундов) применяется в РАНТАЙМЕ
+  // при активации действия, а не пассивно на сборке — иначе временный бафф висел бы постоянно.
+  if (payload.duration != null) return;
   // Числовые роли предметов (max_hp/speed/initiative) считает канал breakdown/passives листа —
   // там предметы уже присутствуют. Здесь их пропускаем, иначе значение задвоится (Решение 2а:
   // ruleState остаётся «голым» по числовым ролям, единый источник — breakdown). Гранты
@@ -334,6 +337,20 @@ function collectAbilityDeltas(
     for (const p of payloadsFromMechanics(runtime.mechanics)) walk(p, runtime.source);
   }
   return { deltas, methods };
+}
+
+/** Строковый размер расы (RU) → числовая категория: Крошечный 0 … Громадный 5. «Средний или
+ *  Маленький» → 2 (Средний по умолчанию). Порядок проверок — от больших, чтобы «средний» в составной
+ *  строке победил «маленький». */
+export function sizeToNumber(s: string | null | undefined): number {
+  const k = String(s ?? '').toLowerCase();
+  if (k.includes('громадн')) return 5;
+  if (k.includes('огромн')) return 4;
+  if (k.includes('больш')) return 3;
+  if (k.includes('средн')) return 2;
+  if (k.includes('маленьк') || k.includes('мал')) return 1;
+  if (k.includes('крошечн')) return 0;
+  return 2;
 }
 
 /** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.walk_grant,
@@ -595,6 +612,16 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     ? Math.max(0, foldModifiers(speedAdditive, { modifiers: [], advantage: 'none', hasAdvantage: false, hasDisadvantage: false, ops: speedOps, autoFail: false, denied: false }).value)
     : speedAdditive;
   const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
+  // Размер как числовая категория (Крошечный=0…Громадный=5). База — раса (Голиаф Средний=2);
+  // «или Маленький» → Средний по умолчанию. Постоянные size-модификаторы (редко) прибавляются;
+  // временные (Большая форма) считает breakdown('size') из активных эффектов.
+  const size = sizeToNumber(assembled.race?.size) + (numericMods.size ?? 0);
+  // Грузоподъёмность = Сила×15×множитель размера. numericMods.carry — прибавка размера ТОЛЬКО для
+  // груза (Мощное телосложение Голиафа: modifier applies_to roll:'carry' +1 → считается на категорию
+  // больше). Парадигма №3: это отдельный «метод» размера для формулы груза, не меняющий боевой размер.
+  const carrySize = Math.max(0, size + (numericMods.carry ?? 0));
+  const carryMult = carrySize <= 0 ? 0.5 : carrySize <= 2 ? 1 : 2 ** (carrySize - 2);
+  const carryingCapacity = Math.floor((scores.str ?? 10) * 15 * carryMult);
 
   return {
     version: 1,
@@ -627,6 +654,8 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     armorClass,
     speed,
     baseSpeed,
+    size,
+    carryingCapacity,
     senses,
     speeds,
     initiativeBonus,

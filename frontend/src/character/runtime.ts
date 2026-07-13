@@ -94,6 +94,7 @@ export function buildCharacterContext(
     variables: ruleState.variables,
     characterSpeed: ruleState.speed,
     baseSpeed: ruleState.baseSpeed,
+    baseSize: ruleState.size,
     hitDie: klass?.hit_die ?? null,
     equippedCards,
     knownCards: equippedCards,
@@ -120,8 +121,16 @@ export function buildExecuteContext(
   };
 }
 
-export function carryingCapacity(strScore: number): number {
-  return strScore * 15;
+/** Множитель грузоподъёмности по размеру (D&D 2024): Крошечный ×0.5, Маленький/Средний ×1,
+ *  далее ×2 за каждую категорию (Большой ×2, Огромный ×4, Громадный ×8). */
+export function carrySizeMultiplier(size: number): number {
+  if (size <= 0) return 0.5;
+  if (size <= 2) return 1;
+  return 2 ** (size - 2);
+}
+/** Грузоподъёмность: Сила ×15 × множитель размера. size по умолчанию Средний (2). */
+export function carryingCapacity(strScore: number, size = 2): number {
+  return Math.floor(strScore * 15 * carrySizeMultiplier(size));
 }
 
 export function addToInventory(state: RuntimeState, cardId: string, qty = 1): RuntimeState {
