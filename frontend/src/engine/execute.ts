@@ -26,6 +26,7 @@ import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/exp
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
 import { rollD20 } from './roll';
+import { applyDamageDieRules } from './rollRules';
 import { weaponContext, attackRangeFromEffect } from './weapon';
 
 type Dict = Record<string, unknown>;
@@ -631,6 +632,23 @@ function collectDamageModifiers(ctx: ExecuteContext, state: RuntimeState, filter
   }).modifiers;
 }
 
+/** Правила урона (die_bonus/explode) — глобальные пассивы/эффекты для текущего контекста. */
+function damageRules(ctx: ExecuteContext, state: RuntimeState): Dict[] {
+  return collectModifiers(state, passivesFromCtx(ctx), {
+    roll: 'damage', formulaCtx: formulaCtx(ctx), evalCtx: evalCtxOf(state, ctx),
+  }).rules;
+}
+
+/** Лимит взрывных костей из свойства payload.explode ({limit}|число|формула). undefined — нет взрыва. */
+function explodeLimitOf(payload: Dict, ctx: ExecuteContext): number | undefined {
+  const ex = payload.explode;
+  if (ex == null || ex === false) return undefined;
+  const raw = typeof ex === 'object' ? ((ex as Dict).limit ?? (ex as Dict).times) : ex;
+  if (raw == null || raw === true) return undefined;
+  try { const v = evaluate(String(raw).replace(/\s+/g, ''), formulaCtx(ctx)); if (typeof v === 'number') return Math.max(0, Math.floor(v)); } catch { /* число ниже */ }
+  const n = Number(raw); return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : undefined;
+}
+
 /**
  * Критическое попадание (PHB 2024): кости урона броска бросаются ДВАЖДЫ, а модификаторы
  * (мод характеристики, зачарование, плоские бонусы) прибавляются один раз. Удваиваем число
@@ -655,6 +673,8 @@ function resolveDamageAmounts(
   crit = false,
 ): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment);
+  const dmgRules = damageRules(ctx, state); // die_bonus/explode (глобальные)
+  const explodeLimit = explodeLimitOf(payload, ctx);
 
   if (payload.dice === 'weapon') {
     const fallbackType = String(payload.type) === 'weapon'
@@ -664,7 +684,9 @@ function resolveDamageAmounts(
     const ab = String(payload.ability ?? 'auto');
     return lines.map((line, i) => {
       const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: ctx.rng });
-      let total = fr.total;
+      // Правила кости (die_bonus/explode) — на кости строки, до модов характеристики/зачарования.
+      const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: ctx.rng });
+      let total = fr.total + ruled.delta;
       let extraMods: RollModifier[] = [];
       // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
       if (i === 0) {
@@ -679,7 +701,7 @@ function resolveDamageAmounts(
       return {
         amount: total,
         damageType: line.type,
-        roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
+        roll: { kind: 'damage', advantage: 'none', dice: ruled.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
       };
     });
   }
@@ -691,17 +713,18 @@ function resolveDamageAmounts(
   if (flat != null) {
     const scaled = withScaling(flat, payload, ctx);
     const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: ctx.rng });
+    const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: ctx.rng });
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
     // если задан; иначе ability в фильтр не кладём (эффект без ability-фильтра всё равно применится).
     const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
       ? (payload.ability as AbilityKey) : undefined;
     const extraMods = collectDamageModifiers(ctx, state, usedAbility ? { ability: usedAbility } : {});
-    let total = fr.total;
+    let total = fr.total + ruled.delta;
     for (const m of extraMods) total += m.value;
     return [{
       amount: total,
       damageType,
-      roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
+      roll: { kind: 'damage', advantage: 'none', dice: ruled.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
     }];
   }
 
@@ -936,8 +959,15 @@ function runAttackRoll(
     modifiers: mods,
     target: { type: 'ac', value: ac },
     rng: ctx.rng,
+    rules: collected.rules, // правила бросков (crit_range/outcome/on_roll/…)
   });
   events.push(rollEvent('Атака', roll));
+
+  let next = state;
+  // on_roll-триггеры по значению кости (напр. «на 15 → парализовать цель») — не зависят от исхода.
+  if (Array.isArray(roll.triggered) && roll.triggered.length) {
+    next = applyPayloads(roll.triggered as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
+  }
 
   // Автокрит (B): попадание рукопашной атакой по Парализованному/Без сознания — критическое.
   const outcome = roll.outcome === 'hit' && projected.autoCrit ? 'crit' : roll.outcome;
@@ -945,7 +975,6 @@ function runAttackRoll(
     events.push(narrativeEvent('Автокрит: попадание вблизи становится критическим (состояние цели).'));
   }
 
-  let next = state;
   if (outcome === 'hit' || outcome === 'crit') {
     // При крите используем on_crit, если автор задал его явно (тогда он — истина, не удваиваем).
     // Иначе берём on_hit и удваиваем кости урона движком (PHB 2024: кости броска дважды).
@@ -1000,7 +1029,7 @@ function runSave(
         roll: 'saving_throw', filter: { ability },
         evalCtx: { state: targetState, activeConditions: activeConditionsOf(targetState), savedConditions: new Set(savedConditionsOf(effect)) },
       })
-    : { modifiers: [] as RollModifier[], advantage: 'none' as const, autoFail: false };
+    : { modifiers: [] as RollModifier[], advantage: 'none' as const, autoFail: false, rules: [] as Dict[] };
 
   let success: boolean;
   if (ctx.forceSaveOutcome != null) {
@@ -1018,6 +1047,7 @@ function runSave(
       modifiers: [{ value: saveMod, source: 'цель' }, ...collected.modifiers],
       target: { type: 'dc', value: dc },
       rng: ctx.rng,
+      rules: collected.rules,
     });
     events.push(rollEvent('Спасбросок', { ...roll, kind: 'save' }));
     // Планирующий прогон: берём ветку провала, чтобы кости on_fail-урона попали в план кубов
@@ -1077,6 +1107,7 @@ function runAbilityCheck(
       ...collected.modifiers,
     ],
     rng: ctx.rng,
+    rules: collected.rules,
   });
   events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
 

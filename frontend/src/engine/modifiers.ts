@@ -12,8 +12,12 @@ import { conditionModifierPayloads } from './conditions';
 import { payloadsOf } from './mechanicsView';
 import { evaluate, type FormulaContext } from './formula';
 import { matchesWhen, type EvalContext } from './circumstances';
+import { ROLL_RULE_OPS } from './rollRules';
 
 type Dict = Record<string, unknown>;
+
+/** d20-тесты, которым соответствует правило с applies_to.roll:'d20' (любой бросок к20). */
+const D20_TESTS = new Set(['attack', 'saving_throw', 'ability_check', 'initiative']);
 
 export interface CollectOptions {
   roll: string;
@@ -64,6 +68,8 @@ export interface CollectResult {
   autoFail: boolean;
   /** op:'deny' — запрошенная способность (action/bonus_action/reaction/concentration) запрещена (Недееспособен). */
   denied: boolean;
+  /** Правила бросков (reroll/set_die/crit_range/outcome/on_roll/die_bonus/explode), см. engine/rollRules.ts. */
+  rules: Dict[];
 }
 
 /** Ключ фильтра эффекта, отсутствующий в запросе = НЕ матч (R2). */
@@ -86,7 +92,11 @@ function collectFromPayload(
   // scope:'target' — проекция на атакующего носителя (фаза E); к своим броскам не относится.
   if (String(payload.scope ?? 'self') === 'target') return;
   const applies = payload.applies_to as Dict | undefined;
-  if (!applies || applies.roll !== opts.roll) return;
+  if (!applies) return;
+  // Гейт по roll: точное совпадение ИЛИ правило с applies_to.roll:'d20' — на любой d20-тест.
+  const rollMatch = applies.roll === opts.roll
+    || (applies.roll === 'd20' && D20_TESTS.has(String(opts.roll)));
+  if (!rollMatch) return;
   if (!matchFilter(applies.filter as Dict | undefined, opts.filter)) return;
 
   // Обстоятельства (§5.5): применяем модификатор только если when выполнено.
@@ -95,6 +105,10 @@ function collectFromPayload(
     ? { ...opts.evalCtx, advantageSoFar: out.advantage }
     : undefined;
   if (!matchesWhen(payload.when as Dict[] | undefined, whenCtx)) return;
+
+  // Правило броска (reroll/set_die/crit_range/outcome/on_roll/die_bonus/explode) — не числовой
+  // модификатор: складываем сырой payload, интерпретирует roll.ts / расчёт урона.
+  if (ROLL_RULE_OPS.has(String(payload.op ?? ''))) { out.rules.push(payload); return; }
 
   if (payload.op === 'advantage' || payload.op === 'disadvantage') {
     if (payload.op === 'advantage') out.hasAdvantage = true;
@@ -152,6 +166,7 @@ export function collectModifiers(
     ops: [],
     autoFail: false,
     denied: false,
+    rules: [],
   };
 
   for (const effect of state.activeEffects) {
@@ -213,7 +228,7 @@ export function collectRollModifiers(
   state: RuntimeState,
   passives: Dict[],
   appliesTo: { roll: string; filter?: Dict; evalCtx?: EvalContext },
-): { modifiers: RollModifier[]; advantage: AdvantageState; autoFail: boolean; denied: boolean } {
+): { modifiers: RollModifier[]; advantage: AdvantageState; autoFail: boolean; denied: boolean; rules: Dict[] } {
   return collectModifiers(state, passives, appliesTo);
 }
 

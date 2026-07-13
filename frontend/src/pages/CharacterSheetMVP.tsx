@@ -434,6 +434,7 @@ const CharacterSheetMVP = () => {
         advantage: collected.advantage,
         modifiers: [{ value: mod, source: abilLabel, reason: 'спасбросок' }, ...collected.modifiers],
         target: { type: 'dc', value: p.dc }, rng,
+        rules: collected.rules,
       });
       saved = roll.outcome === 'success';
       saveEvent = { type: 'roll', label: `Спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}`, roll };
@@ -632,7 +633,7 @@ const CharacterSheetMVP = () => {
       // (breakdown), поэтому из collected берём только advantage, а не его modifiers.
       const collected = runtimeState
         ? collectRollModifiers(runtimeState, passives, { roll: 'initiative' })
-        : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false };
+        : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false, rules: [] };
       const plan = Array.from(
         { length: collected.advantage === 'none' ? 1 : 2 },
         () => ({ sides: 20, label: 'Инициатива' }),
@@ -646,6 +647,7 @@ const CharacterSheetMVP = () => {
         advantage: collected.advantage,
         modifiers: [{ value: initiative, source: 'инициатива', reason: 'бонус инициативы' }],
         rng,
+        rules: collected.rules,
       });
       const event = rollEvent('Инициатива', roll);
       pushToast([event]);
@@ -687,7 +689,7 @@ const CharacterSheetMVP = () => {
     // иначе литеральные бонусы задваивались бы (parts + collected).
     const collected = runtimeState
       ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
-      : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false };
+      : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false, rules: [] };
     // Автопровал (A): Парализован/Ошеломлён/Без сознания автоматически проваливают спас СИЛ/ЛВК.
     // d20 не катим — сразу пишем провал в журнал.
     if (rollKind === 'saving_throw' && collected.autoFail) {
@@ -707,6 +709,7 @@ const CharacterSheetMVP = () => {
       advantage: collected.advantage,
       modifiers: [...parts],
       rng,
+      rules: collected.rules,
     });
     await appendRuntimeEvents([rollEvent(label, roll)]);
   };

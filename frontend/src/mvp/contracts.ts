@@ -43,9 +43,11 @@ export interface RollLog {
   modifiers: RollModifier[];
   total: number;
   target?: { type: 'ac' | 'dc'; value: number };
-  outcome?: 'hit' | 'miss' | 'crit' | 'success' | 'fail';
+  outcome?: 'hit' | 'miss' | 'crit' | 'crit_miss' | 'success' | 'fail';
   /** Человекочитаемая разбивка: «к20: 13 +3 [ЛВК] +2 [БМ] = 18 против КЗ 15». */
   text: string;
+  /** Payload-ы, сработавшие по значению кости (on_roll-правила) — вызывающий их применяет. */
+  triggered?: Record<string, unknown>[];
 }
 
 // `source` — необязательная атрибуция «кто это сделал» (напр. имя атакующего в бою). Используется
@@ -73,6 +75,9 @@ export interface RollD20Options {
   modifiers?: RollModifier[];
   /** 20 → криты на «чистой» 20; 19 → 19–20 и т.д. */
   critRange?: number;
+  /** Правила бросков (data-driven): reroll/set_die/crit_range/outcome/on_roll (см. engine/rollRules.ts).
+   *  Собираются пассивами/эффектами; roll.ts применяет их к d20-броску. */
+  rules?: Record<string, unknown>[];
   target?: { type: 'ac' | 'dc'; value: number };
   rng: () => number;
 }

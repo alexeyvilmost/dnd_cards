@@ -201,7 +201,12 @@
               "scaling": { "type": "object" },
               "on_success": { "enum": ["half", "none", "full"] },
               "per_dart": { "type": "boolean" },
-              "bonus": { "type": "object" }
+              "bonus": { "type": "object" },
+              "explode": {
+                "type": "object",
+                "description": "Взрывные кости: на натуральном максимуме добросить ещё того же размера, до limit раз (Чародейский выброс).",
+                "properties": { "limit": { "$ref": "#/$defs/formula" } }
+              }
             }
           }
         },
@@ -402,14 +407,23 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration"] },
-            "filter": { "type": "object" }
+            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "d20"] },
+            "filter": { "type": "object" },
+            "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "die_bonus", "explode"] },
         "value": { "$ref": "#/$defs/formula" },
         "scope": { "enum": ["self", "target"] },
         "range": { "enum": ["melee", "ranged"] },
+        "natural": {
+          "type": "object",
+          "description": "Предикат по натуральному значению кости (для reroll/outcome/on_roll): {eq} | {min,max}.",
+          "properties": { "eq": { "type": "number" }, "min": { "type": "number" }, "max": { "type": "number" } }
+        },
+        "faces": { "type": "number", "description": "set_die: грани кости (24 — к24 вместо к20)." },
+        "limit": { "$ref": "#/$defs/formula" },
+        "then": { "type": "array", "items": { "$ref": "#/$defs/payload" }, "description": "on_roll: payload-ы при совпадении natural." },
         "priority": { "type": "number" },
         "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
         "duration": { "$ref": "#/$defs/duration" }
