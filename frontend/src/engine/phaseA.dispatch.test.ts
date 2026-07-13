@@ -121,3 +121,30 @@ describe('Фаза A — damage_taken: авто-концентрация и ре
     expect(res.pendingReactions?.map((r) => r.listenerId)).toContain('rebuke');
   });
 });
+
+describe('Фаза A — interrupt-триггеры: optional и ctx.triggers', () => {
+  const giantFree: Dict = {
+    id: 'giant', name: 'Пламя великана',
+    activation: { mode: 'triggered', optional: true, trigger: { event: 'hit' } },
+    uses: { per: 'turn' },
+    effects: [{ resolution: 'auto', result: [{ kind: 'damage', dice: '1d10', type: 'fire' }] }],
+  };
+  it('свободный OPTIONAL-триггер (Голиаф) ПРЕДЛАГАЕТСЯ, а не срабатывает сам', () => {
+    const ctx: Ctx = { character, rng: HIT, target: { ac: 1 }, passives: [giantFree] };
+    const res = executeAction(freshState(), attackAction, ctx);
+    expect(res.pendingReactions?.map((r) => r.listenerId)).toContain('giant');
+    expect(damages(res.events)).toHaveLength(1); // авто-урона нет — только оружие
+  });
+  it('свободный НЕ-optional триггер срабатывает сам (как Скрытая атака)', () => {
+    const nonOpt: Dict = { ...giantFree, id: 'g2', activation: { mode: 'triggered', trigger: { event: 'hit' } } };
+    const ctx: Ctx = { character, rng: HIT, target: { ac: 1 }, passives: [nonOpt] };
+    const res = executeAction(freshState(), attackAction, ctx);
+    expect(res.pendingReactions ?? []).toHaveLength(0);
+    expect(damages(res.events).length).toBeGreaterThanOrEqual(2); // оружие + авто-огонь
+  });
+  it('ctx.triggers — отдельный пул слушателей (заклинание-реакция), не пассивка', () => {
+    const ctx = { character, rng: HIT, target: { ac: 1 }, triggers: [smite] } as ExecuteContext & { triggers: Dict[] };
+    const res = executeAction(freshState(), attackAction, ctx);
+    expect(res.pendingReactions?.map((r) => r.listenerId)).toContain('smite');
+  });
+});

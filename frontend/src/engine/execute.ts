@@ -1253,7 +1253,10 @@ export function emitEvent(
   pending: ReactionOffer[],
   targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
-  const listeners = collectListeners(ev, state, passivesFromCtx(ctx), evalCtxOf(state, ctx));
+  // Слушатели: пассивки + отдельный пул триггерных способностей (ctx.triggers — заклинания-реакции
+  // вроде Божественной кары; их не читает collectModifiers, чтобы не применять эффект пассивно).
+  const triggers = (ctx as ExecuteContext & { triggers?: Dict[] }).triggers ?? [];
+  const listeners = collectListeners(ev, state, [...passivesFromCtx(ctx), ...triggers], evalCtxOf(state, ctx));
   if (!listeners.length) return state; // нет слушателей → рекурсии быть не может → бюджет не тратим
   // C4: бюджет жжём только на эмиссии СО слушателями (лишь они способны углубить рекурсию), иначе
   // широкое линейное действие (многолучевое заклинание без триггеров) ловило бы ложный лимит.

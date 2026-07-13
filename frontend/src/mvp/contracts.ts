@@ -170,6 +170,10 @@ export interface ExecuteContext {
   character: CharacterContext;
   /** Id исполнителя действия (кастера). Проставляется в sourceId накладываемых состояний (E). */
   selfId?: string;
+  /** Триггерные способности-СЛУШАТЕЛИ (заклинания вроде Божественной кары): пул для emitEvent/реакций.
+   *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КЗ
+   *  Щита) не применялся пассивно до активации. */
+  triggers?: Record<string, unknown>[];
   target?: TargetContext;
   rng: () => number;
   /** Выборы игрока внутри действия (напр. вариант Толчка). Ключ — сырой choice.id;

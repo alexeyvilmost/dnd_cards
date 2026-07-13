@@ -332,11 +332,25 @@ export default function SheetActionsPanel({
     return out;
   }, [runtime.inventory, runtime.equipment, equipCards]);
 
-  const actions = useMemo(
+  const allActions = useMemo(
     () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions, containerCards,
       (id) => equipCards.get(id)?.name ?? cardsIndex.get(id)?.name),
     [assembled, itemMechs, basicActions, grantedActions, containerCards, equipCards, cardsIndex],
   );
+
+  // Триггерные способности-СЛУШАТЕЛИ (interrupt): mode reaction/triggered + activation.trigger.event
+  // (Божественная кара при попадании, особенности Голиафа). Отдаём движку как ctx.triggers; из
+  // кликабельного списка исключаем — их нельзя применить проактивно, только по событию.
+  const isTriggerAbility = (m: Record<string, unknown> | undefined): boolean => {
+    const act = m?.activation as Record<string, unknown> | undefined;
+    const mode = String(act?.mode ?? '');
+    return !!(act?.trigger as Record<string, unknown> | undefined)?.event && (mode === 'reaction' || mode === 'triggered');
+  };
+  const triggerSources = useMemo(
+    () => allActions.filter((a) => isTriggerAbility(a.mechanics)).map((a) => ({ ...a.mechanics, name: a.name, id: a.mechanics?.id ?? a.name })),
+    [allActions],
+  );
+  const actions = useMemo(() => allActions.filter((a) => !isTriggerAbility(a.mechanics)), [allActions]);
 
   // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,
@@ -580,7 +594,7 @@ export default function SheetActionsPanel({
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
     // targetOverride — богатая цель из выбранного персонажа (иначе dummy {ac, saveMods}).
     const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}, targetOverride?: TargetContext, forceSaveOutcome?: 'success' | 'fail') =>
-      ({ character: ctx, selfId: character.id, target: targetOverride ?? target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
+      ({ character: ctx, selfId: character.id, target: targetOverride ?? target, rng, passives, triggers: triggerSources, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // В бою действие со спасом цели-ПЕРСОНАЖА: спас бросает САМА цель. Кастер предрассчитывает ОБА
     // исхода (onFail/onSuccess как дельты) и шлёт pending-спас на комбатант цели; применение — у цели.
@@ -642,7 +656,8 @@ export default function SheetActionsPanel({
       preview?: ReactNode,
       confirm = false,
       targetOpts?: { targets?: { id: string; name: string }[]; needsTarget?: boolean },
-    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void> } | null> => {
+      presetTargetId?: string,
+    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void>; targetId?: string } | null> => {
       // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
       // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
       const inPlay = collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title });
@@ -656,19 +671,21 @@ export default function SheetActionsPanel({
       // исключаем d20 спасброска (кастер вводит только кости урона).
       const battleTargetSave = !!encounterId && actionForcesTargetSave(m);
       const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events, battleTargetSave);
-      const decision = await diceDialog.request(plan, title, preview, { confirm, targets: targetOpts?.targets, needsTarget: targetOpts?.needsTarget });
+      // presetTargetId (реакция-райдер по той же цели, что попадание) — пикер не показываем.
+      const decision = await diceDialog.request(plan, title, preview, { confirm, targets: presetTargetId ? undefined : targetOpts?.targets, needsTarget: presetTargetId ? false : targetOpts?.needsTarget });
       if (decision.mode === 'cancel') return null;
+      const targetId = presetTargetId ?? decision.targetId;
       // Выбранная цель → богатая цель. В бою цель — комбатант (по actorId), применяем патчем на
       // сервер (синк доски + write-through в лист + журналы); иначе — персонаж (по id) в его запись.
       let richTarget: TargetContext | undefined;
       let targetCb: Combatant | undefined;
       let targetChar: ForgeCharacter | undefined;
-      if (decision.targetId) {
+      if (targetId) {
         if (encounterId) {
-          targetCb = encCombatantsRef.current.find((c) => c.actorId === decision.targetId);
+          targetCb = encCombatantsRef.current.find((c) => c.actorId === targetId);
           if (targetCb) richTarget = await buildEncounterTarget(targetCb);
         } else {
-          targetChar = (targetCharsRef.current ?? []).find((c) => c.id === decision.targetId);
+          targetChar = (targetCharsRef.current ?? []).find((c) => c.id === targetId);
           if (targetChar) richTarget = buildTargetFromCharacter(targetChar);
         }
       }
@@ -701,14 +718,14 @@ export default function SheetActionsPanel({
           // и его само-эффекты, и бросок урона); цель отдельно залогирует фактически полученный урон.
           await emitPendingSave(targetCb, m, save, onFail, onSuccess);
           const casterEvents: EngineEvent[] = [...rf.events, { type: 'narrative', text: `«${String(m.name ?? action.name)}» → ${targetCb.name}: спасбросок ${save.ability.toUpperCase()} СЛ ${save.dc} (цель бросает у себя)` }];
-          return { state: rf.state, events: casterEvents, pending: rf.pendingReactions ?? [], commitTarget: undefined };
+          return { state: rf.state, events: casterEvents, pending: rf.pendingReactions ?? [], commitTarget: undefined, targetId };
         }
         // Монстр (нет листа): кастер катит спас монстра (мод — из поля «Спас цели») и применяет дельту.
         const sroll = rollD20({ modifiers: [{ value: targetSaveMod, source: 'цель', reason: 'спасбросок' }], target: { type: 'dc', value: save?.dc ?? 10 }, rng: () => Math.random() });
         const monOut = sroll.outcome === 'success' ? onSuccess : onFail;
         const saveEvent: EngineEvent = { type: 'roll', label: `Спасбросок ${(save?.ability ?? '').toUpperCase()} цели — ${sroll.outcome === 'success' ? 'успех' : 'провал'}`, roll: sroll };
         const commitTarget = () => applyMonsterSaveOutcome(targetCb!, monOut, sroll, save?.ability ?? '');
-        return { state: rf.state, events: [saveEvent], pending: rf.pendingReactions ?? [], commitTarget };
+        return { state: rf.state, events: [saveEvent], pending: rf.pendingReactions ?? [], commitTarget, targetId };
       }
       const r = executeAction(baseState, m, execCtx(rng, false, choices, richTarget));
       let commitTarget: (() => Promise<void>) | undefined;
@@ -717,7 +734,7 @@ export default function SheetActionsPanel({
         if (targetCb) commitTarget = () => applyToEncounterTarget(targetCb!, tstate, r.events);
         else if (targetChar) commitTarget = () => persistTarget(targetChar!, tstate);
       }
-      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, commitTarget };
+      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, commitTarget, targetId };
     };
 
     try {
@@ -759,16 +776,39 @@ export default function SheetActionsPanel({
         events = [...events, ...conc.events];
       }
 
-      // Предложенные реакции/триггеры со стоимостью (фаза A): спрашиваем игрока.
+      // Предложенные реакции/триггеры (фаза A: interrupt): всплывающее окно решения. Для заклинаний
+      // на ячейку — опции апкаста (Божественная кара). Свободные optional-триггеры (Голиаф) — тоже спрашиваем.
       for (const offer of main.pending) {
-        if (!canPay(state, offer.cost).ok) continue;
-        const decision = await reactionPrompt.request(offer, describeMechanicsLine(offer.mechanics));
-        if (decision !== 'accept') continue;
-        const rmech = { ...offer.mechanics, name: offer.name };
-        const r = await runViaDialog(state, rmech, offer.name);
+        const slotIdx = offer.cost.findIndex((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
+        const nonSlot = offer.cost.filter((_, i) => i !== slotIdx);
+        if (nonSlot.length && !canPay(state, nonSlot).ok) continue; // нет действия/реакции — не предлагаем
+        let options: { id: string; label: string }[] | undefined;
+        let baseLevel = 0;
+        if (slotIdx >= 0) {
+          baseLevel = Number(offer.cost[slotIdx].level) || 1;
+          const need = Number(offer.cost[slotIdx].amount ?? 1) || 1;
+          const levels: number[] = [];
+          for (let L = baseLevel; L <= 9; L += 1) if ((state.resources[`spell_slot_${L}`] ?? 0) >= need) levels.push(L);
+          if (!levels.length) continue; // нет ячеек — не предлагаем
+          options = levels.map((L) => ({ id: String(L), label: L === baseLevel ? `${L} круг` : `${L} круг (апкаст +${L - baseLevel})` }));
+        }
+        const res = await reactionPrompt.request(offer, { describe: describeMechanicsLine(offer.mechanics), options });
+        if (res.decision !== 'accept') continue;
+        let rmech: Record<string, unknown> = { ...offer.mechanics, name: offer.name };
+        spellCtx = undefined; // реакция — отдельный каст; не тянем апкаст основного действия
+        if (slotIdx >= 0 && res.option) {
+          const L = Number(res.option);
+          const act = rmech.activation as Record<string, unknown> | undefined;
+          const rcost = ((act?.cost as Record<string, unknown>[]) ?? []).map((c, i) => (i === slotIdx ? { ...c, level: L } : c));
+          rmech = { ...rmech, activation: { ...(act ?? {}), cost: rcost } };
+          spellCtx = { baseLevel, castLevel: L };
+        }
+        // Райдер по той же цели, что и попадание (Божественная кара/Голиаф бьют по цели атаки).
+        const r = await runViaDialog(state, rmech, offer.name, undefined, false, undefined, main.targetId);
         if (!r) continue;
         state = r.state;
         events = [...events, ...r.events];
+        if (r.commitTarget) await r.commitTarget();
       }
 
       apply(state, events);

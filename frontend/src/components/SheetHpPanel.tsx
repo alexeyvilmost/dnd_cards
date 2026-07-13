@@ -146,8 +146,8 @@ export default function SheetHpPanel({
       // Реакции на получение урона (Адское возмездие и т.п.) — предлагаем игроку.
       for (const offer of res.pendingReactions ?? []) {
         if (!canPay(state, offer.cost).ok) continue;
-        const rDecision = await reactionPrompt.request(offer, describeMechanicsLine(offer.mechanics));
-        if (rDecision !== 'accept') continue;
+        const rRes = await reactionPrompt.request(offer, { describe: describeMechanicsLine(offer.mechanics) });
+        if (rRes.decision !== 'accept') continue;
         const rmech = { ...offer.mechanics, name: offer.name };
         const rplan = extractDiceFromEvents(executeAction(state, rmech, execCtx(PLANNING_RNG, true)).events);
         let rrng: () => number = () => Math.random();

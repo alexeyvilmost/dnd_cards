@@ -13,9 +13,15 @@ import './DiceDialog.css';
 export type ReactionDecision = 'accept' | 'decline';
 export type ReactionPolicy = 'ask' | 'auto' | 'disabled';
 
+/** Опция реакции (напр. круг ячейки для апкаста Божественной кары). id уходит в исполнение. */
+export interface ReactionOption { id: string; label: string }
+/** Итог решения: применять/нет + выбранная опция (если были). */
+export interface ReactionResult { decision: ReactionDecision; option?: string }
+
 interface ReactionPromptApi {
-  /** Спросить игрока про реакцию. auto → сразу accept, disabled → decline, ask → модалка. */
-  request: (offer: ReactionOffer, describe?: string) => Promise<ReactionDecision>;
+  /** Спросить игрока про реакцию. auto → сразу accept (перв. опция), disabled → decline, ask → модалка.
+   *  opts.options — расширяемые варианты (апкаст и т.п.); выбранный id вернётся в ReactionResult.option. */
+  request: (offer: ReactionOffer, opts?: { describe?: string; options?: ReactionOption[] }) => Promise<ReactionResult>;
 }
 
 const Ctx = createContext<ReactionPromptApi | null>(null);
@@ -52,6 +58,7 @@ function setPolicyFor(name: string, policy: ReactionPolicy): void {
 interface PromptState {
   offer: ReactionOffer;
   describe?: string;
+  options?: ReactionOption[];
 }
 
 const linkStyle: CSSProperties = {
@@ -61,21 +68,22 @@ const linkStyle: CSSProperties = {
 
 export function ReactionPromptProvider({ children }: { children: ReactNode }) {
   const [prompt, setPrompt] = useState<PromptState | null>(null);
-  const resolver = useRef<((d: ReactionDecision) => void) | null>(null);
+  const resolver = useRef<((r: ReactionResult) => void) | null>(null);
 
-  const request = useCallback((offer: ReactionOffer, describe?: string): Promise<ReactionDecision> => {
+  const request = useCallback((offer: ReactionOffer, opts?: { describe?: string; options?: ReactionOption[] }): Promise<ReactionResult> => {
+    const options = opts?.options;
     const policy = policyFor(offer.name);
-    if (policy === 'auto') return Promise.resolve('accept');
-    if (policy === 'disabled') return Promise.resolve('decline');
+    if (policy === 'auto') return Promise.resolve({ decision: 'accept', option: options?.[0]?.id });
+    if (policy === 'disabled') return Promise.resolve({ decision: 'decline' });
     return new Promise((resolve) => {
       resolver.current = resolve;
-      setPrompt({ offer, describe });
+      setPrompt({ offer, describe: opts?.describe, options });
     });
   }, []);
 
-  const finish = (d: ReactionDecision) => {
+  const finish = (r: ReactionResult) => {
     setPrompt(null);
-    resolver.current?.(d);
+    resolver.current?.(r);
     resolver.current = null;
   };
 
@@ -90,7 +98,7 @@ export function ReactionPromptProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ request }}>
       {children}
       {prompt && (
-        <div className="dice-dialog-backdrop" onClick={() => finish('decline')}>
+        <div className="dice-dialog-backdrop" onClick={() => finish({ decision: 'decline' })}>
           <div className="dice-dialog" role="dialog" aria-label="Реакция" onClick={(e) => e.stopPropagation()}>
             <div className="dice-dialog-title">Реакция: {prompt.offer.name}</div>
             <div className="dice-dialog-summary">
@@ -103,20 +111,29 @@ export function ReactionPromptProvider({ children }: { children: ReactNode }) {
                 </>
               )}
             </div>
-            <div className="dice-dialog-actions">
-              <button type="button" className="dice-dialog-btn primary" onClick={() => finish('accept')}>
-                Использовать
-              </button>
-              <button type="button" className="dice-dialog-btn ghost" onClick={() => finish('decline')}>
+            <div className="dice-dialog-actions" style={{ flexWrap: 'wrap' }}>
+              {prompt.options && prompt.options.length > 0 ? (
+                // Расширяемые опции (напр. круг ячейки для апкаста) — каждая кнопка = «применить с этой опцией».
+                prompt.options.map((o) => (
+                  <button key={o.id} type="button" className="dice-dialog-btn primary" onClick={() => finish({ decision: 'accept', option: o.id })}>
+                    {o.label}
+                  </button>
+                ))
+              ) : (
+                <button type="button" className="dice-dialog-btn primary" onClick={() => finish({ decision: 'accept' })}>
+                  Использовать
+                </button>
+              )}
+              <button type="button" className="dice-dialog-btn ghost" onClick={() => finish({ decision: 'decline' })}>
                 Пропустить
               </button>
             </div>
             <p className="dice-dialog-note">
-              <button type="button" style={linkStyle} onClick={() => { setPolicyFor(prompt.offer.name, 'auto'); finish('accept'); }}>
+              <button type="button" style={linkStyle} onClick={() => { setPolicyFor(prompt.offer.name, 'auto'); finish({ decision: 'accept', option: prompt.options?.[0]?.id }); }}>
                 Всегда использовать
               </button>
               {' · '}
-              <button type="button" style={linkStyle} onClick={() => { setPolicyFor(prompt.offer.name, 'disabled'); finish('decline'); }}>
+              <button type="button" style={linkStyle} onClick={() => { setPolicyFor(prompt.offer.name, 'disabled'); finish({ decision: 'decline' }); }}>
                 Больше не предлагать
               </button>
             </p>

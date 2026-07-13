@@ -37,6 +37,9 @@ export interface ListenerMatch {
   cost: Dict[];
   /** uses.per (turn|round|…) для гейта «раз за ход». */
   usesPer?: string;
+  /** activation.optional — свободный, но НЕОБЯЗАТЕЛЬНЫЙ триггер: предлагается игроку, а не срабатывает
+   *  сам (особенности Голиафа «свободное действие при попадании» — игрок решает применять или нет). */
+  optional?: boolean;
 }
 
 function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
@@ -44,6 +47,7 @@ function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
   const mode = String(act?.mode ?? '');
   if (mode !== 'triggered' && mode !== 'reaction') return null;
   const uses = mech.uses as Dict | undefined;
+  const trig = act?.trigger as Dict | undefined;
   return {
     id: String(mech.id ?? name),
     name,
@@ -51,6 +55,7 @@ function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
     mode,
     cost: (act?.cost as Dict[]) ?? [],
     usesPer: uses?.per != null ? String(uses.per) : undefined,
+    optional: act?.optional === true || trig?.prompt === true,
   };
 }
 
@@ -84,9 +89,10 @@ export function collectListeners(
   return out;
 }
 
-/** Автоматический слушатель — triggered без стоимости (исполняется сразу). */
+/** Автоматический слушатель — triggered без стоимости и НЕ optional (исполняется сразу).
+ *  optional-триггер (свободный, но по выбору игрока — Голиаф) уходит в предложение. */
 export function isAuto(m: ListenerMatch): boolean {
-  return m.mode === 'triggered' && m.cost.length === 0;
+  return m.mode === 'triggered' && m.cost.length === 0 && !m.optional;
 }
 
 /** Обернуть слушателя-«предложение» в ReactionOffer для UI. */
