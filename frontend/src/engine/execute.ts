@@ -616,16 +616,27 @@ function collectDamageModifiers(ctx: ExecuteContext, state: RuntimeState, filter
 }
 
 /**
+ * Критическое попадание (PHB 2024): кости урона броска бросаются ДВАЖДЫ, а модификаторы
+ * (мод характеристики, зачарование, плоские бонусы) прибавляются один раз. Удваиваем число
+ * костей в формуле («2d6+3» → «4d6+3»); константы/бонусы не трогаем.
+ */
+function doubleDice(formula: string): string {
+  return String(formula).replace(/(\d+)d(\d+)/gi, (_m, n: string, s: string) => `${Number(n) * 2}d${s}`);
+}
+
+/**
  * Одна payload-строка урона → одна ИЛИ несколько нанесённых инстанций.
  * dice:"weapon" раскрывается в оружие в руке: основная строка (кость + мод характеристики
  * + зачарование) плюс отдельная инстанция на каждый стихийный урон (без мода и зачарования).
  * Порядок стабилен (основная первой) — важно для плана кубов/диалога и сопротивлений по типам.
+ * crit=true — критическое попадание: кости броска удваиваются (модификаторы — один раз).
  */
 function resolveDamageAmounts(
   payload: Dict,
   ctx: ExecuteContext,
   state: RuntimeState,
   hand: 'main' | 'off',
+  crit = false,
 ): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment);
 
@@ -636,7 +647,7 @@ function resolveDamageAmounts(
     const lines = handWeapon?.damages ?? [{ dice: handWeapon?.dice ?? '1d4', type: fallbackType }];
     const ab = String(payload.ability ?? 'auto');
     return lines.map((line, i) => {
-      const fr = rollFormula(line.dice, formulaCtx(ctx), { rng: ctx.rng });
+      const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: ctx.rng });
       let total = fr.total;
       let extraMods: RollModifier[] = [];
       // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
@@ -662,7 +673,8 @@ function resolveDamageAmounts(
 
   const flat = payload.amount != null ? String(payload.amount) : payload.dice != null ? String(payload.dice) : null;
   if (flat != null) {
-    const fr = rollFormula(withScaling(flat, payload, ctx), formulaCtx(ctx), { rng: ctx.rng });
+    const scaled = withScaling(flat, payload, ctx);
+    const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: ctx.rng });
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
     // если задан; иначе ability в фильтр не кладём (эффект без ability-фильтра всё равно применится).
     const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
@@ -743,6 +755,7 @@ function applyPayloads(
   halfDamage = false,
   whoTarget = false,
   targetRef: TargetRef = { mutated: false },
+  crit = false,
 ): RuntimeState {
   let next = state;
   // Роутер мутации (C2): who:'target' с переданным состоянием цели пишет в ЦЕЛЬ и метит
@@ -767,7 +780,7 @@ function applyPayloads(
           // (сопротивление/иммунитет/уязвимость цели, temp→current, авто-проверка концентрации).
           // Величину урона считаем статами АТАКУЮЩЕГО, применяем — на состоянии ЦЕЛИ с её контекстом.
           const tctx: ExecuteContext = { ...ctx, character: ctx.target?.characterContext ?? ctx.character };
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             const res = applyIncomingDamage(targetRef.state, amount, tctx, { damageType: dmg.damageType });
             targetRef.state = res.state;
@@ -775,7 +788,7 @@ function applyPayloads(
             events.push(...res.events);
           }
         } else {
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             events.push(damageEvent(amount, dmg.damageType, dmg.roll));
           }
@@ -918,11 +931,13 @@ function runAttackRoll(
 
   let next = state;
   if (outcome === 'hit' || outcome === 'crit') {
-    const payloads = (outcome === 'crit' && effect.on_crit
-      ? effect.on_crit
-      : effect.on_hit) as Dict[] | undefined;
+    // При крите используем on_crit, если автор задал его явно (тогда он — истина, не удваиваем).
+    // Иначе берём on_hit и удваиваем кости урона движком (PHB 2024: кости броска дважды).
+    const useCritPayloads = outcome === 'crit' && Array.isArray(effect.on_crit);
+    const payloads = (useCritPayloads ? effect.on_crit : effect.on_hit) as Dict[] | undefined;
+    const critDouble = outcome === 'crit' && !useCritPayloads;
     if (Array.isArray(payloads)) {
-      next = applyPayloads(payloads, next, ctx, events, source, hand, false, whoTarget, targetRef);
+      next = applyPayloads(payloads, next, ctx, events, source, hand, false, whoTarget, targetRef, critDouble);
     }
     // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
     // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
