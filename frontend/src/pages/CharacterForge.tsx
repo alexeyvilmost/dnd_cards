@@ -18,7 +18,7 @@ import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft,
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
-import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, type ForgeSectionDef } from '../character/components';
+import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, useAutoRecommendedChoices, type ForgeSectionDef } from '../character/components';
 import { useIsMobile } from '../hooks/useIsMobile';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
@@ -309,6 +309,10 @@ const CharacterForge = () => {
   const setResolved = useCallback((choiceId: string, vals: string[]) => {
     setDraft((d) => ({ ...d, resolvedChoices: { ...d.resolvedChoices, [choiceId]: vals } }));
   }, []);
+  // Рекомендованные варианты (recommended в choice-механике) — предвыбираем автоматически,
+  // снижая число решений новичку. Покрывает ChoiceList, SpellsSection и выбор заклинаний,
+  // т.к. все они читают из assembled.pendingChoices + setResolved.
+  useAutoRecommendedChoices(assembled.pendingChoices, draft.resolvedChoices, setResolved);
   // Ручная правка (+/− point-buy, ручной ввод) — помечает характеристики
   // «тронутыми»: смена класса их больше не перезаписывает.
   const setAbility = useCallback((k: AbilityKey, v: number | undefined) => {

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
@@ -182,6 +182,51 @@ export function ChoiceResolver({
       </div>
     </div>
   );
+}
+
+/**
+ * Чистое ядро авто-рекомендаций: какие выборы предзаполнить рекомендованными вариантами.
+ * Возвращает карту `choiceId → рекомендованные ID` (не больше `count`). Пропускает:
+ *  • выборы контекста in_play (разрешаются диалогом в момент действия);
+ *  • уже применённые в этой сессии (`applied`) — очистка выбора игроком не должна
+ *    триггерить повторное авто-заполнение;
+ *  • уже выбранные (непустой `resolved`) — сохранённый выбор персонажа не перетираем.
+ */
+export function recommendedChoiceSeed(
+  choices: PendingChoice[],
+  resolved: Record<string, string[]>,
+  applied: ReadonlySet<string>,
+): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const pc of choices) {
+    if (pc.context === 'in_play' || applied.has(pc.id)) continue;
+    if ((resolved[pc.id] ?? []).length) continue;
+    const rec = (pc.recommended ?? []).slice(0, pc.count);
+    if (rec.length) out[pc.id] = rec;
+  }
+  return out;
+}
+
+/**
+ * Авто-выбор рекомендованных вариантов. Для каждого невыбранного choice с непустым
+ * `recommended` один раз проставляет рекомендованные ID в resolved — снижает порог входа
+ * новичкам: рекомендованные заклинания/эффекты уже отмечены, но их можно изменить.
+ * Каждый выбор обрабатывается единожды (ref): даже если игрок очистит выбор, авто-
+ * заполнение не повторится.
+ */
+export function useAutoRecommendedChoices(
+  choices: PendingChoice[],
+  resolved: Record<string, string[]>,
+  setResolved: (id: string, vals: string[]) => void,
+): void {
+  const applied = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const seed = recommendedChoiceSeed(choices, resolved, applied.current);
+    for (const pc of choices) {
+      if (pc.context !== 'in_play') applied.current.add(pc.id);   // отметить как обработанные
+    }
+    for (const [id, vals] of Object.entries(seed)) setResolved(id, vals);
+  }, [choices, resolved, setResolved]);
 }
 
 // ─── Раскладка характеристик ─────────────────────────────────────────────────

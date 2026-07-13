@@ -38,7 +38,8 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
       // Не оставляем предыдущий запрос «висящим» без ответа (защита от гонки при повторном request).
       resolver.current?.(null);
       resolver.current = resolve;
-      setValues(Object.fromEntries(choices.map((c) => [c.id, []])));
+      // Рекомендованные варианты предвыбираем сразу (можно изменить перед «Применить»).
+      setValues(Object.fromEntries(choices.map((c) => [c.id, (c.recommended ?? []).slice(0, Math.max(1, c.count || 1))])));
       setDialog({ choices, title });
     });
   }, []);
