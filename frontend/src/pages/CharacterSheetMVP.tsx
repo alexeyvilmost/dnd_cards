@@ -509,6 +509,19 @@ const CharacterSheetMVP = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encSeq, encState, id, encId, ruleState]);
 
+  // Детект входящих pending-«атакован» (реакция Щит). Хук ОБЯЗАН стоять до раннего return
+  // (правила хуков); сам резолвер — в ref (использует значения, вычисляемые ниже).
+  const resolveIncomingAttackRef = useRef<(pa: PendingAttack) => void>(() => {});
+  useEffect(() => {
+    if (!encId || !id || !ruleState) return;
+    const own = encState.combatants.find((c) => c.characterId === id);
+    const next = (own?.pendingAttacks ?? []).find((p) => !handledAttackRef.current.has(p.id));
+    if (!next) return;
+    handledAttackRef.current.add(next.id);
+    void resolveIncomingAttackRef.current(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encSeq, encState, id, encId, ruleState]);
+
   // Механики выданных предметами эффектов для числового канала (breakdown листа + панель действий).
   const itemGrantedPassives = useMemo(
     () => itemGrantedEffects2.map((eff) => eff.mechanics).filter((m): m is Record<string, unknown> => !!m),
@@ -719,16 +732,9 @@ const CharacterSheetMVP = () => {
     } catch { /* best-effort */ }
   };
 
-  // Обнаружение входящих pending-«атакован» на своём комбатанте (для реакции Щит).
-  useEffect(() => {
-    if (!encId || !id || !ruleState) return;
-    const own = encState.combatants.find((c) => c.characterId === id);
-    const next = (own?.pendingAttacks ?? []).find((p) => !handledAttackRef.current.has(p.id));
-    if (!next) return;
-    handledAttackRef.current.add(next.id);
-    void resolveIncomingAttack(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [encSeq, encState, id, encId, ruleState]);
+  // Резолвер входящей атаки хранится в ref: детектирующий useEffect стоит ДО раннего return
+  // (правила хуков), а сам резолвер использует значения, вычисленные ниже (ac/sheetCtx/…).
+  resolveIncomingAttackRef.current = resolveIncomingAttack;
 
   const rollInitiative = async () => {
     if (!id || rollingInit) return;
