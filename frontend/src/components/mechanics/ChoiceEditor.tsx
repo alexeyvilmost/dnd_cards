@@ -33,6 +33,15 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
   const usesItems = ITEM_SOURCES.includes(value.source || 'skill');
   const isEffect = value.source === 'effect';
 
+  // Варианты для «Рекомендуемые» (предвыбор): feat → черты; item-источники → сами бусины;
+  // иначе → справочник источника (навыки/инструменты/языки). Для spell справочник пуст →
+  // редактируем списком ID через запятую (полный список заклинаний грузится не здесь).
+  const recOptions = useMemo(() => {
+    if (value.source === 'feat') return ORIGIN_FEATS;
+    if (usesItems) return (value.items || []).filter((it) => it.id).map((it) => ({ id: it.id, label: it.name || it.id }));
+    return sourceOptions;
+  }, [value.source, value.items, usesItems, sourceOptions]);
+
   const set = (patch: Partial<ChoiceFormValue>) => onChange({ ...value, ...patch });
 
   return (
@@ -93,9 +102,10 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
         </div>
       </div>
 
-      {value.source === 'feat' && (
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">Рекомендуемые</label>
+      {/* Рекомендуемые варианты — предвыбираются в кузне при рендере выбора (можно изменить). */}
+      <div>
+        <label className="block text-xs text-gray-600 mb-1">Рекомендуемые (предвыбор)</label>
+        {recOptions.length > 0 ? (
           <select
             multiple
             className="w-full px-2 py-1 border rounded text-sm h-20"
@@ -104,12 +114,25 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
               set({ recommended: Array.from(e.target.selectedOptions).map((o) => o.value) })
             }
           >
-            {ORIGIN_FEATS.map((o) => (
+            {recOptions.map((o) => (
               <option key={o.id} value={o.id}>{o.label}</option>
             ))}
           </select>
-        </div>
-      )}
+        ) : (
+          <input
+            className="w-full px-2 py-1 border rounded text-sm"
+            value={((value.recommended as string[]) || []).join(', ')}
+            onChange={(e) =>
+              set({ recommended: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })
+            }
+            placeholder="ID вариантов через запятую (напр. id заклинаний)"
+          />
+        )}
+        <p className="text-xs text-gray-500 mt-0.5">
+          Отмеченные варианты выбираются автоматически при создании — снижает число решений новичку
+          (игрок сможет изменить).
+        </p>
+      </div>
 
       {!usesItems && (
         <div>
