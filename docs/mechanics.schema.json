@@ -402,12 +402,14 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative", "carry", "max_hp"] },
+            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration"] },
             "filter": { "type": "object" }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny"] },
         "value": { "$ref": "#/$defs/formula" },
+        "scope": { "enum": ["self", "target"] },
+        "range": { "enum": ["melee", "ranged"] },
         "priority": { "type": "number" },
         "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
         "duration": { "$ref": "#/$defs/duration" }

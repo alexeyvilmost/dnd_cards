@@ -97,6 +97,9 @@ export interface ActiveEffectEntry {
   /** 'start_of_next_turn' | 'end_of_turn' | 'until_rest' | 'manual' */
   expiry?: string;
   source: string;
+  /** Id наложившего эффект существа (кастера). Для реляционных правил (E): Очарованный не может
+   *  выбрать очаровавшего целью. undefined — источник неизвестен (ручное наложение и т.п.). */
+  sourceId?: string;
 }
 
 export interface RuntimeState {
@@ -160,6 +163,8 @@ export interface TargetContext {
 
 export interface ExecuteContext {
   character: CharacterContext;
+  /** Id исполнителя действия (кастера). Проставляется в sourceId накладываемых состояний (E). */
+  selfId?: string;
   target?: TargetContext;
   rng: () => number;
   /** Выборы игрока внутри действия (напр. вариант Толчка). Ключ — сырой choice.id;

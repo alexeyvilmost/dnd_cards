@@ -49,6 +49,7 @@ import CharacterSheetV2 from './CharacterSheetV2';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { activeConditionsOf } from '../engine/circumstances';
+import { conditionModifierPayloads, conditionLabel } from '../engine/conditions';
 import { rollD20 } from '../engine/roll';
 import './CharacterForge.css';
 
@@ -372,9 +373,28 @@ const CharacterSheetMVP = () => {
     [itemMechanics, itemGrantedEffects2],
   );
 
+  // H: активные состояния как источники правил — их не-аддитивная алгебра (Скорость 0) доходит до
+  // ruleState.speed → characterContext.characterSpeed (формулы/грид), а не только до breakdown('speed').
+  // Берём self-scope модификаторы состояния (с раскрытием композиции); target-проекции сюда не идут.
+  const conditionRuntimeSources = useMemo<RuntimeRuleSource[]>(() => {
+    const conds = (runtimeState?.activeEffects ?? []).filter(
+      (e) => (e.mechanics as Record<string, unknown>)?.kind === 'condition',
+    );
+    return conds.map((e) => {
+      const value = String((e.mechanics as Record<string, unknown>).value ?? '');
+      const result = conditionModifierPayloads(value)
+        .filter((m) => String(m.scope ?? 'self') !== 'target')
+        .map((m) => ({ kind: 'modifier', ...m }));
+      return {
+        source: { type: 'condition' as const, id: `cond:${value}`, name: conditionLabel(value) },
+        mechanics: { effects: [{ resolution: 'auto', result }] },
+      };
+    });
+  }, [runtimeState]);
+
   const ruleState = useMemo(
-    () => (draft && assembled ? resolveCharacterRules({ draft, assembled, runtimeSources: itemRuntimeSources }) : null),
-    [draft, assembled, itemRuntimeSources],
+    () => (draft && assembled ? resolveCharacterRules({ draft, assembled, runtimeSources: [...itemRuntimeSources, ...conditionRuntimeSources] }) : null),
+    [draft, assembled, itemRuntimeSources, conditionRuntimeSources],
   );
 
   // Спасброски проходятся ЦЕЛЬЮ: когда на мой комбатант пришёл pending-спас (кастер наложил
@@ -399,15 +419,25 @@ const CharacterSheetMVP = () => {
       roll: 'saving_throw', filter: { ability: p.ability },
       evalCtx: { state: runtimeState, activeConditions: activeConditionsOf(runtimeState), savedConditions: new Set(p.avoidsConditions ?? []) },
     });
-    // Отмена/клик мимо трактуем как автобросок — спас должен разрешиться (нельзя «зависнуть» в бою).
-    const decision = await diceDialog.request(plan, `Входящий спасбросок — ${p.actionName}`, preview);
-    const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
-    const roll = rollD20({
-      advantage: collected.advantage,
-      modifiers: [{ value: mod, source: abilLabel, reason: 'спасбросок' }, ...collected.modifiers],
-      target: { type: 'dc', value: p.dc }, rng,
-    });
-    const saved = roll.outcome === 'success';
+    // Автопровал (A): Парализован/Ошеломлён/Без сознания автоматически проваливают спас СИЛ/ЛВК —
+    // диалог не показываем, d20 не катим, фиксируем провал.
+    let saved: boolean;
+    let saveEvent: EngineEvent;
+    if (collected.autoFail) {
+      saved = false;
+      saveEvent = { type: 'narrative', text: `Спасбросок ${abilLabel} — автопровал (состояние)` };
+    } else {
+      // Отмена/клик мимо трактуем как автобросок — спас должен разрешиться (нельзя «зависнуть» в бою).
+      const decision = await diceDialog.request(plan, `Входящий спасбросок — ${p.actionName}`, preview);
+      const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+      const roll = rollD20({
+        advantage: collected.advantage,
+        modifiers: [{ value: mod, source: abilLabel, reason: 'спасбросок' }, ...collected.modifiers],
+        target: { type: 'dc', value: p.dc }, rng,
+      });
+      saved = roll.outcome === 'success';
+      saveEvent = { type: 'roll', label: `Спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}`, roll };
+    }
     const out = saved ? p.onSuccess : p.onFail;
     // Дельту применяем к ТЕКУЩЕМУ комбатанту (боевая истина), а не к снимку на момент каста —
     // иначе затёрли бы урон, прилетевший от другого атакующего, пока открыт диалог.
@@ -420,7 +450,7 @@ const CharacterSheetMVP = () => {
     const hpDmg = Math.max(0, -(out.hpDelta ?? 0));
     // журнал цели: бросок спаса + результат + урон/состояния (атрибуция — кастер)
     const journal: EngineEvent[] = [
-      { type: 'roll', label: `Спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}`, roll },
+      saveEvent,
       ...(hpDmg > 0 ? [{ type: 'damage', amount: hpDmg, damageType: out.damageType ?? 'урон', source: p.sourceName } as EngineEvent] : []),
       ...addEff.map((c) => ({ type: 'condition_applied', condition: c.name, source: p.sourceName } as EngineEvent)),
     ];
@@ -602,7 +632,7 @@ const CharacterSheetMVP = () => {
       // (breakdown), поэтому из collected берём только advantage, а не его modifiers.
       const collected = runtimeState
         ? collectRollModifiers(runtimeState, passives, { roll: 'initiative' })
-        : { advantage: 'none' as const, modifiers: [] };
+        : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false };
       const plan = Array.from(
         { length: collected.advantage === 'none' ? 1 : 2 },
         () => ({ sides: 20, label: 'Инициатива' }),
@@ -657,7 +687,13 @@ const CharacterSheetMVP = () => {
     // иначе литеральные бонусы задваивались бы (parts + collected).
     const collected = runtimeState
       ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
-      : { advantage: 'none' as const, modifiers: [] };
+      : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false };
+    // Автопровал (A): Парализован/Ошеломлён/Без сознания автоматически проваливают спас СИЛ/ЛВК.
+    // d20 не катим — сразу пишем провал в журнал.
+    if (rollKind === 'saving_throw' && collected.autoFail) {
+      await appendRuntimeEvents([{ type: 'narrative', text: `${label} — автопровал (состояние)` }]);
+      return;
+    }
     const plan = Array.from(
       { length: collected.advantage === 'none' ? 1 : 2 },
       () => ({ sides: 20, label }),

@@ -12,6 +12,7 @@ function toConditionModifier(p: Record<string, unknown>): ConditionModifier | nu
     op: String(p.op ?? 'add') as ConditionModifier['op'],
     ...(p.value != null ? { value: String(p.value) } : {}),
     ...(p.scope === 'target' ? { scope: 'target' as const } : {}),
+    ...(p.range === 'melee' || p.range === 'ranged' ? { range: p.range as 'melee' | 'ranged' } : {}),
   };
 }
 
@@ -29,7 +30,10 @@ export async function loadConditions(): Promise<void> {
           .map(toConditionModifier)
           .filter((m): m is ConditionModifier => m !== null);
         const id = String(e.card_number ?? '').replace(/^COND-/, '');
-        return { id, label: e.name, modifiers, note: e.description || undefined };
+        // Композиция (F): mechanics.includes — состояния, чью механику носитель наследует.
+        const rawIncludes = (e.mechanics as Record<string, unknown> | undefined)?.includes;
+        const includes = Array.isArray(rawIncludes) ? rawIncludes.map(String) : undefined;
+        return { id, label: e.name, modifiers, ...(includes?.length ? { includes } : {}), note: e.description || undefined };
       })
       .filter((d) => d.id);
     if (defs.length) registerConditions(defs);

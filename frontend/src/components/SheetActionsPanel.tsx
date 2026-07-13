@@ -19,6 +19,7 @@ import { isActionUsesKey } from '../engine/actionUses';
 import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } from '../engine/freeuse';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
+import { deniedCapabilities } from '../engine/modifiers';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeAction, readTargetSave, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
@@ -224,6 +225,34 @@ export default function SheetActionsPanel({
     // S3: выданные предметами эффекты (grant_effect) — тот же числовой канал, что и механики предметов.
     return [...collectPassiveMechanics(assembled, character.resolved_choices ?? {}), ...items, ...(itemGrantedPassives ?? [])];
   }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards, runtime.inventory, itemGrantedPassives]);
+
+  // D: способности экономики хода, запрещённые состояниями (Недееспособный → действие/бонусное/
+  // реакция/концентрация). Гейтят запуск и доступность действий с соответствующей стоимостью.
+  const deniedCaps = useMemo(() => deniedCapabilities(runtime, passives), [runtime, passives]);
+
+  // E: id существ, очаровавших меня (sourceId condition:charmed). Их нельзя выбирать целью.
+  const charmerIds = useMemo(() => {
+    const out = new Set<string>();
+    for (const e of runtime.activeEffects ?? []) {
+      const m = e.mechanics as Record<string, unknown> | undefined;
+      if (m?.kind === 'condition' && m?.value === 'charmed' && e.sourceId) out.add(e.sourceId);
+    }
+    return out;
+  }, [runtime]);
+
+  // D: причина запрета действия недееспособностью (стоимость с запрещённым типом / концентрация).
+  const CAP_RU: Record<string, string> = {
+    action: 'тратить действие', bonus_action: 'тратить бонусное действие',
+    reaction: 'использовать реакцию', concentration: 'концентрироваться',
+  };
+  const deniedActionReason = (action: SheetAction, cost: Record<string, unknown>[]): string | null => {
+    if (!deniedCaps.size) return null;
+    const cap = cost.map((c) => String(c.resource ?? '')).find((r) => deniedCaps.has(r));
+    if (cap) return `Недееспособен: нельзя ${CAP_RU[cap] ?? cap}`;
+    const dur = action.mechanics.duration as Record<string, unknown> | undefined;
+    if (deniedCaps.has('concentration') && dur?.concentration) return 'Недееспособен: нельзя концентрироваться';
+    return null;
+  };
 
   const equippedCards = useMemo(() => {
     const out: Card[] = [];
@@ -483,6 +512,8 @@ export default function SheetActionsPanel({
     if (ammo) mech = appendActivationCost(mech, ammo);
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
+    // D: недееспособность запрещает экономику хода — не запускаем действие с запрещённым типом.
+    if (deniedActionReason(action, cost)) return;
     // freeuse: заклинание с пулом бесплатных использований (каст без ячейки). Считаем ДО гейта —
     // персонаж без ячеек (напр. предмет-каст) всё равно может кастовать бесплатно.
     const freeuse = freeuseFor(action);
@@ -549,7 +580,7 @@ export default function SheetActionsPanel({
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
     // targetOverride — богатая цель из выбранного персонажа (иначе dummy {ac, saveMods}).
     const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}, targetOverride?: TargetContext, forceSaveOutcome?: 'success' | 'fail') =>
-      ({ character: ctx, target: targetOverride ?? target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
+      ({ character: ctx, selfId: character.id, target: targetOverride ?? target, rng, passives, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // В бою действие со спасом цели-ПЕРСОНАЖА: спас бросает САМА цель. Кастер предрассчитывает ОБА
     // исхода (onFail/onSuccess как дельты) и шлёт pending-спас на комбатант цели; применение — у цели.
@@ -702,10 +733,17 @@ export default function SheetActionsPanel({
         if (encounterId) {
           // В бою: цели — комбатанты боя (по actorId, включая монстров), кроме себя.
           const combatants = await loadEncounterCombatants();
-          targetOptions = combatants.filter((c) => c.characterId !== character.id).map((c) => ({ id: c.actorId, name: c.name }));
+          targetOptions = combatants.filter((c) => c.characterId !== character.id).map((c) => ({
+            id: c.actorId, name: c.name,
+            // E: очаровавшего нельзя выбрать целью (с подсказкой почему).
+            ...(c.characterId && charmerIds.has(c.characterId) ? { disabled: true, reason: 'вы очарованы им' } : {}),
+          }));
         } else {
           const chars = await loadTargetChars();
-          targetOptions = chars.filter((c) => c.id !== character.id).map((c) => ({ id: c.id, name: c.name }));
+          targetOptions = chars.filter((c) => c.id !== character.id).map((c) => ({
+            id: c.id, name: c.name,
+            ...(charmerIds.has(c.id) ? { disabled: true, reason: 'вы очарованы им' } : {}),
+          }));
         }
       }
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
@@ -749,6 +787,10 @@ export default function SheetActionsPanel({
     if (!avail.available) return { disabled: true, reason: avail.reason };
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const baseCost = (activation?.cost as Record<string, unknown>[]) ?? [];
+    // D: Недееспособность запрещает экономику хода — гейтим действие, если его стоимость включает
+    // запрещённый тип (действие/бонусное/реакция) или оно требует концентрации при её запрете.
+    const capReason = deniedActionReason(action, baseCost);
+    if (capReason) return { disabled: true, reason: capReason };
     // S5: дальнобойное оружие требует боеприпас — добавляем его к проверяемой стоимости.
     const ammo = weaponAmmoCost(action.mechanics, runtime.equipment, equipCards);
     const cost = ammo ? [...baseCost, ammo] : baseCost;

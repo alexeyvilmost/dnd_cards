@@ -26,7 +26,7 @@ import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/exp
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
 import { rollD20 } from './roll';
-import { weaponContext } from './weapon';
+import { weaponContext, attackRangeFromEffect } from './weapon';
 
 type Dict = Record<string, unknown>;
 
@@ -105,11 +105,12 @@ function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
  * активных эффектов цели по данным scope:'target' — и из состояний (по данным состояния),
  * и из любого эффекта с scope:'target'-модификатором. Никакого хардкода проекции.
  */
-function projectedAgainst(
+export function projectedAgainst(
   target: ExecuteContext['target'],
   roll: string,
-): { modifiers: RollModifier[]; advantage: AdvantageState; hasAdvantage: boolean; hasDisadvantage: boolean } {
-  const out = { modifiers: [] as RollModifier[], advantage: 'none' as AdvantageState, hasAdvantage: false, hasDisadvantage: false };
+  attackRange?: 'melee' | 'ranged',
+): { modifiers: RollModifier[]; advantage: AdvantageState; hasAdvantage: boolean; hasDisadvantage: boolean; autoCrit: boolean } {
+  const out = { modifiers: [] as RollModifier[], advantage: 'none' as AdvantageState, hasAdvantage: false, hasDisadvantage: false, autoCrit: false };
   const st = target?.runtimeState;
   if (!st) return out;
 
@@ -120,8 +121,15 @@ function projectedAgainst(
     if (String(m.scope ?? 'self') !== 'target') return;
     const applies = m.applies_to as Dict | undefined;
     if (!applies || applies.roll !== roll) return;
+    // Дистанционный гейт (B/C): модификатор с range применяется только к атаке того же типа.
+    // Закрыт по умолчанию — если тип атаки неизвестен, range-гейтованный модификатор не применяется
+    // (не ставим ложный автокрит / преимущество распластанному от неизвестной атаки).
+    const range = m.range as 'melee' | 'ranged' | undefined;
+    if (range === 'melee' || range === 'ranged') { if (attackRange !== range) return; }
     const op = String(m.op ?? '');
-    if (op === 'advantage' || op === 'disadvantage') {
+    if (op === 'auto_crit') {
+      out.autoCrit = true;
+    } else if (op === 'advantage' || op === 'disadvantage') {
       if (op === 'advantage') out.hasAdvantage = true; else out.hasDisadvantage = true;
       out.advantage = foldAdvantage(out.hasAdvantage, out.hasDisadvantage);
     } else if (op === 'add' && m.value != null) {
@@ -536,6 +544,7 @@ function applyCondition(
   payload: Dict,
   source: string,
   events: EngineEvent[],
+  sourceId?: string,
 ): RuntimeState {
   const condition = String(payload.value ?? '');
   if (!condition) return state;
@@ -559,6 +568,8 @@ function applyCondition(
     roundsLeft,
     expiry,
     source,
+    // E: id наложившего (кастера) — для реляционных правил (Очарованный ↛ очаровавший).
+    ...(sourceId ? { sourceId } : {}),
   };
   events.push(conditionAppliedEvent(condition));
   return stackApply(state, entry, payload);
@@ -773,7 +784,7 @@ function applyPayloads(
       }
       case 'healing': route((s) => applyHealing(s, p, ctx, events)); break;
       case 'temp_hp': route((s) => applyTempHp(s, p, ctx, events)); break;
-      case 'condition': route((s) => applyCondition(s, p, source, events)); break;
+      case 'condition': route((s) => applyCondition(s, p, source, events, ctx.selfId)); break;
       case 'resource': route((s) => applyResource(s, p, events)); break;
       case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
       case 'resistance': route((s) => applyResistancePayload(s, p, source, events)); break;
@@ -882,7 +893,9 @@ function runAttackRoll(
   });
   // Проекция состояний цели на бросок атакующего (фаза E): атака по распластанному/
   // опутанному/ослеплённому/парализованному/ошеломлённому/без сознания — с преимуществом.
-  const projected = projectedAgainst(ctx.target, 'attack');
+  // Дистанционный гейт (B/C): рукопашная/дальнобойная атака определяется по оружию в руке.
+  const attackRange = attackRangeFromEffect(effect, hand, ctx.character, state.equipment);
+  const projected = projectedAgainst(ctx.target, 'attack', attackRange);
   const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers, ...projected.modifiers];
 
   const roll = rollD20({
@@ -897,9 +910,15 @@ function runAttackRoll(
   });
   events.push(rollEvent('Атака', roll));
 
+  // Автокрит (B): попадание рукопашной атакой по Парализованному/Без сознания — критическое.
+  const outcome = roll.outcome === 'hit' && projected.autoCrit ? 'crit' : roll.outcome;
+  if (roll.outcome === 'hit' && projected.autoCrit) {
+    events.push(narrativeEvent('Автокрит: попадание вблизи становится критическим (состояние цели).'));
+  }
+
   let next = state;
-  if (roll.outcome === 'hit' || roll.outcome === 'crit') {
-    const payloads = (roll.outcome === 'crit' && effect.on_crit
+  if (outcome === 'hit' || outcome === 'crit') {
+    const payloads = (outcome === 'crit' && effect.on_crit
       ? effect.on_crit
       : effect.on_hit) as Dict[] | undefined;
     if (Array.isArray(payloads)) {
@@ -908,7 +927,7 @@ function runAttackRoll(
     // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
     // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
     next = emitEvent({ kind: 'hit', source: 'self' }, next, ctx, events, pending, targetRef);
-    if (roll.outcome === 'crit') next = emitEvent({ kind: 'crit', source: 'self' }, next, ctx, events, pending, targetRef);
+    if (outcome === 'crit') next = emitEvent({ kind: 'crit', source: 'self' }, next, ctx, events, pending, targetRef);
   } else {
     // Промах: on_miss-райдеры (Graze/Vex — оружейное мастерство 2024) + событие miss.
     if (Array.isArray(effect.on_miss)) {
@@ -950,13 +969,18 @@ function runSave(
         roll: 'saving_throw', filter: { ability },
         evalCtx: { state: targetState, activeConditions: activeConditionsOf(targetState), savedConditions: new Set(savedConditionsOf(effect)) },
       })
-    : { modifiers: [] as RollModifier[], advantage: 'none' as const };
+    : { modifiers: [] as RollModifier[], advantage: 'none' as const, autoFail: false };
 
   let success: boolean;
   if (ctx.forceSaveOutcome != null) {
     // Онлайн-бой: исход форсирован (предрасчёт для передачи цели). d20 НЕ катим — иначе съели бы
     // из ctx.rng кости урона; событие спасброска не эмитим — бросок сделает цель на своём листе.
     success = ctx.forceSaveOutcome === 'success';
+  } else if (collected.autoFail) {
+    // Автопровал (A): Парализован/Ошеломлён/Без сознания автоматически проваливают спас СИЛ/ЛВК.
+    // d20 не катим (не тратим кости урона), фиксируем провал.
+    events.push(narrativeEvent(`Спасбросок ${ABILITY_LABEL[ability]} — автопровал (состояние цели).`));
+    success = false;
   } else {
     const roll = rollD20({
       advantage: collected.advantage,

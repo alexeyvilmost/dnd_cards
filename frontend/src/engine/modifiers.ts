@@ -60,6 +60,10 @@ export interface CollectResult {
   hasAdvantage: boolean;
   hasDisadvantage: boolean;
   ops: ModifierOp[];
+  /** op:'auto_fail' — запрошенный спасбросок автоматически провален (Парализован/Ошеломлён/…). */
+  autoFail: boolean;
+  /** op:'deny' — запрошенная способность (action/bonus_action/reaction/concentration) запрещена (Недееспособен). */
+  denied: boolean;
 }
 
 /** Ключ фильтра эффекта, отсутствующий в запросе = НЕ матч (R2). */
@@ -98,6 +102,10 @@ function collectFromPayload(
     out.advantage = foldAdvantage(out.hasAdvantage, out.hasDisadvantage);
     return;
   }
+  // Не-числовые маркеры (self-scope): автопровал спаса, запрет способности хода. Проходят те же
+  // гейты (roll/filter/when/scope), что и adv/dis — фильтр по roll уже отсеял чужие цели.
+  if (payload.op === 'auto_fail') { out.autoFail = true; return; }
+  if (payload.op === 'deny') { out.denied = true; return; }
   if ((payload.op == null || payload.op === 'add') && payload.value != null) {
     const raw = String(payload.value).replace(/^\+/, '');
     let value: number | undefined;
@@ -142,6 +150,8 @@ export function collectModifiers(
     hasAdvantage: false,
     hasDisadvantage: false,
     ops: [],
+    autoFail: false,
+    denied: false,
   };
 
   for (const effect of state.activeEffects) {
@@ -203,6 +213,18 @@ export function collectRollModifiers(
   state: RuntimeState,
   passives: Dict[],
   appliesTo: { roll: string; filter?: Dict; evalCtx?: EvalContext },
-): { modifiers: RollModifier[]; advantage: AdvantageState } {
+): { modifiers: RollModifier[]; advantage: AdvantageState; autoFail: boolean; denied: boolean } {
   return collectModifiers(state, passives, appliesTo);
+}
+
+/** Способности экономики хода, запрещённые состояниями (D: Недееспособный → все четыре). */
+const ACTION_CAPABILITIES = ['action', 'bonus_action', 'reaction', 'concentration'] as const;
+
+/** Множество запрещённых способностей (op:'deny') из активных состояний/эффектов (Недееспособность). */
+export function deniedCapabilities(state: RuntimeState, passives: Dict[] = []): Set<string> {
+  const out = new Set<string>();
+  for (const cap of ACTION_CAPABILITIES) {
+    if (collectModifiers(state, passives, { roll: cap }).denied) out.add(cap);
+  }
+  return out;
 }

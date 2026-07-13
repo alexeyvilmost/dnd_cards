@@ -2,6 +2,7 @@ import type { Action, PassiveEffect } from '../../types';
 import type { OriginAction, OriginEffect } from '../assemble';
 import { computeMaxHP, spellcasting } from '../derive';
 import { armorClassValue } from '../../engine/ac';
+import { foldModifiers, type ModifierOp } from '../../engine/modifiers';
 import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
 import { parseFreeuse, type FreeuseSpec } from '../../engine/freeuse';
@@ -573,7 +574,26 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   // (breakdown('speed')) берёт baseSpeed за базу и добавляет modifier-speed из passives ОДИН раз
   // (иначе modifier считался бы дважды, т.к. characterSpeed=ruleState.speed уже его содержит).
   const baseSpeed = (assembled.race?.speed ?? 30) + (numericMods.walk_grant ?? 0);
-  const speed = baseSpeed + (numericMods.speed ?? 0); // итог (для формул/движка): все прибавки
+  // H: не-аддитивная алгебра скорости (Скорость 0 у Схвачен/Опутан/Парализован/Без сознания;
+  // ×2 у Ускорения) должна доходить и до ruleState.speed → characterContext.characterSpeed (формулы,
+  // будущий грид-бой), а не только до отображения листа (breakdown('speed')). Собираем set/multiply-
+  // ops состояний из runtimeSources (лист передаёт активные состояния как condition-источники).
+  const speedAdditive = baseSpeed + (numericMods.speed ?? 0); // все аддитивные прибавки
+  const speedOps: ModifierOp[] = [];
+  for (const rt of input.runtimeSources ?? []) {
+    for (const p of payloadsFromMechanics(rt.mechanics)) {
+      if (p.kind !== 'modifier' || String(p.scope ?? 'self') === 'target') continue;
+      if (String((p.applies_to as Dict | undefined)?.roll ?? '') !== 'speed') continue;
+      const op = String(p.op ?? '');
+      if (op === 'set' || op === 'multiply' || op === 'upgrade' || op === 'downgrade') {
+        const v = Number(String(p.value ?? '').replace(/^\+/, ''));
+        if (!Number.isNaN(v)) speedOps.push({ op: op as ModifierOp['op'], value: v, priority: Number(p.priority ?? 0) || 0, source: rt.source.name });
+      }
+    }
+  }
+  const speed = speedOps.length
+    ? Math.max(0, foldModifiers(speedAdditive, { modifiers: [], advantage: 'none', hasAdvantage: false, hasDisadvantage: false, ops: speedOps, autoFail: false, denied: false }).value)
+    : speedAdditive;
   const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
 
   return {

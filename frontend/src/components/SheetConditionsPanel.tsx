@@ -8,7 +8,7 @@ import { Plus, X } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
-import { conditionOptions, conditionLabel, conditionRule } from '../engine/conditions';
+import { conditionOptions, conditionLabel, conditionRule, conditionModifierPayloads } from '../engine/conditions';
 import type { EngineEvent } from '../mvp/contracts';
 
 interface Props {
@@ -56,7 +56,21 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
       expiry: 'manual',
       source: 'вручную',
     };
-    persist([...runtime.activeEffects, entry], [{ type: 'condition_applied', condition: rule?.label ?? picked }]);
+    let effects = [...runtime.activeEffects, entry];
+    const events: EngineEvent[] = [{ type: 'condition_applied', condition: rule?.label ?? picked }];
+    // D: недееспособность (в т.ч. по композиции — Парализован/Ошеломлён/Без сознания) прерывает
+    // концентрацию — снимаем чип концентрации.
+    const deniesConc = conditionModifierPayloads(picked).some(
+      (m) => m.op === 'deny' && m.applies_to.roll === 'concentration',
+    );
+    if (deniesConc) {
+      const conc = effects.find((e) => (e.mechanics as Record<string, unknown>)?.kind === 'concentration');
+      if (conc) {
+        effects = effects.filter((e) => e !== conc);
+        events.push({ type: 'narrative', text: 'Концентрация потеряна (недееспособность).' });
+      }
+    }
+    persist(effects, events);
   };
 
   const removeCondition = (id: string, name: string) => {
@@ -72,19 +86,25 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
     const ROLL_RU: Record<string, string> = {
       attack: 'атаки', saving_throw: 'спасброски', ability_check: 'проверки',
       initiative: 'инициатива', speed: 'скорость',
+      action: 'действие', bonus_action: 'бонусное действие', reaction: 'реакция', concentration: 'концентрация',
     };
-    const mods = rule.modifiers.map((m) => {
+    // Раскрываем композицию (F): показываем и унаследованные правила (Без сознания → Недееспособен …).
+    const mods = conditionModifierPayloads(value).map((m) => {
       const roll = ROLL_RU[m.applies_to.roll] ?? m.applies_to.roll;
       const flt = m.applies_to.filter?.ability ? ` (${String(m.applies_to.filter.ability).toUpperCase()})` : '';
       const scope = m.scope === 'target' ? ' по вам' : '';
-      // set/multiply/… над значением (Скорость 0) показываем как «скорость = 0», а adv/dis/add — как раньше.
-      if (m.op === 'advantage') return `преимущество: ${roll}${flt}${scope}`;
-      if (m.op === 'disadvantage') return `помеха: ${roll}${flt}${scope}`;
+      const rng = m.range === 'melee' ? ' (рукопашные)' : m.range === 'ranged' ? ' (дальнобойные)' : '';
+      if (m.op === 'advantage') return `преимущество: ${roll}${flt}${scope}${rng}`;
+      if (m.op === 'disadvantage') return `помеха: ${roll}${flt}${scope}${rng}`;
+      if (m.op === 'auto_fail') return `автопровал: ${roll}${flt}`;
+      if (m.op === 'auto_crit') return `автокрит${scope}${rng}`;
+      if (m.op === 'deny') return `запрет: ${roll}`;
       if (m.op === 'set') return `${roll} = ${m.value}`;
       if (m.op === 'multiply') return `${roll} ×${m.value}`;
       return `${m.value}: ${roll}${flt}`;
     });
-    return [...mods, rule.note].filter(Boolean).join('\n');
+    // Дедуп повторов из композиции (напр. incapacitated включён несколькими путями).
+    return [...new Set([...mods, rule.note].filter(Boolean))].join('\n');
   };
 
   const body = (

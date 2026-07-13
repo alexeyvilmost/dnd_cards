@@ -23,6 +23,7 @@ const ROLL_RU: Record<string, string> = {
   attack: 'атаку', saving_throw: 'спасбросок', ability_check: 'проверку',
   damage: 'урон', ac: 'КЗ', speed: 'скорость', initiative: 'инициативу',
   spell_dc: 'СЛ заклинаний', max_hp: 'макс. хиты',
+  action: 'действие', bonus_action: 'бонусное действие', reaction: 'реакцию', concentration: 'концентрацию',
 };
 const ABILITY_RU: Record<string, string> = {
   str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
@@ -64,9 +65,13 @@ function modifierPhrase(p: Dict): string {
   const roll = rollRu(applies.roll);
   const op = String(p.op ?? 'add');
   const projected = String(p.scope ?? 'self') === 'target';
+  const rng = p.range === 'melee' ? ' (рукопашные)' : p.range === 'ranged' ? ' (дальнобойные)' : '';
   let core: string;
-  if (op === 'advantage') core = `преимущество на ${roll}`;
-  else if (op === 'disadvantage') core = `помеха на ${roll}`;
+  if (op === 'advantage') core = `преимущество на ${roll}${rng}`;
+  else if (op === 'disadvantage') core = `помеха на ${roll}${rng}`;
+  else if (op === 'auto_fail') core = `автопровал: ${roll}`;
+  else if (op === 'auto_crit') return `критическое попадание${projected ? ' по вам' : ''}${rng}`;
+  else if (op === 'deny') return `запрет: ${roll}`;
   else if (op === 'set') core = `${roll} = ${p.value ?? ''}`;
   else if (op === 'multiply') core = `${roll} ×${p.value ?? ''}`;
   else core = `${p.value ?? ''} к ${roll}`;

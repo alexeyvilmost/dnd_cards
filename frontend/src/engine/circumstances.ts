@@ -11,6 +11,7 @@
  * сейчас (например «у цели состояние», а цели нет), тоже дают false — условие не выполнено.
  */
 import type { AdvantageState, CharacterContext, RuntimeState, TargetContext } from '../mvp/contracts';
+import { expandConditionSet } from './conditions';
 
 type Dict = Record<string, unknown>;
 
@@ -31,15 +32,16 @@ export interface EvalContext {
   lastD20?: number;
 }
 
-/** Собрать множество активных состояний владельца из RuntimeState. */
+/** Собрать множество активных состояний владельца из RuntimeState (с раскрытием композиции F:
+ *  «Без сознания» → тоже «Недееспособен» и т.д. — чтобы предикаты видели унаследованные состояния). */
 export function activeConditionsOf(state: RuntimeState | undefined): Set<string> {
-  const out = new Set<string>();
-  if (!state) return out;
+  const raw: string[] = [];
+  if (!state) return new Set();
   for (const e of state.activeEffects) {
     const m = e.mechanics as Dict;
-    if (m?.kind === 'condition' && m.value) out.add(String(m.value));
+    if (m?.kind === 'condition' && m.value) raw.push(String(m.value));
   }
-  return out;
+  return expandConditionSet(raw);
 }
 
 /** Вычислить один предикат обстоятельства. Нераспознанный гейт → false (closed-by-default); narrative → true. */

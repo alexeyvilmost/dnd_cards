@@ -152,6 +152,26 @@ export function weaponAttackKind(mechanics: Dict | null | undefined): WeaponAtta
   return tags.includes('off_hand') ? 'off' : 'main';
 }
 
+/**
+ * Рукопашная / дальнобойная атака ОДНОГО effect'а (для дистанционного гейта B/C: автокрит и
+ * проекция «Распластан» зависят от типа атаки). unarmed → melee; оружейная (on_hit dice:'weapon')
+ * → по свойству ammunition оружия в руке (лук/арбалет = ranged, иначе melee). Не-оружейная
+ * (атака заклинанием) → undefined: дальность неизвестна, range-гейт закрыт по умолчанию.
+ */
+export function attackRangeFromEffect(
+  effect: Dict,
+  hand: 'main' | 'off',
+  character: CharacterContext,
+  equipment?: Record<string, string | null | undefined>,
+): 'melee' | 'ranged' | undefined {
+  if (String(effect.attack_kind ?? '') === 'unarmed') return 'melee';
+  const onHit = Array.isArray(effect.on_hit) ? (effect.on_hit as Dict[]) : [];
+  if (!onHit.some((p) => p.dice === 'weapon')) return undefined;
+  const w = weaponContext(character, hand, equipment);
+  if (!w) return 'melee';
+  return w.properties.includes('ammunition') ? 'ranged' : 'melee';
+}
+
 // ─── Доступность оружейных действий по экипировке ───────────────────────────
 
 export interface ActionAvailability {
