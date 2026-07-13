@@ -20,7 +20,6 @@ type ClassForm = {
   weapon_proficiencies: string;
   tool_proficiencies: string;
   skill_choices_json: string;
-  starting_equipment_json: string;
   resources_json: string;
   description: string;
   detailed_description: string;
@@ -111,7 +110,6 @@ const ClassCreator = () => {
           weapon_proficiencies: (cl.weapon_proficiencies || []).join(', '),
           tool_proficiencies: (cl.tool_proficiencies || []).join(', '),
           skill_choices_json: stringifyJson(cl.skill_choices),
-          starting_equipment_json: stringifyJson(cl.starting_equipment),
           resources_json: stringifyJson(cl.resources),
           description: cl.description || '',
           detailed_description: cl.detailed_description || '',
@@ -184,7 +182,6 @@ const ClassCreator = () => {
         weapon_proficiencies: splitList(data.weapon_proficiencies).length ? splitList(data.weapon_proficiencies) : null,
         tool_proficiencies: splitList(data.tool_proficiencies).length ? splitList(data.tool_proficiencies) : null,
         skill_choices: parseJsonObject(data.skill_choices_json, 'Выбор навыков'),
-        starting_equipment: parseJsonObject(data.starting_equipment_json, 'Стартовое снаряжение'),
         equipment_options: equipPayload,
         resources: parseJsonObject(data.resources_json, 'Ресурсы'),
         level_progression: Object.keys(levelProgression).length ? levelProgression : null,
@@ -371,10 +368,6 @@ const ClassCreator = () => {
                       <div>
                         <label className={labelCls}>Выбор навыков (JSON)</label>
                         <textarea {...register('skill_choices_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"count":2,"options":["athletics","perception"]}' />
-                      </div>
-                      <div>
-                        <label className={labelCls}>Стартовое снаряжение (JSON)</label>
-                        <textarea {...register('starting_equipment_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"packages":[]}' />
                       </div>
                     </>
                   )}

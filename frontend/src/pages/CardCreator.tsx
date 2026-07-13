@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Save, Eye, EyeOff, ArrowLeft, FileText, Image as ImageIcon, Type, Sword, Sparkles, Cog,
+  Save, Eye, EyeOff, ArrowLeft, FileText, Image as ImageIcon, Type, Sword, Cog,
 } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
@@ -18,7 +18,6 @@ import { MainSection } from '../components/cardCreator/MainSection';
 import { ImageSection } from '../components/cardCreator/ImageSection';
 import { TextSection } from '../components/cardCreator/TextSection';
 import { EquipmentSection } from '../components/cardCreator/EquipmentSection';
-import EffectsSection from '../components/cardCreator/EffectsSection';
 import { PrivacySection } from '../components/cardCreator/PrivacySection';
 import type { ImageLibraryItem } from '../api/imageLibraryApi';
 
@@ -39,7 +38,7 @@ const CardCreator = () => {
   const [createdCardId, setCreatedCardId] = useState<string | null>(null); // ID карты, созданной при генерации изображения
   const [isPollingImage, setIsPollingImage] = useState(false); // Флаг активного polling'а
   const [activeSection, setActiveSection] = useState('main'); // Активная секция навигации
-  const [effects, setEffects] = useState<Effect[]>([]); // Эффекты предмета
+  const [effects, setEffects] = useState<Effect[]>([]); // Легаси-эффекты: только round-trip (UI удалён, механику заменил движок)
   const [mechanics, setMechanics] = useState<Record<string, unknown> | null>(null); // Унифицированная механика
 
   const isMobile = useIsMobile();
@@ -50,7 +49,6 @@ const CardCreator = () => {
     { id: 'image', label: 'Изображение', icon: <ImageIcon size={18} /> },
     { id: 'text', label: 'Текст', icon: <Type size={18} /> },
     { id: 'equipment', label: 'Снаряжение', icon: <Sword size={18} /> },
-    { id: 'effects', label: 'Эффекты', icon: <Sparkles size={18} /> },
     { id: 'engine', label: 'Движок', icon: <Cog size={18} /> },
     { id: 'privacy', label: 'Приватность', icon: <Eye size={18} /> },
   ];
@@ -615,17 +613,6 @@ const CardCreator = () => {
                   setValue={setValue}
                   watch={watch}
                 />
-              )}
-              
-              {activeSection === 'effects' && (
-                <div>
-                  <h2 className="text-xl font-bold mb-4">Секция эффектов</h2>
-                  <EffectsSection 
-                    effects={effects}
-                    onEffectsChange={setEffects}
-                    description={watchedValues.description}
-                  />
-                </div>
               )}
               
               {activeSection === 'engine' && (

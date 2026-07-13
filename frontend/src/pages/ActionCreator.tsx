@@ -54,7 +54,6 @@ const ActionCreator = () => {
           const action = await actionsApi.getAction(sourceId);
           
           // Заполняем форму данными действия
-          console.log('[ActionCreator] Загружено действие с бэкенда:', action);
           
           // Преобразуем resources из массива в массив строк для selectedResources
           const resourcesArray = action.resources && Array.isArray(action.resources) 
@@ -74,7 +73,6 @@ const ActionCreator = () => {
             distance: action.distance || null,
             recharge: action.recharge || null,
             recharge_custom: action.recharge_custom || null,
-            script: action.script || null,
             mechanics: action.mechanics || null,
             action_type: action.action_type || 'base_action',
             type: action.type || null,
@@ -93,7 +91,6 @@ const ActionCreator = () => {
             detailed_description_font_size: action.detailed_description_font_size || null,
           });
           
-          console.log('[ActionCreator] Форма заполнена, resources установлены:', resourcesArray);
         } catch (err) {
           setError('Ошибка загрузки действия');
           console.error('Error loading action:', err);
@@ -119,7 +116,6 @@ const ActionCreator = () => {
     distance: formData.distance || null,
     recharge: formData.recharge || null,
     recharge_custom: formData.recharge_custom || null,
-    script: formData.script || null,
     mechanics: formData.mechanics || null,
     action_type: formData.action_type || 'base_action',
     type: formData.type || null,
@@ -208,7 +204,6 @@ const ActionCreator = () => {
     try {
       if (isEditMode && editId) {
         // Обновление существующего действия
-        console.log('[ActionCreator] Отправляем данные на обновление:', data);
         
         const updateData: UpdateActionRequest = {
           name: data.name,
@@ -220,7 +215,6 @@ const ActionCreator = () => {
           distance: data.distance || null,
           recharge: data.recharge || null,
           recharge_custom: data.recharge_custom || null,
-          script: data.script || null,
           mechanics: data.mechanics ?? null,
           action_type: data.action_type,
           type: data.type || null,
@@ -239,12 +233,10 @@ const ActionCreator = () => {
           detailed_description_font_size: data.detailed_description_font_size || null,
         };
         
-        console.log('[ActionCreator] Данные для обновления:', updateData);
         await actionsApi.updateAction(editId, updateData);
         navigate('/?type=actions');
       } else {
         // Создание нового действия
-        console.log('[ActionCreator] Отправляем данные на создание:', data);
         
         // Добавляем resources в данные перед отправкой
         const submitData = {

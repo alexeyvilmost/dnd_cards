@@ -23,10 +23,8 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
   const bonus_type = watch('bonus_type');
   const name = watch('name');
   const weapon_type = watch('weapon_type');
-  const battle_profile = watch('battle_profile');
   const { showToast } = useToast();
   const lastProcessedName = useRef<string>('');
-  const [battleProfileText, setBattleProfileText] = React.useState<string>('');
 
   // Функция для поиска типа оружия по названию
   const findWeaponTypeByName = (cardName: string): { name: string; russian_name: string } | null => {
@@ -82,36 +80,6 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
       lastProcessedName.current = name;
     }
   }, [name, weapon_type, setValue, showToast]);
-
-  useEffect(() => {
-    if (battle_profile && typeof battle_profile === 'object') {
-      setBattleProfileText(JSON.stringify(battle_profile, null, 2));
-    } else {
-      setBattleProfileText('');
-    }
-  }, [battle_profile]);
-
-  const applyBattleProfile = () => {
-    if (!battleProfileText.trim()) {
-      setValue('battle_profile', null);
-      return;
-    }
-    try {
-      const parsed = JSON.parse(battleProfileText);
-      setValue('battle_profile', parsed);
-      showToast({
-        type: 'success',
-        title: 'Боевой профиль сохранён',
-        message: 'JSON боевого профиля успешно применён',
-      });
-    } catch (e) {
-      showToast({
-        type: 'error',
-        title: 'Ошибка JSON',
-        message: 'Проверьте формат battle_profile',
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -397,42 +365,6 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
           </select>
         </div>
       )}
-
-      {/* Боевой профиль (интеграция с battle) */}
-      <div className="border-t border-gray-200 pt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Боевой профиль (battle_profile JSON)
-        </label>
-        <textarea
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-          rows={8}
-          value={battleProfileText}
-          onChange={(e) => setBattleProfileText(e.target.value)}
-          placeholder={`{\n  "ready": true,\n  "kind": "weapon",\n  "damage_dice": "1d8",\n  "damage_type": "slashing",\n  "to_hit_bonus": 1,\n  "ac_bonus": null\n}`}
-        />
-        <div className="flex gap-2 mt-2">
-          <button
-            type="button"
-            onClick={applyBattleProfile}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Применить JSON
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setBattleProfileText('');
-              setValue('battle_profile', null);
-            }}
-            className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-          >
-            Очистить
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Используется эндпоинтом <code>/api/cards/:id/battle-stats</code> для подготовки предмета к бою.
-        </p>
-      </div>
     </div>
   );
 };

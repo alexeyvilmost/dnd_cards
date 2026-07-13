@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Eye, EyeOff, FileText, ShieldHalf, Puzzle } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, FileText, Puzzle } from 'lucide-react';
 import { effectsApi } from '../api/client';
 import type { CreatePassiveEffectRequest, UpdatePassiveEffectRequest, PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
@@ -10,7 +10,6 @@ import { FormattedTextarea } from '../components/FormattedTextarea';
 import ImageUploader from '../components/ImageUploader';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { PropertiesSection } from '../components/effectCreator/PropertiesSection';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { registryItems, useResourceOptions } from '../utils/resources';
 import { validateMechanics } from '../engine/validateMechanics';
@@ -44,7 +43,6 @@ const EffectCreator = () => {
   // Секции конструктора эффекта для сквозного рейла.
   const effectSections: NavRailItem[] = [
     { id: 'main', label: 'Основное', icon: <FileText size={18} /> },
-    { id: 'properties', label: 'Свойства', icon: <ShieldHalf size={18} /> },
     { id: 'mechanics', label: 'Механика', icon: <Puzzle size={18} /> },
   ];
 
@@ -65,8 +63,6 @@ const EffectCreator = () => {
           const effect = await effectsApi.getEffect(sourceId);
           
           // Заполняем форму данными эффекта
-          console.log('[EffectCreator] Загружен эффект с бэкенда:', effect);
-          console.log('[EffectCreator] Script из эффекта:', effect.script);
           
           reset({
             name: effect.name,
@@ -86,12 +82,10 @@ const EffectCreator = () => {
             show_detailed_description: effect.show_detailed_description || false,
             detailed_description_alignment: effect.detailed_description_alignment || null,
             detailed_description_font_size: effect.detailed_description_font_size || null,
-            script: effect.script || null,
             mechanics: effect.mechanics || null,
             properties: effect.properties || null,
           });
           
-          console.log('[EffectCreator] Форма заполнена, script установлен:', effect.script);
         } catch (err) {
           setError('Ошибка загрузки эффекта');
           console.error('Error loading effect:', err);
@@ -115,7 +109,6 @@ const EffectCreator = () => {
     card_number: '', // Не отображаем номер
     effect_type: formData.effect_type || 'passive',
     condition_description: formData.condition_description || null,
-    script: formData.script || null,
     type: formData.type || null,
     author: formData.author || 'Admin',
     source: formData.source || null,
@@ -187,8 +180,6 @@ const EffectCreator = () => {
     try {
       if (isEditMode && editId) {
         // Обновление существующего эффекта
-        console.log('[EffectCreator] Отправляем данные на обновление:', data);
-        console.log('[EffectCreator] Script в данных:', data.script);
         
         const updateData: UpdatePassiveEffectRequest = {
           name: data.name,
@@ -199,7 +190,6 @@ const EffectCreator = () => {
           effect_type: data.effect_type,
           type: data.type || null,
           condition_description: data.condition_description,
-          script: data.script || null,
           mechanics: data.mechanics ?? null,
           repeatable: data.repeatable,
           is_extended: data.is_extended,
@@ -212,19 +202,15 @@ const EffectCreator = () => {
           properties: data.properties,
         };
         
-        console.log('[EffectCreator] Данные для обновления:', updateData);
         await effectsApi.updateEffect(editId, updateData);
       } else {
         // Создание нового эффекта
-        console.log('[EffectCreator] Отправляем данные на создание:', data);
-        console.log('[EffectCreator] Script в данных:', data.script);
         
         const createData: CreatePassiveEffectRequest = {
           ...data,
           rarity: 'common', // Всегда common для эффектов
         };
         
-        console.log('[EffectCreator] Данные для создания:', createData);
         await effectsApi.createEffect(createData);
       }
       navigate('/?type=effects');
@@ -470,10 +456,6 @@ const EffectCreator = () => {
             </div>
                     </div>
                   </>
-                )}
-
-                {activeSection === 'properties' && (
-                  <PropertiesSection setValue={setValue} watch={watch} />
                 )}
 
                 {activeSection === 'mechanics' && (
