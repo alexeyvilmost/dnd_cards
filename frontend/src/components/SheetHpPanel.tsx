@@ -18,7 +18,34 @@ import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
 import { rollD20 } from '../engine/roll';
 import { rollEvent } from '../engine/events';
 import ValueBreakdownTip from './ValueBreakdownTip';
-import type { CharacterContext, EngineEvent, ExecuteContext, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+import type { CharacterContext, EngineEvent, ExecuteContext, ReactionOffer, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+
+/** Механика содержит payload reduce_damage (снижение входящего урона). */
+function hasReduceDamage(mechanics: unknown): boolean {
+  const effects = (mechanics as { effects?: unknown[] })?.effects;
+  if (!Array.isArray(effects)) return false;
+  return effects.some((e) => Array.isArray((e as { result?: unknown[] })?.result)
+    && (e as { result: unknown[] }).result.some((p) => (p as { kind?: string })?.kind === 'reduce_damage'));
+}
+
+/** Реакции «снизить входящий урон» (Каменная стойкость): mode reaction/triggered + trigger
+ *  damage_taken + payload reduce_damage. Предлагаются ДО применения урона. */
+function collectReduceDamageReactions(passives: Record<string, unknown>[]): ReactionOffer[] {
+  const out: ReactionOffer[] = [];
+  for (const m of passives) {
+    const act = m.activation as { mode?: string; trigger?: { event?: string }; cost?: unknown[] } | undefined;
+    if (!act || (act.mode !== 'reaction' && act.mode !== 'triggered')) continue;
+    if (act.trigger?.event !== 'damage_taken' || !hasReduceDamage(m)) continue;
+    out.push({
+      listenerId: String(m.id ?? m.name ?? 'reduce_damage'),
+      name: String(m.name ?? 'Снижение урона'),
+      mechanics: m,
+      cost: (act.cost as Record<string, unknown>[]) ?? [],
+      event: { kind: 'damage_taken' },
+    });
+  }
+  return out;
+}
 
 // C15: типы урона для селектора (влияют на сопротивления/иммунитеты/уязвимости цели).
 const DAMAGE_TYPES: Array<{ v: string; label: string }> = [
@@ -83,6 +110,9 @@ export default function SheetHpPanel({
       const updated = await charactersV3Api.patchRuntime(character.id, {
         current_hp: state.hp.current,
         max_hp: state.hp.max,
+        // Реакции в конвейере урона могут тратить ресурсы (реакция, заряд Наследия великанов) —
+        // персистим resources, иначе трата терялась бы (giant_legacy Каменной стойкости и т.п.).
+        resources: state.resources,
         active_effects: state.activeEffects,
         turn_state: {
           ...(character.turn_state ?? {}),
@@ -120,22 +150,42 @@ export default function SheetHpPanel({
       const execCtx = (rng: () => number, planning = false): ExecuteContext =>
         ({ character: sheetCtx, rng, passives: passives ?? [], planning }) as ExecuteContext;
       const opts = { crit, damageType, conSaveBonus };
-      // План кубов проверки концентрации → диалог игроку → реальный прогон.
+      const dtLabel = DAMAGE_TYPES.find((d) => d.v === damageType)?.label ?? '';
+
+      // 0. ДО УРОНА: снижение входящего урона (Каменная стойкость). Применяется как вычет из урона
+      //    в applyIncomingDamage, а не лечение → HP не проседает ниже итогового (нет ложных
+      //    «Окровален»/падения до 0) и не блокируется запретом исцеления.
+      let working = runtime;
+      let damageReduction = 0;
+      const preEvents: EngineEvent[] = [];
+      for (const react of collectReduceDamageReactions(passives ?? [])) {
+        if (!canPay(working, react.cost).ok) continue;
+        const rRes = await reactionPrompt.request(react, {
+          describe: `Входящий урон ${amount}${dtLabel ? ` (${dtLabel})` : ''} — снизить «${react.name}»?`,
+        });
+        if (rRes.decision !== 'accept') continue;
+        const r = executeAction(working, { ...react.mechanics, name: react.name }, execCtx(() => Math.random()));
+        working = r.state; // стоимость (заряд Наследия великанов) списана
+        for (const e of r.events) if (e.type === 'damage_reduction') damageReduction += e.amount;
+        preEvents.push(...r.events);
+      }
+      const dmgOpts = { ...opts, damageReduction };
+
+      // 1. План кубов проверки концентрации (уже по СНИЖЕННОМУ урону) → диалог → реальный прогон.
       const plan = extractDiceFromEvents(
-        applyIncomingDamage(runtime, amount, execCtx(PLANNING_RNG, true), opts).events,
+        applyIncomingDamage(working, amount, execCtx(PLANNING_RNG, true), dmgOpts).events,
       );
       let rng: () => number = () => Math.random();
       if (plan.length) {
-        const dtLabel = DAMAGE_TYPES.find((d) => d.v === damageType)?.label ?? '';
         const decision = await diceDialog.request(
           plan, `Урон ${amount}${dtLabel ? ` (${dtLabel})` : ''}${crit ? ', крит' : ''}`,
         );
         if (decision.mode === 'cancel') return;
         rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
       }
-      const res = applyIncomingDamage(runtime, amount, execCtx(rng), opts);
+      const res = applyIncomingDamage(working, amount, execCtx(rng), dmgOpts);
       let state = res.state;
-      let events = [...res.events];
+      let events = [...preEvents, ...res.events];
       let ds: DeathSaveState | undefined;
       if (state.hp.current === 0) {
         ds = emptyDeathSaves();
@@ -143,9 +193,9 @@ export default function SheetHpPanel({
         state = dropped.state;
         events = [...events, ...dropped.events];
       }
-      // Реакции на получение урона (Адское возмездие и т.п.) — предлагаем игроку.
+      // Пост-урон реакции (Адское возмездие и т.п.). Снижающие урон уже предложены ДО урона — пропускаем.
       for (const offer of res.pendingReactions ?? []) {
-        if (!canPay(state, offer.cost).ok) continue;
+        if (hasReduceDamage(offer.mechanics) || !canPay(state, offer.cost).ok) continue;
         const rRes = await reactionPrompt.request(offer, { describe: describeMechanicsLine(offer.mechanics) });
         if (rRes.decision !== 'accept') continue;
         const rmech = { ...offer.mechanics, name: offer.name };

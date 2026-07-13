@@ -189,7 +189,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "healing", "reduce_damage", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "choice", "add_item"] }
       },
       "allOf": [
         {

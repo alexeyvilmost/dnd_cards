@@ -524,6 +524,27 @@ function applyHealing(
   return next;
 }
 
+/**
+ * reduce_damage: снижение ВХОДЯЩЕГО урона (Каменная стойкость Голиафа) — реакция на damage_taken.
+ * НЕ трогает хиты: бросает формулу (1к12+ТЕЛ) и лишь ЭМИТИТ damage_reduction. Величину применяет
+ * applyIncomingDamage (opts.damageReduction) ДО списания хитов — поэтому HP не проседает ниже
+ * итогового (не триггерит «Окровален»/падение до 0) и это НЕ исцеление (не блокируется анти-хилом).
+ */
+function applyReduceDamage(
+  state: RuntimeState,
+  payload: Dict,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+): RuntimeState {
+  const formula = withScaling(String(payload.amount ?? '0'), payload, ctx);
+  const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
+  events.push({
+    type: 'damage_reduction', amount: fr.total,
+    roll: { kind: 'damage', advantage: 'none', dice: fr.dice, modifiers: fr.modifiers, total: fr.total, text: fr.text },
+  });
+  return state;
+}
+
 /** temp_hp: временные хиты не суммируются — остаётся большее значение. */
 function applyTempHp(
   state: RuntimeState,
@@ -835,6 +856,7 @@ function applyPayloads(
         break;
       }
       case 'healing': route((s) => applyHealing(s, p, ctx, events)); break;
+      case 'reduce_damage': route((s) => applyReduceDamage(s, p, ctx, events)); break;
       case 'temp_hp': route((s) => applyTempHp(s, p, ctx, events)); break;
       case 'condition': route((s) => applyCondition(s, p, source, events, ctx.selfId)); break;
       case 'resource': route((s) => applyResource(s, p, events)); break;
@@ -1350,7 +1372,7 @@ export function applyIncomingDamage(
   state: RuntimeState,
   amount: number,
   ctx: ExecuteContext,
-  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number },
+  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number; damageReduction?: number },
 ): ExecuteResult {
   beginCascade(ctx); // C4: свежий бюджет каскада событий на это получение урона
   let next = cloneState(state);
@@ -1361,10 +1383,17 @@ export function applyIncomingDamage(
   const damageType = opts?.damageType ?? 'урон';
   // Сопротивление/иммунитет/уязвимость цели (фаза E) — применяется при получении урона.
   const level = resistanceLevelFor(next, ctx, damageType);
-  const dmg = applyResistance(raw, level);
-  if (level && dmg !== raw) {
+  const resisted = applyResistance(raw, level);
+  if (level && resisted !== raw) {
     const label = level === 'immunity' ? 'иммунитет' : level === 'resistance' ? 'сопротивление' : 'уязвимость';
-    events.push(narrativeEvent(`${label} к «${damageType}»: ${raw} → ${dmg}`));
+    events.push(narrativeEvent(`${label} к «${damageType}»: ${raw} → ${resisted}`));
+  }
+  // Снижение урона (Каменная стойкость) — ПОСЛЕ сопротивления, ДО списания хитов. Урон не может
+  // уйти ниже 0. Так HP не проседает (нет ложных «Окровален»/падения до 0), и это НЕ лечение.
+  const reduction = Math.max(0, Math.floor(opts?.damageReduction ?? 0));
+  const dmg = Math.max(0, resisted - reduction);
+  if (reduction > 0) {
+    events.push(narrativeEvent(`Снижение урона: ${resisted} → ${dmg} (−${Math.min(reduction, resisted)})`));
   }
   const absorbed = Math.min(next.hp.temp, dmg);
   next.hp.temp -= absorbed;

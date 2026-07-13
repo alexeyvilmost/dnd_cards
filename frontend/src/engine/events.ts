@@ -130,6 +130,8 @@ export function describeEngineEvent(event: EngineEvent): string {
       return `${src}Урон ${event.amount} (${event.damageType})${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'healing':
       return `${src}Лечение ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
+    case 'damage_reduction':
+      return `${src}Снижение урона на ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'temp_hp':
       return `${src}Временные HP +${event.amount}`;
     case 'resource_spent':

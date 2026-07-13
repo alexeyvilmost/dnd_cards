@@ -43,7 +43,7 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
 
   // ПОЛНОСТЬЮ исполняемые: рантайм-роутер меняет состояние либо сборка применяет грант.
   const HANDLED = [
-    'damage', 'healing', 'temp_hp', 'condition', 'resource', 'modifier',
+    'damage', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource', 'modifier',
     'resistance', 'set_value',                          // урон/AC-метод/рантайм-роутер (ярус 2.4)
     'value_method',                                     // сборка: методы характеристик (C8, Пояс силы огра)
     'narrative', 'add_item',                            // add_item: S1 контейнеры

@@ -56,6 +56,7 @@ export type EngineEvent =
   | { type: 'roll'; label: string; roll: RollLog }
   | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string }
   | { type: 'healing'; amount: number; roll?: RollLog; source?: string }
+  | { type: 'damage_reduction'; amount: number; roll?: RollLog; source?: string }
   | { type: 'temp_hp'; amount: number; source?: string }
   | { type: 'resource_spent'; resource: string; amount: number; remaining: number }
   | { type: 'resource_restored'; resource: string; amount: number; current: number }
