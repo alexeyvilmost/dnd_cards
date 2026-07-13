@@ -100,6 +100,8 @@ export interface OriginAction { action: Action; origin: ChoiceOrigin; }
 
 export interface AssembledCharacter {
   race: Race | null;
+  /** Выбранный подвид-субрас (lineageId = UUID субраса). Для отображения имени линиджа на листе. */
+  subrace?: Race | null;
   klass: CharacterClass | null;
   subclass?: CharacterClass | null;
   background: Background | null;
@@ -124,6 +126,7 @@ export interface AssembledCharacter {
 
 export interface EntityBundle {
   race: Race | null;
+  subrace?: Race | null;
   klass: CharacterClass | null;
   subclass?: CharacterClass | null;
   background: Background | null;
@@ -164,6 +167,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
 
   return {
     race: bundle.race,
+    subrace: bundle.subrace ?? null,
     klass: bundle.klass,
     subclass: bundle.subclass ?? null,
     background: bundle.background,
@@ -361,7 +365,7 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // B5: загрузка стартовала в начале функции (variableDefsP) — здесь только ждём.
   const variableDefs = await variableDefsP;
 
-  return { race, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [], variableDefs };
+  return { race, subrace, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [], variableDefs };
 }
 
 const entityRegistry = createRegistry(createApiResolver());

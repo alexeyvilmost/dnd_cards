@@ -15,7 +15,7 @@ import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { executeAction } from '../engine/execute';
 import type { EngineEvent } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
-import { characterToDraft } from '../character/forgeHelpers';
+import { characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { collectItemMechanics } from '../character/attunement';
@@ -608,10 +608,15 @@ const CharacterSheetMVP = () => {
     return breakdownValue('speed', sheetCtx, runtimeState, passives);
   }, [sheetCtx, runtimeState, passives]);
 
-  const lineageName = useMemo(() => {
-    if (!draft?.lineageId || !assembled?.race?.lineages) return draft?.lineageId ?? null;
-    return assembled.race.lineages.find((l) => l.name === draft.lineageId)?.name || draft.lineageId;
-  }, [assembled?.race?.lineages, draft?.lineageId]);
+  // Имя линиджа: подвид-субрас (lineageId=UUID) → имя субраса; инлайн-линидж → по имени;
+  // неразрешённый UUID не показываем (общий резолвер кузни, единый источник правды).
+  const lineageName = useMemo(
+    () => resolveLineageName(draft?.lineageId, {
+      subraces: assembled?.subrace ? [assembled.subrace] : [],
+      lineages: assembled?.race?.lineages,
+    }) ?? null,
+    [assembled?.subrace, assembled?.race?.lineages, draft?.lineageId],
+  );
 
   const spellsByLevel = useMemo(() => {
     const map = new Map<number, NonNullable<AssembledCharacter['spells']>>();
