@@ -609,7 +609,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     }
   }
   const speed = speedOps.length
-    ? Math.max(0, foldModifiers(speedAdditive, { modifiers: [], advantage: 'none', hasAdvantage: false, hasDisadvantage: false, ops: speedOps, autoFail: false, denied: false }).value)
+    ? Math.max(0, foldModifiers(speedAdditive, { modifiers: [], advantage: 'none', hasAdvantage: false, hasDisadvantage: false, ops: speedOps, autoFail: false, denied: false, rules: [] }).value)
     : speedAdditive;
   const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
   // Размер как числовая категория (Крошечный=0…Громадный=5). База — раса (Голиаф Средний=2);

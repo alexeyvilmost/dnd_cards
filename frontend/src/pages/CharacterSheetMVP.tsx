@@ -13,7 +13,7 @@ import { useEncounterStream } from '../battle/useEncounterStream';
 import type { Combatant, PendingSave, PendingAttack } from '../battle/encounterTypes';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { executeAction } from '../engine/execute';
-import type { EngineEvent } from '../mvp/contracts';
+import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';

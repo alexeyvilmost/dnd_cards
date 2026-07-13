@@ -183,6 +183,13 @@ export function collectModifiers(
   }
 
   for (const mech of passives) {
+    // Активируемые/реактивные/триггерные способности вносят свои модификаторы ТОЛЬКО при
+    // использовании — становясь runtime-эффектом (первый цикл по activeEffects), а не пассивно.
+    // Пассивный пул несёт лишь всегда-действующие механики (mode:passive или без activation).
+    // Иначе «Большая форма» (+1 размер / +10 скорости on-use) и любая активируемая способность
+    // со стат-модификатором «залипали» бы как постоянные (C: размер/скорость раздувались бы).
+    const mode = ((mech as Dict).activation as Dict | undefined)?.mode;
+    if (mode != null && mode !== 'passive') continue;
     const src = String((mech as Dict).name ?? 'пассивка');
     for (const payload of payloadsOf(mech)) {
       collectFromPayload(payload, opts, src, out);
