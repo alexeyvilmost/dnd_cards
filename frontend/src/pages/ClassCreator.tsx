@@ -135,6 +135,7 @@ const ClassCreator = () => {
   const previewClass: CharacterClass = {
     id: '',
     name: fd.name || 'Название класса',
+    name_en: fd.name_en || null,
     description: fd.description || 'Описание класса',
     detailed_description: fd.detailed_description || null,
     image_url: fd.image_url || '',

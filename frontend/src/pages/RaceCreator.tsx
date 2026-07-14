@@ -130,6 +130,7 @@ const RaceCreator = () => {
 
   const previewRace: Race = {
     id: '', name: fd.name || 'Название вида', description: fd.description || 'Описание вида',
+    name_en: fd.name_en || null,
     detailed_description: fd.detailed_description || null, image_url: fd.image_url || '',
     rarity: 'common', card_number: '',
     is_subrace: isSubrace,

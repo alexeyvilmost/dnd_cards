@@ -11,6 +11,7 @@ import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import OriginalName from './OriginalName';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -121,6 +122,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
       )}
 
       <h3>{spell.name || 'Название заклинания'}</h3>
+      <OriginalName nameEn={spell.name_en} />
       <div className="sp-subtype">{subtype || 'Заговор'}</div>
 
       {spell.id && (

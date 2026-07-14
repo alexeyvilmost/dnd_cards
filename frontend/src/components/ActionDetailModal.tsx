@@ -44,6 +44,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={action.name}
+      titleEn={action.name_en}
       preview={(
         <EntityImageEditor
           entityId={action.id}

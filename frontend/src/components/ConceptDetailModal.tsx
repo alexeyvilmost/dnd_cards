@@ -21,6 +21,7 @@ const ConceptDetailModal: React.FC<ConceptDetailModalProps> = ({ concept, isOpen
       isOpen={isOpen}
       onClose={onClose}
       title={concept.name}
+      titleEn={concept.name_en}
       preview={<ConceptPreview concept={concept} disableHover />}
       actions={(
         <>

@@ -32,6 +32,7 @@ const BackgroundDetailModal: React.FC<BackgroundDetailModalProps> = ({ backgroun
       isOpen={isOpen}
       onClose={onClose}
       title={b.name}
+      titleEn={b.name_en}
       preview={<BackgroundPreview background={b} disableHover />}
       actions={(
         <>

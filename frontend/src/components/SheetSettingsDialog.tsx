@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, X } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Languages, X } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -55,6 +55,18 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
           <span>
             <span className="sheet-settings-row-label"><Dices size={16} /> Диалог бросков кубов</span>
             <span className="sheet-settings-hint">Перед броском показывать окно: авто-бросок или ввод своих кубов.</span>
+          </span>
+        </label>
+
+        <label className="sheet-settings-check">
+          <input
+            type="checkbox"
+            checked={settings.showOriginalNames}
+            onChange={(e) => setSetting('showOriginalNames', e.target.checked)}
+          />
+          <span>
+            <span className="sheet-settings-row-label"><Languages size={16} /> Оригинальные названия</span>
+            <span className="sheet-settings-hint">Под названием показывать оригинальное (английское) — в превью и детальных окнах.</span>
           </span>
         </label>
 

@@ -33,6 +33,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={effect.name}
+      titleEn={effect.name_en}
       preview={(
         <EntityImageEditor
           entityId={effect.id}

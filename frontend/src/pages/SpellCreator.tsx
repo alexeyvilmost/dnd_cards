@@ -155,6 +155,7 @@ const SpellCreator = () => {
   const previewSpell: Spell = {
     id: '',
     name: fd.name || 'Название заклинания',
+    name_en: fd.name_en || null,
     description: fd.description || 'Описание заклинания',
     detailed_description: fd.detailed_description || null,
     image_url: fd.image_url || '',

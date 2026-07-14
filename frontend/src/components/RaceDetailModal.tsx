@@ -23,6 +23,7 @@ const RaceDetailModal: React.FC<RaceDetailModalProps> = ({ race, isOpen, onClose
       isOpen={isOpen}
       onClose={onClose}
       title={r.name}
+      titleEn={r.name_en}
       preview={<RacePreview race={r} disableHover />}
       actions={(
         <>

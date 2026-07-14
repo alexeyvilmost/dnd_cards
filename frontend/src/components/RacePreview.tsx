@@ -25,6 +25,7 @@ const RacePreview: React.FC<RacePreviewProps> = ({ race, parentRaceName, classNa
   return (
     <Bg3Card
       title={race.name || 'Название вида'}
+      titleEn={race.name_en}
       subtype={subtype}
       imageUrl={race.image_url}
       disableHover={disableHover}

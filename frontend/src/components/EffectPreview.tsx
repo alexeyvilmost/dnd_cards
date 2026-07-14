@@ -7,6 +7,7 @@ import { SPELL_CARD_CSS } from './spellCardStyle';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
+import OriginalName from './OriginalName';
 
 // Превью эффекта в едином стиле карточек заклинаний/действий/предметов (SPELL_CARD_CSS, классы .sp-*).
 // Тип эффекта → sp-subtype (или sourceLabel в контексте листа/кузни), условие → sp-saveline,
@@ -72,6 +73,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
       )}
 
       <h3>{effect.name || 'Название эффекта'}</h3>
+      <OriginalName nameEn={effect.name_en} />
       <div className="sp-subtype">{subtype || 'Эффект'}</div>
 
       {hasStats && (

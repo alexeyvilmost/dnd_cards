@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import OriginalName from './OriginalName';
 import './entityDetailModal.css';
 
 /**
@@ -10,6 +11,7 @@ import './entityDetailModal.css';
  */
 export function EntityDetailShell({
   title,
+  titleEn,
   titlePrefix,
   isOpen,
   onClose,
@@ -20,6 +22,8 @@ export function EntityDetailShell({
   labelledById,
 }: {
   title: ReactNode;
+  /** Оригинальное (английское) название — под заголовком, если включена настройка. */
+  titleEn?: string | null;
   /** Необязательный префикс перед названием (напр. символ редкости). */
   titlePrefix?: ReactNode;
   isOpen: boolean;
@@ -70,6 +74,7 @@ export function EntityDetailShell({
               <X size={24} />
             </button>
           </div>
+          <OriginalName nameEn={titleEn} size="detail" />
 
           {children}
 

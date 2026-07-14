@@ -11,6 +11,7 @@ import { SPELL_CARD_CSS } from './spellCardStyle';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import { useContainerTotals, useResolvedRefs } from './RelatedItems';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
+import OriginalName from './OriginalName';
 
 // Третий режим отображения предмета (entityDisplay.items='interface'): стат-блок в стиле превью
 // ЗАКЛИНАНИЯ (тёмный BG3, классы .sp-*, общий SPELL_CARD_CSS), но с полями ПРЕДМЕТА. Порядок полей —
@@ -99,6 +100,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
       )}
 
       <h3>{card.name || 'Название предмета'}</h3>
+      <OriginalName nameEn={card.name_en} />
       <div className="sp-subtype">{subtype || 'Предмет'}</div>
 
       {hasStats && (

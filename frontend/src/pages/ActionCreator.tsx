@@ -119,6 +119,7 @@ const ActionCreator = () => {
   const previewAction = {
     id: '',
     name: formData.name || 'Название действия',
+    name_en: formData.name_en || null,
     description: formData.description || 'Описание действия',
     detailed_description: formData.detailed_description || null,
     image_url: formData.image_url || '',

@@ -79,6 +79,7 @@ const FeatCreator = () => {
   const previewFeat: Feat = {
     id: '',
     name: fd.name || 'Название черты',
+    name_en: fd.name_en || null,
     description: fd.description || 'Описание черты',
     detailed_description: fd.detailed_description || null,
     image_url: fd.image_url || '',

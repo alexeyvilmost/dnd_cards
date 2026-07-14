@@ -92,6 +92,7 @@ const BackgroundCreator = () => {
   const previewBg: Background = {
     id: '',
     name: fd.name || 'Название предыстории',
+    name_en: fd.name_en || null,
     description: fd.description || 'Описание предыстории',
     detailed_description: fd.detailed_description || null,
     image_url: fd.image_url || '',

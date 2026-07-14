@@ -1,4 +1,4 @@
-import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Eye } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Eye, Languages } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -70,6 +70,26 @@ const Settings = () => {
               Прячет техническое описание механики (сырые id ресурсов/ячеек, «Стоит…», «Использования…»)
               из превью и листа персонажа. Остаётся человеческое описание, чипы стоимости и боевые
               характеристики (атака, урон, лечение). Выключите, чтобы как мастер видеть всю механику.
+            </span>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-4 p-5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-1 w-5 h-5 text-indigo-600 rounded"
+            checked={settings.showOriginalNames}
+            onChange={(e) => setSetting('showOriginalNames', e.target.checked)}
+          />
+          <span>
+            <span className="flex items-center gap-2 font-medium text-gray-900">
+              <Languages size={18} className="text-indigo-600" />
+              Отображать оригинальные названия
+            </span>
+            <span className="block text-sm text-gray-500 mt-1">
+              Под основным названием показывается оригинальное (английское) — в интерфейсных
+              отображениях, детальных окнах и превью при наведении. На печатных карточках предметов
+              не показывается. У сущностей без заданного оригинала ничего не добавляется.
             </span>
           </span>
         </label>

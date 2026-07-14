@@ -28,6 +28,7 @@ const FeatPreview: React.FC<FeatPreviewProps> = ({ feat, className = '', disable
   return (
     <Bg3Card
       title={feat.name || 'Название черты'}
+      titleEn={feat.name_en}
       subtype={subtype}
       imageUrl={feat.image_url}
       disableHover={disableHover}

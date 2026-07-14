@@ -1,7 +1,10 @@
 import React from 'react';
+import OriginalName from './OriginalName';
 
 interface Bg3CardProps {
   title: string;
+  /** Оригинальное (английское) название — показывается под заголовком, если включена настройка. */
+  titleEn?: string | null;
   subtype?: string;
   imageUrl?: string;
   children?: React.ReactNode;
@@ -15,6 +18,7 @@ interface Bg3CardProps {
 // Заголовок + подтип + произвольное тело + опциональная нижняя плашка.
 const Bg3Card: React.FC<Bg3CardProps> = ({
   title,
+  titleEn,
   subtype,
   imageUrl,
   children,
@@ -73,6 +77,7 @@ const Bg3Card: React.FC<Bg3CardProps> = ({
       )}
 
       <h3>{title}</h3>
+      <OriginalName nameEn={titleEn} />
       {subtype && <div className="bg3-subtype">{subtype}</div>}
       {children}
       {footer ? <div className="bg3-costbar">{footer}</div> : <div className="bg3-spacer" />}

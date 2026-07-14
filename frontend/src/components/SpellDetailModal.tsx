@@ -81,6 +81,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={spell.name}
+      titleEn={spell.name_en}
       preview={(
         <EntityImageEditor
           entityId={spell.id}

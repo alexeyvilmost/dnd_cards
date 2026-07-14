@@ -104,6 +104,7 @@ const EffectCreator = () => {
   const previewEffect: PassiveEffect = {
     id: '',
     name: formData.name || 'Название эффекта',
+    name_en: formData.name_en || null,
     description: formData.description || 'Описание эффекта',
     detailed_description: formData.detailed_description || null,
     image_url: formData.image_url || '',

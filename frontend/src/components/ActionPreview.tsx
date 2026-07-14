@@ -8,6 +8,7 @@ import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useSiteSettings } from '../settings';
+import OriginalName from './OriginalName';
 
 interface ActionPreviewProps {
   action: Action;
@@ -76,6 +77,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
       )}
 
       <h3>{action.name || 'Название действия'}</h3>
+      <OriginalName nameEn={action.name_en} />
       <div className="sp-subtype">{subtype || 'Действие'}</div>
 
       {hasStats && (

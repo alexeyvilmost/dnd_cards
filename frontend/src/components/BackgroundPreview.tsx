@@ -24,6 +24,7 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
   return (
     <Bg3Card
       title={background.name || 'Название предыстории'}
+      titleEn={background.name_en}
       subtype="Предыстория"
       imageUrl={background.image_url}
       disableHover={disableHover}

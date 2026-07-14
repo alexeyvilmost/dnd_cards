@@ -24,6 +24,9 @@ export interface SiteSettings {
   /** Режим игрока: превью/лист прячут авто-описание механики и сырые id, оставляя
    *  человеческое описание, чипы стоимости и боевые статы. Мастер выключает — видит всё. */
   playerMode: boolean;
+  /** Показывать оригинальное (английское) название под основным — в интерфейсных
+   *  отображениях, детальных окнах и превью при наведении. На печатных карточках не показывается. */
+  showOriginalNames: boolean;
 }
 
 const KEY = 'site-settings';
@@ -39,6 +42,7 @@ const DEFAULTS: SiteSettings = {
   },
   itemPreview: 'card',
   playerMode: false,
+  showOriginalNames: false,
 };
 
 export function getSettings(): SiteSettings {

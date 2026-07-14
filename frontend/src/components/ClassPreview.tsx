@@ -21,6 +21,7 @@ const ClassPreview: React.FC<ClassPreviewProps> = ({ characterClass, className =
   return (
     <Bg3Card
       title={characterClass.name || 'Название класса'}
+      titleEn={characterClass.name_en}
       subtype="Класс"
       imageUrl={characterClass.image_url}
       disableHover={disableHover}

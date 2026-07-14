@@ -29,6 +29,7 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
       isOpen={isOpen}
       onClose={onClose}
       title={feat.name}
+      titleEn={feat.name_en}
       preview={(
         <EntityImageEditor
           entityId={feat.id}

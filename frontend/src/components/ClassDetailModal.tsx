@@ -21,6 +21,7 @@ const ClassDetailModal = ({ characterClass, isOpen, onClose, onDelete }: ClassDe
       isOpen={isOpen}
       onClose={onClose}
       title={cl.name}
+      titleEn={cl.name_en}
       preview={<ClassPreview characterClass={cl} disableHover />}
       actions={(
         <>
