@@ -9,10 +9,10 @@ import {
 } from '../settings';
 
 const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string }> = [
-  { kind: 'spells', label: 'Заклинания', hint: 'Лист персонажа, кузница, библиотека' },
-  { kind: 'actions', label: 'Действия', hint: 'Способности-действия персонажа и библиотека' },
-  { kind: 'effects', label: 'Эффекты', hint: 'Пассивные способности персонажа и библиотека' },
-  { kind: 'items', label: 'Предметы', hint: 'Инвентарь на листе, библиотека, магазин' },
+  { kind: 'spells', label: 'Заклинания', hint: 'Лист персонажа и кузница' },
+  { kind: 'actions', label: 'Действия', hint: 'Способности-действия персонажа' },
+  { kind: 'effects', label: 'Эффекты', hint: 'Пассивные способности персонажа' },
+  { kind: 'items', label: 'Предметы', hint: 'Инвентарь на листе и магазин' },
 ];
 
 const MODE_OPTIONS: Array<{ mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid }> = [
@@ -101,7 +101,8 @@ const Settings = () => {
           </div>
           <p className="text-sm text-gray-500 mt-1 mb-4">
             «Иконки» — квадратные плитки с карточкой при наведении. «Список» — строки с маленькой
-            иконкой и текстом. Настройка действует на лист персонажа, кузницу, библиотеку и магазин.
+            иконкой и текстом. Настройка действует на лист персонажа, кузницу и магазин.
+            В библиотеке — свой переключатель вида (по умолчанию «Список»).
           </p>
           <div className="space-y-3">
             {ENTITY_ROWS.map(({ kind, label, hint }) => (

@@ -47,23 +47,7 @@ import {
   parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
 import ItemPreview from '../components/ItemPreview';
-import { getSettings, useSiteSettings, type EntityDisplayKind } from '../settings';
-
-/** Тип библиотеки → ключ настройки «Отображение сущностей». */
-const ENTITY_DISPLAY_KEY: Partial<Record<LibraryContentType, EntityDisplayKind>> = {
-  cards: 'items',
-  effects: 'effects',
-  actions: 'actions',
-  spells: 'spells',
-};
-
-/** Начальный режим просмотра из настроек сайта (null — тип без настройки). */
-function settingsViewFor(type: LibraryContentType): LibraryViewMode | null {
-  const key = ENTITY_DISPLAY_KEY[type];
-  if (!key) return null;
-  // «Интерфейс» — отдельная настройка превью (не раскладка), библиотечный тумблер задаёт его вручную.
-  return getSettings().entityDisplay[key] === 'icon' ? 'grid' : 'list';
-}
+import { useSiteSettings } from '../settings';
 
 /** «Интерфейс» рисуем только для предметов; для прочих типов (в т.ч. из ссылки) — «Список». */
 const clampView = (v: LibraryViewMode, type: LibraryContentType): LibraryViewMode =>
@@ -238,13 +222,12 @@ const CardLibrary = () => {
   const [hasMore, setHasMore] = useState(true);
   // Отдельная настройка: превью предмета при наведении — карточка или интерфейс (стат-блок).
   const { itemPreview } = useSiteSettings();
-  // Явный ?view= в URL важнее; без него — режим из настройки «Отображение сущностей».
-  const [viewMode, setViewMode] = useState<LibraryViewMode>(() => clampView(
-    searchParams.get('view')
-      ? initialFilters.viewMode
-      : settingsViewFor(initialFilters.contentType) ?? initialFilters.viewMode,
-    initialFilters.contentType,
-  ));
+  // Режим просмотра библиотеки — её собственный, по умолчанию «Список» для всех типов
+  // (см. parseLibraryParams). Настройка «Отображение сущностей» сюда НЕ влияет: она про
+  // лист персонажа и кузню. Явный ?view= в URL и ручной тумблер работают поверх.
+  const [viewMode, setViewMode] = useState<LibraryViewMode>(() =>
+    clampView(initialFilters.viewMode, initialFilters.contentType),
+  );
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
@@ -826,12 +809,7 @@ const CardLibrary = () => {
     setArmorTypeFilter(parsed.armorType);
     setResourceCategoryFilter(parsed.resourceCategory);
     setSortBy(parsed.sortBy);
-    setViewMode(clampView(
-      searchParams.get('view')
-        ? parsed.viewMode
-        : settingsViewFor(parsed.contentType) ?? parsed.viewMode,
-      parsed.contentType,
-    ));
+    setViewMode(clampView(parsed.viewMode, parsed.contentType));
     lastWrittenParamsRef.current = currentStr;
   }, [searchParams]);
 
@@ -1246,11 +1224,9 @@ const CardLibrary = () => {
   ];
   const handleContentTypeChange = (next: LibraryContentType) => {
     setContentType(next);
-    // Начальный режим вкладки — из настройки; ручной переключатель работает поверх.
-    const preferred = settingsViewFor(next);
-    if (preferred) setViewMode(preferred);
-    // «Интерфейс» есть только у предметов — при уходе на другой тип сбрасываем в «Список».
-    else if (next !== 'cards') setViewMode((v) => (v === 'interface' ? 'list' : v));
+    // Выбранный вручную режим держим между вкладками; «Интерфейс» есть только у предметов,
+    // поэтому при уходе на другой тип сбрасываем его в «Список».
+    if (next !== 'cards') setViewMode((v) => (v === 'interface' ? 'list' : v));
   };
   // Счётчик активных фильтров — бейдж на кнопке «Фильтры». (Тип шаблона и
   // сортировка всегда заданы, поэтому в счётчик не входят.)

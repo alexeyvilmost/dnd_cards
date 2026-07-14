@@ -13,7 +13,7 @@ import {
 // на /settings, но рядом с самим отображением.
 
 const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string }> = [
-  { kind: 'spells', label: 'Заклинания', hint: 'Лист, кузница, библиотека' },
+  { kind: 'spells', label: 'Заклинания', hint: 'Лист и кузница' },
   { kind: 'actions', label: 'Действия', hint: 'Способности-действия' },
   { kind: 'effects', label: 'Эффекты', hint: 'Пассивные способности' },
   { kind: 'items', label: 'Предметы', hint: 'Инвентарь и слоты' },
