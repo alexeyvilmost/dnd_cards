@@ -215,11 +215,23 @@ CodeGraph/grep (движок `engine/`, сборка листа `character/`, п
 5. ◐ `console.log` вычищены (Action/Effect). `rarity`-селект и passthrough-поля `ActionCreator` — отложены.
 
 **Фаза B — дедупликация (среднее усилие):**
-6. Вынести `<CreatorShell>` (шапка + спиннер + ошибка + сетка/превью + кнопки) и перевести все конструкторы.
-7. Вынести сборку payload в один хелпер на сущность; убрать вторую копию в `CardCreator`.
-8. `useEntityId()` (regex + uniqueness) вместо 3 копий; `useEffectActionLoaders()` вместо 3 копий;
-   `<EquipmentOptionsEditor>` и `<ChipToggleList>` как общие компоненты.
-9. Унифицировать навигацию на `NavRail` (в т.ч. `SpellCreator`, `ActionCreator`).
+
+> **Статус:** сделаны не-визуальные дедупликации (проверяются `tsc`, commit `ce1f155`). Визуальные части
+> (общий каркас/навигация/UI-компоненты) отложены: они **меняют отрисовку** и требуют визуальной проверки.
+
+6. ✅ **Сделано.** `<CreatorShell>` (шапка + спиннер + ошибка + сетка/превью) + `<CreatorActions>` +
+   `CREATOR_INPUT_CLS`/`CREATOR_LABEL_CLS`. Переведены Background/Feat/Class/Race; состояние показа превью
+   теперь живёт в каркасе. Попутно нормализован отступ превью (у Background/Feat был `mb-8`+`pt-4`, у
+   Class/Race `mb-4`; overhang'а у превью нет — разница была случайным дрейфом).
+7. ✅ **Сделано.** Единая сборка payload `buildCardPayload` в `CardCreator` — убрана вторая копия в
+   `handleCreateCardForGeneration`; попутно устранён дрейф (генерация теряла mechanics/effects/enchant и др.).
+8. ◐ **Частично.** ✅ `useEffectActionLoaders()` (load/resolve) вместо 3 копий в Feat/Class/Race.
+   ⏸ `useEntityId()` (regex+uniqueness) — отложен (маргинально, трогает валидацию сабмита).
+   ⏸ `<EquipmentOptionsEditor>` / `<ChipToggleList>` — визуальные компоненты, отложены.
+9. ⏸ **Отложено (визуальное).** Унификация навигации на `NavRail` (в т.ч. `SpellCreator`, `ActionCreator`).
+
+**Отдельно (баг, не дедуп):** `FeatCreator` — `EntityRefSelector` без `resolveItems` (показывает UUID).
+Теперь `useEffectActionLoaders` уже отдаёт `resolveEffects`/`resolveActions` — фикс = передать их в селекторы.
 
 **Фаза C — упрощение (точечно):**
 10. Исправить `FeatCreator`: передать `resolveItems` в `EntityRefSelector` (баг с UUID).
