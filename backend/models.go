@@ -453,7 +453,9 @@ type CreateCardRequest struct {
 type UpdateCardRequest struct {
 	Name                         string         `json:"name"`
 	Properties                   *Properties    `json:"properties"`
-	Description                  string         `json:"description"`
+	// Указатель, чтобы отличать «поле не передано» (nil → не трогаем) от «очищено» (""→ пустое).
+	// Раньше был string с гейтом `!= ""`, из-за чего описание карты нельзя было стереть.
+	Description                  *string        `json:"description"`
 	DetailedDescription          *string        `json:"detailed_description"`
 	Rarity                       Rarity         `json:"rarity"`
 	CustomRarityColor            *string        `json:"custom_rarity_color"`

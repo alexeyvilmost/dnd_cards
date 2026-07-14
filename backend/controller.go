@@ -555,8 +555,8 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Properties != nil {
 		card.Properties = NormalizeProperties(req.Properties)
 	}
-	if req.Description != "" {
-		card.Description = req.Description
+	if req.Description != nil {
+		card.Description = *req.Description
 	}
 	if req.DetailedDescription != nil {
 		card.DetailedDescription = req.DetailedDescription

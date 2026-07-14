@@ -459,3 +459,57 @@ describe('resolveCharacterRules — grant_language и НЕреализованн
     expect(rs.senses.find((s) => s.sense === 'darkvision')?.range).toBe(120);
   });
 });
+
+describe('Искусность оружия (Weapon Mastery, PHB 2024) — сбор выбранных видов', () => {
+  /** Особенность «Искусное владение оружием»: выбор N видов оружия → weapon_mastery. */
+  const masteryChoice = (count: number) => auto({
+    kind: 'choice', id: 'weapon-mastery', context: 'in_play', count,
+    options: { source: 'weapon' }, grant: { kind: 'weapon_mastery' },
+  });
+
+  it('выбор видов оружия попадает в ruleState.weaponMasteries', () => {
+    const rs = build({
+      effects: [fx('wm', masteryChoice(3))],
+      draft: { resolvedChoices: { 'weapon-mastery': ['longsword', 'handaxe', 'greataxe'] } },
+    });
+    expect([...rs.weaponMasteries].sort()).toEqual(['greataxe', 'handaxe', 'longsword']);
+  });
+
+  it('особенность есть, но выбор не сделан → искусности нет', () => {
+    const rs = build({ effects: [fx('wm', masteryChoice(2))] });
+    expect(rs.weaponMasteries).toEqual([]);
+  });
+
+  it('нет особенности → искусности нет (у большинства персонажей)', () => {
+    expect(build().weaponMasteries).toEqual([]);
+  });
+
+  it('прямой пейлоад weapon_mastery (без выбора) тоже собирается', () => {
+    const rs = build({ effects: [fx('wm', auto({ kind: 'weapon_mastery', value: 'rapier' }))] });
+    expect(rs.weaponMasteries).toEqual(['rapier']);
+  });
+
+  it('дубли из разных источников не копятся', () => {
+    const rs = build({
+      effects: [
+        fx('wm1', auto({ kind: 'weapon_mastery', value: 'dagger' })),
+        fx('wm2', auto({ kind: 'weapon_mastery', value: 'dagger' })),
+      ],
+    });
+    expect(rs.weaponMasteries).toEqual(['dagger']);
+  });
+
+  it('несколько особенностей суммируются (L1 + прибавка на 4-м уровне)', () => {
+    const rs = build({
+      effects: [
+        fx('wm-base', masteryChoice(3)),
+        fx('wm-plus', auto({
+          kind: 'choice', id: 'weapon-mastery-plus', context: 'in_play', count: 1,
+          options: { source: 'weapon' }, grant: { kind: 'weapon_mastery' },
+        })),
+      ],
+      draft: { resolvedChoices: { 'weapon-mastery': ['longsword'], 'weapon-mastery-plus': ['maul'] } },
+    });
+    expect([...rs.weaponMasteries].sort()).toEqual(['longsword', 'maul']);
+  });
+});
