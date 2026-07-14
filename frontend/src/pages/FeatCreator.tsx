@@ -10,6 +10,7 @@ import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import EntityRefSelector from '../components/EntityRefSelector';
 import CreatorShell, { CreatorActions, CREATOR_INPUT_CLS, CREATOR_LABEL_CLS } from '../components/CreatorShell';
+import ChipToggleList from '../components/ChipToggleList';
 
 type ScalarForm = {
   name: string;
@@ -89,10 +90,7 @@ const FeatCreator = () => {
     updated_at: '',
   };
 
-  const toggleAbility = (v: string) =>
-    setAbilityIncrease(abilityIncrease.includes(v) ? abilityIncrease.filter((x) => x !== v) : [...abilityIncrease, v]);
-
-  const { loadEffects, loadActions } = useEffectActionLoaders();
+  const { loadEffects, loadActions, resolveEffects, resolveActions } = useEffectActionLoaders();
 
   const onSubmit = async (data: ScalarForm) => {
     setLoading(true);
@@ -166,18 +164,7 @@ const FeatCreator = () => {
 
         <div>
           <label className={labelCls}>Повышение характеристики</label>
-          <div className="flex flex-wrap gap-2">
-            {ABILITY_OPTIONS.map((o) => (
-              <button type="button" key={o.value} onClick={() => toggleAbility(o.value)}
-                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                  abilityIncrease.includes(o.value)
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}>
-                {o.label}
-              </button>
-            ))}
-          </div>
+          <ChipToggleList options={ABILITY_OPTIONS} selected={abilityIncrease} onChange={setAbilityIncrease} />
         </div>
 
         <label className="flex items-center space-x-2">
@@ -193,12 +180,14 @@ const FeatCreator = () => {
             value={relatedEffects}
             onChange={setRelatedEffects}
             loadItems={loadEffects}
+            resolveItems={resolveEffects}
           />
           <EntityRefSelector
             label="Действия"
             value={relatedActions}
             onChange={setRelatedActions}
             loadItems={loadActions}
+            resolveItems={resolveActions}
           />
         </div>
 

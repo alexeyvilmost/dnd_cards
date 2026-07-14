@@ -2,13 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { backgroundsApi } from '../api/client';
-import type { CreateBackgroundRequest, UpdateBackgroundRequest, Background, BackgroundEquipmentOptions } from '../types';
+import type { CreateBackgroundRequest, UpdateBackgroundRequest, Background, BackgroundEquipmentOptions, EquipmentOption } from '../types';
 import { ABILITY_OPTIONS, SKILL_OPTIONS } from '../types';
-import ItemRefSelector from '../components/ItemRefSelector';
+import EquipmentOptionsEditor, { type EquipOptSpec } from '../components/EquipmentOptionsEditor';
 import BackgroundPreview from '../components/BackgroundPreview';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import CreatorShell, { CreatorActions, CREATOR_INPUT_CLS, CREATOR_LABEL_CLS } from '../components/CreatorShell';
+import ChipToggleList from '../components/ChipToggleList';
+
+type BgEquipKey = 'option_a' | 'option_b';
+
+const BG_EQUIP_SPECS: ReadonlyArray<EquipOptSpec<BgEquipKey>> = [
+  { key: 'option_a', label: 'Вариант А' },
+  { key: 'option_b', label: 'Вариант Б', note: 'Обычно только золото, но можно добавить предметы.' },
+];
 
 type ScalarForm = {
   name: string;
@@ -97,10 +105,7 @@ const BackgroundCreator = () => {
     updated_at: '',
   };
 
-  const toggle = (v: string, list: string[], setter: (x: string[]) => void) =>
-    setter(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-
-  const setOpt = (key: 'option_a' | 'option_b', patch: Partial<{ items: any[]; gold: number }>) =>
+  const setOpt = (key: BgEquipKey, patch: Partial<EquipmentOption>) =>
     setEquipmentOptions((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
 
   const onSubmit = async (data: ScalarForm) => {
@@ -161,18 +166,7 @@ const BackgroundCreator = () => {
 
         <div>
           <label className={labelCls}>Характеристики (обычно 3)</label>
-          <div className="flex flex-wrap gap-2">
-            {ABILITY_OPTIONS.map((o) => (
-              <button type="button" key={o.value} onClick={() => toggle(o.value, abilityScores, setAbilityScores)}
-                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                  abilityScores.includes(o.value)
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}>
-                {o.label}
-              </button>
-            ))}
-          </div>
+          <ChipToggleList options={ABILITY_OPTIONS} selected={abilityScores} onChange={setAbilityScores} />
         </div>
 
         <div>
@@ -182,18 +176,7 @@ const BackgroundCreator = () => {
 
         <div>
           <label className={labelCls}>Владение навыками</label>
-          <div className="flex flex-wrap gap-2">
-            {SKILL_OPTIONS.map((s) => (
-              <button type="button" key={s} onClick={() => toggle(s, skills, setSkills)}
-                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                  skills.includes(s)
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}>
-                {s}
-              </button>
-            ))}
-          </div>
+          <ChipToggleList options={SKILL_OPTIONS} selected={skills} onChange={setSkills} />
         </div>
 
         <div>
@@ -207,46 +190,7 @@ const BackgroundCreator = () => {
         </div>
 
         {/* Варианты снаряжения А/Б с предметами и золотом */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="border border-gray-200 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-gray-800">Вариант А</span>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number" min={0}
-                  value={equipmentOptions.option_a.gold}
-                  onChange={(e) => setOpt('option_a', { gold: parseInt(e.target.value || '0', 10) })}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                />
-                <span className="text-sm text-yellow-600">ЗМ</span>
-              </div>
-            </div>
-            <ItemRefSelector
-              value={equipmentOptions.option_a.items}
-              onChange={(items) => setOpt('option_a', { items })}
-            />
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-gray-800">Вариант Б</span>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number" min={0}
-                  value={equipmentOptions.option_b.gold}
-                  onChange={(e) => setOpt('option_b', { gold: parseInt(e.target.value || '0', 10) })}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                />
-                <span className="text-sm text-yellow-600">ЗМ</span>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 mb-2">Обычно только золото, но можно добавить предметы.</p>
-            <ItemRefSelector
-              value={equipmentOptions.option_b.items}
-              onChange={(items) => setOpt('option_b', { items })}
-            />
-          </div>
-        </div>
+        <EquipmentOptionsEditor specs={BG_EQUIP_SPECS} value={equipmentOptions} onChange={setOpt} />
 
         <div>
           <label className={labelCls}>Описание *</label>

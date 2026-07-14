@@ -17,12 +17,14 @@ import {
 import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../utils/damageTypes';
 import SpellPreview from '../components/SpellPreview';
 import NavRail, { type NavRailItem } from '../components/NavRail';
+import ChipToggleList from '../components/ChipToggleList';
 import { useIsMobile } from '../hooks/useIsMobile';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import ResourceMultiSelect from '../components/ResourceMultiSelect';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { validateMechanics } from '../engine/validateMechanics';
+import { validateEntityIdFormat } from '../utils/entityId';
 
 type ScalarForm = {
   name: string;
@@ -181,23 +183,15 @@ const SpellCreator = () => {
     updated_at: '',
   };
 
-  const toggleInList = (
-    value: string,
-    list: string[],
-    setter: (v: string[]) => void
-  ) => {
-    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
-  };
-
   const onSubmit = async (data: ScalarForm) => {
     setLoading(true);
     setError(null);
     setIdError(null);
 
     if (!isEditMode && data.card_number && data.card_number.trim() !== '') {
-      const idRegex = /^[a-zA-Z0-9_-]{1,30}$/;
-      if (!idRegex.test(data.card_number)) {
-        setIdError('ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов');
+      const formatError = validateEntityIdFormat(data.card_number);
+      if (formatError) {
+        setIdError(formatError);
         setLoading(false);
         return;
       }
@@ -435,22 +429,7 @@ const SpellCreator = () => {
 
                     <div>
                       <label className={labelCls}>Классы</label>
-                      <div className="flex flex-wrap gap-2">
-                        {SPELL_CLASS_OPTIONS.map((o) => (
-                          <button
-                            type="button"
-                            key={o.value}
-                            onClick={() => toggleInList(o.value, classes, setClasses)}
-                            className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                              classes.includes(o.value)
-                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                      </div>
+                      <ChipToggleList options={SPELL_CLASS_OPTIONS} selected={classes} onChange={setClasses} />
                     </div>
 
                     <div>

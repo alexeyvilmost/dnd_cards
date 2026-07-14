@@ -254,31 +254,28 @@ const RaceCreator = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className={labelCls}>Скорость (фт)</label>
-                <input type="number" {...register('speed', { valueAsNumber: true })} className={inputCls} placeholder="30" />
-              </div>
-              <div>
-                <label className={labelCls}>Тёмное зрение (фт)</label>
-                <input type="number" {...register('darkvision', { valueAsNumber: true })} className={inputCls} placeholder="0" />
-              </div>
-              <div>
-                <label className={labelCls}>Доп. скорости</label>
-                <input {...register('extra_speeds')} className={inputCls} placeholder="Плавание 30 фт" />
-              </div>
-            </div>
           </>
         )}
 
-        {isSubrace && (
-          <div className="grid grid-cols-2 gap-4">
+        {/* Тёмное зрение есть и у вида, и у подвида — поле одно; скорости задаёт только вид. */}
+        <div className="grid grid-cols-3 gap-4">
+          {!isSubrace && (
             <div>
-              <label className={labelCls}>Тёмное зрение (фт)</label>
-              <input type="number" {...register('darkvision', { valueAsNumber: true })} className={inputCls} placeholder="0" />
+              <label className={labelCls}>Скорость (фт)</label>
+              <input type="number" {...register('speed', { valueAsNumber: true })} className={inputCls} placeholder="30" />
             </div>
+          )}
+          <div>
+            <label className={labelCls}>Тёмное зрение (фт)</label>
+            <input type="number" {...register('darkvision', { valueAsNumber: true })} className={inputCls} placeholder="0" />
           </div>
-        )}
+          {!isSubrace && (
+            <div>
+              <label className={labelCls}>Доп. скорости</label>
+              <input {...register('extra_speeds')} className={inputCls} placeholder="Плавание 30 фт" />
+            </div>
+          )}
+        </div>
 
         <div>
           <label className={labelCls}>Изображение</label>

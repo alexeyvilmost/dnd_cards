@@ -225,9 +225,10 @@ CodeGraph/grep (движок `engine/`, сборка листа `character/`, п
    Class/Race `mb-4`; overhang'а у превью нет — разница была случайным дрейфом).
 7. ✅ **Сделано.** Единая сборка payload `buildCardPayload` в `CardCreator` — убрана вторая копия в
    `handleCreateCardForGeneration`; попутно устранён дрейф (генерация теряла mechanics/effects/enchant и др.).
-8. ◐ **Частично.** ✅ `useEffectActionLoaders()` (load/resolve) вместо 3 копий в Feat/Class/Race.
-   ⏸ `useEntityId()` (regex+uniqueness) — отложен (маргинально, трогает валидацию сабмита).
-   ⏸ `<EquipmentOptionsEditor>` / `<ChipToggleList>` — визуальные компоненты, отложены.
+8. ✅ **Сделано.** `useEffectActionLoaders()` (load/resolve) вместо 3 копий в Feat/Class/Race;
+   `utils/entityId.ts` (`validateEntityIdFormat` + `isEntityIdTaken`) вместо regex×3 и `checkIdUniqueness`×2;
+   `<EquipmentOptionsEditor>` (дженерик по ключам: А/Б у предыстории, А/Б/В у класса);
+   `<ChipToggleList>` вместо 4 копий чип-разметки (Background ×2, Feat, Spell).
 9. ✅ **Сделано.** Навигация унифицирована на `NavRail` — три реализации свелись к одной:
    - `SpellCreator`: инлайн-кнопки по `SECTIONS` → `NavRail` (5 секций, добавлены иконки), сетка 12-col →
      flex `has-navrail-bottom` как у Card/Effect; отступ превью нормализован (`mb-8`+`pt-4` → `mb-4`).
@@ -239,11 +240,36 @@ CodeGraph/grep (движок `engine/`, сборка листа `character/`, п
 **Отдельно (баг, не дедуп):** `FeatCreator` — `EntityRefSelector` без `resolveItems` (показывает UUID).
 Теперь `useEffectActionLoaders` уже отдаёт `resolveEffects`/`resolveActions` — фикс = передать их в селекторы.
 
-**Фаза C — упрощение (точечно):**
-10. Исправить `FeatCreator`: передать `resolveItems` в `EntityRefSelector` (баг с UUID).
-11. Свернуть дубли: `MechanicsBuilder.move()`, `ChoiceEditor.patchItem()`, `RaceCreator.darkvision`,
-    общий `inputCls`/`<RowList>` в `components/mechanics/*`, единый мультиселект-чип (убрать нативный в `ChoiceEditor`).
-12. `CardCreator` — цельный `watch()` вместо ручного мемо; добавить `validateMechanics` для паритета.
+**Фаза C — упрощение (точечно). ✅ ВЫПОЛНЕНА:**
+10. ✅ `FeatCreator`: передан `resolveItems` — баг с UUID закрыт (латентный: стрелял бы при >200 эффектов).
+11. ✅ Свёрнуты дубли: `MechanicsBuilder.moveEffect(idx,dir)` вместо двух инлайн-свопов;
+    `ChoiceEditor.patchItem()` вместо трёх инлайн-обработчиков; `RaceCreator.darkvision` — один инпут вместо
+    двух во взаимоисключающих ветках; `components/mechanics/shared.tsx` — `MECH_INPUT_CLS` (было **13** копий
+    строки класса) + `rowList()`/`RowAddButton`/`RowDeleteButton` (было 3 копии каркаса);
+    нативный `<select multiple>` в `ChoiceEditor` заменён чипами.
+12. ✅ `CardCreator`: `validateMechanics` добавлен (был единственным без проверки схемы; `kind='passive_effect'`
+    — своего вида у предмета в `MechanicKind` нет, предмет = эффект с гейтом). Ручной мемо из 35 полей заменён
+    ключом по содержимому — раньше в списке не хватало `enchant_bonus`, `weapon_type`, `container_mode`,
+    `contents`, и превью на их правку не пересобиралось.
 
-Приоритет №1 по соотношению «эффект/риск»: **Фаза A.1–A.3** (убрать три легаси-подсистемы `effects`/`script`)
-и **Фаза B.6–B.7** (общий каркас + единый payload). Они же дают самое заметное сокращение кода.
+**Мёртвые пропсы (убраны):** `WhenEditor.label` и `LevelProgressionEditor.maxLevel` — ни один вызывающий
+их не передавал (`maxLevel` использовался внутри → вынесен в константу `MAX_LEVEL`).
+
+---
+
+## 6. Итог: все три фазы выполнены (2026-07-13)
+
+| Фаза | Что | Коммит |
+|------|-----|--------|
+| A | Удаление легаси-подсистем (`effects`, `script`/PropertiesSection, `battle_profile`, `starting_equipment`) | содержимое в дереве `c12f999` |
+| B-1 | `buildCardPayload` (устранён дрейф) + `useEffectActionLoaders` | содержимое в дереве `c12f999` |
+| B-2 | `<CreatorShell>` + `<CreatorActions>` + классы полей | `2917196` |
+| B-3 | Единая навигация на `NavRail` (Spell/Action) | `c0c1bc9` |
+| C | Баг Feat, мёртвые пропсы, дедуп `mechanics/*`, чипы, `entityId`, паритет `validateMechanics` | этот коммит |
+
+**Единственный шлюз проверки — `tsc --noEmit`:** prettier в проекте нет, а `eslint` падает («couldn't find a
+configuration file»), хотя скрипт `lint` в package.json есть. Это стоит починить отдельно.
+
+**Осталось за рамками аудита конструкторов** (из общего ревью): мёртвый бэкенд-хвост `effects_utils.go`
+(`AnalyzeCardEffects`/`GetEffectsSummary`, 0 вызовов), мёртвый эндпоинт `/battle-stats` (`main.go:161-162`)
+и сами поля `effects`/`battle_profile`/`starting_equipment` в типах и БД — их удаление требует миграции.

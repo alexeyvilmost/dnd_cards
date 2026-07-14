@@ -2,10 +2,9 @@ import { DURATION_TYPES } from '../../mechanics/registries';
 import type { DurationForm } from '../../mechanics/blocks';
 import type { Cond } from '../../mechanics/predicates';
 import WhenEditor from './WhenEditor';
+import { MECH_INPUT_CLS as cls } from './shared';
 
 // Длительность (mechanics.duration). rounds / until_*_of_turn движок применяет; прочее ⏳.
-
-const cls = 'w-full px-2 py-1 border rounded text-sm';
 
 export default function DurationEditor({ value, onChange }: { value: DurationForm; onChange: (v: DurationForm) => void }) {
   const d = value || {};

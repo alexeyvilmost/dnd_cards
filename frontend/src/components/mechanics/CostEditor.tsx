@@ -1,5 +1,5 @@
-import { Trash2, Plus } from 'lucide-react';
 import type { CostRow } from '../../mechanics/blocks';
+import { MECH_INPUT_CLS as cls, rowList, RowAddButton, RowDeleteButton } from './shared';
 
 // Редактор дополнительной стоимости активации (activation.cost[]): произвольные ресурсы
 // с количеством, уровнем (для ячеек заклинаний) и card_id (для расхода предмета).
@@ -11,11 +11,8 @@ const COMMON_RESOURCES = [
   'ki', 'lay_on_hands', 'second_wind', 'action_surge', 'luck_points', 'wild_shape',
 ];
 
-const cls = 'w-full px-2 py-1 border rounded text-sm';
-
 export default function CostEditor({ value, onChange }: { value: CostRow[]; onChange: (v: CostRow[]) => void }) {
-  const rows = Array.isArray(value) ? value : [];
-  const patch = (i: number, p: Partial<CostRow>) => onChange(rows.map((r, j) => (j === i ? { ...r, ...p } : r)));
+  const { rows, patch, remove, add } = rowList(value, onChange);
   return (
     <div className="space-y-2">
       <datalist id="cost-resources">
@@ -31,9 +28,7 @@ export default function CostEditor({ value, onChange }: { value: CostRow[]; onCh
               value={r.resource ?? ''}
               onChange={(e) => patch(i, { resource: e.target.value })}
             />
-            <button type="button" className="p-1 text-red-400 hover:text-red-600" onClick={() => onChange(rows.filter((_, j) => j !== i))} title="Удалить стоимость">
-              <Trash2 size={15} />
-            </button>
+            <RowDeleteButton onClick={() => remove(i)} title="Удалить стоимость" />
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             <input className={cls} placeholder="кол-во" value={r.amount ?? ''} onChange={(e) => patch(i, { amount: e.target.value })} />
@@ -42,13 +37,7 @@ export default function CostEditor({ value, onChange }: { value: CostRow[]; onCh
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800"
-        onClick={() => onChange([...rows, { resource: '' }])}
-      >
-        <Plus size={13} /> стоимость
-      </button>
+      <RowAddButton onClick={() => add({ resource: '' })}>стоимость</RowAddButton>
     </div>
   );
 }

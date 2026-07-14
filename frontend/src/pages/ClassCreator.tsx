@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { classesApi } from '../api/client';
 import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CharacterClass, ClassEquipmentOptions, CreateClassRequest, EquipmentOption, LevelProgression, UpdateClassRequest } from '../types';
-import ItemRefSelector from '../components/ItemRefSelector';
+import EquipmentOptionsEditor from '../components/EquipmentOptionsEditor';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import LevelProgressionEditor from '../components/LevelProgressionEditor';
@@ -284,28 +284,12 @@ const ClassCreator = () => {
             {/* Стартовое снаряжение — до трёх вариантов (как у предысторий) */}
             <div>
               <label className={labelCls}>Стартовое снаряжение — варианты (пустые не сохраняются)</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {EQUIP_OPT_LABELS.map(({ key, label }) => (
-                  <div key={key} className="border border-gray-200 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-800">{label}</span>
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number" min={0}
-                          value={equipmentOptions[key].gold}
-                          onChange={(e) => setEquipOpt(key, { gold: parseInt(e.target.value || '0', 10) })}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                        />
-                        <span className="text-sm text-yellow-600">ЗМ</span>
-                      </div>
-                    </div>
-                    <ItemRefSelector
-                      value={equipmentOptions[key].items}
-                      onChange={(items) => setEquipOpt(key, { items })}
-                    />
-                  </div>
-                ))}
-              </div>
+              <EquipmentOptionsEditor
+                specs={EQUIP_OPT_LABELS}
+                value={equipmentOptions}
+                onChange={setEquipOpt}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+              />
             </div>
           </>
         )}

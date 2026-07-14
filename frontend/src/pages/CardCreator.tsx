@@ -14,6 +14,7 @@ import ImageLibraryModal from '../components/ImageLibraryModal';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
+import { validateMechanics } from '../engine/validateMechanics';
 import { MainSection } from '../components/cardCreator/MainSection';
 import { ImageSection } from '../components/cardCreator/ImageSection';
 import { TextSection } from '../components/cardCreator/TextSection';
@@ -243,44 +244,13 @@ const CardCreator = () => {
     }
   }, [searchParams, isEditMode, setValue]);
 
-  // Мемоизируем watchedValues для предотвращения бесконечных циклов
-  const memoizedWatchedValues = useMemo(() => watchedValues, [
-    watchedValues.name,
-    watchedValues.rarity,
-    watchedValues.custom_rarity_color,
-    watchedValues.description,
-    watchedValues.detailed_description,
-    watchedValues.properties,
-    watchedValues.price,
-    watchedValues.price_currency,
-    watchedValues.price_abbreviated,
-    watchedValues.weight,
-    watchedValues.bonus_type,
-    watchedValues.bonus_value,
-    watchedValues.damage_type,
-    watchedValues.elemental_damage_value,
-    watchedValues.elemental_damage_type,
-    watchedValues.defense_type,
-    watchedValues.is_extended,
-    watchedValues.text_alignment,
-    watchedValues.text_font_size,
-    watchedValues.show_detailed_description,
-    watchedValues.detailed_description_alignment,
-    watchedValues.detailed_description_font_size,
-    watchedValues.author,
-    watchedValues.source,
-    watchedValues.type,
-    watchedValues.related_cards,
-    watchedValues.related_actions,
-    watchedValues.related_effects,
-    watchedValues.attunement,
-    watchedValues.requires_attunement,
-    watchedValues.range,
-    watchedValues.tags,
-    watchedValues.slot,
-    watchedValues.is_template,
-    watchedValues.battle_profile
-  ]);
+  // Стабильная ссылка на значения формы — нужна, чтобы useEffect превью не зациклился.
+  // Ключ по содержимому, а не вручную перечисленные поля: в прежнем списке из 35 полей
+  // не хватало enchant_bonus, weapon_type, container_mode и contents — превью на их правку
+  // не обновлялось. Теперь пересборка идёт на любое изменение формы.
+  const watchedValuesKey = JSON.stringify(watchedValues);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoizedWatchedValues = useMemo(() => watchedValues, [watchedValuesKey]);
 
   // Обновляем превью при изменении данных
   useEffect(() => {
@@ -351,6 +321,23 @@ const CardCreator = () => {
     try {
       setSaving(true);
       setError(null);
+
+      // Паритет с конструкторами заклинания/действия/эффекта: не даём сохранить механику,
+      // не проходящую схему (раньше предмет был единственным без этой проверки).
+      if (mechanics && typeof mechanics === 'object') {
+        // kind='passive_effect': у предмета своего вида в схеме нет — механика предмета
+        // и есть эффект с гейтом (while: equipped/attuned).
+        const check = validateMechanics(mechanics as Record<string, unknown>, {
+          id: data.name || 'draft-card',
+          name: data.name || 'card',
+          kind: 'passive_effect',
+        });
+        if (!check.valid) {
+          setError(`Ошибка схемы механики: ${check.errors.slice(0, 4).join('; ')}`);
+          setSaving(false);
+          return;
+        }
+      }
 
       const cardData = buildCardPayload(data);
 

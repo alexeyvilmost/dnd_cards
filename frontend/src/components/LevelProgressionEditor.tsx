@@ -12,10 +12,12 @@ interface LevelProgressionEditorProps {
   resolveEffects?: (ids: string[]) => Promise<RefItem[]>;
   resolveActions?: (ids: string[]) => Promise<RefItem[]>;
   showAllLevels?: boolean;
-  maxLevel?: number;
 }
 
-const normalizeLevel = (level: number) => String(Math.max(1, Math.min(20, level)));
+// Потолок уровней D&D — един для классов и видов (раньше был пропом maxLevel, который никто не передавал).
+const MAX_LEVEL = 20;
+
+const normalizeLevel = (level: number) => String(Math.max(1, Math.min(MAX_LEVEL, level)));
 
 const InlineRefSelector = ({
   label,
@@ -103,7 +105,6 @@ const LevelProgressionEditor = ({
   resolveEffects,
   resolveActions,
   showAllLevels = false,
-  maxLevel = 20,
 }: LevelProgressionEditorProps) => {
   const [newLevel, setNewLevel] = useState(1);
   const [effects, setEffects] = useState<RefItem[]>([]);
@@ -142,10 +143,10 @@ const LevelProgressionEditor = ({
 
   const visibleLevels = useMemo(() => {
     if (showAllLevels) {
-      return Array.from({ length: maxLevel }, (_, i) => String(i + 1));
+      return Array.from({ length: MAX_LEVEL }, (_, i) => String(i + 1));
     }
     return Object.keys(value).sort((a, b) => Number(a) - Number(b));
-  }, [maxLevel, showAllLevels, value]);
+  }, [showAllLevels, value]);
 
   const setLevelAbilities = (level: string, patch: Partial<NonNullable<LevelProgression[string]>>) => {
     const current = value[level] || {};
@@ -182,7 +183,7 @@ const LevelProgressionEditor = ({
             <input
               type="number"
               min={1}
-              max={maxLevel}
+              max={MAX_LEVEL}
               value={newLevel}
               onChange={(e) => setNewLevel(parseInt(e.target.value || '1', 10))}
               className="w-24 px-2 py-1.5 border rounded text-sm"

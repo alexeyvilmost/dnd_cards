@@ -5,6 +5,7 @@ import {
   labelOf,
   optionsForChoiceSource,
 } from '../../mechanics/registries';
+import { MECH_INPUT_CLS as cls } from './shared';
 
 export type ChoiceFormValue = {
   id?: string;
@@ -44,13 +45,20 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
 
   const set = (patch: Partial<ChoiceFormValue>) => onChange({ ...value, ...patch });
 
+  const patchItem = (idx: number, p: Partial<NonNullable<ChoiceFormValue['items']>[number]>) =>
+    set({ items: (value.items || []).map((it, j) => (j === idx ? { ...it, ...p } : it)) });
+
+  const rec = (value.recommended as string[]) || [];
+  const toggleRec = (id: string) =>
+    set({ recommended: rec.includes(id) ? rec.filter((x) => x !== id) : [...rec, id] });
+
   return (
     <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="block text-xs text-gray-600 mb-1">ID (стабильный)</label>
           <input
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={value.id || ''}
             onChange={(e) => set({ id: e.target.value })}
             placeholder="human_skill"
@@ -61,7 +69,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
           <input
             type="number"
             min={1}
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={value.count ?? 1}
             onChange={(e) => set({ count: parseInt(e.target.value || '1', 10) })}
           />
@@ -70,7 +78,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
       <div>
         <label className="block text-xs text-gray-600 mb-1">Подсказка</label>
         <input
-          className="w-full px-2 py-1 border rounded text-sm"
+          className={cls}
           value={value.prompt || ''}
           onChange={(e) => set({ prompt: e.target.value })}
           placeholder="Выберите навык"
@@ -80,7 +88,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
         <div>
           <label className="block text-xs text-gray-600 mb-1">Источник</label>
           <select
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={value.source || 'skill'}
             onChange={(e) => set({ source: e.target.value, filter: 'all' })}
           >
@@ -92,7 +100,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
         <div>
           <label className="block text-xs text-gray-600 mb-1">Разрешение</label>
           <select
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={value.resolution || 'on_acquire'}
             onChange={(e) => set({ resolution: e.target.value as ChoiceFormValue['resolution'] })}
           >
@@ -106,22 +114,31 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
       <div>
         <label className="block text-xs text-gray-600 mb-1">Рекомендуемые (предвыбор)</label>
         {recOptions.length > 0 ? (
-          <select
-            multiple
-            className="w-full px-2 py-1 border rounded text-sm h-20"
-            value={(value.recommended as string[]) || []}
-            onChange={(e) =>
-              set({ recommended: Array.from(e.target.selectedOptions).map((o) => o.value) })
-            }
-          >
-            {recOptions.map((o) => (
-              <option key={o.id} value={o.id}>{o.label}</option>
-            ))}
-          </select>
+          // Чипы-переключатели, а не нативный <select multiple>: тот требует ctrl+click и
+          // сбрасывает выбор при обычном клике (тот же выбор, что уже сделан в MechanicsBuilder).
+          <div className="flex flex-wrap gap-1.5">
+            {recOptions.map((o) => {
+              const on = rec.includes(o.id);
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => toggleRec(o.id)}
+                  className={`px-2.5 py-1 rounded text-xs border transition-colors ${
+                    on
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {o.label}
+                </button>
+              );
+            })}
+          </div>
         ) : (
           <input
-            className="w-full px-2 py-1 border rounded text-sm"
-            value={((value.recommended as string[]) || []).join(', ')}
+            className={cls}
+            value={rec.join(', ')}
             onChange={(e) =>
               set({ recommended: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })
             }
@@ -140,7 +157,7 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
             Фильтр ({labelOf(CHOICE_SOURCES, value.source)})
           </label>
           <select
-            className="w-full px-2 py-1 border rounded text-sm disabled:bg-gray-100 disabled:text-gray-400"
+            className={`${cls} disabled:bg-gray-100 disabled:text-gray-400`}
             value={typeof value.filter === 'string' ? value.filter : 'all'}
             disabled={value.source === 'spell' && !!value.onlyAvailableSlots}
             onChange={(e) => set({ filter: e.target.value === 'all' ? 'all' : e.target.value })}
@@ -198,35 +215,23 @@ const ChoiceEditor = ({ value, onChange }: ChoiceEditorProps) => {
           {(value.items || []).map((item, idx) => (
             <div key={idx} className="p-2 border rounded bg-white space-y-1">
               <input
-                className="w-full px-2 py-1 border rounded text-sm"
+                className={cls}
                 placeholder={isEffect ? 'EFF-... (slug эффекта)' : 'id'}
                 value={item.id}
-                onChange={(e) => {
-                  const items = [...(value.items || [])];
-                  items[idx] = { ...items[idx], id: e.target.value };
-                  set({ items });
-                }}
+                onChange={(e) => patchItem(idx, { id: e.target.value })}
               />
               <input
-                className="w-full px-2 py-1 border rounded text-sm"
+                className={cls}
                 placeholder="Название"
                 value={item.name}
-                onChange={(e) => {
-                  const items = [...(value.items || [])];
-                  items[idx] = { ...items[idx], name: e.target.value };
-                  set({ items });
-                }}
+                onChange={(e) => patchItem(idx, { name: e.target.value })}
               />
               <textarea
-                className="w-full px-2 py-1 border rounded text-sm font-mono text-xs"
+                className={`${cls} font-mono text-xs`}
                 rows={3}
                 placeholder={isEffect ? '[] (доп. гранты; обычно пусто)' : '[{"kind":"grant_spell","value":"light"}]'}
                 value={item.grantsJson}
-                onChange={(e) => {
-                  const items = [...(value.items || [])];
-                  items[idx] = { ...items[idx], grantsJson: e.target.value };
-                  set({ items });
-                }}
+                onChange={(e) => patchItem(idx, { grantsJson: e.target.value })}
               />
             </div>
           ))}

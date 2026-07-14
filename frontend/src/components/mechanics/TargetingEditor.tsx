@@ -1,9 +1,8 @@
 import { TARGETING_SHAPES, AREA_KINDS } from '../../mechanics/registries';
 import type { TargetingForm } from '../../mechanics/blocks';
+import { MECH_INPUT_CLS as cls } from './shared';
 
 // Наведение (mechanics.targeting). ⏳ — движок пока не интерпретирует (описательно).
-
-const cls = 'w-full px-2 py-1 border rounded text-sm';
 
 export default function TargetingEditor({ value, onChange }: { value: TargetingForm; onChange: (v: TargetingForm) => void }) {
   const t = value || {};

@@ -30,6 +30,7 @@ import RequirementsEditor from './RequirementsEditor';
 import FilterEditor from './FilterEditor';
 import TargetingEditor from './TargetingEditor';
 import DurationEditor from './DurationEditor';
+import { MECH_INPUT_CLS as cls } from './shared';
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
@@ -223,7 +224,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       case 'select':
         return (
           <select
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={String(values[field.key] ?? field.default ?? '')}
             onChange={(e) => onField(field.key, e.target.value)}
           >
@@ -267,7 +268,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
         return (
           <input
             type="number"
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={values[field.key] !== undefined ? Number(values[field.key]) : (field.default ?? '')}
             onChange={(e) => onField(field.key, parseFloat(e.target.value))}
           />
@@ -276,7 +277,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       case 'text':
         return (
           <input
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={String(values[field.key] ?? field.default ?? '')}
             onChange={(e) => onField(field.key, e.target.value)}
             placeholder={field.type === 'formula' ? 'prof_bonus, self_level d4' : ''}
@@ -285,7 +286,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       case 'damage-type':
         return (
           <select
-            className="w-full px-2 py-1 border rounded text-sm"
+            className={cls}
             value={String(values[field.key] ?? field.default ?? 'fire')}
             onChange={(e) => onField(field.key, e.target.value)}
           >
@@ -333,6 +334,17 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       ...prev,
       { id: newEntryId(), blockId, values: defaultValuesForBlock(blockId) },
     ]);
+  };
+
+  // Перенос блока эффекта: dir = -1 (выше) | 1 (ниже).
+  const moveEffect = (idx: number, dir: -1 | 1) => {
+    markDirty();
+    setEffectEntries((prev) => {
+      const n = [...prev];
+      const j = idx + dir;
+      [n[idx], n[j]] = [n[j], n[idx]];
+      return n;
+    });
   };
 
   // AI-генерация механики по описанию сущности (кнопка «AI»).
@@ -471,7 +483,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
           <div>
             <label className="block text-xs text-gray-600 mb-1">Гейт предмета (while)</label>
             <select
-              className="w-full px-2 py-1 border rounded text-sm"
+              className={cls}
               value={itemWhile}
               onChange={(e) => { markDirty(); setItemWhile(e.target.value as typeof itemWhile); }}
             >
@@ -484,7 +496,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
           <div>
             <label className="block text-xs text-gray-600 mb-1">Боеприпас (ammo — id/слаг)</label>
             <input
-              className="w-full px-2 py-1 border rounded text-sm"
+              className={cls}
               value={ammo}
               placeholder="напр. arrow"
               onChange={(e) => { markDirty(); setAmmo(e.target.value); }}
@@ -493,7 +505,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
           <div>
             <label className="block text-xs text-gray-600 mb-1">Перезарядка uses (recharge) ⏳</label>
             <input
-              className="w-full px-2 py-1 border rounded text-sm"
+              className={cls}
               value={recharge}
               placeholder="напр. 5-6, dawn"
               onChange={(e) => { markDirty(); setRecharge(e.target.value); }}
@@ -565,20 +577,12 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
                   <div className="flex gap-1">
                     <button type="button" title="Выше" className="p-1 text-gray-400 hover:text-gray-700"
                       disabled={idx === 0}
-                      onClick={() => { markDirty(); setEffectEntries((prev) => {
-                        const n = [...prev];
-                        [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]];
-                        return n;
-                      }); }}>
+                      onClick={() => moveEffect(idx, -1)}>
                       <ChevronUp size={16} />
                     </button>
                     <button type="button" title="Ниже" className="p-1 text-gray-400 hover:text-gray-700"
                       disabled={idx === effectEntries.length - 1}
-                      onClick={() => { markDirty(); setEffectEntries((prev) => {
-                        const n = [...prev];
-                        [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]];
-                        return n;
-                      }); }}>
+                      onClick={() => moveEffect(idx, 1)}>
                       <ChevronDown size={16} />
                     </button>
                     <button type="button" className="p-1 text-red-400 hover:text-red-600"

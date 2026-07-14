@@ -7,14 +7,13 @@ import {
   type Cond,
   type PredField,
 } from '../../mechanics/predicates';
+import { MECH_INPUT_CLS as inputCls } from './shared';
 
 // Рекурсивный редактор предикатов движка (массив условий `when` / `circumstances`).
 // Условия верхнего уровня складываются по И (matchesWhen AND-fold); any_of — ИЛИ, not — отрицание.
 // Редактирует «сырые» JSON-объекты условий напрямую — ничего не теряется при round-trip.
 
 const MAX_DEPTH = 6;
-
-const inputCls = 'w-full px-2 py-1 border rounded text-sm';
 
 function CondField({ field, cond, onChange }: { field: PredField; cond: Cond; onChange: (c: Cond) => void }) {
   const set = (val: unknown) => onChange({ ...cond, [field.key]: val });
@@ -157,17 +156,15 @@ function CondRow({
 export interface WhenEditorProps {
   value: Cond[] | undefined;
   onChange: (when: Cond[]) => void;
-  label?: string;
   hint?: string;
   nested?: boolean;
   depth?: number;
 }
 
-export default function WhenEditor({ value, onChange, label, hint, nested, depth = 0 }: WhenEditorProps) {
+export default function WhenEditor({ value, onChange, hint, nested, depth = 0 }: WhenEditorProps) {
   const conds = Array.isArray(value) ? value : [];
   return (
     <div className="space-y-1.5">
-      {label && <label className="block text-xs text-gray-600">{label}</label>}
       {hint && <p className="text-xs text-gray-400">{hint}</p>}
       {conds.map((c, i) => (
         <CondRow

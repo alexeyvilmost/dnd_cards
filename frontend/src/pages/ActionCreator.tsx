@@ -13,6 +13,7 @@ import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { validateMechanics } from '../engine/validateMechanics';
+import { isEntityIdTaken, validateEntityIdFormat } from '../utils/entityId';
 
 // Секции конструктора действия для сквозного рейла (как у эффекта: основное + механика).
 const SECTIONS: NavRailItem[] = [
@@ -155,21 +156,6 @@ const ActionCreator = () => {
     setValue('resources', newResources.length > 0 ? newResources : null);
   };
 
-  // Проверка уникальности ID (проверяем по card_number через API)
-  const checkIdUniqueness = async (id: string): Promise<boolean> => {
-    if (!id || id.trim() === '') return true; // Пустой ID допустим
-    try {
-      // Проверяем через список действий с фильтром по card_number
-      const response = await actionsApi.getActions({ search: id, limit: 100 });
-      // Ищем точное совпадение card_number
-      const exists = response.actions.some(action => action.card_number === id);
-      return !exists; // Возвращаем true если не найден
-    } catch (error: any) {
-      console.error('Ошибка проверки уникальности ID:', error);
-      return false; // Ошибка при проверке
-    }
-  };
-
   const onSubmit = async (data: CreateActionRequest) => {
     setLoading(true);
     setError(null);
@@ -182,17 +168,20 @@ const ActionCreator = () => {
       return;
     }
 
-    // Проверка уникальности ID, если он указан (только при создании)
+    // Проверка формата и уникальности ID, если он указан (только при создании)
     if (!isEditMode && data.card_number && data.card_number.trim() !== '') {
-      const idRegex = /^[a-zA-Z0-9_-]{1,30}$/;
-      if (!idRegex.test(data.card_number)) {
-        setIdError('ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов');
+      const formatError = validateEntityIdFormat(data.card_number);
+      if (formatError) {
+        setIdError(formatError);
         setLoading(false);
         return;
       }
 
-      const isUnique = await checkIdUniqueness(data.card_number);
-      if (!isUnique) {
+      const taken = await isEntityIdTaken(
+        (q) => actionsApi.getActions({ search: q, limit: 100 }).then((r) => r.actions),
+        data.card_number,
+      );
+      if (taken) {
         setIdError('Действие с таким ID уже существует');
         setLoading(false);
         return;

@@ -13,6 +13,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { registryItems, useResourceOptions } from '../utils/resources';
 import { validateMechanics } from '../engine/validateMechanics';
+import { isEntityIdTaken, validateEntityIdFormat } from '../utils/entityId';
 
 const EffectCreator = () => {
   const navigate = useNavigate();
@@ -127,37 +128,25 @@ const EffectCreator = () => {
     updated_at: '',
   };
 
-  // Проверка уникальности ID (проверяем по card_number через API)
-  const checkIdUniqueness = async (id: string): Promise<boolean> => {
-    if (!id || id.trim() === '') return true; // Пустой ID допустим
-    try {
-      // Проверяем через список эффектов с фильтром по card_number
-      const response = await effectsApi.getEffects({ search: id, limit: 100 });
-      // Ищем точное совпадение card_number
-      const exists = response.effects.some(effect => effect.card_number === id);
-      return !exists; // Возвращаем true если не найден
-    } catch (error: any) {
-      console.error('Ошибка проверки уникальности ID:', error);
-      return false; // Ошибка при проверке
-    }
-  };
-
   const onSubmit = async (data: CreatePassiveEffectRequest) => {
     setLoading(true);
     setError(null);
     setIdError(null);
 
-    // Проверка уникальности ID, если он указан (только при создании)
+    // Проверка формата и уникальности ID, если он указан (только при создании)
     if (!isEditMode && data.card_number && data.card_number.trim() !== '') {
-      const idRegex = /^[a-zA-Z0-9_-]{1,30}$/;
-      if (!idRegex.test(data.card_number)) {
-        setIdError('ID может содержать только латинские буквы, цифры, дефисы и подчеркивания, до 30 символов');
+      const formatError = validateEntityIdFormat(data.card_number);
+      if (formatError) {
+        setIdError(formatError);
         setLoading(false);
         return;
       }
 
-      const isUnique = await checkIdUniqueness(data.card_number);
-      if (!isUnique) {
+      const taken = await isEntityIdTaken(
+        (q) => effectsApi.getEffects({ search: q, limit: 100 }).then((r) => r.effects),
+        data.card_number,
+      );
+      if (taken) {
         setIdError('Эффект с таким ID уже существует');
         setLoading(false);
         return;
