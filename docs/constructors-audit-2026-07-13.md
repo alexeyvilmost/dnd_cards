@@ -228,7 +228,13 @@ CodeGraph/grep (движок `engine/`, сборка листа `character/`, п
 8. ◐ **Частично.** ✅ `useEffectActionLoaders()` (load/resolve) вместо 3 копий в Feat/Class/Race.
    ⏸ `useEntityId()` (regex+uniqueness) — отложен (маргинально, трогает валидацию сабмита).
    ⏸ `<EquipmentOptionsEditor>` / `<ChipToggleList>` — визуальные компоненты, отложены.
-9. ⏸ **Отложено (визуальное).** Унификация навигации на `NavRail` (в т.ч. `SpellCreator`, `ActionCreator`).
+9. ✅ **Сделано.** Навигация унифицирована на `NavRail` — три реализации свелись к одной:
+   - `SpellCreator`: инлайн-кнопки по `SECTIONS` → `NavRail` (5 секций, добавлены иконки), сетка 12-col →
+     flex `has-navrail-bottom` как у Card/Effect; отступ превью нормализован (`mb-8`+`pt-4` → `mb-4`).
+   - `ActionCreator`: навигации не было вовсе — форма разбита на 2 секции (Основное / Механика) по её же
+     собственным заголовкам, как у эффекта; превью вынесено из `<form>`; добавлена кнопка «Назад»
+     (единственный конструктор без неё). Превью показывается всегда — переключателя у действия не было
+     и не добавлял.
 
 **Отдельно (баг, не дедуп):** `FeatCreator` — `EntityRefSelector` без `resolveItems` (показывает UUID).
 Теперь `useEffectActionLoaders` уже отдаёт `resolveEffects`/`resolveActions` — фикс = передать их в селекторы.

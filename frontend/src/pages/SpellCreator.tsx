@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Plus, Trash2, FileText, FlaskConical, Swords, Cog, Type } from 'lucide-react';
 import { spellsApi } from '../api/client';
 import type {
   CreateSpellRequest,
@@ -16,6 +16,8 @@ import {
 } from '../types';
 import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../utils/damageTypes';
 import SpellPreview from '../components/SpellPreview';
+import NavRail, { type NavRailItem } from '../components/NavRail';
+import { useIsMobile } from '../hooks/useIsMobile';
 import ImageUploader from '../components/ImageUploader';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import ResourceMultiSelect from '../components/ResourceMultiSelect';
@@ -47,13 +49,14 @@ type ScalarForm = {
   source: string;
 };
 
-const SECTIONS = [
-  { id: 'main', label: 'Основное' },
-  { id: 'components', label: 'Компоненты' },
-  { id: 'mechanics', label: 'Механика' },
-  { id: 'engine', label: 'Движок' },
-  { id: 'text', label: 'Описание' },
-] as const;
+// Секции конструктора заклинания для сквозного рейла.
+const SECTIONS: NavRailItem[] = [
+  { id: 'main', label: 'Основное', icon: <FileText size={18} /> },
+  { id: 'components', label: 'Компоненты', icon: <FlaskConical size={18} /> },
+  { id: 'mechanics', label: 'Механика', icon: <Swords size={18} /> },
+  { id: 'engine', label: 'Движок', icon: <Cog size={18} /> },
+  { id: 'text', label: 'Описание', icon: <Type size={18} /> },
+];
 
 const SpellCreator = () => {
   const navigate = useNavigate();
@@ -90,6 +93,7 @@ const SpellCreator = () => {
   const [idError, setIdError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('main');
   const [showPreview, setShowPreview] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (sourceId) {
@@ -298,28 +302,21 @@ const SpellCreator = () => {
           <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">{error}</div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4">
-          {/* Навигация по секциям */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow p-2 flex lg:flex-col gap-1 sticky top-6 overflow-x-auto">
-              {SECTIONS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setActiveSection(s.id)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium text-left whitespace-nowrap transition-colors ${
-                    activeSection === s.id
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className={`flex gap-3 sm:gap-4 has-navrail-bottom ${isMobile ? 'flex-col' : 'flex-row'}`}>
+          {/* Навигация — сквозной рейл (вертикальный на десктопе, нижний таб-бар на мобильных) */}
+          <NavRail
+            items={SECTIONS}
+            active={activeSection}
+            onSelect={setActiveSection}
+            layout="compact"
+            variant="light"
+            mobileDock="bottom"
+            ariaLabel="Разделы конструктора заклинания"
+            className="creator-rail"
+          />
 
           {/* Форма */}
-          <div className={showPreview ? 'lg:col-span-6' : 'lg:col-span-10'}>
+          <div className="flex-1 min-w-0">
             <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* ── Основное ── */}
@@ -630,10 +627,10 @@ const SpellCreator = () => {
 
           {/* Превью */}
           {showPreview && (
-            <div className="lg:col-span-4">
-              <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 sticky top-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-8">Превью заклинания</h3>
-                <div className="flex justify-center pt-4">
+            <div className={isMobile ? 'w-full' : 'w-[420px] flex-none'}>
+              <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 lg:sticky lg:top-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Превью заклинания</h3>
+                <div className="flex justify-center">
                   <SpellPreview spell={previewSpell} disableHover={true} />
                 </div>
               </div>
