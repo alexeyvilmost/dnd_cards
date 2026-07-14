@@ -1,13 +1,13 @@
 import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import {
-  Search, Filter, Plus, Grid3X3, List, LayoutTemplate, Trash2, X,
-  Package, Sparkles, Zap, Wand2, Star, ScrollText, Users, Shield, Gem, Variable, Lightbulb,
+  Search, Filter, Plus, Grid3X3, List, LayoutTemplate, X,
+  Package, Sparkles, Zap, Wand2, Star, ScrollText, Users, Shield, Gem, Variable as VariableIcon, Lightbulb,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, conceptsApi } from '../api/client';
-import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Concept } from '../types';
+import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, variablesApi, conceptsApi } from '../api/client';
+import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Variable, Concept } from '../types';
 import { RARITY_OPTIONS, PROPERTIES_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
@@ -28,6 +28,10 @@ import RaceDetailModal from '../components/RaceDetailModal';
 import ClassDetailModal from '../components/ClassDetailModal';
 import ConceptPreview from '../components/ConceptPreview';
 import ConceptDetailModal from '../components/ConceptDetailModal';
+import ResourcePreview, { resourceCategoryLabel, resourceRechargeLabel } from '../components/ResourcePreview';
+import VariablePreview, { variableTypeLabel } from '../components/VariablePreview';
+import ResourceDetailModal from '../components/ResourceDetailModal';
+import VariableDetailModal from '../components/VariableDetailModal';
 import { evictEntity } from '../components/EntityRefRegistry';
 import { FormattedText } from '../utils/formattedText';
 import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
@@ -169,6 +173,7 @@ const CardLibrary = () => {
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<CharacterClass[]>([]);
   const [resources, setResources] = useState<ResourceDefinition[]>([]);
+  const [variables, setVariables] = useState<Variable[]>([]);
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -216,6 +221,10 @@ const CardLibrary = () => {
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [hoveredClass, setHoveredClass] = useState<CharacterClass | null>(null);
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
+  const [selectedResource, setSelectedResource] = useState<ResourceDefinition | null>(null);
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [selectedVariable, setSelectedVariable] = useState<Variable | null>(null);
+  const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
   const [isConceptModalOpen, setIsConceptModalOpen] = useState(false);
   const [hoveredConcept, setHoveredConcept] = useState<Concept | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -651,6 +660,34 @@ const CardLibrary = () => {
     }
   };
 
+  // Переменные раньше в библиотеке не грузились вовсе: вкладка была заглушкой со ссылкой
+  // на конструктор. Теперь это полноценный раздел, как понятия.
+  const loadVariables = async () => {
+    try {
+      setLoading(true);
+      const response = await variablesApi.getVariables();
+      const list = response.variables || [];
+      const normalizedSearch = search.trim().toLowerCase();
+      const filtered = normalizedSearch
+        ? list.filter((variable) =>
+            [variable.name, variable.name_en || '', variable.variable_id, variable.description || '']
+              .join(' ')
+              .toLowerCase()
+              .includes(normalizedSearch))
+        : list;
+      setVariables(filtered);
+      setTotalCards(filtered.length);
+      setHasMore(false);
+      setCurrentPage(1);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки переменных');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   const loadConcepts = async () => {
     try {
       setLoading(true);
@@ -707,6 +744,8 @@ const CardLibrary = () => {
       loadClasses(1, false);
     } else if (contentType === 'resources') {
       loadResources();
+    } else if (contentType === 'variables') {
+      loadVariables();
     } else if (contentType === 'concepts') {
       loadConcepts();
     }
@@ -1080,9 +1119,35 @@ const CardLibrary = () => {
     if (!confirm('Вы уверены, что хотите удалить этот ресурс?')) return;
     try {
       await resourcesApi.deleteResource(resourceId);
+      evictEntity('resource', resourceId);
+      setIsResourceModalOpen(false);
+      setSelectedResource(null);
       if (contentType === 'resources') loadResources();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления ресурса');
+    }
+  };
+
+  const handleResourceClick = (resource: ResourceDefinition) => {
+    setSelectedResource(resource);
+    setIsResourceModalOpen(true);
+  };
+
+  const handleVariableClick = (variable: Variable) => {
+    setSelectedVariable(variable);
+    setIsVariableModalOpen(true);
+  };
+
+  const handleDeleteVariable = async (variableId: string) => {
+    if (!confirm('Удалить переменную?')) return;
+    try {
+      await variablesApi.deleteVariable(variableId);
+      evictEntity('variable', variableId);
+      setIsVariableModalOpen(false);
+      setSelectedVariable(null);
+      if (contentType === 'variables') loadVariables();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления переменной');
     }
   };
 
@@ -1112,28 +1177,6 @@ const CardLibrary = () => {
   // Получение метки ресурса действия для отображения
   const getActionResourceLabel = (resource: string) => {
     return resourceLabel(resourceOptions, resource);
-  };
-
-  const getResourceCategoryLabel = (category?: string | null) => {
-    if (!category) return 'Без категории';
-    return RESOURCE_CATEGORY_OPTIONS.find((option) => option.value === category)?.label || category;
-  };
-
-  const getResourceRechargeLabel = (recharge?: string | null) => {
-    switch (recharge) {
-      case 'per_turn':
-        return 'Каждый ход';
-      case 'per_round':
-        return 'Каждый раунд';
-      case 'short_rest':
-        return 'Короткий отдых';
-      case 'long_rest':
-        return 'Длинный отдых';
-      case 'custom':
-        return 'Произвольно';
-      default:
-        return 'Без авто-восстановления';
-    }
   };
 
   // Функция для получения цвета полоски редкости
@@ -1198,7 +1241,7 @@ const CardLibrary = () => {
     { id: 'races', label: 'Виды', icon: <Users size={18} /> },
     { id: 'classes', label: 'Классы', icon: <Shield size={18} /> },
     { id: 'resources', label: 'Ресурсы', icon: <Gem size={18} /> },
-    { id: 'variables', label: 'Переменные', icon: <Variable size={18} /> },
+    { id: 'variables', label: 'Переменные', icon: <VariableIcon size={18} /> },
     { id: 'concepts', label: 'Понятия', icon: <Lightbulb size={18} /> },
   ];
   const handleContentTypeChange = (next: LibraryContentType) => {
@@ -1720,17 +1763,45 @@ const CardLibrary = () => {
         </div>
       )}
 
-      {contentType === 'variables' && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg mb-2">Переменные (число/dice) для формул эффектов</p>
-          <p className="text-gray-400 text-sm mb-4 max-w-xl mx-auto">
-            Переменная — это имя, тип и значение по умолчанию; значение на персонаже задают эффекты.
-            Библиотека и конструктор — на отдельной странице.
-          </p>
-          <Link to="/variable-creator" className="btn-primary inline-block">
-            Открыть библиотеку переменных
-          </Link>
-        </div>
+      {!loading && contentType === 'variables' && variables.length === 0 && (
+        <div className="text-center py-12 text-gray-500">Переменные не найдены</div>
+      )}
+
+      {!loading && contentType === 'variables' && variables.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-gray-600">
+            Показано: {variables.length} из {totalCards} переменных
+          </div>
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+              {variables.map((variable) => (
+                <div key={variable.variable_id} className="flex justify-center">
+                  <VariablePreview variable={variable} onClick={() => handleVariableClick(variable)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {variables.map((variable) => (
+                <button
+                  type="button"
+                  key={variable.variable_id}
+                  onClick={() => handleVariableClick(variable)}
+                  className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                >
+                  <div className="font-medium truncate text-gray-900">{variable.name}</div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {variable.variable_id} · {variableTypeLabel(variable.var_type)}
+                  </div>
+                  <div className="text-xs text-gray-400 truncate">
+                    По умолчанию: {variable.default_value || '—'}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {!loading && contentType === 'concepts' && concepts.length === 0 && (
@@ -2270,62 +2341,21 @@ const CardLibrary = () => {
           </div>
 
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
               {resources.map((resource) => (
-                <div
-                  key={resource.resource_id}
-                  className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-slate-50 p-4 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-lg border border-blue-100 bg-white flex items-center justify-center overflow-hidden">
-                      <img
-                        src={resource.image_url || resourceIcon(resourceOptions, resource.resource_id)}
-                        alt={resource.name}
-                        className="w-10 h-10 object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/charges/main_action.png'; }}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-gray-900 truncate">{resource.name}</div>
-                      <div className="text-xs font-mono text-gray-500 truncate">{resource.resource_id}</div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        <span className="rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs">
-                          {getResourceCategoryLabel(resource.category)}
-                        </span>
-                        <span className="rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-xs">
-                          {getResourceRechargeLabel(resource.recharge)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {resource.description && (
-                    <p className="mt-3 text-sm text-gray-600 line-clamp-3">{resource.description}</p>
-                  )}
-                  <div className="mt-4 flex items-center justify-between border-t border-blue-100 pt-3">
-                    <Link
-                      to={`/resource-creator?edit=${resource.resource_id}`}
-                      className="text-sm font-medium text-blue-700 hover:text-blue-900"
-                    >
-                      Редактировать
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteResource(resource.resource_id)}
-                      className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
-                    >
-                      <Trash2 size={14} />
-                      Удалить
-                    </button>
-                  </div>
+                <div key={resource.resource_id} className="flex justify-center">
+                  <ResourcePreview resource={resource} onClick={() => handleResourceClick(resource)} />
                 </div>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {resources.map((resource) => (
-                <div
+                <button
+                  type="button"
                   key={resource.resource_id}
-                  className="w-full p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                  onClick={() => handleResourceClick(resource)}
+                  className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
@@ -2333,35 +2363,20 @@ const CardLibrary = () => {
                         src={resource.image_url || resourceIcon(resourceOptions, resource.resource_id)}
                         alt={resource.name}
                         className="w-9 h-9 object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/charges/main_action.png'; }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate text-gray-900">{resource.name}</div>
                       <div className="text-xs text-gray-500 truncate">
-                        {resource.resource_id} · {getResourceCategoryLabel(resource.category)}
+                        {resource.resource_id} · {resourceCategoryLabel(resource.category)}
                       </div>
                       <div className="text-xs text-gray-400 truncate">
-                        {getResourceRechargeLabel(resource.recharge)}
+                        {resourceRechargeLabel(resource.recharge)}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <Link
-                        to={`/resource-creator?edit=${resource.resource_id}`}
-                        className="text-xs font-medium text-blue-700 hover:text-blue-900"
-                      >
-                        Редактировать
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteResource(resource.resource_id)}
-                        className="text-xs text-red-600 hover:text-red-800"
-                      >
-                        Удалить
-                      </button>
-                    </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -2745,6 +2760,20 @@ const CardLibrary = () => {
         isOpen={isConceptModalOpen}
         onClose={() => { setIsConceptModalOpen(false); setSelectedConcept(null); }}
         onDelete={handleDeleteConcept}
+      />
+
+      <ResourceDetailModal
+        resource={selectedResource}
+        isOpen={isResourceModalOpen}
+        onClose={() => { setIsResourceModalOpen(false); setSelectedResource(null); }}
+        onDelete={handleDeleteResource}
+      />
+
+      <VariableDetailModal
+        variable={selectedVariable}
+        isOpen={isVariableModalOpen}
+        onClose={() => { setIsVariableModalOpen(false); setSelectedVariable(null); }}
+        onDelete={handleDeleteVariable}
       />
       </div>
     </div>

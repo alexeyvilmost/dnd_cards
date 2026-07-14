@@ -3,7 +3,7 @@
  * существующий *Preview. Единая точка «ссылка → превью» — без переписывания превью.
  */
 import type { CSSProperties } from 'react';
-import type { Card, Spell, Action, PassiveEffect, Concept } from '../types';
+import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef } from './EntityRefRegistry';
 import CardPreview from './CardPreview';
@@ -11,6 +11,8 @@ import SpellPreview from './SpellPreview';
 import ActionPreview from './ActionPreview';
 import EffectPreview from './EffectPreview';
 import ConceptPreview from './ConceptPreview';
+import ResourcePreview from './ResourcePreview';
+import VariablePreview from './VariablePreview';
 
 interface EntityRefPreviewProps {
   type: EntityRefType;
@@ -34,6 +36,8 @@ const EntityRefPreview: React.FC<EntityRefPreviewProps> = ({ type, id }) => {
     case 'action': return <ActionPreview action={entity as Action} disableHover />;
     case 'effect': return <EffectPreview effect={entity as PassiveEffect} disableHover />;
     case 'concept': return <ConceptPreview concept={entity as Concept} disableHover />;
+    case 'resource': return <ResourcePreview resource={entity as ResourceDefinition} disableHover />;
+    case 'variable': return <VariablePreview variable={entity as Variable} disableHover />;
     default: return null;
   }
 };

@@ -4,8 +4,8 @@
  * затем рендерит нужную модалку. Удаление — реальный вызов API + закрытие.
  */
 import { useCallback, useState, type ReactNode } from 'react';
-import type { Card, Spell, Action, PassiveEffect, Concept } from '../types';
-import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi } from '../api/client';
+import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
+import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi } from '../api/client';
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef, evictEntity } from './EntityRefRegistry';
 import { EntityDetailContext } from '../contexts/entityDetail';
@@ -14,6 +14,8 @@ import ActionDetailModal from './ActionDetailModal';
 import EffectDetailModal from './EffectDetailModal';
 import CardDetailModal from './CardDetailModal';
 import ConceptDetailModal from './ConceptDetailModal';
+import ResourceDetailModal from './ResourceDetailModal';
+import VariableDetailModal from './VariableDetailModal';
 
 const DELETERS: Record<EntityRefType, (id: string) => Promise<void>> = {
   card: (id) => cardsApi.deleteCard(id),
@@ -21,6 +23,8 @@ const DELETERS: Record<EntityRefType, (id: string) => Promise<void>> = {
   action: (id) => actionsApi.deleteAction(id),
   effect: (id) => effectsApi.deleteEffect(id),
   concept: (id) => conceptsApi.deleteConcept(id),
+  resource: (id) => resourcesApi.deleteResource(id),
+  variable: (id) => variablesApi.deleteVariable(id),
 };
 
 /** Загружает сущность по ссылке и рендерит подходящую детальную модалку. */
@@ -43,6 +47,8 @@ const DetailHost = ({ type, id, onClose }: { type: EntityRefType; id: string; on
     case 'action': return <ActionDetailModal action={entity as Action} isOpen onClose={onClose} onDelete={handleDelete} onUpdated={onImageUpdated} />;
     case 'effect': return <EffectDetailModal effect={entity as PassiveEffect} isOpen onClose={onClose} onDelete={handleDelete} onUpdated={onImageUpdated} />;
     case 'concept': return <ConceptDetailModal concept={entity as Concept} isOpen onClose={onClose} onDelete={handleDelete} />;
+    case 'resource': return <ResourceDetailModal resource={entity as ResourceDefinition} isOpen onClose={onClose} onDelete={handleDelete} />;
+    case 'variable': return <VariableDetailModal variable={entity as Variable} isOpen onClose={onClose} onDelete={handleDelete} />;
     default: return null;
   }
 };

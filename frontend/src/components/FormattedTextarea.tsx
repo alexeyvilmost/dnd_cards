@@ -30,6 +30,7 @@ const FORMAT_ACTIONS: FormatAction[] = [
 type LinkResult = { type: EntityRefType; ref: string; name: string; typeLabel: string };
 const TYPE_LABEL: Record<EntityRefType, string> = {
   card: 'Предмет', spell: 'Заклинание', action: 'Действие', effect: 'Эффект', concept: 'Понятие',
+  resource: 'Ресурс', variable: 'Переменная',
 };
 
 async function searchLinkTargets(query: string): Promise<LinkResult[]> {

@@ -4,14 +4,15 @@
  * поэтому повторные наведения не перезапрашивают. Бэкенды принимают и UUID, и slug.
  */
 import { useEffect, useState } from 'react';
-import type { Card, Spell, Action, PassiveEffect, Concept } from '../types';
-import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi } from '../api/client';
+import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
+import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi } from '../api/client';
 
-export type EntityRefType = 'card' | 'spell' | 'action' | 'effect' | 'concept';
-export type EntityData = Card | Spell | Action | PassiveEffect | Concept;
+export type EntityRefType = 'card' | 'spell' | 'action' | 'effect' | 'concept' | 'resource' | 'variable';
+export type EntityData = Card | Spell | Action | PassiveEffect | Concept | ResourceDefinition | Variable;
 
 export const ENTITY_TYPE_LABEL: Record<EntityRefType, string> = {
   card: 'Предмет', spell: 'Заклинание', action: 'Действие', effect: 'Эффект', concept: 'Понятие',
+  resource: 'Ресурс', variable: 'Переменная',
 };
 
 const FETCHERS: Record<EntityRefType, (id: string) => Promise<EntityData>> = {
@@ -20,6 +21,8 @@ const FETCHERS: Record<EntityRefType, (id: string) => Promise<EntityData>> = {
   action: (id) => actionsApi.getAction(id),
   effect: (id) => effectsApi.getEffect(id),
   concept: (id) => conceptsApi.getConcept(id),
+  resource: (id) => resourcesApi.getResource(id),
+  variable: (id) => variablesApi.getVariable(id),
 };
 
 type CacheEntry = { status: 'loading' | 'ok' | 'error'; data?: EntityData; promise?: Promise<EntityData> };
