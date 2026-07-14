@@ -91,6 +91,9 @@ function cardToWeapon(card: Card, character: CharacterContext, twoHandedGrip = f
     damages,
     enchant: magic ? weaponEnchant(card) : 0,
     properties: cardPropsList(card),
+    weaponType: card.weapon_type ?? null,
+    // Искусность — НЕ магическое свойство: работает и без настройки (гейт — выбор персонажа).
+    mastery: card.mastery ?? null,
   };
 }
 

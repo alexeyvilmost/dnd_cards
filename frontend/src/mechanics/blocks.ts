@@ -6,6 +6,7 @@ import {
   ACTIVE_RESOURCES,
   ATTACK_ABILITIES,
   CHOICE_SOURCES,
+  WEAPON_TYPES,
   CONDITIONS,
   DAMAGE_TYPE_OPTIONS,
   LANGUAGES,
@@ -375,6 +376,18 @@ export const EFFECT_BLOCKS: Block[] = [
     defaults: { range: 60 },
     build: (v) => ({ kind: 'grant_sense', sense: v.sense, range: Number(v.range) || 60 }),
     summary: (v) => `${labelOf(SENSES, String(v.sense))} ${v.range} фт`,
+  },
+  {
+    id: 'eff_weapon_mastery',
+    label: 'Искусность оружия',
+    group: 'effect',
+    fields: [
+      { key: 'value', label: 'Вид оружия', type: 'select', options: WEAPON_TYPES },
+    ],
+    // Искусность 2024: персонаж может пользоваться свойством искусности этого ВИДА оружия.
+    // Обычно выдаётся через choice(source:'weapon', apply:{kind:'weapon_mastery'}) — «выбери N видов».
+    build: (v) => ({ kind: 'weapon_mastery', value: v.value }),
+    summary: (v) => `Искусность: ${labelOf(WEAPON_TYPES, String(v.value))}`,
   },
   {
     id: 'eff_grant_speed',
@@ -907,6 +920,7 @@ function payloadToEntry(p: Dict): { blockId: string; values: Dict } {
       } };
     }
     case 'grant_sense': return { blockId: 'eff_grant_sense', values: { sense: p.sense, range: p.range ?? 60 } };
+    case 'weapon_mastery': return { blockId: 'eff_weapon_mastery', values: { value: p.value } };
     case 'grant_speed': return { blockId: 'eff_grant_speed', values: { mode: p.mode, value: p.value } };
     case 'grant_ability_score': return { blockId: 'eff_grant_ability', values: { ability: p.ability, amount: p.amount ?? 1 } };
     case 'grant_effect': {
@@ -1124,6 +1138,7 @@ export function optionsForChoiceSource(source: string): RegistryItem[] {
     case 'language': return LANGUAGES;
     case 'feat': return ORIGIN_FEATS;
     case 'damage_type': return DAMAGE_TYPE_OPTIONS;
+    case 'weapon': return WEAPON_TYPES;
     default: return [];
   }
 }

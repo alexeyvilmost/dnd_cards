@@ -9,6 +9,7 @@ import PropertySelector from '../PropertySelector';
 import TagsInput from '../TagsInput';
 import weaponTypesData from '../../../utils/weapon_types.json';
 import { useToast } from '../../contexts/ToastContext';
+import { useMasteryEffects } from '../../utils/mastery';
 
 interface EquipmentSectionProps {
   register: UseFormRegister<CreateCardRequest>;
@@ -24,6 +25,8 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
   const name = watch('name');
   const weapon_type = watch('weapon_type');
   const { showToast } = useToast();
+  // Список мастерств — данные (эффекты type='Эффект мастерства'), не хардкод.
+  const masteryEffects = useMasteryEffects();
   const lastProcessedName = useRef<string>('');
 
   // Функция для поиска типа оружия по названию
@@ -290,6 +293,27 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
                 )
               ))}
             </select>
+          </div>
+
+          {/* Искусность (Weapon Mastery, PHB 2024): у каждого оружия ровно одно свойство.
+              Список — данные (эффекты type='Эффект мастерства'), а не хардкод. */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Мастерство (искусность)
+            </label>
+            <select
+              {...register('mastery')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Без мастерства</option>
+              {masteryEffects.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Свойство искусности оружия. Работает только у персонажа с особенностью «Искусное
+              владение оружием» и только для выбранных им видов оружия.
+            </p>
           </div>
 
           <div className="border-t border-gray-200 pt-4">

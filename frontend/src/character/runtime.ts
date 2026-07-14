@@ -95,6 +95,8 @@ export function buildCharacterContext(
     characterSpeed: ruleState.speed,
     baseSpeed: ruleState.baseSpeed,
     baseSize: ruleState.size,
+    // Искусность 2024: выбранные виды оружия — по ним движок гейтит свойство искусности оружия.
+    weaponMasteries: ruleState.weaponMasteries,
     hitDie: klass?.hit_die ?? null,
     equippedCards,
     knownCards: equippedCards,

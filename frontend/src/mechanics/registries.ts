@@ -1,6 +1,21 @@
 import { DAMAGE_TYPES } from '../utils/damageTypes';
+import weaponTypesData from '../../utils/weapon_types.json';
 
 export type RegistryItem = { id: string; label: string };
+
+/**
+ * Виды оружия (Простое/Воинское, рукопашное/дальнобойное) — из общего справочника
+ * utils/weapon_types.json (тот же, что использует конструктор предмета). id = card.weapon_type,
+ * поэтому выбор «Искусное владение оружием» напрямую сопоставляется с оружием в руке.
+ * Данные, а не хардкод: новый вид оружия появляется в выборе сам (парадигма №1).
+ */
+export const WEAPON_TYPES: RegistryItem[] = (weaponTypesData.basic ?? []).flatMap(
+  (group: { russian_name?: string; weapons?: Array<{ name: string; russian_name: string }> }) =>
+    (group.weapons ?? []).map((w) => ({
+      id: w.name,
+      label: group.russian_name ? `${w.russian_name} (${group.russian_name.toLowerCase()})` : w.russian_name,
+    })),
+);
 
 export const ABILITIES: RegistryItem[] = [
   { id: 'str', label: 'Сила' },
@@ -276,6 +291,7 @@ export const CHOICE_SOURCES: RegistryItem[] = [
   { id: 'feat', label: 'Черта' },
   { id: 'spell', label: 'Заклинание' },
   { id: 'damage_type', label: 'Тип урона' },
+  { id: 'weapon', label: 'Вид оружия' },
   { id: 'subfeature', label: 'Подвариант' },
   { id: 'explicit', label: 'Явный список' },
   { id: 'effect', label: 'Эффект (бусины)' },
@@ -367,6 +383,9 @@ export function optionsForChoiceSource(source: string): RegistryItem[] {
       return ORIGIN_FEATS;
     case 'damage_type':
       return DAMAGE_TYPE_OPTIONS;
+    case 'weapon':
+      // «Искусное владение оружием»: выбор N ВИДОВ оружия (id = card.weapon_type).
+      return WEAPON_TYPES;
     default:
       return [];
   }

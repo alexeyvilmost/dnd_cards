@@ -82,6 +82,8 @@ export interface Card {
   source?: string | null;
   type?: ItemType | null;
   weapon_type?: string | null;
+  /** Свойство искусности (Weapon Mastery, PHB 2024): id эффекта-мастерства (type='Эффект мастерства'). */
+  mastery?: string | null;
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
@@ -131,6 +133,8 @@ export interface CreateCardRequest {
   source?: string | null;
   type?: ItemType | null;
   weapon_type?: string | null;
+  /** Свойство искусности (Weapon Mastery, PHB 2024): id эффекта-мастерства (type='Эффект мастерства'). */
+  mastery?: string | null;
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;
@@ -179,6 +183,8 @@ export interface UpdateCardRequest {
   source?: string | null;
   type?: ItemType | null;
   weapon_type?: string | null;
+  /** Свойство искусности (Weapon Mastery, PHB 2024): id эффекта-мастерства (type='Эффект мастерства'). */
+  mastery?: string | null;
   related_cards?: Properties | null;
   related_actions?: Properties | null;
   related_effects?: Properties | null;

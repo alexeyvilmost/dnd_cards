@@ -102,6 +102,10 @@ export interface CharacterRuleState {
   /** Доп. режимы перемещения (grant_speed mode≠walk): fly/swim/climb → скорость (фт).
    *  mode:'walk' вливается в общую speed (numericMods), здесь только небазовые режимы. */
   speeds: Record<string, number>;
+  /** Искусность (Weapon Mastery, PHB 2024): выбранные ВИДЫ оружия (card.weapon_type).
+   *  Свойство искусности оружия работает, только если его вид здесь (особенность «Искусное
+   *  владение оружием» + выбор игрока, перевыбираемый на листе после долгого отдыха). */
+  weaponMasteries: string[];
   initiativeBonus: number;
   passivePerception: number;
   spellcasting: AssembledCharacter['derived']['spellcasting'];

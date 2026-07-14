@@ -158,6 +158,10 @@ export interface CharacterContext {
    * магических бонусов: предмет с requires_attunement без настройки даёт только чистые статы.
    * undefined — контекст без данных о настройке (тесты) → бонусы не гейтятся. */
   attunedIds?: string[];
+  /** Искусность (Weapon Mastery, PHB 2024): ВЫБРАННЫЕ виды оружия (card.weapon_type: longsword…).
+   * Свойство искусности оружия работает, только если его вид здесь. undefined/[] — искусности нет
+   * (нет классовой особенности либо выбор не сделан) → мастерство не применяется. */
+  weaponMasteries?: string[];
 }
 
 export interface TargetContext {
@@ -190,6 +194,13 @@ export interface ExecuteContext {
    *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). repeatable — повторяемый
    *  эффект накапливается (не перезаписывается) при повторной выдаче. */
   grantedEffects?: Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean } | undefined>;
+  /** Предзагруженные эффекты-мастерства (Weapon Mastery 2024): id эффекта → {name, mechanics}.
+   *  Ключ — card.mastery оружия. Движок синхронный, поэтому механику мастерства (как и grantedEffects)
+   *  резолвит лист/бой заранее. Без этой карты мастерство молча не сработает. */
+  masteryEffects?: Record<string, { name?: string; mechanics?: unknown } | undefined>;
+  /** Модификатор характеристики атаки текущим оружием → формульный токен weapon_mod.
+   *  Проставляется движком на прогоне механики искусности (СЛ Опрокидывающего, урон Задевающего). */
+  weaponMod?: number;
   /** Планирующий прогон для плана кубов: спасброски берут ветку провала, чтобы кости
    * урона попали в план (иначе при СЛ-успехе on_fail-урон не запланируется). Не для боя. */
   planning?: boolean;
@@ -234,6 +245,10 @@ export interface WeaponContext {
   /** Магический бонус «+N» к броскам атаки и к основному урону. */
   enchant: number;
   properties: string[];
+  /** Вид оружия (longsword, scimitar…) — по нему гейтится искусность (выбор персонажа). */
+  weaponType?: string | null;
+  /** Свойство искусности (Weapon Mastery 2024): id эффекта-мастерства из card.mastery. */
+  mastery?: string | null;
 }
 
 export interface ValueBreakdown {

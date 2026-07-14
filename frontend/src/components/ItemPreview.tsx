@@ -10,6 +10,7 @@ import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
 import { useContainerTotals, useResolvedRefs } from './RelatedItems';
+import { findMastery, useMasteryEffects } from '../utils/mastery';
 
 // Третий режим отображения предмета (entityDisplay.items='interface'): стат-блок в стиле превью
 // ЗАКЛИНАНИЯ (тёмный BG3, классы .sp-*, общий SPELL_CARD_CSS), но с полями ПРЕДМЕТА. Порядок полей —
@@ -63,7 +64,9 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
   const dmgEntries = [...weaponDmg, ...elementalDmg, ...mstats.damage];
   const healEntries = mstats.heal;
   const defenseBonus = (card.bonus_type === 'defense' && card.bonus_value) ? String(card.bonus_value) : null;
-  const hasStats = mstats.attack || mstats.save || dmgEntries.length > 0 || healEntries.length > 0 || !!defenseBonus;
+  // Искусность (Weapon Mastery 2024): структурное поле card.mastery → эффект-мастерство.
+  const mastery = findMastery(useMasteryEffects(), card.mastery);
+  const hasStats = mstats.attack || mstats.save || dmgEntries.length > 0 || healEntries.length > 0 || !!defenseBonus || !!mastery;
 
   // Мета-строки (только релевантные). Цена/вес — реальными иконками; остальное — эмодзи.
   const meta: MetaEntry[] = [];
@@ -108,6 +111,12 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           )}
           {defenseBonus && (
             <div className="sp-srow"><span className="sp-lbl">Защита:</span><span className="sp-bonus">{defenseBonus}</span></div>
+          )}
+          {mastery && (
+            <div className="sp-srow">
+              <span className="sp-lbl">Мастерство:</span>
+              <span className="sp-bonus" title={mastery.description ?? undefined}>{mastery.name}</span>
+            </div>
           )}
           {dmgEntries.length > 0 && (
             <div className="sp-srow">

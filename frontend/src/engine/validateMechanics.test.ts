@@ -50,6 +50,8 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
     'grant_effect', 'grant_language', 'grant_expertise',
     'grant_proficiency', 'grant_feat', 'grant_spell',   // сборка персонажа
     'grant_ability_score', 'grant_sense', 'grant_speed',// D3: применяются резолвером (resolveCharacterRules.ts:253-364)
+    'weapon_mastery',                                   // искусность 2024: резолвер → ruleState.weaponMasteries,
+                                                        // движок гейтит свойство оружия (engine/mastery.ts)
     'choice',                                           // мета-kind (ChoiceResolver / expandChoices)
   ];
   // ЧАСТИЧНО: kind исполняется, но не полностью (чип+нарратив, один путь, лог-only).

@@ -353,6 +353,18 @@ export function sizeToNumber(s: string | null | undefined): number {
   return 2;
 }
 
+/**
+ * weapon_mastery → ВЫБРАННЫЕ виды оружия для искусности (Weapon Mastery, PHB 2024).
+ * Пейлоад приходит из choice особенности «Искусное владение оружием» (source:'weapon',
+ * apply:{kind:'weapon_mastery'}) — как выбор кузни, так и in-play (перевыбор на листе после
+ * долгого отдыха): оба пути идут через resolvedChoices в этот же резолвер.
+ */
+function collectWeaponMastery(payload: Dict, masteries: string[]) {
+  if (String(payload.kind ?? '') !== 'weapon_mastery') return;
+  const v = String(payload.value ?? payload.weapon_type ?? '').trim();
+  if (v && !masteries.includes(v)) masteries.push(v);
+}
+
 /** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.walk_grant,
  *  входит в базовую скорость; non-walk режимы fly/swim/climb → speeds). */
 function collectSenseSpeed(
@@ -397,6 +409,7 @@ function applyPayload(
   repeatableFeats: Set<string>,
   senses: SenseEntry[],
   speeds: Record<string, number>,
+  masteries: string[],
   depth = 0,
 ) {
   const level = input.draft.level ?? 1;
@@ -409,12 +422,13 @@ function applyPayload(
       // Вложенный choice (напр. item.grants выбранного режима ASI → выбор характеристики):
       // разворачиваем рекурсивно тем же путём, ключ вложенного выбора считается по его id.
       if (selectedPayload.kind === 'choice') {
-        applyPayload(selectedPayload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, depth + 1);
+        applyPayload(selectedPayload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries, depth + 1);
         continue;
       }
       if (!passesLevelGate(selectedPayload, level)) continue;
       collectNumericModifier(selectedPayload, formulaCtx, numericMods, source);
       collectSenseSpeed(selectedPayload, formulaCtx, numericMods, senses, speeds);
+      collectWeaponMastery(selectedPayload, masteries);
       const grant = grantFromPayload(selectedPayload, source, choiceId);
       if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
     }
@@ -424,6 +438,7 @@ function applyPayload(
   if (!passesLevelGate(payload, level)) return;
   collectNumericModifier(payload, formulaCtx, numericMods, source);
   collectSenseSpeed(payload, formulaCtx, numericMods, senses, speeds);
+  collectWeaponMastery(payload, masteries);
   const grant = grantFromPayload(payload, source);
   if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
 }
@@ -441,9 +456,10 @@ function applyMechanics(
   repeatableFeats: Set<string>,
   senses: SenseEntry[],
   speeds: Record<string, number>,
+  masteries: string[],
 ) {
   for (const payload of payloadsFromMechanics(entity.mechanics)) {
-    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
+    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
   }
 }
 
@@ -526,18 +542,20 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const numericMods: Record<string, number> = {};
   const senses: SenseEntry[] = [];
   const speeds: Record<string, number> = {};
+  // Искусность: выбранные виды оружия (Weapon Mastery 2024).
+  const masteries: string[] = [];
   // Повторяемые черты — id из собранных черт (assembled.feats).
   const repeatableFeats = new Set((assembled.feats || []).filter((f) => f.repeatable).map((f) => f.id));
 
   for (const { effect, origin } of assembled.effects as OriginEffect[]) {
-    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
+    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
   }
   for (const { action, origin } of assembled.actions as OriginAction[]) {
-    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
+    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
   }
   for (const runtime of input.runtimeSources || []) {
     for (const payload of payloadsFromMechanics(runtime.mechanics)) {
-      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds);
+      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
     }
   }
 
@@ -658,6 +676,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     carryingCapacity,
     senses,
     speeds,
+    weaponMasteries: masteries,
     initiativeBonus,
     passivePerception: 10 + (skillBonuses.perception ?? abilityMod(scores.wis)),
     spellcasting: spellDerived,

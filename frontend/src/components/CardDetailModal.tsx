@@ -19,6 +19,7 @@ import ElementalDamageDisplay from './ElementalDamageDisplay';
 import { FormattedText } from '../utils/formattedText';
 import { getRarityGlowColor, getRarityGlowSettings } from '../utils/rarityGlow';
 import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/currencies';
+import { findMastery, useMasteryEffects } from '../utils/mastery';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -39,6 +40,8 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   onEquip
 }) => {
   const containerSum = useContainerTotals(card); // S6: сумма веса/цены содержимого контейнера
+  // Искусность (Weapon Mastery 2024): структурное поле card.mastery → эффект-мастерство.
+  const masteryEffect = findMastery(useMasteryEffects(), card?.mastery);
   const asInterface = useSiteSettings().itemPreview === 'interface'; // #4: детальное превью как стат-блок
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -383,6 +386,12 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             )}
             {card.properties && card.properties.length > 0 && (
               <p><strong>Свойства:</strong> {getPropertyLabels(card.properties).join(', ')}</p>
+            )}
+            {/* Искусность (Weapon Mastery 2024) — структурное поле card.mastery. */}
+            {masteryEffect && (
+              <p title={masteryEffect.description ?? undefined}>
+                <strong>Мастерство:</strong> {masteryEffect.name}
+              </p>
             )}
             {card.tags && card.tags.length > 0 && (
               <p><strong>Теги:</strong> {card.tags.join(', ')}</p>

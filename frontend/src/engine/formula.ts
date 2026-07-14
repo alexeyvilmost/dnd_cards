@@ -19,6 +19,10 @@ export interface FormulaContext {
   spellSlotAbove?: number;
   rageBonus?: number;
   characterSpeed?: number;
+  /** Модификатор характеристики, использованной для броска атаки этим оружием (СИЛ/ЛВК с учётом
+   *  Фехтовального/Дальнобойного). Нужен искусности 2024: СЛ Опрокидывающего и урон Задевающего
+   *  считаются «от характеристики, использованной для броска атаки». */
+  weaponMod?: number;
   /** Переменные персонажа (martial_arts_die, rage_damage_modifier, ...). */
   variables?: Record<string, VariableValue>;
   rng?: () => number;
@@ -225,6 +229,11 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
   }
   if (lower === 'character_speed') {
     return addModifier(sink, ctx.characterSpeed ?? 0, 'скорость', 'скорость персонажа');
+  }
+  // Искусность 2024: «модификатор характеристики, использованной для броска атаки» —
+  // подставляется движком из оружия в руке (см. engine/mastery.ts).
+  if (lower === 'weapon_mod') {
+    return addModifier(sink, ctx.weaponMod ?? 0, 'оружие', 'модификатор характеристики атаки');
   }
 
   if (lower.startsWith('class_level:')) {

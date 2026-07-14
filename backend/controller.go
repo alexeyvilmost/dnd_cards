@@ -268,6 +268,7 @@ func (cc *CardController) buildBattleStats(card Card) gin.H {
 		"kind":           kind,
 		"slot":           card.Slot,
 		"weapon_type":    card.WeaponType,
+		"mastery":        card.Mastery,
 		"damage_dice":    emptyToNil(damageDice),
 		"damage_type":    emptyToNil(damageType),
 		"to_hit_bonus":   toHitBonus,
@@ -451,6 +452,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Source:                       req.Source,
 		Type:                         req.Type,
 		WeaponType:                   req.WeaponType,
+		Mastery:                      req.Mastery,
 		RelatedCards:                 NormalizeProperties(req.RelatedCards),
 		RelatedActions:               NormalizeProperties(req.RelatedActions),
 		RelatedEffects:               NormalizeProperties(req.RelatedEffects),
@@ -630,6 +632,14 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	if req.WeaponType != nil {
 		card.WeaponType = req.WeaponType
+	}
+	if req.Mastery != nil {
+		// Пустая строка = снять мастерство (иначе его нельзя было бы убрать через PUT).
+		if *req.Mastery == "" {
+			card.Mastery = nil
+		} else {
+			card.Mastery = req.Mastery
+		}
 	}
 	if req.RelatedCards != nil {
 		card.RelatedCards = NormalizeProperties(req.RelatedCards)

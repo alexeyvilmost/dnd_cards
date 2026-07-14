@@ -381,6 +381,7 @@ type Card struct {
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
 	WeaponType                   *string        `json:"weapon_type" gorm:"type:varchar(50)"` // Тип оружия (например, longsword, scimitar)
+	Mastery                      *string        `json:"mastery" gorm:"type:varchar(64)"`     // Свойство искусности (Weapon Mastery, PHB 2024): id эффекта-мастерства
 	RelatedCards                 *Properties    `json:"related_cards" gorm:"type:text"`
 	RelatedActions               *Properties    `json:"related_actions" gorm:"type:text"`
 	RelatedEffects               *Properties    `json:"related_effects" gorm:"type:text"`
@@ -431,6 +432,7 @@ type CreateCardRequest struct {
 	Source                       *string        `json:"source"`
 	Type                         *string        `json:"type"`
 	WeaponType                   *string        `json:"weapon_type"` // Тип оружия (например, longsword, scimitar)
+	Mastery                      *string        `json:"mastery"`     // Свойство искусности (Weapon Mastery 2024): id эффекта-мастерства
 	RelatedCards                 *Properties    `json:"related_cards"`
 	RelatedActions               *Properties    `json:"related_actions"`
 	RelatedEffects               *Properties    `json:"related_effects"`
@@ -478,6 +480,7 @@ type UpdateCardRequest struct {
 	Source                       *string        `json:"source"`
 	Type                         *string        `json:"type"`
 	WeaponType                   *string        `json:"weapon_type"` // Тип оружия (например, longsword, scimitar)
+	Mastery                      *string        `json:"mastery"`     // Свойство искусности (Weapon Mastery 2024): id эффекта-мастерства
 	RelatedCards                 *Properties    `json:"related_cards"`
 	RelatedActions               *Properties    `json:"related_actions"`
 	RelatedEffects               *Properties    `json:"related_effects"`
@@ -529,6 +532,7 @@ type CardResponse struct {
 	DefenseType                  *string        `json:"defense_type"`
 	Type                         *string        `json:"type"`
 	WeaponType                   *string        `json:"weapon_type"`
+	Mastery                      *string        `json:"mastery"`
 	DescriptionFontSize          *int           `json:"description_font_size"`
 	TextAlignment                *string        `json:"text_alignment"`
 	TextFontSize                 *int           `json:"text_font_size"`
@@ -815,6 +819,7 @@ func (card Card) ToCardResponse() CardResponse {
 		DefenseType:                  card.DefenseType,
 		Type:                         card.Type,
 		WeaponType:                   card.WeaponType,
+		Mastery:                      card.Mastery,
 		DescriptionFontSize:          card.DescriptionFontSize,
 		TextAlignment:                card.TextAlignment,
 		TextFontSize:                 card.TextFontSize,

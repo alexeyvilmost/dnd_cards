@@ -28,6 +28,7 @@ import { concentrationDC, concentrationEntry, dropConcentration } from './concen
 import { rollD20 } from './roll';
 import { applyDamageDieRules } from './rollRules';
 import { weaponContext, attackRangeFromEffect } from './weapon';
+import { activeMastery } from './mastery';
 
 type Dict = Record<string, unknown>;
 
@@ -68,6 +69,9 @@ function formulaCtx(ctx: ExecuteContext): FormulaContext {
     classLevels: ctx.character.classLevels,
     spellcastingMod: ctx.character.spellcastingMod,
     variables: ctx.character.variables,
+    // Искусность 2024: модификатор характеристики атаки текущим оружием (weapon_mod).
+    // Проставляется только на прогоне механики мастерства (см. runAttackRoll).
+    weaponMod: ctx.weaponMod,
     rng: ctx.rng,
   };
 }
@@ -1006,6 +1010,9 @@ function runAttackRoll(
     if (Array.isArray(payloads)) {
       next = applyPayloads(payloads, next, ctx, events, source, hand, false, whoTarget, targetRef, critDouble);
     }
+    // Искусность 2024 на попадании (Опрокидывающее/Ослабляющее/Замедляющее/Отвлекающее/
+    // Отталкивающее/Рассекающее) — до райдеров события, чтобы её эффекты уже были в состоянии.
+    next = runMastery(next, ctx, events, pending, targetRef, hand, 'hit');
     // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
     // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
     next = emitEvent({ kind: 'hit', source: 'self' }, next, ctx, events, pending, targetRef);
@@ -1015,9 +1022,37 @@ function runAttackRoll(
     if (Array.isArray(effect.on_miss)) {
       next = applyPayloads(effect.on_miss as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
     }
+    // Искусность на промахе: Задевающее (урон = модификатор характеристики атаки).
+    next = runMastery(next, ctx, events, pending, targetRef, hand, 'miss');
     next = emitEvent({ kind: 'miss', source: 'self' }, next, ctx, events, pending, targetRef);
   }
   return next;
+}
+
+/**
+ * Искусность оружия (Weapon Mastery, PHB 2024) на исходе броска атаки.
+ * Мастерство берётся из оружия в руке (card.mastery) и работает, только если его ВИД выбран
+ * персонажем (character.weaponMasteries) — см. engine/mastery.ts. Сама механика — данные эффекта,
+ * поэтому просто исполняем её штатным runMechanicEffects по цели этой же атаки.
+ * weapon_mod (модификатор характеристики атаки) прокидываем в формулы: от него зависят СЛ
+ * Опрокидывающего и урон Задевающего.
+ */
+function runMastery(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  pending: ReactionOffer[],
+  targetRef: TargetRef,
+  hand: 'main' | 'off',
+  event: 'hit' | 'miss',
+): RuntimeState {
+  const m = activeMastery(ctx, state, hand);
+  if (!m || m.event !== event) return state;
+  const effects = (m.mechanics.effects as Dict[] | undefined);
+  if (!Array.isArray(effects) || !effects.length) return state;
+  events.push(narrativeEvent(`Искусность: ${m.name}`));
+  const mctx: ExecuteContext = { ...ctx, weaponMod: m.weaponMod };
+  return runMechanicEffects(effects, state, mctx, events, m.name, pending, targetRef);
 }
 
 // Состояния, которые сейв пытается ИЗБЕЖАТЬ: значения condition-пейлоадов из on_fail (урон/прочее

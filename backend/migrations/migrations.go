@@ -459,6 +459,12 @@ func GetAllMigrations() []Migration {
 			Up:          addCharacterCurrentEncounter,
 			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE characters_v3 DROP COLUMN IF EXISTS current_encounter_id"); return err },
 		},
+		{
+			Version:     "076_add_card_mastery",
+			Description: "Свойство искусности оружия (Weapon Mastery, PHB 2024): структурная ссылка card.mastery → id эффекта-мастерства (раньше связь жила только текстом в description)",
+			Up:          addCardMastery,
+			Down:        removeCardMastery,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -3268,6 +3274,37 @@ func revertSpellArraysToTextArray(db *sql.DB) error {
 			"ALTER TABLE spells ALTER COLUMN %s TYPE TEXT[] USING ARRAY(SELECT jsonb_array_elements_text(%s))", col, col)
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to revert spells.%s to text[]: %w", col, err)
+		}
+	}
+	return nil
+}
+
+// addCardMastery — свойство искусности оружия (Weapon Mastery, PHB 2024).
+// Хранит id эффекта-мастерства (EFFECT-0248..0255, type='Эффект мастерства') — структурная
+// связь вместо текстовой ссылки [[Мастерство|concept:weapon_mastery]] в description.
+// Значение — UUID эффекта, поэтому varchar(64) без FK (эффекты живут в своей таблице,
+// жёсткий FK сломал бы импорт/сиды при частичной выгрузке).
+func addCardMastery(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards ADD COLUMN IF NOT EXISTS mastery VARCHAR(64)",
+		"CREATE INDEX IF NOT EXISTS idx_cards_mastery ON cards(mastery)",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+func removeCardMastery(db *sql.DB) error {
+	queries := []string{
+		"DROP INDEX IF EXISTS idx_cards_mastery",
+		"ALTER TABLE cards DROP COLUMN IF EXISTS mastery",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
 		}
 	}
 	return nil
