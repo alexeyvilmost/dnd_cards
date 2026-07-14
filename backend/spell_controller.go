@@ -176,6 +176,7 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 
 	spell := Spell{
 		Name:                req.Name,
+		NameEn:              req.NameEn,
 		Description:         req.Description,
 		DetailedDescription: req.DetailedDescription,
 		ImageURL:            req.ImageURL,
@@ -254,6 +255,7 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	if req.Name != "" {
 		spell.Name = req.Name
 	}
+	spell.NameEn = req.NameEn
 	if req.Description != "" {
 		spell.Description = req.Description
 	}

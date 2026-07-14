@@ -424,6 +424,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 
 	card := Card{
 		Name:                         req.Name,
+		NameEn:                       req.NameEn,
 		Properties:                   NormalizeProperties(req.Properties),
 		Description:                  req.Description,
 		DetailedDescription:          req.DetailedDescription,
@@ -552,6 +553,8 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.Name != "" {
 		card.Name = req.Name
 	}
+	// Без гварда: nil здесь законно значит «оригинального названия нет», иначе его было бы не стереть.
+	card.NameEn = req.NameEn
 	if req.Properties != nil {
 		card.Properties = NormalizeProperties(req.Properties)
 	}
@@ -1061,6 +1064,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 	log.Printf("🔍 [CREATE_ACTION] Создание объекта Action")
 	action := Action{
 		Name:                         req.Name,
+		NameEn:                       req.NameEn,
 		Description:                  req.Description,
 		DetailedDescription:          req.DetailedDescription,
 		ImageURL:                     req.ImageURL,
@@ -1135,6 +1139,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 	if req.Name != "" {
 		action.Name = req.Name
 	}
+	action.NameEn = req.NameEn
 	if req.Description != "" {
 		action.Description = req.Description
 	}
@@ -1424,6 +1429,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 	// Создание эффекта
 	effect := Effect{
 		Name:                         req.Name,
+		NameEn:                       req.NameEn,
 		Description:                  req.Description,
 		DetailedDescription:          req.DetailedDescription,
 		ImageURL:                     req.ImageURL,
@@ -1499,6 +1505,7 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 	if req.Name != "" {
 		effect.Name = req.Name
 	}
+	effect.NameEn = req.NameEn
 	if req.Description != "" {
 		effect.Description = req.Description
 	}

@@ -71,6 +71,7 @@ func (rc *ResourceController) CreateResource(c *gin.Context) {
 	resource := ResourceDefinition{
 		ResourceID:    req.ResourceID,
 		Name:          req.Name,
+		NameEn:        req.NameEn,
 		Description:   req.Description,
 		Category:      req.Category,
 		ImageURL:      req.ImageURL,
@@ -113,6 +114,7 @@ func (rc *ResourceController) UpdateResource(c *gin.Context) {
 	if req.Name != "" {
 		resource.Name = req.Name
 	}
+	resource.NameEn = req.NameEn
 	resource.Description = req.Description
 	if req.Category != "" {
 		resource.Category = req.Category

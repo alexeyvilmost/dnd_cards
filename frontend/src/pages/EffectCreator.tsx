@@ -67,6 +67,7 @@ const EffectCreator = () => {
           
           reset({
             name: effect.name,
+            name_en: effect.name_en || '',
             description: effect.description,
             detailed_description: effect.detailed_description || null,
             image_url: effect.image_url || '',
@@ -172,6 +173,7 @@ const EffectCreator = () => {
         
         const updateData: UpdatePassiveEffectRequest = {
           name: data.name,
+          name_en: data.name_en?.trim() || null,
           description: data.description,
           detailed_description: data.detailed_description,
           image_url: data.image_url,
@@ -291,6 +293,17 @@ const EffectCreator = () => {
                   placeholder="Название эффекта"
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Оригинальное название
+                </label>
+                <input
+                  {...register('name_en')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Rage"
+                />
               </div>
 
               <div>

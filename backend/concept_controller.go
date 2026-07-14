@@ -68,6 +68,7 @@ func (cc *ConceptController) CreateConcept(c *gin.Context) {
 	concept := ConceptEntity{
 		ConceptID:   req.ConceptID,
 		Name:        req.Name,
+		NameEn:      req.NameEn,
 		Description: req.Description,
 		ImageURL:    req.ImageURL,
 		SortOrder:   req.SortOrder,
@@ -107,6 +108,7 @@ func (cc *ConceptController) UpdateConcept(c *gin.Context) {
 	if req.Name != "" {
 		concept.Name = req.Name
 	}
+	concept.NameEn = req.NameEn
 	concept.Description = req.Description
 	concept.ImageURL = req.ImageURL
 	concept.SortOrder = req.SortOrder

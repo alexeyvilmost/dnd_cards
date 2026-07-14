@@ -118,7 +118,7 @@ func (fc *FeatController) CreateFeat(c *gin.Context) {
 	}
 
 	f := Feat{
-		Name: req.Name, Description: req.Description, DetailedDescription: req.DetailedDescription,
+		Name: req.Name, NameEn: req.NameEn, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, Category: req.Category,
 		Prerequisite: req.Prerequisite, AbilityIncrease: req.AbilityIncrease, Repeatable: req.Repeatable,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
@@ -162,6 +162,7 @@ func (fc *FeatController) UpdateFeat(c *gin.Context) {
 	if req.Name != "" {
 		f.Name = req.Name
 	}
+	f.NameEn = req.NameEn
 	if req.Description != "" {
 		f.Description = req.Description
 	}
@@ -322,7 +323,7 @@ func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 	}
 
 	b := Background{
-		Name: req.Name, Description: req.Description, DetailedDescription: req.DetailedDescription,
+		Name: req.Name, NameEn: req.NameEn, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, AbilityScores: req.AbilityScores,
 		OriginFeat: req.OriginFeat, SkillProficiencies: req.SkillProficiencies, ToolProficiency: req.ToolProficiency,
 		Equipment: req.Equipment, EquipmentOptions: req.EquipmentOptions, Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags,
@@ -366,6 +367,7 @@ func (bc *BackgroundController) UpdateBackground(c *gin.Context) {
 	if req.Name != "" {
 		b.Name = req.Name
 	}
+	b.NameEn = req.NameEn
 	if req.Description != "" {
 		b.Description = req.Description
 	}

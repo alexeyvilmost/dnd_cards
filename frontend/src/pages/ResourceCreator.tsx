@@ -45,6 +45,7 @@ const ResourceCreator = () => {
         reset({
           resource_id: resource.resource_id,
           name: resource.name,
+          name_en: resource.name_en || '',
           description: resource.description || '',
           category: resource.category || 'class_resource',
           image_url: resource.image_url || '',
@@ -120,6 +121,15 @@ const ResourceCreator = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Оригинальное название</label>
+          <input
+            {...register('name_en')}
+            placeholder="Rage Charge"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
         </div>
 
         <div>

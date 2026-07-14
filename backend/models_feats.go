@@ -23,6 +23,7 @@ const (
 type Feat struct {
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
+	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description           string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL              string         `json:"image_url" gorm:"type:text"`
@@ -54,6 +55,7 @@ func (Feat) TableName() string { return "feats" }
 // CreateFeatRequest - запрос на создание черты
 type CreateFeatRequest struct {
 	Name                string       `json:"name" binding:"required"`
+	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description" binding:"required"`
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
@@ -75,6 +77,7 @@ type CreateFeatRequest struct {
 // UpdateFeatRequest - запрос на обновление черты
 type UpdateFeatRequest struct {
 	Name                string       `json:"name"`
+	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description"`
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
@@ -96,6 +99,7 @@ type UpdateFeatRequest struct {
 type FeatResponse struct {
 	ID                  uuid.UUID    `json:"id"`
 	Name                string       `json:"name"`
+	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description"`
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
@@ -119,7 +123,7 @@ type FeatResponse struct {
 // ToFeatResponse преобразует модель черты в API-ответ.
 func (f Feat) ToFeatResponse() FeatResponse {
 	return FeatResponse{
-		ID: f.ID, Name: f.Name, Description: f.Description, DetailedDescription: f.DetailedDescription,
+		ID: f.ID, Name: f.Name, NameEn: f.NameEn, Description: f.Description, DetailedDescription: f.DetailedDescription,
 		ImageURL: f.ImageURL, Rarity: f.Rarity, CardNumber: f.CardNumber, Category: f.Category,
 		Prerequisite: f.Prerequisite, AbilityIncrease: f.AbilityIncrease,
 		RelatedEffects: f.RelatedEffects, RelatedActions: f.RelatedActions, Repeatable: f.Repeatable,
@@ -134,6 +138,7 @@ func (f Feat) ToFeatResponse() FeatResponse {
 type Background struct {
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
+	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description           string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL              string         `json:"image_url" gorm:"type:text"`
@@ -165,6 +170,7 @@ func (Background) TableName() string { return "backgrounds" }
 // CreateBackgroundRequest - запрос на создание предыстории
 type CreateBackgroundRequest struct {
 	Name                string      `json:"name" binding:"required"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description" binding:"required"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -186,6 +192,7 @@ type CreateBackgroundRequest struct {
 // UpdateBackgroundRequest - запрос на обновление предыстории
 type UpdateBackgroundRequest struct {
 	Name                string      `json:"name"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -207,6 +214,7 @@ type UpdateBackgroundRequest struct {
 type BackgroundResponse struct {
 	ID                  uuid.UUID   `json:"id"`
 	Name                string      `json:"name"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -230,7 +238,7 @@ type BackgroundResponse struct {
 // ToBackgroundResponse преобразует модель предыстории в API-ответ.
 func (b Background) ToBackgroundResponse() BackgroundResponse {
 	return BackgroundResponse{
-		ID: b.ID, Name: b.Name, Description: b.Description, DetailedDescription: b.DetailedDescription,
+		ID: b.ID, Name: b.Name, NameEn: b.NameEn, Description: b.Description, DetailedDescription: b.DetailedDescription,
 		ImageURL: b.ImageURL, Rarity: b.Rarity, CardNumber: b.CardNumber, AbilityScores: b.AbilityScores,
 		OriginFeat: b.OriginFeat, SkillProficiencies: b.SkillProficiencies, ToolProficiency: b.ToolProficiency,
 		Equipment: b.Equipment, EquipmentOptions: b.EquipmentOptions, Type: b.Type, Author: b.Author, Source: b.Source, Tags: b.Tags,

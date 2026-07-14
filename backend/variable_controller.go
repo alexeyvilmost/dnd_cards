@@ -73,6 +73,7 @@ func (vc *VariableController) CreateVariable(c *gin.Context) {
 	variable := Variable{
 		VariableID:   req.VariableID,
 		Name:         req.Name,
+		NameEn:       req.NameEn,
 		Description:  req.Description,
 		VarType:      req.VarType,
 		DefaultValue: req.DefaultValue,
@@ -114,6 +115,7 @@ func (vc *VariableController) UpdateVariable(c *gin.Context) {
 	if req.Name != "" {
 		variable.Name = req.Name
 	}
+	variable.NameEn = req.NameEn
 	variable.Description = req.Description
 	if req.VarType != "" {
 		variable.VarType = req.VarType

@@ -42,6 +42,7 @@ func (o ClassEquipmentOptions) Value() (driver.Value, error) {
 type Class struct {
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
+	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description           string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL              string         `json:"image_url" gorm:"type:text"`
@@ -82,6 +83,7 @@ func (Class) TableName() string { return "classes" }
 
 type CreateClassRequest struct {
 	Name                string      `json:"name" binding:"required"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description" binding:"required"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -113,6 +115,7 @@ type CreateClassRequest struct {
 
 type UpdateClassRequest struct {
 	Name                string      `json:"name"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -144,6 +147,7 @@ type UpdateClassRequest struct {
 type ClassResponse struct {
 	ID                  uuid.UUID   `json:"id"`
 	Name                string      `json:"name"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -177,7 +181,7 @@ type ClassResponse struct {
 
 func (cl Class) ToClassResponse() ClassResponse {
 	return ClassResponse{
-		ID: cl.ID, Name: cl.Name, Description: cl.Description, DetailedDescription: cl.DetailedDescription,
+		ID: cl.ID, Name: cl.Name, NameEn: cl.NameEn, Description: cl.Description, DetailedDescription: cl.DetailedDescription,
 		ImageURL: cl.ImageURL, Rarity: cl.Rarity, CardNumber: cl.CardNumber, HitDie: cl.HitDie,
 		PrimaryAbilities: cl.PrimaryAbilities, RecommendedAbilities: cl.RecommendedAbilities,
 		SavingThrows: cl.SavingThrows, ArmorTraining: cl.ArmorTraining,

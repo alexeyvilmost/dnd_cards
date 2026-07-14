@@ -101,7 +101,7 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 	}
 
 	cl := Class{
-		Name: req.Name, Description: req.Description, DetailedDescription: req.DetailedDescription,
+		Name: req.Name, NameEn: req.NameEn, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, HitDie: req.HitDie,
 		PrimaryAbilities: req.PrimaryAbilities, RecommendedAbilities: req.RecommendedAbilities,
 		SavingThrows: req.SavingThrows, ArmorTraining: req.ArmorTraining,
@@ -152,6 +152,7 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	if req.Name != "" {
 		cl.Name = req.Name
 	}
+	cl.NameEn = req.NameEn
 	if req.Description != "" {
 		cl.Description = req.Description
 	}

@@ -465,6 +465,12 @@ func GetAllMigrations() []Migration {
 			Up:          addCardMastery,
 			Down:        removeCardMastery,
 		},
+		{
+			Version:     "077_add_name_en",
+			Description: "Оригинальное (английское) название сущностей: name_en на всех 11 каталожных таблицах — показывается под основным названием в интерфейсных отображениях при включённой настройке",
+			Up:          addNameEn,
+			Down:        removeNameEn,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -3303,6 +3309,37 @@ func removeCardMastery(db *sql.DB) error {
 		"ALTER TABLE cards DROP COLUMN IF EXISTS mastery",
 	}
 	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+// nameEnTables — все каталожные сущности с пользовательским названием.
+// Имя колонки name_en, а не original_name: name_en — конвенция проекта (canon-JSON name_ru/name_en),
+// а original_name уже занято на image_library в другом смысле (имя загруженного файла).
+var nameEnTables = []string{
+	"cards", "actions", "effects", "spells",
+	"feats", "backgrounds", "races", "classes",
+	"resources", "variables", "concepts",
+}
+
+// addNameEn — оригинальное (английское) название сущности. Nullable: у самодельного
+// контента оригинала может не быть, и это нормальное состояние, а не ошибка.
+func addNameEn(db *sql.DB) error {
+	for _, table := range nameEnTables {
+		query := fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS name_en VARCHAR(255)", table)
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("failed to execute query '%s': %w", query, err)
+		}
+	}
+	return nil
+}
+
+func removeNameEn(db *sql.DB) error {
+	for _, table := range nameEnTables {
+		query := fmt.Sprintf("ALTER TABLE %s DROP COLUMN IF EXISTS name_en", table)
 		if _, err := db.Exec(query); err != nil {
 			return fmt.Errorf("failed to execute query '%s': %w", query, err)
 		}

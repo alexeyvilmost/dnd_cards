@@ -15,6 +15,7 @@ import CreatorShell, { CreatorActions, CREATOR_INPUT_CLS, CREATOR_LABEL_CLS } fr
 
 type ScalarForm = {
   name: string;
+  name_en: string;
   card_number: string;
   creature_type: string;
   size: string;
@@ -95,6 +96,7 @@ const RaceCreator = () => {
           const r = await racesApi.getRace(editId);
           reset({
             name: r.name, card_number: r.card_number || '',
+            name_en: r.name_en || '',
             creature_type: r.creature_type || 'Гуманоид', size: r.size || 'Средний',
             speed: r.speed ?? 30, extra_speeds: r.extra_speeds || '', darkvision: r.darkvision ?? 0,
             description: r.description || '', detailed_description: r.detailed_description || '',
@@ -146,6 +148,7 @@ const RaceCreator = () => {
     setError(null);
     const payload: CreateRaceRequest & UpdateRaceRequest = {
       name: data.name,
+      name_en: data.name_en?.trim() || null,
       description: data.description,
       detailed_description: data.detailed_description || null,
       image_url: data.image_url || '',
@@ -201,6 +204,10 @@ const RaceCreator = () => {
             <input {...register('card_number')} maxLength={30} disabled={isEditMode}
               placeholder="elf"
               className={`${inputCls} ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''}`} />
+          </div>
+          <div>
+            <label className={labelCls}>Оригинальное название</label>
+            <input {...register('name_en')} className={inputCls} placeholder="Elf" />
           </div>
         </div>
 

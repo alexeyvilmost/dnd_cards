@@ -13,6 +13,7 @@ import CreatorShell, { CreatorActions, CREATOR_INPUT_CLS, CREATOR_LABEL_CLS } fr
 
 type ClassForm = {
   name: string;
+  name_en: string;
   card_number: string;
   hit_die: string;
   primary_abilities: string;
@@ -94,6 +95,7 @@ const ClassCreator = () => {
         const cl = await classesApi.getClass(editId);
         reset({
           name: cl.name,
+          name_en: cl.name_en || '',
           card_number: cl.card_number || '',
           hit_die: cl.hit_die || 'd8',
           primary_abilities: (cl.primary_abilities || []).join(', '),
@@ -164,6 +166,7 @@ const ClassCreator = () => {
       };
       const payload: CreateClassRequest & UpdateClassRequest = {
         name: data.name,
+        name_en: data.name_en?.trim() || null,
         description: data.description,
         detailed_description: data.detailed_description || null,
         image_url: data.image_url || '',
@@ -218,6 +221,11 @@ const ClassCreator = () => {
             <input {...register('card_number')} maxLength={30} disabled={isEditMode} placeholder="fighter"
               className={`${inputCls} ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''}`} />
           </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>Оригинальное название</label>
+          <input {...register('name_en')} className={inputCls} placeholder="Fighter" />
         </div>
 
         <div className="border rounded-lg p-3 bg-gray-50 space-y-3">

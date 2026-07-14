@@ -14,6 +14,7 @@ import ChipToggleList from '../components/ChipToggleList';
 
 type ScalarForm = {
   name: string;
+  name_en: string;
   card_number: string;
   category: FeatCategory;
   prerequisite: string;
@@ -49,6 +50,7 @@ const FeatCreator = () => {
           const feat = await featsApi.getFeat(editId);
           reset({
             name: feat.name,
+            name_en: feat.name_en || '',
             card_number: feat.card_number || '',
             category: feat.category || 'general',
             prerequisite: feat.prerequisite || '',
@@ -97,6 +99,7 @@ const FeatCreator = () => {
     setError(null);
     const payload: CreateFeatRequest & UpdateFeatRequest = {
       name: data.name,
+      name_en: data.name_en?.trim() || null,
       description: data.description,
       detailed_description: data.detailed_description || null,
       image_url: data.image_url || '',
@@ -138,6 +141,11 @@ const FeatCreator = () => {
           <label className={labelCls}>Название *</label>
           <input {...register('name', { required: 'Название обязательно' })} className={inputCls} placeholder="Меткий стрелок" />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+        </div>
+
+        <div>
+          <label className={labelCls}>Оригинальное название</label>
+          <input {...register('name_en')} className={inputCls} placeholder="Sharpshooter" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

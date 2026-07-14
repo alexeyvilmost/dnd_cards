@@ -47,6 +47,7 @@ func (t RaceTraits) Value() (driver.Value, error) {
 type Race struct {
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
+	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description           string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL              string         `json:"image_url" gorm:"type:text"`
@@ -85,6 +86,7 @@ func (Race) TableName() string { return "races" }
 // CreateRaceRequest - запрос на создание вида
 type CreateRaceRequest struct {
 	Name                string      `json:"name" binding:"required"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description" binding:"required"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -113,6 +115,7 @@ type CreateRaceRequest struct {
 // UpdateRaceRequest - запрос на обновление вида
 type UpdateRaceRequest struct {
 	Name                string      `json:"name"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -141,6 +144,7 @@ type UpdateRaceRequest struct {
 type RaceResponse struct {
 	ID                  uuid.UUID   `json:"id"`
 	Name                string      `json:"name"`
+	NameEn              *string     `json:"name_en"`
 	Description         string      `json:"description"`
 	DetailedDescription *string     `json:"detailed_description"`
 	ImageURL            string      `json:"image_url"`
@@ -171,7 +175,7 @@ type RaceResponse struct {
 // ToRaceResponse преобразует модель вида в API-ответ.
 func (r Race) ToRaceResponse() RaceResponse {
 	return RaceResponse{
-		ID: r.ID, Name: r.Name, Description: r.Description, DetailedDescription: r.DetailedDescription,
+		ID: r.ID, Name: r.Name, NameEn: r.NameEn, Description: r.Description, DetailedDescription: r.DetailedDescription,
 		ImageURL: r.ImageURL, Rarity: r.Rarity, CardNumber: r.CardNumber,
 		CreatureType: r.CreatureType, Size: r.Size, Speed: r.Speed, ExtraSpeeds: r.ExtraSpeeds,
 		Darkvision: r.Darkvision, Traits: r.Traits, Lineages: r.Lineages,

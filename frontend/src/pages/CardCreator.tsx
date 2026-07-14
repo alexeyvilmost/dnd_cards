@@ -133,6 +133,7 @@ const CardCreator = () => {
           // Заполняем форму данными карты через reset для полной синхронизации
           reset({
             name: card.name,
+            name_en: card.name_en || '',
             rarity: card.rarity,
             custom_rarity_color: card.custom_rarity_color || null,
             properties: card.properties || [],
@@ -270,6 +271,7 @@ const CardCreator = () => {
   // чтобы оба пути писали один и тот же набор полей (иначе ветки расходятся и теряют данные).
   const buildCardPayload = (src: CreateCardRequest): CreateCardRequest => ({
     name: src.name || 'Название карты',
+    name_en: src.name_en?.trim() || null,
     description: src.description || 'Описание эффекта',
     detailed_description: src.detailed_description || null,
     rarity: src.rarity || 'common',

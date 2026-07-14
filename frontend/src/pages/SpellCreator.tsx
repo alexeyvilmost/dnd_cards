@@ -28,6 +28,7 @@ import { validateEntityIdFormat } from '../utils/entityId';
 
 type ScalarForm = {
   name: string;
+  name_en: string;
   card_number: string;
   level: number;
   school: string;
@@ -105,6 +106,7 @@ const SpellCreator = () => {
           const spell = await spellsApi.getSpell(sourceId);
           reset({
             name: spell.name,
+            name_en: spell.name_en || '',
             card_number: asTemplate ? '' : (spell.card_number || ''),
             level: spell.level ?? 0,
             school: spell.school || '',
@@ -212,6 +214,7 @@ const SpellCreator = () => {
 
     const payload: CreateSpellRequest & UpdateSpellRequest = {
       name: data.name,
+      name_en: data.name_en?.trim() || null,
       description: data.description,
       detailed_description: data.detailed_description || null,
       image_url: data.image_url || '',
@@ -322,6 +325,11 @@ const SpellCreator = () => {
                       <label className={labelCls}>Название *</label>
                       <input {...register('name', { required: 'Название обязательно' })} className={inputCls} placeholder="Огненный снаряд" />
                       {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                    </div>
+
+                    <div>
+                      <label className={labelCls}>Оригинальное название</label>
+                      <input {...register('name_en')} className={inputCls} placeholder="Fire Bolt" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

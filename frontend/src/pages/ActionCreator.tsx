@@ -76,6 +76,7 @@ const ActionCreator = () => {
           
           reset({
             name: action.name,
+            name_en: action.name_en || '',
             description: action.description,
             detailed_description: action.detailed_description || null,
             image_url: action.image_url || '',
@@ -207,6 +208,7 @@ const ActionCreator = () => {
         
         const updateData: UpdateActionRequest = {
           name: data.name,
+          name_en: data.name_en?.trim() || null,
           description: data.description,
           detailed_description: data.detailed_description,
           image_url: data.image_url,
@@ -312,6 +314,17 @@ const ActionCreator = () => {
                       placeholder="Название действия"
                     />
                     {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Оригинальное название
+                    </label>
+                    <input
+                      {...register('name_en')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Breath Weapon"
+                    />
                   </div>
 
                   <div>

@@ -348,6 +348,7 @@ const (
 type Card struct {
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
+	NameEn                       *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Properties                   *Properties    `json:"properties" gorm:"type:text"`
 	Description                  string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription          *string        `json:"detailed_description" gorm:"type:text"`
@@ -404,6 +405,7 @@ type Card struct {
 // CreateCardRequest - запрос на создание карточки
 type CreateCardRequest struct {
 	Name                         string         `json:"name" binding:"required"`
+	NameEn                       *string        `json:"name_en"`
 	Properties                   *Properties    `json:"properties"`
 	Description                  string         `json:"description" binding:"required"`
 	DetailedDescription          *string        `json:"detailed_description"`
@@ -452,6 +454,7 @@ type CreateCardRequest struct {
 // UpdateCardRequest - запрос на обновление карточки
 type UpdateCardRequest struct {
 	Name                         string         `json:"name"`
+	NameEn                       *string        `json:"name_en"`
 	Properties                   *Properties    `json:"properties"`
 	// Указатель, чтобы отличать «поле не передано» (nil → не трогаем) от «очищено» (""→ пустое).
 	// Раньше был string с гейтом `!= ""`, из-за чего описание карты нельзя было стереть.
@@ -514,6 +517,7 @@ type ExportCardsRequest struct {
 type CardResponse struct {
 	ID                           uuid.UUID      `json:"id"`
 	Name                         string         `json:"name"`
+	NameEn                       *string        `json:"name_en"`
 	Properties                   *Properties    `json:"properties"`
 	Description                  string         `json:"description"`
 	DetailedDescription          *string        `json:"detailed_description"`
@@ -801,6 +805,7 @@ func (card Card) ToCardResponse() CardResponse {
 	return CardResponse{
 		ID:                           card.ID,
 		Name:                         card.Name,
+		NameEn:                       card.NameEn,
 		Properties:                   card.Properties,
 		Description:                  card.Description,
 		DetailedDescription:          card.DetailedDescription,
@@ -1446,6 +1451,7 @@ type ResourceDefinition struct {
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	ResourceID  string    `json:"resource_id" gorm:"uniqueIndex;not null;type:varchar(100)"`
 	Name        string    `json:"name" gorm:"not null;type:varchar(255)"`
+	NameEn      *string   `json:"name_en" gorm:"type:varchar(255)"`
 	Description string    `json:"description" gorm:"type:text"`
 	Category    string    `json:"category" gorm:"type:varchar(50);default:'character'"`
 	ImageURL    string    `json:"image_url" gorm:"type:text"`
@@ -1463,6 +1469,7 @@ func (ResourceDefinition) TableName() string { return "resources" }
 type CreateResourceRequest struct {
 	ResourceID    string `json:"resource_id" binding:"required"`
 	Name          string `json:"name" binding:"required"`
+	NameEn        *string `json:"name_en"`
 	Description   string `json:"description"`
 	Category      string `json:"category"`
 	ImageURL      string `json:"image_url"`
@@ -1474,6 +1481,7 @@ type CreateResourceRequest struct {
 type UpdateResourceRequest struct {
 	ResourceID    string `json:"resource_id"`
 	Name          string `json:"name"`
+	NameEn        *string `json:"name_en"`
 	Description   string `json:"description"`
 	Category      string `json:"category"`
 	ImageURL      string `json:"image_url"`
@@ -1489,6 +1497,7 @@ type Variable struct {
 	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	VariableID   string         `json:"variable_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок в формулах
 	Name         string         `json:"name" gorm:"not null;type:varchar(255)"`
+	NameEn       *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description  string         `json:"description" gorm:"type:text"`
 	VarType      string         `json:"var_type" gorm:"type:varchar(20);default:'number'"` // number | dice
 	DefaultValue string         `json:"default_value" gorm:"type:varchar(100)"`            // "0" | "1d6" — значение по умолчанию
@@ -1504,6 +1513,7 @@ func (Variable) TableName() string { return "variables" }
 type CreateVariableRequest struct {
 	VariableID   string `json:"variable_id" binding:"required"`
 	Name         string `json:"name" binding:"required"`
+	NameEn       *string `json:"name_en"`
 	Description  string `json:"description"`
 	VarType      string `json:"var_type"`
 	DefaultValue string `json:"default_value"`
@@ -1514,6 +1524,7 @@ type CreateVariableRequest struct {
 type UpdateVariableRequest struct {
 	VariableID   string `json:"variable_id"`
 	Name         string `json:"name"`
+	NameEn       *string `json:"name_en"`
 	Description  string `json:"description"`
 	VarType      string `json:"var_type"`
 	DefaultValue string `json:"default_value"`
@@ -1528,6 +1539,7 @@ type ConceptEntity struct {
 	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	ConceptID   string         `json:"concept_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок
 	Name        string         `json:"name" gorm:"not null;type:varchar(255)"`
+	NameEn      *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description string         `json:"description" gorm:"type:text"`
 	ImageURL    string         `json:"image_url" gorm:"type:text"`
 	SortOrder   int            `json:"sort_order" gorm:"default:0"`
@@ -1541,6 +1553,7 @@ func (ConceptEntity) TableName() string { return "concepts" }
 type CreateConceptRequest struct {
 	ConceptID   string `json:"concept_id" binding:"required"`
 	Name        string `json:"name" binding:"required"`
+	NameEn      *string `json:"name_en"`
 	Description string `json:"description"`
 	ImageURL    string `json:"image_url"`
 	SortOrder   int    `json:"sort_order"`
@@ -1549,6 +1562,7 @@ type CreateConceptRequest struct {
 type UpdateConceptRequest struct {
 	ConceptID   string `json:"concept_id"`
 	Name        string `json:"name"`
+	NameEn      *string `json:"name_en"`
 	Description string `json:"description"`
 	ImageURL    string `json:"image_url"`
 	SortOrder   int    `json:"sort_order"`
@@ -1677,6 +1691,7 @@ func (cr CharacterResources) Value() (driver.Value, error) {
 type Action struct {
 	ID                           uuid.UUID       `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string          `json:"name" gorm:"not null"`
+	NameEn                       *string         `json:"name_en" gorm:"type:varchar(255)"`
 	Description                  string          `json:"description" gorm:"type:text;not null"`
 	DetailedDescription          *string         `json:"detailed_description" gorm:"type:text"`
 	ImageURL                     string          `json:"image_url" gorm:"type:text"`
@@ -1722,6 +1737,7 @@ func (Action) TableName() string {
 // CreateActionRequest - запрос на создание действия
 type CreateActionRequest struct {
 	Name                         string           `json:"name" binding:"required"`
+	NameEn                       *string          `json:"name_en"`
 	Description                  string           `json:"description" binding:"required"`
 	DetailedDescription          *string          `json:"detailed_description"`
 	ImageURL                     string           `json:"image_url"`
@@ -1755,6 +1771,7 @@ type CreateActionRequest struct {
 // UpdateActionRequest - запрос на обновление действия
 type UpdateActionRequest struct {
 	Name                         string           `json:"name"`
+	NameEn                       *string          `json:"name_en"`
 	Description                  string           `json:"description"`
 	DetailedDescription          *string          `json:"detailed_description"`
 	ImageURL                     string           `json:"image_url"`
@@ -1788,6 +1805,7 @@ type UpdateActionRequest struct {
 type ActionResponse struct {
 	ID                           uuid.UUID        `json:"id"`
 	Name                         string           `json:"name"`
+	NameEn                       *string          `json:"name_en"`
 	Description                  string           `json:"description"`
 	DetailedDescription          *string          `json:"detailed_description"`
 	ImageURL                     string           `json:"image_url"`
@@ -1819,7 +1837,7 @@ type ActionResponse struct {
 // ToActionResponse преобразует модель действия в API-ответ.
 func (a Action) ToActionResponse() ActionResponse {
 	return ActionResponse{
-		ID: a.ID, Name: a.Name, Description: a.Description, DetailedDescription: a.DetailedDescription,
+		ID: a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
 		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
 		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
 		Script: a.Script, Mechanics: a.Mechanics, ActionType: a.ActionType, Type: a.Type,
@@ -1902,6 +1920,7 @@ const (
 type Effect struct {
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
+	NameEn                       *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description                  string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription          *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL                     string         `json:"image_url" gorm:"type:text"`
@@ -1946,6 +1965,7 @@ func (Effect) TableName() string {
 // CreateEffectRequest - запрос на создание эффекта
 type CreateEffectRequest struct {
 	Name                         string      `json:"name" binding:"required"`
+	NameEn                       *string     `json:"name_en"`
 	Description                  string      `json:"description" binding:"required"`
 	DetailedDescription          *string     `json:"detailed_description"`
 	ImageURL                     string      `json:"image_url"`
@@ -1978,6 +1998,7 @@ type CreateEffectRequest struct {
 // UpdateEffectRequest - запрос на обновление эффекта
 type UpdateEffectRequest struct {
 	Name                         string      `json:"name"`
+	NameEn                       *string     `json:"name_en"`
 	Description                  string      `json:"description"`
 	DetailedDescription          *string     `json:"detailed_description"`
 	ImageURL                     string      `json:"image_url"`
@@ -2010,6 +2031,7 @@ type UpdateEffectRequest struct {
 type EffectResponse struct {
 	ID                           uuid.UUID   `json:"id"`
 	Name                         string      `json:"name"`
+	NameEn                       *string     `json:"name_en"`
 	Description                  string      `json:"description"`
 	DetailedDescription          *string     `json:"detailed_description"`
 	ImageURL                     string      `json:"image_url"`
@@ -2039,7 +2061,7 @@ type EffectResponse struct {
 // ToEffectResponse преобразует модель эффекта в API-ответ.
 func (e Effect) ToEffectResponse() EffectResponse {
 	return EffectResponse{
-		ID: e.ID, Name: e.Name, Description: e.Description, DetailedDescription: e.DetailedDescription,
+		ID: e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
 		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics,
 		Type: e.Type, Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
@@ -2186,6 +2208,7 @@ func (sd SpellDamage) Value() (driver.Value, error) {
 type Spell struct {
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
+	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
 	Description           string         `json:"description" gorm:"type:text;not null"`
 	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
 	ImageURL              string         `json:"image_url" gorm:"type:text"`
@@ -2234,6 +2257,7 @@ func (Spell) TableName() string {
 // CreateSpellRequest - запрос на создание заклинания
 type CreateSpellRequest struct {
 	Name                string       `json:"name" binding:"required"`
+	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description" binding:"required"`
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
@@ -2270,6 +2294,7 @@ type CreateSpellRequest struct {
 // UpdateSpellRequest - запрос на обновление заклинания
 type UpdateSpellRequest struct {
 	Name                string       `json:"name"`
+	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description"`
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
@@ -2307,6 +2332,7 @@ type UpdateSpellRequest struct {
 type SpellResponse struct {
 	ID                  uuid.UUID    `json:"id"`
 	Name                string       `json:"name"`
+	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description"`
 	DetailedDescription *string      `json:"detailed_description"`
 	ImageURL            string       `json:"image_url"`
@@ -2347,6 +2373,7 @@ func (spell Spell) ToSpellResponse() SpellResponse {
 	return SpellResponse{
 		ID:                  spell.ID,
 		Name:                spell.Name,
+		NameEn:              spell.NameEn,
 		Description:         spell.Description,
 		DetailedDescription: spell.DetailedDescription,
 		ImageURL:            spell.ImageURL,

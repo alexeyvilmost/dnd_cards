@@ -52,6 +52,7 @@ export interface ActiveEffect {
 export interface Card {
   id: string;
   name: string;
+  name_en?: string | null;
   properties: Properties | null;
   description: string;
   detailed_description?: string | null;
@@ -105,6 +106,7 @@ export interface Card {
 
 export interface CreateCardRequest {
   name: string;
+  name_en?: string | null;
   properties?: Properties | null;
   description: string;
   detailed_description?: string | null;
@@ -154,6 +156,7 @@ export interface CreateCardRequest {
 
 export interface UpdateCardRequest {
   name?: string;
+  name_en?: string | null;
   properties?: Properties | null;
   description?: string;
   detailed_description?: string | null;
@@ -675,6 +678,7 @@ export interface ResourceDefinition {
   id: string;
   resource_id: string;
   name: string;
+  name_en?: string | null;
   description?: string;
   category?: string;
   image_url?: string;
@@ -692,6 +696,7 @@ export interface ResourcesResponse {
 export interface CreateResourceRequest {
   resource_id: string;
   name: string;
+  name_en?: string | null;
   description?: string;
   category?: string;
   image_url?: string;
@@ -709,6 +714,7 @@ export interface Variable {
   id: string;
   variable_id: string;
   name: string;
+  name_en?: string | null;
   description?: string;
   var_type?: 'number' | 'dice';
   default_value?: string; // "0" | "1d6"
@@ -725,6 +731,7 @@ export interface VariablesResponse {
 export interface CreateVariableRequest {
   variable_id: string;
   name: string;
+  name_en?: string | null;
   description?: string;
   var_type?: 'number' | 'dice';
   default_value?: string;
@@ -740,6 +747,7 @@ export interface Concept {
   id: string;
   concept_id: string;
   name: string;
+  name_en?: string | null;
   description?: string;
   image_url?: string;
   sort_order?: number;
@@ -754,6 +762,7 @@ export interface ConceptsResponse {
 export interface CreateConceptRequest {
   concept_id: string;
   name: string;
+  name_en?: string | null;
   description?: string;
   image_url?: string;
   sort_order?: number;
@@ -764,6 +773,7 @@ export type UpdateConceptRequest = Partial<CreateConceptRequest>;
 export interface Action {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -799,6 +809,7 @@ export interface Action {
 
 export interface CreateActionRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -832,6 +843,7 @@ export interface CreateActionRequest {
 
 export interface UpdateActionRequest {
   name?: string;
+  name_en?: string | null;
   description?: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -909,6 +921,7 @@ export type PassiveEffectType =
 export interface PassiveEffect {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -942,6 +955,7 @@ export interface PassiveEffect {
 
 export interface CreatePassiveEffectRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -973,6 +987,7 @@ export interface CreatePassiveEffectRequest {
 
 export interface UpdatePassiveEffectRequest {
   name?: string;
+  name_en?: string | null;
   description?: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1032,6 +1047,7 @@ export interface SpellDamageEntry {
 export interface Spell {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1069,6 +1085,7 @@ export interface Spell {
 
 export interface CreateSpellRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1104,6 +1121,7 @@ export interface CreateSpellRequest {
 
 export interface UpdateSpellRequest {
   name?: string;
+  name_en?: string | null;
   description?: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1237,6 +1255,7 @@ export type FeatCategory = 'origin' | 'general' | 'fighting_style' | 'epic_boon'
 export interface Feat {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1259,6 +1278,7 @@ export interface Feat {
 
 export interface CreateFeatRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1301,6 +1321,7 @@ export const getFeatCategoryLabel = (v: string): string =>
 export interface Background {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1323,6 +1344,7 @@ export interface Background {
 
 export interface CreateBackgroundRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1367,6 +1389,7 @@ export type LevelProgression = Record<string, LevelAbilityProgression>;
 export interface Race {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1396,6 +1419,7 @@ export interface Race {
 
 export interface CreateRaceRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1435,6 +1459,7 @@ export interface RacesResponse {
 export interface CharacterClass {
   id: string;
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;
@@ -1468,6 +1493,7 @@ export interface CharacterClass {
 
 export interface CreateClassRequest {
   name: string;
+  name_en?: string | null;
   description: string;
   detailed_description?: string | null;
   image_url?: string;

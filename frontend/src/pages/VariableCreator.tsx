@@ -34,6 +34,7 @@ const VariableCreator = () => {
       .then((v) => reset({
         variable_id: v.variable_id,
         name: v.name,
+        name_en: v.name_en || '',
         description: v.description || '',
         var_type: v.var_type || 'number',
         default_value: v.default_value || '',
@@ -107,6 +108,15 @@ const VariableCreator = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Оригинальное название</label>
+          <input
+            {...register('name_en')}
+            placeholder="Martial Arts Die"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
         </div>
 
         <div>

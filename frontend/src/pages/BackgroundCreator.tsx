@@ -20,6 +20,7 @@ const BG_EQUIP_SPECS: ReadonlyArray<EquipOptSpec<BgEquipKey>> = [
 
 type ScalarForm = {
   name: string;
+  name_en: string;
   card_number: string;
   origin_feat: string;
   tool_proficiency: string;
@@ -57,6 +58,7 @@ const BackgroundCreator = () => {
           const bg = await backgroundsApi.getBackground(editId);
           reset({
             name: bg.name,
+            name_en: bg.name_en || '',
             card_number: bg.card_number || '',
             origin_feat: bg.origin_feat || '',
             tool_proficiency: bg.tool_proficiency || '',
@@ -113,6 +115,7 @@ const BackgroundCreator = () => {
     setError(null);
     const payload: CreateBackgroundRequest & UpdateBackgroundRequest = {
       name: data.name,
+      name_en: data.name_en?.trim() || null,
       description: data.description,
       detailed_description: data.detailed_description || null,
       image_url: data.image_url || '',
@@ -162,6 +165,11 @@ const BackgroundCreator = () => {
               placeholder="entertainer"
               className={`${inputCls} ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''}`} />
           </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>Оригинальное название</label>
+          <input {...register('name_en')} className={inputCls} placeholder="Entertainer" />
         </div>
 
         <div>

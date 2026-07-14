@@ -31,6 +31,7 @@ const ConceptCreator = () => {
       .then((v) => reset({
         concept_id: v.concept_id,
         name: v.name,
+        name_en: v.name_en || '',
         description: v.description || '',
         image_url: v.image_url || '',
         sort_order: v.sort_order || 100,
@@ -105,6 +106,15 @@ const ConceptCreator = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Оригинальное название</label>
+          <input
+            {...register('name_en')}
+            placeholder="Saving Throw"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
         </div>
 
         <div>
