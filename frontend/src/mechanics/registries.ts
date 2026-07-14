@@ -135,10 +135,11 @@ export const SPEED_MODES: RegistryItem[] = [
   { id: 'burrow', label: 'Копание' },
 ];
 
+// Фолбэк-список пулов для конструктора, когда live-ресурсы (/api/resources) ещё не загрузились;
+// поля с optionSource:'resources' в рабочем режиме используют data-driven список ресурсов.
+// Ресурсы-сущности (rage_charge, giant_legacy, …) живут в БД — сюда их дублировать не нужно.
 export const RESOURCES: RegistryItem[] = [
   { id: 'heroic_inspiration', label: 'Героическое вдохновение' },
-  { id: 'rage_charge', label: 'Заряд ярости' },
-  { id: 'giant_legacy', label: 'Наследие великанов' },
   { id: 'temp_hp', label: 'Временные хиты' },
 ];
 
@@ -155,12 +156,14 @@ export const DAMAGE_TYPE_OPTIONS: RegistryItem[] = DAMAGE_TYPES.map((d) => ({
   label: d.label,
 }));
 
+// Экономика хода для мультиселекта «простой стоимости» + фолбэк. rage_charge оставлен как
+// исторический пример spend-1 пула; новые пулы-ресурсы (giant_legacy и т.п.) — сущности БД,
+// в конструкторе выбираются из live-ресурсов (optionSource:'resources'), в детальной стоимости.
 export const ACTIVE_RESOURCES: RegistryItem[] = [
   { id: 'action', label: 'Действие' },
   { id: 'bonus_action', label: 'Бонусное действие' },
   { id: 'reaction', label: 'Ответное действие' },
   { id: 'rage_charge', label: 'Заряд ярости' },
-  { id: 'giant_legacy', label: 'Наследие великанов' },
 ];
 
 export const USES_PER: RegistryItem[] = [

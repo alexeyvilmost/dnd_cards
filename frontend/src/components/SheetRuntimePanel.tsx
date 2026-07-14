@@ -34,7 +34,6 @@ const RESOURCE_LABELS: Record<string, string> = {
   reaction: 'Реакция',
   second_wind: 'Второе дыхание',
   heroic_inspiration: 'Вдохновение',
-  giant_legacy: 'Наследие великанов',
 };
 
 // Каталог /charges/ пуст (см. utils/resources.ts) — такие пути считаем отсутствием картинки.
