@@ -40,6 +40,7 @@ import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
+import { loadMasteryEffects } from '../utils/mastery';
 
 interface Props {
   character: ForgeCharacter;
@@ -361,6 +362,20 @@ export default function SheetActionsPanel({
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,
   // чтобы applyGrantEffect поставил стоячий активный эффект (set_value ac_base → КЗ обновится).
   const [grantedEffectsBySlug, setGrantedEffectsBySlug] = useState<Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean }>>({});
+  // Искусность оружия (Weapon Mastery 2024): движок синхронный, поэтому механику мастерства
+  // (как и grantedEffects) резолвим заранее — id эффекта из card.mastery → {name, mechanics}.
+  // Без этой карты мастерство молча не сработает.
+  const [masteryById, setMasteryById] = useState<Record<string, { name?: string; mechanics?: unknown }>>({});
+  useEffect(() => {
+    let stale = false;
+    loadMasteryEffects().then((list) => {
+      if (stale) return;
+      const map: Record<string, { name?: string; mechanics?: unknown }> = {};
+      for (const e of list) map[e.id] = { name: e.name, mechanics: e.mechanics };
+      setMasteryById(map);
+    });
+    return () => { stale = true; };
+  }, []);
   const grantEffectSlugs = useMemo(() => {
     const set = new Set<string>();
     for (const a of actions) for (const slug of collectGrantEffectSlugs(a.mechanics)) set.add(slug);
@@ -601,7 +616,7 @@ export default function SheetActionsPanel({
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
     // targetOverride — богатая цель из выбранного персонажа (иначе dummy {ac, saveMods}).
     const execCtx = (rng: () => number, planning = false, choices: Record<string, string[]> = {}, targetOverride?: TargetContext, forceSaveOutcome?: 'success' | 'fail') =>
-      ({ character: ctx, selfId: character.id, target: targetOverride ?? target, rng, passives, triggers: triggerSources, planning, choices, grantedEffects: grantedEffectsBySlug, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
+      ({ character: ctx, selfId: character.id, target: targetOverride ?? target, rng, passives, triggers: triggerSources, planning, choices, grantedEffects: grantedEffectsBySlug, masteryEffects: masteryById, ...(spellCtx ? { spell: spellCtx } : {}), ...(forceSaveOutcome ? { forceSaveOutcome } : {}) }) as ExecuteContext & { passives: typeof passives };
 
     // В бою действие со спасом цели-ПЕРСОНАЖА: спас бросает САМА цель. Кастер предрассчитывает ОБА
     // исхода (onFail/onSuccess как дельты) и шлёт pending-спас на комбатант цели; применение — у цели.
