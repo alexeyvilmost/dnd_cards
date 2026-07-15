@@ -1615,8 +1615,13 @@
           "resolution": "auto",
           "result": [
             {
-              "description": "Без доспеха: КД = 10 + ЛВК + ТЕЛ.",
+              "description": "Без доспеха: КД = 10 + модификатор Ловкости + модификатор Телосложения. Щит разрешён.",
               "kind": "narrative"
+            },
+            {
+              "formula": "10 + dex + con",
+              "kind": "set_value",
+              "target": "ac_base"
             }
           ]
         }
@@ -1634,7 +1639,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": null,
-    "updated_at": "2026-07-02T16:50:32.323823Z",
+    "updated_at": "2026-07-15T21:50:26.963781Z",
     "weight": null
   },
   {
@@ -3530,8 +3535,13 @@
           "resolution": "auto",
           "result": [
             {
-              "description": "Без доспеха и щита: КД = 10 + ЛВК + МДР.",
+              "description": "Без доспеха и щита: КД = 10 + модификатор Ловкости + модификатор Мудрости.",
               "kind": "narrative"
+            },
+            {
+              "formula": "10 + dex + wis",
+              "kind": "set_value",
+              "target": "ac_base"
             }
           ]
         }
@@ -3549,7 +3559,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": null,
-    "updated_at": "2026-07-02T16:50:32.862009Z",
+    "updated_at": "2026-07-15T21:50:27.041787Z",
     "weight": null
   },
   {

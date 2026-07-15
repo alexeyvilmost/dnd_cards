@@ -21,18 +21,28 @@ import { clearCardRegistry } from './cardRegistry';
 import { FIGHTER_CTX, freshFighterState } from '../mvp/fixtures';
 import { REPO_ROOT } from '../canon/reports';
 import type { Card } from '../types';
+import type { CharacterContext } from '../mvp/contracts';
 
-const cardsRaw = JSON.parse(
-  readFileSync(join(REPO_ROOT, 'officials/canon/prod-snapshot/cards.json'), 'utf8'),
-) as unknown;
-const PROD_CARDS: Card[] = (Array.isArray(cardsRaw)
-  ? cardsRaw
-  : (Object.values(cardsRaw as Record<string, unknown>).find(Array.isArray) as Card[])) ?? [];
+const readSnap = (name: string): unknown =>
+  JSON.parse(readFileSync(join(REPO_ROOT, `officials/canon/prod-snapshot/${name}.json`), 'utf8'));
+
+const asList = <T>(raw: unknown): T[] =>
+  (Array.isArray(raw) ? raw : (Object.values(raw as Record<string, unknown>).find(Array.isArray) as T[])) ?? [];
+
+const PROD_CARDS: Card[] = asList<Card>(readSnap('cards'));
+type ProdEffect = { id: string; name?: string; mechanics?: Record<string, unknown> | null };
+const PROD_EFFECTS: ProdEffect[] = asList<ProdEffect>(readSnap('effects'));
 
 const byId = (id: string): Card => {
   const c = PROD_CARDS.find((x) => x.id === id);
   if (!c) throw new Error(`Карта ${id} исчезла из прод-снапшота`);
   return c;
+};
+
+const effById = (id: string): ProdEffect => {
+  const e = PROD_EFFECTS.find((x) => x.id === id);
+  if (!e) throw new Error(`Эффект ${id} исчез из прод-снапшота`);
+  return e;
 };
 
 const PLATE = 'd6c302f9-3a73-482a-9113-9510fcc937fe'; // Латы, КЗ 18
@@ -73,5 +83,38 @@ describe('прод-данные: щиты', () => {
       })
       .map((c) => c.name);
     expect(wrong).toEqual([]);
+  });
+});
+
+/**
+ * Задача 0.4 / KB-005. Эффекты несли только narrative-текст «КД = 10 + ЛВК + ТЕЛ» —
+ * человек читал, движок игнорировал. Гейт держит исполнимый payload на месте.
+ */
+describe('прод-данные: Защита без доспехов', () => {
+  const BARBARIAN_UNARMORED = 'f39414a1-9ad6-42c2-ab83-f5fb57004798';
+  const MONK_UNARMORED = 'e18cf12b-63e3-4da0-b5cd-be2dc2072082';
+
+  const ctx = (mods: Partial<CharacterContext['abilityMods']>): CharacterContext => ({
+    ...FIGHTER_CTX,
+    abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...mods },
+  });
+
+  const acWith = (effectId: string, mods: Partial<CharacterContext['abilityMods']>): number => {
+    const mech = effById(effectId).mechanics as Record<string, unknown>;
+    return computeAC(ctx(mods), freshFighterState(), [mech]).value;
+  };
+
+  it('Варвар: ЛВК+2, ТЕЛ+3, без доспеха → КЗ 15 (10 + ЛВК + ТЕЛ)', () => {
+    expect(acWith(BARBARIAN_UNARMORED, { dex: 2, con: 3 })).toBe(15);
+  });
+
+  it('Монах: ЛВК+3, МДР+2, без доспеха → КЗ 15 (10 + ЛВК + МДР)', () => {
+    expect(acWith(MONK_UNARMORED, { dex: 3, wis: 2 })).toBe(15);
+  });
+
+  it('метод-кандидат проигрывает, когда обычный КЗ выше (парадигма №3: берётся максимум)', () => {
+    // ЛВК+4, ТЕЛ 0 → «Защита без доспехов» даёт 14, безоружная база 10+ЛВК — тоже 14.
+    // Ничего не ломается: берётся максимум, а не первый попавшийся метод.
+    expect(acWith(BARBARIAN_UNARMORED, { dex: 4, con: 0 })).toBe(14);
   });
 });
