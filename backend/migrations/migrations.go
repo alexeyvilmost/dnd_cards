@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 // GetAllMigrations возвращает все миграции в порядке выполнения
@@ -471,8 +472,48 @@ func GetAllMigrations() []Migration {
 			Up:          addNameEn,
 			Down:        removeNameEn,
 		},
+		{
+			Version:     "078_restore_feat_slot_effects",
+			Description: "Восстановление слотов-пикеров черт (pf_1..pf_7, asi_ability_choice): их soft-удаление оставило 51 битую ссылку в level_progression всех 12 классов — черты на 8/12/16/19 уровнях молча не выдавались",
+			Up:          restoreFeatSlotEffects,
+			Down:        unrestoreFeatSlotEffects,
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+// featSlotCardNumbers — эффекты-пикеры «Получение черты» (по одному на ASI-уровень) и эффект
+// выбора ASI. См. scripts/content/seed-asi-feats.mjs.
+const featSlotCardNumbers = `('pf_1','pf_2','pf_3','pf_4','pf_5','pf_6','pf_7','asi_ability_choice')`
+
+// restoreFeatSlotEffects — снимает soft-delete со слотов-пикеров черт.
+//
+// Предыстория: слоты выглядят дубликатами (механика у всех семи идентична), и чистка
+// контента 2026-07-15 удалила pf_2..pf_7 + asi_ability_choice. На деле слоты — несущая
+// конструкция: id слота служит instanceKey (assemble.collectFeatChoiceRefs), который разводит
+// ключи вложенных выборов повторяемых черт между уровнями. После удаления 51 ссылка в
+// level_progression всех 12 классов повисла в пустоту, и черты на 8/12/16/19 не выдавались.
+//
+// Удаление было мягким (gorm.DeletedAt), поэтому строки живы вместе с исходными UUID —
+// снятие deleted_at чинит все ссылки без правки классов. Пересоздать их через API было бы
+// нельзя: effects.card_number держит ОБЫЧНЫЙ uniqueIndex (не частичный `WHERE deleted_at IS
+// NULL`, как idx_cards_card_number_active у карт), поэтому soft-удалённая строка навсегда
+// занимает свой card_number.
+func restoreFeatSlotEffects(db *sql.DB) error {
+	res, err := db.Exec(`UPDATE effects SET deleted_at = NULL
+		WHERE deleted_at IS NOT NULL AND card_number IN ` + featSlotCardNumbers)
+	if err != nil {
+		return fmt.Errorf("restoreFeatSlotEffects: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	log.Printf("restoreFeatSlotEffects: восстановлено слотов-пикеров черт: %d", n)
+	return nil
+}
+
+func unrestoreFeatSlotEffects(db *sql.DB) error {
+	_, err := db.Exec(`UPDATE effects SET deleted_at = CURRENT_TIMESTAMP
+		WHERE deleted_at IS NULL AND card_number IN ` + featSlotCardNumbers)
+	return err
 }
 
 // addCharacterCurrentEncounter — nullable-колонка связи персонажа с текущим боем.

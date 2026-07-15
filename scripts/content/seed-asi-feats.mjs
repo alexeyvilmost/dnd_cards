@@ -99,9 +99,18 @@ const pickerMech = () => ({
 // Слоты-эффекты пикера. Различны, чтобы ключи выбора не совпадали между уровнями ОДНОГО
 // класса. Один слот может использоваться разными классами на разных уровнях (ключ несёт id
 // класса → коллизии нет). Максимум слотов на класс = 7 (Воин: 4/6/8/12/14/16/19).
+//
+// ВНИМАНИЕ: слоты — НЕСУЩАЯ КОНСТРУКЦИЯ, а не дубликаты. id слота служит instanceKey
+// (assemble.collectFeatChoiceRefs → FeatPick.instanceKey), который разводит вложенные выборы
+// повторяемых черт (ASI на 4 и 8 ур.). Механика у всех семи ОДИНАКОВА — дедупликатор «по
+// хешу механики» примет их за мусор и снесёт: 2026-07-15 так и вышло (удалены pf_2..pf_7 →
+// 51 битая ссылка в level_progression всех 12 классов, черты на 8/12/16/19 молча не выдавались).
+// Схлопнуть слоты в один эффект можно только вместе с переводом instanceKey на уровень LP.
+const SLOT_DESCRIPTION = 'Вы можете выбрать одну из универсальных черт или черт происхождения.';
 const PICKER_SLOTS = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
   card: `pf_${n}`,
   name: `Получение черты · слот ${n}`,
+  description: SLOT_DESCRIPTION,
 }));
 
 // Уровень → индекс слота (1-based в card pf_N). Разные раскладки для Воина/Плута.
@@ -117,15 +126,24 @@ const CLASS_LEVELS = {
   Воин: FIGHTER, Плут: ROGUE,
 };
 
-const canon = (v) => JSON.stringify(v);
+// Postgres отдаёт jsonb с ключами в СВОЁМ порядке (не в том, в котором их записали), поэтому
+// сравнение сырых JSON.stringify всегда показывало расхождение и слало лишний PUT на каждом
+// прогоне. Канонизируем рекурсивной сортировкой ключей — тогда «актуален» значит актуален.
+const canon = (v) => {
+  if (Array.isArray(v)) return `[${v.map(canon).join(',')}]`;
+  if (v && typeof v === 'object') {
+    return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v);
+};
 const eq = (a, b) => canon(a) === canon(b);
 
-async function upsertEffect(token, card, name, mech, effectsByCard) {
+async function upsertEffect(token, card, name, mech, effectsByCard, description = name) {
   const existing = effectsByCard.get(card);
   if (!existing) {
     console.log(`[effect] создаю ${card} «${name}»`);
     const created = await apiRequest(token, 'POST', '/api/effects', {
-      name, description: name, rarity: 'common', card_number: card,
+      name, description, rarity: 'common', card_number: card,
       effect_type: 'passive', mechanics: mech, author: 'Admin', source: 'PHB 2024',
     }, { dryRun });
     return created?.id ?? `dry-${card}`;
@@ -172,17 +190,33 @@ async function main() {
   // 2. Пикер-эффекты по слотам.
   const slotEffectId = {};
   for (const slot of PICKER_SLOTS) {
-    slotEffectId[slot.card] = await upsertEffect(token, slot.card, slot.name, pickerMech(), effectsByCard);
+    slotEffectId[slot.card] = await upsertEffect(token, slot.card, slot.name, pickerMech(), effectsByCard, slot.description);
   }
 
   // 3. Привязка пикеров к классам по уровням.
+  //
+  // Битые ссылки вычищаем: если слот-эффект удалили из БД, ссылка на него в LP остаётся
+  // инертной (движок молча не выдаёт черту), а повторный прогон без вычистки лишь дописал бы
+  // рядом новый id, оставив мусор. Вычищаем ТОЛЬКО ссылки на несуществующие эффекты и
+  // логируем каждую — молчаливая правка LP скрыла бы потерю контента.
+  const liveEffectIds = new Set(effects.map((e) => e.id));
   console.log('\n--- level_progression ---');
   let touched = 0;
+  let prunedTotal = 0;
   for (const [name, levels] of Object.entries(CLASS_LEVELS)) {
     const c = classes.find((x) => x.name === name && !x.is_subclass);
     if (!c) { console.log(`  ⚠ НЕ найден класс «${name}»`); continue; }
     const prog = { ...(c.level_progression || {}) };
     const added = [];
+    const pruned = [];
+
+    for (const [lvl, row] of Object.entries(prog)) {
+      const dead = (row.effects || []).filter((id) => !liveEffectIds.has(id) && !String(id).startsWith('dry-'));
+      if (!dead.length) continue;
+      prog[lvl] = { ...row, effects: (row.effects || []).filter((id) => liveEffectIds.has(id)) };
+      dead.forEach((id) => pruned.push(`L${lvl}:${id.slice(0, 8)}`));
+    }
+
     for (const [lvl, slotN] of Object.entries(levels)) {
       const effId = slotEffectId[`pf_${slotN}`];
       const prev = prog[lvl] || {};
@@ -191,14 +225,18 @@ async function main() {
       prog[lvl] = { effects: [...prevEffects, effId], actions: prev.actions || [] };
       added.push(`${lvl}→pf_${slotN}`);
     }
-    if (added.length) {
-      console.log(`  ${name}: +${added.join(', ')}`);
+
+    if (added.length || pruned.length) {
+      if (pruned.length) console.log(`  ${name}: −битых ${pruned.join(', ')}`);
+      if (added.length) console.log(`  ${name}: +${added.join(', ')}`);
+      prunedTotal += pruned.length;
       await apiRequest(token, 'PUT', `/api/classes/${c.id}`, { level_progression: prog }, { dryRun });
       touched++;
     } else {
       console.log(`  ${name}: без изменений`);
     }
   }
+  if (prunedTotal) console.log(`\n⚠ Вычищено битых ссылок: ${prunedTotal}`);
 
   console.log(APPLY ? `\n✓ Готово. Классов затронуто: ${touched}` : '\n(dry-run — записи не было; добавь --apply)');
 }
