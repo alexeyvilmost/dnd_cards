@@ -39,6 +39,7 @@
       }
     },
     "name": "Путь берсерка",
+    "name_en": null,
     "parent_class_id": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
     "primary_abilities": null,
     "rarity": "common",
@@ -98,6 +99,7 @@
       }
     },
     "name": "Путь дикого сердца",
+    "name_en": null,
     "parent_class_id": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
     "primary_abilities": null,
     "rarity": "common",
@@ -156,6 +158,7 @@
       }
     },
     "name": "Путь Мирового Древа",
+    "name_en": null,
     "parent_class_id": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
     "primary_abilities": null,
     "rarity": "common",
@@ -215,6 +218,7 @@
       }
     },
     "name": "Путь фанатика",
+    "name_en": null,
     "parent_class_id": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
     "primary_abilities": null,
     "rarity": "common",
@@ -268,6 +272,7 @@
       }
     },
     "name": "Коллегия танца",
+    "name_en": null,
     "parent_class_id": "be96272c-8585-438d-ac32-b2788f1b1741",
     "primary_abilities": null,
     "rarity": "common",
@@ -321,6 +326,7 @@
       }
     },
     "name": "Коллегия очарования",
+    "name_en": null,
     "parent_class_id": "be96272c-8585-438d-ac32-b2788f1b1741",
     "primary_abilities": null,
     "rarity": "common",
@@ -374,6 +380,7 @@
       }
     },
     "name": "Коллегия знаний",
+    "name_en": null,
     "parent_class_id": "be96272c-8585-438d-ac32-b2788f1b1741",
     "primary_abilities": null,
     "rarity": "common",
@@ -427,6 +434,7 @@
       }
     },
     "name": "Коллегия доблести",
+    "name_en": null,
     "parent_class_id": "be96272c-8585-438d-ac32-b2788f1b1741",
     "primary_abilities": null,
     "rarity": "common",
@@ -492,7 +500,8 @@
         "effects": [
           "f39414a1-9ad6-42c2-ab83-f5fb57004798",
           "2d518b3d-35e2-4f42-8d93-70ca33a33630",
-          "f583bf01-82b8-48f4-b77e-dc33e71aa22f"
+          "f583bf01-82b8-48f4-b77e-dc33e71aa22f",
+          "58167888-c7a4-4fe3-9fd3-0aabfa8aed9a"
         ]
       },
       "2": {
@@ -505,7 +514,8 @@
       "4": {
         "actions": [],
         "effects": [
-          "5dbd9afb-b125-4038-9d51-54819757c777"
+          "5dbd9afb-b125-4038-9d51-54819757c777",
+          "98303d8c-be14-434a-b9e5-8ae0355bc2ac"
         ]
       },
       "8": {
@@ -541,6 +551,7 @@
       }
     },
     "name": "Варвар",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "str"
@@ -583,7 +594,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-08T13:20:28.368753Z",
+    "updated_at": "2026-07-14T12:26:39.296366Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -764,6 +775,7 @@
       }
     },
     "name": "Бард",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "cha"
@@ -1062,6 +1074,7 @@
       }
     },
     "name": "Жрец",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "wis"
@@ -1345,6 +1358,7 @@
       }
     },
     "name": "Друид",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "wis"
@@ -1560,6 +1574,7 @@
       }
     },
     "name": "Монах",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "dex",
@@ -1660,7 +1675,8 @@
         ],
         "effects": [
           "73311806-ad0f-414d-8cab-e014fa0e0d71",
-          "ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c"
+          "ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c",
+          "58167888-c7a4-4fe3-9fd3-0aabfa8aed9a"
         ]
       },
       "2": {
@@ -1681,7 +1697,8 @@
         "actions": [],
         "effects": [
           "5dbd9afb-b125-4038-9d51-54819757c777",
-          "8923056f-52e1-430f-a937-80b72cf4f0c8"
+          "8923056f-52e1-430f-a937-80b72cf4f0c8",
+          "98303d8c-be14-434a-b9e5-8ae0355bc2ac"
         ]
       },
       "5": {
@@ -1786,6 +1803,7 @@
       }
     },
     "name": "Паладин",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "str",
@@ -1862,7 +1880,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-10T10:20:22.187367Z",
+    "updated_at": "2026-07-14T12:26:39.631865Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -1921,7 +1939,8 @@
         "effects": [
           "c4d0a9b1-90e8-49d4-8201-fc0aff542ae6",
           "e0bca40f-dd27-4e71-bdc6-2d6e7c36b305",
-          "8d0758b0-f96f-4fe7-891b-05a7a37d998b"
+          "8d0758b0-f96f-4fe7-891b-05a7a37d998b",
+          "58167888-c7a4-4fe3-9fd3-0aabfa8aed9a"
         ]
       },
       "2": {
@@ -1942,7 +1961,8 @@
         "actions": [],
         "effects": [
           "5dbd9afb-b125-4038-9d51-54819757c777",
-          "cf703391-c2dd-4213-8766-18d9aaab70a2"
+          "cf703391-c2dd-4213-8766-18d9aaab70a2",
+          "98303d8c-be14-434a-b9e5-8ae0355bc2ac"
         ]
       },
       "5": {
@@ -2047,6 +2067,7 @@
       }
     },
     "name": "Следопыт",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "dex",
@@ -2125,7 +2146,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-10T10:20:22.346791Z",
+    "updated_at": "2026-07-14T12:26:40.281731Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -2181,7 +2202,8 @@
         "actions": [],
         "effects": [
           "26e90427-70ba-4fc4-b7d3-a19d88449bd5",
-          "083ca63a-be75-4b3b-81b4-bcba905aa8af"
+          "083ca63a-be75-4b3b-81b4-bcba905aa8af",
+          "58167888-c7a4-4fe3-9fd3-0aabfa8aed9a"
         ]
       },
       "2": {
@@ -2193,7 +2215,8 @@
       "4": {
         "actions": [],
         "effects": [
-          "5dbd9afb-b125-4038-9d51-54819757c777"
+          "5dbd9afb-b125-4038-9d51-54819757c777",
+          "98303d8c-be14-434a-b9e5-8ae0355bc2ac"
         ]
       },
       "8": {
@@ -2228,6 +2251,7 @@
       }
     },
     "name": "Плут",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "dex"
@@ -2270,7 +2294,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-08T13:20:29.456736Z",
+    "updated_at": "2026-07-14T12:26:39.958083Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -2444,6 +2468,7 @@
       }
     },
     "name": "Чародей",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "cha"
@@ -2724,6 +2749,7 @@
       }
     },
     "name": "Колдун",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "cha"
@@ -2859,7 +2885,8 @@
           "1cd19d26-3011-4859-9430-c8787fe99ba7"
         ],
         "effects": [
-          "39be6236-7db8-46c7-a3ab-c84bc51918da"
+          "39be6236-7db8-46c7-a3ab-c84bc51918da",
+          "bfd9a78c-4676-4b6f-8318-e5aee7f1d89b"
         ]
       },
       "2": {
@@ -2873,7 +2900,8 @@
       "4": {
         "actions": [],
         "effects": [
-          "5dbd9afb-b125-4038-9d51-54819757c777"
+          "5dbd9afb-b125-4038-9d51-54819757c777",
+          "98303d8c-be14-434a-b9e5-8ae0355bc2ac"
         ]
       },
       "6": {
@@ -2886,6 +2914,12 @@
         "actions": [],
         "effects": [
           "55689cd6-f67f-4368-8a96-53bc134fd78b"
+        ]
+      },
+      "10": {
+        "actions": [],
+        "effects": [
+          "4d158ef4-61b7-4677-95c1-0c770a9ed112"
         ]
       },
       "12": {
@@ -2903,7 +2937,8 @@
       "16": {
         "actions": [],
         "effects": [
-          "f3a0400f-579f-4a68-8105-cfad1d862357"
+          "f3a0400f-579f-4a68-8105-cfad1d862357",
+          "8ab4f253-8cb5-4319-91c1-f06ba2fa888a"
         ]
       },
       "19": {
@@ -2914,6 +2949,7 @@
       }
     },
     "name": "Воин",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "str",
@@ -2954,7 +2990,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-08T13:20:29.363529Z",
+    "updated_at": "2026-07-14T12:26:38.952374Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -3128,6 +3164,7 @@
       }
     },
     "name": "Волшебник",
+    "name_en": null,
     "parent_class_id": null,
     "primary_abilities": [
       "int"
@@ -3286,6 +3323,7 @@
       }
     },
     "name": "Домен жизни",
+    "name_en": null,
     "parent_class_id": "de7259fa-305e-429d-a209-fa79ec302afd",
     "primary_abilities": null,
     "rarity": "common",
@@ -3340,6 +3378,7 @@
       }
     },
     "name": "Домен света",
+    "name_en": null,
     "parent_class_id": "de7259fa-305e-429d-a209-fa79ec302afd",
     "primary_abilities": null,
     "rarity": "common",
@@ -3394,6 +3433,7 @@
       }
     },
     "name": "Домен обмана",
+    "name_en": null,
     "parent_class_id": "de7259fa-305e-429d-a209-fa79ec302afd",
     "primary_abilities": null,
     "rarity": "common",
@@ -3448,6 +3488,7 @@
       }
     },
     "name": "Домен войны",
+    "name_en": null,
     "parent_class_id": "de7259fa-305e-429d-a209-fa79ec302afd",
     "primary_abilities": null,
     "rarity": "common",
@@ -3507,6 +3548,7 @@
       }
     },
     "name": "Круг земли",
+    "name_en": null,
     "parent_class_id": "932a15ad-a7c5-4062-b13a-899933b94231",
     "primary_abilities": null,
     "rarity": "common",
@@ -3566,6 +3608,7 @@
       }
     },
     "name": "Круг луны",
+    "name_en": null,
     "parent_class_id": "932a15ad-a7c5-4062-b13a-899933b94231",
     "primary_abilities": null,
     "rarity": "common",
@@ -3625,6 +3668,7 @@
       }
     },
     "name": "Круг моря",
+    "name_en": null,
     "parent_class_id": "932a15ad-a7c5-4062-b13a-899933b94231",
     "primary_abilities": null,
     "rarity": "common",
@@ -3684,6 +3728,7 @@
       }
     },
     "name": "Круг звёзд",
+    "name_en": null,
     "parent_class_id": "932a15ad-a7c5-4062-b13a-899933b94231",
     "primary_abilities": null,
     "rarity": "common",
@@ -3749,6 +3794,7 @@
       }
     },
     "name": "Мастер боя",
+    "name_en": null,
     "parent_class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
     "primary_abilities": null,
     "rarity": "common",
@@ -3814,6 +3860,7 @@
       }
     },
     "name": "Чемпион",
+    "name_en": null,
     "parent_class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
     "primary_abilities": null,
     "rarity": "common",
@@ -3879,6 +3926,7 @@
       }
     },
     "name": "Мистический рыцарь",
+    "name_en": null,
     "parent_class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
     "primary_abilities": null,
     "rarity": "common",
@@ -3972,6 +4020,7 @@
       }
     },
     "name": "Пси-воин",
+    "name_en": null,
     "parent_class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
     "primary_abilities": null,
     "rarity": "common",
@@ -4031,6 +4080,7 @@
       }
     },
     "name": "Воин стихий",
+    "name_en": null,
     "parent_class_id": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
     "primary_abilities": null,
     "rarity": "common",
@@ -4091,6 +4141,7 @@
       }
     },
     "name": "Воин милосердия",
+    "name_en": null,
     "parent_class_id": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
     "primary_abilities": null,
     "rarity": "common",
@@ -4149,6 +4200,7 @@
       }
     },
     "name": "Воин открытой ладони",
+    "name_en": null,
     "parent_class_id": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
     "primary_abilities": null,
     "rarity": "common",
@@ -4207,6 +4259,7 @@
       }
     },
     "name": "Воин тени",
+    "name_en": null,
     "parent_class_id": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
     "primary_abilities": null,
     "rarity": "common",
@@ -4266,6 +4319,7 @@
       }
     },
     "name": "Клятва древних",
+    "name_en": null,
     "parent_class_id": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
     "primary_abilities": null,
     "rarity": "common",
@@ -4325,6 +4379,7 @@
       }
     },
     "name": "Клятва преданности",
+    "name_en": null,
     "parent_class_id": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
     "primary_abilities": null,
     "rarity": "common",
@@ -4385,6 +4440,7 @@
       }
     },
     "name": "Клятва славы",
+    "name_en": null,
     "parent_class_id": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
     "primary_abilities": null,
     "rarity": "common",
@@ -4444,6 +4500,7 @@
       }
     },
     "name": "Клятва возмездия",
+    "name_en": null,
     "parent_class_id": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
     "primary_abilities": null,
     "rarity": "common",
@@ -4502,6 +4559,7 @@
       }
     },
     "name": "Повелитель зверей",
+    "name_en": null,
     "parent_class_id": "7eda481c-0474-4443-9b8a-be08c53564c2",
     "primary_abilities": null,
     "rarity": "common",
@@ -4562,6 +4620,7 @@
       }
     },
     "name": "Странник фей",
+    "name_en": null,
     "parent_class_id": "7eda481c-0474-4443-9b8a-be08c53564c2",
     "primary_abilities": null,
     "rarity": "common",
@@ -4622,6 +4681,7 @@
       }
     },
     "name": "Сумрачный охотник",
+    "name_en": null,
     "parent_class_id": "7eda481c-0474-4443-9b8a-be08c53564c2",
     "primary_abilities": null,
     "rarity": "common",
@@ -4681,6 +4741,7 @@
       }
     },
     "name": "Охотник",
+    "name_en": null,
     "parent_class_id": "7eda481c-0474-4443-9b8a-be08c53564c2",
     "primary_abilities": null,
     "rarity": "common",
@@ -4740,6 +4801,7 @@
       }
     },
     "name": "Мистический ловкач",
+    "name_en": null,
     "parent_class_id": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
     "primary_abilities": null,
     "rarity": "common",
@@ -4828,6 +4890,7 @@
       }
     },
     "name": "Убийца",
+    "name_en": null,
     "parent_class_id": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
     "primary_abilities": null,
     "rarity": "common",
@@ -4887,6 +4950,7 @@
       }
     },
     "name": "Клинок душ",
+    "name_en": null,
     "parent_class_id": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
     "primary_abilities": null,
     "rarity": "common",
@@ -4946,6 +5010,7 @@
       }
     },
     "name": "Вор",
+    "name_en": null,
     "parent_class_id": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
     "primary_abilities": null,
     "rarity": "common",
@@ -5006,6 +5071,7 @@
       }
     },
     "name": "Аберрантное чародейство",
+    "name_en": null,
     "parent_class_id": "66a58227-41e6-4c56-b548-1253d98f6f09",
     "primary_abilities": null,
     "rarity": "common",
@@ -5065,6 +5131,7 @@
       }
     },
     "name": "Заводное чародейство",
+    "name_en": null,
     "parent_class_id": "66a58227-41e6-4c56-b548-1253d98f6f09",
     "primary_abilities": null,
     "rarity": "common",
@@ -5124,6 +5191,7 @@
       }
     },
     "name": "Драконье чародейство",
+    "name_en": null,
     "parent_class_id": "66a58227-41e6-4c56-b548-1253d98f6f09",
     "primary_abilities": null,
     "rarity": "common",
@@ -5183,6 +5251,7 @@
       }
     },
     "name": "Чародейство дикой магии",
+    "name_en": null,
     "parent_class_id": "66a58227-41e6-4c56-b548-1253d98f6f09",
     "primary_abilities": null,
     "rarity": "common",
@@ -5242,6 +5311,7 @@
       }
     },
     "name": "Покровительство Архифеи",
+    "name_en": null,
     "parent_class_id": "5a0403b5-3185-43a2-b187-38397d3d01b7",
     "primary_abilities": null,
     "rarity": "common",
@@ -5301,6 +5371,7 @@
       }
     },
     "name": "Покровительство Небожителя",
+    "name_en": null,
     "parent_class_id": "5a0403b5-3185-43a2-b187-38397d3d01b7",
     "primary_abilities": null,
     "rarity": "common",
@@ -5360,6 +5431,7 @@
       }
     },
     "name": "Покровительство Исчадия",
+    "name_en": null,
     "parent_class_id": "5a0403b5-3185-43a2-b187-38397d3d01b7",
     "primary_abilities": null,
     "rarity": "common",
@@ -5421,6 +5493,7 @@
       }
     },
     "name": "Покровительство Великого Древнего",
+    "name_en": null,
     "parent_class_id": "5a0403b5-3185-43a2-b187-38397d3d01b7",
     "primary_abilities": null,
     "rarity": "common",
@@ -5480,6 +5553,7 @@
       }
     },
     "name": "Оградитель",
+    "name_en": null,
     "parent_class_id": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
     "primary_abilities": null,
     "rarity": "common",
@@ -5539,6 +5613,7 @@
       }
     },
     "name": "Прорицатель",
+    "name_en": null,
     "parent_class_id": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
     "primary_abilities": null,
     "rarity": "common",
@@ -5598,6 +5673,7 @@
       }
     },
     "name": "Воплотитель",
+    "name_en": null,
     "parent_class_id": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
     "primary_abilities": null,
     "rarity": "common",
@@ -5657,6 +5733,7 @@
       }
     },
     "name": "Иллюзионист",
+    "name_en": null,
     "parent_class_id": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
     "primary_abilities": null,
     "rarity": "common",

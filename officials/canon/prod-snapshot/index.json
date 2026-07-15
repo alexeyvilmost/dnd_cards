@@ -1,24 +1,24 @@
 {
   "entities": {
     "actions": {
-      "count": 28,
-      "with_mechanics": 25
+      "count": 40,
+      "with_mechanics": 37
     },
     "backgrounds": {
       "count": 16,
       "with_mechanics": 0
     },
     "cards": {
-      "count": 761,
-      "with_mechanics": 152
+      "count": 766,
+      "with_mechanics": 153
     },
     "classes": {
       "count": 60,
       "with_mechanics": 0
     },
     "effects": {
-      "count": 453,
-      "with_mechanics": 422
+      "count": 452,
+      "with_mechanics": 432
     },
     "feats": {
       "count": 77,
@@ -29,7 +29,7 @@
       "with_mechanics": 0
     },
     "resources": {
-      "count": 24,
+      "count": 26,
       "with_mechanics": 0
     },
     "spells": {
