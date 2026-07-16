@@ -56,13 +56,14 @@ export const MECH_OFFHAND_ATTACK: Dict = {
   targeting: { filter: 'enemy', range: 'weapon', shape: 'single' },
 };
 
-/** action_dodge */
+/** action_dodge. Помеха атаки по вам моделируется scope:'target' (проекция на атакующего через
+ *  projectedAgainst), а не мёртвой filter:{against:'self'} — её движок не читал (KB-025). */
 export const MECH_DODGE: Dict = {
   activation: { cost: [{ resource: 'action' }], mode: 'active' },
   effects: [{
     resolution: 'auto',
     result: [
-      { kind: 'modifier', applies_to: { roll: 'attack', filter: { against: 'self' } }, op: 'disadvantage', duration: { type: 'until_start_of_next_turn' } },
+      { kind: 'modifier', applies_to: { roll: 'attack' }, scope: 'target', op: 'disadvantage', duration: { type: 'until_start_of_next_turn' } },
       { kind: 'modifier', applies_to: { roll: 'saving_throw', filter: { ability: 'dex' } }, op: 'advantage', duration: { type: 'until_start_of_next_turn' } },
     ],
   }],

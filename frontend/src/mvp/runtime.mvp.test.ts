@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canPay, collectRollModifiers, executeAction, initResources, longRest, pay, shortRest, startTurn,
 } from './contracts';
+import { projectedAgainst } from '../engine/execute';
 import {
   FIGHTER_CTX, freshFighterState, MECH_DODGE, MECH_RESOURCEFUL, seededRng,
 } from './fixtures';
@@ -112,8 +113,13 @@ describe('D4: активные эффекты и модификаторы бро
     expect(events.some((e) => e.type === 'effect_applied')).toBe(true);
     expect(state.activeEffects.length).toBeGreaterThan(0);
 
-    const incoming = collectRollModifiers(state, [], { roll: 'attack', filter: { against: 'self' } });
-    expect(incoming.advantage).toBe('disadvantage');
+    // KB-025: помеха атак ПО уклоняющемуся проецируется на атакующего (scope:'target'),
+    // читается projectedAgainst — реальный путь движка, а не мёртвый filter:{against:'self'}.
+    const projected = projectedAgainst({ runtimeState: state }, 'attack');
+    expect(projected.advantage).toBe('disadvantage');
+
+    // Свои броски уклоняющегося помеху НЕ получают.
+    expect(collectRollModifiers(state, [], { roll: 'attack' }).advantage).toBe('none');
 
     const dexSave = collectRollModifiers(state, [], { roll: 'saving_throw', filter: { ability: 'dex' } });
     expect(dexSave.advantage).toBe('advantage');

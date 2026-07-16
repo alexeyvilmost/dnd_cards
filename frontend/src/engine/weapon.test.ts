@@ -5,6 +5,7 @@ import {
   freshFighterState, MECH_DODGE, MECH_WEAPON_ATTACK, seededRng,
 } from '../mvp/fixtures';
 import { weaponContext, weaponAttackPreview } from './weapon';
+import { projectedAgainst } from './execute';
 import type { Card } from '../types';
 
 describe('weaponContext slots (R3)', () => {
@@ -44,17 +45,24 @@ describe('C11: дальнобойное оружие атакует от ЛВК'
   });
 });
 
-describe('matchFilter dodge (R2)', () => {
-  it('после Уклонения: свой бросок атаки без помехи, входящий — с помехой', () => {
+describe('Уклонение (R2 / KB-025): помеха проецируется на атакующего', () => {
+  it('после Уклонения: свои броски атаки без помехи, атака ПО уклоняющемуся — с помехой', () => {
     const { state } = executeAction(freshFighterState(), MECH_DODGE, {
       character: FIGHTER_CTX,
       rng: seededRng(1),
     });
+
+    // Свои броски атаки уклоняющегося — без помехи: scope:'target' не применяется к себе
+    // (modifiers.ts:93 исключает его из self-коллектора).
     const own = collectRollModifiers(state, [], { roll: 'attack' });
     expect(own.advantage).toBe('none');
 
-    const incoming = collectRollModifiers(state, [], { roll: 'attack', filter: { against: 'self' } });
-    expect(incoming.advantage).toBe('disadvantage');
+    // Входящая атака: враг атакует уклоняющегося (ctx.target = уклоняющийся) → projectedAgainst
+    // читает scope:'target' помеху. Это РЕАЛЬНЫЙ путь движка (execute.ts:976), а не мёртвый
+    // запрос collectRollModifiers(filter:{against:'self'}), которого в проде не делает никто.
+    const projected = projectedAgainst({ runtimeState: state }, 'attack');
+    expect(projected.advantage).toBe('disadvantage');
+    expect(projected.hasDisadvantage).toBe(true);
   });
 });
 

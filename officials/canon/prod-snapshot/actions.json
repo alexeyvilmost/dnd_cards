@@ -1756,16 +1756,14 @@
           "result": [
             {
               "applies_to": {
-                "filter": {
-                  "against": "self"
-                },
                 "roll": "attack"
               },
               "duration": {
                 "type": "until_start_of_next_turn"
               },
               "kind": "modifier",
-              "op": "disadvantage"
+              "op": "disadvantage",
+              "scope": "target"
             },
             {
               "applies_to": {
@@ -1804,7 +1802,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": "basic",
-    "updated_at": "2026-07-08T05:56:06.105025Z",
+    "updated_at": "2026-07-16T14:44:43.745484Z",
     "weight": null
   },
   {
@@ -2030,16 +2028,14 @@
           "result": [
             {
               "applies_to": {
-                "filter": {
-                  "against": "self"
-                },
                 "roll": "attack"
               },
               "duration": {
                 "type": "until_start_of_next_turn"
               },
               "kind": "modifier",
-              "op": "disadvantage"
+              "op": "disadvantage",
+              "scope": "target"
             },
             {
               "applies_to": {
@@ -2077,7 +2073,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:10.365085Z",
+    "updated_at": "2026-07-16T14:44:43.843437Z",
     "weight": null
   },
   {
