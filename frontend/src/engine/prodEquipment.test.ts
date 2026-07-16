@@ -101,6 +101,55 @@ describe('прод-данные: формулы bonus_value только ASCII',
 });
 
 /**
+ * Задача B.1 / KB-001 + KB-003. Лёгкий доспех даёт полную ЛВК, средний — с капом +2.
+ * До фикса bonus_value были плоскими числами, ЛВК не добавлялась совсем (надевание СНИЖАЛО КЗ).
+ * Критично, что KB-003 (кап) сделан вместе: иначе Кираса при ЛВК+5 дала бы 19 вместо 16 (§8.5.19).
+ */
+describe('прод-данные: ЛВК в доспехах', () => {
+  const LEATHER = '2692f0bb-7d5b-40d3-9ade-27a1f6be3655'; // Кожаный, light, 11 + dex
+  const BREASTPLATE = '43f50a8e-bdf0-4a6a-95f6-c1b6edc18407'; // Кираса, medium, 14 + min(dex, 2)
+
+  const ctxDex = (dexMod: number): CharacterContext => ({
+    ...FIGHTER_CTX,
+    abilityMods: { str: 0, dex: dexMod, con: 0, int: 0, wis: 0, cha: 0 },
+  });
+
+  const acWithArmor = (armorId: string, dexMod: number): number => {
+    const { state } = equipItem(freshFighterState(), byId(armorId));
+    return computeAC(ctxDex(dexMod), state, []).value;
+  };
+
+  it('лёгкий доспех (Кожаный 11) даёт ПОЛНУЮ ЛВК: ЛВК+5 → 16', () => {
+    expect(acWithArmor(LEATHER, 5)).toBe(16); // 11 + 5
+    expect(acWithArmor(LEATHER, 2)).toBe(13); // 11 + 2
+  });
+
+  it('средний доспех (Кираса 14) КАПИТ ЛВК на +2: ЛВК+5 → 16, а не 19 (KB-003, §8.5.19)', () => {
+    expect(acWithArmor(BREASTPLATE, 5)).toBe(16); // 14 + min(5, 2)
+    expect(acWithArmor(BREASTPLATE, 1)).toBe(15); // 14 + min(1, 2)
+  });
+
+  it('надевание доспеха НЕ снижает КЗ ниже безоружного (инвариант KB-001)', () => {
+    // Плут ЛВК+5: без доспеха 15, в кожаном 16 — доспех не хуже.
+    expect(acWithArmor(LEATHER, 5)).toBeGreaterThanOrEqual(10 + 5);
+  });
+
+  it('ни одна карта реального лёгкого/среднего доспеха не осталась с плоским КЗ (без dex)', () => {
+    const armor = PROD_CARDS.filter((c) => {
+      const cc = c as { bonus_type?: string; defense_type?: string; type?: string; properties?: unknown };
+      const props = Array.isArray(cc.properties) ? cc.properties.map(String) : [];
+      return cc.bonus_type === 'defense'
+        && (cc.defense_type === 'light' || cc.defense_type === 'medium')
+        && cc.type !== 'shield'
+        && !props.includes('cloth') && !props.includes('clothing') && !props.includes('heavy_armor');
+    });
+    expect(armor.length).toBeGreaterThan(0);
+    const flat = armor.filter((c) => !/dex/i.test(String((c as { bonus_value?: unknown }).bonus_value ?? ''))).map((c) => c.name);
+    expect(flat, 'реальный доспех с плоским КЗ (не даёт ЛВК)').toEqual([]);
+  });
+});
+
+/**
  * Задача 0.4 / KB-005. Эффекты несли только narrative-текст «КД = 10 + ЛВК + ТЕЛ» —
  * человек читал, движок игнорировал. Гейт держит исполнимый payload на месте.
  */
