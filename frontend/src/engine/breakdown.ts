@@ -90,7 +90,8 @@ function breakdownMaxHp(character: CharacterContext, state: RuntimeState, passiv
     : [
       { value: dieMax, source: 'кость хитов', reason: '1-й уровень' },
       { value: conMod, source: 'ТЕЛ', reason: '1-й уровень' },
-      { value: (lvl - 1) * (Math.floor(dieMax / 2) + 1 + conMod), source: 'уровни', reason: `${lvl - 1}×(${Math.floor(dieMax / 2) + 1}+ТЕЛ)` },
+      // KB-114: на уровень не меньше 1 хита (кламп совпадает с computeMaxHP — инвариант C9).
+      { value: (lvl - 1) * Math.max(1, Math.floor(dieMax / 2) + 1 + conMod), source: 'уровни', reason: `${lvl - 1}×max(1, ${Math.floor(dieMax / 2) + 1}+ТЕЛ)` },
     ];
   const fxParts = effectModifiers('max_hp', undefined, character, state, passives);
   const parts = [...baseParts, ...fxParts];

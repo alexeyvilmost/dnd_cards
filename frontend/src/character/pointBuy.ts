@@ -69,17 +69,48 @@ export function pointBuyIssues(
   return issues;
 }
 
-/** Ошибки распределения бонусов (частичное распределение допустимо только пустое). */
-export function bonusIssues(bonuses: AbilityBonuses | undefined): string[] {
-  if (!bonuses) return [];
+/**
+ * Ошибки распределения бонусов. KB-112: при выбранной предыстории бонусы ОБЯЗАТЕЛЬНЫ — пустое
+ * распределение больше не «валидно молча» (раньше один клик обнулял assignments, и «Создать»
+ * оставалась активной с персонажем на −2/−3). `required` = предыстория выбрана.
+ */
+export function bonusIssues(bonuses: AbilityBonuses | undefined, required = false): string[] {
+  const incomplete = bonuses?.mode === 'one_one_one'
+    ? ['Бонусы предыстории: назначьте +1 трём разным характеристикам']
+    : ['Бонусы предыстории: назначьте +2 и +1 двум разным характеристикам'];
+  if (!bonuses) return required ? incomplete : [];
   const vals = Object.values(bonuses.assignments).filter((v): v is number => !!v);
-  if (!vals.length) return [];
+  if (!vals.length) return required ? incomplete : [];
   if (bonuses.mode === 'two_one') {
     const ok = vals.length === 2 && vals.includes(2) && vals.includes(1);
     return ok ? [] : ['Бонусы предыстории: назначьте +2 и +1 двум разным характеристикам'];
   }
   const ok = vals.length === 3 && vals.every((v) => v === 1);
   return ok ? [] : ['Бонусы предыстории: назначьте +1 трём разным характеристикам'];
+}
+
+/**
+ * Согласовать бонусы при СМЕНЕ предыстории (KB-113). Назначения на характеристики, которых нет
+ * у новой предыстории, недействительны и снимаются (иначе Солдат str+2/dex+1 → Мудрец оставил бы
+ * str/dex вне списка Мудреца). Если после чистки пусто — авто-дефолт +2/+1 (режим two_one), как
+ * при первом выборе предыстории. При anyAbilities (бонусы на любые характеристики) — не трогаем.
+ */
+export function reconcileBonusesForBackground(
+  bonuses: AbilityBonuses,
+  bgAbilities: AbilityKey[],
+): AbilityBonuses {
+  if (bonuses.anyAbilities) return bonuses;
+  const allowed = new Set(bgAbilities);
+  const kept: Partial<Record<AbilityKey, number>> = {};
+  for (const k of ABILITY_KEYS) {
+    const v = bonusOf(bonuses, k);
+    if (v && allowed.has(k)) kept[k] = v;
+  }
+  const empty = !Object.values(kept).some(Boolean);
+  if (empty && bgAbilities.length >= 2 && bonuses.mode === 'two_one') {
+    return { ...bonuses, assignments: { [bgAbilities[0]]: 2, [bgAbilities[1]]: 1 } };
+  }
+  return { ...bonuses, assignments: kept };
 }
 
 /** Пересчитать итоговые значения при смене бонусов: итог = база + новый бонус. */

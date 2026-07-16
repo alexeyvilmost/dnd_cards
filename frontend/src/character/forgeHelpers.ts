@@ -189,7 +189,7 @@ export function completionIssues(draft: CharacterDraft, assembled: AssembledChar
   if (assigned && draft.abilityMethod === 'point_buy') {
     issues.push(...pointBuyIssues(draft.abilities, draft.abilityBonuses));
   }
-  issues.push(...bonusIssues(draft.abilityBonuses));
+  issues.push(...bonusIssues(draft.abilityBonuses, !!draft.backgroundId));
   issues.push(...requiredChoiceIssues(draft, assembled));
   const ruleState = resolveCharacterRules({ draft, assembled });
   issues.push(...ruleState.conflicts.filter((c) => c.severity === 'error').map((c) => c.message));

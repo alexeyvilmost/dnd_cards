@@ -12,7 +12,7 @@ import { useResourceOptions } from '../utils/resources';
 import { resourceView } from '../utils/eventDisplay';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, ABILITY_KEYS, type AbilityBonuses, type CharacterDraft, type AbilityKey } from '../character/types';
-import { bonusOf, reapplyBonuses } from '../character/pointBuy';
+import { bonusOf, reapplyBonuses, reconcileBonusesForBackground } from '../character/pointBuy';
 import { computeMaxHP } from '../character/derive';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, requiredChoiceIssues, resolveLineageName } from '../character/forgeHelpers';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
@@ -348,18 +348,13 @@ const CharacterForge = () => {
   const selectBackground = (bid: string) => {
     setDraft((d) => {
       const next = { ...d, backgroundId: bid };
-      // Дефолтные бонусы: +2 первой и +1 второй характеристике предыстории.
+      // KB-112/113: согласуем бонусы с НОВОЙ предысторией — снимаем назначения на её чужие
+      // характеристики (иначе оставались бы вне списка) и авто-дефолтим +2/+1, если пусто.
       const bg = backgrounds.find((b) => b.id === bid);
       const bgAbilities = (bg?.ability_scores || []) as AbilityKey[];
-      const untouched = !Object.values(d.abilityBonuses.assignments).some(Boolean);
-      if (untouched && bgAbilities.length >= 2 && d.abilityBonuses.mode === 'two_one') {
-        const bonuses: AbilityBonuses = {
-          ...d.abilityBonuses,
-          assignments: { [bgAbilities[0]]: 2, [bgAbilities[1]]: 1 },
-        };
-        next.abilityBonuses = bonuses;
-        next.abilities = reapplyBonuses(d.abilities, d.abilityBonuses, bonuses);
-      }
+      const bonuses = reconcileBonusesForBackground(d.abilityBonuses, bgAbilities);
+      next.abilityBonuses = bonuses;
+      next.abilities = reapplyBonuses(d.abilities, d.abilityBonuses, bonuses);
       return next;
     });
   };

@@ -27,7 +27,11 @@ export function computeMaxHP(
   const conMod = abilityMod(conScore);
   const perLevelAvg = Math.floor(die / 2) + 1;
   const lvl = Math.max(1, level);
-  return die + conMod + (lvl - 1) * (perLevelAvg + conMod);
+  // RAW 2024 (KB-114): на каждом уровне выше 1-го персонаж получает НЕ МЕНЬШЕ 1 хита, даже при
+  // сильно отрицательном модификаторе ТЕЛ. Без клампа d6/ТЕЛ 1/L5 давал −3 (персонаж «мёртв»
+  // при создании). Итог тоже не ниже 1.
+  const perLevel = Math.max(1, perLevelAvg + conMod);
+  return Math.max(1, die + conMod + (lvl - 1) * perLevel);
 }
 
 export const savingThrowBonus = (
