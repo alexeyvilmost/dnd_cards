@@ -193,8 +193,9 @@ func main() {
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
 		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageController.GenerateStandaloneImage)
-		// Загрузка готового data-URL (base64) в Yandex Storage — для миграции base64→S3.
-		api.POST("/images/upload-base64", OptionalAuthMiddleware(authService), imageController.UploadBase64Image)
+		// Роут /images/upload-base64 удалён (KB-202): анонимная неограниченная запись любых данных
+		// в облачный бакет (OptionalAuthMiddleware = аноним) — поверхность абьюза и расходов. Фронт
+		// его не использовал; служил одноразовой миграции base64→S3 (см. историю git при надобности).
 
 		// AI-генерация механики по описанию (кнопка «AI» в редакторах)
 		aiMechanicsController := NewAIMechanicsController()

@@ -459,7 +459,7 @@
 | KB-199 | **`character_controller.go` — 705 строк, 8 роутов v1, полностью мёртв** | low | M | code | CONFIRMED | 6.2 |
 | KB-200 | **`character_v2_controller.go` — 1249 строк, 11 роутов, мёртв.** ⚠ **`API characters-v2` НЕ удалён**: `client.ts:485` живьём дёргает `/api/characters-v2/{id}/active-effects` | low | M | code | CONFIRMED | 6.3 |
 | KB-201 | **37 из 133 роутов (28%) без потребителей** + `effects_utils.go AnalyzeCardEffects`. ⚠ battle-stats: комментарий `controller.go:183` «для сервиса battle» намекает на **внешнего** потребителя вне репо — подтвердить до снятия | low | S | code | CONFIRMED | 6.4 |
-| KB-202 | **`POST /api/images/upload-base64` под `OptionalAuthMiddleware` — анонимная неограниченная запись в публичный S3** (`main.go:197`). Живая поверхность абьюза + расходы. Удалить | high | S | code | CONFIRMED | 6.5 |
+| KB-202 | **`POST /api/images/upload-base64` под `OptionalAuthMiddleware` — анонимная неограниченная запись в публичный S3** (`main.go:197`). Живая поверхность абьюза + расходы. Удалить | high | S | code | ЗАКРЫТО 0.11→next | 6.5 |
 
 ### 7.21 Гигиена репозитория, сборка, CI
 

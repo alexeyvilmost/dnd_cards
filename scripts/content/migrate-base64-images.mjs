@@ -1,10 +1,14 @@
 /**
  * B1: миграция base64-иконок (data-URL в image_url) в Yandex Object Storage.
  *
+ * ⚠️ НЕ ДЕЙСТВУЕТ с 2026-07-16: роут POST /api/images/upload-base64 удалён (KB-202) как
+ * анонимная неограниченная запись в облачный бакет. Скрипт оставлен как история одноразовой
+ * миграции. Чтобы запустить снова: восстановить хендлер UploadBase64Image + роут ПОД РЕАЛЬНОЙ
+ * авторизацией (после починки AuthMiddleware, KB-165) и добавить сюда логин/токен.
+ *
  * Проходит spells/actions/feats/effects, у кого image_url начинается с 'data:':
  *   POST /api/images/upload-base64 {data}  → постоянная https-ссылка;
  *   PUT  /api/<type>/<id> {image_url}       → заменяет data-URL ссылкой.
- * Все три эндпоинта публичны, авторизация не нужна.
  *
  * Запуск:  node scripts/content/migrate-base64-images.mjs [--dry]
  * Отчёт:   scripts/content/batches/data/migrate-base64-report.json

@@ -259,69 +259,6 @@ func (ic *ImageController) GenerateStandaloneImage(c *gin.Context) {
 	})
 }
 
-// UploadBase64Image загружает переданный data-URL (base64) в Yandex Storage и
-// возвращает постоянную https-ссылку. Публичный — для одноразовой миграции base64→S3
-// (эндпоинт /api/images/upload привязан к card/weapon_template; тут — любые данные).
-func (ic *ImageController) UploadBase64Image(c *gin.Context) {
-	var req struct {
-		Data   string `json:"data" binding:"required"`
-		Folder string `json:"folder"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат запроса"})
-		return
-	}
-	if ic.yandexStorage == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "хранилище недоступно"})
-		return
-	}
-
-	data := req.Data
-	contentType := "image/png"
-	ext := ".png"
-	if strings.HasPrefix(data, "data:") {
-		comma := strings.IndexByte(data, ',')
-		if comma < 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный data-URL"})
-			return
-		}
-		header := data[len("data:"):comma]
-		data = data[comma+1:]
-		if semi := strings.IndexByte(header, ';'); semi >= 0 {
-			contentType = header[:semi]
-		} else if header != "" {
-			contentType = header
-		}
-		switch contentType {
-		case "image/jpeg", "image/jpg":
-			contentType, ext = "image/jpeg", ".jpg"
-		case "image/webp":
-			ext = ".webp"
-		case "image/gif":
-			ext = ".gif"
-		default:
-			contentType, ext = "image/png", ".png"
-		}
-	}
-
-	raw, err := base64.StdEncoding.DecodeString(strings.TrimSpace(data))
-	if err != nil || len(raw) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ошибка декодирования base64"})
-		return
-	}
-
-	folder := strings.TrimSpace(req.Folder)
-	if folder == "" {
-		folder = "migrated_icons"
-	}
-	imageURL, cloudinaryID, err := ic.yandexStorage.UploadImageFromBytes(context.Background(), raw, "img"+ext, contentType, folder)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка загрузки: %v", err)})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "image_url": imageURL, "cloudinary_id": cloudinaryID})
-}
-
 // DeleteImage удаляет изображение
 func (ic *ImageController) DeleteImage(c *gin.Context) {
 	entityType := c.Param("entity_type")
