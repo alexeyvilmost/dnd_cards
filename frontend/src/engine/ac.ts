@@ -26,6 +26,20 @@ function evalNum(formula: string, character: CharacterContext): number {
   return v;
 }
 
+/** Безопасная обёртка (KB-004): битую формулу — кириллица «12 + ЛВК», мусор в данных —
+ *  НЕ роняем на весь лист. Токенизатор formula.ts понимает только ASCII-идентификаторы и
+ *  бросает FormulaError на кириллице; без ErrorBoundary это уносило страницу в белый экран,
+ *  и предмет с битой формулой нельзя было даже снять. Метод отбрасывается, вызывающий метит
+ *  его в rejected. Кириллице токенизатор НЕ учим — узаконило бы два словаря; правильная запись
+ *  ASCII (`12 + dex`), а данные чинятся отдельно. */
+function tryEvalNum(formula: string, character: CharacterContext): number | null {
+  try {
+    return evalNum(formula, character);
+  } catch {
+    return null;
+  }
+}
+
 function parseFlatBonus(raw: string): number {
   const m = raw.match(/^\+?(-?\d+(?:\.\d+)?)/);
   return m ? Number(m[1]) : 0;
@@ -102,13 +116,14 @@ function shieldFromState(state: RuntimeState, cards: Card[]): Card | undefined {
   return undefined;
 }
 
-function armorAc(armor: Card, character: CharacterContext, parts: RollModifier[]): number {
+function armorAc(armor: Card, character: CharacterContext, parts: RollModifier[]): number | null {
   const raw = armor.bonus_value ?? '10';
 
   if (/dex/i.test(raw)) {
     const baseFormula = raw.replace(/\s*\+\s*min\([^)]+\)/gi, '').replace(/\s*\+\s*dex.*$/i, '').trim();
-    const base = evalNum(baseFormula || '10', character);
-    const total = evalNum(raw, character);
+    const base = tryEvalNum(baseFormula || '10', character);
+    const total = tryEvalNum(raw, character);
+    if (base === null || total === null) return null;
     const dexPart = total - base;
     parts.push({ value: base, source: armor.name, reason: 'доспех' });
     if (dexPart) {
@@ -117,7 +132,8 @@ function armorAc(armor: Card, character: CharacterContext, parts: RollModifier[]
     return total;
   }
 
-  const fixed = evalNum(raw, character);
+  const fixed = tryEvalNum(raw, character);
+  if (fixed === null) return null;
   parts.push({ value: fixed, source: armor.name, reason: 'доспех' });
   return fixed;
 }
@@ -138,24 +154,41 @@ export function computeAC(
 
   // Методы-кандидаты базового КЗ (парадигма №3): берётся максимум применимого.
   const methods: ValueMethod[] = [];
+  // KB-004: методы с непарсируемой формулой не роняют расчёт, а попадают сюда — в breakdown.
+  const rejected: { name: string; value: number }[] = [];
+
+  const dex = character.abilityMods.dex ?? 0;
+  const unarmoredBase = (): ValueMethod => {
+    const baseParts: RollModifier[] = [{ value: 10, source: 'база', reason: 'без доспеха' }];
+    if (dex) baseParts.push({ value: dex, source: 'ЛВК', reason: 'модификатор характеристики' });
+    return { name: 'Без доспеха', value: 10 + dex, parts: baseParts };
+  };
 
   if (armor) {
     // В доспехе безоружные методы неприменимы (по RAW 2024 требуют отсутствия доспеха).
     const parts: RollModifier[] = [];
     const value = armorAc(armor, character, parts);
-    methods.push({ name: armor.name, value, parts });
+    if (value !== null) {
+      methods.push({ name: armor.name, value, parts });
+    } else {
+      // Битая формула доспеха: не роняем лист. Пол = безоружная база (10+ЛВК); безоружные
+      // методы (Защита без доспехов) НЕ применяем — доспех формально надет.
+      rejected.push({ name: `${armor.name}: формула КЗ «${armor.bonus_value}» не распознана`, value: 0 });
+      methods.push(unarmoredBase());
+    }
   } else {
-    const dex = character.abilityMods.dex ?? 0;
-    const baseParts: RollModifier[] = [{ value: 10, source: 'база', reason: 'без доспеха' }];
-    if (dex) baseParts.push({ value: dex, source: 'ЛВК', reason: 'модификатор характеристики' });
-    methods.push({ name: 'Без доспеха', value: 10 + dex, parts: baseParts });
+    methods.push(unarmoredBase());
 
     // Каждый set_value ac_base — отдельный метод; берётся максимум (Защита без доспехов
     // 10+ЛВК+ТЕЛ vs Доспех мага 13+ЛВК → больший), а не первый попавшийся. Сканируем и пассивки,
     // и активные эффекты (Доспех мага — заклинание, ставящее «стоячий» метод при касте).
     const acMechs = [...passives, ...state.activeEffects.map((e) => e.mechanics as Dict)];
     for (const formula of acBaseFormulas(acMechs)) {
-      const value = evalNum(formula, character);
+      const value = tryEvalNum(formula, character);
+      if (value === null) {
+        rejected.push({ name: `Защита без доспехов: формула «${formula}» не распознана`, value: 0 });
+        continue;
+      }
       methods.push({
         name: 'Защита без доспехов',
         value,
@@ -171,7 +204,11 @@ export function computeAC(
     if (bonus) additive.push({ value: bonus, source: 'Щит', reason: shield.name });
   }
 
-  return pickBestMethod(methods, additive);
+  const result = pickBestMethod(methods, additive);
+  if (rejected.length) {
+    result.rejected = [...(result.rejected ?? []), ...rejected];
+  }
+  return result;
 }
 
 /**

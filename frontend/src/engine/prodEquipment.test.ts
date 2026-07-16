@@ -87,6 +87,20 @@ describe('прод-данные: щиты', () => {
 });
 
 /**
+ * Задача 0.1 / KB-004. Инвариант данных: токенизатор формул понимает только ASCII, кириллица
+ * в bonus_value бросает FormulaError и (до ErrorBoundary) роняла лист в белый экран. Держим
+ * данные чистыми — движок кириллице не учим (иначе два словаря).
+ */
+describe('прод-данные: формулы bonus_value только ASCII', () => {
+  it('ни одна карта не несёт кириллицу в bonus_value', () => {
+    const offenders = PROD_CARDS
+      .filter((c) => /[А-Яа-я]/.test(String((c as { bonus_value?: unknown }).bonus_value ?? '')))
+      .map((c) => `${c.name}: «${(c as { bonus_value?: unknown }).bonus_value}»`);
+    expect(offenders, 'кириллица в формуле → FormulaError при расчёте КЗ/урона').toEqual([]);
+  });
+});
+
+/**
  * Задача 0.4 / KB-005. Эффекты несли только narrative-текст «КД = 10 + ЛВК + ТЕЛ» —
  * человек читал, движок игнорировал. Гейт держит исполнимый payload на месте.
  */

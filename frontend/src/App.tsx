@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import { loadConditions } from './api/conditionsApi';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -59,6 +60,7 @@ const EncounterBoard = lazy(() => import('./pages/EncounterBoard'));
 function App() {
   // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
   useEffect(() => { loadConditions(); }, []);
+  const location = useLocation();
   return (
     <AuthProvider>
       <ToastProvider>
@@ -67,6 +69,7 @@ function App() {
         <ReactionPromptProvider>
         <PinModeProvider>
         <EntityDetailProvider>
+        <ErrorBoundary resetKey={location.pathname}>
         <Suspense fallback={<div style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>Загрузка…</div>}>
         <Routes>
         {/* Публичные маршруты */}
@@ -378,6 +381,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
         </Suspense>
+        </ErrorBoundary>
         </EntityDetailProvider>
         </PinModeProvider>
         </ReactionPromptProvider>
