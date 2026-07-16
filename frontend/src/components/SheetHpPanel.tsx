@@ -3,8 +3,9 @@ import { Dices, Heart, HeartPulse, Minus, Plus, Shield, Skull } from 'lucide-rea
 import { charactersV3Api } from '../character/api';
 import {
   applyDamageAtZero, applyDeathSaveRoll, describeDeathSaveOutcome,
-  emptyDeathSaves, readDeathSaves, type DeathSaveState,
+  emptyDeathSaves, readDeathSaves, rollDeathSaveDie, type DeathSaveState,
 } from '../character/death';
+import type { FormulaContext } from '../engine/formula';
 import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
@@ -132,12 +133,16 @@ export default function SheetHpPanel({
   // ── Урон: провалы при 0 HP, проверка концентрации при уроне ──
   const handleDamage = async () => {
     if (unconscious) {
-      // урон по бессознательному — провал спасброска смерти
-      const { next, dead } = applyDamageAtZero(deathSaves);
+      // Урон по бессознательному — провал спасброска смерти; критическое попадание — ДВА провала
+      // (KB-039). Галочка «крит» в этой же панели раньше не передавалась в applyDamageAtZero и
+      // молча не влияла — расхождение «жив/погиб».
+      const { next, dead } = applyDamageAtZero(deathSaves, crit);
       const events: EngineEvent[] = [
         { type: 'narrative', text: dead
           ? 'Урон по бессознательному: третий провал. Персонаж погибает.'
-          : 'Урон по бессознательному персонажу — провал спасброска смерти (крит — отметьте второй).' },
+          : crit
+            ? 'Критический урон по бессознательному персонажу — два провала спасброска смерти.'
+            : 'Урон по бессознательному персонажу — провал спасброска смерти.' },
       ];
       await persist(runtime, events, next);
       return;
@@ -247,6 +252,12 @@ export default function SheetHpPanel({
   };
 
   const handleHeal = () => {
+    // KB-038: погибшего (три провала) обычное лечение не поднимает — нужно воскрешение.
+    // Иначе кнопка «Лечение» сбрасывала death_saves и молча возвращала труп к жизни.
+    if (deathSaves.dead) {
+      onEvents?.([{ type: 'narrative', text: 'Персонаж мёртв — обычное лечение не действует. Нужно воскрешение (напр., «Возрождение»).' }]);
+      return;
+    }
     const { state, events } = applyHealing(runtime, amount);
     // лечение поднимает из 0 и сбрасывает спасброски смерти
     persist(state, events, emptyDeathSaves());
@@ -257,7 +268,15 @@ export default function SheetHpPanel({
     const decision = await diceDialog.request(plan, 'Спасбросок смерти (без модификаторов)');
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
-    const roll = rollD20({ modifiers: [], rng });
+    // KB-042: без модификаторов характеристик, НО с правилами бросков (Везение полурослика) и
+    // преимуществом/помехой на спасброски — раньше катилось голым rollD20, и Везение не срабатывало.
+    const formulaCtx: FormulaContext = sheetCtx
+      ? {
+        abilityMods: sheetCtx.abilityMods, profBonus: sheetCtx.profBonus,
+        selfLevel: sheetCtx.level, classLevels: sheetCtx.classLevels, variables: sheetCtx.variables,
+      }
+      : {};
+    const roll = rollDeathSaveDie(runtime, passives ?? [], formulaCtx, rng);
     const natural = roll.dice.find((d) => !d.discarded)?.result ?? roll.total;
     const { next, outcome } = applyDeathSaveRoll(deathSaves, natural);
 

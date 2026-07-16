@@ -13,6 +13,7 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { endTurn, longRest, shortRest, startTurn } from '../engine/turn';
+import { emptyDeathSaves } from '../character/death';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 
 interface Props {
@@ -66,7 +67,11 @@ export default function SheetRestButtons({
   );
 
   // Отдых открывает окно смены настройки на предметы; новый ход закрывает.
-  function persistPayload(state: RuntimeState, attunementUnlocked?: boolean) {
+  // resetDeathSaves: отдых сбрасывает спасброски смерти (KB-037). Без этого персонаж, которого
+  // подняли отдыхом из 0 HP, оставался с {failures:3, dead:true} в БД при полном current_hp —
+  // и следующее падение убивало его с первого урона без единого броска. Сброс ТОЛЬКО на отдыхе:
+  // на start/end хода спасброски обязаны сохраняться между ходами (бой при 0 HP).
+  function persistPayload(state: RuntimeState, attunementUnlocked?: boolean, resetDeathSaves?: boolean) {
     return {
       current_hp: state.hp.current,
       max_hp: state.hp.max,
@@ -77,14 +82,15 @@ export default function SheetRestButtons({
         ...(character.turn_state ?? {}),
         temp_hp: state.hp.temp,
         ...(attunementUnlocked !== undefined ? { attunement_unlocked: attunementUnlocked } : {}),
+        ...(resetDeathSaves ? { death_saves: emptyDeathSaves() } : {}),
       },
     };
   }
 
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[], attunementUnlocked?: boolean) => {
+  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[], attunementUnlocked?: boolean, resetDeathSaves?: boolean) => {
     setBusy(true);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, attunementUnlocked));
+      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, attunementUnlocked, resetDeathSaves));
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {
@@ -130,13 +136,18 @@ export default function SheetRestButtons({
 
   const handleShortRest = () => {
     const { state, events } = shortRest(runtime, restCtx);
-    apply(state, events, true);
+    apply(state, events, true, true);
   };
 
   const handleLongRest = () => {
     const { state, events } = longRest(runtime, restCtx);
-    apply(state, events, true);
+    apply(state, events, true, true);
   };
+
+  // KB-037: без сознания (0 HP) нельзя брать короткий/долгий отдых — персонаж умирает/стабилизируется,
+  // а не отдыхает. Ходы (Новый ход/Конец хода) при 0 HP остаются доступны — идут спасброски смерти.
+  const unconscious = runtime.hp.current <= 0;
+  const restTitle = (base: string) => (unconscious ? 'Недоступно при 0 HP — сначала стабилизируйтесь или получите лечение' : base);
 
   const cls = compact ? 'cs-top-rest' : 'sheet-runtime-actions';
 
@@ -157,13 +168,19 @@ export default function SheetRestButtons({
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy}
+        disabled={busy || unconscious}
         onClick={handleShortRest}
-        title="Короткий отдых: +50% max HP и заряды умений"
+        title={restTitle('Короткий отдых: +50% max HP и заряды умений')}
       >
         <Sun size={14} /> Короткий отдых
       </button>
-      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy} onClick={handleLongRest}>
+      <button
+        type="button"
+        className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
+        disabled={busy || unconscious}
+        onClick={handleLongRest}
+        title={restTitle('Долгий отдых')}
+      >
         <Moon size={14} /> Долгий отдых
       </button>
     </div>

@@ -5,6 +5,10 @@
  * три провала — смерть. Урон в нуле — провал (крит — два), лечение сбрасывает.
  * Состояние хранится в turn_state.death_saves (jsonb персонажа).
  */
+import { collectModifiers } from '../engine/modifiers';
+import { rollD20 } from '../engine/roll';
+import type { FormulaContext } from '../engine/formula';
+import type { RollLog, RuntimeState } from '../mvp/contracts';
 
 export interface DeathSaveState {
   successes: number;
@@ -48,6 +52,28 @@ export function applyDeathSaveRoll(
   const failures = Math.min(3, ds.failures + 1);
   const dead = failures >= 3;
   return { next: { ...ds, failures, dead }, outcome: dead ? 'dead' : 'fail' };
+}
+
+/**
+ * Бросок спасброска смерти (PHB 2024, KB-042): к20 БЕЗ модификаторов характеристик, НО с
+ * правилами бросков и преимуществом/помехой из эффектов на спасброски:
+ *   • Везение полурослика (op:'reroll', applies_to.roll:'d20') — переброс натуральной 1;
+ *   • беcфильтровое преимущество/помеха на спасброски.
+ * Отфильтрованные спас-эффекты (напр. «преимущество на спас против яда», filter:{ability:'con'})
+ * на death save НЕ распространяются — matchFilter отсекает беcфильтровый запрос. Числовые
+ * модификаторы НЕ добавляем: у спасброска смерти их нет по правилам.
+ *
+ * До этого хелпера лист катил rollD20({modifiers:[]}) вообще без rules/advantage — Везение
+ * полурослика не срабатывало, и натуральная 1 сразу давала два провала без шанса переброса.
+ */
+export function rollDeathSaveDie(
+  runtime: RuntimeState,
+  passives: Record<string, unknown>[],
+  formulaCtx: FormulaContext,
+  rng: () => number,
+): RollLog {
+  const collected = collectModifiers(runtime, passives, { roll: 'saving_throw', formulaCtx });
+  return rollD20({ advantage: collected.advantage, rules: collected.rules, modifiers: [], rng });
 }
 
 /** Урон при 0 хитов: провал (критическое попадание — два провала). */
