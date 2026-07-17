@@ -1359,6 +1359,61 @@
               "kind": "modifier",
               "op": "add",
               "value": "rage_damage_modifier"
+            },
+            {
+              "damage_type": "bludgeoning",
+              "duration": {
+                "amount": 10,
+                "type": "rounds"
+              },
+              "kind": "resistance",
+              "value": "resistance"
+            },
+            {
+              "damage_type": "piercing",
+              "duration": {
+                "amount": 10,
+                "type": "rounds"
+              },
+              "kind": "resistance",
+              "value": "resistance"
+            },
+            {
+              "damage_type": "slashing",
+              "duration": {
+                "amount": 10,
+                "type": "rounds"
+              },
+              "kind": "resistance",
+              "value": "resistance"
+            },
+            {
+              "applies_to": {
+                "filter": {
+                  "ability": "str"
+                },
+                "roll": "ability_check"
+              },
+              "duration": {
+                "amount": 10,
+                "type": "rounds"
+              },
+              "kind": "modifier",
+              "op": "advantage"
+            },
+            {
+              "applies_to": {
+                "filter": {
+                  "ability": "str"
+                },
+                "roll": "saving_throw"
+              },
+              "duration": {
+                "amount": 10,
+                "type": "rounds"
+              },
+              "kind": "modifier",
+              "op": "advantage"
             }
           ]
         }
@@ -1387,7 +1442,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:09.669365Z",
+    "updated_at": "2026-07-17T01:10:06.065493Z",
     "weight": null
   },
   {
