@@ -95,7 +95,7 @@ export const MUSICAL_INSTRUMENTS: RegistryItem[] = [
 export const CONDITIONS: RegistryItem[] = [
   { id: 'blinded', label: 'Ослеплён' },
   { id: 'charmed', label: 'Очарован' },
-  { id: 'deafened', label: 'Оглушён' },
+  { id: 'deafened', label: 'Оглохший' },
   { id: 'exhaustion', label: 'Истощение' },
   { id: 'frightened', label: 'Испуган' },
   { id: 'grappled', label: 'Схвачен' },
