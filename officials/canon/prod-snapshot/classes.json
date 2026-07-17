@@ -499,7 +499,6 @@
         ],
         "effects": [
           "f39414a1-9ad6-42c2-ab83-f5fb57004798",
-          "2d518b3d-35e2-4f42-8d93-70ca33a33630",
           "f583bf01-82b8-48f4-b77e-dc33e71aa22f",
           "58167888-c7a4-4fe3-9fd3-0aabfa8aed9a"
         ]
@@ -509,6 +508,12 @@
         "effects": [
           "efbca74b-1d17-4c46-9451-55ae58c861a8",
           "18c96563-a7b8-48c2-a401-746ac665c052"
+        ]
+      },
+      "3": {
+        "actions": [],
+        "effects": [
+          "2d518b3d-35e2-4f42-8d93-70ca33a33630"
         ]
       },
       "4": {
@@ -600,7 +605,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-17T01:21:16.653872Z",
+    "updated_at": "2026-07-17T01:26:25.485176Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -1519,7 +1524,6 @@
         "effects": [
           "cdb9f4a8-1c33-4653-88a2-3d18405a83fc",
           "e18cf12b-63e3-4da0-b5cd-be2dc2072082",
-          "22906b8f-6324-4964-960a-57ad1cd11423",
           "ee1f6a10-7383-428d-8bdd-b44b6abefceb"
         ]
       },
@@ -1527,7 +1531,8 @@
         "actions": [],
         "effects": [
           "bc88dbdb-8c9d-41de-a544-ca10e2459648",
-          "16053ee3-e9ae-4e87-bcad-265dcab7348a"
+          "16053ee3-e9ae-4e87-bcad-265dcab7348a",
+          "22906b8f-6324-4964-960a-57ad1cd11423"
         ]
       },
       "4": {
@@ -1624,7 +1629,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-08T13:20:28.905304Z",
+    "updated_at": "2026-07-17T01:26:25.573765Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -1945,7 +1950,6 @@
         "effects": [
           "c4d0a9b1-90e8-49d4-8201-fc0aff542ae6",
           "e0bca40f-dd27-4e71-bdc6-2d6e7c36b305",
-          "8d0758b0-f96f-4fe7-891b-05a7a37d998b",
           "58167888-c7a4-4fe3-9fd3-0aabfa8aed9a"
         ]
       },
@@ -1954,7 +1958,8 @@
         "effects": [
           "c2c21765-457c-465b-93b8-7808b62eb09d",
           "8fd5da52-6345-4dd1-97f3-7781f5b6c9a8",
-          "cf703391-c2dd-4213-8766-18d9aaab70a2"
+          "cf703391-c2dd-4213-8766-18d9aaab70a2",
+          "8d0758b0-f96f-4fe7-891b-05a7a37d998b"
         ]
       },
       "3": {
@@ -2152,7 +2157,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-14T12:26:40.281731Z",
+    "updated_at": "2026-07-17T01:26:25.669019Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -2628,13 +2633,13 @@
         "actions": [],
         "effects": [
           "567f000b-6554-41d2-9888-8b601afd7f6f",
-          "cc2aa0c1-8fe5-4d60-a443-f8b81280f5f0"
+          "cc2aa0c1-8fe5-4d60-a443-f8b81280f5f0",
+          "39f2a896-dda5-4424-b976-bc7ceb60152b"
         ]
       },
       "2": {
         "actions": [],
         "effects": [
-          "39f2a896-dda5-4424-b976-bc7ceb60152b",
           "44290177-d0f4-40eb-8669-0cd689097964"
         ]
       },
@@ -2832,7 +2837,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-10T10:20:22.00447Z",
+    "updated_at": "2026-07-17T01:26:25.760052Z",
     "weapon_proficiencies": [
       "simple"
     ]
