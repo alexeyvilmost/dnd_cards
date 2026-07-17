@@ -246,10 +246,6 @@
         "filter": "ally",
         "range": "60 feet",
         "shape": "single"
-      },
-      "uses": {
-        "count": "prof_bonus",
-        "per": "long_rest"
       }
     },
     "name": "Вдохновение барда",
@@ -268,7 +264,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:09.052547Z",
+    "updated_at": "2026-07-17T01:21:16.915666Z",
     "weight": null
   },
   {
@@ -1420,10 +1416,6 @@
       ],
       "targeting": {
         "shape": "self"
-      },
-      "uses": {
-        "count": 2,
-        "per": "long_rest"
       }
     },
     "name": "Ярость",
@@ -1442,7 +1434,7 @@
     "text_alignment": null,
     "text_font_size": null,
     "type": null,
-    "updated_at": "2026-07-17T01:10:06.065493Z",
+    "updated_at": "2026-07-17T01:21:16.822784Z",
     "weight": null
   },
   {

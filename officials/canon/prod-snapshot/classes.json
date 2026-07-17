@@ -569,7 +569,13 @@
     "related_effects": null,
     "resources": {
       "rage_charge": {
-        "count": 2,
+        "by_level": {
+          "1": 2,
+          "3": 3,
+          "6": 4,
+          "12": 5,
+          "17": 6
+        },
         "per": "long_rest"
       }
     },
@@ -594,7 +600,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-14T12:26:39.296366Z",
+    "updated_at": "2026-07-17T01:21:16.653872Z",
     "weapon_proficiencies": [
       "simple",
       "martial"
@@ -793,7 +799,7 @@
     "related_effects": null,
     "resources": {
       "bardic_inspiration": {
-        "count": "prof_bonus",
+        "count": "max(cha, 1)",
         "per": "long_rest"
       },
       "spell_slot_1": {
@@ -894,7 +900,7 @@
     "tags": null,
     "tool_proficiencies": null,
     "type": null,
-    "updated_at": "2026-07-10T10:20:21.078397Z",
+    "updated_at": "2026-07-17T01:21:16.745375Z",
     "weapon_proficiencies": [
       "simple"
     ]

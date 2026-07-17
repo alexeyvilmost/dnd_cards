@@ -32,14 +32,14 @@
         { "text": "сопротивление дробящему/колющему/рубящему", "status": "needs_content", "note": "движок resistance умеет (ярус 0.4), но ACT-rage моделирует сопротивление ТОЛЬКО narrative-текстом — payload resistance отсутствует. Добавить 3 resistance-payload." },
         { "text": "преимущество на проверки и спасброски Силы", "status": "needs_content", "note": "тоже только в narrative-тексте ACT-rage; выразимо modifier op:advantage" },
         { "text": "нельзя концентрироваться и читать заклинания во время Ярости", "status": "needs_engine", "engine_ref": "ENG-15" },
-        { "text": "число Яростей в день по таблице (long rest / частично short rest на 20 ур.)", "status": "needs_content", "note": "прод: rage_charge фиксировано 2, не растёт по уровню — БАГ" }
+        { "text": "число Яростей в день по таблице (long rest / частично short rest на 20 ур.)", "status": "full", "note": "rage_charge → by_level {1:2,3:3,6:4,12:5,17:6} (0.6/KB-053)" }
       ],
       "checks": [
         { "type": "variable", "at_level": 1, "name": "rage_damage_modifier", "expect": 2 },
         { "type": "variable", "at_level": 9, "name": "rage_damage_modifier", "expect": 3 },
         { "type": "variable", "at_level": 16, "name": "rage_damage_modifier", "expect": 4 },
         { "type": "payload_kinds", "match": "ACT-rage", "expect": ["modifier"], "watch": ["resistance"] },
-        { "type": "resource_scaling", "resource": "rage_charge", "table": "rage_uses", "known_bug": true }
+        { "type": "resource_scaling", "resource": "rage_charge", "table": "rage_uses" }
       ]
     },
     {
