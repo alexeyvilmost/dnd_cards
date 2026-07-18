@@ -17,7 +17,10 @@ interface CardPreviewProps {
 
 const CardPreview = ({ card, className = '', disableHover = false, onClick }: CardPreviewProps) => {
   // Для совместимости с одним свойством и массивом свойств
-  const propertiesArray = Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []);
+  const propertiesArray = (Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []))
+    .filter((property) => typeof property === 'string' && property.trim() !== '');
+  const hasProperties = propertiesArray.length > 0;
+  const hasDetailedDescription = Boolean(card.show_detailed_description && card.detailed_description?.trim());
   const isExtended = Boolean(card.is_extended);
 
   // Функция для определения размера шрифта заголовка
@@ -159,29 +162,28 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                 )}
               </div>
 
-              {/* Свойства */}
-              <div className="px-2 pt-0 pb-2 bg-gray-50 flex-1 min-h-[60px] relative overflow-hidden">
-                <div className="w-full">
-                  {card.show_detailed_description && card.detailed_description && card.detailed_description.trim() !== '' ? (
-                    <div 
-                      className={`text-xs font-fantasy whitespace-pre-wrap`}
-                      style={{
-                        fontSize: card.detailed_description_font_size ? `${card.detailed_description_font_size}px` : '12px',
-                        textAlign: (card.detailed_description_alignment || 'left') as React.CSSProperties['textAlign'],
-                        color: getEffectiveRarityColor(card.rarity, card.custom_rarity_color)
-                      }}
-                    >
-                      {card.detailed_description}
-                    </div>
-                  ) : (
-                    <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
-                      {(() => {
-                        return renderProperties(propertiesArray, Boolean(isExtended));
-                      })()}
-                    </div>
-                  )}
+              {(hasProperties || hasDetailedDescription) && (
+                <div className="px-2 pt-0 pb-2 bg-gray-50 flex-1 min-h-[60px] relative overflow-hidden">
+                  <div className="w-full">
+                    {card.show_detailed_description && card.detailed_description && card.detailed_description.trim() !== '' ? (
+                      <div
+                        className="text-xs font-fantasy whitespace-pre-wrap"
+                        style={{
+                          fontSize: card.detailed_description_font_size ? `${card.detailed_description_font_size}px` : '12px',
+                          textAlign: (card.detailed_description_alignment || 'left') as React.CSSProperties['textAlign'],
+                          color: getEffectiveRarityColor(card.rarity, card.custom_rarity_color)
+                        }}
+                      >
+                        {card.detailed_description}
+                      </div>
+                    ) : (
+                      <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
+                        {renderProperties(propertiesArray, Boolean(isExtended))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Правая половина - только описание */}
@@ -213,11 +215,11 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             <h3 className={getTitleClass(card.rarity, card.name)} style={getTitleStyle(card.rarity)}>
               {card.name}
             </h3>
-            <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
-              {(() => {
-                return renderProperties(propertiesArray, Boolean(isExtended));
-              })()}
-            </div>
+            {hasProperties && (
+              <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
+                {renderProperties(propertiesArray, Boolean(isExtended))}
+              </div>
+            )}
           </div>
 
           {/* Изображение - без отступов */}
