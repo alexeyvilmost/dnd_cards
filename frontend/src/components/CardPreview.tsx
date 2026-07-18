@@ -1,7 +1,6 @@
 import type { Card } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import { renderProperties } from '../utils/propertyIcons';
-import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import CardBottomPanel from './CardBottomPanel';
 import { getCardBorderWrapperStyle } from '../utils/cardStyles';
 import { getCardDescriptionFontSize } from '../utils/cardTextStyles';
@@ -102,20 +101,6 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
       onClick={onClick}
     >
       <div className="relative bg-white rounded-[6px] overflow-hidden flex flex-col h-full w-full">
-      {/* Метка редкости для слабовидящих */}
-      <div className="absolute top-0.5 left-1 text-sm font-bold select-none">
-        <span 
-          title={getRaritySymbolDescription(card.rarity)}
-          aria-label={getRaritySymbolDescription(card.rarity)}
-          className={`${getRarityColor(card.rarity)} drop-shadow-lg`}
-          style={{
-            textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-            ...(card.rarity === 'custom' && card.custom_rarity_color ? { color: card.custom_rarity_color } : {}),
-          }}
-        >
-          {getRaritySymbol(card.rarity)}
-        </span>
-      </div>
       {/* Значок необходимости настройки */}
       {card.requires_attunement && (
         <div className="absolute top-1 right-1 select-none z-10">
