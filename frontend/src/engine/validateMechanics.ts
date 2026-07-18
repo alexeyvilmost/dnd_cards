@@ -10,6 +10,16 @@ export interface MechanicMeta {
   kind: MechanicKind;
 }
 
+/** Привести внешний идентификатор к slug-формату, которую требует схема. */
+export function normalizeMechanicId(id: string): string {
+  const normalized = String(id || '')
+    .trim()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  return normalized || 'draft';
+}
+
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 const validateCard = ajv.compile(schema);
@@ -23,7 +33,7 @@ export function normalizeMechanicsForSchema(
   const interactions = (mechanics.effects as unknown[]) || (mechanics.interactions as unknown[]) || [];
   return {
     schema_version: '1.0',
-    id: meta.id.replace(/[^a-z0-9-]/gi, '-').toLowerCase() || 'draft',
+    id: normalizeMechanicId(meta.id),
     name: meta.name || 'draft',
     kind: meta.kind,
     activation,

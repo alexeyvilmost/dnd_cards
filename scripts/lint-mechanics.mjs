@@ -22,9 +22,14 @@ const validate = ajv.compile(schema);
 
 function normalize(mechanics, meta) {
   if (!mechanics) return null;
+  const id = String(meta.id || '')
+    .trim()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'draft';
   return {
     schema_version: '1.0',
-    id: (meta.id || 'draft').replace(/[^a-z0-9-]/gi, '-').toLowerCase(),
+    id,
     name: meta.name || 'draft',
     kind: meta.kind,
     activation: mechanics.activation || { mode: 'passive' },

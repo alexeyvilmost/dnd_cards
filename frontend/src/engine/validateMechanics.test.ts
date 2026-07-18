@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { validateMechanics } from './validateMechanics';
+import { normalizeMechanicId, validateMechanics } from './validateMechanics';
 import schema from '../schemas/mechanics.schema.json';
 
 describe('validateMechanics', () => {
+  it('нормализует русское название предмета в безопасный id', () => {
+    expect(normalizeMechanicId('Зелье лечения')).toBe('draft');
+    expect(normalizeMechanicId('  item__42  ')).toBe('item-42');
+  });
+
   it('пустая механика — валидна', () => {
     expect(validateMechanics(null, { id: 'x', name: 'X', kind: 'passive_effect' }).valid).toBe(true);
   });

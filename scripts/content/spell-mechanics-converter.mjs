@@ -159,9 +159,14 @@ function convert(spell) {
 }
 
 function validate(spell, mechanics) {
+  const id = String(spell.card_number || spell.id || '')
+    .trim()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'draft';
   const card = {
     schema_version: '1.0',
-    id: (spell.card_number || spell.id).replace(/[^a-z0-9-]/gi, '-').toLowerCase(),
+    id,
     name: spell.name,
     kind: 'spell',
     activation: mechanics.activation,
