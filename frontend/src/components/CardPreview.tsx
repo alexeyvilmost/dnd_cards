@@ -96,7 +96,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
 
   return (
     <div
-      className={`card-preview rounded-lg shadow-md ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[397px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`card-preview rounded-lg shadow-md ${className} transition-all duration-300 ease-out group ${getRarityGlowColor(card.rarity)} ${getEnhancedGlowClass(card.rarity)} ${isExtended ? 'w-[396px] h-[280px]' : 'w-[198px] h-[280px]'} ${!disableHover && className.includes('card-preview-large') ? '' : !disableHover ? 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl' : ''} ${onClick ? 'cursor-pointer' : ''}`}
       style={getCardBorderWrapperStyle(card.rarity, card.custom_rarity_color)}
       onClick={onClick}
     >
@@ -118,7 +118,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           {/* Основной контент - горизонтальная компоновка */}
           <div className="flex flex-1">
             {/* Левая половина - заголовок, изображение, свойства и бонусы */}
-            <div className="w-1/2 flex flex-col">
+            <div className="w-1/2 min-w-0 flex flex-col">
               {/* Заголовок только над левой половиной */}
               <div className="px-1 py-0.5 text-center">
                 <h3 className={getTitleClass(card.rarity, card.name)} style={getTitleStyle(card.rarity)}>
@@ -172,7 +172,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             </div>
 
             {/* Правая половина - только описание */}
-            <div className="w-1/2 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
+            <div className="w-1/2 min-w-0 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
               {/* Описание и детальное описание */}
               <div className="flex-1 overflow-hidden flex flex-col justify-start pt-2 space-y-2">
                 {/* Основное описание */}
