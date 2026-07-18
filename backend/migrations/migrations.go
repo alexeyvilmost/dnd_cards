@@ -478,6 +478,12 @@ func GetAllMigrations() []Migration {
 			Up:          restoreFeatSlotEffects,
 			Down:        unrestoreFeatSlotEffects,
 		},
+		{
+			Version:     "079_expand_card_rarities",
+			Description: "Разрешить relic и custom для карточек предметов",
+			Up:          expandCardRarities,
+			Down:        contractCardRarities,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -517,6 +523,32 @@ func unrestoreFeatSlotEffects(db *sql.DB) error {
 }
 
 // addCharacterCurrentEncounter — nullable-колонка связи персонажа с текущим боем.
+func expandCardRarities(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_rarity_check",
+		"ALTER TABLE cards ADD CONSTRAINT cards_rarity_check CHECK (rarity IN ('common', 'uncommon', 'rare', 'very_rare', 'artifact', 'relic', 'custom'))",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("expandCardRarities: failed query %q: %w", query, err)
+		}
+	}
+	return nil
+}
+
+func contractCardRarities(db *sql.DB) error {
+	queries := []string{
+		"ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_rarity_check",
+		"ALTER TABLE cards ADD CONSTRAINT cards_rarity_check CHECK (rarity IN ('common', 'uncommon', 'rare', 'very_rare', 'artifact'))",
+	}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return fmt.Errorf("contractCardRarities: failed query %q: %w", query, err)
+		}
+	}
+	return nil
+}
+
 func addCharacterCurrentEncounter(db *sql.DB) error {
 	if _, err := db.Exec("ALTER TABLE characters_v3 ADD COLUMN IF NOT EXISTS current_encounter_id UUID"); err != nil {
 		return fmt.Errorf("addCharacterCurrentEncounter: %w", err)

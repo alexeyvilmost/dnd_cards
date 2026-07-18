@@ -182,7 +182,7 @@ class TestCardCreation:
     
     def test_create_card_with_different_rarities(self, api_client: requests.Session):
         """Тест создания карточек с разными редкостями"""
-        rarities = ["common", "uncommon", "rare", "very_rare", "artifact"]
+        rarities = ["common", "uncommon", "rare", "very_rare", "artifact", "relic"]
         
         for rarity in rarities:
             card_data = {
@@ -198,6 +198,19 @@ class TestCardCreation:
             
             # Очистка
             api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
+
+        custom_data = {
+            "name": "Карточка custom",
+            "description": "Тестовая кастомная редкость",
+            "rarity": "custom",
+            "custom_rarity_color": "#e11d48",
+        }
+        response = api_client.post(get_api_url("/cards"), json=custom_data)
+        assert response.status_code == 201
+        created_card = response.json()
+        assert created_card["rarity"] == "custom"
+        assert created_card["custom_rarity_color"] == "#e11d48"
+        api_client.delete(get_api_url(f"/cards/{created_card['id']}"))
     
     def test_create_card_with_different_properties(self, api_client: requests.Session):
         """Тест создания карточек с разными свойствами"""

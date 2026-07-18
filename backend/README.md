@@ -78,7 +78,7 @@ go run .
   "properties": "consumable|single_use",
   "description": "Описание эффекта",
   "image_url": "URL изображения",
-  "rarity": "common|uncommon|rare|very_rare|artifact",
+  "rarity": "common|uncommon|rare|very_rare|artifact|relic|custom",
   "card_number": "CARD-0001",
   "created_at": "2024-01-01T00:00:00Z",
   "updated_at": "2024-01-01T00:00:00Z"

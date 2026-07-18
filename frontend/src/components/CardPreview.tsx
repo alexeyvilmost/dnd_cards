@@ -5,25 +5,9 @@ import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymb
 import CardBottomPanel from './CardBottomPanel';
 import { getCardBorderWrapperStyle } from '../utils/cardStyles';
 import { getCardDescriptionFontSize } from '../utils/cardTextStyles';
+import { getEffectiveRarityColor } from '../utils/rarityVisuals';
 
 // Функция для получения значения цвета редкости для inline стилей
-const getRarityColorValue = (rarity: string) => {
-  switch (rarity) {
-    case 'common':
-      return '#6b7280'; // gray-500
-    case 'uncommon':
-      return '#10b981'; // emerald-500
-    case 'rare':
-      return '#3b82f6'; // blue-500
-    case 'epic':
-      return '#8b5cf6'; // violet-500
-    case 'legendary':
-      return '#f59e0b'; // amber-500
-    default:
-      return '#6b7280';
-  }
-};
-
 interface CardPreviewProps {
   card: Card;
   className?: string;
@@ -184,7 +168,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                       style={{
                         fontSize: card.detailed_description_font_size ? `${card.detailed_description_font_size}px` : '12px',
                         textAlign: (card.detailed_description_alignment || 'left') as React.CSSProperties['textAlign'],
-                        color: getRarityColorValue(card.rarity)
+                        color: getEffectiveRarityColor(card.rarity, card.custom_rarity_color)
                       }}
                     >
                       {card.detailed_description}

@@ -12,7 +12,8 @@ CREATE TABLE cards (
     properties TEXT, -- Храним как JSON массив
     description TEXT NOT NULL,
     image_url TEXT,
-    rarity VARCHAR(50) NOT NULL CHECK (rarity IN ('common', 'uncommon', 'rare', 'very_rare', 'artifact')),
+    rarity VARCHAR(50) NOT NULL CHECK (rarity IN ('common', 'uncommon', 'rare', 'very_rare', 'artifact', 'relic', 'custom')),
+    custom_rarity_color VARCHAR(7),
     card_number VARCHAR(20) NOT NULL,
     price INTEGER CHECK (price >= 1 AND price <= 50000),
     weight DECIMAL(5,2) CHECK (weight >= 0.01 AND weight <= 1000),
