@@ -29,6 +29,12 @@ import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
 const abbr3 = (label: string) => label.slice(0, 3).toUpperCase();
+const ABILITY_ORDER = new Map(ABILITY_KEYS.map((ability, index) => [ability, index]));
+const SORTED_SKILLS = [...SKILLS].sort((left, right) => {
+  const byAbility = (ABILITY_ORDER.get(abilityOfSkill(left.id)) ?? ABILITY_KEYS.length)
+    - (ABILITY_ORDER.get(abilityOfSkill(right.id)) ?? ABILITY_KEYS.length);
+  return byAbility || left.label.localeCompare(right.label, 'ru');
+});
 // D3: локализация особых чувств и небазовых режимов перемещения.
 const SENSE_LABEL: Record<string, string> = {
   darkvision: 'Тёмное зрение', blindsight: 'Слепое зрение',
@@ -232,7 +238,7 @@ const CharacterSheetV2 = ({
 
           <CollapsibleSection title="Навыки">
             <ul className="cs-skills cs-skills--col">
-              {SKILLS.map((skill) => {
+              {SORTED_SKILLS.map((skill) => {
                 const proficient = skills.includes(skill.id);
                 const expert = ruleState.expertise.skills.includes(skill.id);
                 const bonus = ruleState.skillBonuses[skill.id];

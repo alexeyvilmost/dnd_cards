@@ -1,6 +1,7 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { ResourceDefinition } from '../types';
 import type { ResourceOption } from '../utils/resources';
+import HoverCard from './HoverCard';
 import ResourcePreview from './ResourcePreview';
 
 interface ResourceHoverPreviewProps {
@@ -11,8 +12,6 @@ interface ResourceHoverPreviewProps {
 
 /** Ресурсная плитка с тем же превью, что используется в библиотеке ресурсов. */
 export default function ResourceHoverPreview({ resourceId, option, children }: ResourceHoverPreviewProps) {
-  const [hovered, setHovered] = useState(false);
-
   const resource = useMemo<ResourceDefinition>(() => ({
     id: resourceId,
     resource_id: resourceId,
@@ -26,29 +25,14 @@ export default function ResourceHoverPreview({ resourceId, option, children }: R
   }), [resourceId, option]);
 
   return (
-    <span
-      style={{ position: 'relative', display: 'inline-flex' }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {children}
-      {hovered && (
-        <span
-          role="tooltip"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 340,
-            maxWidth: 'min(340px, calc(100vw - 16px))',
-            zIndex: 80,
-            pointerEvents: 'none',
-          }}
-        >
+    <HoverCard
+      content={(
+        <div role="tooltip" style={{ width: 340, maxWidth: 'calc(100vw - 16px)' }}>
           <ResourcePreview resource={resource} disableHover />
-        </span>
+        </div>
       )}
-    </span>
+    >
+      <span style={{ display: 'inline-flex' }}>{children}</span>
+    </HoverCard>
   );
 }
