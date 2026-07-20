@@ -37,8 +37,7 @@ const ConceptPreview: React.FC<ConceptPreviewProps> = ({ concept, className = ''
       />
     )}
     <h3 className="concept-tip-title">{concept.name || 'Понятие'}</h3>
-    <OriginalName nameEn={concept.name_en} />
-    <div className="concept-tip-type">Понятие</div>
+    <div className="concept-tip-type"><OriginalName nameEn={concept.name_en} suffix="Понятие" /></div>
     <div className="concept-tip-desc">
       <FormattedText text={concept.description || ''} emptyText="—" />
     </div>

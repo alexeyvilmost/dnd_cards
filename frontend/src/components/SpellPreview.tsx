@@ -122,8 +122,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
       )}
 
       <h3>{spell.name || 'Название заклинания'}</h3>
-      <OriginalName nameEn={spell.name_en} />
-      <div className="sp-subtype">{subtype || 'Заговор'}</div>
+      <div className="sp-subtype"><OriginalName nameEn={spell.name_en} suffix={subtype || 'Заговор'} /></div>
 
       {spell.id && (
         <Link className="sp-pagelink" to={`/spell/${spell.id}`} onClick={(e) => e.stopPropagation()}>

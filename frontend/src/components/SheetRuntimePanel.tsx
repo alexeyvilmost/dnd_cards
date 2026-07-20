@@ -19,6 +19,7 @@ import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import { findResource, useResourceOptions } from '../utils/resources';
 import type { ResourceOption } from '../utils/resources';
 import SheetRestButtons from './SheetRestButtons';
+import ResourceHoverPreview from './ResourceHoverPreview';
 
 interface Props {
   character: ForgeCharacter;
@@ -130,8 +131,6 @@ function ResTile({ resKey, option, current, max }: ResTileProps) {
     || (warlockLevel != null ? 'Ячейка колдуна' : undefined)
     || RESOURCE_LABELS[resKey]
     || resKey;
-  const title = `${current}/${max} ${label}${option?.description ? `\n${option.description}` : ''}`;
-
   const customUrl = usableImageUrl(option?.imageUrl);
   const spentUrl = usableImageUrl(option?.imageUrlSpent);
   const glyphKind = GLYPH_KEYS[resKey];
@@ -172,11 +171,13 @@ function ResTile({ resKey, option, current, max }: ResTileProps) {
   const cornerLevel = slotLevel ?? (warlockLevel && warlockLevel > 0 ? warlockLevel : null);
 
   return (
-    <span className={`res-tile${spent ? ' res-tile--spent' : ''}`} title={title}>
-      {icon}
-      {cornerLevel != null && <span className="res-tile-corner">{ROMAN[cornerLevel - 1]}</span>}
-      {max > 1 && current !== 1 && <span className="res-tile-count">{current}</span>}
-    </span>
+    <ResourceHoverPreview resourceId={resKey} option={option}>
+      <span className={`res-tile${spent ? ' res-tile--spent' : ''}`}>
+        {icon}
+        {cornerLevel != null && <span className="res-tile-corner">{ROMAN[cornerLevel - 1]}</span>}
+        {max > 1 && current !== 1 && <span className="res-tile-count">{current}</span>}
+      </span>
+    </ResourceHoverPreview>
   );
 }
 

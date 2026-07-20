@@ -36,14 +36,10 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
   const icon = def?.imageUrl && !def.imageUrl.startsWith('/charges/') ? def.imageUrl : undefined;
   const totalRemaining = rows.reduce((s, r) => s + Math.max(0, r.cur), 0);
   const allSpent = totalRemaining <= 0;
-  // Нативный title — доступный фолбэк (и на тач-устройствах long-press).
-  const titleText = `${label}\n${rows.map((r) => `${r.name}: ${r.cur}/${r.max}`).join('\n')}`;
-
   return (
     <span
       className={`res-tile${allSpent ? ' res-tile--spent' : ''}`}
       style={{ position: 'relative' }}
-      title={titleText}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

@@ -40,6 +40,7 @@ import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
+import ResourceHoverPreview from './ResourceHoverPreview';
 import { loadMasteryEffects } from '../utils/mastery';
 
 interface Props {
@@ -932,13 +933,15 @@ export default function SheetActionsPanel({
               : (def?.label || RESOURCE_LABELS[key] || key);
             const roman = slot ? ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Number(slot[1])] : '';
             return (
-              <div key={key} className={`res-tile${spent ? ' res-tile--spent' : ''}`} title={`${cur}/${max} ${label}${def?.description ? `\n${def.description}` : ''}`}>
-                {roman && <span className="res-tile-corner">{roman}</span>}
-                {icon
-                  ? <img src={icon} alt="" className={`res-tile-icon${spent && !useSpentImg ? ' res-tile-icon--dim' : ''}`} />
-                  : <span className={`res-tile-mono${spent ? ' res-tile-mono--dim' : ''}`}>{label.slice(0, 2)}</span>}
-                {max > 1 && cur !== 1 && <span className="res-tile-count">{cur}</span>}
-              </div>
+              <ResourceHoverPreview key={key} resourceId={key} option={def}>
+                <span className={`res-tile${spent ? ' res-tile--spent' : ''}`}>
+                  {roman && <span className="res-tile-corner">{roman}</span>}
+                  {icon
+                    ? <img src={icon} alt="" className={`res-tile-icon${spent && !useSpentImg ? ' res-tile-icon--dim' : ''}`} />
+                    : <span className={`res-tile-mono${spent ? ' res-tile-mono--dim' : ''}`}>{label.slice(0, 2)}</span>}
+                  {max > 1 && cur !== 1 && <span className="res-tile-count">{cur}</span>}
+                </span>
+              </ResourceHoverPreview>
             );
           })}
           <FreeuseSpellsTile

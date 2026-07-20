@@ -73,8 +73,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
       )}
 
       <h3>{effect.name || 'Название эффекта'}</h3>
-      <OriginalName nameEn={effect.name_en} />
-      <div className="sp-subtype">{subtype || 'Эффект'}</div>
+      <div className="sp-subtype"><OriginalName nameEn={effect.name_en} suffix={subtype || 'Эффект'} /></div>
 
       {hasStats && (
         <div className="sp-stats">

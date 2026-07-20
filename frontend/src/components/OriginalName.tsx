@@ -1,28 +1,32 @@
+import type { ReactNode } from 'react';
 import { useSiteSettings } from '../settings';
 
 /**
- * Оригинальное (английское) название под основным — единая точка правила показа.
+ * Оригинальное (английское) название рядом с типом — единая точка правила показа.
  *
  * Рисуется только если включена настройка «Отображать оригинальные названия» и оригинал задан.
  * Место применения — интерфейсные отображения (тёмный стат-блок), детальные окна и превью при
  * наведении. На печатных карточках предметов (CardPreview) НЕ используется — там намеренно только
  * основное название.
  *
+ * Если задан suffix, он выводится в той же строке через «·».
  * Стиль инлайновый, а не классом: превью рендерятся в hover-портале и внутри собственных
  * <style>-блоков разных семейств (.sp-* / .bg3-* / .concept-tip-*), поэтому один инлайновый
  * стиль надёжнее и не требует правок в четырёх CSS.
  */
 export const OriginalName = ({
   nameEn,
+  suffix,
   size = 'preview',
 }: {
   nameEn?: string | null;
+  suffix?: ReactNode;
   /** preview — под заголовком стат-блока; detail — под крупным заголовком детального окна. */
   size?: 'preview' | 'detail';
 }) => {
   const { showOriginalNames } = useSiteSettings();
   const value = nameEn?.trim();
-  if (!showOriginalNames || !value) return null;
+  if (!showOriginalNames && !suffix) return null;
 
   return (
     <div
@@ -35,7 +39,8 @@ export const OriginalName = ({
         margin: '.1rem 0 0',
       }}
     >
-      {value}
+      {showOriginalNames && value ? <>{value}{suffix ? ' · ' : ''}</> : null}
+      {suffix}
     </div>
   );
 };

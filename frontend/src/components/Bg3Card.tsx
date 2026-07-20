@@ -77,8 +77,9 @@ const Bg3Card: React.FC<Bg3CardProps> = ({
       )}
 
       <h3>{title}</h3>
-      <OriginalName nameEn={titleEn} />
-      {subtype && <div className="bg3-subtype">{subtype}</div>}
+      {(titleEn || subtype) && (
+        <div className="bg3-subtype"><OriginalName nameEn={titleEn} suffix={subtype} /></div>
+      )}
       {children}
       {footer ? <div className="bg3-costbar">{footer}</div> : <div className="bg3-spacer" />}
     </div>

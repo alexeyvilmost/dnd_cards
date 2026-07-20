@@ -100,8 +100,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
       )}
 
       <h3>{card.name || 'Название предмета'}</h3>
-      <OriginalName nameEn={card.name_en} />
-      <div className="sp-subtype">{subtype || 'Предмет'}</div>
+      <div className="sp-subtype"><OriginalName nameEn={card.name_en} suffix={subtype || 'Предмет'} /></div>
 
       {hasStats && (
         <div className="sp-stats">
