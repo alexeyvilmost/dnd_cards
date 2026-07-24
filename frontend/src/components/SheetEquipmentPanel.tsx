@@ -39,6 +39,7 @@ interface Props {
   embedded?: boolean;
   /** Пассивные механики персонажа (для контекста; КД считается в шапке листа). */
   passives?: Record<string, unknown>[];
+  disableHoverPreviews?: boolean;
 }
 
 const SLOT_LABELS: Record<string, string> = {
@@ -72,7 +73,14 @@ type Dialog =
   | { card: Card; mode: 'inventory'; occupant: Card | null }
   | { card: Card; mode: 'equipped'; slot: string };
 
-export default function SheetEquipmentPanel({ character, ruleState, onUpdated, embedded, passives = [] }: Props) {
+export default function SheetEquipmentPanel({
+  character,
+  ruleState,
+  onUpdated,
+  embedded,
+  passives = [],
+  disableHoverPreviews = false,
+}: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -250,9 +258,13 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
     prevPin.current = pinModeActive;
   }, [pinModeActive]);
   const hoverHandlers = (card?: Card | null) => ({
-    onMouseEnter: (e: React.MouseEvent) => { if (card) { setHoveredItem(card); setItemMouse({ x: e.clientX, y: e.clientY }); } },
-    onMouseMove: (e: React.MouseEvent) => setItemMouse({ x: e.clientX, y: e.clientY }),
-    onMouseLeave: () => { if (!pinModeActive) setHoveredItem(null); },
+    onMouseEnter: (e: React.MouseEvent) => {
+      if (!disableHoverPreviews && card) { setHoveredItem(card); setItemMouse({ x: e.clientX, y: e.clientY }); }
+    },
+    onMouseMove: (e: React.MouseEvent) => {
+      if (!disableHoverPreviews) setItemMouse({ x: e.clientX, y: e.clientY });
+    },
+    onMouseLeave: () => { if (!disableHoverPreviews && !pinModeActive) setHoveredItem(null); },
   });
 
   // ── Слот-ячейка ──
@@ -511,7 +523,7 @@ export default function SheetEquipmentPanel({ character, ruleState, onUpdated, e
         {renderInventory()}
       </div>
 
-      {hoveredItem && !dialog && (
+      {!disableHoverPreviews && hoveredItem && !dialog && (
         <div
           className="fixed z-50"
           style={{

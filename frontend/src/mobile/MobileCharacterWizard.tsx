@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Pencil, Sparkles } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
+import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Pencil, Search, Sparkles } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { backgroundsApi, classesApi, featsApi, racesApi, spellsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
@@ -18,10 +18,18 @@ import { maxAvailableSpellSlotLevel } from '../engine/resources';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, optionsForChoiceSource, SKILLS } from '../mechanics/registries';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
+import { EntityDetailContext } from '../contexts/entityDetail';
+import type { EntityRefType } from '../components/EntityRefRegistry';
 import { getSpellLevelLabel } from '../types';
 import { FormattedText } from '../utils/formattedText';
+import { findResource, useResourceOptions } from '../utils/resources';
 import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import MobileOverlay from './MobileOverlay';
+import {
+  MobileEntityOverlay,
+  MobileLinkedEntityOverlay,
+  type MobileEntityView,
+} from './MobileEntityCard';
 import '../pages/CharacterForge.css';
 import './mobile.css';
 
@@ -73,32 +81,94 @@ function WizardChoiceCard({
   );
 }
 
+type GrantedAbility = {
+  key: string;
+  name: string;
+  detail?: string;
+  imageUrl?: string | null;
+  view?: MobileEntityView;
+};
+
 function EntityDetails({
   description,
   detailedDescription,
-  abilityNames,
+  abilities,
+  resources = [],
+  onInspect,
 }: {
   description?: string | null;
   detailedDescription?: string | null;
-  abilityNames: string[];
+  abilities: GrantedAbility[];
+  resources?: GrantedAbility[];
+  onInspect: (view: MobileEntityView) => void;
 }) {
+  const tiles = (values: GrantedAbility[], empty: string) => {
+    const uniqueValues: GrantedAbility[] = [];
+    const positions = new Map<string, number>();
+    values.forEach((ability) => {
+      const normalizedName = ability.name.trim().toLocaleLowerCase('ru-RU');
+      const previousIndex = positions.get(normalizedName);
+      if (previousIndex === undefined) {
+        positions.set(normalizedName, uniqueValues.length);
+        uniqueValues.push(ability);
+        return;
+      }
+      const previous = uniqueValues[previousIndex];
+      if (previous.view?.kind === 'text' && ability.view && ability.view.kind !== 'text') {
+        uniqueValues[previousIndex] = ability;
+      }
+    });
+    return uniqueValues.length ? (
+    <div className="m-wizard-granted-list">
+      {uniqueValues.map((ability) => (
+        <button
+          type="button"
+          key={ability.key}
+          onClick={() => ability.view && onInspect(ability.view)}
+          disabled={!ability.view}
+        >
+          <span className="m-wizard-option-image">
+            {ability.imageUrl
+              ? <img src={ability.imageUrl} alt="" />
+              : ability.name.slice(0, 1).toUpperCase()}
+          </span>
+          <span><strong>{ability.name}</strong>{ability.detail && <small>{ability.detail}</small>}</span>
+          {ability.view && <ChevronRight size={18} />}
+        </button>
+      ))}
+    </div>
+    ) : <p>{empty}</p>;
+  };
+
   return (
     <div className="m-wizard-entity-details">
       <details>
         <summary>Описание</summary>
         <div className="m-wizard-details-body">
-          <FormattedText text={description || detailedDescription || ''} emptyText="Описание не заполнено." />
-          {description && detailedDescription && <FormattedText text={detailedDescription} emptyText="" />}
+          <div className="m-wizard-formatted-copy">
+            <FormattedText text={description || detailedDescription || ''} emptyText="Описание не заполнено." />
+          </div>
+          {description && detailedDescription && (
+            <div className="m-wizard-formatted-copy m-wizard-formatted-copy--detail">
+              <FormattedText text={detailedDescription} emptyText="" />
+            </div>
+          )}
         </div>
       </details>
       <details>
         <summary>Выдаваемые способности</summary>
         <div className="m-wizard-details-body">
-          {abilityNames.length
-            ? <ul>{abilityNames.map((name) => <li key={name}>{name}</li>)}</ul>
-            : <p>Дополнительных способностей нет.</p>}
+          {tiles(abilities, 'Дополнительных способностей нет.')}
         </div>
       </details>
+      {resources.length > 0 && (
+        <details>
+          <summary>Ресурсы класса</summary>
+          <div className="m-wizard-details-body">
+            {tiles(resources, 'Дополнительных ресурсов нет.')}
+          </div>
+        </details>
+      )}
     </div>
   );
 }
@@ -124,6 +194,25 @@ function spellMatchesChoice(spell: Spell, choice: PendingChoice, maxSlotLevel: n
     ? filter.classes.map(String)
     : typeof filter.class === 'string' ? [filter.class] : [];
   return !classes.length || classes.some((klass) => (spell.classes || []).includes(klass));
+}
+
+function featMatchesChoice(feat: Feat, choice: PendingChoice): boolean {
+  const categories = choice.options?.categories;
+  if (Array.isArray(categories) && categories.length) {
+    return categories.map(String).includes(feat.category);
+  }
+  if (Array.isArray(choice.filter)) {
+    return choice.filter.map(String).some((value) => value === feat.id || value === feat.card_number);
+  }
+  if (typeof choice.filter !== 'string' || !choice.filter || choice.filter === 'all') return true;
+  const category: Record<string, string> = {
+    fighting_style: 'fighting_style',
+    origin_feats: 'origin',
+    origin: 'origin',
+    general: 'general',
+    epic_boon: 'epic_boon',
+  };
+  return category[choice.filter] ? feat.category === category[choice.filter] : true;
 }
 
 function SelectGrid<T extends { id: string; name: string; image_url?: string }>({
@@ -180,9 +269,13 @@ export default function MobileCharacterWizard() {
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [feats, setFeats] = useState<Feat[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
+  const resourceOptions = useResourceOptions();
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [picker, setPicker] = useState<Picker | null>(null);
+  const [entityView, setEntityView] = useState<MobileEntityView | null>(null);
+  const [linkedEntity, setLinkedEntity] = useState<{ type: EntityRefType; id: string } | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -317,13 +410,49 @@ export default function MobileCharacterWizard() {
   const selectedBackgroundFeat = draft.swapFeat
     ? feats.find((feat) => draft.featIds.includes(feat.id))
     : defaultBackgroundFeat;
-  const originAbilityNames = (kind: 'race' | 'class') => {
+  const originAbilities = (kind: 'race' | 'class'): GrantedAbility[] => {
     if (!assembled) return [];
-    return [
-      ...assembled.effects.filter((entry) => entry.origin.kind === kind).map((entry) => entry.effect.name),
-      ...assembled.actions.filter((entry) => entry.origin.kind === kind).map((entry) => entry.action.name),
+    const allowedIds = kind === 'race'
+      ? new Set([draft.raceId, draft.lineageId].filter(Boolean))
+      : new Set([draft.classId, draft.subclassId].filter(Boolean));
+    const abilities: GrantedAbility[] = [
+      ...assembled.effects
+        .filter((entry) => entry.origin.kind === kind && allowedIds.has(entry.origin.id))
+        .map((entry) => ({
+          key: `effect:${entry.effect.id}:${entry.origin.id}`,
+          name: entry.effect.name,
+          detail: entry.origin.name,
+          imageUrl: entry.effect.image_url,
+          view: { kind: 'effect', entity: entry.effect, sourceLabel: entry.origin.name } as MobileEntityView,
+        })),
+      ...assembled.actions
+        .filter((entry) => entry.origin.kind === kind && allowedIds.has(entry.origin.id))
+        .map((entry) => ({
+          key: `action:${entry.action.id}:${entry.origin.id}`,
+          name: entry.action.name,
+          detail: entry.origin.name,
+          imageUrl: entry.action.image_url,
+          view: { kind: 'action', entity: entry.action, sourceLabel: entry.origin.name } as MobileEntityView,
+        })),
     ];
+    return abilities.filter((ability, index) => (
+      abilities.findIndex((candidate) => candidate.name.trim().toLocaleLowerCase('ru-RU')
+        === ability.name.trim().toLocaleLowerCase('ru-RU')) === index
+    ));
   };
+  const classResources = useMemo<GrantedAbility[]>(() => {
+    if (!selectedClass?.resources || !assembled) return [];
+    return Object.keys(selectedClass.resources).map((key) => {
+      const assembledResource = assembled.resources.find((entry) => entry.id === key || entry.resource_id === key);
+      const resource = findResource(resourceOptions, key);
+      return {
+        key: `resource:${key}`,
+        name: resource?.label || assembledResource?.name || key,
+        detail: 'Ресурс класса',
+        imageUrl: resource?.imageUrl || assembledResource?.image_url,
+      };
+    });
+  }, [assembled, resourceOptions, selectedClass]);
   const choiceValueLabels = (choice: PendingChoice, values: string[]) => values.map((id) => {
     const item = choice.items?.find((entry) => entry.id === id);
     const feat = feats.find((entry) => entry.id === id);
@@ -355,6 +484,32 @@ export default function MobileCharacterWizard() {
     setError(null);
     setStepIndex((index) => Math.min(index + 1, steps.length - 1));
     window.scrollTo(0, 0);
+  };
+
+  const previousStep = useCallback(() => {
+    if (stepIndex <= 0) {
+      navigate('/m/characters');
+      return;
+    }
+    setError(null);
+    setStepIndex((index) => Math.max(0, index - 1));
+    window.scrollTo(0, 0);
+  }, [navigate, stepIndex]);
+
+  const startSwipe = (event: TouchEvent) => {
+    const touch = event.touches[0];
+    touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+
+  const endSwipe = (event: TouchEvent) => {
+    if (picker || entityView || linkedEntity) return;
+    const start = touchStart.current;
+    const touch = event.changedTouches[0];
+    touchStart.current = null;
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = Math.abs(touch.clientY - start.y);
+    if (start.x < 42 && dx > 82 && dy < 70) previousStep();
   };
 
   const save = async () => {
@@ -416,9 +571,15 @@ export default function MobileCharacterWizard() {
   if (loading) return <main className="m-app"><div className="m-empty">Готовим мобильный мастер…</div></main>;
 
   return (
-    <main className="m-app m-wizard">
+    <EntityDetailContext.Provider
+      value={{
+        openEntity: (type, entityId) => setLinkedEntity({ type, id: entityId }),
+        disableHoverPreviews: true,
+      }}
+    >
+    <main className="m-app m-wizard" onTouchStart={startSwipe} onTouchEnd={endSwipe}>
       <header className="m-wizard-header">
-        <button type="button" className="m-icon-button" onClick={() => navigate('/m/characters')} aria-label="Выйти из мастера">
+        <button type="button" className="m-icon-button" onClick={previousStep} aria-label="Назад">
           <ArrowLeft size={21} />
         </button>
         <div>
@@ -481,11 +642,34 @@ export default function MobileCharacterWizard() {
                   selectedRace.detailed_description,
                   selectedLineage?.detailed_description,
                 ].filter(Boolean).join('\n\n')}
-                abilityNames={[
-                  ...(selectedRace.traits || []).map((trait) => trait.name),
-                  ...(selectedLineage?.traits || []).map((trait) => trait.name),
-                  ...originAbilityNames('race'),
+                abilities={[
+                  ...(selectedRace.traits || []).map((trait, index) => ({
+                    key: `race-trait:${selectedRace.id}:${index}`,
+                    name: trait.name,
+                    detail: selectedRace.name,
+                    imageUrl: selectedRace.image_url,
+                    view: {
+                      kind: 'text',
+                      title: trait.name,
+                      description: trait.description,
+                      detail: `Вид · ${selectedRace.name}`,
+                    } as MobileEntityView,
+                  })),
+                  ...(selectedLineage?.traits || []).map((trait, index) => ({
+                    key: `lineage-trait:${selectedLineage?.id ?? 'lineage'}:${index}`,
+                    name: trait.name,
+                    detail: selectedLineage?.name,
+                    imageUrl: selectedLineage?.image_url,
+                    view: {
+                      kind: 'text',
+                      title: trait.name,
+                      description: trait.description,
+                      detail: `Подвид · ${selectedLineage?.name ?? ''}`,
+                    } as MobileEntityView,
+                  })),
+                  ...originAbilities('race'),
                 ]}
+                onInspect={setEntityView}
               />
             )}
           </section>
@@ -510,7 +694,9 @@ export default function MobileCharacterWizard() {
               <EntityDetails
                 description={selectedClass.description}
                 detailedDescription={selectedClass.detailed_description}
-                abilityNames={originAbilityNames('class')}
+                abilities={originAbilities('class')}
+                resources={classResources}
+                onInspect={setEntityView}
               />
             )}
           </section>
@@ -534,15 +720,26 @@ export default function MobileCharacterWizard() {
                 <EntityDetails
                   description={selectedBackground.description}
                   detailedDescription={selectedBackground.detailed_description}
-                  abilityNames={[
-                    ...(selectedBackground.skill_proficiencies || []).map(
-                      (skill) => `Навык: ${labelOf(SKILLS, skill)}`,
-                    ),
-                    ...(selectedBackground.tool_proficiency
-                      ? [`Инструмент: ${selectedBackground.tool_proficiency}`]
-                      : []),
-                    ...(selectedBackgroundFeat ? [`Черта: ${selectedBackgroundFeat.name}`] : []),
+                  abilities={[
+                    ...(selectedBackground.skill_proficiencies || []).map((skill) => ({
+                      key: `skill:${skill}`,
+                      name: labelOf(SKILLS, skill),
+                      detail: 'Владение навыком',
+                    })),
+                    ...(selectedBackground.tool_proficiency ? [{
+                      key: `tool:${selectedBackground.tool_proficiency}`,
+                      name: selectedBackground.tool_proficiency,
+                      detail: 'Владение инструментом',
+                    }] : []),
+                    ...(selectedBackgroundFeat ? [{
+                      key: `feat:${selectedBackgroundFeat.id}`,
+                      name: selectedBackgroundFeat.name,
+                      detail: 'Черта происхождения',
+                      imageUrl: selectedBackgroundFeat.image_url,
+                      view: { kind: 'feat', entity: selectedBackgroundFeat } as MobileEntityView,
+                    }] : []),
                   ]}
+                  onInspect={setEntityView}
                 />
                 {selectedBackground.origin_feat && (
                   <div className="m-wizard-background-feat">
@@ -655,12 +852,8 @@ export default function MobileCharacterWizard() {
         <button
           type="button"
           className="m-button"
-          disabled={stepIndex === 0 || saving}
-          onClick={() => {
-            setError(null);
-            setStepIndex((index) => Math.max(0, index - 1));
-            window.scrollTo(0, 0);
-          }}
+          disabled={saving}
+          onClick={previousStep}
         >
           <ChevronLeft size={18} /> Назад
         </button>
@@ -725,28 +918,34 @@ export default function MobileCharacterWizard() {
                 const values = draft.resolvedChoices[activePickerChoice.id] ?? [];
                 const selected = values.includes(spell.id);
                 return (
-                  <button
-                    type="button"
-                    key={spell.id}
-                    className={selected ? 'is-selected' : ''}
-                    onClick={() => {
-                      const nextValues = selected
-                        ? values.filter((value) => value !== spell.id)
-                        : values.length >= activePickerChoice.count
-                          ? [...values.slice(1), spell.id]
-                          : [...values, spell.id];
-                      setResolved(activePickerChoice.id, nextValues);
-                    }}
-                  >
-                    <span className="m-wizard-option-image">
-                      {spell.image_url ? <img src={spell.image_url} alt="" /> : <Sparkles size={19} />}
-                    </span>
-                    <span>
-                      <strong>{spell.name}</strong>
-                      <small>{getSpellLevelLabel(spell.level)}</small>
-                    </span>
-                    {selected && <Check size={18} />}
-                  </button>
+                  <div key={spell.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
+                    <button
+                      type="button"
+                      className="m-wizard-option-select"
+                      onClick={() => {
+                        const nextValues = selected
+                          ? values.filter((value) => value !== spell.id)
+                          : values.length >= activePickerChoice.count
+                            ? [...values.slice(1), spell.id]
+                            : [...values, spell.id];
+                        setResolved(activePickerChoice.id, nextValues);
+                      }}
+                    >
+                      <span className="m-wizard-option-image">
+                        {spell.image_url ? <img src={spell.image_url} alt="" /> : <Sparkles size={19} />}
+                      </span>
+                      <span><strong>{spell.name}</strong><small>{getSpellLevelLabel(spell.level)}</small></span>
+                      {selected && <Check size={18} />}
+                    </button>
+                    <button
+                      type="button"
+                      className="m-wizard-inspect"
+                      aria-label={`Изучить ${spell.name}`}
+                      onClick={() => setEntityView({ kind: 'spell', entity: spell })}
+                    >
+                      <Search size={18} />
+                    </button>
+                  </div>
                 );
               })}
               {spells.filter((spell) => spellMatchesChoice(spell, activePickerChoice, maxSlotLevel)).length === 0 && (
@@ -755,7 +954,50 @@ export default function MobileCharacterWizard() {
             </div>
           )}
 
-          {picker.kind === 'mechanic' && activePickerChoice?.source !== 'spell' && activePickerChoice && (
+          {picker.kind === 'mechanic' && activePickerChoice?.source === 'feat' && (
+            <div className="m-wizard-option-list">
+              <p className="m-picker-note">Выберите {activePickerChoice.count}</p>
+              {feats
+                .filter((feat) => featMatchesChoice(feat, activePickerChoice))
+                .map((feat) => {
+                  const values = draft.resolvedChoices[activePickerChoice.id] ?? [];
+                  const selected = values.includes(feat.id);
+                  return (
+                    <div key={feat.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
+                      <button
+                        type="button"
+                        className="m-wizard-option-select"
+                        onClick={() => {
+                          const nextValues = selected
+                            ? values.filter((value) => value !== feat.id)
+                            : values.length >= activePickerChoice.count
+                              ? [...values.slice(1), feat.id]
+                              : [...values, feat.id];
+                          setResolved(activePickerChoice.id, nextValues);
+                        }}
+                      >
+                        <span className="m-wizard-option-image">
+                          {feat.image_url ? <img src={feat.image_url} alt="" /> : <Sparkles size={19} />}
+                        </span>
+                        <span><strong>{feat.name}</strong><small>{feat.description || 'Черта'}</small></span>
+                        {selected && <Check size={18} />}
+                      </button>
+                      <button
+                        type="button"
+                        className="m-wizard-inspect"
+                        aria-label={`Изучить ${feat.name}`}
+                        onClick={() => setEntityView({ kind: 'feat', entity: feat })}
+                      >
+                        <Search size={18} />
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {picker.kind === 'mechanic' && activePickerChoice?.source !== 'spell'
+            && activePickerChoice?.source !== 'feat' && activePickerChoice && (
             <div className="m-wizard-choice-resolver">
               <ChoiceResolver
                 choice={activePickerChoice}
@@ -789,43 +1031,56 @@ export default function MobileCharacterWizard() {
           {picker.kind === 'background-feat' && (
             <div className="m-wizard-option-list">
               {defaultBackgroundFeat && (
-                <button
-                  type="button"
-                  className={!draft.swapFeat ? 'is-selected' : ''}
-                  onClick={() => patch({ swapFeat: false, featIds: [] })}
-                >
-                  <span className="m-wizard-option-image">
-                    {defaultBackgroundFeat.image_url
-                      ? <img src={defaultBackgroundFeat.image_url} alt="" />
-                      : <Sparkles size={19} />}
-                  </span>
-                  <span><strong>{defaultBackgroundFeat.name}</strong><small>Черта предыстории</small></span>
-                  {!draft.swapFeat && <Check size={18} />}
-                </button>
+                <div className={`m-wizard-option-row${!draft.swapFeat ? ' is-selected' : ''}`}>
+                  <button type="button" className="m-wizard-option-select" onClick={() => patch({ swapFeat: false, featIds: [] })}>
+                    <span className="m-wizard-option-image">
+                      {defaultBackgroundFeat.image_url
+                        ? <img src={defaultBackgroundFeat.image_url} alt="" />
+                        : <Sparkles size={19} />}
+                    </span>
+                    <span><strong>{defaultBackgroundFeat.name}</strong><small>Черта предыстории</small></span>
+                    {!draft.swapFeat && <Check size={18} />}
+                  </button>
+                  <button type="button" className="m-wizard-inspect" aria-label={`Изучить ${defaultBackgroundFeat.name}`}
+                    onClick={() => setEntityView({ kind: 'feat', entity: defaultBackgroundFeat })}>
+                    <Search size={18} />
+                  </button>
+                </div>
               )}
               {originFeats
                 .filter((feat) => feat.id !== defaultBackgroundFeat?.id)
                 .map((feat) => {
                   const selected = draft.swapFeat && draft.featIds.includes(feat.id);
                   return (
-                    <button
-                      type="button"
-                      key={feat.id}
-                      className={selected ? 'is-selected' : ''}
-                      onClick={() => patch({ swapFeat: true, featIds: [feat.id] })}
-                    >
-                      <span className="m-wizard-option-image">
-                        {feat.image_url ? <img src={feat.image_url} alt="" /> : <Sparkles size={19} />}
-                      </span>
-                      <span><strong>{feat.name}</strong><small>{feat.description || 'Черта происхождения'}</small></span>
-                      {selected && <Check size={18} />}
-                    </button>
+                    <div key={feat.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
+                      <button type="button" className="m-wizard-option-select"
+                        onClick={() => patch({ swapFeat: true, featIds: [feat.id] })}>
+                        <span className="m-wizard-option-image">
+                          {feat.image_url ? <img src={feat.image_url} alt="" /> : <Sparkles size={19} />}
+                        </span>
+                        <span><strong>{feat.name}</strong><small>{feat.description || 'Черта происхождения'}</small></span>
+                        {selected && <Check size={18} />}
+                      </button>
+                      <button type="button" className="m-wizard-inspect" aria-label={`Изучить ${feat.name}`}
+                        onClick={() => setEntityView({ kind: 'feat', entity: feat })}>
+                        <Search size={18} />
+                      </button>
+                    </div>
                   );
                 })}
             </div>
           )}
         </MobileOverlay>
       )}
+      {entityView && <MobileEntityOverlay view={entityView} onClose={() => setEntityView(null)} />}
+      {linkedEntity && (
+        <MobileLinkedEntityOverlay
+          type={linkedEntity.type}
+          id={linkedEntity.id}
+          onClose={() => setLinkedEntity(null)}
+        />
+      )}
     </main>
+    </EntityDetailContext.Provider>
   );
 }

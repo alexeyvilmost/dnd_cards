@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import {
   ArrowLeft, Backpack, BookOpen, ChevronRight, Dices, Heart,
-  History, Languages, MoreHorizontal, Plus, ScrollText, Shield,
+  History, Languages, MoreHorizontal, Plus, ScrollText, Settings, Shield,
   Swords, UserRound,
 } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -9,16 +9,24 @@ import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
+import SheetSettingsDialog from '../components/SheetSettingsDialog';
+import { EntityDetailContext } from '../contexts/entityDetail';
+import type { EntityRefType } from '../components/EntityRefRegistry';
+import type { SheetAction } from '../character/actionSheet';
 import { charactersV3Api } from '../character/api';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
 import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey } from '../character/types';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { SKILLS } from '../mechanics/registries';
-import { totalWeight } from '../engine/equipment';
 import { rollD20 } from '../engine/roll';
 import { rollEvent, describeEngineEvent } from '../engine/events';
 import type { EngineEvent } from '../mvp/contracts';
 import MobileOverlay from './MobileOverlay';
+import {
+  MobileEntityOverlay,
+  MobileLinkedEntityOverlay,
+  type MobileEntityView,
+} from './MobileEntityCard';
 import { useMobileCharacter } from './useMobileCharacter';
 import '../pages/CharacterForge.css';
 import './mobile.css';
@@ -86,14 +94,21 @@ function Section({
 function EntityRow({
   name,
   detail,
+  imageUrl,
   onClick,
 }: {
   name: string;
   detail?: string;
+  imageUrl?: string | null;
   onClick?: () => void;
 }) {
   return (
     <button type="button" className="m-entity-row" onClick={onClick}>
+      <span className="m-entity-row-image">
+        {imageUrl
+          ? <img src={imageUrl} alt="" onError={(event) => { event.currentTarget.src = '/default_image.png'; }} />
+          : name.slice(0, 1).toUpperCase()}
+      </span>
       <span>
         <strong>{name}</strong>
         {detail && <small>{detail}</small>}
@@ -109,16 +124,55 @@ export default function MobileCharacterSheet() {
   const location = useLocation();
   const data = useMobileCharacter(id);
   const [page, setPage] = useState<SheetPage>('general');
+  const pageHistory = useRef<SheetPage[]>(['general']);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const [linkedEntity, setLinkedEntity] = useState<{ type: EntityRefType; id: string } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [overlay, setOverlay] = useState<
     | { type: 'hp' }
     | { type: 'ac' }
     | { type: 'check'; label: string; bonus: number }
     | { type: 'notes'; description: string; notes: string }
-    | { type: 'entity'; title: string; description?: string | null; detail?: string }
+    | { type: 'entity'; view: MobileEntityView; apply?: () => void; disabledReason?: string }
     | null
   >(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [savingNotes, setSavingNotes] = useState(false);
+
+  const visitPage = useCallback((next: SheetPage) => {
+    setPage((current) => {
+      if (current !== next) pageHistory.current.push(next);
+      return next;
+    });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (page === 'general' || pageHistory.current.length <= 1) {
+      navigate('/m/characters');
+      return;
+    }
+    pageHistory.current.pop();
+    const previous = pageHistory.current[pageHistory.current.length - 1] ?? 'general';
+    setPage(previous);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [navigate, page]);
+
+  const startSwipe = (event: TouchEvent) => {
+    const touch = event.touches[0];
+    touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+
+  const endSwipe = (event: TouchEvent) => {
+    if (overlay || linkedEntity || settingsOpen) return;
+    const start = touchStart.current;
+    const touch = event.changedTouches[0];
+    touchStart.current = null;
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = Math.abs(touch.clientY - start.y);
+    if (start.x < 42 && dx > 82 && dy < 70) goBack();
+  };
 
   const flash = useCallback((text: string) => {
     setNotice(text);
@@ -191,7 +245,6 @@ export default function MobileCharacterSheet() {
   const initiative = data.initiativeBreakdown?.value ?? ruleState.initiativeBonus;
   const speed = data.speedBreakdown?.value ?? ruleState.speed;
   const size = data.sizeBreakdown?.value ?? ruleState.size;
-  const weight = totalWeight(runtimeState, data.equipCards);
   const activeNonConditions = runtimeState.activeEffects.filter(
     (effect) => (effect.mechanics as Record<string, unknown>)?.kind !== 'condition',
   );
@@ -210,13 +263,45 @@ export default function MobileCharacterSheet() {
     </button>
   );
 
+  const inspectAction = (
+    action: SheetAction,
+    apply: () => void,
+    disabledReason?: string,
+  ) => {
+    const view: MobileEntityView = action.spellRef
+      ? {
+          kind: 'spell',
+          entity: action.spellRef,
+          spellcasting: ruleState.spellcasting
+            ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack }
+            : undefined,
+        }
+      : action.actionRef
+        ? { kind: 'action', entity: action.actionRef, sourceLabel: action.sourceLabel }
+        : action.effectRef
+          ? { kind: 'effect', entity: action.effectRef, sourceLabel: action.sourceLabel }
+          : {
+              kind: 'text',
+              title: action.name,
+              description: action.description,
+              detail: action.sourceLabel || 'Базовое действие',
+            };
+    setOverlay({ type: 'entity', view, apply, disabledReason });
+  };
+
   return (
-    <main className="m-app m-sheet">
+    <EntityDetailContext.Provider
+      value={{
+        openEntity: (type, entityId) => setLinkedEntity({ type, id: entityId }),
+        disableHoverPreviews: true,
+      }}
+    >
+    <main className="m-app m-sheet" onTouchStart={startSwipe} onTouchEnd={endSwipe}>
       <header className="m-sheet-header">
-        <button type="button" className="m-icon-button" onClick={() => navigate('/m/characters')} aria-label="К персонажам">
+        <button type="button" className="m-icon-button" onClick={goBack} aria-label="Назад">
           <ArrowLeft size={21} />
         </button>
-        <button type="button" className="m-sheet-name" onClick={() => setPage('general')}>
+        <button type="button" className="m-sheet-name" onClick={() => visitPage('general')}>
           <span>{character.name || 'Без имени'}</span>
           <small>{assembled.klass?.name ?? 'Персонаж'} · {character.level} ур.</small>
         </button>
@@ -245,6 +330,7 @@ export default function MobileCharacterSheet() {
                 <div><span>Скорость</span><strong>{speed} фт</strong></div>
                 <div><span>БМ</span><strong>{fmtMod(ruleState.proficiencyBonus)}</strong></div>
                 <div><span>КЗ</span><strong>{armorClass}</strong></div>
+                <div><span>Размер</span><strong>{SIZE_LABELS[size] ?? size}</strong></div>
               </div>
             </Section>
 
@@ -350,6 +436,8 @@ export default function MobileCharacterSheet() {
                 onEvents={appendEvents}
                 showResources={false}
                 showEffects={false}
+                disableHoverPreviews
+                onInspectAction={inspectAction}
               />
             </div>
           </>
@@ -357,19 +445,13 @@ export default function MobileCharacterSheet() {
 
         {page === 'inventory' && (
           <>
-            <Section title="Нагрузка">
-              <div className="m-stat-grid">
-                <div><span>Размер</span><strong>{SIZE_LABELS[size] ?? size}</strong></div>
-                <div><span>Вес</span><strong>{weight.toFixed(1)} фнт</strong></div>
-                <div><span>Предел</span><strong>{ruleState.carryingCapacity} фнт</strong></div>
-              </div>
-            </Section>
             <div className="m-reused-panel">
               <SheetEquipmentPanel
                 character={character}
                 ruleState={ruleState}
                 onUpdated={data.updateCharacter}
                 passives={data.passives}
+                disableHoverPreviews
               />
             </div>
           </>
@@ -384,7 +466,8 @@ export default function MobileCharacterSheet() {
                     key={feat.id}
                     name={feat.name}
                     detail="Черта"
-                    onClick={() => setOverlay({ type: 'entity', title: feat.name, description: feat.description, detail: 'Пассивная черта' })}
+                    imageUrl={feat.image_url}
+                    onClick={() => setOverlay({ type: 'entity', view: { kind: 'feat', entity: feat } })}
                   />
                 ))}
                 {assembled.effects.map(({ effect, origin }) => (
@@ -392,7 +475,8 @@ export default function MobileCharacterSheet() {
                     key={`${effect.id}:${origin.id}`}
                     name={effect.name}
                     detail={origin.name}
-                    onClick={() => setOverlay({ type: 'entity', title: effect.name, description: effect.description, detail: `Источник: ${origin.name}` })}
+                    imageUrl={effect.image_url}
+                    onClick={() => setOverlay({ type: 'entity', view: { kind: 'effect', entity: effect, sourceLabel: origin.name } })}
                   />
                 ))}
                 {!assembled.feats.length && !assembled.effects.length && <p className="m-muted">Нет черт и способностей.</p>}
@@ -426,8 +510,11 @@ export default function MobileCharacterSheet() {
                     detail={[effect.source, effect.expiry].filter(Boolean).join(' · ')}
                     onClick={() => setOverlay({
                       type: 'entity',
-                      title: effect.name,
-                      detail: `Источник: ${effect.source}`,
+                      view: {
+                        kind: 'text',
+                        title: effect.name,
+                        detail: `Источник: ${effect.source}`,
+                      },
                     })}
                   />
                 ))}
@@ -442,7 +529,10 @@ export default function MobileCharacterSheet() {
                     key={effect.id}
                     name={effect.name}
                     detail={[effect.source, effect.expiry].filter(Boolean).join(' · ')}
-                    onClick={() => setOverlay({ type: 'entity', title: effect.name, detail: `Источник: ${effect.source}` })}
+                    onClick={() => setOverlay({
+                      type: 'entity',
+                      view: { kind: 'text', title: effect.name, detail: `Источник: ${effect.source}` },
+                    })}
                   />
                 ))}
                 {!activeNonConditions.length && <p className="m-muted">Нет активных эффектов.</p>}
@@ -453,6 +543,13 @@ export default function MobileCharacterSheet() {
 
         {page === 'more' && (
           <>
+            <Section title="Лист персонажа">
+              <button type="button" className="m-settings-row" onClick={() => setSettingsOpen(true)}>
+                <Settings size={19} />
+                <span><strong>Настройки</strong><small>Отображение, броски и оригинальные названия</small></span>
+                <ChevronRight size={18} />
+              </button>
+            </Section>
             <Section title="Владения">
               <div className="m-more-groups">
                 <div><h3>Оружие</h3><p>{ruleState.proficiencies.weapons.join(', ') || '—'}</p></div>
@@ -493,10 +590,7 @@ export default function MobileCharacterSheet() {
               key={tab.id}
               className={page === tab.id ? 'is-active' : ''}
               aria-current={page === tab.id ? 'page' : undefined}
-              onClick={() => {
-                setPage(tab.id);
-                window.scrollTo({ top: 0, behavior: 'auto' });
-              }}
+              onClick={() => visitPage(tab.id)}
             >
               <Icon size={20} />
               <span>{tab.label}</span>
@@ -555,10 +649,25 @@ export default function MobileCharacterSheet() {
       )}
 
       {overlay?.type === 'entity' && (
-        <MobileOverlay title={overlay.title} onClose={() => setOverlay(null)}>
-          {overlay.detail && <p className="m-entity-detail">{overlay.detail}</p>}
-          <div className="m-entity-description">{overlay.description || 'Подробное описание отсутствует.'}</div>
-        </MobileOverlay>
+        <MobileEntityOverlay
+          view={overlay.view}
+          onClose={() => setOverlay(null)}
+          footer={overlay.apply && (
+            <button
+              type="button"
+              className="m-button m-button--wide m-button--gold"
+              disabled={!!overlay.disabledReason}
+              title={overlay.disabledReason}
+              onClick={() => {
+                const apply = overlay.apply;
+                setOverlay(null);
+                apply?.();
+              }}
+            >
+              {overlay.disabledReason || 'Применить'}
+            </button>
+          )}
+        />
       )}
 
       {overlay?.type === 'notes' && (
@@ -596,6 +705,15 @@ export default function MobileCharacterSheet() {
           </div>
         </MobileOverlay>
       )}
+      {linkedEntity && (
+        <MobileLinkedEntityOverlay
+          type={linkedEntity.type}
+          id={linkedEntity.id}
+          onClose={() => setLinkedEntity(null)}
+        />
+      )}
+      {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
     </main>
+    </EntityDetailContext.Provider>
   );
 }

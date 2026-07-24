@@ -6,6 +6,8 @@ import type { EntityRefType } from '../components/EntityRefRegistry';
 // вытягивания всех *DetailModal (провайдер живёт отдельно).
 export interface EntityDetailApi {
   openEntity: (type: EntityRefType, id: string) => void;
+  /** Мобильный интерфейс открывает сущности отдельной страницей и не показывает hover-превью. */
+  disableHoverPreviews?: boolean;
 }
 
 export const EntityDetailContext = createContext<EntityDetailApi>({ openEntity: () => {} });

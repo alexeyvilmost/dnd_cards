@@ -8,12 +8,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { usePinMode } from '../hooks/usePinMode';
+import { useEntityDetail } from '../contexts/entityDetail';
 
 interface HoverCardProps {
   children: ReactNode;   // триггер (inline)
   content: ReactNode;    // плавающее превью
   className?: string;    // класс триггера
   onClick?: () => void;  // клик по триггеру (напр. открыть детальное окно)
+  disabled?: boolean;
 }
 
 function computePosition(trigger: DOMRect, card: { width: number; height: number }) {
@@ -30,8 +32,10 @@ function computePosition(trigger: DOMRect, card: { width: number; height: number
   return { left, top };
 }
 
-const HoverCard = ({ children, content, className, onClick }: HoverCardProps) => {
+const HoverCard = ({ children, content, className, onClick, disabled = false }: HoverCardProps) => {
   const { pinModeActive } = usePinMode();
+  const { disableHoverPreviews = false } = useEntityDetail();
+  const hoverDisabled = disabled || disableHoverPreviews;
   const triggerRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
@@ -78,13 +82,13 @@ const HoverCard = ({ children, content, className, onClick }: HoverCardProps) =>
       <span
         ref={triggerRef}
         className={className}
-        onMouseEnter={openNow}
-        onMouseLeave={handleLeave}
+        onMouseEnter={hoverDisabled ? undefined : openNow}
+        onMouseLeave={hoverDisabled ? undefined : handleLeave}
         onClick={onClick}
       >
         {children}
       </span>
-      {open && createPortal(
+      {!hoverDisabled && open && createPortal(
         <div
           ref={cardRef}
           style={{

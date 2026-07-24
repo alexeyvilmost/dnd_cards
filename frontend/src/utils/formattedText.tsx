@@ -230,6 +230,7 @@ const renderParsedNodes = (
   keyPrefix: string,
   useInlineStyles: boolean,
   onOpenRef?: (type: EntityRefType, id: string) => void,
+  disableHoverPreviews = false,
 ): React.ReactNode[] => {
   return nodes.map((node, index) => {
     const key = `${keyPrefix}-${index}`;
@@ -245,6 +246,7 @@ const renderParsedNodes = (
           className="ft-link"
           content={<EntityRefPreview type={node.refType} id={node.refId} />}
           onClick={onOpenRef ? () => onOpenRef(node.refType, node.refId) : undefined}
+          disabled={disableHoverPreviews}
         >
           {node.label}
         </HoverCard>
@@ -274,7 +276,7 @@ const renderParsedNodes = (
     if (node.type === 'color') {
       return (
         <span key={key} style={{ color: getDamageColor(node.dmg) }}>
-          {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef)}
+          {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef, disableHoverPreviews)}
         </span>
       );
     }
@@ -285,7 +287,7 @@ const renderParsedNodes = (
 
     return (
       <span key={key} {...styleProps}>
-        {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef)}
+        {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef, disableHoverPreviews)}
       </span>
     );
   });
@@ -310,7 +312,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
   onOpenRef,
 }) => {
   // По умолчанию клик по ссылке открывает деталь через глобальный хост (если он смонтирован).
-  const { openEntity } = useEntityDetail();
+  const { openEntity, disableHoverPreviews = false } = useEntityDetail();
   const effectiveOpenRef = onOpenRef ?? openEntity;
 
   if (!text || text.trim() === '') {
@@ -321,7 +323,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
 
   return (
     <span className={className} style={style}>
-      {renderParsedNodes(nodes, 'formatted', useInlineStyles, effectiveOpenRef)}
+      {renderParsedNodes(nodes, 'formatted', useInlineStyles, effectiveOpenRef, disableHoverPreviews)}
     </span>
   );
 };

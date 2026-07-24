@@ -31,6 +31,9 @@ type Props = {
   weaponAttackPreview?: WeaponAttackPreview;
   /** 'row' — строка (по умолчанию); 'icon' — плитка (настройка отображения действий). */
   variant?: 'row' | 'icon';
+  disableHover?: boolean;
+  /** В режиме просмотра недоступное действие всё равно можно открыть и изучить. */
+  inspectMode?: boolean;
   onActivate: () => void;
 };
 
@@ -49,6 +52,8 @@ const SheetActionLine = ({
   spellcasting,
   weaponAttackPreview,
   variant = 'row',
+  disableHover = false,
+  inspectMode = false,
   onActivate,
 }: Props) => {
   const [hover, setHover] = useState(false);
@@ -62,6 +67,7 @@ const SheetActionLine = ({
   }, [pinModeActive]);
 
   const onEnter = (e: React.MouseEvent) => {
+    if (disableHover) return;
     setHover(true);
     setPos({ x: e.clientX, y: e.clientY });
   };
@@ -73,7 +79,7 @@ const SheetActionLine = ({
         <button
           type="button"
           className={`cs-action-tile${disabled ? ' cs-action-tile--disabled' : ''}`}
-          disabled={disabled}
+          disabled={disabled && !inspectMode}
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
@@ -90,7 +96,7 @@ const SheetActionLine = ({
           imageUrl={imageUrl}
           name={name}
           detail={detail}
-          disabled={disabled}
+          disabled={disabled && !inspectMode}
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
@@ -100,7 +106,7 @@ const SheetActionLine = ({
       )}
       {/* Превью доступно ВСЕГДА (в т.ч. когда действие недоступно): показывает суть
           из данных сущности; причина недоступности — отдельным слоем, не вместо. */}
-      {hover && (effectRef || actionRef || spellRef || description) && (
+      {!disableHover && hover && (effectRef || actionRef || spellRef || description) && (
         <div
           className="forge-effect-popover"
           style={{

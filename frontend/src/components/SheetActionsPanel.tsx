@@ -73,6 +73,13 @@ interface Props {
    *  ограничивается комбатантами этого боя, а урон/лечение/эффекты применяются к комбатанту
    *  через encountersApi.apply (синк на доску боя и другие устройства), а не в запись персонажа. */
   encounterId?: string;
+  /** Мобильный лист сначала открывает полноэкранную карточку, а применение запускает из неё. */
+  onInspectAction?: (
+    action: SheetAction,
+    apply: () => void,
+    disabledReason?: string,
+  ) => void;
+  disableHoverPreviews?: boolean;
 }
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
@@ -184,6 +191,8 @@ export default function SheetActionsPanel({
   targetSaveMod: targetSaveModProp,
   onTargetSaveModChange,
   encounterId,
+  onInspectAction,
+  disableHoverPreviews = false,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1008,7 +1017,11 @@ export default function SheetActionsPanel({
                   weaponAttackPreview={weaponPreview}
                   disabled={disabled}
                   disabledTitle={reason ?? 'Недостаточно ресурсов'}
-                  onActivate={() => runAction(action)}
+                  disableHover={disableHoverPreviews}
+                  inspectMode={!!onInspectAction}
+                  onActivate={() => onInspectAction
+                    ? onInspectAction(action, () => { void runAction(action); }, disabled ? (reason ?? 'Недостаточно ресурсов') : undefined)
+                    : runAction(action)}
                 />
                 </div>
               );
