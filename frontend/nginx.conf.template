@@ -36,6 +36,23 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    # PWA bootstrap-файлы должны перепроверяться при каждом запуске, иначе CDN
+    # или браузер могут надолго оставить пользователя на старой версии приложения.
+    location = /sw.js {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    location = /registerSW.js {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    location = /manifest.webmanifest {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache";
+    }
+
     location / {
         try_files $uri /index.html;
     }
