@@ -599,7 +599,18 @@
 }
 .m-notes-editor textarea:focus { border-color: var(--m-gold); }
 
-.m-reused-panel { min-width: 0; }
+.m-reused-panel {
+  --forge-bg: var(--m-bg);
+  --forge-panel: var(--m-panel);
+  --forge-panel-2: var(--m-panel-2);
+  --forge-line: var(--m-line);
+  --forge-gold: var(--m-gold);
+  --forge-gold-dim: var(--m-gold);
+  --forge-text: var(--m-text);
+  --forge-text-dim: var(--m-muted);
+  --forge-danger: var(--m-danger);
+  min-width: 0;
+}
 .m-reused-panel .sheet-panel { color: var(--m-text); }
 .m-reused-panel .forge-note { color: var(--m-muted); }
 .m-reused-panel .forge-input {

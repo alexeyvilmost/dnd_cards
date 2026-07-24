@@ -20,6 +20,7 @@ import { rollEvent, describeEngineEvent } from '../engine/events';
 import type { EngineEvent } from '../mvp/contracts';
 import MobileOverlay from './MobileOverlay';
 import { useMobileCharacter } from './useMobileCharacter';
+import '../pages/CharacterForge.css';
 import './mobile.css';
 
 type SheetPage = 'general' | 'actions' | 'inventory' | 'passives' | 'more';

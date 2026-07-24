@@ -32,18 +32,9 @@ export default function SheetEntityRow({
   onClick, onMouseEnter, onMouseMove, onMouseLeave,
 }: Props) {
   const url = imageUrl?.trim();
-  return (
-    <button
-      type="button"
-      className={`sheet-item-row${dimmed ? ' is-dimmed' : ''}${disabled ? ' is-disabled' : ''}${selected ? ' is-selected' : ''} ${className}`}
-      style={accent ? { borderLeftColor: accent } : undefined}
-      onClick={onClick}
-      disabled={disabled}
-      title={title ?? name}
-      onMouseEnter={onMouseEnter}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-    >
+  const rowClassName = `sheet-item-row${dimmed ? ' is-dimmed' : ''}${disabled ? ' is-disabled' : ''}${selected ? ' is-selected' : ''} ${className}`;
+  const rowContent = (
+    <>
       {stamp && <img className="sheet-item-stamp" src={stamp} alt="" aria-hidden="true" />}
       <span className="sheet-item-row-thumb">
         {url ? (
@@ -60,6 +51,49 @@ export default function SheetEntityRow({
         {detail != null && <span className="sheet-item-row-detail">{detail}</span>}
       </span>
       {right && <span className="sheet-item-row-right">{right}</span>}
+    </>
+  );
+
+  // Some inventory rows contain their own action button on the right. A div
+  // keeps that markup valid while preserving keyboard access to the row itself.
+  if (right) {
+    return (
+      <div
+        className={rowClassName}
+        style={accent ? { borderLeftColor: accent } : undefined}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick && !disabled ? 0 : undefined}
+        aria-disabled={disabled || undefined}
+        onClick={disabled ? undefined : onClick}
+        onKeyDown={(event) => {
+          if (!disabled && onClick && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+        title={title ?? name}
+        onMouseEnter={onMouseEnter}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+      >
+        {rowContent}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={rowClassName}
+      style={accent ? { borderLeftColor: accent } : undefined}
+      onClick={onClick}
+      disabled={disabled}
+      title={title ?? name}
+      onMouseEnter={onMouseEnter}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+    >
+      {rowContent}
     </button>
   );
 }
