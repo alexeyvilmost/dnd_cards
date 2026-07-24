@@ -93,6 +93,8 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		UserID:                   userID,
 		Name:                     req.Name,
 		AvatarURL:                req.AvatarURL,
+		Description:              req.Description,
+		Notes:                    req.Notes,
 		RaceID:                   req.RaceID,
 		LineageID:                req.LineageID,
 		ClassID:                  req.ClassID,
@@ -100,6 +102,9 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		Level:                    req.Level,
 		FeatIDs:                  req.FeatIDs,
 		SpellIDs:                 req.SpellIDs,
+		ActionIDs:                req.ActionIDs,
+		EffectIDs:                req.EffectIDs,
+		ResourceIDs:              req.ResourceIDs,
 		Abilities:                req.Abilities,
 		SkillProficiencies:       req.SkillProficiencies,
 		SkillExpertise:           req.SkillExpertise,
@@ -211,6 +216,8 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		character.Name = req.Name
 	}
 	character.AvatarURL = req.AvatarURL
+	character.Description = req.Description
+	character.Notes = req.Notes
 	character.RaceID = req.RaceID
 	character.LineageID = req.LineageID
 	character.ClassID = req.ClassID
@@ -218,6 +225,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 	character.Level = req.Level
 	character.FeatIDs = req.FeatIDs
 	character.SpellIDs = req.SpellIDs
+	character.ActionIDs = req.ActionIDs
+	character.EffectIDs = req.EffectIDs
+	character.ResourceIDs = req.ResourceIDs
 	character.Abilities = req.Abilities
 	character.SkillProficiencies = req.SkillProficiencies
 	character.SkillExpertise = req.SkillExpertise

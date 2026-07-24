@@ -12,6 +12,7 @@ import { EntityDetailProvider } from './components/EntityDetailProvider';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
+import MobileSuggestion from './mobile/MobileSuggestion';
 
 // Ленивая загрузка страниц (code-splitting по роутам) — уменьшает основной чанк.
 const Settings = lazy(() => import('./pages/Settings'));
@@ -56,6 +57,10 @@ const ImageStudio = lazy(() => import('./pages/ImageStudio'));
 const MechanicsGuide = lazy(() => import('./pages/MechanicsGuide'));
 const EncounterList = lazy(() => import('./pages/EncounterList'));
 const EncounterBoard = lazy(() => import('./pages/EncounterBoard'));
+const MobileCharactersPage = lazy(() => import('./mobile/MobileCharactersPage'));
+const MobileCharacterSheet = lazy(() => import('./mobile/MobileCharacterSheet'));
+const MobileCharacterWizard = lazy(() => import('./mobile/MobileCharacterWizard'));
+const MobileEntityCatalog = lazy(() => import('./mobile/MobileEntityCatalog'));
 
 function App() {
   // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
@@ -82,6 +87,16 @@ function App() {
         <Route path="/characters-forge" element={<CharactersForgeList />} />
         <Route path="/spell/:id" element={<SpellPage />} />
         <Route path="/characters-v3/:id" element={<CharacterSheetMVP />} />
+
+        {/* Отдельный мобильный интерфейс игрока */}
+        <Route path="/m" element={<Navigate to="/m/characters" replace />} />
+        <Route path="/m/characters" element={<MobileCharactersPage />} />
+        <Route path="/m/characters/new" element={<MobileCharacterWizard />} />
+        <Route path="/m/characters/:id" element={<MobileCharacterSheet />} />
+        <Route path="/m/characters/:id/edit" element={<MobileCharacterWizard />} />
+        <Route path="/m/characters/:id/level-up" element={<MobileCharacterWizard />} />
+        <Route path="/m/characters/:id/add" element={<MobileEntityCatalog />} />
+        <Route path="/m/characters/:id/add/:type" element={<MobileEntityCatalog />} />
 
         {/* Защищенные маршруты */}
         <Route path="/" element={
@@ -380,6 +395,7 @@ function App() {
         {/* Любой неизвестный URL — страница «не найдено» (иначе белый экран) */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+        <MobileSuggestion />
         </Suspense>
         </ErrorBoundary>
         </EntityDetailProvider>

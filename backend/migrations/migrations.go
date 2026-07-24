@@ -410,7 +410,10 @@ func GetAllMigrations() []Migration {
 			Version:     "067_card_enchant_bonus",
 			Description: "Add cards.enchant_bonus (магический бонус оружия +N к атаке/урону); backfill из имени '+N'",
 			Up:          addCardEnchantBonus,
-			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE cards DROP COLUMN IF EXISTS enchant_bonus"); return err },
+			Down: func(db *sql.DB) error {
+				_, err := db.Exec("ALTER TABLE cards DROP COLUMN IF EXISTS enchant_bonus")
+				return err
+			},
 		},
 		{
 			Version:     "068_dash_disengage_actions",
@@ -446,7 +449,10 @@ func GetAllMigrations() []Migration {
 			Version:     "073_add_effects_repeatable",
 			Description: "Флаг repeatable у эффектов (повторяемый: складывается, можно выбрать несколько раз в конструкторе)",
 			Up:          addEffectsRepeatable,
-			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE effects DROP COLUMN IF EXISTS repeatable"); return err },
+			Down: func(db *sql.DB) error {
+				_, err := db.Exec("ALTER TABLE effects DROP COLUMN IF EXISTS repeatable")
+				return err
+			},
 		},
 		{
 			Version:     "074_create_encounters",
@@ -458,7 +464,10 @@ func GetAllMigrations() []Migration {
 			Version:     "075_character_current_encounter",
 			Description: "Связь персонаж→бой (current_encounter_id) для отображения «в бою» и правила «один бой на персонажа»",
 			Up:          addCharacterCurrentEncounter,
-			Down:        func(db *sql.DB) error { _, err := db.Exec("ALTER TABLE characters_v3 DROP COLUMN IF EXISTS current_encounter_id"); return err },
+			Down: func(db *sql.DB) error {
+				_, err := db.Exec("ALTER TABLE characters_v3 DROP COLUMN IF EXISTS current_encounter_id")
+				return err
+			},
 		},
 		{
 			Version:     "076_add_card_mastery",
@@ -484,8 +493,38 @@ func GetAllMigrations() []Migration {
 			Up:          expandCardRarities,
 			Down:        contractCardRarities,
 		},
+		{
+			Version:     "080_character_manual_entities",
+			Description: "Ручные действия, эффекты и ресурсы в листе characters_v3",
+			Up:          addCharacterManualEntities,
+			Down:        removeCharacterManualEntities,
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+func addCharacterManualEntities(db *sql.DB) error {
+	_, err := db.Exec(`
+		ALTER TABLE characters_v3
+			ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '',
+			ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT '',
+			ADD COLUMN IF NOT EXISTS action_ids JSONB DEFAULT '[]'::jsonb,
+			ADD COLUMN IF NOT EXISTS effect_ids JSONB DEFAULT '[]'::jsonb,
+			ADD COLUMN IF NOT EXISTS resource_ids JSONB DEFAULT '[]'::jsonb
+	`)
+	return err
+}
+
+func removeCharacterManualEntities(db *sql.DB) error {
+	_, err := db.Exec(`
+		ALTER TABLE characters_v3
+			DROP COLUMN IF EXISTS description,
+			DROP COLUMN IF EXISTS notes,
+			DROP COLUMN IF EXISTS action_ids,
+			DROP COLUMN IF EXISTS effect_ids,
+			DROP COLUMN IF EXISTS resource_ids
+	`)
+	return err
 }
 
 // featSlotCardNumbers — эффекты-пикеры «Получение черты» (по одному на ASI-уровень) и эффект

@@ -1,8 +1,6 @@
 /** REST-клиент онлайн-боёв + базовый URL для SSE-потока (EventSource). */
-import { apiClient } from '../api/client';
+import { API_BASE_URL, apiClient } from '../api/client';
 import type { Encounter, EncounterState, Combatant, EncounterEvent, BattleLogEntry } from './encounterTypes';
-
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-production-41c3.up.railway.app';
 
 export interface ApplyOp {
   patches?: { actor_id: string; set?: Record<string, unknown> }[];

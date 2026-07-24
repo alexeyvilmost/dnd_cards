@@ -6,9 +6,10 @@ import {
   effectsApi,
   actionsApi,
   spellsApi,
+  resourcesApi,
   variablesApi,
 } from '../api/client';
-import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spell, LevelProgression, Variable } from '../types';
+import type { Race, CharacterClass, Background, Feat, PassiveEffect, Action, Spell, LevelProgression, Variable, ResourceDefinition } from '../types';
 import { collectVariablesFromEffects } from './variables';
 import type { VariableValue } from '../engine/formula';
 import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechanics/collectChoices';
@@ -109,6 +110,7 @@ export interface AssembledCharacter {
   effects: OriginEffect[];
   actions: OriginAction[];
   spells: Spell[];
+  resources: ResourceDefinition[];
   pendingChoices: PendingChoice[];
   featAbilityIncreases: string[]; // информативно (не применяется автоматически в MVP)
   /** Активные переменные персонажа (martial_arts_die и т.п.) для формул. */
@@ -134,6 +136,7 @@ export interface EntityBundle {
   effects: OriginEffect[];
   actions: OriginAction[];
   spells: Spell[];
+  resources?: ResourceDefinition[];
   /** Справочник переменных (type/default) для сворачивания variable-payload'ов эффектов. */
   variableDefs?: Variable[];
 }
@@ -175,6 +178,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     effects: bundle.effects,
     actions: bundle.actions,
     spells: bundle.spells,
+    resources: bundle.resources ?? [],
     pendingChoices,
     featAbilityIncreases: bundle.feats.flatMap((f) => f.ability_increase || []),
     variables,
@@ -229,6 +233,21 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     : klass;
 
   const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level, subrace, subclass);
+  const manualOrigin = (kind: 'effect' | 'action', index: number): ChoiceOrigin => ({
+    kind: 'other',
+    id: `manual-${kind}-${index}`,
+    name: 'Добавлено игроком',
+    instanceKey: `manual:${kind}:${index}`,
+  });
+  (draft.effectIds || []).forEach((id, index) => {
+    if (id) effectRefs.push({ id, origin: manualOrigin('effect', index) });
+  });
+  const knownManualActionIds = new Set(actionRefs.map((ref) => ref.id));
+  (draft.actionIds || []).forEach((id, index) => {
+    if (!id || knownManualActionIds.has(id)) return;
+    knownManualActionIds.add(id);
+    actionRefs.push({ id, origin: manualOrigin('action', index) });
+  });
 
   // Тела эффектов грузим по УНИКАЛЬНЫМ id (refs могут дублироваться для повторяемых), затем собираем
   // список с учётом повторяемости: неповторяемый — 1 раз (дедуп по id); повторяемый — по одной бусине
@@ -363,9 +382,25 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
 
   // Справочник переменных (type/default) для сворачивания variable-payload'ов.
   // B5: загрузка стартовала в начале функции (variableDefsP) — здесь только ждём.
-  const variableDefs = await variableDefsP;
+  const [variableDefs, resources] = await Promise.all([
+    variableDefsP,
+    Promise.all((draft.resourceIds || []).map((id) => resourcesApi.getResource(id).catch(() => null)))
+      .then((items) => items.filter((item): item is ResourceDefinition => !!item)),
+  ]);
 
-  return { race, subrace, klass: klassWithSub, subclass, background, feats: allFeats, effects, actions, spells: [], variableDefs };
+  return {
+    race,
+    subrace,
+    klass: klassWithSub,
+    subclass,
+    background,
+    feats: allFeats,
+    effects,
+    actions,
+    spells: [],
+    resources,
+    variableDefs,
+  };
 }
 
 const entityRegistry = createRegistry(createApiResolver());

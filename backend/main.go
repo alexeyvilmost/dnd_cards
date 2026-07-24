@@ -59,6 +59,8 @@ func main() {
 	config.AllowOrigins = []string{
 		"http://localhost:3000",
 		"http://localhost:5173",
+		"http://127.0.0.1:3000",
+		"http://127.0.0.1:5173",
 		"https://frontend-production-550b.up.railway.app", // Ваш конкретный frontend URL
 		"https://bagofholding.up.railway.app",             // Домен на Railway
 		"https://*.vercel.app",

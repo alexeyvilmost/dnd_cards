@@ -14,6 +14,8 @@ export interface ForgeCharacter {
   group_id?: string | null;
   name: string;
   avatar_url?: string;
+  description?: string;
+  notes?: string;
 
   race_id?: string | null;
   lineage_id?: string | null;
@@ -23,6 +25,9 @@ export interface ForgeCharacter {
 
   feat_ids?: string[] | null;
   spell_ids?: string[] | null;
+  action_ids?: string[] | null;
+  effect_ids?: string[] | null;
+  resource_ids?: string[] | null;
 
   abilities?: Partial<AbilityScores> | null;
 
@@ -65,6 +70,8 @@ export interface ForgeCharacter {
 export interface SaveForgeCharacterRequest {
   name: string;
   avatar_url?: string;
+  description?: string;
+  notes?: string;
   race_id?: string | null;
   lineage_id?: string | null;
   class_id?: string | null;
@@ -72,6 +79,9 @@ export interface SaveForgeCharacterRequest {
   level?: number;
   feat_ids?: string[] | null;
   spell_ids?: string[] | null;
+  action_ids?: string[] | null;
+  effect_ids?: string[] | null;
+  resource_ids?: string[] | null;
   abilities?: Partial<AbilityScores> | null;
   skill_proficiencies?: string[] | null;
   skill_expertise?: string[] | null;
@@ -113,6 +123,8 @@ export interface CharacterDraft {
   id?: string; // если редактируется уже сохранённый черновик
   name: string;
   avatarUrl?: string;
+  description?: string;
+  notes?: string;
   raceId: string | null;
   lineageId: string | null;
   classId: string | null;
@@ -121,6 +133,10 @@ export interface CharacterDraft {
   backgroundId: string | null;
   level: number;
   featIds: string[];
+  /** Добавленные игроком напрямую сущности листа. */
+  actionIds?: string[];
+  effectIds?: string[];
+  resourceIds?: string[];
   /** UUID заклинаний, выбранных игроком (не slug из grant_spell). */
   spellIds: string[];
   /** Slug-и заклинаний из rule_state / grant_spell (только для загрузки). */
@@ -156,6 +172,8 @@ export const ABILITY_LABEL_RU: Record<AbilityKey, string> = {
 
 export const emptyDraft = (): CharacterDraft => ({
   name: '',
+  description: '',
+  notes: '',
   raceId: null,
   lineageId: null,
   classId: null,
@@ -163,6 +181,9 @@ export const emptyDraft = (): CharacterDraft => ({
   backgroundId: null,
   level: 1,
   featIds: [],
+  actionIds: [],
+  effectIds: [],
+  resourceIds: [],
   spellIds: [],
   abilities: {},
   abilityMethod: 'point_buy',

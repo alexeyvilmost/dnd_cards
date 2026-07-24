@@ -13,11 +13,13 @@ import (
 // предыстория/черты/заклинания) и хранящая разрешённые выборы из механики.
 // Низкоуровневые умения этих сущностей — это эффекты и действия.
 type CharacterV3 struct {
-	ID        uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	UserID    uuid.UUID  `json:"user_id" gorm:"type:uuid;not null"`
-	GroupID   *uuid.UUID `json:"group_id" gorm:"type:uuid"`
-	Name      string     `json:"name" gorm:"not null"`
-	AvatarURL string     `json:"avatar_url" gorm:"type:text"`
+	ID          uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	UserID      uuid.UUID  `json:"user_id" gorm:"type:uuid;not null"`
+	GroupID     *uuid.UUID `json:"group_id" gorm:"type:uuid"`
+	Name        string     `json:"name" gorm:"not null"`
+	AvatarURL   string     `json:"avatar_url" gorm:"type:text"`
+	Description string     `json:"description" gorm:"type:text"`
+	Notes       string     `json:"notes" gorm:"type:text"`
 
 	// Ссылки на сущности
 	RaceID       *uuid.UUID `json:"race_id" gorm:"type:uuid"`
@@ -27,8 +29,11 @@ type CharacterV3 struct {
 	Level        int        `json:"level" gorm:"not null;default:1"`
 
 	// Списки ссылок (jsonb-массивы строковых uuid)
-	FeatIDs  *Properties `json:"feat_ids" gorm:"type:jsonb"`
-	SpellIDs *Properties `json:"spell_ids" gorm:"type:jsonb"`
+	FeatIDs     *Properties `json:"feat_ids" gorm:"type:jsonb"`
+	SpellIDs    *Properties `json:"spell_ids" gorm:"type:jsonb"`
+	ActionIDs   *Properties `json:"action_ids" gorm:"type:jsonb"`
+	EffectIDs   *Properties `json:"effect_ids" gorm:"type:jsonb"`
+	ResourceIDs *Properties `json:"resource_ids" gorm:"type:jsonb"`
 
 	// Базовые (введённые) характеристики: {"str":15,"dex":14,...}
 	Abilities *JSONMap `json:"abilities" gorm:"type:jsonb"`
@@ -57,13 +62,13 @@ type CharacterV3 struct {
 	PassivePerception int `json:"passive_perception" gorm:"default:10"`
 
 	// Runtime (фаза C1): экипировка, инвентарь, ресурсы боя
-	Equipment      *JSONMap    `json:"equipment" gorm:"type:jsonb"`
+	Equipment      *JSONMap           `json:"equipment" gorm:"type:jsonb"`
 	InventoryItems *InventoryItemRows `json:"inventory_items" gorm:"type:jsonb"`
-	Resources      *JSONMap    `json:"resources" gorm:"type:jsonb"`
-	MaxResources   *JSONMap    `json:"max_resources" gorm:"type:jsonb"`
-	ActiveEffects  *ActiveEffectRows `json:"active_effects" gorm:"type:jsonb"`
-	TurnState      *JSONMap    `json:"turn_state" gorm:"type:jsonb"`
-	Currency       *JSONMap    `json:"currency" gorm:"type:jsonb"`
+	Resources      *JSONMap           `json:"resources" gorm:"type:jsonb"`
+	MaxResources   *JSONMap           `json:"max_resources" gorm:"type:jsonb"`
+	ActiveEffects  *ActiveEffectRows  `json:"active_effects" gorm:"type:jsonb"`
+	TurnState      *JSONMap           `json:"turn_state" gorm:"type:jsonb"`
+	Currency       *JSONMap           `json:"currency" gorm:"type:jsonb"`
 
 	// Онлайн-бой: id текущего боя, в котором участвует персонаж (nil = не в бою).
 	// Ставится/снимается сервером при add/remove комбатанта с этим characterId (см.
@@ -88,14 +93,19 @@ func (CharacterV3) TableName() string { return "characters_v3" }
 type CreateCharacterV3Request struct {
 	Name         string     `json:"name" binding:"required"`
 	AvatarURL    string     `json:"avatar_url"`
+	Description  string     `json:"description"`
+	Notes        string     `json:"notes"`
 	RaceID       *uuid.UUID `json:"race_id"`
 	LineageID    *string    `json:"lineage_id"`
 	ClassID      *uuid.UUID `json:"class_id"`
 	BackgroundID *uuid.UUID `json:"background_id"`
 	Level        int        `json:"level"`
 
-	FeatIDs  *Properties `json:"feat_ids"`
-	SpellIDs *Properties `json:"spell_ids"`
+	FeatIDs     *Properties `json:"feat_ids"`
+	SpellIDs    *Properties `json:"spell_ids"`
+	ActionIDs   *Properties `json:"action_ids"`
+	EffectIDs   *Properties `json:"effect_ids"`
+	ResourceIDs *Properties `json:"resource_ids"`
 
 	Abilities *JSONMap `json:"abilities"`
 
@@ -123,14 +133,19 @@ type CreateCharacterV3Request struct {
 type UpdateCharacterV3Request struct {
 	Name         string     `json:"name"`
 	AvatarURL    string     `json:"avatar_url"`
+	Description  string     `json:"description"`
+	Notes        string     `json:"notes"`
 	RaceID       *uuid.UUID `json:"race_id"`
 	LineageID    *string    `json:"lineage_id"`
 	ClassID      *uuid.UUID `json:"class_id"`
 	BackgroundID *uuid.UUID `json:"background_id"`
 	Level        int        `json:"level"`
 
-	FeatIDs  *Properties `json:"feat_ids"`
-	SpellIDs *Properties `json:"spell_ids"`
+	FeatIDs     *Properties `json:"feat_ids"`
+	SpellIDs    *Properties `json:"spell_ids"`
+	ActionIDs   *Properties `json:"action_ids"`
+	EffectIDs   *Properties `json:"effect_ids"`
+	ResourceIDs *Properties `json:"resource_ids"`
 
 	Abilities *JSONMap `json:"abilities"`
 
@@ -155,15 +170,15 @@ type UpdateCharacterV3Request struct {
 
 // PatchCharacterRuntimeRequest — частичное обновление runtime (не трогает черновик).
 type PatchCharacterRuntimeRequest struct {
-	CurrentHP      *int        `json:"current_hp"`
-	MaxHP          *int        `json:"max_hp"`
-	Equipment      *JSONMap    `json:"equipment"`
+	CurrentHP      *int               `json:"current_hp"`
+	MaxHP          *int               `json:"max_hp"`
+	Equipment      *JSONMap           `json:"equipment"`
 	InventoryItems *InventoryItemRows `json:"inventory_items"`
-	Resources      *JSONMap    `json:"resources"`
-	MaxResources   *JSONMap    `json:"max_resources"`
-	ActiveEffects  *ActiveEffectRows `json:"active_effects"`
-	TurnState      *JSONMap    `json:"turn_state"`
-	Currency       *JSONMap    `json:"currency"`
+	Resources      *JSONMap           `json:"resources"`
+	MaxResources   *JSONMap           `json:"max_resources"`
+	ActiveEffects  *ActiveEffectRows  `json:"active_effects"`
+	TurnState      *JSONMap           `json:"turn_state"`
+	Currency       *JSONMap           `json:"currency"`
 }
 
 // InventoryItemRow — строка инвентаря персонажа v3.
