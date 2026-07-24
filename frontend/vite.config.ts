@@ -105,13 +105,6 @@ export default defineConfig({
         target: 'https://backend-production-41c3.up.railway.app',
         changeOrigin: true,
         secure: true,
-        // Локальный браузер обращается к Vite same-origin. Railway не должен
-        // валидировать localhost как внешний CORS-origin после проксирования.
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.removeHeader('origin')
-          })
-        },
       },
     },
   },

@@ -50,10 +50,10 @@ import type {
   ActiveEffect
 } from '../types';
 
-// В dev используем same-origin URL: Vite проксирует /api на Railway без CORS.
-// В production адрес можно переопределить через VITE_API_URL.
+// Railway production URL по умолчанию; VITE_API_URL позволяет переключить
+// локальную разработку на свой backend, например http://localhost:8080.
 export const API_BASE_URL = import.meta.env.VITE_API_URL
-  || (import.meta.env.DEV ? '' : 'https://backend-production-41c3.up.railway.app');
+  || 'https://backend-production-41c3.up.railway.app';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
