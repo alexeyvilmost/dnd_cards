@@ -55,6 +55,7 @@ const VariableCreator = lazy(() => import('./pages/VariableCreator'));
 const ConceptCreator = lazy(() => import('./pages/ConceptCreator'));
 const ImageStudio = lazy(() => import('./pages/ImageStudio'));
 const MechanicsGuide = lazy(() => import('./pages/MechanicsGuide'));
+const EngineGuide = lazy(() => import('./pages/EngineGuide'));
 const EncounterList = lazy(() => import('./pages/EncounterList'));
 const EncounterBoard = lazy(() => import('./pages/EncounterBoard'));
 const MobileCharactersPage = lazy(() => import('./mobile/MobileCharactersPage'));
@@ -110,6 +111,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <MechanicsGuide />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/docs/engine" element={
+          <ProtectedRoute>
+            <Layout>
+              <EngineGuide />
             </Layout>
           </ProtectedRoute>
         } />

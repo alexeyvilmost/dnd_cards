@@ -23,7 +23,13 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/shop/new', label: 'Магазин', icon: Store },
     { path: '/initiative', label: 'Инициатива', icon: Swords },
     { path: '/image-generator', label: 'Генерация', icon: Sparkles },
-    { path: '/docs/mechanics', label: 'Документация', icon: BookOpen },
+    {
+      label: 'Документация', icon: BookOpen,
+      submenu: [
+        { path: '/docs/engine', label: 'Архитектура движка' },
+        { path: '/docs/mechanics', label: 'Справочник механик' },
+      ],
+    },
     {
       label: 'Ещё', icon: MoreHorizontal,
       submenu: [
