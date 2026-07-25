@@ -2,7 +2,9 @@ import { Children, isValidElement, useEffect, useId, useState, type ReactElement
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
-import guideMd from '../../../docs/engine/README.md?raw';
+// Railway builds with frontend/ as the Docker context. Keep this mirror in sync
+// with docs/engine/README.md, which remains the repository-facing document.
+import guideMd from '../content/engine-guide.md?raw';
 
 function MermaidDiagram({ source }: { source: string }) {
   const reactId = useId();
