@@ -1,5 +1,7 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact' | 'relic' | 'custom';
-export type Property = 'consumable' | 'single_use' | 'light' | 'heavy' | 'finesse' | 'thrown' | 'versatile' | 'two-handed' | 'reach' | 'ammunition' | 'loading' | 'special' | 'shield' | 'ring' | 'necklace' | 'cloak' | 'potion' | 'tool' | 'projectile' | 'explosive' | 'set' | 'choice' | 'equipment' | 'jewelry' | 'musical_instrument' | 'artisan_tool' | 'ammo';
+// Конструктор предлагает стандартные значения из PROPERTIES_OPTIONS, но API
+// хранит свойства как строки и поддерживает пользовательские значения.
+export type Property = string;
 export type Currency = 'gold' | 'silver' | 'copper';
 export type Properties = Property[];
 export type BonusType = 'damage' | 'defense';
