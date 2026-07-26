@@ -9,8 +9,10 @@ import { hasElementalDamage } from '../utils/elementalDamage';
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import { formatFormulaDisplay } from '../engine/formula';
 import { useContainerTotals, useResolvedRefs } from './RelatedItems';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
+import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 
 // Третий режим отображения предмета (entityDisplay.items='interface'): стат-блок в стиле превью
@@ -29,7 +31,6 @@ const rarityColor = (card: Card): string | undefined =>
   (card.rarity === 'custom' && card.custom_rarity_color)
     ? card.custom_rarity_color
     : (RARITY_OPTIONS.find((o) => o.value === card.rarity)?.color || undefined);
-const diceRu = (v: string) => String(v).replace(/(\d)[dд](\d)/gi, '$1к$2');
 const fmtWeight = (w: number) => `${Math.round(w * 100) / 100} фунт.`;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 // Чёрная PNG-иконка веса плохо читается на тёмном фоне — тонируем в пергаментный цвет.
@@ -50,6 +51,8 @@ type MetaEntry = { img?: string; imgStyle?: React.CSSProperties; emoji?: string;
 
 const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disableHover = false, onClick }) => {
   const containerSum = useContainerTotals(card);
+  const formulaCtx = useCharacterFormulaCtx();
+  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
   // Содержимое контейнера рисуем ИНЛАЙН в тёмной теме стат-блока (не через RelatedCardsList —
   // тот несёт свой светлый заголовок «Связанные карты» и светлое CardPreview-превью, чужеродные тут).
   const contents = useResolvedRefs(card.type === 'container' ? (card.contents ?? []) : []);
@@ -127,7 +130,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {diceRu(d.value)}
+                      {fmt(d.value)}
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -139,7 +142,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           {healEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
-              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>{diceRu(healEntries.join(' + '))} лечение</span></span>
+              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>{fmt(healEntries.join(' + '))} лечение</span></span>
             </div>
           )}
         </div>

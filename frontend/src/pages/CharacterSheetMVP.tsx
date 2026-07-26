@@ -54,6 +54,7 @@ import { collectRollModifiers } from '../engine/modifiers';
 import { activeConditionsOf } from '../engine/circumstances';
 import { conditionModifierPayloads, conditionLabel } from '../engine/conditions';
 import { rollD20 } from '../engine/roll';
+import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import './CharacterForge.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -864,6 +865,7 @@ const CharacterSheetMVP = () => {
   const inSec = (s: string) => !mobileSectioned || activeSec === s;
 
   return (
+    <CharacterFormulaProvider value={formulaCtxFromCharacter(sheetCtx)}>
     <div className={`${rootCls}${!useV2 ? ' sheet-has-bottomnav' : ''}`}>
       <div className="forge-header sheet-header-bar">
         <button type="button" className="sheet-back" onClick={() => navigate(-1)} title="Назад">
@@ -1377,6 +1379,7 @@ const CharacterSheetMVP = () => {
         unseen={unseen}
       />
     </div>
+    </CharacterFormulaProvider>
   );
 };
 

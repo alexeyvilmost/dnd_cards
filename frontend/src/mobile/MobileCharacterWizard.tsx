@@ -19,6 +19,7 @@ import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, optionsForChoiceSource, SKILLS } from '../mechanics/registries';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
 import { EntityDetailContext } from '../contexts/entityDetail';
+import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import type { EntityRefType } from '../components/EntityRefRegistry';
 import { getSpellLevelLabel } from '../types';
 import { FormattedText } from '../utils/formattedText';
@@ -370,6 +371,12 @@ export default function MobileCharacterWizard() {
     () => assembled ? resolveCharacterRules({ draft, assembled }) : null,
     [assembled, draft],
   );
+  const formulaCtx = useMemo(
+    () => (assembled && ruleState
+      ? formulaCtxFromCharacter(buildCharacterContext(ruleState, draft, [], assembled.klass))
+      : null),
+    [assembled, ruleState, draft],
+  );
   const maxSlotLevel = useMemo(
     () => assembled && ruleState
       ? maxAvailableSpellSlotLevel(
@@ -571,6 +578,7 @@ export default function MobileCharacterWizard() {
   if (loading) return <main className="m-app"><div className="m-empty">Готовим мобильный мастер…</div></main>;
 
   return (
+    <CharacterFormulaProvider value={formulaCtx}>
     <EntityDetailContext.Provider
       value={{
         openEntity: (type, entityId) => setLinkedEntity({ type, id: entityId }),
@@ -1082,5 +1090,6 @@ export default function MobileCharacterWizard() {
       )}
     </main>
     </EntityDetailContext.Provider>
+    </CharacterFormulaProvider>
   );
 }

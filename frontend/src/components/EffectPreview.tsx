@@ -5,8 +5,10 @@ import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../util
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import { formatFormulaDisplay } from '../engine/formula';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
+import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 
 // Превью эффекта в едином стиле карточек заклинаний/действий/предметов (SPELL_CARD_CSS, классы .sp-*).
@@ -22,15 +24,14 @@ interface EffectPreviewProps {
   sourceLabel?: string;
 }
 
-// «2d8» → «2к8» (русский BG3-тултип, как в остальных превью).
-const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
-
 const effectTypeLabel = (effectType: string) =>
   PASSIVE_EFFECT_TYPE_OPTIONS.find((opt) => opt.value === effectType)?.label || effectType;
 
 const EffectPreview = ({ effect, className = '', disableHover = false, onClick, sourceLabel }: EffectPreviewProps) => {
   const resources = useResourceOptions();
   const { playerMode } = useSiteSettings();
+  const formulaCtx = useCharacterFormulaCtx();
+  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const subtype = [sourceLabel || effectTypeLabel(effect.effect_type), effect.type]
     .filter(Boolean)
@@ -41,7 +42,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
   const hasStats = stats.attack || stats.save || stats.damage.length > 0 || stats.heal.length > 0;
 
   // Парадигма №2: авто-описание МЕХАНИКИ (сырые id/стоимость/использования) — прячем в режиме игрока.
-  const mechDesc = describeMechanics(effect.mechanics as Record<string, unknown> | null | undefined);
+  const mechDesc = describeMechanics(effect.mechanics as Record<string, unknown> | null | undefined, formulaCtx);
 
   // Стоимость активируемого эффекта (mechanics.activation.cost) — плашкой снизу, как у действий.
   const resourceIds: string[] = actionCostResourceIds(effect as { mechanics?: Record<string, unknown> | null });
@@ -91,7 +92,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {diceRu(d.value)}
+                      {fmt(d.value)}
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -103,7 +104,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
           {stats.heal.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
-              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>{diceRu(stats.heal.join(' + '))} лечение</span></span>
+              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>{fmt(stats.heal.join(' + '))} лечение</span></span>
             </div>
           )}
         </div>

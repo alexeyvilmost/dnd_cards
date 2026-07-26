@@ -134,12 +134,32 @@
 /* ── Навыки ── */
 .cs-skills { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px 18px; }
 .cs-skills--col { grid-template-columns: 1fr; gap: 0; }
-.cs-skills li { display: grid; grid-template-columns: 10px 1fr auto auto; align-items: center; gap: 6px; padding: 2.5px 0; font-size: 12.5px; }
+.cs-skills li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) 2.6em 2.4em;
+  align-items: center;
+  gap: 6px;
+  padding: 2.5px 0;
+  font-size: 12.5px;
+}
+.cs-skills li.cs-skill-sep {
+  margin-top: 5px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, var(--forge-line) 70%, transparent);
+}
 .cs-skills li.on .cs-dot { background: var(--forge-gold); border-color: var(--forge-gold); }
 .cs-skills li.on .cs-skill-nm { color: var(--forge-text); font-weight: 600; }
 .cs-skill-nm { color: var(--forge-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cs-skill-ab { font-size: 9px; color: var(--forge-text-dim); opacity: .7; }
-.cs-skill-v { color: var(--forge-text); font-weight: 600; min-width: 24px; text-align: right; }
+.cs-skill-ab {
+  font-size: 9px;
+  color: var(--forge-text-dim);
+  opacity: .7;
+  text-align: right;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+.cs-skill-v { color: var(--forge-text); font-weight: 600; display: block; text-align: right; font-variant-numeric: tabular-nums; }
+.cs-skills .value-breakdown-wrap { display: block; text-align: right; }
 
 /* ── Черты и способности ── */
 .cs-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }

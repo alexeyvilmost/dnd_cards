@@ -5,9 +5,11 @@ import type { WeaponAttackPreview } from '../engine/weapon';
 import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import { formatFormulaDisplay } from '../engine/formula';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useSiteSettings } from '../settings';
+import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 
 interface ActionPreviewProps {
@@ -22,14 +24,14 @@ interface ActionPreviewProps {
   weaponAttackPreview?: WeaponAttackPreview;
 }
 
-// "2d8" → "2к8" (русский BG3-тултип, как в design_preview)
-const diceRu = (s: string) => String(s).replace(/(\d)[dд](\d)/gi, '$1к$2');
 const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 
 const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources, sourceLabel, weaponAttackPreview: wp }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
   const { playerMode } = useSiteSettings();
+  const formulaCtx = useCharacterFormulaCtx();
+  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const actionTypeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type || '';
   const rechargeLabel = action.recharge
@@ -47,7 +49,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
   const hasStats = showAttack || stats.save || dmgEntries.length > 0 || stats.heal.length > 0;
 
   // Парадигма №2: описание МЕХАНИКИ из данных (единый describeMechanics), не свободный текст.
-  const mechDesc = describeMechanics(action.mechanics as Record<string, unknown> | null | undefined);
+  const mechDesc = describeMechanics(action.mechanics as Record<string, unknown> | null | undefined, formulaCtx);
 
   // Стоимость: единый источник — mechanics.activation.cost (что списывает движок),
   // откат на устаревшие resources/resource, если стоимости в механике нет.
@@ -102,7 +104,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {diceRu(d.value)}
+                      {fmt(d.value)}
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -116,7 +118,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
               <span className="sp-lbl">Лечение:</span>
               <span className="sp-dmgval">
                 <span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>
-                  {diceRu(stats.heal.join(' + '))}
+                  {fmt(stats.heal.join(' + '))}
                   <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
                   лечение
                 </span>

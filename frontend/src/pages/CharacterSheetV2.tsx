@@ -238,11 +238,13 @@ const CharacterSheetV2 = ({
 
           <CollapsibleSection title="Навыки">
             <ul className="cs-skills cs-skills--col">
-              {SORTED_SKILLS.map((skill) => {
+              {SORTED_SKILLS.map((skill, index) => {
                 const proficient = skills.includes(skill.id);
                 const expert = ruleState.expertise.skills.includes(skill.id);
                 const bonus = ruleState.skillBonuses[skill.id];
                 const ability = abilityOfSkill(skill.id);
+                const prevAbility = index > 0 ? abilityOfSkill(SORTED_SKILLS[index - 1].id) : null;
+                const abilitySep = prevAbility != null && prevAbility !== ability;
                 const skillBd = sheetCtx && runtimeState ? breakdownValue(`skill:${skill.id}`, sheetCtx, runtimeState, passives) : null;
                 const grant = getSkillGrantSource(ruleState, skill.id);
                 const tip = [
@@ -253,7 +255,7 @@ const CharacterSheetV2 = ({
                 return (
                   <li
                     key={skill.id}
-                    className={`${proficient ? 'on' : ''} cs-rollable`}
+                    className={`${proficient ? 'on' : ''} cs-rollable${abilitySep ? ' cs-skill-sep' : ''}`}
                     title={`${fmtMod(bonus)} = ${tip} · клик — бросок`}
                     onClick={() => rollCheck(
                       `Проверка (${skill.label})`,

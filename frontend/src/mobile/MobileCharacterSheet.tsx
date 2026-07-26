@@ -11,6 +11,7 @@ import SheetHpPanel from '../components/SheetHpPanel';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import { EntityDetailContext } from '../contexts/entityDetail';
+import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import type { EntityRefType } from '../components/EntityRefRegistry';
 import type { SheetAction } from '../character/actionSheet';
 import { charactersV3Api } from '../character/api';
@@ -48,7 +49,14 @@ const SENSE_LABELS: Record<string, string> = {
   tremorsense: 'Чувство вибрации',
   truesight: 'Истинное зрение',
 };
-const fmtMod = (value: number) => value >= 0 ? `+${value}` : String(value);
+const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
+const abbr3 = (label: string) => label.slice(0, 3).toUpperCase();
+const ABILITY_ORDER = new Map(ABILITY_KEYS.map((ability, index) => [ability, index]));
+const SORTED_SKILLS = [...SKILLS].sort((left, right) => {
+  const byAbility = (ABILITY_ORDER.get(abilityOfSkill(left.id) as AbilityKey) ?? ABILITY_KEYS.length)
+    - (ABILITY_ORDER.get(abilityOfSkill(right.id) as AbilityKey) ?? ABILITY_KEYS.length);
+  return byAbility || left.label.localeCompare(right.label, 'ru');
+});
 
 function collectDefenses(passives: Record<string, unknown>[]) {
   const rows: Array<{ type: string; level: string }> = [];
@@ -290,6 +298,7 @@ export default function MobileCharacterSheet() {
   };
 
   return (
+    <CharacterFormulaProvider value={formulaCtxFromCharacter(data.sheetCtx)}>
     <EntityDetailContext.Provider
       value={{
         openEntity: (type, entityId) => setLinkedEntity({ type, id: entityId }),
@@ -366,18 +375,22 @@ export default function MobileCharacterSheet() {
 
             <Section title="Навыки" wide>
               <div className="m-skill-list">
-                {SKILLS.map((skill) => {
-                  const ability = abilityOfSkill(skill.id);
-                  const bonus = ruleState.skillBonuses[skill.id] ?? ruleState.abilityMods[ability as AbilityKey];
+                {SORTED_SKILLS.map((skill, index) => {
+                  const ability = abilityOfSkill(skill.id) as AbilityKey;
+                  const bonus = ruleState.skillBonuses[skill.id] ?? ruleState.abilityMods[ability];
                   const proficient = ruleState.proficiencies.skills.includes(skill.id);
                   const expert = ruleState.expertise.skills.includes(skill.id);
+                  const prevAbility = index > 0 ? abilityOfSkill(SORTED_SKILLS[index - 1].id) : null;
+                  const abilitySep = prevAbility != null && prevAbility !== ability;
                   return (
                     <button
                       type="button"
                       key={skill.id}
+                      className={abilitySep ? 'm-skill-sep' : undefined}
                       onClick={() => setOverlay({ type: 'check', label: `Проверка: ${skill.label}`, bonus })}
                     >
                       <span className={proficient ? 'is-proficient' : ''}>{skill.label}{expert ? ' · эксперт' : ''}</span>
+                      <em className="m-skill-ab">{abbr3(ABILITY_LABEL_RU[ability])}</em>
                       <strong>{fmtMod(bonus)}</strong>
                       <Dices size={14} />
                     </button>
@@ -715,5 +728,6 @@ export default function MobileCharacterSheet() {
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
     </main>
     </EntityDetailContext.Provider>
+    </CharacterFormulaProvider>
   );
 }

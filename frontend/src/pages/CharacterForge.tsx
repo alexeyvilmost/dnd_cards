@@ -40,6 +40,7 @@ import { isEntityUuid } from '../engine/ids';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { FormattedText } from '../utils/formattedText';
+import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -222,6 +223,10 @@ const CharacterForge = () => {
   const ruleState = useMemo(
     () => resolveCharacterRules({ draft, assembled }),
     [draft, assembled],
+  );
+  const formulaCtx = useMemo(
+    () => formulaCtxFromCharacter(buildCharacterContext(ruleState, draft, [], assembled.klass)),
+    [ruleState, draft, assembled.klass],
   );
   const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell' && pc.context !== 'in_play');
   // Максимальный доступный круг ячеек (для choice-фильтра only_available_slots): считаем max-пулы
@@ -577,6 +582,7 @@ const CharacterForge = () => {
     const canConfirm = blockingIssues.length === 0;
 
     return (
+      <CharacterFormulaProvider value={formulaCtx}>
       <div className={rootCls}>
         <div className="forge-header sheet-header-bar">
           <button type="button" className="sheet-back" title="Отмена"
@@ -735,10 +741,12 @@ const CharacterForge = () => {
           </div>
         </div>
       </div>
+      </CharacterFormulaProvider>
     );
   }
 
   return (
+    <CharacterFormulaProvider value={formulaCtx}>
     <div className={rootCls}>
       {catalogError && (
         <div
@@ -881,6 +889,7 @@ const CharacterForge = () => {
         {!isMobile && <div className="forge-summary">{overviewPanel}</div>}
       </div>
     </div>
+    </CharacterFormulaProvider>
   );
 };
 

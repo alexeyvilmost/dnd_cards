@@ -443,40 +443,74 @@ function describeId(id: string, ctx: FormulaContext): string {
 
   if (lower.startsWith('__scaling__:')) {
     const [, classId, divStr, sidesStr] = lower.split(':');
-    const level = ctx.classLevels?.[classId] ?? 0;
-    const count = Math.ceil(level / Number(divStr));
+    if (!ctx.classLevels || ctx.classLevels[classId] === undefined) return id;
+    const count = Math.ceil((ctx.classLevels[classId] ?? 0) / Number(divStr));
+    return `${count}к${sidesStr}`;
+  }
+
+  if (lower.startsWith('__scaling_self__:')) {
+    const [, divStr, sidesStr] = lower.split(':');
+    if (ctx.selfLevel === undefined) return id;
+    const count = Math.ceil(ctx.selfLevel / Number(divStr));
     return `${count}к${sidesStr}`;
   }
 
   if (lower === 'prof_bonus' || lower === 'prof') {
-    const v = ctx.profBonus ?? 0;
+    if (ctx.profBonus === undefined) return id;
+    const v = ctx.profBonus;
     return v >= 0 ? `+${v} БМ` : `${v} БМ`;
   }
-  if (lower === 'self_level') return String(ctx.selfLevel ?? 0);
+  if (lower === 'self_level') {
+    if (ctx.selfLevel === undefined) return id;
+    return String(ctx.selfLevel);
+  }
   if (lower === 'spellcasting') {
-    const v = ctx.spellcastingMod ?? 0;
+    if (ctx.spellcastingMod === undefined) return id;
+    const v = ctx.spellcastingMod;
     return v >= 0 ? `+${v} заклин.` : `${v} заклин.`;
   }
-  if (lower === 'spell_slot_above') return String(ctx.spellSlotAbove ?? 0);
-  if (lower === 'rage_bonus') return String(ctx.rageBonus ?? 0);
-  if (lower === 'character_speed') return String(ctx.characterSpeed ?? 0);
+  if (lower === 'spell_slot_above') {
+    if (ctx.spellSlotAbove === undefined) return id;
+    return String(ctx.spellSlotAbove);
+  }
+  if (lower === 'rage_bonus') {
+    if (ctx.rageBonus === undefined) return id;
+    return String(ctx.rageBonus);
+  }
+  if (lower === 'character_speed') {
+    if (ctx.characterSpeed === undefined) return id;
+    return String(ctx.characterSpeed);
+  }
+  if (lower === 'weapon_mod') {
+    if (ctx.weaponMod === undefined) return id;
+    const v = ctx.weaponMod;
+    return v >= 0 ? `+${v}` : String(v);
+  }
 
   if (lower.startsWith('class_level:')) {
     const classId = lower.slice('class_level:'.length);
-    return String(ctx.classLevels?.[classId] ?? 0);
+    if (!ctx.classLevels || ctx.classLevels[classId] === undefined) return id;
+    return String(ctx.classLevels[classId]);
   }
 
   const ability = lower as AbilityKey;
   if (ability in ABILITY_LABEL_RU) {
-    const v = ctx.abilityMods?.[ability] ?? 0;
+    if (!ctx.abilityMods || ctx.abilityMods[ability] === undefined) return id;
+    const v = ctx.abilityMods[ability] ?? 0;
     const label = ABILITY_LABEL_RU[ability];
     return v >= 0 ? `+${v} [${label}]` : `${v} [${label}]`;
+  }
+
+  const variable = ctx.variables?.[lower] ?? ctx.variables?.[id];
+  if (variable !== undefined) {
+    if (typeof variable === 'number') return String(variable);
+    return `${variable.count}к${variable.sides}`;
   }
 
   return id;
 }
 
-/** Человекочитаемое описание формулы для лога бросков. */
+/** Человекочитаемое описание формулы для лога бросков / превью. */
 export function describe(formula: string | number, ctx: FormulaContext = {}): string {
   if (typeof formula === 'number') return String(formula);
   const trimmed = formula.trim();
@@ -494,6 +528,21 @@ export function describe(formula: string | number, ctx: FormulaContext = {}): st
     else if (tok.t === 'rparen') parts.push(')');
   }
   return parts.join(' ').replace(/\s+([+*/])/g, ' $1').replace(/\+\s+-/g, '- ');
+}
+
+/** Превью формулы: известные переменные → значения, кости → «NкM». Без ctx — только кости. */
+export function formatFormulaDisplay(formula: string | number, ctx?: FormulaContext | null): string {
+  if (typeof formula === 'number') return String(formula);
+  const raw = String(formula);
+  if (!raw.trim()) return '';
+  if (ctx) {
+    try {
+      return describe(raw, ctx);
+    } catch {
+      /* битая формула — ниже деградация до кости */
+    }
+  }
+  return raw.replace(/(\d)[dд](\d)/gi, '$1к$2');
 }
 
 export function isFormulaMarker(v: unknown): v is FormulaMarker {

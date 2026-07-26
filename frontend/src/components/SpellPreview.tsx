@@ -11,6 +11,8 @@ import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import { formatFormulaDisplay } from '../engine/formula';
+import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 
 // Класс → русская подпись
@@ -32,9 +34,6 @@ const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 const schoolLabel = (school?: string | null) =>
   SPELL_SCHOOL_OPTIONS.find((s) => s.value === school)?.label || school || '';
 
-// "2d8" → "2к8" (для русского BG3-тултипа, как в design_preview)
-const diceRu = (dice: string) => dice.replace(/(\d)[dд](\d)/gi, '$1к$2');
-
 const SpellPreview: React.FC<SpellPreviewProps> = ({
   spell,
   className = '',
@@ -43,6 +42,8 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   spellcasting,
 }) => {
   const spellResourceOptions = useResourceOptions();
+  const formulaCtx = useCharacterFormulaCtx();
+  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const subtype = [getSpellLevelLabel(spell.level), schoolLabel(spell.school)]
     .filter(Boolean)
@@ -156,7 +157,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {diceRu(d.value)}
+                      {fmt(d.value)}
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -170,7 +171,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
               <span className="sp-lbl">Лечение:</span>
               <span className="sp-dmgval">
                 <span className="sp-dmgitem" style={{ color: getDamageColor('healing') }}>
-                  {diceRu(healEntries.join(' + '))}
+                  {fmt(healEntries.join(' + '))}
                   <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
                   лечение
                 </span>

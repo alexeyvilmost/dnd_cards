@@ -123,4 +123,20 @@ describe('formula.describe', () => {
   it('описывает scaling dice', () => {
     expect(describeFormula('class_level:rogue/2 d6', baseCtx)).toBe('3к6');
   });
+
+  it('подставляет self_level и переменные только когда они известны', () => {
+    expect(describeFormula('1d10 + self_level', baseCtx)).toBe('1к10 + 5');
+    expect(describeFormula('1d10 + self_level', {})).toBe('1к10 + self_level');
+    expect(describeFormula('1d8 + martial_arts_die', {
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+    })).toBe('1к8 + 1к6');
+  });
+});
+
+describe('formatFormulaDisplay', () => {
+  it('без контекста только кости, с контекстом — известные переменные', async () => {
+    const { formatFormulaDisplay } = await import('./formula');
+    expect(formatFormulaDisplay('1d10 + self_level')).toBe('1к10 + self_level');
+    expect(formatFormulaDisplay('1d10 + self_level', baseCtx)).toBe('1к10 + 5');
+  });
 });
