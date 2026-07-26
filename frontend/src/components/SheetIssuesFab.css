@@ -158,7 +158,7 @@
 
 /* Диалог искусности */
 .sheet-mastery-dialog {
-  width: min(94vw, 720px);
+  width: min(96vw, 960px);
   max-height: 92vh;
   display: flex;
   flex-direction: column;
@@ -221,10 +221,25 @@
   overflow-y: auto;
   flex: 1 1 auto;
   min-height: 0;
-  padding-right: 2px;
+  padding-right: 4px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--forge-line) transparent;
+}
+
+.sheet-mastery-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sheet-mastery-body::-webkit-scrollbar-thumb {
+  background: var(--forge-line);
+  border-radius: 4px;
+}
+
+.sheet-mastery-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .sheet-mastery-body.is-busy {
@@ -242,12 +257,48 @@
 
 .sheet-mastery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
 }
 
 .sheet-mastery-check {
   color: var(--forge-gold);
+}
+
+.sheet-mastery-expand {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px dashed var(--forge-line);
+  background: transparent;
+  color: var(--forge-gold);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sheet-mastery-expand:hover {
+  border-color: var(--forge-gold);
+  background: color-mix(in srgb, var(--forge-gold) 8%, transparent);
+}
+
+.sheet-mastery-expand-count {
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .sheet-mastery-dialog {
+    width: min(96vw, 960px);
+  }
+
+  .sheet-mastery-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sheet-longrest-actions {

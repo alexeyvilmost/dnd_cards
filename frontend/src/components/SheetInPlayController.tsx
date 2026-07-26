@@ -6,6 +6,7 @@ import {
   isWeaponMasteryChoice,
   type PendingChoice,
 } from '../mechanics/collectChoices';
+import type { Card } from '../types';
 import SheetChoicesPanel from './SheetChoicesPanel';
 import SheetIssuesFab, {
   SheetLongRestDialog,
@@ -20,6 +21,8 @@ interface Props {
   resolved: Record<string, string[]>;
   conflicts: CharacterRuleState['conflicts'];
   onUpdated: (c: ForgeCharacter) => void;
+  /** Карты инвентаря/экипировки — для приоритета видов в диалоге искусности. */
+  equipCards?: Map<string, Card>;
   /** Сигнал «открыть диалог долгого отдыха» (счётчик/флаг с родителя). */
   longRestOpen: boolean;
   onLongRestClose: () => void;
@@ -35,6 +38,7 @@ export default function SheetInPlayController({
   resolved,
   conflicts,
   onUpdated,
+  equipCards,
   longRestOpen,
   onLongRestClose,
 }: Props) {
@@ -128,6 +132,8 @@ export default function SheetInPlayController({
         <SheetWeaponMasteryDialog
           choices={masteryChoices}
           resolved={resolved}
+          character={character}
+          equipCards={equipCards}
           busy={busy}
           error={error}
           onChange={setResolved}

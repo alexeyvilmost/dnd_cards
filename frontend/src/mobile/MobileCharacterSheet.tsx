@@ -740,6 +740,7 @@ export default function MobileCharacterSheet() {
         resolved={draft.resolvedChoices}
         conflicts={ruleState.conflicts}
         onUpdated={data.updateCharacter}
+        equipCards={data.equipCards}
         longRestOpen={longRestOpen}
         onLongRestClose={() => setLongRestOpen(false)}
       />

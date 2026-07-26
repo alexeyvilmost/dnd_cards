@@ -394,6 +394,7 @@ const CharacterSheetV2 = ({
         resolved={draft.resolvedChoices}
         conflicts={ruleState.conflicts}
         onUpdated={onUpdated}
+        equipCards={equipCards}
         longRestOpen={longRestOpen}
         onLongRestClose={() => setLongRestOpen(false)}
       />

@@ -1337,6 +1337,7 @@ const CharacterSheetMVP = () => {
           resolved={draft.resolvedChoices}
           conflicts={ruleState.conflicts}
           onUpdated={handleCharacterUpdated}
+          equipCards={equipCards}
           longRestOpen={longRestOpen}
           onLongRestClose={() => setLongRestOpen(false)}
         />
