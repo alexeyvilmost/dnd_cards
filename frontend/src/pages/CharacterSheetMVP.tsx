@@ -1333,6 +1333,9 @@ const CharacterSheetMVP = () => {
       {!useV2 && (
         <SheetInPlayController
           character={character}
+          draft={draft}
+          assembled={assembled}
+          ruleState={ruleState}
           choices={inPlayChoices}
           resolved={draft.resolvedChoices}
           conflicts={ruleState.conflicts}

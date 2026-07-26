@@ -1,13 +1,16 @@
 import { useCallback, useMemo, useState } from 'react';
 import { charactersV3Api } from '../character/api';
-import type { ForgeCharacter } from '../character/types';
-import type { CharacterRuleState } from '../character/rules/types';
+import type { AssembledCharacter } from '../character/assemble';
+import type { CharacterDraft, ForgeCharacter } from '../character/types';
+import type { CharacterRuleState, RuleConflict } from '../character/rules/types';
+import { canResolveSkillConflict } from '../character/resolveConflict';
 import {
   isWeaponMasteryChoice,
   type PendingChoice,
 } from '../mechanics/collectChoices';
 import type { Card } from '../types';
 import SheetChoicesPanel from './SheetChoicesPanel';
+import SheetConflictResolveDialog from './SheetConflictResolveDialog';
 import SheetIssuesFab, {
   SheetLongRestDialog,
   type SheetIssueItem,
@@ -17,6 +20,9 @@ import SheetWeaponMasteryDialog from './SheetWeaponMasteryDialog';
 
 interface Props {
   character: ForgeCharacter;
+  draft: CharacterDraft;
+  assembled: AssembledCharacter;
+  ruleState: CharacterRuleState;
   choices: PendingChoice[];
   resolved: Record<string, string[]>;
   conflicts: CharacterRuleState['conflicts'];
@@ -34,6 +40,9 @@ interface Props {
  */
 export default function SheetInPlayController({
   character,
+  draft,
+  assembled,
+  ruleState,
   choices,
   resolved,
   conflicts,
@@ -46,6 +55,7 @@ export default function SheetInPlayController({
   const otherChoices = useMemo(() => choices.filter((c) => !isWeaponMasteryChoice(c)), [choices]);
 
   const [masteryOpen, setMasteryOpen] = useState(false);
+  const [conflictToResolve, setConflictToResolve] = useState<RuleConflict | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,14 +72,22 @@ export default function SheetInPlayController({
     setMasteryOpen(true);
   }, [setIssuesOpen]);
 
+  const openConflict = useCallback((c: RuleConflict) => {
+    setIssuesOpen(false);
+    setConflictToResolve(c);
+  }, [setIssuesOpen]);
+
   const issueItems = useMemo((): SheetIssueItem[] => {
     const items: SheetIssueItem[] = [];
     for (const c of conflicts) {
+      const resolvable = canResolveSkillConflict(c, draft, assembled, ruleState);
       items.push({
-        id: `conflict:${c.message}`,
+        id: `conflict:${c.code}:${c.value ?? ''}:${c.source?.id ?? ''}:${c.existingSource?.id ?? ''}`,
         title: 'Конфликт правил',
         detail: c.message,
-        severity: 'error',
+        severity: c.severity === 'warning' ? 'warning' : 'error',
+        actionLabel: resolvable ? 'Выбрать другой навык' : undefined,
+        onAction: resolvable ? () => openConflict(c) : undefined,
       });
     }
     for (const pc of incomplete) {
@@ -93,7 +111,7 @@ export default function SheetInPlayController({
       }
     }
     return items;
-  }, [conflicts, incomplete, resolved, openMastery]);
+  }, [conflicts, incomplete, resolved, openMastery, openConflict, draft, assembled, ruleState]);
 
   const setResolved = async (choiceId: string, vals: string[]) => {
     setBusy(true);
@@ -138,6 +156,18 @@ export default function SheetInPlayController({
           error={error}
           onChange={setResolved}
           onClose={() => setMasteryOpen(false)}
+        />
+      )}
+
+      {conflictToResolve && (
+        <SheetConflictResolveDialog
+          conflict={conflictToResolve}
+          character={character}
+          draft={draft}
+          assembled={assembled}
+          ruleState={ruleState}
+          onUpdated={onUpdated}
+          onClose={() => setConflictToResolve(null)}
         />
       )}
 

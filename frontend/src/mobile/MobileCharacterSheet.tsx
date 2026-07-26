@@ -736,6 +736,9 @@ export default function MobileCharacterSheet() {
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
       <SheetInPlayController
         character={character}
+        draft={draft}
+        assembled={assembled}
+        ruleState={ruleState}
         choices={inPlayChoices}
         resolved={draft.resolvedChoices}
         conflicts={ruleState.conflicts}
