@@ -132,6 +132,30 @@ describe('formula.evaluate', () => {
       variables: { martial_arts_die: { count: 1, sides: 6 } },
     })).toThrow(/кость/i);
   });
+
+  it('скаляр * кость → N бросков; кость * скаляр → умножить сумму', () => {
+    // d4 при rng=0.5 → 3
+    expect(evaluate('2 * d4', baseCtx)).toBe(6); // 2к4 = 3+3
+    expect(evaluate('d4 * 2', baseCtx)).toBe(6); // один бросок ×2 = 3*2
+    // Различие при другом rng: проверим число костей через rollFormula
+  });
+
+  it('prof_bonus * martial_arts_die → БМ раз кости переменной', () => {
+    const ctx = { ...baseCtx, variables: { martial_arts_die: { count: 1, sides: 6 } } };
+    // 2 * 1d6 → 2d6, каждая 4 → 8
+    expect(evaluate('prof_bonus * martial_arts_die', ctx)).toBe(8);
+    // один бросок d6 × БМ = 4*2 = 8 (совпадает при этом rng, но семантика другая)
+    expect(evaluate('martial_arts_die * prof_bonus', ctx)).toBe(8);
+  });
+
+  it('rollFormula: скаляр * d4 бросает N костей, d4 * скаляр — одну', async () => {
+    const { rollFormula } = await import('./formula');
+    const a = rollFormula('3 * d4', baseCtx);
+    expect(a.dice).toHaveLength(3);
+    const b = rollFormula('d4 * 3', baseCtx);
+    expect(b.dice).toHaveLength(1);
+    expect(b.total).toBe(b.dice[0].result * 3);
+  });
 });
 
 describe('formula.describe', () => {
@@ -156,6 +180,12 @@ describe('formula.describe', () => {
     expect(describeFormula('self_level d4', {})).toBe('self_level к4');
     expect(describeFormula('prof_bonus d4', baseCtx)).toBe('2к4');
     expect(describeFormula('prof d4', {})).toBe('prof к4');
+    expect(describeFormula('2 * d4', baseCtx)).toBe('2к4');
+    expect(describeFormula('prof_bonus * martial_arts_die', {
+      ...baseCtx,
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+    })).toBe('2к6');
+    expect(describeFormula('d4 * 2', baseCtx)).toBe('1к4 * 2');
     expect(describeFormula('1d8 + martial_arts_die', {
       variables: { martial_arts_die: { count: 1, sides: 6 } },
     })).toBe('1к8 + 1к6');

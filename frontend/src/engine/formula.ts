@@ -51,6 +51,11 @@ export class MissingVariableError extends FormulaError {
 
 export type FormulaValue = number | FormulaMarker;
 
+/** Внутреннее отложенное «NкM» — бросается при свёртке в число или при `кость * скаляр`. */
+type DicePending = { kind: 'dice'; count: number; sides: number };
+
+type EvalValue = number | FormulaMarker | DicePending;
+
 export interface DieRoll {
   sides: number;
   result: number;
@@ -135,6 +140,14 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
+    // Голая кость «d4» = 1d4 (чтобы писать `2 * d4` и `d4 * 2`).
+    const bareDiceMatch = s.slice(i).match(/^d(\d+)/i);
+    if (bareDiceMatch) {
+      tokens.push({ t: 'dice', count: 1, sides: Number(bareDiceMatch[1]) });
+      i += bareDiceMatch[0].length;
+      continue;
+    }
+
     // class_level:<id> / N dM — исторический синтаксис (делитель обязателен).
     const scalingMatch = s.slice(i).match(/^class_level:([a-z0-9_-]+)\s*\/\s*(\d+)\s+d(\d+)/i);
     if (scalingMatch) {
@@ -184,7 +197,8 @@ function tokenize(input: string): Token[] {
 
 function rollDice(count: number, sides: number, sink: EvalSink): number {
   let sum = 0;
-  for (let i = 0; i < count; i++) {
+  const n = Math.max(0, Math.floor(count));
+  for (let i = 0; i < n; i++) {
     const result = Math.floor(sink.rng() * sides) + 1;
     if (sink.detailed) sink.dice.push({ sides, result });
     sum += result;
@@ -197,6 +211,46 @@ function addModifier(sink: EvalSink, value: number, source: string, reason?: str
     sink.modifiers.push({ value, source, reason });
   }
   return value;
+}
+
+function isDicePending(v: EvalValue): v is DicePending {
+  return typeof v === 'object' && v !== null && (v as DicePending).kind === 'dice';
+}
+
+function pendingDice(count: number, sides: number): DicePending {
+  return { kind: 'dice', count: Math.max(0, Math.floor(count)), sides };
+}
+
+/** Свернуть отложенную кость в число (бросок). Маркеры — ошибка. */
+function forceNumber(v: EvalValue, sink: EvalSink): number {
+  if (typeof v === 'string') {
+    throw new FormulaError(`Маркер «${v}» нельзя использовать в арифметике`);
+  }
+  if (isDicePending(v)) return rollDice(v.count, v.sides, sink);
+  return v;
+}
+
+/**
+ * Умножение с асимметрией костей:
+ *   скаляр * кость  → бросить кость (скаляр × count) раз (отложенно);
+ *   кость * скаляр  → бросить кость, умножить сумму на скаляр;
+ *   число * число   → обычное произведение;
+ *   кость * кость   — ошибка.
+ */
+function multiplyValues(left: EvalValue, right: EvalValue, sink: EvalSink): EvalValue {
+  if (typeof left === 'string' || typeof right === 'string') {
+    throw new FormulaError('Маркеры weapon/auto нельзя умножать');
+  }
+  if (typeof left === 'number' && isDicePending(right)) {
+    return pendingDice(left * right.count, right.sides);
+  }
+  if (isDicePending(left) && typeof right === 'number') {
+    return rollDice(left.count, left.sides, sink) * right;
+  }
+  if (isDicePending(left) && isDicePending(right)) {
+    throw new FormulaError('Нельзя умножать кость на кость');
+  }
+  return (left as number) * (right as number);
 }
 
 /**
@@ -251,7 +305,7 @@ function isNumericScalarKnown(id: string, ctx: FormulaContext): boolean {
   return typeof variable === 'number';
 }
 
-function resolveId(id: string, sink: EvalSink): FormulaValue {
+function resolveId(id: string, sink: EvalSink): EvalValue {
   const lower = id.toLowerCase();
   const { ctx } = sink;
   if (MARKERS.has(lower)) return lower as FormulaMarker;
@@ -260,19 +314,17 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
     const [, classId, divStr, sidesStr] = lower.split(':');
     const level = ctx.classLevels?.[classId] ?? 0;
     const count = Math.ceil(level / Number(divStr));
-    return rollDice(count, Number(sidesStr), sink);
+    return pendingDice(count, Number(sidesStr));
   }
 
   if (lower.startsWith('__scaling_self__:')) {
-    // Совместимость со старыми токенами; новые формулы идут через __scaling_var__.
     const [, divStr, sidesStr] = lower.split(':');
     const level = ctx.selfLevel ?? 0;
     const count = Math.ceil(level / Number(divStr));
-    return rollDice(count, Number(sidesStr), sink);
+    return pendingDice(count, Number(sidesStr));
   }
 
   if (lower.startsWith('__scaling_var__:')) {
-    // __scaling_var__:divisor:sides:varId
     const rest = id.slice('__scaling_var__:'.length);
     const m = /^(\d+):(\d+):(.+)$/i.exec(rest);
     if (!m) throw new FormulaError(`Битый scaling-токен: ${id}`);
@@ -281,7 +333,7 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
     const varId = m[3];
     const n = resolveNumericScalar(varId, sink.ctx);
     const count = Math.max(0, Math.ceil(n / (divisor || 1)));
-    return rollDice(count, sides, sink);
+    return pendingDice(count, sides);
   }
 
   if (lower === 'prof_bonus' || lower === 'prof') {
@@ -302,8 +354,6 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
   if (lower === 'character_speed') {
     return addModifier(sink, ctx.characterSpeed ?? 0, 'скорость', 'скорость персонажа');
   }
-  // Искусность 2024: «модификатор характеристики, использованной для броска атаки» —
-  // подставляется движком из оружия в руке (см. engine/mastery.ts).
   if (lower === 'weapon_mod') {
     return addModifier(sink, ctx.weaponMod ?? 0, 'оружие', 'модификатор характеристики атаки');
   }
@@ -320,21 +370,19 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
     return addModifier(sink, v, ABILITY_LABEL_RU[ability], 'модификатор характеристики');
   }
 
-  // Переменные персонажа: dice → бросок кости(ей), number → плоский модификатор.
+  // Переменные: number → модификатор; dice → отложенная кость (для асимметрии *).
   const variable = ctx.variables?.[lower] ?? ctx.variables?.[id];
   if (variable !== undefined) {
     if (typeof variable === 'number') {
       return addModifier(sink, variable, id, 'переменная');
     }
-    return rollDice(variable.count, variable.sides, sink);
+    return pendingDice(variable.count, variable.sides);
   }
 
-  // Токен не разрешён: неактивная/несуществующая переменная или опечатка. НЕ общий
-  // throw — специальный тип, чтобы вызывающие мягко пропустили payload (деградация).
   throw new MissingVariableError(id);
 }
 
-function parseExpr(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
+function parseExpr(tokens: Token[], pos: { i: number }, sink: EvalSink): EvalValue {
   let left = parseTerm(tokens, pos, sink);
 
   while (pos.i < tokens.length) {
@@ -342,15 +390,14 @@ function parseExpr(tokens: Token[], pos: { i: number }, sink: EvalSink): Formula
     if (tok.t !== 'op' || (tok.v !== '+' && tok.v !== '-')) break;
     pos.i++;
     const right = parseTerm(tokens, pos, sink);
-    if (typeof left === 'string' || typeof right === 'string') {
-      throw new FormulaError('Маркеры weapon/auto нельзя складывать с числами');
-    }
-    left = tok.v === '+' ? left + right : left - right;
+    const a = forceNumber(left, sink);
+    const b = forceNumber(right, sink);
+    left = tok.v === '+' ? a + b : a - b;
   }
   return left;
 }
 
-function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
+function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): EvalValue {
   let left = parseFactor(tokens, pos, sink);
 
   while (pos.i < tokens.length) {
@@ -358,10 +405,11 @@ function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): Formula
     if (tok.t !== 'op' || (tok.v !== '*' && tok.v !== '/')) break;
     pos.i++;
     const right = parseFactor(tokens, pos, sink);
-    if (typeof left === 'string' || typeof right === 'string') {
-      throw new FormulaError('Маркеры weapon/auto нельзя умножать');
+    if (tok.v === '*') {
+      left = multiplyValues(left, right, sink);
+    } else {
+      left = forceNumber(left, sink) / forceNumber(right, sink);
     }
-    left = tok.v === '*' ? left * right : left / right;
   }
   return left;
 }
@@ -371,8 +419,7 @@ function parseFunctionCall(name: string, tokens: Token[], pos: { i: number }, si
   const args: number[] = [];
   while (pos.i < tokens.length && tokens[pos.i].t !== 'rparen') {
     const v = parseExpr(tokens, pos, sink);
-    if (typeof v === 'string') throw new FormulaError(`Маркер «${v}» нельзя использовать в функции`);
-    args.push(v);
+    args.push(forceNumber(v, sink));
     const sep = tokens[pos.i];
     if (sep?.t === 'op' && sep.v === ',') pos.i++;
     else break;
@@ -385,7 +432,7 @@ function parseFunctionCall(name: string, tokens: Token[], pos: { i: number }, si
   throw new FormulaError(`Неизвестная функция формулы: ${name}`);
 }
 
-function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): FormulaValue {
+function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): EvalValue {
   const tok = tokens[pos.i];
   if (!tok) throw new FormulaError('Незавершённая формула');
 
@@ -396,7 +443,7 @@ function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): Formu
 
   if (tok.t === 'dice') {
     pos.i++;
-    return rollDice(tok.count, tok.sides, sink);
+    return pendingDice(tok.count, tok.sides);
   }
 
   if (tok.t === 'id') {
@@ -419,8 +466,7 @@ function parseFactor(tokens: Token[], pos: { i: number }, sink: EvalSink): Formu
   if (tok.t === 'op' && tok.v === '-') {
     pos.i++;
     const val = parseFactor(tokens, pos, sink);
-    if (typeof val === 'string') throw new FormulaError('Маркер нельзя инвертировать');
-    return -val;
+    return -forceNumber(val, sink);
   }
 
   throw new FormulaError(`Неожиданный токен: ${JSON.stringify(tok)}`);
@@ -438,6 +484,7 @@ function evalTokens(tokens: Token[], ctx: FormulaContext, detailed: boolean): Fo
   const result = parseExpr(tokens, pos, sink);
   if (pos.i < tokens.length) throw new FormulaError('Лишние символы в формуле');
   if (typeof result === 'string') return result;
+  if (isDicePending(result)) return rollDice(result.count, result.sides, sink);
   return result;
 }
 
@@ -497,9 +544,10 @@ export function rollFormula(
   if (pos.i < tokens.length) throw new FormulaError(`Лишние символы в формуле «${formula}»`);
   if (typeof result === 'string') throw new FormulaError(`Формула-маркер «${result}» не бросается`);
 
+  const rolled = isDicePending(result) ? rollDice(result.count, result.sides, sink) : result;
   const extra = (opts?.modifiers || []).reduce((s, m) => s + m.value, 0);
   const allModifiers = [...sink.modifiers, ...(opts?.modifiers || [])];
-  const total = result + extra;
+  const total = rolled + extra;
 
   return {
     total,
@@ -615,7 +663,37 @@ export function describe(formula: string | number, ctx: FormulaContext = {}): st
 
   const tokens = tokenize(trimmed);
   const parts: string[] = [];
-  for (const tok of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    const next = tokens[i + 1];
+    const next2 = tokens[i + 2];
+    // Сворачиваем «N * MкK» / «скаляр * MкK» в «(N×M)кK» для превью.
+    if (
+      next?.t === 'op' && next.v === '*'
+      && next2
+      && (tok.t === 'num' || tok.t === 'id')
+      && (next2.t === 'dice' || next2.t === 'id')
+    ) {
+      const leftNum = tok.t === 'num'
+        ? tok.v
+        : (isNumericScalarKnown(tok.v, ctx) ? resolveNumericScalar(tok.v, ctx) : null);
+      let rightDice: { count: number; sides: number } | null = null;
+      if (next2.t === 'dice') {
+        rightDice = { count: next2.count, sides: next2.sides };
+      } else {
+        const v = ctx.variables?.[next2.v.toLowerCase()] ?? ctx.variables?.[next2.v];
+        if (v && typeof v !== 'number') rightDice = { count: v.count, sides: v.sides };
+        else if (next2.v.toLowerCase().startsWith('__scaling_')) {
+          // уже развёрнутый scaling-id в токене не бывает; describeId ниже
+          rightDice = null;
+        }
+      }
+      if (leftNum != null && rightDice) {
+        parts.push(`${Math.max(0, Math.floor(leftNum * rightDice.count))}к${rightDice.sides}`);
+        i += 2;
+        continue;
+      }
+    }
     if (tok.t === 'num') parts.push(String(tok.v));
     else if (tok.t === 'dice') parts.push(`${tok.count}к${tok.sides}`);
     else if (tok.t === 'id') parts.push(describeId(tok.v, ctx));
