@@ -21,7 +21,7 @@ import CollapsibleSection from '../components/CollapsibleSection';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
-import SheetChoicesPanel from '../components/SheetChoicesPanel';
+import SheetInPlayController from '../components/SheetInPlayController';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import SheetHpDialog from '../components/SheetHpDialog';
 import SheetRestButtons from '../components/SheetRestButtons';
@@ -79,6 +79,7 @@ const CharacterSheetV2 = ({
   lineageName, inPlayChoices, onUpdated, onEvents,
 }: Props) => {
   const [hpOpen, setHpOpen] = useState(false);
+  const [longRestOpen, setLongRestOpen] = useState(false);
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
   const [targetAc, setTargetAc] = useState(10);
   const [targetSaveMod, setTargetSaveMod] = useState(0);
@@ -167,6 +168,7 @@ const CharacterSheetV2 = ({
           onUpdated={onUpdated}
           onEvents={onEvents}
           compact
+          onLongRestComplete={() => setLongRestOpen(true)}
         />
 
         <div className="cs-vitals">
@@ -339,16 +341,8 @@ const CharacterSheetV2 = ({
           )}
         </div>
 
-        {/* ПРАВАЯ: инвентарь, черты и способности, выборы «в игре» */}
+        {/* ПРАВАЯ: инвентарь, черты и способности */}
         <div className="csheet-col">
-          {inPlayChoices.length > 0 && (
-            <SheetChoicesPanel
-              character={character}
-              choices={inPlayChoices}
-              resolved={draft.resolvedChoices}
-              onUpdated={onUpdated}
-            />
-          )}
           <CollapsibleSection title="Инвентарь и экипировка">
             <SheetEquipmentPanel
               character={character}
@@ -394,11 +388,15 @@ const CharacterSheetV2 = ({
         </div>
       </div>
 
-      {ruleState.conflicts.length > 0 && (
-        <div className="cs-conflicts">
-          {ruleState.conflicts.map((c, i) => <span key={i}>⚠ {c.message}</span>)}
-        </div>
-      )}
+      <SheetInPlayController
+        character={character}
+        choices={inPlayChoices}
+        resolved={draft.resolvedChoices}
+        conflicts={ruleState.conflicts}
+        onUpdated={onUpdated}
+        longRestOpen={longRestOpen}
+        onLongRestClose={() => setLongRestOpen(false)}
+      />
 
       <SheetHpDialog
         open={hpOpen}

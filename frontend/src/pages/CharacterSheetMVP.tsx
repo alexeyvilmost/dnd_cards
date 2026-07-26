@@ -46,7 +46,7 @@ import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
 import SheetSpeedDialog from '../components/SheetSpeedDialog';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
-import SheetChoicesPanel from '../components/SheetChoicesPanel';
+import SheetInPlayController from '../components/SheetInPlayController';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CharacterSheetV2 from './CharacterSheetV2';
 import { rollEvent } from '../engine/events';
@@ -117,6 +117,7 @@ const CharacterSheetMVP = () => {
   const [journalLoading, setJournalLoading] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [unseen, setUnseen] = useState(0);
+  const [longRestOpen, setLongRestOpen] = useState(false);
   const { toasts, push: pushToast } = useSheetToasts();
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
@@ -983,15 +984,6 @@ const CharacterSheetMVP = () => {
           />
           )}
 
-          {inSec('combat') && (
-          <SheetChoicesPanel
-            character={character}
-            choices={inPlayChoices}
-            resolved={draft.resolvedChoices}
-            onUpdated={handleCharacterUpdated}
-          />
-          )}
-
           {inSec('inventory') && (
           <SheetEquipmentPanel
             character={character}
@@ -1008,6 +1000,7 @@ const CharacterSheetMVP = () => {
             ruleState={ruleState}
             onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
+            onLongRestComplete={() => setLongRestOpen(true)}
           />
           )}
 
@@ -1268,15 +1261,6 @@ const CharacterSheetMVP = () => {
           </section>
           )}
 
-          {inSec('features') && ruleState.conflicts.length > 0 && (
-            <section className="sheet-panel sheet-panel-wide">
-              <h2 className="sheet-h2">Конфликты правил</h2>
-              <ul className="issues">
-                {ruleState.conflicts.map((conflict, i) => <li key={i}>{conflict.message}</li>)}
-              </ul>
-            </section>
-          )}
-
           {inSec('features') && (ruleState.proficiencies.languages.length || ruleState.proficiencies.tools.length
             || ruleState.proficiencies.armor.length || ruleState.proficiencies.weapons.length) ? (
             <section className="sheet-panel">
@@ -1344,6 +1328,18 @@ const CharacterSheetMVP = () => {
 
         </div>
       </div>
+      )}
+
+      {!useV2 && (
+        <SheetInPlayController
+          character={character}
+          choices={inPlayChoices}
+          resolved={draft.resolvedChoices}
+          conflicts={ruleState.conflicts}
+          onUpdated={handleCharacterUpdated}
+          longRestOpen={longRestOpen}
+          onLongRestClose={() => setLongRestOpen(false)}
+        />
       )}
 
       {mobileSectioned && (

@@ -27,6 +27,7 @@ interface Props {
   ruleState: CharacterRuleState;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  onLongRestComplete?: () => void;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -181,7 +182,7 @@ function ResTile({ resKey, option, current, max }: ResTileProps) {
   );
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onLongRestComplete }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
@@ -312,6 +313,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         ruleState={ruleState}
         onUpdated={onUpdated}
         onEvents={onEvents}
+        onLongRestComplete={onLongRestComplete}
       />
 
       {runtime.activeEffects.length > 0 && (

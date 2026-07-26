@@ -26,6 +26,8 @@ export type PendingChoice = {
   origin: ChoiceOrigin;
   /** Где разрешается выбор: 'in_play' — на листе во время игры (иначе — создание/левелап). */
   context?: string;
+  /** kind гранта выбора (напр. weapon_mastery) — для спец-UI на листе. */
+  grantKind?: string;
 };
 
 type Dict = Record<string, unknown>;
@@ -34,6 +36,7 @@ function choiceToPending(ch: Dict, origin: ChoiceOrigin): PendingChoice {
   const form = optionsToChoiceForm(ch) as Dict;
   const opts = (ch.options || {}) as Dict;
   const items = (opts.items as Array<Dict>) || [];
+  const grant = (ch.grant || form.grant) as Dict | undefined;
   return {
     id: choiceKey(origin, ch.id as string | number | undefined),
     prompt: String(ch.prompt ?? 'Выбор'),
@@ -45,7 +48,13 @@ function choiceToPending(ch: Dict, origin: ChoiceOrigin): PendingChoice {
     items: items.map((it) => ({ id: String(it.id), name: String(it.name) })),
     origin,
     context: ch.context ? String(ch.context) : undefined,
+    grantKind: grant?.kind != null ? String(grant.kind) : undefined,
   };
+}
+
+/** Выбор искусности оружия (Weapon Mastery 2024) — отдельный UI на листе. */
+export function isWeaponMasteryChoice(pc: PendingChoice): boolean {
+  return pc.grantKind === 'weapon_mastery' || pc.source === 'weapon';
 }
 
 // Собирает все pending-выборы (kind:"choice") из механики эффекта.

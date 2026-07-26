@@ -19,6 +19,7 @@ import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
 import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey } from '../character/types';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { SKILLS } from '../mechanics/registries';
+import SheetInPlayController from '../components/SheetInPlayController';
 import { rollD20 } from '../engine/roll';
 import { rollEvent, describeEngineEvent } from '../engine/events';
 import type { EngineEvent } from '../mvp/contracts';
@@ -146,6 +147,7 @@ export default function MobileCharacterSheet() {
   >(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [savingNotes, setSavingNotes] = useState(false);
+  const [longRestOpen, setLongRestOpen] = useState(false);
 
   const visitPage = useCallback((next: SheetPage) => {
     setPage((current) => {
@@ -248,6 +250,11 @@ export default function MobileCharacterSheet() {
   }
 
   const { character, assembled, ruleState, runtimeState } = data;
+  const draft = useMemo(() => characterToDraft(character), [character]);
+  const inPlayChoices = useMemo(
+    () => assembled.pendingChoices.filter((pc) => pc.context === 'in_play'),
+    [assembled.pendingChoices],
+  );
   const maxHp = data.maxHpBreakdown?.value ?? ruleState.maxHP;
   const armorClass = data.acBreakdown?.value ?? ruleState.armorClass;
   const initiative = data.initiativeBreakdown?.value ?? ruleState.initiativeBonus;
@@ -436,6 +443,7 @@ export default function MobileCharacterSheet() {
                 ruleState={ruleState}
                 onUpdated={data.updateCharacter}
                 onEvents={appendEvents}
+                onLongRestComplete={() => setLongRestOpen(true)}
               />
             </div>
             <div className="m-reused-panel">
@@ -726,6 +734,15 @@ export default function MobileCharacterSheet() {
         />
       )}
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
+      <SheetInPlayController
+        character={character}
+        choices={inPlayChoices}
+        resolved={draft.resolvedChoices}
+        conflicts={ruleState.conflicts}
+        onUpdated={data.updateCharacter}
+        longRestOpen={longRestOpen}
+        onLongRestClose={() => setLongRestOpen(false)}
+      />
     </main>
     </EntityDetailContext.Provider>
     </CharacterFormulaProvider>

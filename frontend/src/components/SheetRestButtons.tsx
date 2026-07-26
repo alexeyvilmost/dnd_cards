@@ -23,6 +23,8 @@ interface Props {
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
   compact?: boolean;
+  /** Вызывается после успешного долгого отдыха (диалог действий отдыха). */
+  onLongRestComplete?: () => void;
 }
 
 export default function SheetRestButtons({
@@ -32,6 +34,7 @@ export default function SheetRestButtons({
   onUpdated,
   onEvents,
   compact,
+  onLongRestComplete,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const syncAttempted = useRef(false);
@@ -93,12 +96,14 @@ export default function SheetRestButtons({
       const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, attunementUnlocked, resetDeathSaves));
       onUpdated(updated);
       onEvents?.(events);
+      return true;
     } catch (e) {
       console.error(e);
+      return false;
     } finally {
       setBusy(false);
     }
-  }, [character.id, onUpdated, onEvents]);
+  }, [character, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
     const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
@@ -126,22 +131,23 @@ export default function SheetRestButtons({
 
   const handleStartTurn = () => {
     const { state, events } = startTurn(runtime, restCtx);
-    apply(state, events, false);
+    void apply(state, events, false);
   };
 
   const handleEndTurn = () => {
     const { state, events } = endTurn(runtime, restCtx);
-    apply(state, events, false);
+    void apply(state, events, false);
   };
 
   const handleShortRest = () => {
     const { state, events } = shortRest(runtime, restCtx);
-    apply(state, events, true, true);
+    void apply(state, events, true, true);
   };
 
-  const handleLongRest = () => {
+  const handleLongRest = async () => {
     const { state, events } = longRest(runtime, restCtx);
-    apply(state, events, true, true);
+    const ok = await apply(state, events, true, true);
+    if (ok) onLongRestComplete?.();
   };
 
   // KB-037: без сознания (0 HP) нельзя брать короткий/долгий отдых — персонаж умирает/стабилизируется,

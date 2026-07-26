@@ -1613,3 +1613,16 @@
   .m-wizard-select-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .m-wizard-footer { padding-inline: max(24px, calc((100vw - 820px) / 2)); }
 }
+
+/* FAB ошибок/выборов над нижней навигацией мобильного листа */
+.m-sheet .sheet-issues-fab-root {
+  bottom: calc(78px + var(--m-safe-bottom));
+  left: 14px;
+}
+
+@media (min-width: 900px) {
+  .m-sheet .sheet-issues-fab-root {
+    bottom: 20px;
+    left: 20px;
+  }
+}
