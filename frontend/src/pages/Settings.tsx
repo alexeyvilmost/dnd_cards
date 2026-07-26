@@ -7,6 +7,7 @@ import {
   type EntityDisplayMode,
   type ItemPreviewStyle,
 } from '../settings';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
 
 const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string }> = [
   { kind: 'spells', label: 'Заклинания', hint: 'Лист персонажа и кузница' },
@@ -28,6 +29,7 @@ const ITEM_PREVIEW_OPTIONS: Array<{ mode: ItemPreviewStyle; label: string; icon:
 /** Общие настройки сайта (хранятся локально в браузере). */
 const Settings = () => {
   const settings = useSiteSettings();
+  const diceDialog = useDiceDialog();
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -53,6 +55,42 @@ const Settings = () => {
             </span>
           </span>
         </label>
+
+        <div className="flex items-start gap-4 p-5">
+          <input
+            id="setting-dice-3d"
+            type="checkbox"
+            className="mt-1 w-5 h-5 text-indigo-600 rounded"
+            checked={settings.dice3d}
+            disabled={!settings.diceDialog}
+            onChange={(e) => setSetting('dice3d', e.target.checked)}
+          />
+          <div>
+            <label htmlFor="setting-dice-3d" className="flex items-center gap-2 font-medium text-gray-900 cursor-pointer">
+              <Dices size={18} className="text-amber-600" />
+              Физические 3D-кубики
+            </label>
+            <span className="block text-sm text-gray-500 mt-1">
+              Бросать кубики поверх листа с физикой, столкновениями и управляемой силой броска.
+              Потяните стопку кубов и отпустите её. Если настройку выключить, останется компактный
+              диалог с автоброском и ручным вводом значений.
+            </span>
+            <button
+              type="button"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!settings.diceDialog}
+              onClick={() => {
+                void diceDialog.request([
+                  { sides: 20, label: 'Бросок атаки' },
+                  { sides: 8, label: 'Урон (огонь)' },
+                  { sides: 8, label: 'Урон (огонь)' },
+                ], 'Пробный бросок');
+              }}
+            >
+              <Dices size={15} /> Проверить бросок
+            </button>
+          </div>
+        </div>
 
         <label className="flex items-start gap-4 p-5 cursor-pointer">
           <input

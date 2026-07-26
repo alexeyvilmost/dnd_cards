@@ -12,7 +12,7 @@ import { emptyDraft, ABILITY_KEYS, type AbilityKey, type CharacterDraft } from '
 import { classSkillChoice } from '../character/forgeHelpers';
 import { getSkillGrantSource, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { PendingChoice } from '../mechanics/collectChoices';
-import { LANGUAGES, ORIGIN_FEATS, SKILLS } from '../mechanics/registries';
+import { LANGUAGES, ORIGIN_FEATS, SKILLS, optionsForChoiceSource } from '../mechanics/registries';
 import { bonusOf } from '../character/pointBuy';
 import type { Background, CharacterClass, Feat, Race } from '../types';
 
@@ -67,7 +67,9 @@ function pickChoiceOptions(pc: PendingChoice, ruleState: ReturnType<typeof resol
   } else if (pc.source === 'spell') {
     pool = Array.isArray(pc.filter) ? (pc.filter as string[]) : [];
   } else {
-    pool = (pc.items || []).map((it) => it.id);
+    pool = pc.items?.length
+      ? pc.items.map((it) => it.id)
+      : optionsForChoiceSource(pc.source).map((it) => it.id);
   }
   for (const id of pool) { if (picked.length >= pc.count) break; if (!picked.includes(id)) picked.push(id); }
   return picked;

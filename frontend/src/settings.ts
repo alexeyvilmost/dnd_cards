@@ -17,6 +17,8 @@ export type ItemPreviewStyle = 'card' | 'interface';
 export interface SiteSettings {
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
   diceDialog: boolean;
+  /** Физическая 3D-сцена броска. Если выключена, остаётся обычный диалог и ручной ввод. */
+  dice3d: boolean;
   /** Как отображать заклинания/действия/эффекты/предметы в меню и на листе (раскладка). */
   entityDisplay: EntityDisplaySettings;
   /** Вид превью предмета при наведении (инвентарь листа, библиотека): карточка или интерфейс. */
@@ -34,6 +36,7 @@ const EVENT = 'site-settings-changed';
 
 const DEFAULTS: SiteSettings = {
   diceDialog: true,
+  dice3d: true,
   entityDisplay: {
     spells: 'icon',
     actions: 'row',
