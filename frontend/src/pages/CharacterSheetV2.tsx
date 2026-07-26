@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
+import { effectAbilityPresentation } from '../character/abilityDisplay';
 import type { CharacterRuleState } from '../character/rules/types';
 import type { CharacterDraft, ForgeCharacter } from '../character/types';
 import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
@@ -362,13 +363,16 @@ const CharacterSheetV2 = ({
             <ForgeAbilityDisplay
               mode={entityDisplay.effects}
               linesClassName="cs-lines"
-              entries={assembled.effects.map(({ effect, origin }) => ({
-                key: effect.id,
-                name: effect.name,
-                imageUrl: effect.image_url,
-                sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
-                effect,
-              }))}
+              entries={assembled.effects.map(({ effect, origin }) => {
+                const p = effectAbilityPresentation(effect, origin, assembled.feats, originLabel);
+                return {
+                  key: effect.id,
+                  name: p.name,
+                  imageUrl: effect.image_url,
+                  sourceLabel: p.sourceLabel,
+                  effect: p.effect,
+                };
+              })}
             />
             <ForgeAbilityDisplay
               mode={entityDisplay.actions}

@@ -15,6 +15,7 @@ import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { executeAction } from '../engine/execute';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
+import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -1227,14 +1228,19 @@ const CharacterSheetMVP = () => {
                 <ForgeAbilityDisplay
                   mode={entityDisplay.effects}
                   linesClassName="sheet-item-cols"
-                  entries={assembled.effects.map(({ effect, origin }) => ({
-                    key: effect.id,
-                    name: effect.name,
-                    imageUrl: effect.image_url,
-                    sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
-                    detail: originDetail(origin.kind, origin.name),
-                    effect,
-                  }))}
+                  entries={assembled.effects.map(({ effect, origin }) => {
+                    const p = effectAbilityPresentation(effect, origin, assembled.feats, originLabel);
+                    return {
+                      key: effect.id,
+                      name: p.name,
+                      imageUrl: effect.image_url,
+                      sourceLabel: p.sourceLabel,
+                      detail: p.sourceLabel.includes('Боевой стиль')
+                        ? p.sourceLabel
+                        : originDetail(origin.kind, origin.name),
+                      effect: p.effect,
+                    };
+                  })}
                 />
               </div>
             )}

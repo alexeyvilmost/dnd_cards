@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
+import { effectAbilityPresentation } from './abilityDisplay';
 import type { CharacterRuleState } from './rules/types';
 import {
   ABILITY_KEYS, ABILITY_LABEL_RU,
@@ -525,16 +526,19 @@ export function SummaryPanel({
               <ForgeEntityIcon imageUrl={f.image_url} alt={f.name} />
               <span>{f.name}</span>
             </span>
-            {featEffects.map((e) => (
+            {featEffects.map((e) => {
+              const p = effectAbilityPresentation(e.effect, e.origin, [f]);
+              return (
               <ForgeAbilityLine
                 key={e.effect.id}
-                name={e.effect.name}
+                name={p.name}
                 imageUrl={e.effect.image_url}
                 fallbackImageUrl={f.image_url}
-                sourceLabel={`Способность черты · ${e.origin.name}`}
-                effect={e.effect}
+                sourceLabel={p.sourceLabel}
+                effect={p.effect}
               />
-            ))}
+              );
+            })}
             {featActions.map((a) => (
               <ForgeAbilityLine
                 key={a.action.id}

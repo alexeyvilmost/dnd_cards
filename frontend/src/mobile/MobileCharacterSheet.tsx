@@ -15,6 +15,7 @@ import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/C
 import type { EntityRefType } from '../components/EntityRefRegistry';
 import type { SheetAction } from '../character/actionSheet';
 import { charactersV3Api } from '../character/api';
+import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
 import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey } from '../character/types';
 import { abilityOfSkill } from '../character/rules/foundation';
@@ -491,15 +492,18 @@ export default function MobileCharacterSheet() {
                     onClick={() => setOverlay({ type: 'entity', view: { kind: 'feat', entity: feat } })}
                   />
                 ))}
-                {assembled.effects.map(({ effect, origin }) => (
+                {assembled.effects.map(({ effect, origin }) => {
+                  const p = effectAbilityPresentation(effect, origin, assembled.feats, (k) => k);
+                  return (
                   <EntityRow
                     key={`${effect.id}:${origin.id}`}
-                    name={effect.name}
-                    detail={origin.name}
+                    name={p.name}
+                    detail={p.sourceLabel}
                     imageUrl={effect.image_url}
-                    onClick={() => setOverlay({ type: 'entity', view: { kind: 'effect', entity: effect, sourceLabel: origin.name } })}
+                    onClick={() => setOverlay({ type: 'entity', view: { kind: 'effect', entity: p.effect, sourceLabel: p.sourceLabel } })}
                   />
-                ))}
+                  );
+                })}
                 {!assembled.feats.length && !assembled.effects.length && <p className="m-muted">Нет черт и способностей.</p>}
               </div>
             </Section>
