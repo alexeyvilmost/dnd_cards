@@ -107,6 +107,31 @@ describe('formula.evaluate', () => {
   it('class_level:barbarian+con', () => {
     expect(evaluate('class_level:barbarian+con', baseCtx)).toBe(4);
   });
+
+  it('prof_bonus d4 и prof d4 — число d4 = БМ', () => {
+    // БМ=2, d4 при rng=0.5 → 3; 2×3 = 6
+    expect(evaluate('prof_bonus d4', baseCtx)).toBe(6);
+    expect(evaluate('prof d4', baseCtx)).toBe(6);
+  });
+
+  it('self_level d4 — число d4 = уровень', () => {
+    // level=5, d4→3; 5×3 = 15
+    expect(evaluate('self_level d4', baseCtx)).toBe(15);
+  });
+
+  it('числовая переменная dN и делитель', () => {
+    const ctx = { ...baseCtx, variables: { rage_damage_modifier: 3 } };
+    // 3 d6 → 3×4 = 12; 3/2 d6 → ceil(1.5)=2 → 8
+    expect(evaluate('rage_damage_modifier d6', ctx)).toBe(12);
+    expect(evaluate('rage_damage_modifier / 2 d6', ctx)).toBe(8);
+  });
+
+  it('dice-переменная в X dN запрещена', () => {
+    expect(() => evaluate('martial_arts_die d4', {
+      ...baseCtx,
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+    })).toThrow(/кость/i);
+  });
 });
 
 describe('formula.describe', () => {
@@ -129,6 +154,8 @@ describe('formula.describe', () => {
     expect(describeFormula('1d10 + self_level', {})).toBe('1к10 + self_level');
     expect(describeFormula('self_level d4', baseCtx)).toBe('5к4');
     expect(describeFormula('self_level d4', {})).toBe('self_level к4');
+    expect(describeFormula('prof_bonus d4', baseCtx)).toBe('2к4');
+    expect(describeFormula('prof d4', {})).toBe('prof к4');
     expect(describeFormula('1d8 + martial_arts_die', {
       variables: { martial_arts_die: { count: 1, sides: 6 } },
     })).toBe('1к8 + 1к6');

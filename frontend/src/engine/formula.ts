@@ -135,6 +135,7 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
+    // class_level:<id> / N dM — исторический синтаксис (делитель обязателен).
     const scalingMatch = s.slice(i).match(/^class_level:([a-z0-9_-]+)\s*\/\s*(\d+)\s+d(\d+)/i);
     if (scalingMatch) {
       const classId = scalingMatch[1];
@@ -145,15 +146,20 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
-    // self_level [/ делитель] dN → бросок «уровень персонажа [/делитель]» раз кости dN (по образцу
-    // class_level). Требует пробел + dN; без него «self_level» остаётся обычным скаляром-слагаемым.
-    const selfScalingMatch = s.slice(i).match(/^self_level(?:\s*\/\s*(\d+))?\s+d(\d+)/i);
-    if (selfScalingMatch) {
-      const divisor = Number(selfScalingMatch[1] || 1);
-      const sides = Number(selfScalingMatch[2]);
-      tokens.push({ t: 'id', v: `__scaling_self__:${divisor}:${sides}` });
-      i += selfScalingMatch[0].length;
-      continue;
+    // <числовая переменная> [/ делитель] dN → ceil(value/div) раз кости dN.
+    // Работает для prof_bonus, self_level, str, cha, rage_damage_modifier и т.п.
+    // Требует пробел перед dN; без него токен остаётся скаляром. Маркеры weapon/auto — нет.
+    const varScalingMatch = s.slice(i).match(/^([a-zA-Z_][a-zA-Z0-9_:]*)(?:\s*\/\s*(\d+))?\s+d(\d+)/i);
+    if (varScalingMatch) {
+      const varId = varScalingMatch[1];
+      if (!MARKERS.has(varId.toLowerCase())) {
+        const divisor = Number(varScalingMatch[2] || 1);
+        const sides = Number(varScalingMatch[3]);
+        // id в конце: в имени могут быть двоеточия (class_level:rogue без «/N»).
+        tokens.push({ t: 'id', v: `__scaling_var__:${divisor}:${sides}:${varId}` });
+        i += varScalingMatch[0].length;
+        continue;
+      }
     }
 
     const idMatch = s.slice(i).match(/^[a-zA-Z_][a-zA-Z0-9_:]*/);
@@ -193,6 +199,58 @@ function addModifier(sink: EvalSink, value: number, source: string, reason?: str
   return value;
 }
 
+/**
+ * Скаляр для «X dN»: только числа (БМ, уровень, мод. характеристики, number-переменные).
+ * Dice-переменные и маркеры — ошибка (число костей должно быть известно до броска).
+ */
+function resolveNumericScalar(id: string, ctx: FormulaContext): number {
+  const lower = id.toLowerCase();
+  if (MARKERS.has(lower)) {
+    throw new FormulaError(`Маркер «${id}» нельзя использовать как число костей`);
+  }
+  if (lower === 'prof_bonus' || lower === 'prof') return ctx.profBonus ?? 0;
+  if (lower === 'self_level') return ctx.selfLevel ?? 0;
+  if (lower === 'spellcasting') return ctx.spellcastingMod ?? 0;
+  if (lower === 'spell_slot_above') return ctx.spellSlotAbove ?? 0;
+  if (lower === 'rage_bonus') return ctx.rageBonus ?? 0;
+  if (lower === 'character_speed') return ctx.characterSpeed ?? 0;
+  if (lower === 'weapon_mod') return ctx.weaponMod ?? 0;
+  if (lower.startsWith('class_level:')) {
+    const classId = lower.slice('class_level:'.length);
+    return ctx.classLevels?.[classId] ?? 0;
+  }
+  const ability = lower as AbilityKey;
+  if (ability in ABILITY_LABEL_RU) return ctx.abilityMods?.[ability] ?? 0;
+
+  const variable = ctx.variables?.[lower] ?? ctx.variables?.[id];
+  if (variable !== undefined) {
+    if (typeof variable === 'number') return variable;
+    throw new FormulaError(`«${id}» — кость, а не число; нельзя писать «${id} d…»`);
+  }
+  throw new MissingVariableError(id);
+}
+
+/** Есть ли в ctx значение для превью «X dN» (иначе оставляем имя переменной). */
+function isNumericScalarKnown(id: string, ctx: FormulaContext): boolean {
+  const lower = id.toLowerCase();
+  if (MARKERS.has(lower)) return false;
+  if (lower === 'prof_bonus' || lower === 'prof') return ctx.profBonus !== undefined;
+  if (lower === 'self_level') return ctx.selfLevel !== undefined;
+  if (lower === 'spellcasting') return ctx.spellcastingMod !== undefined;
+  if (lower === 'spell_slot_above') return ctx.spellSlotAbove !== undefined;
+  if (lower === 'rage_bonus') return ctx.rageBonus !== undefined;
+  if (lower === 'character_speed') return ctx.characterSpeed !== undefined;
+  if (lower === 'weapon_mod') return ctx.weaponMod !== undefined;
+  if (lower.startsWith('class_level:')) {
+    const classId = lower.slice('class_level:'.length);
+    return ctx.classLevels?.[classId] !== undefined;
+  }
+  const ability = lower as AbilityKey;
+  if (ability in ABILITY_LABEL_RU) return ctx.abilityMods?.[ability] !== undefined;
+  const variable = ctx.variables?.[lower] ?? ctx.variables?.[id];
+  return typeof variable === 'number';
+}
+
 function resolveId(id: string, sink: EvalSink): FormulaValue {
   const lower = id.toLowerCase();
   const { ctx } = sink;
@@ -206,10 +264,24 @@ function resolveId(id: string, sink: EvalSink): FormulaValue {
   }
 
   if (lower.startsWith('__scaling_self__:')) {
+    // Совместимость со старыми токенами; новые формулы идут через __scaling_var__.
     const [, divStr, sidesStr] = lower.split(':');
     const level = ctx.selfLevel ?? 0;
     const count = Math.ceil(level / Number(divStr));
     return rollDice(count, Number(sidesStr), sink);
+  }
+
+  if (lower.startsWith('__scaling_var__:')) {
+    // __scaling_var__:divisor:sides:varId
+    const rest = id.slice('__scaling_var__:'.length);
+    const m = /^(\d+):(\d+):(.+)$/i.exec(rest);
+    if (!m) throw new FormulaError(`Битый scaling-токен: ${id}`);
+    const divisor = Number(m[1]);
+    const sides = Number(m[2]);
+    const varId = m[3];
+    const n = resolveNumericScalar(varId, sink.ctx);
+    const count = Math.max(0, Math.ceil(n / (divisor || 1)));
+    return rollDice(count, sides, sink);
   }
 
   if (lower === 'prof_bonus' || lower === 'prof') {
@@ -458,6 +530,25 @@ function describeId(id: string, ctx: FormulaContext): string {
     }
     const count = Math.ceil(ctx.selfLevel / Number(divStr));
     return `${count}к${sidesStr}`;
+  }
+
+  if (lower.startsWith('__scaling_var__:')) {
+    const rest = id.slice('__scaling_var__:'.length);
+    const m = /^(\d+):(\d+):(.+)$/i.exec(rest);
+    if (!m) return id;
+    const divisor = Number(m[1]);
+    const sides = m[2];
+    const varId = m[3];
+    if (!isNumericScalarKnown(varId, ctx)) {
+      return divisor > 1 ? `${varId}/${divisor} к${sides}` : `${varId} к${sides}`;
+    }
+    try {
+      const n = resolveNumericScalar(varId, ctx);
+      const count = Math.max(0, Math.ceil(n / (divisor || 1)));
+      return `${count}к${sides}`;
+    } catch {
+      return divisor > 1 ? `${varId}/${divisor} к${sides}` : `${varId} к${sides}`;
+    }
   }
 
   if (lower === 'prof_bonus' || lower === 'prof') {
