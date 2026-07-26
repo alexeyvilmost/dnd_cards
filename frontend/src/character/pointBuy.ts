@@ -133,6 +133,8 @@ export const BONUS_KEY = 'builder:ability_bonus';
 export const METHOD_KEY = 'builder:ability_method';
 export const EQUIPMENT_OPTION_KEY = 'builder:equipment_option';
 export const CLASS_EQUIPMENT_OPTION_KEY = 'builder:class_equipment';
+/** Выбранные навыки класса (class.skill_choices) — персист без отдельной колонки БД. */
+export const CLASS_SKILLS_KEY = 'builder:class_skills';
 
 export function serializeBonuses(b: AbilityBonuses): string[] {
   return [

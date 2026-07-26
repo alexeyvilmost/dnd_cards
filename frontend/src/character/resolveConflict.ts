@@ -91,6 +91,7 @@ export function findConflictReplaceSlots(
   conflict: RuleConflict,
   draft: CharacterDraft,
   assembled: AssembledCharacter,
+  ruleState?: CharacterRuleState,
 ): ConflictReplaceSlot[] {
   if (conflict.code !== 'duplicate_proficiency' || conflict.kind !== 'skill' || !conflict.value) {
     return [];
@@ -99,13 +100,21 @@ export function findConflictReplaceSlots(
   const parties = [conflict.existingSource, conflict.source].filter(Boolean) as RuleSource[];
   const slots: ConflictReplaceSlot[] = [];
 
+  // Навыки класса из драфта ИЛИ из appliedGrants (на случай рассинхрона).
+  const classPicked = new Set([
+    ...draft.classSkillChoices.map(normalizeSkillId),
+    ...((ruleState?.appliedGrants || [])
+      .filter((g) => g.kind === 'skill' && g.mode === 'proficiency' && g.choiceId === 'class_skill_choices')
+      .map((g) => normalizeSkillId(g.value))),
+  ]);
+
   for (const src of parties) {
     const pool = skillPoolForSource(src, draft, assembled);
     const sourceName = sourceDisplayName(src);
 
     if (
       matchesEntity(src, 'class', assembled.klass)
-      && draft.classSkillChoices.some((s) => normalizeSkillId(s) === value)
+      && classPicked.has(value)
     ) {
       pushUniqueSlot(slots, {
         choiceId: 'class_skill_choices',
@@ -234,16 +243,25 @@ export function applySkillConflictReplacement(
   draft: CharacterDraft,
   slot: ConflictReplaceSlot,
   newSkillId: string,
+  ruleState?: CharacterRuleState,
 ): CharacterDraft {
   const next = normalizeSkillId(newSkillId);
   const prev = normalizeSkillId(slot.currentValue);
   if (slot.kind === 'class_skills') {
-    const skills = draft.classSkillChoices.map((s) => (normalizeSkillId(s) === prev ? next : s));
-    // Если текущего значения не было (редко) — заменяем первый слот / добавляем.
-    if (!draft.classSkillChoices.some((s) => normalizeSkillId(s) === prev)) {
-      return { ...draft, classSkillChoices: [...draft.classSkillChoices.filter((s) => normalizeSkillId(s) !== next), next] };
+    // База: текущий драфт, иначе — то, что уже в appliedGrants класса.
+    const base = draft.classSkillChoices.length
+      ? draft.classSkillChoices.map(normalizeSkillId)
+      : (ruleState?.appliedGrants || [])
+        .filter((g) => g.kind === 'skill' && g.mode === 'proficiency' && g.choiceId === 'class_skill_choices')
+        .map((g) => normalizeSkillId(g.value));
+    if (base.some((s) => s === prev)) {
+      return { ...draft, classSkillChoices: base.map((s) => (s === prev ? next : s)) };
     }
-    return { ...draft, classSkillChoices: skills };
+    // Конфликтующего значения в списке нет — заменяем первый слот / добавляем.
+    if (base.length) {
+      return { ...draft, classSkillChoices: [next, ...base.slice(1)].filter((s, i, arr) => arr.indexOf(s) === i) };
+    }
+    return { ...draft, classSkillChoices: [next] };
   }
   const current = draft.resolvedChoices[slot.choiceId] || [];
   const replaced = current.some((s) => normalizeSkillId(s) === prev)
@@ -261,7 +279,7 @@ export function canResolveSkillConflict(
   assembled: AssembledCharacter,
   ruleState: CharacterRuleState,
 ): boolean {
-  const slots = findConflictReplaceSlots(conflict, draft, assembled);
+  const slots = findConflictReplaceSlots(conflict, draft, assembled, ruleState);
   if (!slots.length) return false;
   const parties = conflictPartyPools(conflict, draft, assembled);
   return slots.some((slot) => availableReplacementSkills(slot, parties, ruleState).length > 0);

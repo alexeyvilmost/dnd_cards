@@ -1,7 +1,7 @@
 import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
 import { ABILITY_KEYS } from './types';
 import {
-  BONUS_KEY, CLASS_EQUIPMENT_OPTION_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
+  BONUS_KEY, CLASS_EQUIPMENT_OPTION_KEY, CLASS_SKILLS_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
   bonusIssues, parseBonuses, pointBuyIssues, serializeBonuses,
 } from './pointBuy';
 
@@ -12,8 +12,22 @@ import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
 import { collectChosenSpellUuids } from '../engine/spellRefs';
 import { isEntityUuid } from '../engine/ids';
+import { normalizeSkillList } from './skillNormalize';
 import type { Race, RaceTrait } from '../types';
 import type { PendingChoice } from '../mechanics/collectChoices';
+
+/** Восстановить выбранные навыки класса: явный ключ → appliedGrants → пусто. */
+export function classSkillChoicesFromCharacter(c: ForgeCharacter): string[] {
+  const stored = c.resolved_choices?.[CLASS_SKILLS_KEY];
+  if (Array.isArray(stored) && stored.length) {
+    return normalizeSkillList(stored.map(String));
+  }
+  return normalizeSkillList(
+    (c.rule_state?.appliedGrants || [])
+      .filter((grant) => grant.kind === 'skill' && grant.mode === 'proficiency' && grant.choiceId === 'class_skill_choices')
+      .map((grant) => grant.value),
+  );
+}
 
 export function resolveLineageName(
   lineageId: string | null | undefined,
@@ -40,9 +54,7 @@ export function resolveLineageName(
 }
 
 export function characterToDraft(c: ForgeCharacter): CharacterDraft {
-  const classSkillChoices = (c.rule_state?.appliedGrants || [])
-    .filter((grant) => grant.kind === 'skill' && grant.choiceId === 'class_skill_choices')
-    .map((grant) => grant.value);
+  const classSkillChoices = classSkillChoicesFromCharacter(c);
 
   const legacySlugs = (c.spell_ids || []).filter((id) => !isEntityUuid(id));
   const knownSlugs = (c.rule_state?.spells?.known || []).filter((id) => !isEntityUuid(id));
@@ -157,6 +169,7 @@ export function buildSavePayload(
       [EQUIPMENT_OPTION_KEY]: [draft.equipmentOption],
       [CLASS_EQUIPMENT_OPTION_KEY]: [draft.classEquipmentOption],
       [SUBCLASS_KEY]: draft.subclassId ? [draft.subclassId] : [],
+      [CLASS_SKILLS_KEY]: draft.classSkillChoices,
     },
     rule_state: ruleState,
     max_hp: maxHP,

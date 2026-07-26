@@ -34,8 +34,8 @@ export default function SheetConflictResolveDialog({
   conflict, character, draft, assembled, ruleState, onUpdated, onClose,
 }: Props) {
   const slots = useMemo(
-    () => findConflictReplaceSlots(conflict, draft, assembled),
-    [conflict, draft, assembled],
+    () => findConflictReplaceSlots(conflict, draft, assembled, ruleState),
+    [conflict, draft, assembled, ruleState],
   );
   const partyPools = useMemo(
     () => conflictPartyPools(conflict, draft, assembled),
@@ -72,13 +72,19 @@ export default function SheetConflictResolveDialog({
     setBusy(true);
     setError(null);
     try {
-      const nextDraft = applySkillConflictReplacement(draft, activeSlot, skillId);
+      const nextDraft = applySkillConflictReplacement(draft, activeSlot, skillId, ruleState);
       const nextRules = resolveCharacterRules({ draft: nextDraft, assembled });
-      const updated = await charactersV3Api.update(
-        character.id,
-        buildSavePayload(nextDraft, assembled, nextRules, character.current_hp),
-      );
-      onUpdated(updated);
+      const payload = buildSavePayload(nextDraft, assembled, nextRules, character.current_hp);
+      const updated = await charactersV3Api.update(character.id, payload);
+      // Клиентский снимок поверх ответа: навыки класса живут в resolved_choices + rule_state,
+      // и лист пересчитывает владения из драфта — гарантируем, что замена сразу видна.
+      onUpdated({
+        ...updated,
+        resolved_choices: payload.resolved_choices ?? updated.resolved_choices,
+        rule_state: nextRules,
+        skill_proficiencies: nextRules.proficiencies.skills,
+        skill_expertise: nextRules.expertise.skills,
+      });
       onClose();
     } catch (e) {
       console.error('resolve conflict', e);

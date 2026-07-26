@@ -298,16 +298,27 @@ const CharacterForge = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subfeatureChoice, draft.resolvedChoices]);
 
-  // Восстановить навыки класса из сохранённого персонажа при редактировании
+  // Фоллбэк: если в драфте нет навыков класса (старые сохранения без builder:class_skills
+  // и без choiceId в appliedGrants) — восстановить из skill_proficiencies ∩ список класса,
+  // исключая фиксированные навыки предыстории (иначе конфликт вроде Артист/Воин вернётся).
   useEffect(() => {
     if (!editId || restoredClassSkillsRef.current || !bundle?.klass) return;
+    if (draft.classSkillChoices.length) {
+      restoredClassSkillsRef.current = true;
+      return;
+    }
     const sc = classSkillChoice(assemble({ ...bundle, spells: [] }, draft));
-    if (!sc?.options.length) return;
+    if (!sc?.options.length) {
+      restoredClassSkillsRef.current = true;
+      return;
+    }
     const opts = new Set(sc.options.map(normalizeSkillId));
-    const classSkills = normalizeSkillList(savedSkillsRef.current).filter((s) => opts.has(s));
+    const bgSkills = new Set(normalizeSkillList(bundle.background?.skill_proficiencies));
+    const classSkills = normalizeSkillList(savedSkillsRef.current)
+      .filter((s) => opts.has(s) && !bgSkills.has(s));
     if (classSkills.length) setDraft((d) => ({ ...d, classSkillChoices: classSkills }));
     restoredClassSkillsRef.current = true;
-  }, [editId, bundle?.klass, draft.classId]);
+  }, [editId, bundle?.klass, draft.classId, draft.classSkillChoices.length]);
 
   // ─── Апдейтеры черновика ───────────────────────────────────────────────────
   const patch = (p: Partial<CharacterDraft>) => setDraft((d) => ({ ...d, ...p }));
