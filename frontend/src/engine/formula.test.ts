@@ -156,6 +156,22 @@ describe('formula.evaluate', () => {
     expect(b.dice).toHaveLength(1);
     expect(b.total).toBe(b.dice[0].result * 3);
   });
+
+  it('rollFormula: prof d4 и prof martial_arts_die (healing hands / монах)', async () => {
+    const { rollFormula } = await import('./formula');
+    const a = rollFormula('prof d4', { ...baseCtx, rng: () => 0 });
+    expect(a.dice).toHaveLength(2);
+    expect(a.dice.every((d) => d.sides === 4)).toBe(true);
+    expect(a.total).toBe(2);
+
+    const b = rollFormula('prof martial_arts_die', {
+      ...baseCtx,
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+      rng: () => 0,
+    });
+    expect(b.dice).toHaveLength(2);
+    expect(b.dice.every((d) => d.sides === 6)).toBe(true);
+  });
 });
 
 describe('formula.describe', () => {

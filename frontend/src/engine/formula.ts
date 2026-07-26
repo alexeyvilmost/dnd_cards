@@ -107,7 +107,8 @@ function defaultRng(): number {
 }
 
 function tokenize(input: string): Token[] {
-  const s = input.trim().replace(/\s+/g, ' ');
+  // Нормализуем пробелы (в т.ч. NBSP из конструктора), иначе «prof d4» может не склеиться.
+  const s = input.trim().replace(/[\u00a0\u202f\u2007\u2009\u200b]/g, ' ').replace(/\s+/g, ' ');
   const tokens: Token[] = [];
   let i = 0;
 
@@ -402,14 +403,37 @@ function parseTerm(tokens: Token[], pos: { i: number }, sink: EvalSink): EvalVal
 
   while (pos.i < tokens.length) {
     const tok = tokens[pos.i];
-    if (tok.t !== 'op' || (tok.v !== '*' && tok.v !== '/')) break;
-    pos.i++;
-    const right = parseFactor(tokens, pos, sink);
-    if (tok.v === '*') {
-      left = multiplyValues(left, right, sink);
-    } else {
-      left = forceNumber(left, sink) / forceNumber(right, sink);
+    if (tok.t === 'op' && (tok.v === '*' || tok.v === '/')) {
+      pos.i++;
+      const right = parseFactor(tokens, pos, sink);
+      if (tok.v === '*') {
+        left = multiplyValues(left, right, sink);
+      } else {
+        left = forceNumber(left, sink) / forceNumber(right, sink);
+      }
+      continue;
     }
+    // Неявное «скаляр кость» (prof d4, 2 d6) = скаляр * кость → N бросков.
+    // Нужно, когда токены не склеились в scaling (пробел/юникод) или написали «2 d4».
+    if (typeof left === 'number' && tok.t === 'dice') {
+      pos.i++;
+      left = multiplyValues(left, pendingDice(tok.count, tok.sides), sink);
+      continue;
+    }
+    // Неявное «скаляр dice_var» (prof martial_arts_die).
+    if (typeof left === 'number' && tok.t === 'id' && tokens[pos.i + 1]?.t !== 'lparen') {
+      try {
+        const peek = resolveId(tok.v, { ...sink, detailed: false });
+        if (isDicePending(peek)) {
+          pos.i++;
+          left = multiplyValues(left, peek, sink);
+          continue;
+        }
+      } catch {
+        // не dice-переменная — пусть разберёт внешний уровень / выбросит ошибку
+      }
+    }
+    break;
   }
   return left;
 }
