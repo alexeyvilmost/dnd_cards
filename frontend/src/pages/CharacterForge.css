@@ -777,6 +777,23 @@
 .sheet-hp-dmgtype { padding: 4px 8px !important; }
 .sheet-hp-crit { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--forge-text-dim); cursor: pointer; }
 .sheet-hp-crit input { accent-color: var(--forge-gold); cursor: pointer; }
+.sheet-hp-condition {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--forge-line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sheet-hp-condition-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sheet-hp-cond-select { flex: 1; min-width: 140px; padding: 4px 8px !important; }
+.sheet-hp-dc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--forge-text-dim);
+}
 .sheet-h3 { color: var(--forge-gold-dim); font-size: 14px; margin: 0 0 8px; font-weight: 600; }
 .sheet-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .sheet-ab { border: 1px solid var(--forge-line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--forge-panel-2); }

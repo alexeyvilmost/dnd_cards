@@ -7,20 +7,40 @@ import {
 } from '../character/death';
 import type { FormulaContext } from '../engine/formula';
 import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
-import type { ForgeCharacter } from '../character/types';
+import type { AbilityKey, ForgeCharacter } from '../character/types';
+import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
+import { activeConditionsOf } from '../engine/circumstances';
 import { concentrationDC, concentrationEntry, dropConcentration } from '../engine/concentration';
+import { conditionLabel, conditionOptions } from '../engine/conditions';
 import { canPay } from '../engine/cost';
 import { describeMechanicsLine } from '../engine/describeMechanics';
 import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { applyIncomingDamage, executeAction } from '../engine/execute';
 import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
+import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import { rollEvent } from '../engine/events';
 import ValueBreakdownTip from './ValueBreakdownTip';
-import type { CharacterContext, EngineEvent, ExecuteContext, ReactionOffer, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+import type { CharacterContext, EngineEvent, ExecuteContext, ReactionOffer, RuntimeState, TargetContext, ValueBreakdown } from '../mvp/contracts';
 import { DAMAGE_TYPES as SHARED_DAMAGE_TYPES } from '../utils/damageTypes';
+
+/** Пустой рантайм «кастера» для тест-наложения состояния на владельца листа как на цель. */
+const EMPTY_CASTER_STATE: RuntimeState = {
+  hp: { current: 1, max: 1, temp: 0 },
+  resources: {},
+  maxResources: {},
+  equipment: {},
+  inventory: [],
+  activeEffects: [],
+};
+
+const DUMMY_CASTER: CharacterContext = {
+  abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+  profBonus: 2,
+  level: 1,
+};
 
 /** Механика содержит payload reduce_damage (снижение входящего урона). */
 function hasReduceDamage(mechanics: unknown): boolean {
@@ -79,6 +99,10 @@ export default function SheetHpPanel({
   const [amount, setAmount] = useState(5);
   const [damageType, setDamageType] = useState('');
   const [crit, setCrit] = useState(false);
+  const [conditionId, setConditionId] = useState('poisoned');
+  const [withSave, setWithSave] = useState(true);
+  const [saveAbility, setSaveAbility] = useState<AbilityKey>('con');
+  const [saveDc, setSaveDc] = useState(13);
   const diceDialog = useDiceDialog();
   const reactionPrompt = useReactionPrompt();
 
@@ -89,6 +113,7 @@ export default function SheetHpPanel({
   const deathSaves = useMemo(() => readDeathSaves(character.turn_state), [character.turn_state]);
   const unconscious = runtime.hp.current <= 0;
   const concentration = concentrationEntry(runtime);
+  const condChoices = useMemo(() => conditionOptions(), []);
 
   const persist = useCallback(async (
     state: RuntimeState,
@@ -252,6 +277,116 @@ export default function SheetHpPanel({
     persist(state, events, emptyDeathSaves());
   };
 
+  /**
+   * Наложение состояния / входящий спас — через executeAction с владельцем листа как ЦЕЛЬЮ
+   * (тот же конвейер, что межперсонажное взаимодействие). Спас бросается как у цели в бою:
+   * collectRollModifiers + savedConditions → предикат save_avoids_condition
+   * (Устойчивость конструкта / Дворфская стойкость / Происхождение фей).
+   */
+  const handleApplyCondition = async () => {
+    if (!sheetCtx || !conditionId) return;
+    const label = conditionLabel(conditionId);
+    const selfTarget: TargetContext = {
+      characterContext: sheetCtx,
+      runtimeState: runtime,
+    };
+    const applyViaEngine = (forceSaveOutcome?: 'success' | 'fail') => {
+      const mechanics = withSave
+        ? {
+          name: `Тест: ${label}`,
+          activation: { mode: 'action', cost: [] },
+          effects: [{
+            resolution: 'save',
+            who: 'target',
+            ability: saveAbility,
+            dc: String(saveDc),
+            on_fail: [{ kind: 'condition', op: 'apply', value: conditionId }],
+            on_success: [],
+          }],
+        }
+        : {
+          name: `Тест: ${label}`,
+          activation: { mode: 'action', cost: [] },
+          effects: [{
+            resolution: 'auto',
+            who: 'target',
+            result: [{ kind: 'condition', op: 'apply', value: conditionId }],
+          }],
+        };
+      return executeAction(EMPTY_CASTER_STATE, mechanics, {
+        character: DUMMY_CASTER,
+        selfId: 'test-source',
+        target: selfTarget,
+        rng: () => Math.random(),
+        ...(forceSaveOutcome ? { forceSaveOutcome } : {}),
+      } as ExecuteContext);
+    };
+
+    if (!withSave) {
+      const res = applyViaEngine();
+      const state = res.targetState ?? runtime;
+      await persist(state, [
+        { type: 'narrative', text: `Тест наложения: «${label}» (без спасброска, через цель)` },
+        ...res.events,
+      ]);
+      return;
+    }
+
+    // Как resolveIncomingSave на листе цели: пассивки + savedConditions гейтят преимущество.
+    const abilLabel = ABILITY_LABEL_RU[saveAbility] ?? saveAbility.toUpperCase();
+    const saveMod = (sheetCtx.abilityMods[saveAbility] ?? 0)
+      + (sheetCtx.saveProficiencies?.includes(saveAbility) ? sheetCtx.profBonus : 0);
+    const collected = collectRollModifiers(runtime, passives ?? [], {
+      roll: 'saving_throw',
+      filter: { ability: saveAbility },
+      evalCtx: {
+        state: runtime,
+        character: sheetCtx,
+        activeConditions: activeConditionsOf(runtime),
+        savedConditions: new Set([conditionId]),
+      },
+    });
+
+    let saved: boolean;
+    const events: EngineEvent[] = [];
+    if (collected.autoFail) {
+      saved = false;
+      events.push({ type: 'narrative', text: `Спасбросок ${abilLabel} — автопровал (состояние)` });
+    } else {
+      const plan = [{ sides: 20, label: `Спасбросок ${abilLabel} (СЛ ${saveDc})` }];
+      const preview = (
+        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+          Входящий спас против «{label}»
+          {collected.advantage === 'advantage' ? ' · преимущество' : ''}
+          {collected.advantage === 'disadvantage' ? ' · помеха' : ''}
+        </div>
+      );
+      const decision = await diceDialog.request(plan, `Спас против «${label}»`, preview);
+      if (decision.mode === 'cancel') return;
+      const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+      const roll = rollD20({
+        advantage: collected.advantage,
+        modifiers: [{ value: saveMod, source: abilLabel, reason: 'спасбросок' }, ...collected.modifiers],
+        target: { type: 'dc', value: saveDc },
+        rng,
+        rules: collected.rules,
+      });
+      saved = roll.outcome === 'success';
+      events.push(rollEvent(`Спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}`, { ...roll, kind: 'save' }));
+    }
+
+    // Исход форсируем в движок (как кастер в онлайн-бою) — condition пишется в targetState.
+    const res = applyViaEngine(saved ? 'success' : 'fail');
+    const state = res.targetState ?? runtime;
+    events.push(
+      { type: 'narrative', text: saved
+        ? `Спасбросок против «${label}» успешен — состояние не наложено.`
+        : `Провал спасброска — «${label}» наложено через механизм цели.` },
+      ...res.events,
+    );
+    await persist(state, events);
+  };
+
   const rollDeathSave = async () => {
     const plan = [{ sides: 20, label: 'Спасбросок смерти' }];
     const decision = await diceDialog.request(plan, 'Спасбросок смерти (без модификаторов)');
@@ -379,6 +514,59 @@ export default function SheetHpPanel({
           <Plus size={14} /> Temp HP
         </button>
       </div>
+
+      {sheetCtx && (
+        <div className="sheet-hp-condition" title="Наложение через цель (executeAction who:target) — как входящее действие другого персонажа">
+          <div className="sheet-hp-condition-row">
+            <select
+              className="forge-input sheet-hp-cond-select"
+              value={conditionId}
+              onChange={(e) => setConditionId(e.target.value)}
+            >
+              {condChoices.map((o) => (
+                <option key={o.id} value={o.id}>{o.label}</option>
+              ))}
+            </select>
+            <label className="sheet-hp-crit" title="Спасбросок цели с пассивками (save_avoids_condition)">
+              <input type="checkbox" checked={withSave} onChange={(e) => setWithSave(e.target.checked)} />
+              спас
+            </label>
+          </div>
+          {withSave && (
+            <div className="sheet-hp-condition-row">
+              <select
+                className="forge-input sheet-hp-dmgtype"
+                value={saveAbility}
+                onChange={(e) => setSaveAbility(e.target.value as AbilityKey)}
+                title="Характеристика спасброска"
+              >
+                {ABILITY_KEYS.map((k) => (
+                  <option key={k} value={k}>{ABILITY_LABEL_RU[k]}</option>
+                ))}
+              </select>
+              <label className="sheet-hp-dc">
+                СЛ
+                <input
+                  type="number"
+                  className="forge-input sheet-hp-amount"
+                  min={1}
+                  max={40}
+                  value={saveDc}
+                  onChange={(e) => setSaveDc(Math.max(1, Number(e.target.value) || 1))}
+                />
+              </label>
+            </div>
+          )}
+          <button
+            type="button"
+            className="forge-btn ghost sheet-roll-btn"
+            disabled={busy}
+            onClick={handleApplyCondition}
+          >
+            <Plus size={14} /> {withSave ? 'Спровоцировать спас' : 'Наложить состояние'}
+          </button>
+        </div>
+      )}
     </>
   );
 
