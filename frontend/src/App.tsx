@@ -9,6 +9,7 @@ import { ChoiceDialogProvider } from './contexts/ChoiceDialogContext';
 import { ReactionPromptProvider } from './contexts/ReactionPromptContext';
 import { PinModeProvider } from './hooks/usePinMode';
 import { EntityDetailProvider } from './components/EntityDetailProvider';
+import { CharacterFormulaRoot } from './contexts/CharacterFormulaContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
@@ -70,6 +71,7 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <CharacterFormulaRoot>
         <DiceDialogProvider>
         <ChoiceDialogProvider>
         <ReactionPromptProvider>
@@ -411,6 +413,7 @@ function App() {
         </ReactionPromptProvider>
         </ChoiceDialogProvider>
         </DiceDialogProvider>
+        </CharacterFormulaRoot>
       </ToastProvider>
     </AuthProvider>
   );

@@ -443,14 +443,19 @@ function describeId(id: string, ctx: FormulaContext): string {
 
   if (lower.startsWith('__scaling__:')) {
     const [, classId, divStr, sidesStr] = lower.split(':');
-    if (!ctx.classLevels || ctx.classLevels[classId] === undefined) return id;
+    if (!ctx.classLevels || ctx.classLevels[classId] === undefined) {
+      return `class_level:${classId}/${divStr} к${sidesStr}`;
+    }
     const count = Math.ceil((ctx.classLevels[classId] ?? 0) / Number(divStr));
     return `${count}к${sidesStr}`;
   }
 
   if (lower.startsWith('__scaling_self__:')) {
     const [, divStr, sidesStr] = lower.split(':');
-    if (ctx.selfLevel === undefined) return id;
+    if (ctx.selfLevel === undefined) {
+      const div = Number(divStr);
+      return div > 1 ? `self_level/${div} к${sidesStr}` : `self_level к${sidesStr}`;
+    }
     const count = Math.ceil(ctx.selfLevel / Number(divStr));
     return `${count}к${sidesStr}`;
   }

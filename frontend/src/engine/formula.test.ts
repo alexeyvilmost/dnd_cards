@@ -127,6 +127,8 @@ describe('formula.describe', () => {
   it('подставляет self_level и переменные только когда они известны', () => {
     expect(describeFormula('1d10 + self_level', baseCtx)).toBe('1к10 + 5');
     expect(describeFormula('1d10 + self_level', {})).toBe('1к10 + self_level');
+    expect(describeFormula('self_level d4', baseCtx)).toBe('5к4');
+    expect(describeFormula('self_level d4', {})).toBe('self_level к4');
     expect(describeFormula('1d8 + martial_arts_die', {
       variables: { martial_arts_die: { count: 1, sides: 6 } },
     })).toBe('1к8 + 1к6');
