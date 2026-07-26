@@ -725,7 +725,12 @@ export function describe(formula: string | number, ctx: FormulaContext = {}): st
     else if (tok.t === 'lparen') parts.push('(');
     else if (tok.t === 'rparen') parts.push(')');
   }
-  return parts.join(' ').replace(/\s+([+*/])/g, ' $1').replace(/\+\s+-/g, '- ');
+  return parts.join(' ')
+    .replace(/\s+([+*/])/g, ' $1')
+    .replace(/\+\s+-/g, '- ')
+    // Идентификаторы сохраняют ведущий «+» для самостоятельного показа
+    // («+3 [СИЛ]»), но после бинарного оператора он был бы продублирован.
+    .replace(/([+\-*/(])\s+\+(?=\d)/g, '$1 ');
 }
 
 /** Превью формулы: известные переменные → значения, кости → «NкM». Без ctx — только кости. */

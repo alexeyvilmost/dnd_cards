@@ -23,7 +23,9 @@ import { SKILLS } from '../mechanics/registries';
 import SheetInPlayController from '../components/SheetInPlayController';
 import { rollD20 } from '../engine/roll';
 import { rollEvent, describeEngineEvent } from '../engine/events';
+import { plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import type { EngineEvent } from '../mvp/contracts';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
 import MobileOverlay from './MobileOverlay';
 import {
   MobileEntityOverlay,
@@ -133,6 +135,7 @@ export default function MobileCharacterSheet() {
   const navigate = useNavigate();
   const location = useLocation();
   const data = useMobileCharacter(id);
+  const diceDialog = useDiceDialog();
   const [page, setPage] = useState<SheetPage>('general');
   const pageHistory = useRef<SheetPage[]>(['general']);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -141,7 +144,7 @@ export default function MobileCharacterSheet() {
   const [overlay, setOverlay] = useState<
     | { type: 'hp' }
     | { type: 'ac' }
-    | { type: 'check'; label: string; bonus: number }
+    | { type: 'check'; label: string; bonus: number; ability: AbilityKey }
     | { type: 'notes'; description: string; notes: string }
     | { type: 'entity'; view: MobileEntityView; apply?: () => void; disabledReason?: string }
     | null
@@ -203,13 +206,22 @@ export default function MobileCharacterSheet() {
     if (first) flash(describeEngineEvent(first));
   }, [data.appendEvents, flash]);
 
-  const runCheck = async (label: string, bonus: number) => {
+  const runCheck = async (label: string, bonus: number, ability: AbilityKey) => {
+    const plan: PlannedDie[] = [{
+      sides: 20,
+      label: `${label} · ${ABILITY_LABEL_RU[ability]}`,
+    }];
+    setOverlay(null);
+    const decision = await diceDialog.request(plan, label);
+    if (decision.mode === 'cancel') return;
+    const rng = decision.mode === 'manual'
+      ? plannedValuesRng(plan, decision.values)
+      : Math.random;
     const roll = rollD20({
       modifiers: [{ value: bonus, source: label }],
-      rng: Math.random,
+      rng,
     });
     await appendEvents([rollEvent(label, roll)]);
-    setOverlay(null);
     flash(`${label}: ${roll.total}`);
   };
 
@@ -251,11 +263,10 @@ export default function MobileCharacterSheet() {
   }
 
   const { character, assembled, ruleState, runtimeState } = data;
-  const draft = useMemo(() => characterToDraft(character), [character]);
-  const inPlayChoices = useMemo(
-    () => assembled.pendingChoices.filter((pc) => pc.context === 'in_play'),
-    [assembled.pendingChoices],
-  );
+  // Эти вычисления идут после loading/error guard, поэтому не должны быть хуками:
+  // иначе первый и второй рендеры мобильного листа вызывают разное число хуков.
+  const draft = characterToDraft(character);
+  const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
   const maxHp = data.maxHpBreakdown?.value ?? ruleState.maxHP;
   const armorClass = data.acBreakdown?.value ?? ruleState.armorClass;
   const initiative = data.initiativeBreakdown?.value ?? ruleState.initiativeBonus;
@@ -341,7 +352,12 @@ export default function MobileCharacterSheet() {
           <>
             <Section title="Ключевые показатели">
               <div className="m-stat-grid">
-                <button type="button" onClick={() => setOverlay({ type: 'check', label: 'Инициатива', bonus: initiative })}>
+                <button type="button" onClick={() => setOverlay({
+                  type: 'check',
+                  label: 'Инициатива',
+                  bonus: initiative,
+                  ability: 'dex',
+                })}>
                   <span>Инициатива</span><strong>{fmtMod(initiative)}</strong>
                 </button>
                 <div><span>Скорость</span><strong>{speed} фт</strong></div>
@@ -364,14 +380,24 @@ export default function MobileCharacterSheet() {
                       <strong>{score}</strong>
                       <button
                         type="button"
-                        onClick={() => setOverlay({ type: 'check', label: `Проверка: ${ABILITY_LABEL_RU[ability]}`, bonus: mod })}
+                        onClick={() => setOverlay({
+                          type: 'check',
+                          label: `Проверка: ${ABILITY_LABEL_RU[ability]}`,
+                          bonus: mod,
+                          ability,
+                        })}
                       >
                         <Dices size={14} /> {fmtMod(mod)}
                       </button>
                       <button
                         type="button"
                         className={proficient ? 'is-proficient' : ''}
-                        onClick={() => setOverlay({ type: 'check', label: `Спасбросок: ${ABILITY_LABEL_RU[ability]}`, bonus: save })}
+                        onClick={() => setOverlay({
+                          type: 'check',
+                          label: `Спасбросок: ${ABILITY_LABEL_RU[ability]}`,
+                          bonus: save,
+                          ability,
+                        })}
                       >
                         Спас {fmtMod(save)}
                       </button>
@@ -395,7 +421,12 @@ export default function MobileCharacterSheet() {
                       type="button"
                       key={skill.id}
                       className={abilitySep ? 'm-skill-sep' : undefined}
-                      onClick={() => setOverlay({ type: 'check', label: `Проверка: ${skill.label}`, bonus })}
+                      onClick={() => setOverlay({
+                        type: 'check',
+                        label: `Проверка: ${skill.label}`,
+                        bonus,
+                        ability,
+                      })}
                     >
                       <span className={proficient ? 'is-proficient' : ''}>{skill.label}{expert ? ' · эксперт' : ''}</span>
                       <em className="m-skill-ab">{abbr3(ABILITY_LABEL_RU[ability])}</em>
@@ -660,7 +691,11 @@ export default function MobileCharacterSheet() {
           title={overlay.label}
           onClose={() => setOverlay(null)}
           footer={(
-            <button type="button" className="m-button m-button--wide m-button--gold" onClick={() => runCheck(overlay.label, overlay.bonus)}>
+            <button
+              type="button"
+              className="m-button m-button--wide m-button--gold"
+              onClick={() => runCheck(overlay.label, overlay.bonus, overlay.ability)}
+            >
               <Dices size={18} /> Бросить {fmtMod(overlay.bonus)}
             </button>
           )}

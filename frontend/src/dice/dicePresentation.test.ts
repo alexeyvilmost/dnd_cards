@@ -66,12 +66,13 @@ describe('визуальная семантика 3D-кубов', () => {
   it('переводит точку отпускания мыши в точку старта на физическом столе', () => {
     expect(diceStartPosition({ x: 500, y: 250 }, { width: 1000, height: 500 }, 8)).toEqual([0, 8, 0]);
     const rightBottom = diceStartPosition({ x: 1000, y: 500 }, { width: 1000, height: 500 }, 8);
-    expect(rightBottom[0]).toBeGreaterThan(0);
+    // Камера DiceBox зеркалит мировую X: правая точка экрана должна стать отрицательным X.
+    expect(rightBottom[0]).toBeLessThan(0);
     expect(rightBottom[2]).toBeGreaterThan(0);
   });
 
   it('удерживает точку старта внутри физических границ экрана', () => {
     const outside = diceStartPosition({ x: 5000, y: -1000 }, { width: 1000, height: 500 }, 9);
-    expect(outside).toEqual([8.17, 9, -4.085]);
+    expect(outside).toEqual([-8.17, 9, -4.085]);
   });
 });

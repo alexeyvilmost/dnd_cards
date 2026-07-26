@@ -48,8 +48,10 @@ export function diceStartPosition(
   const normalizedX = Math.max(-1, Math.min(1, release.x / width * 2 - 1));
   const normalizedY = Math.max(-1, Math.min(1, release.y / height * 2 - 1));
   // Оставляем запас до физических стен, чтобы крупная кость не появилась внутри коллайдера.
+  // Камера DiceBox смотрит вдоль оси X в обратную сторону: экранное «право»
+  // соответствует отрицательному X физического мира.
   return [
-    normalizedX * DICE_WORLD_SIZE * aspect * 0.43,
+    normalizedX === 0 ? 0 : -normalizedX * DICE_WORLD_SIZE * aspect * 0.43,
     startingHeight,
     normalizedY * DICE_WORLD_SIZE * 0.43,
   ];
