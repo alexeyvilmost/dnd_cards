@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
@@ -12,7 +13,12 @@ import type DiceBox from '@3d-dice/dice-box';
 import type { PlannedDie } from '../engine/dicePlan';
 import { summarizeDice } from '../engine/dicePlan';
 import type { TargetOption } from '../contexts/DiceDialogContext';
-import { dicePresentation, diceThrowConfig, groupDiceResults } from './dicePresentation';
+import {
+  dicePresentation,
+  diceStartPosition,
+  diceThrowConfig,
+  groupDiceResults,
+} from './dicePresentation';
 
 interface Props {
   active: boolean;
@@ -35,6 +41,12 @@ interface DragState {
   x: number;
   y: number;
   distance: number;
+}
+
+interface ThrowGesture {
+  strength: number;
+  releaseX?: number;
+  releaseY?: number;
 }
 
 type Stage = 'loading' | 'ready' | 'rolling' | 'settled' | 'error';
@@ -83,9 +95,18 @@ export default function Dice3DOverlay({
   const [values, setValues] = useState<number[]>([]);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [lastPower, setLastPower] = useState(0.55);
+  const [lastGesture, setLastGesture] = useState<ThrowGesture>({ strength: 0.55 });
   const mustPickTarget = !!needsTarget && !!targets?.length && !targetId;
 
   const grouped = useMemo(() => groupDiceResults(plan, values), [plan, values]);
+  const largestDie = useMemo(
+    () => plan.reduce<PlannedDie | undefined>(
+      (largest, die) => !largest || die.sides > largest.sides ? die : largest,
+      undefined,
+    ),
+    [plan],
+  );
+  const largestPresentation = largestDie ? dicePresentation(largestDie) : undefined;
   const power = drag ? clamp(drag.distance / MAX_DRAG, 0, 1) : lastPower;
   const dragDx = drag ? clamp(drag.x - drag.startX, -MAX_DRAG, MAX_DRAG) : 0;
   const dragDy = drag ? clamp(drag.y - drag.startY, -MAX_DRAG, MAX_DRAG) : 0;
@@ -117,7 +138,8 @@ export default function Dice3DOverlay({
           shadowTransparency: 0.72,
           theme: 'default',
           themeColor: '#6f5134',
-          scale: window.innerWidth < 640 ? 4.2 : 5.8,
+          // На 20% меньше прежнего размера (4.2/5.8).
+          scale: window.innerWidth < 640 ? 3.36 : 4.64,
           offscreen: true,
         });
         await box.init();
@@ -164,12 +186,21 @@ export default function Dice3DOverlay({
     };
   }, [active, onCancel]);
 
-  const roll = useCallback(async (strength = 0.55) => {
+  const roll = useCallback(async (gesture: ThrowGesture = { strength: 0.55 }) => {
     if (stage === 'rolling' || !plan.length) return;
     try {
       const box = await ensureBox();
-      const throwConfig = diceThrowConfig(strength);
+      const throwConfig = diceThrowConfig(gesture.strength);
+      const hasReleasePoint = gesture.releaseX != null && gesture.releaseY != null;
+      const startPosition = hasReleasePoint
+        ? diceStartPosition(
+          { x: gesture.releaseX!, y: gesture.releaseY! },
+          { width: window.innerWidth, height: window.innerHeight },
+          throwConfig.startingHeight,
+        )
+        : undefined;
       setLastPower(throwConfig.strength);
+      setLastGesture({ ...gesture, strength: throwConfig.strength });
       setValues([]);
       setDrag(null);
       setStage('rolling');
@@ -177,6 +208,7 @@ export default function Dice3DOverlay({
         throwForce: throwConfig.throwForce,
         spinForce: throwConfig.spinForce,
         startingHeight: throwConfig.startingHeight,
+        ...(startPosition ? { startPosition } : {}),
       });
       const result = await box.roll(
         plan.map((die) => ({
@@ -185,7 +217,9 @@ export default function Dice3DOverlay({
           theme: 'default',
           themeColor: dicePresentation(die).color,
         })),
-        { newStartPoint: true },
+        // При жесте сохраняем рассчитанную из точки отпускания позицию.
+        // Быстрый клик и клавиатура используют штатную случайную границу стола.
+        { newStartPoint: !startPosition },
       );
       const rolled = readValues(result);
       if (rolled.length !== plan.length || rolled.some((value) => !Number.isFinite(value))) {
@@ -221,8 +255,16 @@ export default function Dice3DOverlay({
   const onPointerUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (!drag) return;
     event.currentTarget.releasePointerCapture(event.pointerId);
-    const strength = drag.distance < 12 ? 0.55 : clamp(drag.distance / MAX_DRAG, 0.15, 1);
-    void roll(strength);
+    const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+    if (distance < 12) {
+      void roll();
+      return;
+    }
+    void roll({
+      strength: clamp(distance / MAX_DRAG, 0.15, 1),
+      releaseX: event.clientX,
+      releaseY: event.clientY,
+    });
   };
 
   return (
@@ -239,7 +281,7 @@ export default function Dice3DOverlay({
       <header className="dice3d-header">
         <div className="dice3d-kicker"><Dices size={15} /> Бросок</div>
         <h2>{title}</h2>
-        <p>{summarizeDice(plan)} · потяните кубы и отпустите</p>
+        <p>{summarizeDice(plan)} · потяните к{largestDie?.sides ?? 20} и отпустите</p>
         {!!targets?.length && (
           <label className="dice3d-target">
             <span>Цель</span>
@@ -267,7 +309,7 @@ export default function Dice3DOverlay({
             <span
               className="dice3d-tether"
               style={{
-                width: drag.distance,
+                width: Math.min(drag.distance, MAX_DRAG),
                 transform: `rotate(${tetherAngle}deg)`,
               }}
               aria-hidden="true"
@@ -284,15 +326,23 @@ export default function Dice3DOverlay({
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                void roll(0.55);
+                void roll();
               }
             }}
-            aria-label="Потяните стопку кубов и отпустите, чтобы бросить"
+            aria-label={`Потяните к${largestDie?.sides ?? 20} и отпустите, чтобы бросить`}
           >
-            <span className="dice3d-mini d20">20</span>
-            <span className="dice3d-mini d12">12</span>
-            <span className="dice3d-mini d8">8</span>
-            <span className="dice3d-pile-copy">{drag ? 'Отпускайте' : values.length ? 'Бросить снова' : 'Потянуть и бросить'}</span>
+            <span
+              className={`dice3d-grab-die dice3d-grab-die--d${largestDie?.sides ?? 20}`}
+              style={{
+                '--dice3d-grab-color': largestPresentation?.color ?? '#6f5134',
+                '--dice3d-grab-text': largestPresentation?.textColor ?? '#f1dfbd',
+              } as CSSProperties}
+            >
+              <span>к{largestDie?.sides ?? 20}</span>
+            </span>
+            <span className="dice3d-pile-copy">
+              {drag ? 'Отпускайте' : values.length ? 'Потяните, чтобы перебросить' : 'Потяните, чтобы бросить'}
+            </span>
           </button>
           <div className="dice3d-power" aria-live="polite">
             <span>Сила броска</span>
@@ -326,7 +376,7 @@ export default function Dice3DOverlay({
               <span className="dice3d-results-eyebrow">Кубы остановились</span>
               <h3>Результаты броска</h3>
             </div>
-            <button type="button" className="dice3d-reroll" onClick={() => void roll(lastPower)}>
+            <button type="button" className="dice3d-reroll" onClick={() => void roll(lastGesture)}>
               <RotateCcw size={15} /> Перебросить
             </button>
           </div>

@@ -5,9 +5,11 @@
  * Включается/выключается в настройках (/settings, «Диалог бросков кубов»).
  */
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { Dices } from 'lucide-react';
 import { getSettings } from '../settings';
 import { summarizeDice, type PlannedDie } from '../engine/dicePlan';
 import Dice3DOverlay from '../dice/Dice3DOverlay';
+import { diceEntryMode } from '../dice/diceMode';
 import './DiceDialog.css';
 
 /** Кандидат-цель для пикера в окне броска (действие бьёт по другому персонажу). */
@@ -27,9 +29,11 @@ export interface DiceRequestOpts {
 
 interface DiceDialogApi {
   /**
-   * Запросить решение игрока. Диалог выключен в настройках → сразу {mode:'auto'} (цель не выбирается,
-   * резолв в dummy). Диалог включён: при непустом плане — окно броска; при ПУСТОМ плане обычно тоже
-   * {mode:'auto'}, но если opts.confirm или opts.needsTarget — окно (подтверждение/выбор цели).
+   * Запросить решение игрока. Диалог включён: при непустом плане сначала показывается компактное окно
+   * с выбором авто/3D/ручного броска. Диалог выключен, но 3D включён → физическая сцена запускается
+   * сразу. Оба интерфейса выключены → {mode:'auto'} (цель не выбирается, резолв в dummy).
+   * При ПУСТОМ плане обычно тоже {mode:'auto'}, но если opts.confirm или opts.needsTarget и диалог
+   * включён — показывается окно подтверждения/выбора цели.
    * Если opts.targets заданы — в окне пикер цели; выбранный id вернётся в DiceDecision.targetId.
    */
   request: (plan: PlannedDie[], title: string, preview?: ReactNode, opts?: DiceRequestOpts) => Promise<DiceDecision>;
@@ -59,13 +63,14 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [values, setValues] = useState<string[]>([]);
   const [targetId, setTargetId] = useState<string>('');
-  const [forceClassic, setForceClassic] = useState(false);
+  const [show3dScene, setShow3dScene] = useState(false);
   const resolver = useRef<((d: DiceDecision) => void) | null>(null);
 
   const request = useCallback((plan: PlannedDie[], title: string, preview?: ReactNode, opts?: DiceRequestOpts): Promise<DiceDecision> => {
     const settings = getSettings();
-    // Диалог выключен в настройках → всегда авто (никаких окон, цель не выбирается → dummy).
-    if (!settings.diceDialog) return Promise.resolve({ mode: 'auto' });
+    const entryMode = diceEntryMode(settings, plan.length > 0);
+    // Оба интерфейса выключены (либо бросать нечего) → системный автобросок.
+    if (entryMode === 'auto' && !settings.diceDialog) return Promise.resolve({ mode: 'auto' });
     const hasTargets = !!opts?.targets?.length;
     const confirmOnly = plan.length === 0;
     // Пустой план, без подтверждения и без выбора цели (свободное действие) → авто.
@@ -73,7 +78,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
     return new Promise((resolve) => {
       resolver.current = resolve;
       setValues(plan.map(() => ''));
-      setForceClassic(false);
+      setShow3dScene(entryMode === '3d');
       // Один кандидат — выбираем сразу; иначе просим выбрать.
       setTargetId(opts?.targets?.length === 1 ? opts.targets[0].id : '');
       setDialog({
@@ -91,7 +96,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
 
   const finish = (d: DiceDecision) => {
     setDialog(null);
-    setForceClassic(false);
+    setShow3dScene(false);
     resolver.current?.(d);
     resolver.current = null;
   };
@@ -106,7 +111,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
     return Number.isFinite(n) && n >= 1 && n <= sides ? n : null;
   }) : [];
   const manualReady = dialog ? parsed.every((v) => v !== null) : false;
-  const show3d = !!dialog && !dialog.confirmOnly && dialog.use3d && !forceClassic;
+  const show3d = !!dialog && !dialog.confirmOnly && dialog.use3d && show3dScene;
 
   return (
     <Ctx.Provider value={{ request }}>
@@ -123,7 +128,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
         onTargetChange={setTargetId}
         onComplete={(rolledValues) => finish(withTarget({ mode: 'manual', values: rolledValues }))}
         onCancel={() => finish({ mode: 'cancel' })}
-        onFallback={() => setForceClassic(true)}
+        onFallback={() => setShow3dScene(false)}
       />
       {dialog && !show3d && (
         <div className="dice-dialog-backdrop" onClick={() => finish({ mode: 'cancel' })}>
@@ -188,6 +193,15 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
                   <button type="button" className="dice-dialog-btn primary" disabled={mustPickTarget} title={mustPickTarget ? 'Выберите цель' : undefined} onClick={() => finish(withTarget({ mode: 'auto' }))}>
                     Автобросок
                   </button>
+                  {dialog.use3d && (
+                    <button
+                      type="button"
+                      className="dice-dialog-btn dice-dialog-btn--3d"
+                      onClick={() => setShow3dScene(true)}
+                    >
+                      <Dices size={16} /> Бросить на сайте
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="dice-dialog-btn"

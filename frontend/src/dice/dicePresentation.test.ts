@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { dicePresentation, diceThrowConfig, groupDiceResults } from './dicePresentation';
+import {
+  dicePresentation,
+  diceStartPosition,
+  diceThrowConfig,
+  groupDiceResults,
+} from './dicePresentation';
 import { getSettings } from '../settings';
 
 describe('визуальная семантика 3D-кубов', () => {
@@ -56,5 +61,17 @@ describe('визуальная семантика 3D-кубов', () => {
   it('ограничивает слишком слабый и слишком сильный жест безопасным диапазоном', () => {
     expect(diceThrowConfig(-10).strength).toBe(0.15);
     expect(diceThrowConfig(10).strength).toBe(1);
+  });
+
+  it('переводит точку отпускания мыши в точку старта на физическом столе', () => {
+    expect(diceStartPosition({ x: 500, y: 250 }, { width: 1000, height: 500 }, 8)).toEqual([0, 8, 0]);
+    const rightBottom = diceStartPosition({ x: 1000, y: 500 }, { width: 1000, height: 500 }, 8);
+    expect(rightBottom[0]).toBeGreaterThan(0);
+    expect(rightBottom[2]).toBeGreaterThan(0);
+  });
+
+  it('удерживает точку старта внутри физических границ экрана', () => {
+    const outside = diceStartPosition({ x: 5000, y: -1000 }, { width: 1000, height: 500 }, 9);
+    expect(outside).toEqual([8.17, 9, -4.085]);
   });
 });

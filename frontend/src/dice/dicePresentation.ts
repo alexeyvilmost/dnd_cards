@@ -14,6 +14,13 @@ export interface DiceThrowConfig {
   startingHeight: number;
 }
 
+export interface DiceReleasePoint {
+  x: number;
+  y: number;
+}
+
+const DICE_WORLD_SIZE = 9.5;
+
 /**
  * Перевод силы пользовательского жеста в параметры физической сцены.
  * Нижняя граница не даёт костям «урониться на месте», верхняя ограничивает
@@ -27,6 +34,25 @@ export function diceThrowConfig(strength: number): DiceThrowConfig {
     spinForce: 4 + normalized * 10,
     startingHeight: 6.5 + normalized * 5,
   };
+}
+
+/** Перевод экранной точки отпускания в координаты физического стола DiceBox. */
+export function diceStartPosition(
+  release: DiceReleasePoint,
+  viewport: { width: number; height: number },
+  startingHeight: number,
+): [number, number, number] {
+  const width = Math.max(1, viewport.width);
+  const height = Math.max(1, viewport.height);
+  const aspect = width / height;
+  const normalizedX = Math.max(-1, Math.min(1, release.x / width * 2 - 1));
+  const normalizedY = Math.max(-1, Math.min(1, release.y / height * 2 - 1));
+  // Оставляем запас до физических стен, чтобы крупная кость не появилась внутри коллайдера.
+  return [
+    normalizedX * DICE_WORLD_SIZE * aspect * 0.43,
+    startingHeight,
+    normalizedY * DICE_WORLD_SIZE * 0.43,
+  ];
 }
 
 const ABILITY_TONES: Array<{ match: RegExp; tone: DicePresentation }> = [

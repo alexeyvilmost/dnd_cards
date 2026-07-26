@@ -50,8 +50,8 @@ const Settings = () => {
             </span>
             <span className="block text-sm text-gray-500 mt-1">
               Перед действием, требующим броска, показывать окно: система подскажет, сколько и каких
-              кубов бросить, и позволит либо бросить автоматически, либо ввести значения ваших
-              физических кубов. Результат в любом случае попадает в журнал.
+              кубов бросить, и предложит автобросок, 3D-бросок (если включён) или ввод значений
+              ваших физических кубов. Результат в любом случае попадает в журнал.
             </span>
           </span>
         </label>
@@ -62,7 +62,6 @@ const Settings = () => {
             type="checkbox"
             className="mt-1 w-5 h-5 text-indigo-600 rounded"
             checked={settings.dice3d}
-            disabled={!settings.diceDialog}
             onChange={(e) => setSetting('dice3d', e.target.checked)}
           />
           <div>
@@ -72,13 +71,13 @@ const Settings = () => {
             </label>
             <span className="block text-sm text-gray-500 mt-1">
               Бросать кубики поверх листа с физикой, столкновениями и управляемой силой броска.
-              Потяните стопку кубов и отпустите её. Если настройку выключить, останется компактный
-              диалог с автоброском и ручным вводом значений.
+              При включённом диалоге появится вариант «Бросить на сайте». Если диалог выключен,
+              3D-бросок запускается сразу при использовании действия.
             </span>
             <button
               type="button"
               className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!settings.diceDialog}
+              disabled={!settings.diceDialog && !settings.dice3d}
               onClick={() => {
                 void diceDialog.request([
                   { sides: 20, label: 'Бросок атаки' },

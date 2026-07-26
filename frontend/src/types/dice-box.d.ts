@@ -45,6 +45,8 @@ declare module '@3d-dice/dice-box' {
     theme?: string;
     themeColor?: string;
     scale?: number;
+    size?: number;
+    startPosition?: [number, number, number];
     offscreen?: boolean;
   }
 
