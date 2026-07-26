@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import type { ForgeCharacter } from '../character/types';
 import SheetHpPanel from './SheetHpPanel';
-import type { EngineEvent, ValueBreakdown } from '../mvp/contracts';
+import type { CharacterContext, EngineEvent, ValueBreakdown } from '../mvp/contracts';
 import './SheetHpDialog.css';
 
 interface Props {
@@ -14,12 +14,16 @@ interface Props {
   onEvents?: (events: EngineEvent[]) => void;
   /** Бонус спасброска ТЕЛ — для проверки концентрации при уроне. */
   conSaveBonus?: number;
+  /** Контекст листа — включает тип урона, сопротивления/уязвимости и реакции. */
+  sheetCtx?: CharacterContext | null;
+  passives?: Record<string, unknown>[];
 }
 
 /** Диалог хитов кокпита: тонкая обёртка над SheetHpPanel (единая логика
  * урона/лечения/temp HP, спасбросков смерти и концентрации). */
 export default function SheetHpDialog({
   open, onClose, character, maxHp, maxHpBreakdown, onUpdated, onEvents, conSaveBonus,
+  sheetCtx, passives,
 }: Props) {
   if (!open) return null;
 
@@ -45,6 +49,8 @@ export default function SheetHpDialog({
           onUpdated={onUpdated}
           onEvents={onEvents}
           conSaveBonus={conSaveBonus}
+          sheetCtx={sheetCtx}
+          passives={passives}
         />
       </div>
     </div>

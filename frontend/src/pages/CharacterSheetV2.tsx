@@ -411,6 +411,8 @@ const CharacterSheetV2 = ({
         onUpdated={onUpdated}
         onEvents={onEvents}
         conSaveBonus={ruleState.savingThrowBonuses.con}
+        sheetCtx={sheetCtx}
+        passives={passives}
       />
     </div>
   );

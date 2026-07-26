@@ -20,6 +20,7 @@ import { rollD20 } from '../engine/roll';
 import { rollEvent } from '../engine/events';
 import ValueBreakdownTip from './ValueBreakdownTip';
 import type { CharacterContext, EngineEvent, ExecuteContext, ReactionOffer, RuntimeState, ValueBreakdown } from '../mvp/contracts';
+import { DAMAGE_TYPES as SHARED_DAMAGE_TYPES } from '../utils/damageTypes';
 
 /** Механика содержит payload reduce_damage (снижение входящего урона). */
 function hasReduceDamage(mechanics: unknown): boolean {
@@ -48,22 +49,10 @@ function collectReduceDamageReactions(passives: Record<string, unknown>[]): Reac
   return out;
 }
 
-// C15: типы урона для селектора (влияют на сопротивления/иммунитеты/уязвимости цели).
+// C15: типы урона для селектора (сопротивления/иммунитеты/уязвимости).
 const DAMAGE_TYPES: Array<{ v: string; label: string }> = [
   { v: '', label: 'Без типа' },
-  { v: 'bludgeoning', label: 'Дробящий' },
-  { v: 'piercing', label: 'Колющий' },
-  { v: 'slashing', label: 'Рубящий' },
-  { v: 'fire', label: 'Огонь' },
-  { v: 'cold', label: 'Холод' },
-  { v: 'lightning', label: 'Молния' },
-  { v: 'thunder', label: 'Гром' },
-  { v: 'acid', label: 'Кислота' },
-  { v: 'poison', label: 'Яд' },
-  { v: 'necrotic', label: 'Некротический' },
-  { v: 'radiant', label: 'Излучение' },
-  { v: 'psychic', label: 'Психический' },
-  { v: 'force', label: 'Силовой' },
+  ...SHARED_DAMAGE_TYPES.map((d) => ({ v: d.value, label: d.label })),
 ];
 
 interface Props {
@@ -219,7 +208,7 @@ export default function SheetHpPanel({
       return;
     }
 
-    // Fallback без контекста листа (кокпит V2): простое вычитание + локальная концентрация.
+    // Fallback без контекста листа: простое вычитание + локальная концентрация.
     let { state, events } = applyDamage(runtime, amount);
     let ds: DeathSaveState | undefined;
     if (state.hp.current === 0) {
