@@ -3,7 +3,11 @@ import { Copy, MoreVertical, Pencil, Plus, Shield, Sparkles, Trash2 } from 'luci
 import { Link, useNavigate } from 'react-router-dom';
 import { classesApi, racesApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
-import type { ForgeCharacter, SaveForgeCharacterRequest } from '../character/types';
+import {
+  characterMetadataLabel,
+  type ForgeCharacter,
+  type SaveForgeCharacterRequest,
+} from '../character/types';
 import type { CharacterClass, Race } from '../types';
 import './mobile.css';
 
@@ -13,6 +17,10 @@ function clonePayload(character: ForgeCharacter): SaveForgeCharacterRequest {
     avatar_url: character.avatar_url,
     description: character.description ?? '',
     notes: character.notes ?? '',
+    system_id: character.system_id,
+    ruleset_version: character.ruleset_version,
+    character_type: character.character_type,
+    character_schema_version: character.character_schema_version,
     race_id: character.race_id,
     lineage_id: character.lineage_id,
     class_id: character.class_id,
@@ -166,6 +174,7 @@ export default function MobileCharactersPage() {
                 <div className="m-character-meta">
                   <h2>{character.name || 'Без имени'}</h2>
                   <p>{subtitle(character)}</p>
+                  <p>{characterMetadataLabel(character)}</p>
                 </div>
                 <div className="m-card-menu" ref={menuId === character.id ? menuRef : undefined}>
                   <button

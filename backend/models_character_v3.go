@@ -9,6 +9,19 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	DefaultCharacterSystemID      = "dnd5e-2024"
+	DefaultCharacterRuleset       = "2024"
+	DefaultCharacterType          = "free"
+	CurrentCharacterSchemaVersion = 1
+)
+
+var validCharacterTypes = map[string]bool{
+	"free":          true,
+	"campaign":      true,
+	"dungeon_crawl": true,
+}
+
 // CharacterV3 — новая модель персонажа, ссылающаяся на сущности (вид/класс/
 // предыстория/черты/заклинания) и хранящая разрешённые выборы из механики.
 // Низкоуровневые умения этих сущностей — это эффекты и действия.
@@ -20,6 +33,13 @@ type CharacterV3 struct {
 	AvatarURL   string     `json:"avatar_url" gorm:"type:text"`
 	Description string     `json:"description" gorm:"type:text"`
 	Notes       string     `json:"notes" gorm:"type:text"`
+
+	// Системная принадлежность. system_id неизменяем после создания; смена
+	// системы выполняется только созданием нового персонажа/явной конвертацией.
+	SystemID               string `json:"system_id" gorm:"type:varchar(100);not null;default:'dnd5e-2024'"`
+	RulesetVersion         string `json:"ruleset_version" gorm:"type:varchar(100);not null;default:'2024'"`
+	CharacterType          string `json:"character_type" gorm:"type:varchar(30);not null;default:'free'"`
+	CharacterSchemaVersion int    `json:"character_schema_version" gorm:"not null;default:1"`
 
 	// Ссылки на сущности
 	RaceID       *uuid.UUID `json:"race_id" gorm:"type:uuid"`
@@ -91,15 +111,19 @@ func (CharacterV3) TableName() string { return "characters_v3" }
 // Все ссылки опциональны, чтобы можно было сохранить незавершённого персонажа
 // (черновик); обязательно только имя.
 type CreateCharacterV3Request struct {
-	Name         string     `json:"name" binding:"required"`
-	AvatarURL    string     `json:"avatar_url"`
-	Description  string     `json:"description"`
-	Notes        string     `json:"notes"`
-	RaceID       *uuid.UUID `json:"race_id"`
-	LineageID    *string    `json:"lineage_id"`
-	ClassID      *uuid.UUID `json:"class_id"`
-	BackgroundID *uuid.UUID `json:"background_id"`
-	Level        int        `json:"level"`
+	Name                   string     `json:"name" binding:"required"`
+	AvatarURL              string     `json:"avatar_url"`
+	Description            string     `json:"description"`
+	Notes                  string     `json:"notes"`
+	SystemID               *string    `json:"system_id"`
+	RulesetVersion         *string    `json:"ruleset_version"`
+	CharacterType          *string    `json:"character_type"`
+	CharacterSchemaVersion *int       `json:"character_schema_version"`
+	RaceID                 *uuid.UUID `json:"race_id"`
+	LineageID              *string    `json:"lineage_id"`
+	ClassID                *uuid.UUID `json:"class_id"`
+	BackgroundID           *uuid.UUID `json:"background_id"`
+	Level                  int        `json:"level"`
 
 	FeatIDs     *Properties `json:"feat_ids"`
 	SpellIDs    *Properties `json:"spell_ids"`
@@ -131,15 +155,19 @@ type CreateCharacterV3Request struct {
 // UpdateCharacterV3Request — запрос на обновление. Полная замена полей черновика
 // (редактор держит полное состояние персонажа). Имя опционально.
 type UpdateCharacterV3Request struct {
-	Name         string     `json:"name"`
-	AvatarURL    string     `json:"avatar_url"`
-	Description  string     `json:"description"`
-	Notes        string     `json:"notes"`
-	RaceID       *uuid.UUID `json:"race_id"`
-	LineageID    *string    `json:"lineage_id"`
-	ClassID      *uuid.UUID `json:"class_id"`
-	BackgroundID *uuid.UUID `json:"background_id"`
-	Level        int        `json:"level"`
+	Name                   string     `json:"name"`
+	AvatarURL              string     `json:"avatar_url"`
+	Description            string     `json:"description"`
+	Notes                  string     `json:"notes"`
+	SystemID               *string    `json:"system_id"`
+	RulesetVersion         *string    `json:"ruleset_version"`
+	CharacterType          *string    `json:"character_type"`
+	CharacterSchemaVersion *int       `json:"character_schema_version"`
+	RaceID                 *uuid.UUID `json:"race_id"`
+	LineageID              *string    `json:"lineage_id"`
+	ClassID                *uuid.UUID `json:"class_id"`
+	BackgroundID           *uuid.UUID `json:"background_id"`
+	Level                  int        `json:"level"`
 
 	FeatIDs     *Properties `json:"feat_ids"`
 	SpellIDs    *Properties `json:"spell_ids"`
@@ -166,6 +194,66 @@ type UpdateCharacterV3Request struct {
 	ArmorClass        int `json:"armor_class"`
 	InitiativeBonus   int `json:"initiative_bonus"`
 	PassivePerception int `json:"passive_perception"`
+}
+
+func requestedCharacterMetadata(
+	systemID *string,
+	rulesetVersion *string,
+	characterType *string,
+	schemaVersion *int,
+) (string, string, string, int) {
+	system := DefaultCharacterSystemID
+	if systemID != nil && *systemID != "" {
+		system = *systemID
+	}
+	ruleset := DefaultCharacterRuleset
+	if rulesetVersion != nil && *rulesetVersion != "" {
+		ruleset = *rulesetVersion
+	}
+	kind := DefaultCharacterType
+	if characterType != nil && *characterType != "" {
+		kind = *characterType
+	}
+	schema := CurrentCharacterSchemaVersion
+	if schemaVersion != nil && *schemaVersion > 0 {
+		schema = *schemaVersion
+	}
+	return system, ruleset, kind, schema
+}
+
+func validateNewCharacterMetadata(systemID, rulesetVersion, characterType string, schemaVersion int) error {
+	if systemID != DefaultCharacterSystemID {
+		return fmt.Errorf("игровая система %q пока не поддерживается", systemID)
+	}
+	if rulesetVersion != DefaultCharacterRuleset {
+		return fmt.Errorf("версия правил %q пока не поддерживается", rulesetVersion)
+	}
+	if !validCharacterTypes[characterType] {
+		return fmt.Errorf("неизвестный character_type %q", characterType)
+	}
+	if characterType != DefaultCharacterType {
+		return fmt.Errorf("character_type %q ещё не доступен в этом endpoint", characterType)
+	}
+	if schemaVersion != CurrentCharacterSchemaVersion {
+		return fmt.Errorf("неподдерживаемая character_schema_version %d", schemaVersion)
+	}
+	return nil
+}
+
+func validateCharacterMetadataUpdate(character CharacterV3, req UpdateCharacterV3Request) error {
+	if req.SystemID != nil && *req.SystemID != character.SystemID {
+		return fmt.Errorf("system_id существующего персонажа нельзя изменить")
+	}
+	if req.RulesetVersion != nil && *req.RulesetVersion != character.RulesetVersion {
+		return fmt.Errorf("ruleset_version меняется только через миграцию персонажа")
+	}
+	if req.CharacterType != nil && *req.CharacterType != character.CharacterType {
+		return fmt.Errorf("character_type существующего персонажа нельзя изменить")
+	}
+	if req.CharacterSchemaVersion != nil && *req.CharacterSchemaVersion != character.CharacterSchemaVersion {
+		return fmt.Errorf("character_schema_version управляется серверной миграцией")
+	}
+	return nil
 }
 
 // PatchCharacterRuntimeRequest — частичное обновление runtime (не трогает черновик).

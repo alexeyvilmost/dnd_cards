@@ -15,7 +15,12 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --config vite.config.ts",
     "test": "vitest run",
-    "test:mvp": "vitest run --config vitest.mvp.config.ts"
+    "test:mvp": "vitest run --config vitest.mvp.config.ts",
+    "test:content-manifest": "node --test ../scripts/content/micro-micro-manifest.test.mjs",
+    "test:micro-micro:live": "node ../scripts/content/micro-micro-gate.mjs --strict",
+    "test:micro-micro:matrix": "vitest run --config vitest.matrix.config.ts",
+    "test:micro-micro:certification": "vitest run --config vitest.matrix.config.ts src/mvp/micro-micro.certification.live.test.ts",
+    "content:certify": "node ../scripts/content/certify-content.mjs"
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",

@@ -394,9 +394,10 @@ type Card struct {
 	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
 	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
 	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`                         // Унифицированная механика (как у effects/actions)
-	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`                    // Боевой профиль предмета для сервиса battle
-	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"`              // Режим контейнера: all | choice
-	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`                          // Содержимое контейнера
+	Support                      *JSONMap       `json:"support" gorm:"type:jsonb"`
+	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`       // Боевой профиль предмета для сервиса battle
+	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"` // Режим контейнера: all | choice
+	Contents                     *CardRefList   `json:"contents" gorm:"type:jsonb"`             // Содержимое контейнера
 	CreatedAt                    time.Time      `json:"created_at"`
 	UpdatedAt                    time.Time      `json:"updated_at"`
 	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
@@ -453,9 +454,9 @@ type CreateCardRequest struct {
 
 // UpdateCardRequest - запрос на обновление карточки
 type UpdateCardRequest struct {
-	Name                         string         `json:"name"`
-	NameEn                       *string        `json:"name_en"`
-	Properties                   *Properties    `json:"properties"`
+	Name       string      `json:"name"`
+	NameEn     *string     `json:"name_en"`
+	Properties *Properties `json:"properties"`
 	// Указатель, чтобы отличать «поле не передано» (nil → не трогаем) от «очищено» (""→ пустое).
 	// Раньше был string с гейтом `!= ""`, из-за чего описание карты нельзя было стереть.
 	Description                  *string        `json:"description"`
@@ -554,6 +555,7 @@ type CardResponse struct {
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
 	Mechanics                    *JSONMap       `json:"mechanics"`
+	Support                      *JSONMap       `json:"support"`
 	BattleProfile                *JSONMap       `json:"battle_profile"`
 	ContainerMode                *string        `json:"container_mode"`
 	Contents                     *CardRefList   `json:"contents"`
@@ -842,6 +844,7 @@ func (card Card) ToCardResponse() CardResponse {
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
 		Mechanics:                    card.Mechanics,
+		Support:                      card.Support,
 		BattleProfile:                card.BattleProfile,
 		ContainerMode:                card.ContainerMode,
 		Contents:                     card.Contents,
@@ -1467,27 +1470,27 @@ type ResourceDefinition struct {
 func (ResourceDefinition) TableName() string { return "resources" }
 
 type CreateResourceRequest struct {
-	ResourceID    string `json:"resource_id" binding:"required"`
-	Name          string `json:"name" binding:"required"`
+	ResourceID    string  `json:"resource_id" binding:"required"`
+	Name          string  `json:"name" binding:"required"`
 	NameEn        *string `json:"name_en"`
-	Description   string `json:"description"`
-	Category      string `json:"category"`
-	ImageURL      string `json:"image_url"`
-	ImageURLSpent string `json:"image_url_spent"`
-	Recharge      string `json:"recharge"`
-	SortOrder     int    `json:"sort_order"`
+	Description   string  `json:"description"`
+	Category      string  `json:"category"`
+	ImageURL      string  `json:"image_url"`
+	ImageURLSpent string  `json:"image_url_spent"`
+	Recharge      string  `json:"recharge"`
+	SortOrder     int     `json:"sort_order"`
 }
 
 type UpdateResourceRequest struct {
-	ResourceID    string `json:"resource_id"`
-	Name          string `json:"name"`
+	ResourceID    string  `json:"resource_id"`
+	Name          string  `json:"name"`
 	NameEn        *string `json:"name_en"`
-	Description   string `json:"description"`
-	Category      string `json:"category"`
-	ImageURL      string `json:"image_url"`
-	ImageURLSpent string `json:"image_url_spent"`
-	Recharge      string `json:"recharge"`
-	SortOrder     int    `json:"sort_order"`
+	Description   string  `json:"description"`
+	Category      string  `json:"category"`
+	ImageURL      string  `json:"image_url"`
+	ImageURLSpent string  `json:"image_url_spent"`
+	Recharge      string  `json:"recharge"`
+	SortOrder     int     `json:"sort_order"`
 }
 
 // Variable — именованное значение персонажа: число или dice. Само по себе это
@@ -1511,25 +1514,25 @@ type Variable struct {
 func (Variable) TableName() string { return "variables" }
 
 type CreateVariableRequest struct {
-	VariableID   string `json:"variable_id" binding:"required"`
-	Name         string `json:"name" binding:"required"`
+	VariableID   string  `json:"variable_id" binding:"required"`
+	Name         string  `json:"name" binding:"required"`
 	NameEn       *string `json:"name_en"`
-	Description  string `json:"description"`
-	VarType      string `json:"var_type"`
-	DefaultValue string `json:"default_value"`
-	ImageURL     string `json:"image_url"`
-	SortOrder    int    `json:"sort_order"`
+	Description  string  `json:"description"`
+	VarType      string  `json:"var_type"`
+	DefaultValue string  `json:"default_value"`
+	ImageURL     string  `json:"image_url"`
+	SortOrder    int     `json:"sort_order"`
 }
 
 type UpdateVariableRequest struct {
-	VariableID   string `json:"variable_id"`
-	Name         string `json:"name"`
+	VariableID   string  `json:"variable_id"`
+	Name         string  `json:"name"`
 	NameEn       *string `json:"name_en"`
-	Description  string `json:"description"`
-	VarType      string `json:"var_type"`
-	DefaultValue string `json:"default_value"`
-	ImageURL     string `json:"image_url"`
-	SortOrder    int    `json:"sort_order"`
+	Description  string  `json:"description"`
+	VarType      string  `json:"var_type"`
+	DefaultValue string  `json:"default_value"`
+	ImageURL     string  `json:"image_url"`
+	SortOrder    int     `json:"sort_order"`
 }
 
 // ConceptEntity — «понятие» глоссария: пояснение, не выражаемое отдельной сущностью
@@ -1551,21 +1554,21 @@ type ConceptEntity struct {
 func (ConceptEntity) TableName() string { return "concepts" }
 
 type CreateConceptRequest struct {
-	ConceptID   string `json:"concept_id" binding:"required"`
-	Name        string `json:"name" binding:"required"`
+	ConceptID   string  `json:"concept_id" binding:"required"`
+	Name        string  `json:"name" binding:"required"`
 	NameEn      *string `json:"name_en"`
-	Description string `json:"description"`
-	ImageURL    string `json:"image_url"`
-	SortOrder   int    `json:"sort_order"`
+	Description string  `json:"description"`
+	ImageURL    string  `json:"image_url"`
+	SortOrder   int     `json:"sort_order"`
 }
 
 type UpdateConceptRequest struct {
-	ConceptID   string `json:"concept_id"`
-	Name        string `json:"name"`
+	ConceptID   string  `json:"concept_id"`
+	Name        string  `json:"name"`
 	NameEn      *string `json:"name_en"`
-	Description string `json:"description"`
-	ImageURL    string `json:"image_url"`
-	SortOrder   int    `json:"sort_order"`
+	Description string  `json:"description"`
+	ImageURL    string  `json:"image_url"`
+	SortOrder   int     `json:"sort_order"`
 }
 
 // Состояния D&D теперь — это ЭФФЕКТЫ (effect_type='condition'), а не отдельная сущность.
@@ -1707,6 +1710,7 @@ type Action struct {
 	RechargeCustom               *string         `json:"recharge_custom" gorm:"type:text"`
 	Script                       *Script         `json:"script" gorm:"type:jsonb"`
 	Mechanics                    *JSONMap        `json:"mechanics" gorm:"type:jsonb"`
+	Support                      *JSONMap        `json:"support" gorm:"type:jsonb"`
 	ActionType                   ActionType      `json:"action_type" gorm:"not null"`
 	Type                         *string         `json:"type" gorm:"type:varchar(50)"`
 	Author                       string          `json:"author" gorm:"type:varchar(255);default:'Admin'"`
@@ -1817,6 +1821,7 @@ type ActionResponse struct {
 	RechargeCustom               *string          `json:"recharge_custom"`
 	Script                       *Script          `json:"script"`
 	Mechanics                    *JSONMap         `json:"mechanics"`
+	Support                      *JSONMap         `json:"support"`
 	ActionType                   ActionType       `json:"action_type"`
 	Type                         *string          `json:"type"`
 	Tags                         *Properties      `json:"tags"`
@@ -1840,7 +1845,7 @@ func (a Action) ToActionResponse() ActionResponse {
 		ID: a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
 		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
 		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
-		Script: a.Script, Mechanics: a.Mechanics, ActionType: a.ActionType, Type: a.Type,
+		Script: a.Script, Mechanics: a.Mechanics, Support: a.Support, ActionType: a.ActionType, Type: a.Type,
 		Tags: a.Tags, Price: a.Price, Weight: a.Weight, Properties: a.Properties, IsExtended: a.IsExtended,
 		DescriptionFontSize: a.DescriptionFontSize, TextAlignment: a.TextAlignment, TextFontSize: a.TextFontSize,
 		ShowDetailedDescription: a.ShowDetailedDescription, DetailedDescriptionAlignment: a.DetailedDescriptionAlignment,
@@ -1934,6 +1939,7 @@ type Effect struct {
 	ConditionDescription         *string        `json:"condition_description" gorm:"type:text"`
 	Script                       *Script        `json:"script" gorm:"type:jsonb"`
 	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`
+	Support                      *JSONMap       `json:"support" gorm:"type:jsonb"`
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
@@ -2041,6 +2047,7 @@ type EffectResponse struct {
 	ConditionDescription         *string     `json:"condition_description"`
 	Script                       *Script     `json:"script"`
 	Mechanics                    *JSONMap    `json:"mechanics"`
+	Support                      *JSONMap    `json:"support"`
 	Type                         *string     `json:"type"`
 	Tags                         *Properties `json:"tags"`
 	Price                        *int        `json:"price"`
@@ -2063,7 +2070,7 @@ func (e Effect) ToEffectResponse() EffectResponse {
 	return EffectResponse{
 		ID: e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
-		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics,
+		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics, Support: e.Support,
 		Type: e.Type, Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
 		Repeatable: e.Repeatable,
 		IsExtended: e.IsExtended, DescriptionFontSize: e.DescriptionFontSize, TextAlignment: e.TextAlignment,
@@ -2239,6 +2246,7 @@ type Spell struct {
 	SaveOutcome           *string        `json:"save_outcome" gorm:"type:text"`       // Результат при спасброске
 	UpcastDescription     *string        `json:"upcast_description" gorm:"type:text"` // Повышение уровня / Cantrip Upgrade
 	Mechanics             *JSONMap       `json:"mechanics" gorm:"type:jsonb"`         // Унифицированная механика (как у effects/actions)
+	Support               *JSONMap       `json:"support" gorm:"type:jsonb"`
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -2359,6 +2367,7 @@ type SpellResponse struct {
 	SaveOutcome         *string      `json:"save_outcome"`
 	UpcastDescription   *string      `json:"upcast_description"`
 	Mechanics           *JSONMap     `json:"mechanics"`
+	Support             *JSONMap     `json:"support"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
@@ -2400,6 +2409,7 @@ func (spell Spell) ToSpellResponse() SpellResponse {
 		SaveOutcome:         spell.SaveOutcome,
 		UpcastDescription:   spell.UpcastDescription,
 		Mechanics:           spell.Mechanics,
+		Support:             spell.Support,
 		Type:                spell.Type,
 		Author:              spell.Author,
 		Source:              spell.Source,

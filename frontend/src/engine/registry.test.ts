@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRegistry, collectMechanicRefs } from './registry';
 import { isEntityUuid, splitRefs } from './ids';
 import { collectChosenSpellUuids, grantedSpellSlugs, splitStoredSpellIds } from './spellRefs';
+import { emptyDraft } from '../character/types';
 
 describe('ids', () => {
   it('различает UUID и slug', () => {
@@ -59,21 +60,9 @@ describe('spellRefs', () => {
   it('collectChosenSpellUuids из resolvedChoices', () => {
     const uuids = collectChosenSpellUuids(
       {
+        ...emptyDraft(),
         name: 'x',
-        raceId: null,
-        lineageId: null,
-        classId: null,
-        subclassId: null,
-        backgroundId: null,
-        level: 1,
-        classEquipmentOption: 'a',
-        featIds: [],
         spellIds: ['a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'],
-        abilities: {},
-        abilityMethod: 'point_buy',
-        abilityBonuses: { mode: 'two_one', assignments: {}, anyAbilities: false },
-        equipmentOption: 'a',
-        classSkillChoices: [],
         resolvedChoices: { spell_pick: ['b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'] },
       },
       {

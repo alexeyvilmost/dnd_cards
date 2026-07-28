@@ -425,14 +425,16 @@ export const resourcesApi = {
 };
 
 export const variablesApi = {
-  getVariables: async (params?: { var_type?: string }): Promise<VariablesResponse> => {
-    const response = await apiClient.get<VariablesResponse>('/api/variables', { params });
-    return response.data;
-  },
-  getVariable: async (id: string): Promise<Variable> => {
-    const response = await apiClient.get<Variable>(`/api/variables/${id}`);
-    return response.data;
-  },
+  getVariables: async (params?: { var_type?: string }): Promise<VariablesResponse> =>
+    cached(`/api/variables?var_type=${params?.var_type ?? ''}`, 60000, async () => {
+      const response = await apiClient.get<VariablesResponse>('/api/variables', { params });
+      return response.data;
+    }),
+  getVariable: async (id: string): Promise<Variable> =>
+    cached(`/api/variables/${id}`, 60000, async () => {
+      const response = await apiClient.get<Variable>(`/api/variables/${id}`);
+      return response.data;
+    }),
   createVariable: async (data: CreateVariableRequest): Promise<Variable> => {
     const response = await apiClient.post<Variable>('/api/variables', data);
     return response.data;

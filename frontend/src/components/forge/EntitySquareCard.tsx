@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react';
+import type { SupportableEntity } from '../../content/supportStatus';
+import SupportStatusBadge from './SupportStatusBadge';
 
 type EntitySquareCardProps = {
   name: string;
@@ -10,9 +12,10 @@ type EntitySquareCardProps = {
    *  сохраняется (парадигма «превью везде, даже при disabled»); клик блокируется. */
   disabled?: boolean;
   disabledReason?: string;
+  supportEntity?: SupportableEntity | null;
 };
 
-const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled, disabledReason }: EntitySquareCardProps) => {
+const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled, disabledReason, supportEntity }: EntitySquareCardProps) => {
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -47,6 +50,7 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled
           )}
         </div>
         <span className={`forge-square-card-label${longName ? ' long' : ''}`}>{name}</span>
+        {supportEntity && <SupportStatusBadge entity={supportEntity} compact />}
       </button>
       {hover && preview && (
         <div

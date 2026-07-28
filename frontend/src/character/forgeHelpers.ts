@@ -1,5 +1,11 @@
 import type { AbilityKey, CharacterDraft, ForgeCharacter, SaveForgeCharacterRequest } from './types';
-import { ABILITY_KEYS } from './types';
+import {
+  ABILITY_KEYS,
+  CURRENT_CHARACTER_SCHEMA_VERSION,
+  DEFAULT_CHARACTER_RULESET_VERSION,
+  DEFAULT_CHARACTER_SYSTEM_ID,
+  DEFAULT_CHARACTER_TYPE,
+} from './types';
 import {
   BONUS_KEY, CLASS_EQUIPMENT_OPTION_KEY, CLASS_SKILLS_KEY, EQUIPMENT_OPTION_KEY, METHOD_KEY,
   bonusIssues, parseBonuses, pointBuyIssues, serializeBonuses,
@@ -85,6 +91,10 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     avatarUrl: c.avatar_url,
     description: c.description ?? '',
     notes: c.notes ?? '',
+    systemId: c.system_id ?? DEFAULT_CHARACTER_SYSTEM_ID,
+    rulesetVersion: c.ruleset_version ?? DEFAULT_CHARACTER_RULESET_VERSION,
+    characterType: c.character_type ?? DEFAULT_CHARACTER_TYPE,
+    characterSchemaVersion: c.character_schema_version ?? CURRENT_CHARACTER_SCHEMA_VERSION,
     raceId: c.race_id ?? null,
     lineageId: c.lineage_id ?? null,
     classId: c.class_id ?? null,
@@ -145,6 +155,10 @@ export function buildSavePayload(
     avatar_url: draft.avatarUrl,
     description: draft.description ?? '',
     notes: draft.notes ?? '',
+    system_id: draft.systemId,
+    ruleset_version: draft.rulesetVersion,
+    character_type: draft.characterType,
+    character_schema_version: draft.characterSchemaVersion,
     race_id: draft.raceId,
     lineage_id: draft.lineageId,
     class_id: draft.classId,

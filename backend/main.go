@@ -104,6 +104,7 @@ func main() {
 	resourceController := NewResourceController(db)
 	variableController := NewVariableController(db)
 	conceptController := NewConceptController(db)
+	contentSupportController := NewContentSupportController(db)
 
 	// Онлайн-бои: серверная истина + realtime-рассылка (SSE + Postgres LISTEN/NOTIFY).
 	encounterHub := NewEncounterHub(dbConfig.GetDSN())
@@ -231,6 +232,10 @@ func main() {
 		api.POST("/classes", AuthMiddleware(authService), classController.CreateClass)
 		api.PUT("/classes/:id", AuthMiddleware(authService), classController.UpdateClass)
 		api.DELETE("/classes/:id", AuthMiddleware(authService), classController.DeleteClass)
+
+		// Отдельный путь сертификации: обычный CRUD не принимает support и
+		// миграционный trigger инвалидирует прежний статус после правки контента.
+		api.PUT("/content-support/:entityType/:id", AuthMiddleware(authService), contentSupportController.Update)
 
 		// Ресурсы действий/персонажа
 		api.GET("/resources", OptionalAuthMiddleware(authService), resourceController.GetResources)

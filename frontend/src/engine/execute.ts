@@ -1269,7 +1269,7 @@ export const EMITTED_EVENTS = [
 
 export const PLANNED_EVENTS = [
   // Требуют конвейера стадий атаки/урона (отдельные точки эмиссии):
-  'attack_roll_made', 'damage_dealt', 'saving_throw_made', 'forced_save', 'ability_check_made',
+  'attack_roll_made', 'hit_by_attack', 'damage_dealt', 'saving_throw_made', 'forced_save', 'ability_check_made',
   // Требуют многоактора/EncounterState (позиции, дистанции) — вне текущей модели:
   'creature_enters_reach', 'creature_leaves_reach', 'creature_moves',
   // Прочее (условия/инициатива/приобретение/уровень) — отдельные слайсы:

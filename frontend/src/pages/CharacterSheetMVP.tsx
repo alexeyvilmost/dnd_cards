@@ -28,6 +28,7 @@ import { abilityOfSkill } from '../character/rules/foundation';
 import {
   ABILITY_KEYS,
   ABILITY_LABEL_RU,
+  characterMetadataLabel,
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
@@ -880,7 +881,7 @@ const CharacterSheetMVP = () => {
               <Swords size={12} /> В бою: {activeEncounter.name}
             </Link>
           ) : (
-            <span className="sheet-header-sub">Лист персонажа</span>
+            <span className="sheet-header-sub">{characterMetadataLabel(character)}</span>
           )}
         </div>
         <div className="sheet-header-actions">
@@ -961,6 +962,7 @@ const CharacterSheetMVP = () => {
           <section className="sheet-hero">
             <h1 className="sheet-name">{character.name}</h1>
             <p className="sheet-subtitle">{headerLine || '—'}</p>
+            <p className="sheet-subtitle">{characterMetadataLabel(character)}</p>
           </section>
         )}
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, User } from 'lucide-react';
 import { charactersV3Api } from '../character/api';
 import { racesApi, classesApi } from '../api/client';
-import type { ForgeCharacter } from '../character/types';
+import { characterMetadataLabel, type ForgeCharacter } from '../character/types';
 import type { Race, CharacterClass } from '../types';
 import './CharacterForge.css';
 
@@ -87,6 +87,7 @@ const CharactersForgeList = () => {
               <Link to={`/characters-v3/${c.id}`} className="forge-char-card-link">
                 <span className="ec-name">{c.name || 'Без имени'}</span>
                 <span className="ec-sub">{subtitle(c)}</span>
+                <span className="ec-sub">{characterMetadataLabel(c)}</span>
                 <span className="ec-sub">Уровень {c.level} · HP {c.current_hp}/{c.max_hp}</span>
                 <span className="ec-sub" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <User size={12} /> Открыть лист

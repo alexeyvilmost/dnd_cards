@@ -58,6 +58,18 @@ func (cc *CharacterV3Controller) getOrCreateDefaultUser() (uuid.UUID, error) {
 
 // applyCharacterV3Defaults проставляет разумные значения по умолчанию.
 func applyCharacterV3Defaults(ch *CharacterV3) {
+	if ch.SystemID == "" {
+		ch.SystemID = DefaultCharacterSystemID
+	}
+	if ch.RulesetVersion == "" {
+		ch.RulesetVersion = DefaultCharacterRuleset
+	}
+	if ch.CharacterType == "" {
+		ch.CharacterType = DefaultCharacterType
+	}
+	if ch.CharacterSchemaVersion <= 0 {
+		ch.CharacterSchemaVersion = CurrentCharacterSchemaVersion
+	}
 	if ch.Level <= 0 {
 		ch.Level = 1
 	}
@@ -88,6 +100,16 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса", "details": err.Error()})
 		return
 	}
+	systemID, rulesetVersion, characterType, schemaVersion := requestedCharacterMetadata(
+		req.SystemID,
+		req.RulesetVersion,
+		req.CharacterType,
+		req.CharacterSchemaVersion,
+	)
+	if err := validateNewCharacterMetadata(systemID, rulesetVersion, characterType, schemaVersion); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные метаданные персонажа", "details": err.Error()})
+		return
+	}
 
 	character := CharacterV3{
 		UserID:                   userID,
@@ -95,6 +117,10 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		AvatarURL:                req.AvatarURL,
 		Description:              req.Description,
 		Notes:                    req.Notes,
+		SystemID:                 systemID,
+		RulesetVersion:           rulesetVersion,
+		CharacterType:            characterType,
+		CharacterSchemaVersion:   schemaVersion,
 		RaceID:                   req.RaceID,
 		LineageID:                req.LineageID,
 		ClassID:                  req.ClassID,
@@ -209,6 +235,10 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 	var req UpdateCharacterV3Request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные запроса", "details": err.Error()})
+		return
+	}
+	if err := validateCharacterMetadataUpdate(character, req); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "нельзя изменить принадлежность персонажа", "details": err.Error()})
 		return
 	}
 

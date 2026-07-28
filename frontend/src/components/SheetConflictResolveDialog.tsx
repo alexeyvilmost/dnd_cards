@@ -38,8 +38,8 @@ export default function SheetConflictResolveDialog({
     [conflict, draft, assembled, ruleState],
   );
   const partyPools = useMemo(
-    () => conflictPartyPools(conflict, draft, assembled),
-    [conflict, draft, assembled],
+    () => conflictPartyPools(conflict, assembled),
+    [conflict, assembled],
   );
   const [activeSlotId, setActiveSlotId] = useState(slots[0]?.choiceId ?? '');
   const [busy, setBusy] = useState(false);

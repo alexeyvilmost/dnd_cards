@@ -1,3 +1,10 @@
+import type { EntitySupportCertification } from '../content/supportStatus';
+export type {
+  EntitySupportCertification,
+  EntitySupportStatus,
+  SupportableEntity,
+} from '../content/supportStatus';
+
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'very_rare' | 'artifact' | 'relic' | 'custom';
 // Конструктор предлагает стандартные значения из PROPERTIES_OPTIONS, но API
 // хранит свойства как строки и поддерживает пользовательские значения.
@@ -52,6 +59,7 @@ export interface ActiveEffect {
 }
 
 export interface Card {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -773,6 +781,7 @@ export interface CreateConceptRequest {
 export type UpdateConceptRequest = Partial<CreateConceptRequest>;
 
 export interface Action {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -921,6 +930,7 @@ export type PassiveEffectType =
   | 'condition';
 
 export interface PassiveEffect {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -1047,6 +1057,7 @@ export interface SpellDamageEntry {
 }
 
 export interface Spell {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -1255,6 +1266,7 @@ export const SKILL_OPTIONS = [
 export type FeatCategory = 'origin' | 'general' | 'fighting_style' | 'epic_boon';
 
 export interface Feat {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -1321,6 +1333,7 @@ export const getFeatCategoryLabel = (v: string): string =>
 // ─── Предыстории (Background) ────────────────────────────────────────────────
 
 export interface Background {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -1389,6 +1402,7 @@ export interface LevelAbilityProgression {
 export type LevelProgression = Record<string, LevelAbilityProgression>;
 
 export interface Race {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;
@@ -1459,6 +1473,7 @@ export interface RacesResponse {
 // ─── Классы ──────────────────────────────────────────────────────────────────
 
 export interface CharacterClass {
+  support?: EntitySupportCertification | null;
   id: string;
   name: string;
   name_en?: string | null;

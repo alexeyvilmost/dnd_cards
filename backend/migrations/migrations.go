@@ -499,8 +499,140 @@ func GetAllMigrations() []Migration {
 			Up:          addCharacterManualEntities,
 			Down:        removeCharacterManualEntities,
 		},
+		{
+			Version:     "081_content_support_certification",
+			Description: "Статус и версия механической поддерживаемости каталожных сущностей с автоматической инвалидизацией после редактирования",
+			Up:          addContentSupportCertification,
+			Down:        removeContentSupportCertification,
+		},
+		{
+			Version:     "082_character_system_metadata",
+			Description: "Принадлежность characters_v3 игровой системе, версии правил, типу владения и версии схемы",
+			Up:          addCharacterSystemMetadata,
+			Down:        removeCharacterSystemMetadata,
+		},
+		{
+			Version:     "083_certify_micro_micro_content",
+			Description: "Сертификация 37 сущностей acceptance-среза micro-micro-MVP",
+			Up:          certifyMicroMicroContent,
+			Down:        uncertifyMicroMicroContent,
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+func addCharacterSystemMetadata(db *sql.DB) error {
+	_, err := db.Exec(`
+		ALTER TABLE characters_v3
+			ADD COLUMN IF NOT EXISTS system_id VARCHAR(100) NOT NULL DEFAULT 'dnd5e-2024',
+			ADD COLUMN IF NOT EXISTS ruleset_version VARCHAR(100) NOT NULL DEFAULT '2024',
+			ADD COLUMN IF NOT EXISTS character_type VARCHAR(30) NOT NULL DEFAULT 'free',
+			ADD COLUMN IF NOT EXISTS character_schema_version INTEGER NOT NULL DEFAULT 1;
+
+		ALTER TABLE characters_v3
+			DROP CONSTRAINT IF EXISTS characters_v3_character_type_check;
+		ALTER TABLE characters_v3
+			ADD CONSTRAINT characters_v3_character_type_check
+			CHECK (character_type IN ('free', 'campaign', 'dungeon_crawl'));
+
+		CREATE OR REPLACE FUNCTION prevent_character_system_change()
+		RETURNS TRIGGER AS $$
+		BEGIN
+			IF NEW.system_id IS DISTINCT FROM OLD.system_id THEN
+				RAISE EXCEPTION 'system_id существующего персонажа нельзя изменить'
+					USING ERRCODE = 'check_violation';
+			END IF;
+			RETURN NEW;
+		END;
+		$$ LANGUAGE plpgsql;
+
+		DROP TRIGGER IF EXISTS prevent_characters_v3_system_change ON characters_v3;
+		CREATE TRIGGER prevent_characters_v3_system_change
+			BEFORE UPDATE OF system_id ON characters_v3
+			FOR EACH ROW
+			EXECUTE FUNCTION prevent_character_system_change();
+	`)
+	return err
+}
+
+func removeCharacterSystemMetadata(db *sql.DB) error {
+	_, err := db.Exec(`
+		DROP TRIGGER IF EXISTS prevent_characters_v3_system_change ON characters_v3;
+		DROP FUNCTION IF EXISTS prevent_character_system_change();
+		ALTER TABLE characters_v3
+			DROP CONSTRAINT IF EXISTS characters_v3_character_type_check,
+			DROP COLUMN IF EXISTS character_schema_version,
+			DROP COLUMN IF EXISTS character_type,
+			DROP COLUMN IF EXISTS ruleset_version,
+			DROP COLUMN IF EXISTS system_id;
+	`)
+	return err
+}
+
+var supportCertifiedTables = []string{
+	"cards", "actions", "effects", "spells",
+	"feats", "backgrounds", "races", "classes",
+}
+
+func addContentSupportCertification(db *sql.DB) error {
+	if _, err := db.Exec(`
+		CREATE OR REPLACE FUNCTION invalidate_content_support()
+		RETURNS TRIGGER AS $$
+		BEGIN
+			-- updated_at меняется техническим trigger-ом и не является содержимым.
+			-- Если изменилось что-либо кроме support/updated_at, прежняя
+			-- certification больше не относится к записи.
+			IF (to_jsonb(NEW) - 'support' - 'updated_at')
+				IS DISTINCT FROM
+			   (to_jsonb(OLD) - 'support' - 'updated_at') THEN
+				NEW.support = NULL;
+			END IF;
+			RETURN NEW;
+		END;
+		$$ LANGUAGE plpgsql
+	`); err != nil {
+		return fmt.Errorf("failed to create support invalidation function: %w", err)
+	}
+
+	for _, table := range supportCertifiedTables {
+		if _, err := db.Exec(fmt.Sprintf(
+			"ALTER TABLE %s ADD COLUMN IF NOT EXISTS support JSONB", table,
+		)); err != nil {
+			return fmt.Errorf("failed to add %s.support: %w", table, err)
+		}
+		trigger := fmt.Sprintf("invalidate_%s_support", table)
+		queries := []string{
+			fmt.Sprintf("DROP TRIGGER IF EXISTS %s ON %s", trigger, table),
+			fmt.Sprintf(`
+				CREATE TRIGGER %s
+				BEFORE UPDATE ON %s
+				FOR EACH ROW
+				EXECUTE FUNCTION invalidate_content_support()
+			`, trigger, table),
+		}
+		for _, query := range queries {
+			if _, err := db.Exec(query); err != nil {
+				return fmt.Errorf("failed to configure %s support trigger: %w", table, err)
+			}
+		}
+	}
+	return nil
+}
+
+func removeContentSupportCertification(db *sql.DB) error {
+	for _, table := range supportCertifiedTables {
+		trigger := fmt.Sprintf("invalidate_%s_support", table)
+		if _, err := db.Exec(fmt.Sprintf("DROP TRIGGER IF EXISTS %s ON %s", trigger, table)); err != nil {
+			return fmt.Errorf("failed to drop %s support trigger: %w", table, err)
+		}
+		if _, err := db.Exec(fmt.Sprintf(
+			"ALTER TABLE %s DROP COLUMN IF EXISTS support", table,
+		)); err != nil {
+			return fmt.Errorf("failed to drop %s.support: %w", table, err)
+		}
+	}
+	_, err := db.Exec("DROP FUNCTION IF EXISTS invalidate_content_support()")
+	return err
 }
 
 func addCharacterManualEntities(db *sql.DB) error {

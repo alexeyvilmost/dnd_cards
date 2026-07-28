@@ -95,6 +95,14 @@
   text-align: center; padding: 10px; font-size: 20px; color: var(--forge-gold-dim);
   border-bottom: 1px solid var(--forge-line); flex: 0 0 auto;
 }
+.forge-support-filter {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 7px 12px; border-bottom: 1px solid var(--forge-line);
+  color: var(--forge-text); background: color-mix(in srgb, var(--forge-panel) 82%, transparent);
+  font-size: 13px; cursor: pointer; flex: 0 0 auto;
+}
+.forge-support-filter input { accent-color: var(--forge-gold); }
+.forge-support-filter small { color: var(--forge-text-dim); font-size: 11px; }
 /* Блок выбора — по центру */
 .forge-editor { flex: 1 1 auto; padding: 20px 28px; overflow-y: auto; min-width: 0; min-height: 0; }
 /* Обзор персонажа — справа, на всю высоту forge-body (как левая навигация) */
@@ -169,6 +177,7 @@
 .forge-square-card {
   width: 130px; flex: 0 0 130px;
   aspect-ratio: 1; display: flex; flex-direction: column; align-items: center;
+  position: relative;
   border: 2px solid var(--forge-gold-dim); border-radius: 16px;
   background: var(--forge-panel); padding: 10px 8px 8px; cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s; color: inherit;
@@ -190,6 +199,33 @@
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .forge-square-card-label.long { font-size: 11px; line-height: 1.15; -webkit-line-clamp: 4; }
+
+.support-status-badge {
+  display: inline-flex; align-items: center; gap: 5px; max-width: 100%;
+  border: 1px solid currentColor; border-radius: 999px; padding: 2px 7px;
+  font-size: 10px; line-height: 1.2; white-space: nowrap;
+}
+.support-status-badge__dot {
+  width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: currentColor;
+}
+.support-status-badge--success { color: #58c987; }
+.support-status-badge--info { color: #69aee8; }
+.support-status-badge--warning { color: #e0aa4f; }
+.support-status-badge--neutral { color: #9d9d9d; }
+.support-status-badge--danger { color: #e36a6a; }
+.support-status-badge--compact {
+  width: 13px; height: 13px; min-width: 13px; padding: 2px;
+  border: 0; vertical-align: middle; margin-left: 5px;
+}
+.support-status-badge--compact .support-status-badge__dot { width: 8px; height: 8px; }
+.forge-square-card > .support-status-badge--compact {
+  position: absolute; top: 7px; right: 7px; margin: 0;
+  background: rgba(20, 18, 15, 0.82); border-radius: 50%;
+}
+.forge-spell-icon > .support-status-badge--compact {
+  position: absolute; left: 3px; top: 3px; margin: 0;
+  background: rgba(20, 18, 15, 0.82); border-radius: 50%; z-index: 2;
+}
 
 /* Секции/заголовки */
 .forge-section-h { color: var(--forge-gold); font-size: 16px; font-weight: 600; margin: 4px 0 10px; }

@@ -57,19 +57,20 @@ type Race struct {
 	ImageGenerationPrompt string         `json:"image_generation_prompt" gorm:"type:text"`
 	Rarity                Rarity         `json:"rarity" gorm:"not null;default:'common'"`
 	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
-	CreatureType          *string        `json:"creature_type" gorm:"type:varchar(100)"` // Тип существа (Гуманоид и т.п.)
-	Size                  *string        `json:"size" gorm:"type:varchar(100)"`          // Размер (Средний / Маленький / выбор)
-	Speed                 *int           `json:"speed" gorm:"type:int"`                  // Скорость, футы
-	ExtraSpeeds           *string        `json:"extra_speeds" gorm:"type:text"`          // Доп. скорости (плавание/полёт/лазание)
-	Darkvision            *int           `json:"darkvision" gorm:"type:int"`             // Тёмное зрение, футы (0 = нет)
-	Traits                *RaceTraits    `json:"traits" gorm:"type:jsonb"`               // Видовые особенности
-	Lineages              *RaceTraits    `json:"lineages" gorm:"type:jsonb"`             // Происхождения/подвиды (опц., legacy)
+	CreatureType          *string        `json:"creature_type" gorm:"type:varchar(100)"`       // Тип существа (Гуманоид и т.п.)
+	Size                  *string        `json:"size" gorm:"type:varchar(100)"`                // Размер (Средний / Маленький / выбор)
+	Speed                 *int           `json:"speed" gorm:"type:int"`                        // Скорость, футы
+	ExtraSpeeds           *string        `json:"extra_speeds" gorm:"type:text"`                // Доп. скорости (плавание/полёт/лазание)
+	Darkvision            *int           `json:"darkvision" gorm:"type:int"`                   // Тёмное зрение, футы (0 = нет)
+	Traits                *RaceTraits    `json:"traits" gorm:"type:jsonb"`                     // Видовые особенности
+	Lineages              *RaceTraits    `json:"lineages" gorm:"type:jsonb"`                   // Происхождения/подвиды (опц., legacy)
 	IsSubrace             *bool          `json:"is_subrace" gorm:"type:boolean;default:false"` // это подвид другого вида
-	ParentRaceID          *uuid.UUID     `json:"parent_race_id" gorm:"type:uuid"`        // родительский вид (для подвида)
-	SubraceLevel          *int           `json:"subrace_level" gorm:"type:int;default:1"` // на каком уровне выбирается подвид
-	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`      // id привязанных эффектов
-	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`      // id привязанных действий
-	LevelProgression      *JSONMap       `json:"level_progression" gorm:"type:jsonb"`    // способности вида по уровням
+	ParentRaceID          *uuid.UUID     `json:"parent_race_id" gorm:"type:uuid"`              // родительский вид (для подвида)
+	SubraceLevel          *int           `json:"subrace_level" gorm:"type:int;default:1"`      // на каком уровне выбирается подвид
+	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`            // id привязанных эффектов
+	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`            // id привязанных действий
+	LevelProgression      *JSONMap       `json:"level_progression" gorm:"type:jsonb"`          // способности вида по уровням
+	Support               *JSONMap       `json:"support" gorm:"type:jsonb"`
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -163,6 +164,7 @@ type RaceResponse struct {
 	RelatedEffects      *Properties `json:"related_effects"`
 	RelatedActions      *Properties `json:"related_actions"`
 	LevelProgression    *JSONMap    `json:"level_progression"`
+	Support             *JSONMap    `json:"support"`
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
@@ -180,7 +182,7 @@ func (r Race) ToRaceResponse() RaceResponse {
 		CreatureType: r.CreatureType, Size: r.Size, Speed: r.Speed, ExtraSpeeds: r.ExtraSpeeds,
 		Darkvision: r.Darkvision, Traits: r.Traits, Lineages: r.Lineages,
 		IsSubrace: r.IsSubrace, ParentRaceID: r.ParentRaceID, SubraceLevel: r.SubraceLevel,
-		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions, LevelProgression: r.LevelProgression,
+		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions, LevelProgression: r.LevelProgression, Support: r.Support,
 		Type: r.Type, Author: r.Author, Source: r.Source, Tags: r.Tags,
 		IsExtended: r.IsExtended, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}

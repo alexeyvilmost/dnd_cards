@@ -42,7 +42,6 @@ function matchesEntity(
 /** Пул навыков источника конфликта (класс / предыстория / choice). */
 export function skillPoolForSource(
   src: RuleSource,
-  draft: CharacterDraft,
   assembled: AssembledCharacter,
 ): string[] {
   if (matchesEntity(src, 'class', assembled.klass)) {
@@ -109,7 +108,7 @@ export function findConflictReplaceSlots(
   ]);
 
   for (const src of parties) {
-    const pool = skillPoolForSource(src, draft, assembled);
+    const pool = skillPoolForSource(src, assembled);
     const sourceName = sourceDisplayName(src);
 
     if (
@@ -186,13 +185,12 @@ export function findConflictReplaceSlots(
 /** Пулы обоих участников конфликта — для подписи «доступно Воину / Артисту». */
 export function conflictPartyPools(
   conflict: RuleConflict,
-  draft: CharacterDraft,
   assembled: AssembledCharacter,
 ): ConflictPartyPool[] {
   const parties = [conflict.existingSource, conflict.source].filter(Boolean) as RuleSource[];
   const out: ConflictPartyPool[] = [];
   for (const src of parties) {
-    const skills = skillPoolForSource(src, draft, assembled);
+    const skills = skillPoolForSource(src, assembled);
     if (!skills.length) continue;
     out.push({ sourceName: sourceDisplayName(src), skills });
   }
@@ -281,6 +279,6 @@ export function canResolveSkillConflict(
 ): boolean {
   const slots = findConflictReplaceSlots(conflict, draft, assembled, ruleState);
   if (!slots.length) return false;
-  const parties = conflictPartyPools(conflict, draft, assembled);
+  const parties = conflictPartyPools(conflict, assembled);
   return slots.some((slot) => availableReplacementSkills(slot, parties, ruleState).length > 0);
 }

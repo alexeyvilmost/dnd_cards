@@ -6,6 +6,18 @@ import type { CharacterRuleState } from './rules/types';
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 export type AbilityScores = Record<AbilityKey, number>;
+export type CharacterType = 'free' | 'campaign' | 'dungeon_crawl';
+
+export const DEFAULT_CHARACTER_SYSTEM_ID = 'dnd5e-2024';
+export const DEFAULT_CHARACTER_RULESET_VERSION = '2024';
+export const DEFAULT_CHARACTER_TYPE: CharacterType = 'free';
+export const CURRENT_CHARACTER_SCHEMA_VERSION = 1;
+
+export const CHARACTER_TYPE_LABELS: Record<CharacterType, string> = {
+  free: 'Свободный лист',
+  campaign: 'Персонаж кампании',
+  dungeon_crawl: 'Dungeon Crawl',
+};
 
 // Персонаж, как он хранится в characters_v3 (ответ бэкенда).
 export interface ForgeCharacter {
@@ -16,6 +28,10 @@ export interface ForgeCharacter {
   avatar_url?: string;
   description?: string;
   notes?: string;
+  system_id: string;
+  ruleset_version: string;
+  character_type: CharacterType;
+  character_schema_version: number;
 
   race_id?: string | null;
   lineage_id?: string | null;
@@ -65,6 +81,20 @@ export interface ForgeCharacter {
   updated_at: string;
 }
 
+export function characterMetadataLabel(character: Pick<
+  ForgeCharacter,
+  'system_id' | 'ruleset_version' | 'character_type'
+>): string {
+  const systemId = character.system_id || DEFAULT_CHARACTER_SYSTEM_ID;
+  const rulesetVersion = character.ruleset_version || DEFAULT_CHARACTER_RULESET_VERSION;
+  const characterType = character.character_type || DEFAULT_CHARACTER_TYPE;
+  const system = systemId === DEFAULT_CHARACTER_SYSTEM_ID
+    ? 'D&D 5e'
+    : systemId;
+  const type = CHARACTER_TYPE_LABELS[characterType] ?? characterType;
+  return `${system} · ${rulesetVersion} · ${type}`;
+}
+
 // Тело запроса create/update. Редактор держит полное состояние и шлёт его целиком
 // (update на бэкенде — полная замена полей).
 export interface SaveForgeCharacterRequest {
@@ -72,6 +102,10 @@ export interface SaveForgeCharacterRequest {
   avatar_url?: string;
   description?: string;
   notes?: string;
+  system_id?: string;
+  ruleset_version?: string;
+  character_type?: CharacterType;
+  character_schema_version?: number;
   race_id?: string | null;
   lineage_id?: string | null;
   class_id?: string | null;
@@ -125,6 +159,10 @@ export interface CharacterDraft {
   avatarUrl?: string;
   description?: string;
   notes?: string;
+  systemId: string;
+  rulesetVersion: string;
+  characterType: CharacterType;
+  characterSchemaVersion: number;
   raceId: string | null;
   lineageId: string | null;
   classId: string | null;
@@ -174,6 +212,10 @@ export const emptyDraft = (): CharacterDraft => ({
   name: '',
   description: '',
   notes: '',
+  systemId: DEFAULT_CHARACTER_SYSTEM_ID,
+  rulesetVersion: DEFAULT_CHARACTER_RULESET_VERSION,
+  characterType: DEFAULT_CHARACTER_TYPE,
+  characterSchemaVersion: CURRENT_CHARACTER_SCHEMA_VERSION,
   raceId: null,
   lineageId: null,
   classId: null,

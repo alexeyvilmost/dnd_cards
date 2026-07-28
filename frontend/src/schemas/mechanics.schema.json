@@ -91,7 +91,7 @@
       "required": ["event"],
       "properties": {
         "timing": { "enum": ["before", "during", "after", "replaces"] },
-        "event": { "enum": ["attack_roll_made", "hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
+        "event": { "enum": ["attack_roll_made", "hit_by_attack", "hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
         "subject": { "enum": ["self", "ally", "enemy", "attacker", "target", "any_creature"] },
         "circumstances": { "type": "array", "items": { "$ref": "#/$defs/condition" } }
       }

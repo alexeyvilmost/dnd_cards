@@ -1,12 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { purchaseItem } from '../character/inventory';
-import type { ForgeCharacter } from '../character/types';
+import {
+  CURRENT_CHARACTER_SCHEMA_VERSION,
+  DEFAULT_CHARACTER_RULESET_VERSION,
+  DEFAULT_CHARACTER_SYSTEM_ID,
+  DEFAULT_CHARACTER_TYPE,
+  type ForgeCharacter,
+} from '../character/types';
 import type { Card } from '../types';
 
 const baseChar = (): ForgeCharacter => ({
   id: 'c1',
   user_id: 'u1',
   name: 'Test',
+  system_id: DEFAULT_CHARACTER_SYSTEM_ID,
+  ruleset_version: DEFAULT_CHARACTER_RULESET_VERSION,
+  character_type: DEFAULT_CHARACTER_TYPE,
+  character_schema_version: CURRENT_CHARACTER_SCHEMA_VERSION,
   level: 1,
   max_hp: 10,
   current_hp: 10,

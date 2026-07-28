@@ -39,6 +39,7 @@ type Feat struct {
 	RelatedEffects        *Properties    `json:"related_effects" gorm:"type:jsonb"`  // id привязанных эффектов
 	RelatedActions        *Properties    `json:"related_actions" gorm:"type:jsonb"`  // id привязанных действий
 	Repeatable            bool           `json:"repeatable" gorm:"type:boolean;default:false"`
+	Support               *JSONMap       `json:"support" gorm:"type:jsonb"`
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
@@ -111,6 +112,7 @@ type FeatResponse struct {
 	RelatedEffects      *Properties  `json:"related_effects"`
 	RelatedActions      *Properties  `json:"related_actions"`
 	Repeatable          bool         `json:"repeatable"`
+	Support             *JSONMap     `json:"support"`
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
@@ -126,7 +128,7 @@ func (f Feat) ToFeatResponse() FeatResponse {
 		ID: f.ID, Name: f.Name, NameEn: f.NameEn, Description: f.Description, DetailedDescription: f.DetailedDescription,
 		ImageURL: f.ImageURL, Rarity: f.Rarity, CardNumber: f.CardNumber, Category: f.Category,
 		Prerequisite: f.Prerequisite, AbilityIncrease: f.AbilityIncrease,
-		RelatedEffects: f.RelatedEffects, RelatedActions: f.RelatedActions, Repeatable: f.Repeatable,
+		RelatedEffects: f.RelatedEffects, RelatedActions: f.RelatedActions, Repeatable: f.Repeatable, Support: f.Support,
 		Type: f.Type, Author: f.Author, Source: f.Source, Tags: f.Tags, IsExtended: f.IsExtended,
 		CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt,
 	}
@@ -136,32 +138,33 @@ func (f Feat) ToFeatResponse() FeatResponse {
 
 // Background - модель предыстории D&D
 type Background struct {
-	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name                  string         `json:"name" gorm:"not null"`
-	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
-	Description           string         `json:"description" gorm:"type:text;not null"`
-	DetailedDescription   *string        `json:"detailed_description" gorm:"type:text"`
-	ImageURL              string         `json:"image_url" gorm:"type:text"`
-	ImageCloudinaryID     string         `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
-	ImageCloudinaryURL    string         `json:"image_cloudinary_url" gorm:"type:text"`
-	ImageGenerated        bool           `json:"image_generated" gorm:"type:boolean;default:false"`
-	ImageGenerationPrompt string         `json:"image_generation_prompt" gorm:"type:text"`
-	Rarity                Rarity         `json:"rarity" gorm:"not null;default:'common'"`
-	CardNumber            string         `json:"card_number" gorm:"uniqueIndex;not null"`
-	AbilityScores         *Properties    `json:"ability_scores" gorm:"type:jsonb"`      // 3 кода характеристик
-	OriginFeat            *string        `json:"origin_feat" gorm:"type:varchar(255)"`  // Черта происхождения (название)
-	SkillProficiencies    *Properties    `json:"skill_proficiencies" gorm:"type:jsonb"` // Владение навыками
-	ToolProficiency       *string        `json:"tool_proficiency" gorm:"type:text"`     // Владение инструментами
-	Equipment             *string        `json:"equipment" gorm:"type:text"`            // Снаряжение (текст, legacy)
-	EquipmentOptions      *BackgroundEquipmentOptions `json:"equipment_options" gorm:"type:jsonb"` // Варианты А/Б (предметы + золото)
-	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
-	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
-	Source                *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                  *Properties    `json:"tags" gorm:"type:jsonb"`
-	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
-	CreatedAt             time.Time      `json:"created_at"`
-	UpdatedAt             time.Time      `json:"updated_at"`
-	DeletedAt             gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                    uuid.UUID                   `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name                  string                      `json:"name" gorm:"not null"`
+	NameEn                *string                     `json:"name_en" gorm:"type:varchar(255)"`
+	Description           string                      `json:"description" gorm:"type:text;not null"`
+	DetailedDescription   *string                     `json:"detailed_description" gorm:"type:text"`
+	ImageURL              string                      `json:"image_url" gorm:"type:text"`
+	ImageCloudinaryID     string                      `json:"image_cloudinary_id" gorm:"type:varchar(255)"`
+	ImageCloudinaryURL    string                      `json:"image_cloudinary_url" gorm:"type:text"`
+	ImageGenerated        bool                        `json:"image_generated" gorm:"type:boolean;default:false"`
+	ImageGenerationPrompt string                      `json:"image_generation_prompt" gorm:"type:text"`
+	Rarity                Rarity                      `json:"rarity" gorm:"not null;default:'common'"`
+	CardNumber            string                      `json:"card_number" gorm:"uniqueIndex;not null"`
+	AbilityScores         *Properties                 `json:"ability_scores" gorm:"type:jsonb"`      // 3 кода характеристик
+	OriginFeat            *string                     `json:"origin_feat" gorm:"type:varchar(255)"`  // Черта происхождения (название)
+	SkillProficiencies    *Properties                 `json:"skill_proficiencies" gorm:"type:jsonb"` // Владение навыками
+	ToolProficiency       *string                     `json:"tool_proficiency" gorm:"type:text"`     // Владение инструментами
+	Equipment             *string                     `json:"equipment" gorm:"type:text"`            // Снаряжение (текст, legacy)
+	EquipmentOptions      *BackgroundEquipmentOptions `json:"equipment_options" gorm:"type:jsonb"`   // Варианты А/Б (предметы + золото)
+	Support               *JSONMap                    `json:"support" gorm:"type:jsonb"`
+	Type                  *string                     `json:"type" gorm:"type:varchar(50)"`
+	Author                string                      `json:"author" gorm:"type:varchar(255);default:'Admin'"`
+	Source                *string                     `json:"source" gorm:"type:varchar(255)"`
+	Tags                  *Properties                 `json:"tags" gorm:"type:jsonb"`
+	IsExtended            *bool                       `json:"is_extended" gorm:"type:boolean;default:null"`
+	CreatedAt             time.Time                   `json:"created_at"`
+	UpdatedAt             time.Time                   `json:"updated_at"`
+	DeletedAt             gorm.DeletedAt              `json:"-" gorm:"index"`
 }
 
 // TableName указывает имя таблицы для GORM
@@ -169,70 +172,71 @@ func (Background) TableName() string { return "backgrounds" }
 
 // CreateBackgroundRequest - запрос на создание предыстории
 type CreateBackgroundRequest struct {
-	Name                string      `json:"name" binding:"required"`
-	NameEn              *string     `json:"name_en"`
-	Description         string      `json:"description" binding:"required"`
-	DetailedDescription *string     `json:"detailed_description"`
-	ImageURL            string      `json:"image_url"`
-	Rarity              Rarity      `json:"rarity"`
-	CardNumber          string      `json:"card_number"`
-	AbilityScores       *Properties `json:"ability_scores"`
-	OriginFeat          *string     `json:"origin_feat"`
-	SkillProficiencies  *Properties `json:"skill_proficiencies"`
-	ToolProficiency     *string     `json:"tool_proficiency"`
-	Equipment           *string     `json:"equipment"`
+	Name                string                      `json:"name" binding:"required"`
+	NameEn              *string                     `json:"name_en"`
+	Description         string                      `json:"description" binding:"required"`
+	DetailedDescription *string                     `json:"detailed_description"`
+	ImageURL            string                      `json:"image_url"`
+	Rarity              Rarity                      `json:"rarity"`
+	CardNumber          string                      `json:"card_number"`
+	AbilityScores       *Properties                 `json:"ability_scores"`
+	OriginFeat          *string                     `json:"origin_feat"`
+	SkillProficiencies  *Properties                 `json:"skill_proficiencies"`
+	ToolProficiency     *string                     `json:"tool_proficiency"`
+	Equipment           *string                     `json:"equipment"`
 	EquipmentOptions    *BackgroundEquipmentOptions `json:"equipment_options"`
-	Type                *string     `json:"type"`
-	Author              string      `json:"author"`
-	Source              *string     `json:"source"`
-	Tags                *Properties  `json:"tags"`
-	IsExtended          *bool       `json:"is_extended"`
+	Type                *string                     `json:"type"`
+	Author              string                      `json:"author"`
+	Source              *string                     `json:"source"`
+	Tags                *Properties                 `json:"tags"`
+	IsExtended          *bool                       `json:"is_extended"`
 }
 
 // UpdateBackgroundRequest - запрос на обновление предыстории
 type UpdateBackgroundRequest struct {
-	Name                string      `json:"name"`
-	NameEn              *string     `json:"name_en"`
-	Description         string      `json:"description"`
-	DetailedDescription *string     `json:"detailed_description"`
-	ImageURL            string      `json:"image_url"`
-	Rarity              Rarity      `json:"rarity"`
-	AbilityScores       *Properties `json:"ability_scores"`
-	OriginFeat          *string     `json:"origin_feat"`
-	SkillProficiencies  *Properties `json:"skill_proficiencies"`
-	ToolProficiency     *string     `json:"tool_proficiency"`
-	Equipment           *string     `json:"equipment"`
+	Name                string                      `json:"name"`
+	NameEn              *string                     `json:"name_en"`
+	Description         string                      `json:"description"`
+	DetailedDescription *string                     `json:"detailed_description"`
+	ImageURL            string                      `json:"image_url"`
+	Rarity              Rarity                      `json:"rarity"`
+	AbilityScores       *Properties                 `json:"ability_scores"`
+	OriginFeat          *string                     `json:"origin_feat"`
+	SkillProficiencies  *Properties                 `json:"skill_proficiencies"`
+	ToolProficiency     *string                     `json:"tool_proficiency"`
+	Equipment           *string                     `json:"equipment"`
 	EquipmentOptions    *BackgroundEquipmentOptions `json:"equipment_options"`
-	Type                *string     `json:"type"`
-	Author              string      `json:"author"`
-	Source              *string     `json:"source"`
-	Tags                *Properties  `json:"tags"`
-	IsExtended          *bool       `json:"is_extended"`
+	Type                *string                     `json:"type"`
+	Author              string                      `json:"author"`
+	Source              *string                     `json:"source"`
+	Tags                *Properties                 `json:"tags"`
+	IsExtended          *bool                       `json:"is_extended"`
 }
 
 // BackgroundResponse - ответ с предысторией
 type BackgroundResponse struct {
-	ID                  uuid.UUID   `json:"id"`
-	Name                string      `json:"name"`
-	NameEn              *string     `json:"name_en"`
-	Description         string      `json:"description"`
-	DetailedDescription *string     `json:"detailed_description"`
-	ImageURL            string      `json:"image_url"`
-	Rarity              Rarity      `json:"rarity"`
-	CardNumber          string      `json:"card_number"`
-	AbilityScores       *Properties `json:"ability_scores"`
-	OriginFeat          *string     `json:"origin_feat"`
-	SkillProficiencies  *Properties `json:"skill_proficiencies"`
-	ToolProficiency     *string     `json:"tool_proficiency"`
-	Equipment           *string     `json:"equipment"`
+	ID                  uuid.UUID                   `json:"id"`
+	Name                string                      `json:"name"`
+	NameEn              *string                     `json:"name_en"`
+	Description         string                      `json:"description"`
+	DetailedDescription *string                     `json:"detailed_description"`
+	ImageURL            string                      `json:"image_url"`
+	Rarity              Rarity                      `json:"rarity"`
+	CardNumber          string                      `json:"card_number"`
+	AbilityScores       *Properties                 `json:"ability_scores"`
+	OriginFeat          *string                     `json:"origin_feat"`
+	SkillProficiencies  *Properties                 `json:"skill_proficiencies"`
+	ToolProficiency     *string                     `json:"tool_proficiency"`
+	Equipment           *string                     `json:"equipment"`
 	EquipmentOptions    *BackgroundEquipmentOptions `json:"equipment_options"`
-	Type                *string     `json:"type"`
-	Author              string      `json:"author"`
-	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
-	IsExtended          *bool       `json:"is_extended"`
-	CreatedAt           time.Time   `json:"created_at"`
-	UpdatedAt           time.Time   `json:"updated_at"`
+	Support             *JSONMap                    `json:"support"`
+	Type                *string                     `json:"type"`
+	Author              string                      `json:"author"`
+	Source              *string                     `json:"source"`
+	Tags                *Properties                 `json:"tags"`
+	IsExtended          *bool                       `json:"is_extended"`
+	CreatedAt           time.Time                   `json:"created_at"`
+	UpdatedAt           time.Time                   `json:"updated_at"`
 }
 
 // ToBackgroundResponse преобразует модель предыстории в API-ответ.
@@ -241,7 +245,7 @@ func (b Background) ToBackgroundResponse() BackgroundResponse {
 		ID: b.ID, Name: b.Name, NameEn: b.NameEn, Description: b.Description, DetailedDescription: b.DetailedDescription,
 		ImageURL: b.ImageURL, Rarity: b.Rarity, CardNumber: b.CardNumber, AbilityScores: b.AbilityScores,
 		OriginFeat: b.OriginFeat, SkillProficiencies: b.SkillProficiencies, ToolProficiency: b.ToolProficiency,
-		Equipment: b.Equipment, EquipmentOptions: b.EquipmentOptions, Type: b.Type, Author: b.Author, Source: b.Source, Tags: b.Tags,
+		Equipment: b.Equipment, EquipmentOptions: b.EquipmentOptions, Support: b.Support, Type: b.Type, Author: b.Author, Source: b.Source, Tags: b.Tags,
 		IsExtended: b.IsExtended, CreatedAt: b.CreatedAt, UpdatedAt: b.UpdatedAt,
 	}
 }

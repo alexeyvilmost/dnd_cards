@@ -23,7 +23,7 @@ function assembledStub(over: Partial<AssembledCharacter> = {}): AssembledCharact
         count: 2,
         options: ['acrobatics', 'animal_handling', 'athletics', 'history', 'insight', 'intimidation', 'perception', 'survival'],
       },
-    } as AssembledCharacter['klass'],
+    } as unknown as AssembledCharacter['klass'],
     background: {
       id: 'entertainer',
       name: 'Артист',
@@ -58,7 +58,7 @@ describe('resolveConflict skill duplicate', () => {
     expect(slots[0].kind).toBe('class_skills');
     expect(slots[0].sourceName).toBe('Воин');
 
-    const parties = conflictPartyPools(conflict as RuleConflict, draft, assembled);
+    const parties = conflictPartyPools(conflict as RuleConflict, assembled);
     expect(parties.map((p) => p.sourceName).sort()).toEqual(['Артист', 'Воин']);
 
     const options = availableReplacementSkills(slots[0], parties, ruleState);

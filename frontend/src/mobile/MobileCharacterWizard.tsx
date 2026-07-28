@@ -7,6 +7,7 @@ import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { AbilityAssigner, ChoiceResolver } from '../character/components';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
+import { spellMatchesChoice } from '../character/spellChoices';
 import {
   buildSavePayload, characterToDraft, classSkillChoice, completionIssues,
 } from '../character/forgeHelpers';
@@ -174,29 +175,6 @@ function EntityDetails({
   );
 }
 
-function spellMatchesChoice(spell: Spell, choice: PendingChoice, maxSlotLevel: number): boolean {
-  const options = (choice.options || {}) as Record<string, unknown>;
-  const filter = (options.filter || choice.filter || {}) as Record<string, unknown> | string | string[];
-  if (Array.isArray(filter)) return filter.includes(spell.id);
-  if (typeof filter === 'string') {
-    if (filter === 'all') return true;
-    if (filter === 'cantrip') return spell.level === 0;
-    return spell.id === filter;
-  }
-  if (filter.only_available_slots) {
-    if (spell.level < 1 || spell.level > maxSlotLevel) return false;
-  } else {
-    const levels = Array.isArray(filter.levels)
-      ? filter.levels.map(Number)
-      : typeof filter.level === 'number' ? [filter.level] : [];
-    if (levels.length && !levels.includes(spell.level)) return false;
-  }
-  const classes = Array.isArray(filter.classes)
-    ? filter.classes.map(String)
-    : typeof filter.class === 'string' ? [filter.class] : [];
-  return !classes.length || classes.some((klass) => (spell.classes || []).includes(klass));
-}
-
 function featMatchesChoice(feat: Feat, choice: PendingChoice): boolean {
   const categories = choice.options?.categories;
   if (Array.isArray(categories) && categories.length) {
@@ -247,8 +225,8 @@ function SelectGrid<T extends { id: string; name: string; image_url?: string }>(
 function safeDraft(raw: string | null): CharacterDraft | null {
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as CharacterDraft;
-    return parsed && typeof parsed === 'object' ? parsed : null;
+    const parsed = JSON.parse(raw) as Partial<CharacterDraft>;
+    return parsed && typeof parsed === 'object' ? { ...emptyDraft(), ...parsed } : null;
   } catch {
     return null;
   }
