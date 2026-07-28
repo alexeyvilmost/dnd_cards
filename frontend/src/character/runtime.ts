@@ -51,6 +51,7 @@ function parseActiveEffects(raw: unknown): RuntimeState['activeEffects'] {
 export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
   const rs = c.rule_state as CharacterRuleState | undefined;
   const characterContext: CharacterContext | undefined = rs ? {
+    abilityScores: rs.abilities,
     abilityMods: rs.abilityMods,
     profBonus: rs.proficiencyBonus,
     level: c.level ?? 1,
@@ -58,6 +59,10 @@ export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
     saveProficiencies: rs.proficiencies?.savingThrows,
     skillProficiencies: rs.proficiencies?.skills,
     skillExpertise: rs.expertise?.skills,
+    spellcastingMod: rs.spellcasting
+      ? rs.abilityMods[rs.spellcasting.ability]
+      : undefined,
+    spellcastingAbility: rs.spellcasting?.ability,
   } : undefined;
   return {
     ac: rs?.armorClass ?? c.armor_class ?? 10,
@@ -87,6 +92,7 @@ export function buildCharacterContext(
 ): CharacterContext {
   const classKey = classLevelKey(klass ?? null);
   return {
+    abilityScores: ruleState.abilities,
     abilityMods: ruleState.abilityMods,
     profBonus: ruleState.proficiencyBonus,
     level: draft.level,
@@ -103,6 +109,7 @@ export function buildCharacterContext(
     spellcastingMod: ruleState.spellcasting
       ? ruleState.abilityMods[ruleState.spellcasting.ability]
       : undefined,
+    spellcastingAbility: ruleState.spellcasting?.ability,
     saveProficiencies: ruleState.proficiencies.savingThrows,
     skillProficiencies: ruleState.proficiencies.skills,
     skillExpertise: ruleState.expertise.skills,

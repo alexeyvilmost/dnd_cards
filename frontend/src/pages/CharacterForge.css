@@ -798,6 +798,9 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.25); font-size: 12px;
 }
 .value-breakdown-popover-title { display: block; font-weight: 600; margin-bottom: 6px; color: var(--forge-gold-dim); }
+.value-breakdown-method { display: flex; flex-direction: column; gap: 2px; padding: 0 0 6px; margin-bottom: 4px; border-bottom: 1px solid var(--forge-line); }
+.value-breakdown-method small,
+.value-breakdown-list li > span:first-child small { display: block; color: var(--forge-muted); font-size: 10px; font-weight: 400; }
 .value-breakdown-list { list-style: none; padding: 0; margin: 0; }
 .value-breakdown-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
 .value-breakdown-total { border-top: 1px solid var(--forge-line); margin-top: 4px; padding-top: 4px; font-weight: 600; }

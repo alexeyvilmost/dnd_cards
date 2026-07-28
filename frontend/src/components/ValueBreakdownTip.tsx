@@ -12,7 +12,12 @@ export default function ValueBreakdownTip({ breakdown, children, label }: Props)
   const [open, setOpen] = useState(false);
 
   const tip = breakdown.parts.length
-    ? breakdown.parts.map((p) => `${p.source}: ${p.value >= 0 ? '+' : ''}${p.value}`).join('\n')
+    ? [
+        breakdown.selectedMethod
+          ? `Способ: ${breakdown.selectedMethod.name} (${breakdown.selectedMethod.reason})`
+          : null,
+        ...breakdown.parts.map((p) => `${p.source}: ${p.value >= 0 ? '+' : ''}${p.value}${p.reason ? ` — ${p.reason}` : ''}`),
+      ].filter(Boolean).join('\n')
     : String(breakdown.value);
 
   return (
@@ -29,10 +34,19 @@ export default function ValueBreakdownTip({ breakdown, children, label }: Props)
       {open && breakdown.parts.length > 0 && (
         <span className="value-breakdown-popover" role="tooltip">
           {label && <span className="value-breakdown-popover-title">{label}</span>}
+          {breakdown.selectedMethod && (
+            <span className="value-breakdown-method">
+              <b>Используется: {breakdown.selectedMethod.name}</b>
+              <small>{breakdown.selectedMethod.reason}</small>
+            </span>
+          )}
           <ul className="value-breakdown-list">
             {breakdown.parts.map((p, i) => (
               <li key={i}>
-                <span>{p.source}</span>
+                <span>
+                  {p.source}
+                  {p.reason && <small>{p.reason}</small>}
+                </span>
                 <span>{p.value >= 0 ? `+${p.value}` : p.value}</span>
               </li>
             ))}

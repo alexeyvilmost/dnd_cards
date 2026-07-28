@@ -128,6 +128,15 @@ const CharacterSheetV2 = ({
   const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;
   const speed = speedBreakdown?.value ?? ruleState.speed;
   const spellcasting = ruleState.spellcasting;
+  const passivePerceptionBd = sheetCtx && runtimeState
+    ? breakdownValue('passive_perception', sheetCtx, runtimeState, passives)
+    : null;
+  const spellAttackBd = spellcasting && sheetCtx && runtimeState
+    ? breakdownValue('spell_attack', sheetCtx, runtimeState, passives)
+    : null;
+  const spellDcBd = spellcasting && sheetCtx && runtimeState
+    ? breakdownValue('spell_dc', sheetCtx, runtimeState, passives)
+    : null;
   const hpPct = maxHP > 0 ? Math.max(0, Math.min(100, (currentHP / maxHP) * 100)) : 0;
 
   const subLine = [
@@ -192,7 +201,8 @@ const CharacterSheetV2 = ({
           {pill('Скор', `${speed}`, speedBreakdown)}
           {Object.entries(ruleState.speeds).map(([mode, v]) => pill(SPEED_MODE_LABEL[mode] ?? mode, `${v}`))}
           {pill('БМ', fmtMod(pb))}
-          {spellcasting && pill('Заклин.', `СЛ ${spellcasting.saveDC} · ${fmtMod(spellcasting.attack)}`)}
+          {spellcasting && pill('СЛ закл.', spellcasting.saveDC, spellDcBd)}
+          {spellcasting && pill('Атака закл.', fmtMod(spellcasting.attack), spellAttackBd)}
         </div>
       </div>
 
@@ -207,13 +217,25 @@ const CharacterSheetV2 = ({
                 const proficient = saves.includes(k);
                 const saveBonus = ruleState.savingThrowBonuses[k];
                 const saveBd = sheetCtx && runtimeState ? breakdownValue(`save:${k}`, sheetCtx, runtimeState, passives) : null;
+                const scoreBd = sheetCtx && runtimeState ? breakdownValue(`ability:${k}`, sheetCtx, runtimeState, passives) : null;
+                const modBd = sheetCtx && runtimeState ? breakdownValue(`ability_mod:${k}`, sheetCtx, runtimeState, passives) : null;
                 return (
                   <div key={k} className="cs-abil">
                     <div className="cs-abil-id">
                       <span className="cs-abil-ab">{abbr3(ABILITY_LABEL_RU[k])}</span>
-                      <span className="cs-abil-sc">{score}</span>
+                      {scoreBd ? (
+                        <ValueBreakdownTip breakdown={scoreBd} label={ABILITY_LABEL_RU[k]}>
+                          <span className="cs-abil-sc">{score}</span>
+                        </ValueBreakdownTip>
+                      ) : <span className="cs-abil-sc">{score}</span>}
                     </div>
-                    <div className="cs-abil-mod">{fmtMod(mod)}</div>
+                    <div className="cs-abil-mod">
+                      {modBd ? (
+                        <ValueBreakdownTip breakdown={modBd} label={`Модификатор ${ABILITY_LABEL_RU[k]}`}>
+                          <span>{fmtMod(mod)}</span>
+                        </ValueBreakdownTip>
+                      ) : fmtMod(mod)}
+                    </div>
                     <div
                       className={`cs-abil-save${proficient ? ' on' : ''} cs-rollable`}
                       title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
@@ -280,7 +302,14 @@ const CharacterSheetV2 = ({
           </CollapsibleSection>
 
           <CollapsibleSection title="Чувства">
-            <div className="cs-kv"><span>Пассивное восприятие</span><b>{ruleState.passivePerception}</b></div>
+            <div className="cs-kv">
+              <span>Пассивное восприятие</span>
+              {passivePerceptionBd ? (
+                <ValueBreakdownTip breakdown={passivePerceptionBd} label="Пассивное восприятие">
+                  <b>{passivePerceptionBd.value}</b>
+                </ValueBreakdownTip>
+              ) : <b>{ruleState.passivePerception}</b>}
+            </div>
             {ruleState.senses.length > 0
               ? ruleState.senses.map((s) => (
                   <div key={s.sense} className="cs-kv"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><b>{s.range} фт</b></div>

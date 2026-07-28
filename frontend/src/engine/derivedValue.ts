@@ -18,6 +18,8 @@ export interface ValueMethod {
   parts: RollModifier[];
   /** Применим ли метод в текущем состоянии. По умолчанию true. */
   applicable?: boolean;
+  /** Почему этот метод является кандидатом (источник/условие применимости). */
+  reason?: string;
 }
 
 /**
@@ -42,6 +44,15 @@ export function pickBestMethod(
   return {
     value: (best?.value ?? 0) + additiveSum,
     parts: [...(best?.parts ?? []), ...additive],
+    ...(best ? {
+      selectedMethod: {
+        name: best.name,
+        reason: best.reason
+          ?? (applicable.length > 1
+            ? 'выбран наибольший применимый результат'
+            : 'единственный применимый способ'),
+      },
+    } : {}),
     ...(rejected.length ? { rejected } : {}),
   };
 }

@@ -127,11 +127,15 @@ export interface RuntimeState {
 }
 
 export interface CharacterContext {
+  /** Итоговые значения характеристик после всех постоянных источников. */
+  abilityScores?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   abilityMods: Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>;
   profBonus: number;
   level: number;
   classLevels?: Record<string, number>;
   spellcastingMod?: number;
+  /** Характеристика заклинаний нужна для понятного breakdown СЛ и атаки. */
+  spellcastingAbility?: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
   /** Итоговая скорость (все прибавки) — для формул (character_speed) и движка. */
   characterSpeed?: number;
   /** Базовая скорость (раса + grant_speed walk, без modifier-speed) — база breakdown('speed'),
@@ -254,6 +258,8 @@ export interface WeaponContext {
 export interface ValueBreakdown {
   value: number;
   parts: RollModifier[];
+  /** Выбранный способ расчёта, если значение допускает несколько методов. */
+  selectedMethod?: { name: string; reason: string };
   /** Отвергнутые методы-кандидаты (парадигма №3): показываются в превью «прочие способы». */
   rejected?: { name: string; value: number }[];
 }

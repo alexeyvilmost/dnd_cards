@@ -620,6 +620,21 @@ const CharacterSheetMVP = () => {
     return breakdownValue('size', sheetCtx, runtimeState, passives);
   }, [sheetCtx, runtimeState, passives]);
 
+  const passivePerceptionBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState) return null;
+    return breakdownValue('passive_perception', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives]);
+
+  const spellAttackBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState || !ruleState?.spellcasting) return null;
+    return breakdownValue('spell_attack', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives, ruleState?.spellcasting]);
+
+  const spellDcBreakdown = useMemo(() => {
+    if (!sheetCtx || !runtimeState || !ruleState?.spellcasting) return null;
+    return breakdownValue('spell_dc', sheetCtx, runtimeState, passives);
+  }, [sheetCtx, runtimeState, passives, ruleState?.spellcasting]);
+
   // Имя линиджа: подвид-субрас (lineageId=UUID) → имя субраса; инлайн-линидж → по имени;
   // неразрешённый UUID не показываем (общий резолвер кузни, единый источник правды).
   const lineageName = useMemo(
@@ -1035,11 +1050,29 @@ const CharacterSheetMVP = () => {
               {ABILITY_KEYS.map((k) => {
                 const score = scores[k] ?? 10;
                 const mod = ruleState.abilityMods[k];
+                const scoreBd = sheetCtx && runtimeState
+                  ? breakdownValue(`ability:${k}`, sheetCtx, runtimeState, passives)
+                  : null;
+                const modBd = sheetCtx && runtimeState
+                  ? breakdownValue(`ability_mod:${k}`, sheetCtx, runtimeState, passives)
+                  : null;
                 return (
                   <div key={k} className="sheet-ab" title={`${ABILITY_LABEL_RU[k]}: значение ${score}, модификатор ${fmtMod(mod)}`}>
                     <div className="sheet-ab-label">{ABILITY_LABEL_RU[k]}</div>
-                    <div className="sheet-ab-score">{score}</div>
-                    <div className="sheet-ab-mod">{fmtMod(mod)}</div>
+                    <div className="sheet-ab-score">
+                      {scoreBd ? (
+                        <ValueBreakdownTip breakdown={scoreBd} label={ABILITY_LABEL_RU[k]}>
+                          <span>{score}</span>
+                        </ValueBreakdownTip>
+                      ) : score}
+                    </div>
+                    <div className="sheet-ab-mod">
+                      {modBd ? (
+                        <ValueBreakdownTip breakdown={modBd} label={`Модификатор ${ABILITY_LABEL_RU[k]}`}>
+                          <span>{fmtMod(mod)}</span>
+                        </ValueBreakdownTip>
+                      ) : fmtMod(mod)}
+                    </div>
                   </div>
                 );
               })}
@@ -1110,7 +1143,27 @@ const CharacterSheetMVP = () => {
             {spellcasting && (
               <div className="sheet-spellcasting">
                 <div>Заклинания ({ABILITY_LABEL_RU[spellcasting.ability]})</div>
-                <div>DC {spellcasting.saveDC} · атака {fmtMod(spellcasting.attack)}</div>
+                <div>
+                  {spellDcBreakdown ? (
+                    <ValueBreakdownTip breakdown={spellDcBreakdown} label="СЛ заклинаний">
+                      <span>СЛ {spellcasting.saveDC}</span>
+                    </ValueBreakdownTip>
+                  ) : <span>СЛ {spellcasting.saveDC}</span>}
+                  {' · '}
+                  {spellAttackBreakdown ? (
+                    <ValueBreakdownTip breakdown={spellAttackBreakdown} label="Атака заклинанием">
+                      <span>атака {fmtMod(spellcasting.attack)}</span>
+                    </ValueBreakdownTip>
+                  ) : <span>атака {fmtMod(spellcasting.attack)}</span>}
+                </div>
+              </div>
+            )}
+            {passivePerceptionBreakdown && (
+              <div className="sheet-spellcasting">
+                <div>Пассивное восприятие</div>
+                <ValueBreakdownTip breakdown={passivePerceptionBreakdown} label="Пассивное восприятие">
+                  <div>{passivePerceptionBreakdown.value}</div>
+                </ValueBreakdownTip>
               </div>
             )}
           </section>

@@ -244,6 +244,7 @@ export function armorClassValue(
   return {
     value: folded.value,
     parts: [...base.parts, ...folded.parts],
+    ...(base.selectedMethod ? { selectedMethod: base.selectedMethod } : {}),
     ...(base.rejected ? { rejected: base.rejected } : {}),
   };
 }

@@ -53,6 +53,49 @@ describe('F2: breakdownValue', () => {
     expect(breakdownValue('speed', FIGHTER_CTX, freshFighterState(), []).value).toBe(30);
   });
 
+  it('характеристика и её модификатор объясняются отдельно, включая нечётное значение', () => {
+    const ctx = {
+      ...FIGHTER_CTX,
+      abilityScores: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+    };
+    const score = breakdownValue('ability:str', ctx, freshFighterState(), []);
+    const mod = breakdownValue('ability_mod:str', ctx, freshFighterState(), []);
+
+    expect(score.value).toBe(15);
+    expect(score.parts[0].source).toBe('СИЛ');
+    expect(mod.value).toBe(2);
+    expect(mod.parts[0].reason).toContain('15');
+  });
+
+  it('пассивное восприятие = 10 + полная разбивка навыка', () => {
+    const ctx = {
+      ...FIGHTER_CTX,
+      abilityScores: { str: 14, dex: 14, con: 12, int: 12, wis: 14, cha: 8 },
+      abilityMods: { ...FIGHTER_CTX.abilityMods, wis: 2 },
+      skillProficiencies: ['perception'],
+    };
+    const bd = breakdownValue('passive_perception', ctx, freshFighterState(), []);
+
+    expect(bd.value).toBe(14);
+    expect(bd.parts.map((part) => part.value)).toEqual([10, 2, 2]);
+    expect(bd.parts.reduce((sum, part) => sum + part.value, 0)).toBe(bd.value);
+  });
+
+  it('СЛ и атака заклинанием показывают базу, БМ и заклинательную характеристику', () => {
+    const ctx = {
+      ...FIGHTER_CTX,
+      spellcastingAbility: 'int' as const,
+      spellcastingMod: 3,
+    };
+    const attack = breakdownValue('spell_attack', ctx, freshFighterState(), []);
+    const dc = breakdownValue('spell_dc', ctx, freshFighterState(), []);
+
+    expect(attack.value).toBe(5);
+    expect(attack.parts.map((part) => part.value)).toEqual([2, 3]);
+    expect(dc.value).toBe(13);
+    expect(dc.parts.map((part) => part.value)).toEqual([8, 2, 3]);
+  });
+
   it('временный модификатор (активный эффект) появляется в разбивке с источником-эффектом', () => {
     const state = freshFighterState();
     state.activeEffects.push({
@@ -66,5 +109,7 @@ describe('F2: breakdownValue', () => {
     const bd = breakdownValue('ac', FIGHTER_CTX, state, []);
     expect(bd.value).toBe(14); // 10 + 2 ЛВК + 2 эффект
     expect(bd.parts.some((p) => p.source.includes('Щит веры'))).toBe(true);
+    expect(bd.selectedMethod?.name).toBeTruthy();
+    expect(bd.selectedMethod?.reason).toBeTruthy();
   });
 });

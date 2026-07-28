@@ -143,7 +143,19 @@ function breakdownSkill(
 }
 
 export function breakdownValue(
-  what: 'ac' | 'max_hp' | 'initiative' | 'speed' | 'size' | `save:${string}` | `skill:${string}`,
+  what:
+    | 'ac'
+    | 'max_hp'
+    | 'initiative'
+    | 'speed'
+    | 'size'
+    | 'passive_perception'
+    | 'spell_attack'
+    | 'spell_dc'
+    | `ability:${string}`
+    | `ability_mod:${string}`
+    | `save:${string}`
+    | `skill:${string}`,
   character: CharacterContext,
   state: RuntimeState,
   passives: Dict[],
@@ -177,6 +189,42 @@ export function breakdownValue(
     const folded = foldModifiers(base, collected);
     const parts = [{ value: base, source: 'размер', reason: 'базовый' }, ...folded.parts];
     return { value: Math.max(0, folded.value), parts };
+  }
+  if (what.startsWith('ability:')) {
+    const ability = what.slice(8) as AbilityKey;
+    const score = character.abilityScores?.[ability] ?? ((character.abilityMods[ability] ?? 0) * 2 + 10);
+    return {
+      value: score,
+      parts: [{ value: score, source: ABILITY_LABEL[ability], reason: 'итог после всех постоянных источников' }],
+    };
+  }
+  if (what.startsWith('ability_mod:')) {
+    const ability = what.slice(12) as AbilityKey;
+    const score = character.abilityScores?.[ability] ?? ((character.abilityMods[ability] ?? 0) * 2 + 10);
+    const value = character.abilityMods[ability] ?? 0;
+    return {
+      value,
+      parts: [{ value, source: ABILITY_LABEL[ability], reason: `⌊(${score} − 10) / 2⌋` }],
+    };
+  }
+  if (what === 'passive_perception') {
+    const skill = breakdownSkill('perception', character, state, passives);
+    const parts: RollModifier[] = [
+      { value: 10, source: 'Пассивная проверка', reason: 'базовое значение' },
+      ...skill.parts,
+    ];
+    return { value: parts.reduce((sum, part) => sum + part.value, 0), parts };
+  }
+  if (what === 'spell_attack' || what === 'spell_dc') {
+    const ability = character.spellcastingAbility;
+    const abilityLabel = ability ? ABILITY_LABEL[ability] : 'Заклинательная характеристика';
+    const spellMod = character.spellcastingMod ?? 0;
+    const parts: RollModifier[] = [
+      ...(what === 'spell_dc' ? [{ value: 8, source: 'СЛ заклинания', reason: 'базовое значение' }] : []),
+      { value: character.profBonus, source: 'БМ', reason: 'бонус мастерства' },
+      { value: spellMod, source: abilityLabel, reason: 'модификатор заклинательной характеристики' },
+    ];
+    return { value: parts.reduce((sum, part) => sum + part.value, 0), parts };
   }
   if (what.startsWith('save:')) {
     return breakdownSave(what.slice(5) as AbilityKey, character, state, passives);
