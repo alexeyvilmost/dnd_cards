@@ -54,3 +54,25 @@ func TestMicroMicroQaCertificationsAreCompleteAndUnique(t *testing.T) {
 		}
 	}
 }
+
+func TestTransitiveMicroMicroCertificationsAreCompleteAndUnique(t *testing.T) {
+	if len(transitiveMicroMicroCertifications) != 4 {
+		t.Fatalf("expected 4 transitive certifications, got %d", len(transitiveMicroMicroCertifications))
+	}
+	seen := map[string]bool{}
+	for _, certification := range transitiveMicroMicroCertifications {
+		key := certification.Table + ":" + certification.CardNumber
+		if seen[key] {
+			t.Fatalf("duplicate transitive certification %s", key)
+		}
+		seen[key] = true
+		if !microMicroCertificationTables[certification.Table] {
+			t.Fatalf("%s uses an unsupported table", key)
+		}
+		for _, hash := range []string{certification.ContentHash, certification.DependencyHash} {
+			if !strings.HasPrefix(hash, "sha256:") || len(hash) != len("sha256:")+64 {
+				t.Fatalf("%s has invalid hash %q", key, hash)
+			}
+		}
+	}
+}

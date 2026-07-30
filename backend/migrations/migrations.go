@@ -523,6 +523,12 @@ func GetAllMigrations() []Migration {
 			Up:          certifyMicroMicroQaFixes,
 			Down:        uncertifyMicroMicroQaFixes,
 		},
+		{
+			Version:     "085_refresh_transitive_micro_micro_certifications",
+			Description: "Обновление транзитивных хэшей Волшебника, Человека, Солдата и Преступника после исправления зависимостей",
+			Up:          refreshTransitiveMicroMicroCertifications,
+			Down:        unrefreshTransitiveMicroMicroCertifications,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

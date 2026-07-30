@@ -12,7 +12,11 @@ import { ENTITY_ENDPOINTS } from './micro-micro-gate.mjs';
 
 const targets = [
   ['class', 'CLASS-cleric'],
+  ['class', 'CLASS-wizard'],
   ['race', 'RACE-0008'],
+  ['race', 'RACE-0002'],
+  ['background', 'BG-0012'],
+  ['background', 'BG-0008'],
   ['feat', 'FEAT-0001'],
   ['feat', 'FEAT-0056'],
   ['spell', 'SPELL-0230'],
