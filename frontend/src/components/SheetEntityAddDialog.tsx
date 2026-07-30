@@ -4,6 +4,7 @@ import {
   CircleDot,
   Plus,
   Search,
+  ShieldCheck,
   Sparkles,
   Swords,
   X,
@@ -32,6 +33,7 @@ const TYPES: Array<{
   { type: 'actions', label: 'Действия', search: 'атака, приём, способность…', icon: Swords },
   { type: 'effects', label: 'Эффекты', search: 'пассивный эффект…', icon: CircleDot },
   { type: 'spells', label: 'Заклинания', search: 'название заклинания…', icon: Sparkles },
+  { type: 'feats', label: 'Черты', search: 'черта происхождения, боевой стиль…', icon: ShieldCheck },
 ];
 
 function errorMessage(error: unknown): string {

@@ -78,7 +78,7 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
           />
           <span>
             <span className="sheet-settings-row-label"><PlusCircle size={16} /> Ручное добавление в лист</span>
-            <span className="sheet-settings-hint">Разрешить добавлять предметы, действия, эффекты и заклинания прямо из листа персонажа.</span>
+            <span className="sheet-settings-hint">Разрешить добавлять предметы, действия, эффекты, заклинания и черты прямо из листа персонажа.</span>
           </span>
         </label>
 

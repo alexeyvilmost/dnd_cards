@@ -26,6 +26,7 @@ import { loadAssembly } from '../character/assemble';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
 import {
   addManualEntities,
+  FEAT_CATEGORY_LABELS,
   type ManualEntity,
   type ManualEntityType,
 } from '../character/manualEntityAddition';
@@ -82,6 +83,8 @@ function normalize(
   let meta = '';
   if (type === 'spells' && 'level' in source) {
     meta = source.level === 0 ? 'Заговор' : `${source.level} уровень`;
+  } else if (type === 'feats' && 'category' in source) {
+    meta = FEAT_CATEGORY_LABELS[(source as Feat).category];
   } else if (type === 'actions' && 'resource' in source) {
     meta = source.resource || '';
   } else if (type === 'effects' && 'effect_type' in source) {
@@ -170,7 +173,7 @@ async function saveSelection(
   entities: CatalogEntity[],
   selection: Record<string, number>,
 ): Promise<void> {
-  if (type === 'items' || type === 'actions' || type === 'effects' || type === 'spells') {
+  if (type === 'items' || type === 'actions' || type === 'effects' || type === 'spells' || type === 'feats') {
     const manualType = type as ManualEntityType;
     await addManualEntities(character, manualType, entities.map((entity) => ({
       entity: {
@@ -208,7 +211,6 @@ async function saveSelection(
   }
 
   const draft = characterToDraft(character);
-  if (type === 'feats') draft.featIds = nextIds(draft.featIds, entities, selection, true);
   if (type === 'resources') draft.resourceIds = nextIds(draft.resourceIds, entities, selection, false);
 
   const assembled = await loadAssembly(draft);

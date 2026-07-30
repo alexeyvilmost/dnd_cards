@@ -927,7 +927,7 @@ const CharacterSheetMVP = () => {
               type="button"
               className="sheet-header-btn"
               onClick={() => setEntityAddOpen(true)}
-              title="Добавить предмет, действие, эффект или заклинание"
+              title="Добавить предмет, действие, эффект, заклинание или черту"
             >
               <Plus size={16} />
               <span className="sheet-header-btn-label">Добавить</span>

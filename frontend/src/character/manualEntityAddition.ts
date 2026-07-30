@@ -1,5 +1,5 @@
-import { actionsApi, cardsApi, effectsApi, spellsApi } from '../api/client';
-import type { Action, Card, PassiveEffect, Spell } from '../types';
+import { actionsApi, cardsApi, effectsApi, featsApi, spellsApi } from '../api/client';
+import type { Action, Card, Feat, FeatCategory, PassiveEffect, Spell } from '../types';
 import { charactersV3Api } from './api';
 import { loadAssembly } from './assemble';
 import { buildSavePayload, characterToDraft } from './forgeHelpers';
@@ -8,8 +8,8 @@ import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import { buildCharacterContext } from './runtime';
 import type { CharacterDraft, ForgeCharacter } from './types';
 
-export type ManualEntityType = 'items' | 'actions' | 'effects' | 'spells';
-export type ManualEntitySource = Card | Action | PassiveEffect | Spell;
+export type ManualEntityType = 'items' | 'actions' | 'effects' | 'spells' | 'feats';
+export type ManualEntitySource = Card | Action | PassiveEffect | Spell | Feat;
 
 export interface ManualEntity {
   id: string;
@@ -26,10 +26,19 @@ export interface ManualEntitySelection {
   amount: number;
 }
 
+export const FEAT_CATEGORY_LABELS: Record<FeatCategory, string> = {
+  origin: 'Черта происхождения',
+  general: 'Общая черта',
+  fighting_style: 'Боевой стиль',
+  epic_boon: 'Эпическая милость',
+};
+
 function normalize(source: ManualEntitySource, type: ManualEntityType): ManualEntity {
   let meta = '';
   if (type === 'spells' && 'level' in source) {
     meta = source.level === 0 ? 'Заговор' : `${source.level} уровень`;
+  } else if (type === 'feats' && 'category' in source) {
+    meta = FEAT_CATEGORY_LABELS[source.category];
   } else if (type === 'actions' && 'resource' in source) {
     meta = source.resource || '';
   } else if (type === 'effects' && 'effect_type' in source) {
@@ -66,6 +75,10 @@ export async function loadManualEntities(
     const response = await spellsApi.getSpells({ limit, search: query });
     return (response.spells ?? []).map((entity) => normalize(entity, type));
   }
+  if (type === 'feats') {
+    const response = await featsApi.getFeats({ limit, search: query });
+    return (response.feats ?? []).map((entity) => normalize(entity, type));
+  }
   const response = await effectsApi.getEffects({ limit, search: query });
   return (response.effects ?? [])
     .filter((entity) => entity.effect_type !== 'condition')
@@ -77,9 +90,10 @@ export function manualEntityAlreadyAdded(
   type: ManualEntityType,
   entity: Pick<ManualEntity, 'id' | 'repeatable'>,
 ): boolean {
-  if (type === 'items' || (type === 'effects' && entity.repeatable)) return false;
+  if (type === 'items' || ((type === 'effects' || type === 'feats') && entity.repeatable)) return false;
   if (type === 'actions') return (character.action_ids ?? []).includes(entity.id);
   if (type === 'effects') return (character.effect_ids ?? []).includes(entity.id);
+  if (type === 'feats') return (character.feat_ids ?? []).includes(entity.id);
   return (character.spell_ids ?? []).includes(entity.id);
 }
 
@@ -107,6 +121,8 @@ function addSelectionsToDraft(
     draft.actionIds = appendManualEntityIds(draft.actionIds, selections, false);
   } else if (type === 'effects') {
     draft.effectIds = appendManualEntityIds(draft.effectIds, selections, true);
+  } else if (type === 'feats') {
+    draft.featIds = appendManualEntityIds(draft.featIds, selections, true);
   } else {
     draft.spellIds = appendManualEntityIds(draft.spellIds, selections, false);
   }
