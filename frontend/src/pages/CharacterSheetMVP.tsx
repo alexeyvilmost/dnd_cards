@@ -42,7 +42,7 @@ import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
 import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
-import { plannedValuesRng } from '../engine/dicePlan';
+import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
@@ -778,10 +778,17 @@ const CharacterSheetMVP = () => {
       const collected = runtimeState
         ? collectRollModifiers(runtimeState, passives, { roll: 'initiative' })
         : { advantage: 'none' as const, modifiers: [], autoFail: false, denied: false, rules: [] };
-      const plan = Array.from(
+      const plan: PlannedDie[] = Array.from(
         { length: collected.advantage === 'none' ? 1 : 2 },
-        () => ({ sides: 20, label: 'Инициатива' }),
+        (_, index) => ({
+          sides: 20,
+          label: 'Инициатива',
+          resultGroup: 'initiative',
+          advantage: collected.advantage,
+          ...(index === 0 ? { modifier: initiative } : {}),
+        }),
       );
+      plan.push(...plannedD20BonusDice(collected.rules, 'Инициатива', 'initiative'));
       const decision = await diceDialog.request(plan, 'Бросок инициативы');
       if (decision.mode === 'cancel') return;
       const rng = decision.mode === 'manual'
@@ -840,10 +847,17 @@ const CharacterSheetMVP = () => {
       await appendRuntimeEvents([{ type: 'narrative', text: `${label} — автопровал (состояние)` }]);
       return;
     }
-    const plan = Array.from(
+    const plan: PlannedDie[] = Array.from(
       { length: collected.advantage === 'none' ? 1 : 2 },
-      () => ({ sides: 20, label }),
+      (_, index) => ({
+        sides: 20,
+        label,
+        resultGroup: 'check',
+        advantage: collected.advantage,
+        ...(index === 0 ? { modifier: parts.reduce((sum, part) => sum + part.value, 0) } : {}),
+      }),
     );
+    plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
     const decision = await diceDialog.request(plan, label);
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'

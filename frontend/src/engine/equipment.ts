@@ -33,6 +33,24 @@ function isBodyArmor(card: Card): boolean {
   return card.slot === 'body' || card.type === 'chest' || (!!card.defense_type && !isShield(card));
 }
 
+/** Настоящий доспех для правил вида «пока вы носите доспех»; одежда и щит не считаются. */
+export function isArmorCard(card: Card): boolean {
+  if (isShield(card)) return false;
+  if (card.defense_type && card.defense_type !== 'none') return true;
+  if (card.type !== 'chest' && card.slot !== 'body') return false;
+  const props = cardProps(card).map((value) => value.toLowerCase());
+  if (props.includes('cloth') || props.includes('clothing')) return false;
+  const formula = String(card.bonus_value ?? '');
+  return /dex/i.test(formula) || Number(formula.match(/\d+/)?.[0] ?? 0) > 10;
+}
+
+export function isWearingArmor(state: RuntimeState | undefined, cards: Card[] = []): boolean {
+  const bodyId = state?.equipment?.body;
+  if (!bodyId) return false;
+  const card = cards.find((candidate) => candidate.id === bodyId);
+  return !!card && isArmorCard(card);
+}
+
 function bothHandsFree(equipment: Record<string, string | null | undefined>): boolean {
   return !equipment.main_hand && !equipment.off_hand;
 }

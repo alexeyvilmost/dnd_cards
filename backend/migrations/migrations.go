@@ -517,6 +517,12 @@ func GetAllMigrations() []Migration {
 			Up:          certifyMicroMicroContent,
 			Down:        uncertifyMicroMicroContent,
 		},
+		{
+			Version:     "084_certify_micro_micro_qa_fixes",
+			Description: "Повторная сертификация исправлений ручной приёмки и механических подвидов эльфа/драконорождённого",
+			Up:          certifyMicroMicroQaFixes,
+			Down:        uncertifyMicroMicroQaFixes,
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

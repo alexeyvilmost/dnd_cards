@@ -8,10 +8,10 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
-import { Dices, Keyboard, RotateCcw, X } from 'lucide-react';
+import { Dices, RotateCcw, X } from 'lucide-react';
 import type DiceBox from '@3d-dice/dice-box';
 import type { PlannedDie } from '../engine/dicePlan';
-import { summarizeDice } from '../engine/dicePlan';
+import { calculatePlannedRollTotals, summarizeDice } from '../engine/dicePlan';
 import type { TargetOption } from '../contexts/DiceDialogContext';
 import {
   dicePresentation,
@@ -28,6 +28,7 @@ interface Props {
   preview?: ReactNode;
   targets?: TargetOption[];
   needsTarget?: boolean;
+  autoThrow: boolean;
   targetId: string;
   onTargetChange: (id: string) => void;
   onComplete: (values: number[]) => void;
@@ -83,6 +84,7 @@ export default function Dice3DOverlay({
   preview,
   targets,
   needsTarget,
+  autoThrow,
   targetId,
   onTargetChange,
   onComplete,
@@ -96,9 +98,11 @@ export default function Dice3DOverlay({
   const [drag, setDrag] = useState<DragState | null>(null);
   const [lastPower, setLastPower] = useState(0.55);
   const [lastGesture, setLastGesture] = useState<ThrowGesture>({ strength: 0.55 });
+  const autoThrownRequestRef = useRef('');
   const mustPickTarget = !!needsTarget && !!targets?.length && !targetId;
 
   const grouped = useMemo(() => groupDiceResults(plan, values), [plan, values]);
+  const totals = useMemo(() => calculatePlannedRollTotals(plan, values), [plan, values]);
   const largestDie = useMemo(
     () => plan.reduce<PlannedDie | undefined>(
       (largest, die) => !largest || die.sides > largest.sides ? die : largest,
@@ -233,6 +237,12 @@ export default function Dice3DOverlay({
     }
   }, [ensureBox, plan, stage]);
 
+  useEffect(() => {
+    if (!active || !autoThrow || stage !== 'ready' || autoThrownRequestRef.current === requestKey) return;
+    autoThrownRequestRef.current = requestKey;
+    void roll({ strength: 0.2 });
+  }, [active, autoThrow, requestKey, roll, stage]);
+
   const onPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (stage !== 'ready' && stage !== 'settled') return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -303,7 +313,7 @@ export default function Dice3DOverlay({
 
       {preview && <div className="dice3d-preview">{preview}</div>}
 
-      {(stage === 'ready' || stage === 'settled') && (
+      {(stage === 'ready' || stage === 'settled') && !autoThrow && (
         <>
           {drag && (
             <span
@@ -401,7 +411,18 @@ export default function Dice3DOverlay({
               </div>
             ))}
           </div>
-          <p className="dice3d-results-note">Модификаторы и итог проверки появятся в журнале после применения.</p>
+          <div className="dice3d-roll-totals">
+            {totals.map((total) => (
+              <div key={total.key} className="dice3d-roll-total">
+                <span>{total.label}</span>
+                <strong>
+                  {total.modifier
+                    ? `${total.diceTotal} ${total.modifier >= 0 ? '+' : '−'} ${Math.abs(total.modifier)} = ${total.total}`
+                    : `= ${total.total}`}
+                </strong>
+              </div>
+            ))}
+          </div>
           <div className="dice3d-results-actions">
             <button
               type="button"
@@ -410,12 +431,8 @@ export default function Dice3DOverlay({
               title={mustPickTarget ? 'Сначала выберите цель' : undefined}
               onClick={() => onComplete(values)}
             >
-              Использовать результаты
+              Далее
             </button>
-            <button type="button" className="dice-dialog-btn" onClick={onFallback}>
-              <Keyboard size={15} /> Ввести вручную
-            </button>
-            <button type="button" className="dice-dialog-btn ghost" onClick={onCancel}>Отмена</button>
           </div>
         </section>
       )}

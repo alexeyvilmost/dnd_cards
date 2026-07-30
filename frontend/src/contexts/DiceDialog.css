@@ -507,6 +507,27 @@
   font: 11px/1.35 system-ui, sans-serif;
 }
 
+.dice3d-roll-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.dice3d-roll-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #c7b99f;
+  font: 12px/1.35 system-ui, sans-serif;
+}
+
+.dice3d-roll-total strong {
+  color: #f1d89e;
+  font-size: 15px;
+}
+
 .dice3d-results-actions {
   display: flex;
   flex-wrap: wrap;
@@ -519,6 +540,10 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+.dice3d-results-actions .dice-dialog-btn.primary {
+  width: 100%;
 }
 
 @keyframes dice3d-spin {

@@ -19,6 +19,8 @@ export interface SiteSettings {
   diceDialog: boolean;
   /** Физическая 3D-сцена броска. Если выключена, остаётся обычный диалог и ручной ввод. */
   dice3d: boolean;
+  /** Автоматически запускать 3D-кубики с небольшой силой после загрузки сцены. */
+  dice3dAutoThrow: boolean;
   /** Как отображать заклинания/действия/эффекты/предметы в меню и на листе (раскладка). */
   entityDisplay: EntityDisplaySettings;
   /** Вид превью предмета при наведении (инвентарь листа, библиотека): карточка или интерфейс. */
@@ -37,6 +39,7 @@ const EVENT = 'site-settings-changed';
 const DEFAULTS: SiteSettings = {
   diceDialog: true,
   dice3d: true,
+  dice3dAutoThrow: false,
   entityDisplay: {
     spells: 'icon',
     actions: 'row',

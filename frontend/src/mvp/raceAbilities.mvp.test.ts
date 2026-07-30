@@ -276,7 +276,7 @@ const KNOWN_RULE_DEVIATIONS = [
   'Аасимар — Целебные руки: число d4 равно уровню, должно равняться бонусу мастерства',
   'Аасимар — Небесное откровение: все три варианта дают только narrative-события',
   'Драконорождённый — Оружие дыхания: тратит всё действие и имеет только конус 15 фт вместо замены атаки с выбором конус/линия',
-  'Драконорождённый — Драконий полёт: кнопка доступна уже на 1 уровне, но скорость полёта не появляется даже на 5-м, а grant_speed не исполняется движком',
+  'Драконорождённый — Драконий полёт с 5 уровня пока не меняет runtime-скорость после нажатия',
   'Дворф — Камнечувствие: tremorsense применяется постоянно, а при нажатии не исполняется движком',
   'Голиаф — Большая форма: длится 10 раундов и восстанавливается после короткого отдыха вместо 10 минут и длинного отдыха',
   'Голиаф — Мощное телосложение: преимущество на спасбросок для окончания Схваченного осталось narrative',
@@ -522,7 +522,10 @@ d('Незаклинательные способности видов: полн�
     const flightPayload = directPayloads(flight?.mechanics as Dict | null | undefined)
       .find((payload) => payload.kind === 'grant_speed');
     const flightButtonAtL1 = collectSheetActions(dragonL1.assembled).some((action) => action.id === flight?.id);
-    if (flightPayload && flightButtonAtL1 && !dragonL5.ruleState.speeds.fly) {
+    const flightButtonAtL5 = collectSheetActions(dragonL5.assembled).some((action) => action.id === flight?.id);
+    expect(flightButtonAtL1).toBe(false);
+    expect(flightButtonAtL5).toBe(true);
+    if (flightPayload && flightButtonAtL5 && !dragonL5.ruleState.speeds.fly) {
       deviations.push(KNOWN_RULE_DEVIATIONS[3]);
     }
     const dwarfL1 = build({ race: dwarf }, klass, 1).ruleState;

@@ -2,7 +2,7 @@
  * Живой тест боевых стилей (гейт MVP_CONTENT=1, ходит в прод):
  * выбор боевого стиля у Воина 1 уровня — это choice(source:"feat",
  * filter:"fighting_style"); выбранная черта «Оборона» попадает в bundle.feats,
- * её эффект fs_defense — в сборку, и КЗ получает +1.
+ * её эффект fs_defense — в сборку, а +1 КЗ применяется только в доспехе.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -74,7 +74,7 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     defenseFeat = styles.find((f) => f.name === 'Оборона');
   }, 120_000);
 
-  it('выбор «Оборона»: черта в bundle.feats, эффект fs_defense в сборке, КЗ +1', async () => {
+  it('выбор «Оборона»: черта и эффект в сборке, без доспеха бонус КЗ не применяется', async () => {
     expect(fighter && human && bg && defenseFeat).toBeTruthy();
     const draft: CharacterDraft = {
       ...emptyDraft(),
@@ -109,14 +109,13 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     expect(ruleState.appliedGrants.some((g) => g.kind === 'feat' && g.value === defenseFeat!.id)).toBe(true);
     expect(ruleState.conflicts.filter((c) => c.severity === 'error')).toHaveLength(0);
 
-    // 4) КЗ листа учитывает +1 от стиля (модификатор в пассивках). После C9 тот же +1
-    // попадает и в ruleState.armorClass (единый примитив armorClassValue) → значения РАВНЫ
-    // (раньше резолв билда терял modifier-ac без resolution:'auto', отсюда был «+1»).
+    // 4) В пустом runtime доспех не надет: условный модификатор не применяется.
+    // Отдельный локальный тест equipment.mvp проверяет вторую половину правила — +1 в доспехе.
     const passives = collectPassiveMechanics(assembled);
     const ctx = buildCharacterContext(ruleState, draft as { level: number; abilities: Record<string, number> }, [], assembled.klass);
     const ac = breakdownValue('ac', ctx, emptyRuntime(), passives);
     expect(ac.value).toBe(ruleState.armorClass);
-    expect(ac.parts.some((p) => p.value === 1 && p.reason === 'эффект')).toBe(true);
+    expect(ac.parts.some((p) => p.source === 'Боевой стиль: Оборона')).toBe(false);
 
     // eslint-disable-next-line no-console
     console.log('[live] стиль «Оборона»:',

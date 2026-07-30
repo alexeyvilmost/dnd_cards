@@ -14,6 +14,12 @@ export interface PlannedDie {
   sides: number;
   /** Подпись для игрока: «Атака», «Урон (piercing)», «Лечение»… */
   label: string;
+  /** Идентификатор одного логического броска (например, атака отдельно от урона). */
+  resultGroup?: string;
+  /** Числовые модификаторы логического броска; задаются на первой кости группы. */
+  modifier?: number;
+  /** Как выбрать d20 при преимуществе/помехе. */
+  advantage?: 'none' | 'advantage' | 'disadvantage';
 }
 
 /**
@@ -33,18 +39,106 @@ const DAMAGE_LABEL: Record<string, string> = {
  *  (онлайн-бой: спас бросает ЦЕЛЬ на своём листе, кастер вводит только кости урона). */
 export function extractDiceFromEvents(events: EngineEvent[], skipSave = false): PlannedDie[] {
   const out: PlannedDie[] = [];
-  for (const e of events) {
+  events.forEach((e, eventIndex) => {
     if (e.type === 'roll') {
-      if (skipSave && e.roll.kind === 'save') continue;
-      for (const d of e.roll.dice) out.push({ sides: d.sides, label: e.label });
+      if (skipSave && e.roll.kind === 'save') return;
+      const modifier = e.roll.modifiers.reduce((sum, item) => sum + item.value, 0);
+      for (const [dieIndex, d] of e.roll.dice.entries()) {
+        out.push({
+          sides: d.sides,
+          label: e.label,
+          resultGroup: `event-${eventIndex}`,
+          ...(dieIndex === 0 && modifier ? { modifier } : {}),
+          ...(e.roll.advantage !== 'none' ? { advantage: e.roll.advantage } : {}),
+        });
+      }
     } else if (e.type === 'damage' && e.roll) {
       const t = DAMAGE_LABEL[e.damageType] ?? e.damageType;
-      for (const d of e.roll.dice) out.push({ sides: d.sides, label: `Урон (${t})` });
+      const modifier = e.roll.modifiers.reduce((sum, item) => sum + item.value, 0);
+      for (const [dieIndex, d] of e.roll.dice.entries()) {
+        out.push({
+          sides: d.sides,
+          label: `Урон (${t})`,
+          resultGroup: `event-${eventIndex}`,
+          ...(dieIndex === 0 && modifier ? { modifier } : {}),
+        });
+      }
     } else if (e.type === 'healing' && e.roll) {
-      for (const d of e.roll.dice) out.push({ sides: d.sides, label: 'Лечение' });
+      const modifier = e.roll.modifiers.reduce((sum, item) => sum + item.value, 0);
+      for (const [dieIndex, d] of e.roll.dice.entries()) {
+        out.push({
+          sides: d.sides,
+          label: 'Лечение',
+          resultGroup: `event-${eventIndex}`,
+          ...(dieIndex === 0 && modifier ? { modifier } : {}),
+        });
+      }
+    }
+  });
+  return out;
+}
+
+export interface PlannedRollTotal {
+  key: string;
+  label: string;
+  diceTotal: number;
+  modifier: number;
+  total: number;
+}
+
+/** Превращает data-driven bonus_die (Наставление/Благословение) в физические кости плана. */
+export function plannedD20BonusDice(
+  rules: Record<string, unknown>[],
+  label: string,
+  resultGroup: string,
+): PlannedDie[] {
+  const dice: PlannedDie[] = [];
+  for (const rule of rules) {
+    if (rule.op !== 'bonus_die') continue;
+    const faces = Math.floor(Number(rule.faces ?? rule.die ?? rule.value ?? 0));
+    if (faces < 2) continue;
+    const count = Math.max(1, Math.floor(Number(rule.count ?? 1)));
+    for (let index = 0; index < count; index += 1) {
+      dice.push({ sides: faces, label, resultGroup });
     }
   }
-  return out;
+  return dice;
+}
+
+/** Полные итоги логических бросков для 3D-панели: кости + модификаторы. */
+export function calculatePlannedRollTotals(plan: PlannedDie[], values: number[]): PlannedRollTotal[] {
+  const groups: Array<{ key: string; label: string; dice: Array<{ sides: number; value: number }>; modifier: number; advantage: PlannedDie['advantage'] }> = [];
+  let implicitGroup = 0;
+  let previousImplicitLabel: string | undefined;
+  plan.forEach((die, index) => {
+    if (!die.resultGroup && die.label !== previousImplicitLabel) implicitGroup += 1;
+    const key = die.resultGroup ?? `implicit-${implicitGroup}`;
+    let group = groups[groups.length - 1];
+    if (!group || group.key !== key) {
+      group = { key, label: die.label, dice: [], modifier: 0, advantage: die.advantage };
+      groups.push(group);
+    }
+    group.dice.push({ sides: die.sides, value: Number(values[index]) || 0 });
+    group.modifier += die.modifier ?? 0;
+    group.advantage = group.advantage ?? die.advantage;
+    previousImplicitLabel = die.resultGroup ? undefined : die.label;
+  });
+
+  return groups.map((group) => {
+    const d20 = group.dice.filter((die) => die.sides === 20).map((die) => die.value);
+    const other = group.dice.filter((die) => die.sides !== 20).reduce((sum, die) => sum + die.value, 0);
+    let d20Total = d20.reduce((sum, value) => sum + value, 0);
+    if (d20.length > 1 && group.advantage === 'advantage') d20Total = Math.max(...d20);
+    if (d20.length > 1 && group.advantage === 'disadvantage') d20Total = Math.min(...d20);
+    const diceTotal = d20Total + other;
+    return {
+      key: group.key,
+      label: group.label,
+      diceTotal,
+      modifier: group.modifier,
+      total: diceTotal + group.modifier,
+    };
+  });
 }
 
 /** Человекочитаемая сводка плана: «1к20 и 2к8» (группировка по типу кости). */

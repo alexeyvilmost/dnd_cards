@@ -76,6 +76,14 @@ describe('D20-правила (roll.ts)', () => {
     expect(roll.total).toBe(20);        // 19 + 1
     expect(roll.outcome).toBe('hit');   // натуральная 19 — не крит (крит по натуралу, не по total)
   });
+
+  it('bonus_die — Наставление/Благословение добавляет к4 к полному итогу', () => {
+    const rules = [{ op: 'bonus_die', applies_to: { roll: 'ability_check' }, faces: 4 }];
+    const roll = rollD20({ rng: seq([face(12), face(3, 4)]), modifiers: [{ value: 5, source: 'Навык' }], rules });
+    expect(roll.dice.map((die) => [die.sides, die.result])).toEqual([[20, 12], [4, 3]]);
+    expect(roll.total).toBe(20);
+    expect(roll.text).toContain('к4: 3');
+  });
 });
 
 describe('Правила урона (applyDamageDieRules)', () => {

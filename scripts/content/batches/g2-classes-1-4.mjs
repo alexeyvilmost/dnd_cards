@@ -65,8 +65,31 @@ const DIVINE_ORDER = {
     options: {
       source: 'explicit',
       items: [
-        { id: 'protector', name: 'Защитник', grants: [{ kind: 'narrative', description: 'Владение тяжёлыми доспехами и военным оружием.' }] },
-        { id: 'thaumaturge', name: 'Тaumaturge', grants: [{ kind: 'narrative', description: 'Дополнительный заговор и бонус к магическому урону/лечению.' }] },
+        {
+          id: 'protector',
+          name: 'Защитник',
+          grants: [
+            { kind: 'grant_proficiency', prof: 'armor', value: 'heavy' },
+            { kind: 'grant_proficiency', prof: 'weapon', value: 'martial' },
+          ],
+        },
+        {
+          id: 'thaumaturge',
+          name: 'Чудотворец',
+          grants: [
+            {
+              kind: 'choice',
+              id: 'cleric_thaumaturge_cantrip',
+              prompt: 'Дополнительный заговор жреца',
+              count: 1,
+              options: { source: 'spell', filter: { classes: ['жрец'], levels: [0] } },
+              grant: { kind: 'grant_spell', label: 'cantrip' },
+              resolution: 'on_acquire',
+            },
+            { kind: 'modifier', applies_to: { roll: 'ability_check', filter: { skill: 'arcana' } }, op: 'add', value: 'max(1,wis)', source: 'Чудотворец' },
+            { kind: 'modifier', applies_to: { roll: 'ability_check', filter: { skill: 'religion' } }, op: 'add', value: 'max(1,wis)', source: 'Чудотворец' },
+          ],
+        },
       ],
     },
     resolution: 'on_acquire',

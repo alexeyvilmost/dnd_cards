@@ -55,6 +55,7 @@ interface DialogState {
   /** Пустой план + подтверждение расхода ресурсов: окно «Применить»/«Отмена» без кубов. */
   confirmOnly: boolean;
   use3d: boolean;
+  autoThrow3d: boolean;
   targets?: TargetOption[];
   needsTarget?: boolean;
 }
@@ -90,6 +91,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
         use3d: settings.dice3d,
         targets: opts?.targets,
         needsTarget: opts?.needsTarget,
+        autoThrow3d: settings.dice3dAutoThrow,
       });
     });
   }, []);
@@ -124,6 +126,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
         preview={dialog?.preview}
         targets={dialog?.targets}
         needsTarget={dialog?.needsTarget}
+        autoThrow={dialog?.autoThrow3d ?? false}
         targetId={targetId}
         onTargetChange={setTargetId}
         onComplete={(rolledValues) => finish(withTarget({ mode: 'manual', values: rolledValues }))}

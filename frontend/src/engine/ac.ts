@@ -237,6 +237,7 @@ export function armorClassValue(
       characterSpeed: character.characterSpeed,
       variables: character.variables,
     },
+    evalCtx: { character, state },
   });
   // C5: КЗ — ЗНАЧЕНИЕ, поэтому применяем полную алгебру (аддитивы + set/multiply/upgrade/downgrade),
   // а не только сумму, иначе «КЗ не ниже 13»/«установить КЗ» из валидного контента тихо терялись бы.

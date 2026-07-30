@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { computeAC, equipItem, totalWeight, unequipSlot, weaponContext } from './contracts';
+import { armorClassValue } from '../engine/ac';
 import type { RuntimeState } from './contracts';
 import {
   ALL_CARDS, CARD_CHAIN_MAIL, CARD_GREATAXE, CARD_LEATHER_ARMOR,
@@ -52,6 +53,21 @@ describe('C2: вес инвентаря', () => {
 });
 
 describe('C4: КЗ-конвейер с разбивкой', () => {
+  const DEFENSE_STYLE = {
+    activation: { mode: 'passive' },
+    effects: [{
+      resolution: 'auto',
+      result: [{
+        kind: 'modifier',
+        applies_to: { roll: 'ac' },
+        op: 'add',
+        value: '+1',
+        source: 'Боевой стиль: Оборона',
+        when: [{ kind: 'wearing_armor' }],
+      }],
+    }],
+  };
+
   it('без доспеха: 10 + ЛВК', () => {
     const bd = computeAC(FIGHTER_CTX, freshFighterState(), []);
     expect(bd.value).toBe(12);
@@ -71,6 +87,12 @@ describe('C4: КЗ-конвейер с разбивкой', () => {
     const bd = computeAC(FIGHTER_CTX, state, []);
     expect(bd.value).toBe(18);
     expect(bd.parts.some((p) => p.source.toLowerCase().includes('щит') && p.value === 2)).toBe(true);
+  });
+
+  it('боевой стиль «Оборона» не действует без доспеха и даёт +1 в доспехе', () => {
+    expect(armorClassValue(FIGHTER_CTX, freshFighterState(), [DEFENSE_STYLE]).value).toBe(12);
+    const { state } = equipItem(freshFighterState(), CARD_LEATHER_ARMOR);
+    expect(armorClassValue(FIGHTER_CTX_EQUIPPED, state, [DEFENSE_STYLE]).value).toBe(14);
   });
 
   it('set_value из пассивки (Защита без доспехов 10+dex+con) применяется без брони', () => {

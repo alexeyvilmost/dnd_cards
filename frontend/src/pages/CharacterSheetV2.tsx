@@ -6,7 +6,7 @@ import type { CharacterDraft, ForgeCharacter } from '../character/types';
 import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
 import type { CharacterContext, EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { breakdownValue } from '../engine/breakdown';
-import { plannedValuesRng } from '../engine/dicePlan';
+import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
@@ -99,11 +99,18 @@ const CharacterSheetV2 = ({
     // иначе литеральные бонусы задваивались бы (parts + collected).
     const collected = runtimeState
       ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
-      : { advantage: 'none' as const, modifiers: [] };
-    const plan = Array.from(
+      : { advantage: 'none' as const, modifiers: [], rules: [] as Record<string, unknown>[] };
+    const plan: PlannedDie[] = Array.from(
       { length: collected.advantage === 'none' ? 1 : 2 },
-      () => ({ sides: 20, label }),
+      (_, index) => ({
+        sides: 20,
+        label,
+        resultGroup: 'check',
+        advantage: collected.advantage,
+        ...(index === 0 ? { modifier: parts.reduce((sum, part) => sum + part.value, 0) } : {}),
+      }),
     );
+    plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
     const decision = await diceDialog.request(plan, label);
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
@@ -113,6 +120,7 @@ const CharacterSheetV2 = ({
       advantage: collected.advantage,
       modifiers: [...parts],
       rng,
+      rules: collected.rules,
     });
     onEvents([rollEvent(label, roll)]);
   };

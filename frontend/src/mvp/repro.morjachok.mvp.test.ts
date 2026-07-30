@@ -110,15 +110,14 @@ describe.skipIf(!RUN)('Репро: Морячок-воин, стиль «Обо�
     const panelAc = breakdownValue('ac', panelCtx, runtimeState, passives);
     console.log('[repro] КД (расчёт) панели =', panelAc.value);
 
-    // Без доспеха (пустая экипировка): 10 + ЛВК(1) + Оборона(1) = 12.
+    // Без доспеха (пустая экипировка): Оборона не применяется.
     const nakedState = { ...runtimeState, equipment: {} };
     const nakedAc = breakdownValue('ac', ctx, nakedState, passives);
     console.log('[repro] КЗ без доспеха =', nakedAc.value);
 
     expect(styleEffect, 'эффект fs_defense должен быть в сборке').toBeTruthy();
     expect(ac.parts.some((p) => p.value === 1 && p.reason === 'эффект'), '+1 от «Обороны» в шапке').toBe(true);
-    // После C9 ruleState.armorClass сам включает +1 «Обороны» (единый armorClassValue),
-    // поэтому «голый» КЗ листа РАВЕН персистируемому (раньше был на +1 больше).
+    // Персистируемый базовый КЗ считается без runtime-экипировки, поэтому равен «голому».
     expect(nakedAc.value, 'КЗ без доспеха = персистируемый (единый примитив)').toBe(ruleState.armorClass);
     expect(panelAc.value, '«КД (расчёт)» совпадает с шапкой').toBe(ac.value);
   }, 120_000);

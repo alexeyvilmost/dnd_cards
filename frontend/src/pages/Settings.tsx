@@ -74,6 +74,23 @@ const Settings = () => {
               При включённом диалоге появится вариант «Бросить на сайте». Если диалог выключен,
               3D-бросок запускается сразу при использовании действия.
             </span>
+            <label className={`mt-3 flex items-start gap-3 ${settings.dice3d ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+              <input
+                type="checkbox"
+                className="mt-0.5 w-4 h-4 text-amber-600 rounded"
+                checked={settings.dice3dAutoThrow}
+                disabled={!settings.dice3d}
+                onChange={(e) => setSetting('dice3dAutoThrow', e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-medium text-gray-800">
+                  Кидать 3D-кубики автоматически
+                </span>
+                <span className="block text-xs text-gray-500 mt-0.5">
+                  После загрузки сцены кубики сами бросаются с небольшой силой — тянуть их не нужно.
+                </span>
+              </span>
+            </label>
             <button
               type="button"
               className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"

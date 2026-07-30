@@ -21,7 +21,7 @@ import type { DieRoll } from '../mvp/contracts';
 
 type Dict = Record<string, unknown>;
 
-export const D20_RULE_OPS = new Set(['reroll', 'set_die', 'crit_range', 'outcome', 'on_roll']);
+export const D20_RULE_OPS = new Set(['reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die']);
 export const DAMAGE_RULE_OPS = new Set(['die_bonus', 'explode']);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
@@ -67,6 +67,22 @@ export function d20DieBonus(rules: Dict[], faces: number): number {
   let b = 0;
   for (const r of rules) if (r.op === 'die_bonus' && num((r.applies_to as Dict)?.die) === faces) b += num(r.value, 0);
   return b;
+}
+
+/** Дополнительные кости к итогу d20 (Наставление/Благословение: +1к4). */
+export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
+  const dice: DieRoll[] = [];
+  for (const rule of rules) {
+    if (rule.op !== 'bonus_die') continue;
+    const rawFaces = Math.floor(num(rule.faces ?? rule.die ?? rule.value, 0));
+    if (rawFaces < 2) continue;
+    const faces = rawFaces;
+    const count = Math.max(1, Math.floor(num(rule.count, 1)));
+    for (let index = 0; index < count; index += 1) {
+      dice.push({ sides: faces, result: Math.floor(rng() * faces) + 1 });
+    }
+  }
+  return dice;
 }
 
 /** Переопределение исхода по натуральному значению; undefined — базовая логика. */

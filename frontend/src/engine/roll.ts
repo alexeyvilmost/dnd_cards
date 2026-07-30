@@ -8,7 +8,15 @@ import type {
   RollLog,
   RollModifier,
 } from '../mvp/contracts';
-import { d20Faces, critRangeShift, shouldReroll, d20DieBonus, outcomeOverride, rollTriggers } from './rollRules';
+import {
+  d20Faces,
+  critRangeShift,
+  shouldReroll,
+  d20DieBonus,
+  outcomeOverride,
+  rollTriggers,
+  rollD20BonusDice,
+} from './rollRules';
 
 function rollDie(sides: number, rng: () => number): number {
   return Math.floor(rng() * sides) + 1;
@@ -26,6 +34,7 @@ function buildD20Text(
   target?: RollD20Options['target'],
   outcome?: RollLog['outcome'],
   dieBonus = 0,
+  bonusDice: DieRoll[] = [],
 ): string {
   const parts: string[] = [];
   const kept = dice.filter((d) => !d.discarded);
@@ -43,6 +52,9 @@ function buildD20Text(
     if (k && disc) parts.push(`${label}: ${k.result} (отброшено ${disc.result})`);
   }
   if (dieBonus) parts.push(`${dieBonus >= 0 ? '+' : ''}${dieBonus} кость`);
+  if (bonusDice.length) {
+    parts.push(`+ ${bonusDice.map((die) => `к${die.sides}: ${die.result}`).join(' + ')}`);
+  }
   for (const m of modifiers) parts.push(formatMod(m));
   let text = parts.join(' ');
   if (parts.length > 1 || modifiers.length) text += ` = ${total}`;
@@ -96,7 +108,9 @@ export function rollD20(opts: RollD20Options): RollLog {
 
   // die_bonus к самой d20-кости (+N к каждой к20/к24) — в total, детекцию крита не меняет.
   const dieBonus = d20DieBonus(rules, faces);
-  const total = natural + dieBonus + modSum;
+  const bonusDice = rollD20BonusDice(rules, rng);
+  const bonusDiceTotal = bonusDice.reduce((sum, die) => sum + die.result, 0);
+  const total = natural + dieBonus + bonusDiceTotal + modSum;
   const critAt = (opts.critRange ?? 20) + critRangeShift(rules); // crit_range складывается
 
   let outcome: RollLog['outcome'];
@@ -118,13 +132,13 @@ export function rollD20(opts: RollD20Options): RollLog {
 
   return {
     kind: 'd20',
-    dice,
+    dice: [...dice, ...bonusDice],
     advantage,
     modifiers,
     total,
     target: opts.target,
     outcome,
-    text: buildD20Text(dice, modifiers, total, opts.target, outcome, dieBonus),
+    text: buildD20Text(dice, modifiers, total, opts.target, outcome, dieBonus, bonusDice),
     ...(triggered.length ? { triggered } : {}),
   };
 }
