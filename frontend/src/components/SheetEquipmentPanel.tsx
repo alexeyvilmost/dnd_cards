@@ -87,7 +87,7 @@ export default function SheetEquipmentPanel({
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<Card[]>([]);
   const [searching, setSearching] = useState(false);
-  const { entityDisplay, itemPreview } = useSiteSettings();
+  const { entityDisplay, itemPreview, allowSheetEntityAdditions } = useSiteSettings();
   const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -494,7 +494,7 @@ export default function SheetEquipmentPanel({
         </div>
       </div>
 
-      <div className="sheet-group">
+      {allowSheetEntityAdditions && <div className="sheet-group">
         <h3 className="sheet-h3">Добавить предмет</h3>
         <div className="sheet-inv-search">
           <Search size={16} className="sheet-inv-search-icon" />
@@ -510,7 +510,7 @@ export default function SheetEquipmentPanel({
           <p className="forge-note">Ничего не найдено.</p>
         )}
         {searchResults.length > 0 && renderSearchResults()}
-      </div>
+      </div>}
 
       <div className="sheet-group">
         <h3 className="sheet-h3">Слоты</h3>

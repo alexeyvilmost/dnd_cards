@@ -31,6 +31,8 @@ export interface SiteSettings {
   /** Показывать оригинальное (английское) название под основным — в интерфейсных
    *  отображениях, детальных окнах и превью при наведении. На печатных карточках не показывается. */
   showOriginalNames: boolean;
+  /** Разрешить вручную добавлять сущности непосредственно из листа персонажа. */
+  allowSheetEntityAdditions: boolean;
 }
 
 const KEY = 'site-settings';
@@ -49,6 +51,7 @@ const DEFAULTS: SiteSettings = {
   itemPreview: 'card',
   playerMode: false,
   showOriginalNames: false,
+  allowSheetEntityAdditions: true,
 };
 
 export function getSettings(): SiteSettings {

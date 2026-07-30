@@ -24,10 +24,16 @@ import {
 import { charactersV3Api } from '../character/api';
 import { loadAssembly } from '../character/assemble';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
+import {
+  addManualEntities,
+  type ManualEntity,
+  type ManualEntityType,
+} from '../character/manualEntityAddition';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { ForgeCharacter } from '../character/types';
 import type { ActiveEffectEntry } from '../mvp/contracts';
 import type { Action, Card, Feat, PassiveEffect, ResourceDefinition, Spell } from '../types';
+import { useSiteSettings } from '../settings';
 import MobileOverlay from './MobileOverlay';
 import './mobile.css';
 
@@ -164,16 +170,20 @@ async function saveSelection(
   entities: CatalogEntity[],
   selection: Record<string, number>,
 ): Promise<void> {
-  if (type === 'items') {
-    const inventory = [...(character.inventory_items ?? [])];
-    for (const entity of entities) {
-      const amount = selection[entity.id] ?? 0;
-      if (!amount) continue;
-      const existing = inventory.find((row) => row.card_id === entity.id && !row.container_id);
-      if (existing) existing.qty += amount;
-      else inventory.push({ card_id: entity.id, qty: amount });
-    }
-    await charactersV3Api.patchRuntime(character.id, { inventory_items: inventory });
+  if (type === 'items' || type === 'actions' || type === 'effects' || type === 'spells') {
+    const manualType = type as ManualEntityType;
+    await addManualEntities(character, manualType, entities.map((entity) => ({
+      entity: {
+        id: entity.id,
+        name: entity.name,
+        description: entity.description,
+        imageUrl: entity.imageUrl,
+        meta: entity.meta,
+        repeatable: Boolean(entity.repeatable),
+        source: entity.source as ManualEntity['source'],
+      },
+      amount: selection[entity.id] ?? 0,
+    })));
     return;
   }
 
@@ -198,10 +208,7 @@ async function saveSelection(
   }
 
   const draft = characterToDraft(character);
-  if (type === 'actions') draft.actionIds = nextIds(draft.actionIds, entities, selection, false);
-  if (type === 'spells') draft.spellIds = nextIds(draft.spellIds, entities, selection, false);
   if (type === 'feats') draft.featIds = nextIds(draft.featIds, entities, selection, true);
-  if (type === 'effects') draft.effectIds = nextIds(draft.effectIds, entities, selection, true);
   if (type === 'resources') draft.resourceIds = nextIds(draft.resourceIds, entities, selection, false);
 
   const assembled = await loadAssembly(draft);
@@ -239,6 +246,13 @@ export default function MobileEntityCatalog() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { allowSheetEntityAdditions } = useSiteSettings();
+
+  useEffect(() => {
+    if (!allowSheetEntityAdditions && id) {
+      navigate(`/m/characters/${id}`, { replace: true });
+    }
+  }, [allowSheetEntityAdditions, id, navigate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 250);
@@ -305,7 +319,7 @@ export default function MobileEntityCatalog() {
   };
 
   const apply = async () => {
-    if (!character || !type || selectedCount === 0) return;
+    if (!allowSheetEntityAdditions || !character || !type || selectedCount === 0) return;
     setSaving(true);
     setError(null);
     try {

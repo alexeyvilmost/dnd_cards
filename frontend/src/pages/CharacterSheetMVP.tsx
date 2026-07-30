@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon,
-  Swords, Sparkles, Backpack, ScrollText, Zap, LayoutGrid,
+  Swords, Sparkles, Backpack, ScrollText, Zap, LayoutGrid, Plus,
 } from 'lucide-react';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -38,6 +38,7 @@ import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import SheetEntityRow from '../components/SheetEntityRow';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
+import SheetEntityAddDialog from '../components/SheetEntityAddDialog';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
 import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
@@ -112,6 +113,7 @@ const CharacterSheetMVP = () => {
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [entityAddOpen, setEntityAddOpen] = useState(false);
   const [speedDialogOpen, setSpeedDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +123,7 @@ const CharacterSheetMVP = () => {
   const [unseen, setUnseen] = useState(0);
   const [longRestOpen, setLongRestOpen] = useState(false);
   const { toasts, push: pushToast } = useSheetToasts();
-  const { entityDisplay } = useSiteSettings();
+  const { entityDisplay, allowSheetEntityAdditions } = useSiteSettings();
   const diceDialog = useDiceDialog();
   const reactionPrompt = useReactionPrompt();
   // Рефы, чтобы loadJournal оставался стабильным (иначе смена journalOpen/pushToast пересоздавала бы
@@ -292,6 +294,12 @@ const CharacterSheetMVP = () => {
     setCharacter(next);
     syncSelfToEncounter(next);
   }, [syncSelfToEncounter]);
+
+  const handleManualEntityUpdated = useCallback(async (next: ForgeCharacter) => {
+    handleCharacterUpdated(next);
+    const nextAssembly = await loadAssembly(characterToDraft(next));
+    setAssembled(nextAssembly);
+  }, [handleCharacterUpdated]);
 
   const draft = useMemo(() => (character ? characterToDraft(character) : null), [character]);
 
@@ -914,6 +922,17 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
+          {allowSheetEntityAdditions && (
+            <button
+              type="button"
+              className="sheet-header-btn"
+              onClick={() => setEntityAddOpen(true)}
+              title="Добавить предмет, действие, эффект или заклинание"
+            >
+              <Plus size={16} />
+              <span className="sheet-header-btn-label">Добавить</span>
+            </button>
+          )}
           <button
             type="button"
             className="sheet-header-btn"
@@ -1434,6 +1453,13 @@ const CharacterSheetMVP = () => {
       )}
 
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {entityAddOpen && allowSheetEntityAdditions && (
+        <SheetEntityAddDialog
+          character={character}
+          onUpdated={handleManualEntityUpdated}
+          onClose={() => setEntityAddOpen(false)}
+        />
+      )}
       {speedDialogOpen && (
         <SheetSpeedDialog
           speed={speed}

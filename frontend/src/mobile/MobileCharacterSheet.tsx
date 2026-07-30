@@ -26,6 +26,7 @@ import { rollEvent, describeEngineEvent } from '../engine/events';
 import { plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import type { EngineEvent } from '../mvp/contracts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { useSiteSettings } from '../settings';
 import MobileOverlay from './MobileOverlay';
 import {
   MobileEntityOverlay,
@@ -136,6 +137,7 @@ export default function MobileCharacterSheet() {
   const location = useLocation();
   const data = useMobileCharacter(id);
   const diceDialog = useDiceDialog();
+  const { allowSheetEntityAdditions } = useSiteSettings();
   const [page, setPage] = useState<SheetPage>('general');
   const pageHistory = useRef<SheetPage[]>(['general']);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -342,9 +344,11 @@ export default function MobileCharacterSheet() {
           <Shield size={16} />
           <span>{armorClass}</span>
         </button>
-        <button type="button" className="m-icon-button m-icon-button--gold" onClick={() => navigate(`/m/characters/${character.id}/add`)} aria-label="Добавить в лист">
-          <Plus size={21} />
-        </button>
+        {allowSheetEntityAdditions && (
+          <button type="button" className="m-icon-button m-icon-button--gold" onClick={() => navigate(`/m/characters/${character.id}/add`)} aria-label="Добавить в лист">
+            <Plus size={21} />
+          </button>
+        )}
       </header>
 
       <div className={`m-sheet-content m-sheet-page--${page}`}>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Languages, X } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Languages, PlusCircle, X } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -67,6 +67,18 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
           <span>
             <span className="sheet-settings-row-label"><Languages size={16} /> Оригинальные названия</span>
             <span className="sheet-settings-hint">Под названием показывать оригинальное (английское) — в превью и детальных окнах.</span>
+          </span>
+        </label>
+
+        <label className="sheet-settings-check">
+          <input
+            type="checkbox"
+            checked={settings.allowSheetEntityAdditions}
+            onChange={(e) => setSetting('allowSheetEntityAdditions', e.target.checked)}
+          />
+          <span>
+            <span className="sheet-settings-row-label"><PlusCircle size={16} /> Ручное добавление в лист</span>
+            <span className="sheet-settings-hint">Разрешить добавлять предметы, действия, эффекты и заклинания прямо из листа персонажа.</span>
           </span>
         </label>
 

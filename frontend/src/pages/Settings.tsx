@@ -1,4 +1,4 @@
-import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Eye, Languages } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Eye, Languages, PlusCircle } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -124,6 +124,25 @@ const Settings = () => {
               Прячет техническое описание механики (сырые id ресурсов/ячеек, «Стоит…», «Использования…»)
               из превью и листа персонажа. Остаётся человеческое описание, чипы стоимости и боевые
               характеристики (атака, урон, лечение). Выключите, чтобы как мастер видеть всю механику.
+            </span>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-4 p-5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-1 w-5 h-5 text-indigo-600 rounded"
+            checked={settings.allowSheetEntityAdditions}
+            onChange={(e) => setSetting('allowSheetEntityAdditions', e.target.checked)}
+          />
+          <span>
+            <span className="flex items-center gap-2 font-medium text-gray-900">
+              <PlusCircle size={18} className="text-indigo-600" />
+              Ручное добавление в лист
+            </span>
+            <span className="block text-sm text-gray-500 mt-1">
+              Показывает на листе инструменты для добавления предметов, действий, эффектов и
+              заклинаний. Добавленные сущности проходят тот же пересчёт, что и выборы кузницы.
             </span>
           </span>
         </label>
