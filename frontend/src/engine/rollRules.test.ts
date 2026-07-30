@@ -85,6 +85,20 @@ describe('D20-правила (roll.ts)', () => {
     expect(roll.total).toBe(20);
     expect(roll.text).toContain('к4: 3 (Наставление)');
   });
+
+  it('bonus_die с sign:-1 — Защита от оружия вычитает к4 и объясняет источник', () => {
+    const rules = [{
+      op: 'bonus_die',
+      applies_to: { roll: 'attack' },
+      faces: 4,
+      sign: -1,
+      source: 'Защита от оружия',
+    }];
+    const roll = rollD20({ rng: seq([face(12), face(3, 4)]), modifiers: [{ value: 5, source: 'Атака' }], rules });
+    expect(roll.dice[1]).toMatchObject({ sides: 4, result: 3, sign: -1, source: 'Защита от оружия' });
+    expect(roll.total).toBe(14);
+    expect(roll.text).toContain('− к4: 3 (Защита от оружия)');
+  });
 });
 
 describe('Правила урона (applyDamageDieRules)', () => {

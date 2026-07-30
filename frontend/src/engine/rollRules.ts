@@ -71,7 +71,7 @@ export function d20DieBonus(rules: Dict[], faces: number): number {
 
 /** Дополнительные кости к итогу d20 (Наставление/Благословение: +1к4). */
 export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
-  const dice: Array<DieRoll & { source?: string }> = [];
+  const dice: DieRoll[] = [];
   for (const rule of rules) {
     if (rule.op !== 'bonus_die') continue;
     const rawFaces = Math.floor(num(rule.faces ?? rule.die ?? rule.value, 0));
@@ -81,11 +81,13 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
     const source = typeof rule.source === 'string' && rule.source.trim()
       ? rule.source.trim()
       : undefined;
+    const sign: 1 | -1 = num(rule.sign, 1) < 0 ? -1 : 1;
     for (let index = 0; index < count; index += 1) {
       dice.push({
         sides: faces,
         result: Math.floor(rng() * faces) + 1,
         ...(source ? { source } : {}),
+        ...(sign < 0 ? { sign } : {}),
       });
     }
   }

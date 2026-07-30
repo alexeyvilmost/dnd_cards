@@ -247,6 +247,7 @@ export const ROLL_TARGETS: RegistryItem[] = [
   { id: 'attack_roll', label: 'Бросок атаки' },
   { id: 'ability_check', label: 'Проверка характеристики' },
   { id: 'saving_throw', label: 'Спасбросок' },
+  { id: 'healing', label: 'Лечение' },
   { id: 'max_hp', label: 'Макс. хиты' },
   { id: 'ac', label: 'КД' },
   { id: 'speed', label: 'Скорость' },

@@ -59,6 +59,28 @@ describe('полный итог в панели 3D-кубиков', () => {
     )).toEqual([{ sides: 4, label: 'Наставление', resultGroup: 'save' }]);
   });
 
+  it('штрафная кость сохраняет знак и вычитается из полного результата', () => {
+    const plan = [
+      { sides: 20, label: 'Атака', resultGroup: 'attack', modifier: 5 },
+      { sides: 4, label: 'Защита от оружия (штраф)', resultGroup: 'attack', sign: -1 as const },
+    ];
+    expect(calculatePlannedRollTotals(plan, [12, 3])[0]).toMatchObject({
+      diceTotal: 9,
+      modifier: 5,
+      total: 14,
+    });
+    expect(plannedD20BonusDice(
+      [{ op: 'bonus_die', faces: 4, sign: -1, source: 'Защита от оружия' }],
+      'Атака',
+      'attack',
+    )).toEqual([{
+      sides: 4,
+      label: 'Защита от оружия (штраф)',
+      resultGroup: 'attack',
+      sign: -1,
+    }]);
+  });
+
   it('показывает источник бонусной кости из события, сохраняя общий итог броска', () => {
     const dice = [
       { sides: 20, result: 10 },

@@ -407,7 +407,7 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "d20"] },
+            "roll": { "enum": ["attack", "damage", "healing", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "d20"] },
             "filter": { "type": "object" },
             "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }
@@ -422,6 +422,8 @@
           "properties": { "eq": { "type": "number" }, "min": { "type": "number" }, "max": { "type": "number" } }
         },
         "faces": { "type": "number", "description": "set_die: грани основной кости; bonus_die: грани дополнительной кости к итогу." },
+        "sign": { "enum": [1, -1], "description": "Знак дополнительной кости: 1 прибавляет, -1 вычитает." },
+        "consume": { "enum": ["next"], "description": "Снять временный эффект после следующего подходящего броска." },
         "limit": { "$ref": "#/$defs/formula" },
         "then": { "type": "array", "items": { "$ref": "#/$defs/payload" }, "description": "on_roll: payload-ы при совпадении natural." },
         "priority": { "type": "number" },

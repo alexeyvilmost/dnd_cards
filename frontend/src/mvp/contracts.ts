@@ -32,6 +32,10 @@ export interface DieRoll {
   result: number;
   /** true — кость отброшена (преимущество/помеха, переброс). */
   discarded?: boolean;
+  /** Источник дополнительной кости (Наставление, Защита от оружия и т.п.). */
+  source?: string;
+  /** −1 означает, что дополнительная кость вычитается из результата. */
+  sign?: 1 | -1;
 }
 
 export type AdvantageState = 'none' | 'advantage' | 'disadvantage';

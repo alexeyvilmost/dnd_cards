@@ -53,10 +53,11 @@ function buildD20Text(
   }
   if (dieBonus) parts.push(`${dieBonus >= 0 ? '+' : ''}${dieBonus} кость`);
   if (bonusDice.length) {
-    parts.push(`+ ${bonusDice.map((die) => {
-      const source = (die as DieRoll & { source?: string }).source;
-      return `к${die.sides}: ${die.result}${source ? ` (${source})` : ''}`;
-    }).join(' + ')}`);
+    parts.push(bonusDice.map((die, index) => {
+      const negative = die.sign === -1;
+      const operator = negative ? '−' : (index === 0 ? '+' : '+');
+      return `${operator} к${die.sides}: ${die.result}${die.source ? ` (${die.source})` : ''}`;
+    }).join(' '));
   }
   for (const m of modifiers) parts.push(formatMod(m));
   let text = parts.join(' ');
@@ -112,7 +113,7 @@ export function rollD20(opts: RollD20Options): RollLog {
   // die_bonus к самой d20-кости (+N к каждой к20/к24) — в total, детекцию крита не меняет.
   const dieBonus = d20DieBonus(rules, faces);
   const bonusDice = rollD20BonusDice(rules, rng);
-  const bonusDiceTotal = bonusDice.reduce((sum, die) => sum + die.result, 0);
+  const bonusDiceTotal = bonusDice.reduce((sum, die) => sum + die.result * (die.sign ?? 1), 0);
   const total = natural + dieBonus + bonusDiceTotal + modSum;
   const critAt = (opts.critRange ?? 20) + critRangeShift(rules); // crit_range складывается
 

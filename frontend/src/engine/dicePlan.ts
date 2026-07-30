@@ -20,6 +20,8 @@ export interface PlannedDie {
   modifier?: number;
   /** Как выбрать d20 при преимуществе/помехе. */
   advantage?: 'none' | 'advantage' | 'disadvantage';
+  /** −1 — результат кости вычитается из логического броска. */
+  sign?: 1 | -1;
 }
 
 /**
@@ -44,13 +46,14 @@ export function extractDiceFromEvents(events: EngineEvent[], skipSave = false): 
       if (skipSave && e.roll.kind === 'save') return;
       const modifier = e.roll.modifiers.reduce((sum, item) => sum + item.value, 0);
       for (const [dieIndex, d] of e.roll.dice.entries()) {
-        const dieSource = (d as typeof d & { source?: string }).source;
+        const dieSource = d.source;
         out.push({
           sides: d.sides,
-          label: dieSource || e.label,
+          label: d.sign === -1 && dieSource ? `${dieSource} (штраф)` : dieSource || e.label,
           resultGroup: `event-${eventIndex}`,
           ...(dieIndex === 0 && modifier ? { modifier } : {}),
           ...(e.roll.advantage !== 'none' ? { advantage: e.roll.advantage } : {}),
+          ...(d.sign === -1 ? { sign: -1 as const } : {}),
         });
       }
     } else if (e.type === 'damage' && e.roll) {
@@ -102,8 +105,14 @@ export function plannedD20BonusDice(
     const source = typeof rule.source === 'string' && rule.source.trim()
       ? rule.source.trim()
       : label;
+    const sign: 1 | -1 = Number(rule.sign ?? 1) < 0 ? -1 : 1;
     for (let index = 0; index < count; index += 1) {
-      dice.push({ sides: faces, label: source, resultGroup });
+      dice.push({
+        sides: faces,
+        label: sign < 0 ? `${source} (штраф)` : source,
+        resultGroup,
+        ...(sign < 0 ? { sign } : {}),
+      });
     }
   }
   return dice;
@@ -122,7 +131,7 @@ export function calculatePlannedRollTotals(plan: PlannedDie[], values: number[])
       group = { key, label: die.label, dice: [], modifier: 0, advantage: die.advantage };
       groups.push(group);
     }
-    group.dice.push({ sides: die.sides, value: Number(values[index]) || 0 });
+    group.dice.push({ sides: die.sides, value: (Number(values[index]) || 0) * (die.sign ?? 1) });
     group.modifier += die.modifier ?? 0;
     group.advantage = group.advantage ?? die.advantage;
     previousImplicitLabel = die.resultGroup ? undefined : die.label;

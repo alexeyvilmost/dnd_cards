@@ -118,11 +118,22 @@ export function collectInPlayActionChoices(
   const effects = (mechanics as Dict).effects;
   if (!Array.isArray(effects)) return [];
   const raw: Dict[] = [];
-  for (const it of effects as Dict[]) {
-    if (it?.kind === 'choice') raw.push(it);
-    else if (it?.resolution === 'auto' && Array.isArray(it.result)) {
-      for (const p of it.result as Dict[]) if (p?.kind === 'choice') raw.push(p);
+  const outcomeKeys = ['result', 'results', 'on_hit', 'on_crit', 'on_miss', 'on_fail', 'on_success'];
+  const visitInteraction = (interaction: Dict): void => {
+    if (interaction?.kind === 'choice') {
+      raw.push(interaction);
+      return;
     }
+    for (const key of outcomeKeys) {
+      const payloads = interaction?.[key];
+      if (!Array.isArray(payloads)) continue;
+      for (const payload of payloads as Dict[]) {
+        if (payload?.kind === 'choice') raw.push(payload);
+      }
+    }
+  };
+  for (const effect of effects as Dict[]) {
+    visitInteraction(effect);
   }
   return raw
     .filter((ch) => String(ch.context ?? '') === 'in_play')

@@ -98,6 +98,21 @@ describe('collectInPlayActionChoices', () => {
     const mech: Dict = { effects: [{ resolution: 'auto', result: [{ kind: 'choice', id: 'z', context: 'in_play', options: {} }] }] };
     expect(collectInPlayActionChoices(mech, origin).map((c) => c.id)).toEqual(['z']);
   });
+  it('видит выбор результата внутри попадания и провала спасброска', () => {
+    const choice = (id: string): Dict => ({
+      kind: 'choice',
+      id,
+      context: 'in_play',
+      options: { source: 'explicit', items: [] },
+    });
+    const mech: Dict = {
+      effects: [
+        { resolution: 'attack_roll', on_hit: [choice('damage_type')] },
+        { resolution: 'save', on_fail: [choice('damage_die')] },
+      ],
+    };
+    expect(collectInPlayActionChoices(mech, origin).map((c) => c.id)).toEqual(['damage_type', 'damage_die']);
+  });
   it('нет in_play выборов → пусто', () => {
     expect(collectInPlayActionChoices({ effects: [{ kind: 'choice', id: 'a', context: 'build' }] }, origin)).toEqual([]);
   });

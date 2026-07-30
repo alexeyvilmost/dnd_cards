@@ -114,8 +114,15 @@ export function projectedAgainst(
   target: ExecuteContext['target'],
   roll: string,
   attackRange?: 'melee' | 'ranged',
-): { modifiers: RollModifier[]; advantage: AdvantageState; hasAdvantage: boolean; hasDisadvantage: boolean; autoCrit: boolean } {
-  const out = { modifiers: [] as RollModifier[], advantage: 'none' as AdvantageState, hasAdvantage: false, hasDisadvantage: false, autoCrit: false };
+): { modifiers: RollModifier[]; rules: Dict[]; advantage: AdvantageState; hasAdvantage: boolean; hasDisadvantage: boolean; autoCrit: boolean } {
+  const out = {
+    modifiers: [] as RollModifier[],
+    rules: [] as Dict[],
+    advantage: 'none' as AdvantageState,
+    hasAdvantage: false,
+    hasDisadvantage: false,
+    autoCrit: false,
+  };
   const st = target?.runtimeState;
   if (!st) return out;
 
@@ -134,6 +141,8 @@ export function projectedAgainst(
     const op = String(m.op ?? '');
     if (op === 'auto_crit') {
       out.autoCrit = true;
+    } else if (op === 'bonus_die') {
+      out.rules.push(m);
     } else if (op === 'advantage' || op === 'disadvantage') {
       if (op === 'advantage') out.hasAdvantage = true; else out.hasDisadvantage = true;
       out.advantage = foldAdvantage(out.hasAdvantage, out.hasDisadvantage);
@@ -513,6 +522,10 @@ function applyHealing(
   ctx: ExecuteContext,
   events: EngineEvent[],
 ): RuntimeState {
+  if (collectModifiers(state, [], { roll: 'healing' }).denied) {
+    events.push(narrativeEvent('Лечение заблокировано действующим эффектом.'));
+    return state;
+  }
   const formula = withScaling(String(payload.amount ?? '0'), payload, ctx);
   const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
   const next = cloneState(state);
@@ -715,12 +728,32 @@ function resolveDamageAmounts(
       let extraMods: RollModifier[] = [];
       // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
       if (i === 0) {
-        if (ab === 'auto' && handWeapon) total += ctx.character.abilityMods[handWeapon.ability];
-        else if (ab !== 'auto' && ab !== 'none') total += ctx.character.abilityMods[ab as AbilityKey] ?? 0;
-        if (handWeapon?.enchant) total += handWeapon.enchant;
+        const weaponMods: RollModifier[] = [];
+        if (ab === 'auto' && handWeapon) {
+          weaponMods.push({
+            value: ctx.character.abilityMods[handWeapon.ability] ?? 0,
+            source: ABILITY_LABEL[handWeapon.ability],
+          });
+        } else if (ab === 'spellcasting') {
+          weaponMods.push({
+            value: ctx.character.spellcastingMod ?? 0,
+            source: 'Базовая характеристика заклинаний',
+          });
+        } else if (ab !== 'auto' && ab !== 'none') {
+          weaponMods.push({
+            value: ctx.character.abilityMods[ab as AbilityKey] ?? 0,
+            source: ABILITY_LABEL[ab as AbilityKey],
+          });
+        }
+        if (handWeapon?.enchant) weaponMods.push({ value: handWeapon.enchant, source: 'Зачарование оружия' });
         // C1: модификаторы урона из эффектов (Ярость и т.п.) — на основную строку, отдельными частями.
-        const usedAbility = ab === 'auto' ? handWeapon?.ability : (ab !== 'none' ? (ab as AbilityKey) : undefined);
-        extraMods = collectDamageModifiers(ctx, state, { hand, ...(usedAbility ? { ability: usedAbility } : {}) });
+        const usedAbility = ab === 'auto'
+          ? handWeapon?.ability
+          : (ab !== 'none' && ab !== 'spellcasting' ? (ab as AbilityKey) : undefined);
+        extraMods = [
+          ...weaponMods,
+          ...collectDamageModifiers(ctx, state, { hand, ...(usedAbility ? { ability: usedAbility } : {}) }),
+        ];
         for (const m of extraMods) total += m.value;
       }
       return {
@@ -951,6 +984,31 @@ function applyPayloads(
   return next;
 }
 
+/**
+ * Снять активный modifier с consume:'next' после первого подходящего броска.
+ * Это общий примитив для «следующей атаки с помехой» и «−к4 к следующему спасброску».
+ */
+function consumeNextRollEffects(
+  state: RuntimeState,
+  roll: string,
+  events: EngineEvent[],
+): RuntimeState {
+  const expired: ActiveEffectEntry[] = [];
+  const activeEffects = state.activeEffects.filter((entry) => {
+    const consumes = payloadsOf(entry.mechanics).some((payload) => {
+      if (payload.kind !== 'modifier' || payload.consume !== 'next') return false;
+      const applies = payload.applies_to as Dict | undefined;
+      return applies?.roll === roll || (applies?.roll === 'd20'
+        && ['attack', 'saving_throw', 'ability_check', 'initiative'].includes(roll));
+    });
+    if (consumes) expired.push(entry);
+    return !consumes;
+  });
+  if (!expired.length) return state;
+  expired.forEach((entry) => events.push({ type: 'effect_expired', name: entry.name }));
+  return { ...state, activeEffects };
+}
+
 function runAttackRoll(
   effect: Dict,
   state: RuntimeState,
@@ -985,11 +1043,11 @@ function runAttackRoll(
     modifiers: mods,
     target: { type: 'ac', value: ac },
     rng: ctx.rng,
-    rules: collected.rules, // правила бросков (crit_range/outcome/on_roll/…)
+    rules: [...collected.rules, ...projected.rules], // свои правила + проекция цели (Blade Ward)
   });
   events.push(rollEvent('Атака', roll));
 
-  let next = state;
+  let next = consumeNextRollEffects(state, 'attack', events);
   // on_roll-триггеры по значению кости (напр. «на 15 → парализовать цель») — не зависят от исхода.
   if (Array.isArray(roll.triggered) && roll.triggered.length) {
     next = applyPayloads(roll.triggered as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
@@ -1111,11 +1169,22 @@ function runSave(
     // (иначе при высоком PLANNING_RNG цель успевает спастись и урон не планируется → #8).
     success = ctx.planning ? false : roll.outcome === 'success';
   }
+  let next = state;
+  if (targetState && targetRef.state) {
+    const consumedTarget = consumeNextRollEffects(targetRef.state, 'saving_throw', events);
+    if (consumedTarget !== targetRef.state) {
+      targetRef.state = consumedTarget;
+      targetRef.mutated = true;
+    }
+  } else {
+    next = consumeNextRollEffects(next, 'saving_throw', events);
+  }
+
   const payloads = (success ? effect.on_success : effect.on_fail) as Dict[] | undefined;
-  if (!Array.isArray(payloads)) return state;
+  if (!Array.isArray(payloads)) return next;
 
   const half = success && payloads.some((p) => p.on_success === 'half');
-  return applyPayloads(payloads, state, ctx, events, source, 'main', half, whoTarget, targetRef);
+  return applyPayloads(payloads, next, ctx, events, source, 'main', half, whoTarget, targetRef);
 }
 
 // readTargetSave — параметры форсируемого спасброска ЦЕЛИ из механики действия (ability, DC, half).
@@ -1167,6 +1236,7 @@ function runAbilityCheck(
     rules: collected.rules,
   });
   events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
+  const next = consumeNextRollEffects(state, 'ability_check', events);
 
   // Исход: против фиксированной СЛ (mode:dc) ИЛИ состязание (contest_vs, по умолчанию Атлетика).
   let success: boolean;
@@ -1187,13 +1257,13 @@ function runAbilityCheck(
     success = attRoll.total > defRoll.total;
   }
 
-  if (!success) return state;
+  if (!success) return next;
   // C12: исход успеха идёт через общий роутер payload-ов — состояние (Толчок → prone),
   // перемещение, нарратив. who:'target' направляет состояние ЦЕЛИ, а не исполнителю.
   const onSuccess = effect.on_success as Dict[] | undefined;
-  if (!Array.isArray(onSuccess)) return state;
+  if (!Array.isArray(onSuccess)) return next;
   const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
-  return applyPayloads(onSuccess, state, ctx, events, source, 'main', false, whoTarget, targetRef);
+  return applyPayloads(onSuccess, next, ctx, events, source, 'main', false, whoTarget, targetRef);
 }
 
 /**
