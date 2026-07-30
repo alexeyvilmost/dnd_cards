@@ -78,11 +78,12 @@ describe('D20-правила (roll.ts)', () => {
   });
 
   it('bonus_die — Наставление/Благословение добавляет к4 к полному итогу', () => {
-    const rules = [{ op: 'bonus_die', applies_to: { roll: 'ability_check' }, faces: 4 }];
+    const rules = [{ op: 'bonus_die', applies_to: { roll: 'ability_check' }, faces: 4, source: 'Наставление' }];
     const roll = rollD20({ rng: seq([face(12), face(3, 4)]), modifiers: [{ value: 5, source: 'Навык' }], rules });
     expect(roll.dice.map((die) => [die.sides, die.result])).toEqual([[20, 12], [4, 3]]);
+    expect((roll.dice[1] as DieRoll & { source?: string }).source).toBe('Наставление');
     expect(roll.total).toBe(20);
-    expect(roll.text).toContain('к4: 3');
+    expect(roll.text).toContain('к4: 3 (Наставление)');
   });
 });
 

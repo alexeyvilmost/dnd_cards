@@ -323,7 +323,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
             {runtime.activeEffects.map((fx) => (
               <li key={fx.id} className="sheet-active-effect">
                 <span className="sheet-active-effect-name">{fx.name}</span>
-                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry)}</span>
+                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"

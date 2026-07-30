@@ -57,6 +57,42 @@ describe('C3 слайс 2 — endTurn / turn-события через шину'
     expect(narratives(events)).toContain('Сработало: Тикающий яд');
   });
 
+  it('Новый ход и Конец хода уменьшают длительность в ходах; на нуле эффект снимается', () => {
+    const makeState = () => {
+      const state = freshFighterState();
+      state.activeEffects = [{
+        id: 'bless',
+        name: 'Благословение',
+        source: 'Благословение',
+        roundsLeft: 2,
+        mechanics: { kind: 'modifier', duration: { type: 'rounds', amount: 2, concentration: true } },
+      }];
+      return state;
+    };
+
+    const afterStart = startTurn(makeState()).state;
+    expect(afterStart.activeEffects[0]?.roundsLeft).toBe(1);
+    expect(startTurn(afterStart).state.activeEffects).toHaveLength(0);
+
+    const afterEnd = endTurn(makeState(), FIGHTER_CTX).state;
+    expect(afterEnd.activeEffects[0]?.roundsLeft).toBe(1);
+    expect(endTurn(afterEnd, FIGHTER_CTX).state.activeEffects).toHaveLength(0);
+  });
+
+  it('Конец хода не снимает эффект «до начала следующего хода» преждевременно', () => {
+    const state = freshFighterState();
+    state.activeEffects = [{
+      id: 'until-start',
+      name: 'До начала',
+      source: 'тест',
+      expiry: 'start_of_next_turn',
+      mechanics: {},
+    }];
+    const afterEnd = endTurn(state, FIGHTER_CTX).state;
+    expect(afterEnd.activeEffects).toHaveLength(1);
+    expect(startTurn(afterEnd).state.activeEffects).toHaveLength(0);
+  });
+
   it('startTurn с ctx эмитит turn_start → будит слушателя; startTurn(state) — нет (обр. совм.)', () => {
     const withCtx = startTurn(freshFighterState(), { ...FIGHTER_CTX, passives: [listener('Регенерация', 'turn_start')] } as typeof FIGHTER_CTX);
     expect(narratives(withCtx.events)).toContain('Сработало: Регенерация');

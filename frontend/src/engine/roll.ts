@@ -53,7 +53,10 @@ function buildD20Text(
   }
   if (dieBonus) parts.push(`${dieBonus >= 0 ? '+' : ''}${dieBonus} кость`);
   if (bonusDice.length) {
-    parts.push(`+ ${bonusDice.map((die) => `к${die.sides}: ${die.result}`).join(' + ')}`);
+    parts.push(`+ ${bonusDice.map((die) => {
+      const source = (die as DieRoll & { source?: string }).source;
+      return `к${die.sides}: ${die.result}${source ? ` (${source})` : ''}`;
+    }).join(' + ')}`);
   }
   for (const m of modifiers) parts.push(formatMod(m));
   let text = parts.join(' ');

@@ -511,6 +511,7 @@ const CharacterForge = () => {
       // Успешно сохранён — черновик-автосейв больше не нужен.
       setRestorable(null);
       try { localStorage.removeItem(FORGE_DRAFT_KEY); } catch { /* ignore */ }
+      if (isCreate) navigate(`/characters-v3/${res.id}`, { replace: true });
     } catch (e) {
       console.error(e);
       setError('Ошибка сохранения персонажа');

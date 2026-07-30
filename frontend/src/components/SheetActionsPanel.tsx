@@ -810,7 +810,15 @@ export default function SheetActionsPanel({
       if (main.commitTarget) await main.commitTarget();
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
       if (action.spellRef?.concentration) {
-        const conc = startConcentration(state, action.name);
+        const previousEffectIds = new Set(runtime.activeEffects.map((effect) => effect.id));
+        const concentrationEffectIds = state.activeEffects
+          .filter((effect) => {
+            if (previousEffectIds.has(effect.id)) return false;
+            const duration = (effect.mechanics as Record<string, unknown>).duration as Record<string, unknown> | undefined;
+            return duration?.concentration === true;
+          })
+          .map((effect) => effect.id);
+        const conc = startConcentration(state, action.name, concentrationEffectIds);
         state = conc.state;
         events = [...events, ...conc.events];
       }
@@ -1076,7 +1084,7 @@ export default function SheetActionsPanel({
             {runtime.activeEffects.map((fx) => (
               <li key={fx.id} className="sheet-active-effect">
                 <span className="sheet-active-effect-name">{fx.name}</span>
-                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry)}</span>
+                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"

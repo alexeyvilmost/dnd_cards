@@ -53,9 +53,35 @@ describe('полный итог в панели 3D-кубиков', () => {
 
   it('добавляет физическую бонусную кость из правила Наставления/Благословения', () => {
     expect(plannedD20BonusDice(
-      [{ op: 'bonus_die', faces: 4 }],
+      [{ op: 'bonus_die', faces: 4, source: 'Наставление' }],
       'Спасбросок',
       'save',
-    )).toEqual([{ sides: 4, label: 'Спасбросок', resultGroup: 'save' }]);
+    )).toEqual([{ sides: 4, label: 'Наставление', resultGroup: 'save' }]);
+  });
+
+  it('показывает источник бонусной кости из события, сохраняя общий итог броска', () => {
+    const dice = [
+      { sides: 20, result: 10 },
+      { sides: 4, result: 3, source: 'Благословение' },
+    ];
+    const events: EngineEvent[] = [{
+      type: 'roll',
+      label: 'Проверка (Восприятие)',
+      roll: {
+        kind: 'd20',
+        dice,
+        advantage: 'none',
+        modifiers: [{ value: 2, source: 'МДР' }],
+        total: 15,
+        text: 'к20: 10 + к4: 3 (Благословение) +2 МДР = 15',
+      },
+    }];
+    const plan = extractDiceFromEvents(events);
+    expect(plan.map((die) => die.label)).toEqual(['Проверка (Восприятие)', 'Благословение']);
+    expect(calculatePlannedRollTotals(plan, [10, 3])[0]).toMatchObject({
+      diceTotal: 13,
+      modifier: 2,
+      total: 15,
+    });
   });
 });

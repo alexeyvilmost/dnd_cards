@@ -44,9 +44,10 @@ export function extractDiceFromEvents(events: EngineEvent[], skipSave = false): 
       if (skipSave && e.roll.kind === 'save') return;
       const modifier = e.roll.modifiers.reduce((sum, item) => sum + item.value, 0);
       for (const [dieIndex, d] of e.roll.dice.entries()) {
+        const dieSource = (d as typeof d & { source?: string }).source;
         out.push({
           sides: d.sides,
-          label: e.label,
+          label: dieSource || e.label,
           resultGroup: `event-${eventIndex}`,
           ...(dieIndex === 0 && modifier ? { modifier } : {}),
           ...(e.roll.advantage !== 'none' ? { advantage: e.roll.advantage } : {}),
@@ -98,8 +99,11 @@ export function plannedD20BonusDice(
     const faces = Math.floor(Number(rule.faces ?? rule.die ?? rule.value ?? 0));
     if (faces < 2) continue;
     const count = Math.max(1, Math.floor(Number(rule.count ?? 1)));
+    const source = typeof rule.source === 'string' && rule.source.trim()
+      ? rule.source.trim()
+      : label;
     for (let index = 0; index < count; index += 1) {
-      dice.push({ sides: faces, label, resultGroup });
+      dice.push({ sides: faces, label: source, resultGroup });
     }
   }
   return dice;

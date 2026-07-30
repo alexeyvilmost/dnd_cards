@@ -75,15 +75,23 @@ function restoreTurnResources(state: RuntimeState): RuntimeState {
   return { ...state, resources };
 }
 
-function expireStartOfTurnEffects(state: RuntimeState): { state: RuntimeState; events: EngineEvent[] } {
+/**
+ * Один явный переход хода уменьшает раундовые длительности на 1. В одиночном листе
+ * игрок может пользоваться либо «Новый ход», либо «Конец хода», поэтому оба действия
+ * вызывают этот резолвер.
+ */
+function advanceRoundEffects(
+  state: RuntimeState,
+  expireStartBoundary = false,
+): { state: RuntimeState; events: EngineEvent[] } {
   const events: EngineEvent[] = [];
   const kept: typeof state.activeEffects = [];
   for (const e of state.activeEffects) {
-    if (e.expiry === 'start_of_next_turn') {
+    if (expireStartBoundary && e.expiry === 'start_of_next_turn') {
       events.push({ type: 'effect_expired', name: e.name });
       continue;
     }
-    // Длительность в раундах (condition duration.rounds): тикаем на начале хода.
+    // Длительность в раундах: каждый явный переход хода списывает один оставшийся ход.
     if (e.roundsLeft != null) {
       const left = e.roundsLeft - 1;
       if (left <= 0) {
@@ -106,7 +114,7 @@ export function startTurn(state: RuntimeState, ctx?: CharacterContext): ExecuteR
   // Сброс гейта «раз за ход» для triggered-эффектов (Скрытая атака и т.п.).
   next = { ...next, firedThisTurn: [] };
   next = restoreTurnResources(next);
-  const expired = expireStartOfTurnEffects(next);
+  const expired = advanceRoundEffects(next, true);
   next = expired.state;
   events.push(...expired.events);
 
@@ -165,6 +173,12 @@ export function endTurn(state: RuntimeState, ctx: CharacterContext): ExecuteResu
     kept.push(e);
   }
   next = { ...next, activeEffects: kept };
+
+  // Списываем ход только у эффектов, существовавших до turn_end-триггеров. Эффект,
+  // который сам возник «в конце хода», не должен немедленно потерять первый ход.
+  const advanced = advanceRoundEffects(next);
+  next = advanced.state;
+  events.push(...advanced.events);
 
   // Шина: конец хода (тикающие яды/горение, end-of-turn эффекты как данные).
   next = emitEvent({ kind: 'turn_end', source: 'self' }, next, execCtxOf(ctx), events, pending);
