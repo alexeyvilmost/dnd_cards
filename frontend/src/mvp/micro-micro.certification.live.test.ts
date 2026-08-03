@@ -16,6 +16,7 @@ import { API_BASE_URL } from '../api/client';
 import { autoBuildAt, type BuildContent } from '../canon/autoBuild';
 import { executeAction, type RuntimeState } from './contracts';
 import { validateMechanics, type MechanicKind } from '../engine/validateMechanics';
+import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
 
 type Dict = Record<string, unknown>;
@@ -96,6 +97,18 @@ function kindOf(entityType: string): MechanicKind {
   if (entityType === 'action') return 'action';
   if (entityType === 'effect') return 'passive_effect';
   return 'trait';
+}
+
+function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<string, string[]> {
+  const choices = collectInPlayActionChoices(mechanics, {
+    kind: 'other',
+    id: 'certification-smoke',
+    name: label,
+  });
+  return Object.fromEntries(choices.flatMap((choice) => {
+    const selected = choice.items?.slice(0, choice.count).map((item) => item.id) ?? [];
+    return selected.length > 0 ? [[choice.id, selected]] : [];
+  }));
 }
 
 function directReferences(entity: CatalogEntity): string[] {
@@ -216,6 +229,7 @@ describe('micro-micro certification audit: 37 entities', () => {
             rng: () => 0.75,
             forceSaveOutcome: 'fail',
             grantedEffects,
+            choices: firstInPlayChoiceSelections(mechanics, label),
             ...(record.type === 'spell'
               ? { spell: { baseLevel: Number((record.entity as unknown as Spell).level ?? 1), castLevel: 1 } }
               : {}),
