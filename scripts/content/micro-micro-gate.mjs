@@ -152,9 +152,10 @@ export function assessMicroMicroContent(catalogs) {
 async function fetchCatalog(baseUrl, path, key) {
   const entities = [];
   const limit = 1000;
+  const timeoutMs = Number(process.env.CONTENT_GATE_TIMEOUT_MS || 60_000);
   for (let page = 1; ; page += 1) {
     const response = await fetch(`${baseUrl}${path}?page=${page}&limit=${limit}`, {
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
     const body = await response.json();

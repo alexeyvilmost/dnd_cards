@@ -543,6 +543,13 @@ func GetAllMigrations() []Migration {
 			// Поле и индекс оставляем: откат не должен терять данные или защиту от дублей.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "088_normalize_spell_targeting_ranges",
+			Description: "Строковые дистанции Наставления, Благословения и Усыпления по правилам 2024",
+			Up:          normalizeSpellTargetingRanges,
+			// Нормализация не удаляет данные и не должна откатываться к невалидной schema.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

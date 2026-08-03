@@ -112,7 +112,7 @@ const guidance = {
     },
     resolution: 'immediate',
   }],
-  targeting: { shape: 'single', range: 5, filter: 'creature' },
+  targeting: { shape: 'single', range: 'Касание', filter: 'creature' },
 };
 
 const bless = {
@@ -142,7 +142,7 @@ const bless = {
       },
     ],
   }],
-  targeting: { shape: 'single', range: 30, filter: 'creature' },
+  targeting: { shape: 'single', range: '30 футов', filter: 'creature' },
 };
 
 const sleep = {
@@ -166,7 +166,7 @@ const sleep = {
   targeting: {
     shape: 'area',
     area: { kind: 'sphere', size: 5 },
-    range: 60,
+    range: '60 футов',
     filter: 'creature',
   },
 };
