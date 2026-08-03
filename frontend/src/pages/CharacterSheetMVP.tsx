@@ -521,7 +521,6 @@ const CharacterSheetMVP = () => {
     resolvingSaveRef.current = true;
     resolvingSaveIdRef.current = next.id;
     void resolveIncomingSave(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encSeq, encState, id, encId, ruleState]);
 
   // Детект входящих pending-«атакован» (реакция Щит). Хук ОБЯЗАН стоять до раннего return
@@ -534,7 +533,6 @@ const CharacterSheetMVP = () => {
     if (!next) return;
     handledAttackRef.current.add(next.id);
     void resolveIncomingAttackRef.current(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encSeq, encState, id, encId, ruleState]);
 
   // Механики выданных предметами эффектов для числового канала (breakdown листа + панель действий).

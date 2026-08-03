@@ -215,7 +215,7 @@ const CharacterForge = () => {
         setError('Не удалось загрузить персонажа');
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [editId]);
 
   // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний).
@@ -229,7 +229,7 @@ const CharacterForge = () => {
       if (!stale) setBundle(b);
     })();
     return () => { stale = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [refsKey]);
 
   const spellIndex = useMemo(() => indexSpells(spells), [spells]);
@@ -332,7 +332,7 @@ const CharacterForge = () => {
     if (!subfeatureChoice) return;
     const sel = draft.resolvedChoices[subfeatureChoice.id]?.[0] ?? null;
     if (sel !== draft.lineageId) setDraft((d) => ({ ...d, lineageId: sel }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [subfeatureChoice, draft.resolvedChoices]);
 
   // Фоллбэк: если в драфте нет навыков класса (старые сохранения без builder:class_skills
@@ -464,7 +464,7 @@ const CharacterForge = () => {
       });
     })();
     return () => { stale = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [levelUp, draft.classId, draft.raceId]);
 
   const issues = completionIssues(draft, assembled);

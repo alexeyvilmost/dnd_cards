@@ -1,5 +1,12 @@
 name: CI
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Гейты покрытия правил (docs/rules-coverage-plan-2026-07-11.md, этап 0.4).
 # PR/пуш — быстрый ОФФЛАЙН-гейт (детерминированный, без сети): tsc + оба vitest-набора
 #   (обычный + MVP-оффлайн). Сюда входят пилот покрытия (canon) и контракт схема↔рантайм.
@@ -16,39 +23,51 @@ on:
 
 jobs:
   offline:
-    name: Оффлайн-гейт (tsc + vitest)
+    name: Оффлайн-гейт (build + lint + tests)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache-dependency-path: backend/go.sum
       - name: Установка зависимостей
         working-directory: frontend
         run: npm ci
-      - name: Проверка типов
+      - name: Production build
         working-directory: frontend
-        run: ./node_modules/.bin/tsc --noEmit
+        run: npm run build
+      - name: Frontend lint
+        working-directory: frontend
+        run: npm run lint
       - name: Тесты (обычный набор + пилот покрытия)
         working-directory: frontend
         run: npm test
       - name: Тесты MVP (оффлайн-часть)
         working-directory: frontend
         run: npm run test:mvp
+      - name: Backend tests
+        working-directory: backend
+        run: go test ./...
 
   live-content:
     name: Живой прод (ночью / вручную)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       MVP_CONTENT: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Установка зависимостей

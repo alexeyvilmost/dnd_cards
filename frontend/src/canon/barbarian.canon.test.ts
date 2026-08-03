@@ -8,8 +8,8 @@
  * блокирующих checks (реально работающих фич), регрессии present-базлайна. Отсутствующий
  * контент и гапы — в отчёт, не в красноту (их закрывают волны, а не этот гейт).
  */
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   auditUnit, findClassUnit, type CanonUnit, type CanonFeature, type Snapshot,
@@ -99,7 +99,9 @@ describe('Пилот покрытия: Варвар', () => {
     ...[...engRefs.entries()].sort((a, b) => b[1] - a[1]).map(([r, n]) => `- ${r}: ${n}`)].join('\n');
 
   const doc = renderCoverageDoc('Варвар (class:barbarian)', [...sections, engSummary]);
-  writeFileSync(join(REPO_ROOT, 'docs/coverage/class-barbarian.md'), doc + '\n');
+  const reportPath = join(REPO_ROOT, 'docs/coverage/class-barbarian.md');
+  mkdirSync(dirname(reportPath), { recursive: true });
+  writeFileSync(reportPath, doc + '\n');
 
   // ---------- АССЕРТЫ (гейт) ----------
   it('нет битых ссылок фич (база + подклассы)', () => {

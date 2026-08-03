@@ -117,7 +117,7 @@ const CardExport = () => {
   useEffect(() => {
     setCurrentPage(1);
     loadCards(1, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [search, rarityFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, sortBy]);
 
   // Автоподгрузка при прокрутке
@@ -140,7 +140,7 @@ const CardExport = () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timeoutId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [hasMore, loadingMore, loading, currentPage]);
 
   // --- Выбор карт ---

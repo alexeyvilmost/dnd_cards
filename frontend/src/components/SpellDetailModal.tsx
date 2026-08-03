@@ -71,7 +71,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
     + (spell.component_material && spell.material_text ? ` (${spell.material_text})` : '');
 
   const hasTags = mstats.attack || mstats.save || spell.concentration || spell.ritual || spell.is_healing;
-  const classesText = Boolean(spell.classes?.length || spell.subclasses?.length)
+  const classesText = spell.classes?.length || spell.subclasses?.length
     ? (spell.classes || []).map((c) => labelFrom(SPELL_CLASS_OPTIONS, c)).join(', ')
       + (spell.subclasses?.length ? ` · ${spell.subclasses.join(', ')}` : '')
     : null;

@@ -117,7 +117,6 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       setJsonText(JSON.stringify(value, null, 2));
     }
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, hydrated]);
 
   const built = useMemo(() => {
@@ -174,7 +173,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   useEffect(() => {
     if (!hydrated || !dirty.current || mode !== 'blocks') return;
     emit(built);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [built, hydrated, mode]);
 
   const switchToJson = () => {

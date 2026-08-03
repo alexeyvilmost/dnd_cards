@@ -119,7 +119,7 @@ const CardCreator = () => {
         setLoading(true);
           const card = await cardsApi.getCard(id);
           setOriginalCard(card);
-          
+
           // Загружаем эффекты карты
           if (card.effects && card.effects.length > 0) {
             setEffects(card.effects);
@@ -129,7 +129,7 @@ const CardCreator = () => {
           if (card.mechanics && typeof card.mechanics === 'object') {
             setMechanics(card.mechanics as Record<string, unknown>);
           }
-          
+
           // Заполняем форму данными карты через reset для полной синхронизации
           reset({
             name: card.name,
@@ -196,7 +196,7 @@ const CardCreator = () => {
         try {
           setLoading(true);
           const template = await cardsApi.getCard(templateId);
-          
+
           // Заполняем форму данными шаблона
           setValue('name', template.name);
           setValue('rarity', template.rarity);
@@ -230,7 +230,7 @@ const CardCreator = () => {
           setValue('slot', template.slot);
           setValue('is_template', 'false'); // Новая карта не является шаблоном
           setValue('battle_profile', template.battle_profile || null);
-          
+
           if (template.image_url) {
             setCardImage(template.image_url);
           }
@@ -250,7 +250,7 @@ const CardCreator = () => {
   // не хватало enchant_bonus, weapon_type, container_mode и contents — превью на их правку
   // не обновлялось. Теперь пересборка идёт на любое изменение формы.
   const watchedValuesKey = JSON.stringify(watchedValues);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   const memoizedWatchedValues = useMemo(() => watchedValues, [watchedValuesKey]);
 
   // Обновляем превью при изменении данных
@@ -393,24 +393,24 @@ const CardCreator = () => {
 
     // Создаем карту
     const newCard = await cardsApi.createCard(cardData);
-    
+
     // Сохраняем ID созданной карты
     setCreatedCardId(newCard.id);
-    
+
     // Запускаем polling для проверки появления изображения
     startImagePolling(newCard.id);
-    
+
     return newCard.id;
   };
 
   // Polling для проверки появления изображения
   const startImagePolling = (cardId: string) => {
     setIsPollingImage(true);
-    
+
     const pollInterval = setInterval(async () => {
       try {
         const card = await cardsApi.getCard(cardId);
-        
+
         if (card.image_url) {
           // Изображение появилось - обновляем превью
           setCardImage(card.image_url);
@@ -523,7 +523,7 @@ const CardCreator = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Рендер активной секции */}
               {activeSection === 'main' && (
-                <MainSection 
+                <MainSection
                   register={register}
                   control={control}
                   errors={errors}
@@ -534,9 +534,9 @@ const CardCreator = () => {
                   entityId={id || createdCardId || ''}
                 />
               )}
-              
+
               {activeSection === 'image' && (
-                <ImageSection 
+                <ImageSection
                   register={register}
                   errors={errors}
                   setValue={setValue}
@@ -548,9 +548,9 @@ const CardCreator = () => {
                   setShowImageLibrary={setShowImageLibrary}
                 />
               )}
-              
+
               {activeSection === 'text' && (
-                <TextSection 
+                <TextSection
                   register={register}
                   control={control}
                   errors={errors}
@@ -558,16 +558,16 @@ const CardCreator = () => {
                   watch={watch}
                 />
               )}
-              
+
               {activeSection === 'equipment' && (
-                <EquipmentSection 
+                <EquipmentSection
                   register={register}
                   errors={errors}
                   setValue={setValue}
                   watch={watch}
                 />
               )}
-              
+
               {activeSection === 'engine' && (
                 <div>
                   <h2 className="text-xl font-bold mb-4">Механика движка</h2>

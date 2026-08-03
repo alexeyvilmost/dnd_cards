@@ -117,7 +117,6 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     expect(ac.value).toBe(ruleState.armorClass);
     expect(ac.parts.some((p) => p.source === 'Боевой стиль: Оборона')).toBe(false);
 
-    // eslint-disable-next-line no-console
     console.log('[live] стиль «Оборона»:',
       `feats=[${bundle.feats.map((f) => f.name).join(', ')}]`,
       `эффект=${styleEffect!.effect.name}`,
