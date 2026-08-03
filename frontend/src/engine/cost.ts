@@ -49,6 +49,18 @@ export function costKey(entry: Dict): string {
   return resource;
 }
 
+/** `hit_die` — схемный абстрактный ключ; runtime хранит отдельный пул по размеру кости. */
+function runtimeCostKey(state: RuntimeState, entry: Dict): string {
+  const key = costKey(entry);
+  if (key !== 'hit_die') return key;
+  const requested = typeof entry.die === 'string' ? `hit_dice_${entry.die.toLowerCase()}` : null;
+  if (requested && requested in state.resources) return requested;
+  const available = Object.keys(state.resources)
+    .filter((candidate) => candidate.startsWith('hit_dice_d') && (state.resources[candidate] ?? 0) > 0)
+    .sort((a, b) => Number(b.slice('hit_dice_d'.length)) - Number(a.slice('hit_dice_d'.length)));
+  return available[0] ?? 'hit_die';
+}
+
 export function canPay(state: RuntimeState, cost: Dict[]): { ok: boolean; missing: string[] } {
   // Суммируем потребность ПО КЛЮЧУ до сравнения: две записи на один card_id/ресурс иначе каждая
   // видела бы полный запас → canPay ложно проходил бы, а pay недосписывал (нарушение атомарности).
@@ -60,7 +72,7 @@ export function canPay(state: RuntimeState, cost: Dict[]): { ok: boolean; missin
       const cardId = String(entry.card_id ?? '');
       itemNeed.set(cardId, (itemNeed.get(cardId) ?? 0) + need);
     } else {
-      const key = costKey(entry);
+      const key = runtimeCostKey(state, entry);
       resNeed.set(key, (resNeed.get(key) ?? 0) + need);
     }
   }
@@ -91,7 +103,7 @@ export function pay(state: RuntimeState, cost: Dict[]): { state: RuntimeState; e
       events.push(itemConsumedEvent(cardId, need, inventoryQty(next, cardId), name));
       continue;
     }
-    const key = costKey(entry);
+    const key = runtimeCostKey(state, entry);
     resources[key] = (resources[key] ?? 0) - need;
     events.push(resourceSpentEvent(key, need, resources[key]));
   }

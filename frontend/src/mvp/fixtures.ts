@@ -201,13 +201,14 @@ export const FIGHTER_CTX: CharacterContext = {
   level: 1,
   classLevels: { fighter: 1 },
   characterSpeed: 30,
+  hitDie: 'd10',
 };
 
 export function freshFighterState(): RuntimeState {
   return {
     hp: { current: 11, max: 11, temp: 0 },
-    resources: { action: 1, bonus_action: 1, reaction: 1, second_wind: 2, heroic_inspiration: 1 },
-    maxResources: { action: 1, bonus_action: 1, reaction: 1, second_wind: 2, heroic_inspiration: 1 },
+    resources: { action: 1, bonus_action: 1, reaction: 1, second_wind: 2, heroic_inspiration: 1, hit_dice_d10: 1 },
+    maxResources: { action: 1, bonus_action: 1, reaction: 1, second_wind: 2, heroic_inspiration: 1, hit_dice_d10: 1 },
     equipment: {},
     inventory: [
       { cardId: CARD_LONGSWORD.id, qty: 1 },

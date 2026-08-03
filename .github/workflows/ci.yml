@@ -39,7 +39,7 @@ jobs:
           cache-dependency-path: backend/go.sum
       - name: Установка зависимостей
         working-directory: frontend
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Production build
         working-directory: frontend
         run: npm run build
@@ -72,7 +72,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Установка зависимостей
         working-directory: frontend
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Живые MVP-тесты (прод-контент)
         working-directory: frontend
         run: npm run test:mvp

@@ -12,9 +12,11 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
-import { endTurn, longRest, shortRest, startTurn } from '../engine/turn';
+import { hitDiceResourceKey, hitDieSides } from '../engine/resources';
+import { endTurn, longRest, shortRest, spendHitDie, startTurn } from '../engine/turn';
 import { emptyDeathSaves } from '../character/death';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
 
 interface Props {
   character: ForgeCharacter;
@@ -37,7 +39,9 @@ export default function SheetRestButtons({
   onLongRestComplete,
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
   const syncAttempted = useRef(false);
+  const diceDialog = useDiceDialog();
 
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
 
@@ -141,7 +145,32 @@ export default function SheetRestButtons({
 
   const handleShortRest = () => {
     const { state, events } = shortRest(runtime, restCtx);
-    void apply(state, events, true, true);
+    setShortRestDraft({ state, events });
+  };
+
+  const handleSpendHitDie = async () => {
+    if (!shortRestDraft) return;
+    const sides = hitDieSides(ctx.hitDie);
+    if (!sides) return;
+    const decision = await diceDialog.request(
+      [{ sides, label: 'Кость хитов', resultGroup: 'hit-die', modifier: ctx.abilityMods.con }],
+      'Короткий отдых — кость хитов',
+    );
+    if (decision.mode === 'cancel') return;
+    const rolled = decision.mode === 'manual'
+      ? decision.values[0]
+      : Math.floor(Math.random() * sides) + 1;
+    setShortRestDraft((current) => {
+      if (!current) return current;
+      const result = spendHitDie(current.state, ctx, rolled);
+      return { state: result.state, events: [...current.events, ...result.events] };
+    });
+  };
+
+  const handleFinishShortRest = async () => {
+    if (!shortRestDraft) return;
+    const ok = await apply(shortRestDraft.state, shortRestDraft.events, true, true);
+    if (ok) setShortRestDraft(null);
   };
 
   const handleLongRest = async () => {
@@ -156,8 +185,16 @@ export default function SheetRestButtons({
   const restTitle = (base: string) => (unconscious ? 'Недоступно при 0 HP — сначала стабилизируйтесь или получите лечение' : base);
 
   const cls = compact ? 'cs-top-rest' : 'sheet-runtime-actions';
+  const hitDiceKey = hitDiceResourceKey(ctx.hitDie);
+  const hitDiceAvailable = shortRestDraft && hitDiceKey
+    ? shortRestDraft.state.resources[hitDiceKey] ?? 0
+    : 0;
+  const canSpendHitDie = !!shortRestDraft
+    && hitDiceAvailable > 0
+    && shortRestDraft.state.hp.current < shortRestDraft.state.hp.max;
 
   return (
+    <>
     <div className={cls}>
       <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy} onClick={handleStartTurn}>
         <Swords size={14} /> Новый ход
@@ -176,7 +213,7 @@ export default function SheetRestButtons({
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
         disabled={busy || unconscious}
         onClick={handleShortRest}
-        title={restTitle('Короткий отдых: +50% max HP и заряды умений')}
+        title={restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
       >
         <Sun size={14} /> Короткий отдых
       </button>
@@ -190,5 +227,34 @@ export default function SheetRestButtons({
         <Moon size={14} /> Долгий отдых
       </button>
     </div>
+    {shortRestDraft && (
+      <div className="dice-dialog-backdrop" onClick={() => !busy && setShortRestDraft(null)}>
+        <div className="dice-dialog-wrap" onClick={(event) => event.stopPropagation()}>
+          <div className="dice-dialog" role="dialog" aria-label="Короткий отдых">
+            <div className="dice-dialog-title">Короткий отдых</div>
+            <div className="dice-dialog-summary">
+              HP: <b>{shortRestDraft.state.hp.current}/{shortRestDraft.state.hp.max}</b>
+              {' · '}Кости хитов {ctx.hitDie ?? '—'}: <b>{hitDiceAvailable}</b>
+            </div>
+            <p className="dice-dialog-note">
+              После каждого броска вы решаете, тратить ли ещё одну кость. К каждому броску
+              добавляется модификатор Телосложения (минимум 1 HP).
+            </p>
+            <div className="dice-dialog-actions">
+              <button type="button" className="dice-dialog-btn primary" disabled={busy || !canSpendHitDie} onClick={() => void handleSpendHitDie()}>
+                Потратить 1 кость
+              </button>
+              <button type="button" className="dice-dialog-btn" disabled={busy} onClick={() => void handleFinishShortRest()}>
+                Завершить отдых
+              </button>
+              <button type="button" className="dice-dialog-btn ghost" disabled={busy} onClick={() => setShortRestDraft(null)}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

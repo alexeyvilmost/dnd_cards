@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
-  canPay, collectRollModifiers, executeAction, initResources, longRest, pay, shortRest, startTurn,
+  canPay, collectRollModifiers, executeAction, initResources, longRest, pay, shortRest, spendHitDie, startTurn,
 } from './contracts';
 import { projectedAgainst } from '../engine/execute';
 import {
@@ -23,6 +23,7 @@ describe('D1: инициализация ресурсов', () => {
     expect(maxResources.action).toBe(1);
     expect(maxResources.bonus_action).toBe(1);
     expect(maxResources.reaction).toBe(1);
+    expect(maxResources.hit_dice_d10).toBe(1);
   });
 });
 
@@ -67,29 +68,38 @@ describe('D3: ход и отдыхи', () => {
     expect(next.resources.second_wind).toBe(state.maxResources.second_wind);
   });
 
-  it('shortRest восстанавливает половину max HP', () => {
+  it('shortRest не лечит без добровольной траты кости хитов', () => {
     const state = freshFighterState();
     state.hp = { current: 2, max: 10, temp: 0 };
     const { state: next, events } = shortRest(state, FIGHTER_CTX);
-    expect(next.hp.current).toBe(7);
-    expect(events.some((e) => e.type === 'healing')).toBe(true);
+    expect(next.hp.current).toBe(2);
+    expect(next.resources.hit_dice_d10).toBe(1);
+    expect(events.some((e) => e.type === 'healing')).toBe(false);
   });
 
-  it('shortRest не превышает max HP', () => {
+  it('spendHitDie тратит одну кость и лечит на бросок + ТЕЛ (не выше max HP)', () => {
     const state = freshFighterState();
-    state.hp = { current: 8, max: 10, temp: 0 };
-    const { state: next } = shortRest(state, FIGHTER_CTX);
+    state.hp = { current: 4, max: 10, temp: 0 };
+    const { state: next, events } = spendHitDie(state, FIGHTER_CTX, 8);
     expect(next.hp.current).toBe(10);
+    expect(next.resources.hit_dice_d10).toBe(0);
+    expect(events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'resource_spent', resource: 'hit_dice_d10', amount: 1 }),
+      expect.objectContaining({ type: 'healing', amount: 6 }),
+    ]));
+    expect((events.find((event) => event.type === 'healing') as Extract<typeof events[number], { type: 'healing' }>).roll?.total).toBe(9);
   });
 
   it('longRest: HP до максимума, все ресурсы, активные эффекты сняты', () => {
     const state = freshFighterState();
     state.hp = { current: 3, max: 11, temp: 0 };
     state.resources = { ...state.resources, second_wind: 0, heroic_inspiration: 0 };
+    state.resources.hit_dice_d10 = 0;
     state.activeEffects = [{ id: 'x', name: 'Бафф', mechanics: {}, source: 'тест' }];
     const { state: next, events } = longRest(state, FIGHTER_CTX);
     expect(next.hp.current).toBe(11);
     expect(next.resources.second_wind).toBe(2);
+    expect(next.resources.hit_dice_d10).toBe(1);
     expect(next.activeEffects).toHaveLength(0);
     expect(events.some((e) => e.type === 'long_rest')).toBe(true);
   });

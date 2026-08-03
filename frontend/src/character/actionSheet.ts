@@ -325,7 +325,7 @@ export function collectSheetActions(
   return [...basic, ...fromRace, ...fromClass, ...fromItems, ...fromGranted, ...fromContainers, ...spells];
 }
 
-export type ActionUsesPool = { key: string; count: number | string; per?: string };
+export type ActionUsesPool = { key: string; count: number | string; per?: string; source: string };
 
 function isActiveMech(mech: unknown): boolean {
   if (!mech || typeof mech !== 'object') return false;
@@ -340,18 +340,18 @@ function isActiveMech(mech: unknown): boolean {
 export function collectActionUsesPools(assembled: AssembledCharacter): ActionUsesPool[] {
   const out: ActionUsesPool[] = [];
   const seen = new Set<string>();
-  const push = (key: string | undefined, mech: unknown) => {
+  const push = (key: string | undefined, mech: unknown, source: string) => {
     const uses = usesFromMechanics(mech as Dict | null | undefined);
     if (!key || !uses || seen.has(key)) return;
     seen.add(key);
-    out.push({ key, count: uses.count, per: uses.per });
+    out.push({ key, count: uses.count, per: uses.per, source });
   };
-  for (const { action } of assembled.actions) {
-    if (isActiveMech(action.mechanics)) push(actionUsesRef(action), action.mechanics);
+  for (const { action, origin } of assembled.actions) {
+    if (isActiveMech(action.mechanics)) push(actionUsesRef(action), action.mechanics, `${action.name} · ${origin.name}`);
   }
   for (const { effect, origin } of assembled.effects) {
     if (origin.kind !== 'race' || !isActiveMech(effect.mechanics)) continue;
-    push(effectUsesRef(effect), effect.mechanics);
+    push(effectUsesRef(effect), effect.mechanics, `${effect.name} · ${origin.name}`);
   }
   return out;
 }

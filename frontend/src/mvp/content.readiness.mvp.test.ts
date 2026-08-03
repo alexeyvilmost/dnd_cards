@@ -37,9 +37,11 @@ async function fetchAll(path: string, key: string): Promise<Record<string, unkno
 }
 
 d('G2–G4: классы', () => {
-  it('12 классов; у каждого уровни 1 и 2 с контентом; заданы ресурсы и кость хитов', async () => {
-    const classes = await fetchAll('/api/classes', 'classes');
-    expect(classes.length, 'должно быть 12 классов').toBeGreaterThanOrEqual(12);
+  it('12+ базовых классов; у каждого уровни 1 и 2 с контентом, кость хитов и спасброски', async () => {
+    // /api/classes возвращает и базовые классы, и подклассы. Уровни 1–2
+    // обязательны только для базового класса: подкласс начинается с 3-го уровня.
+    const classes = (await fetchAll('/api/classes', 'classes')).filter((c) => !c.is_subclass);
+    expect(classes.length, 'должно быть не менее 12 базовых классов').toBeGreaterThanOrEqual(12);
     for (const c of classes) {
       const lp = (c.level_progression || {}) as Record<string, { effects?: string[]; actions?: string[] }>;
       for (const lvl of ['1', '2']) {

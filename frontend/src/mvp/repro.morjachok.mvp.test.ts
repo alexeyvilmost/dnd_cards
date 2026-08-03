@@ -1,124 +1,119 @@
 /**
- * Регрессия бага «Оборона не даёт +1 КЗ» на живом персонаже Морячок-воин
- * (ab78d857). Гейт MVP_CONTENT=1, ходит в прод.
+ * Детерминированная регрессия бага «Оборона не даёт +1 КЗ».
  *
- * Цепочка загрузки сохранённого персонажа (characterToDraft → loadBundle →
- * assemble → resolveCharacterRules → breakdownValue) должна давать +1 КЗ от
- * стиля и в шапке листа, и в «КД (расчёт)» панели экипировки (раньше панель
- * считала голым computeAC и теряла modifier-пассивки).
+ * Тест берёт канонический контент из прода, но создаёт персонажа в памяти:
+ * ему не нужна и не создаётся историческая запись characters_v3.
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-// apiClient (axios) читает localStorage в интерсепторе токена — в node его нет.
 if (typeof globalThis.localStorage === 'undefined') {
   const store = new Map<string, string>();
   globalThis.localStorage = {
-    getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => { store.set(k, v); },
-    removeItem: (k: string) => { store.delete(k); },
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => { store.set(key, value); },
+    removeItem: (key: string) => { store.delete(key); },
     clear: () => store.clear(),
     key: () => null,
     get length() { return store.size; },
   } as Storage;
 }
+
 import { assemble, loadBundle } from '../character/assemble';
-import { characterToDraft } from '../character/forgeHelpers';
-import { charactersV3Api } from '../character/api';
+import { emptyDraft, type CharacterDraft } from '../character/types';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import { collectPassiveMechanics } from '../character/resourceInit';
-import { collectItemMechanics } from '../character/attunement';
 import { collectEquippedCards } from '../character/inventory';
-import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
+import { buildCharacterContext } from '../character/runtime';
 import { breakdownValue } from '../engine/breakdown';
-import { cardsApi } from '../api/client';
-import type { Card } from '../types';
+import type { RuntimeState } from './contracts';
+import type { Background, Card, CharacterClass, Feat, Race } from '../types';
 
 const RUN = !!process.env.MVP_CONTENT;
-const CHAR_ID = 'ab78d857-dc94-4081-a949-562e808c5e9c';
+const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
 
-describe.skipIf(!RUN)('Репро: Морячок-воин, стиль «Оборона» (+1 КЗ)', () => {
-  it('цепочка загрузка → сборка → правила → КЗ листа', async () => {
-    const c = await charactersV3Api.get(CHAR_ID);
-    console.log('[repro] class_id =', c.class_id, 'race_id =', c.race_id, 'armor_class(db) =', c.armor_class);
-    console.log('[repro] abilities =', JSON.stringify(c.abilities));
-    console.log('[repro] resolved_choices keys:');
-    for (const [k, v] of Object.entries(c.resolved_choices || {})) {
-      console.log('   ', k, '=>', JSON.stringify(v));
-    }
+async function fetchAll<T>(path: string, key: string): Promise<T[]> {
+  const items: T[] = [];
+  for (let page = 1; ; page++) {
+    const response = await fetch(`${BASE}${path}?page=${page}&limit=100`);
+    if (!response.ok) throw new Error(`${path} HTTP ${response.status}`);
+    const data = await response.json();
+    const batch = (data[key] || []) as T[];
+    items.push(...batch);
+    if (batch.length < 100) break;
+  }
+  return items;
+}
 
-    const draft = characterToDraft(c);
-    console.log('[repro] draft.resolvedChoices keys:', Object.keys(draft.resolvedChoices));
+let fighter: CharacterClass | undefined;
+let human: Race | undefined;
+let background: Background | undefined;
+let defenseFeat: Feat | undefined;
+let armor: Card | undefined;
 
-    const bundle = await loadBundle(draft);
-    console.log('[repro] bundle.feats =', bundle.feats.map((f) => `${f.name} (${f.id})`));
-    console.log('[repro] bundle.effects =', bundle.effects.map((e) => `${e.effect.card_number || e.effect.id} <- ${e.origin.kind}:${e.origin.id}`));
+describe.skipIf(!RUN)('Репро: Воин со стилем «Оборона» (+1 КЗ)', () => {
+  beforeAll(async () => {
+    const [classes, races, backgrounds, feats, cards] = await Promise.all([
+      fetchAll<CharacterClass>('/api/classes', 'classes'),
+      fetchAll<Race>('/api/races', 'races'),
+      fetchAll<Background>('/api/backgrounds', 'backgrounds'),
+      fetchAll<Feat>('/api/feats', 'feats'),
+      fetchAll<Card>('/api/cards', 'cards'),
+    ]);
+    fighter = classes.find((item) => item.card_number === 'CLASS-warrior');
+    human = races.find((item) => item.name === 'Человек');
+    background = backgrounds.find((item) => item.name === 'Стражник') ?? backgrounds[0];
+    defenseFeat = feats.find((item) => item.category === 'fighting_style' && item.name === 'Оборона');
+    armor = cards.find((item) => item.name === 'Наборный доспех'
+      && item.type === 'chest' && item.slot === 'body' && item.bonus_type === 'defense');
+  }, 120_000);
 
-    const assembled = assemble({ ...bundle, spells: [] }, draft);
-    const styleEffect = assembled.effects.find((e) => e.effect.card_number === 'fs_defense');
-    console.log('[repro] fs_defense в сборке:', !!styleEffect);
+  it('единый breakdown даёт +1 в доспехе и не даёт бонус без него', async () => {
+    expect(fighter && human && background && defenseFeat && armor).toBeTruthy();
+    const draft: CharacterDraft = {
+      ...emptyDraft(),
+      name: 'Регрессия Обороны',
+      raceId: human!.id,
+      classId: fighter!.id,
+      backgroundId: background!.id,
+      abilities: { str: 15, dex: 14, con: 13, int: 8, wis: 12, cha: 10 },
+    };
 
-    // Эффект(ы), содержащие choice(source:"feat") — печатаем, какой instance id получится.
-    for (const { effect, origin } of assembled.effects) {
-      const effs = (effect.mechanics as { effects?: Record<string, unknown>[] } | null)?.effects;
-      if (!Array.isArray(effs)) continue;
-      const scanChoice = (p: Record<string, unknown>) => {
-        if (p?.kind !== 'choice') return;
-        const opts = (p.options || {}) as Record<string, unknown>;
-        if (String(opts.source) !== 'feat') return;
-        const instanceId = `${origin.kind}:${origin.id}:${effect.id}:${String(p.id ?? 'choice')}`;
-        console.log('[repro] choice(source:feat) instanceId =', instanceId,
-          '| в draft.resolvedChoices?', instanceId in draft.resolvedChoices);
-      };
-      for (const it of effs) {
-        if ((it as Record<string, unknown>)?.kind) scanChoice(it as Record<string, unknown>);
-        else if ((it as Record<string, unknown>)?.resolution === 'auto' && Array.isArray((it as Record<string, unknown>).result)) {
-          for (const p of (it as Record<string, unknown>).result as Record<string, unknown>[]) scanChoice(p);
-        }
-      }
-    }
+    let bundle = await loadBundle(draft);
+    let assembled = assemble({ ...bundle, spells: [] }, draft);
+    const choice = assembled.pendingChoices.find((item) =>
+      item.source === 'feat' && item.origin.kind === 'class' && item.filter === 'fighting_style');
+    expect(choice, 'у Воина 1-го уровня есть выбор боевого стиля').toBeTruthy();
+
+    draft.resolvedChoices[choice!.id] = [defenseFeat!.id];
+    bundle = await loadBundle(draft);
+    assembled = assemble({ ...bundle, spells: [] }, draft);
+    const styleEffect = assembled.effects.find((item) => item.effect.card_number === 'fs_defense');
+    expect(styleEffect, 'эффект fs_defense должен прийти из черты').toBeTruthy();
 
     const ruleState = resolveCharacterRules({ draft, assembled });
-    console.log('[repro] appliedGrants(feat) =', ruleState.appliedGrants.filter((g) => g.kind === 'feat').map((g) => g.value));
-    console.log('[repro] ruleState.armorClass =', ruleState.armorClass);
-
-    // КЗ листа — как в CharacterSheetMVP: пассивки (эффекты + предметы),
-    // надетые карты в контексте, breakdownValue.
-    const runtimeState = forgeToRuntimeState(c);
-    const equipIds = new Set<string>();
-    for (const row of c.inventory_items ?? []) equipIds.add(row.card_id);
-    for (const cid of Object.values(c.equipment ?? {})) if (cid) equipIds.add(cid);
-    const equipCards = new Map<string, Card>();
-    for (const cid of equipIds) {
-      try { equipCards.set(cid, await cardsApi.getCard(cid)); } catch { /* skip */ }
-    }
-    const passives = [
-      ...collectPassiveMechanics(assembled),
-      ...collectItemMechanics(c.equipment ?? {}, equipCards, c.turn_state).map((im) => im.mechanics),
-    ];
-    const equipped = collectEquippedCards(runtimeState.equipment, equipCards);
+    const runtimeState: RuntimeState = {
+      hp: { current: ruleState.maxHP, max: ruleState.maxHP, temp: 0 },
+      resources: {},
+      maxResources: {},
+      equipment: { body: armor!.id },
+      inventory: [],
+      activeEffects: [],
+    };
+    const cardMap = new Map([[armor!.id, armor!]]);
+    const equipped = collectEquippedCards(runtimeState.equipment, cardMap);
+    const passives = collectPassiveMechanics(assembled);
     const ctx = buildCharacterContext(ruleState, draft, equipped, assembled.klass);
     const ac = breakdownValue('ac', ctx, runtimeState, passives);
-    console.log('[repro] КЗ шапки листа =', ac.value, 'части:', JSON.stringify(ac.parts));
 
-    // «КД (расчёт)» — как SheetEquipmentPanel (после фикса: breakdownValue).
-    const panelCtx = buildCharacterContext(
-      ruleState,
-      { level: c.level, abilities: c.abilities ?? {} },
-      equipped,
-      null,
-    );
+    const panelCtx = buildCharacterContext(ruleState, draft, equipped, null);
     const panelAc = breakdownValue('ac', panelCtx, runtimeState, passives);
-    console.log('[repro] КД (расчёт) панели =', panelAc.value);
-
-    // Без доспеха (пустая экипировка): Оборона не применяется.
     const nakedState = { ...runtimeState, equipment: {} };
-    const nakedAc = breakdownValue('ac', ctx, nakedState, passives);
-    console.log('[repro] КЗ без доспеха =', nakedAc.value);
+    const nakedCtx = buildCharacterContext(ruleState, draft, [], assembled.klass);
+    const nakedAc = breakdownValue('ac', nakedCtx, nakedState, passives);
 
-    expect(styleEffect, 'эффект fs_defense должен быть в сборке').toBeTruthy();
-    expect(ac.parts.some((p) => p.value === 1 && p.reason === 'эффект'), '+1 от «Обороны» в шапке').toBe(true);
-    // Персистируемый базовый КЗ считается без runtime-экипировки, поэтому равен «голому».
-    expect(nakedAc.value, 'КЗ без доспеха = персистируемый (единый примитив)').toBe(ruleState.armorClass);
-    expect(panelAc.value, '«КД (расчёт)» совпадает с шапкой').toBe(ac.value);
+    expect(ac.parts.some((part) => part.source === 'Боевой стиль: Оборона' && part.value === 1)).toBe(true);
+    expect(nakedAc.parts.some((part) => part.source === 'Боевой стиль: Оборона')).toBe(false);
+    expect(nakedAc.value).toBe(ruleState.armorClass);
+    expect(panelAc.value).toBe(ac.value);
   }, 120_000);
 });

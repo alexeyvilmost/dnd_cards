@@ -1,8 +1,9 @@
 import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools } from './actionSheet';
-import { initResources, resolveCount } from '../engine/resources';
+import { hitDiceResourceKey, initResources, resolveByLevel, resolveCount } from '../engine/resources';
 import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
+import type { ValueBreakdown } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
 import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
@@ -51,6 +52,94 @@ export function collectResourceGrantPayloads(passives: Dict[]): Dict[] {
   return out;
 }
 
+function resourceGrantParts(passives: Dict[], resourceKey: string, ctx: CharacterContext) {
+  const parts: ValueBreakdown['parts'] = [];
+  for (const mech of passives) {
+    const source = String(mech.name ?? 'Эффект персонажа');
+    const effects = mech.effects as Dict[] | undefined;
+    if (!Array.isArray(effects)) continue;
+    for (const effect of effects) {
+      const results = (effect.result ?? effect.results) as Dict[] | undefined;
+      if (!Array.isArray(results)) continue;
+      for (const result of results) {
+        if (result.kind !== 'resource' || result.op !== 'grant' || String(result.id ?? '') !== resourceKey) continue;
+        const value = resolveCount(result.amount ?? 1, ctx);
+        if (value > 0) parts.push({ value, source, reason: 'выданный ресурс' });
+      }
+    }
+  }
+  return parts;
+}
+
+/**
+ * Объяснение максимума ресурса для UI. Порядок зеркалит syncRuntimeResources:
+ * системные/классовые пулы + гранты, затем виртуальные uses/freeuse-пулы.
+ * actualMax добавляет явную строку согласования для старого или вручную
+ * изменённого snapshot, поэтому показанные части всегда сходятся с UI-числом.
+ */
+export function resourceMaximumBreakdown(
+  resourceKey: string,
+  ctx: CharacterContext,
+  assembled: AssembledCharacter,
+  freeuseSpells: FreeuseSpec[] = [],
+  actualMax?: number,
+): ValueBreakdown {
+  let parts: ValueBreakdown['parts'] = [];
+  const turnLabels: Record<string, string> = {
+    action: 'Действие', bonus_action: 'Бонусное действие', reaction: 'Реакция',
+  };
+
+  if (turnLabels[resourceKey]) {
+    parts = [{ value: 1, source: 'Экономика хода', reason: turnLabels[resourceKey] }];
+  } else if (resourceKey === hitDiceResourceKey(ctx.hitDie)) {
+    parts = [{
+      value: Math.max(0, ctx.level),
+      source: assembled.klass?.name ?? 'Класс',
+      reason: `${ctx.level} ур. · ${ctx.hitDie ?? 'кость хитов'}`,
+    }];
+  } else {
+    const classDef = (assembled.klass?.resources as Dict | null | undefined)?.[resourceKey] as Dict | undefined;
+    if (classDef) {
+      const value = resolveByLevel(classDef.by_level, ctx.level)
+        ?? resolveCount(classDef.count ?? classDef.max, ctx);
+      if (value > 0) {
+        const fromSubclass = Boolean((assembled.subclass?.resources as Dict | null | undefined)?.[resourceKey]);
+        parts.push({
+          value,
+          source: (fromSubclass ? assembled.subclass?.name : assembled.klass?.name) ?? 'Класс',
+          reason: classDef.by_level ? `значение на ${ctx.level}-м уровне` : 'максимум класса',
+        });
+      }
+    }
+    parts.push(...resourceGrantParts(collectPassiveMechanics(assembled), resourceKey, ctx));
+  }
+
+  const usesPool = collectActionUsesPools(assembled).find((pool) => pool.key === resourceKey);
+  if (usesPool) {
+    parts = [{ value: resolveCount(usesPool.count, ctx), source: usesPool.source, reason: 'лимит использований' }];
+  }
+
+  const freeuse = freeuseSpells.find((spec) => freeuseKey(spec.spell) === resourceKey);
+  if (freeuse) {
+    const spell = assembled.spells.find((candidate) => candidate.id === freeuse.spell || candidate.card_number === freeuse.spell);
+    parts = [{
+      value: resolveCount(freeuse.count, ctx),
+      source: spell?.name ?? freeuse.spell,
+      reason: 'бесплатные использования заклинания',
+    }];
+  }
+
+  const computed = parts.reduce((sum, part) => sum + part.value, 0);
+  const value = actualMax ?? computed;
+  if (computed !== value) {
+    parts.push({ value: value - computed, source: 'Сохранённое состояние', reason: 'согласование runtime' });
+  }
+  if (!parts.length) {
+    parts.push({ value, source: 'Сохранённое состояние', reason: 'максимум ресурса' });
+  }
+  return { value, parts };
+}
+
 /** Синхронизация max-пулов с классом и пассивками; сохраняет потраченные заряды. */
 export function syncRuntimeResources(
   ctx: CharacterContext,
@@ -89,7 +178,11 @@ export function syncRuntimeResources(
   for (const key of Object.keys(maxResources)) {
     const cur = existing.resources[key];
     if (cur != null) {
-      resources[key] = Math.min(cur, maxResources[key]);
+      const oldMax = existing.maxResources[key] ?? maxResources[key];
+      const gainedAtLevelUp = key === hitDiceResourceKey(ctx.hitDie)
+        ? Math.max(0, maxResources[key] - oldMax)
+        : 0;
+      resources[key] = Math.min(cur + gainedAtLevelUp, maxResources[key]);
     }
   }
 

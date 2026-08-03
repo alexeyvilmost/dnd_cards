@@ -8,6 +8,7 @@ import {
   buildResourceRuntimePatch,
   hpNeedsSync,
   resourcesNeedSync,
+  resourceMaximumBreakdown,
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -116,9 +117,10 @@ interface ResTileProps {
   option?: ResourceOption;
   current: number;
   max: number;
+  maximum: ReturnType<typeof resourceMaximumBreakdown>;
 }
 
-function ResTile({ resKey, option, current, max }: ResTileProps) {
+function ResTile({ resKey, option, current, max, maximum }: ResTileProps) {
   // Пути картинок, которые не загрузились, — падаем на следующий вариант иконки.
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const markFailed = (src: string) => setFailed((f) => ({ ...f, [src]: true }));
@@ -128,6 +130,7 @@ function ResTile({ resKey, option, current, max }: ResTileProps) {
   const warlockLevel = warlockSlotLevel(resKey);
 
   const label = option?.label
+    || (/^hit_dice_d\d+$/.test(resKey) ? `Кости хитов (к${resKey.slice('hit_dice_d'.length)})` : undefined)
     || (slotLevel != null ? `Ячейка ${slotLevel}-го круга` : undefined)
     || (warlockLevel != null ? 'Ячейка колдуна' : undefined)
     || RESOURCE_LABELS[resKey]
@@ -172,7 +175,7 @@ function ResTile({ resKey, option, current, max }: ResTileProps) {
   const cornerLevel = slotLevel ?? (warlockLevel && warlockLevel > 0 ? warlockLevel : null);
 
   return (
-    <ResourceHoverPreview resourceId={resKey} option={option}>
+    <ResourceHoverPreview resourceId={resKey} option={option} maximum={maximum}>
       <span className={`res-tile${spent ? ' res-tile--spent' : ''}`}>
         {icon}
         {cornerLevel != null && <span className="res-tile-corner">{ROMAN[cornerLevel - 1]}</span>}
@@ -289,6 +292,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
             option={findResource(resourceOptions, key)}
             current={runtime.resources[key] ?? 0}
             max={runtime.maxResources[key]}
+            maximum={resourceMaximumBreakdown(key, ctx, assembled, ruleState.freeuseSpells, runtime.maxResources[key])}
           />
         ))}
         <FreeuseSpellsTile

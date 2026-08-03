@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,12 +21,48 @@ type JWTClaims struct {
 
 // AuthService - сервис для работы с авторизацией
 type AuthService struct {
-	db *gorm.DB
+	db       *gorm.DB
+	publicMu sync.Mutex
+	publicID uuid.UUID
 }
 
 // NewAuthService - создание нового сервиса авторизации
 func NewAuthService(db *gorm.DB) *AuthService {
 	return &AuthService{db: db}
+}
+
+// ResolvePublicUser возвращает общего владельца анонимного прототипа. Успешный
+// результат кэшируется, ошибка БД — нет, чтобы следующий запрос мог повторить
+// попытку после кратковременного сбоя.
+func (s *AuthService) ResolvePublicUser() (uuid.UUID, error) {
+	s.publicMu.Lock()
+	defer s.publicMu.Unlock()
+	if s.publicID != uuid.Nil {
+		return s.publicID, nil
+	}
+
+	var user User
+	if err := s.db.Where("username = ?", "public").First(&user).Error; err == nil {
+		s.publicID = user.ID
+		return user.ID, nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return uuid.Nil, err
+	}
+
+	user = User{
+		Username:     "public",
+		Email:        "public@local",
+		PasswordHash: "disabled",
+		DisplayName:  "Публичный",
+	}
+	if err := s.db.Create(&user).Error; err != nil {
+		// Другая горутина/версия сервиса могла создать запись между SELECT и INSERT.
+		if retryErr := s.db.Where("username = ?", "public").First(&user).Error; retryErr != nil {
+			return uuid.Nil, err
+		}
+	}
+	s.publicID = user.ID
+	return user.ID, nil
 }
 
 // Register - регистрация нового пользователя

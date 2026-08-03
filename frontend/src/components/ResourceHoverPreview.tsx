@@ -1,17 +1,19 @@
 import { useMemo, type ReactNode } from 'react';
 import type { ResourceDefinition } from '../types';
 import type { ResourceOption } from '../utils/resources';
+import type { ValueBreakdown } from '../mvp/contracts';
 import HoverCard from './HoverCard';
 import ResourcePreview from './ResourcePreview';
 
 interface ResourceHoverPreviewProps {
   resourceId: string;
   option?: ResourceOption;
+  maximum?: ValueBreakdown;
   children: ReactNode;
 }
 
 /** Ресурсная плитка с тем же превью, что используется в библиотеке ресурсов. */
-export default function ResourceHoverPreview({ resourceId, option, children }: ResourceHoverPreviewProps) {
+export default function ResourceHoverPreview({ resourceId, option, maximum, children }: ResourceHoverPreviewProps) {
   const resource = useMemo<ResourceDefinition>(() => ({
     id: resourceId,
     resource_id: resourceId,
@@ -28,7 +30,7 @@ export default function ResourceHoverPreview({ resourceId, option, children }: R
     <HoverCard
       content={(
         <div role="tooltip" style={{ width: 340, maxWidth: 'calc(100vw - 16px)' }}>
-          <ResourcePreview resource={resource} disableHover />
+          <ResourcePreview resource={resource} maximum={maximum} disableHover />
         </div>
       )}
     >

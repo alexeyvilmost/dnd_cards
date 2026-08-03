@@ -53,6 +53,8 @@ func main() {
 	// gzip ответов (списки справочников после B1 сжимаются на ~85%).
 	// SSE-потоки боёв (/stream) исключаем — gzip буферизирует и ломает realtime.
 	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPathsRegexs([]string{`.*/stream$`})))
+	r.Use(RequestIDMiddleware())
+	r.Use(SecurityHeadersMiddleware())
 
 	// CORS настройки
 	config := cors.DefaultConfig()
@@ -69,7 +71,8 @@ func main() {
 		"https://*.digitalocean.app",
 	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"}
+	config.ExposeHeaders = []string{"X-Request-ID", "Retry-After"}
 	config.AllowCredentials = true
 	r.Use(cors.New(config))
 
@@ -120,40 +123,18 @@ func main() {
 		})
 	})
 
-	// Debug endpoint
-	r.GET("/api/debug", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":          "ok",
-			"timestamp":       time.Now().Unix(),
-			"auth_controller": authController != nil,
-			"auth_service":    authService != nil,
-		})
-	})
-
-	// Test auth endpoint
-	r.GET("/api/test-auth", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message":        "Auth endpoint test",
-			"auth_available": authController != nil,
-		})
-	})
-
 	// Маршруты API
 	api := r.Group("/api")
+	api.Use(MutationAuditMiddleware())
+	api.Use(JSONBodyLimitMiddleware(2 << 20))
+	api.Use(NewFixedWindowRateLimiter(180, time.Minute).MutationsOnly())
 	{
-		// Тестовый endpoint в группе API
-		api.GET("/test", func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "API group works", "auth_controller": authController != nil})
-		})
-
-		// Тест auth endpoints
-		api.GET("/auth/test", func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "Auth endpoints work", "controller": authController != nil})
-		})
-
 		// Публичные маршруты (без авторизации)
-		api.POST("/auth/register", authController.Register)
-		api.POST("/auth/login", authController.Login)
+		authRateLimit := NewFixedWindowRateLimiter(20, 10*time.Minute)
+		imageRateLimit := NewFixedWindowRateLimiter(3, 10*time.Minute)
+		uploadRateLimit := NewFixedWindowRateLimiter(20, time.Hour)
+		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
+		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
 
 		// Магазины (публичные ссылки на просмотр, создание за авторизацией)
 		api.GET("/shops/:slug", shopController.GetShop)
@@ -166,7 +147,7 @@ func main() {
 		api.POST("/cards", AuthMiddleware(authService), cardController.CreateCard)
 		api.PUT("/cards/:id", AuthMiddleware(authService), cardController.UpdateCard)
 		api.DELETE("/cards/:id", AuthMiddleware(authService), cardController.DeleteCard)
-		api.POST("/cards/generate-image", AuthMiddleware(authService), cardController.GenerateImage)
+		api.POST("/cards/generate-image", AuthMiddleware(authService), imageRateLimit.Handler(), cardController.GenerateImage)
 		api.POST("/cards/export", AuthMiddleware(authService), cardController.ExportCards)
 
 		// Действия (публичные, но с опциональной авторизацией)
@@ -195,14 +176,15 @@ func main() {
 		api.DELETE("/spells/:id", AuthMiddleware(authService), spellController.DeleteSpell)
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
-		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageController.GenerateStandaloneImage)
+		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageRateLimit.Handler(), imageController.GenerateStandaloneImage)
 		// Роут /images/upload-base64 удалён (KB-202): анонимная неограниченная запись любых данных
 		// в облачный бакет (OptionalAuthMiddleware = аноним) — поверхность абьюза и расходов. Фронт
 		// его не использовал; служил одноразовой миграции base64→S3 (см. историю git при надобности).
 
 		// AI-генерация механики по описанию (кнопка «AI» в редакторах)
 		aiMechanicsController := NewAIMechanicsController()
-		api.POST("/ai/mechanics", OptionalAuthMiddleware(authService), aiMechanicsController.GenerateMechanics)
+		aiRateLimit := NewFixedWindowRateLimiter(8, 10*time.Minute)
+		api.POST("/ai/mechanics", OptionalAuthMiddleware(authService), aiRateLimit.Handler(), aiMechanicsController.GenerateMechanics)
 
 		// Черты (публичные, но с опциональной авторизацией)
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
@@ -269,7 +251,8 @@ func main() {
 		api.PUT("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.UpdateConcept)
 		api.DELETE("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.DeleteConcept)
 
-		// Защищенные маршруты (требуют авторизации)
+		// Маршруты с контекстом пользователя. В публичном режиме AuthMiddleware
+		// подставляет общего пользователя public; валидный JWT по-прежнему учитывается.
 		protected := api.Group("/")
 		protected.Use(AuthMiddleware(authService))
 		{
@@ -331,8 +314,8 @@ func main() {
 			protected.PATCH("/characters-v3/:id/runtime", characterV3Controller.PatchCharacterRuntime)
 
 			// Изображения
-			protected.POST("/images/upload", imageController.UploadImage)
-			protected.POST("/images/generate", imageController.GenerateImage)
+			protected.POST("/images/upload", RequestBodyLimitMiddleware(12<<20), uploadRateLimit.Handler(), imageController.UploadImage)
+			protected.POST("/images/generate", imageRateLimit.Handler(), imageController.GenerateImage)
 			protected.DELETE("/images/:entity_type/:entity_id", imageController.DeleteImage)
 			protected.POST("/images/setup-cors", imageController.SetupCORS)
 			protected.GET("/images/status", imageController.GetStatus)

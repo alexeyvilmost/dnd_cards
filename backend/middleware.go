@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,15 @@ func AuthMiddleware(authService *AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// --- Авторизация временно отключена ---
 		optionalAuth(authService, c)
+		if _, exists := c.Get("user_id"); !exists {
+			publicID, err := authService.ResolvePublicUser()
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "не удалось определить публичного пользователя"})
+				return
+			}
+			c.Set("user_id", publicID)
+			c.Set("username", "public")
+		}
 		c.Next()
 
 		/* СТРОГАЯ ПРОВЕРКА (временно отключена):

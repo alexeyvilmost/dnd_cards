@@ -61,14 +61,11 @@ class BackendTester:
             return False
     
     def test_health_endpoints(self):
-        """Тестирует health и debug endpoints"""
+        """Тестирует публичный health endpoint"""
         self.log("\n=== Тестирование Health Endpoints ===", "INFO")
         
         endpoints = [
             ("GET", "/api/health", 200),
-            ("GET", "/api/debug", 200),
-            ("GET", "/api/test", 200),
-            ("GET", "/api/test-auth", 200),
         ]
         
         for method, endpoint, status in endpoints:

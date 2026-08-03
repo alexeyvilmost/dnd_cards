@@ -14,6 +14,17 @@ const TURN_RESOURCES: Record<string, number> = {
 
 const TURN_KEYS = ['action', 'bonus_action', 'reaction'] as const;
 
+export function hitDiceResourceKey(hitDie: string | null | undefined): string | null {
+  const match = /^d(\d+)$/i.exec(String(hitDie ?? '').trim());
+  return match ? `hit_dice_d${Number(match[1])}` : null;
+}
+
+export function hitDieSides(hitDie: string | null | undefined): number | null {
+  const match = /^d(\d+)$/i.exec(String(hitDie ?? '').trim());
+  const sides = match ? Number(match[1]) : 0;
+  return sides >= 2 ? sides : null;
+}
+
 function formulaCtx(ctx: CharacterContext): FormulaContext {
   return {
     abilityMods: ctx.abilityMods,
@@ -75,6 +86,12 @@ export function initResources(
   const maxResources: Record<string, number> = { ...TURN_RESOURCES };
   const resources: Record<string, number> = { ...TURN_RESOURCES };
 
+  const hitDiceKey = hitDiceResourceKey(ctx.hitDie);
+  if (hitDiceKey && ctx.level > 0) {
+    maxResources[hitDiceKey] = ctx.level;
+    resources[hitDiceKey] = ctx.level;
+  }
+
   if (classResources) {
     for (const [id, def] of Object.entries(classResources)) {
       const row = def as Dict;
@@ -123,10 +140,11 @@ export function resourcesRestoredOnShortRest(
 ): string[] {
   if (!recharge) {
     const LEGACY_SKIP = new Set(['action', 'bonus_action', 'reaction', 'heroic_inspiration']);
-    return Object.keys(maxResources).filter((k) => !LEGACY_SKIP.has(k));
+    return Object.keys(maxResources).filter((k) => !LEGACY_SKIP.has(k) && !k.startsWith('hit_dice_'));
   }
   return Object.keys(maxResources).filter((k) => {
     if (TURN_KEYS.includes(k as typeof TURN_KEYS[number])) return false;
+    if (k.startsWith('hit_dice_')) return false;
     return recharge[k] === 'short_rest';
   });
 }

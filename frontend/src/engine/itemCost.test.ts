@@ -48,6 +48,19 @@ describe('S4 — стоимость-предмет (canPay/pay)', () => {
   });
 });
 
+describe('стоимость костью хитов', () => {
+  it('разрешает абстрактный hit_die через фактический пул класса', () => {
+    const current = state([], { hit_dice_d10: 2 });
+    const result = pay(current, [{ resource: 'hit_die' }]);
+
+    expect(canPay(current, [{ resource: 'hit_die' }]).ok).toBe(true);
+    expect(result.state.resources.hit_dice_d10).toBe(1);
+    expect(result.events).toContainEqual({
+      type: 'resource_spent', resource: 'hit_dice_d10', amount: 1, remaining: 1,
+    });
+  });
+});
+
 describe('S4 — applyItemConsumeCost (саморасход зелья)', () => {
   it('впрыскивает item-cost при consumes_self', () => {
     const out = applyItemConsumeCost({ activation: { mode: 'active', consumes_self: true }, effects: [] }, 'potion');

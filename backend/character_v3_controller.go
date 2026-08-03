@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CharacterV3Controller — контроллер персонажей V3 (сущностно-ориентированное хранение).
@@ -380,24 +381,53 @@ func (cc *CharacterV3Controller) PostCharacterEvents(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "пустой список событий"})
 		return
 	}
+	if len(req.Events) > 200 {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "в одном пакете допустимо не более 200 событий"})
+		return
+	}
 
 	rows := make([]CharacterEvent, 0, len(req.Events))
 	now := time.Now()
+	tx := cc.db.Begin()
+	if tx.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка начала сохранения событий"})
+		return
+	}
+	defer tx.Rollback()
+
 	for _, item := range req.Events {
 		ts := now
 		if item.Ts != nil {
 			ts = *item.Ts
 		}
-		rows = append(rows, CharacterEvent{
-			CharacterID: characterID,
-			Ts:          ts,
-			Type:        item.Type,
-			Payload:     item.Payload,
-		})
-	}
+		row := CharacterEvent{
+			CharacterID:   characterID,
+			ClientEventID: item.ClientEventID,
+			Ts:            ts,
+			Type:          item.Type,
+			Payload:       item.Payload,
+		}
 
-	if err := cc.db.Create(&rows).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка сохранения событий", "details": err.Error()})
+		var create *gorm.DB
+		if item.ClientEventID != nil {
+			create = tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&row)
+		} else {
+			create = tx.Create(&row)
+		}
+		if create.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка сохранения событий"})
+			return
+		}
+		if item.ClientEventID != nil && create.RowsAffected == 0 {
+			if err := tx.Where("character_id = ? AND client_event_id = ?", characterID, *item.ClientEventID).First(&row).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка чтения сохранённого события"})
+				return
+			}
+		}
+		rows = append(rows, row)
+	}
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка завершения сохранения событий"})
 		return
 	}
 	c.JSON(http.StatusCreated, rows)

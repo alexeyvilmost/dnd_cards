@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ResourceDefinition } from '../types';
+import type { ValueBreakdown } from '../mvp/contracts';
 import { FormattedText } from '../utils/formattedText';
 import Bg3Card from './Bg3Card';
 
@@ -8,6 +9,7 @@ interface ResourcePreviewProps {
   className?: string;
   disableHover?: boolean;
   onClick?: () => void;
+  maximum?: ValueBreakdown;
 }
 
 // Ярлыки категорий/восстановления держим здесь, рядом с показом: раньше они жили
@@ -38,6 +40,7 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
   className = '',
   disableHover = false,
   onClick,
+  maximum,
 }) => {
   const footer = (
     <>
@@ -58,6 +61,19 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
       footer={footer}
     >
       <div className="bg3-stats">
+        {maximum && (
+          <div className="bg3-srow" style={{ alignItems: 'flex-start' }}>
+            <span className="bg3-lbl">Максимум:</span>
+            <span className="bg3-val">
+              <strong>{maximum.value}</strong>
+              {maximum.parts.map((part, index) => (
+                <span key={`${part.source}-${index}`} style={{ display: 'block', fontSize: '.78rem', opacity: .78 }}>
+                  {part.value >= 0 && index > 0 ? '+' : ''}{part.value} · {part.source}{part.reason ? ` — ${part.reason}` : ''}
+                </span>
+              ))}
+            </span>
+          </div>
+        )}
         <div className="bg3-srow">
           <span className="bg3-lbl">Восстановление:</span>
           <span className="bg3-val">{resourceRechargeLabel(resource.recharge)}</span>

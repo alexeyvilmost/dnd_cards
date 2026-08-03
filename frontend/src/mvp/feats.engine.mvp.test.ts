@@ -92,7 +92,7 @@ describe.skipIf(!RUN)('Движок черт: HP Крепкого, origin-чер
     const passives = collectPassiveMechanics(assembled);
     const bd = breakdownValue('max_hp', ctx, emptyRuntime(), passives as Record<string, unknown>[]);
     expect(bd.value).toBe(baseHP + 2 * level);
-    expect(bd.parts.some((p) => p.reason === 'эффект' && p.value === 2 * level)).toBe(true);
+    expect(bd.parts.some((p) => p.source === 'Крепкий' && p.value === 2 * level)).toBe(true);
   }, 60_000);
 
   it('origin-черта предыстории попадает в сборку без «Сменить черту»', async () => {

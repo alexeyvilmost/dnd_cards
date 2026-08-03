@@ -290,7 +290,7 @@ export { equipItem, unequipSlot, totalWeight } from '../engine/equipment';
 export { canPay, pay } from '../engine/cost';
 
 // Шаг D3 — engine/turn.ts
-export { shortRest, startTurn, longRest } from '../engine/turn';
+export { shortRest, spendHitDie, startTurn, longRest } from '../engine/turn';
 
 // Шаг D1 — engine/resources.ts
 export { initResources } from '../engine/resources';

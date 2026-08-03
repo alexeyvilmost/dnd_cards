@@ -529,6 +529,20 @@ func GetAllMigrations() []Migration {
 			Up:          refreshTransitiveMicroMicroCertifications,
 			Down:        unrefreshTransitiveMicroMicroCertifications,
 		},
+		{
+			Version:     "086_repair_content_mechanics",
+			Description: "Добавить passive-activation состояниям и честные narrative/частичные механики фичам Кулачника",
+			Up:          repairContentMechanics,
+			// Откат не удаляет и не обнуляет каталожные данные.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "087_idempotent_character_events",
+			Description: "Идемпотентная пакетная запись журнала персонажа по клиентскому UUID",
+			Up:          addCharacterEventIdempotency,
+			// Поле и индекс оставляем: откат не должен терять данные или защиту от дублей.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

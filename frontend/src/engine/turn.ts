@@ -9,8 +9,8 @@
 import type {
   CharacterContext, EngineEvent, ExecuteContext, ExecuteResult, ReactionOffer, RuntimeState,
 } from '../mvp/contracts';
-import { healingEvent, rollEvent, turnEndedEvent } from './events';
-import { resourcesRestoredOnShortRest } from './resources';
+import { rollEvent, turnEndedEvent } from './events';
+import { hitDiceResourceKey, hitDieSides, resourcesRestoredOnShortRest } from './resources';
 import { emitEvent } from './execute';
 import { rollD20 } from './roll';
 import { collectModifiers } from './modifiers';
@@ -186,20 +186,52 @@ export function endTurn(state: RuntimeState, ctx: CharacterContext): ExecuteResu
   return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
 }
 
-/** Короткий отдых: +50% max HP и ресурсы с recharge short_rest. */
+/**
+ * Потратить одну кость хитов во время короткого отдыха (PHB 2024):
+ * лечение = результат кости + ТЕЛ, минимум 1. UI вызывает функцию по одной
+ * кости, чтобы игрок решал после каждого броска, тратить ли следующую.
+ */
+export function spendHitDie(state: RuntimeState, ctx: CharacterContext, rolled: number): ExecuteResult {
+  const key = hitDiceResourceKey(ctx.hitDie);
+  const sides = hitDieSides(ctx.hitDie);
+  if (!key || !sides || !Number.isFinite(rolled) || state.hp.current >= state.hp.max || (state.resources[key] ?? 0) < 1) {
+    return { state: cloneState(state), events: [] };
+  }
+
+  const die = Math.max(1, Math.min(sides, Math.floor(rolled)));
+  const con = ctx.abilityMods.con ?? 0;
+  const rawHealing = Math.max(1, die + con);
+  const next = cloneState(state);
+  next.resources[key] -= 1;
+  const before = next.hp.current;
+  next.hp.current = Math.min(next.hp.max, next.hp.current + rawHealing);
+  const healed = next.hp.current - before;
+  const remaining = next.resources[key];
+  const modifiers = con === 0 ? [] : [{ value: con, source: 'ТЕЛ', reason: 'модификатор Телосложения' }];
+  const events: EngineEvent[] = [
+    { type: 'resource_spent', resource: key, amount: 1, remaining },
+    {
+      type: 'healing',
+      amount: healed,
+      roll: {
+        kind: 'healing',
+        dice: [{ sides, result: die }],
+        advantage: 'none',
+        modifiers,
+        total: rawHealing,
+        text: `к${sides}: ${die}${con >= 0 ? ' +' : ' '}${con} [ТЕЛ] = ${rawHealing} ХП`,
+      },
+    },
+  ];
+  return { state: next, events };
+}
+
+/** Короткий отдых: без автолечения; HP восстанавливаются только через spendHitDie. */
 export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteResult {
   let next = cloneState(state);
   const events: EngineEvent[] = [{ type: 'short_rest' }];
   const pending: ReactionOffer[] = [];
   const recharge = (ctx as RestContext).resourceRecharge;
-
-  const healAmount = Math.floor(next.hp.max / 2);
-  if (healAmount > 0) {
-    const before = next.hp.current;
-    next.hp.current = Math.min(next.hp.max, next.hp.current + healAmount);
-    const healed = next.hp.current - before;
-    if (healed > 0) events.push(healingEvent(healed));
-  }
 
   for (const key of resourcesRestoredOnShortRest(next.maxResources, recharge)) {
     const max = next.maxResources[key] ?? 0;

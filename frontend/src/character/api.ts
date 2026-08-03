@@ -5,6 +5,7 @@ import type { ForgeCharacter, SaveForgeCharacterRequest } from './types';
 export interface CharacterEventRow {
   id: string;
   character_id: string;
+  client_event_id?: string;
   ts: string;
   type: string;
   payload: EngineEvent;
@@ -12,9 +13,29 @@ export interface CharacterEventRow {
 }
 
 export interface CreateCharacterEventItem {
+  client_event_id?: string;
   ts?: string;
   type: string;
   payload: EngineEvent;
+}
+
+export function withClientEventIds(events: CreateCharacterEventItem[]): CreateCharacterEventItem[] {
+  return events.map((event) => ({
+    ...event,
+    client_event_id: event.client_event_id ?? createClientEventId(),
+  }));
+}
+
+function createClientEventId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // UUID v4-compatible fallback for older WebViews. Randomness is sufficient
+  // for an idempotency key; the database remains the final uniqueness guard.
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const value = Math.floor(Math.random() * 16);
+    return (char === 'x' ? value : (value & 0x3) | 0x8).toString(16);
+  });
 }
 
 // API новой системы персонажей (characters_v3). Доступ без авторизации:
@@ -44,7 +65,8 @@ export const charactersV3Api = {
     return data ?? [];
   },
   postEvents: async (characterId: string, events: CreateCharacterEventItem[]): Promise<CharacterEventRow[]> => {
-    const { data } = await apiClient.post<CharacterEventRow[]>(`/api/characters-v3/${characterId}/events`, { events });
+	const payload = { events: withClientEventIds(events) };
+	const { data } = await apiClient.post<CharacterEventRow[]>(`/api/characters-v3/${characterId}/events`, payload);
     return data ?? [];
   },
   patchRuntime: async (characterId: string, payload: PatchCharacterRuntimeRequest): Promise<ForgeCharacter> => {

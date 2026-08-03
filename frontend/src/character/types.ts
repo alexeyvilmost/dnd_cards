@@ -1,6 +1,6 @@
 // Типы новой (сущностно-ориентированной) системы персонажей — «CharacterForge».
-// Название ForgeCharacter выбрано, чтобы не конфликтовать с существующим
-// CharacterV3 из utils/characterCalculationsV3 (тот построен на API characters-v2).
+// Название ForgeCharacter подчёркивает принадлежность к сущностной системе
+// CharacterForge и не смешивает её с серверной моделью CharacterV3.
 
 import type { CharacterRuleState } from './rules/types';
 
