@@ -550,6 +550,13 @@ func GetAllMigrations() []Migration {
 			// Нормализация не удаляет данные и не должна откатываться к невалидной schema.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "089_repair_spell_targeting_certifications",
+			Description: "Восстановить support-статусы и production-хэши после нормализации дистанций",
+			Up:          repairSpellTargetingCertifications,
+			// Сертификация не удаляется при откате, чтобы сущности не исчезали из verified-каталога.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
