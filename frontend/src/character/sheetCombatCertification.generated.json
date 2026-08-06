@@ -4,20 +4,20 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0",
-      "contentHash": "sha256:6b04b93ad93476c2e57224f902d1a0739e1ff3fa4994e9d36f6e77d7b927ff48",
+      "releaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.overlay.1.10.0",
+      "contentHash": "sha256:4ee64d32fffe6b88e797a10ae89207d5f88c0f2214cc16df043d6b9464e9f056",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0",
+      "id": "prod-snapshot@2026-08-06.micro-mvp-l1.overlay.1.10.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
-      "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
-      "sourceContentHash": "sha256:0d7677988be340531fc2fdb13f17825b8f136b5d8dfdf5c1937a6a5428fca04b",
-      "overlayHash": "sha256:980678c4ab6c2d696b150142ce3ab2e3fa52bbc49cee5c9844b2535542aed108",
-      "contentHash": "sha256:6b04b93ad93476c2e57224f902d1a0739e1ff3fa4994e9d36f6e77d7b927ff48",
-      "releaseHash": "sha256:8568dc40ae99dd4ea3d981799941e510445a682a107aece7c62a752593a8689c"
+      "sourceReleaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.v2",
+      "sourceContentHash": "sha256:95556fca97630dd76af1cdc5e991635f42eca5379d85432c23075c0cb0bfb17d",
+      "overlayHash": "sha256:bb83dc32c63f72c7c29cb81128aa309e580f36eeb17bc6f72db6bd437836ffbc",
+      "contentHash": "sha256:4ee64d32fffe6b88e797a10ae89207d5f88c0f2214cc16df043d6b9464e9f056",
+      "releaseHash": "sha256:04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b"
     }
   },
   "summary": {
@@ -3713,16 +3713,11 @@
       "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
       "name": "Волна грома",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-bard",
-          "CLASS-druid",
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
@@ -3733,11 +3728,7 @@
               "resource": "spell_slot"
             }
           ],
-          "mode": "active",
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [
           {
@@ -3754,54 +3745,63 @@
                 "type": "thunder"
               },
               {
+                "distance": 10,
                 "kind": "movement",
-                "value": "push",
-                "distance": 10
+                "value": "push"
               }
             ],
             "on_success": [
               {
                 "dice": "2d8",
                 "kind": "damage",
+                "on_success": "half",
                 "scaling": {
                   "dice": "1d8",
                   "per": "spell_slot_above"
                 },
-                "type": "thunder",
-                "on_success": "half"
+                "type": "thunder"
               }
             ],
             "resolution": "save",
             "who": "target"
           }
         ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "exclude_carried_objects": true,
+          "exclude_secured_objects": true,
+          "object_area_requirement": "entirely_in_area",
+          "object_max_distance_ft": 15,
+          "object_push_distance_ft": 10,
+          "type": "area_object_push"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "domain": "mixed",
           "actor_targets": true,
-          "range_ft": 15,
           "allowed_relations": [
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": false,
-          "shape": "area",
-          "min_targets": 0,
-          "max_targets": 8,
-          "range": "15 футов",
-          "filter": "creature",
           "area": {
             "kind": "cube",
             "size_ft": 15
-          }
-        },
-        "primitive": {
-          "type": "area_object_push",
-          "object_push_distance_ft": 10,
-          "object_max_distance_ft": 15,
-          "object_area_requirement": "entirely_in_area",
-          "exclude_secured_objects": true,
-          "exclude_carried_objects": true
+          },
+          "domain": "mixed",
+          "filter": "creature",
+          "max_targets": 8,
+          "min_targets": 0,
+          "range": "15 футов",
+          "range_ft": 15,
+          "requires_line_of_sight": false,
+          "shape": "area"
         }
       },
       "sourceEntityIds": [
@@ -3841,16 +3841,11 @@
       "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
       "name": "Волна грома",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-bard",
-          "CLASS-druid",
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
@@ -3861,11 +3856,7 @@
               "resource": "spell_slot"
             }
           ],
-          "mode": "active",
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [
           {
@@ -3882,54 +3873,63 @@
                 "type": "thunder"
               },
               {
+                "distance": 10,
                 "kind": "movement",
-                "value": "push",
-                "distance": 10
+                "value": "push"
               }
             ],
             "on_success": [
               {
                 "dice": "2d8",
                 "kind": "damage",
+                "on_success": "half",
                 "scaling": {
                   "dice": "1d8",
                   "per": "spell_slot_above"
                 },
-                "type": "thunder",
-                "on_success": "half"
+                "type": "thunder"
               }
             ],
             "resolution": "save",
             "who": "target"
           }
         ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "exclude_carried_objects": true,
+          "exclude_secured_objects": true,
+          "object_area_requirement": "entirely_in_area",
+          "object_max_distance_ft": 15,
+          "object_push_distance_ft": 10,
+          "type": "area_object_push"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "domain": "mixed",
           "actor_targets": true,
-          "range_ft": 15,
           "allowed_relations": [
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": false,
-          "shape": "area",
-          "min_targets": 0,
-          "max_targets": 8,
-          "range": "15 футов",
-          "filter": "creature",
           "area": {
             "kind": "cube",
             "size_ft": 15
-          }
-        },
-        "primitive": {
-          "type": "area_object_push",
-          "object_push_distance_ft": 10,
-          "object_max_distance_ft": 15,
-          "object_area_requirement": "entirely_in_area",
-          "exclude_secured_objects": true,
-          "exclude_carried_objects": true
+          },
+          "domain": "mixed",
+          "filter": "creature",
+          "max_targets": 8,
+          "min_targets": 0,
+          "range": "15 футов",
+          "range_ft": 15,
+          "requires_line_of_sight": false,
+          "shape": "area"
         }
       },
       "sourceEntityIds": [
@@ -3969,17 +3969,14 @@
       "id": "6812f780-de8a-4509-9253-b4be711a9212",
       "name": "Атака второй рукой",
       "mechanics": {
-        "primitive": {
-          "type": "light_weapon_extra_attack"
-        },
         "activation": {
           "cost": [
             {
               "resource": "bonus_action"
             },
             {
-              "resource": "equipped_weapon_ammo",
-              "amount": 1
+              "amount": 1,
+              "resource": "equipped_weapon_ammo"
             }
           ],
           "mode": "active"
@@ -4005,19 +4002,22 @@
           }
         ],
         "name": "Атака второй рукой",
+        "primitive": {
+          "type": "light_weapon_extra_attack"
+        },
         "targeting": {
-          "domain": "actor",
           "actor_targets": true,
-          "shape": "single",
-          "min_targets": 1,
-          "max_targets": 1,
-          "range_ft": 600,
-          "requires_line_of_sight": true,
           "allowed_relations": [
             "ally",
             "enemy",
             "neutral"
-          ]
+          ],
+          "domain": "actor",
+          "max_targets": 1,
+          "min_targets": 1,
+          "range_ft": 600,
+          "requires_line_of_sight": true,
+          "shape": "single"
         }
       },
       "sourceEntityIds": [
@@ -4040,14 +4040,11 @@
       "id": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
       "name": "Огненные ладони",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
@@ -4058,11 +4055,7 @@
               "resource": "spell_slot"
             }
           ],
-          "mode": "active",
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [
           {
@@ -4083,45 +4076,52 @@
               {
                 "dice": "3d6",
                 "kind": "damage",
+                "on_success": "half",
                 "scaling": {
                   "dice": "1d6",
                   "per": "spell_slot_above"
                 },
-                "type": "fire",
-                "on_success": "half"
+                "type": "fire"
               }
             ],
             "resolution": "save",
             "who": "target"
           }
         ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "policy": {
+            "exclude_carried": true,
+            "require_flammable": true,
+            "require_in_area": true
+          },
+          "type": "burning_hands_objects"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "domain": "mixed",
           "actor_targets": true,
-          "range_ft": 15,
           "allowed_relations": [
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": false,
-          "shape": "area",
-          "min_targets": 0,
-          "max_targets": 8,
-          "range": "15 футов",
-          "filter": "creature",
           "area": {
             "kind": "cone",
             "size_ft": 15
-          }
-        },
-        "primitive": {
-          "type": "burning_hands_objects",
-          "policy": {
-            "require_in_area": true,
-            "require_flammable": true,
-            "exclude_carried": true
-          }
+          },
+          "domain": "mixed",
+          "filter": "creature",
+          "max_targets": 8,
+          "min_targets": 0,
+          "range": "15 футов",
+          "range_ft": 15,
+          "requires_line_of_sight": false,
+          "shape": "area"
         }
       },
       "sourceEntityIds": [
@@ -4159,14 +4159,11 @@
       "id": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
       "name": "Огненные ладони",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
@@ -4177,11 +4174,7 @@
               "resource": "spell_slot"
             }
           ],
-          "mode": "active",
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [
           {
@@ -4202,45 +4195,52 @@
               {
                 "dice": "3d6",
                 "kind": "damage",
+                "on_success": "half",
                 "scaling": {
                   "dice": "1d6",
                   "per": "spell_slot_above"
                 },
-                "type": "fire",
-                "on_success": "half"
+                "type": "fire"
               }
             ],
             "resolution": "save",
             "who": "target"
           }
         ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "policy": {
+            "exclude_carried": true,
+            "require_flammable": true,
+            "require_in_area": true
+          },
+          "type": "burning_hands_objects"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "domain": "mixed",
           "actor_targets": true,
-          "range_ft": 15,
           "allowed_relations": [
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": false,
-          "shape": "area",
-          "min_targets": 0,
-          "max_targets": 8,
-          "range": "15 футов",
-          "filter": "creature",
           "area": {
             "kind": "cone",
             "size_ft": 15
-          }
-        },
-        "primitive": {
-          "type": "burning_hands_objects",
-          "policy": {
-            "require_in_area": true,
-            "require_flammable": true,
-            "exclude_carried": true
-          }
+          },
+          "domain": "mixed",
+          "filter": "creature",
+          "max_targets": 8,
+          "min_targets": 0,
+          "range": "15 футов",
+          "range_ft": 15,
+          "requires_line_of_sight": false,
+          "shape": "area"
         }
       },
       "sourceEntityIds": [
@@ -4278,70 +4278,70 @@
       "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
       "name": "Волшебная стрела",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
-          "mode": "active",
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
             },
             {
-              "resource": "spell_slot",
+              "amount": 1,
               "level": 1,
-              "amount": 1
+              "resource": "spell_slot"
             }
           ],
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "policy": {
+            "allocation_choice_id": "magic_missile_dart_targets",
+            "base_dart_count": 3,
+            "base_slot_level": 1,
+            "darts_per_slot_above": 1,
+            "max_slot_level": 9,
+            "per_dart_effect": {
+              "resolution": "auto",
+              "result": [
+                {
+                  "dice": "1d4 + 1",
+                  "kind": "damage",
+                  "type": "force"
+                }
+              ],
+              "who": "target"
+            },
+            "simultaneous": true
+          },
+          "type": "magic_missile"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "shape": "multiple",
-          "min_targets": 1,
-          "max_targets": 11,
-          "domain": "actor",
           "actor_targets": true,
-          "range_ft": 120,
           "allowed_relations": [
             "self",
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": true,
-          "range": "120 футов",
+          "domain": "actor",
           "filter": "creature",
-          "requires_sight": true
-        },
-        "primitive": {
-          "type": "magic_missile",
-          "policy": {
-            "base_slot_level": 1,
-            "max_slot_level": 9,
-            "base_dart_count": 3,
-            "darts_per_slot_above": 1,
-            "allocation_choice_id": "magic_missile_dart_targets",
-            "simultaneous": true,
-            "per_dart_effect": {
-              "resolution": "auto",
-              "who": "target",
-              "result": [
-                {
-                  "kind": "damage",
-                  "dice": "1d4 + 1",
-                  "type": "force"
-                }
-              ]
-            }
-          }
+          "max_targets": 11,
+          "min_targets": 1,
+          "range": "120 футов",
+          "range_ft": 120,
+          "requires_line_of_sight": true,
+          "requires_sight": true,
+          "shape": "multiple"
         }
       },
       "sourceEntityIds": [
@@ -4381,70 +4381,70 @@
       "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
       "name": "Волшебная стрела",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
-          "mode": "active",
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
             },
             {
-              "resource": "spell_slot",
+              "amount": 1,
               "level": 1,
-              "amount": 1
+              "resource": "spell_slot"
             }
           ],
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "policy": {
+            "allocation_choice_id": "magic_missile_dart_targets",
+            "base_dart_count": 3,
+            "base_slot_level": 1,
+            "darts_per_slot_above": 1,
+            "max_slot_level": 9,
+            "per_dart_effect": {
+              "resolution": "auto",
+              "result": [
+                {
+                  "dice": "1d4 + 1",
+                  "kind": "damage",
+                  "type": "force"
+                }
+              ],
+              "who": "target"
+            },
+            "simultaneous": true
+          },
+          "type": "magic_missile"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "shape": "multiple",
-          "min_targets": 1,
-          "max_targets": 11,
-          "domain": "actor",
           "actor_targets": true,
-          "range_ft": 120,
           "allowed_relations": [
             "self",
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": true,
-          "range": "120 футов",
+          "domain": "actor",
           "filter": "creature",
-          "requires_sight": true
-        },
-        "primitive": {
-          "type": "magic_missile",
-          "policy": {
-            "base_slot_level": 1,
-            "max_slot_level": 9,
-            "base_dart_count": 3,
-            "darts_per_slot_above": 1,
-            "allocation_choice_id": "magic_missile_dart_targets",
-            "simultaneous": true,
-            "per_dart_effect": {
-              "resolution": "auto",
-              "who": "target",
-              "result": [
-                {
-                  "kind": "damage",
-                  "dice": "1d4 + 1",
-                  "type": "force"
-                }
-              ]
-            }
-          }
+          "max_targets": 11,
+          "min_targets": 1,
+          "range": "120 футов",
+          "range_ft": 120,
+          "requires_line_of_sight": true,
+          "requires_sight": true,
+          "shape": "multiple"
         }
       },
       "sourceEntityIds": [
@@ -4484,70 +4484,70 @@
       "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
       "name": "Волшебная стрела",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
-        "interaction": {
-          "intent": "harmful"
-        },
         "activation": {
-          "mode": "active",
+          "cast_time": {
+            "amount": 1,
+            "unit": "action"
+          },
           "cost": [
             {
               "resource": "action"
             },
             {
-              "resource": "spell_slot",
+              "amount": 1,
               "level": 1,
-              "amount": 1
+              "resource": "spell_slot"
             }
           ],
-          "cast_time": {
-            "unit": "action",
-            "amount": 1
-          }
+          "mode": "active"
         },
         "effects": [],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "primitive": {
+          "policy": {
+            "allocation_choice_id": "magic_missile_dart_targets",
+            "base_dart_count": 3,
+            "base_slot_level": 1,
+            "darts_per_slot_above": 1,
+            "max_slot_level": 9,
+            "per_dart_effect": {
+              "resolution": "auto",
+              "result": [
+                {
+                  "dice": "1d4 + 1",
+                  "kind": "damage",
+                  "type": "force"
+                }
+              ],
+              "who": "target"
+            },
+            "simultaneous": true
+          },
+          "type": "magic_missile"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "shape": "multiple",
-          "min_targets": 1,
-          "max_targets": 11,
-          "domain": "actor",
           "actor_targets": true,
-          "range_ft": 120,
           "allowed_relations": [
             "self",
             "ally",
             "enemy",
             "neutral"
           ],
-          "requires_line_of_sight": true,
-          "range": "120 футов",
+          "domain": "actor",
           "filter": "creature",
-          "requires_sight": true
-        },
-        "primitive": {
-          "type": "magic_missile",
-          "policy": {
-            "base_slot_level": 1,
-            "max_slot_level": 9,
-            "base_dart_count": 3,
-            "darts_per_slot_above": 1,
-            "allocation_choice_id": "magic_missile_dart_targets",
-            "simultaneous": true,
-            "per_dart_effect": {
-              "resolution": "auto",
-              "who": "target",
-              "result": [
-                {
-                  "kind": "damage",
-                  "dice": "1d4 + 1",
-                  "type": "force"
-                }
-              ]
-            }
-          }
+          "max_targets": 11,
+          "min_targets": 1,
+          "range": "120 футов",
+          "range_ft": 120,
+          "requires_line_of_sight": true,
+          "requires_sight": true,
+          "shape": "multiple"
         }
       },
       "sourceEntityIds": [
@@ -4587,17 +4587,14 @@
       "id": "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
       "name": "Атака оружием",
       "mechanics": {
-        "primitive": {
-          "type": "weapon_attack"
-        },
         "activation": {
           "cost": [
             {
               "resource": "action"
             },
             {
-              "resource": "equipped_weapon_ammo",
-              "amount": 1
+              "amount": 1,
+              "resource": "equipped_weapon_ammo"
             }
           ],
           "mode": "active"
@@ -4619,19 +4616,22 @@
           }
         ],
         "name": "Атака оружием",
+        "primitive": {
+          "type": "weapon_attack"
+        },
         "targeting": {
-          "domain": "actor",
           "actor_targets": true,
-          "shape": "single",
-          "min_targets": 1,
-          "max_targets": 1,
-          "range_ft": 600,
-          "requires_line_of_sight": true,
           "allowed_relations": [
             "ally",
             "enemy",
             "neutral"
-          ]
+          ],
+          "domain": "actor",
+          "max_targets": 1,
+          "min_targets": 1,
+          "range_ft": 600,
+          "requires_line_of_sight": true,
+          "shape": "single"
         }
       },
       "sourceEntityIds": [
@@ -4654,11 +4654,11 @@
       "id": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
       "name": "Щит",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
         "activation": {
+          "cast_time": {
+            "amount": 1,
+            "unit": "reaction"
+          },
           "cost": [
             {
               "resource": "reaction"
@@ -4670,10 +4670,6 @@
             }
           ],
           "mode": "reaction",
-          "cast_time": {
-            "unit": "reaction",
-            "amount": 1
-          },
           "trigger": {
             "event": "hit_by_attack",
             "events": [
@@ -4694,9 +4690,9 @@
                   "type": "until_start_of_next_turn"
                 },
                 "kind": "modifier",
+                "magic_missile_immunity": true,
                 "op": "add",
-                "value": "+5",
-                "magic_missile_immunity": true
+                "value": "+5"
               },
               {
                 "description": "Действует до начала вашего следующего хода, в т.ч. против вызвавшей атаки; иммунитет к Волшебной стреле.",
@@ -4705,17 +4701,21 @@
             ]
           }
         ],
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "domain": "actor",
           "actor_targets": false,
-          "shape": "self",
-          "min_targets": 0,
-          "max_targets": 1,
-          "range_ft": 0,
-          "requires_line_of_sight": false,
           "allowed_relations": [
             "self"
-          ]
+          ],
+          "domain": "actor",
+          "max_targets": 1,
+          "min_targets": 0,
+          "range_ft": 0,
+          "requires_line_of_sight": false,
+          "shape": "self"
         }
       },
       "sourceEntityIds": [
@@ -4751,11 +4751,11 @@
       "id": "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
       "name": "Щит",
       "mechanics": {
-        "spell_class_list_ids": [
-          "CLASS-sorcerer",
-          "CLASS-wizard"
-        ],
         "activation": {
+          "cast_time": {
+            "amount": 1,
+            "unit": "reaction"
+          },
           "cost": [
             {
               "resource": "reaction"
@@ -4767,10 +4767,6 @@
             }
           ],
           "mode": "reaction",
-          "cast_time": {
-            "unit": "reaction",
-            "amount": 1
-          },
           "trigger": {
             "event": "hit_by_attack",
             "events": [
@@ -4791,9 +4787,9 @@
                   "type": "until_start_of_next_turn"
                 },
                 "kind": "modifier",
+                "magic_missile_immunity": true,
                 "op": "add",
-                "value": "+5",
-                "magic_missile_immunity": true
+                "value": "+5"
               },
               {
                 "description": "Действует до начала вашего следующего хода, в т.ч. против вызвавшей атаки; иммунитет к Волшебной стреле.",
@@ -4802,17 +4798,21 @@
             ]
           }
         ],
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
         "targeting": {
-          "domain": "actor",
           "actor_targets": false,
-          "shape": "self",
-          "min_targets": 0,
-          "max_targets": 1,
-          "range_ft": 0,
-          "requires_line_of_sight": false,
           "allowed_relations": [
             "self"
-          ]
+          ],
+          "domain": "actor",
+          "max_targets": 1,
+          "min_targets": 0,
+          "range_ft": 0,
+          "requires_line_of_sight": false,
+          "shape": "self"
         }
       },
       "sourceEntityIds": [
@@ -5288,6 +5288,6 @@
       }
     ]
   },
-  "sourceProjectionHash": "sha256:c73e52f7385a8819c670f357be0d94fce193f4202714eada2f6b66a7b29064db",
-  "contentHash": "sha256:a682bf95c34e5c476bd006ab8864f8bc43332fbc7f34b0f9fb32e815583886ac"
+  "sourceProjectionHash": "sha256:d45f8d97601e6eba0640e6b1c0d95eaf26fc67cb6889187de45a3b5769d187ca",
+  "contentHash": "sha256:c7d28beda4ee169df4a424c1c547fd12f68dec1756f3cf5083a91a3485bbf22b"
 }

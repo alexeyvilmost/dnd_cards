@@ -26,7 +26,6 @@ import {
   type Spellcasting,
 } from './derive';
 import { ABILITY_KEYS, type AbilityKey, type CharacterDraft } from './types';
-import { excludesMicroMvpL1SourceEffect } from '../canon/microMvpSourceCorrections';
 import { resolvePrimarySpellcastingAbility } from './spellcastingAbility';
 
 // ─── Сбор ссылок на эффекты/действия из выбранных сущностей ──────────────────
@@ -271,20 +270,11 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   await Promise.all(
     uniqueEffectIds.map((id) => effectsApi.getEffect(id).then((e) => { effBodyById.set(id, e); }).catch(() => {})),
   );
-  const canonicalEffectRefs = effectRefs.filter((reference) => {
-    const effect = effBodyById.get(reference.id);
-    return !excludesMicroMvpL1SourceEffect({
-      characterLevel: draft.level,
-      raceCardNumber: race?.card_number,
-      classCardNumber: klass?.card_number,
-      effectCardNumber: effect?.card_number,
-    });
-  });
   const baseEffects: OriginEffect[] = [];
   {
     const seenNonRep = new Set<string>();
     const repN = new Map<string, number>();
-    for (const r of canonicalEffectRefs) {
+    for (const r of effectRefs) {
       const effect = effBodyById.get(r.id);
       if (!effect) continue;
       if (effect.repeatable) {

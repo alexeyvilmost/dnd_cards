@@ -170,11 +170,18 @@ describe('live micro-MVP compiled certification boundary', () => {
     expect(result.catalogInput.fullCatalog.rawMatchesReviewed).toBe(false);
   }, 60_000);
 
-  it('refuses the unmaterialized legacy snapshot on the production verification path', async () => {
-    await expect(compileLiveMicroMvpCertification({
+  it('accepts a production fixture without legacy-materialization and records hash diagnostics', async () => {
+    const result = await compileLiveMicroMvpCertification({
       catalogs: copy(readProdSnapshotCatalogs()),
       certificationVersion: 'micro-mvp-l1-rules-core-v3',
-    })).rejects.toThrow();
+    });
+    expect(result.catalogInput.compilerRaw.contentHashMatchesReviewed).toBe(true);
+    expect(result.catalogInput.compilerRaw.releaseHashMatchesReviewed).toBe(true);
+    expect(result.catalogInput.fullCatalog.rawMatchesReviewed).toBe(true);
+    expect(result.catalogInput.fullCatalog.normalizedMatchesReviewed).toBe(true);
+    expect(result.provider.release).toMatchObject({
+      sourceReleaseId: expect.any(String),
+    });
   }, 60_000);
 
   it('binds fetched catalog bytes, compiled release, denominator and evidence protocol', async () => {

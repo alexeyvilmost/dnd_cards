@@ -121,7 +121,6 @@ import {
   type RuleActionProjectionProvenance,
   type SpellCastingOverride,
 } from './ruleActionProjection';
-import { excludesMicroMvpL1SourceEffect } from './microMvpSourceCorrections';
 import type {
   FixtureActorState,
   MicroMvpSnapshotManifest,
@@ -137,7 +136,7 @@ type JsonObject = Record<string, unknown>;
 export const MICRO_MVP_L1_OVERLAY_SPEC = {
   schemaVersion: 1,
   version: MICRO_MVP_L1_OVERLAY_VERSION,
-  sourceReleaseId: 'prod-snapshot@2026-07-15.micro-mvp-l1.v1',
+  sourceReleaseId: 'prod-snapshot@2026-08-06.micro-mvp-l1.v2',
   rulesLine: 'dnd5e-2024',
   characterLevel: 1,
   contentAuthority: {
@@ -155,8 +154,6 @@ export const MICRO_MVP_L1_OVERLAY_SPEC = {
     warlockInvocationPolicy: 'phb-2024-level-1-options-without-prerequisites-only',
   },
   sourceCorrections: [
-    'human.remove-foreign-elf-keen-senses',
-    'dragonborn.move-draconic-flight-to-level-5',
     'dragonborn.breath-weapon-attack-sequence-replacement',
     'actions.declarative-attack-replacement-policy',
     'dwarf.stonecunning-runtime-sense-duration-and-stonework-scope',
@@ -266,39 +263,6 @@ export const MICRO_MVP_L1_SOURCE_ISSUE_DISPOSITIONS = [
     subjects: ['CLASS-druid:wild_shape', 'CLASS-sorcerer:sorcery_points'],
     correctionIds: ['class.remove-l2-only-resource-pools-at-level-1'],
     readinessInvariant: 'no-level-2-resource-in-l1-runtime',
-  },
-  {
-    code: 'narrative_only_mechanic',
-    subjects: ['EFF-alert'],
-    correctionIds: [
-      'alert.use-proficiency-bonus-for-initiative',
-      'alert.structured-initiative-swap-capability',
-    ],
-    readinessInvariant: 'narrative-record-replaced-by-structured-mechanics',
-  },
-  {
-    code: 'narrative_only_mechanic',
-    subjects: ['EFF-divine-order'],
-    correctionIds: ['divine-order.structured-grants'],
-    readinessInvariant: 'narrative-record-replaced-by-structured-mechanics',
-  },
-  {
-    code: 'narrative_only_mechanic',
-    subjects: ['EFF-innate-sorcery'],
-    correctionIds: ['innate-sorcery.class-scoped-runtime-modifiers'],
-    readinessInvariant: 'narrative-record-replaced-by-structured-mechanics',
-  },
-  {
-    code: 'narrative_only_mechanic',
-    subjects: ['EFF-primal-order'],
-    correctionIds: ['primal-order.structured-grants'],
-    readinessInvariant: 'narrative-record-replaced-by-structured-mechanics',
-  },
-  {
-    code: 'narrative_only_mechanic',
-    subjects: ['EFF-sneak-attack'],
-    correctionIds: ['sneak-attack.weapon-roll-and-ally-eligibility'],
-    readinessInvariant: 'narrative-record-replaced-by-structured-mechanics',
   },
 ] as const satisfies readonly MicroMvpL1SourceIssueDisposition[];
 
@@ -448,7 +412,7 @@ function stableIndex(key: string, size: number): number {
 
 function catalogContentForCompilation(
   source: SnapshotCatalogs,
-  mode: ContentPatchMode = 'apply',
+  mode: ContentPatchMode = 'verify-only',
 ): SnapshotCatalogs {
   return materializeMicroMvpL1ContentPatch(source, { mode }).catalogs;
 }
@@ -553,24 +517,10 @@ function buildBaseBundle(
   const effectIndex = indexByReference(catalogs.effects);
   const actionIndex = indexByReference(catalogs.actions);
   const refs = gatherFeatureRefs(race, klass, [feat], 1, lineage ?? null);
-  const removedSourceEffectIds: string[] = [];
-  const effectRefs = refs.effectRefs.filter((reference) => {
-    const candidate = effectIndex.get(reference.id);
-    if (excludesMicroMvpL1SourceEffect({
-      characterLevel: 1,
-      raceCardNumber: race.card_number,
-      classCardNumber: klass.card_number,
-      effectCardNumber: candidate?.card_number,
-    })) {
-      if (candidate) removedSourceEffectIds.push(candidate.id);
-      return false;
-    }
-    return true;
-  });
 
   const effects: OriginEffect[] = [];
   const seen = new Set<string>();
-  for (const reference of effectRefs) {
+  for (const reference of refs.effectRefs) {
     const source = effectIndex.get(reference.id);
     if (!source || seen.has(source.id)) continue;
     seen.add(source.id);
@@ -599,7 +549,9 @@ function buildBaseBundle(
     },
     speciesAudit: {
       speciesId: race.id,
-      removedSourceEffectIds: removedSourceEffectIds.sort(),
+      // Source ownership corrections are materialized in the database patch;
+      // production compilation must never filter effects by entity identity.
+      removedSourceEffectIds: [],
       ...(lineage ? {
         lineageId: lineage.id,
         lineageCardNumber: lineage.card_number,
@@ -2838,7 +2790,7 @@ async function compileMicroMvpL1OverlayWithCatalogs(input: {
   manifest: MicroMvpSnapshotManifest;
   contentPatchMode?: ContentPatchMode;
 }): Promise<CompiledMicroMvpL1Provider> {
-  const { source, sourceCatalogs, manifest, contentPatchMode = 'apply' } = input;
+  const { source, sourceCatalogs, manifest, contentPatchMode = 'verify-only' } = input;
   const spellScope = createSpellCompileScope(spellScopeReadiness(
     'micro-MVP spell compile boundary',
     () => buildMicroMvpSpellScopePolicy({ manifest, snapshotSpells: sourceCatalogs.spells }),

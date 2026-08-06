@@ -43,7 +43,14 @@ describe('checked-in Rules Lab compiled artifact', () => {
     expect(fighterRoot).toBeDefined();
     expect(wizardRoot).toBeDefined();
     expect(snapshotWeaponCard).toBeDefined();
-    expect(snapshotWeaponCard?.mechanics).toBeNull();
+    expect(snapshotWeaponCard?.mechanics).toMatchObject({
+      weapon_profile: {
+        weapon_type: 'mace',
+        attack_ability: 'str',
+        damage_lines: [{ dice: '1d6', type: 'bludgeoning' }],
+        default_attack_mode: 'melee',
+      },
+    });
     expect(weaponCard?.mechanics).toMatchObject({
       weapon_profile: {
         weapon_type: 'mace',

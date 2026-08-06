@@ -140,7 +140,7 @@ export function createMicroMvpProtectionCapabilityMechanics(
       mode: 'reaction_capability',
       capability_id: PROTECTION_REACTION_CAPABILITY,
     },
-    name: 'Защита',
+    name: 'Боевой стиль: Защита',
     sourceEntityIds,
     activation: { mode: 'reaction', cost: [{ resource: 'reaction' }] },
     capabilities: [{

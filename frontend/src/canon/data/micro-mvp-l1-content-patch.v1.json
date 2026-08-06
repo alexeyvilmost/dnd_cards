@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "patchId": "dnd5e-2024.micro-mvp-l1.content-patch.v1",
   "patchVersion": "1.5.0",
-  "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
+  "sourceReleaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.v2",
   "authorityTarget": "database-entity-mechanics",
   "mechanicsPatches": {
     "effects": [

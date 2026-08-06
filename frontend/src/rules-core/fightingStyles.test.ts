@@ -311,7 +311,7 @@ describe('micro-MVP D&D 2024 Fighting Styles', () => {
         id: 'protection', mode: 'reaction_capability',
         capability_id: PROTECTION_REACTION_CAPABILITY,
       },
-      name: 'Защита',
+      name: 'Боевой стиль: Защита',
       sourceEntityIds: MICRO_MVP_FIGHTING_STYLE_ENTITIES.protection.sourceEntityIds,
       activation: { mode: 'reaction', cost: [{ resource: 'reaction' }] },
       capabilities: [{

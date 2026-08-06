@@ -154,7 +154,7 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
   });
 
   it('pins overlay, compiled content, and release hashes independently from the raw release', () => {
-    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.9.0');
+    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.10.0');
     expect(provider.release).toMatchObject({
       id: MICRO_MVP_L1_OVERLAY_RELEASE_ID,
       sourceReleaseId: provider.source.release.id,
@@ -517,9 +517,8 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
     const invocation = effect(root, 'EFF-invoc-armor_of_shadows')!;
     expect(readProdSnapshotCatalogs().effects.some((item) => (
       item.card_number === invocation.card_number
-    ))).toBe(false);
+    ))).toBe(true);
     expect(invocation).toMatchObject({
-      id: '7c1e7fd0-3a72-5a11-8d31-2d056c71af01',
       author: 'micro-mvp-overlay',
       source: 'PHB 2024; micro-MVP L1 overlay canonical entity v1',
     });
@@ -577,9 +576,8 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
     const invocation = effect(root, 'EFF-invoc-eldritch_mind')!;
     expect(readProdSnapshotCatalogs().effects.some((item) => (
       item.card_number === invocation.card_number
-    ))).toBe(false);
+    ))).toBe(true);
     expect(invocation).toMatchObject({
-      id: '88094c3d-5e06-54fe-b8f3-0c0ee0e18302',
       author: 'micro-mvp-overlay',
       source: 'PHB 2024; micro-MVP L1 overlay canonical entity v1',
     });

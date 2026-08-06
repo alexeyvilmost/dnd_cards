@@ -20,9 +20,21 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-qa-2026-07-30",
+      "certified_at": "2026-07-30T00:00:00Z",
+      "content_hash": "sha256:19f1216d6e103eff632a9889104f0ea31b3d03d9709a971fd94329d502e52752",
+      "dependency_hash": "sha256:c114c869d2a4d9fa2284b13849885b5b3c56b26167e3b74532443d68b1fbc96f",
+      "limitations": [
+        "Проверены данные, зависимости и исполнение механики в пределах текущего micro-micro-MVP; полноценный encounter остаётся за границей этапа.",
+        "Обмен инициативой с союзником остаётся подтверждаемым вручную."
+      ],
+      "note": "Проверено после ручной приёмки micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:15.475034Z"
+    "updated_at": "2026-07-30T00:43:05.930701Z"
   },
   {
     "ability_increase": null,
@@ -48,6 +60,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:15.816687Z"
@@ -75,6 +88,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:16.122293Z"
@@ -100,6 +114,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:16.451391Z"
@@ -125,9 +140,20 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:5ad1b52756ca9da485020314582c050cc94ff9191721912192515a3be95c7953",
+      "dependency_hash": "sha256:c3cda7f96005516ec906474801e4699653b2e1f69fdec020a02861b38510bd39",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:17.418774Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_increase": null,
@@ -152,6 +178,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:17.730729Z"
@@ -178,6 +205,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:18.060359Z"
@@ -203,9 +231,20 @@
     ],
     "repeatable": true,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:413a15a4c078177fce359bea2c945632a9b646d6f696da2a5bb2d2110f8f5e91",
+      "dependency_hash": "sha256:4737ae512b8e9037de6301fc21ac31b3079b52a258dd4c85f97089bce2071244",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:18.685617Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_increase": null,
@@ -228,9 +267,20 @@
     ],
     "repeatable": true,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:5e233dbf4226533654ffca4a5df1e36bb12e5a274ad6654d4b5bc79decf68315",
+      "dependency_hash": "sha256:c8da4f87e9e128d89c3eebf1af5a0fa8f53282a9595d9cd5421dfa65d77e5f12",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:19.296145Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_increase": null,
@@ -255,6 +305,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:20.219947Z"
@@ -281,6 +332,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:14.509012Z"
@@ -306,6 +358,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:14.825542Z"
@@ -332,6 +385,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:15.150656Z"
@@ -359,6 +413,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:34:32.862892Z"
@@ -385,6 +440,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:42:10.740822Z"
@@ -411,6 +467,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:31:37.614168Z"
@@ -438,6 +495,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:38:17.807847Z"
@@ -464,6 +522,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:38:42.454518Z"
@@ -490,6 +549,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:39:49.93139Z"
@@ -516,6 +576,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:35:45.27231Z"
@@ -543,6 +604,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:36:16.659617Z"
@@ -570,6 +632,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:05.566806Z"
@@ -596,6 +659,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:30:50.522179Z"
@@ -622,6 +686,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:31:14.035335Z"
@@ -648,6 +713,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:40:47.476609Z"
@@ -674,6 +740,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:05.853603Z"
@@ -699,6 +766,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:42:00.536413Z"
@@ -725,6 +793,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:41:48.277499Z"
@@ -751,6 +820,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:34:45.687502Z"
@@ -777,6 +847,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:06.128205Z"
@@ -803,6 +874,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:40:42.334397Z"
@@ -828,6 +900,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:33:36.42241Z"
@@ -855,6 +928,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:33:51.629849Z"
@@ -880,6 +954,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:33:21.38342Z"
@@ -906,6 +981,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:06.570691Z"
@@ -931,6 +1007,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:06.670095Z"
@@ -956,6 +1033,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:06.791339Z"
@@ -982,6 +1060,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:06.859501Z"
@@ -1008,6 +1087,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:06.934502Z"
@@ -1033,6 +1113,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.003825Z"
@@ -1060,6 +1141,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:32:14.34518Z"
@@ -1086,6 +1168,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.177642Z"
@@ -1113,6 +1196,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.258121Z"
@@ -1138,6 +1222,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.326263Z"
@@ -1164,6 +1249,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:32:29.317532Z"
@@ -1191,6 +1277,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.467396Z"
@@ -1218,6 +1305,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.57508Z"
@@ -1244,6 +1332,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.66025Z"
@@ -1269,6 +1358,7 @@
     ],
     "repeatable": true,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T13:20:27.583061Z"
@@ -1292,6 +1382,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.809318Z"
@@ -1318,6 +1409,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.885591Z"
@@ -1343,6 +1435,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:07.954866Z"
@@ -1366,6 +1459,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:08.027851Z"
@@ -1391,6 +1485,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:16.775102Z"
@@ -1416,9 +1511,20 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:0ec5b8d309fbb9399221138af066b3b5ca63096b5b8b28826943de65051e497d",
+      "dependency_hash": "sha256:b234c304cd2191787e84dfe1c145fdd34062200266613309dfe0f7429e85f575",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:17.095649Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_increase": null,
@@ -1441,9 +1547,20 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-qa-2026-07-30",
+      "certified_at": "2026-07-30T00:00:00Z",
+      "content_hash": "sha256:05b304a6ab4a547df6369ab0b496e44167a8184d0c3c4f0de58503586d047189",
+      "dependency_hash": "sha256:fddc32d83c28b994c9dd1dc16e0d4f8108443696e386edd49f36dcbd625fc601",
+      "limitations": [
+        "Проверены данные, зависимости и исполнение механики в пределах текущего micro-micro-MVP; полноценный encounter остаётся за границей этапа."
+      ],
+      "note": "Проверено после ручной приёмки micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:18.376561Z"
+    "updated_at": "2026-07-30T00:43:05.930701Z"
   },
   {
     "ability_increase": null,
@@ -1466,6 +1583,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:18.982019Z"
@@ -1491,6 +1609,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:20.532878Z"
@@ -1516,6 +1635,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:20.859912Z"
@@ -1541,6 +1661,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:21.16828Z"
@@ -1566,9 +1687,20 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:0658b95baa82fde52d9cca6f360065c7a69ded869d233c4f1018a756f86ac97a",
+      "dependency_hash": "sha256:96b4bf11c7b313c2918db134f00b49b1e607ea6970191b477959ad951753e7d6",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:21.46154Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_increase": null,
@@ -1591,6 +1723,7 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:21.773482Z"
@@ -1616,9 +1749,20 @@
     ],
     "repeatable": false,
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:84c51edc3fddfc381648637fe511a4c46ff5ab9bc48e822b867e01a0da986a05",
+      "dependency_hash": "sha256:9503947b85141636114c3e65682929c1d9fb72b0f299e2d35256fe89eea0fc1c",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "type": null,
-    "updated_at": "2026-07-08T05:56:22.100242Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_increase": null,
@@ -1639,6 +1783,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:45:05.529655Z"
@@ -1662,6 +1807,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:46:32.741686Z"
@@ -1689,6 +1835,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:47:49.365451Z"
@@ -1712,6 +1859,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:48:20.375162Z"
@@ -1735,6 +1883,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-09T18:49:00.369071Z"
@@ -1761,6 +1910,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.354332Z"
@@ -1784,6 +1934,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.428633Z"
@@ -1807,6 +1958,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.4993Z"
@@ -1830,6 +1982,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.571851Z"
@@ -1853,6 +2006,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.638206Z"
@@ -1876,6 +2030,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.701892Z"
@@ -1899,6 +2054,7 @@
     "related_effects": null,
     "repeatable": false,
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-06-28T17:17:09.772993Z"
@@ -1924,6 +2080,7 @@
     ],
     "repeatable": true,
     "source": null,
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:19.946631Z"
@@ -1949,6 +2106,7 @@
     ],
     "repeatable": true,
     "source": null,
+    "support": null,
     "tags": null,
     "type": null,
     "updated_at": "2026-07-08T05:56:19.620891Z"

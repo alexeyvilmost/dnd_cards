@@ -54,6 +54,7 @@
       "performance"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Выберите один вид Музыкальных инструментов",
     "type": null,
@@ -106,6 +107,7 @@
       "persuasion"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Выберите один вид Игрового набора",
     "type": null,
@@ -170,6 +172,7 @@
       "stealth"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Воровские инструменты",
     "type": null,
@@ -226,6 +229,7 @@
       "perception"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Инструменты навигатора",
     "type": null,
@@ -286,10 +290,21 @@
       "arcana"
     ],
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:b2099a923f53f7366e5dfc1d405d415db5825b5294bba51f45ad579f07d007b0",
+      "dependency_hash": "sha256:171ed4745ce37915dcf36db6964e6b59ba881957468115faab04f9e9ad315fd0",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "tool_proficiency": "Инструменты каллиграфа",
     "type": null,
-    "updated_at": "2026-07-14T20:17:34.465546Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_scores": [
@@ -354,6 +369,7 @@
       "religion"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Набор травника",
     "type": null,
@@ -414,6 +430,7 @@
       "investigation"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Инструменты каллиграфа",
     "type": null,
@@ -474,10 +491,21 @@
       "stealth"
     ],
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-schema-2026-08-03",
+      "certified_at": "2026-08-03T00:00:00Z",
+      "content_hash": "sha256:c5a1d556f955b905f388f62c475e9ff7cc12344ae639733f384691aa052151d7",
+      "dependency_hash": "sha256:b647f0f21f41e7c1c888115d7edab2832f55a7b7fffd6c875fe42db59d94d512",
+      "limitations": [
+        "Проверены данные, зависимости и исполнение механики в пределах текущего micro-micro-MVP; полноценный encounter остаётся за границей этапа."
+      ],
+      "note": "Транзитивная сертификация обновлена после исправления зависимостей.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "tool_proficiency": "Воровские инструменты",
     "type": null,
-    "updated_at": "2026-07-14T20:17:34.675773Z"
+    "updated_at": "2026-08-03T16:08:49.488473Z"
   },
   {
     "ability_scores": [
@@ -534,10 +562,21 @@
       "religion"
     ],
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-v1",
+      "certified_at": "2026-07-28T00:00:00Z",
+      "content_hash": "sha256:1aedaad3ea1662e07c866f94acd1eea03a993f45cea0d95e726ee189714d0ceb",
+      "dependency_hash": "sha256:94fc61c3f75c816f91d0a28a36caeca90a0702843dd609b9ae1d27b7f9bb7ec7",
+      "limitations": [
+        "Проверены сущность, зависимости, сборка первого уровня и базовое исполнение в пределах micro-micro-MVP; encounter и граничные сценарии покрыты не полностью."
+      ],
+      "note": "Проверено автоматическим acceptance-аудитом micro-micro-MVP.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "tool_proficiency": "Инструменты каллиграфа",
     "type": null,
-    "updated_at": "2026-07-14T20:17:34.74837Z"
+    "updated_at": "2026-07-28T05:58:00.33406Z"
   },
   {
     "ability_scores": [
@@ -602,6 +641,7 @@
       "stealth"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Инструменты картографа",
     "type": null,
@@ -654,6 +694,7 @@
       "persuasion"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Выберите один вид Ремесленных инструментов",
     "type": null,
@@ -722,10 +763,21 @@
       "intimidation"
     ],
     "source": "PHB 2024",
+    "support": {
+      "certification_version": "micro-micro-schema-2026-08-03",
+      "certified_at": "2026-08-03T00:00:00Z",
+      "content_hash": "sha256:05a53cec2f71a1fa1dfa916cfd0c8af5c4782e08499853b2bc53bdf8c30bb83b",
+      "dependency_hash": "sha256:419bda9919f8f45280b04690b5069da5951c809edb7ab76c359c374d76f57a39",
+      "limitations": [
+        "Проверены данные, зависимости и исполнение механики в пределах текущего micro-micro-MVP; полноценный encounter остаётся за границей этапа."
+      ],
+      "note": "Транзитивная сертификация обновлена после исправления зависимостей.",
+      "status": "verified_partial"
+    },
     "tags": null,
     "tool_proficiency": "Выберите один вид Игрового набора",
     "type": null,
-    "updated_at": "2026-07-14T20:17:34.960979Z"
+    "updated_at": "2026-08-03T16:08:49.488473Z"
   },
   {
     "ability_scores": [
@@ -794,6 +846,7 @@
       "perception"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Выберите один вид Игрового набора",
     "type": null,
@@ -846,6 +899,7 @@
       "animal_handling"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Инструменты навигатора",
     "type": null,
@@ -910,6 +964,7 @@
       "animal_handling"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Инструменты плотника",
     "type": null,
@@ -962,6 +1017,7 @@
       "deception"
     ],
     "source": "PHB 2024",
+    "support": null,
     "tags": null,
     "tool_proficiency": "Набор для фальсификации",
     "type": null,

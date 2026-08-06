@@ -111,7 +111,7 @@ describe('pinned prod-snapshot micro-MVP L1 fixture provider', () => {
       'SPELL-0241',
       'SPELL-0252',
     ]);
-    expect(provider.release.dependencyEntityCount).toBe(124);
+    expect(provider.release.dependencyEntityCount).toBe(154);
   });
 
   it('replaces, rather than adds, every official background Origin feat', () => {
@@ -155,17 +155,11 @@ describe('pinned prod-snapshot micro-MVP L1 fixture provider', () => {
     const narrativeSubjects = new Set(
       issuesOf(provider, 'narrative_only_mechanic').map((issue) => issue.subjectId),
     );
-    expect(narrativeSubjects).toEqual(new Set([
-      'EFF-alert',
-      'EFF-divine-order',
-      'EFF-innate-sorcery',
-      'EFF-primal-order',
-      'EFF-sneak-attack',
-    ]));
+    expect(narrativeSubjects).toEqual(new Set());
   });
 
   it('reports current snapshot blockers and makes the full-build gate fail closed', () => {
-    expect(issuesOf(provider, 'missing_support_certification')).toHaveLength(19);
+    expect(issuesOf(provider, 'missing_support_certification')).toHaveLength(7);
     expect(issuesOf(provider, 'l1_choice_unresolved').length).toBeGreaterThan(0);
     expect(issuesOf(provider, 'l1_warlock_invocation_mismatch')).toEqual([
       expect.objectContaining({ affectedRootCount: 64 }),
@@ -180,7 +174,7 @@ describe('pinned prod-snapshot micro-MVP L1 fixture provider', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(PinnedSnapshotReadinessError);
       const readiness = error as PinnedSnapshotReadinessError;
-      expect(readiness.issues.some((issue) => issue.code === 'narrative_only_mechanic')).toBe(true);
+      expect(readiness.issues.some((issue) => issue.code === 'missing_support_certification')).toBe(true);
       expect(readiness.issues.some((issue) => issue.code === 'l2_resource_source_leak')).toBe(true);
       expect(readiness.issues.some((issue) => issue.code === 'l1_choice_unresolved')).toBe(true);
     }
