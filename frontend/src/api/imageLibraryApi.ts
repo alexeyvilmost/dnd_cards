@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from './client';
-import { readPersistedAuthToken, signalUnauthorized } from './authSession';
+import { readPersistedAuthTokenForRequest, signalUnauthorized } from './authSession';
 
 // Создаем экземпляр axios с базовой конфигурацией
 const api = axios.create({
@@ -12,7 +12,7 @@ const api = axios.create({
 
 // Интерцептор для добавления токена авторизации
 api.interceptors.request.use((config) => {
-  const token = readPersistedAuthToken();
+  const token = readPersistedAuthTokenForRequest();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

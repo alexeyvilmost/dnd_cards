@@ -83,7 +83,7 @@ describe('AuthProvider server-validated session lifecycle', () => {
   };
 
   it('keeps saved auth unauthenticated until profile validation and persists the server identity', async () => {
-    localStorage.setItem('auth_token', 'valid-token');
+    localStorage.setItem('auth_token', 'header.payload.signature');
     localStorage.setItem('user', JSON.stringify(cachedUser));
 
     let resolveProfile!: (user: User) => void;
@@ -106,12 +106,12 @@ describe('AuthProvider server-validated session lifecycle', () => {
     await vi.waitFor(() => expect(probe().dataset.loading).toBe('false'));
     expect(probe().dataset.authenticated).toBe('true');
     expect(probe().dataset.userId).toBe(serverUser.id);
-    expect(probe().dataset.token).toBe('valid-token');
+    expect(probe().dataset.token).toBe('header.payload.signature');
     expect(JSON.parse(localStorage.getItem('user') ?? 'null')).toEqual(serverUser);
   });
 
   it('clears an expired saved session when profile bootstrap fails with 401', async () => {
-    localStorage.setItem('auth_token', 'expired-token');
+    localStorage.setItem('auth_token', 'expired.header.signature');
     localStorage.setItem('user', JSON.stringify(cachedUser));
     vi.spyOn(authApi, 'getProfile').mockRejectedValue({
       response: { status: 401, data: { error: 'Token has expired' } },
@@ -127,7 +127,7 @@ describe('AuthProvider server-validated session lifecycle', () => {
   });
 
   it('clears mounted auth state immediately when the API interceptor receives a runtime 401', async () => {
-    localStorage.setItem('auth_token', 'initially-valid-token');
+    localStorage.setItem('auth_token', 'header.payload.signature');
     localStorage.setItem('user', JSON.stringify(cachedUser));
     vi.spyOn(authApi, 'getProfile').mockResolvedValue(serverUser);
 

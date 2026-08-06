@@ -4,7 +4,7 @@ import {
   AUTH_UNAUTHORIZED_EVENT,
   clearPersistedAuthSession,
   persistAuthSession,
-  readPersistedAuthToken,
+  readPersistedAuthTokenForRequest,
 } from '../api/authSession';
 import type { User, AuthRequest, RegisterRequest } from '../types';
 
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, clearAuthState);
 
     const bootstrap = async () => {
-      const savedToken = readPersistedAuthToken();
+      const savedToken = readPersistedAuthTokenForRequest();
       if (!savedToken) {
         clearPersistedAuthSession();
         if (active) setIsLoading(false);

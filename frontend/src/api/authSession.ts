@@ -12,8 +12,40 @@ function getStorage(): Storage | null {
   }
 }
 
+const JWT_SEGMENT = /^[A-Za-z0-9_-]+=*$/;
+
+function isLikelyJwtToken(token: string): boolean {
+  const parts = token.split('.');
+  return parts.length === 3
+    && parts.every((part) => part.length > 0 && JWT_SEGMENT.test(part));
+}
+
 export function readPersistedAuthToken(): string | null {
   return getStorage()?.getItem(AUTH_TOKEN_STORAGE_KEY) ?? null;
+}
+
+export function readPersistedAuthTokenForRequest(): string | null {
+  const storage = getStorage();
+  if (!storage) return null;
+
+  const raw = storage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  if (!raw) return null;
+
+  const token = raw.trim();
+  if (!token || !isLikelyJwtToken(token)) {
+    storage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    storage.removeItem(AUTH_USER_STORAGE_KEY);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+    }
+    return null;
+  }
+
+  if (token !== raw) {
+    storage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+  }
+
+  return token;
 }
 
 export function persistAuthSession(token: string, user: User): void {

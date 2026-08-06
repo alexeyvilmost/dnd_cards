@@ -1,6 +1,6 @@
 /** REST-клиент онлайн-боёв + аутентифицированный SSE поверх fetch streaming. */
 import { API_BASE_URL, apiClient } from '../api/client';
-import { readPersistedAuthToken, signalUnauthorized } from '../api/authSession';
+import { readPersistedAuthTokenForRequest, signalUnauthorized } from '../api/authSession';
 import type { Encounter, EncounterState, Combatant, EncounterEvent, BattleLogEntry } from './encounterTypes';
 
 export interface ApplyOp {
@@ -81,7 +81,7 @@ export function parseEncounterSSEFrames(input: string): { events: EncounterEvent
 }
 
 async function streamEncounter(id: string, since: number, options: EncounterStreamOptions): Promise<void> {
-  const token = readPersistedAuthToken();
+  const token = readPersistedAuthTokenForRequest();
   if (!token) {
     signalUnauthorized();
     throw new EncounterStreamError('Требуется авторизация для подключения к бою', 401);

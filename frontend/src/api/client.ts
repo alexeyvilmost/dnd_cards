@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { cached, bustPrefix } from './apiCache';
-import { readPersistedAuthToken, signalUnauthorized } from './authSession';
+import { readPersistedAuthTokenForRequest, signalUnauthorized } from './authSession';
 import type { 
   Card, 
   CreateCardRequest, 
@@ -79,7 +79,7 @@ export class ApiRequestError extends Error {
 // Интерцептор для добавления токена авторизации
 apiClient.interceptors.request.use(
   (config) => {
-    const token = readPersistedAuthToken();
+    const token = readPersistedAuthTokenForRequest();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

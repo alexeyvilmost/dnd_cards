@@ -34,7 +34,7 @@ describe('authenticated encounter SSE', () => {
   });
 
   it('sends Bearer authentication and delivers streamed events', async () => {
-    localStorage.setItem('auth_token', 'encounter-jwt');
+    localStorage.setItem('auth_token', 'encounter.jwt.token');
     const bytes = new TextEncoder().encode('id: 8\ndata: {"seq":8,"active_index":1}\n\n');
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -65,7 +65,7 @@ describe('authenticated encounter SSE', () => {
     expect(url).toContain('/api/encounters/encounter%2Fid/stream?since=7');
     expect(init.headers).toMatchObject({
       Accept: 'text/event-stream',
-      Authorization: 'Bearer encounter-jwt',
+      Authorization: 'Bearer encounter.jwt.token',
     });
   });
 
@@ -81,7 +81,7 @@ describe('authenticated encounter SSE', () => {
   });
 
   it('surfaces participant denial and does not silently reconnect as another identity', async () => {
-    localStorage.setItem('auth_token', 'valid-but-not-a-member');
+    localStorage.setItem('auth_token', 'member.jwt.token');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,
       status: 403,
@@ -96,7 +96,7 @@ describe('authenticated encounter SSE', () => {
       status: 403,
       message: 'Нет доступа к этому бою',
     } satisfies Partial<EncounterStreamError>);
-    expect(localStorage.getItem('auth_token')).toBe('valid-but-not-a-member');
+    expect(localStorage.getItem('auth_token')).toBe('member.jwt.token');
   });
 
   it('puts invite capability in a fragment rather than a logged query string', () => {
