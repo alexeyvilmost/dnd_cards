@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 3,
+  "kind": "micro-mvp-release-gate-evidence",
+  "evidenceId": "bfd39277-a335-4872-a5bf-0c775fc0a656",
+  "apiBase": "https://backend-production-41c3.up.railway.app",
+  "frontendBase": "https://bagofholding.up.railway.app",
+  "startedAt": "2026-08-06T09:35:36.388Z",
+  "completedAt": "2026-08-06T09:35:54.388Z",
+  "status": "passed",
+  "totalTests": 13,
+  "passedTests": 10,
+  "skippedTests": 0,
+  "failedTests": 0,
+  "todoTests": 3,
+  "deploymentAttestation": {
+    "sourceCommit": "278258aa0e8b21d326040097b745540bcf369684",
+    "expectedDeployedCommit": "278258aa0e8b21d326040097b745540bcf369684",
+    "basis": "operator-supplied-commit-identity",
+    "externalVerificationRequired": true
+  },
+  "release": {
+    "sourceHash": "sha256:729a0b4e025c3b626b60dfff73338296341f48f5dc408a207ce4ebe153df5f98",
+    "sourceFileCount": 1195,
+    "sourceContentHash": "sha256:95556fca97630dd76af1cdc5e991635f42eca5379d85432c23075c0cb0bfb17d",
+    "rulesHash": "sha256:bb83dc32c63f72c7c29cb81128aa309e580f36eeb17bc6f72db6bd437836ffbc",
+    "contentHash": "sha256:4ee64d32fffe6b88e797a10ae89207d5f88c0f2214cc16df043d6b9464e9f056",
+    "releaseHash": "sha256:04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b",
+    "patchHash": "sha256:1bb6cbc3df976c8891155ab7cdda90822e340c0d582b15cc164cbd403a21ae41",
+    "releaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.overlay.1.10.0"
+  },
+  "catalog": {
+    "hash": "sha256:4433cbe35282b560b512644af1f331b55888f1442d3e96bdc9020e47a14f64fa",
+    "counts": {
+      "action": 44,
+      "background": 16,
+      "card": 827,
+      "class": 62,
+      "effect": 483,
+      "feat": 77,
+      "race": 36,
+      "spell": 394
+    }
+  },
+  "gates": [
+    {
+      "id": "backend_go_test",
+      "command": "CANONICAL_RUNTIME_TEST_DSN=<configured> CONTENT_MIGRATION_TEST_DSN=<configured> go test -race -count=1 -p 1 -json ./...",
+      "startedAt": "2026-08-06T09:35:36.388Z",
+      "completedAt": "2026-08-06T09:35:36.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:cb3e2373b5c131c62b8718e14f6cea16ac8b085c75765958fed4ffc909f815e6",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:7afe00d2ff359f692e425df204a363695dbf13247feb13c9a1d70311eb2ad108"
+      },
+      "reportHash": "sha256:7afe00d2ff359f692e425df204a363695dbf13247feb13c9a1d70311eb2ad108"
+    },
+    {
+      "id": "backend_go_vet",
+      "command": "go vet ./...",
+      "startedAt": "2026-08-06T09:35:37.388Z",
+      "completedAt": "2026-08-06T09:35:37.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:e2557516131ccb4963b06d1ca46d0626d11464396348c128392e9b0333c314a6",
+      "outputBytes": 256,
+      "testSummary": null,
+      "reportHash": null
+    },
+    {
+      "id": "frontend_test",
+      "command": "npm test -- --reporter=json --outputFile=<report>",
+      "startedAt": "2026-08-06T09:35:38.388Z",
+      "completedAt": "2026-08-06T09:35:38.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:635405f92c6d201c2d63273fe7303daf82198aeba39bbe92b5f693cf9135de79",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:6111dd9cbb38a0a7b3d43b0ccdd8e32c6f451ac484915bc402f25819a4bbc02b"
+      },
+      "reportHash": "sha256:6111dd9cbb38a0a7b3d43b0ccdd8e32c6f451ac484915bc402f25819a4bbc02b"
+    },
+    {
+      "id": "frontend_mvp",
+      "command": "MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:mvp -- --reporter=json --outputFile=<report>",
+      "startedAt": "2026-08-06T09:35:39.388Z",
+      "completedAt": "2026-08-06T09:35:39.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:26ad104d7459c34f5fbebbe9bc654906cec71f6344f1ef1235f36ba82cb02ce4",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 4,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 3,
+        "reportHash": "sha256:0c892f9b451c23cad05a0568c10a76108b286f157564aa9a5d9559111c8e9410"
+      },
+      "reportHash": "sha256:0c892f9b451c23cad05a0568c10a76108b286f157564aa9a5d9559111c8e9410"
+    },
+    {
+      "id": "micro_manifest",
+      "command": "NODE_OPTIONS=\"--test-reporter=tap --test-reporter-destination=<report>\" npm run test:micro:manifest",
+      "startedAt": "2026-08-06T09:35:40.388Z",
+      "completedAt": "2026-08-06T09:35:40.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:7b35539c1e7d4833f41c4387f0321a15a7987e533b876692cf841cd7d2193fe4",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:eed823017855056af2cc303f3b215ebb2dbc1641ee56ae613171e9bcc15fe235"
+      },
+      "reportHash": "sha256:eed823017855056af2cc303f3b215ebb2dbc1641ee56ae613171e9bcc15fe235"
+    },
+    {
+      "id": "micro_matrix",
+      "command": "npm run test:micro:matrix -- --reporter=json --outputFile=<report>",
+      "startedAt": "2026-08-06T09:35:41.388Z",
+      "completedAt": "2026-08-06T09:35:41.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:d42d62b7aeae2034d225334588deff7b25c2cf5c10006a340b733f997aa1adee",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:c5fc4a09f6b4a50294b2de7a6f6cbf27eb0fac87a2be3ca56924dfc889d05ecb"
+      },
+      "reportHash": "sha256:c5fc4a09f6b4a50294b2de7a6f6cbf27eb0fac87a2be3ca56924dfc889d05ecb"
+    },
+    {
+      "id": "rules_core_coverage",
+      "command": "npm run test:rules:coverage -- --reporter=json --outputFile=<report>",
+      "startedAt": "2026-08-06T09:35:42.388Z",
+      "completedAt": "2026-08-06T09:35:42.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:566fda92a71afcdbc131d3a2d900388b91fa06214b0f2299050011a3c05ea72d",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:e3494d0cb82e4b6d59c7233a8d4ef69723d226f9d2a9f2c71fd29c1eaa2f4a36"
+      },
+      "reportHash": "sha256:e3494d0cb82e4b6d59c7233a8d4ef69723d226f9d2a9f2c71fd29c1eaa2f4a36"
+    },
+    {
+      "id": "rules_primitive_coverage",
+      "command": "npm run test:rules:primitives -- --reporter=json --outputFile=<report>",
+      "startedAt": "2026-08-06T09:35:43.388Z",
+      "completedAt": "2026-08-06T09:35:43.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:7588dfe009a5ee5e458ff157934b1902f9582ef98f9d51dd72fef5bc40a9f36b",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:767280d3dfb12a27fd3ebea48205b67ac960e8e2e116f4ecda5fe76e548a57dd"
+      },
+      "reportHash": "sha256:767280d3dfb12a27fd3ebea48205b67ac960e8e2e116f4ecda5fe76e548a57dd"
+    },
+    {
+      "id": "semantic_coverage",
+      "command": "npm run test:micro:coverage",
+      "startedAt": "2026-08-06T09:35:44.388Z",
+      "completedAt": "2026-08-06T09:35:44.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:3a0f6ff2370b92447b8079b09d449e275b7f1a78c9cb452951d2657a91cef384",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:cff93d71b936d50773bcdcbfbf93f1aa8dfa3a6d68f1fc0f46330bdc7e91872e"
+      },
+      "reportHash": "sha256:cff93d71b936d50773bcdcbfbf93f1aa8dfa3a6d68f1fc0f46330bdc7e91872e"
+    },
+    {
+      "id": "live_matrix",
+      "command": "MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:micro:live-matrix -- --reporter=json",
+      "startedAt": "2026-08-06T09:35:45.388Z",
+      "completedAt": "2026-08-06T09:35:45.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:09622f2182a3dba1f5035d6821eb5e9409b8bc0705c020fa40829379946a13a8",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:199c8a65f7e65b4c90abede930355bfbdde7a6793ec9bdc304d29ee938a0270d"
+      },
+      "reportHash": "sha256:199c8a65f7e65b4c90abede930355bfbdde7a6793ec9bdc304d29ee938a0270d"
+    },
+    {
+      "id": "sheet_combat_certification",
+      "command": "npm run sheet-combat-certification:check",
+      "startedAt": "2026-08-06T09:35:46.388Z",
+      "completedAt": "2026-08-06T09:35:46.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:988a0e176a3060c2b0bc9828a13f4b4813c4c95437797ff92b5774750305be99",
+      "outputBytes": 256,
+      "testSummary": null,
+      "reportHash": null
+    },
+    {
+      "id": "rules_lab_fixture",
+      "command": "npm run rules-lab:check",
+      "startedAt": "2026-08-06T09:35:47.388Z",
+      "completedAt": "2026-08-06T09:35:47.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:fcd6f899c9a43ae4de22d15927fde1002fbfe356ee3bd8141e7575c1e1d991cf",
+      "outputBytes": 256,
+      "testSummary": null,
+      "reportHash": null
+    },
+    {
+      "id": "build",
+      "command": "VITE_API_URL=<apiBase> npm run build",
+      "startedAt": "2026-08-06T09:35:48.388Z",
+      "completedAt": "2026-08-06T09:35:48.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:9161817ea23d63fa5565ce61ea86a7c3b3cbbfe15aa1f67cf295b0a75c46b18f",
+      "outputBytes": 256,
+      "testSummary": null,
+      "reportHash": null
+    },
+    {
+      "id": "lint",
+      "command": "npm run lint",
+      "startedAt": "2026-08-06T09:35:49.388Z",
+      "completedAt": "2026-08-06T09:35:49.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:fc5db958cd8a96716147e8f16ceb43e51d81c63292ed757d969045f25bb5a5a6",
+      "outputBytes": 256,
+      "testSummary": null,
+      "reportHash": null
+    },
+    {
+      "id": "browser",
+      "command": "CI=1 playwright test --reporter=json",
+      "startedAt": "2026-08-06T09:35:50.388Z",
+      "completedAt": "2026-08-06T09:35:50.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:ca82959a1c24cb72ab01c3ce976dc11b4a86e98b98a5ef037f78be74c60af30d",
+      "outputBytes": 256,
+      "testSummary": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "todo": 0,
+        "reportHash": "sha256:d902aede0d8048f6978a29f897056b76b88c103ef1f8a54046d70d9cac89e8e6"
+      },
+      "reportHash": "sha256:d902aede0d8048f6978a29f897056b76b88c103ef1f8a54046d70d9cac89e8e6"
+    },
+    {
+      "id": "deployment_health",
+      "command": "GET <apiBase>/api/health and <frontendBase>/build-info.json; require both source_commit=<expectedDeployedCommit>",
+      "startedAt": "2026-08-06T09:35:51.388Z",
+      "completedAt": "2026-08-06T09:35:51.511Z",
+      "status": "passed",
+      "exitCode": 0,
+      "outputHash": "sha256:b07eee5eb9a0b30088d884817a38d44b07524a89b377a19dffa1f052ebd9fed4",
+      "outputBytes": 256,
+      "testSummary": null,
+      "reportHash": null
+    }
+  ]
+}

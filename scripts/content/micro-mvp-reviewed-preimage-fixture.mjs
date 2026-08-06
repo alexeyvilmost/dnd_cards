@@ -20,7 +20,7 @@ const require = createRequire(import.meta.url);
 const Ajv = require(join(REPO_ROOT, 'frontend/node_modules/ajv/dist/ajv.js')).default;
 
 export const REVIEWED_PREIMAGE_FIXTURE_SHA256 =
-  'sha256:029ab1bb4b8ff2d9b3f19fecbbf0746472c5bd9e2511b729bc1c50169914ec27';
+  'sha256:196a83c0f0055d31ae5f70adc95491685f5ad0b2b5c5ac5c7c267aa34bc9fa4d';
 
 const COLLECTIONS = Object.freeze([
   'effects', 'actions', 'spells', 'races', 'classes', 'cards',

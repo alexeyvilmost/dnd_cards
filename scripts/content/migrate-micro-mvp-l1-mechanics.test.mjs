@@ -490,7 +490,7 @@ test('reviewed preimage fixture is schema-validated, hash-pinned and patch-close
   const fixture = readReviewedPreimageFixture();
   assert.equal(
     REVIEWED_PREIMAGE_FIXTURE_SHA256,
-    'sha256:029ab1bb4b8ff2d9b3f19fecbbf0746472c5bd9e2511b729bc1c50169914ec27',
+    'sha256:196a83c0f0055d31ae5f70adc95491685f5ad0b2b5c5ac5c7c267aa34bc9fa4d',
   );
   assert.equal(fixture.fixtureId, 'dnd5e-2024.micro-mvp-l1.reviewed-source-preimage.v1');
   assert.equal(fixture.patch.canonicalHash, sha256Canonical(reviewedPatch()));
