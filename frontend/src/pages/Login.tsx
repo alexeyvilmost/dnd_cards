@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, User, Lock } from 'lucide-react';
+import { authenticatedReturnPath } from '../authReturnPath';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ const Login: React.FC = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ const Login: React.FC = () => {
 
     try {
       await login(formData);
-      navigate('/');
+      navigate(authenticatedReturnPath(location.state), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
@@ -50,15 +52,6 @@ const Login: React.FC = () => {
 
         {/* Форма входа */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
-          {/* Тестовые данные */}
-          <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
-            <h3 className="text-blue-200 font-medium mb-2">Тестовые данные для входа:</h3>
-            <p className="text-blue-100 text-sm">
-              <strong>Имя пользователя:</strong> testuser<br/>
-              <strong>Пароль:</strong> password
-            </p>
-          </div>
-          
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Сообщение об ошибке */}
             {error && (
@@ -83,16 +76,9 @@ const Login: React.FC = () => {
                   required
                   value={formData.username}
                   onChange={handleChange}
-                  className="input-field pl-10 pr-20 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
+                  className="input-field pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Введите имя пользователя"
                 />
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, username: 'testuser' }))}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-blue-400 hover:text-blue-300"
-                >
-                  Тест
-                </button>
               </div>
             </div>
 
@@ -116,13 +102,6 @@ const Login: React.FC = () => {
                   placeholder="Введите пароль"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, password: 'password' }))}
-                    className="pr-2 text-xs text-blue-400 hover:text-blue-300"
-                  >
-                    Тест
-                  </button>
                   <button
                     type="button"
                     className="pr-3 flex items-center"
@@ -161,6 +140,7 @@ const Login: React.FC = () => {
               Нет аккаунта?{' '}
               <Link
                 to="/register"
+                state={location.state}
                 className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
               >
                 Зарегистрироваться

@@ -206,8 +206,10 @@ func MutationAuditMiddleware() gin.HandlerFunc {
 
 		started := time.Now()
 		c.Next()
-		requestID, _ := c.Get(requestIDContextKey)
-		username, _ := c.Get("username")
+		requestIDValue, _ := c.Get(requestIDContextKey)
+		requestID, _ := requestIDValue.(string)
+		usernameValue, _ := c.Get("username")
+		username, _ := usernameValue.(string)
 		log.Printf(
 			"audit mutation request_id=%q method=%s path=%q status=%d latency_ms=%d client_ip=%q username=%q",
 			requestID,

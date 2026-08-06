@@ -17,10 +17,16 @@ import type { SheetAction } from '../character/actionSheet';
 import { charactersV3Api } from '../character/api';
 import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
-import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey } from '../character/types';
+import {
+  ABILITY_KEYS,
+  ABILITY_LABEL_RU,
+  isCharacterReadOnly,
+  type AbilityKey,
+} from '../character/types';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { SKILLS } from '../mechanics/registries';
 import SheetInPlayController from '../components/SheetInPlayController';
+import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import { rollD20 } from '../engine/roll';
 import { rollEvent, describeEngineEvent } from '../engine/events';
 import { plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
@@ -34,6 +40,7 @@ import {
   type MobileEntityView,
 } from './MobileEntityCard';
 import { useMobileCharacter } from './useMobileCharacter';
+import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import '../pages/CharacterForge.css';
 import './mobile.css';
 
@@ -154,6 +161,7 @@ export default function MobileCharacterSheet() {
   const [notice, setNotice] = useState<string | null>(null);
   const [savingNotes, setSavingNotes] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
+  const readOnly = data.character ? isCharacterReadOnly(data.character) : true;
 
   const visitPage = useCallback((next: SheetPage) => {
     setPage((current) => {
@@ -203,12 +211,14 @@ export default function MobileCharacterSheet() {
   }, [flash, location.pathname, location.state, navigate]);
 
   const appendEvents = useCallback(async (events: EngineEvent[]) => {
+    if (readOnly) return;
     await data.appendEvents(events);
     const first = events.find((event) => event.type !== 'turn_started' && event.type !== 'turn_ended');
     if (first) flash(describeEngineEvent(first));
-  }, [data.appendEvents, flash]);
+  }, [data.appendEvents, flash, readOnly]);
 
   const runCheck = async (label: string, bonus: number, ability: AbilityKey) => {
+    if (readOnly) return;
     const plan: PlannedDie[] = [{
       sides: 20,
       label: `${label} · ${ABILITY_LABEL_RU[ability]}`,
@@ -228,7 +238,7 @@ export default function MobileCharacterSheet() {
   };
 
   const saveNotes = async () => {
-    if (overlay?.type !== 'notes' || !data.character || !data.assembled || !data.ruleState) return;
+    if (readOnly || overlay?.type !== 'notes' || !data.character || !data.assembled || !data.ruleState) return;
     setSavingNotes(true);
     try {
       const draft = characterToDraft(data.character);
@@ -282,6 +292,7 @@ export default function MobileCharacterSheet() {
   );
 
   const addButton = (type?: string) => (
+    readOnly ? null :
     <button
       type="button"
       className="m-section-add"
@@ -334,8 +345,9 @@ export default function MobileCharacterSheet() {
         <button type="button" className="m-sheet-name" onClick={() => visitPage('general')}>
           <span>{character.name || 'Без имени'}</span>
           <small>{assembled.klass?.name ?? 'Персонаж'} · {character.level} ур.</small>
+          <CharacterAccessBadge character={character} />
         </button>
-        <button type="button" className="m-vital m-vital--hp" onClick={() => setOverlay({ type: 'hp' })}>
+        <button type="button" className="m-vital m-vital--hp" disabled={readOnly} onClick={() => setOverlay({ type: 'hp' })}>
           <Heart size={16} />
           <span>{runtimeState.hp.current}/{maxHp}</span>
           {runtimeState.hp.temp > 0 && <small>+{runtimeState.hp.temp}</small>}
@@ -344,7 +356,7 @@ export default function MobileCharacterSheet() {
           <Shield size={16} />
           <span>{armorClass}</span>
         </button>
-        {allowSheetEntityAdditions && (
+        {allowSheetEntityAdditions && !readOnly && (
           <button type="button" className="m-icon-button m-icon-button--gold" onClick={() => navigate(`/m/characters/${character.id}/add`)} aria-label="Добавить в лист">
             <Plus size={21} />
           </button>
@@ -361,7 +373,7 @@ export default function MobileCharacterSheet() {
                   label: 'Инициатива',
                   bonus: initiative,
                   ability: 'dex',
-                })}>
+                })} disabled={readOnly}>
                   <span>Инициатива</span><strong>{fmtMod(initiative)}</strong>
                 </button>
                 <div><span>Скорость</span><strong>{speed} фт</strong></div>
@@ -384,6 +396,7 @@ export default function MobileCharacterSheet() {
                       <strong>{score}</strong>
                       <button
                         type="button"
+                        disabled={readOnly}
                         onClick={() => setOverlay({
                           type: 'check',
                           label: `Проверка: ${ABILITY_LABEL_RU[ability]}`,
@@ -396,6 +409,7 @@ export default function MobileCharacterSheet() {
                       <button
                         type="button"
                         className={proficient ? 'is-proficient' : ''}
+                        disabled={readOnly}
                         onClick={() => setOverlay({
                           type: 'check',
                           label: `Спасбросок: ${ABILITY_LABEL_RU[ability]}`,
@@ -425,6 +439,7 @@ export default function MobileCharacterSheet() {
                       type="button"
                       key={skill.id}
                       className={abilitySep ? 'm-skill-sep' : undefined}
+                      disabled={readOnly}
                       onClick={() => setOverlay({
                         type: 'check',
                         label: `Проверка: ${skill.label}`,
@@ -452,6 +467,7 @@ export default function MobileCharacterSheet() {
               <button
                 type="button"
                 className="m-notes-placeholder"
+                disabled={readOnly}
                 onClick={() => setOverlay({
                   type: 'notes',
                   description: character.description ?? '',
@@ -472,7 +488,26 @@ export default function MobileCharacterSheet() {
 
         {page === 'actions' && (
           <>
-            <div className="m-reused-panel m-actions-runtime">
+            {readOnly ? (
+              <>
+                <div className="m-alert">Выполнение действий отключено; данные листа доступны ниже.</div>
+                <Section title="Ресурсы" wide>
+                  <div className="m-detail-list">
+                    {Object.entries(runtimeState.maxResources).map(([key, maximum]) => (
+                      <p key={key}><span>{key.replaceAll('_', ' ')}</span><strong>{runtimeState.resources[key] ?? 0}/{maximum}</strong></p>
+                    ))}
+                    {!Object.keys(runtimeState.maxResources).length && <p className="m-muted">Отслеживаемых ресурсов нет.</p>}
+                  </div>
+                </Section>
+                <Section title="Действия и заклинания" wide>
+                  <div className="m-chip-list">
+                    {assembled.actions.map(({ action, origin }) => <span key={`${action.id}:${origin.id}`}>{action.name}</span>)}
+                    {assembled.spells.map((spell) => <span key={spell.id}>{spell.name}</span>)}
+                    {!assembled.actions.length && !assembled.spells.length && <span>Действия не указаны</span>}
+                  </div>
+                </Section>
+              </>
+            ) : <><div className="m-reused-panel m-actions-runtime">
               <SheetRuntimePanel
                 character={character}
                 assembled={assembled}
@@ -497,12 +532,25 @@ export default function MobileCharacterSheet() {
                 onInspectAction={inspectAction}
               />
             </div>
+            </>}
           </>
         )}
 
         {page === 'inventory' && (
           <>
-            <div className="m-reused-panel">
+            {readOnly ? (
+              <Section title="Инвентарь" wide>
+                <div className="m-detail-list">
+                  {(character.inventory_items ?? []).map((item, index) => (
+                    <p key={`${item.card_id}:${item.container_id ?? 'root'}:${index}`}>
+                      <span>{data.equipCards.get(item.card_id)?.name ?? item.card_id}</span>
+                      <strong>×{item.qty}</strong>
+                    </p>
+                  ))}
+                  {!(character.inventory_items?.length) && <p className="m-muted">Инвентарь пуст.</p>}
+                </div>
+              </Section>
+            ) : <div className="m-reused-panel">
               <SheetEquipmentPanel
                 character={character}
                 ruleState={ruleState}
@@ -510,7 +558,7 @@ export default function MobileCharacterSheet() {
                 passives={data.passives}
                 disableHoverPreviews
               />
-            </div>
+            </div>}
           </>
         )}
 
@@ -545,10 +593,10 @@ export default function MobileCharacterSheet() {
 
             <Section title="Чувства">
               <div className="m-chip-list">
-                {ruleState.senses.map((sense) => (
-                  <span key={sense.sense}>{SENSE_LABELS[sense.sense] ?? sense.sense} · {sense.range} фт</span>
+                {data.effectiveSenses.map((sense) => (
+                  <span key={sense.sense}>{SENSE_LABELS[sense.sense] ?? sense.sense} · <EffectiveSenseValue sense={sense} /></span>
                 ))}
-                {!ruleState.senses.length && <span>Особых чувств нет</span>}
+                {!data.effectiveSenses.length && <span>Особых чувств нет</span>}
               </div>
             </Section>
 
@@ -661,7 +709,7 @@ export default function MobileCharacterSheet() {
 
       {notice && <div className="m-toast" role="status">{notice}</div>}
 
-      {overlay?.type === 'hp' && (
+      {!readOnly && overlay?.type === 'hp' && (
         <MobileOverlay title="Хиты" onClose={() => setOverlay(null)}>
           <div className="m-reused-panel m-embedded-panel">
             <SheetHpPanel
@@ -690,7 +738,7 @@ export default function MobileCharacterSheet() {
         </MobileOverlay>
       )}
 
-      {overlay?.type === 'check' && (
+      {!readOnly && overlay?.type === 'check' && (
         <MobileOverlay
           title={overlay.label}
           onClose={() => setOverlay(null)}
@@ -734,7 +782,7 @@ export default function MobileCharacterSheet() {
         />
       )}
 
-      {overlay?.type === 'notes' && (
+      {!readOnly && overlay?.type === 'notes' && (
         <MobileOverlay
           title="Описание и заметки"
           onClose={() => !savingNotes && setOverlay(null)}
@@ -777,7 +825,7 @@ export default function MobileCharacterSheet() {
         />
       )}
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
-      <SheetInPlayController
+      {!readOnly && <SheetInPlayController
         character={character}
         draft={draft}
         assembled={assembled}
@@ -789,7 +837,7 @@ export default function MobileCharacterSheet() {
         equipCards={data.equipCards}
         longRestOpen={longRestOpen}
         onLongRestClose={() => setLongRestOpen(false)}
-      />
+      />}
     </main>
     </EntityDetailContext.Provider>
     </CharacterFormulaProvider>

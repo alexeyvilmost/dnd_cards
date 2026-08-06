@@ -42,6 +42,22 @@ describe('F2: breakdownValue', () => {
     expect(bd.parts).toHaveLength(2);
   });
 
+  it('не выводит владения и кость хитов из identity-ключа класса', () => {
+    const incompleteLegacyContext = {
+      abilityMods: { str: 2, dex: 2, con: 1, int: 1, wis: 0, cha: -1 },
+      profBonus: 2,
+      level: 1,
+      classLevels: { fighter: 1 },
+    };
+
+    const save = breakdownValue('save:str', incompleteLegacyContext, freshFighterState(), []);
+    const hp = breakdownValue('max_hp', incompleteLegacyContext, freshFighterState(), []);
+
+    expect(save.value).toBe(2);
+    expect(save.parts).toHaveLength(1);
+    expect(hp.value).toBe(9); // generic d8 fallback + CON, not inferred Fighter d10
+  });
+
   it('навык без владения: только характеристика', () => {
     const bd = breakdownValue('skill:arcana', FIGHTER_CTX, freshFighterState(), []);
     expect(bd.value).toBe(1); // ИНТ +1

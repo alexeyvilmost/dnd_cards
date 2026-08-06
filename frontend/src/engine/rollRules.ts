@@ -18,6 +18,7 @@
  *                 и свойством payload-урона `explode:{limit}` (локально для конкретного заклинания).
  */
 import type { DieRoll } from '../mvp/contracts';
+import { drawDie } from './random';
 
 type Dict = Record<string, unknown>;
 
@@ -85,7 +86,7 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
     for (let index = 0; index < count; index += 1) {
       dice.push({
         sides: faces,
-        result: Math.floor(rng() * faces) + 1,
+        result: drawDie(rng, faces),
         ...(source ? { source } : {}),
         ...(sign < 0 ? { sign } : {}),
       });
@@ -135,7 +136,7 @@ export function applyDamageDieRules(
     for (let i = 0; i < out.length && budget > 0; i += 1) {
       const d = out[i];
       if (d.discarded || d.result < d.sides) continue; // взрыв только на натуральном максимуме
-      const nv = Math.floor(opts.rng() * d.sides) + 1;
+      const nv = drawDie(opts.rng, d.sides);
       out.push({ sides: d.sides, result: nv });
       delta += nv;
       budget -= 1;

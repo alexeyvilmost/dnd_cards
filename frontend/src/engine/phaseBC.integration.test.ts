@@ -28,7 +28,7 @@ function rollEvents(events: EngineEvent[]): Extract<EngineEvent, { type: 'roll' 
 describe('Фаза C — интеграция через executeAction', () => {
   it('проверка характеристики получает модификатор эффекта (раньше игнорировался)', () => {
     const state = freshState([modEffect({ kind: 'modifier', applies_to: { roll: 'ability_check' }, op: 'add', value: '+3' })]);
-    const mech = { name: 'Проверка Силы', activation: { cost: [] }, effects: [{ resolution: 'ability_check', ability: 'str' }] };
+    const mech = { name: 'Проверка Силы', activation: { cost: [] }, effects: [{ resolution: 'ability_check', ability: 'str', dc: '10' }] };
     const { events } = executeAction(state, mech, { character, rng: seededRng(1) });
     const check = rollEvents(events).find((e) => e.label.startsWith('Проверка'));
     expect(check).toBeTruthy();

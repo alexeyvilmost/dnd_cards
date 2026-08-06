@@ -9,6 +9,7 @@ import type { ActiveEffectEntry, RuntimeState } from './contracts';
 import {
   canPay, collectRollModifiers, executeAction, initResources, longRest, pay, startTurn,
 } from './contracts';
+import { applyIncomingDamage } from '../engine/execute';
 import { FIGHTER_CTX, freshFighterState, seededRng } from './fixtures';
 
 type Mech = Record<string, unknown>;
@@ -99,25 +100,33 @@ describe('ход/отдых — истечение эффектов и восс�
     expect(next.activeEffects.map((e) => e.id)).toEqual(['bless']);
   });
 
-  it('longRest восстанавливает ячейки заклинаний и снимает все эффекты', () => {
+  it('longRest восстанавливает ячейки, снимает rest-эффекты и сохраняет manual', () => {
     const base = freshFighterState();
     const state: RuntimeState = {
       ...base,
       resources: { ...base.resources, spell_slot_1: 0 },
       maxResources: { ...base.maxResources, spell_slot_1: 2 },
-      activeEffects: [{ id: 'x', name: 'бафф', source: 't', mechanics: {} }],
+      activeEffects: [
+        { id: 'manual', name: 'постоянный', source: 't', mechanics: {}, expiry: 'manual' },
+        { id: 'rest', name: 'до отдыха', source: 't', mechanics: {}, expiry: 'long_rest' },
+      ],
     };
     const { state: next } = longRest(state, FIGHTER_CTX);
     expect(next.resources.spell_slot_1).toBe(2);
-    expect(next.activeEffects).toHaveLength(0);
+    expect(next.activeEffects.map((effect) => effect.id)).toEqual(['manual']);
   });
 });
 
 describe('executeAction — маршрутизация и устойчивость', () => {
-  it('неизвестный resolution не роняет исполнитель, а логирует NOT_IMPLEMENTED', () => {
+  it('неизвестный resolution отклоняется fail-closed до исполнения и оплаты', () => {
     const weird: Mech = { activation: { mode: 'active', cost: [] }, effects: [{ resolution: 'summon' }] };
-    const { events } = executeAction(freshFighterState(), weird, { character: FIGHTER_CTX, rng: seededRng(1) });
-    expect(events.some((e) => e.type === 'narrative' && /NOT_IMPLEMENTED/.test(e.text))).toBe(true);
+    const state = freshFighterState();
+    const before = JSON.parse(JSON.stringify(state));
+    expect(() => executeAction(state, weird, {
+      character: FIGHTER_CTX,
+      rng: seededRng(1),
+    })).toThrow(/UNKNOWN_RESOLUTION/);
+    expect(state).toEqual(before);
   });
 
   it('несколько auto-исходов (модификатор + лечение) применяются за один вызов', () => {
@@ -319,5 +328,34 @@ describe('НЕреализованные payload-ы исполнителя (road
   it.todo('set_die: подмена кубика заранее (Предсказание)');
   it.todo('grant_action во время исполнения (Хитрое действие → варианты бонусного действия)');
   it.todo('movement: применяет фактическое перемещение цели, а не только лог');
-  it.todo('resistance: сопротивление/иммунитет учитываются при расчёте урона');
+});
+
+describe('реализованные защитные payload-ы исполнителя', () => {
+  it('resistance уменьшает входящий типизированный урон и сохраняет атрибуцию источника', () => {
+    const state = withEffects([
+      {
+        id: 'fire-ward',
+        name: 'Огненная защита',
+        source: 'test',
+        mechanics: { kind: 'resistance', damage_type: 'fire', value: 'resistance' },
+      },
+    ]);
+    const before = state.hp.current;
+    const result = applyIncomingDamage(state, 9, {
+      character: FIGHTER_CTX,
+      rng: seededRng(1),
+    }, { damageType: 'fire' });
+
+    expect(result.state.hp.current).toBe(before - 4);
+    expect(result.events).toContainEqual(expect.objectContaining({
+      type: 'narrative',
+      damageAdjustment: {
+        damageType: 'fire',
+        adjustment: 'resistance',
+        before: 9,
+        after: 4,
+        sourceEntityIds: ['fire-ward'],
+      },
+    }));
+  });
 });

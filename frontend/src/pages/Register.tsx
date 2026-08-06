@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, User, Mail, Lock, UserCheck } from 'lucide-react';
+import { authenticatedReturnPath } from '../authReturnPath';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ const Register: React.FC = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +46,7 @@ const Register: React.FC = () => {
         password: formData.password,
         display_name: formData.display_name,
       });
-      navigate('/');
+      navigate(authenticatedReturnPath(location.state), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка регистрации');
     } finally {
@@ -240,6 +242,7 @@ const Register: React.FC = () => {
               Уже есть аккаунт?{' '}
               <Link
                 to="/login"
+                state={location.state}
                 className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
               >
                 Войти

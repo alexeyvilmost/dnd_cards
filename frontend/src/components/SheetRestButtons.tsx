@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Hourglass, Moon, Sun, Swords } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
-import { collectActionUsesRecharge } from '../character/actionSheet';
+import type { EncounterApply } from '../battle/encountersApi';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
+import { collectActionUsesRecharge, collectActionUsesRecovery } from '../character/actionSheet';
 import type { AssembledCharacter } from '../character/assemble';
 import { collectFreeuseRecharge } from '../engine/freeuse';
-import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
+import {
+  buildCharacterContext,
+  alignRuntimeHp,
+  forgeToRuntimeState,
+  writeRulesEngineRuntimeTurnState,
+} from '../character/runtime';
 import {
   buildResourceRuntimePatch,
   collectPassiveMechanics,
@@ -27,6 +33,15 @@ interface Props {
   compact?: boolean;
   /** Вызывается после успешного долгого отдыха (диалог действий отдыха). */
   onLongRestComplete?: () => void;
+  encounterApply?: EncounterApply;
+}
+
+/** Pure adapter used by the real sheet: action mechanics remain the authority. */
+export function collectSheetActionUseRestPolicies(assembled: AssembledCharacter) {
+  return {
+    recharge: collectActionUsesRecharge(assembled),
+    recovery: collectActionUsesRecovery(assembled),
+  };
 }
 
 export default function SheetRestButtons({
@@ -37,6 +52,7 @@ export default function SheetRestButtons({
   onEvents,
   compact,
   onLongRestComplete,
+  encounterApply,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
@@ -44,16 +60,21 @@ export default function SheetRestButtons({
   const diceDialog = useDiceDialog();
 
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
+  const actionUseRestPolicies = useMemo(
+    () => collectSheetActionUseRestPolicies(assembled),
+    [assembled],
+  );
 
   // Ресурсы класса + виртуальные пулы использований действий + пулы freeuse (ключ → per).
   const resourceRecharge = useMemo(
     () => ({
       ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
-      ...collectActionUsesRecharge(assembled),
+      ...actionUseRestPolicies.recharge,
       ...collectFreeuseRecharge(ruleState.freeuseSpells),
     }),
-    [assembled, ruleState.freeuseSpells],
+    [assembled.klass?.resources, actionUseRestPolicies.recharge, ruleState.freeuseSpells],
   );
+  const resourceRecovery = actionUseRestPolicies.recovery;
 
   const ctx = useMemo(
     () => ({
@@ -64,8 +85,16 @@ export default function SheetRestButtons({
         assembled.klass,
       ),
       resourceRecharge,
+      resourceRecovery,
     }),
-    [ruleState, character.level, character.abilities, assembled.klass, resourceRecharge],
+    [
+      ruleState,
+      character.level,
+      character.abilities,
+      assembled.klass,
+      resourceRecharge,
+      resourceRecovery,
+    ],
   );
 
   const runtime = useMemo(
@@ -85,19 +114,21 @@ export default function SheetRestButtons({
       resources: state.resources,
       max_resources: state.maxResources,
       active_effects: state.activeEffects,
-      turn_state: {
-        ...(character.turn_state ?? {}),
-        temp_hp: state.hp.temp,
+      turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, state, {
         ...(attunementUnlocked !== undefined ? { attunement_unlocked: attunementUnlocked } : {}),
         ...(resetDeathSaves ? { death_saves: emptyDeathSaves() } : {}),
-      },
+      }),
     };
   }
 
   const apply = useCallback(async (next: RuntimeState, events: EngineEvent[], attunementUnlocked?: boolean, resetDeathSaves?: boolean) => {
     setBusy(true);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, attunementUnlocked, resetDeathSaves));
+      const updated = await persistCharacterRuntime(
+        character,
+        persistPayload(next, attunementUnlocked, resetDeathSaves),
+        encounterApply,
+      );
       onUpdated(updated);
       onEvents?.(events);
       return true;
@@ -107,21 +138,21 @@ export default function SheetRestButtons({
     } finally {
       setBusy(false);
     }
-  }, [character, onUpdated, onEvents]);
+  }, [character, encounterApply, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
     const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
     if (!patch) return;
     setBusy(true);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, patch);
+      const updated = await persistCharacterRuntime(character, patch, encounterApply);
       onUpdated(updated);
     } catch (e) {
       console.error(e);
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, onUpdated, ruleState.maxHP]);
+  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP]);
 
   // Один прогон синка на маунт: buildResourceRuntimePatch сам вернёт null,
   // если пулы (включая uses_<key> действий) и HP уже актуальны.

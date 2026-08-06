@@ -61,20 +61,23 @@ describe('переменные в формулах', () => {
   });
 });
 
-describe('деградация при отсутствии переменной', () => {
+describe('fail-closed при отсутствии переменной', () => {
   it('формула с отсутствующей переменной кидает MissingVariableError', () => {
     expect(() => evaluate('martial_arts_die', {})).toThrow(MissingVariableError);
   });
-  it('executeAction НЕ падает: эффект пропускается с логом', () => {
+  it('executeAction отклоняет механику до исполнения и не меняет состояние', () => {
     const mech = {
       activation: { mode: 'active', cost: [] },
       name: 'Тест-удар',
       effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: 'martial_arts_die + wis' }] }],
     };
-    // У бойца нет martial_arts_die → не падает.
-    const { events } = executeAction(freshFighterState(), mech, { character: FIGHTER_CTX, rng: seededRng(1) });
-    expect(events.some((e) => e.type === 'narrative' && /martial_arts_die|недоступна/i.test(e.text))).toBe(true);
-    expect(events.some((e) => e.type === 'healing')).toBe(false);
+    const state = freshFighterState();
+    const before = JSON.parse(JSON.stringify(state));
+    expect(() => executeAction(state, mech, {
+      character: FIGHTER_CTX,
+      rng: seededRng(1),
+    })).toThrow(/martial_arts_die|недоступна/i);
+    expect(state).toEqual(before);
   });
   it('с активной переменной тот же эффект применяется', () => {
     const mech = {

@@ -212,12 +212,12 @@ target больше НЕ создаёт фантомный ресурс молч
     а маршрутизируется как item-источник (runtimeSources + passives) — наследует item-семантику слайса 1. Async
     (эффект грузится по id) с sync-предчеком `collectEffectGrantRefs`; прокинут в панель действий как
     `itemGrantedPassives`. Тесты `itemGrantedEffects.test.ts` (3).
-  - **предмет-действие + саморасход + персист ✅ СДЕЛАНО (слайс 4).** `canPay/pay` (cost.ts) полиморфны:
-    `{resource:'item', card_id}` тратит предмет из инвентаря (эмит `item_consumed`), иначе прежняя ветка resources.
-    `applyItemConsumeCost` впрыскивает саморасход зелья (`activation.consumes_self`); `fromItems` применяет его на
-    item-действии. Доступность гейтится тем же `canPay` (нет зелья → кнопка недоступна; исполнение → throw ловится).
-    Персист: `persistPayload` += `inventory_items` — **бэкенд УЖЕ принимал** (character_v3_controller.go:405), правок
-    Go нет. Схема: `cost.card_id` + `activation.consumes_self`. Тесты `itemCost.test.ts` (12, вкл. интеграцию зелья).
+  - **предмет-действие + саморасход + персист ✅ СДЕЛАНО (слайс 4, контракт позднее ужесточён).**
+    `canPay/pay` (cost.ts) полиморфны: `{resource:'item', card_id}` тратит предмет из инвентаря
+    (эмит `item_consumed`), иначе работает ветка resources. Сохранённая механика обязана явно
+    объявить относительную цену `{resource:'self_item'}`; адаптер лишь связывает её с id
+    конкретной карты. Legacy `activation.consumes_self` больше не читается. Доступность
+    гейтится тем же `canPay`; `persistPayload` сохраняет `inventory_items`.
   - **предмет как ресурс (стрелы) ✅ СДЕЛАНО (слайс 5).** `weaponAmmoCost` (weapon.ts): дальнобойное оружие
     декларирует `mechanics.ammo` (card_id или {card_id,name}) → cost `{resource:'item', card_id}`, который тратит/гейтит
     штатный canPay/pay (слайс 4). Панель: runAction впрыскивает боеприпас (`appendActivationCost`), disabledInfo даёт

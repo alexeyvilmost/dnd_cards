@@ -4,7 +4,7 @@ Frontend приложение для сервиса создания карто�
 
 ## Требования
 
-- Node.js 18+
+- Node.js 20+
 - npm или yarn
 
 ## Установка и запуск
@@ -56,7 +56,10 @@ yarn build
 ```
 src/
 ├── api/           # API клиент
+├── canon/         # pinned content compiler и versioned overlay
 ├── components/    # React компоненты
+├── rules-core/    # детерминированное ядро WorldState/Command/Event/replay
+├── rules-session/ # атомарный persistence gateway (IndexedDB/local authority)
 ├── pages/         # Страницы приложения
 ├── types/         # TypeScript типы
 ├── App.tsx        # Основной компонент
@@ -107,14 +110,87 @@ src/
 
 ## Разработка
 
-### Тесты движка (Vitest)
+### Тесты micro-MVP
 
-Юнит-тесты движка (`frontend/src/engine/`) запускаются в среде **node** (без jsdom):
+Основные локальные ворота:
 
 ```bash
 cd frontend
 npm run test
+npm run test:micro:manifest
+npm run test:micro:matrix
+npm run test:rules:coverage
+npm run test:rules:primitives
+npm run test:micro:coverage
+npm run test:browser
 ```
+
+Публичный `/rules-lab` исполняет checked-in compiled artifact в двух-PC
+сценариях, сохраняет мир в IndexedDB и проверяется Playwright на desktop и
+mobile Chromium. Записи Character Forge в E2E изолированы и не отправляются в
+production DB.
+
+Для persisted production certification отдельные команды выше недостаточны.
+Команда `npm run content:evidence:micro` требует `--api`, `--frontend`,
+`--artifact`, `--source-commit` и `--expected-deployed-commit`, выполняет полный 16-gate
+контракт и пишет 0600 artifact. Strict micro/integration/browser-наборы не
+допускают skip/todo; общий `npm test` также обязан пройти без пропусков, а
+`test:mvp` запускается с live-контентом без skip и допускает только три
+закреплённых по полному имени post-micro-MVP `todo`. Последним gate генератор
+live-проверяет один exact 40-hex commit одновременно в backend `/api/health` и
+frontend `/build-info.json`; несовпадение любого сервиса закрывает release. Затем
+`content:certify:micro` требует тот же файл через `--evidence`. Полный безопасный
+порядок dump/plan/apply/rollback и требования к двум disposable PostgreSQL DSN описаны в
+`../docs/micro-mvp-production-content-migration.md`.
+
+Live-matrix блокирует release по `verify-only` materialization и exact SHA-256
+скомпилированной semantic projection 448 корней. Назначенные production DB
+UUID канонизируются в однозначные catalog identities, поэтому surrogate ID не
+подменяет семантику правила. Полный каталог
+фиксируется отдельно для диагностики и evidence→apply TOCTOU; поэтому
+новые неиспользуемые сущности mini-/part-MVP не ломают micro-MVP gate,
+но любое изменение каталога после сбора evidence всё ещё fail-closed.
+
+Отдельный opt-in canary проверяет уже развёрнутые frontend, backend и реальные
+CharacterV3-записи. Он намеренно не входит в изолированный `test:browser`,
+требует два разных заранее созданных аккаунта и явное разрешение на временные
+записи:
+
+```bash
+LIVE_BROWSER_CANARY=1 \
+LIVE_BROWSER_BASE_URL=https://bagofholding.up.railway.app \
+LIVE_BROWSER_API_URL=https://backend-production-41c3.up.railway.app \
+LIVE_BROWSER_USER_A=<configured-user-a> \
+LIVE_BROWSER_PASSWORD_A=<from-secret-store> \
+LIVE_BROWSER_USER_B=<configured-user-b> \
+LIVE_BROWSER_PASSWORD_B=<from-secret-store> \
+npm run test:browser:live
+```
+
+Production-target жёстко закреплён за этими двумя origin; альтернативой может
+быть только явный `localhost`/`127.0.0.1` origin без path/query/fragment/userinfo.
+Перед запуском сам spec отдельно типизируется через
+`npm run test:browser:live:typecheck`.
+
+Canary создаёт по одному временному персонажу у каждого аккаунта, объединяет
+их в encounter, проверяет последовательный `expected_seq`, входящий спасбросок
+и его разрешение вторым игроком через UI/SSE, изменение HP, канонический
+condition, журнал, переход хода из UI мастера и reload реального листа. В
+`finally` он закрывает браузерные контексты, удаляет encounter атомарным API и
+сметает оба листа по уникальному cleanup-marker (включая случай потерянного
+create-response); ошибка cleanup делает gate красным и требует ручной проверки.
+Запускать его следует после materialization и certification контента, когда UI
+уже видит новый verified release.
+
+Граница этого canary намеренно транспортная. Pending save создаётся
+синтетическим payload (`DC 99`, `hpDelta 3`), после чего spec проверяет реальный
+JWT/ownership, CAS под row lock, SSE, UI-разрешение, CharacterV3/encounter DB и
+канонический lifecycle состояния Prone. Backend всё ещё принимает уже
+рассчитанные клиентом patches, а source/target не коммитятся одной транзакцией.
+Поэтому зелёный canary доказывает работоспособность реального transport/UI/DB,
+но не исполнение production action/spell mechanics и не server command
+authority; эти правила принимаются matrix/primitive/two-PC semantic gates на
+точном materialized release.
 
 ### Добавление новых компонентов
 

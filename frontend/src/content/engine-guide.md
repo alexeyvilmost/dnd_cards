@@ -475,11 +475,18 @@ flowchart TD
 
 ### 7.1. Нормализация активного действия
 
-- Если у активной механики нет стоимости действия, нормализатор добавляет
-  стандартную стоимость основного действия.
-- `mechanics.uses` превращается в виртуальный ресурс `uses_<id>`.
-- `consumes_self` превращается в стоимость предметом.
-- `ammo` оружия превращается в стоимость предметом-боеприпасом.
+- Активная механика или реакция без явного массива `activation.cost` не
+  становится действием листа и не проходит сертификацию. Движок не добавляет
+  стандартную стоимость по умолчанию.
+- `mechanics.uses` объявляет размер и восстановление виртуального пула
+  `uses_<id>`, но не цену. Расход пула обязан быть явно записан как
+  `activation.cost[{"resource":"self_uses"}]`; адаптер только связывает эту
+  относительную ссылку со стабильным id сущности.
+- Legacy-флаг `consumes_self` не имеет runtime-семантики. Саморасход объявляется
+  ценой `activation.cost[{"resource":"self_item"}]`, которая связывается с
+  конкретным экземпляром предмета.
+- Боеприпас также должен быть явной контекстной записью `activation.cost`;
+  оружие лишь поставляет выбранной записи id расходуемой карты.
 - Заклинание получает оплату ячейкой или пулом бесплатного использования.
 
 ### 7.2. Доступность
@@ -908,7 +915,7 @@ sequenceDiagram
 flowchart TD
     ClassRes["Ресурсы класса"]
     Grants["resource op=grant"]
-    Uses["mechanics.uses"]
+    Uses["mechanics.uses + explicit self_uses cost"]
     Freeuse["grant_spell.freeuse"]
     Init["initResources"]
     Fresh["Новые maxResources и resources"]
@@ -938,8 +945,10 @@ flowchart TD
 }
 ```
 
-Для действия создаётся виртуальный пул `uses_<card_number или id>`. Он добавляется
-в стоимость действия и восстанавливается по карте recharge.
+Для действия создаётся виртуальный пул `uses_<card_number или id>`. Он
+восстанавливается по карте recharge, но списывается только когда данные действия
+явно содержат `activation.cost` с `resource: "self_uses"`. Несогласованная пара
+(`uses` без `self_uses` или наоборот) закрывается ошибкой контента.
 
 Действие, выданное через `grant_action`, сейчас не получает полноценный
 инициализированный `uses`-пул: его экономика действия сохраняется, но собственный
@@ -1036,18 +1045,19 @@ flowchart LR
 
 ### 14.3. Расходники
 
-`consumes_self: true` добавляет стоимость:
+Саморасход объявляется прямо в механике предмета:
 
 ```json
 {
-  "resource": "item",
-  "card_id": "<id самого предмета>",
+  "resource": "self_item",
   "amount": 1
 }
 ```
 
-После выполнения в журнал попадает `item_consumed`, а UI сохраняет изменённый
-инвентарь.
+Перед выполнением адаптер связывает `self_item` с id конкретного экземпляра, но
+не изобретает цену. После выполнения в журнал попадает `item_consumed`, а UI
+сохраняет изменённый инвентарь. `consumes_self` сохранён в схеме только как
+deprecated-маркер для миграции и движком не читается.
 
 ### 14.4. Боеприпасы
 
@@ -1059,7 +1069,8 @@ flowchart LR
 - `container_mode: "all"` создаёт действие распаковки всех вложений.
 - `container_mode: "choice"` создаёт runtime-выбор одного вложения.
 - Полученные карты добавляются payload `add_item`.
-- Сам контейнер расходуется, если действие помечено `consumes_self`.
+- Сам контейнер расходуется, только если созданное действие явно содержит цену
+  `self_item` (после связывания — `item` с id контейнера).
 
 ---
 
@@ -1265,7 +1276,7 @@ flowchart LR
 | `interactions` | interaction[] | Массив способов разрешения |
 | `duration` | object | Общая длительность |
 | `uses` | object | Собственный лимит использований |
-| `ammo` | string или object | Боеприпас |
+| `weapon_profile` | object | Единственный runtime-authority оружия, включая `ammo: null | {card_id,name?}` |
 
 ### 19.2. `requirements`
 
@@ -1282,7 +1293,7 @@ flowchart LR
 |---|---|
 | `mode` | `active`, `passive`, `reaction`, `triggered` |
 | `while` | `equipped`, `carried`, `attuned` |
-| `consumes_self` | boolean |
+| `consumes_self` | deprecated boolean без runtime-семантики; мигрировать в `cost: self_item` |
 | `cost` | cost[] |
 | `trigger` | trigger |
 | `casting_time` | string |
@@ -1297,6 +1308,11 @@ flowchart LR
 | `amount` | Число или формула |
 | `level` | Круг для `spell_slot` |
 | `card_id` | Карта для `item` |
+
+Относительные примитивы `self_item` и `self_uses` допустимы только в сохранённых
+механиках сущности. Адаптер связывает их с конкретным id карты или пула до
+атомарной проверки и оплаты; отсутствие явного примитива не компенсируется
+эвристикой UI.
 
 ### 19.5. `trigger`
 
@@ -1546,9 +1562,11 @@ payload `kind: "set_die"` не маршрутизируется.
   "kind": "action",
   "activation": {
     "mode": "active",
-    "cost": [{ "resource": "action", "amount": 1 }]
+    "cost": [
+      { "resource": "action", "amount": 1 },
+      { "resource": "equipped_weapon_ammo", "amount": 1 }
+    ]
   },
-  "ammo": { "card_id": "arrow", "name": "Стрела" },
   "targeting": { "shape": "single", "range": "150/600 ft" },
   "interactions": [
     {
@@ -1564,8 +1582,12 @@ payload `kind: "set_die"` не маршрутизируется.
 }
 ```
 
-Путь: UI добавляет стоимость стрелой → движок атомарно списывает действие и
-стрелу → бросок против КЗ → урон богатой цели → журнал и сохранение.
+Выбранная Card длинного лука отдельно обязана объявить полный
+`mechanics.weapon_profile`, включая ranged mode 150/600, свойство `ammunition`
+и `ammo: {"card_id":"arrow","name":"Стрела"}`. Actor binder заменяет
+контекстный маркер обычной item-ценой до показа target UI. Путь: движок
+атомарно списывает действие и стрелу → бросок против КЗ → урон цели → журнал и
+сохранение. `Card.range`, tags и имя не участвуют в исполнении.
 
 ### 22.3. Зелье лечения
 
@@ -1576,8 +1598,10 @@ payload `kind: "set_die"` не маршрутизируется.
   "kind": "action",
   "activation": {
     "mode": "active",
-    "consumes_self": true,
-    "cost": [{ "resource": "bonus_action", "amount": 1 }]
+    "cost": [
+      { "resource": "bonus_action", "amount": 1 },
+      { "resource": "self_item", "amount": 1 }
+    ]
   },
   "interactions": [
     {

@@ -4,8 +4,15 @@
  * свободным старшим слотом, но потраченным базовым, не смог бы кастовать.
  */
 import { describe, expect, it } from 'vitest';
-import { payableWithUpcast } from './SheetActionsPanel';
-import type { RuntimeState } from '../mvp/contracts';
+import {
+  characterInteractionTargetOption,
+  payableWithUpcast,
+  replaceCachedInteractionTarget,
+} from './SheetActionsPanel';
+import { applyIncomingDamage } from '../engine/execute';
+import { forgeToRuntimeState, writeRulesEngineRuntimeTurnState } from '../character/runtime';
+import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
+import type { ForgeCharacter } from '../character/types';
 
 function rt(resources: Record<string, number>): RuntimeState {
   return {
@@ -69,5 +76,82 @@ describe('D1 — payableWithUpcast', () => {
       expect(payableWithUpcast(rt({ action: 0, spell_slot_1: 0 }), detectMagic, true)).toBe(false);
       expect(payableWithUpcast(rt({ action: 1, spell_slot_1: 0 }), detectMagic, true)).toBe(true);
     });
+  });
+});
+
+describe('CharacterV3 interaction targets', () => {
+  it('disables a legacy public target before any runtime mutation is attempted', () => {
+    expect(characterInteractionTargetOption({
+      id: 'legacy-public',
+      name: 'Архивный герой',
+      access_mode: 'legacy_public_readonly',
+    }, new Set())).toEqual({
+      id: 'legacy-public',
+      name: 'Архивный герой',
+      disabled: true,
+      reason: 'архивный публичный лист доступен только для чтения',
+    });
+  });
+
+  it('keeps an owned non-charmer target writable', () => {
+    expect(characterInteractionTargetOption({
+      id: 'owned-target',
+      name: 'Союзник',
+      access_mode: 'owner',
+    }, new Set())).toEqual({ id: 'owned-target', name: 'Союзник' });
+  });
+
+  it('uses the committed target ledger for a second interaction without a page reload', () => {
+    const target = {
+      id: 'owned-target',
+      name: 'Полуорк',
+      access_mode: 'owner',
+      current_hp: 5,
+      max_hp: 20,
+      resources: {},
+      max_resources: {},
+      equipment: {},
+      inventory_items: [],
+      active_effects: [],
+      turn_state: null,
+    } as unknown as ForgeCharacter;
+    const character: CharacterContext = {
+      abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      profBonus: 2,
+      level: 1,
+    };
+    const relentless = {
+      id: 'relentless-endurance',
+      name: 'Relentless Endurance',
+      uses: { per: 'long_rest' },
+      activation: { mode: 'triggered', trigger: { event: 'reduced_to_0_hp' } },
+      effects: [{
+        resolution: 'auto',
+        result: [{ kind: 'set_value', target: 'hp', value: '1' }],
+      }],
+    };
+    const context = {
+      character,
+      rng: () => 0.5,
+      passives: [relentless],
+    } as unknown as ExecuteContext;
+
+    const first = applyIncomingDamage(forgeToRuntimeState(target), 10, context, {
+      damageType: 'slashing',
+    }).state;
+    expect(first.hp.current).toBe(1);
+    expect(first.firedThisRest).toContain('relentless-endurance');
+    const committed = {
+      ...target,
+      current_hp: first.hp.current,
+      turn_state: writeRulesEngineRuntimeTurnState(target.turn_state, first),
+    };
+    const cached = replaceCachedInteractionTarget([target], committed);
+
+    const second = applyIncomingDamage(forgeToRuntimeState(cached[0]), 10, context, {
+      damageType: 'slashing',
+    }).state;
+    expect(second.hp.current).toBe(0);
+    expect(second.firedThisRest).toEqual(['relentless-endurance']);
   });
 });

@@ -15,9 +15,9 @@ if (typeof globalThis.localStorage === 'undefined') {
 import { API_BASE_URL } from '../api/client';
 import { autoBuildAt, type BuildContent } from '../canon/autoBuild';
 import {
-  createMicroMicroMatrix,
-  microMicroBuildIssues,
-  type MatrixEntity,
+  createMicroMvpMatrix,
+  microMvpBuildIssues,
+  type MicroMvpMatrixEntity,
 } from '../canon/microMicroMatrix';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
 
@@ -37,21 +37,44 @@ type Manifest = {
   };
 };
 
-async function fetchAll<T>(path: string, key: string): Promise<T[]> {
+async function fetchAll<T extends { id: string }>(path: string, key: string): Promise<T[]> {
   const items: T[] = [];
-  for (let page = 1; ; page += 1) {
+  const seenIds = new Set<string>();
+  let expectedTotal: number | null = null;
+  for (let page = 1; page <= 100; page += 1) {
     const response = await fetch(`${API_BASE_URL}${path}?page=${page}&limit=1000`, {
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
     const body = await response.json() as Record<string, unknown>;
-    const batch = (body[key] ?? []) as T[];
+    if (!Array.isArray(body[key])) throw new Error(`${path}: required collection ${key} is missing`);
+    const batch = body[key] as T[];
+    const responseTotal = Number(body.total);
+    if (Number.isSafeInteger(responseTotal) && responseTotal >= 0) {
+      if (expectedTotal !== null && responseTotal !== expectedTotal) {
+        throw new Error(`${path}: total changed from ${expectedTotal} to ${responseTotal}`);
+      }
+      expectedTotal = responseTotal;
+    }
+    const repeatedId = batch.find((item) => !item?.id || seenIds.has(item.id))?.id;
+    if (repeatedId !== undefined) {
+      throw new Error(`${path}: pagination repeated or omitted entity id ${repeatedId || '<blank>'}`);
+    }
+    batch.forEach((item) => seenIds.add(item.id));
     items.push(...batch);
-    if (batch.length < 1000) return items;
+    if (expectedTotal !== null) {
+      if (items.length === expectedTotal) return items;
+      if (items.length > expectedTotal || batch.length === 0) {
+        throw new Error(`${path}: received ${items.length}/${expectedTotal} records`);
+      }
+    } else if (batch.length < 1000) {
+      return items;
+    }
   }
+  throw new Error(`${path}: pagination exceeded 100 pages`);
 }
 
-function resolveManifestEntities<T extends MatrixEntity>(
+function resolveManifestEntities<T extends MicroMvpMatrixEntity>(
   entries: ManifestEntry[],
   catalog: T[],
 ): T[] {
@@ -67,7 +90,7 @@ function resolveManifestEntities<T extends MatrixEntity>(
   });
 }
 
-describe('micro-micro live matrix: 4 × 4 × 4 × 4', () => {
+describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP live matrix: 7 × 4 × 4 × 4', () => {
   let content: BuildContent;
   let scope: {
     classes: CharacterClass[];
@@ -78,11 +101,11 @@ describe('micro-micro live matrix: 4 × 4 × 4 × 4', () => {
   let allowedSpellIds: Set<string>;
 
   beforeAll(async () => {
-    const manifestUrl = new URL('../../../scripts/content/micro-micro-manifest.mjs', import.meta.url);
+    const manifestUrl = new URL('../../../scripts/content/micro-mvp-manifest.mjs', import.meta.url);
     const manifestModule = await import(/* @vite-ignore */ manifestUrl.href) as {
-      MICRO_MICRO_MANIFEST: Manifest;
+      MICRO_MVP_MANIFEST: Manifest;
     };
-    const manifest = manifestModule.MICRO_MICRO_MANIFEST;
+    const manifest = manifestModule.MICRO_MVP_MANIFEST;
     const [classes, races, backgrounds, feats, spells] = await Promise.all([
       fetchAll<CharacterClass>('/api/classes', 'classes'),
       fetchAll<Race>('/api/races', 'races'),
@@ -105,9 +128,9 @@ describe('micro-micro live matrix: 4 × 4 × 4 × 4', () => {
     content = { classes, races, backgrounds, feats, spells: acceptedSpells };
   }, 180_000);
 
-  it('каждое из 256 сочетаний создаёт завершённого персонажа через реальный pipeline кузницы', async () => {
+  it('каждое из 448 сочетаний создаёт завершённого персонажа через реальный pipeline кузницы', async () => {
     const failures: Array<{ className: string; featName: string; detail: string }> = [];
-    const matrix = createMicroMicroMatrix(scope);
+    const matrix = createMicroMvpMatrix(scope);
 
     for (const matrixCase of matrix) {
       try {
@@ -119,7 +142,7 @@ describe('micro-micro live matrix: 4 × 4 × 4 × 4', () => {
           replaceBackgroundFeat: true,
           level: 1,
         }, content);
-        const caseIssues = microMicroBuildIssues(matrixCase, result);
+        const caseIssues = microMvpBuildIssues(matrixCase, result);
         const outsideManifest = result.draft.spellIds
           .filter((spellId) => !allowedSpellIds.has(spellId));
         if (outsideManifest.length) {
@@ -141,7 +164,7 @@ describe('micro-micro live matrix: 4 × 4 × 4 × 4', () => {
       }
     }
 
-    expect(matrix).toHaveLength(256);
+    expect(matrix).toHaveLength(448);
     if (failures.length) {
       const counts = (field: 'className' | 'featName') => Object.entries(
         failures.reduce<Record<string, number>>((acc, failure) => {

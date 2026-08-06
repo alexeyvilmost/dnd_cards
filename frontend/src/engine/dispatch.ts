@@ -82,7 +82,10 @@ export function collectListeners(
     if (!trig || String(trig.event ?? '') !== ev.kind) continue;
     const trigTiming = trig.timing != null ? String(trig.timing) : undefined;
     if (ev.timing && trigTiming && trigTiming !== ev.timing) continue;
-    if (!matchesWhen(trig.circumstances as Dict[] | undefined, evalCtx)) continue;
+    if (!matchesWhen(
+      trig.circumstances as Dict[] | undefined,
+      { ...(evalCtx ?? {}), event: { kind: ev.kind, ...(ev.data ? { data: ev.data } : {}) } },
+    )) continue;
     const lm = listenerFrom(mech, name);
     if (lm) out.push(lm);
   }

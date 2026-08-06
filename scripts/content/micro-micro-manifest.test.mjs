@@ -19,7 +19,7 @@ test('manifest contains the approved number of entities in every collection', ()
   for (const [collection, size] of Object.entries(MICRO_MICRO_COLLECTION_SIZES)) {
     assert.equal(MICRO_MICRO_MANIFEST.collections[collection].length, size);
   }
-  assert.equal(flattenMicroMicroManifest().length, 37);
+  assert.equal(flattenMicroMicroManifest().length, 49);
 });
 
 test('stable selector plus visible verified status is ready', () => {

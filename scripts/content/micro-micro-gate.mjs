@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { fileURLToPath } from 'node:url';
 import {
-  MICRO_MICRO_MANIFEST,
-  flattenMicroMicroManifest,
-  validateMicroMicroManifest,
-} from './micro-micro-manifest.mjs';
+  MICRO_MVP_COLLECTION_ENTITY_TYPES,
+  MICRO_MVP_MANIFEST,
+  flattenMicroMvpManifest,
+  validateMicroMvpManifest,
+} from './micro-mvp-manifest.mjs';
+import { fetchRequiredCollection } from './api.mjs';
 import {
   buildCertificationIndex,
   certificationHashes,
@@ -21,15 +23,7 @@ export const ENTITY_ENDPOINTS = {
   effect: ['/api/effects', 'effects'],
 };
 
-export const COLLECTION_ENTITY_TYPES = {
-  classes: 'class',
-  species: 'race',
-  backgrounds: 'background',
-  originFeats: 'feat',
-  cantrips: 'spell',
-  firstLevelSpells: 'spell',
-  fightingStyles: 'feat',
-};
+export const COLLECTION_ENTITY_TYPES = MICRO_MVP_COLLECTION_ENTITY_TYPES;
 
 const normalized = (value) => String(value ?? '').trim().toLocaleLowerCase('en');
 
@@ -70,7 +64,7 @@ export function resolveManifestEntry(item, entities, certificationContext = null
   }
 
   const supportStatus = entity.support?.status ?? 'untested';
-  if (!MICRO_MICRO_MANIFEST.defaultVisibleStatuses.includes(supportStatus)) {
+  if (!MICRO_MVP_MANIFEST.defaultVisibleStatuses.includes(supportStatus)) {
     return { status: 'not_certified', entity, supportStatus };
   }
   const certificationIssues = [];
@@ -112,7 +106,7 @@ export function resolveManifestEntry(item, entities, certificationContext = null
 }
 
 export function assessMicroMicroContent(catalogs) {
-  const manifestIssues = validateMicroMicroManifest();
+  const manifestIssues = validateMicroMvpManifest();
   const entityGroups = Object.fromEntries(
     Object.entries(ENTITY_ENDPOINTS).map(([entityType]) => [
       entityType,
@@ -125,7 +119,7 @@ export function assessMicroMicroContent(catalogs) {
     ]),
   );
   const certificationIndex = buildCertificationIndex(entityGroups);
-  const results = flattenMicroMicroManifest().map((item) => {
+  const results = flattenMicroMvpManifest().map((item) => {
     const entities = catalogs[item.collection] ?? [];
     return {
       ...item,
@@ -149,20 +143,15 @@ export function assessMicroMicroContent(catalogs) {
   };
 }
 
+export const assessMicroMvpContent = assessMicroMicroContent;
+
 async function fetchCatalog(baseUrl, path, key) {
-  const entities = [];
-  const limit = 1000;
   const timeoutMs = Number(process.env.CONTENT_GATE_TIMEOUT_MS || 60_000);
-  for (let page = 1; ; page += 1) {
-    const response = await fetch(`${baseUrl}${path}?page=${page}&limit=${limit}`, {
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
-    const body = await response.json();
-    const batch = body[key] ?? body.data ?? [];
-    entities.push(...batch);
-    if (batch.length < limit) return entities;
-  }
+  return fetchRequiredCollection(path, key, {
+    baseUrl,
+    limit: 1000,
+    fetchImpl: (url) => fetch(url, { signal: AbortSignal.timeout(timeoutMs) }),
+  });
 }
 
 export async function runLiveGate({
@@ -195,7 +184,7 @@ async function main() {
   if (json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(`micro-micro-MVP content gate — ${report.baseUrl}`);
+    console.log(`micro-MVP content gate — ${report.baseUrl}`);
     console.log(`ready: ${report.ready ? 'yes' : 'no'}`);
     console.log(`summary: ${JSON.stringify(report.summary)}`);
     for (const result of report.results.filter((item) => item.status !== 'ready')) {

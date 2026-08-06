@@ -7,6 +7,10 @@ import {
 import { weaponContext, weaponAttackPreview } from './weapon';
 import { projectedAgainst } from './execute';
 import type { Card } from '../types';
+import {
+  withDeclaredTestWeaponProfile,
+  type DeclaredTestWeaponProfile,
+} from '../testing/weaponProfileFixtures';
 
 describe('weaponContext slots (R3)', () => {
   it('основная рука по слоту, не по порядку карточек в массиве', () => {
@@ -20,28 +24,64 @@ describe('weaponContext slots (R3)', () => {
   });
 });
 
-describe('C11: дальнобойное оружие атакует от ЛВК', () => {
-  // Силач: СИЛ > ЛВК — чтобы «дальнобойное→ЛВК» не спуталось с finesse «лучший из двух».
+describe('C11: способность атаки берётся из mechanics.weapon_profile', () => {
+  // Силач: СИЛ > ЛВК — чтобы явно отличить dex-профиль от finesse.
   const strChar: CharacterContext = { ...FIGHTER_CTX, abilityMods: { str: 5, dex: 1, con: 2, int: 0, wis: 1, cha: 0 } };
-  const mkWeapon = (props: string[], tags: string[] = []): Card => ({
-    ...CARD_LONGSWORD, id: 'w', name: 'Тест-оружие', bonus_value: '1d8',
-    properties: props as unknown as Card['properties'],
-    tags: tags as unknown as Card['tags'],
-  });
+  const mkWeapon = (profile: Partial<DeclaredTestWeaponProfile> = {}): Card => (
+    withDeclaredTestWeaponProfile({
+      ...CARD_LONGSWORD,
+      id: 'w',
+      name: 'Тест-оружие',
+      bonus_value: '1d8',
+    }, {
+      weaponType: 'longsword',
+      proficiencyCategory: 'martial',
+      attackAbility: 'str',
+      damageLines: [{ dice: '1d8', type: 'slashing' }],
+      defaultAttackMode: 'melee',
+      attackModes: [{ kind: 'melee', reach_ft: 5 }],
+      properties: [],
+      masteryEffectId: 'mastery:test',
+      ...profile,
+    })
+  );
   const abilityOf = (card: Card) =>
     weaponContext({ ...strChar, equippedCards: [card] }, 'main', { main_hand: card.id })?.ability;
 
-  it('лук (свойство ammunition) — ЛВК, несмотря на бОльшую СИЛ', () => {
-    expect(abilityOf(mkWeapon(['ammunition', 'two_handed']))).toBe('dex');
+  it('явно объявленный дальнобойный профиль использует ЛВК, несмотря на большую СИЛ', () => {
+    expect(abilityOf(mkWeapon({
+      weaponType: 'longbow',
+      attackAbility: 'dex',
+      damageLines: [{ dice: '1d8', type: 'piercing' }],
+      defaultAttackMode: 'ranged',
+      attackModes: [{ kind: 'ranged', normal_ft: 150, long_ft: 600 }],
+      properties: ['ammunition', 'heavy', 'two_handed'],
+      ammo: { card_id: 'card:arrow', name: 'Стрела' },
+    }))).toBe('dex');
   });
-  it('тег «Дальнобойное» — ЛВК (фолбэк без свойства ammunition)', () => {
-    expect(abilityOf(mkWeapon([], ['Воинское', 'Дальнобойное']))).toBe('dex');
+
+  it('не выводит правила из отображаемых properties/tags без weapon_profile', () => {
+    const undeclared = {
+      ...CARD_LONGSWORD,
+      id: 'legacy-display-only',
+      name: 'Лук только по отображаемым полям',
+      mechanics: {},
+      properties: ['ammunition', 'two_handed'] as unknown as Card['properties'],
+      tags: ['Воинское', 'Дальнобойное'] as unknown as Card['tags'],
+    };
+    expect(abilityOf(undeclared)).toBeUndefined();
   });
+
   it('рукопашное без finesse — СИЛ', () => {
-    expect(abilityOf(mkWeapon(['heavy']))).toBe('str');
+    expect(abilityOf(mkWeapon({ properties: ['heavy'] }))).toBe('str');
   });
+
   it('finesse (не дальнобойное) — лучший из СИЛ/ЛВК = СИЛ у силача', () => {
-    expect(abilityOf(mkWeapon(['finesse', 'light']))).toBe('str');
+    expect(abilityOf(mkWeapon({
+      weaponType: 'rapier',
+      attackAbility: 'finesse',
+      properties: ['finesse'],
+    }))).toBe('str');
   });
 });
 

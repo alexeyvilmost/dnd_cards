@@ -17,6 +17,7 @@ import type { AssembledCharacter } from './assemble';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
 import { collectChosenSpellUuids } from '../engine/spellRefs';
+import { preparedSpellSelectionIssues } from '../mechanics/collectChoices';
 import { isEntityUuid } from '../engine/ids';
 import { normalizeSkillList } from './skillNormalize';
 import type { Race, RaceTrait } from '../types';
@@ -207,7 +208,10 @@ export function requiredChoiceIssues(draft: CharacterDraft, assembled: Assembled
   for (const pc of assembled.pendingChoices) {
     if (pc.context === 'in_play') continue; // выборы «в игре» разрешаются на листе, не блокируют создание
     const sel = draft.resolvedChoices[pc.id] || [];
-    if (sel.length < pc.count) {
+    const preparedIssues = preparedSpellSelectionIssues(pc, sel);
+    if (preparedIssues.length) {
+      issues.push(...preparedIssues.map((issue) => `«${pc.prompt}»: ${issue}`));
+    } else if (sel.length < pc.count) {
       issues.push(`«${pc.prompt}»: выберите ${pc.count} (выбрано ${sel.length})`);
     }
   }

@@ -3,47 +3,32 @@
 Скрипт для получения токена авторизации
 """
 
+import os
+
 import requests
-import json
 
 def get_auth_token():
     """Получает токен авторизации"""
-    try:
-        # Сначала попробуем зарегистрировать пользователя
-        register_data = {
-            "username": "importer_user",
-            "password": "importer_pass123",
-            "email": "importer@example.com",
-            "display_name": "Importer User"
-        }
-        
-        print("Регистрируем пользователя...")
-        register_response = requests.post(
-            "http://localhost:8080/api/auth/register",
-            json=register_data,
-            headers={"Content-Type": "application/json"}
+    explicit_token = os.environ.get("API_TOKEN", "").strip()
+    if explicit_token:
+        return explicit_token
+
+    api_url = os.environ.get("API_URL", "http://localhost:8080").rstrip("/")
+    username = os.environ.get("CONTENT_ADMIN_USERNAME", "").strip()
+    password = os.environ.get("CONTENT_ADMIN_PASSWORD", "")
+    if not username or not password:
+        raise RuntimeError(
+            "Set API_TOKEN or both CONTENT_ADMIN_USERNAME and "
+            "CONTENT_ADMIN_PASSWORD"
         )
-        
-        print(f"Статус регистрации: {register_response.status_code}")
-        print(f"Ответ регистрации: {register_response.text}")
-        
-        if register_response.status_code in [200, 201]:  # Успешная регистрация
-            print("Пользователь успешно зарегистрирован")
-        elif register_response.status_code == 400:  # Пользователь уже существует
-            print("Пользователь уже существует, продолжаем логин")
-        else:
-            print(f"Ошибка регистрации: {register_response.status_code}")
-            return None
-        
-        # Теперь логинимся
+    try:
         login_data = {
-            "username": "importer_user", 
-            "password": "importer_pass123"
+            "username": username,
+            "password": password,
         }
-        
         print("Получаем токен авторизации...")
         login_response = requests.post(
-            "http://localhost:8080/api/auth/login",
+            f"{api_url}/api/auth/login",
             json=login_data,
             headers={"Content-Type": "application/json"}
         )
@@ -52,7 +37,7 @@ def get_auth_token():
             result = login_response.json()
             token = result.get('token')
             if token:
-                print(f"Токен получен: {token[:20]}...")
+                print("Токен получен")
                 return token
             else:
                 print("Токен не найден в ответе")
@@ -69,6 +54,7 @@ def get_auth_token():
 if __name__ == "__main__":
     token = get_auth_token()
     if token:
-        print(f"\nИспользуйте этот токен: {token}")
+        print("\nВНИМАНИЕ: следующая строка является секретом и не должна попадать в логи.")
+        print(token)
     else:
         print("Не удалось получить токен")

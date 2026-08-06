@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import type { ForgeCharacter } from '../character/types';
 import SheetHpPanel from './SheetHpPanel';
 import type { CharacterContext, EngineEvent, ValueBreakdown } from '../mvp/contracts';
+import type { EncounterApply } from '../battle/encountersApi';
 import './SheetHpDialog.css';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
   /** Контекст листа — включает тип урона, сопротивления/уязвимости и реакции. */
   sheetCtx?: CharacterContext | null;
   passives?: Record<string, unknown>[];
+  encounterApply?: EncounterApply;
 }
 
 /** Диалог хитов кокпита: тонкая обёртка над SheetHpPanel (единая логика
@@ -24,6 +26,7 @@ interface Props {
 export default function SheetHpDialog({
   open, onClose, character, maxHp, maxHpBreakdown, onUpdated, onEvents, conSaveBonus,
   sheetCtx, passives,
+  encounterApply,
 }: Props) {
   if (!open) return null;
 
@@ -51,6 +54,7 @@ export default function SheetHpDialog({
           conSaveBonus={conSaveBonus}
           sheetCtx={sheetCtx}
           passives={passives}
+          encounterApply={encounterApply}
         />
       </div>
     </div>

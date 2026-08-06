@@ -3,8 +3,20 @@
 Тест добавления полей по одному
 """
 
-import requests
 import json
+import os
+
+import requests
+
+
+def request_headers():
+    token = os.environ.get("API_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("API_TOKEN is required")
+    return {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}",
+    }
 
 def test_with_price():
     """Тестирует добавление поля price"""
@@ -17,10 +29,7 @@ def test_with_price():
         "price": 300
     }
     
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDc2OTVmMmUtOGY2YS00ZmYyLWIzMmQtYzc1NTZmYjU4YTMxIiwidXNlcm5hbWUiOiJpbXBvcnRlcl91c2VyIiwiaXNzIjoiZG5kLWNhcmRzLWJhY2tlbmQiLCJzdWIiOiJkNzY5NWYyZS04ZjZhLTRmZjItYjMyZC1jNzU1NmZiNThhMzEiLCJleHAiOjE3NjA0MDU4NTAsIm5iZiI6MTc2MDMxOTQ1MCwiaWF0IjoxNzYwMzE5NDUwfQ.7vn0WyCMG3BtuxSISNFbg2yLm9clEB21sPKWqNsK96M'
-    }
+    headers = request_headers()
     
     print("Тест с полем price...")
     
@@ -51,10 +60,7 @@ def test_with_weight():
         "weight": 45.0
     }
     
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDc2OTVmMmUtOGY2YS00ZmYyLWIzMmQtYzc1NTZmYjU4YTMxIiwidXNlcm5hbWUiOiJpbXBvcnRlcl91c2VyIiwiaXNzIjoiZG5kLWNhcmRzLWJhY2tlbmQiLCJzdWIiOiJkNzY5NWYyZS04ZjZhLTRmZjItYjMyZC1jNzU1NmZiNThhMzEiLCJleHAiOjE3NjA0MDU4NTAsIm5iZiI6MTc2MDMxOTQ1MCwiaWF0IjoxNzYwMzE5NDUwfQ.7vn0WyCMG3BtuxSISNFbg2yLm9clEB21sPKWqNsK96M'
-    }
+    headers = request_headers()
     
     print("\nТест с полем weight...")
     
@@ -85,10 +91,7 @@ def test_with_type():
         "type": "доспех"
     }
     
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDc2OTVmMmUtOGY2YS00ZmYyLWIzMmQtYzc1NTZmYjU4YTMxIiwidXNlcm5hbWUiOiJpbXBvcnRlcl91c2VyIiwiaXNzIjoiZG5kLWNhcmRzLWJhY2tlbmQiLCJzdWIiOiJkNzY5NWYyZS04ZjZhLTRmZjItYjMyZC1jNzU1NmZiNThhMzEiLCJleHAiOjE3NjA0MDU4NTAsIm5iZiI6MTc2MDMxOTQ1MCwiaWF0IjoxNzYwMzE5NDUwfQ.7vn0WyCMG3BtuxSISNFbg2yLm9clEB21sPKWqNsK96M'
-    }
+    headers = request_headers()
     
     print("\nТест с полем type...")
     
@@ -119,10 +122,7 @@ def test_with_properties():
         "properties": "защита"
     }
     
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDc2OTVmMmUtOGY2YS00ZmYyLWIzMmQtYzc1NTZmYjU4YTMxIiwidXNlcm5hbWUiOiJpbXBvcnRlcl91c2VyIiwiaXNzIjoiZG5kLWNhcmRzLWJhY2tlbmQiLCJzdWIiOiJkNzY5NWYyZS04ZjZhLTRmZjItYjMyZC1jNzU1NmZiNThhMzEiLCJleHAiOjE3NjA0MDU4NTAsIm5iZiI6MTc2MDMxOTQ1MCwiaWF0IjoxNzYwMzE5NDUwfQ.7vn0WyCMG3BtuxSISNFbg2yLm9clEB21sPKWqNsK96M'
-    }
+    headers = request_headers()
     
     print("\nТест с полем properties...")
     

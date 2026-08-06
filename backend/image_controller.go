@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +17,20 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+const imageGenerationRequestBudget = 175 * time.Second
+
+func writeImageContextError(c *gin.Context, err error) bool {
+	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		c.JSON(http.StatusGatewayTimeout, gin.H{"error": "превышен общий лимит времени генерации изображения"})
+	} else {
+		c.Status(499) // Client Closed Request (de-facto nginx convention).
+	}
+	return true
+}
 
 // ImageController контроллер для работы с изображениями
 type ImageController struct {
@@ -123,9 +138,14 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	// Генерируем изображение с помощью OpenAI
 	log.Printf("Отправляем промпт в OpenAI DALL-E (size=%s): %s", imageSize, prompt)
 	startTime := time.Now()
-	generatedImageURL, err := ic.openAIService.GenerateImage(prompt, req.Quality, imageSize)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), imageGenerationRequestBudget)
+	defer cancel()
+	generatedImageURL, err := ic.openAIService.GenerateImageContext(ctx, prompt, req.Quality, imageSize)
 	if err != nil {
 		log.Printf("Ошибка генерации изображения: %v", err)
+		if writeImageContextError(c, err) {
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
 		return
 	}
@@ -133,9 +153,11 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 	generationTime := int(time.Since(startTime).Milliseconds())
 
 	// Скачиваем сгенерированное изображение
-	ctx := context.Background()
-	imageData, err := ic.downloadImage(generatedImageURL)
+	imageData, err := ic.downloadImage(ctx, generatedImageURL)
 	if err != nil {
+		if writeImageContextError(c, err) {
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка скачивания сгенерированного изображения: %v", err)})
 		return
 	}
@@ -221,8 +243,13 @@ func (ic *ImageController) GenerateStandaloneImage(c *gin.Context) {
 
 	log.Printf("Standalone-генерация (style=%s): %s", req.Style, prompt)
 	startTime := time.Now()
-	generatedImageURL, err := ic.openAIService.GenerateImage(prompt, req.Quality, "1024x1024")
+	ctx, cancel := context.WithTimeout(c.Request.Context(), imageGenerationRequestBudget)
+	defer cancel()
+	generatedImageURL, err := ic.openAIService.GenerateImageContext(ctx, prompt, req.Quality, "1024x1024")
 	if err != nil {
+		if writeImageContextError(c, err) {
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
 		return
 	}
@@ -237,9 +264,11 @@ func (ic *ImageController) GenerateStandaloneImage(c *gin.Context) {
 	}
 
 	// Иначе загружаем в хранилище и возвращаем постоянную ссылку
-	ctx := context.Background()
-	imageData, err := ic.downloadImage(generatedImageURL)
+	imageData, err := ic.downloadImage(ctx, generatedImageURL)
 	if err != nil {
+		if writeImageContextError(c, err) {
+			return
+		}
 		// fallback: вернуть data URL
 		c.JSON(http.StatusOK, StandaloneImageResponse{
 			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
@@ -486,7 +515,10 @@ func isValidImageType(contentType string) bool {
 }
 
 // downloadImage скачивает изображение по URL или обрабатывает data URL
-func (ic *ImageController) downloadImage(url string) ([]byte, error) {
+func (ic *ImageController) downloadImage(ctx context.Context, url string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	// Проверяем, является ли это data URL
 	if strings.HasPrefix(url, "data:image/") {
 		// Извлекаем base64 данные из data URL
@@ -505,7 +537,11 @@ func (ic *ImageController) downloadImage(url string) ([]byte, error) {
 	}
 
 	// Обычный HTTP URL
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка создания запроса изображения: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка скачивания изображения: %v", err)
 	}

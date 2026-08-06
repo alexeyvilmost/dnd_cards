@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildMechanics, deserializeMechanics, costRowsToCost } from './blocks';
 
-// S3: гейты-разрешения (while / consumes_self / ammo / uses.recharge / доп. стоимость) и
+// S3: гейты-разрешения (while / explicit self_item / ammo / uses.recharge / доп. стоимость) и
 // новый блок eff_grant_action с level_gate.
 
 describe('deserialize gates', () => {
@@ -16,6 +16,19 @@ describe('deserialize gates', () => {
     expect(d?.consumesSelf).toBe(true);
     expect(d?.ammo).toBe('arrow');
     expect(d?.recharge).toBe('5-6');
+  });
+
+  it('читает explicit self_item как саморасход и не дублирует его в extraCost', () => {
+    const d = deserializeMechanics({
+      activation: {
+        mode: 'active',
+        cost: [{ resource: 'action' }, { resource: 'self_item' }],
+      },
+      effects: [],
+    });
+    expect(d?.consumesSelf).toBe(true);
+    expect(d?.triggerValues.resources).toEqual(['action']);
+    expect(d?.extraCost).toEqual([]);
   });
 
   it('ammo-объект → card_id строкой', () => {

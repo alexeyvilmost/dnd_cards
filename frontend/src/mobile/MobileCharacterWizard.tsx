@@ -2,21 +2,24 @@ import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } fr
 import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Pencil, Search, Sparkles } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { backgroundsApi, classesApi, featsApi, racesApi, spellsApi } from '../api/client';
-import { charactersV3Api } from '../character/api';
+import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
-import { AbilityAssigner, ChoiceResolver } from '../character/components';
+import { AbilityAssigner, ChoiceResolver, optionsForChoice } from '../character/components';
+import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
+import { projectStartingEquipmentPatch } from '../character/startingEquipment';
+import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveCharacter';
 import { spellMatchesChoice } from '../character/spellChoices';
 import {
   buildSavePayload, characterToDraft, classSkillChoice, completionIssues,
 } from '../character/forgeHelpers';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import {
-  ABILITY_KEYS, emptyDraft, type AbilityKey, type CharacterDraft, type ForgeCharacter,
+  ABILITY_KEYS, emptyDraft, isCharacterReadOnly, type AbilityKey, type CharacterDraft, type ForgeCharacter,
 } from '../character/types';
 import { maxAvailableSpellSlotLevel } from '../engine/resources';
-import type { PendingChoice } from '../mechanics/collectChoices';
+import { isSpellSelectionChoice, type PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, optionsForChoiceSource, SKILLS } from '../mechanics/registries';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
 import { EntityDetailContext } from '../contexts/entityDetail';
@@ -279,6 +282,13 @@ export default function MobileCharacterWizard() {
         setFeats(featResult.feats ?? []);
         setSpells(spellResult.spells ?? []);
         if (character) {
+          if (isCharacterReadOnly(character)) {
+            navigate(`/m/characters/${character.id}`, {
+              replace: true,
+              state: { notice: 'Архивный публичный лист доступен только для чтения.' },
+            });
+            return;
+          }
           setOriginal(character);
           const stored = safeDraft(localStorage.getItem(storageKey));
           if (!stored) {
@@ -288,13 +298,13 @@ export default function MobileCharacterWizard() {
         }
       } catch (e) {
         console.error(e);
-        if (!stale) setError('Не удалось подготовить мастер персонажа');
+        if (!stale) setError(characterV3ErrorMessage(e, 'Не удалось подготовить мастер персонажа'));
       } finally {
         if (!stale) setLoading(false);
       }
     })();
     return () => { stale = true; };
-  }, [id, levelUp, storageKey]);
+  }, [id, levelUp, navigate, storageKey]);
 
   useEffect(() => {
     if (loading) return;
@@ -388,6 +398,32 @@ export default function MobileCharacterWizard() {
   const activePickerChoice = picker?.kind === 'mechanic'
     ? buildChoices.find((choice) => choice.id === picker.choiceId)
     : undefined;
+  const activeChoiceUnavailable = useMemo(() => {
+    if (!activePickerChoice || !ruleState) return {};
+    const optionIds = isSpellSelectionChoice(activePickerChoice)
+      ? spells.filter((spell) => spellMatchesChoice(spell, activePickerChoice, maxSlotLevel)).map((spell) => spell.id)
+      : activePickerChoice.source === 'feat'
+        ? feats.filter((feat) => featMatchesChoice(feat, activePickerChoice)).map((feat) => feat.id)
+        : optionsForChoice(activePickerChoice, feats).map((option) => option.id);
+    const featByReference = new Map(feats.flatMap((feat) => (
+      [[feat.id, feat.id], [feat.card_number, feat.id]] as const
+    )));
+    const spellByReference = new Map(spells.flatMap((spell) => (
+      [[spell.id, spell.id], [spell.card_number, spell.id]] as const
+    )));
+    return unavailableChoiceOptions(
+      activePickerChoice,
+      ruleState,
+      optionIds,
+      draft.resolvedChoices[activePickerChoice.id] ?? [],
+      {
+        activeFeatIds: new Set((assembled?.feats ?? []).map((feat) => feat.id)),
+        repeatableFeatIds: new Set(feats.filter((feat) => feat.repeatable).map((feat) => feat.id)),
+        canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
+        canonicalSpellId: (reference) => spellByReference.get(reference) ?? reference,
+      },
+    );
+  }, [activePickerChoice, assembled?.feats, draft.resolvedChoices, feats, maxSlotLevel, ruleState, spells]);
   const originFeats = feats.filter((feat) => feat.category === 'origin');
   const defaultBackgroundFeat = selectedBackground?.origin_feat
     ? feats.find((feat) => feat.id === selectedBackground.origin_feat || feat.card_number === selectedBackground.origin_feat)
@@ -509,18 +545,17 @@ export default function MobileCharacterWizard() {
     try {
       const resolvedRules = resolveCharacterRules({ draft, assembled });
       const payload = buildSavePayload(draft, assembled, resolvedRules, original?.current_hp);
-      const character = original
-        ? await charactersV3Api.update(original.id, payload)
-        : await charactersV3Api.create(payload);
-      const runtimePatch = buildResourceRuntimePatch(
-        character,
-        buildCharacterContext(resolvedRules, draft, [], assembled.klass),
-        assembled,
-        true,
-        undefined,
-        resolvedRules.freeuseSpells,
-      ) ?? {};
+      const context = buildCharacterContext(resolvedRules, draft, [], assembled.klass);
+      let character: ForgeCharacter;
       if (!original) {
+        let runtimePatch = buildResourceRuntimePatch(
+          runtimeSeedFromSavePayload(payload),
+          context,
+          assembled,
+          true,
+          undefined,
+          resolvedRules.freeuseSpells,
+        ) ?? {};
         const backgroundOptions = assembled.background?.equipment_options;
         const backgroundOption = backgroundOptions?.[
           draft.equipmentOption === 'b' ? 'option_b' : 'option_a'
@@ -530,24 +565,31 @@ export default function MobileCharacterWizard() {
           ? 'option_b'
           : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
         const classOption = classOptions?.[classKey] ?? classOptions?.option_a;
-        const quantities = new Map<string, number>();
-        for (const item of [...(backgroundOption?.items || []), ...(classOption?.items || [])]) {
-          quantities.set(item.card_id, (quantities.get(item.card_id) || 0) + (item.quantity ?? 1));
+        runtimePatch = projectStartingEquipmentPatch(runtimePatch, backgroundOption, classOption);
+        character = await saveCharacter(charactersV3Api, {
+          mode: 'create',
+          payload,
+          initialRuntime: runtimePatch,
+        });
+      } else {
+        character = await charactersV3Api.update(original.id, payload);
+        const runtimePatch = buildResourceRuntimePatch(
+          character,
+          context,
+          assembled,
+          true,
+          undefined,
+          resolvedRules.freeuseSpells,
+        );
+        if (runtimePatch) {
+          character = await charactersV3Api.patchRuntime(character.id, runtimePatch);
         }
-        if (quantities.size) {
-          runtimePatch.inventory_items = [...quantities].map(([card_id, qty]) => ({ card_id, qty }));
-        }
-        const gold = (backgroundOption?.gold || 0) + (classOption?.gold || 0);
-        if (gold) runtimePatch.currency = { gold };
-      }
-      if (Object.keys(runtimePatch).length) {
-        await charactersV3Api.patchRuntime(character.id, runtimePatch);
       }
       localStorage.removeItem(storageKey);
       navigate(`/m/characters/${character.id}`, { replace: true });
     } catch (e) {
       console.error(e);
-      setError('Не удалось сохранить персонажа');
+      setError(characterV3ErrorMessage(e, 'Не удалось сохранить персонажа'));
     } finally {
       setSaving(false);
     }
@@ -897,18 +939,22 @@ export default function MobileCharacterWizard() {
             </div>
           )}
 
-          {picker.kind === 'mechanic' && activePickerChoice?.source === 'spell' && (
+          {picker.kind === 'mechanic' && activePickerChoice && isSpellSelectionChoice(activePickerChoice) && (
             <div className="m-wizard-option-list m-wizard-spell-options">
               <p className="m-picker-note">Выберите {activePickerChoice.count}</p>
               {spells.filter((spell) => spellMatchesChoice(spell, activePickerChoice, maxSlotLevel)).map((spell) => {
                 const values = draft.resolvedChoices[activePickerChoice.id] ?? [];
                 const selected = values.includes(spell.id);
+                const disabledReason = activeChoiceUnavailable[spell.id];
                 return (
                   <div key={spell.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
                     <button
                       type="button"
                       className="m-wizard-option-select"
+                      disabled={!!disabledReason && !selected}
+                      title={disabledReason}
                       onClick={() => {
+                        if (disabledReason && !selected) return;
                         const nextValues = selected
                           ? values.filter((value) => value !== spell.id)
                           : values.length >= activePickerChoice.count
@@ -948,12 +994,16 @@ export default function MobileCharacterWizard() {
                 .map((feat) => {
                   const values = draft.resolvedChoices[activePickerChoice.id] ?? [];
                   const selected = values.includes(feat.id);
+                  const disabledReason = activeChoiceUnavailable[feat.id];
                   return (
                     <div key={feat.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
                       <button
                         type="button"
                         className="m-wizard-option-select"
+                        disabled={!!disabledReason && !selected}
+                        title={disabledReason}
                         onClick={() => {
+                          if (disabledReason && !selected) return;
                           const nextValues = selected
                             ? values.filter((value) => value !== feat.id)
                             : values.length >= activePickerChoice.count
@@ -982,13 +1032,15 @@ export default function MobileCharacterWizard() {
             </div>
           )}
 
-          {picker.kind === 'mechanic' && activePickerChoice?.source !== 'spell'
-            && activePickerChoice?.source !== 'feat' && activePickerChoice && (
+          {picker.kind === 'mechanic' && activePickerChoice
+            && !isSpellSelectionChoice(activePickerChoice)
+            && activePickerChoice.source !== 'feat' && (
             <div className="m-wizard-choice-resolver">
               <ChoiceResolver
                 choice={activePickerChoice}
                 value={draft.resolvedChoices[activePickerChoice.id] ?? []}
                 onChange={(values) => setResolved(activePickerChoice.id, values)}
+                unavailableOptions={activeChoiceUnavailable}
                 feats={feats}
               />
             </div>

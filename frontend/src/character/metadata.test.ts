@@ -26,6 +26,7 @@ function characterFixture(overrides: Partial<ForgeCharacter> = {}): ForgeCharact
     created_at: '',
     updated_at: '',
     ...overrides,
+    access_mode: overrides.access_mode ?? 'owner',
   };
 }
 

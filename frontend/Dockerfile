@@ -10,14 +10,18 @@ RUN npm config set cache /tmp/.npm && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retries 3
 
-RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+RUN if [ -f package-lock.json ]; then npm ci --include=dev --no-audit --no-fund; else npm install --include=dev --no-audit --no-fund; fi
 
 COPY . .
 
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
-RUN npx vite build
+# Keep the deployment boundary identical to the local/CI production gate.
+# `npm run build` runs TypeScript before Vite, so Railway cannot publish a
+# bundle whose transpilation succeeds while the checked application contract
+# is already type-invalid.
+RUN npm run build
 
 # Этап 2: nginx раздаёт статику
 FROM nginx:alpine

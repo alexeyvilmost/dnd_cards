@@ -1,6 +1,13 @@
 import type { AssembledCharacter } from './assemble';
-import { actionUsesKey, applyActionUsesCost, usesFromMechanics } from '../engine/actionUses';
-import { applyItemConsumeCost } from '../engine/cost';
+import {
+  actionUsesKey,
+  bindActionUsesCost,
+  declaresSelfUsesCost,
+  resolveActionUsesRecovery,
+  usesFromMechanics,
+} from '../engine/actionUses';
+import { bindSelfItemCost } from '../engine/cost';
+import type { ResourceRestRecovery } from '../mvp/contracts';
 import type { Action, Card, PassiveEffect, Spell } from '../types';
 
 type Dict = Record<string, unknown>;
@@ -20,7 +27,17 @@ export type SheetAction = {
   actionRef?: Action;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
+  /** Immutable content provenance used by the canonical rules bridge. */
+  sourceEntityIds?: readonly [string, ...string[]];
 };
+
+function stableSources(...values: Array<string | null | undefined>): [string, ...string[]] {
+  const ids = [...new Set(values.filter((value): value is string => (
+    typeof value === 'string' && value.trim().length > 0
+  )))];
+  if (!ids.length) throw new Error('Sheet action must have immutable source provenance');
+  return ids as [string, ...string[]];
+}
 
 /** uses_<key> для действия с mechanics.uses; undefined — без ограничения использований. */
 function actionUsesRef(action: Action): string | undefined {
@@ -35,20 +52,17 @@ function effectUsesRef(effect: PassiveEffect): string | undefined {
 
 function normalizeActiveMechanics(
   mech: Record<string, unknown>,
-  fallbackResource?: string,
   usesKey?: string,
-): Record<string, unknown> {
+): Record<string, unknown> | null {
   const activation = { ...(mech.activation as Record<string, unknown> | undefined) };
   if (activation.mode !== 'active') return mech;
-  // mechanics.uses → трата виртуального пула uses_<key> (canPay/pay из коробки).
-  let next: Dict = { ...mech, activation };
-  if (usesKey) next = applyActionUsesCost(next, usesKey);
-  const nextActivation = next.activation as Record<string, unknown>;
-  const cost = nextActivation.cost as unknown[] | undefined;
-  if (!Array.isArray(cost) || !cost.length) {
-    nextActivation.cost = [{ resource: fallbackResource || 'action' }];
-  }
-  return next;
+  // Цена — только из mechanics.activation.cost. Даже action.resource и
+  // mechanics.uses не являются вторым источником экономики действия.
+  if (!Array.isArray(activation.cost)) return null;
+  const hasUses = usesFromMechanics(mech) !== null;
+  if (hasUses !== declaresSelfUsesCost(mech)) return null;
+  if (hasUses && !usesKey) return null;
+  return usesKey ? bindActionUsesCost({ ...mech, activation }, usesKey) : { ...mech, activation };
 }
 
 function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> | null {
@@ -56,25 +70,18 @@ function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> |
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(mech as Record<string, unknown>, 'action', effectUsesRef(effect));
+  return normalizeActiveMechanics(mech as Record<string, unknown>, effectUsesRef(effect));
 }
 
 function actionMechanics(action: Action, withUses = true): Record<string, unknown> | null {
   const mech = action.mechanics;
-  if (!mech || typeof mech !== 'object') {
-    if (!action.resource) return null;
-    return {
-      name: action.name,
-      activation: { mode: 'active', cost: [{ resource: action.resource }] },
-      effects: [{
-        resolution: 'auto',
-        result: [{ kind: 'narrative', description: action.description || action.name }],
-      }],
-    };
-  }
+  if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(mech as Record<string, unknown>, action.resource, withUses ? actionUsesRef(action) : undefined);
+  return normalizeActiveMechanics(
+    mech as Record<string, unknown>,
+    withUses ? actionUsesRef(action) : undefined,
+  );
 }
 
 function spellMechanics(spell: Spell): Record<string, unknown> | null {
@@ -82,6 +89,7 @@ function spellMechanics(spell: Spell): Record<string, unknown> | null {
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (!activation || activation.mode === 'passive') return null;
+  if (!Array.isArray(activation.cost)) return null;
   return mech as Record<string, unknown>;
 }
 
@@ -132,7 +140,7 @@ export interface GrantedAction { action: Action; sourceLabel: string; group: She
 
 /**
  * S2 контейнеры: действие «Распаковать» для контейнера mode='all' (Набор артиста) — кладёт ВСЁ
- * содержимое в инвентарь (add_item ×N из card.contents) и расходует сам контейнер (consumes_self).
+ * содержимое в инвентарь (add_item ×N из card.contents) и расходует сам контейнер явной item-cost.
  * Режим и состав — ДАННЫЕ карты (container_mode+contents), поведение не хардкодится. Cycle-guard:
  * пропускаем само-ссылку (дата-баг). mode='choice' здесь → null (одноразовый выбор — отдельный слайс).
  */
@@ -147,12 +155,11 @@ export function containerUnpackAction(card: Card, nameOf?: (id: string) => strin
       return { kind: 'add_item', card_id: c.card_id, qty: Math.max(1, Math.floor(Number(c.quantity)) || 1), ...(nm ? { name: nm } : {}) };
     });
   if (!result.length) return null;
-  // consumes_self впрыскивает cost {resource:'item', card_id:self} → расход самого набора при использовании.
-  const mechanics = applyItemConsumeCost({
+  const mechanics = {
     name: card.name,
-    activation: { mode: 'active', consumes_self: true, cost: [] },
+    activation: { mode: 'active', cost: [{ resource: 'item', card_id: card.id, amount: 1 }] },
     effects: [{ resolution: 'auto', result }],
-  }, card.id);
+  };
   return {
     id: `container-${card.id}`,
     name: `Распаковать: ${card.name}`,
@@ -160,13 +167,14 @@ export function containerUnpackAction(card: Card, nameOf?: (id: string) => strin
     group: 'item',
     imageUrl: card.image_url,
     sourceLabel: card.name,
+    sourceEntityIds: stableSources(card.id, card.card_number),
   };
 }
 
 /**
  * S3 контейнеры: действие «Достать» для контейнера mode='choice' (Мешок инструментов) — диалог выбора
  * ОДНОГО предмета из содержимого (choice source:'item', context:'in_play' — тот же примитив, что выбор
- * «Сглаза»); выбранный → в инвентарь (add_item), сам мешок расходуется (consumes_self, одноразовый).
+ * «Сглаза»); выбранный → в инвентарь (add_item), сам мешок расходуется явной item-cost.
  * Общее решение: выбор предмета обрабатывается source:'item' в selectedChoicePayloads, не спец-логикой.
  * Cycle-guard само-ссылки; qty из quantity содержимого.
  */
@@ -177,14 +185,14 @@ export function containerChoiceAction(card: Card, nameOf?: (id: string) => strin
     .filter((c) => c && c.card_id && c.card_id !== card.id)
     .map((c) => ({ id: c.card_id, name: nameOf?.(c.card_id) ?? c.card_id, qty: Math.max(1, Math.floor(Number(c.quantity)) || 1) }));
   if (!items.length) return null;
-  const mechanics = applyItemConsumeCost({
+  const mechanics = {
     name: card.name,
-    activation: { mode: 'active', consumes_self: true, cost: [] },
+    activation: { mode: 'active', cost: [{ resource: 'item', card_id: card.id, amount: 1 }] },
     effects: [{
       resolution: 'auto',
       result: [{ kind: 'choice', context: 'in_play', id: 'container', prompt: `Выберите предмет: ${card.name}`, count: 1, options: { source: 'item', items } }],
     }],
-  }, card.id);
+  };
   return {
     id: `container-${card.id}`,
     name: `Достать: ${card.name}`,
@@ -192,6 +200,7 @@ export function containerChoiceAction(card: Card, nameOf?: (id: string) => strin
     group: 'item',
     imageUrl: card.image_url,
     sourceLabel: card.name,
+    sourceEntityIds: stableSources(card.id, card.card_number),
   };
 }
 
@@ -221,6 +230,7 @@ export function collectSheetActions(
         description: action.description,
         usesKey: actionUsesRef(action),
         actionRef: action,
+        sourceEntityIds: stableSources(action.id, action.card_number),
       };
     })
     .filter((a): a is SheetAction => a != null);
@@ -238,12 +248,16 @@ export function collectSheetActions(
         sourceLabel: `${origin.name}`,
         usesKey: actionUsesRef(action),
         actionRef: action,
+        sourceEntityIds: stableSources(action.id, action.card_number, origin.id),
       };
     })
     .filter((a): a is SheetAction => a != null);
 
-  const fromRace: SheetAction[] = assembled.effects
-    .filter(({ origin }) => origin.kind === 'race')
+  // Active effects are actions regardless of their source. Historically the
+  // real sheet promoted only species effects, which made active class/feat
+  // mechanics (including Pact Blade) disappear even though the compiler and
+  // Rules Lab could execute them.
+  const fromEffects: SheetAction[] = assembled.effects
     .map(({ effect, origin }): SheetAction | null => {
       const mechanics = effectActiveMechanics(effect);
       if (!mechanics) return null;
@@ -251,11 +265,12 @@ export function collectSheetActions(
         id: effect.id,
         name: effect.name,
         mechanics: { ...mechanics, name: effect.name },
-        group: 'race' as const,
+        group: origin.kind === 'race' ? 'race' as const : 'class' as const,
         imageUrl: effect.image_url,
         sourceLabel: `${origin.name}`,
         usesKey: effectUsesRef(effect),
         effectRef: effect,
+        sourceEntityIds: stableSources(effect.id, effect.card_number, origin.id),
       };
     })
     .filter((a): a is SheetAction => a != null);
@@ -273,6 +288,12 @@ export function collectSheetActions(
         imageUrl: spell.image_url,
         sourceLabel: spell.school ? `Заклинание · ${spell.school}` : 'Заклинание',
         spellRef: spell,
+        sourceEntityIds: stableSources(
+          spell.id,
+          spell.card_number,
+          assembled.klass?.id,
+          assembled.klass?.card_number,
+        ),
       };
     })
     .filter((a): a is SheetAction => a != null);
@@ -281,9 +302,10 @@ export function collectSheetActions(
     .map(({ card, mechanics }): SheetAction | null => {
       const activation = mechanics.activation as Record<string, unknown> | undefined;
       if (!activation || activation.mode === 'passive') return null;
-      // S4: саморасходуемый предмет (зелье) тратит себя из инвентаря при использовании
-      // (consumes_self → cost {resource:'item', card_id:self}; canPay/pay из коробки).
-      const mechanics2 = applyItemConsumeCost({ ...mechanics, name: card.name }, card.id);
+      // Экономика предмета так же обязана быть объявлена данными. Legacy
+      // consumes_self больше не превращается здесь в скрытую стоимость.
+      if (!Array.isArray(activation.cost)) return null;
+      const mechanics2 = bindSelfItemCost({ ...mechanics, name: card.name }, card.id);
       return {
         id: `item-${card.id}`,
         name: card.name,
@@ -291,6 +313,7 @@ export function collectSheetActions(
         group: 'item' as const,
         imageUrl: card.image_url,
         sourceLabel: 'Предмет',
+        sourceEntityIds: stableSources(card.id, card.card_number),
       };
     })
     .filter((a): a is SheetAction => a != null);
@@ -299,10 +322,9 @@ export function collectSheetActions(
   // (activation) и поведение — здесь только оборачиваем в строку листа с источником.
   const fromGranted: SheetAction[] = grantedActions
     .map(({ action, sourceLabel, group }): SheetAction | null => {
-      // withUses=false: пул использований выданных действий пока НЕ сидируется (грант резолвится на
-      // рендере, а не на init/rest), поэтому не гейтим по uses — иначе действие с mechanics.uses было
-      // бы навсегда недоступно. Экономика действия (bonus_action и т.п.) сохраняется. Полноценный uses
-      // для грантов (сид+перезарядка) — отдельная задача.
+      // withUses=false: grant_action пока не материализует uses-пул в init/rest.
+      // Limited granted actions therefore fail closed (actionMechanics returns
+      // null) instead of silently becoming unlimited.
       const mechanics = actionMechanics(action, false);
       if (!mechanics) return null;
       return {
@@ -313,6 +335,7 @@ export function collectSheetActions(
         imageUrl: action.image_url,
         sourceLabel,
         actionRef: action,
+        sourceEntityIds: stableSources(action.id, action.card_number),
       };
     })
     .filter((a): a is SheetAction => a != null);
@@ -322,10 +345,17 @@ export function collectSheetActions(
     .map((c) => (c.container_mode === 'choice' ? containerChoiceAction(c, nameOf) : containerUnpackAction(c, nameOf)))
     .filter((a): a is SheetAction => a != null);
 
-  return [...basic, ...fromRace, ...fromClass, ...fromItems, ...fromGranted, ...fromContainers, ...spells];
+  return [...basic, ...fromEffects, ...fromClass, ...fromItems, ...fromGranted, ...fromContainers, ...spells];
 }
 
-export type ActionUsesPool = { key: string; count: number | string; per?: string; source: string };
+export type ActionUsesPool = {
+  key: string;
+  count: number | string;
+  per?: string;
+  source: string;
+  /** undefined = legacy uses.per; null = explicit invalid recovery (fail closed). */
+  recovery?: ResourceRestRecovery | null;
+};
 
 function isActiveMech(mech: unknown): boolean {
   if (!mech || typeof mech !== 'object') return false;
@@ -344,13 +374,21 @@ export function collectActionUsesPools(assembled: AssembledCharacter): ActionUse
     const uses = usesFromMechanics(mech as Dict | null | undefined);
     if (!key || !uses || seen.has(key)) return;
     seen.add(key);
-    out.push({ key, count: uses.count, per: uses.per, source });
+    const recovery = resolveActionUsesRecovery(mech as Dict | null | undefined);
+    out.push({
+      key,
+      count: uses.count,
+      per: uses.per,
+      source,
+      ...(recovery.status === 'configured' ? { recovery: recovery.recovery } : {}),
+      ...(recovery.status === 'invalid' ? { recovery: null } : {}),
+    });
   };
   for (const { action, origin } of assembled.actions) {
     if (isActiveMech(action.mechanics)) push(actionUsesRef(action), action.mechanics, `${action.name} · ${origin.name}`);
   }
   for (const { effect, origin } of assembled.effects) {
-    if (origin.kind !== 'race' || !isActiveMech(effect.mechanics)) continue;
+    if (!isActiveMech(effect.mechanics)) continue;
     push(effectUsesRef(effect), effect.mechanics, `${effect.name} · ${origin.name}`);
   }
   return out;
@@ -360,7 +398,30 @@ export function collectActionUsesPools(assembled: AssembledCharacter): ActionUse
 export function collectActionUsesRecharge(assembled: AssembledCharacter): Record<string, string> {
   const out: Record<string, string> = {};
   for (const pool of collectActionUsesPools(assembled)) {
-    if (pool.per) out[pool.key] = pool.per;
+    if (pool.recovery === null) {
+      out[pool.key] = 'never';
+    } else if (pool.recovery?.short_rest) {
+      out[pool.key] = 'short_rest';
+    } else if (pool.per) {
+      out[pool.key] = pool.per;
+    }
+  }
+  return out;
+}
+
+/**
+ * Recovery-политики виртуальных uses-пулов, напрямую декодированные из mechanics.
+ * null сохраняется намеренно: это запрет восстановления для невалидного explicit
+ * declaration, а не повод откатиться к legacy full-pool recharge.
+ */
+export function collectActionUsesRecovery(
+  assembled: AssembledCharacter,
+): Record<string, ResourceRestRecovery | null> {
+  const out: Record<string, ResourceRestRecovery | null> = {};
+  for (const pool of collectActionUsesPools(assembled)) {
+    if (Object.prototype.hasOwnProperty.call(pool, 'recovery')) {
+      out[pool.key] = pool.recovery ?? null;
+    }
   }
   return out;
 }

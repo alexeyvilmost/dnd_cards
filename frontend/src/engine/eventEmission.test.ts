@@ -30,7 +30,7 @@ const narratives = (events: EngineEvent[]) => events.filter((e) => e.type === 'n
 
 const attackAction: Dict = {
   name: 'Атака', activation: { cost: [] },
-  effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'weapon', ability: 'none' }] }],
+  effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'bludgeoning', ability: 'none' }] }],
 };
 const castAction: Dict = {
   name: 'Огненный снаряд', activation: { cost: [] },

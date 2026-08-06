@@ -4,6 +4,66 @@ import type { Card } from '../types';
 import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
 
+export const RULES_ENGINE_RUNTIME_TURN_STATE_KEY = 'rules_engine_runtime_v1' as const;
+export const RULES_ENGINE_RUNTIME_TURN_STATE_VERSION = 1 as const;
+
+type RulesEngineRuntimeTurnState = {
+  schemaVersion: typeof RULES_ENGINE_RUNTIME_TURN_STATE_VERSION;
+  firedThisTurn: string[];
+  firedThisRest: string[];
+};
+
+function engineLedger(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)
+    || value.some((entry) => typeof entry !== 'string' || !entry.trim())) {
+    throw new Error(`${label} must be an array of non-empty rule identities`);
+  }
+  return [...new Set(value)];
+}
+
+function readRulesEngineRuntimeTurnState(
+  turnState: Record<string, unknown> | null | undefined,
+): RulesEngineRuntimeTurnState {
+  const raw = turnState?.[RULES_ENGINE_RUNTIME_TURN_STATE_KEY];
+  if (raw === undefined) {
+    return {
+      schemaVersion: RULES_ENGINE_RUNTIME_TURN_STATE_VERSION,
+      firedThisTurn: [],
+      firedThisRest: [],
+    };
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('Persisted rules-engine runtime envelope must be an object');
+  }
+  const envelope = raw as Record<string, unknown>;
+  if (envelope.schemaVersion !== RULES_ENGINE_RUNTIME_TURN_STATE_VERSION) {
+    throw new Error('Persisted rules-engine runtime envelope has an unsupported version');
+  }
+  return {
+    schemaVersion: RULES_ENGINE_RUNTIME_TURN_STATE_VERSION,
+    firedThisTurn: engineLedger(envelope.firedThisTurn, 'firedThisTurn'),
+    firedThisRest: engineLedger(envelope.firedThisRest, 'firedThisRest'),
+  };
+}
+
+/** Persist the trigger/mastery usage ledgers together with ordinary turn state. */
+export function writeRulesEngineRuntimeTurnState(
+  turnState: Record<string, unknown> | null | undefined,
+  state: Pick<RuntimeState, 'hp' | 'firedThisTurn' | 'firedThisRest'>,
+  additions: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    ...(turnState ?? {}),
+    ...additions,
+    temp_hp: state.hp.temp,
+    [RULES_ENGINE_RUNTIME_TURN_STATE_KEY]: {
+      schemaVersion: RULES_ENGINE_RUNTIME_TURN_STATE_VERSION,
+      firedThisTurn: [...new Set(state.firedThisTurn ?? [])],
+      firedThisRest: [...new Set(state.firedThisRest ?? [])],
+    },
+  };
+}
+
 /** Синхронизирует max HP в runtime с расчётным значением правил. */
 export function alignRuntimeHp(state: RuntimeState, computedMax: number): RuntimeState {
   if (computedMax <= 0) return state;
@@ -23,6 +83,7 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
     qty: row.qty,
     ...(row.container_id ? { containerId: row.container_id } : {}),
   }));
+  const engineRuntime = readRulesEngineRuntimeTurnState(c.turn_state);
   return {
     hp: {
       current: c.current_hp ?? 0,
@@ -34,6 +95,8 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
     equipment: { ...(c.equipment ?? {}) },
     inventory: inv,
     activeEffects: parseActiveEffects(c.active_effects),
+    firedThisTurn: engineRuntime.firedThisTurn,
+    firedThisRest: engineRuntime.firedThisRest,
   };
 }
 
@@ -50,6 +113,10 @@ function parseActiveEffects(raw: unknown): RuntimeState['activeEffects'] {
  */
 export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
   const rs = c.rule_state as CharacterRuleState | undefined;
+  const armorClass = rs ? rs.armorClass : c.armor_class;
+  if (typeof armorClass !== 'number' || !Number.isFinite(armorClass) || armorClass <= 0) {
+    throw new Error('Character target requires an explicit positive finite Armor Class');
+  }
   const characterContext: CharacterContext | undefined = rs ? {
     abilityScores: rs.abilities,
     abilityMods: rs.abilityMods,
@@ -59,13 +126,16 @@ export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
     saveProficiencies: rs.proficiencies?.savingThrows,
     skillProficiencies: rs.proficiencies?.skills,
     skillExpertise: rs.expertise?.skills,
+    ...(rs.proficiencies?.weapons
+      ? { weaponProficiencies: [...rs.proficiencies.weapons] }
+      : {}),
     spellcastingMod: rs.spellcasting
       ? rs.abilityMods[rs.spellcasting.ability]
       : undefined,
     spellcastingAbility: rs.spellcasting?.ability,
   } : undefined;
   return {
-    ac: rs?.armorClass ?? c.armor_class ?? 10,
+    ac: armorClass,
     checkMods: rs?.skillBonuses,          // для состязаний (Толчок/Подножка): навыки цели
     characterContext,
     runtimeState: forgeToRuntimeState(c),
@@ -113,6 +183,7 @@ export function buildCharacterContext(
     saveProficiencies: ruleState.proficiencies.savingThrows,
     skillProficiencies: ruleState.proficiencies.skills,
     skillExpertise: ruleState.expertise.skills,
+    weaponProficiencies: [...ruleState.proficiencies.weapons],
   };
 }
 

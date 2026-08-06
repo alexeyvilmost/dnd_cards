@@ -3,6 +3,8 @@
  * Чистый TS — без React.
  */
 
+import { drawDie } from './random';
+
 export type FormulaMarker = 'weapon' | 'auto';
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
@@ -200,7 +202,7 @@ function rollDice(count: number, sides: number, sink: EvalSink): number {
   let sum = 0;
   const n = Math.max(0, Math.floor(count));
   for (let i = 0; i < n; i++) {
-    const result = Math.floor(sink.rng() * sides) + 1;
+    const result = drawDie(sink.rng, sides);
     if (sink.detailed) sink.dice.push({ sides, result });
     sum += result;
   }

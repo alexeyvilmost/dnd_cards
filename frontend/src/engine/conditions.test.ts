@@ -9,8 +9,13 @@ import {
 } from './conditions';
 
 describe('conditions registry (data-driven, scoped)', () => {
-  it('встроенные 13 состояний доступны как сид', () => {
-    expect(Object.keys(BUILTIN_CONDITION_RULES)).toHaveLength(13);
+  it('все 15 состояний PHB 2024 доступны как offline-сид', () => {
+    expect(Object.keys(BUILTIN_CONDITION_RULES)).toHaveLength(15);
+    expect(Object.keys(BUILTIN_CONDITION_RULES).sort()).toEqual([
+      'blinded', 'charmed', 'deafened', 'exhaustion', 'frightened',
+      'grappled', 'incapacitated', 'invisible', 'paralyzed', 'petrified',
+      'poisoned', 'prone', 'restrained', 'stunned', 'unconscious',
+    ]);
     expect(conditionLabel('prone')).toBe('Распластан');
     expect(conditionRule('unknown-xyz')).toBeNull();
   });

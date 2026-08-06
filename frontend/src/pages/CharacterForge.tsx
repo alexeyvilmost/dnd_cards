@@ -4,21 +4,32 @@ import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, 
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
-import { charactersV3Api } from '../character/api';
+import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
+import { projectStartingEquipmentPatch } from '../character/startingEquipment';
+import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveCharacter';
 import { maxAvailableSpellSlotLevel, resolveByLevel } from '../engine/resources';
 import { useResourceOptions } from '../utils/resources';
 import { resourceView } from '../utils/eventDisplay';
 import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
-import { emptyDraft, ABILITY_KEYS, type AbilityBonuses, type CharacterDraft, type AbilityKey } from '../character/types';
+import {
+  emptyDraft,
+  ABILITY_KEYS,
+  isCharacterReadOnly,
+  type AbilityBonuses,
+  type CharacterDraft,
+  type AbilityKey,
+  type ForgeCharacter,
+} from '../character/types';
 import { bonusOf, reapplyBonuses, reconcileBonusesForBackground } from '../character/pointBuy';
 import { computeMaxHP } from '../character/derive';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, requiredChoiceIssues, resolveLineageName } from '../character/forgeHelpers';
+import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
-import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, useAutoRecommendedChoices, type ForgeSectionDef } from '../character/components';
+import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, optionsForChoice, useAutoRecommendedChoices, type ForgeSectionDef } from '../character/components';
 import { useIsMobile } from '../hooks/useIsMobile';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
@@ -39,7 +50,7 @@ import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { spellMatchesChoice } from '../character/spellChoices';
 import { isEntityUuid } from '../engine/ids';
-import type { PendingChoice } from '../mechanics/collectChoices';
+import { isSpellSelectionChoice, type PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { FormattedText } from '../utils/formattedText';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
@@ -77,7 +88,10 @@ const CharacterForge = () => {
 
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
   const [restorable, setRestorable] = useState<CharacterDraft | null>(null);
-  const [bundle, setBundle] = useState<EntityBundle | null>(null);
+  const [loadedBundle, setLoadedBundle] = useState<{
+    refsKey: string;
+    value: EntityBundle;
+  } | null>(null);
   const [active, setActive] = useState('race');
   const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
@@ -199,6 +213,13 @@ const CharacterForge = () => {
     (async () => {
       try {
         const c = await charactersV3Api.get(editId);
+        if (isCharacterReadOnly(c)) {
+          navigate(`/characters-v3/${c.id}`, {
+            replace: true,
+            state: { notice: 'Архивный публичный лист доступен только для чтения.' },
+          });
+          return;
+        }
         savedSkillsRef.current = c.skill_proficiencies || [];
         savedHpRef.current = c.current_hp ?? null;
         restoredClassSkillsRef.current = false;
@@ -212,21 +233,27 @@ const CharacterForge = () => {
         setDraft(d);
       } catch (e) {
         console.error(e);
-        setError('Не удалось загрузить персонажа');
+        setError(characterV3ErrorMessage(e, 'Не удалось загрузить персонажа'));
       }
     })();
 
-  }, [editId]);
+  }, [editId, navigate]);
 
   // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний).
   // resolvedChoices включён, т.к. выбор в choice(source:effect) меняет набор
   // разворачиваемых эффектов-бусин; резолв эффектов кэшируется в реестре.
   const refsKey = `${draft.raceId}|${draft.lineageId}|${draft.classId}|${draft.subclassId}|${draft.backgroundId}|${draft.level}|${draft.featIds.join(',')}|${JSON.stringify(draft.resolvedChoices)}`;
+  // The reference key changes during render, before the loading effect runs;
+  // this comparison therefore closes the one-frame stale-bundle save window.
+  const bundle = loadedBundle?.refsKey === refsKey ? loadedBundle.value : null;
   useEffect(() => {
     let stale = false;
+    // Never expose a save action against a bundle assembled for the previous
+    // set of entity references.
+    setLoadedBundle(null);
     (async () => {
       const b = await loadBundle(draft);
-      if (!stale) setBundle(b);
+      if (!stale) setLoadedBundle({ refsKey, value: b });
     })();
     return () => { stale = true; };
 
@@ -265,7 +292,9 @@ const CharacterForge = () => {
     () => formulaCtxFromCharacter(buildCharacterContext(ruleState, draft, [], assembled.klass)),
     [ruleState, draft, assembled.klass],
   );
-  const spellChoices = assembled.pendingChoices.filter((pc) => pc.source === 'spell' && pc.context !== 'in_play');
+  const spellChoices = assembled.pendingChoices.filter((pc) => (
+    isSpellSelectionChoice(pc) && pc.context !== 'in_play'
+  ));
   // Максимальный доступный круг ячеек (для choice-фильтра only_available_slots): считаем max-пулы
   // персонажа и берём наибольший spell_slot_N/warlock_slot. Нативно даёт колдунам их пактовый круг.
   const maxSlotLevel = useMemo(
@@ -468,21 +497,25 @@ const CharacterForge = () => {
   }, [levelUp, draft.classId, draft.raceId]);
 
   const issues = completionIssues(draft, assembled);
-  const canCreate = issues.length === 0;
+  const canCreate = bundle !== null && issues.length === 0;
 
   const save = async () => {
     setSaving(true); setError(null);
     try {
       const isCreate = !draft.id;
       const payload = buildSavePayload(draft, assembled, ruleState, savedHpRef.current ?? undefined);
-      const res = draft.id
-        ? await charactersV3Api.update(draft.id, payload)
-        : await charactersV3Api.create(payload);
       const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
-      const runtimePatch = buildResourceRuntimePatch(res, ctx, assembled, true, undefined, ruleState.freeuseSpells) ?? {};
-      // Стартовое снаряжение и деньги предыстории и класса — только при создании,
-      // чтобы не перезаписать инвентарь существующего персонажа.
+      let res: ForgeCharacter;
       if (isCreate) {
+        let runtimePatch = buildResourceRuntimePatch(
+          runtimeSeedFromSavePayload(payload),
+          ctx,
+          assembled,
+          true,
+          undefined,
+          ruleState.freeuseSpells,
+        ) ?? {};
+        // Стартовое снаряжение и деньги входят в тот же POST, что и персонаж.
         const bgOptions = assembled.background?.equipment_options as
           | Record<'option_a' | 'option_b', { items?: Array<{ card_id: string; quantity?: number }>; gold?: number }>
           | null | undefined;
@@ -492,18 +525,24 @@ const CharacterForge = () => {
           : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
         // Устаревший выбор (вариант удалили из класса) — падаем на вариант А.
         const clOpt = clOptions?.[clKey] ?? clOptions?.option_a;
-        // Слияние предметов обоих источников (одинаковые card_id — суммируем).
-        const qtyById = new Map<string, number>();
-        for (const it of [...(bgOpt?.items || []), ...(clOpt?.items || [])]) {
-          qtyById.set(it.card_id, (qtyById.get(it.card_id) || 0) + (it.quantity ?? 1));
-        }
-        if (qtyById.size) {
-          runtimePatch.inventory_items = [...qtyById].map(([card_id, qty]) => ({ card_id, qty }));
-        }
-        const gold = (bgOpt?.gold || 0) + (clOpt?.gold || 0);
-        if (gold) runtimePatch.currency = { gold };
+        runtimePatch = projectStartingEquipmentPatch(runtimePatch, bgOpt, clOpt);
+        res = await saveCharacter(charactersV3Api, {
+          mode: 'create',
+          payload,
+          initialRuntime: runtimePatch,
+        });
+      } else {
+        res = await charactersV3Api.update(draft.id!, payload);
+        const runtimePatch = buildResourceRuntimePatch(
+          res,
+          ctx,
+          assembled,
+          true,
+          undefined,
+          ruleState.freeuseSpells,
+        );
+        if (runtimePatch) res = await charactersV3Api.patchRuntime(res.id, runtimePatch);
       }
-      if (Object.keys(runtimePatch).length) await charactersV3Api.patchRuntime(res.id, runtimePatch);
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id }));
       // Последующие сохранения в этой же сессии тоже не должны лечить (E3).
@@ -514,7 +553,7 @@ const CharacterForge = () => {
       if (isCreate) navigate(`/characters-v3/${res.id}`, { replace: true });
     } catch (e) {
       console.error(e);
-      setError('Ошибка сохранения персонажа');
+      setError(characterV3ErrorMessage(e, 'Ошибка сохранения персонажа'));
     } finally {
       setSaving(false);
     }
@@ -523,10 +562,10 @@ const CharacterForge = () => {
   // Выборы по источникам / типам. context:'in_play' исключаем — они разрешаются на ЛИСТЕ
   // во время игры (слайс 5), кузню не касаются.
   const buildChoices = assembled.pendingChoices.filter((pc) => pc.context !== 'in_play');
-  const raceChoices = buildChoices.filter((pc) => pc.origin.kind === 'race' && pc.source !== 'spell');
+  const raceChoices = buildChoices.filter((pc) => pc.origin.kind === 'race' && !isSpellSelectionChoice(pc));
   const raceOtherChoices = raceChoices.filter((pc) => pc.source !== 'subfeature');
   const raceSubChoices = raceChoices.filter((pc) => pc.source === 'subfeature');
-  const classChoices = buildChoices.filter((pc) => pc.origin.kind === 'class' && pc.source !== 'spell');
+  const classChoices = buildChoices.filter((pc) => pc.origin.kind === 'class' && !isSpellSelectionChoice(pc));
   const classOtherChoices = classChoices.filter((pc) => pc.source !== 'subfeature');
   const classSubChoices = classChoices.filter((pc) => pc.source === 'subfeature');
   const featChoices = buildChoices.filter((pc) => pc.source === 'feat');
@@ -534,7 +573,7 @@ const CharacterForge = () => {
   // выбор самой черты и НЕ заклинания). Раньше не попадали ни в одну вкладку → «Одарённый»
   // молча не предлагал 3 навыка, ASI не предлагал характеристику. Теперь живут во вкладке черт.
   const featOwnChoices = buildChoices.filter(
-    (pc) => pc.origin.kind === 'feat' && pc.source !== 'feat' && pc.source !== 'spell',
+    (pc) => pc.origin.kind === 'feat' && pc.source !== 'feat' && !isSpellSelectionChoice(pc),
   );
 
   // Подвиды — отдельные виды-сущности с parent_race_id текущего вида
@@ -634,8 +673,8 @@ const CharacterForge = () => {
     const unresolved = assembled.pendingChoices.filter(
       (pc) => pc.context !== 'in_play' && (draft.resolvedChoices[pc.id] || []).length < pc.count,
     );
-    const unresolvedSpells = unresolved.filter((pc) => pc.source === 'spell');
-    const unresolvedOther = unresolved.filter((pc) => pc.source !== 'spell');
+    const unresolvedSpells = unresolved.filter(isSpellSelectionChoice);
+    const unresolvedOther = unresolved.filter((pc) => !isSpellSelectionChoice(pc));
     // #3: spell-выборы, появившиеся на ЭТОМ уровне (нет в prevRefs), показываем ЦЕЛИКОМ — в т.ч.
     // уже заполненные, чтобы игрок мог переиграть выбор, не уходя «назад». До загрузки prevRefs —
     // fallback на незавершённые (как раньше).
@@ -797,6 +836,7 @@ const CharacterForge = () => {
                   choices={newSpellChoices}
                   ownerChoices={spellChoices}
                   maxSlotLevel={maxSlotLevel}
+                  ruleState={ruleState}
                   resolved={draft.resolvedChoices}
                   setResolved={setResolved}
                 />
@@ -950,7 +990,7 @@ const CharacterForge = () => {
                 <SubclassSection choices={classSubChoices} resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} klass={assembled.klass} allFeats={visibleFeats} />
               )}
               {act === 'spells' && (
-                <SpellsSection spells={visibleSpells} granted={grantedSpells} choices={spellChoices} ownerChoices={spellChoices} maxSlotLevel={maxSlotLevel} resolved={draft.resolvedChoices} setResolved={setResolved} />
+                <SpellsSection spells={visibleSpells} granted={grantedSpells} choices={spellChoices} ownerChoices={spellChoices} maxSlotLevel={maxSlotLevel} ruleState={ruleState} resolved={draft.resolvedChoices} setResolved={setResolved} />
               )}
               {act === 'background' && (
                 <BackgroundSection backgrounds={visibleBackgrounds} draft={draft} onSelect={selectBackground}
@@ -1052,41 +1092,39 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
   ruleState: CharacterRuleState; feats?: Feat[]; activeFeats?: Feat[]; title?: string;
 }) {
   if (!choices.length) return null;
-  // Правило «два эффекта с одним названием не складываются»: неповторяемые черты,
-  // уже действующие на персонажа, недоступны в пикере (повторяемые — остаются).
-  const activeNonRepeatable = new Set((activeFeats || []).filter((f) => !f.repeatable).map((f) => f.name));
   return (
     <div className="forge-block">
       <div className="forge-section-h">{title}</div>
       {choices.map((pc) => {
         const value = resolved[pc.id] || [];
-        // filter:"proficient" (экспертиза) — логика ОБРАТНАЯ: доступны только
-        // навыки, которыми персонаж уже владеет; без владения экспертиза запрещена.
-        const isExpertise = pc.filter === 'proficient';
-        const unavailableOptions = pc.source === 'skill'
-          ? Object.fromEntries(SKILLS.map((skill) => {
-            const existing = getSkillGrantSource(ruleState, skill.id);
-            const unavailable = isExpertise
-              ? !existing && !value.includes(skill.id)
-              : !!existing && !value.includes(skill.id);
-            const reason = isExpertise
-              ? 'Требуется владение навыком'
-              : (existing ? grantReason(existing) : undefined);
-            return [skill.id, unavailable ? reason : undefined];
-          }).filter(([, reason]) => !!reason)) as Record<string, string>
-          // Предел характеристики 2024: уже достигшую 20 нельзя повышать (ASI).
-          : pc.source === 'ability'
+        const optionIds = optionsForChoice(pc, feats).map((option) => option.id);
+        const featByReference = new Map((feats ?? []).flatMap((feat) => (
+          [[feat.id, feat.id], [feat.card_number, feat.id]] as const
+        )));
+        const declarativeUnavailable = unavailableChoiceOptions(
+          pc,
+          ruleState,
+          optionIds,
+          value,
+          {
+            activeFeatIds: new Set((activeFeats ?? []).map((feat) => feat.id)),
+            repeatableFeatIds: new Set((feats ?? []).filter((feat) => feat.repeatable).map((feat) => feat.id)),
+            canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
+          },
+        );
+        // Предел характеристики 2024 не является AppliedGrant: это отдельное
+        // числовое ограничение поверх общей grant-semantics.
+        const sourceUnavailable = pc.source === 'ability'
           ? Object.fromEntries(ABILITIES.map((ab) => {
             const score = ruleState.abilities?.[ab.id as AbilityKey] ?? 0;
             const capped = score >= 20 && !value.includes(ab.id);
             return [ab.id, capped ? 'Максимум 20' : undefined];
           }).filter(([, reason]) => !!reason)) as Record<string, string>
-          // Черты: уже-активные неповторяемые недоступны (dedup по названию).
-          : pc.source === 'feat'
-          ? Object.fromEntries((feats || [])
-            .filter((f) => activeNonRepeatable.has(f.name) && !value.includes(f.id))
-            .map((f) => [f.id, 'Уже получена — черта не повторяется'])) as Record<string, string>
           : undefined;
+        const unavailableOptions = {
+          ...declarativeUnavailable,
+          ...(sourceUnavailable ?? {}),
+        };
         return (
           <ChoiceResolver
             key={pc.id}
@@ -1411,13 +1449,14 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, re
   );
 }
 
-function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 0, resolved, setResolved }: {
+function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 0, ruleState, resolved, setResolved }: {
   spells: Spell[]; granted: Spell[]; choices: PendingChoice[];
   // Полный набор spell-выборов для дедупа (по умолчанию = отображаемые choices). На уровень-апе
   // сюда передаётся ВЕСЬ набор spell-выборов (включая решённые на прошлых уровнях), а choices —
   // лишь незавершённые; так уже известные заклинания исключаются из выбора, как в кузне.
   ownerChoices?: PendingChoice[];
   maxSlotLevel?: number; // для choice-фильтра only_available_slots
+  ruleState: CharacterRuleState;
   resolved: Record<string, string[]>; setResolved: (id: string, v: string[]) => void;
 }) {
   const { entityDisplay } = useSiteSettings();
@@ -1425,6 +1464,13 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
   const [search, setSearch] = useState('');
   const [hovered, setHovered] = useState<Spell | null>(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const spellByReference = useMemo(() => new Map(spells.flatMap((spell) => (
+    [[spell.id, spell.id], [spell.card_number, spell.id]] as const
+  ))), [spells]);
+  const canonicalSpellId = useCallback(
+    (reference: string) => spellByReference.get(reference) ?? reference,
+    [spellByReference],
+  );
 
   const grantedFiltered = useMemo(
     () => granted.filter((spell) => !search || spell.name.toLowerCase().includes(search.toLowerCase())),
@@ -1436,28 +1482,52 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
     // Автоматически выданные заклинания персонаж уже знает — исключаем из выбора (owner без choiceId
     // текущего выбора → всегда disabled). choiceId '__granted__' не совпадёт ни с одним реальным.
     for (const spell of granted) {
-      if (!owners.has(spell.id)) owners.set(spell.id, { choiceId: '__granted__', label: 'Уже получено' });
+      const canonical = canonicalSpellId(spell.id);
+      if (!owners.has(canonical)) owners.set(canonical, { choiceId: '__granted__', label: 'Уже получено' });
     }
     // Дедуп по ВСЕМ spell-выборам (ownerChoices), а не только отображаемым: на уровень-апе это ловит
     // заклинания, выбранные на прошлых уровнях (их choices уже решены и в choices не попадают).
     for (const choice of ownerChoices ?? choices) {
+      // Preparing a spell does not grant it a second time. The source
+      // spellbook remains the sole owner of the grant/provenance.
+      if (choice.source === 'prepared_spell') continue;
       const origin = [choice.origin.name, choice.origin.featureName].filter(Boolean).join(' · ');
       const label = origin ? `${choice.prompt} (${origin})` : choice.prompt;
-      for (const spellId of resolved[choice.id] || []) {
-        if (!owners.has(spellId)) owners.set(spellId, { choiceId: choice.id, label });
+      for (const reference of resolved[choice.id] || []) {
+        const canonical = canonicalSpellId(reference);
+        if (!owners.has(canonical)) owners.set(canonical, { choiceId: choice.id, label });
       }
     }
     return owners;
-  }, [choices, ownerChoices, granted, resolved]);
+  }, [choices, ownerChoices, granted, resolved, canonicalSpellId]);
 
   const toggleChoiceSpell = (choice: PendingChoice, spellId: string) => {
     const value = resolved[choice.id] || [];
-    if (value.includes(spellId)) { setResolved(choice.id, value.filter((id) => id !== spellId)); return; }
+    const canonicalValue = value.map(canonicalSpellId);
+    if (canonicalValue.includes(spellId)) {
+      setResolved(choice.id, value.filter((reference) => canonicalSpellId(reference) !== spellId));
+      return;
+    }
     const warning = supportSelectionWarning(spells.find((spell) => spell.id === spellId));
     if (warning && !window.confirm(warning)) return;
     const owner = selectedSpellOwners.get(spellId);
-    if (owner && owner.choiceId !== choice.id) return;
-    const next = value.length >= choice.count ? [...value.slice(1), spellId] : [...value, spellId];
+    const ownedByPreparedSource = choice.source === 'prepared_spell'
+      && owner?.choiceId === choice.preparedSpellSourceChoiceId;
+    if (owner && owner.choiceId !== choice.id && !ownedByPreparedSource) return;
+    const optionIds = spells
+      .filter((spell) => spellMatchesChoice(spell, choice, maxSlotLevel))
+      .map((spell) => spell.id);
+    const unavailable = unavailableChoiceOptions(
+      choice,
+      ruleState,
+      optionIds,
+      canonicalValue,
+      { canonicalSpellId },
+    );
+    if (unavailable[spellId]) return;
+    const next = canonicalValue.length >= choice.count
+      ? [...canonicalValue.slice(1), spellId]
+      : [...canonicalValue, spellId];
     setResolved(choice.id, next);
   };
 
@@ -1507,10 +1577,17 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
         <p className="forge-note">Этот персонаж пока не получил заклинаний из эффектов класса, вида или черт.</p>
       )}
       {choices.map((choice) => {
-        const selected = resolved[choice.id] || [];
+        const selected = (resolved[choice.id] || []).map(canonicalSpellId);
         const filtered = spells
           .filter((spell) => spellMatchesChoice(spell, choice, maxSlotLevel))
           .filter((spell) => !search || spell.name.toLowerCase().includes(search.toLowerCase()));
+        const unavailable = unavailableChoiceOptions(
+          choice,
+          ruleState,
+          spells.filter((spell) => spellMatchesChoice(spell, choice, maxSlotLevel)).map((spell) => spell.id),
+          selected,
+          { canonicalSpellId },
+        );
         const done = selected.length >= choice.count;
         return (
           <div className="forge-block" key={choice.id}>
@@ -1520,8 +1597,14 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
               {filtered.map((spell) => {
                 const isSelected = selected.includes(spell.id);
                 const owner = selectedSpellOwners.get(spell.id);
-                const disabled = !!owner && owner.choiceId !== choice.id;
-                const title = disabled ? `Уже выбрано: ${owner.label}` : `${spell.name} · ${getSpellLevelLabel(spell.level)}`;
+                const disabledReason = unavailable[spell.id];
+                const ownedByPreparedSource = choice.source === 'prepared_spell'
+                  && owner?.choiceId === choice.preparedSpellSourceChoiceId;
+                const ownerBlocks = !!owner && owner.choiceId !== choice.id && !ownedByPreparedSource;
+                const disabled = ownerBlocks || (!!disabledReason && !isSelected);
+                const title = disabled
+                  ? (ownerBlocks ? `Уже выбрано: ${owner?.label}` : disabledReason)
+                  : `${spell.name} · ${getSpellLevelLabel(spell.level)}`;
                 const hoverHandlers = {
                   onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); },
                   onMouseMove: (e: React.MouseEvent) => setMouse({ x: e.clientX, y: e.clientY }),

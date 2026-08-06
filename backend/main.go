@@ -49,6 +49,9 @@ func main() {
 
 	// Настройка Gin
 	r := gin.Default()
+	if err := configureTrustedClientIPs(r); err != nil {
+		log.Fatal("Ошибка настройки доверенных reverse proxy:", err)
+	}
 
 	// gzip ответов (списки справочников после B1 сжимаются на ~85%).
 	// SSE-потоки боёв (/stream) исключаем — gzip буферизирует и ломает realtime.
@@ -65,6 +68,7 @@ func main() {
 		"http://127.0.0.1:5173",
 		"https://frontend-production-550b.up.railway.app", // Ваш конкретный frontend URL
 		"https://bagofholding.up.railway.app",             // Домен на Railway
+		"https://bagofholding.ru",                         // Публичный custom domain
 		"https://*.vercel.app",
 		"https://*.netlify.app",
 		"https://*.render.com",
@@ -108,18 +112,21 @@ func main() {
 	variableController := NewVariableController(db)
 	conceptController := NewConceptController(db)
 	contentSupportController := NewContentSupportController(db)
+	contentMigrationController := NewContentMigrationController(db)
+	canonicalSessionController := NewCanonicalSessionController(db)
 
 	// Онлайн-бои: серверная истина + realtime-рассылка (SSE + Postgres LISTEN/NOTIFY).
 	encounterHub := NewEncounterHub(dbConfig.GetDSN())
 	encounterHub.StartListener(db)
-	encounterController := NewEncounterController(db, encounterHub)
+	encounterInviteService := NewEncounterInviteService()
+	encounterController := NewEncounterController(db, encounterHub, encounterInviteService)
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status":    "ok",
-			"timestamp": time.Now().Unix(),
-			"version":   "fixed-v3", // Обновляем версию для принудительного пересборки
+			"status":        "ok",
+			"timestamp":     time.Now().Unix(),
+			"source_commit": deployedSourceCommit(),
 		})
 	})
 
@@ -133,6 +140,9 @@ func main() {
 		authRateLimit := NewFixedWindowRateLimiter(20, 10*time.Minute)
 		imageRateLimit := NewFixedWindowRateLimiter(3, 10*time.Minute)
 		uploadRateLimit := NewFixedWindowRateLimiter(20, time.Hour)
+		// Глобальные справочники читаются публично, но любое изменение требует
+		// строгий JWT без public fallback и UUID из server-side admin allowlist.
+		contentAdminAuth := ContentAdminAuthMiddleware(authService)
 		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
 		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
 
@@ -144,39 +154,35 @@ func main() {
 		api.GET("/cards/:id", OptionalAuthMiddleware(authService), cardController.GetCard)
 		api.GET("/cards/:id/battle-stats", OptionalAuthMiddleware(authService), cardController.GetCardBattleStats)
 		api.POST("/cards/battle-stats", OptionalAuthMiddleware(authService), cardController.GetBatchCardBattleStats)
-		api.POST("/cards", AuthMiddleware(authService), cardController.CreateCard)
-		api.PUT("/cards/:id", AuthMiddleware(authService), cardController.UpdateCard)
-		api.DELETE("/cards/:id", AuthMiddleware(authService), cardController.DeleteCard)
-		api.POST("/cards/generate-image", AuthMiddleware(authService), imageRateLimit.Handler(), cardController.GenerateImage)
+		api.POST("/cards", contentAdminAuth, cardController.CreateCard)
+		api.PUT("/cards/:id", contentAdminAuth, cardController.UpdateCard)
+		api.DELETE("/cards/:id", contentAdminAuth, cardController.DeleteCard)
+		api.POST("/cards/generate-image", contentAdminAuth, imageRateLimit.Handler(), cardController.GenerateImage)
 		api.POST("/cards/export", AuthMiddleware(authService), cardController.ExportCards)
 
 		// Действия (публичные, но с опциональной авторизацией)
 		api.GET("/actions", OptionalAuthMiddleware(authService), actionController.GetActions)
 		api.GET("/actions/:id", OptionalAuthMiddleware(authService), actionController.GetAction)
-		api.POST("/actions", AuthMiddleware(authService), actionController.CreateAction)
-		// PUT публичный (как у заклинаний): контент глобальный, нужен для смены изображения из детального окна.
-		api.PUT("/actions/:id", OptionalAuthMiddleware(authService), actionController.UpdateAction)
-		api.DELETE("/actions/:id", AuthMiddleware(authService), actionController.DeleteAction)
+		api.POST("/actions", contentAdminAuth, actionController.CreateAction)
+		api.PUT("/actions/:id", contentAdminAuth, actionController.UpdateAction)
+		api.DELETE("/actions/:id", contentAdminAuth, actionController.DeleteAction)
 
 		// Эффекты (публичные, но с опциональной авторизацией)
 		api.GET("/effects", OptionalAuthMiddleware(authService), effectController.GetEffects)
 		api.GET("/effects/:id", OptionalAuthMiddleware(authService), effectController.GetEffect)
-		api.POST("/effects", AuthMiddleware(authService), effectController.CreateEffect)
-		// PUT публичный (как у заклинаний): нужен для смены изображения из детального окна.
-		api.PUT("/effects/:id", OptionalAuthMiddleware(authService), effectController.UpdateEffect)
-		api.DELETE("/effects/:id", AuthMiddleware(authService), effectController.DeleteEffect)
+		api.POST("/effects", contentAdminAuth, effectController.CreateEffect)
+		api.PUT("/effects/:id", contentAdminAuth, effectController.UpdateEffect)
+		api.DELETE("/effects/:id", contentAdminAuth, effectController.DeleteEffect)
 
 		// Заклинания (публичные, но с опциональной авторизацией)
 		api.GET("/spells", OptionalAuthMiddleware(authService), spellController.GetSpells)
 		api.GET("/spells/:id", OptionalAuthMiddleware(authService), spellController.GetSpell)
-		api.POST("/spells", AuthMiddleware(authService), spellController.CreateSpell)
-		// PUT публичный (как у понятий): контент заклинаний глобальный, без владельца;
-		// нужен для конструктора без авторизации и массового обогащения описаний.
-		api.PUT("/spells/:id", OptionalAuthMiddleware(authService), spellController.UpdateSpell)
-		api.DELETE("/spells/:id", AuthMiddleware(authService), spellController.DeleteSpell)
+		api.POST("/spells", contentAdminAuth, spellController.CreateSpell)
+		api.PUT("/spells/:id", contentAdminAuth, spellController.UpdateSpell)
+		api.DELETE("/spells/:id", contentAdminAuth, spellController.DeleteSpell)
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
-		api.POST("/images/generate-standalone", OptionalAuthMiddleware(authService), imageRateLimit.Handler(), imageController.GenerateStandaloneImage)
+		api.POST("/images/generate-standalone", contentAdminAuth, imageRateLimit.Handler(), imageController.GenerateStandaloneImage)
 		// Роут /images/upload-base64 удалён (KB-202): анонимная неограниченная запись любых данных
 		// в облачный бакет (OptionalAuthMiddleware = аноним) — поверхность абьюза и расходов. Фронт
 		// его не использовал; служил одноразовой миграции base64→S3 (см. историю git при надобности).
@@ -184,80 +190,100 @@ func main() {
 		// AI-генерация механики по описанию (кнопка «AI» в редакторах)
 		aiMechanicsController := NewAIMechanicsController()
 		aiRateLimit := NewFixedWindowRateLimiter(8, 10*time.Minute)
-		api.POST("/ai/mechanics", OptionalAuthMiddleware(authService), aiRateLimit.Handler(), aiMechanicsController.GenerateMechanics)
+		api.POST("/ai/mechanics", contentAdminAuth, aiRateLimit.Handler(), aiMechanicsController.GenerateMechanics)
 
 		// Черты (публичные, но с опциональной авторизацией)
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
 		api.GET("/feats/:id", OptionalAuthMiddleware(authService), featController.GetFeat)
-		api.POST("/feats", AuthMiddleware(authService), featController.CreateFeat)
-		// PUT публичный (как у заклинаний): нужен для смены изображения из детального окна.
-		api.PUT("/feats/:id", OptionalAuthMiddleware(authService), featController.UpdateFeat)
-		api.DELETE("/feats/:id", AuthMiddleware(authService), featController.DeleteFeat)
+		api.POST("/feats", contentAdminAuth, featController.CreateFeat)
+		api.PUT("/feats/:id", contentAdminAuth, featController.UpdateFeat)
+		api.DELETE("/feats/:id", contentAdminAuth, featController.DeleteFeat)
 
 		// Предыстории (публичные, но с опциональной авторизацией)
 		api.GET("/backgrounds", OptionalAuthMiddleware(authService), backgroundController.GetBackgrounds)
 		api.GET("/backgrounds/:id", OptionalAuthMiddleware(authService), backgroundController.GetBackground)
-		api.POST("/backgrounds", AuthMiddleware(authService), backgroundController.CreateBackground)
-		api.PUT("/backgrounds/:id", AuthMiddleware(authService), backgroundController.UpdateBackground)
-		api.DELETE("/backgrounds/:id", AuthMiddleware(authService), backgroundController.DeleteBackground)
+		api.POST("/backgrounds", contentAdminAuth, backgroundController.CreateBackground)
+		api.PUT("/backgrounds/:id", contentAdminAuth, backgroundController.UpdateBackground)
+		api.DELETE("/backgrounds/:id", contentAdminAuth, backgroundController.DeleteBackground)
 
 		// Виды (расы)
 		api.GET("/races", OptionalAuthMiddleware(authService), raceController.GetRaces)
 		api.GET("/races/:id", OptionalAuthMiddleware(authService), raceController.GetRace)
-		api.POST("/races", AuthMiddleware(authService), raceController.CreateRace)
-		api.PUT("/races/:id", AuthMiddleware(authService), raceController.UpdateRace)
-		api.DELETE("/races/:id", AuthMiddleware(authService), raceController.DeleteRace)
+		api.POST("/races", contentAdminAuth, raceController.CreateRace)
+		api.PUT("/races/:id", contentAdminAuth, raceController.UpdateRace)
+		api.DELETE("/races/:id", contentAdminAuth, raceController.DeleteRace)
 
 		// Классы
 		api.GET("/classes", OptionalAuthMiddleware(authService), classController.GetClasses)
 		api.GET("/classes/:id", OptionalAuthMiddleware(authService), classController.GetClass)
-		api.POST("/classes", AuthMiddleware(authService), classController.CreateClass)
-		api.PUT("/classes/:id", AuthMiddleware(authService), classController.UpdateClass)
-		api.DELETE("/classes/:id", AuthMiddleware(authService), classController.DeleteClass)
+		api.POST("/classes", contentAdminAuth, classController.CreateClass)
+		api.PUT("/classes/:id", contentAdminAuth, classController.UpdateClass)
+		api.DELETE("/classes/:id", contentAdminAuth, classController.DeleteClass)
 
 		// Отдельный путь сертификации: обычный CRUD не принимает support и
 		// миграционный trigger инвалидирует прежний статус после правки контента.
-		api.PUT("/content-support/:entityType/:id", AuthMiddleware(authService), contentSupportController.Update)
+		api.PUT("/content-support/:entityType/:id", contentAdminAuth, contentSupportController.Update)
+		api.POST("/content-support/batch-exact", contentAdminAuth, contentMigrationController.ApplyExactSupportBatch)
+		// Create и физический rollback создаваемых migration-сущностей связаны
+		// server-issued receipt в одной транзакции. Endpoint намеренно effect-only:
+		// versioned patch schema не разрешает create для других коллекций.
+		api.POST("/content-migrations/:bundleId/effects", contentAdminAuth, contentMigrationController.CreateEffect)
+		api.POST("/content-migrations/:bundleId/:entityType/:id/exact-update", contentAdminAuth, contentMigrationController.ExactUpdate)
+		api.POST("/content-rollback/effect/:id/hard-delete-created", contentAdminAuth, contentMigrationController.RollbackCreatedEffect)
+		api.POST("/content-rollback/:entityType/:id/support", contentAdminAuth, contentMigrationController.RestoreSupport)
 
 		// Ресурсы действий/персонажа
 		api.GET("/resources", OptionalAuthMiddleware(authService), resourceController.GetResources)
 		api.GET("/resources/:id", OptionalAuthMiddleware(authService), resourceController.GetResource)
-		api.POST("/resources", AuthMiddleware(authService), resourceController.CreateResource)
-		api.PUT("/resources/:id", AuthMiddleware(authService), resourceController.UpdateResource)
-		api.DELETE("/resources/:id", AuthMiddleware(authService), resourceController.DeleteResource)
+		api.POST("/resources", contentAdminAuth, resourceController.CreateResource)
+		api.PUT("/resources/:id", contentAdminAuth, resourceController.UpdateResource)
+		api.DELETE("/resources/:id", contentAdminAuth, resourceController.DeleteResource)
 
 		// Переменные (числовые/dice), выдаваемые классами/эффектами
 		api.GET("/variables", OptionalAuthMiddleware(authService), variableController.GetVariables)
 		api.GET("/variables/:id", OptionalAuthMiddleware(authService), variableController.GetVariable)
-		api.POST("/variables", AuthMiddleware(authService), variableController.CreateVariable)
-		api.PUT("/variables/:id", AuthMiddleware(authService), variableController.UpdateVariable)
-		api.DELETE("/variables/:id", AuthMiddleware(authService), variableController.DeleteVariable)
+		api.POST("/variables", contentAdminAuth, variableController.CreateVariable)
+		api.PUT("/variables/:id", contentAdminAuth, variableController.UpdateVariable)
+		api.DELETE("/variables/:id", contentAdminAuth, variableController.DeleteVariable)
 
-		// Онлайн-бои (encounters): серверная истина боя + SSE-поток изменений всем клиентам.
-		// OptionalAuth: SSE из браузерного EventSource не шлёт заголовок Authorization.
-		api.POST("/encounters", OptionalAuthMiddleware(authService), encounterController.Create)
-		api.GET("/encounters", OptionalAuthMiddleware(authService), encounterController.List)
-		api.GET("/encounters/:id", OptionalAuthMiddleware(authService), encounterController.Get)
-		api.GET("/encounters/:id/events", OptionalAuthMiddleware(authService), encounterController.Events)
-		api.POST("/encounters/:id/join", OptionalAuthMiddleware(authService), encounterController.Join)
-		api.POST("/encounters/:id/apply", OptionalAuthMiddleware(authService), encounterController.Apply)
-		api.GET("/encounters/:id/stream", encounterController.Stream) // SSE, без middleware-обёрток
+		// Онлайн-бои (encounters) содержат состояние и журналы конкретных персонажей,
+		// поэтому весь контур, включая SSE-handshake, требует строгий JWT. Доступ к
+		// конкретному бою дополнительно проверяется контроллером по owner/member/controller.
+		encounterAuth := StrictAuthMiddleware(authService)
+		api.POST("/encounters", encounterAuth, encounterController.Create)
+		api.GET("/encounters", encounterAuth, encounterController.List)
+		api.GET("/encounters/:id", encounterAuth, encounterController.Get)
+		api.DELETE("/encounters/:id", encounterAuth, encounterController.Delete)
+		api.GET("/encounters/:id/events", encounterAuth, encounterController.Events)
+		api.POST("/encounters/:id/invite", encounterAuth, encounterController.IssueInvite)
+		api.POST("/encounters/:id/join", encounterAuth, RequestBodyLimitMiddleware(8<<10), encounterController.Join)
+		api.POST("/encounters/:id/apply", encounterAuth, JSONBodyLimitMiddleware(maxEncounterApplyBodyBytes), RequestBodyLimitMiddleware(maxEncounterApplyBodyBytes), encounterController.Apply)
+		api.GET("/encounters/:id/stream", encounterAuth, encounterController.Stream)
 
-		// Понятия (глоссарий): пояснения, не выражаемые отдельной сущностью.
-		// Общий справочник без авторизации (создание/правка/удаление доступны всем).
+		// CharacterV3 содержит пользовательские листы и журналы. Весь контур
+		// требует строгий JWT; контроллер разрешает authenticated read старых
+		// public-листов, но оставляет их неизменяемыми.
+		registerCharacterV3Routes(api, authService, characterV3Controller)
+		if canonicalTransportEnabled() {
+			log.Printf("WARNING: %s=1 exposes the partial, client-semantics-unverified canonical transport", canonicalTransportFeatureFlag)
+			registerCanonicalSessionRoutes(api, authService, canonicalSessionController)
+		}
+
+		// Понятия (глоссарий): публичное чтение, строгая авторизация записи.
 		api.GET("/concepts", OptionalAuthMiddleware(authService), conceptController.GetConcepts)
 		api.GET("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.GetConcept)
-		api.POST("/concepts", OptionalAuthMiddleware(authService), conceptController.CreateConcept)
-		api.PUT("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.UpdateConcept)
-		api.DELETE("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.DeleteConcept)
+		api.POST("/concepts", contentAdminAuth, conceptController.CreateConcept)
+		api.PUT("/concepts/:id", contentAdminAuth, conceptController.UpdateConcept)
+		api.DELETE("/concepts/:id", contentAdminAuth, conceptController.DeleteConcept)
 
 		// Маршруты с контекстом пользователя. В публичном режиме AuthMiddleware
 		// подставляет общего пользователя public; валидный JWT по-прежнему учитывается.
+		shopCreateRateLimit := NewFixedWindowRateLimiter(10, time.Hour)
 		protected := api.Group("/")
 		protected.Use(AuthMiddleware(authService))
 		{
 			// Магазины
-			protected.POST("/shops", shopController.CreateShop)
+			protected.POST("/shops", shopCreateRateLimit.Handler(), shopController.CreateShop)
 			// Авторизация
 			protected.GET("/auth/profile", authController.GetProfile)
 			protected.POST("/auth/logout", authController.Logout)
@@ -303,31 +329,21 @@ func main() {
 			protected.POST("/characters-v2/:id/equip", characterV2Controller.EquipItem)
 			protected.GET("/characters-v2/:id/active-effects", characterV2Controller.GetActiveEffects)
 
-			// Персонажи V3 (сущностно-ориентированное хранение)
-			protected.POST("/characters-v3", characterV3Controller.CreateCharacterV3)
-			protected.GET("/characters-v3", characterV3Controller.GetCharactersV3)
-			protected.GET("/characters-v3/:id", characterV3Controller.GetCharacterV3)
-			protected.PUT("/characters-v3/:id", characterV3Controller.UpdateCharacterV3)
-			protected.DELETE("/characters-v3/:id", characterV3Controller.DeleteCharacterV3)
-			protected.GET("/characters-v3/:id/events", characterV3Controller.GetCharacterEvents)
-			protected.POST("/characters-v3/:id/events", characterV3Controller.PostCharacterEvents)
-			protected.PATCH("/characters-v3/:id/runtime", characterV3Controller.PatchCharacterRuntime)
-
 			// Изображения
-			protected.POST("/images/upload", RequestBodyLimitMiddleware(12<<20), uploadRateLimit.Handler(), imageController.UploadImage)
-			protected.POST("/images/generate", imageRateLimit.Handler(), imageController.GenerateImage)
-			protected.DELETE("/images/:entity_type/:entity_id", imageController.DeleteImage)
-			protected.POST("/images/setup-cors", imageController.SetupCORS)
-			protected.GET("/images/status", imageController.GetStatus)
+			protected.POST("/images/upload", contentAdminAuth, RequestBodyLimitMiddleware(12<<20), uploadRateLimit.Handler(), imageController.UploadImage)
+			protected.POST("/images/generate", contentAdminAuth, imageRateLimit.Handler(), imageController.GenerateImage)
+			protected.DELETE("/images/:entity_type/:entity_id", contentAdminAuth, imageController.DeleteImage)
+			protected.POST("/images/setup-cors", contentAdminAuth, imageController.SetupCORS)
+			protected.GET("/images/status", contentAdminAuth, imageController.GetStatus)
 
 			// Библиотека изображений
 			protected.GET("/image-library", imageLibraryController.GetImageLibrary)
-			protected.POST("/image-library", imageLibraryController.AddToLibrary)
-			protected.PUT("/image-library/:id", imageLibraryController.UpdateImageLibrary)
-			protected.DELETE("/image-library/:id", imageLibraryController.DeleteFromLibrary)
+			protected.POST("/image-library", contentAdminAuth, imageLibraryController.AddToLibrary)
+			protected.PUT("/image-library/:id", contentAdminAuth, imageLibraryController.UpdateImageLibrary)
+			protected.DELETE("/image-library/:id", contentAdminAuth, imageLibraryController.DeleteFromLibrary)
 			protected.GET("/image-library/rarities", imageLibraryController.GetRarities)
-			protected.POST("/image-library/update-from-cards", imageLibraryController.UpdateImageLibraryFromCards)
-			protected.POST("/image-library/sync-missing", imageLibraryController.SyncMissingImages)
+			protected.POST("/image-library/update-from-cards", contentAdminAuth, imageLibraryController.UpdateImageLibraryFromCards)
+			protected.POST("/image-library/sync-missing", contentAdminAuth, imageLibraryController.SyncMissingImages)
 		}
 	}
 

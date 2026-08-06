@@ -92,6 +92,23 @@ const character: CharacterContext = { abilityMods: { str: 0, dex: 0, con: 0, int
 const fresh = (): RuntimeState => ({ hp: { current: 20, max: 20, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: [] });
 
 describe('collectPassiveMechanics — выбранный runtime-пейлоад доходит до боя', () => {
+  it('не проецирует active/reaction-механику в постоянные build/runtime-пассивы', () => {
+    const modifier = {
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value: '5',
+      }] }],
+    };
+    expect(collectPassiveMechanics(assembledWith({
+      ...modifier, activation: { mode: 'active', cost: [{ resource: 'action' }] },
+    }))).toEqual([]);
+    expect(collectPassiveMechanics(assembledWith({
+      ...modifier, activation: { mode: 'reaction', trigger: { event: 'hit_by_attack' } },
+    }))).toEqual([]);
+    expect(collectPassiveMechanics(assembledWith({
+      ...modifier, activation: { mode: 'triggered', trigger: { event: 'turn_started' } },
+    }))).toHaveLength(1);
+  });
+
   it('выбранное сопротивление появляется в пассивах (payloadsOf видит)', () => {
     const passives = collectPassiveMechanics(assembledWith(resistMech), { [key]: ['fire'] });
     const payloads = passives.flatMap((m) => payloadsOf(m));

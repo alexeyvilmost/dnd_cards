@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	scriptauth "armor-loader/internal/scriptauth"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -160,50 +160,7 @@ func main() {
 }
 
 func getAuthToken() (string, error) {
-	// Данные для авторизации
-	authData := map[string]string{
-		"username":     "admin",
-		"password":     "admin123",
-		"email":        "admin@example.com",
-		"display_name": "Admin",
-	}
-
-	jsonData, err := json.Marshal(authData)
-	if err != nil {
-		return "", err
-	}
-
-	// Сначала пробуем залогиниться
-	resp, err := http.Post("http://localhost:8080/api/auth/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 {
-		var authResp AuthResponse
-		if err := json.NewDecoder(resp.Body).Decode(&authResp); err != nil {
-			return "", err
-		}
-		return authResp.Token, nil
-	}
-
-	// Если логин не удался, пробуем зарегистрироваться
-	resp, err = http.Post("http://localhost:8080/api/auth/register", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 201 {
-		var authResp AuthResponse
-		if err := json.NewDecoder(resp.Body).Decode(&authResp); err != nil {
-			return "", err
-		}
-		return authResp.Token, nil
-	}
-
-	return "", fmt.Errorf("ошибка авторизации")
+	return scriptauth.Token("http://localhost:8080/api")
 }
 
 // getKeys возвращает список ключей из map
@@ -222,4 +179,3 @@ func max(a, b int) int {
 	}
 	return b
 }
-

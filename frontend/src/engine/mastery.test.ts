@@ -5,24 +5,35 @@
  */
 import { describe, expect, it } from 'vitest';
 import { executeAction } from './execute';
-import { knowsMastery, masteryEvent } from './mastery';
+import { activeMastery, knowsMastery, masteryEvent } from './mastery';
 import type { Card } from '../types';
 import type { CharacterContext, EngineEvent, ExecuteContext, RuntimeState } from '../mvp/contracts';
+import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
 
 type Dict = Record<string, unknown>;
 
 const SAP = 'eff-sap';
 const GRAZE = 'eff-graze';
 
-const longsword = {
+const longsword = withDeclaredTestWeaponProfile({
   id: 'w-longsword', name: 'Длинный меч', type: 'weapon', weapon_type: 'longsword',
   bonus_value: '1d8', damage_type: 'slashing', mastery: SAP,
-} as unknown as Card;
+} as unknown as Card, {
+  weaponType: 'longsword', proficiencyCategory: 'martial', attackAbility: 'str',
+  damageLines: [{ dice: '1d8', type: 'slashing' }],
+  defaultAttackMode: 'melee', attackModes: [{ kind: 'melee', reach_ft: 5 }],
+  properties: [], masteryEffectId: SAP,
+});
 // Глефа: Задевающее (на промахе), СИЛ. Фехтовального нет → weapon_mod = СИЛ.
-const glaive = {
+const glaive = withDeclaredTestWeaponProfile({
   id: 'w-glaive', name: 'Глефа', type: 'weapon', weapon_type: 'glaive',
   bonus_value: '1d10', damage_type: 'slashing', mastery: GRAZE,
-} as unknown as Card;
+} as unknown as Card, {
+  weaponType: 'glaive', proficiencyCategory: 'martial', attackAbility: 'str',
+  damageLines: [{ dice: '1d10', type: 'slashing' }],
+  defaultAttackMode: 'melee', attackModes: [{ kind: 'melee', reach_ft: 10 }],
+  properties: ['heavy', 'reach', 'two_handed'], masteryEffectId: GRAZE,
+});
 
 const MASTERY_EFFECTS = {
   [SAP]: {
@@ -47,6 +58,7 @@ const MASTERY_EFFECTS = {
 
 const character = (weaponMasteries?: string[], cards: Card[] = [longsword]): CharacterContext => ({
   abilityMods: { str: 3, dex: 1, con: 0, int: 0, wis: 0, cha: 0 },
+  abilityScores: { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 },
   profBonus: 2, level: 5, equippedCards: cards, knownCards: cards, weaponMasteries,
 });
 
@@ -59,7 +71,7 @@ const withWeapon = (cardId: string): RuntimeState => ({ ...fresh(), equipment: {
 // Оружейная атака: маркер dice:'weapon' связывает действие с оружием в руке.
 const WEAPON_ATTACK: Dict = {
   name: 'Атака оружием',
-  effects: [{ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon' }] }],
+  effects: [{ resolution: 'attack_roll', ability: 'auto', on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon' }] }],
 };
 
 const HIT = () => 0.5;   // к20 = 11 → попадание по КЗ 5
@@ -126,6 +138,28 @@ describe('Ослабляющее (Sap) — на попадании кладёт 
   it('механика не догружена (masteryEffects пуст) → тихо ничего', () => {
     const res = run(HIT, 5, { masteryEffects: {} });
     expect(narratives(res.events)).not.toContain('Искусность: Ослабляющее');
+  });
+
+  it('неполный typed primitive недоступен и не откатывается к legacy effects', () => {
+    const state = withWeapon('w-longsword');
+    const ctx = {
+      character: character(['longsword']),
+      rng: HIT,
+      masteryEffects: {
+        [SAP]: {
+          name: 'Malformed Sap',
+          mechanics: {
+            activation: { mode: 'triggered', trigger: { event: 'hit' } },
+            weapon_mastery: { type: 'sap' },
+            effects: [{
+              resolution: 'auto', who: 'target',
+              result: [{ kind: 'damage', amount: '999', type: 'force' }],
+            }],
+          },
+        },
+      },
+    } as ExecuteContext;
+    expect(activeMastery(ctx, state, 'main', { dealtDamage: true })).toBeNull();
   });
 
   it('на ПРОМАХЕ hit-мастерство не срабатывает', () => {

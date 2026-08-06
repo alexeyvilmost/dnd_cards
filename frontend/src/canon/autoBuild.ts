@@ -10,11 +10,12 @@
 import { assemble, loadBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, ABILITY_KEYS, type AbilityKey, type CharacterDraft } from '../character/types';
 import { classSkillChoice, completionIssues } from '../character/forgeHelpers';
+import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { getSkillGrantSource, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import { buildCharacterContext } from '../character/runtime';
 import { syncRuntimeResources } from '../character/resourceInit';
 import { spellMatchesChoice } from '../character/spellChoices';
-import type { PendingChoice } from '../mechanics/collectChoices';
+import { isSpellSelectionChoice, type PendingChoice } from '../mechanics/collectChoices';
 import { LANGUAGES, ORIGIN_FEATS, SKILLS, optionsForChoiceSource } from '../mechanics/registries';
 import { bonusOf } from '../character/pointBuy';
 import { maxAvailableSpellSlotLevel } from '../engine/resources';
@@ -37,7 +38,7 @@ export interface BuildParams {
   lineageId?: string | null;
   /** UUID подкласса; если не задан и уровень ≥ subclass_level — берётся первый доступный. */
   subclassId?: string | null;
-  /** Явно выбранные дополнительные черты (в MM-MVP — заменяющая черта происхождения). */
+  /** Явно выбранные дополнительные черты (в micro-MVP — заменяющая черта происхождения). */
   featIds?: string[];
   /** Включает тот же режим замены черты происхождения, что и переключатель кузницы. */
   replaceBackgroundFeat?: boolean;
@@ -65,6 +66,7 @@ function pickChoiceOptions(
   ruleState: ReturnType<typeof resolveCharacterRules>,
   already: string[],
   feats: Feat[],
+  activeFeats: readonly Feat[],
   spells: Spell[],
   maxSlotLevel: number,
   reservedSpellIds: Set<string>,
@@ -83,12 +85,10 @@ function pickChoiceOptions(
       pool = list.length ? list.map((f) => f.id) : ORIGIN_FEATS.map((f) => f.id);
     }
   } else if (pc.source === 'skill') {
-    const isExpertise = pc.filter === 'proficient';
-    const base = Array.isArray(pc.filter) ? (pc.filter as string[]) : SKILLS.map((s) => s.id);
-    pool = base.filter((id) => { const g = !!getSkillGrantSource(ruleState, id); return isExpertise ? g : !g; });
+    pool = Array.isArray(pc.filter) ? (pc.filter as string[]) : SKILLS.map((s) => s.id);
   } else if (pc.source === 'language') {
-    pool = LANGUAGES.map((l) => l.id).filter((id) => !ruleState.proficiencies.languages.includes(id));
-  } else if (pc.source === 'spell') {
+    pool = LANGUAGES.map((l) => l.id);
+  } else if (isSpellSelectionChoice(pc)) {
     pool = spells
       .filter((spell) => spellMatchesChoice(spell, pc, maxSlotLevel))
       .map((spell) => spell.id);
@@ -97,6 +97,19 @@ function pickChoiceOptions(
       ? pc.items.map((it) => it.id)
       : optionsForChoiceSource(pc.source).map((it) => it.id);
   }
+  const featByReference = new Map(feats.flatMap((feat) => (
+    [[feat.id, feat.id], [feat.card_number, feat.id]] as const
+  )));
+  const spellByReference = new Map(spells.flatMap((spell) => (
+    [[spell.id, spell.id], [spell.card_number, spell.id]] as const
+  )));
+  const unavailable = unavailableChoiceOptions(pc, ruleState, pool, picked, {
+    activeFeatIds: new Set(activeFeats.map((feat) => feat.id)),
+    repeatableFeatIds: new Set(feats.filter((feat) => feat.repeatable).map((feat) => feat.id)),
+    canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
+    canonicalSpellId: (reference) => spellByReference.get(reference) ?? reference,
+  });
+  pool = pool.filter((id) => !unavailable[id]);
   const orderedPool = [
     ...pool.filter((id) => preferredChoiceOptionIds.has(id)),
     ...pool.filter((id) => !preferredChoiceOptionIds.has(id)),
@@ -173,6 +186,7 @@ export async function autoBuildAt(params: BuildParams, content: BuildContent): P
         rs,
         sel,
         content.feats,
+        assembled.feats,
         content.spells ?? [],
         maxSlotLevel,
         reservedSpellIds,
@@ -200,11 +214,11 @@ export async function autoBuildAt(params: BuildParams, content: BuildContent): P
   assembled = assemble({ ...(await loadBundle(current)), spells: selectedSpells }, current);
   const ruleState = resolveCharacterRules({ draft: current, assembled });
   const unresolvedNonSpell = assembled.pendingChoices
-    .filter((pc) => pc.source !== 'spell' && pc.context !== 'in_play')
+    .filter((pc) => !isSpellSelectionChoice(pc) && pc.context !== 'in_play')
     .filter((pc) => (current.resolvedChoices[pc.id] || []).length < pc.count)
     .map((pc) => `${pc.prompt} [${pc.source}]`);
   const unresolvedSpell = assembled.pendingChoices
-    .filter((pc) => pc.source === 'spell' && pc.context !== 'in_play')
+    .filter((pc) => isSpellSelectionChoice(pc) && pc.context !== 'in_play')
     .filter((pc) => (current.resolvedChoices[pc.id] || []).length < pc.count)
     .map((pc) => `${pc.prompt}: ${current.resolvedChoices[pc.id]?.length ?? 0}/${pc.count}`);
   const issues = completionIssues(current, assembled);

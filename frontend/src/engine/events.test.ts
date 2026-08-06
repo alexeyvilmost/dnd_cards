@@ -35,6 +35,12 @@ describe('events serialization', () => {
     expect(deserializeEngineEvent(serializeEngineEvent(e))).toEqual(e);
   });
 
+  it('round-trips and describes a structured forced-movement event', () => {
+    const event: EngineEvent = { type: 'movement', mode: 'push', distanceFt: 10 };
+    expect(deserializeEngineEvent(serializeEngineEvent(event))).toEqual(event);
+    expect(describeEngineEvent(event)).toBe('Перемещение: push 10 фт');
+  });
+
   it('source-атрибуция: журнал цели показывает «кто» (для боя)', () => {
     const withSrc: EngineEvent = { type: 'damage', amount: 6, damageType: 'яд', source: 'Тест' };
     expect(describeEngineEvent(withSrc)).toBe('Тест: Урон 6 (яд)');

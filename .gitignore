@@ -46,11 +46,30 @@ pids
 *.seed
 *.pid.lock
 
+# Local database safety dumps (never commit production data)
+backups/
+dump*.sql
+*.dump
+/outputs/
+/bestiary/
+*.tsbuildinfo
+
 # Coverage directory used by tools like istanbul
 coverage/
+!frontend/src/rules-core/coverage/
+!frontend/src/rules-core/coverage/**
+frontend/playwright-report/
+frontend/test-results/
+frontend/playwright-report-live/
+frontend/test-results-live/
+frontend/.micro-mvp-evidence/
+frontend/.coverage-*/
+officials/canon/.prod-snapshot.staging-*/
+officials/canon/.prod-snapshot.previous-*/
 
 # Docker
 .dockerignore
+!frontend/.dockerignore
 
 # Temporary files
 *.tmp

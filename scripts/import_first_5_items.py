@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import logging
+import os
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -114,8 +115,9 @@ def main():
         }
     ]
     
-    # Получаем токен авторизации
-    auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDc2OTVmMmUtOGY2YS00ZmYyLWIzMmQtYzc1NTZmYjU4YTMxIiwidXNlcm5hbWUiOiJpbXBvcnRlcl91c2VyIiwiaXNzIjoiZG5kLWNhcmRzLWJhY2tlbmQiLCJzdWIiOiJkNzY5NWYyZS04ZjZhLTRmZjItYjMyZC1jNzU1NmZiNThhMzEiLCJleHAiOjE3NjA0MDU4NTAsIm5iZiI6MTc2MDMxOTQ1MCwiaWF0IjoxNzYwMzE5NDUwfQ.7vn0WyCMG3BtuxSISNFbg2yLm9clEB21sPKWqNsK96M"
+    auth_token = os.environ.get("API_TOKEN", "").strip()
+    if not auth_token:
+        raise RuntimeError("API_TOKEN is required")
     
     importer = ItemsImporter(auth_token=auth_token)
     

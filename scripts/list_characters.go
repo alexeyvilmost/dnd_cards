@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bytes"
+	scriptauth "armor-loader/internal/scriptauth"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -35,31 +34,13 @@ func main() {
 }
 
 func getAuthToken() (string, error) {
-	loginData := map[string]string{
-		"username": "testuser123",
-		"password": "password123",
-	}
-
-	jsonData, _ := json.Marshal(loginData)
-	resp, err := http.Post("http://localhost:8080/api/auth/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-	
-	if token, ok := result["token"].(string); ok {
-		return token, nil
-	}
-	return "", fmt.Errorf("токен не найден в ответе")
+	return scriptauth.Token("http://localhost:8080/api")
 }
 
 func getCharacters(token string) ([]interface{}, error) {
 	req, _ := http.NewRequest("GET", "http://localhost:8080/api/characters", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
-	
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -69,10 +50,9 @@ func getCharacters(token string) ([]interface{}, error) {
 
 	var result map[string]interface{}
 	json.NewDecoder(resp.Body).Decode(&result)
-	
+
 	if characters, ok := result["characters"].([]interface{}); ok {
 		return characters, nil
 	}
 	return nil, fmt.Errorf("персонажи не найдены в ответе")
 }
-

@@ -10,7 +10,7 @@ import os
 import sys
 
 # URL API
-BASE_URL = "http://localhost:8080/api"
+BASE_URL = os.environ.get("API_URL", "http://localhost:8080").rstrip("/") + "/api"
 
 # Загружаем данные о типах оружия
 def load_weapon_types():
@@ -23,10 +23,22 @@ def load_weapon_types():
 
 def get_auth_token():
     """Получает токен авторизации"""
+    explicit_token = os.environ.get("API_TOKEN", "").strip()
+    if explicit_token:
+        return explicit_token
+
+    username = os.environ.get("CONTENT_ADMIN_USERNAME", "").strip()
+    password = os.environ.get("CONTENT_ADMIN_PASSWORD", "")
+    if not username or not password:
+        print(
+            "Set API_TOKEN or both CONTENT_ADMIN_USERNAME and "
+            "CONTENT_ADMIN_PASSWORD"
+        )
+        return None
     try:
         login_data = {
-            "username": "importer_user", 
-            "password": "importer_pass123"
+            "username": username,
+            "password": password,
         }
         
         login_response = requests.post(
@@ -41,33 +53,7 @@ def get_auth_token():
             if token:
                 return token
         else:
-            # Попробуем зарегистрировать пользователя
-            register_data = {
-                "username": "importer_user",
-                "password": "importer_pass123",
-                "email": "importer@example.com",
-                "display_name": "Importer User"
-            }
-            
-            requests.post(
-                f"{BASE_URL}/auth/register",
-                json=register_data,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            # Повторная попытка логина
-            login_response = requests.post(
-                f"{BASE_URL}/auth/login",
-                json=login_data,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if login_response.status_code == 200:
-                result = login_response.json()
-                token = result.get('token')
-                if token:
-                    return token
-                    
+            print(f"Ошибка авторизации: {login_response.status_code}")
     except Exception as e:
         print(f"Ошибка получения токена: {e}")
     
@@ -203,4 +189,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

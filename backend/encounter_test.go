@@ -68,10 +68,10 @@ func TestApplyOps_Combined(t *testing.T) {
 	base := map[string]interface{}{"combatants": []interface{}{combatant("a", 20), combatant("b", 30)}}
 	r := 2
 	st := applyOps(base, ApplyRequest{
-		Patches:     []CombatantPatch{{ActorID: "b", Set: JSONMap{"hp": float64(5)}}},
-		Add:         []map[string]interface{}{combatant("c", 10)},
-		Remove:      []string{"a"},
-		Round:       &r,
+		Patches: []CombatantPatch{{ActorID: "b", Set: JSONMap{"hp": float64(5)}}},
+		Add:     []map[string]interface{}{combatant("c", 10)},
+		Remove:  []string{"a"},
+		Round:   &r,
 	})
 	cs := combatantsOf(st)
 	if len(cs) != 2 {
@@ -164,7 +164,8 @@ func TestOpPayload_Log(t *testing.T) {
 
 func TestOpPayload_Roundtrip(t *testing.T) {
 	r := 4
-	m := opPayload(ApplyRequest{Round: &r, Remove: []string{"x"}, Events: []interface{}{"hit"}})
+	expectedSeq := int64(3)
+	m := opPayload(ApplyRequest{ExpectedSeq: &expectedSeq, Round: &r, Remove: []string{"x"}, Events: []interface{}{"hit"}})
 	// json-теги: round / remove / events
 	if !reflect.DeepEqual(m["remove"], []interface{}{"x"}) {
 		t.Fatalf("remove не сериализовался: %+v", m["remove"])
@@ -174,5 +175,8 @@ func TestOpPayload_Roundtrip(t *testing.T) {
 	}
 	if !reflect.DeepEqual(m["events"], []interface{}{"hit"}) {
 		t.Fatalf("events не сериализовались: %+v", m["events"])
+	}
+	if _, leaked := m["expected_seq"]; leaked {
+		t.Fatalf("command precondition leaked into replay payload: %+v", m)
 	}
 }

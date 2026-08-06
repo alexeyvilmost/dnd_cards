@@ -225,9 +225,12 @@ export function armorClassValue(
   state: RuntimeState,
   passives: Dict[],
 ): ValueBreakdown {
+  const cards = allKnownCards(character);
+  const wearingArmor = armorFromState(state, cards) !== undefined;
   const base = computeAC(character, state, passives);
   const fx = collectModifiers(state, passives, {
     roll: 'ac',
+    filter: { wearingArmor },
     formulaCtx: {
       abilityMods: character.abilityMods,
       profBonus: character.profBonus,

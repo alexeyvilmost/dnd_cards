@@ -4,6 +4,7 @@
 """
 import requests
 import json
+import secrets
 import sys
 from typing import Dict, Any, Optional
 
@@ -76,10 +77,11 @@ class BackendTester:
         self.log("\n=== Тестирование Auth Endpoints ===", "INFO")
         
         # Тест регистрации (может вернуть 400 если пользователь уже существует)
+        suffix = secrets.token_hex(6)
         test_user = {
-            "username": "test_user",
-            "password": "test_password123",
-            "email": "test@example.com",
+            "username": f"api_test_{suffix}",
+            "password": secrets.token_urlsafe(24),
+            "email": f"api_test_{suffix}@example.invalid",
             "display_name": "Test User"
         }
         
@@ -89,8 +91,8 @@ class BackendTester:
         
         # Тест логина
         login_data = {
-            "username": "test_user",
-            "password": "test_password123"
+            "username": test_user["username"],
+            "password": test_user["password"]
         }
         
         try:

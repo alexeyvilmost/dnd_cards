@@ -148,6 +148,10 @@ export function describeEngineEvent(event: EngineEvent): string {
       return `Эффект снят: ${event.name}`;
     case 'condition_applied':
       return `${src}Состояние: ${event.condition}`;
+    case 'condition_immune':
+      return `${src}Иммунитет к состоянию: ${event.condition}`;
+    case 'movement':
+      return `${src}Перемещение: ${event.mode} ${event.distanceFt} фт`;
     case 'turn_started':
       return 'Начало хода';
     case 'turn_ended':

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cardsApi } from '../api/client';
-import { charactersV3Api, type CharacterEventRow } from '../character/api';
+import {
+  characterV3ErrorMessage,
+  charactersV3Api,
+  type CharacterEventRow,
+} from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
 import { collectItemMechanics } from '../character/attunement';
 import { characterToDraft } from '../character/forgeHelpers';
@@ -13,11 +17,16 @@ import type { ForgeCharacter } from '../character/types';
 import { breakdownValue } from '../engine/breakdown';
 import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import type { Card } from '../types';
+import {
+  effectiveSenses as projectEffectiveSenses,
+  type EffectiveSense,
+} from '../rules-core/dwarfTraits';
 
 export interface MobileCharacterData {
   character: ForgeCharacter | null;
   assembled: AssembledCharacter | null;
   ruleState: CharacterRuleState | null;
+  effectiveSenses: readonly EffectiveSense[];
   runtimeState: RuntimeState | null;
   equipCards: Map<string, Card>;
   passives: Record<string, unknown>[];
@@ -78,7 +87,7 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
         void reloadJournal();
       } catch (e) {
         console.error(e);
-        if (!stale) setError('Не удалось загрузить лист персонажа');
+        if (!stale) setError(characterV3ErrorMessage(e, 'Не удалось загрузить лист персонажа'));
       } finally {
         if (!stale) setLoading(false);
       }
@@ -167,6 +176,13 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
     [assembled, character?.resolved_choices, itemMechanics],
   );
 
+  const effectiveSenses = useMemo(
+    () => (ruleState && runtimeState
+      ? projectEffectiveSenses({ build: ruleState.senses, runtime: runtimeState })
+      : []),
+    [ruleState, runtimeState],
+  );
+
   const sheetCtx = useMemo(
     () => {
       if (!ruleState || !draft || !runtimeState) return null;
@@ -201,6 +217,7 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
     character,
     assembled,
     ruleState,
+    effectiveSenses,
     runtimeState,
     equipCards,
     passives,

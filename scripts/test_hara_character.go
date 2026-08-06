@@ -1,6 +1,7 @@
 package main
 
 import (
+	scriptauth "armor-loader/internal/scriptauth"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -66,7 +67,7 @@ func main() {
 		fmt.Printf("Содержимое traits (первые 300 символов): %s...\n", string(traitsBytes)[:min(300, len(traitsBytes))])
 	} else {
 		fmt.Printf("❌ Поле 'traits' НЕ найдено в Hara.json на верхнем уровне\n")
-		
+
 		// Проверяем внутри поля data
 		if dataField, exists := haraCharacter["data"]; exists {
 			if dataStr, ok := dataField.(string); ok {
@@ -77,7 +78,7 @@ func main() {
 						fmt.Printf("'%s' ", key)
 					}
 					fmt.Printf("\n")
-					
+
 					if traits, exists := dataContent["traits"]; exists {
 						fmt.Printf("✅ Поле 'traits' найдено внутри поля 'data'\n")
 						traitsBytes, _ := json.MarshalIndent(traits, "", "  ")
@@ -139,14 +140,14 @@ func main() {
 			return
 		}
 		fmt.Printf("✅ Персонаж успешно создан! ID: %s, Name: %s\n", character.ID, character.Name)
-		
+
 		// Проверяем, что traits есть в сохраненных данных
 		var savedData map[string]interface{}
 		if err := json.Unmarshal([]byte(character.Data), &savedData); err != nil {
 			fmt.Printf("Ошибка парсинга сохраненных данных: %v\n", err)
 			return
 		}
-		
+
 		if traits, exists := savedData["traits"]; exists {
 			fmt.Printf("✅ Поле 'traits' найдено в сохраненных данных\n")
 			traitsBytes, _ := json.MarshalIndent(traits, "", "  ")
@@ -159,7 +160,7 @@ func main() {
 			}
 			fmt.Printf("\n")
 		}
-		
+
 	} else {
 		fmt.Printf("❌ Ошибка создания персонажа (статус %d): %s\n", resp.StatusCode, string(body))
 	}
@@ -173,56 +174,5 @@ func min(a, b int) int {
 }
 
 func getAuthToken() (string, error) {
-	// Сначала пытаемся зарегистрировать пользователя
-	registerData := map[string]string{
-		"username":     "admin",
-		"password":     "admin123",
-		"email":        "admin@example.com",
-		"display_name": "Admin",
-	}
-
-	registerBody, err := json.Marshal(registerData)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := http.Post("http://localhost:8080/api/auth/register", "application/json", bytes.NewBuffer(registerBody))
-	if err != nil {
-		return "", err
-	}
-	resp.Body.Close()
-
-	// Теперь логинимся
-	loginData := LoginRequest{
-		Username: "admin",
-		Password: "admin123",
-	}
-
-	loginBody, err := json.Marshal(loginData)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err = http.Post("http://localhost:8080/api/auth/login", "application/json", bytes.NewBuffer(loginBody))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("ошибка авторизации: %s", string(body))
-	}
-
-	var loginResp LoginResponse
-	if err := json.Unmarshal(body, &loginResp); err != nil {
-		return "", err
-	}
-
-	return loginResp.Token, nil
+	return scriptauth.Token("http://localhost:8080/api")
 }
-

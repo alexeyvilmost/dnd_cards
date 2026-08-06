@@ -7,10 +7,17 @@ import {
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi } from '../api/client';
-import { charactersV3Api, type CharacterEventRow } from '../character/api';
-import { encountersApi } from '../battle/encountersApi';
+import {
+  characterV3ErrorMessage,
+  charactersV3Api,
+  type CharacterEventRow,
+} from '../character/api';
 import { useEncounterStream } from '../battle/useEncounterStream';
-import type { Combatant, PendingSave, PendingAttack } from '../battle/encounterTypes';
+import type { PendingSave, PendingAttack } from '../battle/encounterTypes';
+import {
+  isPendingAttackNegated,
+  restoreNegatedPendingAttack,
+} from '../battle/pendingAttack';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { executeAction } from '../engine/execute';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
@@ -20,7 +27,11 @@ import { characterToDraft, resolveLineageName } from '../character/forgeHelpers'
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import { collectItemMechanics } from '../character/attunement';
-import { buildCharacterContext, forgeToRuntimeState } from '../character/runtime';
+import {
+  buildCharacterContext,
+  forgeToRuntimeState,
+  writeRulesEngineRuntimeTurnState,
+} from '../character/runtime';
 import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { RuntimeRuleSource } from '../character/rules/types';
@@ -29,6 +40,7 @@ import {
   ABILITY_KEYS,
   ABILITY_LABEL_RU,
   characterMetadataLabel,
+  isCharacterReadOnly,
   type ForgeCharacter,
 } from '../character/types';
 import { labelOf, SKILLS } from '../mechanics/registries';
@@ -52,12 +64,16 @@ import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import SheetInPlayController from '../components/SheetInPlayController';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import CharacterSheetV2 from './CharacterSheetV2';
+import EffectiveSenseValue from '../components/EffectiveSenseValue';
+import SheetAuthorityNotice from '../components/SheetAuthorityNotice';
+import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { activeConditionsOf } from '../engine/circumstances';
 import { conditionModifierPayloads, conditionLabel } from '../engine/conditions';
 import { rollD20 } from '../engine/roll';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
+import { effectiveSenses as projectEffectiveSenses } from '../rules-core/dwarfTraits';
 import './CharacterForge.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -111,6 +127,8 @@ const CharacterSheetMVP = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
+  const characterRef = useRef<ForgeCharacter | null>(character);
+  characterRef.current = character;
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [entityAddOpen, setEntityAddOpen] = useState(false);
@@ -138,21 +156,29 @@ const CharacterSheetMVP = () => {
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
   // E4: единое «КЗ цели» на весь лист — оба инстанса SheetActionsPanel
   // (действия и заклинания) целятся в один и тот же AC.
-  const [targetAc, setTargetAc] = useState(10);
-  const [targetSaveMod, setTargetSaveMod] = useState(0);
+  const [targetAc, setTargetAc] = useState<number | null>(null);
+  const [targetSaveMod, setTargetSaveMod] = useState<number | null>(null);
+  const readOnly = character ? isCharacterReadOnly(character) : false;
   // Онлайн-бой: если персонаж в бою (current_encounter_id) — подписываемся на общий стол боя,
   // чтобы (а) показывать индикатор «в бою», (б) отражать боевое HP/temp/состояния на листе в
   // реальном времени (даже если урон нанесли с другого устройства), (в) синхронизировать
   // собственные изменения листа обратно в комбатант. id боя также идёт в панели действий.
   const encId = character?.current_encounter_id ?? null;
-  const { meta: encMeta, state: encState, seq: encSeq } = useEncounterStream(encId ?? undefined);
+  const {
+    meta: encMeta,
+    state: encState,
+    seq: encSeq,
+    apply: applyEncounter,
+  } = useEncounterStream(encId ?? undefined);
   const activeEncounter = encId ? { id: encId, name: encMeta?.name ?? 'Бой' } : null;
   const encStateRef = useRef(encState);
   encStateRef.current = encState;
+  const encSeqRef = useRef(encSeq);
+  encSeqRef.current = encSeq;
   const ownSigRef = useRef('');            // последняя применённая на лист боевая сигнатура
   const pendingSelfRef = useRef<string | null>(null); // ожидаемая сигнатура после собственного пуша
   const handledPendingRef = useRef<Set<string>>(new Set()); // id уже обработанных pending-спасбросков
-  const handledAttackRef = useRef<Set<string>>(new Set()); // id уже обработанных pending-«атакован» (Щит)
+  const handledAttackRef = useRef<Set<string>>(new Set()); // id уже обработанных pending-«атакован»
   const resolvingSaveRef = useRef(false); // сериализация: один диалог спасброска за раз (единый resolver)
   const resolvingSaveIdRef = useRef<string | null>(null); // id разрешаемого спаса — ждём его снятия из state
   const [paperTheme, setPaperTheme] = useState<boolean>(() => {
@@ -169,6 +195,7 @@ const CharacterSheetMVP = () => {
   const [useV2, setUseV2] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-layout') === 'v2'; } catch { return false; }
   });
+  const renderedV2 = useV2 || readOnly;
   const toggleLayout = useCallback(() => {
     setUseV2((prev) => {
       const next = !prev;
@@ -219,7 +246,7 @@ const CharacterSheetMVP = () => {
         if (!stale) await loadJournal(id);
       } catch (e) {
         console.error(e);
-        if (!stale) setError('Не удалось загрузить лист персонажа');
+        if (!stale) setError(characterV3ErrorMessage(e, 'Не удалось загрузить лист персонажа'));
       } finally {
         if (!stale) setLoading(false);
       }
@@ -263,37 +290,11 @@ const CharacterSheetMVP = () => {
     loadJournal(id, { toast: true }); // новые боевые записи → всплывающая подсказка
   }, [encSeq, encId, id, encState, loadJournal]);
 
-  // Sheet→room (self-sync): собственные изменения листа (само-лечение/урон/эффекты) — в свой
-  // комбатант в бою, чтобы доска и другие участники видели их. Пушим только при отличии; ставим
-  // pendingSelfRef, чтобы live-эффект не откатил оптимистичное значение до прихода эха.
-  const syncSelfToEncounter = useCallback((next: ForgeCharacter) => {
-    const eid = next.current_encounter_id;
-    if (!eid) return;
-    const own = encStateRef.current.combatants.find((c) => c.characterId === next.id);
-    if (!own) return;
-    const hp = next.current_hp ?? 0;
-    const temp = Number(next.turn_state?.temp_hp ?? 0);
-    const activeEffects = (next.active_effects ?? []) as Combatant['activeEffects'];
-    const sig = combatantSig({ hp, temp, activeEffects: activeEffects ?? [] });
-    if (sig === combatantSig(own)) return; // ничего не изменилось
-    pendingSelfRef.current = sig;
-    ownSigRef.current = sig; // лист уже показывает next
-    encountersApi.apply(eid, {
-      patches: [{ actor_id: own.actorId, set: { hp, temp, activeEffects } }],
-      log: [{ message: `${next.name}: HP ${hp}/${next.max_hp ?? own.maxHp}` }],
-    }).catch(() => {
-      // Пуш не прошёл: комбатант остался устаревшим, но лист уже персистнут в запись персонажа.
-      // Не откатываем лист к устаревшему комбатанту — считаем его сигнатуру «применённой».
-      pendingSelfRef.current = null;
-      ownSigRef.current = combatantSig(own);
-    });
-  }, []);
-
-  // Обёртка onUpdated: применяем изменение к листу и синхроним себя в бой (если в бою).
+  // Runtime panels persist encounter-owned fields through persistCharacterRuntime,
+  // which routes them to the version-aware encounter Apply command.
   const handleCharacterUpdated = useCallback((next: ForgeCharacter) => {
     setCharacter(next);
-    syncSelfToEncounter(next);
-  }, [syncSelfToEncounter]);
+  }, []);
 
   const handleManualEntityUpdated = useCallback(async (next: ForgeCharacter) => {
     handleCharacterUpdated(next);
@@ -416,11 +417,18 @@ const CharacterSheetMVP = () => {
     [draft, assembled, itemRuntimeSources, conditionRuntimeSources],
   );
 
+  const effectiveSenseRows = useMemo(
+    () => (ruleState && runtimeState
+      ? projectEffectiveSenses({ build: ruleState.senses, runtime: runtimeState })
+      : []),
+    [ruleState, runtimeState],
+  );
+
   // Спасброски проходятся ЦЕЛЬЮ: когда на мой комбатант пришёл pending-спас (кастер наложил
   // save-заклинание), показываю диалог броска (Бросить/Автобросок) на СВОЁМ листе, катаю d20 со
   // своим модификатором спаса vs СЛ, применяю исход (провал/половина/негейт) к себе и снимаю pending.
   const resolveIncomingSave = async (p: PendingSave) => {
-    if (!ruleState || !encId || !id || !runtimeState) return;
+    if (readOnly || !ruleState || !encId || !id || !runtimeState) return;
     const abilLabel = (ABILITY_LABEL_RU as Record<string, string>)[p.ability] ?? p.ability.toUpperCase();
     const mod = (ruleState.savingThrowBonuses as Record<string, number>)[p.ability] ?? 0;
     const halfLabel = (p.onSuccess.hpDelta ?? 0) < 0 ? ' · успех — половина урона' : '';
@@ -489,10 +497,10 @@ const CharacterSheetMVP = () => {
     // ниже (ждём эхо снятия), поэтому whole-array RMW не воскрешает соседние pending.
     const remaining = (own.pendingSaves ?? []).filter((x) => x.id !== p.id);
     try {
-      await encountersApi.apply(encId, {
+      await applyEncounter({
         patches: [{ actor_id: own.actorId, set: { hp: newHp, temp: newTemp, activeEffects: newEff, pendingSaves: remaining } }],
         log: [{ message: `${character?.name ?? 'Персонаж'}: спасбросок ${abilLabel} — ${saved ? 'успех' : 'провал'}${hpDmg ? `, урон ${hpDmg}` : ''}` }],
-      });
+      }, encSeqRef.current);
     } catch {
       // Пуш не прошёл — не вешаем очередь спасбросков: освобождаем сериализатор (спас останется
       // помеченным обработанным, урон уже отражён локально).
@@ -506,7 +514,7 @@ const CharacterSheetMVP = () => {
   // resolver диалога): resolvingSaveRef сериализует; ждём, пока снятие предыдущего отразится в
   // состоянии (эхо), прежде чем брать следующий (иначе whole-array RMW воскресил бы снятый).
   useEffect(() => {
-    if (!encId || !id || !ruleState) return;
+    if (readOnly || !encId || !id || !ruleState) return;
     const own = encState.combatants.find((c) => c.characterId === id);
     const pendings = own?.pendingSaves ?? [];
     if (resolvingSaveRef.current) {
@@ -521,23 +529,27 @@ const CharacterSheetMVP = () => {
     resolvingSaveRef.current = true;
     resolvingSaveIdRef.current = next.id;
     void resolveIncomingSave(next);
-  }, [encSeq, encState, id, encId, ruleState]);
+  }, [encSeq, encState, id, encId, ruleState, readOnly]);
 
-  // Детект входящих pending-«атакован» (реакция Щит). Хук ОБЯЗАН стоять до раннего return
+  // Детект входящих pending-«атакован» (реакции на попадание). Хук ОБЯЗАН стоять до раннего return
   // (правила хуков); сам резолвер — в ref (использует значения, вычисляемые ниже).
   const resolveIncomingAttackRef = useRef<(pa: PendingAttack) => void>(() => {});
   useEffect(() => {
-    if (!encId || !id || !ruleState) return;
+    if (readOnly || !encId || !id || !ruleState) return;
     const own = encState.combatants.find((c) => c.characterId === id);
     const next = (own?.pendingAttacks ?? []).find((p) => !handledAttackRef.current.has(p.id));
     if (!next) return;
     handledAttackRef.current.add(next.id);
     void resolveIncomingAttackRef.current(next);
-  }, [encSeq, encState, id, encId, ruleState]);
+  }, [encSeq, encState, id, encId, ruleState, readOnly]);
 
   // Механики выданных предметами эффектов для числового канала (breakdown листа + панель действий).
   const itemGrantedPassives = useMemo(
-    () => itemGrantedEffects2.map((eff) => eff.mechanics).filter((m): m is Record<string, unknown> => !!m),
+    () => itemGrantedEffects2.flatMap((effect) => (
+      effect.mechanics && typeof effect.mechanics === 'object'
+        ? [{ ...effect.mechanics, id: effect.id, name: effect.name }]
+        : []
+    )),
     [itemGrantedEffects2],
   );
 
@@ -583,7 +595,7 @@ const CharacterSheetMVP = () => {
     return buildCharacterContext(ruleState, draft, equipped, assembled?.klass ?? null);
   }, [ruleState, draft, runtimeState, equipCards, assembled?.klass]);
 
-  // Реакции-слушатели «когда по вам попадают атакой» (Щит): заклинания/эффекты с trigger.event
+  // Реакции-слушатели «когда по вам попадают атакой»: заклинания/эффекты с trigger.event
   // 'hit_by_attack'. Собираются на СТОРОНЕ ЦЕЛИ — она решает применять ли, когда атакующий доставит
   // pending-«атакован» (см. resolveIncomingAttack).
   const incomingReactions = useMemo(() => {
@@ -697,18 +709,18 @@ const CharacterSheetMVP = () => {
   // Слайс 5: выборы «в игре» (context:'in_play') — разрешаются на листе, а не в кузне.
   const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
 
-  // Входящая реакция «когда по вам попадают» (Щит): атакующий доставил pending-«атакован»; цель на
-  // СВОЁМ листе решает применить ли реакцию. Щит +5 КЗ действует и против вызвавшей атаки — если после
-  // него бросок атаки < КЗ, попадание обращается в промах и урон возвращается.
+  // Входящая реакция «когда по вам попадают»: атакующий доставил pending-«атакован»; цель на
+  // СВОЁМ листе решает применить ли реакцию. Если declarative modifier меняет итоговый КЗ так,
+  // что попадание становится промахом, точные HP/temp-каналы нанесённого урона откатываются.
   const resolveIncomingAttack = async (pa: PendingAttack) => {
     if (!encId || !id || !runtimeState || !sheetCtx) return;
     const own = encStateRef.current.combatants.find((c) => c.characterId === id);
     if (!own) return;
     const clearPending = async () => {
       const remaining = (own.pendingAttacks ?? []).filter((x) => x.id !== pa.id);
-      try { await encountersApi.apply(encId, { patches: [{ actor_id: own.actorId, set: { pendingAttacks: remaining } }] }); } catch { /* best-effort */ }
+      try { await applyEncounter({ patches: [{ actor_id: own.actorId, set: { pendingAttacks: remaining } }] }, encSeqRef.current); } catch { /* best-effort */ }
     };
-    // Подбираем реакцию (Щит), которую можно оплатить (ячейка); реакцию как ресурс не жёстко требуем.
+    // Подбираем подходящую реакцию, которую можно оплатить; реакцию как ресурс не жёстко требуем.
     let chosen: { mechanics: Record<string, unknown>; slotIdx: number; level?: number } | null = null;
     for (const react of incomingReactions) {
       const cost = ((react.mechanics.activation as Record<string, unknown>)?.cost ?? []) as Record<string, unknown>[];
@@ -734,18 +746,46 @@ const CharacterSheetMVP = () => {
     const rmech = slotIdx >= 0 && level != null
       ? { ...mechanics, name: reactName, activation: { ...(mechanics.activation as Record<string, unknown>), cost: cost0.map((c, i) => (i === slotIdx ? { ...c, level } : c)) } }
       : { ...mechanics, name: reactName };
+    // The prompt is asynchronous. Re-read the encounter snapshot so a hit,
+    // heal, or temporary-HP change received while the dialog was open is not
+    // overwritten with the stale `own` captured before the prompt.
+    const currentOwn = encStateRef.current.combatants.find((c) => c.actorId === own.actorId) ?? own;
+    const currentActiveEffects = (currentOwn.activeEffects
+      ?? runtimeState.activeEffects) as RuntimeState['activeEffects'];
     // Лист может не трекать реакцию как ресурс — гарантируем её, чтобы оплата прошла (реакция тратится).
-    const runtimeForCast: RuntimeState = { ...runtimeState, hp: { ...runtimeState.hp, current: own.hp, temp: own.temp ?? 0 }, resources: { ...runtimeState.resources, reaction: runtimeState.resources.reaction ?? 1 } };
+    const runtimeForCast: RuntimeState = {
+      ...runtimeState,
+      hp: {
+        current: currentOwn.hp,
+        max: currentOwn.maxHp,
+        temp: currentOwn.temp ?? 0,
+      },
+      activeEffects: currentActiveEffects,
+      resources: { ...runtimeState.resources, reaction: runtimeState.resources.reaction ?? 1 },
+    };
     let out;
     try {
       out = executeAction(runtimeForCast, rmech, { character: sheetCtx, passives, rng: () => Math.random(), selfId: id } as import('../mvp/contracts').ExecuteContext & { passives: typeof passives });
     } catch { await clearPending(); return; }
 
-    // Рефанд: Щит = +5 КЗ (в т.ч. против вызвавшей атаки). Если теперь бросок < КЗ — промах, урон вернуть.
-    const newAc = ac + 5;
-    const negated = pa.attackTotal < newAc;
-    const finalHp = Math.min(runtimeState.hp.max, own.hp + (negated ? pa.damage : 0));
-    const nextState: RuntimeState = { ...out.state, hp: { ...out.state.hp, current: finalHp } };
+    // Реакция уже материализовала свой modifier КЗ в out.state. Поэтому величина
+    // бонуса остаётся данными заклинания/эффекта, а rollback лишь сравнивает итог.
+    const newAc = breakdownValue('ac', sheetCtx, out.state, passives).value;
+    const negated = isPendingAttackNegated(pa, newAc);
+    const restored = negated
+      ? restoreNegatedPendingAttack({
+        hp: currentOwn.hp,
+        maxHp: currentOwn.maxHp,
+        temp: currentOwn.temp ?? 0,
+      }, pa)
+      : { hp: currentOwn.hp, temp: currentOwn.temp ?? 0 };
+    const finalHp = restored.hp;
+    const finalTemp = restored.temp;
+    const nextState: RuntimeState = {
+      ...out.state,
+      hp: { ...out.state.hp, current: finalHp, temp: finalTemp },
+    };
+    const nextTurnState = writeRulesEngineRuntimeTurnState(character?.turn_state, nextState);
     const journal: EngineEvent[] = [
       ...out.events,
       { type: 'narrative', text: negated
@@ -759,14 +799,25 @@ const CharacterSheetMVP = () => {
       saved.forEach((r) => seenEventIdsRef.current.add(r.id));
       setJournal((prev) => [...prev, ...saved]);
     } catch { /* журнал best-effort */ }
-    setCharacter((prev) => prev ? { ...prev, current_hp: finalHp, resources: nextState.resources, active_effects: nextState.activeEffects as unknown[] } : prev);
-    try { await charactersV3Api.patchRuntime(id, { current_hp: finalHp, resources: nextState.resources, active_effects: nextState.activeEffects as unknown[] }); } catch { /* best-effort */ }
-    const remaining = (own.pendingAttacks ?? []).filter((x) => x.id !== pa.id);
+    setCharacter((prev) => prev ? {
+      ...prev,
+      current_hp: finalHp,
+      resources: nextState.resources,
+      active_effects: nextState.activeEffects as unknown[],
+      turn_state: nextTurnState,
+    } : prev);
     try {
-      await encountersApi.apply(encId, {
-        patches: [{ actor_id: own.actorId, set: { hp: finalHp, activeEffects: nextState.activeEffects, pendingAttacks: remaining } }],
-        log: [{ message: `${character?.name ?? 'Персонаж'}: ${reactName}${negated ? ` — атака отражена, урон ${pa.damage} возвращён` : ''}` }],
+      await charactersV3Api.patchRuntime(id, {
+        resources: nextState.resources,
+        turn_state: nextTurnState,
       });
+    } catch { /* best-effort */ }
+    const remaining = (currentOwn.pendingAttacks ?? []).filter((x) => x.id !== pa.id);
+    try {
+      await applyEncounter({
+        patches: [{ actor_id: own.actorId, set: { hp: finalHp, temp: finalTemp, activeEffects: nextState.activeEffects, pendingAttacks: remaining } }],
+        log: [{ message: `${character?.name ?? 'Персонаж'}: ${reactName}${negated ? ` — атака отражена, урон ${pa.damage} возвращён` : ''}` }],
+      }, encSeqRef.current);
     } catch { /* best-effort */ }
   };
 
@@ -775,7 +826,7 @@ const CharacterSheetMVP = () => {
   resolveIncomingAttackRef.current = resolveIncomingAttack;
 
   const rollInitiative = async () => {
-    if (!id || rollingInit) return;
+    if (readOnly || !id || rollingInit) return;
     setRollingInit(true);
     try {
       // Состояния влияют на бросок Инициативы (PHB 2024): Невидимый → преимущество,
@@ -821,7 +872,7 @@ const CharacterSheetMVP = () => {
   // Как в трекере: событие показывается всплывающей подсказкой, полная
   // история копится в журнале (FAB), который открывается только вручную.
   const appendRuntimeEvents = async (events: import('../mvp/contracts').EngineEvent[]) => {
-    if (!id || !events.length) return;
+    if (readOnly || !id || !events.length) return;
     pushToast(events);
     if (!journalOpen) setUnseen((u) => u + 1);
     try {
@@ -898,19 +949,20 @@ const CharacterSheetMVP = () => {
   ];
   const activeSec = sheetSections.some((s) => s.id === sheetSection) ? sheetSection : 'combat';
   // Секционируем только на мобильном классическом листе (V2 — свой макет).
-  const mobileSectioned = isMobile && !useV2;
+  const mobileSectioned = isMobile && !renderedV2;
   // На десктопе показываем все секции; на мобильном — только активную.
   const inSec = (s: string) => !mobileSectioned || activeSec === s;
 
   return (
     <CharacterFormulaProvider value={formulaCtxFromCharacter(sheetCtx)}>
-    <div className={`${rootCls}${!useV2 ? ' sheet-has-bottomnav' : ''}`}>
+    <div className={`${rootCls}${!renderedV2 ? ' sheet-has-bottomnav' : ''}`}>
       <div className="forge-header sheet-header-bar">
         <button type="button" className="sheet-back" onClick={() => navigate(-1)} title="Назад">
           <ArrowLeft size={18} />
         </button>
         <div className="sheet-header-center">
           <span className="sheet-header-name">{character.name || 'Без имени'}</span>
+          <CharacterAccessBadge character={character} />
           {activeEncounter ? (
             <Link to={`/encounter/${activeEncounter.id}`} className="sheet-in-battle" title="Открыть онлайн-бой">
               <Swords size={12} /> В бою: {activeEncounter.name}
@@ -920,7 +972,7 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
-          {allowSheetEntityAdditions && (
+          {allowSheetEntityAdditions && !readOnly && (
             <button
               type="button"
               className="sheet-header-btn"
@@ -940,15 +992,17 @@ const CharacterSheetMVP = () => {
             <SettingsIcon size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
           </button>
-          <button
-            type="button"
-            className="sheet-header-btn"
-            onClick={toggleLayout}
-            title={useV2 ? 'Классический макет' : 'Новый макет (кокпит)'}
-          >
-            <LayoutGrid size={16} />
-            <span className="sheet-header-btn-label">{useV2 ? 'Классический' : '✦ Новый'}</span>
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              className="sheet-header-btn"
+              onClick={toggleLayout}
+              title={useV2 ? 'Классический макет' : 'Новый макет (кокпит)'}
+            >
+              <LayoutGrid size={16} />
+              <span className="sheet-header-btn-label">{useV2 ? 'Классический' : '✦ Новый'}</span>
+            </button>
+          )}
           <button
             type="button"
             className="sheet-header-btn"
@@ -958,35 +1012,48 @@ const CharacterSheetMVP = () => {
             {paperTheme ? <Moon size={16} /> : <Sun size={16} />}
             <span className="sheet-header-btn-label">{paperTheme ? 'Тёмная' : 'Бумага'}</span>
           </button>
-          <button
-            type="button"
-            className="sheet-header-btn"
-            onClick={rollInitiative}
-            disabled={rollingInit}
-            title="Бросок инициативы"
-          >
-            <Dices size={16} />
-            <span className="sheet-header-btn-label">{rollingInit ? '…' : 'Инициатива'}</span>
-          </button>
-          <Link
-            to={`/character-forge/${character.id}?levelup=1`}
-            className="sheet-header-btn"
-            title={`Поднять уровень (сейчас ${character.level})`}
-          >
-            <ChevronsUp size={16} />
-            <span className="sheet-header-btn-label">Уровень {character.level} ↑</span>
-          </Link>
-          <Link to={`/character-forge/${character.id}`} className="sheet-edit" title="Редактировать">
-            <Pencil size={16} />
-          </Link>
+          {!readOnly && (
+            <>
+              <button
+                type="button"
+                className="sheet-header-btn"
+                onClick={rollInitiative}
+                disabled={rollingInit}
+                title="Бросок инициативы"
+              >
+                <Dices size={16} />
+                <span className="sheet-header-btn-label">{rollingInit ? '…' : 'Инициатива'}</span>
+              </button>
+              <Link
+                to={`/character-forge/${character.id}?levelup=1`}
+                className="sheet-header-btn"
+                title={`Поднять уровень (сейчас ${character.level})`}
+              >
+                <ChevronsUp size={16} />
+                <span className="sheet-header-btn-label">Уровень {character.level} ↑</span>
+              </Link>
+              <Link to={`/character-forge/${character.id}`} className="sheet-edit" title="Редактировать">
+                <Pencil size={16} />
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
-      {useV2 ? (
+      <SheetAuthorityNotice />
+      {readOnly && (
+        <p className="forge-note" role="note" style={{ margin: '12px auto', maxWidth: 900, padding: '0 16px' }}>
+          Архивный публичный лист открыт только для чтения. Создайте свою копию, чтобы менять HP,
+          ресурсы, эффекты, экипировку или сборку персонажа.
+        </p>
+      )}
+
+      {renderedV2 ? (
         <CharacterSheetV2
           character={character}
           assembled={assembledForActions ?? assembled}
           ruleState={ruleState}
+          effectiveSenses={effectiveSenseRows}
           draft={draft}
           sheetCtx={sheetCtx}
           runtimeState={runtimeState}
@@ -1001,6 +1068,8 @@ const CharacterSheetMVP = () => {
           inPlayChoices={inPlayChoices}
           onUpdated={handleCharacterUpdated}
           onEvents={appendRuntimeEvents}
+          readOnly={readOnly}
+          encounterApply={applyEncounter}
         />
       ) : (
       <div className="sheet-scroll">
@@ -1013,7 +1082,7 @@ const CharacterSheetMVP = () => {
         )}
 
         <div className="sheet-grid">
-          {inSec('combat') && (
+          {inSec('combat') && !readOnly && (
           <SheetActionsPanel
             character={character}
             assembled={assembledForActions ?? assembled}
@@ -1030,19 +1099,21 @@ const CharacterSheetMVP = () => {
             targetSaveMod={targetSaveMod}
             onTargetSaveModChange={setTargetSaveMod}
             encounterId={encId ?? undefined}
+            encounterApply={applyEncounter}
           />
           )}
 
-          {inSec('inventory') && (
+          {inSec('inventory') && !readOnly && (
           <SheetEquipmentPanel
             character={character}
             ruleState={ruleState}
             onUpdated={handleCharacterUpdated}
             passives={passives}
+            encounterApply={applyEncounter}
           />
           )}
 
-          {inSec('combat') && (
+          {inSec('combat') && !readOnly && (
           <SheetRuntimePanel
             character={character}
             assembled={assembledForActions ?? assembled}
@@ -1050,10 +1121,11 @@ const CharacterSheetMVP = () => {
             onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
             onLongRestComplete={() => setLongRestOpen(true)}
+            encounterApply={applyEncounter}
           />
           )}
 
-          {inSec('combat') && (
+          {inSec('combat') && !readOnly && (
           <SheetHpPanel
             character={character}
             maxHp={maxHP}
@@ -1063,14 +1135,17 @@ const CharacterSheetMVP = () => {
             conSaveBonus={ruleState.savingThrowBonuses.con}
             sheetCtx={sheetCtx}
             passives={passives}
+            encounterApply={applyEncounter}
           />
           )}
 
-          {inSec('combat') && (
+          {inSec('combat') && !readOnly && (
           <SheetConditionsPanel
             character={character}
             onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
+            passives={passives}
+            encounterApply={applyEncounter}
           />
           )}
 
@@ -1167,8 +1242,8 @@ const CharacterSheetMVP = () => {
               {Object.entries(ruleState.speeds).map(([mode, v]) => (
                 <div key={`spd-${mode}`} className="sheet-stat"><span>{SPEED_MODE_LABEL[mode] ?? mode}</span><strong>{v} фт</strong></div>
               ))}
-              {ruleState.senses.map((s) => (
-                <div key={`sense-${s.sense}`} className="sheet-stat"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><strong>{s.range} фт</strong></div>
+              {effectiveSenseRows.map((s) => (
+                <div key={`sense-${s.sense}`} className="sheet-stat"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><strong><EffectiveSenseValue sense={s} /></strong></div>
               ))}
             </div>
             {spellcasting && (
@@ -1392,7 +1467,7 @@ const CharacterSheetMVP = () => {
             </section>
           ) : null}
 
-          {inSec('spells') && (assembledForActions ?? assembled).spells.length > 0 && (
+          {inSec('spells') && !readOnly && (assembledForActions ?? assembled).spells.length > 0 && (
             <section className="sheet-panel sheet-panel-wide">
               <h2 className="sheet-h2">Заклинания</h2>
               {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel,
@@ -1414,6 +1489,7 @@ const CharacterSheetMVP = () => {
                 targetSaveMod={targetSaveMod}
                 onTargetSaveModChange={setTargetSaveMod}
                 encounterId={encId ?? undefined}
+                encounterApply={applyEncounter}
               />
             </section>
           )}
@@ -1422,7 +1498,7 @@ const CharacterSheetMVP = () => {
       </div>
       )}
 
-      {!useV2 && (
+      {!renderedV2 && !readOnly && (
         <SheetInPlayController
           character={character}
           draft={draft}
@@ -1451,7 +1527,7 @@ const CharacterSheetMVP = () => {
       )}
 
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
-      {entityAddOpen && allowSheetEntityAdditions && (
+      {entityAddOpen && allowSheetEntityAdditions && !readOnly && (
         <SheetEntityAddDialog
           character={character}
           onUpdated={handleManualEntityUpdated}
@@ -1473,7 +1549,7 @@ const CharacterSheetMVP = () => {
         onOpenChange={(o) => { setJournalOpen(o); if (o) setUnseen(0); }}
         rows={journal}
         loading={journalLoading}
-        onRollInitiative={rollInitiative}
+        onRollInitiative={readOnly ? undefined : rollInitiative}
         rollingInit={rollingInit}
         unseen={unseen}
       />

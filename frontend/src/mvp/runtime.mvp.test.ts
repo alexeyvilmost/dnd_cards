@@ -90,17 +90,21 @@ describe('D3: ход и отдыхи', () => {
     expect((events.find((event) => event.type === 'healing') as Extract<typeof events[number], { type: 'healing' }>).roll?.total).toBe(9);
   });
 
-  it('longRest: HP до максимума, все ресурсы, активные эффекты сняты', () => {
+  it('longRest: HP/ресурсы восстановлены, rest-эффекты сняты, manual сохранены', () => {
     const state = freshFighterState();
     state.hp = { current: 3, max: 11, temp: 0 };
     state.resources = { ...state.resources, second_wind: 0, heroic_inspiration: 0 };
     state.resources.hit_dice_d10 = 0;
-    state.activeEffects = [{ id: 'x', name: 'Бафф', mechanics: {}, source: 'тест' }];
+    state.activeEffects = [
+      { id: 'manual', name: 'Постоянный эффект', mechanics: {}, source: 'тест', expiry: 'manual' },
+      { id: 'rest', name: 'До долгого отдыха', mechanics: {}, source: 'тест', expiry: 'long_rest' },
+    ];
     const { state: next, events } = longRest(state, FIGHTER_CTX);
     expect(next.hp.current).toBe(11);
     expect(next.resources.second_wind).toBe(2);
     expect(next.resources.hit_dice_d10).toBe(1);
-    expect(next.activeEffects).toHaveLength(0);
+    expect(next.activeEffects.map((effect) => effect.id)).toEqual(['manual']);
+    expect(events).toContainEqual({ type: 'effect_expired', name: 'До долгого отдыха' });
     expect(events.some((e) => e.type === 'long_rest')).toBe(true);
   });
 

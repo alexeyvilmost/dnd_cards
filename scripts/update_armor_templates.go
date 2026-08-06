@@ -1,6 +1,7 @@
 package main
 
 import (
+	scriptauth "armor-loader/internal/scriptauth"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -58,35 +59,9 @@ func main() {
 
 	// Получаем токен авторизации
 	fmt.Println("Получаем токен авторизации...")
-	authData := map[string]string{
-		"username": "admin",
-		"password": "admin123",
-	}
-	authJSON, _ := json.Marshal(authData)
-
-	authResp, err := http.Post(apiURL+"/auth/login", "application/json", bytes.NewBuffer(authJSON))
+	token, err := scriptauth.Token(apiURL)
 	if err != nil {
 		fmt.Printf("Ошибка авторизации: %v\n", err)
-		os.Exit(1)
-	}
-	defer authResp.Body.Close()
-
-	authBody, err := io.ReadAll(authResp.Body)
-	if err != nil {
-		fmt.Printf("Ошибка чтения ответа авторизации: %v\n", err)
-		os.Exit(1)
-	}
-
-	var authResponse struct {
-		Token string `json:"token"`
-	}
-	if err := json.Unmarshal(authBody, &authResponse); err != nil {
-		fmt.Printf("Ошибка парсинга токена: %v\n", err)
-		os.Exit(1)
-	}
-
-	if authResponse.Token == "" {
-		fmt.Printf("Не удалось получить токен: %s\n", string(authBody))
 		os.Exit(1)
 	}
 
@@ -163,7 +138,7 @@ func main() {
 			continue
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authResponse.Token)
+		req.Header.Set("Authorization", "Bearer "+token)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)

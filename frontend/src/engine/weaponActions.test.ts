@@ -15,7 +15,8 @@ const CTX: CharacterContext = {
 
 describe('weaponContext: многострочный урон + зачарование', () => {
   it('Молот мороза +1: основной 2d6 дробящий + стихийный 1d6 холод, enchant=1', () => {
-    const w = weaponContext(CTX, 'main', { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id });
+    const attuned = { ...CTX, attunedIds: [CARD_FROST_HAMMER.id] };
+    const w = weaponContext(attuned, 'main', { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id });
     expect(w).toBeTruthy();
     expect(w!.dice).toBe('2d6');
     expect(w!.damageType).toBe('bludgeoning');
@@ -33,15 +34,23 @@ describe('weaponContext: многострочный урон + зачарова�
   });
 });
 
-describe('weaponEnchant: поле важнее имени, имя — запасной путь', () => {
-  it('поле enchant_bonus имеет приоритет над именем', () => {
-    expect(weaponEnchant({ ...CARD_LONGSWORD, name: 'Меч', enchant_bonus: 2 })).toBe(2);
+describe('weaponEnchant: mechanics.weapon_profile — единственный authority', () => {
+  it('игнорирует конфликтующие legacy name/enchant_bonus', () => {
+    expect(weaponEnchant({ ...CARD_LONGSWORD, name: 'Меч +3', enchant_bonus: 2 })).toBe(0);
   });
-  it('без поля — разбор «+N» из имени', () => {
-    expect(weaponEnchant({ ...CARD_LONGSWORD, name: 'Меч +3', enchant_bonus: null })).toBe(3);
+
+  it('читает только явный attack_bonus профиля', () => {
+    const mechanics = structuredClone(CARD_LONGSWORD.mechanics) as Record<string, unknown>;
+    const profile = mechanics.weapon_profile as Record<string, unknown>;
+    profile.enchantment = {
+      ...(profile.enchantment as Record<string, unknown>),
+      attack_bonus: 2,
+    };
+    expect(weaponEnchant({ ...CARD_LONGSWORD, mechanics })).toBe(2);
   });
-  it('нет ни поля, ни «+N» — 0', () => {
-    expect(weaponEnchant({ ...CARD_LONGSWORD, name: 'Меч', enchant_bonus: null })).toBe(0);
+
+  it('fail-closed при отсутствии профиля', () => {
+    expect(() => weaponEnchant({ ...CARD_LONGSWORD, mechanics: {} })).toThrow(/weapon_profile is required/);
   });
 });
 
@@ -103,10 +112,10 @@ describe('настройка гейтит магию оружия (#5): без �
     expect(w.damages).toEqual([{ dice: '2d6', type: 'bludgeoning' }, { dice: '1d6', type: 'cold' }]);
   });
 
-  it('attunedIds не задан (тесты/старый контекст) — не гейтим (обратная совместимость)', () => {
+  it('неизвестное состояние настройки fail-closed: магические бонусы не активны', () => {
     const w = weaponContext(CTX, 'main', eq)!; // CTX без attunedIds
-    expect(w.enchant).toBe(1);
-    expect(w.damages).toHaveLength(2);
+    expect(w.enchant).toBe(0);
+    expect(w.damages).toEqual([{ dice: '2d6', type: 'bludgeoning' }]);
   });
 });
 
@@ -125,8 +134,9 @@ describe('weaponAttackPreview: числа из оружия в руке', () => 
   });
 
   it('Молот мороза +1: атака +5 (СИЛ+БМ+зач.), урон 2d6 +3 дробящий и 1d6 холод (без бонуса)', () => {
+    const attuned = { ...CTX, attunedIds: [CARD_FROST_HAMMER.id] };
     const p = weaponAttackPreview(
-      MECH_WEAPON_ATTACK, CTX, { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id })!;
+      MECH_WEAPON_ATTACK, attuned, { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id })!;
     expect(p.attack).toBe(5); // 2 СИЛ + 2 БМ + 1 зачарование
     expect(p.damages).toEqual([
       { dice: '2d6', bonus: 3, type: 'bludgeoning' }, // 2 СИЛ + 1 зачарование
@@ -145,8 +155,9 @@ describe('weaponAttackPreview: числа из оружия в руке', () => 
   });
 
   it('явная характеристика (не auto): зачарование НЕ идёт в атаку (зеркало движка), но идёт в урон', () => {
-    const mech = { effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: 'weapon' }] }] };
-    const p = weaponAttackPreview(mech, CTX, { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id })!;
+    const mech = { effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon' }] }] };
+    const attuned = { ...CTX, attunedIds: [CARD_FROST_HAMMER.id] };
+    const p = weaponAttackPreview(mech, attuned, { main_hand: CARD_FROST_HAMMER.id, off_hand: CARD_FROST_HAMMER.id })!;
     expect(p.attack).toBe(4); // СИЛ(2)+БМ(2), без +1 к атаке
     expect(p.damages[0]).toEqual({ dice: '2d6', bonus: 3, type: 'bludgeoning' }); // урон: +СИЛ +зачарование
   });

@@ -2,16 +2,30 @@
 
 ## Подготовка проекта
 
-### 1. Создайте health check endpoint для backend
+### 1. Проверьте health и identity обоих сервисов
 
-Добавьте в `backend/main.go`:
+Backend уже публикует:
 
 ```go
-// Health check endpoint
 r.GET("/api/health", func(c *gin.Context) {
-    c.JSON(200, gin.H{"status": "ok"})
+	c.JSON(200, gin.H{
+		"status":        "ok",
+		"timestamp":     time.Now().Unix(),
+		"source_commit": deployedSourceCommit(),
+	})
 })
 ```
+
+В Railway `source_commit` берётся из системной переменной
+`RAILWAY_GIT_COMMIT_SHA` и принимается только как полный 40-символьный Git SHA.
+После deployment значение обязано точно совпасть с локально проверенным
+release commit; `unavailable` закрывает production release gate.
+
+Frontend-контейнер при старте атомарно создаёт `/build-info.json` из той же
+`RAILWAY_GIT_COMMIT_SHA`. Endpoint отдаётся с `Cache-Control: no-cache,
+no-store, must-revalidate`; отсутствующий или невалидный SHA публикуется как
+`null` и также закрывает gate. Финальная release-проверка требует один и тот же
+exact 40-hex commit у backend и frontend.
 
 ### 2. Создайте .env.example файл
 
@@ -38,7 +52,7 @@ YANDEX_REGION=ru-central1
 
 #### 1. Подготовьте репозиторий
 ```bash
-git add .
+# Добавляйте только явно проверенный release allowlist; не используйте `git add .`
 git commit -m "Prepare for deployment"
 git push origin main
 ```
@@ -107,7 +121,8 @@ services:
 
 ### Backend:
 - `DATABASE_URL` - URL вашей Supabase БД
-- `JWT_SECRET` - секретный ключ для JWT
+- `JWT_SECRET` - секретный ключ для JWT, не менее 32 случайных байт
+- `ENCOUNTER_INVITE_SECRET` - рекомендуемый отдельный HMAC-ключ приглашений в бой (>=32 байт); при отсутствии используется доменно-разделённый `JWT_SECRET`
 - `OPENAI_API_KEY` - ключ OpenAI
 - `YANDEX_ACCESS_KEY_ID` - ключ Yandex Storage
 - `YANDEX_SECRET_ACCESS_KEY` - секрет Yandex Storage

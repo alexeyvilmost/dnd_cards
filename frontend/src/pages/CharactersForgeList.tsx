@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, User } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
+import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { racesApi, classesApi } from '../api/client';
-import { characterMetadataLabel, type ForgeCharacter } from '../character/types';
+import {
+  characterMetadataLabel,
+  isCharacterReadOnly,
+  type ForgeCharacter,
+} from '../character/types';
 import type { Race, CharacterClass } from '../types';
+import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import './CharacterForge.css';
 
 const CharactersForgeList = () => {
@@ -29,7 +34,7 @@ const CharactersForgeList = () => {
         setClasses(cc.classes || []);
       } catch (e) {
         console.error(e);
-        setError('Не удалось загрузить список персонажей');
+        setError(characterV3ErrorMessage(e, 'Не удалось загрузить список персонажей'));
       } finally {
         setLoading(false);
       }
@@ -55,7 +60,7 @@ const CharactersForgeList = () => {
       setConfirmId(null);
     } catch (e) {
       console.error(e);
-      setError('Не удалось удалить персонажа');
+      setError(characterV3ErrorMessage(e, 'Не удалось удалить персонажа'));
     } finally {
       setBusy(false);
     }
@@ -88,12 +93,13 @@ const CharactersForgeList = () => {
                 <span className="ec-name">{c.name || 'Без имени'}</span>
                 <span className="ec-sub">{subtitle(c)}</span>
                 <span className="ec-sub">{characterMetadataLabel(c)}</span>
+                <CharacterAccessBadge character={c} />
                 <span className="ec-sub">Уровень {c.level} · HP {c.current_hp}/{c.max_hp}</span>
                 <span className="ec-sub" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <User size={12} /> Открыть лист
                 </span>
               </Link>
-              {confirmId === c.id ? (
+              {!isCharacterReadOnly(c) && (confirmId === c.id ? (
                 <span className="forge-char-card-actions">
                   <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => remove(c.id)}>
                     Удалить?
@@ -111,7 +117,7 @@ const CharactersForgeList = () => {
                 >
                   <Trash2 size={14} />
                 </button>
-              )}
+              ))}
             </div>
           ))}
         </div>

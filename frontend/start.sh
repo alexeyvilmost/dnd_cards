@@ -6,6 +6,21 @@ export PORT
 
 echo ">>> dnd-cards frontend: PORT=${PORT}"
 
+# Runtime deployment attestation. Railway supplies the Git-triggered commit as
+# a system variable; local images remain usable and advertise null instead of
+# inventing an identity. The no-cache endpoint is checked immediately before
+# production content mutation and by browser canaries.
+SOURCE_COMMIT="${RAILWAY_GIT_COMMIT_SHA:-}"
+BUILD_INFO_TMP="/usr/share/nginx/html/.build-info.json.tmp"
+BUILD_INFO_PATH="/usr/share/nginx/html/build-info.json"
+if printf '%s' "$SOURCE_COMMIT" | grep -Eq '^[0-9A-Fa-f]{40}$'; then
+  SOURCE_COMMIT="$(printf '%s' "$SOURCE_COMMIT" | tr 'A-F' 'a-f')"
+  printf '{"source_commit":"%s"}\n' "$SOURCE_COMMIT" > "$BUILD_INFO_TMP"
+else
+  printf '{"source_commit":null}\n' > "$BUILD_INFO_TMP"
+fi
+mv "$BUILD_INFO_TMP" "$BUILD_INFO_PATH"
+
 rm -f /etc/nginx/conf.d/default.conf
 
 envsubst '${PORT}' < /etc/nginx/templates/app.conf.template > /etc/nginx/conf.d/app.conf
@@ -28,6 +43,11 @@ server {
         access_log off;
         return 200 'ok';
         add_header Content-Type text/plain;
+    }
+
+    location = /build-info.json {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
     }
 
     location /proxy/ttg-club-import/bestiary/ {

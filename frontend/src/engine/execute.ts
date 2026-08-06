@@ -5,6 +5,7 @@ import type {
   ActiveEffectEntry,
   AdvantageState,
   CharacterContext,
+  DeferredTargetSave,
   EngineEvent,
   ExecuteContext,
   ExecuteResult,
@@ -18,16 +19,36 @@ import {
   resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
-import { collectModifiers, foldAdvantage } from './modifiers';
-import { activeConditionsOf, type EvalContext } from './circumstances';
-import { conditionModifierPayloads, conditionLeaves, conditionLabel } from './conditions';
+import {
+  collectModifiers,
+  foldAdvantage,
+  foldModifiers,
+  type ModifierQueryFacts,
+} from './modifiers';
+import { activeConditionsOf, matchesWhen, type EvalContext } from './circumstances';
+import {
+  conditionLevel,
+  conditionModifierPayloads,
+  conditionRuntimePayloads,
+  conditionRule,
+  conditionStacking,
+  conditionLeaves,
+  conditionLabel,
+} from './conditions';
 import { payloadsOf } from './mechanicsView';
 import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/expandChoices';
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
-import { rollD20 } from './roll';
+import { retargetAttackRoll, rollD20 } from './roll';
 import { applyDamageDieRules } from './rollRules';
-import { weaponContext, attackRangeFromEffect } from './weapon';
+import {
+  attackRangeFromEffect,
+  attackRollQueryFacts,
+  extraAttackSourceFromEffect,
+  isWeaponProficient,
+  weaponContext,
+} from './weapon';
+import { evaluateWeaponHeavyRule } from './weaponProfile';
 import { activeMastery } from './mastery';
 
 type Dict = Record<string, unknown>;
@@ -40,6 +61,34 @@ export class InsufficientResourcesError extends Error {
   constructor(readonly missing: string[]) {
     super(`INSUFFICIENT_RESOURCES: ${missing.join(', ')}`);
     this.name = 'InsufficientResourcesError';
+  }
+}
+
+export type MechanicsExecutionErrorCode =
+  | 'INVALID_MECHANICS'
+  | 'CANONICAL_PRIMITIVE_REQUIRED'
+  | 'UNKNOWN_RESOLUTION'
+  | 'UNKNOWN_PAYLOAD'
+  | 'INVALID_PAYLOAD'
+  | 'INVALID_FORMULA'
+  | 'MISSING_CHOICE'
+  | 'INVALID_CHOICE'
+  | 'UNRESOLVED_GRANT_EFFECT';
+
+/**
+ * A data/adapter contract error detected before an action can spend resources.
+ * `code` and `path` are stable machine-readable diagnostics; entity ids and
+ * localized names deliberately never participate in dispatch.
+ */
+export class MechanicsExecutionError extends Error {
+  constructor(
+    readonly code: MechanicsExecutionErrorCode,
+    readonly path: string,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
+    super(`${code} at ${path}: ${message}`, options);
+    this.name = 'MechanicsExecutionError';
   }
 }
 
@@ -91,6 +140,735 @@ function targetFormulaCtx(target: ExecuteContext['target']): FormulaContext | nu
   };
 }
 
+const EXECUTABLE_RESOLUTIONS = new Set(['auto', 'attack_roll', 'save', 'ability_check']);
+const EXECUTABLE_PAYLOAD_KINDS = new Set([
+  'damage', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
+  'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
+  'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
+  'transform', 'narrative',
+]);
+const ABILITY_KEYS = new Set<AbilityKey>(['str', 'dex', 'con', 'int', 'wis', 'cha']);
+const ATTACK_ABILITIES = new Set([...ABILITY_KEYS, 'auto', 'spellcasting']);
+const MODIFIER_OPS = new Set([
+  'add', 'set', 'advantage', 'disadvantage', 'reroll', 'multiply', 'upgrade',
+  'downgrade', 'auto_fail', 'auto_crit', 'deny', 'set_die', 'crit_range',
+  'outcome', 'on_roll', 'die_bonus', 'bonus_die', 'explode',
+]);
+const NUMERIC_MODIFIER_OPS = new Set(['add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'die_bonus']);
+const MOVEMENT_MODES = new Set(['push', 'pull', 'teleport', 'extra_speed', 'double', 'knock_prone', 'move']);
+const RESISTANCE_LEVELS = new Set(['resistance', 'immunity', 'vulnerability']);
+const MAX_PREFLIGHT_DEPTH = 12;
+const PREFLIGHT_RNG = () => 0.5;
+
+function isDict(value: unknown): value is Dict {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function mechanicsError(
+  code: MechanicsExecutionErrorCode,
+  path: string,
+  message: string,
+  cause?: unknown,
+): MechanicsExecutionError {
+  return new MechanicsExecutionError(code, path, message, cause === undefined ? undefined : { cause });
+}
+
+function preflightFormulaCtx(ctx: ExecuteContext, targetOwned = false): FormulaContext {
+  const base = targetOwned ? (targetFormulaCtx(ctx.target) ?? formulaCtx(ctx)) : formulaCtx(ctx);
+  return { ...base, rng: PREFLIGHT_RNG };
+}
+
+/** Parse and evaluate without consuming the caller's RNG tape. */
+function assertFiniteFormula(
+  value: unknown,
+  path: string,
+  ctx: ExecuteContext,
+  targetOwned = false,
+): number {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    throw mechanicsError('INVALID_FORMULA', path, 'expected a formula string or number');
+  }
+  try {
+    const result = evaluate(value, preflightFormulaCtx(ctx, targetOwned));
+    if (typeof result !== 'number' || !Number.isFinite(result)) {
+      throw new FormulaError('formula must resolve to a finite number');
+    }
+    return result;
+  } catch (error) {
+    throw mechanicsError(
+      'INVALID_FORMULA',
+      path,
+      error instanceof Error ? error.message : String(error),
+      error,
+    );
+  }
+}
+
+function explicitAbility(
+  value: unknown,
+  path: string,
+  supported: ReadonlySet<string>,
+  label: string,
+): string {
+  if (typeof value !== 'string' || !supported.has(value)) {
+    throw mechanicsError(
+      'INVALID_PAYLOAD',
+      path,
+      `${label} requires an explicit supported ability`,
+    );
+  }
+  return value;
+}
+
+function explicitPositiveDc(
+  value: unknown,
+  path: string,
+  ctx: ExecuteContext,
+): number {
+  if (value === undefined) {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'resolution requires an explicit DC formula');
+  }
+  const dc = assertFiniteFormula(value, path, ctx);
+  if (dc <= 0) {
+    throw mechanicsError('INVALID_FORMULA', path, 'DC formula must resolve to a positive number');
+  }
+  return dc;
+}
+
+function explicitTargetArmorClass(ctx: ExecuteContext): number {
+  const ac = ctx.target?.ac;
+  if (typeof ac !== 'number' || !Number.isFinite(ac) || ac <= 0) {
+    throw mechanicsError(
+      'INVALID_MECHANICS',
+      'context.target.ac',
+      'attack resolution requires an explicit positive finite target AC',
+    );
+  }
+  return ac;
+}
+
+function explicitCharacterAbilityModifier(
+  ctx: ExecuteContext,
+  ability: AbilityKey,
+): number {
+  const modifier = ctx.character?.abilityMods?.[ability];
+  if (typeof modifier !== 'number' || !Number.isFinite(modifier)) {
+    throw mechanicsError(
+      'INVALID_MECHANICS',
+      `context.character.abilityMods.${ability}`,
+      'resolution requires an explicit finite actor ability modifier',
+    );
+  }
+  return modifier;
+}
+
+function explicitCharacterProficiencyBonus(ctx: ExecuteContext): number {
+  const bonus = ctx.character?.profBonus;
+  if (typeof bonus !== 'number' || !Number.isFinite(bonus)) {
+    throw mechanicsError(
+      'INVALID_MECHANICS',
+      'context.character.profBonus',
+      'D20 resolution requires an explicit finite actor proficiency bonus',
+    );
+  }
+  return bonus;
+}
+
+function explicitTargetSaveModifier(ctx: ExecuteContext, ability: AbilityKey): number {
+  const targetCharacter = ctx.target?.characterContext;
+  if (targetCharacter) {
+    const base = targetCharacter.abilityMods[ability];
+    if (typeof base !== 'number' || !Number.isFinite(base)
+      || typeof targetCharacter.profBonus !== 'number'
+      || !Number.isFinite(targetCharacter.profBonus)) {
+      throw mechanicsError(
+        'INVALID_MECHANICS',
+        `context.target.characterContext.abilityMods.${ability}`,
+        'save resolution requires explicit finite target ability and proficiency facts',
+      );
+    }
+    return base + (targetCharacter.saveProficiencies?.includes(ability)
+      ? targetCharacter.profBonus
+      : 0);
+  }
+  const modifier = ctx.target?.saveMods?.[ability];
+  if (typeof modifier !== 'number' || !Number.isFinite(modifier)) {
+    throw mechanicsError(
+      'INVALID_MECHANICS',
+      `context.target.saveMods.${ability}`,
+      'save resolution requires an explicit finite target save modifier',
+    );
+  }
+  return modifier;
+}
+
+function explicitContestSkills(effect: Dict, path: string, ctx: ExecuteContext): string[] {
+  if (!Array.isArray(effect.contest_vs)
+    || effect.contest_vs.length === 0
+    || effect.contest_vs.some((skill) => typeof skill !== 'string' || !skill.trim())
+    || new Set(effect.contest_vs).size !== effect.contest_vs.length) {
+    throw mechanicsError(
+      'INVALID_PAYLOAD',
+      `${path}.contest_vs`,
+      'contest requires explicit distinct non-empty defending skills',
+    );
+  }
+  const skills = effect.contest_vs as string[];
+  for (const skill of skills) {
+    const modifier = ctx.target?.checkMods?.[skill];
+    if (typeof modifier !== 'number' || !Number.isFinite(modifier)) {
+      throw mechanicsError(
+        'INVALID_MECHANICS',
+        `context.target.checkMods.${skill}`,
+        'contest requires an explicit finite modifier for every defending skill',
+      );
+    }
+  }
+  return skills;
+}
+
+/** Activation costs must be deterministic: a price may use actor variables,
+ * but cannot roll dice while the engine is deciding whether it can be paid. */
+function resolveCostAmount(value: unknown, path: string, ctx: ExecuteContext): number {
+  if (value === undefined) return 1;
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    throw mechanicsError('INVALID_FORMULA', path, 'cost amount must be a deterministic formula');
+  }
+  try {
+    const result = evaluate(value, {
+      ...preflightFormulaCtx(ctx),
+      rng: () => { throw new FormulaError('activation cost cannot contain a random die'); },
+    });
+    if (typeof result !== 'number' || !Number.isFinite(result)
+      || !Number.isInteger(result) || result <= 0) {
+      throw new FormulaError('cost amount must resolve to a positive integer');
+    }
+    return result;
+  } catch (error) {
+    throw mechanicsError(
+      'INVALID_FORMULA',
+      path,
+      error instanceof Error ? error.message : String(error),
+      error,
+    );
+  }
+}
+
+/** Validate and resolve the exact cost array that canPay/pay will receive.
+ * Formula prices are reduced once to numeric values, so resources cannot be
+ * checked using one amount and consumed using another. */
+function preflightActivationCost(mechanics: Dict, ctx: ExecuteContext): Dict[] {
+  if (mechanics.activation === undefined) return [];
+  if (!isDict(mechanics.activation)) {
+    throw mechanicsError('INVALID_MECHANICS', 'mechanics.activation', 'activation must be an object');
+  }
+  const activation = mechanics.activation;
+  if (activation.cost === undefined) return [];
+  if (!Array.isArray(activation.cost)) {
+    throw mechanicsError('INVALID_MECHANICS', 'mechanics.activation.cost', 'activation cost must be an array');
+  }
+  return activation.cost.map((entry, index) => {
+    const path = `mechanics.activation.cost[${index}]`;
+    if (!isDict(entry)) {
+      throw mechanicsError('INVALID_PAYLOAD', path, 'cost entry must be an object');
+    }
+    if (typeof entry.resource !== 'string' || !entry.resource.trim()) {
+      throw mechanicsError('INVALID_PAYLOAD', `${path}.resource`, 'cost resource must be non-empty');
+    }
+    if (entry.resource === 'item'
+      && (typeof entry.card_id !== 'string' || !entry.card_id.trim())) {
+      throw mechanicsError('INVALID_PAYLOAD', `${path}.card_id`, 'item cost requires a non-empty card_id');
+    }
+    if (entry.level !== undefined
+      && (!Number.isInteger(entry.level) || Number(entry.level) < 0 || Number(entry.level) > 9)) {
+      throw mechanicsError('INVALID_PAYLOAD', `${path}.level`, 'cost level must be an integer from 0 to 9');
+    }
+    return {
+      ...entry,
+      resource: entry.resource,
+      amount: resolveCostAmount(entry.amount, `${path}.amount`, ctx),
+    };
+  });
+}
+
+function assertPayloadArray(
+  value: unknown,
+  path: string,
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  targetOwned: boolean,
+  depth: number,
+  hand: 'main' | 'off' = 'main',
+): void {
+  if (!Array.isArray(value)) {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'expected an array of payloads');
+  }
+  value.forEach((payload, index) => preflightPayload(
+    payload,
+    `${path}[${index}]`,
+    state,
+    ctx,
+    targetOwned,
+    depth + 1,
+    hand,
+  ));
+}
+
+function grantEffectSlugs(payload: Dict, path: string): string[] {
+  const slugs: string[] = [];
+  if (payload.value !== undefined) {
+    if (typeof payload.value !== 'string' || !payload.value.trim()) {
+      throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, 'expected a non-empty effect reference');
+    }
+    slugs.push(payload.value);
+  }
+  if (payload.values !== undefined) {
+    if (!Array.isArray(payload.values) || payload.values.some((value) => typeof value !== 'string' || !value.trim())) {
+      throw mechanicsError('INVALID_PAYLOAD', `${path}.values`, 'expected non-empty effect references');
+    }
+    slugs.push(...payload.values as string[]);
+  }
+  if (!slugs.length) {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'grant_effect has no effect reference');
+  }
+  return [...new Set(slugs)];
+}
+
+function preflightModifier(
+  payload: Dict,
+  path: string,
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  targetOwned: boolean,
+  depth: number,
+  hand: 'main' | 'off',
+): void {
+  const op = String(payload.op ?? 'add');
+  if (!MODIFIER_OPS.has(op)) {
+    throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `unsupported modifier operation «${op}»`);
+  }
+  if (!isDict(payload.applies_to)) {
+    throw mechanicsError('INVALID_PAYLOAD', `${path}.applies_to`, 'modifier must declare its engine query');
+  }
+  if (NUMERIC_MODIFIER_OPS.has(op)) {
+    const formula = typeof payload.value === 'string'
+      ? payload.value.replace(/^\+/, '')
+      : payload.value;
+    assertFiniteFormula(formula, `${path}.value`, ctx, targetOwned);
+  }
+  if (op === 'set_die' || op === 'bonus_die') {
+    const faces = Number(payload.faces ?? payload.die ?? payload.value);
+    if (!Number.isFinite(faces) || faces < 2) {
+      throw mechanicsError('INVALID_PAYLOAD', path, `${op} requires at least two die faces`);
+    }
+  }
+  if (op === 'explode') {
+    const limit = payload.limit ?? payload.value;
+    if (limit === undefined) {
+      throw mechanicsError('INVALID_PAYLOAD', path, 'explode requires a limit formula');
+    }
+    assertFiniteFormula(limit, `${path}.${payload.limit === undefined ? 'value' : 'limit'}`, ctx, targetOwned);
+  }
+  if (op === 'outcome' && typeof (payload.value ?? payload.outcome) !== 'string') {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'outcome requires a string result');
+  }
+  if (op === 'on_roll') {
+    const nested = payload.then ?? payload.result;
+    assertPayloadArray(
+      nested,
+      `${path}.${payload.then === undefined ? 'result' : 'then'}`,
+      state,
+      ctx,
+      targetOwned,
+      depth,
+      hand,
+    );
+  }
+}
+
+function preflightChoice(
+  payload: Dict,
+  path: string,
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  targetOwned: boolean,
+  depth: number,
+  hand: 'main' | 'off',
+): void {
+  const id = String(payload.id ?? 'choice');
+  const raw = ctx.choices?.[id];
+  if (raw == null) {
+    throw mechanicsError('MISSING_CHOICE', path, `runtime choice «${id}» was not resolved`);
+  }
+  const selected = (Array.isArray(raw) ? raw : [raw]).filter((value): value is string => (
+    typeof value === 'string' && value.length > 0
+  ));
+  const expected = Math.max(1, Math.floor(Number(payload.count ?? 1)) || 1);
+  if (selected.length !== expected || new Set(selected).size !== selected.length) {
+    throw mechanicsError(
+      'INVALID_CHOICE',
+      path,
+      `runtime choice «${id}» requires ${expected} distinct selection(s)`,
+    );
+  }
+  const expanded = selectedChoicePayloads(payload, selected).map(normalizeChoicePayload);
+  if (!expanded.length) {
+    throw mechanicsError('INVALID_CHOICE', path, `runtime choice «${id}» has no executable selected branch`);
+  }
+  expanded.forEach((candidate, index) => preflightPayload(
+    candidate,
+    `${path}.selected[${index}]`,
+    state,
+    ctx,
+    targetOwned,
+    depth + 1,
+    hand,
+  ));
+}
+
+function preflightPayload(
+  value: unknown,
+  path: string,
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  targetOwned: boolean,
+  depth: number,
+  hand: 'main' | 'off' = 'main',
+): void {
+  if (depth > MAX_PREFLIGHT_DEPTH) {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'payload nesting exceeds the engine limit');
+  }
+  if (!isDict(value)) {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'payload must be an object');
+  }
+  const kind = typeof value.kind === 'string' ? value.kind : '';
+  if (!EXECUTABLE_PAYLOAD_KINDS.has(kind)) {
+    throw mechanicsError('UNKNOWN_PAYLOAD', `${path}.kind`, `executor does not own payload kind «${kind || '?'}»`);
+  }
+
+  switch (kind) {
+    case 'damage': {
+      const base = value.amount ?? value.dice;
+      if (base == null) throw mechanicsError('INVALID_PAYLOAD', path, 'damage requires amount or dice');
+      if (typeof value.type !== 'string' || !value.type.trim()) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          `${path}.type`,
+          'damage requires an explicit non-empty damage type',
+        );
+      }
+      if (base === 'weapon' && value.type !== 'weapon') {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          `${path}.type`,
+          'weapon damage dice require the explicit weapon damage type',
+        );
+      }
+      if ((base === 'weapon' || value.type === 'weapon')
+        && !weaponContext(ctx.character, hand, state.equipment)) {
+        throw mechanicsError(
+          'INVALID_MECHANICS',
+          'context.character.equipment',
+          `weapon damage requires an explicit equipped ${hand}-hand weapon`,
+        );
+      }
+      if (base !== 'weapon') {
+        assertFiniteFormula(withScaling(String(base), value, ctx), `${path}.${value.amount == null ? 'dice' : 'amount'}`, ctx);
+      }
+      const explode = value.explode;
+      if (isDict(explode) && explode.limit !== undefined) {
+        assertFiniteFormula(explode.limit, `${path}.explode.limit`, ctx);
+      } else if (explode !== undefined && typeof explode !== 'boolean') {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.explode`, 'expected a boolean or an object');
+      }
+      break;
+    }
+    case 'healing':
+    case 'reduce_damage':
+    case 'temp_hp': {
+      if (value.amount == null) throw mechanicsError('INVALID_PAYLOAD', path, `${kind} requires amount`);
+      assertFiniteFormula(withScaling(String(value.amount), value, ctx), `${path}.amount`, ctx);
+      break;
+    }
+    case 'condition': {
+      if (typeof value.value !== 'string' || !value.value.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, 'condition id must be non-empty');
+      }
+      const op = String(value.op ?? 'apply');
+      if (op !== 'apply' && op !== 'remove') {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `unsupported condition operation «${op}»`);
+      }
+      break;
+    }
+    case 'resource': {
+      const id = value.id ?? value.resource;
+      if (typeof id !== 'string' || !id.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'resource id must be non-empty');
+      }
+      const op = String(value.op ?? 'grant');
+      if (op !== 'grant' && op !== 'restore') {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `executor does not support resource operation «${op}»`);
+      }
+      if (value.amount !== undefined) assertFiniteFormula(value.amount, `${path}.amount`, ctx, targetOwned);
+      break;
+    }
+    case 'modifier':
+      preflightModifier(value, path, state, ctx, targetOwned, depth, hand);
+      break;
+    case 'attack_follow_up': {
+      if (typeof value.follow_up !== 'string' || !value.follow_up.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'attack_follow_up requires a typed follow_up');
+      }
+      break;
+    }
+    case 'grant_sense': {
+      if (typeof value.sense !== 'string' || !value.sense.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.sense`, 'sense must be non-empty');
+      }
+      const range = Number(value.range);
+      if (!Number.isFinite(range) || range <= 0) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.range`, 'sense range must be positive');
+      }
+      break;
+    }
+    case 'resistance': {
+      if (typeof value.damage_type !== 'string' || !value.damage_type.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.damage_type`, 'damage type must be non-empty');
+      }
+      if (!RESISTANCE_LEVELS.has(String(value.value ?? ''))) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, 'invalid damage adjustment level');
+      }
+      break;
+    }
+    case 'set_value': {
+      const target = typeof value.target === 'string' ? value.target : '';
+      const knownTarget = ['hp', 'current_hp', 'temp_hp', 'max_hp', 'hp_max', 'ac_base'].includes(target)
+        || target in state.resources || target in state.maxResources;
+      if (!knownTarget) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.target`, `unknown runtime target «${target || '?'}»`);
+      }
+      assertFiniteFormula(value.formula ?? value.value, `${path}.${value.formula === undefined ? 'value' : 'formula'}`, ctx, targetOwned);
+      break;
+    }
+    case 'grant_effect': {
+      for (const slug of grantEffectSlugs(value, path)) {
+        const granted = ctx.grantedEffects?.[slug];
+        if (!granted || !isDict(granted.mechanics)) {
+          throw mechanicsError(
+            'UNRESOLVED_GRANT_EFFECT',
+            path,
+            `effect reference «${slug}» is not present in ExecuteContext.grantedEffects`,
+          );
+        }
+      }
+      break;
+    }
+    case 'choice':
+      preflightChoice(value, path, state, ctx, targetOwned, depth, hand);
+      break;
+    case 'add_item': {
+      const cardId = value.card_id ?? value.value;
+      if (typeof cardId !== 'string' || !cardId.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'add_item requires card_id or value');
+      }
+      const qty = Number(value.qty ?? value.amount ?? 1);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'add_item quantity must be positive');
+      }
+      break;
+    }
+    case 'movement': {
+      const mode = String(value.value ?? 'move');
+      if (!MOVEMENT_MODES.has(mode)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, `unsupported movement mode «${mode}»`);
+      }
+      if (value.distance !== undefined) assertFiniteFormula(value.distance, `${path}.distance`, ctx, targetOwned);
+      break;
+    }
+    // These primitives either persist a typed effect or emit an explicit
+    // narrative/event and intentionally do not require numeric fields.
+    case 'boon':
+    case 'reroll':
+    case 'transform':
+    case 'narrative':
+      break;
+    default:
+      break;
+  }
+}
+
+function preflightEffect(
+  value: unknown,
+  path: string,
+  state: RuntimeState,
+  ctx: ExecuteContext,
+): void {
+  if (!isDict(value)) throw mechanicsError('INVALID_PAYLOAD', path, 'effect must be an object');
+  const hand = resolveHand(value);
+  if (value.kind !== undefined) {
+    if (value.kind !== 'choice') {
+      throw mechanicsError(
+        'UNKNOWN_PAYLOAD',
+        `${path}.kind`,
+        `payload kind «${String(value.kind)}» cannot be used at the interaction layer`,
+      );
+    }
+    preflightPayload(value, path, state, ctx, String(value.who ?? 'self') === 'target', 0, hand);
+    return;
+  }
+  const resolution = typeof value.resolution === 'string' ? value.resolution : '';
+  if (!EXECUTABLE_RESOLUTIONS.has(resolution)) {
+    throw mechanicsError('UNKNOWN_RESOLUTION', `${path}.resolution`, `executor does not own resolution «${resolution || '?'}»`);
+  }
+  const targetOwned = String(value.who ?? (resolution === 'auto' ? 'self' : 'target')) === 'target';
+  const outcomes = resolution === 'auto'
+    ? ['result', 'results']
+    : resolution === 'attack_roll'
+      ? ['on_hit', 'on_crit', 'on_miss']
+      : resolution === 'save'
+        ? ['on_fail', 'on_success']
+        : ['on_success'];
+  if (resolution === 'auto' && value.result === undefined && value.results === undefined) {
+    throw mechanicsError('INVALID_PAYLOAD', path, 'auto resolution requires result or results');
+  }
+  for (const key of outcomes) {
+    if (value[key] !== undefined) {
+      assertPayloadArray(value[key], `${path}.${key}`, state, ctx, targetOwned, 0, hand);
+    }
+  }
+  if (resolution === 'attack_roll') {
+    const ability = explicitAbility(
+      value.ability,
+      `${path}.ability`,
+      ATTACK_ABILITIES,
+      'attack resolution',
+    );
+    explicitTargetArmorClass(ctx);
+    explicitCharacterProficiencyBonus(ctx);
+    if (ability === 'spellcasting'
+      && (typeof ctx.character.spellcastingMod !== 'number'
+        || !Number.isFinite(ctx.character.spellcastingMod))) {
+      throw mechanicsError(
+        'INVALID_MECHANICS',
+        'context.character.spellcastingMod',
+        'spell attack requires an explicit finite spellcasting modifier',
+      );
+    }
+    if (ability === 'auto') {
+      const weapon = weaponContext(ctx.character, resolveHand(value), state.equipment);
+      if (!weapon) {
+        throw mechanicsError(
+          'INVALID_MECHANICS',
+          'context.character.equipment',
+          'automatic attack ability requires an explicit equipped weapon',
+        );
+      }
+      explicitCharacterAbilityModifier(ctx, weapon.ability);
+    } else if (ability !== 'spellcasting') {
+      explicitCharacterAbilityModifier(ctx, ability as AbilityKey);
+    }
+  } else if (resolution === 'save') {
+    const ability = explicitAbility(
+      value.ability,
+      `${path}.ability`,
+      ABILITY_KEYS,
+      'save resolution',
+    ) as AbilityKey;
+    explicitPositiveDc(value.dc, `${path}.dc`, ctx);
+    const hasDeferredTargetAuthority = ctx.deferTargetSaves === true
+      && targetOwned
+      && ctx.target?.runtimeState !== undefined
+      && ctx.deferredSaveSource !== undefined;
+    if (ctx.forceSaveOutcome == null && !hasDeferredTargetAuthority) {
+      explicitTargetSaveModifier(ctx, ability);
+    }
+  } else if (resolution === 'ability_check') {
+    const ability = explicitAbility(
+      value.ability,
+      `${path}.ability`,
+      ABILITY_KEYS,
+      'ability-check resolution',
+    ) as AbilityKey;
+    explicitCharacterAbilityModifier(ctx, ability);
+    explicitCharacterProficiencyBonus(ctx);
+    const hasDc = value.dc !== undefined;
+    const hasContest = value.contest_vs !== undefined;
+    if (hasDc === hasContest) {
+      throw mechanicsError(
+        'INVALID_PAYLOAD',
+        path,
+        'ability check requires exactly one explicit dc or contest_vs declaration',
+      );
+    }
+    if (value.mode !== undefined
+      && value.mode !== (hasDc ? 'dc' : 'contest')) {
+      throw mechanicsError(
+        'INVALID_PAYLOAD',
+        `${path}.mode`,
+        'ability-check mode contradicts its explicit dc or contest_vs declaration',
+      );
+    }
+    if (hasDc) {
+      explicitPositiveDc(value.dc, `${path}.dc`, ctx);
+    } else {
+      explicitContestSkills(value, path, ctx);
+    }
+  }
+}
+
+/**
+ * Validate precisely the mechanics graph that the synchronous executor owns.
+ * This runs before `canPay`/`pay`, consumes no caller RNG, resolves selected
+ * runtime choices, and rejects canonical/build primitives instead of silently
+ * degrading them into a paid no-op.
+ */
+export function preflightMechanicsExecution(
+  state: RuntimeState,
+  mechanics: Dict,
+  ctx: ExecuteContext,
+): Dict[] {
+  if (!isDict(mechanics)) {
+    throw mechanicsError('INVALID_MECHANICS', 'mechanics', 'mechanics must be an object');
+  }
+  // This executor never dispatches a world primitive. Canonical rules-core may
+  // call back with the same immutable mechanics only after its own validated
+  // world mutation, using an explicit one-way authority hand-off. Every direct
+  // browser/legacy caller therefore fails before resource checks/payment.
+  if (Object.prototype.hasOwnProperty.call(mechanics, 'primitive')
+    && ctx.externalPrimitiveHandled !== true) {
+    const primitive = isDict(mechanics.primitive) ? String(mechanics.primitive.type ?? '?') : '?';
+    throw mechanicsError(
+      'CANONICAL_PRIMITIVE_REQUIRED',
+      'mechanics.primitive',
+      `primitive «${primitive}» requires a canonical rules-core hand-off`,
+    );
+  }
+  if (mechanics.interactions !== undefined && mechanics.effects === undefined) {
+    throw mechanicsError(
+      'INVALID_MECHANICS',
+      'mechanics.interactions',
+      'legacy executor accepts the effects container only',
+    );
+  }
+  const cost = preflightActivationCost(mechanics, ctx);
+  if (mechanics.effects === undefined) {
+    if (mechanics.kind !== undefined) {
+      throw mechanicsError('INVALID_MECHANICS', 'mechanics.kind', 'a payload cannot be executed as an action');
+    }
+    return cost;
+  }
+  if (!Array.isArray(mechanics.effects)) {
+    throw mechanicsError('INVALID_MECHANICS', 'mechanics.effects', 'effects must be an array');
+  }
+  mechanics.effects.forEach((effect, index) => preflightEffect(
+    effect,
+    `mechanics.effects[${index}]`,
+    state,
+    ctx,
+  ));
+  return cost;
+}
+
 function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
   return {
     character: ctx.character,
@@ -100,6 +878,11 @@ function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
     // C10: состояния ЦЕЛИ — чтобы предикат target_has_condition («преимущество, пока цель
     // распластана/опутана») гейтился данными, а не молча давал false. Пустое множество, если цели нет.
     targetConditions: activeConditionsOf(ctx.target?.runtimeState),
+    rollerActorId: ctx.selfId,
+    rollTargetActorId: ctx.target?.id,
+    conditionSourceFacts: ctx.conditionSourceFacts,
+    distancesFt: ctx.conditionRelationFacts?.distancesFt,
+    visibility: ctx.conditionRelationFacts?.visibility,
   };
 }
 
@@ -114,6 +897,8 @@ export function projectedAgainst(
   target: ExecuteContext['target'],
   roll: string,
   attackRange?: 'melee' | 'ranged',
+  evalCtx?: EvalContext,
+  queryFilter?: ModifierQueryFacts,
 ): { modifiers: RollModifier[]; rules: Dict[]; advantage: AdvantageState; hasAdvantage: boolean; hasDisadvantage: boolean; autoCrit: boolean } {
   const out = {
     modifiers: [] as RollModifier[],
@@ -129,10 +914,17 @@ export function projectedAgainst(
   // C14-родственник: значение проецируемого модификатора вычисляем formula-aware в контексте
   // ЦЕЛИ (её характеристики/переменные), а не голым Number() — иначе формульные моды теряются.
   const tctx = targetFormulaCtx(target);
-  const consider = (m: Dict, source: string): void => {
+  const consider = (m: Dict, source: string, conditionSourceId?: string): void => {
     if (String(m.scope ?? 'self') !== 'target') return;
     const applies = m.applies_to as Dict | undefined;
     if (!applies || applies.roll !== roll) return;
+    const effectFilter = applies.filter as Dict | undefined;
+    if (effectFilter && Object.entries(effectFilter).some(([key, value]) => queryFilter?.[key] !== value)) return;
+    if (!matchesWhen(m.when as Dict[] | undefined, {
+      ...(evalCtx ?? {}),
+      conditionSourceId,
+      conditionOwnerId: target?.id,
+    })) return;
     // Дистанционный гейт (B/C): модификатор с range применяется только к атаке того же типа.
     // Закрыт по умолчанию — если тип атаки неизвестен, range-гейтованный модификатор не применяется
     // (не ставим ложный автокрит / преимущество распластанному от неизвестной атаки).
@@ -158,7 +950,9 @@ export function projectedAgainst(
   for (const e of st.activeEffects) {
     const mech = e.mechanics as Dict;
     if (mech?.kind === 'condition' && mech.value) {
-      for (const rule of conditionModifierPayloads(String(mech.value))) consider(rule as unknown as Dict, String(mech.value));
+      for (const rule of conditionModifierPayloads(String(mech.value))) {
+        consider(rule as unknown as Dict, String(mech.value), e.sourceId);
+      }
     } else {
       for (const p of payloadsOf(mech)) if (p.kind === 'modifier') consider(p, e.name);
     }
@@ -166,19 +960,50 @@ export function projectedAgainst(
   return out;
 }
 
-/** Уровень сопротивления существа к типу урона (активные resistance-эффекты + пассивки). */
-function resistanceLevelFor(state: RuntimeState, ctx: ExecuteContext, damageType: string): string | null {
+interface DamageAdjustmentRule {
+  level: string | null;
+  sourceEntityIds: string[];
+}
+
+/** Уровень и стабильный источник сопротивления (активные эффекты + пассивки). */
+function resistanceRuleFor(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  damageType: string,
+): DamageAdjustmentRule {
   const rank = (l: string | null) => (l === 'immunity' ? 3 : l === 'resistance' ? 2 : l === 'vulnerability' ? 1 : 0);
   const scan = (mech: Dict | undefined): string | null => {
-    for (const p of payloadsOf(mech)) {
-      if (p.kind === 'resistance' && String(p.damage_type ?? '') === damageType) return String(p.value ?? '');
+    const payloads = mech?.kind === 'condition' && mech.value
+      ? conditionRuntimePayloads(String(mech.value))
+      : payloadsOf(mech);
+    for (const p of payloads) {
+      const declaredType = String(p.damage_type ?? '');
+      if (p.kind === 'resistance' && (declaredType === damageType || declaredType === 'all')) {
+        return String(p.value ?? '');
+      }
     }
     return null;
   };
-  let level: string | null = null;
-  for (const e of state.activeEffects) { const l = scan(e.mechanics as Dict); if (rank(l) > rank(level)) level = l; }
-  for (const m of passivesFromCtx(ctx)) { const l = scan(m); if (rank(l) > rank(level)) level = l; }
-  return level;
+  const stableSources = (owner: Dict, fallback: string[]): string[] => {
+    const declared = Array.isArray(owner.sourceEntityIds)
+      ? owner.sourceEntityIds.filter((id): id is string => typeof id === 'string' && Boolean(id))
+      : [];
+    return [...new Set(declared.length ? declared : fallback)].sort();
+  };
+  let result: DamageAdjustmentRule = { level: null, sourceEntityIds: [] };
+  for (const effect of state.activeEffects) {
+    const level = scan(effect.mechanics as Dict);
+    if (rank(level) > rank(result.level)) {
+      result = { level, sourceEntityIds: stableSources(effect.mechanics as Dict, [effect.id]) };
+    }
+  }
+  for (const passive of passivesFromCtx(ctx)) {
+    const level = scan(passive);
+    if (rank(level) > rank(result.level)) {
+      result = { level, sourceEntityIds: stableSources(passive, []) };
+    }
+  }
+  return result;
 }
 
 /** Применить уровень сопротивления к количеству урона. */
@@ -193,24 +1018,34 @@ function applyResistance(amount: number, level: string | null): number {
 function targetSaveMod(target: ExecuteContext['target'], ability: AbilityKey): number {
   const cc = target?.characterContext;
   if (cc) {
-    const base = cc.abilityMods[ability] ?? 0;
+    const base = cc.abilityMods[ability];
     const prof = cc.saveProficiencies?.includes(ability) ? cc.profBonus : 0;
     return base + prof;
   }
-  return target?.saveMods?.[ability] ?? 0;
+  return target!.saveMods![ability]!;
 }
 
 function evalDc(formula: string, ctx: ExecuteContext): number {
   const normalized = formula.replace(/\s+/g, '');
   const v = evaluate(normalized, formulaCtx(ctx));
   if (typeof v !== 'number') throw new FormulaError(`DC формула «${formula}» не число`);
-  return v;
+  const spellClass = ctx.spell?.sourceClass;
+  const state = ctx.selfRuntime;
+  if (!spellClass || !state) return v;
+  const collected = collectModifiers(state, passivesFromCtx(ctx), {
+    roll: 'spell_save_dc',
+    filter: { spellClass },
+    formulaCtx: formulaCtx(ctx),
+    evalCtx: evalCtxOf(state, ctx),
+  });
+  return foldModifiers(v, collected).value;
 }
 
 function expiryFromDuration(duration: Dict | undefined): string | undefined {
   const t = duration?.type;
   if (t === 'until_start_of_next_turn') return 'start_of_next_turn';
   if (t === 'until_end_of_turn') return 'end_of_turn';
+  if (t === 'until_long_rest') return 'long_rest';
   return undefined;
 }
 
@@ -222,17 +1057,43 @@ function expiryFromDuration(duration: Dict | undefined): string | undefined {
  * (снимается вручную/до отдыха, как чип Ярости).
  */
 function resolveDuration(duration: Dict | undefined): { roundsLeft?: number; expiry?: string } {
-  if (duration?.type === 'rounds') {
+  if (duration?.type === 'rounds' || duration?.type === 'minutes' || duration?.type === 'hours') {
     // Целое число раундов → тикающий эффект. Невалидный amount (0/отрицательное/дробное/NaN, а
     // также формульное '1d4' — Number()→NaN) НЕ делаем вечным: даём 1 раунд (истечёт на следующем
     // ходу), иначе временный эффект тихо стал бы постоянным. Формульные длительности через evaluate —
     // отдельная фича (нужен ctx/rng здесь), пока усекаются до 1 раунда.
-    const n = Math.floor(Number(duration.amount));
-    return { roundsLeft: Number.isFinite(n) && n > 0 ? n : 1 };
+    const raw = Math.floor(Number(duration.amount));
+    const multiplier = duration.type === 'minutes' ? 10 : duration.type === 'hours' ? 600 : 1;
+    const rounds = raw * multiplier;
+    return { roundsLeft: Number.isFinite(rounds) && rounds > 0 ? rounds : 1 };
   }
   // Нет длительности / until_*-метка: expiry ('start_of_next_turn'|'end_of_turn') либо 'manual'
   // (стоячий до ручного снятия/отдыха — Ярость и т.п.).
   return { expiry: expiryFromDuration(duration) ?? 'manual' };
+}
+
+function sourceTurnMetadata(
+  duration: Dict | undefined,
+  ctx: ExecuteContext,
+  ownerActorId: string | undefined,
+): Pick<ActiveEffectEntry, 'expiry' | 'ownerId' | 'sourceId' | 'sourceTurnExpiry'> | undefined {
+  const type = String(duration?.type ?? '');
+  const boundary = type === 'until_start_of_source_next_turn'
+    ? 'start' as const
+    : type === 'until_end_of_source_next_turn'
+      ? 'end' as const
+      : null;
+  if (!boundary || !ctx.selfId || !ownerActorId) return undefined;
+  return {
+    expiry: 'source_turn',
+    ownerId: ownerActorId,
+    sourceId: ctx.selfId,
+    sourceTurnExpiry: {
+      sourceActorId: ctx.selfId,
+      ownerActorId,
+      boundary,
+    },
+  };
 }
 
 /**
@@ -266,32 +1127,51 @@ function resolveHand(effect: Dict): 'main' | 'off' {
 
 function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'off', state: RuntimeState): RollModifier[] {
   const mods: RollModifier[] = [];
-  const ability = String(effect.ability ?? 'str');
+  const ability = String(effect.ability);
+  const attackKind = attackRollQueryFacts(effect, hand, ctx.character, state.equipment).attackKind;
+  const currentWeapon = attackKind === 'weapon'
+    ? weaponContext(ctx.character, hand, state.equipment)
+    : null;
+  const proficiencyBonus = attackKind !== 'weapon'
+    || (currentWeapon !== null
+      && isWeaponProficient(
+        ctx.character,
+        currentWeapon.weaponType,
+        currentWeapon.proficiencyCategory,
+      ))
+    ? ctx.character.profBonus
+    : 0;
 
   if (ability === 'spellcasting') {
-    mods.push({ value: ctx.character.spellcastingMod ?? 0, source: 'заклин.', reason: 'модификатор заклинаний' });
-    mods.push({ value: ctx.character.profBonus, source: 'БМ', reason: 'бонус мастерства' });
+    mods.push({ value: ctx.character.spellcastingMod!, source: 'заклин.', reason: 'модификатор заклинаний' });
+    if (proficiencyBonus) {
+      mods.push({ value: proficiencyBonus, source: 'БМ', reason: 'бонус мастерства' });
+    }
   } else if (ability === 'auto') {
-    const w = weaponContext(ctx.character, hand, state.equipment);
+    const w = currentWeapon ?? weaponContext(ctx.character, hand, state.equipment);
     if (w) {
       mods.push({
         value: ctx.character.abilityMods[w.ability],
         source: ABILITY_LABEL[w.ability],
         reason: 'модификатор характеристики',
       });
-      if (w.enchant) {
-        mods.push({ value: w.enchant, source: `+${w.enchant}`, reason: 'зачарование оружия' });
+      if (w.attackEnchant) {
+        mods.push({ value: w.attackEnchant, source: `+${w.attackEnchant}`, reason: 'зачарование оружия' });
       }
     }
-    mods.push({ value: ctx.character.profBonus, source: 'БМ', reason: 'бонус мастерства' });
+    if (proficiencyBonus) {
+      mods.push({ value: proficiencyBonus, source: 'БМ', reason: 'бонус мастерства' });
+    }
   } else {
     const key = ability as AbilityKey;
     mods.push({
-      value: ctx.character.abilityMods[key] ?? 0,
+      value: ctx.character.abilityMods[key],
       source: ABILITY_LABEL[key] ?? ability,
       reason: 'модификатор характеристики',
     });
-    mods.push({ value: ctx.character.profBonus, source: 'БМ', reason: 'бонус мастерства' });
+    if (proficiencyBonus) {
+      mods.push({ value: proficiencyBonus, source: 'БМ', reason: 'бонус мастерства' });
+    }
   }
   return mods;
 }
@@ -342,20 +1222,59 @@ function stackApply(state: RuntimeState, entry: ActiveEffectEntry, payload: Dict
   return { ...state, activeEffects: [...others, entry] };
 }
 
+function runtimeEffectId(ctx: ExecuteContext, prefix: string, ordinal: number): string {
+  return ctx.nextId?.() ?? `${prefix}-${ordinal}-${Date.now()}`;
+}
+
 function applyModifierPayload(
   state: RuntimeState,
   payload: Dict,
   source: string,
   events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const duration = payload.duration as Dict | undefined;
+  const relative = sourceTurnMetadata(duration, ctx, ownerActorId);
+  const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration);
+  const { roundsLeft, expiry } = resolved;
   const entry: ActiveEffectEntry = {
-    id: `fx-${state.activeEffects.length}-${Date.now()}`,
+    id: runtimeEffectId(ctx, 'fx', state.activeEffects.length),
     name: source,
     mechanics: payload,
     roundsLeft, // C6: раньше не выставлялся — модификатор с duration.rounds не истекал
     expiry,
     source,
+    ...(relative ?? {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
+/** Runtime sense grants such as Dwarf Stonecunning are persisted effects. */
+function applySensePayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const sense = String(payload.sense ?? '');
+  const range = Number(payload.range);
+  if (!sense || !Number.isFinite(range) || range <= 0) {
+    throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', `grant_sense «${sense || '?'}» has invalid range`);
+  }
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'sense', state.activeEffects.length),
+    name: source,
+    mechanics: payload,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
   };
   events.push({ type: 'effect_applied', name: source });
   return stackApply(state, entry, payload);
@@ -373,10 +1292,11 @@ function applyAcBaseMethod(
   payload: Dict,
   source: string,
   events: EngineEvent[],
+  ctx: ExecuteContext,
 ): RuntimeState {
   const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
   const entry: ActiveEffectEntry = {
-    id: `ac-${state.activeEffects.length}-${Date.now()}`,
+    id: runtimeEffectId(ctx, 'ac', state.activeEffects.length),
     name: source,
     mechanics: payload,
     roundsLeft,
@@ -392,20 +1312,28 @@ function applyAcBaseMethod(
  * механику которого лист предзагрузил в ctx.grantedEffects[slug]. Ставим её «стоячим» активным
  * эффектом — так его непрерывные роли (set_value ac_base, modifier, resistance) начинают влиять
  * на лист/бой ровно как у пассивок. Длительность берём из механики выданного эффекта (until_long_rest
- * и т.п.). Если лист не резолвнул slug — тихо пропускаем (грант валиден, просто не догружен), НЕ мусорим
- * NOT_IMPLEMENTED. Наносится ИСПОЛНИТЕЛЮ (single-character лист): цель каста = сам носитель.
+ * и т.п.). Все ссылки обязаны быть разрешены preflight-проходом до оплаты действия.
+ * Наносится ИСПОЛНИТЕЛЮ (single-character лист): цель каста = сам носитель.
  */
 function applyGrantEffect(
   state: RuntimeState,
   slugs: string[],
   granted: ExecuteContext['grantedEffects'],
   events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
 ): RuntimeState {
   let next = state;
   for (const slug of slugs) {
     const rec = granted?.[slug];
     const rawMech = (rec?.mechanics ?? undefined) as Dict | undefined;
-    if (!rawMech || typeof rawMech !== 'object') continue; // не догружен — тихо
+    if (!isDict(rawMech)) {
+      throw mechanicsError(
+        'UNRESOLVED_GRANT_EFFECT',
+        'runtime.payload',
+        `effect reference «${slug}» was not resolved`,
+      );
+    }
     // Ключуем выданный эффект его slug'ом (если автор не задал stack_id): неповторяемый повторный
     // каст ПЕРЕЗАПИСЫВАЕТ (одна копия), повторяемый — НАКАПЛИВАЕТСЯ (stack_type='stack' → независимые
     // экземпляры даже для Истощения/Отравления, которые иначе схлопнулись бы).
@@ -417,12 +1345,14 @@ function applyGrantEffect(
     const name = String(rec?.name ?? (rawMech as Dict).name ?? slug);
     const { roundsLeft, expiry } = resolveDuration(mech.duration as Dict | undefined);
     const entry: ActiveEffectEntry = {
-      id: `grant-${slug}-${next.activeEffects.length}-${Date.now()}`,
+      id: runtimeEffectId(ctx, `grant-${slug}`, next.activeEffects.length),
       name,
       mechanics: mech,
       roundsLeft,
       expiry,
       source: name,
+      ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+      ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
     };
     events.push({ type: 'effect_applied', name });
     next = stackApply(next, entry, mech);
@@ -440,10 +1370,11 @@ function applyResistancePayload(
   payload: Dict,
   source: string,
   events: EngineEvent[],
+  ctx: ExecuteContext,
 ): RuntimeState {
   const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
   const entry: ActiveEffectEntry = {
-    id: `res-${state.activeEffects.length}-${Date.now()}`,
+    id: runtimeEffectId(ctx, 'res', state.activeEffects.length),
     name: source,
     mechanics: payload,
     roundsLeft,
@@ -462,20 +1393,13 @@ function applyResistancePayload(
 function applySetValue(state: RuntimeState, payload: Dict, fctx: FormulaContext, events: EngineEvent[]): RuntimeState {
   const target = String(payload.target ?? '');
   const raw = String(payload.formula ?? payload.value ?? '').replace(/\s+/g, '');
-  if (!raw) return state;
+  if (!raw) throw mechanicsError('INVALID_FORMULA', 'runtime.payload', 'set_value formula is empty');
   // formula-aware: fctx выбирается вызывающим (для who:'target' — контекст ЦЕЛИ, а не исполнителя).
-  let val: number;
-  try {
-    const r = evaluate(raw, fctx);
-    if (typeof r !== 'number' || Number.isNaN(r)) {
-      events.push(narrativeEvent(`set_value «${target}»: формула «${raw}» не число — пропущено.`));
-      return state;
-    }
-    val = Math.floor(r);
-  } catch {
-    events.push(narrativeEvent(`set_value «${target}»: формула «${raw}» не вычислена — пропущено.`));
-    return state;
+  const evaluated = evaluate(raw, fctx);
+  if (typeof evaluated !== 'number' || !Number.isFinite(evaluated)) {
+    throw new FormulaError(`set_value «${target}»: формула «${raw}» не является конечным числом`);
   }
+  const val = Math.floor(evaluated);
 
   const next = cloneState(state);
   switch (target) {
@@ -509,7 +1433,7 @@ function applySetValue(state: RuntimeState, payload: Dict, fctx: FormulaContext,
           ? resourceRestoredEvent(target, delta, next.resources[target])
           : narrativeEvent(`Ресурс «${target}» установлен: ${next.resources[target]}`));
       } else {
-        events.push(narrativeEvent(`set_value: неизвестный target «${target}» — пропущено (ожидался hp/temp_hp/max_hp/известный ресурс).`));
+        throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', `set_value has unknown target «${target}»`);
       }
     }
   }
@@ -583,7 +1507,9 @@ function applyCondition(
   payload: Dict,
   source: string,
   events: EngineEvent[],
+  ctx: ExecuteContext,
   sourceId?: string,
+  conditionImmunities = ctx.conditionImmunities,
 ): RuntimeState {
   const condition = String(payload.value ?? '');
   if (!condition) return state;
@@ -604,7 +1530,7 @@ function applyCondition(
     for (const leave of conditionLeaves(condition)) {
       if (present.has(leave)) continue;
       additions.push({
-        id: `cond-leave-${state.activeEffects.length}-${leave}-${Date.now()}`,
+        id: runtimeEffectId(ctx, `cond-leave-${leave}`, state.activeEffects.length + additions.length),
         name: conditionLabel(leave),
         mechanics: { kind: 'condition', value: leave, op: 'apply' },
         expiry: 'manual',
@@ -615,11 +1541,57 @@ function applyCondition(
     return { ...state, activeEffects: [...kept, ...additions] };
   }
 
+  const normalizeTag = (value: string) => value.trim().toLowerCase()
+    .replaceAll('-', '_').replaceAll(' ', '_');
+  const causeTags = new Set(
+    (Array.isArray(payload.causeTags) ? payload.causeTags
+      : Array.isArray(payload.cause_tags) ? payload.cause_tags
+        : [])
+      .filter((tag): tag is string => typeof tag === 'string')
+      .map(normalizeTag),
+  );
+  const conditionOwnedImmunities = state.activeEffects.flatMap((entry) => {
+    const mechanics = entry.mechanics as Dict;
+    if (mechanics.kind !== 'condition' || !mechanics.value) return [];
+    return conditionRuntimePayloads(String(mechanics.value)).flatMap((candidate) => (
+      candidate.kind === 'condition_immunity' && candidate.condition
+        ? [{
+          condition: String(candidate.condition),
+          ...(Array.isArray(candidate.requiredCauseTags)
+            ? { requiredCauseTags: candidate.requiredCauseTags.map(String) }
+            : {}),
+          sourceEntityIds: [entry.id],
+        }]
+        : []
+    ));
+  });
+  const immunity = [...(conditionImmunities ?? []), ...conditionOwnedImmunities].find((candidate) => (
+    normalizeTag(candidate.condition) === normalizeTag(condition)
+      && (candidate.requiredCauseTags ?? []).every((tag) => causeTags.has(normalizeTag(tag)))
+  ));
+  if (immunity) {
+    events.push({
+      type: 'condition_immune',
+      condition,
+      sourceEntityIds: [...immunity.sourceEntityIds],
+    });
+    return state;
+  }
+
   const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const stacking = conditionStacking(condition);
+  const existingLevel = conditionLevel(state, condition);
+  if (stacking.mode === 'levels' && stacking.max != null && existingLevel >= stacking.max) {
+    events.push(narrativeEvent(`${conditionLabel(condition)}: достигнут максимальный уровень ${stacking.max}.`));
+    return state;
+  }
+  const persistedPayload: Dict = stacking.mode === 'levels'
+    ? { ...payload, stack_type: 'stack' }
+    : payload;
   const entry: ActiveEffectEntry = {
-    id: `cond-${state.activeEffects.length}-${Date.now()}`,
+    id: runtimeEffectId(ctx, 'cond', state.activeEffects.length),
     name: condition,
-    mechanics: payload,
+    mechanics: persistedPayload,
     roundsLeft,
     expiry,
     source,
@@ -627,21 +1599,37 @@ function applyCondition(
     ...(sourceId ? { sourceId } : {}),
   };
   events.push(conditionAppliedEvent(condition));
-  return stackApply(state, entry, payload);
+  const next = stackApply(state, entry, persistedPayload);
+  const threshold = conditionLevel(next, condition);
+  if (threshold > existingLevel) {
+    const outcome = conditionRule(condition)?.thresholds?.find((candidate) => threshold >= candidate.atLevel);
+    if (outcome) events.push(narrativeEvent(
+      `${conditionLabel(condition)}: уровень ${threshold}, порог ${outcome.atLevel} → ${outcome.outcome}.`,
+    ));
+  }
+  return next;
 }
 
 /** resource: grant — сверх максимума (Прилив действий), restore — до максимума. */
 function applyResource(
   state: RuntimeState,
   payload: Dict,
+  ctx: ExecuteContext,
   events: EngineEvent[],
 ): RuntimeState {
   let key = String(payload.id ?? payload.resource ?? '');
-  if (!key) return state;
+  if (!key) throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', 'resource id is empty');
   if (key === 'spell_slot' && payload.level != null) key = `spell_slot_${payload.level}`;
 
-  const amount = typeof payload.amount === 'number' ? payload.amount : Number(payload.amount) || 1;
+  const evaluated = evaluate(payload.amount == null ? 1 : String(payload.amount), formulaCtx(ctx));
+  if (typeof evaluated !== 'number' || !Number.isFinite(evaluated)) {
+    throw new FormulaError(`resource «${key}»: amount must resolve to a finite number`);
+  }
+  const amount = Math.max(0, Math.floor(evaluated));
   const op = String(payload.op ?? 'grant');
+  if (op !== 'grant' && op !== 'restore') {
+    throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', `unsupported resource operation «${op}»`);
+  }
   const next = cloneState(state);
   const current = next.resources[key] ?? 0;
 
@@ -657,15 +1645,24 @@ function applyResource(
 }
 
 type DamageInstance = { amount: number; damageType: string; roll?: import('../mvp/contracts').RollLog };
+type AttackDamageQueryFacts = Pick<ModifierQueryFacts, 'attackKind' | 'extraAttackSource'> & {
+  /** Ability modifier used for this attack, independent of the weapon's default ability. */
+  weaponMod?: number;
+};
 
 /** C1: модификаторы урона из активных эффектов/пассивок (Ярость +СИЛ, «Свет Латандера» +3).
  *  Запрос ОБЯЗАН передать ability использованной характеристики — иначе фильтр Ярости
  *  {ability:'str'} отсечёт её (matchFilter). Возвращает отдельные строки (гранулярность №4). */
-function collectDamageModifiers(ctx: ExecuteContext, state: RuntimeState, filter: Dict): RollModifier[] {
+function collectDamageModifiers(
+  ctx: ExecuteContext,
+  state: RuntimeState,
+  filter: ModifierQueryFacts,
+  weaponMod?: number,
+): RollModifier[] {
   return collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'damage',
     filter,
-    formulaCtx: formulaCtx(ctx),
+    formulaCtx: { ...formulaCtx(ctx), ...(weaponMod !== undefined ? { weaponMod } : {}) },
     evalCtx: evalCtxOf(state, ctx),
   }).modifiers;
 }
@@ -709,29 +1706,40 @@ function resolveDamageAmounts(
   state: RuntimeState,
   hand: 'main' | 'off',
   crit = false,
+  attackFacts?: AttackDamageQueryFacts,
 ): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment);
+  const declaredDamageType = String(payload.type).trim();
   const dmgRules = damageRules(ctx, state); // die_bonus/explode (глобальные)
   const explodeLimit = explodeLimitOf(payload, ctx);
+  const damageRng = ctx.damageRng ?? ctx.rng;
 
   if (payload.dice === 'weapon') {
-    const fallbackType = String(payload.type) === 'weapon'
-      ? (handWeapon?.damageType ?? 'bludgeoning')
-      : String(payload.type ?? 'bludgeoning');
-    const lines = handWeapon?.damages ?? [{ dice: handWeapon?.dice ?? '1d4', type: fallbackType }];
+    if (!handWeapon) {
+      throw mechanicsError(
+        'INVALID_MECHANICS',
+        'context.character.equipment',
+        `weapon damage requires an explicit equipped ${hand}-hand weapon`,
+      );
+    }
+    const lines = handWeapon.damages;
     const ab = String(payload.ability ?? 'auto');
     return lines.map((line, i) => {
-      const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: ctx.rng });
+      const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: damageRng });
       // Правила кости (die_bonus/explode) — на кости строки, до модов характеристики/зачарования.
-      const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: ctx.rng });
+      const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
       let total = fr.total + ruled.delta;
       let extraMods: RollModifier[] = [];
       // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
       if (i === 0) {
         const weaponMods: RollModifier[] = [];
+        const weaponDamageAbilityMod = handWeapon
+          ? ctx.character.abilityMods[handWeapon.ability] ?? 0
+          : undefined;
+        const attackWeaponMod = attackFacts?.weaponMod ?? weaponDamageAbilityMod;
         if (ab === 'auto' && handWeapon) {
           weaponMods.push({
-            value: ctx.character.abilityMods[handWeapon.ability] ?? 0,
+            value: weaponDamageAbilityMod ?? 0,
             source: ABILITY_LABEL[handWeapon.ability],
           });
         } else if (ab === 'spellcasting') {
@@ -745,14 +1753,22 @@ function resolveDamageAmounts(
             source: ABILITY_LABEL[ab as AbilityKey],
           });
         }
-        if (handWeapon?.enchant) weaponMods.push({ value: handWeapon.enchant, source: 'Зачарование оружия' });
+        if (handWeapon?.damageEnchant) {
+          weaponMods.push({ value: handWeapon.damageEnchant, source: 'Зачарование оружия' });
+        }
         // C1: модификаторы урона из эффектов (Ярость и т.п.) — на основную строку, отдельными частями.
         const usedAbility = ab === 'auto'
           ? handWeapon?.ability
           : (ab !== 'none' && ab !== 'spellcasting' ? (ab as AbilityKey) : undefined);
         extraMods = [
           ...weaponMods,
-          ...collectDamageModifiers(ctx, state, { hand, ...(usedAbility ? { ability: usedAbility } : {}) }),
+          ...collectDamageModifiers(ctx, state, {
+            hand,
+            ...(usedAbility ? { ability: usedAbility } : {}),
+            attackKind: attackFacts?.attackKind ?? 'weapon',
+            extraAttackSource: attackFacts?.extraAttackSource ?? 'none',
+            abilityModifierAlreadyIncluded: ab !== 'none',
+          }, attackWeaponMod),
         ];
         for (const m of extraMods) total += m.value;
       }
@@ -764,19 +1780,30 @@ function resolveDamageAmounts(
     });
   }
 
-  let damageType = String(payload.type ?? 'bludgeoning');
-  if (damageType === 'weapon') damageType = handWeapon?.damageType ?? 'bludgeoning';
+  let damageType = declaredDamageType;
+  if (damageType === 'weapon') {
+    if (!handWeapon) {
+      throw mechanicsError(
+        'INVALID_MECHANICS',
+        'context.character.equipment',
+        `weapon damage requires an explicit equipped ${hand}-hand weapon`,
+      );
+    }
+    damageType = handWeapon.damageType;
+  }
 
   const flat = payload.amount != null ? String(payload.amount) : payload.dice != null ? String(payload.dice) : null;
   if (flat != null) {
     const scaled = withScaling(flat, payload, ctx);
-    const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: ctx.rng });
-    const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: ctx.rng });
+    const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: damageRng });
+    const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
     // если задан; иначе ability в фильтр не кладём (эффект без ability-фильтра всё равно применится).
     const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
       ? (payload.ability as AbilityKey) : undefined;
-    const extraMods = collectDamageModifiers(ctx, state, usedAbility ? { ability: usedAbility } : {});
+    const extraMods = payload.suppress_damage_modifiers === true
+      ? []
+      : collectDamageModifiers(ctx, state, usedAbility ? { ability: usedAbility } : {});
     let total = fr.total + ruled.delta;
     for (const m of extraMods) total += m.value;
     return [{
@@ -793,17 +1820,24 @@ function resolveDamageAmounts(
  * Единый роутер payload-ов (§6.5 схемы): исполняет список исходов
  * on_hit / on_crit / on_fail / on_success / result.
  */
-/** Холдер состояния ЦЕЛИ (C2). payload-ы who:'target' мутируют его, а не состояние
- *  исполнителя; state undefined → цель без runtimeState, всё идёт в self (обратная совм.). */
-type TargetRef = { state?: RuntimeState; mutated: boolean };
+/** Холдер состояния ЦЕЛИ (C2). payload-ы who:'target' мутируют отдельную цель через state,
+ *  а self-target — уже оплаченное состояние исполнителя через aliasesSelf. state undefined без
+ *  aliasesSelf означает цель без runtimeState: всё идёт в self для обратной совместимости. */
+type TargetRef = { state?: RuntimeState; mutated: boolean; aliasesSelf?: boolean };
 
 /** «Талон» (Вдохновение барда): чип-эффект с костью, снимается вручную; кость вводится
  *  диалогом бросков получателя. Вынесен в хелпер, чтобы who:'target' мог класть его цели. */
-function applyBoon(state: RuntimeState, p: Dict, source: string, events: EngineEvent[]): RuntimeState {
+function applyBoon(
+  state: RuntimeState,
+  p: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+): RuntimeState {
   const die = String(p.die ?? 'к6').replace(/d/i, 'к');
   const name = `Талон ${die}${p.id ? ` (${source})` : ''}`;
   const entry: ActiveEffectEntry = {
-    id: `boon-${state.activeEffects.length}-${Date.now()}`, name, mechanics: p, expiry: 'manual', source,
+    id: runtimeEffectId(ctx, 'boon', state.activeEffects.length), name, mechanics: p, expiry: 'manual', source,
   };
   const next = { ...state, activeEffects: [...state.activeEffects, entry] };
   events.push({ type: 'effect_applied', name, sourceAction: source });
@@ -815,10 +1849,16 @@ function applyBoon(state: RuntimeState, p: Dict, source: string, events: EngineE
 }
 
 /** Превращение (Дикий облик): облик как активный эффект-чип; стат-блок зверя — по бестиарию. */
-function applyTransform(state: RuntimeState, p: Dict, source: string, events: EngineEvent[]): RuntimeState {
+function applyTransform(
+  state: RuntimeState,
+  p: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+): RuntimeState {
   const formName = String(p.form ?? p.value ?? p.into ?? 'Дикий облик');
   const entry: ActiveEffectEntry = {
-    id: `form-${state.activeEffects.length}-${Date.now()}`, name: `Облик: ${formName}`, mechanics: p, expiry: 'manual', source,
+    id: runtimeEffectId(ctx, 'form', state.activeEffects.length), name: `Облик: ${formName}`, mechanics: p, expiry: 'manual', source,
   };
   const next = { ...state, activeEffects: [...state.activeEffects, entry] };
   events.push({ type: 'effect_applied', name: entry.name, sourceAction: source });
@@ -853,13 +1893,16 @@ function applyPayloads(
   whoTarget = false,
   targetRef: TargetRef = { mutated: false },
   crit = false,
+  attackFacts?: AttackDamageQueryFacts,
 ): RuntimeState {
   let next = state;
   // Роутер мутации (C2): who:'target' с переданным состоянием цели пишет в ЦЕЛЬ и метит
-  // mutated; иначе — в состояние исполнителя (self). Урон/перемещение/переброс/нарратив —
-  // только события, состояние не трогают, поэтому маршрутизации не требуют.
+  // mutated; self-target пишет прямо в уже оплаченное состояние исполнителя. Иначе — в self
+  // для обратной совместимости с вызовами без runtimeState цели.
   const route = (mutate: (s: RuntimeState) => RuntimeState) => {
-    if (whoTarget && targetRef.state) {
+    if (whoTarget && targetRef.aliasesSelf) {
+      next = mutate(next);
+    } else if (whoTarget && targetRef.state) {
       targetRef.state = mutate(targetRef.state);
       targetRef.mutated = true;
     } else {
@@ -872,20 +1915,36 @@ function applyPayloads(
       case 'damage': {
         // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
-        if (whoTarget && targetRef.state) {
+        const routedTarget = whoTarget
+          ? (targetRef.aliasesSelf ? next : targetRef.state)
+          : undefined;
+        if (routedTarget) {
           // C2/фаза E: урон по ВЫБРАННОЙ цели реально списывает её HP через applyIncomingDamage
           // (сопротивление/иммунитет/уязвимость цели, temp→current, авто-проверка концентрации).
           // Величину урона считаем статами АТАКУЮЩЕГО, применяем — на состоянии ЦЕЛИ с её контекстом.
-          const tctx: ExecuteContext = { ...ctx, character: ctx.target?.characterContext ?? ctx.character };
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit)) {
+          const tctx: ExecuteContext = {
+            ...ctx,
+            character: ctx.target?.characterContext ?? ctx.character,
+            passives: ctx.target?.passives ?? ctx.passives,
+          };
+          let damagedTarget = routedTarget;
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit, attackFacts)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
-            const res = applyIncomingDamage(targetRef.state, amount, tctx, { damageType: dmg.damageType });
-            targetRef.state = res.state;
-            targetRef.mutated = true;
+            const res = applyIncomingDamage(damagedTarget, amount, tctx, {
+              damageType: dmg.damageType,
+              roll: dmg.roll,
+            });
+            damagedTarget = res.state;
             events.push(...res.events);
           }
+          if (targetRef.aliasesSelf) {
+            next = damagedTarget;
+          } else {
+            targetRef.state = damagedTarget;
+            targetRef.mutated = true;
+          }
         } else {
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit, attackFacts)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             events.push(damageEvent(amount, dmg.damageType, dmg.roll));
           }
@@ -895,14 +1954,47 @@ function applyPayloads(
       case 'healing': route((s) => applyHealing(s, p, ctx, events)); break;
       case 'reduce_damage': route((s) => applyReduceDamage(s, p, ctx, events)); break;
       case 'temp_hp': route((s) => applyTempHp(s, p, ctx, events)); break;
-      case 'condition': route((s) => applyCondition(s, p, source, events, ctx.selfId)); break;
-      case 'resource': route((s) => applyResource(s, p, events)); break;
-      case 'modifier': route((s) => applyModifierPayload(s, p, source, events)); break;
-      case 'resistance': route((s) => applyResistancePayload(s, p, source, events)); break;
+      case 'condition': route((s) => applyCondition(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        ctx.selfId,
+        whoTarget ? ctx.target?.conditionImmunities : ctx.conditionImmunities,
+      )); break;
+      case 'resource': route((s) => applyResource(s, p, ctx, events)); break;
+      case 'modifier': route((s) => applyModifierPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      // Typed, short-lived opportunity consumed by an authoritative follow-up
+      // command (Cleave today; reusable for later attack riders).
+      case 'attack_follow_up': route((s) => applyModifierPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'grant_sense': route((s) => applySensePayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'resistance': route((s) => applyResistancePayload(s, p, source, events, ctx)); break;
       case 'set_value': {
         // ac_base — не рантайм-мутация, а НОВЫЙ метod расчёта КЗ (Доспех мага 13+ЛВК): ставим
         // «стоячий» активный эффект с сырой формулой, computeAC подберёт его как метод-кандидат.
-        if (p.target === 'ac_base') { route((s) => applyAcBaseMethod(s, p, source, events)); break; }
+        if (p.target === 'ac_base') { route((s) => applyAcBaseMethod(s, p, source, events, ctx)); break; }
         // Значение считаем в контексте того, КОГО меняем: при who:'target' — по статам ЦЕЛИ
         // (targetFormulaCtx), иначе исполнителя. Для литералов (hp=1) неважно; для формул — критично.
         const fctx = (whoTarget && targetRef.state) ? (targetFormulaCtx(ctx.target) ?? formulaCtx(ctx)) : formulaCtx(ctx);
@@ -915,18 +2007,28 @@ function applyPayloads(
         const slugs: string[] = [];
         if (typeof p.value === 'string' && p.value) slugs.push(p.value);
         if (Array.isArray(p.values)) for (const v of p.values) if (typeof v === 'string' && v) slugs.push(v);
-        next = applyGrantEffect(next, slugs, ctx.grantedEffects, events);
+        route((s) => applyGrantEffect(
+          s,
+          slugs,
+          ctx.grantedEffects,
+          events,
+          ctx,
+          whoTarget ? ctx.target?.id : ctx.selfId,
+        ));
         break;
       }
       case 'variable':
-        // 2.4: рантайм-мутация переменной пока не поддержана — нет RuntimeState.variables и наложения
-        // на formulaCtx (мутация была бы инертна для формул). Ждёт слайса «рантайм-переменные».
-        events.push(narrativeEvent(`Переменная «${p.id ?? p.target ?? ''}» — рантайм-мутация переменных пока не реализована.`));
-        break;
+        throw mechanicsError(
+          'UNKNOWN_PAYLOAD',
+          'runtime.payload.kind',
+          'variable is a build primitive and has no RuntimeState interpreter',
+        );
       case 'value_method':
-        // C8: value_method — build-only (расчёт характеристик в resolveCharacterRules). В рантайме
-        // это no-op (не мусорим NOT_IMPLEMENTED), как build-гранты grant_*.
-        break;
+        throw mechanicsError(
+          'UNKNOWN_PAYLOAD',
+          'runtime.payload.kind',
+          'value_method is a build primitive and cannot be activated',
+        );
       case 'choice': {
         // Ярус 1.2: выбор в момент исполнения. Решение игрока собрано предпроходом на клике
         // действия в ctx.choices[<сырой id выбора>] (fallback 'choice' — как в коллекторе).
@@ -939,7 +2041,9 @@ function applyPayloads(
           const sub = selectedChoicePayloads(p, vals)
             .map(normalizeChoicePayload)
             .filter((sp) => !String(sp.kind).startsWith('grant_'));
-          next = applyPayloads(sub, next, ctx, events, source, hand, halfDamage, whoTarget, targetRef);
+          next = applyPayloads(
+            sub, next, ctx, events, source, hand, halfDamage, whoTarget, targetRef, crit, attackFacts,
+          );
         }
         break;
       }
@@ -954,17 +2058,23 @@ function applyPayloads(
           const name = typeof p.name === 'string' ? p.name : undefined;
           events.push(itemAddedEvent(cardId, qty, invQtyOf(next, cardId), name));
         } else {
-          // Диагностика (ревью S1): пустой card_id И value — обычно опечатка имени поля (item_id/card).
-          // Схему ужесточить нельзя: S3-форма выбора {kind:'add_item'} получает value из выбранного
-          // варианта в рантайме, поэтому сигналим здесь, а не required в схеме.
-          events.push(narrativeEvent('add_item: не указан card_id/value — предмет не выдан (проверьте имя поля card_id).'));
+          throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', 'add_item has no card_id/value');
         }
         break;
       }
-      case 'movement':
-        events.push(narrativeEvent(`Перемещение: ${p.value} ${p.distance ?? ''} фт`));
+      case 'movement': {
+        const evaluated = evaluate(p.distance == null ? 0 : String(p.distance), formulaCtx(ctx));
+        if (typeof evaluated !== 'number' || !Number.isFinite(evaluated)) {
+          throw new FormulaError('movement distance must resolve to a finite number');
+        }
+        events.push({
+          type: 'movement',
+          mode: String(p.value ?? 'move'),
+          distanceFt: Math.max(0, evaluated),
+        });
         break;
-      case 'boon': route((s) => applyBoon(s, p, source, events)); break;
+      }
+      case 'boon': route((s) => applyBoon(s, p, source, events, ctx)); break;
       case 'reroll': {
         // Переброс (Везунчик): архитектурно бросок уже совершён — движок фиксирует
         // право переброса, значение вводится диалогом кубов.
@@ -973,12 +2083,12 @@ function applyPayloads(
         events.push(narrativeEvent(`Переброс ${which}: перебросьте кость — ${keep}.`));
         break;
       }
-      case 'transform': route((s) => applyTransform(s, p, source, events)); break;
+      case 'transform': route((s) => applyTransform(s, p, source, events, ctx)); break;
       case 'narrative':
         events.push(narrativeEvent(String(p.description ?? p.text ?? '')));
         break;
       default:
-        events.push(narrativeEvent(`NOT_IMPLEMENTED payload: ${kind}`));
+        throw mechanicsError('UNKNOWN_PAYLOAD', 'runtime.payload.kind', `executor does not own payload kind «${kind || '?'}»`);
     }
   }
   return next;
@@ -988,21 +2098,72 @@ function applyPayloads(
  * Снять активный modifier с consume:'next' после первого подходящего броска.
  * Это общий примитив для «следующей атаки с помехой» и «−к4 к следующему спасброску».
  */
-function consumeNextRollEffects(
+function modifierMatchesRoll(
+  payload: Dict,
+  roll: string,
+  filter?: Dict,
+  evalCtx?: EvalContext,
+  scope: 'self' | 'target' = 'self',
+): boolean {
+  if (payload.kind !== 'modifier' || payload.consume !== 'next') return false;
+  if (String(payload.scope ?? 'self') !== scope) return false;
+  const applies = payload.applies_to as Dict | undefined;
+  const rollMatches = applies?.roll === roll || (applies?.roll === 'd20'
+    && ['attack', 'saving_throw', 'ability_check', 'initiative'].includes(roll));
+  if (!rollMatches) return false;
+  const requiredFilter = applies?.filter as Dict | undefined;
+  if (requiredFilter) {
+    if (!filter) return false;
+    for (const [key, value] of Object.entries(requiredFilter)) {
+      if (filter[key] !== value) return false;
+    }
+  }
+  return matchesWhen(payload.when as Dict[] | undefined, evalCtx);
+}
+
+export function consumeNextRollEffects(
   state: RuntimeState,
   roll: string,
+  events: EngineEvent[],
+  options: { filter?: Dict; evalCtx?: EvalContext; scope?: 'self' | 'target' } = {},
+): RuntimeState {
+  const expired: ActiveEffectEntry[] = [];
+  const activeEffects = state.activeEffects.filter((entry) => {
+    const consumes = payloadsOf(entry.mechanics).some((payload) => (
+      modifierMatchesRoll(payload, roll, options.filter, options.evalCtx, options.scope)
+    ));
+    if (consumes) expired.push(entry);
+    return !consumes;
+  });
+  if (!expired.length) return state;
+  expired.forEach((entry) => events.push({ type: 'effect_expired', name: entry.name }));
+  return { ...state, activeEffects };
+}
+
+/**
+ * Ends runtime effects whose canonical payload names an observable trigger.
+ * Hide uses this after the roll has been assembled, so Invisible still affects
+ * the first attack but cannot leak into a second attack in the same action.
+ */
+export function expireEffectsForTrigger(
+  state: RuntimeState,
+  trigger: string,
   events: EngineEvent[],
 ): RuntimeState {
   const expired: ActiveEffectEntry[] = [];
   const activeEffects = state.activeEffects.filter((entry) => {
-    const consumes = payloadsOf(entry.mechanics).some((payload) => {
-      if (payload.kind !== 'modifier' || payload.consume !== 'next') return false;
-      const applies = payload.applies_to as Dict | undefined;
-      return applies?.roll === roll || (applies?.roll === 'd20'
-        && ['attack', 'saving_throw', 'ability_check', 'initiative'].includes(roll));
-    });
-    if (consumes) expired.push(entry);
-    return !consumes;
+    const mechanics = entry.mechanics as Dict;
+    const triggers = [
+      ...(Array.isArray(mechanics.hidden_end_triggers)
+        ? mechanics.hidden_end_triggers.map(String)
+        : []),
+      ...(Array.isArray(mechanics.end_triggers)
+        ? mechanics.end_triggers.map(String)
+        : []),
+    ];
+    if (!triggers.includes(trigger)) return true;
+    expired.push(entry);
+    return false;
   });
   if (!expired.length) return state;
   expired.forEach((entry) => events.push({ type: 'effect_expired', name: entry.name }));
@@ -1017,37 +2178,77 @@ function runAttackRoll(
   source: string,
   pending: ReactionOffer[],
   targetRef: TargetRef = { mutated: false },
+  deferredSaves: DeferredTargetSave[] = [],
 ): RuntimeState {
-  const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
+  const whoTarget = String(effect.who ?? 'target') === 'target'
+    && (!!targetRef.state || targetRef.aliasesSelf === true);
   const hand = resolveHand(effect);
-  const ac = ctx.target?.ac ?? 10;
+  const ac = ctx.target!.ac!;
   const passives = passivesFromCtx(ctx);
+  const currentWeapon = weaponContext(ctx.character, hand, state.equipment);
+  const attackRange = attackRangeFromEffect(effect, hand, ctx.character, state.equipment);
+  const heavy = currentWeapon ? evaluateWeaponHeavyRule(
+    currentWeapon,
+    attackRange ?? currentWeapon.defaultAttackMode,
+    ctx.character.abilityScores,
+  ) : null;
+  if (heavy && !heavy.valid) throw new Error(heavy.issue);
+  const attackFacts = attackRollQueryFacts(effect, hand, ctx.character, state.equipment);
+  const attackFilter: ModifierQueryFacts = {
+    ...attackFacts,
+    ...(ctx.target?.id ? { targetActorId: ctx.target.id } : {}),
+    ...(ctx.spell?.sourceClass ? { spellClass: ctx.spell.sourceClass } : {}),
+  };
   const collected = collectModifiers(state, passives, {
     roll: 'attack',
+    filter: attackFilter,
     formulaCtx: formulaCtx(ctx),
     evalCtx: evalCtxOf(state, ctx),
   });
   // Проекция состояний цели на бросок атакующего (фаза E): атака по распластанному/
   // опутанному/ослеплённому/парализованному/ошеломлённому/без сознания — с преимуществом.
   // Дистанционный гейт (B/C): рукопашная/дальнобойная атака определяется по оружию в руке.
-  const attackRange = attackRangeFromEffect(effect, hand, ctx.character, state.equipment);
-  const projected = projectedAgainst(ctx.target, 'attack', attackRange);
+  const projected = projectedAgainst(
+    ctx.target,
+    'attack',
+    attackRange,
+    evalCtxOf(state, ctx),
+    attackFilter,
+  );
   const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers, ...projected.modifiers];
 
-  const roll = rollD20({
+  const roll = ctx.forcedAttackRoll
+    ? retargetAttackRoll(ctx.forcedAttackRoll, ac)
+    : rollD20({
     // C7: объединяем флаги обоих проходов — и преим., и помеха (свои + от цели) → none.
     advantage: foldAdvantage(
       collected.hasAdvantage || projected.hasAdvantage,
-      collected.hasDisadvantage || projected.hasDisadvantage,
+      collected.hasDisadvantage || projected.hasDisadvantage
+        || Boolean(heavy?.valid && heavy.disadvantage),
     ),
     modifiers: mods,
     target: { type: 'ac', value: ac },
     rng: ctx.rng,
     rules: [...collected.rules, ...projected.rules], // свои правила + проекция цели (Blade Ward)
-  });
+    });
   events.push(rollEvent('Атака', roll));
 
-  let next = consumeNextRollEffects(state, 'attack', events);
+  let next = consumeNextRollEffects(state, 'attack', events, {
+    filter: attackFilter,
+    evalCtx: evalCtxOf(state, ctx),
+  });
+  if (targetRef.state) {
+    const consumedTarget = consumeNextRollEffects(targetRef.state, 'attack', events, {
+      scope: 'target',
+      evalCtx: evalCtxOf(state, ctx),
+    });
+    if (consumedTarget !== targetRef.state) {
+      targetRef.state = consumedTarget;
+      targetRef.mutated = true;
+    }
+  }
+  next = expireEffectsForTrigger(next, 'actor_makes_attack_roll', events);
+  if (ctx.pauseAfterAttackRoll) return next;
   // on_roll-триггеры по значению кости (напр. «на 15 → парализовать цель») — не зависят от исхода.
   if (Array.isArray(roll.triggered) && roll.triggered.length) {
     next = applyPayloads(roll.triggered as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
@@ -1065,24 +2266,90 @@ function runAttackRoll(
     const useCritPayloads = outcome === 'crit' && Array.isArray(effect.on_crit);
     const payloads = (useCritPayloads ? effect.on_crit : effect.on_hit) as Dict[] | undefined;
     const critDouble = outcome === 'crit' && !useCritPayloads;
+    const attackAbility = String(effect.ability);
+    const attackWeaponMod = attackAbility === 'spellcasting'
+      ? ctx.character.spellcastingMod!
+      : attackAbility === 'auto'
+        ? ctx.character.abilityMods[currentWeapon!.ability]
+        : ctx.character.abilityMods[attackAbility as AbilityKey];
+    const attackDamageFacts: AttackDamageQueryFacts = {
+      attackKind: attackFacts.attackKind,
+      extraAttackSource: extraAttackSourceFromEffect(
+        effect, hand, ctx.character, state.equipment,
+      ),
+      weaponMod: attackWeaponMod,
+    };
+    const damageEventStart = events.length;
     if (Array.isArray(payloads)) {
-      next = applyPayloads(payloads, next, ctx, events, source, hand, false, whoTarget, targetRef, critDouble);
+      next = applyPayloads(
+        payloads,
+        next,
+        ctx,
+        events,
+        source,
+        hand,
+        false,
+        whoTarget,
+        targetRef,
+        critDouble,
+        attackDamageFacts,
+      );
     }
+    const dealtDamage = events.slice(damageEventStart).some((entry) => (
+      entry.type === 'damage' && entry.amount > 0
+    ));
     // Искусность 2024 на попадании (Опрокидывающее/Ослабляющее/Замедляющее/Отвлекающее/
     // Отталкивающее/Рассекающее) — до райдеров события, чтобы её эффекты уже были в состоянии.
-    next = runMastery(next, ctx, events, pending, targetRef, hand, 'hit');
+    next = runMastery(
+      next,
+      ctx,
+      events,
+      pending,
+      targetRef,
+      hand,
+      'hit',
+      deferredSaves,
+      { attackRange, dealtDamage },
+    );
     // Событие попадания → on-hit-райдеры: Скрытая атака (авто), Божественная кара /
     // Внезапный удар (предложение со стоимостью). Без timing — совпадает с любым.
-    next = emitEvent({ kind: 'hit', source: 'self' }, next, ctx, events, pending, targetRef);
-    if (outcome === 'crit') next = emitEvent({ kind: 'crit', source: 'self' }, next, ctx, events, pending, targetRef);
+    const declaredProperties = Array.isArray(effect.weapon_properties)
+      ? (effect.weapon_properties as unknown[]).map(String)
+      : [];
+    next = emitEvent({
+      kind: 'hit',
+      source: 'self',
+      data: {
+        advantage: roll.advantage,
+        attackRange: attackRange ?? 'unknown',
+        weaponProperties: [...new Set([...(currentWeapon?.properties ?? []), ...declaredProperties])],
+        nearbyEligibleAllyToTarget: ctx.attackFacts?.nearbyEligibleAllyToTarget === true,
+        critical: outcome === 'crit',
+      },
+    }, next, ctx, events, pending, targetRef, deferredSaves);
+    if (outcome === 'crit') next = emitEvent(
+      { kind: 'crit', source: 'self' }, next, ctx, events, pending, targetRef, deferredSaves,
+    );
   } else {
     // Промах: on_miss-райдеры (Graze/Vex — оружейное мастерство 2024) + событие miss.
     if (Array.isArray(effect.on_miss)) {
       next = applyPayloads(effect.on_miss as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
     }
     // Искусность на промахе: Задевающее (урон = модификатор характеристики атаки).
-    next = runMastery(next, ctx, events, pending, targetRef, hand, 'miss');
-    next = emitEvent({ kind: 'miss', source: 'self' }, next, ctx, events, pending, targetRef);
+    next = runMastery(
+      next,
+      ctx,
+      events,
+      pending,
+      targetRef,
+      hand,
+      'miss',
+      deferredSaves,
+      { attackRange, dealtDamage: false },
+    );
+    next = emitEvent(
+      { kind: 'miss', source: 'self' }, next, ctx, events, pending, targetRef, deferredSaves,
+    );
   }
   return next;
 }
@@ -1103,14 +2370,27 @@ function runMastery(
   targetRef: TargetRef,
   hand: 'main' | 'off',
   event: 'hit' | 'miss',
+  deferredSaves: DeferredTargetSave[],
+  facts: { attackRange?: 'melee' | 'ranged'; dealtDamage: boolean },
 ): RuntimeState {
-  const m = activeMastery(ctx, state, hand);
+  const m = activeMastery(ctx, state, hand, facts);
   if (!m || m.event !== event) return state;
   const effects = (m.mechanics.effects as Dict[] | undefined);
   if (!Array.isArray(effects) || !effects.length) return state;
   events.push(narrativeEvent(`Искусность: ${m.name}`));
-  const mctx: ExecuteContext = { ...ctx, weaponMod: m.weaponMod };
-  return runMechanicEffects(effects, state, mctx, events, m.name, pending, targetRef);
+  const mctx: ExecuteContext = {
+    ...ctx,
+    weaponMod: m.weaponMod,
+    deferredSaveSource: {
+      kind: 'weapon_mastery',
+      entityId: m.id,
+      name: m.name,
+      weaponMod: m.weaponMod,
+    },
+  };
+  return runMechanicEffects(
+    effects, state, mctx, events, m.name, pending, targetRef, false, deferredSaves,
+  );
 }
 
 // Состояния, которые сейв пытается ИЗБЕЖАТЬ: значения condition-пейлоадов из on_fail (урон/прочее
@@ -1128,12 +2408,23 @@ function runSave(
   events: EngineEvent[],
   source: string,
   targetRef: TargetRef = { mutated: false },
+  deferredSaves: DeferredTargetSave[] = [],
 ): RuntimeState {
-  const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
-  const dcFormula = String(effect.dc ?? '10');
+  const whoTarget = String(effect.who ?? 'target') === 'target'
+    && (!!targetRef.state || targetRef.aliasesSelf === true);
+  const dcFormula = String(effect.dc);
   const dc = evalDc(dcFormula, ctx);
-  const ability = String(effect.ability ?? 'dex') as AbilityKey;
-  const saveMod = targetSaveMod(ctx.target, ability);
+  const ability = String(effect.ability) as AbilityKey;
+  if (ctx.deferTargetSaves && whoTarget && targetRef.state && ctx.deferredSaveSource) {
+    deferredSaves.push({
+      source: { ...ctx.deferredSaveSource },
+      effect: { ...effect },
+      ability,
+      dc,
+      avoidsConditions: savedConditionsOf(effect),
+    });
+    return state;
+  }
   // Спасбросок совершает ЦЕЛЬ своими модификаторами/преимуществом — НЕ атакующий.
   // Берём эффекты из рантайма цели (богатая цель, фаза E); у обобщённой цели их нет.
   // evalCtx с savedConditions гейтит модификаторы «преимущество/бонус на спас против состояния X»
@@ -1157,6 +2448,7 @@ function runSave(
     events.push(narrativeEvent(`Спасбросок ${ABILITY_LABEL[ability]} — автопровал (состояние цели).`));
     success = false;
   } else {
+    const saveMod = targetSaveMod(ctx.target, ability);
     const roll = rollD20({
       advantage: collected.advantage,
       modifiers: [{ value: saveMod, source: 'цель' }, ...collected.modifiers],
@@ -1171,13 +2463,23 @@ function runSave(
   }
   let next = state;
   if (targetState && targetRef.state) {
-    const consumedTarget = consumeNextRollEffects(targetRef.state, 'saving_throw', events);
+    const consumedTarget = consumeNextRollEffects(targetRef.state, 'saving_throw', events, {
+      filter: { ability },
+      evalCtx: {
+        state: targetRef.state,
+        activeConditions: activeConditionsOf(targetRef.state),
+        savedConditions: new Set(savedConditionsOf(effect)),
+      },
+    });
     if (consumedTarget !== targetRef.state) {
       targetRef.state = consumedTarget;
       targetRef.mutated = true;
     }
   } else {
-    next = consumeNextRollEffects(next, 'saving_throw', events);
+    next = consumeNextRollEffects(next, 'saving_throw', events, {
+      filter: { ability },
+      evalCtx: evalCtxOf(next, ctx),
+    });
   }
 
   const payloads = (success ? effect.on_success : effect.on_fail) as Dict[] | undefined;
@@ -1193,10 +2495,20 @@ function runSave(
 export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability: string; dc: number; half: boolean; avoidsConditions: string[] } | null {
   const effects = mechanics.effects as Dict[] | undefined;
   if (!Array.isArray(effects)) return null;
-  const eff = effects.find((e) => String(e.resolution ?? '') === 'save' && String(e.who ?? 'target') === 'target');
-  if (!eff) return null;
-  const dc = evalDc(String(eff.dc ?? '10'), ctx);
-  const ability = String(eff.ability ?? 'dex');
+  const effectIndex = effects.findIndex((effect) => (
+    String(effect.resolution ?? '') === 'save' && String(effect.who ?? 'target') === 'target'
+  ));
+  if (effectIndex < 0) return null;
+  const eff = effects[effectIndex];
+  const path = `mechanics.effects[${effectIndex}]`;
+  const ability = explicitAbility(
+    eff.ability,
+    `${path}.ability`,
+    ABILITY_KEYS,
+    'save resolution',
+  );
+  explicitPositiveDc(eff.dc, `${path}.dc`, ctx);
+  const dc = evalDc(String(eff.dc), ctx);
   const half = Array.isArray(eff.on_success) && (eff.on_success as Dict[]).some((p) => p.on_success === 'half');
   // Состояния, которые сейв позволяет избежать — цель применит condition-scoped модификаторы (Происхождение фей).
   return { ability, dc, half, avoidsConditions: savedConditionsOf(eff) };
@@ -1210,7 +2522,7 @@ function runAbilityCheck(
   source: string,
   targetRef: TargetRef = { mutated: false },
 ): RuntimeState {
-  const ability = String(effect.ability ?? 'str') as AbilityKey;
+  const ability = String(effect.ability) as AbilityKey;
   const skill = String(effect.skill ?? '');
   // C12: бонус мастерства — ТОЛЬКО при владении навыком (экспертиза ×2). «Голая» проверка
   // характеристики (без skill) бонус мастерства не получает — раньше он прибавлялся безусловно.
@@ -1219,42 +2531,63 @@ function runAbilityCheck(
     : skill && ctx.character.skillProficiencies?.includes(skill)
       ? ctx.character.profBonus
       : 0;
-  const attackerTotal = (ctx.character.abilityMods[ability] ?? 0) + prof;
+  const attackerTotal = ctx.character.abilityMods[ability] + prof;
+  const sense = String(effect.requires_sense ?? effect.sense ?? '');
+  const checkFilter: ModifierQueryFacts = {
+    ability,
+    ...(skill ? { skill } : {}),
+    ...(sense === 'sight' || sense === 'hearing' ? { sense } : {}),
+  };
   const collected = collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'ability_check',
-    filter: skill ? { skill } : { ability },
+    filter: checkFilter,
     formulaCtx: formulaCtx(ctx),
     evalCtx: evalCtxOf(state, ctx),
   });
-  const attRoll = rollD20({
-    advantage: collected.advantage,
-    modifiers: [
-      { value: attackerTotal, source: skill || ABILITY_LABEL[ability] },
-      ...collected.modifiers,
-    ],
-    rng: ctx.rng,
-    rules: collected.rules,
-  });
-  events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
-  const next = consumeNextRollEffects(state, 'ability_check', events);
-
-  // Исход: против фиксированной СЛ (mode:dc) ИЛИ состязание (contest_vs, по умолчанию Атлетика).
+  let next = state;
   let success: boolean;
-  if (effect.dc != null) {
-    success = attRoll.total >= evalDc(String(effect.dc), ctx);
+  if (collected.autoFail) {
+    // Sight/hearing requirements are explicit action facts. A matching
+    // condition declares auto_fail; the executor consumes neither RNG nor a
+    // "next roll" effect because no D20 Test occurred.
+    events.push(narrativeEvent(
+      `Проверка${sense ? ` (${sense})` : ''} — автопровал (состояние).`,
+    ));
+    success = false;
   } else {
-    // RAW 2024: цель ВЫБИРАЕТ одну защитную характеристику (Атлетика ИЛИ Акробатика) — берёт
-    // выгоднейшую по модификатору — и совершает ОДИН бросок (не максимум из нескольких d20,
-    // что раньше давало защите фактическое преимущество).
-    const contestVs = (effect.contest_vs as string[]) ?? ['athletics'];
-    const defSkill = contestVs.reduce(
-      (best, s) => ((ctx.target?.checkMods?.[s] ?? 0) > (ctx.target?.checkMods?.[best] ?? 0) ? s : best),
-      contestVs[0] ?? 'athletics',
-    );
-    const defMod = ctx.target?.checkMods?.[defSkill] ?? 0;
-    const defRoll = rollD20({ modifiers: [{ value: defMod, source: defSkill }], rng: ctx.rng });
-    events.push(rollEvent(`Ответ (${defSkill})`, { ...defRoll, kind: 'check' }));
-    success = attRoll.total > defRoll.total;
+    const attRoll = rollD20({
+      advantage: collected.advantage,
+      modifiers: [
+        { value: attackerTotal, source: skill || ABILITY_LABEL[ability] },
+        ...collected.modifiers,
+      ],
+      ...(effect.dc == null ? {} : { target: { type: 'dc' as const, value: evalDc(String(effect.dc), ctx) } }),
+      rng: ctx.rng,
+      rules: collected.rules,
+    });
+    events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
+    next = consumeNextRollEffects(state, 'ability_check', events, {
+      filter: checkFilter,
+      evalCtx: evalCtxOf(state, ctx),
+    });
+
+    // Исход: против явно объявленной СЛ или явно объявленного набора защитных навыков.
+    if (effect.dc != null) {
+      success = attRoll.total >= evalDc(String(effect.dc), ctx);
+    } else {
+      // RAW 2024: цель ВЫБИРАЕТ одну защитную характеристику (Атлетика ИЛИ Акробатика) — берёт
+      // выгоднейшую по модификатору — и совершает ОДИН бросок.
+      const contestVs = effect.contest_vs as string[];
+      const checkMods = ctx.target!.checkMods!;
+      const defSkill = contestVs.reduce(
+        (best, candidate) => (checkMods[candidate] > checkMods[best] ? candidate : best),
+        contestVs[0],
+      );
+      const defMod = checkMods[defSkill];
+      const defRoll = rollD20({ modifiers: [{ value: defMod, source: defSkill }], rng: ctx.rng });
+      events.push(rollEvent(`Ответ (${defSkill})`, { ...defRoll, kind: 'check' }));
+      success = attRoll.total > defRoll.total;
+    }
   }
 
   if (!success) return next;
@@ -1262,14 +2595,16 @@ function runAbilityCheck(
   // перемещение, нарратив. who:'target' направляет состояние ЦЕЛИ, а не исполнителю.
   const onSuccess = effect.on_success as Dict[] | undefined;
   if (!Array.isArray(onSuccess)) return next;
-  const whoTarget = String(effect.who ?? 'target') === 'target' && !!targetRef.state;
+  const whoTarget = String(effect.who ?? 'target') === 'target'
+    && (!!targetRef.state || targetRef.aliasesSelf === true);
   return applyPayloads(onSuccess, next, ctx, events, source, 'main', false, whoTarget, targetRef);
 }
 
 /**
- * Исполнить список interactions механики (auto/attack_roll/save/ability_check) с мягкой
- * деградацией формул. Общий для основного действия и для авто-срабатывающих слушателей
- * событий (фаза A).
+ * Исполнить список interactions механики (auto/attack_roll/save/ability_check).
+ * Основное действие проходит строгий preflight до оплаты; ошибки динамически
+ * подключённых слушателей также остаются typed/fail-closed, а не становятся
+ * успешным narrative-only применением.
  */
 function runMechanicEffects(
   effects: Dict[],
@@ -1279,40 +2614,60 @@ function runMechanicEffects(
   sourceName: string,
   pending: ReactionOffer[],
   targetRef: TargetRef = { mutated: false },
+  criticalDamage = false,
+  deferredSaves: DeferredTargetSave[] = [],
 ): RuntimeState {
   let next = state;
   for (const eff of effects) {
     const resolution = String(eff.resolution ?? '');
-    // Мягкая деградация: если формула эффекта ссылается на недоступную переменную,
-    // эффект пропускается с логом, а не роняет всё действие (см. docs/variables.md).
     try {
       // Ярус 1.2: choice как самостоятельная интеракция действия — через общий роутер payload-ов
       // (там case 'choice' развернёт выбор из ctx.choices). Иначе бы упал в NOT_IMPLEMENTED resolution.
       if (eff.kind === 'choice') {
-        const whoTarget = String(eff.who ?? 'self') === 'target' && !!targetRef.state;
+        const whoTarget = String(eff.who ?? 'self') === 'target'
+          && (!!targetRef.state || targetRef.aliasesSelf === true);
         next = applyPayloads([eff], next, ctx, events, sourceName, 'main', false, whoTarget, targetRef);
         continue;
       }
       if (resolution === 'auto') {
         const results = (eff.result ?? eff.results) as Dict[] | undefined;
         if (Array.isArray(results)) {
-          const whoTarget = String(eff.who ?? 'self') === 'target' && !!targetRef.state;
-          next = applyPayloads(results, next, ctx, events, sourceName, 'main', false, whoTarget, targetRef);
+          const whoTarget = String(eff.who ?? 'self') === 'target'
+            && (!!targetRef.state || targetRef.aliasesSelf === true);
+          next = applyPayloads(results, next, ctx, events, sourceName, 'main', false, whoTarget, targetRef, criticalDamage);
         }
         continue;
       }
-      if (resolution === 'attack_roll') { next = runAttackRoll(eff, next, ctx, events, sourceName, pending, targetRef); continue; }
-      if (resolution === 'save') { next = runSave(eff, next, ctx, events, sourceName, targetRef); continue; }
-      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events, sourceName, targetRef); continue; }
-      events.push(narrativeEvent(`NOT_IMPLEMENTED resolution: ${resolution}`));
-    } catch (e) {
-      if (e instanceof MissingVariableError) {
-        events.push(narrativeEvent(`Переменная «${e.variable}» недоступна — эффект «${sourceName}» не применён.`));
+      if (resolution === 'attack_roll') {
+        next = runAttackRoll(eff, next, ctx, events, sourceName, pending, targetRef, deferredSaves);
         continue;
       }
-      if (e instanceof FormulaError) {
-        events.push(narrativeEvent(`Формула эффекта «${sourceName}» не вычислена: ${e.message}`));
+      if (resolution === 'save') {
+        next = runSave(eff, next, ctx, events, sourceName, targetRef, deferredSaves);
         continue;
+      }
+      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events, sourceName, targetRef); continue; }
+      throw mechanicsError(
+        'UNKNOWN_RESOLUTION',
+        'runtime.effect.resolution',
+        `executor does not own resolution «${resolution || '?'}»`,
+      );
+    } catch (e) {
+      if (e instanceof MissingVariableError) {
+        throw mechanicsError(
+          'INVALID_FORMULA',
+          'runtime.effect.formula',
+          `variable «${e.variable}» is unavailable for effect «${sourceName}»`,
+          e,
+        );
+      }
+      if (e instanceof FormulaError) {
+        throw mechanicsError(
+          'INVALID_FORMULA',
+          'runtime.effect.formula',
+          `effect «${sourceName}» cannot be evaluated: ${e.message}`,
+          e,
+        );
       }
       throw e;
     }
@@ -1379,6 +2734,7 @@ export function emitEvent(
   events: EngineEvent[],
   pending: ReactionOffer[],
   targetRef: TargetRef = { mutated: false },
+  deferredSaves: DeferredTargetSave[] = [],
 ): RuntimeState {
   // Слушатели: пассивки + отдельный пул триггерных способностей (ctx.triggers — заклинания-реакции
   // вроде Божественной кары; их не читает collectModifiers, чтобы не применять эффект пассивно).
@@ -1411,7 +2767,17 @@ export function emitEvent(
     const effs = (lm.mechanics.effects as Dict[]) ?? [];
     if (effs.length) {
       events.push(narrativeEvent(`Сработало: ${lm.name}`));
-      next = runMechanicEffects(effs, next, ctx, events, lm.name, pending, targetRef);
+      next = runMechanicEffects(
+        effs,
+        next,
+        ctx,
+        events,
+        lm.name,
+        pending,
+        targetRef,
+        ev.kind === 'hit' && ev.data?.critical === true,
+        deferredSaves,
+      );
     }
   }
   return next;
@@ -1422,19 +2788,25 @@ export function executeAction(
   mechanics: Dict,
   ctx: ExecuteContext,
 ): ExecuteResult {
+  const cost = preflightMechanicsExecution(state, mechanics, ctx);
   beginCascade(ctx); // C4: свежий бюджет каскада событий на это действие
   let next = cloneState(state);
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
-  // Состояние ЦЕЛИ (C2): клон (не мутируем объект вызывающего). payload-ы who:'target'
-  // пишут сюда; если цель без runtimeState — state undefined и всё идёт в self.
+  const deferredSaves: DeferredTargetSave[] = [];
+  // Состояние ОТДЕЛЬНОЙ цели (C2): клон (не мутируем объект вызывающего). Для self-target
+  // отдельная ветка недопустима: она потеряла бы уже оплаченную стоимость source-state, когда
+  // handler сведёт две мутации одного actor id. Поэтому who:'target' для самого исполнителя
+  // штатно пишет в `next`, а для другого существа — в targetRef.
+  const hasSeparateTarget = ctx.target?.runtimeState != null
+    && !(ctx.selfId != null && ctx.target.id === ctx.selfId);
+  const aliasesSelf = ctx.selfId != null && ctx.target?.id === ctx.selfId;
   const targetRef: TargetRef = {
-    state: ctx.target?.runtimeState ? cloneState(ctx.target.runtimeState) : undefined,
+    state: hasSeparateTarget ? cloneState(ctx.target!.runtimeState!) : undefined,
     mutated: false,
+    aliasesSelf,
   };
 
-  const activation = mechanics.activation as Dict | undefined;
-  const cost = (activation?.cost as Dict[]) ?? [];
   if (cost.length) {
     const check = canPay(next, cost);
     if (!check.ok) throw new InsufficientResourcesError(check.missing);
@@ -1444,19 +2816,28 @@ export function executeAction(
   }
 
   const effects = mechanics.effects as Dict[] | undefined;
-  if (!Array.isArray(effects)) return { state: next, events };
-
-  const sourceName = String(mechanics.name ?? 'действие');
-  next = runMechanicEffects(effects, next, ctx, events, sourceName, pending, targetRef);
+  if (Array.isArray(effects)) {
+    const sourceName = String(mechanics.name ?? 'действие');
+    next = runMechanicEffects(
+      effects, next, ctx, events, sourceName, pending, targetRef, false, deferredSaves,
+    );
+  }
 
   // Событие «сотворено заклинание» → триггеры на каст (напр. отклик оружия/предмета).
   // Активируется, когда лист/кузня передают ctx.spell (пикер уровня слота — D1 слайс 2);
   // до этого не фигурирует (аддитивно, без изменения текущего поведения).
-  if (ctx.spell) {
+  if (ctx.spell && !ctx.suppressSpellCastEvent) {
     next = emitEvent(
       { kind: 'spell_cast', source: 'self', data: { level: ctx.spell.castLevel ?? ctx.spell.baseLevel } },
-      next, ctx, events, pending, targetRef,
+      next, ctx, events, pending, targetRef, deferredSaves,
     );
+    if (ctx.spell.components?.verbal === true) {
+      next = expireEffectsForTrigger(
+        next,
+        'actor_casts_spell_with_verbal_component',
+        events,
+      );
+    }
   }
 
   void (ctx.character as CharacterContext);
@@ -1464,6 +2845,7 @@ export function executeAction(
     state: next,
     events,
     ...(pending.length ? { pendingReactions: pending } : {}),
+    ...(deferredSaves.length ? { deferredTargetSaves: deferredSaves } : {}),
     ...(targetRef.mutated ? { targetState: targetRef.state } : {}),
   };
 }
@@ -1477,7 +2859,13 @@ export function applyIncomingDamage(
   state: RuntimeState,
   amount: number,
   ctx: ExecuteContext,
-  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number; damageReduction?: number },
+  opts?: {
+    crit?: boolean;
+    damageType?: string;
+    conSaveBonus?: number;
+    damageReduction?: number;
+    roll?: import('../mvp/contracts').RollLog;
+  },
 ): ExecuteResult {
   beginCascade(ctx); // C4: свежий бюджет каскада событий на это получение урона
   let next = cloneState(state);
@@ -1487,11 +2875,22 @@ export function applyIncomingDamage(
   const raw = Math.max(0, Math.floor(amount));
   const damageType = opts?.damageType ?? 'урон';
   // Сопротивление/иммунитет/уязвимость цели (фаза E) — применяется при получении урона.
-  const level = resistanceLevelFor(next, ctx, damageType);
+  const resistanceRule = resistanceRuleFor(next, ctx, damageType);
+  const level = resistanceRule.level;
   const resisted = applyResistance(raw, level);
   if (level && resisted !== raw) {
     const label = level === 'immunity' ? 'иммунитет' : level === 'resistance' ? 'сопротивление' : 'уязвимость';
-    events.push(narrativeEvent(`${label} к «${damageType}»: ${raw} → ${resisted}`));
+    events.push({
+      type: 'narrative',
+      text: `${label} к «${damageType}»: ${raw} → ${resisted}`,
+      damageAdjustment: {
+        damageType,
+        adjustment: level as 'resistance' | 'immunity' | 'vulnerability',
+        before: raw,
+        after: resisted,
+        sourceEntityIds: resistanceRule.sourceEntityIds,
+      },
+    });
   }
   // Снижение урона (Каменная стойкость) — ПОСЛЕ сопротивления, ДО списания хитов. Урон не может
   // уйти ниже 0. Так HP не проседает (нет ложных «Окровален»/падения до 0), и это НЕ лечение.
@@ -1503,7 +2902,7 @@ export function applyIncomingDamage(
   const absorbed = Math.min(next.hp.temp, dmg);
   next.hp.temp -= absorbed;
   next.hp.current = Math.max(0, next.hp.current - (dmg - absorbed));
-  events.push(damageEvent(dmg, damageType));
+  events.push(damageEvent(dmg, damageType, opts?.roll));
 
   // Авто-проверка концентрации при уроне.
   const conc = concentrationEntry(next);

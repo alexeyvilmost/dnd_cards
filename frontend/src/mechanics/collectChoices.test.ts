@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { collectChoices, type ChoiceOrigin } from './collectChoices';
+import {
+  collectChoices,
+  preparedSpellSelectionIssues,
+  type ChoiceOrigin,
+} from './collectChoices';
 import { choiceKey, sourceKey } from './choiceKey';
 
 const ORIGIN: ChoiceOrigin = { kind: 'feat', id: 'asi', name: 'Улучшение характеристик', featureId: 'asi_fx' };
@@ -36,6 +40,33 @@ describe('collectChoices — всплытие вложенных выборов'
   it('без resolvedChoices всплывает только внешний выбор', () => {
     const out = collectChoices(asiMechanics, ORIGIN);
     expect(out.map((c) => c.id)).toEqual(['feat:asi:asi_fx:asi_mode']);
+    expect(out[0].items?.[0].grants).toEqual([
+      expect.objectContaining({ kind: 'choice', id: 'asi_p2' }),
+    ]);
+  });
+
+  it('preserves choice-level grant/apply templates for downstream legality', () => {
+    const mechanics = {
+      effects: [
+        {
+          kind: 'choice', id: 'skill', options: { source: 'skill' },
+          grant: { kind: 'grant_proficiency', prof: 'skill' },
+        },
+        {
+          kind: 'choice', id: 'damage', options: { source: 'damage_type' },
+          apply: { kind: 'resistance', value_into: 'type' },
+        },
+      ],
+    };
+    const out = collectChoices(mechanics, ORIGIN);
+    expect(out.find((choice) => choice.id.endsWith(':skill'))?.grant).toEqual({
+      kind: 'grant_proficiency',
+      prof: 'skill',
+    });
+    expect(out.find((choice) => choice.id.endsWith(':damage'))?.grant).toEqual({
+      kind: 'resistance',
+      value_into: 'type',
+    });
   });
 
   it('после выбора режима «+2» всплывает вложенный выбор характеристики', () => {
@@ -51,5 +82,62 @@ describe('collectChoices — всплытие вложенных выборов'
     const p1 = out.find((c) => c.id === 'feat:asi:asi_fx:asi_p1');
     expect(p1).toBeDefined();
     expect(p1?.count).toBe(2);
+  });
+});
+
+describe('prepared_spell_choice', () => {
+  const wizardOrigin: ChoiceOrigin = {
+    kind: 'class',
+    id: 'wizard-uuid',
+    name: 'Волшебник',
+    featureId: 'wizard-spellcasting-effect',
+  };
+  const mechanics = {
+    effects: [
+      {
+        kind: 'choice',
+        id: 'wizard_spellbook_level_1',
+        prompt: 'Книга заклинаний',
+        count: 6,
+        options: { source: 'spell' },
+      },
+      {
+        kind: 'prepared_spell_choice',
+        id: 'wizard_prepared_spells_level_1',
+        source_choice_id: 'wizard_spellbook_level_1',
+        prompt: 'Подготовьте заклинания',
+        count: 4,
+        resolution: 'on_acquire',
+      },
+    ],
+  };
+
+  it('строит домен только из фактически сохранённой книги и использует scoped ids', () => {
+    const sourceId = choiceKey(wizardOrigin, 'wizard_spellbook_level_1');
+    const out = collectChoices(mechanics, wizardOrigin, {
+      [sourceId]: ['shield', 'magic-missile', 'sleep', 'detect-magic', 'fog-cloud', 'mage-armor'],
+    });
+    const prepared = out.find((candidate) => candidate.source === 'prepared_spell');
+    expect(prepared).toMatchObject({
+      id: choiceKey(wizardOrigin, 'wizard_prepared_spells_level_1'),
+      preparedSpellSourceChoiceId: sourceId,
+      count: 4,
+      allowedOptionIds: ['shield', 'magic-missile', 'sleep', 'detect-magic', 'fog-cloud', 'mage-armor'],
+    });
+  });
+
+  it('fail-closed валидирует count, дубли и заклинание вне книги', () => {
+    const sourceId = choiceKey(wizardOrigin, 'wizard_spellbook_level_1');
+    const prepared = collectChoices(mechanics, wizardOrigin, {
+      [sourceId]: ['shield', 'magic-missile', 'sleep', 'detect-magic', 'fog-cloud', 'mage-armor'],
+    }).find((candidate) => candidate.source === 'prepared_spell')!;
+    expect(preparedSpellSelectionIssues(prepared, ['shield', 'shield', 'sleep', 'outside']))
+      .toEqual([
+        'подготовленные заклинания должны быть различны',
+        'заклинания вне выбранной книги: outside',
+      ]);
+    expect(preparedSpellSelectionIssues(prepared, ['shield'])).toEqual([
+      'требуется выбрать ровно 4',
+    ]);
   });
 });

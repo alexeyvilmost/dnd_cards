@@ -51,4 +51,52 @@ describe('базовые действия как сущности (не хард
     const out = collectSheetActions(emptyAssembled, [], []);
     expect(out.filter((a) => a.group === 'basic')).toHaveLength(0);
   });
+
+  it('не синтезирует механику, цену или narrative из legacy action.resource', () => {
+    const legacy = {
+      id: 'legacy', card_number: 'ACT-legacy', name: 'Legacy', resource: 'action',
+      description: 'Текст не является исполняемой механикой', mechanics: null,
+    } as unknown as Action;
+    expect(collectSheetActions(emptyAssembled, [], [legacy])).toEqual([]);
+  });
+
+  it('fail-closed скрывает active без явного activation.cost', () => {
+    const missingCost = {
+      ...basicUnarmed,
+      id: 'missing-cost',
+      mechanics: { activation: { mode: 'active' }, effects: [] },
+    } as unknown as Action;
+    expect(collectSheetActions(emptyAssembled, [], [missingCost])).toEqual([]);
+  });
+
+  it('uses-пул тратится только через явный self_uses и связывается со stable ref', () => {
+    const limited = {
+      ...basicUnarmed,
+      id: 'limited',
+      card_number: 'ACT-limited',
+      mechanics: {
+        activation: {
+          mode: 'active',
+          cost: [{ resource: 'action' }, { resource: 'self_uses' }],
+        },
+        uses: { count: 2, per: 'long_rest' },
+        effects: [],
+      },
+    } as unknown as Action;
+    const compiled = collectSheetActions(emptyAssembled, [], [limited]);
+    expect((compiled[0].mechanics.activation as { cost: unknown }).cost).toEqual([
+      { resource: 'action' }, { resource: 'uses_ACT-limited' },
+    ]);
+
+    const poolOnly = {
+      ...limited,
+      id: 'pool-only',
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        uses: { count: 2, per: 'long_rest' },
+        effects: [],
+      },
+    } as unknown as Action;
+    expect(collectSheetActions(emptyAssembled, [], [poolOnly])).toEqual([]);
+  });
 });

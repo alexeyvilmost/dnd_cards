@@ -4,6 +4,8 @@ import { Plus, Search, Sparkles } from 'lucide-react';
 import { MAX_ATTUNED, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
 import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
+import type { EncounterApply } from '../battle/encountersApi';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
 import {
   addToInventory,
   carryingCapacity,
@@ -40,6 +42,7 @@ interface Props {
   /** Пассивные механики персонажа (для контекста; КД считается в шапке листа). */
   passives?: Record<string, unknown>[];
   disableHoverPreviews?: boolean;
+  encounterApply?: EncounterApply;
 }
 
 const SLOT_LABELS: Record<string, string> = {
@@ -80,6 +83,7 @@ export default function SheetEquipmentPanel({
   embedded,
   passives = [],
   disableHoverPreviews = false,
+  encounterApply,
 }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
@@ -170,12 +174,12 @@ export default function SheetEquipmentPanel({
     setBusy(true);
     setError(null);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, {
+      const updated = await persistCharacterRuntime(character, {
         equipment: next.equipment,
         inventory_items: runtimeInventoryPayload(next),
         current_hp: next.hp.current,
         max_hp: next.hp.max,
-      });
+      }, encounterApply);
       onUpdated(updated);
     } catch (e) {
       console.error(e);
@@ -183,7 +187,7 @@ export default function SheetEquipmentPanel({
     } finally {
       setBusy(false);
     }
-  }, [character.id, onUpdated]);
+  }, [character, encounterApply, onUpdated]);
 
   // S5 контейнеры: положить предмет в контейнер / достать обратно (хелперы S4 + общий persist).
   const putInContainer = (cardId: string, containerCardId: string) => persist(moveToContainer(runtime, cardId, containerCardId, 1));

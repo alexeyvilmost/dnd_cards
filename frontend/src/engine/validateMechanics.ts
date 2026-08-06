@@ -31,6 +31,24 @@ export function normalizeMechanicsForSchema(
 ): Record<string, unknown> {
   const activation = (mechanics.activation as Record<string, unknown>) || { mode: 'passive' };
   const interactions = (mechanics.effects as unknown[]) || (mechanics.interactions as unknown[]) || [];
+  const extensionKeys = [
+    'interaction',
+    'primitive',
+    'weapon_mastery',
+    'attack_replacement',
+    'rest_decision',
+    'condition',
+    'fighting_style',
+    'capabilities',
+    'end_triggers',
+    'includes',
+    'leaves',
+    'stacking',
+    'long_rest',
+    'thresholds',
+    'world_facts',
+    'weapon_profile',
+  ] as const;
   return {
     schema_version: '1.0',
     id: normalizeMechanicId(meta.id),
@@ -40,6 +58,9 @@ export function normalizeMechanicsForSchema(
     interactions,
     ...(mechanics.uses ? { uses: mechanics.uses } : {}),
     ...(mechanics.targeting ? { targeting: mechanics.targeting } : {}),
+    ...Object.fromEntries(extensionKeys.flatMap((key) => (
+      mechanics[key] === undefined ? [] : [[key, mechanics[key]]]
+    ))),
   };
 }
 

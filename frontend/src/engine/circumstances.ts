@@ -31,6 +31,21 @@ export interface EvalContext {
   advantageSoFar?: AdvantageState;
   /** Результат последнего d20 (для d20_equals). */
   lastD20?: number;
+  /** Current engine event when evaluating a triggered listener. */
+  event?: { kind: string; data?: Dict };
+  /** Stable actor identities for condition-source predicates. */
+  rollerActorId?: string;
+  rollTargetActorId?: string;
+  /** ActiveEffectEntry.sourceId of the condition whose payload is evaluated. */
+  conditionSourceId?: string;
+  /** Stable id of the creature that carries the evaluated condition. */
+  conditionOwnerId?: string;
+  /** Explicit board/GM observations keyed by condition source actor id. */
+  conditionSourceFacts?: Record<string, { lineOfSight: boolean }>;
+  /** Explicit symmetric distance facts keyed actor -> actor -> feet. */
+  distancesFt?: Record<string, Record<string, number>>;
+  /** Explicit directed visibility facts keyed observer -> observed actor. */
+  visibility?: Record<string, Record<string, boolean>>;
 }
 
 /** Собрать множество активных состояний владельца из RuntimeState (с раскрытием композиции F:
@@ -94,6 +109,44 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       // «Спасбросок, чтобы ИЗБЕЖАТЬ состояния X» — истинно, когда текущий сейв налагает X при провале
       // (Происхождение фей: преимущество на спас против Очарования). savedConditions заполняет runSave.
       return ctx.savedConditions?.has(String(cond.value)) ?? false;
+    case 'condition_source_in_line_of_sight': {
+      const sourceId = ctx.conditionSourceId;
+      return !!sourceId && ctx.conditionSourceFacts?.[sourceId]?.lineOfSight === true;
+    }
+    case 'roll_target_is_condition_source':
+      return !!ctx.conditionSourceId && !!ctx.rollTargetActorId
+        && ctx.rollTargetActorId === ctx.conditionSourceId;
+    case 'roll_target_is_not_condition_source':
+      return !!ctx.conditionSourceId && !!ctx.rollTargetActorId
+        && ctx.rollTargetActorId !== ctx.conditionSourceId;
+    case 'roller_is_condition_source':
+      return !!ctx.conditionSourceId && !!ctx.rollerActorId
+        && ctx.rollerActorId === ctx.conditionSourceId;
+    case 'distance_to_condition_owner': {
+      const ownerId = ctx.conditionOwnerId;
+      const subjectId = cond.subject === 'roll_target' ? ctx.rollTargetActorId : ctx.rollerActorId;
+      if (!ownerId || !subjectId) return false;
+      const distance = ctx.distancesFt?.[subjectId]?.[ownerId]
+        ?? ctx.distancesFt?.[ownerId]?.[subjectId];
+      const feet = Number(cond.feet);
+      if (typeof distance !== 'number' || !Number.isFinite(distance)
+        || !Number.isFinite(feet) || feet < 0) return false;
+      const observedDistanceFt: number = distance;
+      if (cond.operator === 'lte') return observedDistanceFt <= feet;
+      if (cond.operator === 'lt') return observedDistanceFt < feet;
+      if (cond.operator === 'gte') return observedDistanceFt >= feet;
+      if (cond.operator === 'gt') return observedDistanceFt > feet;
+      if (cond.operator === 'eq') return observedDistanceFt === feet;
+      return false;
+    }
+    case 'observer_can_see_condition_owner': {
+      const ownerId = ctx.conditionOwnerId;
+      const observerId = cond.observer === 'roll_target'
+        ? ctx.rollTargetActorId
+        : ctx.rollerActorId;
+      if (!ownerId || !observerId || typeof cond.value !== 'boolean') return false;
+      return ctx.visibility?.[observerId]?.[ownerId] === cond.value;
+    }
     case 'condition':
       // Легаси-форма расовых черт «преимущество на спас против X» ({kind:'condition', id:X}) — движок
       // раньше её не знал (закрыто-по-умолчанию), а до передачи evalCtx в сейв она применялась БЕЗУСЛОВНО.
@@ -102,6 +155,17 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       return ctx.savedConditions?.has(String(cond.id ?? cond.value)) ?? false;
     case 'has_advantage':
       return ctx.advantageSoFar === 'advantage';
+    case 'attack_weapon_property': {
+      const properties = ctx.event?.data?.weaponProperties;
+      return ctx.event?.kind === 'hit' && Array.isArray(properties)
+        && properties.map(String).includes(String(cond.value));
+    }
+    case 'attack_range':
+      return ctx.event?.kind === 'hit' && ctx.event.data?.attackRange === cond.value;
+    case 'attack_advantage_state':
+      return ctx.event?.kind === 'hit' && ctx.event.data?.advantage === cond.value;
+    case 'nearby_eligible_ally_to_target':
+      return ctx.event?.kind === 'hit' && ctx.event.data?.nearbyEligibleAllyToTarget === true;
     case 'd20_equals':
       return ctx.lastD20 != null && ctx.lastD20 === Number(cond.value);
     case 'narrative':

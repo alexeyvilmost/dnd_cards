@@ -41,6 +41,18 @@ type CreateEncounterRequest struct {
 	Name string `json:"name"`
 }
 
+// JoinEncounterRequest carries a short-lived capability only for a caller who
+// is not already a participant/controller. Existing participant and legacy
+// character-controller repair paths remain idempotent without a token.
+type JoinEncounterRequest struct {
+	InviteToken string `json:"invite_token"`
+}
+
+type EncounterInviteResponse struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
 // CombatantPatch — частичное изменение комбатанта: shallow-merge полей Set в объект по ActorID.
 type CombatantPatch struct {
 	ActorID string  `json:"actor_id" binding:"required"`
@@ -63,6 +75,10 @@ type BattleLogEntry struct {
 // Сервер применяет всё, бампит seq, write-through боевого состояния в листы персонажей,
 // пишет журналы (боя + персонажей) и шлёт подписчикам.
 type ApplyRequest struct {
+	// ExpectedSeq is the encounter snapshot version the caller used to build
+	// this operation. It is required by Apply and compared while the encounter
+	// row is locked, before any state, journal, or CharacterV3 mutation.
+	ExpectedSeq *int64                   `json:"expected_seq"`
 	Patches     []CombatantPatch         `json:"patches"`
 	Add         []map[string]interface{} `json:"add"`
 	Remove      []string                 `json:"remove"`

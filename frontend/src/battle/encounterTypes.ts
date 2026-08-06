@@ -29,14 +29,19 @@ export interface PendingSave {
 }
 
 /** Входящая атака, ПОПАВШАЯ по цели (онлайн-бой) — доставляется цели, чтобы предложить реакцию
- *  «когда по вам попадают» (Щит). Цель на своём листе решает; при Щите КЗ+5 может обратить попадание
- *  в промах — тогда нанесённый урон возвращается (attackTotal < КЗ+5). Живёт на комбатанте-цели. */
+ *  «когда по вам попадают». Цель на своём листе решает; declarative AC modifier реакции может
+ *  обратить попадание в промах — тогда нанесённый урон возвращается. Живёт на комбатанте-цели. */
 export interface PendingAttack {
   id: string;
   sourceName: string;   // кто атаковал (для журнала/диалога)
   attackName: string;   // название атаки
-  attackTotal: number;  // итог броска атаки (сравнить с КЗ+5 после Щита)
-  damage: number;       // нанесённый урон по hp/temp (вернётся при промахе после Щита)
+  attackTotal: number;  // итог броска атаки (сравнить с КЗ после исполнения реакции)
+  damage: number;       // нанесённый урон по hp/temp (вернётся, если реакция превратила hit в miss)
+  /** Versioned damage channels. A reaction restores temporary-HP damage to
+   * the temporary pool and ordinary damage to current HP. `damage` remains a
+   * legacy/display aggregate for already persisted encounters. */
+  hpDamage?: number;
+  tempHpDamage?: number;
   damageType?: string;
   crit?: boolean;       // было ли критическое попадание
 }
@@ -56,6 +61,8 @@ export interface Combatant {
   pendingAttacks?: PendingAttack[];
   avatarUrl?: string;
   initiative?: number;
+  /** Explicit marker for legacy/manual enrollment paths; never grants rules authority. */
+  provenance?: string;
 }
 
 export interface EncounterState {

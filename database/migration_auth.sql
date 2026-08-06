@@ -113,23 +113,6 @@ CREATE TRIGGER update_inventory_items_updated_at
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
--- Вставка тестового пользователя (только если таблица пустая)
-INSERT INTO users (username, email, password_hash, display_name)
-SELECT 'testuser', 'test@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Тестовый пользователь'
-WHERE NOT EXISTS (SELECT 1 FROM users LIMIT 1);
-
--- Вставка тестовой группы (только если таблица пустая)
-INSERT INTO groups (name, description, dm_id)
-SELECT 'Тестовая группа', 'Группа для тестирования системы', u.id
-FROM users u
-WHERE u.username = 'testuser'
-AND NOT EXISTS (SELECT 1 FROM groups LIMIT 1);
-
--- Добавление тестового пользователя в группу как ДМ
-INSERT INTO group_members (group_id, user_id, role)
-SELECT g.id, u.id, 'dm'
-FROM groups g, users u
-WHERE g.name = 'Тестовая группа' 
-AND u.username = 'testuser'
-AND NOT EXISTS (SELECT 1 FROM group_members LIMIT 1);
-
+-- Production/bootstrap migrations intentionally create no users, groups, or
+-- passwords. Test identities belong in isolated test fixtures and must never
+-- be provisioned with a repository-known credential.

@@ -20,16 +20,15 @@ const ABILITY_LABEL: Record<AbilityKey, string> = {
   str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
 };
 
-/** Владения спасбросками: из rule_state (ctx.saveProficiencies); фолбэк —
- * старый хардкод Воина, чтобы не сломать вызовы без контекста владений. */
+/** Владения спасбросками приходят только из rule_state/effect grants.
+ * Отсутствующая проекция означает отсутствие объявленного владения. */
 function saveProficiencies(ctx: CharacterContext): Set<AbilityKey> {
-  if (ctx.saveProficiencies) return new Set(ctx.saveProficiencies as AbilityKey[]);
-  if (ctx.classLevels?.fighter) return new Set<AbilityKey>(['str', 'con']);
-  return new Set();
+  return new Set((ctx.saveProficiencies ?? []) as AbilityKey[]);
 }
 
-function defaultHitDie(ctx: CharacterContext): string {
-  if (ctx.classLevels?.fighter) return 'd10';
+function defaultHitDie(): string {
+  // A legacy/incomplete context has no authority to infer a die from class
+  // identity. Real character contexts project hitDie explicitly.
   return 'd8';
 }
 
@@ -77,7 +76,7 @@ function breakdownAC(
 }
 
 function breakdownMaxHp(character: CharacterContext, state: RuntimeState, passives: Dict[]): ValueBreakdown {
-  const hitDie = character.hitDie ?? defaultHitDie(character);
+  const hitDie = character.hitDie ?? defaultHitDie();
   const dieMax = hitDieMax(hitDie);
   const conMod = character.abilityMods.con ?? 0;
   const lvl = Math.max(1, character.level);

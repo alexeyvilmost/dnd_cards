@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // CharacterEvent — запись журнала событий персонажа (фаза B3).
@@ -18,6 +19,13 @@ type CharacterEvent struct {
 }
 
 func (CharacterEvent) TableName() string { return "character_events" }
+
+// BeforeCreate is the final persistence guard for every backend writer. Route
+// handlers validate earlier for clearer batch errors, but an internal writer
+// cannot accidentally bypass the EngineEvent contract.
+func (event *CharacterEvent) BeforeCreate(_ *gorm.DB) error {
+	return validateCharacterEvent(event.Type, event.Payload)
+}
 
 // CreateCharacterEventItem — одно событие в batch-запросе.
 type CreateCharacterEventItem struct {

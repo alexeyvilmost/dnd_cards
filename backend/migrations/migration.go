@@ -1,11 +1,17 @@
 package migrations
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"time"
 )
+
+// migrationAdvisoryLockID serializes schema migrations across rolling backend
+// replicas. The lock is session-scoped and automatically disappears if the
+// owning PostgreSQL connection is lost.
+const migrationAdvisoryLockID int64 = 0x444e444341524453 // "DNDCARDS"
 
 // Migration представляет одну миграцию
 type Migration struct {
@@ -26,7 +32,18 @@ func NewMigrator(db *sql.DB) *Migrator {
 }
 
 // Run выполняет все миграции
-func (m *Migrator) Run() error {
+func (m *Migrator) Run() (runErr error) {
+	ctx := context.Background()
+	lockConnection, err := m.acquireAdvisoryLock(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire migration advisory lock: %w", err)
+	}
+	defer func() {
+		if err := releaseAdvisoryLock(ctx, lockConnection); err != nil && runErr == nil {
+			runErr = fmt.Errorf("failed to release migration advisory lock: %w", err)
+		}
+	}()
+
 	// Создаем таблицу для отслеживания миграций
 	if err := m.createMigrationsTable(); err != nil {
 		return fmt.Errorf("failed to create migrations table: %w", err)
@@ -56,6 +73,38 @@ func (m *Migrator) Run() error {
 		}
 	}
 
+	return nil
+}
+
+func (m *Migrator) acquireAdvisoryLock(ctx context.Context) (*sql.Conn, error) {
+	connection, err := m.db.Conn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := connection.ExecContext(
+		ctx,
+		"SELECT pg_advisory_lock($1)",
+		migrationAdvisoryLockID,
+	); err != nil {
+		_ = connection.Close()
+		return nil, err
+	}
+	return connection, nil
+}
+
+func releaseAdvisoryLock(ctx context.Context, connection *sql.Conn) error {
+	defer connection.Close()
+	var released bool
+	if err := connection.QueryRowContext(
+		ctx,
+		"SELECT pg_advisory_unlock($1)",
+		migrationAdvisoryLockID,
+	).Scan(&released); err != nil {
+		return err
+	}
+	if !released {
+		return fmt.Errorf("migration advisory lock was not owned by this connection")
+	}
 	return nil
 }
 

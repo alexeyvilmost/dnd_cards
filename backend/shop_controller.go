@@ -113,6 +113,12 @@ func rarityGEUncommon(r Rarity) bool {
 // CreateShop generates a shop assortment and persists it with a slug
 func (sc *ShopController) CreateShop(c *gin.Context) {
 	rand.Seed(time.Now().UnixNano())
+	if err := sc.db.Exec(
+		"DELETE FROM shops WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '30 days'",
+	).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка очистки устаревших магазинов"})
+		return
+	}
 
 	// Load all non-deleted cards and exclude template-only
 	var cards []Card

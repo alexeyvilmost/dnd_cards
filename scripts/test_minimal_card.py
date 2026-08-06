@@ -3,8 +3,10 @@
 Тест создания карты с минимальными данными из D&D предметов
 """
 
-import requests
 import json
+import os
+
+import requests
 
 def test_minimal_card():
     """Тестирует создание карты с минимальными данными"""
@@ -17,9 +19,12 @@ def test_minimal_card():
         "author": "D&D Importer"
     }
     
+    token = os.environ.get("API_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("API_TOKEN is required")
     headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDc2OTVmMmUtOGY2YS00ZmYyLWIzMmQtYzc1NTZmYjU4YTMxIiwidXNlcm5hbWUiOiJpbXBvcnRlcl91c2VyIiwiaXNzIjoiZG5kLWNhcmRzLWJhY2tlbmQiLCJzdWIiOiJkNzY5NWYyZS04ZjZhLTRmZjItYjMyZC1jNzU1NmZiNThhMzEiLCJleHAiOjE3NjA0MDU4NTAsIm5iZiI6MTc2MDMxOTQ1MCwiaWF0IjoxNzYwMzE5NDUwfQ.7vn0WyCMG3BtuxSISNFbg2yLm9clEB21sPKWqNsK96M'
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}",
     }
     
     print("Отправляем карту с минимальными данными...")

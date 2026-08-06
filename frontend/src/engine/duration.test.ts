@@ -42,6 +42,16 @@ describe('C6 — длительности стоячих эффектов', () =
     expect(state.hp.temp).toBe(0);
   });
 
+  it('длинный отдых истекает только по данным длительности и сохраняет manual-эффекты', () => {
+    const ctx = { character, rng: () => 0.5 } as unknown as Ctx;
+    const manual = executeAction(fresh(), buff(), ctx).state;
+    const untilRest = executeAction(manual, buff({ type: 'until_long_rest' }), ctx).state;
+    const oneHour = executeAction(untilRest, buff({ type: 'hours', amount: 1 }), ctx).state;
+    const rested = longRest(oneHour, character).state;
+    expect(rested.activeEffects).toHaveLength(1);
+    expect(rested.activeEffects[0].expiry).toBe('manual');
+  });
+
   it('состояние с duration.rounds по-прежнему истекает (регрессия)', () => {
     const cond: Dict = { name: 'Яд', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'condition', value: 'poisoned', duration: { type: 'rounds', amount: 1 } }] }] };
     const { state } = executeAction(fresh(), cond, { character, rng: () => 0.5 } as unknown as Ctx);

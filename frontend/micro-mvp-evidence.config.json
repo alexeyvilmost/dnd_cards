@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "manifestRelativePath": ".micro-mvp-evidence/execution-manifest.json",
+  "reporter": "./scripts/micro-mvp-evidence-reporter.mjs",
+  "hashInputs": [
+    "micro-mvp-evidence.config.json",
+    "vitest.micro-coverage.config.ts",
+    "scripts/micro-mvp-evidence-reporter.mjs"
+  ],
+  "environment": "node",
+  "include": [
+    "src/App.rules-lab.test.ts",
+    "src/api/conditionsApi.test.ts",
+    "src/battle/pendingAttack.test.ts",
+    "src/character/sheetCompanionCommand.integration.test.ts",
+    "src/character/sheetRuntimeCommand.test.ts",
+    "src/canon/microMvpL1Overlay*.test.ts",
+    "src/canon/microMvpWeaponProfiles.test.ts",
+    "src/engine/sneakAttack2024.test.ts",
+    "src/engine/equipment.test.ts",
+    "src/engine/weaponActions.test.ts",
+    "src/engine/weaponAmmo.test.ts",
+    "src/engine/weaponMastery2024.test.ts",
+    "src/engine/weaponProfile.test.ts",
+    "src/rules-core/**/*.test.ts"
+  ],
+  "testTimeoutMs": 60000,
+  "hookTimeoutMs": 60000,
+  "gateConfig": "vitest.micro-coverage.gate.config.ts"
+}

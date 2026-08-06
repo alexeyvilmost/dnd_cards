@@ -7,11 +7,15 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Гейты покрытия правил (docs/rules-coverage-plan-2026-07-11.md, этап 0.4).
-# PR/пуш — быстрый ОФФЛАЙН-гейт (детерминированный, без сети): tsc + оба vitest-набора
-#   (обычный + MVP-оффлайн). Сюда входят пилот покрытия (canon) и контракт схема↔рантайм.
-# Ночь — ЖИВОЙ прод: MVP_CONTENT-тесты + lint-mechanics + рефреш снапшота с диффом дрейфа
-#   (контент правят в UI прод-БД без коммитов — ночной дифф это ловит).
+# PR/пуш — полный детерминированный micro-MVP gate: build/lint, обычные и
+# regression-наборы (их intentional skip/todo видны отдельно), manifest +
+# 448 builds, exact structural coverage ядра и
+# примитивов, semantic two-PC evidence, isolated Playwright desktop/mobile и PostgreSQL.
+# CI-only content fixture проверяет транзакционный контракт, но не считается
+# production restore drill. Release evidence отдельно требует восстановленную
+# production-like БД и намеренно запрещает CONTENT_MIGRATION_TEST_BOOTSTRAP.
+# Ночь/ручной запуск — read-only live catalog compilation/certification и
+# экспорт снапшота для явного обнаружения дрейфа production-контента.
 
 on:
   push:
@@ -25,7 +29,21 @@ jobs:
   offline:
     name: Оффлайн-гейт (build + lint + tests)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: dnd_cards_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dnd_cards_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,9 +58,27 @@ jobs:
       - name: Установка зависимостей
         working-directory: frontend
         run: npm ci --ignore-scripts
+      - name: Изолированные PostgreSQL базы для integration tests
+        env:
+          PGPASSWORD: test
+        run: |
+          createdb --host 127.0.0.1 --username postgres canonical_runtime_test
+          createdb --host 127.0.0.1 --username postgres content_migration_test
+      - name: Запрет tracked database dumps
+        run: node scripts/security/check-no-database-dumps.mjs
+      - name: Запрет известных паролей и авторегистрации из скриптов
+        run: |
+          node scripts/security/check-no-known-credentials.mjs
+          node --test scripts/security/check-no-known-credentials.test.mjs
       - name: Production build
         working-directory: frontend
         run: npm run build
+      - name: Проверка generated fixture Rules Lab
+        working-directory: frontend
+        run: npm run rules-lab:check
+      - name: Проверка 448-root сертификата боя листов
+        working-directory: frontend
+        run: npm run sheet-combat-certification:check
       - name: Frontend lint
         working-directory: frontend
         run: npm run lint
@@ -52,9 +88,47 @@ jobs:
       - name: Тесты MVP (оффлайн-часть)
         working-directory: frontend
         run: npm run test:mvp
+      - name: Manifest и 448-сочетаний micro-MVP (offline snapshot)
+        working-directory: frontend
+        run: npm run test:micro:manifest && npm run test:micro:matrix
+      - name: Структурное покрытие replay-critical ядра
+        working-directory: frontend
+        run: npm run test:rules:coverage
+      - name: Структурное покрытие правил-примитивов
+        working-directory: frontend
+        run: npm run test:rules:primitives
+      - name: Полный semantic gate micro-MVP
+        working-directory: frontend
+        run: npm run test:micro:coverage
+      - name: Установка Chromium для browser acceptance
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Browser acceptance Rules Lab + isolated sheet API fixture (desktop + mobile)
+        working-directory: frontend
+        run: npx playwright test --project=desktop-chromium --project=mobile-chromium
+      - name: Browser diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+      - name: CI-only fixture + transaction contract content migration (не release evidence)
+        working-directory: backend
+        env:
+          CONTENT_MIGRATION_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_migration_test?sslmode=disable
+          CONTENT_MIGRATION_TEST_BOOTSTRAP: '1'
+        run: go test -race -count=1 -run '^TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres$' .
       - name: Backend tests
         working-directory: backend
-        run: go test ./...
+        env:
+          CANONICAL_RUNTIME_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/canonical_runtime_test?sslmode=disable
+          CONTENT_MIGRATION_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_migration_test?sslmode=disable
+        run: go test -race -count=1 -p 1 ./...
+      - name: Backend vet
+        working-directory: backend
+        run: go vet ./...
 
   live-content:
     name: Живой прод (ночью / вручную)
@@ -63,6 +137,7 @@ jobs:
     timeout-minutes: 20
     env:
       MVP_CONTENT: '1'
+      VITE_API_URL: 'https://backend-production-41c3.up.railway.app'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -76,6 +151,9 @@ jobs:
       - name: Живые MVP-тесты (прод-контент)
         working-directory: frontend
         run: npm run test:mvp
+      - name: Живая матрица и certification micro-MVP
+        working-directory: frontend
+        run: npm run test:micro:live-matrix
       - name: Линт механик (схема по всей прод-БД)
         run: node scripts/lint-mechanics.mjs
       - name: Рефреш снапшота прод-контента

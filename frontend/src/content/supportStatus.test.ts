@@ -60,6 +60,38 @@ describe('content support status', () => {
     })).toEqual([]);
   });
 
+  it('не активирует неполную release-evidence certification v3', () => {
+    const hash = `sha256:${'a'.repeat(64)}`;
+    const incomplete: EntitySupportCertification = {
+      status: 'verified_mechanical',
+      certification_version: 'micro-mvp-l1-rules-core-v3',
+      content_hash: hash,
+      dependency_hash: hash,
+      certified_at: '2026-08-05T00:00:00Z',
+    };
+    expect(supportStatusOf({ support: incomplete })).toBe('untested');
+    expect(effectiveSupportStatus(incomplete, hash, hash)).toBe('untested');
+    expect(certificationContractIssues(incomplete)).toContain(
+      'micro-MVP v3 требует evidence_id UUID',
+    );
+
+    const complete: EntitySupportCertification = {
+      ...incomplete,
+      evidence_id: '00000000-0000-4000-8000-000000000001',
+      evidence_completed_at: '2026-08-05T00:01:00Z',
+      evidence_hash: hash,
+      gate_source_hash: hash,
+      source_content_hash: hash,
+      rules_hash: hash,
+      release_content_hash: hash,
+      release_hash: hash,
+      patch_hash: hash,
+      catalog_hash: hash,
+    };
+    expect(certificationContractIssues(complete)).toEqual([]);
+    expect(supportStatusOf({ support: complete })).toBe('verified_mechanical');
+  });
+
   it('фильтр сохраняет выбранную неподтверждённую сущность', () => {
     const entities = [
       { id: 'verified', support: { status: 'verified_narrative' as const } },

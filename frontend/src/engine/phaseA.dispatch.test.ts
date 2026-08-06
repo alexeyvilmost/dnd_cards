@@ -27,13 +27,13 @@ const MISS = () => 0;   // natural 1 → промах
 
 const attackAction: Dict = {
   name: 'Атака', activation: { cost: [] },
-  effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'weapon', ability: 'none' }] }],
+  effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'bludgeoning', ability: 'none' }] }],
 };
 const sneak: Dict = {
   id: 'sneak', name: 'Скрытая атака',
   activation: { mode: 'triggered', trigger: { event: 'hit' } },
   uses: { count: 1, per: 'turn' },
-  effects: [{ resolution: 'auto', result: [{ kind: 'damage', dice: '2d6', type: 'weapon' }] }],
+  effects: [{ resolution: 'auto', result: [{ kind: 'damage', dice: '2d6', type: 'bludgeoning' }] }],
 };
 const smite: Dict = {
   id: 'smite', name: 'Божественная кара',

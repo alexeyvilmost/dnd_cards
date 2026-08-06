@@ -23,6 +23,10 @@ export interface RuleSource {
   type: RuleSourceType;
   id: string;
   name: string;
+  /** Stable origin entity (class/species/feat UUID), separate from display name. */
+  originEntityId?: string;
+  /** Stable mechanics entity that emitted the grant. */
+  featureEntityId?: string;
 }
 
 export interface AppliedGrant {
@@ -35,6 +39,8 @@ export interface AppliedGrant {
   label?: string;
   /** Только для kind:'spell' — бесплатные использования (каст без ячейки). */
   freeuse?: Omit<FreeuseSpec, 'spell'>;
+  /** Exact data-declared casting ability for this spell grant. */
+  spellcastingAbility?: AbilityKey;
 }
 
 export interface RuleConflict {

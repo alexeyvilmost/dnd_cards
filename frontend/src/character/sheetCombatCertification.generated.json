@@ -1,0 +1,5293 @@
+{
+  "schemaVersion": 1,
+  "artifactVersion": "1.0.0",
+  "source": {
+    "ruleset": {
+      "systemId": "dnd5e-2024",
+      "releaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0",
+      "contentHash": "sha256:6b04b93ad93476c2e57224f902d1a0739e1ff3fa4994e9d36f6e77d7b927ff48",
+      "errataVersion": "phb-2024-errata-v1"
+    },
+    "release": {
+      "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0",
+      "systemId": "dnd5e-2024",
+      "rulesetVersion": "2024",
+      "errataVersion": "phb-2024-errata-v1",
+      "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
+      "sourceContentHash": "sha256:0d7677988be340531fc2fdb13f17825b8f136b5d8dfdf5c1937a6a5428fca04b",
+      "overlayHash": "sha256:980678c4ab6c2d696b150142ce3ab2e3fa52bbc49cee5c9844b2535542aed108",
+      "contentHash": "sha256:6b04b93ad93476c2e57224f902d1a0739e1ff3fa4994e9d36f6e77d7b927ff48",
+      "releaseHash": "sha256:8568dc40ae99dd4ea3d981799941e510445a682a107aece7c62a752593a8689c"
+    }
+  },
+  "summary": {
+    "rootCount": 448,
+    "combatRootCount": 448,
+    "actionOccurrenceCount": 1440,
+    "uniqueActionCount": 11
+  },
+  "coverage": [
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.cleric|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.druid|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.fighter|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.rogue|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.sorcerer|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.warlock|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dragonborn|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.dwarf|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.elf|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.acolyte|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.acolyte|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.acolyte|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.acolyte|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.criminal|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.criminal|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.criminal|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.criminal|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.sage|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.sage|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.sage|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.sage|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.soldier|feat.magic-initiate",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.soldier|feat.skilled",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "stableKey": "class.wizard|species.human|background.soldier|feat.tough",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+      "name": "Волна грома",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "con",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder"
+              },
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 10
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cube",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "area_object_push",
+          "object_push_distance_ft": 10,
+          "object_max_distance_ft": 15,
+          "object_area_requirement": "entirely_in_area",
+          "exclude_secured_objects": true,
+          "exclude_carried_objects": true
+        }
+      },
+      "sourceEntityIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0",
+        "932a15ad-a7c5-4062-b13a-899933b94231"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-druid",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+      "name": "Волна грома",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "con",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder"
+              },
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 10
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cube",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "area_object_push",
+          "object_push_distance_ft": 10,
+          "object_max_distance_ft": 15,
+          "object_area_requirement": "entirely_in_area",
+          "exclude_secured_objects": true,
+          "exclude_carried_objects": true
+        }
+      },
+      "sourceEntityIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0",
+        "d3b22b24-a4f1-4dab-8038-c89bfee62843"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-wizard",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "6812f780-de8a-4509-9253-b4be711a9212",
+      "name": "Атака второй рукой",
+      "mechanics": {
+        "primitive": {
+          "type": "light_weapon_extra_attack"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "equipped_weapon_ammo",
+              "amount": 1
+            }
+          ],
+          "mode": "active"
+        },
+        "effects": [
+          {
+            "ability": "auto",
+            "attack_kind": "weapon_melee",
+            "on_hit": [
+              {
+                "ability": "none",
+                "dice": "weapon",
+                "kind": "damage",
+                "type": "weapon"
+              }
+            ],
+            "resolution": "attack_roll",
+            "tags": [
+              "off_hand",
+              "two_weapon"
+            ],
+            "vs": "ac"
+          }
+        ],
+        "name": "Атака второй рукой",
+        "targeting": {
+          "domain": "actor",
+          "actor_targets": true,
+          "shape": "single",
+          "min_targets": 1,
+          "max_targets": 1,
+          "range_ft": 600,
+          "requires_line_of_sight": true,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ]
+        }
+      },
+      "sourceEntityIds": [
+        "6812f780-de8a-4509-9253-b4be711a9212"
+      ],
+      "targeting": {
+        "minTargets": 1,
+        "maxTargets": 1,
+        "rangeFt": 600,
+        "requiresLineOfSight": true,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "nonSpell"
+    },
+    {
+      "id": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+      "name": "Огненные ладони",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "dex",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "3d6",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d6",
+                  "per": "spell_slot_above"
+                },
+                "type": "fire"
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "3d6",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d6",
+                  "per": "spell_slot_above"
+                },
+                "type": "fire",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cone",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "burning_hands_objects",
+          "policy": {
+            "require_in_area": true,
+            "require_flammable": true,
+            "exclude_carried": true
+          }
+        }
+      },
+      "sourceEntityIds": [
+        "732c2287-dd4d-46cd-9315-67447549abfa",
+        "66a58227-41e6-4c56-b548-1253d98f6f09"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-sorcerer",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+      "name": "Огненные ладони",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "dex",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "3d6",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d6",
+                  "per": "spell_slot_above"
+                },
+                "type": "fire"
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "3d6",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d6",
+                  "per": "spell_slot_above"
+                },
+                "type": "fire",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cone",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "burning_hands_objects",
+          "policy": {
+            "require_in_area": true,
+            "require_flammable": true,
+            "exclude_carried": true
+          }
+        }
+      },
+      "sourceEntityIds": [
+        "732c2287-dd4d-46cd-9315-67447549abfa",
+        "d3b22b24-a4f1-4dab-8038-c89bfee62843"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-wizard",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+      "name": "Волшебная стрела",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "mode": "active",
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "resource": "spell_slot",
+              "level": 1,
+              "amount": 1
+            }
+          ],
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [],
+        "targeting": {
+          "shape": "multiple",
+          "min_targets": 1,
+          "max_targets": 11,
+          "domain": "actor",
+          "actor_targets": true,
+          "range_ft": 120,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "range": "120 футов",
+          "filter": "creature",
+          "requires_sight": true
+        },
+        "primitive": {
+          "type": "magic_missile",
+          "policy": {
+            "base_slot_level": 1,
+            "max_slot_level": 9,
+            "base_dart_count": 3,
+            "darts_per_slot_above": 1,
+            "allocation_choice_id": "magic_missile_dart_targets",
+            "simultaneous": true,
+            "per_dart_effect": {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "damage",
+                  "dice": "1d4 + 1",
+                  "type": "force"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "sourceEntityIds": [
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+        "51832580-68f5-4e96-8afe-93e4af045283",
+        "2023be11-201d-4f3a-b9c3-a8019b972b80"
+      ],
+      "targeting": {
+        "minTargets": 1,
+        "maxTargets": 11,
+        "rangeFt": 120,
+        "requiresLineOfSight": true,
+        "requiresSight": true,
+        "allowedRelations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+      "name": "Волшебная стрела",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "mode": "active",
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "resource": "spell_slot",
+              "level": 1,
+              "amount": 1
+            }
+          ],
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [],
+        "targeting": {
+          "shape": "multiple",
+          "min_targets": 1,
+          "max_targets": 11,
+          "domain": "actor",
+          "actor_targets": true,
+          "range_ft": 120,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "range": "120 футов",
+          "filter": "creature",
+          "requires_sight": true
+        },
+        "primitive": {
+          "type": "magic_missile",
+          "policy": {
+            "base_slot_level": 1,
+            "max_slot_level": 9,
+            "base_dart_count": 3,
+            "darts_per_slot_above": 1,
+            "allocation_choice_id": "magic_missile_dart_targets",
+            "simultaneous": true,
+            "per_dart_effect": {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "damage",
+                  "dice": "1d4 + 1",
+                  "type": "force"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "sourceEntityIds": [
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+        "66a58227-41e6-4c56-b548-1253d98f6f09"
+      ],
+      "targeting": {
+        "minTargets": 1,
+        "maxTargets": 11,
+        "rangeFt": 120,
+        "requiresLineOfSight": true,
+        "requiresSight": true,
+        "allowedRelations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-sorcerer",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+      "name": "Волшебная стрела",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "mode": "active",
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "resource": "spell_slot",
+              "level": 1,
+              "amount": 1
+            }
+          ],
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [],
+        "targeting": {
+          "shape": "multiple",
+          "min_targets": 1,
+          "max_targets": 11,
+          "domain": "actor",
+          "actor_targets": true,
+          "range_ft": 120,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "range": "120 футов",
+          "filter": "creature",
+          "requires_sight": true
+        },
+        "primitive": {
+          "type": "magic_missile",
+          "policy": {
+            "base_slot_level": 1,
+            "max_slot_level": 9,
+            "base_dart_count": 3,
+            "darts_per_slot_above": 1,
+            "allocation_choice_id": "magic_missile_dart_targets",
+            "simultaneous": true,
+            "per_dart_effect": {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "damage",
+                  "dice": "1d4 + 1",
+                  "type": "force"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "sourceEntityIds": [
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+        "d3b22b24-a4f1-4dab-8038-c89bfee62843"
+      ],
+      "targeting": {
+        "minTargets": 1,
+        "maxTargets": 11,
+        "rangeFt": 120,
+        "requiresLineOfSight": true,
+        "requiresSight": true,
+        "allowedRelations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-wizard",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+      "name": "Атака оружием",
+      "mechanics": {
+        "primitive": {
+          "type": "weapon_attack"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "resource": "equipped_weapon_ammo",
+              "amount": 1
+            }
+          ],
+          "mode": "active"
+        },
+        "effects": [
+          {
+            "ability": "auto",
+            "attack_kind": "weapon_melee",
+            "on_hit": [
+              {
+                "ability": "auto",
+                "dice": "weapon",
+                "kind": "damage",
+                "type": "weapon"
+              }
+            ],
+            "resolution": "attack_roll",
+            "vs": "ac"
+          }
+        ],
+        "name": "Атака оружием",
+        "targeting": {
+          "domain": "actor",
+          "actor_targets": true,
+          "shape": "single",
+          "min_targets": 1,
+          "max_targets": 1,
+          "range_ft": 600,
+          "requires_line_of_sight": true,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ]
+        }
+      },
+      "sourceEntityIds": [
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+      ],
+      "targeting": {
+        "minTargets": 1,
+        "maxTargets": 1,
+        "rangeFt": 600,
+        "requiresLineOfSight": true,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "nonSpell"
+    },
+    {
+      "id": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+      "name": "Щит",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "activation": {
+          "cost": [
+            {
+              "resource": "reaction"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "reaction",
+          "cast_time": {
+            "unit": "reaction",
+            "amount": 1
+          },
+          "trigger": {
+            "event": "hit_by_attack",
+            "events": [
+              "hit_by_attack",
+              "targeted_by_magic_missile"
+            ]
+          }
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "duration": {
+                  "type": "until_start_of_next_turn"
+                },
+                "kind": "modifier",
+                "op": "add",
+                "value": "+5",
+                "magic_missile_immunity": true
+              },
+              {
+                "description": "Действует до начала вашего следующего хода, в т.ч. против вызвавшей атаки; иммунитет к Волшебной стреле.",
+                "kind": "narrative"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "domain": "actor",
+          "actor_targets": false,
+          "shape": "self",
+          "min_targets": 0,
+          "max_targets": 1,
+          "range_ft": 0,
+          "requires_line_of_sight": false,
+          "allowed_relations": [
+            "self"
+          ]
+        }
+      },
+      "sourceEntityIds": [
+        "d87f4507-849f-450b-b328-0198cb011587",
+        "51832580-68f5-4e96-8afe-93e4af045283",
+        "2023be11-201d-4f3a-b9c3-a8019b972b80"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 1,
+        "rangeFt": 0,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "self"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+      "name": "Щит",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "activation": {
+          "cost": [
+            {
+              "resource": "reaction"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "reaction",
+          "cast_time": {
+            "unit": "reaction",
+            "amount": 1
+          },
+          "trigger": {
+            "event": "hit_by_attack",
+            "events": [
+              "hit_by_attack",
+              "targeted_by_magic_missile"
+            ]
+          }
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "duration": {
+                  "type": "until_start_of_next_turn"
+                },
+                "kind": "modifier",
+                "op": "add",
+                "value": "+5",
+                "magic_missile_immunity": true
+              },
+              {
+                "description": "Действует до начала вашего следующего хода, в т.ч. против вызвавшей атаки; иммунитет к Волшебной стреле.",
+                "kind": "narrative"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "domain": "actor",
+          "actor_targets": false,
+          "shape": "self",
+          "min_targets": 0,
+          "max_targets": 1,
+          "range_ft": 0,
+          "requires_line_of_sight": false,
+          "allowed_relations": [
+            "self"
+          ]
+        }
+      },
+      "sourceEntityIds": [
+        "d87f4507-849f-450b-b328-0198cb011587",
+        "d3b22b24-a4f1-4dab-8038-c89bfee62843"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 1,
+        "rangeFt": 0,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "self"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-wizard",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    }
+  ],
+  "accessSignaturesByAction": {
+    "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-druid:34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+            "sourceId": "CLASS-druid",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
+    "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard",
+              "f3098f61-1ea7-4816-9819-1903388cfe06@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      }
+    ],
+    "6812f780-de8a-4509-9253-b4be711a9212": [
+      {
+        "grants": [],
+        "preparedSources": []
+      }
+    ],
+    "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-sorcerer:732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+            "sourceId": "CLASS-sorcerer",
+            "access": "known",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
+    "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard",
+              "f3098f61-1ea7-4816-9819-1903388cfe06@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      }
+    ],
+    "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
+    "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-sorcerer:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+            "sourceId": "CLASS-sorcerer",
+            "access": "known",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
+    "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard",
+              "f3098f61-1ea7-4816-9819-1903388cfe06@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      }
+    ],
+    "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d": [
+      {
+        "grants": [],
+        "preparedSources": []
+      }
+    ],
+    "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
+    "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-wizard:d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+            "sourceId": "CLASS-wizard",
+            "access": "spellbook",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": [
+          {
+            "sourceId": "CLASS-wizard",
+            "capacity": 4,
+            "availableActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+              "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard",
+              "f3098f61-1ea7-4816-9819-1903388cfe06@CLASS-wizard"
+            ],
+            "preparedActionIds": [
+              "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+              "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+              "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+              "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "preparedSourceProfiles": [
+    {
+      "sourceId": "CLASS-wizard",
+      "capacity": 4,
+      "availableActionIds": [
+        "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+        "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard"
+      ],
+      "preparedActionIds": [
+        "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-wizard",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@CLASS-wizard",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    },
+    {
+      "sourceId": "CLASS-wizard",
+      "capacity": 4,
+      "availableActionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
+        "db6433bf-f779-4b65-8766-0feffefd1930@CLASS-wizard",
+        "f3098f61-1ea7-4816-9819-1903388cfe06@CLASS-wizard"
+      ],
+      "preparedActionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
+      ]
+    }
+  ],
+  "magicInitiate": {
+    "grantSourceId": "FEAT-0009",
+    "originFeatEntityId": "51832580-68f5-4e96-8afe-93e4af045283",
+    "actions": [
+      {
+        "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+        "sourceEntityIds": [
+          "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+          "51832580-68f5-4e96-8afe-93e4af045283",
+          "2023be11-201d-4f3a-b9c3-a8019b972b80"
+        ],
+        "grantSignatures": [
+          {
+            "grantId": "spell-grant:FEAT-0009:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          }
+        ]
+      },
+      {
+        "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+        "sourceEntityIds": [
+          "d87f4507-849f-450b-b328-0198cb011587",
+          "51832580-68f5-4e96-8afe-93e4af045283",
+          "2023be11-201d-4f3a-b9c3-a8019b972b80"
+        ],
+        "grantSignatures": [
+          {
+            "grantId": "spell-grant:FEAT-0009:d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
+          }
+        ]
+      }
+    ]
+  },
+  "sourceProjectionHash": "sha256:c73e52f7385a8819c670f357be0d94fce193f4202714eada2f6b66a7b29064db",
+  "contentHash": "sha256:a682bf95c34e5c476bd006ab8864f8bc43332fbc7f34b0f9fb32e815583886ac"
+}

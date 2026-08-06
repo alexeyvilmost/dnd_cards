@@ -15,6 +15,11 @@ server {
         add_header Content-Type text/plain;
     }
 
+    location = /build-info.json {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+    }
+
     # Прокси импорта бестиария ttg.club. В dev это делает vite-middleware, а в проде —
     # nginx: /proxy/ttg-club-import/bestiary/<slug> → https://new.ttg.club/bestiary/<slug>.
     # Хост фиксирован (только new.ttg.club), поэтому SSRF невозможен.

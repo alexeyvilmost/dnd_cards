@@ -14,7 +14,7 @@ const char: CharacterContext = { abilityMods: { str: 0, dex: 0, con: 0, int: 0, 
 /** rng: первый вызов (бросок к20) = first, остальные (кости урона) = rest. */
 const seq = (first: number, rest: number) => { let n = 0; return () => (n++ === 0 ? first : rest); };
 
-const ATTACK = { name: 'Тест-атака', effects: [{ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: '2d6', type: 'fire' }] }] };
+const ATTACK = { name: 'Тест-атака', effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '2d6', type: 'fire' }] }] };
 const damageTotal = (events: EngineEvent[]) =>
   events.filter((e) => e.type === 'damage').reduce((s, e) => s + ((e as { amount?: number }).amount ?? 0), 0);
 
@@ -32,7 +32,7 @@ describe('Критическое попадание — удвоение кос�
   });
   it('модификатор урона прибавляется ОДИН раз (не удваивается)', () => {
     // Кость + плоский бонус: 1d8+3, нат.20 → 2d8+3 (не 2d8+6). d8=8 → 16+3 = 19.
-    const mech = { name: 'a', effects: [{ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: '1d8+3', type: 'slashing' }] }] };
+    const mech = { name: 'a', effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d8+3', type: 'slashing' }] }] };
     expect(damageTotal(run(() => 0.96, mech))).toBe(19);
   });
   it('явный on_crit не удваивается движком (истина автора)', () => {
@@ -40,6 +40,7 @@ describe('Критическое попадание — удвоение кос�
       name: 'a',
       effects: [{
         resolution: 'attack_roll',
+        ability: 'str',
         on_hit: [{ kind: 'damage', dice: '2d6', type: 'fire' }],
         on_crit: [{ kind: 'damage', dice: '2d6', type: 'fire' }],
       }],

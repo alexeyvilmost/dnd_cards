@@ -89,6 +89,10 @@ type CharacterV3 struct {
 	ActiveEffects  *ActiveEffectRows  `json:"active_effects" gorm:"type:jsonb"`
 	TurnState      *JSONMap           `json:"turn_state" gorm:"type:jsonb"`
 	Currency       *JSONMap           `json:"currency" gorm:"type:jsonb"`
+	// RuntimeRevision is the optimistic-concurrency token for every persisted
+	// runtime projection. Multi-character rules commands compare it while all
+	// participant rows are locked and then advance it in the same transaction.
+	RuntimeRevision int64 `json:"runtime_revision" gorm:"not null;default:0"`
 
 	// Онлайн-бой: id текущего боя, в котором участвует персонаж (nil = не в бою).
 	// Ставится/снимается сервером при add/remove комбатанта с этим characterId (см.
@@ -98,6 +102,10 @@ type CharacterV3 struct {
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+
+	// AccessMode is response-only authorization metadata. The browser must not
+	// infer write permission from owner names or UUIDs.
+	AccessMode string `json:"access_mode" gorm:"-"`
 
 	// Связи
 	User  User   `json:"user" gorm:"foreignKey:UserID"`
@@ -150,6 +158,17 @@ type CreateCharacterV3Request struct {
 	ArmorClass        int `json:"armor_class"`
 	InitiativeBonus   int `json:"initiative_bonus"`
 	PassivePerception int `json:"passive_perception"`
+
+	// Initial runtime is part of the same INSERT as the character draft. This
+	// prevents an interrupted create+PATCH sequence from leaving duplicate,
+	// partially initialized characters.
+	Equipment      *JSONMap           `json:"equipment"`
+	InventoryItems *InventoryItemRows `json:"inventory_items"`
+	Resources      *JSONMap           `json:"resources"`
+	MaxResources   *JSONMap           `json:"max_resources"`
+	ActiveEffects  *ActiveEffectRows  `json:"active_effects"`
+	TurnState      *JSONMap           `json:"turn_state"`
+	Currency       *JSONMap           `json:"currency"`
 }
 
 // UpdateCharacterV3Request — запрос на обновление. Полная замена полей черновика
@@ -258,15 +277,19 @@ func validateCharacterMetadataUpdate(character CharacterV3, req UpdateCharacterV
 
 // PatchCharacterRuntimeRequest — частичное обновление runtime (не трогает черновик).
 type PatchCharacterRuntimeRequest struct {
-	CurrentHP      *int               `json:"current_hp"`
-	MaxHP          *int               `json:"max_hp"`
-	Equipment      *JSONMap           `json:"equipment"`
-	InventoryItems *InventoryItemRows `json:"inventory_items"`
-	Resources      *JSONMap           `json:"resources"`
-	MaxResources   *JSONMap           `json:"max_resources"`
-	ActiveEffects  *ActiveEffectRows  `json:"active_effects"`
-	TurnState      *JSONMap           `json:"turn_state"`
-	Currency       *JSONMap           `json:"currency"`
+	// ExpectedRuntimeRevision is optional for the compatibility PATCH route.
+	// New rules-driven callers should always provide it; the atomic multi-sheet
+	// command endpoint requires an expected revision for every participant.
+	ExpectedRuntimeRevision *int64             `json:"expected_runtime_revision"`
+	CurrentHP               *int               `json:"current_hp"`
+	MaxHP                   *int               `json:"max_hp"`
+	Equipment               *JSONMap           `json:"equipment"`
+	InventoryItems          *InventoryItemRows `json:"inventory_items"`
+	Resources               *JSONMap           `json:"resources"`
+	MaxResources            *JSONMap           `json:"max_resources"`
+	ActiveEffects           *ActiveEffectRows  `json:"active_effects"`
+	TurnState               *JSONMap           `json:"turn_state"`
+	Currency                *JSONMap           `json:"currency"`
 }
 
 // InventoryItemRow — строка инвентаря персонажа v3.
@@ -309,14 +332,28 @@ func (r InventoryItemRows) Value() (driver.Value, error) {
 	return json.Marshal(r)
 }
 
+// ActiveEffectSourceTurnExpiry preserves lifecycle metadata for effects whose
+// duration is expressed relative to the source actor's turn. Keep this shape
+// aligned with frontend/src/mvp/contracts.ts: encounter write-through must not
+// silently erase relational timing data.
+type ActiveEffectSourceTurnExpiry struct {
+	SourceActorID string `json:"sourceActorId"`
+	OwnerActorID  string `json:"ownerActorId"`
+	Boundary      string `json:"boundary"`
+	Armed         bool   `json:"armed,omitempty"`
+}
+
 // ActiveEffectRow — активный эффект на листе v3 (runtime).
 type ActiveEffectRow struct {
-	ID         string  `json:"id"`
-	Name       string  `json:"name"`
-	Mechanics  JSONMap `json:"mechanics"`
-	RoundsLeft *int    `json:"roundsLeft,omitempty"`
-	Expiry     *string `json:"expiry,omitempty"`
-	Source     string  `json:"source"`
+	ID               string                        `json:"id"`
+	Name             string                        `json:"name"`
+	Mechanics        JSONMap                       `json:"mechanics"`
+	RoundsLeft       *int                          `json:"roundsLeft,omitempty"`
+	Expiry           *string                       `json:"expiry,omitempty"`
+	Source           string                        `json:"source"`
+	OwnerID          string                        `json:"ownerId,omitempty"`
+	SourceID         string                        `json:"sourceId,omitempty"`
+	SourceTurnExpiry *ActiveEffectSourceTurnExpiry `json:"sourceTurnExpiry,omitempty"`
 }
 
 // ActiveEffectRows — jsonb-массив активных эффектов.

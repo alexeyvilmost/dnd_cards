@@ -19,9 +19,25 @@ type Dict = Record<string, unknown>;
 /** d20-тесты, которым соответствует правило с applies_to.roll:'d20' (любой бросок к20). */
 const D20_TESTS = new Set(['attack', 'saving_throw', 'ability_check', 'initiative']);
 
+/**
+ * Engine-derived facts available to structured modifier filters. The index
+ * signature preserves legacy content keys while canonical rules use the typed
+ * fields below instead of names, UI flags, or localized descriptions.
+ */
+export interface ModifierQueryFacts {
+  [key: string]: unknown;
+  attackKind?: 'weapon' | 'spell' | 'unarmed';
+  weaponCategory?: 'melee' | 'ranged';
+  wearingArmor?: boolean;
+  extraAttackSource?: 'light_property' | 'other' | 'none';
+  abilityModifierAlreadyIncluded?: boolean;
+  /** Stable defender identity for target-locked effects such as Vex. */
+  targetActorId?: string;
+}
+
 export interface CollectOptions {
   roll: string;
-  filter?: Dict;
+  filter?: ModifierQueryFacts;
   /** Контекст формул. Без него формульные значения (rage_bonus, переменные) мягко пропускаются. */
   formulaCtx?: FormulaContext;
   /** Контекст обстоятельств. Без него when-условия НЕ блокируют (обратная совместимость). */
@@ -175,8 +191,21 @@ export function collectModifiers(
       collectFromPayload(payload, opts, src, out);
       // Состояние (kind:'condition') влияет на броски по правилам 2024.
       if (payload.kind === 'condition' && payload.value) {
+        // Condition-owned `when` predicates are always evaluated fail-closed,
+        // even at legacy call sites that omit an EvalContext.  The exact
+        // source is instance data, never inferred from the condition name.
+        const conditionOpts: CollectOptions = {
+          ...opts,
+          evalCtx: {
+            ...(opts.evalCtx ?? {}),
+            conditionSourceId: effect.sourceId,
+            // Runtime collection is always for the condition carrier. Prefer
+            // persisted ownership, fall back to the stable roller identity.
+            conditionOwnerId: effect.ownerId ?? opts.evalCtx?.rollerActorId,
+          },
+        };
         for (const rule of conditionModifierPayloads(String(payload.value))) {
-          collectFromPayload({ kind: 'modifier', ...rule }, opts, String(payload.value), out);
+          collectFromPayload({ kind: 'modifier', ...rule }, conditionOpts, String(payload.value), out);
         }
       }
     }
@@ -226,16 +255,15 @@ export function foldModifiers(base: number, result: CollectResult): { value: num
 }
 
 /**
- * @deprecated Обёртка над collectModifiers для колл-сайтов без formula/eval-контекста
- * (ручные броски листа). Формульные значения без formulaCtx мягко пропускаются;
- * when без evalCtx не блокирует — как было до фазы C. Новый код используйте
- * collectModifiers напрямую, передавая formulaCtx и evalCtx.
+ * Compatibility wrapper retained for historical call sites.  It accepts the
+ * complete collection context so rules-core cannot accidentally erase formula
+ * or circumstance inputs while crossing the legacy adapter boundary.
  */
 export function collectRollModifiers(
   state: RuntimeState,
   passives: Dict[],
-  appliesTo: { roll: string; filter?: Dict; evalCtx?: EvalContext },
-): { modifiers: RollModifier[]; advantage: AdvantageState; autoFail: boolean; denied: boolean; rules: Dict[] } {
+  appliesTo: CollectOptions,
+): CollectResult {
   return collectModifiers(state, passives, appliesTo);
 }
 
@@ -249,4 +277,16 @@ export function deniedCapabilities(state: RuntimeState, passives: Dict[] = []): 
     if (collectModifiers(state, passives, { roll: cap }).denied) out.add(cap);
   }
   return out;
+}
+
+/** Generic capability/relation query used by rules-core adapters. Conditions
+ * declare the denied capability and source predicates in mechanics; callers
+ * provide only explicit actor/board facts. */
+export function conditionCapabilityDenied(
+  state: RuntimeState,
+  capability: string,
+  evalCtx: EvalContext,
+  passives: Dict[] = [],
+): boolean {
+  return collectModifiers(state, passives, { roll: capability, evalCtx }).denied;
 }

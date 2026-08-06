@@ -5,22 +5,47 @@
  */
 import { useMemo, useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
+import type { EncounterApply } from '../battle/encountersApi';
+import { certifiedConditionEffectEntity } from '../api/conditionsApi';
+import { persistDetachedManualEffects } from '../character/manualEffectPersistence';
 import { forgeToRuntimeState } from '../character/runtime';
+import {
+  assertManualEffectMutationAllowed,
+  manualEffectMutationBlockReason,
+} from '../character/manualEffectMutationPolicy';
 import type { ForgeCharacter } from '../character/types';
-import { conditionOptions, conditionLabel, conditionRule, conditionModifierPayloads, conditionLeaves } from '../engine/conditions';
+import {
+  conditionLabel,
+  conditionLevel,
+  conditionModifierPayloads,
+  conditionOptions,
+  conditionRule,
+  conditionStacking,
+} from '../engine/conditions';
+import {
+  applyEffectCommandFromEntity,
+  collectConditionImmunitiesFromPassives,
+  conditionRequiresSourceActor,
+  executeManualEffectCommand,
+  nextBrowserManualEffectId,
+} from '../engine/manualEffectCommands';
 import type { EngineEvent } from '../mvp/contracts';
 
 interface Props {
   character: ForgeCharacter;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  passives: Record<string, unknown>[];
   embedded?: boolean;
+  encounterApply?: EncounterApply;
 }
 
-export default function SheetConditionsPanel({ character, onUpdated, onEvents, embedded }: Props) {
+export default function SheetConditionsPanel({ character, onUpdated, onEvents, passives, embedded }: Props) {
   const [busy, setBusy] = useState(false);
   const [picked, setPicked] = useState('poisoned');
+  const [sourceActorId, setSourceActorId] = useState('');
+  const [causeTags, setCauseTags] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
   const conditions = runtime.activeEffects.filter(
@@ -29,73 +54,80 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
   const activeValues = new Set(
     conditions.map((e) => String((e.mechanics as Record<string, unknown>).value ?? '')),
   );
+  const immunityProjection = useMemo(() => {
+    try {
+      return { values: collectConditionImmunitiesFromPassives(passives), error: null };
+    } catch (reason) {
+      return {
+        values: [],
+        error: reason instanceof Error ? reason.message : 'Некорректные данные иммунитетов',
+      };
+    }
+  }, [passives]);
+  const conditionImmunities = immunityProjection.values;
+  const mutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
+  const pickedNeedsSource = conditionRequiresSourceActor(picked);
+  const pickedEntity = certifiedConditionEffectEntity(picked);
+  const pickedStacking = conditionStacking(picked);
+  const pickedLevel = conditionLevel(runtime, picked);
+  const pickedAtMaximum = pickedStacking.mode === 'binary'
+    ? pickedLevel > 0
+    : pickedStacking.max != null && pickedLevel >= pickedStacking.max;
 
   const persist = async (activeEffects: typeof runtime.activeEffects, events: EngineEvent[]) => {
     setBusy(true);
+    setError(null);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, {
-        active_effects: activeEffects,
-        turn_state: { ...(character.turn_state ?? {}), temp_hp: runtime.hp.temp },
-      });
+      const updated = await persistDetachedManualEffects(character, activeEffects);
       onUpdated(updated);
       if (events.length) onEvents?.(events);
     } catch (e) {
       console.error(e);
+      setError(e instanceof Error ? e.message : 'Не удалось изменить состояние');
     } finally {
       setBusy(false);
     }
   };
 
   const applyCondition = () => {
-    if (activeValues.has(picked)) return;
-    const rule = conditionRule(picked);
-    const entry = {
-      id: `cond-manual-${Date.now()}`,
-      name: rule?.label ?? picked,
-      mechanics: { kind: 'condition', value: picked, op: 'apply' },
-      expiry: 'manual',
-      source: 'вручную',
-    };
-    let effects = [...runtime.activeEffects, entry];
-    const events: EngineEvent[] = [{ type: 'condition_applied', condition: rule?.label ?? picked }];
-    // D: недееспособность (в т.ч. по композиции — Парализован/Ошеломлён/Без сознания) прерывает
-    // концентрацию — снимаем чип концентрации.
-    const deniesConc = conditionModifierPayloads(picked).some(
-      (m) => m.op === 'deny' && m.applies_to.roll === 'concentration',
-    );
-    if (deniesConc) {
-      const conc = effects.find((e) => (e.mechanics as Record<string, unknown>)?.kind === 'concentration');
-      if (conc) {
-        effects = effects.filter((e) => e !== conc);
-        events.push({ type: 'narrative', text: 'Концентрация потеряна (недееспособность).' });
+    if (pickedAtMaximum) return;
+    try {
+      assertManualEffectMutationAllowed(character.current_encounter_id);
+      if (!pickedEntity) {
+        throw new Error('Сертифицированная карточка состояния из БД недоступна; изменение запрещено');
       }
+      const command = applyEffectCommandFromEntity(
+        pickedEntity,
+        'manual:sheet_conditions',
+        {
+          ownerActorId: character.id,
+          conditionImmunities,
+          causeTags: causeTags.split(',').map((tag) => tag.trim()).filter(Boolean),
+          ...(sourceActorId.trim() ? { sourceActorId: sourceActorId.trim() } : {}),
+        },
+      );
+      const result = executeManualEffectCommand(runtime, command, {
+        nextId: nextBrowserManualEffectId,
+      });
+      void persist(result.state.activeEffects, result.events);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось наложить состояние');
     }
-    persist(effects, events);
   };
 
-  const removeCondition = (id: string, name: string) => {
-    const removed = runtime.activeEffects.find((e) => e.id === id);
-    const value = String((removed?.mechanics as Record<string, unknown>)?.value ?? '');
-    let effects = runtime.activeEffects.filter((e) => e.id !== id);
-    const events: EngineEvent[] = [{ type: 'effect_expired', name }];
-    // Остаточные состояния (Без сознания → остаётесь Опрокинутым): добавляем, если ещё нет.
-    const present = new Set(
-      effects
-        .filter((e) => (e.mechanics as Record<string, unknown>)?.kind === 'condition')
-        .map((e) => String((e.mechanics as Record<string, unknown>).value ?? '')),
-    );
-    for (const leave of conditionLeaves(value)) {
-      if (present.has(leave)) continue;
-      effects = [...effects, {
-        id: `cond-leave-${Date.now()}-${leave}`,
-        name: conditionLabel(leave),
-        mechanics: { kind: 'condition', value: leave, op: 'apply' },
-        expiry: 'manual',
-        source: `осталось от «${name}»`,
-      }];
-      events.push({ type: 'condition_applied', condition: conditionLabel(leave) });
+  const removeCondition = (id: string) => {
+    try {
+      assertManualEffectMutationAllowed(character.current_encounter_id);
+      const result = executeManualEffectCommand(runtime, {
+        type: 'RemoveEffect',
+        effectId: id,
+        ownerActorId: character.id,
+        provenance: 'manual:sheet_conditions',
+      }, { nextId: nextBrowserManualEffectId });
+      void persist(result.state.activeEffects, result.events);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось снять состояние');
     }
-    persist(effects, events);
   };
 
   const conditionTip = (value: string): string => {
@@ -127,6 +159,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
 
   const body = (
     <>
+      {error && <p className="issues" role="alert">{error}</p>}
       {conditions.length === 0 && (
         <p className="forge-note">Нет активных состояний.</p>
       )}
@@ -137,15 +170,15 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
             return (
               <li key={c.id} className="sheet-condition" title={conditionTip(value)}>
                 <span className="sheet-condition-name">{conditionLabel(value)}</span>
-                {c.source && c.source !== 'вручную' && (
+                {c.source && c.source !== 'manual:sheet_conditions' && (
                   <span className="sheet-condition-src">· {c.source}</span>
                 )}
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"
-                  disabled={busy}
-                  title="Снять состояние"
-                  onClick={() => removeCondition(c.id, c.name)}
+                  disabled={busy || Boolean(mutationBlockReason)}
+                  title={mutationBlockReason ?? 'Снять состояние'}
+                  onClick={() => removeCondition(c.id)}
                 >
                   <X size={13} />
                 </button>
@@ -160,19 +193,61 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, e
           value={picked}
           onChange={(e) => setPicked(e.target.value)}
         >
-          {conditionOptions().map((o) => (
-            <option key={o.id} value={o.id} disabled={activeValues.has(o.id)}>{o.label}</option>
-          ))}
+          {conditionOptions().map((o) => {
+            const stacking = conditionStacking(o.id);
+            const level = conditionLevel(runtime, o.id);
+            const unavailable = stacking.mode === 'binary'
+              ? activeValues.has(o.id)
+              : stacking.max != null && level >= stacking.max;
+            return (
+              <option key={o.id} value={o.id} disabled={unavailable}>
+                {o.label}{stacking.mode === 'levels' ? ` (${level}/${stacking.max ?? '∞'})` : ''}
+              </option>
+            );
+          })}
         </select>
         <button
           type="button"
           className="forge-btn ghost sheet-roll-btn"
-          disabled={busy || activeValues.has(picked)}
+          disabled={busy || Boolean(mutationBlockReason) || !pickedEntity || !!immunityProjection.error || pickedAtMaximum || (pickedNeedsSource && !sourceActorId.trim())}
           onClick={applyCondition}
         >
           <Plus size={14} /> Наложить
         </button>
       </div>
+      {!pickedEntity && (
+        <p className="issues" role="alert">
+          Состояния доступны только для просмотра: сертифицированный каталог БД не загружен.
+        </p>
+      )}
+      {mutationBlockReason && (
+        <p className="issues" role="alert">{mutationBlockReason}</p>
+      )}
+      {immunityProjection.error && (
+        <p className="issues" role="alert">
+          Изменение запрещено: {immunityProjection.error}
+        </p>
+      )}
+      {pickedNeedsSource && (
+        <label className="forge-note">
+          ID источника состояния (обязательно для реляционных правил)
+          <input
+            className="forge-input"
+            value={sourceActorId}
+            onChange={(event) => setSourceActorId(event.target.value)}
+            placeholder="ID персонажа или участника боя"
+          />
+        </label>
+      )}
+      <label className="forge-note">
+        Теги причины (если применимы, через запятую)
+        <input
+          className="forge-input"
+          value={causeTags}
+          onChange={(event) => setCauseTags(event.target.value)}
+          placeholder="например: magical, sleep"
+        />
+      </label>
     </>
   );
 

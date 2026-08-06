@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { cached, bustPrefix } from './apiCache';
+import { readPersistedAuthToken, signalUnauthorized } from './authSession';
 import type { 
   Card, 
   CreateCardRequest, 
@@ -62,10 +63,23 @@ export const apiClient = axios.create({
   },
 });
 
+/**
+ * Normalized transport error.  Keeping the HTTP status is important for
+ * feature adapters that need to distinguish an expired session (401) from an
+ * authenticated-but-forbidden operation (403) without depending on Axios'
+ * private response shape.
+ */
+export class ApiRequestError extends Error {
+  constructor(message: string, readonly status?: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
+
 // Интерцептор для добавления токена авторизации
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = readPersistedAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -89,11 +103,19 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    // ВНИМАНИЕ: авторизация временно отключена — не выкидываем на /login при 401.
-    if (error.response?.data?.error) {
-      throw new Error(error.response.data.error);
+    const status = typeof error.response?.status === 'number'
+      ? error.response.status
+      : undefined;
+    if (status === 401) {
+      signalUnauthorized();
     }
-    throw new Error('Произошла ошибка при выполнении запроса');
+    const responseMessage = typeof error.response?.data?.error === 'string'
+      ? error.response.data.error
+      : null;
+    throw new ApiRequestError(
+      responseMessage || 'Произошла ошибка при выполнении запроса',
+      status,
+    );
   }
 );
 
@@ -204,8 +226,11 @@ export const effectsApi = {
     type?: string;
     search?: string;
     fields?: 'list';
-  }): Promise<PassiveEffectsResponse> => {
-    const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', { params });
+  }, request?: { timeoutMs?: number }): Promise<PassiveEffectsResponse> => {
+    const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', {
+      params,
+      ...(request?.timeoutMs != null ? { timeout: request.timeoutMs } : {}),
+    });
     return response.data;
   },
 

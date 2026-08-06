@@ -56,6 +56,36 @@ function build(opts: {
 }
 
 describe('resolveCharacterRules — базовые владения и производные', () => {
+  it('не применяет active/reaction payload к build до выполнения способности', () => {
+    const active = build({
+      effects: [fx('active-boost', {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        effects: [{ resolution: 'auto', result: [
+          { kind: 'grant_proficiency', prof: 'skill', value: 'stealth' },
+          { kind: 'grant_ability_score', ability: 'dex', amount: 2 },
+          { kind: 'modifier', applies_to: { roll: 'initiative' }, op: 'add', value: 5 },
+        ] }],
+      })],
+    });
+    const baseline = build();
+
+    expect(active.abilities).toEqual(baseline.abilities);
+    expect(active.proficiencies.skills).not.toContain('stealth');
+    expect(active.initiativeBonus).toBe(baseline.initiativeBonus);
+
+    const passive = build({
+      effects: [fx('passive-boost', {
+        activation: { mode: 'passive' },
+        effects: [{ resolution: 'auto', result: [
+          { kind: 'grant_proficiency', prof: 'skill', value: 'stealth' },
+          { kind: 'modifier', applies_to: { roll: 'initiative' }, op: 'add', value: 5 },
+        ] }],
+      })],
+    });
+    expect(passive.proficiencies.skills).toContain('stealth');
+    expect(passive.initiativeBonus).toBe(baseline.initiativeBonus + 5);
+  });
+
   it('спасброски класса добавляют БМ, прочие — только модификатор', () => {
     const rs = build({ klass: { id: 'fighter', name: 'Воин', hit_die: 'd10', saving_throws: ['str', 'con'] } });
     expect(rs.proficiencyBonus).toBe(2);
@@ -96,7 +126,7 @@ describe('resolveCharacterRules — базовые владения и прои�
   });
 });
 
-describe('resolveCharacterRules — единый КЗ (C9) и заклинательство подкласса', () => {
+describe('resolveCharacterRules — единый КЗ (C9) и декларативное заклинательство', () => {
   it('set_value ac_base (Защита без доспехов) попадает в персистируемый КЗ', () => {
     const rs = build({
       klass: { id: 'barb', name: 'Варвар', hit_die: 'd12' },
@@ -114,18 +144,62 @@ describe('resolveCharacterRules — единый КЗ (C9) и заклинате
     expect(rs.armorClass).toBe(10 + abilityMod(STD.dex) + 1);
   });
 
-  it('подкласс-кастер (Мистический рыцарь) даёт заклинательство от ИНТ', () => {
+  it('primary spellcasting_ability даёт СЛ и атаку независимо от имени класса/подкласса', () => {
     const rs = build({
-      klass: { id: 'fighter', name: 'Воин', hit_die: 'd10' },
-      subclass: { id: 'ek', name: 'Мистический рыцарь' },
+      klass: { id: 'renamed-caster', name: 'Полностью переименованный класс', hit_die: 'd10' },
+      effects: [fx(
+        'spellcasting',
+        auto({ kind: 'spellcasting_ability', role: 'primary', ability: 'int' }),
+        { kind: 'class', id: 'renamed-caster', name: 'Полностью переименованный класс' },
+      )],
     });
     expect(rs.spellcasting).not.toBeNull();
     expect(rs.spellcasting?.ability).toBe('int');
     expect(rs.spellcasting?.saveDC).toBe(8 + rs.proficiencyBonus + abilityMod(STD.int));
   });
 
-  it('у не-кастера без кастующего подкласса заклинательства нет', () => {
-    const rs = build({ klass: { id: 'fighter', name: 'Воин', hit_die: 'd10' } });
+  it('известное старому хардкоду имя без примитива fail closed', () => {
+    const rs = build({ klass: { id: 'wizard', name: 'Волшебник', hit_die: 'd6' } });
+    expect(rs.spellcasting).toBeNull();
+  });
+
+  it('source-scoped выбор не подменяет primary характеристику персонажа', () => {
+    const rs = build({
+      klass: { id: 'wizard', name: 'Волшебник', hit_die: 'd6' },
+      effects: [
+        fx('class-spellcasting', auto(
+          { kind: 'spellcasting_ability', role: 'primary', ability: 'int' },
+        ), { kind: 'class', id: 'wizard', name: 'Волшебник' }),
+        fx('magic-initiate', auto({
+          kind: 'choice',
+          id: 'magic_initiate_spellcasting_ability',
+          options: { source: 'ability' },
+          grant: { kind: 'spellcasting_ability' },
+        }), { kind: 'feat', id: 'magic-initiate', name: 'Посвящённый в магию' }),
+      ],
+      draft: { resolvedChoices: { magic_initiate_spellcasting_ability: ['cha'] } },
+    });
+    expect(rs.spellcasting?.ability).toBe('int');
+  });
+
+  it('две разные primary декларации fail closed, одинаковые дедуплицируются', () => {
+    const primary = (id: string, ability: AbilityKey) => fx(
+      id,
+      auto({ kind: 'spellcasting_ability', role: 'primary', ability }),
+      { kind: 'class', id: 'caster', name: 'Caster' },
+    );
+    expect(build({ effects: [primary('a', 'wis'), primary('b', 'wis')] }).spellcasting?.ability)
+      .toBe('wis');
+    expect(build({ effects: [primary('a', 'wis'), primary('b', 'cha')] }).spellcasting)
+      .toBeNull();
+  });
+
+  it('невалидная primary декларация fail closed даже без запуска schema validator', () => {
+    const rs = build({
+      effects: [fx('invalid-spellcasting', auto(
+        { kind: 'spellcasting_ability', role: 'primary', ability: 'WIS' },
+      ))],
+    });
     expect(rs.spellcasting).toBeNull();
   });
 });
@@ -176,6 +250,41 @@ describe('resolveCharacterRules — grant_spell и заговоры', () => {
     });
     expect(rs.spells.known).toEqual(['light']);
     expect(rs.conflicts.some((c) => c.code === 'duplicate_spell')).toBe(true);
+  });
+
+  it('сохраняет exact ability grant-а и наследует data-declared ability того же mechanics source', () => {
+    const rs = build({
+      klass: { id: 'caster', name: 'Переименованный класс', hit_die: 'd8' },
+      effects: [fx('spell-source', auto(
+        { kind: 'spellcasting_ability', role: 'primary', ability: 'wis' },
+        { kind: 'grant_spell', value: 'direct', ability: 'cha' },
+        { kind: 'grant_spell', value: 'inherited', label: 'known' },
+      ), { kind: 'class', id: 'caster', name: 'Переименованный класс' })],
+    });
+    expect(rs.appliedGrants.find((grant) => grant.value === 'direct')?.spellcastingAbility)
+      .toBe('cha');
+    expect(rs.appliedGrants.find((grant) => grant.value === 'inherited')?.spellcastingAbility)
+      .toBe('wis');
+  });
+
+  it('class-origin invocation inherits primary ability by stable origin id, not source name', () => {
+    const origin = { kind: 'class' as const, id: 'caster', name: 'Любое имя' };
+    const rs = build({
+      klass: { id: 'caster', name: 'Другое отображаемое имя', hit_die: 'd8' },
+      effects: [
+        fx('class-spellcasting', auto(
+          { kind: 'spellcasting_ability', role: 'primary', ability: 'int' },
+        ), origin),
+        fx('invocation', auto(
+          { kind: 'grant_spell', value: 'invocation_spell' },
+        ), origin),
+      ],
+    });
+    expect(rs.appliedGrants.find((grant) => grant.value === 'invocation_spell'))
+      .toMatchObject({
+        spellcastingAbility: 'int',
+        source: { originEntityId: 'caster', featureEntityId: 'invocation' },
+      });
   });
 });
 
@@ -457,6 +566,14 @@ describe('resolveCharacterRules — grant_language и НЕреализованн
     });
     expect(rs.senses.filter((s) => s.sense === 'darkvision')).toHaveLength(1);
     expect(rs.senses.find((s) => s.sense === 'darkvision')?.range).toBe(120);
+  });
+
+  it('grant_sense без явной дальности не получает скрытый 60-футовый fallback', () => {
+    const rs = build({
+      effects: [fx('incomplete-sense', auto({ kind: 'grant_sense', sense: 'darkvision' }))],
+    });
+
+    expect(rs.senses).not.toContainEqual(expect.objectContaining({ sense: 'darkvision' }));
   });
 });
 

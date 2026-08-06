@@ -97,7 +97,14 @@ export function collectItemMechanics(
     seen.add(id);
     const card = cardMap.get(id);
     if (!card || !itemGate(card, ctx)) continue;
-    out.push({ card, mechanics: { name: card.name, ...(card.mechanics as Record<string, unknown>) } });
+    out.push({
+      card,
+      mechanics: {
+        ...(card.mechanics as Record<string, unknown>),
+        id: card.id,
+        name: String((card.mechanics as Record<string, unknown>).name ?? card.name),
+      },
+    });
   }
   return out;
 }

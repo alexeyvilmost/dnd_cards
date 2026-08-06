@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -480,6 +481,21 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	c.JSON(http.StatusCreated, card.ToCardResponse())
 }
 
+// applyNullableStringUpdate applies the PATCH-style transport contract used by
+// UpdateCard for nullable string fields: nil omits the field, an empty string
+// clears it back to SQL NULL, and every other value replaces it.
+func applyNullableStringUpdate(field **string, requested *string) {
+	if requested == nil {
+		return
+	}
+	if *requested == "" {
+		*field = nil
+		return
+	}
+	value := *requested
+	*field = &value
+}
+
 // UpdateCard - обновление карточки
 func (cc *CardController) UpdateCard(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
@@ -636,14 +652,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	if req.WeaponType != nil {
 		card.WeaponType = req.WeaponType
 	}
-	if req.Mastery != nil {
-		// Пустая строка = снять мастерство (иначе его нельзя было бы убрать через PUT).
-		if *req.Mastery == "" {
-			card.Mastery = nil
-		} else {
-			card.Mastery = req.Mastery
-		}
-	}
+	applyNullableStringUpdate(&card.Mastery, req.Mastery)
 	if req.RelatedCards != nil {
 		card.RelatedCards = NormalizeProperties(req.RelatedCards)
 	}
@@ -667,9 +676,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 			card.Mechanics = req.Mechanics
 		}
 	}
-	if req.Range != nil {
-		card.Range = req.Range
-	}
+	applyNullableStringUpdate(&card.Range, req.Range)
 	if req.Tags != nil {
 		card.Tags = NormalizeProperties(req.Tags)
 	}
@@ -775,8 +782,13 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 	// Генерация изображения через OpenAI API
 	var imageURL string
 	if cc.openaiService != nil {
-		generatedURL, err := cc.openaiService.GenerateImage(prompt, "high", imageSize)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), imageGenerationRequestBudget)
+		defer cancel()
+		generatedURL, err := cc.openaiService.GenerateImageContext(ctx, prompt, "high", imageSize)
 		if err != nil {
+			if writeImageContextError(c, err) {
+				return
+			}
 			// Если OpenAI недоступен, используем заглушку
 			imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")
 		} else {

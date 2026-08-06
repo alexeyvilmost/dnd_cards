@@ -1068,15 +1068,19 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
   // Прочие требования (не level) round-trip'ятся через RequirementsEditor (раньше терялись).
   const requirements = requirementsToRows(reqs);
 
-  // Гейты-разрешения (S3): while / consumes_self / ammo / uses.recharge / доп. стоимость.
+  // Гейты-разрешения (S3): while / self_item cost / ammo / uses.recharge / доп. стоимость.
   const whileVal = String(act.while ?? m.while ?? '');
   const itemWhile = (['equipped', 'carried', 'attuned'].includes(whileVal) ? whileVal : '') as DeserializedMechanics['itemWhile'];
-  const consumesSelf = act.consumes_self === true || m.consumes_self === true;
+  const declaredCost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
+  // Legacy consumes_self is read only so the editor can migrate it on save.
+  // Runtime semantics come solely from activation.cost self_item.
+  const consumesSelf = declaredCost.some((entry) => entry?.resource === 'self_item')
+    || act.consumes_self === true || m.consumes_self === true;
   const ammoRaw = m.ammo;
   const ammo = typeof ammoRaw === 'string' ? ammoRaw
     : (ammoRaw && typeof ammoRaw === 'object' ? String((ammoRaw as Dict).card_id ?? '') : '');
   const recharge = uses.recharge != null ? String(uses.recharge) : '';
-  const allCost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
+  const allCost = declaredCost.filter((entry) => entry?.resource !== 'self_item');
   const extraCost = costToRows(act.mode === 'active' ? allCost.filter((c) => !isPlainActiveCost(c)) : allCost);
 
   const entries: DeserializedMechanics['effectEntries'] = [];

@@ -79,6 +79,7 @@ describe('S2 — collectItemMechanics сканирует сумку', () => {
   it('предмет while:carried из СУМКИ попадает в набор', () => {
     const out = collectItemMechanics({}, map, null, [{ cardId: 'carried', qty: 1 }]);
     expect(out.map((im) => im.card.id)).toEqual(['carried']);
+    expect(out[0].mechanics).toMatchObject({ id: 'carried', name: 'carried' });
   });
 
   it('обычный предмет в сумке (без while) НЕ попадает', () => {

@@ -21,7 +21,7 @@ function resistanceEffect(damage_type: string, value: string): ActiveEffectEntry
 }
 const attackAction: Dict = {
   name: 'Атака', activation: { cost: [] },
-  effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'weapon', ability: 'none' }] }],
+  effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'bludgeoning', ability: 'none' }] }],
 };
 const rollEv = (events: EngineEvent[], label: string) =>
   events.filter((e): e is Extract<EngineEvent, { type: 'roll' }> => e.type === 'roll').find((e) => e.label.startsWith(label));
@@ -34,7 +34,13 @@ describe('Фаза E — проекция состояний цели на ат�
   });
 
   it('атака по невидимой цели — с помехой (проекция disadvantage)', () => {
-    const ctx: Ctx = { character, rng: HIT, target: { ac: 5, runtimeState: fresh([conditionEffect('invisible')]) } };
+    const ctx: Ctx = {
+      character,
+      rng: HIT,
+      selfId: 'attacker',
+      target: { id: 'target', ac: 5, runtimeState: fresh([conditionEffect('invisible')]) },
+      conditionRelationFacts: { visibility: { attacker: { target: false } } },
+    };
     const { events } = executeAction(fresh(), attackAction, ctx);
     expect(rollEv(events, 'Атака')!.roll.advantage).toBe('disadvantage');
   });

@@ -5,17 +5,20 @@ import { armorClassValue } from '../../engine/ac';
 import { foldModifiers, type ModifierOp } from '../../engine/modifiers';
 import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
-import { parseFreeuse, type FreeuseSpec } from '../../engine/freeuse';
+import type { FreeuseSpec } from '../../engine/freeuse';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
 import { sourceKey, instanceFeatureId } from '../../mechanics/choiceKey';
 import { MAX_CHOICE_DEPTH, choiceInstanceId, selectedChoicePayloads, payloadsFromMechanics } from '../../mechanics/expandChoices';
+import { normalizeAppliedGrantPrimitive } from '../../mechanics/grantSemantics';
 import { ABILITY_KEYS, type AbilityKey } from '../types';
+import {
+  resolvePrimarySpellcastingAbility,
+  resolveSourceSpellcastingAbility,
+} from '../spellcastingAbility';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
 import type {
   AppliedGrant,
   CharacterRuleState,
-  GrantMode,
-  ProficiencyKind,
   RuleConflict,
   RuleInput,
   RuleSource,
@@ -41,6 +44,8 @@ const sourceFromOrigin = (origin: { kind: string; id: string; name: string; inst
   // экземпляров различны; совпадает с тем, что пишет форге (assemble → instanceFeatureId).
   id: sourceKey(origin.kind, origin.id, instanceFeatureId(feature?.id ?? '', origin.instanceKey)),
   name: feature ? `${origin.name}: ${feature.name}` : origin.name,
+  originEntityId: origin.id,
+  ...(feature?.id ? { featureEntityId: feature.id } : {}),
 });
 
 // Ключ выбора (choiceInstanceId), MAX_CHOICE_DEPTH, selectedChoicePayloads и payloadsFromMechanics
@@ -166,50 +171,8 @@ function addGrant(
 }
 
 function grantFromPayload(payload: Dict, source: RuleSource, choiceId?: string): Omit<AppliedGrant, 'id'> | null {
-  const kind = String(payload.kind || '');
-  if (kind === 'grant_language') {
-    const value = payload.value;
-    if (!value) return null;
-    return { source, kind: 'language', value: String(value), mode: 'proficiency', choiceId };
-  }
-
-  if (kind === 'grant_expertise') {
-    const prof = String(payload.prof || payload.expertise || 'skill') as ProficiencyKind;
-    const value = payload.value;
-    if (!value) return null;
-    return { source, kind: prof, value: String(value), mode: 'expertise', choiceId };
-  }
-
-  if (kind === 'grant_feat') {
-    const value = payload.value;
-    if (!value) return null;
-    return { source, kind: 'feat', value: String(value), mode: 'proficiency', choiceId };
-  }
-
-  if (kind === 'grant_spell') {
-    const value = payload.value;
-    if (!value) return null;
-    return {
-      source,
-      kind: 'spell',
-      value: String(value),
-      mode: 'proficiency',
-      choiceId,
-      label: typeof payload.label === 'string' ? payload.label : undefined,
-      // freeuse: каст без ячейки из пула freeuse-<value> (native и через choice — общая точка).
-      freeuse: parseFreeuse(payload.freeuse),
-    };
-  }
-
-  if (kind !== 'grant_proficiency') return null;
-  const prof = String(payload.prof || 'skill') as ProficiencyKind;
-  const value = payload.value;
-  if (!value) return null;
-  // Контент помечает экспертизу по-разному: mode:"expertise" | expertise:true | expert:true.
-  const mode: GrantMode = payload.mode === 'expertise' || payload.expertise === true || payload.expert === true
-    ? 'expertise'
-    : 'proficiency';
-  return { source, kind: prof, value: String(value), mode, choiceId };
+  const grant = normalizeAppliedGrantPrimitive(payload);
+  return grant ? { source, ...grant, choiceId } : null;
 }
 
 // Уровневый гейт гранта: применяем, только если уровень персонажа достаточен.
@@ -220,6 +183,18 @@ function passesLevelGate(payload: Dict, level: number): boolean {
   if (g == null) return true;
   const n = Number(g);
   return Number.isNaN(n) || level >= n;
+}
+
+/**
+ * Selected entities can contain both build-time traits and executable
+ * capabilities.  Active/reaction payloads must never be folded into the
+ * permanent character projection before the capability is actually used.
+ */
+function appliesDuringBuild(entity: PassiveEffect | Action): boolean {
+  const mechanics = entity.mechanics as Dict | null | undefined;
+  const activation = mechanics?.activation as Dict | undefined;
+  const mode = String(activation?.mode ?? 'passive');
+  return mode !== 'active' && mode !== 'reaction';
 }
 
 // Роли числовых значений листа, на которые ВЛИЯЮТ modifier-пассивки эффектов.
@@ -375,7 +350,10 @@ function collectSenseSpeed(
   if (kind === 'grant_sense') {
     const sense = String(payload.sense ?? payload.value ?? '').toLowerCase();
     if (!sense) return;
-    const range = Number(payload.range ?? 60) || 60;
+    const range = Number(payload.range);
+    // A sense without an explicit range is incomplete content. Never invent a
+    // D&D-specific 60 ft fallback in the interpreter: the Effect owns it.
+    if (!Number.isFinite(range) || range <= 0) return;
     const existing = senses.find((s) => s.sense === sense);
     if (existing) { if (range > existing.range) existing.range = range; } // несколько источников → больший радиус
     else senses.push({ sense, range });
@@ -469,6 +447,10 @@ export function buildRuleInput(input: RuleInput): RuleInput {
 
 export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const { draft, assembled } = input;
+  const buildEffects = (assembled.effects as OriginEffect[])
+    .filter(({ effect }) => appliesDuringBuild(effect));
+  const buildActions = (assembled.actions as OriginAction[])
+    .filter(({ action }) => appliesDuringBuild(action));
   const maps = emptySetMap();
   const expertise = { skill: new Map<string, AppliedGrant>(), tool: new Map<string, AppliedGrant>() };
   const appliedGrants: AppliedGrant[] = [];
@@ -510,7 +492,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   // D3: grant_ability_score — пред-скан ДО расчёта модов, чтобы прирост дошёл до ВСЕХ
   // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
-  const { deltas: abilityDeltas, methods: abilityMethods } = collectAbilityDeltas(input, assembled.effects as OriginEffect[], assembled.actions as OriginAction[]);
+  const { deltas: abilityDeltas, methods: abilityMethods } = collectAbilityDeltas(input, buildEffects, buildActions);
   const scoresFinal = Object.fromEntries(
     ABILITY_KEYS.map((a) => {
       const base = draft.abilities[a] ?? 10;
@@ -547,10 +529,10 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   // Повторяемые черты — id из собранных черт (assembled.feats).
   const repeatableFeats = new Set((assembled.feats || []).filter((f) => f.repeatable).map((f) => f.id));
 
-  for (const { effect, origin } of assembled.effects as OriginEffect[]) {
+  for (const { effect, origin } of buildEffects) {
     applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
   }
-  for (const { action, origin } of assembled.actions as OriginAction[]) {
+  for (const { action, origin } of buildActions) {
     applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
   }
   for (const runtime of input.runtimeSources || []) {
@@ -563,10 +545,56 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const pb = proficiencyBonusForLevel(draft.level);
   const abilityMods = abilityMods0;
 
-  // Заклинательство считаем ДО производных: (а) подкласс-кастеры (Мистический рыцарь/
-  // Ловкач) — проброс subclassName, иначе spellcasting=null и лист не показывает СЛ/атаку;
-  // (б) spellcastingMod нужен formulaCtx AC-формул (редкие формулы КЗ от заклинательства).
-  const spellDerived = spellcasting(assembled.klass?.name, scores, pb, assembled.subclass?.name);
+  // Заклинательство объявляется mechanics-примитивом, а не именем класса/подкласса.
+  // Несколько разных primary-деклараций и невалидное значение fail closed → null.
+  // spellcastingMod нужен formulaCtx AC-формул (редкие формулы КЗ от заклинательства).
+  const primarySpellcastingAbility = resolvePrimarySpellcastingAbility([
+    ...buildEffects.map(({ effect, origin }) => ({
+      mechanics: effect.mechanics,
+      sourceId: sourceFromOrigin(origin, effect).id,
+    })),
+    ...buildActions.map(({ action, origin }) => ({
+      mechanics: action.mechanics,
+      sourceId: sourceFromOrigin(origin, action).id,
+    })),
+    ...(input.runtimeSources || []).map((runtime) => ({
+      mechanics: runtime.mechanics,
+      sourceId: runtime.source.id,
+    })),
+  ], draft.resolvedChoices);
+  const sourceSpellcastingAbilities = new Map<string, AbilityKey>();
+  for (const { effect, origin } of buildEffects) {
+    const source = sourceFromOrigin(origin, effect);
+    const ability = resolveSourceSpellcastingAbility({
+      mechanics: effect.mechanics,
+      sourceId: source.id,
+    }, draft.resolvedChoices);
+    if (ability) sourceSpellcastingAbilities.set(source.id, ability);
+  }
+  for (const { action, origin } of buildActions) {
+    const source = sourceFromOrigin(origin, action);
+    const ability = resolveSourceSpellcastingAbility({
+      mechanics: action.mechanics,
+      sourceId: source.id,
+    }, draft.resolvedChoices);
+    if (ability) sourceSpellcastingAbilities.set(source.id, ability);
+  }
+  for (const runtime of input.runtimeSources ?? []) {
+    const ability = resolveSourceSpellcastingAbility({
+      mechanics: runtime.mechanics,
+      sourceId: runtime.source.id,
+    }, draft.resolvedChoices);
+    if (ability) sourceSpellcastingAbilities.set(runtime.source.id, ability);
+  }
+  for (const grant of appliedGrants) {
+    if (grant.kind !== 'spell' || grant.spellcastingAbility) continue;
+    const exact = sourceSpellcastingAbilities.get(grant.source.id);
+    const sameClassOrigin = grant.source.type === 'class'
+      && grant.source.originEntityId === assembled.klass?.id;
+    const ability = exact ?? (sameClassOrigin ? primarySpellcastingAbility : null);
+    if (ability) grant.spellcastingAbility = ability;
+  }
+  const spellDerived = spellcasting(primarySpellcastingAbility, scores, pb);
   const spellcastingMod = spellDerived ? abilityMods[spellDerived.ability] : undefined;
 
   const skillBonuses = Object.fromEntries(SKILL_IDS.map((skill) => {
@@ -589,8 +617,8 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   // считается «голый» КЗ: база / Unarmored Defense / set_value ac_base + modifier-эффекты
   // (стиль «Оборона» +1 и т.п.); броню лист учтёт позже сам через breakdownValue('ac').
   const acPassives: Dict[] = [
-    ...(assembled.effects as OriginEffect[]).map((e) => e.effect.mechanics),
-    ...(assembled.actions as OriginAction[]).map((a) => a.action.mechanics),
+    ...buildEffects.map((e) => e.effect.mechanics),
+    ...buildActions.map((a) => a.action.mechanics),
     // Предметы в КЗ резолвера НЕ вливаем: ruleState.armorClass — «голый» билд-КЗ (см. выше),
     // а КЗ от предметов лист считает через breakdown('ac')/passives (там предметы уже есть).
     // Не-предметные runtimeSources (врем. эффекты/условия из боя) в КЗ по-прежнему участвуют.

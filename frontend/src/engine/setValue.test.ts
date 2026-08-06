@@ -4,7 +4,7 @@
  * формула. variable — намеренная заглушка-нарратив (нет рантайм-переменных).
  */
 import { describe, expect, it } from 'vitest';
-import { executeAction, applyIncomingDamage } from './execute';
+import { executeAction, applyIncomingDamage, MechanicsExecutionError } from './execute';
 import { computeAC } from './ac';
 import { longRest } from './turn';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
@@ -53,11 +53,11 @@ describe('2.4 — set_value', () => {
     expect(executeAction(st, setAct('rage', '0'), ctx).state.resources.rage).toBe(0);
   });
 
-  it('НЕИЗВЕСТНЫЙ target (опечатка/характеристика) → нарратив, фантомный ресурс НЕ создаётся', () => {
-    const { state, events } = executeAction(fresh(), setAct('hpp', '1'), ctx);
-    expect(state.resources.hpp).toBeUndefined();                                  // не создали фантом
-    expect(state.hp.current).toBe(20);                                            // hp не тронут
-    expect(events.some((e) => JSON.stringify(e).includes('неизвестный target'))).toBe(true);
+  it('НЕИЗВЕСТНЫЙ target (опечатка/характеристика) → fail-closed без фантомного ресурса', () => {
+    const state = fresh();
+    expect(() => executeAction(state, setAct('hpp', '1'), ctx)).toThrow(MechanicsExecutionError);
+    expect(state.resources.hpp).toBeUndefined();
+    expect(state.hp.current).toBe(20);
   });
 
   it('who:target с ФОРМУЛОЙ берёт статы ЦЕЛИ, не атакующего', () => {
@@ -127,16 +127,15 @@ describe('2.4 — set_value', () => {
     expect(after2.activeEffects.length).toBe(1); // условие с ключом cond:cursed перезаписывается
   });
 
-  it('grant_effect без предзагрузки (slug не в ctx) — тихо, без NOT_IMPLEMENTED и без эффекта', () => {
+  it('grant_effect без предзагрузки (slug не в ctx) — fail-closed до исполнения', () => {
     const spell: Dict = { name: 'X', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', value: 'EFFECT-XXX' }] }] };
-    const { state, events } = executeAction(fresh(), spell, ctx);
-    expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
+    const state = fresh();
+    expect(() => executeAction(state, spell, ctx)).toThrow(MechanicsExecutionError);
     expect(state.activeEffects.length).toBe(0);
   });
 
-  it('variable → нарратив-заглушка, а не NOT_IMPLEMENTED', () => {
-    const { events } = executeAction(fresh(), { name: 'V', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'variable', id: 'x', op: 'set', value: '1' }] }] }, ctx);
-    expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
-    expect(events.some((e) => JSON.stringify(e).includes('рантайм-мутация переменных'))).toBe(true);
+  it('build-only variable нельзя активировать как runtime-действие', () => {
+    expect(() => executeAction(fresh(), { name: 'V', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'variable', id: 'x', op: 'set', value: '1' }] }] }, ctx))
+      .toThrow(MechanicsExecutionError);
   });
 });

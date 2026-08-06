@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // EncounterController — серверная истина боя + realtime-рассылка (SSE) изменений всем
@@ -21,30 +25,13 @@ import (
 // Postgres LISTEN/NOTIFY (без Redis): запись делает pg_notify, единый listener на процесс
 // загружает событие из журнала и рассылает локальным SSE-подписчикам.
 type EncounterController struct {
-	db  *gorm.DB
-	hub *EncounterHub
+	db            *gorm.DB
+	hub           *EncounterHub
+	inviteService *EncounterInviteService
 }
 
-func NewEncounterController(db *gorm.DB, hub *EncounterHub) *EncounterController {
-	return &EncounterController{db: db, hub: hub}
-}
-
-func (ec *EncounterController) resolveUserID(c *gin.Context) uuid.UUID {
-	if v, ok := c.Get("user_id"); ok {
-		if id, ok2 := v.(uuid.UUID); ok2 {
-			return id
-		}
-	}
-	// Авторизация отключена — общий public-пользователь (как в characters_v3).
-	var user User
-	if err := ec.db.Where("username = ?", "public").First(&user).Error; err == nil {
-		return user.ID
-	}
-	user = User{Username: "public", Email: "public@local", PasswordHash: "disabled", DisplayName: "Публичный"}
-	if err := ec.db.Create(&user).Error; err != nil {
-		_ = ec.db.Where("username = ?", "public").First(&user).Error
-	}
-	return user.ID
+func NewEncounterController(db *gorm.DB, hub *EncounterHub, inviteService *EncounterInviteService) *EncounterController {
+	return &EncounterController{db: db, hub: hub, inviteService: inviteService}
 }
 
 // applyOps — ЧИСТАЯ функция применения операции к состоянию боя (тестируется без БД).
@@ -102,6 +89,9 @@ func opPayload(req ApplyRequest) JSONMap {
 	b, _ := json.Marshal(req)
 	var m JSONMap
 	_ = json.Unmarshal(b, &m)
+	// expected_seq is command precondition metadata, not part of the replayable
+	// encounter operation delivered over SSE.
+	delete(m, "expected_seq")
 	return m
 }
 
@@ -126,20 +116,20 @@ func characterIDsInState(state map[string]interface{}) map[string]bool {
 // encounterConflict — правило «один бой на персонажа»: возвращает имя другого боя, если
 // персонаж cid уже реально участвует в ином (существующем) бою. Устаревшую ссылку (бой
 // удалён или персонажа там уже нет) игнорируем, чтобы не залочить персонажа навсегда.
-func (ec *EncounterController) encounterConflict(cid string, thisEnc uuid.UUID) (string, bool) {
+func encounterConflict(db *gorm.DB, cid string, thisEnc uuid.UUID) (string, bool) {
 	charUUID, err := uuid.Parse(cid)
 	if err != nil {
 		return "", false
 	}
 	var ch CharacterV3
-	if err := ec.db.Select("id", "current_encounter_id").First(&ch, "id = ?", charUUID).Error; err != nil {
+	if err := db.Select("id", "current_encounter_id").First(&ch, "id = ?", charUUID).Error; err != nil {
 		return "", false // персонажа нет — не наша забота
 	}
 	if ch.CurrentEncounterID == nil || *ch.CurrentEncounterID == thisEnc {
 		return "", false
 	}
 	var other Encounter
-	if err := ec.db.First(&other, "id = ?", *ch.CurrentEncounterID).Error; err != nil {
+	if err := db.First(&other, "id = ?", *ch.CurrentEncounterID).Error; err != nil {
 		return "", false // бой удалён — ссылка устарела
 	}
 	otherState := map[string]interface{}{}
@@ -157,11 +147,11 @@ func (ec *EncounterController) encounterConflict(cid string, thisEnc uuid.UUID) 
 // activeEffects). ПОЛЕВОЙ write-through: пишем только те поля, что этот op реально менял (changed
 // по actorId), — иначе патч, менявший лишь состояния, затирал бы current_hp значением комбатанта
 // (которое могло разойтись с листом). max_hp НЕ трогаем — заморожен при добавлении. Монстры (без
-// characterId) и не найденные персонажи пропускаются.
-func syncCombatantsToCharacters(tx *gorm.DB, state map[string]interface{}, changed map[string]map[string]bool) {
+// characterId) пропускаются; ошибка записи уже разрешённого CharacterV3 откатывает весь encounter op.
+func syncCombatantsToCharacters(tx *gorm.DB, state map[string]interface{}, changed map[string]map[string]bool, characterOwners map[string]uuid.UUID) error {
 	raw, ok := state["combatants"].([]interface{})
 	if !ok {
-		return
+		return nil
 	}
 	for _, it := range raw {
 		m, ok := it.(map[string]interface{})
@@ -179,6 +169,10 @@ func syncCombatantsToCharacters(tx *gorm.DB, state map[string]interface{}, chang
 		}
 		u, e := uuid.Parse(cid)
 		if e != nil {
+			continue
+		}
+		ownerID, authorized := characterOwners[u.String()]
+		if !authorized || ownerID == uuid.Nil {
 			continue
 		}
 		upd := map[string]interface{}{}
@@ -199,8 +193,8 @@ func syncCombatantsToCharacters(tx *gorm.DB, state map[string]interface{}, chang
 			if t, ok := m["temp"].(float64); ok {
 				// turn_state — read-merge-write только ключа temp_hp (не затираем death_saves/attuned_ids).
 				var cur CharacterV3
-				if e := tx.Select("turn_state").First(&cur, "id = ?", u).Error; e != nil {
-					continue // персонажа нет (монстр/чужой/устаревший id) — пропуск
+				if e := tx.Select("turn_state").First(&cur, "id = ? AND user_id = ?", u, ownerID).Error; e != nil {
+					return fmt.Errorf("load encounter character %s turn state: %w", cid, e)
 				}
 				ts := JSONMap{}
 				if cur.TurnState != nil {
@@ -213,41 +207,86 @@ func syncCombatantsToCharacters(tx *gorm.DB, state map[string]interface{}, chang
 		if len(upd) == 0 {
 			continue
 		}
-		if e := tx.Model(&CharacterV3{}).Where("id = ?", u).Updates(upd).Error; e != nil {
-			log.Printf("encounter write-through для персонажа %s: %v", cid, e)
+		upd["runtime_revision"] = gorm.Expr("runtime_revision + 1")
+		update := tx.Model(&CharacterV3{}).Where("id = ? AND user_id = ?", u, ownerID).Updates(upd)
+		if update.Error != nil {
+			return fmt.Errorf("write encounter state to character %s: %w", cid, update.Error)
+		}
+		if update.RowsAffected != 1 {
+			return fmt.Errorf("write encounter state to character %s: owner row changed", cid)
 		}
 	}
+	return nil
 }
 
 // writeCharacterJournal — пишет адресные записи журнала боя в журналы персонажей (character_events),
 // чтобы всё, что произошло с персонажем (даже с другого устройства/аккаунта), было у него в журнале.
-// Best-effort: ошибка одной записи (битый FK/парс) не рушит транзакцию боя.
-func writeCharacterJournal(tx *gorm.DB, entries []BattleLogEntry) {
+// Apply policy заранее разрешает target id; отсутствующий/битый EngineEvent возвращает ошибку
+// и откатывает всю операцию боя. Неадресные message-only записи остаются только в журнале боя.
+func writeCharacterJournal(tx *gorm.DB, entries []BattleLogEntry, allowedCharacterIDs map[string]uuid.UUID) error {
 	now := time.Now()
 	for _, le := range entries {
-		if le.TargetCharacterID == "" || le.Payload == nil {
+		if le.TargetCharacterID == "" {
 			continue
+		}
+		if le.Payload == nil {
+			return invalidCharacterEvent("log.payload", "is required for a targeted character journal entry")
 		}
 		u, e := uuid.Parse(le.TargetCharacterID)
 		if e != nil {
+			return invalidCharacterEvent("log.targetCharacterId", "must be a UUID in this encounter")
+		}
+		if allowed, ok := allowedCharacterIDs[u.String()]; !ok || allowed != u {
 			continue
 		}
 		typ := le.Type
 		if typ == "" {
-			if t, ok := le.Payload["type"].(string); ok {
-				typ = t
-			}
+			return invalidCharacterEvent("log.type", "must be a supported EngineEvent type")
 		}
-		if typ == "" {
-			continue
+		if e := validateCharacterEvent(typ, le.Payload); e != nil {
+			return fmt.Errorf("encounter log for character %s: %w", le.TargetCharacterID, e)
 		}
 		ev := CharacterEvent{CharacterID: u, Ts: now, Type: typ, Payload: le.Payload}
 		if e := tx.Create(&ev).Error; e != nil {
-			// Мирроринг журнала — best-effort (событие боя durable в encounter_events);
-			// логируем, чтобы потеря записи журнала персонажа при сбое БД была видна.
-			log.Printf("encounter журнал персонажа %s: %v", le.TargetCharacterID, e)
+			return fmt.Errorf("write encounter journal for character %s: %w", le.TargetCharacterID, e)
 		}
 	}
+	return nil
+}
+
+func stateOfEncounter(enc *Encounter) map[string]interface{} {
+	if enc == nil || enc.State == nil {
+		return map[string]interface{}{}
+	}
+	// applyOps mutates its input. A JSON round-trip gives the operation an
+	// isolated state value and also normalizes numeric JSON values consistently.
+	b, err := json.Marshal(*enc.State)
+	if err != nil {
+		return map[string]interface{}{}
+	}
+	var state map[string]interface{}
+	if err := json.Unmarshal(b, &state); err != nil || state == nil {
+		return map[string]interface{}{}
+	}
+	return state
+}
+
+func writeEncounterError(c *gin.Context, err error, fallback string) {
+	var validationErr *characterEventValidationError
+	if errors.As(err, &validationErr) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверное событие журнала", "details": validationErr.Error()})
+		return
+	}
+	var accessErr *encounterAccessError
+	if errors.As(err, &accessErr) {
+		c.JSON(accessErr.Status, gin.H{"error": accessErr.Message})
+		return
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "бой не найден"})
+		return
+	}
+	c.JSON(http.StatusInternalServerError, gin.H{"error": fallback})
 }
 
 // --- CRUD ---
@@ -259,7 +298,11 @@ func (ec *EncounterController) Create(c *gin.Context) {
 	if name == "" {
 		name = "Бой"
 	}
-	owner := ec.resolveUserID(c)
+	owner, err := GetCurrentUserID(c)
+	if err != nil || owner == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "требуется авторизация"})
+		return
+	}
 	empty := JSONMap{"combatants": []interface{}{}, "round": 1, "activeIndex": 0}
 	enc := Encounter{Name: name, OwnerUserID: owner, MemberUserIDs: Properties{owner.String()}, State: &empty, Seq: 0}
 	if err := ec.db.Create(&enc).Error; err != nil {
@@ -270,8 +313,15 @@ func (ec *EncounterController) Create(c *gin.Context) {
 }
 
 func (ec *EncounterController) List(c *gin.Context) {
+	userID, err := GetCurrentUserID(c)
+	if err != nil || userID == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "требуется авторизация"})
+		return
+	}
 	var encs []Encounter
-	if err := ec.db.Order("updated_at desc").Limit(100).Find(&encs).Error; err != nil {
+	if err := ec.db.
+		Where("owner_user_id = ? OR jsonb_exists(COALESCE(member_user_ids, '[]'::jsonb), ?)", userID, userID.String()).
+		Order("updated_at desc").Limit(100).Find(&encs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка загрузки"})
 		return
 	}
@@ -289,7 +339,69 @@ func (ec *EncounterController) Get(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "бой не найден"})
 		return
 	}
+	if _, ok := requireEncounterParticipant(c, &enc); !ok {
+		return
+	}
 	c.JSON(http.StatusOK, enc)
+}
+
+// Delete removes an encounter owned by the caller. Encounter and linked
+// CharacterV3 rows use the same lock order as Apply (encounter first, then
+// characters), so deletion cannot strand current_encounter_id during a race.
+func (ec *EncounterController) Delete(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный id"})
+		return
+	}
+	caller, err := GetCurrentUserID(c)
+	if err != nil || caller == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "требуется авторизация"})
+		return
+	}
+
+	txErr := ec.db.Transaction(func(tx *gorm.DB) error {
+		var enc Encounter
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&enc, "id = ?", id).Error; err != nil {
+			return err
+		}
+		if enc.OwnerUserID != caller {
+			return &encounterAccessError{Status: http.StatusForbidden, Message: "удалить бой может только его мастер"}
+		}
+
+		var linked []CharacterV3
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Select("id", "user_id", "current_encounter_id").
+			Where("current_encounter_id = ?", id).
+			Order("id asc").Find(&linked).Error; err != nil {
+			return err
+		}
+		if len(linked) > 0 {
+			if err := tx.Model(&CharacterV3{}).
+				Where("current_encounter_id = ?", id).
+				Update("current_encounter_id", nil).Error; err != nil {
+				return err
+			}
+		}
+		// Production historically had no FK cascade on encounter_events, so the
+		// child delete is explicit and remains valid if a cascade is added later.
+		if err := tx.Where("encounter_id = ?", id).Delete(&EncounterEvent{}).Error; err != nil {
+			return err
+		}
+		result := tx.Where("id = ? AND owner_user_id = ?", id, caller).Delete(&Encounter{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return &encounterAccessError{Status: http.StatusConflict, Message: "владелец боя изменился; повторите запрос"}
+		}
+		return nil
+	})
+	if txErr != nil {
+		writeEncounterError(c, txErr, "не удалось удалить бой")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "бой удалён"})
 }
 
 // Events — последние N событий боя (общий журнал боя) для бэкскролла на доске.
@@ -307,6 +419,14 @@ func (ec *EncounterController) Events(c *gin.Context) {
 			limit = v
 		}
 	}
+	var enc Encounter
+	if err := ec.db.First(&enc, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "бой не найден"})
+		return
+	}
+	if _, ok := requireEncounterParticipant(c, &enc); !ok {
+		return
+	}
 	var events []EncounterEvent
 	if err := ec.db.Where("encounter_id = ?", id).Order("seq desc").Limit(limit).Find(&events).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка загрузки"})
@@ -318,10 +438,18 @@ func (ec *EncounterController) Events(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"events": events})
 }
 
-func (ec *EncounterController) Join(c *gin.Context) {
+// IssueInvite creates a short-lived stateless capability. Only the encounter
+// owner can issue it; the raw token is returned once and is never persisted or
+// logged by this controller.
+func (ec *EncounterController) IssueInvite(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный id"})
+		return
+	}
+	userID, err := GetCurrentUserID(c)
+	if err != nil || userID == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "требуется авторизация"})
 		return
 	}
 	var enc Encounter
@@ -329,28 +457,94 @@ func (ec *EncounterController) Join(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "бой не найден"})
 		return
 	}
-	uid := ec.resolveUserID(c).String()
-	members := Properties{}
-	if enc.MemberUserIDs != nil {
-		members = enc.MemberUserIDs
+	if !canIssueEncounterInvite(&enc, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "приглашение может создать только мастер боя"})
+		return
 	}
-	found := false
-	for _, m := range members {
-		if m == uid {
-			found = true
-			break
+	if ec.inviteService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "приглашения в бой не настроены"})
+		return
+	}
+	token, expiresAt, err := ec.inviteService.Issue(enc.ID, enc.OwnerUserID)
+	if err != nil {
+		if errors.Is(err, ErrEncounterInviteNotConfigured) {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "приглашения в бой не настроены"})
+			return
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось создать приглашение"})
+		return
 	}
-	if !found {
-		members = append(members, uid)
-		enc.MemberUserIDs = members
-		_ = ec.db.Save(&enc).Error
-	}
-	c.JSON(http.StatusOK, enc)
+	c.Header("Cache-Control", "no-store")
+	c.Header("Pragma", "no-cache")
+	c.JSON(http.StatusOK, EncounterInviteResponse{Token: token, ExpiresAt: expiresAt})
 }
 
-// Apply — применить операцию (client-authoritative-relay): бампит seq, персистит state,
-// пишет событие в журнал и рассылает через pg_notify → SSE. Возвращает новый seq/state.
+func (ec *EncounterController) Join(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный id"})
+		return
+	}
+	userID, err := GetCurrentUserID(c)
+	if err != nil || userID == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "требуется авторизация"})
+		return
+	}
+	var request JoinEncounterRequest
+	if err := c.ShouldBindJSON(&request); err != nil && !errors.Is(err, io.EOF) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные приглашения"})
+		return
+	}
+	var result Encounter
+	txErr := ec.db.Transaction(func(tx *gorm.DB) error {
+		var enc Encounter
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&enc, "id = ?", id).Error; err != nil {
+			return err
+		}
+		combatants, accessErr := combatantMaps(stateOfEncounter(&enc))
+		if accessErr != nil {
+			return accessErr
+		}
+		characterIDs, accessErr := characterUUIDsInCombatants(combatants)
+		if accessErr != nil {
+			return accessErr
+		}
+		characters, err := loadEncounterCharacters(tx, characterIDs, false)
+		if err != nil {
+			return err
+		}
+		actors, accessErr := actorAccessFromCombatants(combatants, characters)
+		if accessErr != nil {
+			return accessErr
+		}
+		// Existing membership and linked-character ownership preserve the
+		// idempotent/legacy repair path. Every unrelated outsider needs a valid,
+		// exact-encounter short-lived capability issued by this encounter owner.
+		if accessErr := authorizeEncounterJoin(&enc, userID, actors, request.InviteToken, ec.inviteService); accessErr != nil {
+			return accessErr
+		}
+		if !isEncounterParticipant(&enc, userID) {
+			members := append(Properties{}, enc.MemberUserIDs...)
+			members = append(members, userID.String())
+			enc.MemberUserIDs = members
+			if err := tx.Model(&Encounter{}).Where("id = ?", enc.ID).Update("member_user_ids", members).Error; err != nil {
+				return err
+			}
+		}
+		result = enc
+		return nil
+	})
+	if txErr != nil {
+		writeEncounterError(c, txErr, "не удалось присоединиться к бою")
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+// Apply — применить разрешённую боевую операцию: участники могут менять только
+// interaction-поля (HP/temp/effects/pending saves/attacks), топологию боя меняет мастер,
+// а добавить/убрать персонажа может его реальный контроллер. После проверки операция
+// бампит seq, персистит state, пишет событие и рассылает его через pg_notify → SSE.
 func (ec *EncounterController) Apply(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -362,105 +556,221 @@ func (ec *EncounterController) Apply(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные данные"})
 		return
 	}
-	var enc Encounter
-	if err := ec.db.First(&enc, "id = ?", id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "бой не найден"})
+	if req.ExpectedSeq == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "expected_seq обязателен"})
 		return
 	}
-	state := map[string]interface{}{}
-	if enc.State != nil {
-		state = *enc.State
+	if *req.ExpectedSeq < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "expected_seq не может быть отрицательным"})
+		return
 	}
-	before := characterIDsInState(state)
-	newState := JSONMap(applyOps(state, req))
-	after := characterIDsInState(newState)
+	if err := validateEncounterApplyEnvelope(req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная операция боя", "details": err.Error()})
+		return
+	}
+	caller, err := GetCurrentUserID(c)
+	if err != nil || caller == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "требуется авторизация"})
+		return
+	}
 
-	// Изменённые поля комбатантов (actorId → набор ключей patch.Set / add) — для ПОЛЕВОГО
-	// write-through: пишем в лист только те поля, что реально менял этот op, иначе патч только
-	// состояния (без hp) затирал бы current_hp листа значением из комбатанта. Removes исключаем.
+	var newState JSONMap
+	var newSeq int64
 	changed := map[string]map[string]bool{}
-	mark := func(aid, key string) {
-		if changed[aid] == nil {
-			changed[aid] = map[string]bool{}
+	characterOwners := map[string]uuid.UUID{}
+	journalCharacters := map[string]uuid.UUID{}
+
+	txErr := ec.db.Transaction(func(tx *gorm.DB) error {
+		var enc Encounter
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&enc, "id = ?", id).Error; err != nil {
+			return err
 		}
-		changed[aid][key] = true
-	}
-	for _, p := range req.Patches {
-		for k := range p.Set {
-			mark(p.ActorID, k)
+		if !isEncounterParticipant(&enc, caller) {
+			return &encounterAccessError{Status: http.StatusForbidden, Message: "нет доступа к этому бою"}
 		}
-	}
-	for _, a := range req.Add {
-		if s, ok := a["actorId"].(string); ok {
-			for k := range a {
-				mark(s, k)
+		if enc.Seq != *req.ExpectedSeq {
+			return &encounterAccessError{
+				Status:  http.StatusConflict,
+				Message: fmt.Sprintf("состояние боя устарело: ожидалась версия %d, текущая версия %d", *req.ExpectedSeq, enc.Seq),
 			}
 		}
-	}
 
-	// Правило «один бой на персонажа»: если добавляемый персонаж уже в другом бою — отказ.
-	for cid := range after {
-		if !before[cid] {
-			if otherName, conflict := ec.encounterConflict(cid, id); conflict {
-				c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("Персонаж уже участвует в бою «%s»", otherName)})
-				return
+		state := stateOfEncounter(&enc)
+		combatants, accessErr := combatantMaps(state)
+		if accessErr != nil {
+			return accessErr
+		}
+		currentCharacterIDs, accessErr := characterUUIDsInCombatants(combatants)
+		if accessErr != nil {
+			return accessErr
+		}
+
+		allCharacterIDs := append([]uuid.UUID{}, currentCharacterIDs...)
+		seenCharacterIDs := make(map[uuid.UUID]struct{}, len(allCharacterIDs))
+		for _, characterID := range currentCharacterIDs {
+			seenCharacterIDs[characterID] = struct{}{}
+		}
+		addedCharacterIDs := make([]uuid.UUID, 0, len(req.Add))
+		for _, added := range req.Add {
+			rawCharacterID, exists := added["characterId"]
+			if !exists || rawCharacterID == nil || strings.TrimSpace(fmt.Sprint(rawCharacterID)) == "" {
+				continue
+			}
+			characterID, parseErr := uuid.Parse(strings.TrimSpace(fmt.Sprint(rawCharacterID)))
+			if parseErr != nil || characterID == uuid.Nil {
+				return &encounterAccessError{Status: http.StatusBadRequest, Message: "неверный characterId"}
+			}
+			addedCharacterIDs = append(addedCharacterIDs, characterID)
+			if _, exists := seenCharacterIDs[characterID]; !exists {
+				seenCharacterIDs[characterID] = struct{}{}
+				allCharacterIDs = append(allCharacterIDs, characterID)
 			}
 		}
-	}
 
-	newSeq := enc.Seq + 1
-	enc.State = &newState
-	enc.Seq = newSeq
-	payload := opPayload(req)
-	ev := EncounterEvent{EncounterID: id, Seq: newSeq, Payload: &payload}
-	if err := ec.db.Transaction(func(tx *gorm.DB) error {
-		if e := tx.Save(&enc).Error; e != nil {
-			return e
+		// Lock linked character rows in a stable transaction before checking the
+		// one-encounter invariant or writing through HP/effects.
+		characters, err := loadEncounterCharacters(tx, allCharacterIDs, true)
+		if err != nil {
+			return err
 		}
-		if e := tx.Create(&ev).Error; e != nil {
-			return e
+		actors, accessErr := actorAccessFromCombatants(combatants, characters)
+		if accessErr != nil {
+			return accessErr
 		}
-		// Связь персонаж→бой: проставить добавленным, снять убранным (атомарно с state).
-		for cid := range after {
-			if !before[cid] {
-				if u, e := uuid.Parse(cid); e == nil {
-					if e := tx.Model(&CharacterV3{}).Where("id = ?", u).Update("current_encounter_id", id).Error; e != nil {
-						return e
-					}
+		addedControllers := make(map[uuid.UUID]uuid.UUID, len(addedCharacterIDs))
+		for _, characterID := range addedCharacterIDs {
+			character, exists := characters[characterID]
+			if exists {
+				addedControllers[characterID] = character.UserID
+			}
+		}
+		if accessErr := validateEncounterApplyPolicy(&enc, caller, actors, addedControllers, req); accessErr != nil {
+			return accessErr
+		}
+
+		normalizedReq := normalizeEncounterAdds(req, characters)
+		before := characterIDsInState(state)
+		newState = JSONMap(applyOps(state, normalizedReq))
+		after := characterIDsInState(newState)
+
+		// A locked CharacterV3 row makes this invariant safe even when two
+		// different encounters concurrently try to add the same character.
+		for characterID := range after {
+			if !before[characterID] {
+				if otherName, conflict := encounterConflict(tx, characterID, id); conflict {
+					return &encounterAccessError{Status: http.StatusConflict, Message: fmt.Sprintf("Персонаж уже участвует в бою «%s»", otherName)}
 				}
 			}
 		}
-		for cid := range before {
-			if !after[cid] {
-				if u, e := uuid.Parse(cid); e == nil {
-					// снимаем только если ссылка ведёт на этот бой (персонаж мог уже уйти в другой)
-					if e := tx.Model(&CharacterV3{}).Where("id = ? AND current_encounter_id = ?", u, id).Update("current_encounter_id", nil).Error; e != nil {
-						return e
-					}
+
+		for characterID, character := range characters {
+			canonical := characterID.String()
+			characterOwners[canonical] = character.UserID
+			journalCharacters[canonical] = characterID
+		}
+
+		mark := func(actorID, field string) {
+			if changed[actorID] == nil {
+				changed[actorID] = map[string]bool{}
+			}
+			changed[actorID][field] = true
+		}
+		for _, patch := range normalizedReq.Patches {
+			for field := range patch.Set {
+				mark(patch.ActorID, field)
+			}
+		}
+		for _, added := range normalizedReq.Add {
+			if actorID, ok := added["actorId"].(string); ok {
+				for field := range added {
+					mark(actorID, field)
 				}
 			}
+		}
+
+		newSeq = enc.Seq + 1
+		enc.State = &newState
+		enc.Seq = newSeq
+		payload := opPayload(normalizedReq)
+		event := EncounterEvent{EncounterID: id, Seq: newSeq, Payload: &payload}
+		if err := tx.Save(&enc).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&event).Error; err != nil {
+			return err
+		}
+
+		// Character links are always qualified by their authoritative owner.
+		for characterID := range after {
+			if before[characterID] {
+				continue
+			}
+			u, parseErr := uuid.Parse(characterID)
+			if parseErr != nil {
+				return parseErr
+			}
+			character := characters[u]
+			result := tx.Model(&CharacterV3{}).
+				Where("id = ? AND user_id = ?", u, character.UserID).
+				Update("current_encounter_id", id)
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected != 1 {
+				return &encounterAccessError{Status: http.StatusConflict, Message: "контроллер персонажа изменился; повторите операцию"}
+			}
+		}
+		for characterID := range before {
+			if after[characterID] {
+				continue
+			}
+			u, parseErr := uuid.Parse(characterID)
+			if parseErr != nil {
+				return parseErr
+			}
+			character := characters[u]
+			if err := tx.Model(&CharacterV3{}).
+				Where("id = ? AND user_id = ? AND current_encounter_id = ?", u, character.UserID, id).
+				Update("current_encounter_id", nil).Error; err != nil {
+				return err
+			}
+		}
+		if err := syncCombatantsToCharacters(tx, newState, changed, characterOwners); err != nil {
+			return err
+		}
+		if err := writeCharacterJournal(tx, req.Log, journalCharacters); err != nil {
+			return err
 		}
 		return nil
-	}); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось применить"})
+	})
+	if txErr != nil {
+		writeEncounterError(c, txErr, "не удалось применить операцию")
 		return
 	}
-	// Пост-коммит best-effort: синк состояния в листы + журналы персонажей. Отдельными
-	// операциями (не в транзакции боя), чтобы сбой листа/журнала не откатывал сам бой; обе
-	// идемпотентны (перезапишутся на следующем применении). Write-through: боевое HP/temp/
-	// состояния затронутых персонажей → в их лист (лист верен даже при уроне с другого
-	// устройства). Журнал персонажей: адресные события — «всё с персонажем логируется у него».
-	syncCombatantsToCharacters(ec.db, newState, changed)
-	writeCharacterJournal(ec.db, req.Log)
 	// Дверной звонок всем инстансам (включая свой) — listener загрузит событие и разошлёт.
-	ec.hub.notify(ec.db, id.String(), newSeq)
-	c.JSON(http.StatusOK, gin.H{"seq": newSeq, "state": enc.State})
+	if ec.hub != nil {
+		ec.hub.notify(ec.db, id.String(), newSeq)
+	}
+	c.JSON(http.StatusOK, gin.H{"seq": newSeq, "state": &newState})
 }
 
 // Stream — SSE-поток изменений боя. ?since=<seq> — реплей пропущенного (докачка), затем live.
 // Подписываемся ДО реплея, чтобы не потерять событие в зазоре; клиент дедуплит по seq.
 func (ec *EncounterController) Stream(c *gin.Context) {
-	id := c.Param("id")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный id"})
+		return
+	}
+	var enc Encounter
+	if err := ec.db.First(&enc, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "бой не найден"})
+		return
+	}
+	if _, ok := requireEncounterParticipant(c, &enc); !ok {
+		return
+	}
+
 	since := int64(0)
 	if s := c.Query("since"); s != "" {
 		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
@@ -482,8 +792,9 @@ func (ec *EncounterController) Stream(c *gin.Context) {
 	w.WriteHeader(http.StatusOK)
 	w.Flush()
 
-	ch := ec.hub.subscribe(id)
-	defer ec.hub.unsubscribe(id, ch)
+	encounterID := id.String()
+	ch := ec.hub.subscribe(encounterID)
+	defer ec.hub.unsubscribe(encounterID, ch)
 
 	// Реплей журнала после since.
 	var events []EncounterEvent

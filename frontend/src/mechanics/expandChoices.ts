@@ -4,6 +4,7 @@
  * читают resolvedChoices по ОДНОМУ ключу; иначе рассинхрон choiceInstanceId → тихий no-op.
  */
 import { sourceKey, instanceFeatureId } from './choiceKey';
+import { materializeChoiceGrant } from './grantSemantics';
 
 type Dict = Record<string, unknown>;
 
@@ -59,10 +60,9 @@ export function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[]
     // damage_type → выбор «огонь» даёт {kind:'damage',dice:'1d6',type:'fire'} (иначе value:'fire'
     // игнорился бы, и урон падал бы к дефолту). Директиву value_into в сам пейлоад НЕ пишем.
     const template = (choice.apply || choice.grant || {}) as Dict;
-    if (template.kind) {
-      const { value_into, ...rest } = template;
-      const field = typeof value_into === 'string' && value_into ? value_into : 'value';
-      out.push({ ...rest, [field]: value });
+    const projected = materializeChoiceGrant(template, value);
+    if (projected) {
+      out.push(projected);
       continue;
     }
 

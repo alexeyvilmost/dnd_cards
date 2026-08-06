@@ -15,6 +15,12 @@
  */
 import type { ExecuteContext, RuntimeState, WeaponContext } from '../mvp/contracts';
 import { weaponContext } from './weapon';
+import {
+  compileWeaponMasteryEffects,
+  weaponMasteryEvent,
+  weaponMasteryPrimitive,
+  type WeaponMasteryPrimitive,
+} from './weaponMastery2024';
 
 type Dict = Record<string, unknown>;
 
@@ -31,6 +37,13 @@ export interface ActiveMastery {
   event: MasteryEvent;
   /** Модификатор характеристики атаки этим оружием — для формул (weapon_mod). */
   weaponMod: number;
+  /** Typed PHB primitive when content has migrated to the canonical contract. */
+  primitive?: WeaponMasteryPrimitive;
+}
+
+export interface ActiveMasteryFacts {
+  attackRange?: 'melee' | 'ranged';
+  dealtDamage?: boolean;
 }
 
 /** Событие мастерства из его механики: activation.trigger.event. По умолчанию 'hit'. */
@@ -59,20 +72,50 @@ export function activeMastery(
   ctx: ExecuteContext,
   state: RuntimeState,
   hand: 'main' | 'off',
+  facts: ActiveMasteryFacts = {},
 ): ActiveMastery | null {
   const weapon = weaponContext(ctx.character, hand, state.equipment);
   if (!knowsMastery(weapon, ctx.character.weaponMasteries)) return null;
   const rec = ctx.masteryEffects?.[weapon!.mastery!];
   const mech = rec?.mechanics as Dict | undefined;
   if (!mech || typeof mech !== 'object') return null; // механика не догружена — тихо
-  // Пассивные мастерства (Быстрое/Рассекающее) — правила экономики действий и позиционирования,
-  // которые движок не исполняет: они описывают себя в превью, но на исход броска не влияют.
-  if (String((mech.activation as Dict | undefined)?.mode ?? 'triggered') === 'passive') return null;
+  const primitive = weaponMasteryPrimitive(mech);
+  // A declaration that opted into the typed contract must satisfy it in full.
+  // Never fall back to legacy effects for a malformed/partial mastery record.
+  if (Object.prototype.hasOwnProperty.call(mech, 'weapon_mastery') && !primitive) return null;
+  // Legacy narrative-only passive records remain non-executable. Canonical
+  // passive Nick/Cleave records are distinguished by their typed primitive.
+  if (!primitive
+    && String((mech.activation as Dict | undefined)?.mode ?? 'triggered') === 'passive') return null;
+  const weaponMod = ctx.character.abilityMods[weapon!.ability] ?? 0;
+  const mechanics = primitive ? {
+    ...mech,
+    activation: {
+      mode: weaponMasteryEvent(primitive) === 'passive' ? 'passive' : 'triggered',
+      trigger: { event: weaponMasteryEvent(primitive) },
+    },
+    effects: compileWeaponMasteryEffects(primitive, {
+      weapon: weapon!,
+      weaponMod,
+      targetActorId: ctx.target?.id,
+      targetSize: ctx.target?.size,
+      attackRange: facts.attackRange,
+      dealtDamage: facts.dealtDamage,
+      choices: ctx.choices,
+      firedThisTurn: state.firedThisTurn,
+      attackActionId: ctx.attackActionId,
+      attackCommandId: ctx.attackCommandId,
+      sourceEntityId: weapon!.mastery!,
+    }),
+  } : mech;
   return {
     id: weapon!.mastery!,
     name: String(rec?.name ?? 'Искусность'),
-    mechanics: mech,
-    event: masteryEvent(mech),
-    weaponMod: ctx.character.abilityMods[weapon!.ability] ?? 0,
+    mechanics,
+    event: primitive
+      ? weaponMasteryEvent(primitive) === 'miss' ? 'miss' : 'hit'
+      : masteryEvent(mech),
+    weaponMod,
+    ...(primitive ? { primitive } : {}),
   };
 }

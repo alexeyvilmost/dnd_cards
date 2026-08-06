@@ -1,10 +1,10 @@
 /**
  * Ярус 1.2: выбор в момент исполнения действия. Движок читает ctx.choices[<сырой id>] и
  * применяет выбранную ветку через общий роутер payload-ов. Тесты дискриминирующие: без выбора
- * ветка не применяется; who:'target' направляет исход ЦЕЛИ.
+ * действие fail-closed до оплаты; who:'target' направляет исход ЦЕЛИ.
  */
 import { describe, expect, it } from 'vitest';
-import { executeAction, applyIncomingDamage } from './execute';
+import { executeAction, applyIncomingDamage, MechanicsExecutionError } from './execute';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
@@ -27,9 +27,9 @@ describe('Ярус 1.2 — выбор в момент исполнения (ctx.
     const ctx = { character, rng: () => 0.5, choices: { aspect: 'bear' } } as unknown as Ctx;
     expect(executeAction(fresh(), aspectAction, ctx).state.hp.temp).toBe(5);
   });
-  it('без выбора — ветка НЕ применяется (temp 0; раньше choice падал в NOT_IMPLEMENTED)', () => {
+  it('без выбора — typed fail-closed, а не успешный no-op', () => {
     const ctx = { character, rng: () => 0.5, choices: {} } as unknown as Ctx;
-    expect(executeAction(fresh(), aspectAction, ctx).state.hp.temp).toBe(0);
+    expect(() => executeAction(fresh(), aspectAction, ctx)).toThrow(MechanicsExecutionError);
   });
   it('другой выбор → другая ветка (Орёл → модификатор, temp остаётся 0)', () => {
     const ctx = { character, rng: () => 0.5, choices: { aspect: 'eagle' } } as unknown as Ctx;
@@ -69,10 +69,13 @@ describe('Ярус 1.2 — правки ревью', () => {
     const { state } = executeAction(fresh(), resAct, { character, rng: () => 0.5, choices: { ward: 'fire' } } as unknown as Ctx);
     expect(applyIncomingDamage(state, 10, { character, rng: () => 0.5 } as unknown as Ctx, { damageType: 'fire' }).state.hp.current).toBe(15);
   });
-  it('build-грант из выбора (source:skill) фильтруется — нет NOT_IMPLEMENTED-мусора', () => {
+  it('build-грант из in-play выбора отклоняется до исполнения', () => {
     const sklAct: Dict = { name: 'Наставник', activation: { cost: [] }, effects: [{ kind: 'choice', id: 'teach', context: 'in_play', options: { source: 'skill' }, apply: { kind: 'grant_proficiency', prof: 'skill' } }] };
-    const { events } = executeAction(fresh(), sklAct, { character, rng: () => 0.5, choices: { teach: 'stealth' } } as unknown as Ctx);
-    expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
+    expect(() => executeAction(
+      fresh(),
+      sklAct,
+      { character, rng: () => 0.5, choices: { teach: 'stealth' } } as unknown as Ctx,
+    )).toThrow(MechanicsExecutionError);
   });
   it('choice внутри resolution:auto исполняется (не только собирается)', () => {
     const autoAct: Dict = { name: 'Авто', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'choice', id: 'z', context: 'in_play', options: { items: [{ id: 't', grants: [{ kind: 'temp_hp', amount: '4' }] }] } }] }] };

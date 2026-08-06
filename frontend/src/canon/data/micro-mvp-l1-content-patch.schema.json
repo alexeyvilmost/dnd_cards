@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dnd-cards/micro-mvp-l1-content-patch.schema.json",
+  "title": "MicroMvpL1ContentPatch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "patchId",
+    "patchVersion",
+    "sourceReleaseId",
+    "authorityTarget",
+    "mechanicsPatches",
+    "fieldPatches",
+    "createEntities",
+    "conditionPatches"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "patchId": { "type": "string", "minLength": 1 },
+    "patchVersion": { "type": "string", "minLength": 1 },
+    "sourceReleaseId": { "type": "string", "minLength": 1 },
+    "authorityTarget": { "const": "database-entity-mechanics" },
+    "mechanicsPatches": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effects", "actions", "spells"],
+      "properties": {
+        "effects": { "type": "array", "items": { "$ref": "#/$defs/mechanicsPatch" } },
+        "actions": { "type": "array", "items": { "$ref": "#/$defs/mechanicsPatch" } },
+        "spells": { "type": "array", "items": { "$ref": "#/$defs/mechanicsPatch" } }
+      }
+    },
+    "fieldPatches": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fieldPatch" }
+    },
+    "createEntities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/createEntity" }
+    },
+    "conditionPatches": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conditionPatch" }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "jsonObject": { "type": "object" },
+    "mechanicsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entityId", "cardNumber", "expectedBeforeMechanicsHash", "mechanics"],
+      "properties": {
+        "entityId": { "type": "string", "minLength": 1 },
+        "cardNumber": { "type": "string", "minLength": 1 },
+        "expectedBeforeMechanicsHash": { "$ref": "#/$defs/sha256" },
+        "productionExpectedBeforeMechanicsHash": { "$ref": "#/$defs/sha256" },
+        "mechanics": { "$ref": "#/$defs/jsonObject" }
+      }
+    },
+    "fieldPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collection", "entityId", "cardNumber", "expectedBeforeFieldsHash", "fields"],
+      "properties": {
+        "collection": { "enum": ["cards", "classes", "races"] },
+        "entityId": { "type": "string", "minLength": 1 },
+        "cardNumber": { "type": "string", "minLength": 1 },
+        "expectedBeforeFieldsHash": { "$ref": "#/$defs/sha256" },
+        "productionExpectedBeforeFieldsHash": { "$ref": "#/$defs/sha256" },
+        "entityReferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/entityReference" }
+        },
+        "fields": { "$ref": "#/$defs/jsonObject" }
+      }
+    },
+    "entityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collection", "entityId", "cardNumber"],
+      "properties": {
+        "collection": { "enum": ["cards", "effects"] },
+        "entityId": { "type": "string", "minLength": 1 },
+        "cardNumber": { "type": "string", "minLength": 1 }
+      }
+    },
+    "createEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collection", "entity"],
+      "properties": {
+        "collection": { "const": "effects" },
+        "entity": {
+          "type": "object",
+          "required": ["id", "card_number", "name", "description", "mechanics"]
+        }
+      }
+    },
+    "conditionPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cardNumber",
+        "entityId",
+        "fixtureEntityId",
+        "expectedBeforeFieldsHash",
+        "fields",
+        "createFields"
+      ],
+      "properties": {
+        "cardNumber": { "type": "string", "minLength": 1 },
+        "entityId": { "type": ["string", "null"] },
+        "fixtureEntityId": { "type": "string", "minLength": 1 },
+        "expectedBeforeFieldsHash": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "productionExpectedBeforeFieldsHash": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "fields": { "$ref": "#/$defs/jsonObject" },
+        "createFields": { "$ref": "#/$defs/jsonObject" }
+      }
+    }
+  }
+}

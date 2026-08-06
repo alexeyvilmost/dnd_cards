@@ -112,8 +112,18 @@ func GenerateImageSize(itemType, cardName, description string) string {
 // GenerateImage - генерация изображения через OpenAI.
 // size может быть пустым — тогда используется квадрат 1024x1024.
 func (s *OpenAIService) GenerateImage(prompt, quality, size string) (string, error) {
+	return s.GenerateImageContext(context.Background(), prompt, quality, size)
+}
+
+// GenerateImageContext keeps every paid attempt inside the caller's lifetime.
+// A disconnected browser or exhausted overall request budget cancels the
+// provider call, retry backoff and all subsequent attempts.
+func (s *OpenAIService) GenerateImageContext(parent context.Context, prompt, quality, size string) (string, error) {
 	if s.client == nil {
 		return "", fmt.Errorf("OpenAI API не настроен")
+	}
+	if err := parent.Err(); err != nil {
+		return "", fmt.Errorf("генерация изображения отменена: %w", err)
 	}
 
 	req := openai.ImageRequest{
@@ -131,18 +141,32 @@ func (s *OpenAIService) GenerateImage(prompt, quality, size string) (string, err
 	var resp openai.ImageResponse
 	var err error
 	for i := 0; i < attempts; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 160*time.Second)
+		ctx, cancel := context.WithTimeout(parent, 160*time.Second)
 		resp, err = s.client.CreateImage(ctx, req)
 		cancel()
 		if err == nil {
 			break
+		}
+		if parentErr := parent.Err(); parentErr != nil {
+			return "", fmt.Errorf("генерация изображения отменена: %w", parentErr)
 		}
 		if i == attempts-1 || !isRetryableNetErr(err) {
 			return "", fmt.Errorf("ошибка генерации изображения: %w", err)
 		}
 		wait := time.Duration(i+1) * 2 * time.Second
 		log.Printf("[openai] генерация изображения: попытка %d/%d не удалась (%v), повтор через %s", i+1, attempts, err, wait)
-		time.Sleep(wait)
+		timer := time.NewTimer(wait)
+		select {
+		case <-timer.C:
+		case <-parent.Done():
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			return "", fmt.Errorf("генерация изображения отменена: %w", parent.Err())
+		}
 	}
 
 	if len(resp.Data) == 0 {

@@ -9,10 +9,66 @@
 import type { Card } from '../types';
 import type { AbilityKey, FormulaContext } from './formula';
 import type { CharacterContext, RuntimeState, WeaponContext } from '../mvp/contracts';
-import { cardPropsList } from './equipment';
-import { collectModifiers } from './modifiers';
+import { collectModifiers, type ModifierQueryFacts } from './modifiers';
+import weaponTypesData from '../../utils/weapon_types.json';
+import {
+  parseWeaponProfile,
+  type WeaponProfile,
+} from './weaponProfile';
 
 type Dict = Record<string, unknown>;
+
+type RawWeaponTypeCatalog = {
+  basic?: Array<{
+    name?: string;
+    weapons?: Array<{ name?: string }>;
+  }>;
+};
+
+function normalizeWeaponProficiencyId(value: string): string {
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (['all_weapon', 'all_weapons', 'weapon', 'weapons'].includes(normalized)) return 'all';
+  if (['simple_weapon', 'simple_weapons'].includes(normalized)) return 'simple';
+  if (['martial_weapon', 'martial_weapons'].includes(normalized)) return 'martial';
+  return normalized;
+}
+
+const WEAPON_GROUP_BY_TYPE = new Map<string, string>(
+  ((weaponTypesData as RawWeaponTypeCatalog).basic ?? []).flatMap((group) => {
+    const groupId = normalizeWeaponProficiencyId(String(group.name ?? ''));
+    return (group.weapons ?? []).flatMap((weapon) => {
+      const weaponType = normalizeWeaponProficiencyId(String(weapon.name ?? ''));
+      return groupId && weaponType ? [[weaponType, groupId] as const] : [];
+    });
+  }),
+);
+
+/**
+ * Single authority for adding PB to an attack with a weapon.  The character
+ * compiler emits exact weapon types, four catalog groups, or the broad
+ * simple/martial categories.  undefined preserves pre-projection contexts;
+ * an explicit empty list means the actor is not proficient.
+ */
+export function isWeaponProficient(
+  character: CharacterContext,
+  weaponType: string | null | undefined,
+  declaredCategory?: 'simple' | 'martial',
+): boolean {
+  if (character.weaponProficiencies === undefined) return true;
+  const normalizedType = normalizeWeaponProficiencyId(String(weaponType ?? ''));
+  if (!normalizedType) return false;
+  const grants = new Set(character.weaponProficiencies.map(normalizeWeaponProficiencyId));
+  if (grants.has('all') || grants.has(normalizedType)) return true;
+  const group = WEAPON_GROUP_BY_TYPE.get(normalizedType);
+  if (!group && !declaredCategory) return false;
+  const broadCategory = declaredCategory ?? (group?.startsWith('simple_')
+    ? 'simple'
+    : group?.startsWith('martial_')
+      ? 'martial'
+      : group);
+  return (group ? grants.has(group) : false)
+    || (broadCategory ? grants.has(broadCategory) : false);
+}
 
 function cardById(ctx: CharacterContext, id: string | null | undefined): Card | undefined {
   if (!id) return undefined;
@@ -20,46 +76,37 @@ function cardById(ctx: CharacterContext, id: string | null | undefined): Card | 
     ?? (ctx.knownCards ?? []).find((c) => c.id === id);
 }
 
-function pickAbility(card: Card, character: CharacterContext): 'str' | 'dex' {
-  const props = cardPropsList(card);
-  const tags = (card.tags as string[] | null | undefined) ?? [];
+/** Default attack mode is an explicit mechanics fact, never a display-field inference. */
+export function weaponCategory(card: Card): 'melee' | 'ranged' | undefined {
+  const parsed = parseWeaponProfile(card);
+  return parsed.valid ? parsed.profile.defaultAttackMode : undefined;
+}
+
+function pickAbility(profile: WeaponProfile, character: CharacterContext): 'str' | 'dex' {
   const best = () => ((character.abilityMods.dex ?? 0) > (character.abilityMods.str ?? 0) ? 'dex' : 'str');
-  // Дальнобойное (лук/арбалет/праща/духовая трубка/огнестрел): свойство ammunition или
-  // тег «Дальнобойное» → атака и урон от ЛВК (C11). Раньше без finesse всё било от СИЛ.
-  if (props.includes('ammunition') || tags.includes('Дальнобойное')) return 'dex';
-  // Фехтовальное (finesse) — лучший из СИЛ/ЛВК (в т.ч. метательное finesse: дротик/кинжал).
-  if (props.includes('finesse')) return best();
-  // Прочее рукопашное/метательное без finesse — от СИЛ.
-  return 'str';
+  return profile.attackAbility === 'finesse' ? best() : profile.attackAbility;
 }
 
-/**
- * Кость урона из bonus_value. Универсальное оружие пишется «1d6 (1d8)»:
- * скобочная кость — при хвате двумя руками (вторая рука свободна).
- */
-function weaponDice(card: Card, twoHandedGrip: boolean): string {
-  const raw = String(card.bonus_value ?? '1d4');
-  const dice = raw.match(/\d+[dк]\d+/gi);
-  if (!dice?.length) return '1d4';
-  const pick = twoHandedGrip && dice.length > 1 ? dice[1] : dice[0];
-  return pick.replace(/к/i, 'd');
-}
-
-/** Магический бонус оружия: поле enchant_bonus, иначе разбор «+N» из имени (запасной путь). */
+/** Compatibility projection of the declared attack enchantment; names are never parsed. */
 export function weaponEnchant(card: Card): number {
-  if (typeof card.enchant_bonus === 'number') return card.enchant_bonus;
-  const m = /\+(\d+)/.exec(card.name ?? '');
-  return m ? Number(m[1]) : 0;
+  const parsed = parseWeaponProfile(card);
+  if (!parsed.valid) throw new Error(parsed.issue);
+  return parsed.profile.enchantment.attackBonus;
 }
 
 /**
  * Магические бонусы предмета действуют, если он не требует настройки ИЛИ на него
  * настроены. Ненастроенный магический предмет даёт только чистые статы (общее правило
- * настройки; пока применяется к оружию). attunedIds:undefined — данных нет (тесты) → не гейтим.
+ * настройки; пока применяется к оружию). attunedIds:undefined означает неизвестный факт и
+ * fail-closed оставляет магические бонусы неактивными.
  */
-function itemBonusesActive(card: Card, character: CharacterContext): boolean {
-  if (!card.requires_attunement) return true;
-  if (character.attunedIds == null) return true;
+function itemBonusesActive(
+  card: Card,
+  profile: WeaponProfile,
+  character: CharacterContext,
+): boolean {
+  if (!profile.attunement.required) return true;
+  if (character.attunedIds == null) return false;
   return character.attunedIds.includes(card.id);
 }
 
@@ -69,31 +116,50 @@ function itemBonusesActive(card: Card, character: CharacterContext): boolean {
  * каждая строка отдельна, движок бросает и применяет их независимо.
  * magic=false (не настроен) — стихийный урон отбрасывается (это магическое свойство).
  */
-function weaponDamages(card: Card, twoHandedGrip: boolean, magic: boolean): Array<{ dice: string; type: string }> {
-  const out: Array<{ dice: string; type: string }> = [
-    { dice: weaponDice(card, twoHandedGrip), type: card.damage_type ?? 'bludgeoning' },
-  ];
-  const ed = card.elemental_damage_value?.trim();
-  const et = card.elemental_damage_type?.trim();
-  if (magic && ed && et) out.push({ dice: ed.replace(/к/i, 'd'), type: et });
+function weaponDamages(
+  profile: WeaponProfile,
+  twoHandedGrip: boolean,
+  magic: boolean,
+): Array<{ dice: string; type: string }> {
+  const out = profile.damageLines.map((line) => ({ ...line }));
+  if (twoHandedGrip && profile.versatileGrip) out[0] = { ...profile.versatileGrip };
+  if (magic) out.push(...profile.enchantment.extraDamageLines.map((line) => ({ ...line })));
   return out;
 }
 
-function cardToWeapon(card: Card, character: CharacterContext, twoHandedGrip = false): WeaponContext {
-  const magic = itemBonusesActive(card, character); // настройка: без неё — только чистые статы
-  const damages = weaponDamages(card, twoHandedGrip, magic);
+function cardToWeapon(
+  card: Card,
+  character: CharacterContext,
+  twoHandedGrip = false,
+): WeaponContext | null {
+  const parsed = parseWeaponProfile(card);
+  if (!parsed.valid) return null;
+  const { profile } = parsed;
+  const magic = itemBonusesActive(card, profile, character);
+  const damages = weaponDamages(profile, twoHandedGrip, magic);
   return {
     cardId: card.id,
     name: card.name,
     dice: damages[0].dice,
-    ability: pickAbility(card, character),
+    ability: pickAbility(profile, character),
     damageType: damages[0].type,
     damages,
-    enchant: magic ? weaponEnchant(card) : 0,
-    properties: cardPropsList(card),
-    weaponType: card.weapon_type ?? null,
+    enchant: magic ? profile.enchantment.attackBonus : 0,
+    attackEnchant: magic ? profile.enchantment.attackBonus : 0,
+    damageEnchant: magic ? profile.enchantment.damageBonus : 0,
+    properties: [...profile.properties],
+    ...(profile.heavyRule ? {
+      heavyRule: {
+        ...profile.heavyRule,
+        abilityByMode: { ...profile.heavyRule.abilityByMode },
+      },
+    } : {}),
+    weaponType: profile.weaponType,
+    proficiencyCategory: profile.proficiencyCategory,
+    defaultAttackMode: profile.defaultAttackMode,
+    attackModes: profile.attackModes.map((mode) => ({ ...mode })),
     // Искусность — НЕ магическое свойство: работает и без настройки (гейт — выбор персонажа).
-    mastery: card.mastery ?? null,
+    mastery: profile.masteryEffectId,
   };
 }
 
@@ -119,7 +185,9 @@ export function weaponContext(
 }
 
 export function abilityForWeapon(card: Card, character: CharacterContext): AbilityKey {
-  return pickAbility(card, character);
+  const parsed = parseWeaponProfile(card);
+  if (!parsed.valid) throw new Error(parsed.issue);
+  return pickAbility(parsed.profile, character);
 }
 
 // ─── Маркеры оружейной атаки (данные механики → тип атаки) ──────────────────
@@ -171,8 +239,57 @@ export function attackRangeFromEffect(
   const onHit = Array.isArray(effect.on_hit) ? (effect.on_hit as Dict[]) : [];
   if (!onHit.some((p) => p.dice === 'weapon')) return undefined;
   const w = weaponContext(character, hand, equipment);
-  if (!w) return 'melee';
-  return w.properties.includes('ammunition') ? 'ranged' : 'melee';
+  if (!w) return undefined;
+  const declared = String(effect.attack_kind ?? '');
+  const requested = declared === 'weapon_ranged'
+    ? 'ranged'
+    : declared === 'weapon_melee'
+      ? 'melee'
+      : w.defaultAttackMode;
+  return w.attackModes.some((mode) => mode.kind === requested) ? requested : undefined;
+}
+
+/** Typed facts for attack-roll modifier filters, derived from mechanics and equipped Card data. */
+export function attackRollQueryFacts(
+  effect: Dict,
+  hand: 'main' | 'off',
+  character: CharacterContext,
+  equipment?: Record<string, string | null | undefined>,
+): Pick<ModifierQueryFacts, 'attackKind' | 'weaponCategory'> {
+  const declaredKind = String(effect.attack_kind ?? '').toLowerCase();
+  if (declaredKind === 'unarmed') return { attackKind: 'unarmed' };
+  if (declaredKind === 'spell') return { attackKind: 'spell' };
+  const onHit = Array.isArray(effect.on_hit) ? (effect.on_hit as Dict[]) : [];
+  const isWeaponAttack = declaredKind.startsWith('weapon')
+    || onHit.some((payload) => payload.dice === 'weapon');
+  if (!isWeaponAttack) return { attackKind: 'spell' };
+  const weapon = weaponContext(character, hand, equipment);
+  return {
+    attackKind: 'weapon',
+    ...(weapon ? { weaponCategory: weapon.defaultAttackMode } : {}),
+  };
+}
+
+/**
+ * Identify the legacy action's Light-property extra attack from canonical
+ * action tags plus two distinct equipped Light weapon Cards. No caller/UI flag
+ * can make a non-Light weapon qualify.
+ */
+export function extraAttackSourceFromEffect(
+  effect: Dict,
+  hand: 'main' | 'off',
+  character: CharacterContext,
+  equipment?: Record<string, string | null | undefined>,
+): NonNullable<ModifierQueryFacts['extraAttackSource']> {
+  const tags = Array.isArray(effect.tags) ? effect.tags.map(String) : [];
+  const canonicalLightExtra = tags.includes('light_property_extra_attack');
+  if (!canonicalLightExtra && (hand !== 'off' || !tags.includes('two_weapon'))) return 'none';
+  const main = weaponContext(character, 'main', equipment);
+  const off = weaponContext(character, 'off', equipment);
+  if (!main || !off || main.cardId === off.cardId) return 'other';
+  const mainLight = main.properties.map((value) => value.toLowerCase()).includes('light');
+  const offLight = off.properties.map((value) => value.toLowerCase()).includes('light');
+  return mainLight && offLight ? 'light_property' : 'other';
 }
 
 // ─── Доступность оружейных действий по экипировке ───────────────────────────
@@ -184,7 +301,7 @@ export interface ActionAvailability {
 }
 
 function isWeaponCard(card: Card | undefined): boolean {
-  return card?.type === 'weapon';
+  return card?.type === 'weapon' && parseWeaponProfile(card).valid;
 }
 
 /**
@@ -224,35 +341,118 @@ export function weaponActionAvailability(
     : { available: false, reason: 'Нет оружия во второй руке' };
 }
 
-/**
- * S5 «предмет=эффект»: боеприпас, который тратит оружейное действие. Оружие в соответствующей
- * руке объявляет боеприпас данными — `mechanics.ammo` (id карты, либо {card_id, name}). Возвращает
- * cost-запись {resource:'item', card_id, name?, amount:1} (тратится/гейтится штатным canPay/pay из
- * слайса 4) или null (не оружейное действие / оружие без ammo). «Дальнобойная атака (стрелы)».
- * ФОРМА ОБЪЕКТА {card_id,name} предпочтительна: имя живёт на карте оружия и показывается в причине
- * «Нет: <имя>» даже когда боеприпас кончился (строка-card_id: при qty 0 карта боеприпаса выгружается
- * из инвентаря → причина деградирует до «Нет: боеприпас»).
- */
-export function weaponAmmoCost(
-  mechanics: Dict | null | undefined,
+export const EQUIPPED_WEAPON_AMMO_RESOURCE = 'equipped_weapon_ammo' as const;
+
+function selectedWeaponForMechanics(
+  mechanics: Dict,
   equipment: Record<string, string | null | undefined> | undefined,
   cardsById: Map<string, Card>,
-): Dict | null {
+): { hand: 'main' | 'off'; weapon: Card; profile: WeaponProfile } | null {
   const kind = weaponAttackKind(mechanics);
   if (kind !== 'main' && kind !== 'off') return null;
   const slotId = kind === 'main' ? equipment?.main_hand : equipment?.off_hand;
   const weapon = slotId ? cardsById.get(slotId) : undefined;
-  const ammo = weapon?.mechanics ? (weapon.mechanics as Dict).ammo : undefined;
-  let cardId = '';
-  let name: string | undefined;
-  if (typeof ammo === 'string') cardId = ammo;
-  else if (ammo && typeof ammo === 'object') {
-    cardId = String((ammo as Dict).card_id ?? '');
-    const n = (ammo as Dict).name;
-    if (typeof n === 'string') name = n;
+  if (!slotId || !weapon || weapon.type !== 'weapon') {
+    throw new Error(`weapon action requires a weapon in the ${kind} hand`);
   }
-  if (!cardId) return null;
-  return { resource: 'item', card_id: cardId, amount: 1, ...(name ? { name } : {}) };
+  const parsed = parseWeaponProfile(weapon);
+  if (!parsed.valid) throw new Error(parsed.issue);
+  return { hand: kind, weapon, profile: parsed.profile };
+}
+
+/**
+ * Materialize the actor-specific targeting ceiling from the selected weapon.
+ * The returned mechanics object is what the canonical action compiler, UI and
+ * handler consume; the catalog template's broad contextual ceiling is never
+ * an executable targeting authority.
+ */
+export function bindEquippedWeaponProfileTargeting(
+  mechanics: Dict | null | undefined,
+  equipment: Record<string, string | null | undefined> | undefined,
+  cardsById: Map<string, Card>,
+): Dict {
+  if (!mechanics) return {};
+  const selected = selectedWeaponForMechanics(mechanics, equipment, cardsById);
+  if (!selected) return mechanics;
+  const targeting = mechanics.targeting;
+  if (!targeting || typeof targeting !== 'object' || Array.isArray(targeting)) {
+    throw new Error('weapon action requires explicit mechanics.targeting');
+  }
+  const ranges = selected.profile.attackModes.map((mode) => (
+    mode.kind === 'melee' ? mode.reachFt : mode.longFt
+  ));
+  if (!ranges.length || ranges.some((range) => !Number.isFinite(range) || range <= 0)) {
+    throw new Error(`${selected.weapon.id}: weapon_profile has no usable attack range`);
+  }
+  return {
+    ...mechanics,
+    targeting: { ...(targeting as Dict), range_ft: Math.max(...ranges) },
+  };
+}
+
+function declaredWeaponAmmo(weapon: Card): { cardId: string; name?: string } | null {
+  const parsed = parseWeaponProfile(weapon);
+  if (!parsed.valid) throw new Error(parsed.issue);
+  return parsed.profile.ammo;
+}
+
+/**
+ * Resolve the explicitly declared contextual activation cost against the
+ * weapon selected by the action's ordinary weapon markers. With no marker,
+ * weapon data is never inspected and ammunition can never be spent.
+ */
+export function bindEquippedWeaponAmmoCost(
+  mechanics: Dict | null | undefined,
+  equipment: Record<string, string | null | undefined> | undefined,
+  cardsById: Map<string, Card>,
+): Dict {
+  if (!mechanics) return {};
+  const activation = mechanics.activation as Dict | undefined;
+  if (!Array.isArray(activation?.cost)) return mechanics;
+  const contextual = (activation.cost as Dict[]).filter((entry) => (
+    entry?.resource === EQUIPPED_WEAPON_AMMO_RESOURCE
+  ));
+  if (!contextual.length) return mechanics;
+  if (contextual.length !== 1) {
+    throw new Error('activation.cost must contain at most one equipped_weapon_ammo entry');
+  }
+  const marker = contextual[0];
+  if (Object.keys(marker).some((key) => !['resource', 'amount'].includes(key))
+    || !Number.isSafeInteger(marker.amount)
+    || Number(marker.amount) <= 0) {
+    throw new Error('activation.cost equipped_weapon_ammo requires only a positive integer amount');
+  }
+  const kind = weaponAttackKind(mechanics);
+  if (kind !== 'main' && kind !== 'off') {
+    throw new Error('activation.cost equipped_weapon_ammo requires a main/off weapon attack');
+  }
+  const selected = selectedWeaponForMechanics(mechanics, equipment, cardsById);
+  if (!selected || selected.hand !== kind) {
+    throw new Error(`activation.cost equipped_weapon_ammo requires a weapon in the ${kind} hand`);
+  }
+  const { weapon } = selected;
+  const ammo = declaredWeaponAmmo(weapon);
+  const cost = (activation.cost as Dict[]).flatMap((entry) => {
+    if (entry.resource !== EQUIPPED_WEAPON_AMMO_RESOURCE) return [entry];
+    if (!ammo) return [];
+    return [{
+      resource: 'item',
+      card_id: ammo.cardId,
+      amount: Number(marker.amount),
+      ...(ammo.name ? { name: ammo.name } : {}),
+    }];
+  });
+  return { ...mechanics, activation: { ...activation, cost } };
+}
+
+/** One actor-context projection used before canonical compilation. */
+export function bindEquippedWeaponActionContext(
+  mechanics: Dict | null | undefined,
+  equipment: Record<string, string | null | undefined> | undefined,
+  cardsById: Map<string, Card>,
+): Dict {
+  const targeted = bindEquippedWeaponProfileTargeting(mechanics, equipment, cardsById);
+  return bindEquippedWeaponAmmoCost(targeted, equipment, cardsById);
 }
 
 // ─── Предпросмотр атаки/урона (парадигма №2) ────────────────────────────────
@@ -264,37 +464,61 @@ export interface WeaponAttackPreview {
   damages: Array<{ dice: string; bonus: number; type: string }>;
 }
 
-/** C1: сумма модификаторов урона из эффектов/пассивок для предпросмотра (парадигма №2 —
- *  превью = исполнению). Фильтр зеркалит resolveDamageAmounts: осн. рука {hand, ability},
- *  вторая {hand}. Без state (вызовы без рантайма) возвращает 0. */
-function damageModifierBonus(
-  state: RuntimeState | undefined,
-  passives: Dict[] | undefined,
+function previewFormulaContext(
   character: CharacterContext,
-  hand: 'main' | 'off',
-  ability: AbilityKey | undefined,
-): number {
-  if (!state) return 0;
-  const fctx: FormulaContext = {
+  weaponMod?: number,
+): FormulaContext {
+  return {
     abilityMods: character.abilityMods,
     profBonus: character.profBonus,
     selfLevel: character.level,
     classLevels: character.classLevels,
     spellcastingMod: character.spellcastingMod,
     variables: character.variables,
+    ...(weaponMod !== undefined ? { weaponMod } : {}),
   };
+}
+
+function attackModifierBonus(
+  state: RuntimeState | undefined,
+  passives: Dict[] | undefined,
+  character: CharacterContext,
+  filter: ModifierQueryFacts,
+): number {
+  if (!state) return 0;
+  const collected = collectModifiers(state, passives ?? [], {
+    roll: 'attack',
+    filter,
+    formulaCtx: previewFormulaContext(character),
+    evalCtx: { character, state },
+  });
+  return collected.modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
+}
+
+/** C1: сумма модификаторов урона из эффектов/пассивок для предпросмотра (парадигма №2 —
+ *  превью = исполнению). Фильтр зеркалит resolveDamageAmounts и несёт только факты,
+ *  выведенные из механики действия и реально экипированных Card. */
+function damageModifierBonus(
+  state: RuntimeState | undefined,
+  passives: Dict[] | undefined,
+  character: CharacterContext,
+  filter: ModifierQueryFacts,
+  weaponMod: number | undefined,
+): number {
+  if (!state) return 0;
   const collected = collectModifiers(state, passives ?? [], {
     roll: 'damage',
-    filter: { hand, ...(ability ? { ability } : {}) },
-    formulaCtx: fctx,
+    filter,
+    formulaCtx: previewFormulaContext(character, weaponMod),
+    evalCtx: { character, state },
   });
-  return collected.modifiers.reduce((s, m) => s + m.value, 0);
+  return collected.modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
 }
 
 /**
  * Числа для подсказки оружейной атаки, посчитанные из оружия в соответствующей руке.
  * Использует ту же математику, что и исполнение (единый источник истины):
- *  - атака = мод характеристики + БМ + зачарование;
+ *  - атака = мод характеристики + БМ при владении + зачарование;
  *  - урон = кость + (осн. рука? мод характеристики) + зачарование (только основная строка);
  *  - вторая рука не добавляет мод характеристики к урону (но добавляет зачарование).
  */
@@ -307,36 +531,70 @@ export function weaponAttackPreview(
 ): WeaponAttackPreview | null {
   const kind = weaponAttackKind(mechanics);
   if (!kind) return null;
-  const prof = character.profBonus;
 
   if (kind === 'unarmed') {
     const strMod = character.abilityMods.str ?? 0;
-    return { attack: strMod + prof, damages: [{ dice: '1', bonus: strMod, type: 'bludgeoning' }] };
+    return {
+      attack: strMod + character.profBonus,
+      damages: [{ dice: '1', bonus: strMod, type: 'bludgeoning' }],
+    };
   }
 
   const hand: 'main' | 'off' = kind === 'off' ? 'off' : 'main';
   const w = weaponContext(character, hand, equipment);
   if (!w) return null;
+  const prof = isWeaponProficient(
+    character,
+    w.weaponType,
+    w.proficiencyCategory,
+  ) ? character.profBonus : 0;
+  const attackEffect = matchedAttackEffect(mechanics) as Dict;
+  const attackFacts = attackRollQueryFacts(attackEffect, hand, character, equipment);
 
   // Бонус к БРОСКУ АТАКИ — зеркало attackAbilityMods (execute.ts): при ability:'auto'
   // берём мод оружия и зачарование; при явной характеристике — её мод без зачарования.
-  const atkAbility = String((matchedAttackEffect(mechanics) as Dict | null)?.ability ?? 'auto');
-  const atkAbilityMod = atkAbility === 'auto'
-    ? character.abilityMods[w.ability] ?? 0
-    : character.abilityMods[atkAbility as keyof CharacterContext['abilityMods']] ?? 0;
-  const attackEnchant = atkAbility === 'auto' ? w.enchant : 0;
+  const atkAbility = String(attackEffect.ability ?? 'auto');
+  const atkAbilityMod = atkAbility === 'spellcasting'
+    ? character.spellcastingMod ?? 0
+    : atkAbility === 'auto'
+      ? character.abilityMods[w.ability] ?? 0
+      : character.abilityMods[atkAbility as keyof CharacterContext['abilityMods']] ?? 0;
+  const attackEnchant = atkAbility === 'auto' ? w.attackEnchant : 0;
+  const attackMods = attackModifierBonus(state, passives, character, attackFacts);
 
-  // Мод характеристики к урону: основная рука — да; вторая рука — нет (зачарование — на обеих).
-  const dmgAbility = hand === 'off' ? 0 : (character.abilityMods[w.ability] ?? 0);
+  const onHit = Array.isArray(attackEffect.on_hit) ? attackEffect.on_hit as Dict[] : [];
+  const weaponDamage = onHit.find((payload) => payload.dice === 'weapon');
+  const damageAbility = String(weaponDamage?.ability ?? 'auto');
+  const damageAbilityBonus = damageAbility === 'none'
+    ? 0
+    : damageAbility === 'spellcasting'
+      ? character.spellcastingMod ?? 0
+      : damageAbility === 'auto'
+        ? character.abilityMods[w.ability] ?? 0
+        : character.abilityMods[damageAbility as AbilityKey] ?? 0;
+  const usedAbility = damageAbility === 'auto'
+    ? w.ability
+    : damageAbility !== 'none' && damageAbility !== 'spellcasting'
+      ? damageAbility as AbilityKey
+      : undefined;
+  const extraAttackSource = extraAttackSourceFromEffect(
+    attackEffect, hand, character, equipment,
+  );
   // C1: модификаторы урона из эффектов (Ярость и т.п.) — на основную строку, как в исполнении.
-  const dmgMods = damageModifierBonus(state, passives, character, hand, hand === 'main' ? w.ability : undefined);
+  const dmgMods = damageModifierBonus(state, passives, character, {
+    hand,
+    ...(usedAbility ? { ability: usedAbility } : {}),
+    attackKind: attackFacts.attackKind,
+    extraAttackSource,
+    abilityModifierAlreadyIncluded: damageAbility !== 'none',
+  }, atkAbilityMod);
 
   return {
-    attack: atkAbilityMod + prof + attackEnchant,
+    attack: atkAbilityMod + prof + attackEnchant + attackMods,
     damages: w.damages.map((d, i) => ({
       dice: d.dice,
       // Мод характеристики + зачарование + модификаторы эффектов — только на основную строку.
-      bonus: i === 0 ? dmgAbility + w.enchant + dmgMods : 0,
+      bonus: i === 0 ? damageAbilityBonus + w.damageEnchant + dmgMods : 0,
       type: d.type,
     })),
   };

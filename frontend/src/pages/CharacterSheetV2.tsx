@@ -24,8 +24,11 @@ import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetInPlayController from '../components/SheetInPlayController';
 import type { PendingChoice } from '../mechanics/collectChoices';
+import type { EffectiveSense } from '../rules-core/dwarfTraits';
 import SheetHpDialog from '../components/SheetHpDialog';
 import SheetRestButtons from '../components/SheetRestButtons';
+import EffectiveSenseValue from '../components/EffectiveSenseValue';
+import type { EncounterApply } from '../battle/encountersApi';
 import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -44,6 +47,14 @@ const SENSE_LABEL: Record<string, string> = {
 const SPEED_MODE_LABEL: Record<string, string> = {
   fly: 'Полёт', swim: 'Плавание', climb: 'Лазание', burrow: 'Копание',
 };
+const READ_ONLY_RESOURCE_LABEL: Record<string, string> = {
+  action: 'Действие',
+  bonus_action: 'Бонусное действие',
+  reaction: 'Реакция',
+  heroic_inspiration: 'Героическое вдохновение',
+};
+const readOnlyResourceLabel = (key: string) => READ_ONLY_RESOURCE_LABEL[key]
+  ?? key.replaceAll('_', ' ');
 const originLabel = (kind: string) => {
   switch (kind) {
     case 'race': return 'Вид';
@@ -58,6 +69,7 @@ interface Props {
   character: ForgeCharacter;
   assembled: AssembledCharacter;
   ruleState: CharacterRuleState;
+  effectiveSenses: readonly EffectiveSense[];
   draft: CharacterDraft;
   sheetCtx: CharacterContext | null;
   runtimeState: RuntimeState | null;
@@ -72,18 +84,20 @@ interface Props {
   inPlayChoices: PendingChoice[];
   onUpdated: (c: ForgeCharacter) => void;
   onEvents: (events: EngineEvent[]) => void;
+  readOnly: boolean;
+  encounterApply?: EncounterApply;
 }
 
 const CharacterSheetV2 = ({
-  character, assembled, ruleState, draft, sheetCtx, runtimeState, passives, equipCards,
+  character, assembled, ruleState, effectiveSenses, draft, sheetCtx, runtimeState, passives, equipCards,
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown,
-  lineageName, inPlayChoices, onUpdated, onEvents,
+  lineageName, inPlayChoices, onUpdated, onEvents, readOnly, encounterApply,
 }: Props) => {
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
-  const [targetAc, setTargetAc] = useState(10);
-  const [targetSaveMod, setTargetSaveMod] = useState(0);
+  const [targetAc, setTargetAc] = useState<number | null>(null);
+  const [targetSaveMod, setTargetSaveMod] = useState<number | null>(null);
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
 
@@ -94,6 +108,7 @@ const CharacterSheetV2 = ({
     rollKind: 'saving_throw' | 'ability_check',
     filter?: Record<string, unknown>,
   ) => {
+    if (readOnly) return;
     // C14: числовые модификаторы эффектов УЖЕ входят в parts (breakdownSave/Skill добавляют
     // effectModifiers). collected нужен только для advantage — его модификаторы НЕ подмешиваем,
     // иначе литеральные бонусы задваивались бы (parts + collected).
@@ -179,15 +194,18 @@ const CharacterSheetV2 = ({
           </div>
         </div>
 
-        <SheetRestButtons
-          character={character}
-          assembled={assembled}
-          ruleState={ruleState}
-          onUpdated={onUpdated}
-          onEvents={onEvents}
-          compact
-          onLongRestComplete={() => setLongRestOpen(true)}
-        />
+        {!readOnly && (
+          <SheetRestButtons
+            character={character}
+            assembled={assembled}
+            ruleState={ruleState}
+            onUpdated={onUpdated}
+            onEvents={onEvents}
+            compact
+            onLongRestComplete={() => setLongRestOpen(true)}
+            encounterApply={encounterApply}
+          />
+        )}
 
         <div className="cs-vitals">
           <div className="cs-ac">
@@ -196,7 +214,7 @@ const CharacterSheetV2 = ({
             </ValueBreakdownTip>
             <span className="cs-ac-l">КД</span>
           </div>
-          <button type="button" className="cs-hp cs-hp-btn" onClick={() => setHpOpen(true)} title="Управление хитами">
+          <button type="button" className="cs-hp cs-hp-btn" disabled={readOnly} onClick={() => setHpOpen(true)} title={readOnly ? 'Лист открыт только для чтения' : 'Управление хитами'}>
             <div className="cs-hp-top">
               <span className="cs-hp-cur">{currentHP}</span>
               <span className="cs-hp-max">/ {maxHP}</span>
@@ -247,9 +265,9 @@ const CharacterSheetV2 = ({
                     <div
                       className={`cs-abil-save${proficient ? ' on' : ''} cs-rollable`}
                       title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => rollCheck(
+                      role={readOnly ? undefined : 'button'}
+                      tabIndex={readOnly ? -1 : 0}
+                      onClick={readOnly ? undefined : () => rollCheck(
                         `Спасбросок (${ABILITY_LABEL_RU[k]})`,
                         saveBd?.parts ?? [{ value: saveBonus, source: abbr3(ABILITY_LABEL_RU[k]) }],
                         'saving_throw',
@@ -290,7 +308,7 @@ const CharacterSheetV2 = ({
                     key={skill.id}
                     className={`${proficient ? 'on' : ''} cs-rollable${abilitySep ? ' cs-skill-sep' : ''}`}
                     title={`${fmtMod(bonus)} = ${tip} · клик — бросок`}
-                    onClick={() => rollCheck(
+                    onClick={readOnly ? undefined : () => rollCheck(
                       `Проверка (${skill.label})`,
                       skillBd?.parts ?? [{ value: bonus, source: skill.label }],
                       'ability_check',
@@ -318,27 +336,61 @@ const CharacterSheetV2 = ({
                 </ValueBreakdownTip>
               ) : <b>{ruleState.passivePerception}</b>}
             </div>
-            {ruleState.senses.length > 0
-              ? ruleState.senses.map((s) => (
-                  <div key={s.sense} className="cs-kv"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><b>{s.range} фт</b></div>
+            {effectiveSenses.length > 0
+              ? effectiveSenses.map((s) => (
+                  <div key={s.sense} className="cs-kv"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><b><EffectiveSenseValue sense={s} /></b></div>
                 ))
               : <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>}
           </CollapsibleSection>
 
           <CollapsibleSection title="Состояния">
-            <SheetConditionsPanel
-              character={character}
-              onUpdated={onUpdated}
-              onEvents={onEvents}
-              embedded
-            />
+            {readOnly ? (
+              runtimeState?.activeEffects.length ? (
+                <div className="cs-tags">
+                  {runtimeState.activeEffects.map((effect) => (
+                    <span key={effect.id} className="cs-tag">{effect.name}</span>
+                  ))}
+                </div>
+              ) : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>
+            ) : (
+              <SheetConditionsPanel
+                character={character}
+                onUpdated={onUpdated}
+                onEvents={onEvents}
+                passives={passives}
+                embedded
+                encounterApply={encounterApply}
+              />
+            )}
           </CollapsibleSection>
         </div>
 
         {/* ЦЕНТР: действия и заклинания — игрок обращается к ним чаще всего, потому в центре. */}
         <div className="csheet-col csheet-col--ctrl">
+          {readOnly && (
+            <CollapsibleSection title="Ресурсы">
+              {runtimeState && Object.keys(runtimeState.maxResources).length ? (
+                <div className="cs-kv-list">
+                  {Object.entries(runtimeState.maxResources).map(([key, maximum]) => (
+                    <div key={key} className="cs-kv">
+                      <span>{readOnlyResourceLabel(key)}</span>
+                      <b>{runtimeState.resources[key] ?? 0}/{maximum}</b>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="cs-hook-note">Отслеживаемых ресурсов нет.</p>}
+            </CollapsibleSection>
+          )}
           <CollapsibleSection title="Действия">
-            <SheetActionsPanel
+            {readOnly ? (
+              assembled.actions.length ? (
+                <div className="cs-tags">
+                  {assembled.actions.map(({ action, origin }) => (
+                    <span key={`${action.id}:${origin.id}`} className="cs-tag">{action.name}</span>
+                  ))}
+                </div>
+              ) : <p className="cs-hook-note">Действия не указаны.</p>
+            ) : <SheetActionsPanel
               character={character}
               assembled={assembled}
               ruleState={ruleState}
@@ -352,7 +404,8 @@ const CharacterSheetV2 = ({
               targetSaveMod={targetSaveMod}
               onTargetSaveModChange={setTargetSaveMod}
               encounterId={character.current_encounter_id ?? undefined}
-            />
+              encounterApply={encounterApply}
+            />}
           </CollapsibleSection>
 
           {assembled.spells.length > 0 && (
@@ -360,7 +413,13 @@ const CharacterSheetV2 = ({
               {/* Заклинания = 1:1 с блоком «Действия»: тот же SheetActionsPanel/
                   SheetActionLine (одна модель отображения строк и иконок), только
                   сгруппировано по кругам. Общий targetAc — поле не дублируется. */}
-              <SheetActionsPanel
+              {readOnly ? (
+                <div className="cs-tags">
+                  {assembled.spells.map((spell) => (
+                    <span key={spell.id} className="cs-tag">{spell.name}</span>
+                  ))}
+                </div>
+              ) : <SheetActionsPanel
                 character={character}
                 assembled={assembled}
                 ruleState={ruleState}
@@ -374,7 +433,8 @@ const CharacterSheetV2 = ({
                 targetSaveMod={targetSaveMod}
                 onTargetSaveModChange={setTargetSaveMod}
                 encounterId={character.current_encounter_id ?? undefined}
-              />
+                encounterApply={encounterApply}
+              />}
             </CollapsibleSection>
           )}
         </div>
@@ -382,13 +442,25 @@ const CharacterSheetV2 = ({
         {/* ПРАВАЯ: инвентарь, черты и способности */}
         <div className="csheet-col">
           <CollapsibleSection title="Инвентарь и экипировка">
-            <SheetEquipmentPanel
+            {readOnly ? (
+              (character.inventory_items?.length ?? 0) > 0 ? (
+                <div className="cs-kv-list">
+                  {(character.inventory_items ?? []).map((item, index) => (
+                    <div key={`${item.card_id}:${item.container_id ?? 'root'}:${index}`} className="cs-kv">
+                      <span>{equipCards.get(item.card_id)?.name ?? item.card_id}</span>
+                      <b>×{item.qty}</b>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="cs-hook-note">Инвентарь пуст.</p>
+            ) : <SheetEquipmentPanel
               character={character}
               ruleState={ruleState}
               onUpdated={onUpdated}
               embedded
               passives={passives}
-            />
+              encounterApply={encounterApply}
+            />}
           </CollapsibleSection>
 
           <CollapsibleSection title="Черты и способности">
@@ -429,7 +501,7 @@ const CharacterSheetV2 = ({
         </div>
       </div>
 
-      <SheetInPlayController
+      {!readOnly && <SheetInPlayController
         character={character}
         draft={draft}
         assembled={assembled}
@@ -441,9 +513,9 @@ const CharacterSheetV2 = ({
         equipCards={equipCards}
         longRestOpen={longRestOpen}
         onLongRestClose={() => setLongRestOpen(false)}
-      />
+      />}
 
-      <SheetHpDialog
+      {!readOnly && <SheetHpDialog
         open={hpOpen}
         onClose={() => setHpOpen(false)}
         character={character}
@@ -454,7 +526,8 @@ const CharacterSheetV2 = ({
         conSaveBonus={ruleState.savingThrowBonuses.con}
         sheetCtx={sheetCtx}
         passives={passives}
-      />
+        encounterApply={encounterApply}
+      />}
     </div>
   );
 };

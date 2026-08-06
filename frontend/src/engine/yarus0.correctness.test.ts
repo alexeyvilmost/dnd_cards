@@ -37,7 +37,7 @@ const attack: Dict = {
 };
 const shove: Dict = {
   name: 'Толчок', activation: { cost: [] },
-  effects: [{ resolution: 'ability_check', ability: 'str', skill: 'athletics', who: 'target', on_success: [{ kind: 'condition', value: 'prone' }] }],
+  effects: [{ resolution: 'ability_check', ability: 'str', skill: 'athletics', who: 'target', contest_vs: ['athletics', 'acrobatics'], on_success: [{ kind: 'condition', value: 'prone' }] }],
 };
 
 // ─── 0.4: сопротивление, выданное действием, режет входящий урон ────────────────
@@ -115,26 +115,26 @@ describe('Ярус0 0.5b — неизвестный предикат-гейт cl
 describe('Ярус0 0.3 — runAbilityCheck (Толчок/Подножка)', () => {
   it('успех состязания → цель получает prone (раньше on_success игнорировал condition)', () => {
     const athlete: CharacterContext = { ...character, skillProficiencies: ['athletics'] };
-    const ctx: Ctx = { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 0 }, runtimeState: fresh() } };
+    const ctx: Ctx = { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 0, acrobatics: 0 }, runtimeState: fresh() } };
     expect(hasProne(executeAction(fresh(), shove, ctx))).toBe(true);
   });
   it('проигрыш состязания → prone НЕ накладывается', () => {
     const athlete: CharacterContext = { ...character, skillProficiencies: ['athletics'] };
-    const ctx: Ctx = { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 20 }, runtimeState: fresh() } }; // защита 11+20=31 > 16
+    const ctx: Ctx = { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 20, acrobatics: 20 }, runtimeState: fresh() } }; // защита 11+20=31 > 16
     expect(hasProne(executeAction(fresh(), shove, ctx))).toBe(false);
   });
   it('БМ добавляется только при владении навыком; экспертиза → ×2', () => {
-    const noProf: Ctx = { character, rng: HIT, target: { ac: 5, checkMods: { athletics: 0 }, runtimeState: fresh() } };
+    const noProf: Ctx = { character, rng: HIT, target: { ac: 5, checkMods: { athletics: 0, acrobatics: 0 }, runtimeState: fresh() } };
     const m0 = rollEv(executeAction(fresh(), shove, noProf).events, 'Проверка').roll.modifiers;
     expect(m0.some((m) => m.value === 3)).toBe(true);   // СИЛ 3, без БМ
     expect(m0.some((m) => m.value === 5)).toBe(false);
 
     const athlete: CharacterContext = { ...character, skillProficiencies: ['athletics'] };
-    const m1 = rollEv(executeAction(fresh(), shove, { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 0 }, runtimeState: fresh() } }).events, 'Проверка').roll.modifiers;
+    const m1 = rollEv(executeAction(fresh(), shove, { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 0, acrobatics: 0 }, runtimeState: fresh() } }).events, 'Проверка').roll.modifiers;
     expect(m1.some((m) => m.value === 5)).toBe(true);    // СИЛ 3 + БМ 2
 
     const expert: CharacterContext = { ...character, skillProficiencies: ['athletics'], skillExpertise: ['athletics'] };
-    const m2 = rollEv(executeAction(fresh(), shove, { character: expert, rng: HIT, target: { ac: 5, checkMods: { athletics: 0 }, runtimeState: fresh() } }).events, 'Проверка').roll.modifiers;
+    const m2 = rollEv(executeAction(fresh(), shove, { character: expert, rng: HIT, target: { ac: 5, checkMods: { athletics: 0, acrobatics: 0 }, runtimeState: fresh() } }).events, 'Проверка').roll.modifiers;
     expect(m2.some((m) => m.value === 7)).toBe(true);    // СИЛ 3 + БМ×2 (4)
   });
   it('состязание: ОДИН бросок защиты по выгоднейшему навыку, не максимум из нескольких', () => {

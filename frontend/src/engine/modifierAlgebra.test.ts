@@ -13,9 +13,12 @@ const fresh = (): RuntimeState => ({ hp: { current: 20, max: 20, temp: 0 }, reso
 const character: CharacterContext = { abilityMods: { str: 0, dex: 2, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 5, characterSpeed: 30, baseSpeed: 30 };
 
 /** RuntimeState с наложенным состоянием (kind:'condition') — как на листе/в бою. */
-const withCondition = (value: string): RuntimeState => ({
+const withCondition = (value: string, sourceId?: string): RuntimeState => ({
   ...fresh(),
-  activeEffects: [{ id: `c-${value}`, name: value, mechanics: { kind: 'condition', value } } as never],
+  activeEffects: [{
+    id: `c-${value}`, name: value, mechanics: { kind: 'condition', value },
+    ...(sourceId ? { sourceId } : {}),
+  } as never],
 });
 
 // Пассивка-механика с одним modifier-пейлоадом.
@@ -107,7 +110,9 @@ describe('Состояния 2024 — механика через движок',
     expect(collectRollModifiers(withCondition('restrained'), [], { roll: 'saving_throw', filter: { ability: 'str' } }).advantage).toBe('none');
   });
   it('Скорость 0 НЕ влияет на d20-броски (роль speed ≠ attack)', () => {
-    expect(collectRollModifiers(withCondition('grappled'), [], { roll: 'attack' }).advantage).toBe('disadvantage'); // только помеха атаки
+    expect(collectRollModifiers(withCondition('grappled', 'grappler'), [], {
+      roll: 'attack', evalCtx: { rollerActorId: 'holder', rollTargetActorId: 'other' },
+    }).advantage).toBe('disadvantage'); // только source-aware помеха атаки
     expect(breakdownValue('speed', character, withCondition('poisoned'), []).value).toBe(30); // Отравлен скорость не режет
   });
 });

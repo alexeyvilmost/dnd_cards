@@ -3,7 +3,12 @@
  * персонаж получает на данном уровне из level_progression вида/класса + related-*.
  */
 import { describe, expect, it } from 'vitest';
-import { collectEffectGrantRefs, expandEffectGrants, gatherFeatureRefs } from './assemble';
+import {
+  collectEffectGrantRefs,
+  collectFeatChoiceRefs,
+  expandEffectGrants,
+  gatherFeatureRefs,
+} from './assemble';
 import type { OriginEffect } from './assemble';
 import type { CharacterClass, Feat, PassiveEffect, Race } from '../types';
 import { emptyDraft, type CharacterDraft } from './types';
@@ -141,6 +146,39 @@ describe('collectEffectGrantRefs — извлечение ссылок на эф
   it('choice без выбора не даёт ссылок', () => {
     const mech = { effects: [{ kind: 'choice', id: 'ch1', options: { source: 'effect', items: [{ id: 'EFF-b' }] } }] };
     expect(collectEffectGrantRefs(mech, 'id-a', ORIGIN, draftWith())).toEqual([]);
+  });
+});
+
+describe('collectFeatChoiceRefs — идентичность повторяемых экземпляров', () => {
+  it('keeps the parent instance key in both the choice lookup and returned feat pick', () => {
+    const mechanics = {
+      effects: [{
+        kind: 'choice',
+        id: 'human_feat',
+        options: { source: 'feat' },
+      }],
+    };
+    const firstOrigin: ChoiceOrigin = {
+      kind: 'feat', id: 'human', name: 'Человек', instanceKey: 'slot-a',
+    };
+    const secondOrigin: ChoiceOrigin = {
+      kind: 'feat', id: 'human', name: 'Человек', instanceKey: 'slot-b',
+    };
+    const firstChoice = 'feat:human:picker#slot-a:human_feat';
+    const secondChoice = 'feat:human:picker#slot-b:human_feat';
+    const draft = draftWith({
+      [firstChoice]: ['feat-skilled'],
+      [secondChoice]: ['feat-skilled'],
+    });
+
+    expect(collectFeatChoiceRefs(mechanics, 'picker', firstOrigin, draft)).toEqual([{
+      featId: 'feat-skilled',
+      instanceKey: 'picker#slot-a',
+    }]);
+    expect(collectFeatChoiceRefs(mechanics, 'picker', secondOrigin, draft)).toEqual([{
+      featId: 'feat-skilled',
+      instanceKey: 'picker#slot-b',
+    }]);
   });
 });
 

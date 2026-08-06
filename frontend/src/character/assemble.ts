@@ -14,6 +14,7 @@ import { collectVariablesFromEffects } from './variables';
 import type { VariableValue } from '../engine/formula';
 import { collectChoices, type PendingChoice, type ChoiceOrigin } from '../mechanics/collectChoices';
 import { choiceKey, instanceFeatureId } from '../mechanics/choiceKey';
+import { passiveSourceId } from '../mechanics/expandChoices';
 import { createRegistry } from '../engine/registry';
 import { createApiResolver } from '../engine/apiResolver';
 import { isEntityUuid } from '../engine/ids';
@@ -25,6 +26,8 @@ import {
   type Spellcasting,
 } from './derive';
 import { ABILITY_KEYS, type AbilityKey, type CharacterDraft } from './types';
+import { excludesMicroMvpL1SourceEffect } from '../canon/microMvpSourceCorrections';
+import { resolvePrimarySpellcastingAbility } from './spellcastingAbility';
 
 // ─── Сбор ссылок на эффекты/действия из выбранных сущностей ──────────────────
 
@@ -168,6 +171,17 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     bundle.variableDefs ?? [],
   );
 
+  const primarySpellcastingAbility = resolvePrimarySpellcastingAbility([
+    ...bundle.effects.map(({ effect, origin }) => ({
+      mechanics: effect.mechanics,
+      sourceId: passiveSourceId(origin, effect),
+    })),
+    ...bundle.actions.map(({ action, origin }) => ({
+      mechanics: action.mechanics,
+      sourceId: passiveSourceId(origin, action),
+    })),
+  ], draft.resolvedChoices);
+
   return {
     race: bundle.race,
     subrace: bundle.subrace ?? null,
@@ -189,7 +203,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
       ac: 10 + abilityMod(scores.dex),
       speed: bundle.race?.speed ?? 30,
       abilityMods,
-      spellcasting: spellcasting(bundle.klass?.name, scores, pb, bundle.subclass?.name),
+      spellcasting: spellcasting(primarySpellcastingAbility, scores, pb),
     },
   };
 }
@@ -257,11 +271,20 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   await Promise.all(
     uniqueEffectIds.map((id) => effectsApi.getEffect(id).then((e) => { effBodyById.set(id, e); }).catch(() => {})),
   );
+  const canonicalEffectRefs = effectRefs.filter((reference) => {
+    const effect = effBodyById.get(reference.id);
+    return !excludesMicroMvpL1SourceEffect({
+      characterLevel: draft.level,
+      raceCardNumber: race?.card_number,
+      classCardNumber: klass?.card_number,
+      effectCardNumber: effect?.card_number,
+    });
+  });
   const baseEffects: OriginEffect[] = [];
   {
     const seenNonRep = new Set<string>();
     const repN = new Map<string, number>();
-    for (const r of effectRefs) {
+    for (const r of canonicalEffectRefs) {
       const effect = effBodyById.get(r.id);
       if (!effect) continue;
       if (effect.repeatable) {
@@ -480,7 +503,12 @@ export function collectFeatChoiceRefs(
     const instanceId = choiceKey({ kind: origin.kind, id: origin.id, featureId: instanceFeatureId(effectId, origin.instanceKey) }, rawChoiceId);
     const selected = draft.resolvedChoices[instanceId] || draft.resolvedChoices[rawChoiceId] || [];
     for (const sel of selected) {
-      if (typeof sel === 'string' && sel) refs.push({ featId: sel, instanceKey: effectId });
+      if (typeof sel === 'string' && sel) {
+        refs.push({
+          featId: sel,
+          instanceKey: instanceFeatureId(effectId, origin.instanceKey),
+        });
+      }
     }
   };
   for (const it of effects as RefDict[]) {

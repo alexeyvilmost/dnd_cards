@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "provider": "Railway",
+  "projectId": "3ec4e61c-9a4d-4b7b-99b8-ce2a560a8b55",
+  "environmentId": "ef702856-4300-4476-852a-1d4cc23532d7",
+  "serviceId": "b008bd10-e7ad-41f6-97ad-1a8060a57110",
+  "database": "railway",
+  "requiredRestorePostgresMajor": 17,
+  "maximumBackupAgeSeconds": 7200,
+  "maximumRestoreLagSeconds": 1800,
+  "maximumFutureClockSkewSeconds": 300
+}

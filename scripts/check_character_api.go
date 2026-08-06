@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	scriptauth "armor-loader/internal/scriptauth"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -46,14 +46,14 @@ func main() {
 	fmt.Printf("Найдено персонажей: %d\n", len(characters))
 	for _, char := range characters {
 		fmt.Printf("- %s (ID: %s)\n", char.Name, char.ID)
-		
+
 		// Парсим данные персонажа
 		var characterData map[string]interface{}
 		if err := json.Unmarshal([]byte(char.Data), &characterData); err != nil {
 			fmt.Printf("  ❌ Ошибка парсинга данных: %v\n", err)
 			continue
 		}
-		
+
 		// Проверяем наличие traits
 		if traits, exists := characterData["traits"]; exists {
 			fmt.Printf("  ✅ Поле 'traits' найдено!\n")
@@ -61,7 +61,7 @@ func main() {
 			fmt.Printf("  Содержимое traits (первые 300 символов): %s...\n", string(traitsBytes)[:min(300, len(traitsBytes))])
 		} else {
 			fmt.Printf("  ❌ Поле 'traits' НЕ найдено\n")
-			
+
 			// Выводим все ключи
 			fmt.Printf("  Ключи в данных: ")
 			for key := range characterData {
@@ -80,57 +80,7 @@ func min(a, b int) int {
 }
 
 func getAuthToken() (string, error) {
-	// Сначала пытаемся зарегистрировать пользователя
-	registerData := map[string]string{
-		"username":     "admin",
-		"password":     "admin123",
-		"email":        "admin@example.com",
-		"display_name": "Admin",
-	}
-
-	registerBody, err := json.Marshal(registerData)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := http.Post("http://localhost:8080/api/auth/register", "application/json", bytes.NewBuffer(registerBody))
-	if err != nil {
-		return "", err
-	}
-	resp.Body.Close()
-
-	// Теперь логинимся
-	loginData := LoginRequest{
-		Username: "admin",
-		Password: "admin123",
-	}
-
-	loginBody, err := json.Marshal(loginData)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err = http.Post("http://localhost:8080/api/auth/login", "application/json", bytes.NewBuffer(loginBody))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("ошибка авторизации: %s", string(body))
-	}
-
-	var loginResp LoginResponse
-	if err := json.Unmarshal(body, &loginResp); err != nil {
-		return "", err
-	}
-
-	return loginResp.Token, nil
+	return scriptauth.Token("http://localhost:8080/api")
 }
 
 func getCharacters(token string) ([]Character, error) {
@@ -164,4 +114,3 @@ func getCharacters(token string) ([]Character, error) {
 
 	return response.Characters, nil
 }
-

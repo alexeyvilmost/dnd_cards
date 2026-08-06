@@ -21,13 +21,28 @@ export type PendingChoice = {
   source: string; // skill | tool | feat | language | subfeature | ...
   filter?: string | string[];
   options?: Record<string, unknown>; // исходные options из механики
+  /** Choice-level grant/apply template. It is materialized with the selected
+   * option id by the same generic semantics used by the rules resolver. */
+  grant?: Record<string, unknown>;
   recommended?: string[];
-  items?: Array<{ id: string; name: string }>; // для source=subfeature
+  items?: Array<{
+    id: string;
+    name: string;
+    /** Declarative effects granted by this exact option. Consumers use these
+     * primitives to explain/disable conflicts without branching on an entity
+     * name, UUID, card number, or choice id. */
+    grants?: Array<Record<string, unknown>>;
+  }>; // для source=subfeature/explicit/effect
   origin: ChoiceOrigin;
   /** Где разрешается выбор: 'in_play' — на листе во время игры (иначе — создание/левелап). */
   context?: string;
   /** kind гранта выбора (напр. weapon_mastery) — для спец-UI на листе. */
   grantKind?: string;
+  /** A prepared-spell choice is a second, non-granting selection over the
+   * exact spells persisted by another choice in the same mechanics source. */
+  preparedSpellSourceChoiceId?: string;
+  /** Immutable option domain projected from the referenced source choice. */
+  allowedOptionIds?: string[];
 };
 
 type Dict = Record<string, unknown>;
@@ -36,7 +51,7 @@ function choiceToPending(ch: Dict, origin: ChoiceOrigin): PendingChoice {
   const form = optionsToChoiceForm(ch) as Dict;
   const opts = (ch.options || {}) as Dict;
   const items = (opts.items as Array<Dict>) || [];
-  const grant = (ch.grant || form.grant) as Dict | undefined;
+  const grant = (ch.apply || ch.grant || form.grant) as Dict | undefined;
   return {
     id: choiceKey(origin, ch.id as string | number | undefined),
     prompt: String(ch.prompt ?? 'Выбор'),
@@ -44,12 +59,81 @@ function choiceToPending(ch: Dict, origin: ChoiceOrigin): PendingChoice {
     source: String(form.source ?? 'skill'),
     filter: form.filter as string | string[] | undefined,
     options: opts,
+    ...(grant?.kind ? { grant: { ...grant } } : {}),
     recommended: ch.recommended as string[] | undefined,
-    items: items.map((it) => ({ id: String(it.id), name: String(it.name) })),
+    items: items.map((it) => ({
+      id: String(it.id),
+      name: String(it.name),
+      ...(Array.isArray(it.grants) ? {
+        grants: (it.grants as Dict[]).map((grant) => ({ ...grant })),
+      } : {}),
+    })),
     origin,
     context: ch.context ? String(ch.context) : undefined,
     grantKind: grant?.kind != null ? String(grant.kind) : undefined,
   };
+}
+
+function preparedSpellChoiceToPending(
+  declaration: Dict,
+  origin: ChoiceOrigin,
+  resolvedChoices?: Record<string, string[]>,
+): PendingChoice {
+  const rawId = declaration.id;
+  const rawSourceChoiceId = declaration.source_choice_id;
+  const count = declaration.count;
+  if ((typeof rawId !== 'string' && typeof rawId !== 'number')
+    || String(rawId).trim().length === 0
+    || (typeof rawSourceChoiceId !== 'string' && typeof rawSourceChoiceId !== 'number')
+    || String(rawSourceChoiceId).trim().length === 0
+    || !Number.isSafeInteger(count) || Number(count) < 1
+    || declaration.resolution !== 'on_acquire') {
+    throw new Error('prepared_spell_choice requires id, source_choice_id, positive count, and resolution:on_acquire');
+  }
+  const id = choiceKey(origin, rawId);
+  const preparedSpellSourceChoiceId = choiceKey(origin, rawSourceChoiceId);
+  const allowedOptionIds = [...new Set(
+    resolvedChoices?.[preparedSpellSourceChoiceId]
+      ?? resolvedChoices?.[String(rawSourceChoiceId)]
+      ?? [],
+  )];
+  return {
+    id,
+    prompt: String(declaration.prompt ?? 'Подготовьте заклинания'),
+    count: Number(count),
+    source: 'prepared_spell',
+    origin,
+    context: declaration.context ? String(declaration.context) : undefined,
+    preparedSpellSourceChoiceId,
+    allowedOptionIds,
+  };
+}
+
+export function isSpellSelectionChoice(choice: Pick<PendingChoice, 'source'>): boolean {
+  return choice.source === 'spell' || choice.source === 'prepared_spell';
+}
+
+export function preparedSpellSelectionIssues(
+  choice: PendingChoice,
+  selection: readonly string[],
+): string[] {
+  if (choice.source !== 'prepared_spell') return [];
+  const issues: string[] = [];
+  if (selection.length !== choice.count) {
+    issues.push(`требуется выбрать ровно ${choice.count}`);
+  }
+  if (new Set(selection).size !== selection.length) {
+    issues.push('подготовленные заклинания должны быть различны');
+  }
+  const allowed = new Set(choice.allowedOptionIds ?? []);
+  const outside = [...new Set(selection.filter((reference) => !allowed.has(reference)))];
+  if (outside.length) {
+    issues.push(`заклинания вне выбранной книги: ${outside.join(', ')}`);
+  }
+  if (!choice.preparedSpellSourceChoiceId) {
+    issues.push('не объявлен исходный выбор книги заклинаний');
+  }
+  return issues;
 }
 
 /** Выбор искусности оружия (Weapon Mastery 2024) — отдельный UI на листе. */
@@ -96,9 +180,14 @@ export function collectChoices(
   for (const it of effects as Dict[]) {
     if (it?.kind === 'choice') {
       visit(it, 0);
+    } else if (it?.kind === 'prepared_spell_choice') {
+      out.push(preparedSpellChoiceToPending(it, origin, resolvedChoices));
     } else if (it?.resolution === 'auto' && Array.isArray(it.result)) {
       for (const p of it.result as Dict[]) {
         if (p?.kind === 'choice') visit(p, 0);
+        else if (p?.kind === 'prepared_spell_choice') {
+          out.push(preparedSpellChoiceToPending(p, origin, resolvedChoices));
+        }
       }
     }
   }

@@ -1,0 +1,27 @@
+node_modules
+dist
+.git
+.env
+.env.*
+# Vite imports the engine/mechanics guides with `?raw`; Markdown under src is a
+# production build input and must stay in the Docker context.
+README.md
+tsconfig.tsbuildinfo
+tsconfig.node.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+
+# Production Docker typechecking covers the shipped source graph. The full
+# repository/CI `npm run build` still typechecks tests; Docker intentionally has
+# no access to sibling test fixtures outside this build context.
+src/**/*.test.ts
+src/**/*.test.tsx
+e2e
+e2e-live
+
+# Test-only generated output must never inflate or influence the image context.
+.micro-mvp-evidence
+coverage
+test-results
+playwright-report
+blob-report

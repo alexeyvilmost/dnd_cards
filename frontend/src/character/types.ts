@@ -7,6 +7,7 @@ import type { CharacterRuleState } from './rules/types';
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 export type AbilityScores = Record<AbilityKey, number>;
 export type CharacterType = 'free' | 'campaign' | 'dungeon_crawl';
+export type CharacterAccessMode = 'owner' | 'legacy_public_readonly';
 
 export const DEFAULT_CHARACTER_SYSTEM_ID = 'dnd5e-2024';
 export const DEFAULT_CHARACTER_RULESET_VERSION = '2024';
@@ -72,13 +73,25 @@ export interface ForgeCharacter {
   active_effects?: unknown[] | null;
   turn_state?: Record<string, unknown> | null;
   currency?: Record<string, number> | null;
+  /** Monotonic CAS token for every engine-owned runtime mutation. */
+  runtime_revision?: number;
 
   // Онлайн-бой: id текущего боя (nil = не в бою). Ставит/снимает сервер при add/remove
   // комбатанта с этим characterId. Основа индикатора «в бою» и правила «один бой на персонажа».
   current_encounter_id?: string | null;
 
+  /** Explicit server authorization projection; never infer write access from user_id. */
+  access_mode: CharacterAccessMode;
+
   created_at: string;
   updated_at: string;
+}
+
+export function isCharacterReadOnly(
+  character: Pick<ForgeCharacter, 'access_mode'>,
+): boolean {
+  // Fail closed: only an explicit server-owned projection enables mutations.
+  return character.access_mode !== 'owner';
 }
 
 export function characterMetadataLabel(character: Pick<
@@ -132,6 +145,15 @@ export interface SaveForgeCharacterRequest {
   armor_class?: number;
   initiative_bonus?: number;
   passive_perception?: number;
+  // Creation-time runtime snapshot. The create endpoint persists these fields
+  // in the same INSERT so a failed second request cannot leave an orphan draft.
+  equipment?: Record<string, string | null> | null;
+  inventory_items?: Array<{ card_id: string; qty: number; container_id?: string }> | null;
+  resources?: Record<string, number> | null;
+  max_resources?: Record<string, number> | null;
+  active_effects?: unknown[] | null;
+  turn_state?: Record<string, unknown> | null;
+  currency?: Record<string, number> | null;
 }
 
 // Метод генерации характеристик (решение владельца 2026-07-05: point-buy — основной).

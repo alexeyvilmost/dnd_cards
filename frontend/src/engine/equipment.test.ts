@@ -5,7 +5,7 @@ import { weaponContext } from './weapon';
 import { clearCardRegistry } from './cardRegistry';
 import {
   ALL_CARDS, CARD_CHAIN_MAIL,
-  CARD_LONGSWORD, CARD_SHIELD,
+  CARD_GREATAXE, CARD_LONGSWORD, CARD_SHIELD,
   FIGHTER_CTX, FIGHTER_CTX_EQUIPPED, freshFighterState,
 } from '../mvp/fixtures';
 import type { Card } from '../types';
@@ -22,6 +22,37 @@ describe('equipment', () => {
 
   it('totalWeight from inventory', () => {
     expect(totalWeight(freshFighterState(), ALL_CARDS)).toBeCloseTo(10);
+  });
+
+  it('uses weapon_profile for profiled two-handed legality and fails closed on malformed profile', () => {
+    const legacyClaimsTwoHands = {
+      ...CARD_LONGSWORD,
+      slot: 'two_hands',
+      properties: ['two_handed'],
+    } as Card;
+    const oneHanded = equipItem(freshFighterState(), legacyClaimsTwoHands);
+    expect(oneHanded.error).toBeUndefined();
+    expect(oneHanded.state.equipment).toMatchObject({
+      main_hand: CARD_LONGSWORD.id,
+      off_hand: null,
+    });
+
+    const profileClaimsTwoHands = {
+      ...CARD_GREATAXE,
+      slot: 'one_hand',
+      properties: [],
+    } as Card;
+    const twoHanded = equipItem(freshFighterState(), profileClaimsTwoHands);
+    expect(twoHanded.error).toBeUndefined();
+    expect(twoHanded.state.equipment).toMatchObject({
+      main_hand: CARD_GREATAXE.id,
+      off_hand: CARD_GREATAXE.id,
+    });
+
+    const malformed = { ...CARD_GREATAXE, mechanics: { weapon_profile: {} } } as Card;
+    const rejected = equipItem(freshFighterState(), malformed);
+    expect(rejected.error).toMatch(/weapon_profile/);
+    expect(rejected.state.equipment).toEqual({});
   });
 });
 

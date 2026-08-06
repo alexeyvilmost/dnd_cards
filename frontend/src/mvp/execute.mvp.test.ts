@@ -191,7 +191,9 @@ describe('E3: save и ability_check', () => {
 
   it('Толкнуть: состязание атлетики против цели; on_success даёт события', () => {
     const { state, events } = executeAction(freshFighterState(), MECH_SHOVE, {
-      character: FIGHTER_CTX, target: { checkMods: { athletics: -5 } }, rng: seededRng(17),
+      character: FIGHTER_CTX,
+      target: { checkMods: { athletics: -5, acrobatics: -5 } },
+      rng: seededRng(17),
     });
     expect(state.resources.bonus_action).toBe(0);
     const checks = rollEvents(events).filter((e) => e.roll.kind === 'check');

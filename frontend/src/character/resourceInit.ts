@@ -26,6 +26,12 @@ export function collectPassiveMechanics(
   for (const { effect, origin } of assembled.effects) {
     const m = effect.mechanics;
     if (!m || typeof m !== 'object') continue;
+    const activation = (m as Dict).activation as Dict | undefined;
+    const activationMode = String(activation?.mode ?? 'passive');
+    // Build-time derivation and runtime passives share this boundary. Active
+    // and reaction mechanics are capabilities, never permanent modifiers on
+    // the character merely because their source entity is selected.
+    if (activationMode === 'active' || activationMode === 'reaction') continue;
     // Имя эффекта — в механику: диспетчер триггеров/реакций показывает его в окне решения
     // (иначе «пассивка N»). id — для гейта «раз за ход» (uses.per) по стабильному ключу.
     out.push({ id: effect.card_number ?? effect.id, ...(m as Dict), name: (m as Dict).name ?? effect.name });

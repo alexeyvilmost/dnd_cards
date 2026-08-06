@@ -127,7 +127,7 @@ describe('Интеграция через executeAction', () => {
 
   it('on_roll: атака на натуральной 15 парализует цель', () => {
     const passives = [{ effects: [{ resolution: 'auto', result: [{ kind: 'modifier', applies_to: { roll: 'attack' }, op: 'on_roll', natural: { eq: 15 }, then: [{ kind: 'condition', value: 'paralyzed' }] }] }] }];
-    const mech = { name: 'Атака', effects: [{ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: '1d6', type: 'slashing' }] }] };
+    const mech = { name: 'Атака', effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [{ kind: 'damage', dice: '1d6', type: 'slashing' }] }] };
     const res = executeAction(fresh(), mech, { character: char, passives, target: { ac: 5, runtimeState: fresh() }, rng: seq([face(15), 0.5]) } as ExecuteContext & { passives: unknown[] });
     const conds = (res.targetState?.activeEffects ?? []).filter((e) => (e.mechanics as { value?: string })?.value === 'paralyzed');
     expect(conds.length).toBe(1);

@@ -2,13 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, MoreVertical, Pencil, Plus, Shield, Sparkles, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { classesApi, racesApi } from '../api/client';
-import { charactersV3Api } from '../character/api';
+import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import {
   characterMetadataLabel,
+  isCharacterReadOnly,
   type ForgeCharacter,
   type SaveForgeCharacterRequest,
 } from '../character/types';
 import type { CharacterClass, Race } from '../types';
+import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import './mobile.css';
 
 function clonePayload(character: ForgeCharacter): SaveForgeCharacterRequest {
@@ -47,6 +49,13 @@ function clonePayload(character: ForgeCharacter): SaveForgeCharacterRequest {
     armor_class: character.armor_class,
     initiative_bonus: character.initiative_bonus,
     passive_perception: character.passive_perception,
+    equipment: { ...(character.equipment ?? {}) },
+    inventory_items: (character.inventory_items ?? []).map((item) => ({ ...item })),
+    resources: { ...(character.resources ?? {}) },
+    max_resources: { ...(character.max_resources ?? {}) },
+    active_effects: structuredClone(character.active_effects ?? []),
+    turn_state: { ...(character.turn_state ?? {}) },
+    currency: { ...(character.currency ?? {}) },
   };
 }
 
@@ -78,7 +87,7 @@ export default function MobileCharactersPage() {
         setClasses(classResult.classes ?? []);
       } catch (e) {
         console.error(e);
-        if (!stale) setError('Не удалось загрузить персонажей');
+        if (!stale) setError(characterV3ErrorMessage(e, 'Не удалось загрузить персонажей'));
       } finally {
         if (!stale) setLoading(false);
       }
@@ -113,7 +122,7 @@ export default function MobileCharactersPage() {
       setMenuId(null);
     } catch (e) {
       console.error(e);
-      setError('Не удалось дублировать персонажа');
+      setError(characterV3ErrorMessage(e, 'Не удалось дублировать персонажа'));
     } finally {
       setBusyId(null);
     }
@@ -129,7 +138,7 @@ export default function MobileCharactersPage() {
       setMenuId(null);
     } catch (e) {
       console.error(e);
-      setError('Не удалось удалить персонажа');
+      setError(characterV3ErrorMessage(e, 'Не удалось удалить персонажа'));
     } finally {
       setBusyId(null);
     }
@@ -175,6 +184,7 @@ export default function MobileCharactersPage() {
                   <h2>{character.name || 'Без имени'}</h2>
                   <p>{subtitle(character)}</p>
                   <p>{characterMetadataLabel(character)}</p>
+                  <CharacterAccessBadge character={character} />
                 </div>
                 <div className="m-card-menu" ref={menuId === character.id ? menuRef : undefined}>
                   <button
@@ -188,23 +198,29 @@ export default function MobileCharactersPage() {
                   </button>
                   {menuId === character.id && (
                     <div className="m-menu" role="menu">
-                      <button type="button" role="menuitem" onClick={() => navigate(`/m/characters/${character.id}/edit`)}>
-                        <Pencil size={16} /> Редактировать
-                      </button>
-                      <button type="button" role="menuitem" onClick={() => navigate(`/m/characters/${character.id}/level-up`)}>
-                        <Sparkles size={16} /> Повысить уровень
-                      </button>
+                      {!isCharacterReadOnly(character) && (
+                        <>
+                          <button type="button" role="menuitem" onClick={() => navigate(`/m/characters/${character.id}/edit`)}>
+                            <Pencil size={16} /> Редактировать
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => navigate(`/m/characters/${character.id}/level-up`)}>
+                            <Sparkles size={16} /> Повысить уровень
+                          </button>
+                        </>
+                      )}
                       <button type="button" role="menuitem" disabled={busyId === character.id} onClick={() => duplicate(character)}>
-                        <Copy size={16} /> Дублировать
+                        <Copy size={16} /> {isCharacterReadOnly(character) ? 'Создать мою копию' : 'Дублировать'}
                       </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        className="is-danger"
-                        onClick={() => setConfirmDeleteId(character.id)}
-                      >
-                        <Trash2 size={16} /> Удалить
-                      </button>
+                      {!isCharacterReadOnly(character) && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="is-danger"
+                          onClick={() => setConfirmDeleteId(character.id)}
+                        >
+                          <Trash2 size={16} /> Удалить
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

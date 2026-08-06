@@ -1,10 +1,10 @@
 /**
  * S4 «предмет=эффект»: стоимость-предмет ({resource:'item', card_id}) тратит предмет из инвентаря
- * (canPay/pay полиморфны), + applyItemConsumeCost впрыскивает саморасход зелья (consumes_self).
- * Единый примитив покрывает и стрелу (внешний card_id, S5), и зелье-саморасход (self-id).
+ * (canPay/pay полиморфны). Relative self_item is explicit in activation.cost
+ * and the entity adapter binds it to the owning card id.
  */
 import { describe, expect, it } from 'vitest';
-import { canPay, pay, applyItemConsumeCost, costAmount } from './cost';
+import { bindSelfItemCost, canPay, pay, costAmount } from './cost';
 import { executeAction } from './execute';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
@@ -61,27 +61,32 @@ describe('стоимость костью хитов', () => {
   });
 });
 
-describe('S4 — applyItemConsumeCost (саморасход зелья)', () => {
-  it('впрыскивает item-cost при consumes_self', () => {
-    const out = applyItemConsumeCost({ activation: { mode: 'active', consumes_self: true }, effects: [] }, 'potion');
+describe('S4 — bindSelfItemCost (явный саморасход зелья)', () => {
+  it('связывает явно объявленный self_item с card id', () => {
+    const out = bindSelfItemCost({ activation: { mode: 'active', cost: [{ resource: 'self_item' }] }, effects: [] }, 'potion');
     expect((out.activation as { cost: unknown }).cost).toEqual([{ resource: 'item', card_id: 'potion', amount: 1 }]);
   });
 
-  it('идемпотентно (повторный вызов не дублирует)', () => {
-    const once = applyItemConsumeCost({ activation: { mode: 'active', consumes_self: true }, effects: [] }, 'potion');
-    const twice = applyItemConsumeCost(once, 'potion');
-    expect((twice.activation as { cost: unknown[] }).cost).toHaveLength(1);
+  it('не создаёт цену из legacy consumes_self', () => {
+    const mech = { activation: { mode: 'active', consumes_self: true }, effects: [] };
+    expect(bindSelfItemCost(mech, 'potion')).toBe(mech);
   });
 
-  it('без consumes_self — механика без изменений (та же ссылка)', () => {
+  it('без self_item — механика без изменений (та же ссылка)', () => {
     const mech = { activation: { mode: 'active' }, effects: [] };
-    expect(applyItemConsumeCost(mech, 'potion')).toBe(mech);
+    expect(bindSelfItemCost(mech, 'potion')).toBe(mech);
   });
 
   it('сохраняет существующую стоимость действия (бонусное действие + расход)', () => {
-    const mech = { activation: { mode: 'active', consumes_self: true, cost: [{ resource: 'bonus_action' }] }, effects: [] };
-    expect((applyItemConsumeCost(mech, 'potion').activation as { cost: unknown }).cost)
+    const mech = { activation: { mode: 'active', cost: [{ resource: 'bonus_action' }, { resource: 'self_item' }] }, effects: [] };
+    expect((bindSelfItemCost(mech, 'potion').activation as { cost: unknown }).cost)
       .toEqual([{ resource: 'bonus_action' }, { resource: 'item', card_id: 'potion', amount: 1 }]);
+  });
+
+  it('отклоняет card_id у относительного self_item', () => {
+    expect(() => bindSelfItemCost({
+      activation: { mode: 'active', cost: [{ resource: 'self_item', card_id: 'other' }] },
+    }, 'potion')).toThrow(/must not declare card_id/);
   });
 });
 
@@ -105,8 +110,8 @@ describe('S4 — устойчивость стоимости (правки ре�
     expect(costAmount({ amount: 2 })).toBe(2);
   });
 
-  it('событие item_consumed несёт имя предмета (из applyItemConsumeCost)', () => {
-    const mech = applyItemConsumeCost({ name: 'Зелье', activation: { mode: 'active', consumes_self: true }, effects: [] }, 'potion');
+  it('событие item_consumed несёт имя предмета (из bindSelfItemCost)', () => {
+    const mech = bindSelfItemCost({ name: 'Зелье', activation: { mode: 'active', cost: [{ resource: 'self_item' }] }, effects: [] }, 'potion');
     const cost = (mech.activation as { cost: Record<string, unknown>[] }).cost;
     const { events } = pay(state([{ cardId: 'potion', qty: 1 }]), cost);
     const ev = events.find((e) => e.type === 'item_consumed');
@@ -119,8 +124,8 @@ describe('S4 — интеграция: зелье лечения (видение
   const ctx = { character, rng: () => 0.5 } as unknown as ExecuteContext;
 
   it('зелье лечит и расходуется из инвентаря (атомарно, + событие)', () => {
-    const potion = applyItemConsumeCost({
-      name: 'Зелье лечения', activation: { mode: 'active', consumes_self: true },
+    const potion = bindSelfItemCost({
+      name: 'Зелье лечения', activation: { mode: 'active', cost: [{ resource: 'self_item' }] },
       effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: '2d4+4' }] }],
     }, 'potion') as Record<string, unknown>;
     const s: RuntimeState = { hp: { current: 5, max: 30, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [{ cardId: 'potion', qty: 2 }], activeEffects: [] } as unknown as RuntimeState;
@@ -131,8 +136,8 @@ describe('S4 — интеграция: зелье лечения (видение
   });
 
   it('зелья нет в инвентаре → действие невозможно (canPay гейтит)', () => {
-    const potion = applyItemConsumeCost({
-      name: 'Зелье лечения', activation: { mode: 'active', consumes_self: true },
+    const potion = bindSelfItemCost({
+      name: 'Зелье лечения', activation: { mode: 'active', cost: [{ resource: 'self_item' }] },
       effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: '2d4+4' }] }],
     }, 'potion') as Record<string, unknown>;
     const s: RuntimeState = { hp: { current: 5, max: 30, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: [] } as unknown as RuntimeState;

@@ -27,6 +27,10 @@ function normalize(mechanics, meta) {
     .replace(/[^a-z0-9]+/gi, '-')
     .replace(/^-+|-+$/g, '')
     .toLowerCase() || 'draft';
+  const extensionKeys = [
+    'interaction', 'primitive', 'weapon_mastery', 'capabilities', 'end_triggers',
+    'includes', 'leaves', 'stacking', 'long_rest', 'thresholds', 'world_facts',
+  ];
   return {
     schema_version: '1.0',
     id,
@@ -36,6 +40,9 @@ function normalize(mechanics, meta) {
     interactions: mechanics.effects || mechanics.interactions || [],
     ...(mechanics.uses ? { uses: mechanics.uses } : {}),
     ...(mechanics.targeting ? { targeting: mechanics.targeting } : {}),
+    ...Object.fromEntries(extensionKeys.flatMap((key) => (
+      mechanics[key] === undefined ? [] : [[key, mechanics[key]]]
+    ))),
   };
 }
 

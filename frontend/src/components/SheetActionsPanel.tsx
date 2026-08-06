@@ -4,27 +4,35 @@ import { charactersV3Api } from '../character/api';
 import { actionsApi, effectsApi } from '../api/client';
 import { getCardsIndex } from '../utils/cardsIndex';
 import type { AssembledCharacter } from '../character/assemble';
-import { actionNeedsTarget, actionInteractsWithTarget, actionForcesTargetSave, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
+import { actionInteractsWithTarget, actionForcesTargetSave, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
-import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState, buildTargetFromCharacter } from '../character/runtime';
-import { encountersApi } from '../battle/encountersApi';
+import {
+  buildCharacterContext,
+  alignRuntimeHp,
+  forgeToRuntimeState,
+  buildTargetFromCharacter,
+  writeRulesEngineRuntimeTurnState,
+} from '../character/runtime';
+import { encountersApi, type EncounterApply } from '../battle/encountersApi';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
 import type { Combatant, BattleLogEntry, PendingSave, PendingAttack, SaveOutcome } from '../battle/encounterTypes';
+import { pendingAttackDamage } from '../battle/pendingAttack';
 import { describeEngineEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
-import type { ForgeCharacter } from '../character/types';
+import { isCharacterReadOnly, type ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
 import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } from '../engine/freeuse';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { deniedCapabilities } from '../engine/modifiers';
-import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
-import { executeAction, readTargetSave, InsufficientResourcesError } from '../engine/execute';
+import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
+import { readTargetSave, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
-import { weaponActionAvailability, weaponAmmoCost, weaponAttackPreview } from '../engine/weapon';
-import { appendActivationCost, costAmount } from '../engine/cost';
+import { bindEquippedWeaponActionContext, weaponActionAvailability, weaponAttackPreview } from '../engine/weapon';
+import { costAmount } from '../engine/cost';
 import { inventoryQty } from '../character/inventory';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
@@ -42,6 +50,73 @@ import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
 import ResourceHoverPreview from './ResourceHoverPreview';
 import { loadMasteryEffects } from '../utils/mastery';
+import {
+  collectSheetPrimitiveChoices,
+  executeSheetAction,
+  planSheetActionDice,
+  sheetPrimitiveCastTimingIssue,
+  UnsupportedSheetPendingResolutionError,
+  type SheetCanonicalActionContext,
+} from '../character/sheetActionOrchestrator';
+import {
+  buildSheetPrimitiveCommandInput,
+  isSheetNoPendingPrimitive,
+  isSheetPendingCombatPrimitive,
+  sheetActionRequiresActorTargets,
+  sheetPrimitiveDefinitionIssue,
+  sheetPrimitiveDisabledReason,
+} from '../character/sheetPrimitiveUi';
+import { projectRunnableSheetCanonicalActions } from '../character/sheetCanonicalActionProjection';
+import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
+import { useSheetWorldInputDialog } from './SheetWorldInputDialog';
+import { useSheetCombatTargetDialog } from './SheetCombatTargetDialog';
+import SheetPendingCombatPanel from './SheetPendingCombatPanel';
+import SheetCompanionControls, {
+  type SheetCompanionTouchDeclaration,
+} from './SheetCompanionControls';
+import {
+  buildSheetCanonicalRuntime,
+  projectSheetCanonicalPersistence,
+  synchronizeSheetCanonicalRuntime,
+  writeSheetCanonicalWorld,
+} from '../character/sheetCanonicalWorld';
+import type { DecisionResponse, GameCommand, WorldState } from '../rules-core/domain';
+import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
+import { buildSheetCombatDeclaration } from '../character/sheetCombatDeclaration';
+import {
+  advanceSheetCombatTurn,
+  commitPreparedSheetCombat,
+  createSheetCombatSession,
+  executeSheetCombatAction,
+  newSheetRuntimeCommandId,
+  prepareSheetCombatCommit,
+  readSheetCombatSession,
+  assertCertifiedSheetCombatSession,
+  resolveSheetCombatDecision,
+  sheetCombatEngineEvents,
+  type PreparedSheetCombatCommit,
+  type SheetCombatSession,
+  type SheetCombatTransition,
+} from '../character/sheetCombatSession';
+import {
+  assertCertifiedSheetCombatActorAction,
+  loadCertifiedSheetCombatCatalog,
+  type CertifiedSheetCombatCatalog,
+} from '../character/sheetCombatCertifiedCatalog';
+import {
+  buildDismissFamiliarCommand,
+  buildPactBladeTouchCommand,
+  buildPactTomeRestCommand,
+  buildReappearFamiliarCommand,
+  collectSheetCompanionControls,
+} from '../character/sheetCompanionActions';
+import {
+  prepareSheetCompanionCommand,
+  prepareSheetFamiliarTouchInteraction,
+  sheetCompanionRetryPolicy,
+  type PreparedSheetCompanionInteraction,
+} from '../character/sheetCompanionInteraction';
+import { currentRuntimeCommandCharacters } from '../character/sheetRuntimeCommand';
 
 interface Props {
   character: ForgeCharacter;
@@ -61,18 +136,19 @@ interface Props {
   showEffects?: boolean;
   /** Только заклинания, сгруппированные по кругам (блок «Заклинания» = 1:1 с блоком «Действия»). */
   spellsOnly?: boolean;
-  /** Контролируемое «КЗ цели» (E4): один общий таргет на все инстансы панели листа.
-   *  Если не передан — панель держит собственный локальный targetAc. */
-  targetAc?: number;
-  onTargetAcChange?: (n: number) => void;
+  /** Явный наблюдаемый факт «КЗ цели». null/undefined означает, что факт ещё не объявлен. */
+  targetAc?: number | null;
+  onTargetAcChange?: (n: number | null) => void;
   /** Контролируемый «Спас цели» (E5): единый модификатор спасброска цели
    *  (передаётся во все ability; движок берёт нужный по механике действия). */
-  targetSaveMod?: number;
-  onTargetSaveModChange?: (n: number) => void;
+  targetSaveMod?: number | null;
+  onTargetSaveModChange?: (n: number | null) => void;
   /** Онлайн-бой: если персонаж сейчас в бою — id боя. Тогда пикер целей в диалоге кубов
    *  ограничивается комбатантами этого боя, а урон/лечение/эффекты применяются к комбатанту
    *  через encountersApi.apply (синк на доску боя и другие устройства), а не в запись персонажа. */
   encounterId?: string;
+  /** Version-aware command writer from the active encounter stream. */
+  encounterApply?: EncounterApply;
   /** Мобильный лист сначала открывает полноэкранную карточку, а применение запускает из неё. */
   onInspectAction?: (
     action: SheetAction,
@@ -83,6 +159,65 @@ interface Props {
 }
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
+
+export interface ExplicitSheetTargetFacts {
+  armorClass: number | null | undefined;
+  savingThrowModifier: number | null | undefined;
+}
+
+function targetResolutionRequirements(mechanics: Record<string, unknown>): {
+  attack: boolean;
+  save: boolean;
+} {
+  const effects = Array.isArray(mechanics.effects)
+    ? mechanics.effects as Record<string, unknown>[]
+    : [];
+  return {
+    attack: effects.some((effect) => effect.resolution === 'attack_roll'),
+    save: effects.some((effect) => effect.resolution === 'save'),
+  };
+}
+
+/** Legacy execution accepts no invented target statistics. */
+export function explicitSheetTargetFactsIssue(
+  mechanics: Record<string, unknown>,
+  facts: ExplicitSheetTargetFacts,
+): string | null {
+  const required = targetResolutionRequirements(mechanics);
+  if (required.attack && (typeof facts.armorClass !== 'number'
+    || !Number.isFinite(facts.armorClass)
+    || facts.armorClass <= 0)) {
+    return 'Укажите КЗ цели или выберите персонажа с явно рассчитанной КЗ';
+  }
+  if (required.save && (typeof facts.savingThrowModifier !== 'number'
+    || !Number.isSafeInteger(facts.savingThrowModifier))) {
+    return 'Укажите модификатор спасброска цели или выберите персонажа с рассчитанными спасбросками';
+  }
+  return null;
+}
+
+export function explicitSheetTargetContext(
+  mechanics: Record<string, unknown>,
+  facts: ExplicitSheetTargetFacts,
+): TargetContext | undefined {
+  const issue = explicitSheetTargetFactsIssue(mechanics, facts);
+  if (issue) throw new Error(issue);
+  const required = targetResolutionRequirements(mechanics);
+  if (!required.attack && !required.save) return undefined;
+  return {
+    ...(required.attack ? { ac: facts.armorClass as number } : {}),
+    ...(required.save ? {
+      saveMods: {
+        dex: facts.savingThrowModifier as number,
+        con: facts.savingThrowModifier as number,
+        str: facts.savingThrowModifier as number,
+        int: facts.savingThrowModifier as number,
+        wis: facts.savingThrowModifier as number,
+        cha: facts.savingThrowModifier as number,
+      },
+    } : {}),
+  };
+}
 
 // Дельта исхода спасброска: изменение состояния цели после прогона движка относительно БАЗЫ
 // прогона (baseHp/baseTemp). Прогон делается по цели с огромным hp, поэтому дельта несёт ИСТИННЫЙ
@@ -128,6 +263,39 @@ const RESOURCE_ICONS: Record<string, string> = {
 /** Выбор источника оплаты каста: за ячейку уровня level или бесплатно (freeuse-пул). */
 type CastChoice = { via: 'slot'; level: number } | { via: 'free' };
 
+export function characterInteractionTargetOption(
+  candidate: Pick<ForgeCharacter, 'id' | 'name' | 'access_mode'>,
+  charmerIds: ReadonlySet<string>,
+): { id: string; name: string; disabled?: true; reason?: string } {
+  if (isCharacterReadOnly(candidate)) {
+    return {
+      id: candidate.id,
+      name: candidate.name,
+      disabled: true,
+      reason: 'архивный публичный лист доступен только для чтения',
+    };
+  }
+  if (charmerIds.has(candidate.id)) {
+    return {
+      id: candidate.id,
+      name: candidate.name,
+      disabled: true,
+      reason: 'вы очарованы им',
+    };
+  }
+  return { id: candidate.id, name: candidate.name };
+}
+
+/** Keep subsequent interactions in this tab on the exact server-committed runtime snapshot. */
+export function replaceCachedInteractionTarget(
+  cached: readonly ForgeCharacter[],
+  persisted: ForgeCharacter,
+): ForgeCharacter[] {
+  return cached.some((candidate) => candidate.id === persisted.id)
+    ? cached.map((candidate) => candidate.id === persisted.id ? persisted : candidate)
+    : [...cached, persisted];
+}
+
 /** Апкаст (D1): заклинание со стоимостью spell_slot уровня N доступно, если есть ЛЮБОЙ
  *  слот уровня ≥ N (не только базового) — иначе кастер со свободным старшим слотом, но
  *  потраченным базовым, не смог бы кастовать. Прочие ресурсы стоимости — обычной проверкой.
@@ -160,7 +328,7 @@ function persistPayload(state: RuntimeState, prevTurnState: Record<string, unkno
     // сумки (экипировка/покупка/расход в другой вкладке). Бэкенд уже принимает inventory_items.
     ...(includeInventory ? { inventory_items: state.inventory.map((r) => ({ card_id: r.cardId, qty: r.qty, ...(r.containerId ? { container_id: r.containerId } : {}) })) } : {}),
     // temp_hp обновляем, остальные поля turn_state (спасброски смерти) сохраняем
-    turn_state: { ...(prevTurnState ?? {}), temp_hp: state.hp.temp },
+    turn_state: writeRulesEngineRuntimeTurnState(prevTurnState, state),
   };
 }
 
@@ -171,6 +339,13 @@ function spendsResource(mech: Record<string, unknown>): boolean {
   const cost = activation?.cost as Record<string, unknown>[] | undefined;
   if (!Array.isArray(cost)) return false;
   return cost.some((c) => !!String(c.resource ?? ''));
+}
+
+function mechanicsPrimitiveType(mechanics: Record<string, unknown>): string | null {
+  const primitive = mechanics.primitive;
+  if (!primitive || typeof primitive !== 'object' || Array.isArray(primitive)) return null;
+  const type = (primitive as Record<string, unknown>).type;
+  return typeof type === 'string' && type ? type : null;
 }
 
 export default function SheetActionsPanel({
@@ -191,6 +366,7 @@ export default function SheetActionsPanel({
   targetSaveMod: targetSaveModProp,
   onTargetSaveModChange,
   encounterId,
+  encounterApply,
   onInspectAction,
   disableHoverPreviews = false,
 }: Props) {
@@ -207,28 +383,68 @@ export default function SheetActionsPanel({
   const requestCastChoice = (baseLevel: number, options: number[], freeuse?: { current: number; max: number; level: number }) =>
     new Promise<CastChoice | null>((resolve) => setSlotPick({ baseLevel, options, freeuse, resolve }));
   const resolveCast = (v: CastChoice | null) => { slotPick?.resolve(v); setSlotPick(null); };
-  const [localTargetAc, setLocalTargetAc] = useState(10);
+  const [localTargetAc, setLocalTargetAc] = useState<number | null>(null);
   // E4: если родитель управляет «КЗ цели» — используем его; иначе локальный стейт.
   const targetAc = targetAcProp ?? localTargetAc;
-  const setTargetAc = (n: number) => {
+  const setTargetAc = (n: number | null) => {
     if (onTargetAcChange) onTargetAcChange(n);
     else setLocalTargetAc(n);
   };
-  const [localTargetSaveMod, setLocalTargetSaveMod] = useState(0);
+  const [localTargetSaveMod, setLocalTargetSaveMod] = useState<number | null>(null);
   // E5: единый модификатор спасброска цели (раньше saveMods жёстко = 0).
   const targetSaveMod = targetSaveModProp ?? localTargetSaveMod;
-  const setTargetSaveMod = (n: number) => {
+  const setTargetSaveMod = (n: number | null) => {
     if (onTargetSaveModChange) onTargetSaveModChange(n);
     else setLocalTargetSaveMod(n);
   };
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
+  const worldInputDialog = useSheetWorldInputDialog();
+  const combatTargetDialog = useSheetCombatTargetDialog();
   const reactionPrompt = useReactionPrompt();
+  const [combatRetry, setCombatRetry] = useState<{
+    prepared: PreparedSheetCombatCommit;
+    events: EngineEvent[];
+  } | null>(null);
+  const [companionRetry, setCompanionRetry] = useState<PreparedSheetCompanionInteraction | null>(null);
+  const [certifiedCombat, setCertifiedCombat] = useState<{
+    catalog: CertifiedSheetCombatCatalog | null;
+    error: Error | null;
+    loading: boolean;
+  }>({ catalog: null, error: null, loading: true });
+  useEffect(() => {
+    let active = true;
+    void loadCertifiedSheetCombatCatalog()
+      .then((catalog) => {
+        if (active) setCertifiedCombat({ catalog, error: null, loading: false });
+      })
+      .catch((cause) => {
+        if (active) setCertifiedCombat({
+          catalog: null,
+          error: cause instanceof Error ? cause : new Error(String(cause)),
+          loading: false,
+        });
+      });
+    return () => { active = false; };
+  }, []);
 
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), maxHp ?? ruleState.maxHP),
     [character, maxHp, ruleState.maxHP],
   );
+  const combatContinuation = useMemo((): {
+    session: SheetCombatSession | null;
+    error: Error | null;
+  } => {
+    try {
+      return { session: readSheetCombatSession(character.turn_state, character.id), error: null };
+    } catch (cause) {
+      return {
+        session: null,
+        error: cause instanceof Error ? cause : new Error(String(cause)),
+      };
+    }
+  }, [character.id, character.turn_state]);
   // Пассивки персонажа + механики надетых предметов (с учётом настройки).
   const passives = useMemo(() => {
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory)
@@ -329,9 +545,21 @@ export default function SheetActionsPanel({
   // S3-полировка (#32): общий индекс карт — резолвер имён СОДЕРЖИМОГО контейнера (его карты не в
   // equipCards, т.к. лежат внутри мешка) для диалога выбора «Достать» и журнала распаковки.
   const [cardsIndex, setCardsIndex] = useState<Map<string, Card>>(new Map());
+  const [cardsIndexReady, setCardsIndexReady] = useState(false);
+  const [cardsIndexError, setCardsIndexError] = useState<Error | null>(null);
   useEffect(() => {
     let alive = true;
-    getCardsIndex().then((m) => alive && setCardsIndex(m));
+    getCardsIndex()
+      .then((m) => {
+        if (!alive) return;
+        setCardsIndex(m);
+        setCardsIndexReady(true);
+        setCardsIndexError(null);
+      })
+      .catch((cause) => {
+        if (!alive) return;
+        setCardsIndexError(cause instanceof Error ? cause : new Error(String(cause)));
+      });
     return () => { alive = false; };
   }, []);
 
@@ -348,11 +576,31 @@ export default function SheetActionsPanel({
     return out;
   }, [runtime.inventory, runtime.equipment, equipCards]);
 
-  const allActions = useMemo(
+  const collectedActions = useMemo(
     () => collectSheetActions(assembled, itemMechs, basicActions, grantedActions, containerCards,
       (id) => equipCards.get(id)?.name ?? cardsIndex.get(id)?.name),
     [assembled, itemMechs, basicActions, grantedActions, containerCards, equipCards, cardsIndex],
   );
+  const contextualCostProjection = useMemo(() => {
+    const issues = new Map<string, string>();
+    const projected = collectedActions.map((action) => {
+      try {
+        return {
+          ...action,
+          mechanics: bindEquippedWeaponActionContext(
+            action.mechanics,
+            runtime.equipment,
+            equipCards,
+          ),
+        };
+      } catch (cause) {
+        issues.set(action.id, cause instanceof Error ? cause.message : String(cause));
+        return action;
+      }
+    });
+    return { actions: projected, issues };
+  }, [collectedActions, runtime.equipment, equipCards]);
+  const allActions = contextualCostProjection.actions;
 
   // Триггерные способности-СЛУШАТЕЛИ (interrupt): mode reaction/triggered + activation.trigger.event
   // (Божественная кара при попадании, особенности Голиафа). Отдаём движку как ctx.triggers; из
@@ -367,6 +615,11 @@ export default function SheetActionsPanel({
     [allActions],
   );
   const actions = useMemo(() => allActions.filter((a) => !isTriggerAbility(a.mechanics)), [allActions]);
+  const canonicalSheetActions = useMemo(() => projectRunnableSheetCanonicalActions({
+    actions: collectedActions,
+    equipment: runtime.equipment,
+    cards: equipCards,
+  }).actions, [collectedActions, runtime.equipment, equipCards]);
 
   // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,
@@ -406,6 +659,86 @@ export default function SheetActionsPanel({
       .catch(() => { if (!stale) setGrantedEffectsBySlug((p) => (Object.keys(p).length ? {} : p)); });
     return () => { stale = true; };
   }, [grantEffectSlugs.join('|')]);
+
+  const canonicalBuild = useMemo(() => {
+    const needsCanonical = allActions.some((candidate) => (
+      mechanicsPrimitiveType(candidate.mechanics) != null
+    )) || assembled.effects.some(({ effect }) => (
+      mechanicsPrimitiveType((effect.mechanics ?? {}) as Record<string, unknown>)?.startsWith('pact_') === true
+    ));
+    if (!needsCanonical) return { runtime: null, error: null };
+    if (!cardsIndexReady) {
+      return {
+        runtime: null,
+        error: cardsIndexError
+          ? new Error(`Не удалось загрузить канонический каталог карт: ${cardsIndexError.message}`)
+          : new Error('Канонический каталог карт ещё загружается'),
+      };
+    }
+    try {
+      return {
+        runtime: buildSheetCanonicalRuntime({
+          character,
+          assembled,
+          ruleState,
+          sheetActions: canonicalSheetActions,
+          runtime,
+          characterContext: ctx,
+          passives,
+          grantedEffects: grantedEffectsBySlug,
+          masteryEffects: masteryById,
+          cards: [...new Map([
+            ...cardsIndex.entries(),
+            ...equipCards.entries(),
+          ]).values()],
+          ac: ruleState.armorClass,
+        }),
+        error: null,
+      };
+    } catch (cause) {
+      return {
+        runtime: null,
+        error: cause instanceof Error ? cause : new Error(String(cause)),
+      };
+    }
+  }, [
+    allActions,
+    canonicalSheetActions,
+    assembled,
+    character,
+    runtime,
+    ctx,
+    passives,
+    grantedEffectsBySlug,
+    masteryById,
+    equipCards,
+    cardsIndex,
+    cardsIndexReady,
+    cardsIndexError,
+    ruleState,
+  ]);
+
+  const canonicalFor = (action: SheetAction): SheetCanonicalActionContext | undefined => {
+    if (!mechanicsPrimitiveType(action.mechanics)) return undefined;
+    if (canonicalBuild.error) throw canonicalBuild.error;
+    if (!canonicalBuild.runtime) {
+      throw new Error('Каноническое состояние правил листа недоступно');
+    }
+    return { runtime: canonicalBuild.runtime, action: canonicalBuild.runtime.actionFor(action) };
+  };
+
+  const companionModel = useMemo(() => {
+    if (!canonicalBuild.runtime) return null;
+    try {
+      return collectSheetCompanionControls({
+        runtime: canonicalBuild.runtime,
+        onlineEncounterId: encounterId ?? character.current_encounter_id,
+      });
+    } catch {
+      return null;
+    }
+  }, [canonicalBuild.runtime, encounterId, character.current_encounter_id]);
+
   const resourceOptions = useResourceOptions();
   const { entityDisplay } = useSiteSettings();
   const actionsAsIcons = entityDisplay.actions === 'icon';
@@ -414,13 +747,48 @@ export default function SheetActionsPanel({
   const resourceKeys = Object.keys(runtime.maxResources)
     .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k) && !isFreeusePoolKey(k));
 
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
+  const apply = useCallback(async (
+    next: RuntimeState,
+    events: EngineEvent[],
+    canonicalWorld?: WorldState,
+  ) => {
     setBusy(true);
     setError(null);
     try {
       // Инвентарь персистим при любом его изменении: расход (item_consumed) ИЛИ выдача (item_added, S1 контейнеры).
       const inventoryChanged = events.some((e) => e.type === 'item_consumed' || e.type === 'item_added');
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next, character.turn_state, inventoryChanged));
+      let turnState = character.turn_state;
+      let runtimeToPersist = next;
+      let currency: Record<string, number> | undefined;
+      if (canonicalBuild.runtime) {
+        const world = synchronizeSheetCanonicalRuntime(
+          canonicalWorld ?? canonicalBuild.runtime.world,
+          canonicalBuild.runtime.actorId,
+          next,
+          Object.keys(canonicalBuild.runtime.resourceBindings),
+        );
+        const projection = projectSheetCanonicalPersistence({
+          runtime: world.actors[canonicalBuild.runtime.actorId].runtime,
+          currency: character.currency,
+          resourceBindings: canonicalBuild.runtime.resourceBindings,
+        });
+        runtimeToPersist = projection.runtime;
+        currency = projection.currency;
+        turnState = writeSheetCanonicalWorld(
+          character.turn_state,
+          canonicalBuild.runtime.actorId,
+          world,
+          canonicalBuild.runtime.resourceBindings,
+        );
+      }
+      const updated = await persistCharacterRuntime(
+        character,
+        {
+          ...persistPayload(runtimeToPersist, turnState, inventoryChanged),
+          ...(currency ? { currency } : {}),
+        },
+        encounterApply,
+      );
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {
@@ -429,7 +797,7 @@ export default function SheetActionsPanel({
     } finally {
       setBusy(false);
     }
-  }, [character.id, onUpdated, onEvents]);
+  }, [character, encounterApply, onUpdated, onEvents, canonicalBuild.runtime]);
 
   // freeuse-пул заклинания-действия (каст без ячейки) с текущим/макс. запасом и
   // фиксированным кругом бесплатного каста (spec.level или базовый круг). null — нет пула/зарядов.
@@ -453,34 +821,232 @@ export default function SheetActionsPanel({
     } catch { return []; }
   }, []);
 
+  const [companionTargets, setCompanionTargets] = useState<ForgeCharacter[]>([]);
+  useEffect(() => {
+    if (!companionModel?.familiar || !companionModel.touchSpells.length) {
+      setCompanionTargets((current) => current.length ? [] : current);
+      return;
+    }
+    let active = true;
+    void loadTargetChars().then((listed) => {
+      if (active) setCompanionTargets(listed.filter((candidate) => candidate.id !== character.id));
+    });
+    return () => { active = false; };
+  }, [companionModel?.familiar?.actorId, companionModel?.touchSpells.length, character.id, loadTargetChars]);
+
+  const runSingleCompanionCommand = async (command: GameCommand) => {
+    if (!canonicalBuild.runtime || companionRetry) return;
+    try {
+      const prepared = prepareSheetCompanionCommand({
+        participant: { character, canonical: canonicalBuild.runtime },
+        onlineEncounterId: encounterId ?? character.current_encounter_id,
+        command,
+        rng: Math.random,
+      });
+      await commitCompanionInteraction(prepared);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
+
+  const handleCompanionDismiss = (mode: 'temporary' | 'forever') => {
+    if (!canonicalBuild.runtime) return;
+    if (mode === 'forever' && !window.confirm('Отпустить фамильяра навсегда?')) return;
+    const command = buildDismissFamiliarCommand({
+      runtime: canonicalBuild.runtime,
+      onlineEncounterId: encounterId ?? character.current_encounter_id,
+      commandId: newSheetRuntimeCommandId(),
+      mode,
+    });
+    void runSingleCompanionCommand(command);
+  };
+
+  const handleCompanionReappear = (facts: {
+    distanceFt: number;
+    lineOfSight: boolean;
+    unoccupiedSpace: true;
+  }) => {
+    if (!canonicalBuild.runtime) return;
+    const command = buildReappearFamiliarCommand({
+      runtime: canonicalBuild.runtime,
+      onlineEncounterId: encounterId ?? character.current_encounter_id,
+      commandId: newSheetRuntimeCommandId(),
+      facts: {
+        factsSource: 'scenario',
+        boardRevision: canonicalBuild.runtime.world.revision,
+        ...facts,
+      },
+    });
+    void runSingleCompanionCommand(command);
+  };
+
+  const handlePactTomeReplace = (rest: 'short' | 'long') => {
+    if (!canonicalBuild.runtime) return;
+    const commandId = newSheetRuntimeCommandId();
+    const command = buildPactTomeRestCommand({
+      runtime: canonicalBuild.runtime,
+      onlineEncounterId: encounterId ?? character.current_encounter_id,
+      commandId,
+      rest,
+      bookObjectId: `sheet:tome:${commandId}`,
+    });
+    void runSingleCompanionCommand(command);
+  };
+
+  const handlePactBladeTouch = (weaponObjectId: string) => {
+    if (!canonicalBuild.runtime) return;
+    const command = buildPactBladeTouchCommand({
+      runtime: canonicalBuild.runtime,
+      onlineEncounterId: encounterId ?? character.current_encounter_id,
+      commandId: newSheetRuntimeCommandId(),
+      weaponObjectId,
+      facts: {
+        factsSource: 'scenario',
+        boardRevision: canonicalBuild.runtime.world.revision,
+        distanceFt: 0,
+        lineOfSight: false,
+        touched: true,
+      },
+    });
+    void runSingleCompanionCommand(command);
+  };
+
+  const commitCompanionInteraction = async (prepared: PreparedSheetCompanionInteraction) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await charactersV3Api.postRuntimeCommand(prepared.request);
+      const current = await currentRuntimeCommandCharacters({
+        request: prepared.request,
+        response,
+        loadCurrent: charactersV3Api.get,
+      });
+      let cached = [...(targetCharsRef.current ?? [])];
+      for (const next of Object.values(current)) {
+        cached = replaceCachedInteractionTarget(cached, next);
+        if (next.id === character.id) onUpdated(next);
+      }
+      targetCharsRef.current = cached;
+      setCompanionRetry(null);
+      onEvents?.(prepared.request.events
+        .filter((event) => event.character_id === character.id)
+        .map((event) => event.payload));
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
+        setCompanionRetry(prepared);
+        setError(`${message}. Безопасный повтор сохранён.`);
+      } else {
+        setCompanionRetry(null);
+        targetCharsRef.current = null;
+        setCompanionTargets([]);
+        try {
+          const refreshed = await charactersV3Api.list();
+          targetCharsRef.current = refreshed;
+          setCompanionTargets(refreshed.filter((candidate) => candidate.id !== character.id));
+          const refreshedSource = refreshed.find((candidate) => candidate.id === character.id);
+          if (refreshedSource) onUpdated(refreshedSource);
+          setError(`${message}. Отклонённый CAS-снимок сброшен, листы обновлены.`);
+        } catch {
+          setError(`${message}. Отклонённый CAS-снимок сброшен; обновите страницу перед повтором.`);
+        }
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleFamiliarTouch = async (declaration: SheetCompanionTouchDeclaration) => {
+    if (!canonicalBuild.runtime || companionRetry) return;
+    try {
+      const target = companionTargets.find((candidate) => candidate.id === declaration.targetActorId);
+      if (!target) throw new Error('Выбранный лист цели больше недоступен');
+      const cards = new Map([...cardsIndex.entries(), ...equipCards.entries()]);
+      const targetSeed = await loadSheetCombatParticipant({ character: target, basicActions, cards });
+      const prepared = prepareSheetFamiliarTouchInteraction({
+        source: { character, canonical: canonicalBuild.runtime },
+        target: targetSeed,
+        commandId: newSheetRuntimeCommandId(),
+        spellActionId: declaration.spellActionId,
+        castOptionId: declaration.castOptionId,
+        ownerToFamiliarFacts: {
+          factsSource: 'scenario',
+          boardRevision: canonicalBuild.runtime.world.revision,
+          distanceFt: declaration.ownerDistanceFt,
+          lineOfSight: declaration.ownerLineOfSight,
+        },
+        familiarToTargetFacts: {
+          factsSource: 'scenario',
+          boardRevision: canonicalBuild.runtime.world.revision,
+          distanceFt: declaration.targetDistanceFt,
+          lineOfSight: declaration.targetLineOfSight,
+          cover: declaration.cover,
+          relation: declaration.relation,
+          willing: declaration.willing,
+        },
+        rng: Math.random,
+      });
+      await commitCompanionInteraction(prepared);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
+
   // Персист изменённого состояния ЦЕЛИ выбранному персонажу (урон/лечение/эффекты).
   // turn_state сливаем с ЦЕЛЬЮ (не носителем!), чтобы не затереть её спасброски смерти.
   const persistTarget = useCallback(async (targetChar: ForgeCharacter, ts: RuntimeState) => {
-    try {
-      await charactersV3Api.patchRuntime(targetChar.id, {
-        current_hp: ts.hp.current,
-        max_hp: ts.hp.max,
-        active_effects: ts.activeEffects,
-        turn_state: { ...(targetChar.turn_state ?? {}), temp_hp: ts.hp.temp },
-      });
-      // Освежаем кэш локально, чтобы повторные касты по той же цели шли от нового HP.
-      targetCharsRef.current = (targetCharsRef.current ?? []).map((c) =>
-        c.id === targetChar.id ? { ...c, current_hp: ts.hp.current, active_effects: ts.activeEffects } : c);
-    } catch (e) { console.error('Не удалось применить к цели', e); }
-  }, []);
+    if (isCharacterReadOnly(targetChar)) {
+      throw new Error('Архивный публичный лист нельзя изменить действием или заклинанием.');
+    }
+    const persistedTarget = await persistCharacterRuntime(targetChar, {
+      current_hp: ts.hp.current,
+      max_hp: ts.hp.max,
+      active_effects: ts.activeEffects,
+      turn_state: writeRulesEngineRuntimeTurnState(targetChar.turn_state, ts),
+    }, targetChar.current_encounter_id === encounterId ? encounterApply : undefined);
+    // Освежаем весь серверный runtime-снимок, включая once-per-turn/rest ledgers:
+    // повторное действие по той же цели в этой вкладке не должно заново активировать
+    // уже сработавшую реактивную способность.
+    targetCharsRef.current = replaceCachedInteractionTarget(
+      targetCharsRef.current ?? [],
+      persistedTarget,
+    );
+  }, [encounterApply, encounterId]);
 
   // --- Онлайн-бой: цели = комбатанты боя, применение = патч комбатанта (синк на доску) ---
   // Свежий снимок комбатантов на каждое целевое действие (доска могла изменить HP из другого
   // устройства); внутри одного действия переиспользуем через ref.
   const encCombatantsRef = useRef<Combatant[]>([]);
+  const encounterSeqRef = useRef<number | null>(null);
   const loadEncounterCombatants = useCallback(async (): Promise<Combatant[]> => {
     if (!encounterId) return [];
     try {
       const enc = await encountersApi.get(encounterId);
       encCombatantsRef.current = enc.state?.combatants ?? [];
-    } catch { encCombatantsRef.current = []; }
+      encounterSeqRef.current = enc.seq;
+    } catch {
+      encCombatantsRef.current = [];
+      encounterSeqRef.current = null;
+    }
     return encCombatantsRef.current;
   }, [encounterId]);
+
+  const sendEncounter = useCallback(async (op: Parameters<EncounterApply>[0]) => {
+    if (!encounterId) throw new Error('Бой не выбран');
+    let expectedSeq = encounterSeqRef.current;
+    if (expectedSeq == null) {
+      const encounter = await encountersApi.get(encounterId);
+      expectedSeq = encounter.seq;
+      encounterSeqRef.current = encounter.seq;
+      encCombatantsRef.current = encounter.state?.combatants ?? [];
+    }
+    const result = encounterApply
+      ? await encounterApply(op, expectedSeq)
+      : await encountersApi.apply(encounterId, expectedSeq, op);
+    encounterSeqRef.current = result.seq;
+    encCombatantsRef.current = result.state.combatants;
+    return result;
+  }, [encounterApply, encounterId]);
 
   // Богатая цель из комбатанта: для персонажа — статы из его листа (AC/спасброски/сопротивления),
   // но HP/состояния СИДИМ из комбатанта (боевая истина, иначе можно стартовать от устаревшего HP);
@@ -497,9 +1063,21 @@ export default function SheetActionsPanel({
         return { ...base, runtimeState: { ...rs, hp: battleHp, activeEffects: effects } };
       }
     }
+    const explicitAc = typeof cb.ac === 'number' && Number.isFinite(cb.ac) && cb.ac > 0
+      ? cb.ac
+      : targetAc;
     return {
-      ac: cb.ac ?? targetAc,
-      saveMods: { dex: targetSaveMod, con: targetSaveMod, str: targetSaveMod, int: targetSaveMod, wis: targetSaveMod, cha: targetSaveMod },
+      ...(typeof explicitAc === 'number' ? { ac: explicitAc } : {}),
+      ...(typeof targetSaveMod === 'number' ? {
+        saveMods: {
+          dex: targetSaveMod,
+          con: targetSaveMod,
+          str: targetSaveMod,
+          int: targetSaveMod,
+          wis: targetSaveMod,
+          cha: targetSaveMod,
+        },
+      } : {}),
       runtimeState: { hp: battleHp, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: effects },
     };
   }, [loadTargetChars, targetAc, targetSaveMod]);
@@ -541,21 +1119,289 @@ export default function SheetActionsPanel({
     // Щит: доставляем цели-персонажу pending-«атакован» — она сможет отреагировать (реакция при попадании).
     const pendingAttacks = pendingAttack ? [...(cb.pendingAttacks ?? []), pendingAttack] : cb.pendingAttacks;
     try {
-      await encountersApi.apply(encounterId, {
+      await sendEncounter({
         patches: [{ actor_id: cb.actorId, set: { hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects, ...(pendingAttack ? { pendingAttacks } : {}) } }],
         log,
       });
       encCombatantsRef.current = encCombatantsRef.current.map((c) =>
         c.actorId === cb.actorId ? { ...c, hp: ts.hp.current, temp: ts.hp.temp, activeEffects: ts.activeEffects as unknown as Combatant['activeEffects'], ...(pendingAttack ? { pendingAttacks } : {}) } : c);
-    } catch (e) { console.error('Не удалось применить к цели в бою', e); }
-  }, [encounterId, character.name]);
+    } catch (error) {
+      console.error('Не удалось применить к цели в бою', error);
+      throw new Error('Состояние цели изменилось: действие не применено и ресурсы источника не списаны', {
+        cause: error,
+      });
+    }
+  }, [encounterId, character.name, sendEncounter]);
+
+  const applyCombatResponse = async (
+    prepared: PreparedSheetCombatCommit,
+    response: Awaited<ReturnType<typeof charactersV3Api.postRuntimeCommand>>,
+    events: EngineEvent[],
+  ) => {
+    const committed = await currentRuntimeCommandCharacters({
+      request: prepared.request,
+      response,
+      loadCurrent: charactersV3Api.get,
+    });
+    let cached = [...(targetCharsRef.current ?? [])];
+    for (const next of Object.values(committed)) {
+      cached = replaceCachedInteractionTarget(cached, next);
+      if (next.id === character.id) onUpdated(next);
+    }
+    targetCharsRef.current = cached;
+    setCombatRetry(null);
+    setError(null);
+    onEvents?.(events);
+  };
+
+  const commitCombat = async (
+    prepared: PreparedSheetCombatCommit,
+    events: EngineEvent[],
+  ): Promise<boolean> => {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await commitPreparedSheetCombat(
+        { commit: charactersV3Api.postRuntimeCommand },
+        prepared,
+      );
+      await applyCombatResponse(prepared, response, events);
+      return true;
+    } catch (cause) {
+      console.error(cause);
+      // Keep the exact command bytes and command_id. A retry may be an
+      // idempotent replay of a transaction whose response was lost.
+      setCombatRetry({ prepared, events });
+      setError(cause instanceof Error
+        ? `${cause.message}. Повтор отправит ту же атомарную команду.`
+        : 'Не удалось подтвердить атомарную команду; её можно безопасно повторить.');
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const combatCharacters = async (
+    session: SheetCombatSession,
+  ): Promise<Record<string, ForgeCharacter>> => {
+    const listed = await charactersV3Api.list();
+    targetCharsRef.current = listed;
+    const byId = Object.fromEntries(listed.map((candidate) => [candidate.id, candidate]));
+    // Preserve the render-owned current sheet if list caching ever lags its
+    // just-returned runtime command response.
+    byId[character.id] = character;
+    for (const [id, revision] of Object.entries(session.participantRevisions)) {
+      const candidate = byId[id];
+      if (!candidate || candidate.runtime_revision !== revision) {
+        throw new Error(`Снимок ${id} изменился; перезагрузите лист перед продолжением`);
+      }
+    }
+    return byId;
+  };
+
+  const commitCombatTransition = async (
+    transition: SheetCombatTransition,
+    characters: Readonly<Record<string, ForgeCharacter>>,
+  ) => {
+    const prepared = prepareSheetCombatCommit({ transition, characters });
+    return commitCombat(prepared, sheetCombatEngineEvents(transition.events));
+  };
+
+  const requireCertifiedCombatSession = (session: SheetCombatSession) => {
+    if (!certifiedCombat.catalog) {
+      throw certifiedCombat.error
+        ?? new Error(certifiedCombat.loading
+          ? 'Сертифицированный combat release ещё загружается'
+          : 'Сертифицированный combat release недоступен');
+    }
+    assertCertifiedSheetCombatSession(session, certifiedCombat.catalog);
+    return certifiedCombat.catalog;
+  };
+
+  const resolveCombatDecision = async (response: DecisionResponse) => {
+    const session = combatContinuation.session;
+    if (!session?.world.pendingResolution) return;
+    try {
+      requireCertifiedCombatSession(session);
+      const characters = await combatCharacters(session);
+      const transition = resolveSheetCombatDecision({
+        session,
+        commandId: newSheetRuntimeCommandId(),
+        response,
+        rng: Math.random,
+      });
+      await commitCombatTransition(transition, characters);
+    } catch (cause) {
+      console.error(cause);
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
+
+  const moveCombatTurn = async () => {
+    const session = combatContinuation.session;
+    if (!session || session.world.pendingResolution || session.world.scene.mode !== 'encounter') return;
+    const activeActorId = session.world.scene.initiative[session.world.scene.activeIndex];
+    if (activeActorId !== character.id) return;
+    try {
+      requireCertifiedCombatSession(session);
+      const characters = await combatCharacters(session);
+      const transition = advanceSheetCombatTurn({
+        session,
+        commandId: newSheetRuntimeCommandId(),
+        type: session.world.scene.turnStarted ? 'EndTurn' : 'StartTurn',
+        actorId: character.id,
+      });
+      await commitCombatTransition(transition, characters);
+    } catch (cause) {
+      console.error(cause);
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
+
+  const runPendingCombatAction = async (
+    action: SheetAction,
+    canonical: SheetCanonicalActionContext,
+  ) => {
+    if (encounterId) {
+      setError('Этот атомарный двухлистовый режим пока не смешивается с онлайн-боем');
+      return;
+    }
+    if (combatRetry) {
+      setError('Сначала подтвердите предыдущую атомарную команду');
+      return;
+    }
+    const existing = combatContinuation.session;
+    if (combatContinuation.error) {
+      setError(combatContinuation.error.message);
+      return;
+    }
+    if (existing?.world.pendingResolution) {
+      setError('Сначала завершите ожидающее решение');
+      return;
+    }
+    if (existing && existing.world.scene.mode === 'encounter') {
+      const activeId = existing.world.scene.initiative[existing.world.scene.activeIndex];
+      if (activeId !== character.id || !existing.world.scene.turnStarted) {
+        setError('Действие доступно только активному персонажу после начала его хода');
+        return;
+      }
+    }
+    try {
+      if (!certifiedCombat.catalog) {
+        throw certifiedCombat.error ?? new Error('Сертифицированный combat release ещё не загружен');
+      }
+      assertCertifiedSheetCombatActorAction(
+        canonical.action,
+        canonical.runtime.world.actors[character.id],
+        certifiedCombat.catalog,
+      );
+      if (existing) assertCertifiedSheetCombatSession(existing, certifiedCombat.catalog);
+      const requested = collectSheetPrimitiveChoices(canonical, 'encounter');
+      const selectedChoices: Record<string, string[]> = {};
+      if (requested.length) {
+        const picked = await choiceDialog.request(requested, action.name);
+        if (!picked) return;
+        for (const [id, values] of Object.entries(picked)) {
+          if (values.length) selectedChoices[id] = values;
+        }
+      }
+      const base = buildSheetPrimitiveCommandInput({
+        runtime: canonical.runtime,
+        action: canonical.action,
+        selectedChoices,
+        sceneMode: 'encounter',
+        targetIds: [],
+      });
+      const allCharacters = await loadTargetChars();
+      const allowedIds = existing
+        ? new Set(Object.keys(existing.participantRevisions))
+        : null;
+      const targetCandidates = allCharacters
+        .filter((candidate) => candidate.id !== character.id)
+        .filter((candidate) => !allowedIds || allowedIds.has(candidate.id))
+        .map((candidate) => {
+          let reason: string | undefined;
+          if (isCharacterReadOnly(candidate)) reason = 'лист доступен только для чтения';
+          else if (candidate.current_encounter_id) reason = 'персонаж уже в онлайн-бою';
+          else if (!Number.isSafeInteger(candidate.runtime_revision)) reason = 'нет серверной runtime_revision';
+          else if (candidate.system_id !== character.system_id) reason = 'другая система правил';
+          return { id: candidate.id, name: candidate.name, ...(reason ? { disabled: true, reason } : {}) };
+        });
+      if (!targetCandidates.some((candidate) => !candidate.disabled)) {
+        throw new Error('Нет доступного второго персонажа для атомарного сценария');
+      }
+      const declarationFacts = await combatTargetDialog.request({
+        title: `${action.name}: цели и факты`,
+        action: canonical.action,
+        castLevel: base.spell?.castLevel,
+        candidates: targetCandidates,
+        requireTarget: true,
+      });
+      if (!declarationFacts) return;
+      const selectedIds = new Set(declarationFacts.targets.map((target) => target.targetId));
+      let session = existing;
+      let characters: Record<string, ForgeCharacter>;
+      if (session) {
+        characters = await combatCharacters(session);
+      } else {
+        const selectedTargets = allCharacters.filter((candidate) => selectedIds.has(candidate.id));
+        const cards = new Map([...cardsIndex.entries(), ...equipCards.entries()]);
+        const targets = await Promise.all(selectedTargets.map((target) => (
+          loadSheetCombatParticipant({ character: target, basicActions, cards })
+        )));
+        session = await createSheetCombatSession({
+          source: { character, canonical: canonical.runtime },
+          targets,
+          sceneMode: 'encounter',
+        });
+        characters = Object.fromEntries([
+          [character.id, character],
+          ...selectedTargets.map((target) => [target.id, target] as const),
+        ]);
+      }
+      const declaration = buildSheetCombatDeclaration({
+        action: canonical.action,
+        base,
+        targets: declarationFacts.targets,
+        dartAllocation: declarationFacts.dartAllocation,
+      });
+      const transition = executeSheetCombatAction({
+        session,
+        actorId: character.id,
+        actionId: canonical.action.id,
+        declaration,
+        commandId: newSheetRuntimeCommandId(),
+        rng: Math.random,
+      });
+      await commitCombatTransition(transition, characters);
+    } catch (cause) {
+      console.error(cause);
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
 
   const runAction = async (action: SheetAction) => {
+    const contextualCostIssue = contextualCostProjection.issues.get(action.id);
+    if (contextualCostIssue) {
+      setError(contextualCostIssue);
+      return;
+    }
     let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
-    // S5: дальнобойное оружие тратит боеприпас из инвентаря (оружие декларирует mechanics.ammo).
-    // Добавляем cost {resource:'item', card_id} — расход/гейт штатным canPay/pay из слайса 4.
-    const ammo = weaponAmmoCost(mech, runtime.equipment, equipCards);
-    if (ammo) mech = appendActivationCost(mech, ammo);
+    const primitive = mechanicsPrimitiveType(mech);
+    const authoritativePrimitive = primitive !== null && isSheetNoPendingPrimitive(primitive);
+    let canonical: SheetCanonicalActionContext | undefined;
+    if (primitive) {
+      try {
+        canonical = canonicalFor(action);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : String(cause));
+        return;
+      }
+    }
+    if (primitive && isSheetPendingCombatPrimitive(primitive) && canonical) {
+      await runPendingCombatAction(action, canonical);
+      return;
+    }
     const activation = mech.activation as Record<string, unknown> | undefined;
     const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
     // D: недееспособность запрещает экономику хода — не запускаем действие с запрещённым типом.
@@ -563,9 +1409,19 @@ export default function SheetActionsPanel({
     // freeuse: заклинание с пулом бесплатных использований (каст без ячейки). Считаем ДО гейта —
     // персонаж без ячеек (напр. предмет-каст) всё равно может кастовать бесплатно.
     const freeuse = freeuseFor(action);
-    if (cost.length && !payableWithUpcast(runtime, cost, !!freeuse)) return;
+    if (!authoritativePrimitive && cost.length && !payableWithUpcast(runtime, cost, !!freeuse)) return;
     // Оружейное действие без нужного оружия в руке — не запускаем.
     if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
+    if (!authoritativePrimitive) {
+      const targetFactsIssue = explicitSheetTargetFactsIssue(mech, {
+        armorClass: targetAc,
+        savingThrowModifier: targetSaveMod,
+      });
+      if (targetFactsIssue) {
+        setError(targetFactsIssue);
+        return;
+      }
+    }
 
     // Апкаст (D1) + freeuse: если действие тратит spell_slot уровня N — выбрать уровень слота N..9
     // и/или источник оплаты (ячейка/бесплатно). castLevel в mech.cost и в ctx.spell включает
@@ -573,7 +1429,7 @@ export default function SheetActionsPanel({
     // помечаем ctx.spell (для триггеров каста), castLevel не задаём.
     let spellCtx: { baseLevel: number; castLevel?: number } | undefined;
     const slotIdx = cost.findIndex((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
-    if (slotIdx >= 0 || freeuse) {
+    if (!authoritativePrimitive && (slotIdx >= 0 || freeuse)) {
       const slotEntry = slotIdx >= 0 ? cost[slotIdx] : null;
       const baseLevel = slotEntry ? Number(slotEntry.level) || 0 : (action.spellRef?.level ?? action.level ?? 0);
       const need = slotEntry ? Number(slotEntry.amount ?? 1) || 1 : 1;
@@ -610,17 +1466,16 @@ export default function SheetActionsPanel({
         }
         spellCtx = { baseLevel, castLevel };
       }
-    } else if (action.spellRef) {
+    } else if (!authoritativePrimitive && action.spellRef) {
       spellCtx = { baseLevel: action.spellRef.level ?? action.level ?? 0 };
     }
 
-    const needsTarget = actionNeedsTarget(mech);
-    const target = needsTarget
-      ? {
-          ac: targetAc,
-          saveMods: { dex: targetSaveMod, con: targetSaveMod, str: targetSaveMod, int: targetSaveMod, wis: targetSaveMod, cha: targetSaveMod },
-        }
-      : undefined;
+    const target = authoritativePrimitive
+      ? undefined
+      : explicitSheetTargetContext(mech, {
+        armorClass: targetAc,
+        savingThrowModifier: targetSaveMod,
+      });
 
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
@@ -638,7 +1493,7 @@ export default function SheetActionsPanel({
         ...(save.avoidsConditions?.length ? { avoidsConditions: save.avoidsConditions } : {}),
       };
       const ab = save.ability.toUpperCase();
-      await encountersApi.apply(encounterId, {
+      await sendEncounter({
         patches: [{ actor_id: cb.actorId, set: { pendingSaves: [...(cb.pendingSaves ?? []), pending] } }],
         log: [{
           message: `${character.name} → ${cb.name}: спасбросок ${ab} СЛ ${save.dc} (${pending.actionName})`,
@@ -659,7 +1514,7 @@ export default function SheetActionsPanel({
       const newEff = [...(cur.activeEffects ?? []), ...(out.addEffects ?? [])];
       const hpDmg = Math.max(0, -(out.hpDelta ?? 0));
       const saved = sroll.outcome === 'success';
-      await encountersApi.apply(encounterId, {
+      await sendEncounter({
         patches: [{ actor_id: cb.actorId, set: { hp: newHp, temp: newTemp, activeEffects: newEff } }],
         log: [{ message: `${cb.name}: спасбросок ${ability.toUpperCase()} — ${saved ? 'успех' : 'провал'}${hpDmg ? `, урон ${hpDmg}` : ''}` }],
       });
@@ -689,20 +1544,57 @@ export default function SheetActionsPanel({
       confirm = false,
       targetOpts?: { targets?: { id: string; name: string }[]; needsTarget?: boolean },
       presetTargetId?: string,
-    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void>; targetId?: string } | null> => {
+      canonicalContext?: SheetCanonicalActionContext,
+    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void>; targetId?: string; canonicalWorld?: WorldState } | null> => {
       // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
       // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
-      const inPlay = collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title });
+      const inPlay = [
+        ...collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title }),
+        ...collectSheetPrimitiveChoices(
+          canonicalContext,
+          encounterId ? 'encounter' : 'exploration',
+        ),
+      ];
       const choices: Record<string, string[]> = {};
       if (inPlay.length) {
         const picked = await choiceDialog.request(inPlay, title);
         if (!picked) return null; // отмена выбора = отмена действия
         for (const [k, v] of Object.entries(picked)) if (v.length) choices[k] = v;
       }
+      let canonicalInput;
+      if (canonicalContext) {
+        const worldForm = sheetWorldInputFormContext(canonicalContext);
+        const worldDeclaration = worldForm
+          ? await worldInputDialog.request(
+            worldForm,
+            `${title}: факты сценария`,
+            `sheet-object:${uid()}`,
+          )
+          : null;
+        if (worldForm && !worldDeclaration) return null;
+        canonicalInput = buildSheetPrimitiveCommandInput({
+          runtime: canonicalContext.runtime,
+          action: canonicalContext.action,
+          selectedChoices: choices,
+          sceneMode: encounterId ? 'encounter' : 'exploration',
+          targetIds: [],
+          ...(worldDeclaration?.worldInput ? { worldInput: worldDeclaration.worldInput } : {}),
+          ...(worldDeclaration?.scenarioObjects.length
+            ? { scenarioObjects: worldDeclaration.scenarioObjects }
+            : {}),
+        });
+      }
       // В бою + действие форсирует спас цели → спас бросит цель сама; из плана кубов кастера
       // исключаем d20 спасброска (кастер вводит только кости урона).
       const battleTargetSave = !!encounterId && actionForcesTargetSave(m);
-      const plan = extractDiceFromEvents(executeAction(baseState, m, execCtx(PLANNING_RNG, true, choices)).events, battleTargetSave);
+      const plan = planSheetActionDice({
+        state: baseState,
+        mechanics: m,
+        context: execCtx(PLANNING_RNG, true, choices),
+        canonical: canonicalContext,
+        canonicalInput,
+        skipTargetSave: battleTargetSave,
+      });
       // presetTargetId (реакция-райдер по той же цели, что попадание) — пикер не показываем.
       const decision = await diceDialog.request(plan, title, preview, { confirm, targets: presetTargetId ? undefined : targetOpts?.targets, needsTarget: presetTargetId ? false : targetOpts?.needsTarget });
       if (decision.mode === 'cancel') return null;
@@ -727,6 +1619,9 @@ export default function SheetActionsPanel({
       // сам у себя (pending); монстр без листа — кастер катит его спас и применяет сразу.
       if (battleTargetSave && targetCb && richTarget) {
         const save = readTargetSave(m, execCtx(() => 0.5, false, choices, richTarget));
+        if (!save) {
+          throw new Error('Скомпилированное действие не содержит явных ability/DC спасброска');
+        }
         // Предрасчёт по цели с ОГРОМНЫМ hp — чтобы урон не упёрся в 0 и дельта несла истинный урон
         // (ограничит уже цель по своему текущему hp). temp/сопротивления — реальные.
         const BIGHP = 1e7;
@@ -737,10 +1632,22 @@ export default function SheetActionsPanel({
         // Два прогона с ОДИНАКОВЫМИ костями урона (record/replay rng): провал rf и успех rs.
         const drawn: number[] = [];
         const recRng = () => { const v = rng(); drawn.push(v); return v; };
-        const rf = executeAction(baseState, m, execCtx(recRng, false, choices, precTarget, 'fail'));
+        const rf = executeSheetAction({
+          state: baseState,
+          mechanics: m,
+          context: execCtx(recRng, false, choices, precTarget, 'fail'),
+          canonical: canonicalContext,
+          canonicalInput,
+        });
         let ri = 0;
         const replayRng = () => (ri < drawn.length ? drawn[ri++] : Math.random());
-        const rs = executeAction(baseState, m, execCtx(replayRng, false, choices, precTarget, 'success'));
+        const rs = executeSheetAction({
+          state: baseState,
+          mechanics: m,
+          context: execCtx(replayRng, false, choices, precTarget, 'success'),
+          canonical: canonicalContext,
+          canonicalInput,
+        });
         const damageType = (rf.events.find((e) => e.type === 'damage') as { damageType?: string } | undefined)?.damageType;
         const prevEff = targetCb.activeEffects ?? [];
         const onFail: SaveOutcome = { ...outcomeDelta(BIGHP, baseTemp, prevEff, rf.targetState), damageType };
@@ -753,27 +1660,51 @@ export default function SheetActionsPanel({
           return { state: rf.state, events: casterEvents, pending: rf.pendingReactions ?? [], commitTarget: undefined, targetId };
         }
         // Монстр (нет листа): кастер катит спас монстра (мод — из поля «Спас цели») и применяет дельту.
-        const sroll = rollD20({ modifiers: [{ value: targetSaveMod, source: 'цель', reason: 'спасбросок' }], target: { type: 'dc', value: save?.dc ?? 10 }, rng: () => Math.random() });
+        if (typeof targetSaveMod !== 'number' || !Number.isSafeInteger(targetSaveMod)) {
+          throw new Error('Для монстра требуется явно указать модификатор спасброска');
+        }
+        const sroll = rollD20({ modifiers: [{ value: targetSaveMod, source: 'цель', reason: 'спасбросок' }], target: { type: 'dc', value: save.dc }, rng: () => Math.random() });
         const monOut = sroll.outcome === 'success' ? onSuccess : onFail;
-        const saveEvent: EngineEvent = { type: 'roll', label: `Спасбросок ${(save?.ability ?? '').toUpperCase()} цели — ${sroll.outcome === 'success' ? 'успех' : 'провал'}`, roll: sroll };
-        const commitTarget = () => applyMonsterSaveOutcome(targetCb!, monOut, sroll, save?.ability ?? '');
+        const saveEvent: EngineEvent = { type: 'roll', label: `Спасбросок ${save.ability.toUpperCase()} цели — ${sroll.outcome === 'success' ? 'успех' : 'провал'}`, roll: sroll };
+        const commitTarget = () => applyMonsterSaveOutcome(targetCb!, monOut, sroll, save.ability);
         return { state: rf.state, events: [saveEvent], pending: rf.pendingReactions ?? [], commitTarget, targetId };
       }
-      const r = executeAction(baseState, m, execCtx(rng, false, choices, richTarget));
+      const r = executeSheetAction({
+        state: baseState,
+        mechanics: m,
+        context: execCtx(rng, false, choices, richTarget),
+        canonical: canonicalContext,
+        canonicalInput,
+      });
+      if (r.pendingResolution) {
+        throw new UnsupportedSheetPendingResolutionError(r.pendingResolution.type);
+      }
       let commitTarget: (() => Promise<void>) | undefined;
       if (r.targetState) {
         const tstate = r.targetState;
         if (targetCb) {
-          // Щит: если это АТАКА, попавшая по персонаже-комбатанте с уроном — прикладываем pending-«атакован».
+          // Реакции на попадание: если АТАКА попала по персонажу-комбатанту и нанесла урон,
+          // сохраняем точные каналы урона в pending-«атакован».
           const atkEv = r.events.find((e) => e.type === 'roll' && e.roll?.kind === 'd20' && (e.roll?.outcome === 'hit' || e.roll?.outcome === 'crit')) as Extract<EngineEvent, { type: 'roll' }> | undefined;
-          const dmg = Math.max(0, targetCb.hp - tstate.hp.current) + Math.max(0, (targetCb.temp ?? 0) - (tstate.hp.temp ?? 0));
-          const pendingAtk: PendingAttack | undefined = targetCb.characterId && atkEv && dmg > 0
-            ? { id: uid(), sourceName: character.name, attackName: String(m.name ?? title), attackTotal: atkEv.roll.total, damage: dmg, damageType: (r.events.find((e) => e.type === 'damage') as { damageType?: string } | undefined)?.damageType, crit: atkEv.roll.outcome === 'crit' }
+          const damage = pendingAttackDamage(
+            { hp: targetCb.hp, temp: targetCb.temp ?? 0 },
+            { hp: tstate.hp.current, temp: tstate.hp.temp ?? 0 },
+          );
+          const pendingAtk: PendingAttack | undefined = targetCb.characterId && atkEv && damage.damage > 0
+            ? { id: uid(), sourceName: character.name, attackName: String(m.name ?? title), attackTotal: atkEv.roll.total, ...damage, damageType: (r.events.find((e) => e.type === 'damage') as { damageType?: string } | undefined)?.damageType, crit: atkEv.roll.outcome === 'crit' }
             : undefined;
           commitTarget = () => applyToEncounterTarget(targetCb!, tstate, r.events, pendingAtk);
         } else if (targetChar) commitTarget = () => persistTarget(targetChar!, tstate);
       }
-      return { state: r.state, events: r.events, pending: r.pendingReactions ?? [], targetState: r.targetState, commitTarget, targetId };
+      return {
+        state: r.state,
+        events: r.events,
+        pending: r.pendingReactions ?? [],
+        targetState: r.targetState,
+        commitTarget,
+        targetId,
+        canonicalWorld: r.canonicalWorld,
+      };
     };
 
     try {
@@ -783,7 +1714,9 @@ export default function SheetActionsPanel({
       const needsConfirm = spendsResource(mech) || !!action.spellRef;
       // Действие взаимодействует с другим персонажем → предложить выбор цели в окне (при включённом
       // диалоге кубов). Список всех персонажей, кроме себя. При выключенном диалоге — dummy, как раньше.
-      const interactsWithTarget = actionInteractsWithTarget(mech);
+      const interactsWithTarget = canonical
+        ? sheetActionRequiresActorTargets(canonical.action)
+        : actionInteractsWithTarget(mech);
       let targetOptions: { id: string; name: string }[] | undefined;
       if (interactsWithTarget && getSettings().diceDialog) {
         if (encounterId) {
@@ -796,20 +1729,19 @@ export default function SheetActionsPanel({
           }));
         } else {
           const chars = await loadTargetChars();
-          targetOptions = chars.filter((c) => c.id !== character.id).map((c) => ({
-            id: c.id, name: c.name,
-            ...(charmerIds.has(c.id) ? { disabled: true, reason: 'вы очарованы им' } : {}),
-          }));
+          targetOptions = chars
+            .filter((c) => c.id !== character.id)
+            .map((c) => characterInteractionTargetOption(c, charmerIds));
         }
       }
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
-        { targets: targetOptions, needsTarget: interactsWithTarget });
+        { targets: targetOptions, needsTarget: interactsWithTarget }, undefined, canonical);
       if (!main) return;
       let { state, events } = main;
       // Применённое к цели состояние (урон/лечение/эффекты) — на комбатанта боя или в запись персонажа.
       if (main.commitTarget) await main.commitTarget();
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
-      if (action.spellRef?.concentration) {
+      if (action.spellRef?.concentration && !main.canonicalWorld) {
         const previousEffectIds = new Set(runtime.activeEffects.map((effect) => effect.id));
         const concentrationEffectIds = state.activeEffects
           .filter((effect) => {
@@ -858,29 +1790,108 @@ export default function SheetActionsPanel({
         if (r.commitTarget) await r.commitTarget();
       }
 
-      apply(state, events);
+      apply(state, events, main.canonicalWorld);
     } catch (e) {
       if (e instanceof InsufficientResourcesError) {
         setError('Недостаточно ресурсов');
         return;
       }
-      throw e;
+      console.error(e);
+      setError(e instanceof Error ? e.message : 'Не удалось выполнить действие');
     }
   };
 
   // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
   const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
+    const contextualCostIssue = contextualCostProjection.issues.get(action.id);
+    if (contextualCostIssue) return { disabled: true, reason: contextualCostIssue };
+    const primitive = mechanicsPrimitiveType(action.mechanics);
+    const pendingCombat = primitive ? isSheetPendingCombatPrimitive(primitive) : false;
+    if (primitive) {
+      const primitiveReason = sheetPrimitiveDisabledReason(primitive);
+      if (primitiveReason) return { disabled: true, reason: primitiveReason };
+      if (canonicalBuild.error) return { disabled: true, reason: canonicalBuild.error.message };
+      try {
+        const canonical = canonicalFor(action);
+        const definitionIssue = canonical ? sheetPrimitiveDefinitionIssue(canonical.action) : null;
+        if (definitionIssue) return { disabled: true, reason: definitionIssue };
+        if (canonical && !canonical.action.targeting) {
+          return { disabled: true, reason: 'У канонического действия нет явного targeting-контракта' };
+        }
+        if (canonical && sheetActionRequiresActorTargets(canonical.action) && !pendingCombat) {
+          return {
+            disabled: true,
+            reason: 'Этот канонический примитив требует выбора персонажа и явных фактов цели; продолжение ещё не подключено',
+          };
+        }
+        if (pendingCombat && encounterId) {
+          return { disabled: true, reason: 'Двухлистовая атомарная команда пока недоступна внутри онлайн-боя' };
+        }
+        if (pendingCombat && certifiedCombat.loading) {
+          return { disabled: true, reason: 'Проверяется сертифицированный combat release' };
+        }
+        if (pendingCombat && certifiedCombat.error) {
+          return { disabled: true, reason: certifiedCombat.error.message };
+        }
+        if (pendingCombat && canonical && certifiedCombat.catalog) {
+          assertCertifiedSheetCombatActorAction(
+            canonical.action,
+            canonical.runtime.world.actors[character.id],
+            certifiedCombat.catalog,
+          );
+        }
+        if (pendingCombat && !Number.isSafeInteger(character.runtime_revision)) {
+          return { disabled: true, reason: 'Сервер не вернул runtime_revision персонажа' };
+        }
+        if (pendingCombat && combatContinuation.error) {
+          return { disabled: true, reason: combatContinuation.error.message };
+        }
+        if (pendingCombat && combatRetry) {
+          return { disabled: true, reason: 'Предыдущая атомарная команда ожидает безопасного повтора' };
+        }
+        if (pendingCombat && combatContinuation.session?.world.pendingResolution) {
+          return { disabled: true, reason: 'Сначала завершите ожидающее решение' };
+        }
+        if (canonical) {
+          const timingIssue = sheetPrimitiveCastTimingIssue(
+            canonical,
+            encounterId ? 'encounter' : 'exploration',
+          );
+          if (timingIssue) return { disabled: true, reason: timingIssue };
+        }
+        collectSheetPrimitiveChoices(canonical, encounterId ? 'encounter' : 'exploration');
+      } catch (cause) {
+        return {
+          disabled: true,
+          reason: cause instanceof Error ? cause.message : String(cause),
+        };
+      }
+    }
     const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards);
     if (!avail.available) return { disabled: true, reason: avail.reason };
+    if (!primitive) {
+      const targetFactsIssue = explicitSheetTargetFactsIssue(action.mechanics, {
+        armorClass: targetAc,
+        savingThrowModifier: targetSaveMod,
+      });
+      if (targetFactsIssue) return { disabled: true, reason: targetFactsIssue };
+    }
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const baseCost = (activation?.cost as Record<string, unknown>[]) ?? [];
     // D: Недееспособность запрещает экономику хода — гейтим действие, если его стоимость включает
     // запрещённый тип (действие/бонусное/реакция) или оно требует концентрации при её запрете.
     const capReason = deniedActionReason(action, baseCost);
     if (capReason) return { disabled: true, reason: capReason };
-    // S5: дальнобойное оружие требует боеприпас — добавляем его к проверяемой стоимости.
-    const ammo = weaponAmmoCost(action.mechanics, runtime.equipment, equipCards);
-    const cost = ammo ? [...baseCost, ammo] : baseCost;
+    if (primitive) {
+      const nonSlotCost = baseCost.filter((entry) => (
+        String(entry.resource ?? '') !== 'spell_slot'
+      ));
+      if (nonSlotCost.length && !canPay(runtime, nonSlotCost).ok) {
+        return { disabled: true, reason: 'Недостаточно ресурсов' };
+      }
+      return { disabled: busy };
+    }
+    const cost = baseCost;
     // Апкаст: спелл доступен при любом слоте ≥ базового круга; freeuse снимает требование
     // ячейки (не действия) — заклинание всё равно требует свободного действия/бонуса.
     const payable = !cost.length || payableWithUpcast(runtime, cost, !!freeuseFor(action));
@@ -924,9 +1935,114 @@ export default function SheetActionsPanel({
   })();
   const groups = spellsOnly ? spellLevelGroups : allGroups;
 
+  const combatSession = combatContinuation.session;
+  const combatActorNames = combatSession
+    ? Object.fromEntries(Object.values(combatSession.world.actors).map((actor) => [actor.id, actor.name]))
+    : {};
+  const combatScene = combatSession?.world.scene.mode === 'encounter'
+    ? combatSession.world.scene
+    : null;
+  const activeCombatActorId = combatScene
+    ? combatScene.initiative[combatScene.activeIndex]
+    : null;
+  let combatSessionCertificationError: Error | null = null;
+  if (combatSession) {
+    try {
+      requireCertifiedCombatSession(combatSession);
+    } catch (cause) {
+      combatSessionCertificationError = cause instanceof Error
+        ? cause
+        : new Error(String(cause));
+    }
+  }
+
   const body = (
     <>
+      {worldInputDialog.dialog}
+      {combatTargetDialog.dialog}
       {error && <p className="issues">{error}</p>}
+      {companionRetry && (
+        <section className="sheet-group" role="alert" data-testid="sheet-companion-retry">
+          <h3 className="sheet-h3">Ответ операции спутника не подтверждён</h3>
+          <p>Повтор использует тот же command_id и те же CAS-снимки всех затронутых листов.</p>
+          <button type="button" className="forge-btn" disabled={busy} onClick={() => { void commitCompanionInteraction(companionRetry); }}>
+            Безопасно повторить
+          </button>
+        </section>
+      )}
+      {combatRetry && (
+        <section className="sheet-group" role="alert" data-testid="sheet-combat-retry">
+          <h3 className="sheet-h3">Ответ атомарной команды не подтверждён</h3>
+          <p>Повтор использует тот же command_id и тот же снимок всех участников.</p>
+          <button
+            type="button"
+            className="forge-btn"
+            disabled={busy}
+            onClick={() => { void commitCombat(combatRetry.prepared, combatRetry.events); }}
+          >
+            Безопасно повторить
+          </button>
+        </section>
+      )}
+      {combatSession && combatSessionCertificationError && (
+        <section className="sheet-group" role="alert" data-testid="sheet-combat-certification-error">
+          <h3 className="sheet-h3">Продолжение боя заблокировано</h3>
+          <p>{combatSessionCertificationError.message}</p>
+        </section>
+      )}
+      {combatSession?.world.pendingResolution && !combatSessionCertificationError && (
+        <SheetPendingCombatPanel
+          pending={combatSession.world.pendingResolution}
+          viewingCharacterId={character.id}
+          actorNames={combatActorNames}
+          busy={busy || !!combatRetry}
+          onResolve={resolveCombatDecision}
+        />
+      )}
+      {combatScene && !combatSession?.world.pendingResolution && !combatSessionCertificationError && (
+        <section className="sheet-group" role="status" data-testid="sheet-combat-turn-state">
+          <h3 className="sheet-h3">Последовательность ходов · раунд {combatScene.round}</h3>
+          <p>
+            Активен: {activeCombatActorId ? combatActorNames[activeCombatActorId] ?? activeCombatActorId : '—'}.
+            {' '}{combatScene.turnStarted ? 'Ход начат.' : 'Ожидается начало хода.'}
+          </p>
+          {activeCombatActorId === character.id && (
+            <button
+              type="button"
+              className="forge-btn ghost"
+              disabled={busy || !!combatRetry}
+              onClick={() => { void moveCombatTurn(); }}
+            >
+              {combatScene.turnStarted ? 'Завершить ход' : 'Начать ход'}
+            </button>
+          )}
+        </section>
+      )}
+
+      {!spellsOnly && companionModel && (
+        <SheetCompanionControls
+          model={companionModel}
+          targets={companionTargets.map((candidate) => ({
+            id: candidate.id,
+            name: candidate.name,
+            ...(isCharacterReadOnly(candidate)
+              ? { disabledReason: 'лист доступен только для чтения' }
+              : candidate.current_encounter_id
+                ? { disabledReason: 'персонаж находится в онлайн-бою' }
+                : !Number.isSafeInteger(candidate.runtime_revision)
+                  ? { disabledReason: 'нет server runtime_revision' }
+                  : candidate.system_id !== character.system_id
+                    ? { disabledReason: 'другая система правил' }
+                    : {}),
+          }))}
+          busy={busy || !!companionRetry}
+          onDismiss={handleCompanionDismiss}
+          onReappear={handleCompanionReappear}
+          onReplaceTome={handlePactTomeReplace}
+          onTouchPactBlade={handlePactBladeTouch}
+          onDeliverTouch={(declaration) => { void handleFamiliarTouch(declaration); }}
+        />
+      )}
 
       {showResources && !spellsOnly && resourceKeys.length > 0 && (
         <div className="res-tile-row">
@@ -979,10 +2095,11 @@ export default function SheetActionsPanel({
             <input
               type="number"
               className="forge-input sheet-target-num"
-              value={targetAc}
+              value={targetAc ?? ''}
               min={1}
               max={30}
-              onChange={(e) => setTargetAc(Number(e.target.value) || 10)}
+              placeholder="—"
+              onChange={(e) => setTargetAc(e.target.value === '' ? null : Number(e.target.value))}
             />
           </label>
           <label className="sheet-target-field">
@@ -990,10 +2107,11 @@ export default function SheetActionsPanel({
             <input
               type="number"
               className="forge-input sheet-target-num"
-              value={targetSaveMod}
+              value={targetSaveMod ?? ''}
               min={-5}
               max={20}
-              onChange={(e) => setTargetSaveMod(Number(e.target.value) || 0)}
+              placeholder="—"
+              onChange={(e) => setTargetSaveMod(e.target.value === '' ? null : Number(e.target.value))}
             />
           </label>
         </div>

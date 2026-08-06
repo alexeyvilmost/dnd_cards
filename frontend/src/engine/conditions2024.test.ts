@@ -1,10 +1,10 @@
 /**
  * Состояния PHB 2024 — доработки движка A/B/C/D/F:
- *  A — автопровал спасов СИЛ/ЛВК; B — автокрит рукопашной атакой; C — проекция по дальности
- *  (Распластан: рукопашные преим., дальнобойные помеха); D — запрет экономики хода; F — композиция.
+ *  A — автопровал спасов СИЛ/ЛВК; B — автокрит атакой в пределах 5 футов; C — проекция
+ *  по явной дистанции (Распластан: ≤5 футов преим., >5 футов помеха); D — запреты; F — композиция.
  */
 import { describe, expect, it } from 'vitest';
-import { collectModifiers, deniedCapabilities } from './modifiers';
+import { collectModifiers, conditionCapabilityDenied, deniedCapabilities } from './modifiers';
 import { conditionModifierPayloads, expandConditionSet, conditionLeaves } from './conditions';
 import { projectedAgainst } from './execute';
 import { attackRangeFromEffect } from './weapon';
@@ -14,7 +14,19 @@ const state = (...conds: string[]): RuntimeState => ({
   hp: { current: 10, max: 10, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [],
   activeEffects: conds.map((value, i) => ({ id: `c${i}`, name: value, mechanics: { kind: 'condition', value } } as never)),
 });
-const target = (...conds: string[]): TargetContext => ({ ac: 10, runtimeState: state(...conds) });
+const target = (...conds: string[]): TargetContext => ({ id: 'target', ac: 10, runtimeState: state(...conds) });
+const projectionAt = (condition: string, distanceFt?: number) => projectedAgainst(
+  target(condition),
+  'attack',
+  undefined,
+  {
+    rollerActorId: 'attacker',
+    rollTargetActorId: 'target',
+    ...(distanceFt == null ? {} : {
+      distancesFt: { attacker: { target: distanceFt } },
+    }),
+  },
+);
 
 describe('F — композиция состояний (includes)', () => {
   it('Парализован наследует механику Недееспособного (deny)', () => {
@@ -28,11 +40,12 @@ describe('F — композиция состояний (includes)', () => {
   it('нет бесконечной рекурсии при цикле', () => {
     expect(() => conditionModifierPayloads('paralyzed', new Set())).not.toThrow();
   });
-  it('Без сознания = Опрокинут + Парализован (→ Недееспособен) транзитивно', () => {
+  it('Без сознания = Опрокинут + Недееспособен, но НЕ Парализован', () => {
     const set = expandConditionSet(['unconscious']);
-    for (const c of ['prone', 'paralyzed', 'incapacitated']) expect(set.has(c)).toBe(true);
+    for (const c of ['prone', 'incapacitated']) expect(set.has(c)).toBe(true);
+    expect(set.has('paralyzed')).toBe(false);
   });
-  it('Без сознания наследует автопровал (от Парализован) и скорость 0', () => {
+  it('Без сознания объявляет собственные автопровал и скорость 0', () => {
     expect(collectModifiers(state('unconscious'), [], { roll: 'saving_throw', filter: { ability: 'str' } }).autoFail).toBe(true);
     expect(conditionModifierPayloads('unconscious').some((m) => m.applies_to.roll === 'speed' && m.op === 'set')).toBe(true);
   });
@@ -70,6 +83,11 @@ describe('D — запрет экономики хода (Недееспособ
     const denied = deniedCapabilities(state('incapacitated'));
     for (const cap of ['action', 'bonus_action', 'reaction', 'concentration']) expect(denied.has(cap)).toBe(true);
   });
+  it('Недееспособен запрещает речь отдельным общим capability-примитивом', () => {
+    expect(conditionCapabilityDenied(state('incapacitated'), 'speech', {
+      rollerActorId: 'subject',
+    })).toBe(true);
+  });
   it('Парализован запрещает их же по композиции', () => {
     expect(deniedCapabilities(state('paralyzed')).has('action')).toBe(true);
   });
@@ -79,25 +97,25 @@ describe('D — запрет экономики хода (Недееспособ
 });
 
 describe('B/C — проекция состояний с дистанционным гейтом', () => {
-  it('Парализован: рукопашная атака по нему — автокрит, дальнобойная — нет', () => {
-    expect(projectedAgainst(target('paralyzed'), 'attack', 'melee').autoCrit).toBe(true);
-    expect(projectedAgainst(target('paralyzed'), 'attack', 'ranged').autoCrit).toBe(false);
-    // Преимущество атак по нему — плоское (обе дальности).
-    expect(projectedAgainst(target('paralyzed'), 'attack', 'ranged').advantage).toBe('advantage');
+  it('Парализован: попадание в пределах 5 футов — автокрит, дальше — нет', () => {
+    expect(projectionAt('paralyzed', 5).autoCrit).toBe(true);
+    expect(projectionAt('paralyzed', 10).autoCrit).toBe(false);
+    // Преимущество атак по нему не зависит от дистанции.
+    expect(projectionAt('paralyzed', 10).advantage).toBe('advantage');
   });
-  it('Распластан: рукопашные атаки по нему — преимущество, дальнобойные — помеха', () => {
-    expect(projectedAgainst(target('prone'), 'attack', 'melee').advantage).toBe('advantage');
-    expect(projectedAgainst(target('prone'), 'attack', 'ranged').advantage).toBe('disadvantage');
+  it('Распластан: атака в пределах 5 футов — преимущество, дальше — помеха', () => {
+    expect(projectionAt('prone', 5).advantage).toBe('advantage');
+    expect(projectionAt('prone', 10).advantage).toBe('disadvantage');
   });
   it('неизвестная дальность — гейт закрыт (ни автокрита, ни проекции Распластан)', () => {
-    expect(projectedAgainst(target('paralyzed'), 'attack', undefined).autoCrit).toBe(false);
-    expect(projectedAgainst(target('prone'), 'attack', undefined).advantage).toBe('none');
+    expect(projectionAt('paralyzed').autoCrit).toBe(false);
+    expect(projectionAt('prone').advantage).toBe('none');
   });
-  it('Без сознания (= Парализован + Опрокинут): рукопашная — преим.+автокрит, дальнобойная — обычная (adv+dis)', () => {
-    expect(projectedAgainst(target('unconscious'), 'attack', 'melee').advantage).toBe('advantage');
-    expect(projectedAgainst(target('unconscious'), 'attack', 'melee').autoCrit).toBe(true);
-    // Плоское преим. (Парализован) + помеха дальнобойным (Опрокинут) → обычный бросок.
-    expect(projectedAgainst(target('unconscious'), 'attack', 'ranged').advantage).toBe('none');
+  it('Без сознания: ≤5 футов — преим.+автокрит, дальше — обычный бросок (adv+dis)', () => {
+    expect(projectionAt('unconscious', 5).advantage).toBe('advantage');
+    expect(projectionAt('unconscious', 5).autoCrit).toBe(true);
+    // Плоское преимущество + помеха от включённого Распластан дальше 5 футов → обычный бросок.
+    expect(projectionAt('unconscious', 10).advantage).toBe('none');
   });
 });
 
@@ -109,7 +127,7 @@ describe('attackRangeFromEffect — тип атаки', () => {
   it('атака заклинанием (нет dice:weapon) — дальность неизвестна', () => {
     expect(attackRangeFromEffect({ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: '1d10' }] }, 'main', char)).toBeUndefined();
   });
-  it('оружейная атака без оружия в руке — трактуется как рукопашная', () => {
-    expect(attackRangeFromEffect({ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: 'weapon' }] }, 'main', char, {})).toBe('melee');
+  it('оружейная атака без объявленного оружия в руке не получает выдуманный тип дальности', () => {
+    expect(attackRangeFromEffect({ resolution: 'attack_roll', on_hit: [{ kind: 'damage', dice: 'weapon' }] }, 'main', char, {})).toBeUndefined();
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Инициализация пулов ресурсов (фаза D1).
  */
-import type { CharacterContext } from '../mvp/contracts';
+import type { CharacterContext, ResourceRestRecovery } from '../mvp/contracts';
 import { evaluate, type FormulaContext } from './formula';
 
 type Dict = Record<string, unknown>;
@@ -137,14 +137,53 @@ export function maxAvailableSpellSlotLevel(maxResources: Record<string, number>)
 export function resourcesRestoredOnShortRest(
   maxResources: Record<string, number>,
   recharge?: Record<string, string>,
+  recovery?: Record<string, ResourceRestRecovery | null>,
 ): string[] {
-  if (!recharge) {
-    const LEGACY_SKIP = new Set(['action', 'bonus_action', 'reaction', 'heroic_inspiration']);
-    return Object.keys(maxResources).filter((k) => !LEGACY_SKIP.has(k) && !k.startsWith('hit_dice_'));
-  }
   return Object.keys(maxResources).filter((k) => {
     if (TURN_KEYS.includes(k as typeof TURN_KEYS[number])) return false;
     if (k.startsWith('hit_dice_')) return false;
+    if (recovery && Object.prototype.hasOwnProperty.call(recovery, k)) {
+      return recovery[k]?.short_rest != null;
+    }
+    if (!recharge) return k !== 'heroic_inspiration';
     return recharge[k] === 'short_rest';
   });
+}
+
+/**
+ * Amount restored for one eligible short-rest resource. Missing policy keeps
+ * legacy full-pool recharge. An explicit null/malformed policy restores zero;
+ * a configured fixed rule is bounded by both its amount and the pool maximum.
+ */
+export function resourceAmountRestoredOnShortRest(
+  resourceKey: string,
+  current: number,
+  maximum: number,
+  recovery?: Record<string, ResourceRestRecovery | null>,
+): number {
+  if (!Number.isSafeInteger(current) || !Number.isSafeInteger(maximum)
+    || current < 0 || maximum < 0 || current >= maximum) return 0;
+
+  const missing = maximum - current;
+  if (!recovery || !Object.prototype.hasOwnProperty.call(recovery, resourceKey)) return missing;
+  const rule = recovery[resourceKey]?.short_rest;
+  if (!rule || rule.mode !== 'fixed' || !Number.isSafeInteger(rule.amount) || rule.amount <= 0) {
+    return 0;
+  }
+  return Math.min(missing, rule.amount);
+}
+
+/** Full recovery declared for an explicitly configured resource. */
+export function resourceAmountRestoredOnLongRest(
+  resourceKey: string,
+  current: number,
+  maximum: number,
+  recovery?: Record<string, ResourceRestRecovery | null>,
+): number | null {
+  if (!recovery || !Object.prototype.hasOwnProperty.call(recovery, resourceKey)) return null;
+  if (!Number.isSafeInteger(current) || !Number.isSafeInteger(maximum)
+    || current < 0 || maximum < 0 || current >= maximum) return 0;
+  const rule = recovery[resourceKey]?.long_rest;
+  if (!rule || rule.mode !== 'full') return 0;
+  return maximum - current;
 }

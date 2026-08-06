@@ -2,11 +2,13 @@
 /**
  * Фаза A5: чистка контента прод-БД через API.
  * Запуск: node scripts/fix-content-a5.mjs
- * Переменные: API_URL, AUTH_USER, AUTH_PASS, DRY_RUN=1
+ * Переменные: API_URL, API_TOKEN или CONTENT_ADMIN_USERNAME +
+ * CONTENT_ADMIN_PASSWORD, DRY_RUN=1
  */
 const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
-const AUTH_USER = process.env.AUTH_USER || 'importer_user';
-const AUTH_PASS = process.env.AUTH_PASS || 'importer_pass123';
+const CONTENT_ADMIN_USERNAME = process.env.CONTENT_ADMIN_USERNAME;
+const CONTENT_ADMIN_PASSWORD = process.env.CONTENT_ADMIN_PASSWORD;
+const API_TOKEN = process.env.API_TOKEN;
 const DRY_RUN = process.env.DRY_RUN === '1';
 
 const SKILL_RU_TO_ID = {
@@ -84,21 +86,19 @@ async function fetchAll(path, key) {
 }
 
 async function login() {
-  await fetch(`${API_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: AUTH_USER,
-      password: AUTH_PASS,
-      email: `${AUTH_USER}@example.com`,
-      display_name: 'Content Fixer',
-    }),
-  }).catch(() => {});
+  if (!CONTENT_ADMIN_USERNAME?.trim() || !CONTENT_ADMIN_PASSWORD) {
+    throw new Error(
+      'Задайте API_TOKEN либо CONTENT_ADMIN_USERNAME и CONTENT_ADMIN_PASSWORD',
+    );
+  }
 
   const res = await fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: AUTH_USER, password: AUTH_PASS }),
+    body: JSON.stringify({
+      username: CONTENT_ADMIN_USERNAME,
+      password: CONTENT_ADMIN_PASSWORD,
+    }),
   });
   if (!res.ok) throw new Error(`Login failed: ${res.status} ${await res.text()}`);
   const data = await res.json();
@@ -189,7 +189,7 @@ function findSpellByNames(spells, names) {
 
 async function main() {
   console.log(`API: ${API_URL}${DRY_RUN ? ' (DRY_RUN)' : ''}`);
-  const token = await login();
+  const token = API_TOKEN?.trim() || await login();
   console.log('Авторизация OK');
 
   const [feats, backgrounds, spells] = await Promise.all([

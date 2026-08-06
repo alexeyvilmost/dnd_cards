@@ -21,16 +21,735 @@
     "interactions": { "type": "array", "items": { "$ref": "#/$defs/effectItem" } },
     "duration": { "$ref": "#/$defs/duration" },
     "uses": { "$ref": "#/$defs/uses" },
-    "ammo": {
-      "description": "S5: боеприпас оружия — id карты или {card_id,name}. Дальнобойная атака тратит его из инвентаря ({resource:'item',card_id}).",
-      "oneOf": [
-        { "type": "string" },
-        { "type": "object", "properties": { "card_id": { "type": "string" }, "name": { "type": "string" } }, "required": ["card_id"] }
+    "interaction": { "$ref": "#/$defs/interactionIntent" },
+    "primitive": { "$ref": "#/$defs/rulesPrimitive" },
+    "spell_class_list_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^CLASS-[a-z0-9_-]+$" },
+      "description": "Immutable stable class-list identities for a spell; display names are never interpreted as rules data."
+    },
+    "weapon_mastery": { "$ref": "#/$defs/weaponMasteryPrimitive" },
+    "attack_replacement": { "$ref": "#/$defs/attackReplacement" },
+    "rest_decision": { "$ref": "#/$defs/restDecision" },
+    "condition": { "$ref": "#/$defs/conditionIdentity" },
+    "fighting_style": { "$ref": "#/$defs/fightingStyle" },
+    "capabilities": { "type": "array", "items": { "type": "object" } },
+    "end_triggers": { "type": "array", "items": { "type": "string" } },
+    "includes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "leaves": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "stacking": {
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["binary", "levels"] },
+        "max": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "levels" } } },
+          "then": { "required": ["max"] },
+          "else": { "properties": { "max": false } }
+        }
       ]
-    }
+    },
+    "long_rest": {
+      "type": "object",
+      "required": ["remove_levels"],
+      "additionalProperties": false,
+      "properties": { "remove_levels": { "type": "integer", "minimum": 0 } }
+    },
+    "thresholds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at_level", "outcome"],
+        "additionalProperties": false,
+        "properties": {
+          "at_level": { "type": "integer", "minimum": 1 },
+          "outcome": { "const": "death" }
+        }
+      }
+    },
+    "world_facts": { "type": "object" },
+    "weapon_profile": { "$ref": "#/$defs/weaponProfile" }
   },
 
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "primitive": {
+            "properties": {
+              "type": { "enum": ["light_world_object", "burning_hands_objects", "detect_magic_world_sensing", "minor_illusion_world_object", "dancing_lights_world", "druidcraft_world", "mending_world", "detect_poison_disease_world", "purify_food_drink_world", "prestidigitation_world", "magic_missile"] }
+            },
+            "required": ["type"]
+          }
+        },
+        "required": ["primitive"]
+      },
+      "then": {
+        "required": ["targeting"],
+        "properties": {
+          "targeting": {
+            "required": ["domain", "actor_targets", "range_ft", "allowed_relations", "requires_line_of_sight", "shape"]
+          }
+        }
+      }
+    }
+  ],
+
   "$defs": {
+    "weaponDamageLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dice", "type"],
+      "properties": {
+        "dice": { "type": "string", "pattern": "^[1-9][0-9]*d(?:[2468]|1[02]|20|100)$" },
+        "type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+      }
+    },
+    "weaponAttackMode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "reach_ft"],
+          "properties": {
+            "kind": { "const": "melee" },
+            "reach_ft": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "normal_ft", "long_ft"],
+          "properties": {
+            "kind": { "const": "ranged" },
+            "normal_ft": { "type": "number", "exclusiveMinimum": 0 },
+            "long_ft": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
+    "weaponHeavyRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_ability_score", "ability_by_mode", "consequence"],
+      "properties": {
+        "minimum_ability_score": { "type": "integer", "minimum": 1 },
+        "ability_by_mode": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["melee", "ranged"],
+          "properties": {
+            "melee": { "const": "str" },
+            "ranged": { "const": "dex" }
+          }
+        },
+        "consequence": { "const": "attack_disadvantage" }
+      }
+    },
+    "weaponProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weapon_type", "proficiency_category", "attack_ability", "damage_lines", "default_attack_mode", "attack_modes", "properties", "mastery_effect_id", "ammo", "enchantment", "attunement"],
+      "properties": {
+        "weapon_type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "proficiency_category": { "enum": ["simple", "martial"] },
+        "attack_ability": { "enum": ["str", "dex", "finesse"] },
+        "damage_lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/weaponDamageLine" }
+        },
+        "versatile_grip": { "$ref": "#/$defs/weaponDamageLine" },
+        "default_attack_mode": { "enum": ["melee", "ranged"] },
+        "attack_modes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/weaponAttackMode" }
+        },
+        "properties": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["ammunition", "finesse", "heavy", "light", "reach", "thrown", "two_handed", "versatile"] }
+        },
+        "heavy": { "$ref": "#/$defs/weaponHeavyRule" },
+        "mastery_effect_id": { "type": "string", "minLength": 1 },
+        "ammo": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["card_id"],
+              "properties": {
+                "card_id": { "type": "string", "minLength": 1 },
+                "name": { "type": "string", "minLength": 1 }
+              }
+            }
+          ]
+        },
+        "enchantment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["attack_bonus", "damage_bonus", "extra_damage_lines"],
+          "properties": {
+            "attack_bonus": { "type": "integer", "minimum": 0 },
+            "damage_bonus": { "type": "integer", "minimum": 0 },
+            "extra_damage_lines": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/weaponDamageLine" }
+            }
+          }
+        },
+        "attunement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required"],
+          "properties": { "required": { "type": "boolean" } }
+        }
+      },
+      "allOf": [{
+        "if": {
+          "properties": { "properties": { "contains": { "const": "heavy" } } },
+          "required": ["properties"]
+        },
+        "then": { "required": ["heavy"] },
+        "else": { "not": { "required": ["heavy"] } }
+      }]
+    },
+    "interactionIntent": {
+      "type": "object",
+      "required": ["intent"],
+      "additionalProperties": false,
+      "properties": { "intent": { "const": "harmful" } }
+    },
+
+    "rulesPrimitive": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["area_object_push", "burning_hands_objects", "dancing_lights_world", "detect_magic_world_sensing", "detect_poison_disease_world", "druidcraft_world", "find_familiar", "light_weapon_extra_attack", "light_world_object", "magic_missile", "mending_world", "minor_illusion_world_object", "pact_blade_bond", "pact_chain_familiar", "pact_tome_book", "prestidigitation_world", "purify_food_drink_world", "temporary_hp_melee_retaliation", "weapon_attack"] },
+        "stateCapability": { "enum": ["warlock.pact.blade", "warlock.pact.chain", "warlock.pact.tome"] },
+        "grantedSpell": { "type": "string", "minLength": 1 },
+        "cantripChoiceId": { "type": "string", "minLength": 1 },
+        "ritualChoiceId": { "type": "string", "minLength": 1 },
+        "bookObjectKind": { "const": "book_of_shadows" },
+        "slotResource": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "materialCostResource": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "commandType": { "const": "BondPactBlade" },
+        "authority": { "const": "rules-core" },
+        "modes": {
+          "type": "array",
+          "items": { "enum": ["conjure", "touch_existing"] },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "weaponCardAuthority": { "const": "immutable_catalog_card_id" },
+        "allowedWeaponCategories": {
+          "type": "array",
+          "items": { "enum": ["simple", "martial"] },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "meleeOnly": { "const": true },
+        "conjureRequiresFreeHand": { "const": true },
+        "damageTypeChoices": {
+          "type": "array",
+          "items": { "enum": ["normal", "necrotic", "psychic", "radiant"] },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "policy": { "type": "object" },
+        "dart_count": { "type": "integer", "minimum": 1 },
+        "allocation_choice_id": { "type": "string", "minLength": 1 },
+        "simultaneous": { "const": true }
+        ,"object_push_distance_ft": { "type": "number", "exclusiveMinimum": 0 }
+        ,"object_max_distance_ft": { "type": "number", "exclusiveMinimum": 0 }
+        ,"object_area_requirement": { "const": "entirely_in_area" }
+        ,"exclude_secured_objects": { "type": "boolean" }
+        ,"exclude_carried_objects": { "type": "boolean" }
+        ,"temporary_hp_per_slot": { "type": "integer", "minimum": 1 }
+        ,"retaliation_damage_per_slot": { "type": "integer", "minimum": 1 }
+        ,"retaliation_damage_type": { "type": "string", "minLength": 1 }
+        ,"retaliation_trigger": { "const": "hit_by_melee_attack_roll" }
+        ,"duration_rounds": { "type": "integer", "minimum": 1 }
+        ,"end_when_no_temporary_hp": { "const": true }
+        ,"minimum_slot_level": { "type": "integer", "minimum": 1 }
+        ,"maximum_slot_level": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "find_familiar" } } },
+          "then": {
+            "required": ["materialCostResource", "policy"],
+            "properties": { "policy": { "$ref": "#/$defs/findFamiliarPolicy" } }
+          },
+          "else": { "properties": { "materialCostResource": false } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "pact_blade_bond" } } },
+          "then": {
+            "required": ["stateCapability", "commandType", "authority", "modes", "weaponCardAuthority", "allowedWeaponCategories", "meleeOnly", "conjureRequiresFreeHand", "damageTypeChoices", "policy"],
+            "properties": { "stateCapability": { "const": "warlock.pact.blade" }, "policy": { "$ref": "#/$defs/pactBladeLifecyclePolicy" }, "grantedSpell": false, "cantripChoiceId": false, "ritualChoiceId": false, "bookObjectKind": false, "slotResource": false, "dart_count": false, "allocation_choice_id": false, "simultaneous": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "pact_chain_familiar" } } },
+          "then": {
+            "required": ["stateCapability", "grantedSpell"],
+            "properties": { "stateCapability": { "const": "warlock.pact.chain" }, "cantripChoiceId": false, "ritualChoiceId": false, "bookObjectKind": false, "slotResource": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "pact_tome_book" } } },
+          "then": {
+            "required": ["stateCapability", "cantripChoiceId", "ritualChoiceId", "bookObjectKind", "slotResource"],
+            "properties": { "stateCapability": { "const": "warlock.pact.tome" }, "grantedSpell": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "not": { "enum": ["pact_blade_bond", "pact_chain_familiar", "pact_tome_book"] } } } },
+          "then": {
+            "properties": { "stateCapability": false, "grantedSpell": false, "cantripChoiceId": false, "ritualChoiceId": false, "bookObjectKind": false, "slotResource": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "magic_missile" } } },
+          "then": {
+            "required": ["policy"],
+            "properties": { "policy": { "$ref": "#/$defs/magicMissilePolicy" }, "commandType": false, "authority": false, "modes": false, "weaponCardAuthority": false, "allowedWeaponCategories": false, "meleeOnly": false, "conjureRequiresFreeHand": false, "damageTypeChoices": false, "dart_count": false, "allocation_choice_id": false, "simultaneous": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "not": { "enum": ["pact_blade_bond", "magic_missile"] } } } },
+          "then": {
+            "properties": { "commandType": false, "authority": false, "modes": false, "weaponCardAuthority": false, "allowedWeaponCategories": false, "meleeOnly": false, "conjureRequiresFreeHand": false, "damageTypeChoices": false, "dart_count": false, "allocation_choice_id": false, "simultaneous": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "area_object_push" } } },
+          "then": {
+            "required": ["object_push_distance_ft", "object_max_distance_ft", "object_area_requirement", "exclude_secured_objects", "exclude_carried_objects"]
+          },
+          "else": {
+            "properties": { "object_push_distance_ft": false, "object_max_distance_ft": false, "object_area_requirement": false, "exclude_secured_objects": false, "exclude_carried_objects": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "temporary_hp_melee_retaliation" } } },
+          "then": {
+            "required": ["temporary_hp_per_slot", "retaliation_damage_per_slot", "retaliation_damage_type", "retaliation_trigger", "duration_rounds", "end_when_no_temporary_hp", "minimum_slot_level", "maximum_slot_level"]
+          },
+          "else": {
+            "properties": { "temporary_hp_per_slot": false, "retaliation_damage_per_slot": false, "retaliation_damage_type": false, "retaliation_trigger": false, "duration_rounds": false, "end_when_no_temporary_hp": false, "minimum_slot_level": false, "maximum_slot_level": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["light_world_object", "burning_hands_objects", "detect_magic_world_sensing", "minor_illusion_world_object", "dancing_lights_world", "druidcraft_world", "mending_world", "detect_poison_disease_world", "purify_food_drink_world", "prestidigitation_world"] } } },
+          "then": { "required": ["policy"] },
+          "else": {
+            "if": { "properties": { "type": { "not": { "enum": ["magic_missile", "find_familiar", "pact_blade_bond"] } } } },
+            "then": { "properties": { "policy": false } }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "light_world_object" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/lightWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "burning_hands_objects" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/burningHandsObjectsPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "detect_magic_world_sensing" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/detectMagicWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "minor_illusion_world_object" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/minorIllusionWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "dancing_lights_world" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/dancingLightsWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "druidcraft_world" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/druidcraftWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "mending_world" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/mendingWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "detect_poison_disease_world" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/detectPoisonDiseaseWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "purify_food_drink_world" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/purifyFoodDrinkWorldPolicy" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "prestidigitation_world" } } },
+          "then": { "properties": { "policy": { "$ref": "#/$defs/prestidigitationWorldPolicy" } } }
+        }
+      ]
+    },
+
+    "magicBlockerThreshold": {
+      "type": "object",
+      "required": ["threshold_inches", "comparison"],
+      "additionalProperties": false,
+      "properties": {
+        "threshold_inches": { "type": "number", "minimum": 0 },
+        "comparison": { "enum": ["gte", "gt"] }
+      }
+    },
+    "magicBlockersPolicy": {
+      "type": "object",
+      "required": ["stone", "common_metal", "lead", "wood", "dirt", "other"],
+      "additionalProperties": false,
+      "properties": {
+        "stone": { "$ref": "#/$defs/magicBlockerThreshold" },
+        "common_metal": { "$ref": "#/$defs/magicBlockerThreshold" },
+        "lead": { "$ref": "#/$defs/magicBlockerThreshold" },
+        "wood": { "$ref": "#/$defs/magicBlockerThreshold" },
+        "dirt": { "$ref": "#/$defs/magicBlockerThreshold" },
+        "other": { "type": "null" }
+      }
+    },
+    "lightWorldPolicy": {
+      "type": "object",
+      "required": ["max_object_size", "exclude_carried_by_other", "bright_radius_ft", "dim_additional_radius_ft", "duration_rounds", "max_active_per_source"],
+      "additionalProperties": false,
+      "properties": {
+        "max_object_size": { "enum": ["tiny", "small", "medium", "large", "huge", "gargantuan"] },
+        "exclude_carried_by_other": { "type": "boolean" },
+        "bright_radius_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "dim_additional_radius_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "duration_rounds": { "type": "integer", "minimum": 1 },
+        "max_active_per_source": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "burningHandsObjectsPolicy": {
+      "type": "object",
+      "required": ["require_in_area", "require_flammable", "exclude_carried"],
+      "additionalProperties": false,
+      "properties": {
+        "require_in_area": { "type": "boolean" },
+        "require_flammable": { "type": "boolean" },
+        "exclude_carried": { "type": "boolean" }
+      }
+    },
+    "detectMagicWorldPolicy": {
+      "type": "object",
+      "required": ["blockers", "aura_requires_line_of_sight", "reveal_spell_school_only"],
+      "additionalProperties": false,
+      "properties": {
+        "blockers": { "$ref": "#/$defs/magicBlockersPolicy" },
+        "aura_requires_line_of_sight": { "type": "boolean" },
+        "reveal_spell_school_only": { "type": "boolean" }
+      }
+    },
+    "minorIllusionWorldPolicy": {
+      "type": "object",
+      "required": ["image_max_cube_side_ft", "duration_rounds", "max_active_per_source", "study_ability", "study_skill"],
+      "additionalProperties": false,
+      "properties": {
+        "image_max_cube_side_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "duration_rounds": { "type": "integer", "minimum": 1 },
+        "max_active_per_source": { "type": "integer", "minimum": 1 },
+        "study_ability": { "const": "int" },
+        "study_skill": { "const": "investigation" }
+      }
+    },
+    "dancingLightsWorldPolicy": {
+      "type": "object",
+      "required": ["min_individual_lights", "max_individual_lights", "combined_form_object_count", "required_separation_ft", "max_move_ft", "dim_radius_ft", "duration_rounds"],
+      "additionalProperties": false,
+      "properties": {
+        "min_individual_lights": { "type": "integer", "minimum": 1 },
+        "max_individual_lights": { "type": "integer", "minimum": 1 },
+        "combined_form_object_count": { "type": "integer", "minimum": 1 },
+        "required_separation_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "max_move_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "dim_radius_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "duration_rounds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "druidcraftWorldPolicy": {
+      "type": "object",
+      "required": ["sensory_cube_side_ft", "weather_duration_rounds"],
+      "additionalProperties": false,
+      "properties": {
+        "sensory_cube_side_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "weather_duration_rounds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "mendingWorldPolicy": {
+      "type": "object",
+      "required": ["max_break_dimension_ft"],
+      "additionalProperties": false,
+      "properties": { "max_break_dimension_ft": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "detectPoisonDiseaseWorldPolicy": {
+      "type": "object",
+      "required": ["blockers"],
+      "additionalProperties": false,
+      "properties": {
+        "blockers": { "$ref": "#/$defs/magicBlockersPolicy" }
+      }
+    },
+    "purifyFoodDrinkWorldPolicy": {
+      "type": "object",
+      "required": ["require_in_area", "exclude_magical"],
+      "additionalProperties": false,
+      "properties": {
+        "require_in_area": { "type": "boolean" },
+        "exclude_magical": { "type": "boolean" }
+      }
+    },
+    "prestidigitationWorldPolicy": {
+      "type": "object",
+      "required": ["max_volume_cubic_ft", "max_active_effects", "attachment_duration_rounds", "creation_source_turn_endings"],
+      "additionalProperties": false,
+      "properties": {
+        "max_volume_cubic_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "max_active_effects": { "type": "integer", "minimum": 1 },
+        "attachment_duration_rounds": { "type": "integer", "minimum": 1 },
+        "creation_source_turn_endings": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "pactBladeLifecyclePolicy": {
+      "type": "object",
+      "required": ["separation_distance_ft", "continuous_separation_seconds_to_end", "end_on_owner_death"],
+      "additionalProperties": false,
+      "properties": {
+        "separation_distance_ft": { "type": "number", "minimum": 0 },
+        "continuous_separation_seconds_to_end": { "type": "number", "exclusiveMinimum": 0 },
+        "end_on_owner_death": { "type": "boolean" }
+      }
+    },
+    "findFamiliarPolicy": {
+      "type": "object",
+      "required": ["connection_range_ft", "reappear_range_ft", "ritual_casting_added_seconds"],
+      "additionalProperties": false,
+      "properties": {
+        "connection_range_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "reappear_range_ft": { "type": "number", "exclusiveMinimum": 0 },
+        "ritual_casting_added_seconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "magicMissilePolicy": {
+      "type": "object",
+      "required": ["base_slot_level", "max_slot_level", "base_dart_count", "darts_per_slot_above", "allocation_choice_id", "simultaneous", "per_dart_effect"],
+      "additionalProperties": false,
+      "properties": {
+        "base_slot_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "max_slot_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "base_dart_count": { "type": "integer", "minimum": 1 },
+        "darts_per_slot_above": { "type": "integer", "minimum": 1 },
+        "allocation_choice_id": { "type": "string", "minLength": 1 },
+        "simultaneous": { "type": "boolean" },
+        "per_dart_effect": {
+          "type": "object",
+          "required": ["resolution", "who", "result"],
+          "properties": {
+            "resolution": { "const": "auto" },
+            "who": { "const": "target" },
+            "result": { "$ref": "#/$defs/outcome" }
+          }
+        }
+      }
+    },
+
+    "weaponMasteryPrimitive": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "saveAbility", "dc", "condition", "choiceId"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "topple" },
+            "saveAbility": { "$ref": "#/$defs/ability" },
+            "dc": { "type": "string", "minLength": 1 },
+            "condition": { "type": "string", "minLength": 1 },
+            "choiceId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "consume", "expires"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "sap" },
+            "consume": { "const": "next" },
+            "expires": { "const": "start_of_source_next_turn" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "penaltyFt", "requiresDamage", "expires", "choiceId"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "slow" },
+            "penaltyFt": { "type": "number", "exclusiveMinimum": 0 },
+            "requiresDamage": { "type": "boolean" },
+            "expires": { "const": "start_of_source_next_turn" },
+            "choiceId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "consume", "targetLocked", "requiresDamage", "expires"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "vex" },
+            "consume": { "const": "next" },
+            "targetLocked": { "type": "boolean" },
+            "requiresDamage": { "type": "boolean" },
+            "expires": { "const": "end_of_source_next_turn" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "maxDistanceFt", "maxTargetSize", "choiceId"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "push" },
+            "maxDistanceFt": { "type": "number", "exclusiveMinimum": 0 },
+            "maxTargetSize": { "enum": ["tiny", "small", "medium", "large", "huge", "gargantuan"] },
+            "choiceId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "damage", "choiceId"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "graze" },
+            "damage": { "type": "string", "minLength": 1 },
+            "choiceId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "timing", "maximumPerTurn"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "nick" },
+            "timing": { "const": "attack_action" },
+            "maximumPerTurn": { "const": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "maximumPerTurn", "secondaryWithinPrimaryFt", "sameWeapon", "positiveAbilityModifier", "expires"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "cleave" },
+            "maximumPerTurn": { "const": 1 },
+            "secondaryWithinPrimaryFt": { "type": "number", "exclusiveMinimum": 0 },
+            "sameWeapon": { "const": true },
+            "positiveAbilityModifier": { "const": false },
+            "expires": { "const": "end_of_turn" }
+          }
+        }
+      ]
+    },
+
+    "attackReplacement": {
+      "type": "object",
+      "required": ["replacement_key", "replaces_attacks", "total_attacks", "once_per_attack_action"],
+      "additionalProperties": false,
+      "properties": {
+        "replacement_key": { "type": "string", "minLength": 1 },
+        "replaces_attacks": { "const": 1 },
+        "total_attacks": { "type": "integer", "minimum": 1 },
+        "once_per_attack_action": { "const": true }
+      }
+    },
+
+    "restDecision": {
+      "type": "object",
+      "required": ["kind", "decision_type", "rest", "capability_id", "level_source", "budget", "slot_resource", "maximum_per_rest"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "slot_recovery" },
+        "decision_type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "rest": { "const": "short_rest" },
+        "capability_id": { "type": "string", "minLength": 1 },
+        "level_source": {
+          "type": "object",
+          "required": ["kind", "class_id", "minimum", "maximum"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "class_level" },
+            "class_id": { "type": "string", "minLength": 1 },
+            "minimum": { "type": "integer", "minimum": 1 },
+            "maximum": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "budget": {
+          "type": "object",
+          "required": ["mode", "divisor"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "const": "ceil_divide_level" },
+            "divisor": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "slot_resource": {
+          "type": "object",
+          "required": ["prefix", "minimum_level", "maximum_level", "restore_amount"],
+          "additionalProperties": false,
+          "properties": {
+            "prefix": { "type": "string", "minLength": 1 },
+            "minimum_level": { "type": "integer", "minimum": 1 },
+            "maximum_level": { "type": "integer", "minimum": 1 },
+            "restore_amount": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "maximum_per_rest": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "conditionIdentity": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+      }
+    },
+
+    "fightingStyle": {
+      "type": "object",
+      "required": ["id", "mode"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "mode": { "enum": ["passive_modifier", "reaction_capability"] },
+        "capability_id": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "reaction_capability" } } },
+          "then": { "required": ["capability_id"] },
+          "else": { "properties": { "capability_id": false } }
+        }
+      ]
+    },
+
     "formula": {
       "description": "Число или строка-формула: prof_bonus, self_level, class_level:<id>, str|dex|con|int|wis|cha, spellcasting, spell_slot_above, rage_bonus, +-*/().",
       "type": ["string", "number"]
@@ -57,22 +776,61 @@
       "type": "object",
       "required": ["resource"],
       "properties": {
-        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die", "item"] },
+        "resource": { "type": "string", "examples": ["action", "bonus_action", "reaction", "free_action", "movement", "spell_slot", "pact_slot", "rage", "focus", "superiority_die", "sorcery_points", "bardic_inspiration", "channel_divinity", "wild_shape", "lay_on_hands", "luck_points", "second_wind", "action_surge", "rage_charge", "heroic_inspiration", "hp", "hit_die", "item", "self_item", "self_uses", "equipped_weapon_ammo"], "description": "Runtime resource or an explicit contextual primitive. Contextual primitive enum: self_item binds to the owning inventory card; self_uses binds to uses_<stable entity ref>; equipped_weapon_ammo binds through the action's main/off weapon markers and selected weapon mechanics.ammo." },
         "amount": { "$ref": "#/$defs/formula" },
         "level": { "type": "integer", "minimum": 0, "description": "уровень ячейки; 0 = заговор" },
-        "card_id": { "type": "string", "description": "S4: для resource:'item' — id расходуемой карты (боеприпас/зелье)" }
-      }
+        "card_id": { "type": "string", "description": "S4: для resource:'item' — id расходуемой карты (боеприпас/зелье)" },
+        "binding": {
+          "type": "object",
+          "required": ["kind", "currency"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "currency" },
+            "currency": { "enum": ["gold", "silver", "copper"] }
+          },
+          "description": "Явный источник персистентного ресурса; движок всё равно списывает обычную activation.cost."
+        },
+        "recharge": { "const": "never", "description": "Привязанная цена не восстанавливается отдыхом." }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["binding"] },
+          "then": { "required": ["recharge"] }
+        },
+        {
+          "if": {
+            "required": ["resource"],
+            "properties": { "resource": { "const": "equipped_weapon_ammo" } }
+          },
+          "then": {
+            "required": ["amount"],
+            "properties": {
+              "amount": { "type": "integer", "minimum": 1 }
+            },
+            "not": { "required": ["card_id"] }
+          }
+        }
+      ]
     },
 
     "activation": {
       "type": "object",
       "required": ["mode"],
       "properties": {
-        "mode": { "enum": ["active", "passive", "reaction", "triggered"] },
+        "mode": { "enum": ["active", "passive", "reaction", "triggered", "rest_decision"] },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
-        "consumes_self": { "type": "boolean", "description": "S4: действие расходует сам предмет из инвентаря (зелье). Впрыскивает cost {resource:'item', card_id:self}." },
+        "consumes_self": { "type": "boolean", "deprecated": true, "description": "Legacy authoring marker without runtime semantics. Migrate to activation.cost {resource:'self_item'}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
         "trigger": { "$ref": "#/$defs/trigger" },
+        "cast_time": {
+          "type": "object",
+          "required": ["unit", "amount"],
+          "additionalProperties": false,
+          "properties": {
+            "unit": { "enum": ["action", "bonus_action", "reaction", "round", "minute", "hour"] },
+            "amount": { "type": "integer", "minimum": 1 }
+          }
+        },
         "casting_time": { "type": "string" },
         "range": { "type": "string" },
         "components": {
@@ -102,9 +860,13 @@
       "required": ["kind"],
       "description": "Предикат-обстоятельство. any_of/all_of позволяют группировать через поле of.",
       "properties": {
-        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "save_avoids_condition", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "item_equipped", "item_carried", "attuned", "any_of", "all_of", "narrative"] },
+        "kind": { "type": "string", "examples": ["attack_is", "has_advantage", "ally_within", "creature_within", "target_has_condition", "save_avoids_condition", "condition_source_in_line_of_sight", "roll_target_is_condition_source", "distance_to_condition_owner", "observer_can_see_condition_owner", "target_type", "target_wears", "wielding", "you_have_condition", "unseen_by_target", "proficiency_skill_in", "item_equipped", "item_carried", "attuned", "any_of", "all_of", "narrative"] },
         "value": {},
         "range": { "type": "number" },
+        "subject": { "enum": ["roller", "roll_target"] },
+        "observer": { "enum": ["roller", "roll_target"] },
+        "operator": { "enum": ["lt", "lte", "eq", "gte", "gt"] },
+        "feet": { "type": "number", "minimum": 0 },
         "of": {},
         "filter": { "type": "string" },
         "description": { "type": "string" }
@@ -114,17 +876,31 @@
     "targeting": {
       "type": "object",
       "properties": {
-        "shape": { "enum": ["self", "single", "multi", "area", "aura"] },
+        "domain": { "enum": ["world", "actor", "mixed"] },
+        "actor_targets": { "type": "boolean" },
+        "shape": { "enum": ["self", "single", "multi", "multiple", "area", "aura"] },
         "range": { "type": "string" },
+        "range_ft": { "type": "number", "minimum": 0 },
+        "min_targets": { "type": "integer", "minimum": 0 },
         "max_targets": { "type": ["integer", "string"] },
+        "allowed_relations": {
+          "type": "array",
+          "items": { "enum": ["self", "ally", "enemy", "neutral"] },
+          "uniqueItems": true
+        },
+        "requires_line_of_sight": { "type": "boolean" },
+        "requires_touch": { "type": "boolean" },
         "area": {
           "type": "object",
           "properties": {
             "kind": { "enum": ["sphere", "cube", "cone", "line", "cylinder", "emanation"] },
-            "size": { "type": "number" }
+            "size": { "type": "number" },
+            "size_ft": { "type": "number", "exclusiveMinimum": 0 },
+            "radius_ft": { "type": "number", "exclusiveMinimum": 0 }
           }
         },
-        "filter": { "type": "string", "examples": ["any", "enemy", "ally", "ally_and_self", "creature_type:undead"] }
+        "filter": { "type": "string", "examples": ["any", "enemy", "ally", "ally_and_self", "creature_type:undead"] },
+        "requires_sight": { "type": "boolean" }
       }
     },
 
@@ -132,8 +908,24 @@
       "description": "Элемент массива effects/interactions: interaction или choice на верхнем уровне (формат конструктора).",
       "oneOf": [
         { "$ref": "#/$defs/interaction" },
-        { "$ref": "#/$defs/topLevelChoice" }
+        { "$ref": "#/$defs/topLevelChoice" },
+        { "$ref": "#/$defs/preparedSpellChoice" }
       ]
+    },
+
+    "preparedSpellChoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "prompt", "count", "source_choice_id", "resolution"],
+      "properties": {
+        "kind": { "const": "prepared_spell_choice" },
+        "id": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "minLength": 1 },
+        "count": { "type": "integer", "minimum": 1 },
+        "source_choice_id": { "type": "string", "minLength": 1 },
+        "resolution": { "const": "on_acquire" },
+        "context": { "enum": ["build", "level_up"] }
+      }
     },
 
     "topLevelChoice": {
@@ -146,7 +938,7 @@
         "count": { "type": "integer", "minimum": 1 },
         "options": { "type": "object" },
         "grant": { "$ref": "#/$defs/payload" },
-        "resolution": { "enum": ["on_acquire", "immediate"] },
+        "resolution": { "enum": ["on_acquire", "immediate", "on_rest"] },
         "recommended": { "type": "array", "items": { "type": "string" } },
         "context": { "enum": ["build", "level_up", "in_play"] }
       }
@@ -189,15 +981,21 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "reduce_damage", "temp_hp", "condition", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "weapon_mastery", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
       },
       "allOf": [
         {
           "if": { "properties": { "kind": { "const": "damage" } } },
           "then": {
+            "required": ["type"],
+            "anyOf": [
+              { "required": ["dice"] },
+              { "required": ["amount"] }
+            ],
             "properties": {
-              "dice": { "type": "string" },
-              "type": { "type": "string" },
+              "dice": { "type": "string", "minLength": 1 },
+              "amount": { "$ref": "#/$defs/formula" },
+              "type": { "type": "string", "minLength": 1 },
               "scaling": { "type": "object" },
               "on_success": { "enum": ["half", "none", "full"] },
               "per_dart": { "type": "boolean" },
@@ -225,7 +1023,26 @@
               "value": { "type": "string" },
               "op": { "enum": ["apply", "remove"] },
               "duration": { "$ref": "#/$defs/duration" },
-              "save_ends": { "type": "object" }
+              "save_ends": {
+                "type": "object",
+                "required": ["ability", "dc"],
+                "properties": {
+                  "ability": { "enum": ["str", "dex", "con", "int", "wis", "cha"] },
+                  "dc": { "$ref": "#/$defs/formula" },
+                  "timing": { "const": "end_of_turn" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "condition_immunity" } } },
+          "then": {
+            "required": ["condition"],
+            "properties": {
+              "condition": { "type": "string" },
+              "requiredCauseTags": { "type": "array", "items": { "type": "string" } },
+              "required_cause_tags": { "type": "array", "items": { "type": "string" } }
             }
           }
         },
@@ -326,6 +1143,21 @@
               "value": { "type": "string" },
               "level_gate": { "type": "integer" },
               "ability": { "$ref": "#/$defs/ability" },
+              "casting_override": {
+                "type": "object",
+                "required": ["remove_cost_resources"],
+                "additionalProperties": false,
+                "properties": {
+                  "remove_cost_resources": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "type": "string", "minLength": 1 }
+                  },
+                  "targeting": { "$ref": "#/$defs/targeting" }
+                },
+                "description": "Grant-owned, source-agnostic cast adapter. It may remove explicitly named costs and optionally replace targeting; entity identity never selects behavior."
+              },
               "freeuse": {
                 "description": "Бесплатные использования: каст без ячейки из пула freeuse-<value>. true = 1×/долгий отдых; число = столько раз/долгий отдых; объект — полная настройка. Работает и в choice.grant, и нативно.",
                 "oneOf": [
@@ -359,6 +1191,25 @@
         {
           "if": { "properties": { "kind": { "const": "grant_speed" } } },
           "then": { "properties": { "mode": { "enum": ["walk", "fly", "swim", "climb", "burrow"] }, "value": { "$ref": "#/$defs/formula" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "spellcasting_ability" } } },
+          "then": {
+            "properties": {
+              "ability": { "enum": ["str", "dex", "con", "int", "wis", "cha"] },
+              "value": { "enum": ["str", "dex", "con", "int", "wis", "cha"] },
+              "role": { "enum": ["primary", "source"] }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "required": ["role"],
+                  "properties": { "role": { "const": "primary" } }
+                },
+                "then": { "required": ["ability"] }
+              }
+            ]
+          }
         },
         {
           "if": { "properties": { "kind": { "const": "choice" } } },
@@ -396,7 +1247,7 @@
         },
         "recommended": { "type": "array", "items": { "type": "string" } },
         "grant": { "$ref": "#/$defs/payload" },
-        "resolution": { "enum": ["on_acquire", "immediate"] },
+        "resolution": { "enum": ["on_acquire", "immediate", "on_rest"] },
         "context": { "enum": ["build", "level_up", "in_play"], "description": "Где разрешается выбор: build/level_up (кузня) или in_play (лист во время игры)." }
       }
     },
@@ -407,7 +1258,7 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "healing", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "d20"] },
+            "roll": { "enum": ["attack", "damage", "healing", "harm", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "spell_save_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "speech", "movement_toward_condition_source", "d20"] },
             "filter": { "type": "object" },
             "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }
@@ -435,7 +1286,7 @@
     "duration": {
       "type": "object",
       "properties": {
-        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_end_of_turn"] },
+        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_start_of_source_next_turn", "until_end_of_source_next_turn", "until_end_of_turn"] },
         "amount": { "type": "number" },
         "concentration": { "type": "boolean" },
         "ends_when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
@@ -445,10 +1296,34 @@
 
     "uses": {
       "type": "object",
+      "required": ["count"],
+      "additionalProperties": false,
       "properties": {
         "count": { "$ref": "#/$defs/formula" },
         "per": { "enum": ["turn", "round", "short_rest", "long_rest", "day"] },
-        "recharge": { "type": "string" }
+        "recharge": { "type": "string" },
+        "recovery": {
+          "type": "object",
+          "required": ["short_rest", "long_rest"],
+          "additionalProperties": false,
+          "properties": {
+            "short_rest": {
+              "type": "object",
+              "required": ["mode", "amount"],
+              "additionalProperties": false,
+              "properties": {
+                "mode": { "const": "fixed" },
+                "amount": { "type": "integer", "exclusiveMinimum": 0 }
+              }
+            },
+            "long_rest": {
+              "type": "object",
+              "required": ["mode"],
+              "additionalProperties": false,
+              "properties": { "mode": { "const": "full" } }
+            }
+          }
+        }
       }
     }
   }

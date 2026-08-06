@@ -21,9 +21,18 @@ import {
   resourcesApi,
   spellsApi,
 } from '../api/client';
+import { certifiedConditionEffectEntity } from '../api/conditionsApi';
 import { charactersV3Api } from '../character/api';
-import { loadAssembly } from '../character/assemble';
+import { expandItemGrantedEffects, loadAssembly } from '../character/assemble';
+import { collectItemMechanics } from '../character/attunement';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
+import { persistDetachedManualEffects } from '../character/manualEffectPersistence';
+import {
+  assertManualEffectMutationAllowed,
+  manualEffectMutationBlockReason,
+} from '../character/manualEffectMutationPolicy';
+import { forgeToRuntimeState } from '../character/runtime';
+import { collectPassiveMechanics } from '../character/resourceInit';
 import {
   addManualEntities,
   FEAT_CATEGORY_LABELS,
@@ -31,8 +40,16 @@ import {
   type ManualEntityType,
 } from '../character/manualEntityAddition';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
-import type { ForgeCharacter } from '../character/types';
-import type { ActiveEffectEntry } from '../mvp/contracts';
+import { isCharacterReadOnly, type ForgeCharacter } from '../character/types';
+import type { EngineEvent } from '../mvp/contracts';
+import { conditionLevel, conditionStacking } from '../engine/conditions';
+import {
+  applyEffectCommandFromEntity,
+  collectConditionImmunitiesFromPassives,
+  conditionIdFromEffectEntity,
+  executeManualEffectCommand,
+  nextBrowserManualEffectId,
+} from '../engine/manualEffectCommands';
 import type { Action, Card, Feat, PassiveEffect, ResourceDefinition, Spell } from '../types';
 import { useSiteSettings } from '../settings';
 import MobileOverlay from './MobileOverlay';
@@ -48,10 +65,13 @@ const CATALOGS = [
   { key: 'resources', title: 'Ресурсы', description: 'Заряды и расходуемые ресурсы', icon: BookOpen },
 ] as const;
 
-type CatalogType = typeof CATALOGS[number]['key'];
+export type CatalogType = typeof CATALOGS[number]['key'];
 type SourceEntity = Card | Action | Spell | Feat | PassiveEffect | ResourceDefinition;
 
-interface CatalogEntity {
+export const MOBILE_CONDITION_EVENT_JOURNAL_LIMITATION =
+  'Ручные состояния на отдельном листе сохраняются в runtime, но их engine events пока не записываются атомарно в серверный журнал.';
+
+export interface CatalogEntity {
   id: string;
   name: string;
   description: string;
@@ -137,7 +157,14 @@ async function loadEntities(type: CatalogType, search: string): Promise<CatalogE
       });
       const effects = type === 'effects'
         ? (response.effects ?? []).filter((entity) => entity.effect_type !== 'condition')
-        : (response.effects ?? []);
+        : (response.effects ?? []).filter((entity) => {
+          try {
+            const conditionId = conditionIdFromEffectEntity(entity);
+            return certifiedConditionEffectEntity(conditionId)?.id === entity.id;
+          } catch {
+            return false;
+          }
+        });
       return effects.map((entity) => normalize(entity, type));
     }
     case 'resources': {
@@ -167,12 +194,16 @@ function nextIds(
   return result;
 }
 
-async function saveSelection(
+export async function saveMobileCatalogSelection(
   character: ForgeCharacter,
   type: CatalogType,
   entities: CatalogEntity[],
   selection: Record<string, number>,
-): Promise<void> {
+  conditionFacts: { sourceActorId: string; causeTags: string },
+): Promise<EngineEvent[]> {
+  if (isCharacterReadOnly(character)) {
+    throw new Error('Архивный публичный лист доступен только для чтения.');
+  }
   if (type === 'items' || type === 'actions' || type === 'effects' || type === 'spells' || type === 'feats') {
     const manualType = type as ManualEntityType;
     await addManualEntities(character, manualType, entities.map((entity) => ({
@@ -187,27 +218,70 @@ async function saveSelection(
       },
       amount: selection[entity.id] ?? 0,
     })));
-    return;
+    return [];
   }
 
   if (type === 'conditions') {
-    const activeEffects = [...((character.active_effects ?? []) as ActiveEffectEntry[])];
+    assertManualEffectMutationAllowed(character.current_encounter_id);
+    const draft = characterToDraft(character);
+    const assembled = await loadAssembly(draft);
+    let runtime = forgeToRuntimeState(character);
+    const itemIds = [...new Set([
+      ...(character.inventory_items ?? []).map((row) => row.card_id),
+      ...Object.values(character.equipment ?? {}).filter((id): id is string => !!id),
+    ])];
+    const itemCards = await Promise.all(itemIds.map((itemId) => cardsApi.getCard(itemId)));
+    const itemMechanics = collectItemMechanics(
+      character.equipment ?? {},
+      new Map(itemCards.map((card) => [card.id, card])),
+      character.turn_state,
+      runtime.inventory,
+    );
+    const itemGrantedEffects = await expandItemGrantedEffects(
+      itemMechanics.map((item) => ({
+        id: item.card.id,
+        name: item.card.name,
+        mechanics: item.mechanics,
+      })),
+      draft,
+    );
+    const passives = [
+      ...collectPassiveMechanics(assembled, character.resolved_choices ?? {}),
+      ...itemMechanics.map((item) => item.mechanics),
+      ...itemGrantedEffects.flatMap((effect) => (
+        effect.mechanics && typeof effect.mechanics === 'object'
+          ? [{ ...effect.mechanics, id: effect.id, name: effect.name }]
+          : []
+      )),
+    ];
+    const conditionImmunities = collectConditionImmunitiesFromPassives(passives);
+    const events: EngineEvent[] = [];
     for (const entity of entities) {
       const amount = selection[entity.id] ?? 0;
       if (!amount) continue;
-      const effect = await effectsApi.getEffect(entity.id);
+      const conditionId = conditionIdFromEffectEntity(entity.source as never);
+      const effect = certifiedConditionEffectEntity(conditionId);
+      if (!effect || effect.id !== entity.id) {
+        throw new Error('Сертифицированная карточка состояния из БД недоступна; изменение запрещено');
+      }
       for (let index = 0; index < amount; index += 1) {
-        activeEffects.push({
-          id: `cond-player-${Date.now()}-${index}-${effect.id}`,
-          name: effect.name,
-          mechanics: effect.mechanics ?? {},
-          expiry: 'manual',
-          source: 'Добавлено игроком',
+        const command = applyEffectCommandFromEntity(effect, 'manual:mobile_entity_catalog', {
+          ownerActorId: character.id,
+          conditionImmunities,
+          causeTags: conditionFacts.causeTags.split(',').map((tag) => tag.trim()).filter(Boolean),
+          ...(conditionFacts.sourceActorId.trim()
+            ? { sourceActorId: conditionFacts.sourceActorId.trim() }
+            : {}),
         });
+        const result = executeManualEffectCommand(runtime, command, {
+          nextId: nextBrowserManualEffectId,
+        });
+        runtime = result.state;
+        events.push(...result.events);
       }
     }
-    await charactersV3Api.patchRuntime(character.id, { active_effects: activeEffects });
-    return;
+    await persistDetachedManualEffects(character, runtime.activeEffects);
+    return events;
   }
 
   const draft = characterToDraft(character);
@@ -231,6 +305,7 @@ async function saveSelection(
     }
     await charactersV3Api.patchRuntime(character.id, { resources, max_resources: maxResources });
   }
+  return [];
 }
 
 export default function MobileEntityCatalog() {
@@ -248,7 +323,12 @@ export default function MobileEntityCatalog() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conditionSourceActorId, setConditionSourceActorId] = useState('');
+  const [conditionCauseTags, setConditionCauseTags] = useState('');
   const { allowSheetEntityAdditions } = useSiteSettings();
+  const conditionMutationBlockReason = type === 'conditions'
+    ? manualEffectMutationBlockReason(character?.current_encounter_id)
+    : null;
 
   useEffect(() => {
     if (!allowSheetEntityAdditions && id) {
@@ -265,10 +345,20 @@ export default function MobileEntityCatalog() {
     if (!id) return;
     let stale = false;
     charactersV3Api.get(id)
-      .then((value) => { if (!stale) setCharacter(value); })
+      .then((value) => {
+        if (stale) return;
+        if (isCharacterReadOnly(value)) {
+          navigate(`/m/characters/${value.id}`, {
+            replace: true,
+            state: { notice: 'Архивный публичный лист доступен только для чтения.' },
+          });
+          return;
+        }
+        setCharacter(value);
+      })
       .catch((reason) => { if (!stale) setError(describeError(reason)); });
     return () => { stale = true; };
-  }, [id]);
+  }, [id, navigate]);
 
   useEffect(() => {
     if (!type) {
@@ -301,14 +391,26 @@ export default function MobileEntityCatalog() {
     if (type === 'feats') return !entity.repeatable && (character.feat_ids ?? []).includes(entity.id);
     if (type === 'effects') return !entity.repeatable && (character.effect_ids ?? []).includes(entity.id);
     if (type === 'resources') return (character.resource_ids ?? []).includes(entity.id);
-    if (type === 'conditions') return false;
+    if (type === 'conditions') {
+      try {
+        const conditionId = conditionIdFromEffectEntity(entity.source as never);
+        const stacking = conditionStacking(conditionId);
+        const level = conditionLevel(forgeToRuntimeState(character), conditionId);
+        return stacking.mode === 'binary'
+          ? level > 0
+          : stacking.max != null && level >= stacking.max;
+      } catch {
+        // The strict interpreter reports malformed condition data on apply.
+        return false;
+      }
+    }
     return false;
   };
 
   const changeAmount = (entity: CatalogEntity, delta: number) => {
     if (selectedAlready(entity)) return;
     const supportsCopies = type === 'items'
-      || type === 'conditions'
+      || (type === 'conditions' && entity.repeatable)
       || ((type === 'feats' || type === 'effects') && entity.repeatable);
     setSelection((current) => {
       const amount = Math.max(0, (current[entity.id] ?? 0) + delta);
@@ -325,10 +427,21 @@ export default function MobileEntityCatalog() {
     setSaving(true);
     setError(null);
     try {
-      await saveSelection(character, type, selectedEntities, selection);
+      const events = await saveMobileCatalogSelection(character, type, selectedEntities, selection, {
+        sourceActorId: conditionSourceActorId,
+        causeTags: conditionCauseTags,
+      });
+      const immuneCount = events.filter((event) => event.type === 'condition_immune').length;
+      const outcomeNotice = immuneCount
+        ? `Состояния обработаны: иммунитет предотвратил ${immuneCount}`
+        : `${config?.title ?? 'Сущности'} добавлены`;
       navigate(`/m/characters/${character.id}`, {
         replace: true,
-        state: { notice: `${config?.title ?? 'Сущности'} добавлены` },
+        state: {
+          notice: type === 'conditions'
+            ? `${outcomeNotice}. ${MOBILE_CONDITION_EVENT_JOURNAL_LIMITATION}`
+            : outcomeNotice,
+        },
       });
     } catch (reason) {
       setError(describeError(reason));
@@ -389,6 +502,18 @@ export default function MobileEntityCatalog() {
           />
         </label>
         {error && <div className="m-inline-error">{error}</div>}
+        {conditionMutationBlockReason && (
+          <div className="m-inline-error">{conditionMutationBlockReason}</div>
+        )}
+        {type === 'conditions' && !conditionMutationBlockReason && (
+          <div
+            className="m-empty-state"
+            role="status"
+            data-testid="mobile-condition-journal-limitation"
+          >
+            {MOBILE_CONDITION_EVENT_JOURNAL_LIMITATION}
+          </div>
+        )}
         {loading && <div className="m-loading">Загрузка…</div>}
         {!loading && !error && entities.length === 0 && <div className="m-empty-state">Ничего не найдено</div>}
         <div className="m-catalog-list">
@@ -396,7 +521,7 @@ export default function MobileEntityCatalog() {
             const amount = selection[entity.id] ?? 0;
             const already = selectedAlready(entity);
             const supportsCopies = type === 'items'
-              || type === 'conditions'
+              || (type === 'conditions' && entity.repeatable)
               || ((type === 'feats' || type === 'effects') && entity.repeatable);
             return (
               <article className={`m-catalog-card${amount ? ' is-selected' : ''}`} key={entity.id}>
@@ -414,7 +539,7 @@ export default function MobileEntityCatalog() {
                   {already ? (
                     <span className="m-catalog-added">Уже добавлено</span>
                   ) : amount === 0 ? (
-                    <button className="m-button" type="button" onClick={() => changeAmount(entity, 1)}>
+                    <button className="m-button" type="button" disabled={Boolean(conditionMutationBlockReason)} onClick={() => changeAmount(entity, 1)}>
                       <Plus size={17} /> Добавить
                     </button>
                   ) : (
@@ -440,7 +565,7 @@ export default function MobileEntityCatalog() {
       {selectedCount > 0 && (
         <div className="m-selection-bar">
           <span><strong>{selectedCount}</strong> выбрано</span>
-          <button className="m-button m-button--gold" type="button" onClick={() => setConfirming(true)}>
+          <button className="m-button m-button--gold" type="button" disabled={Boolean(conditionMutationBlockReason)} onClick={() => setConfirming(true)}>
             Продолжить
           </button>
         </div>
@@ -461,7 +586,7 @@ export default function MobileEntityCatalog() {
         footer={(
           <div className="m-confirm-actions">
             <button className="m-button" type="button" disabled={saving} onClick={() => setConfirming(false)}>Отмена</button>
-            <button className="m-button m-button--gold" type="button" disabled={saving} onClick={apply}>
+            <button className="m-button m-button--gold" type="button" disabled={saving || Boolean(conditionMutationBlockReason)} onClick={apply}>
               {saving ? 'Сохраняем…' : 'Применить'}
             </button>
           </div>
@@ -473,6 +598,26 @@ export default function MobileEntityCatalog() {
             <p key={entity.id}><span>{entity.name}</span><strong>× {selection[entity.id]}</strong></p>
           ))}
         </div>
+        {type === 'conditions' && (
+          <>
+            <label className="m-catalog-search">
+              <span>ID источника</span>
+              <input
+                value={conditionSourceActorId}
+                onChange={(event) => setConditionSourceActorId(event.target.value)}
+                placeholder="Обязателен для реляционных состояний"
+              />
+            </label>
+            <label className="m-catalog-search">
+              <span>Теги причины</span>
+              <input
+                value={conditionCauseTags}
+                onChange={(event) => setConditionCauseTags(event.target.value)}
+                placeholder="например: magical, sleep"
+              />
+            </label>
+          </>
+        )}
       </MobileOverlay>}
     </main>
   );

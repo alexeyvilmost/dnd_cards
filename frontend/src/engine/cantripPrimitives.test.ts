@@ -53,7 +53,7 @@ describe('универсальные примитивы заговоров', () 
     })];
     const result = executeAction(state, {
       name: 'Тестовая атака',
-      effects: [{ resolution: 'attack_roll', on_hit: [] }],
+      effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [] }],
     }, {
       character: FIGHTER_CTX,
       target: { ac: 10 },

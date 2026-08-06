@@ -22,7 +22,11 @@ const ACTIONS: ProdAction[] = (Array.isArray(actionsRaw)
 const RAGE = ACTIONS.find((a) => a.id === '815f7963-ccac-4480-8a4d-6c790d8d2bcb');
 
 describe('прод-данные: Ярость', () => {
-  const ctx = (): ExecuteContext => ({ character: FIGHTER_CTX, rng: seededRng(1), passives: [] }) as ExecuteContext;
+  const barbarianContext = {
+    ...FIGHTER_CTX,
+    variables: { ...FIGHTER_CTX.variables, rage_damage_modifier: 2 },
+  };
+  const ctx = (): ExecuteContext => ({ character: barbarianContext, rng: seededRng(1), passives: [] }) as ExecuteContext;
   // Достаточно HP, чтобы измерять дельту урона без клампа, и заряд Ярости для оплаты действия.
   const tank = (): RuntimeState => {
     const s = freshFighterState();
@@ -35,7 +39,7 @@ describe('прод-данные: Ярость', () => {
   };
   const raging = (): RuntimeState => {
     if (!RAGE) throw new Error('ACT-rage исчезло из прод-снапшота');
-    return executeAction(tank(), RAGE.mechanics, { character: FIGHTER_CTX, rng: seededRng(1) }).state;
+    return executeAction(tank(), RAGE.mechanics, { character: barbarianContext, rng: seededRng(1) }).state;
   };
 
   it('сопротивление физическому урону: 28 рубящего → 14', () => {

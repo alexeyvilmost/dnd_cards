@@ -92,6 +92,33 @@ export const MUSICAL_INSTRUMENTS: RegistryItem[] = [
   { id: 'viol', label: 'Виола' },
 ];
 
+// PHB 2024 treats every listed tool variant as a separate proficiency. Keep
+// the complete domain in one registry so choices such as Skilled do not
+// collapse Gaming Sets, Musical Instruments, or Artisan's Tools into vague
+// category placeholders.
+export const GAMING_SETS: RegistryItem[] = [
+  { id: 'dice_set', label: 'Игровой набор: кости' },
+  { id: 'dragonchess_set', label: 'Игровой набор: драконьи шахматы' },
+  { id: 'playing_card_set', label: 'Игровой набор: игральные карты' },
+  { id: 'three_dragon_ante_set', label: 'Игровой набор: ставка трёх драконов' },
+];
+
+export const OTHER_TOOLS: RegistryItem[] = [
+  { id: 'disguise_kit', label: 'Набор для грима' },
+  { id: 'forgery_kit', label: 'Набор для фальсификации' },
+  ...GAMING_SETS,
+  { id: 'herbalism_kit', label: 'Набор травника' },
+  ...MUSICAL_INSTRUMENTS,
+  { id: 'navigator_tools', label: 'Инструменты навигатора' },
+  { id: 'poisoner_kit', label: 'Инструменты отравителя' },
+  { id: 'thieves_tools', label: 'Воровские инструменты' },
+];
+
+export const TOOL_PROFICIENCIES: RegistryItem[] = [
+  ...ARTISAN_TOOLS,
+  ...OTHER_TOOLS,
+];
+
 export const CONDITIONS: RegistryItem[] = [
   { id: 'blinded', label: 'Ослеплён' },
   { id: 'charmed', label: 'Очарован' },
@@ -122,6 +149,7 @@ export const MOVEMENT_KINDS: RegistryItem[] = [
 
 export const LANGUAGES: RegistryItem[] = [
   { id: 'common', label: 'Общий' },
+  { id: 'common_sign_language', label: 'Общий жестовый' },
   { id: 'elvish', label: 'Эльфийский' },
   { id: 'dwarvish', label: 'Дварфийский' },
   { id: 'giant', label: 'Великан' },
@@ -131,8 +159,14 @@ export const LANGUAGES: RegistryItem[] = [
   { id: 'orc', label: 'Орочий' },
   { id: 'abyssal', label: 'Бездны' },
   { id: 'celestial', label: 'Небесный' },
+  { id: 'deep_speech', label: 'Глубинная речь' },
+  { id: 'druidic', label: 'Друидический' },
   { id: 'draconic', label: 'Драконий' },
   { id: 'infernal', label: 'Инфернальный' },
+  { id: 'primordial', label: 'Первичный' },
+  { id: 'sylvan', label: 'Сильван' },
+  { id: 'thieves_cant', label: 'Воровской жаргон' },
+  { id: 'undercommon', label: 'Подземный' },
 ];
 
 export const SENSES: RegistryItem[] = [
@@ -370,12 +404,7 @@ export function optionsForChoiceSource(source: string): RegistryItem[] {
     case 'skill':
       return SKILLS;
     case 'tool':
-      return [
-        { id: 'thieves_tools', label: 'Воровские инструменты' },
-        { id: 'disguise_kit', label: 'Набор для маскировки' },
-        { id: 'musical_instrument', label: 'Музыкальный инструмент' },
-        { id: 'artisan_tool', label: 'Ремесленный инструмент' },
-      ];
+      return TOOL_PROFICIENCIES;
     case 'saving_throw':
       return SAVING_THROWS;
     case 'language':

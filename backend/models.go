@@ -1824,10 +1824,14 @@ type ActionResponse struct {
 	Support                      *JSONMap         `json:"support"`
 	ActionType                   ActionType       `json:"action_type"`
 	Type                         *string          `json:"type"`
+	Author                       string           `json:"author"`
+	Source                       *string          `json:"source"`
 	Tags                         *Properties      `json:"tags"`
 	Price                        *int             `json:"price"`
 	Weight                       *float64         `json:"weight"`
 	Properties                   *Properties      `json:"properties"`
+	RelatedCards                 *Properties      `json:"related_cards"`
+	RelatedActions               *Properties      `json:"related_actions"`
 	IsExtended                   *bool            `json:"is_extended"`
 	DescriptionFontSize          *int             `json:"description_font_size"`
 	TextAlignment                *string          `json:"text_alignment"`
@@ -1846,7 +1850,8 @@ func (a Action) ToActionResponse() ActionResponse {
 		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
 		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
 		Script: a.Script, Mechanics: a.Mechanics, Support: a.Support, ActionType: a.ActionType, Type: a.Type,
-		Tags: a.Tags, Price: a.Price, Weight: a.Weight, Properties: a.Properties, IsExtended: a.IsExtended,
+		Author: a.Author, Source: a.Source, Tags: a.Tags, Price: a.Price, Weight: a.Weight, Properties: a.Properties,
+		RelatedCards: a.RelatedCards, RelatedActions: a.RelatedActions, IsExtended: a.IsExtended,
 		DescriptionFontSize: a.DescriptionFontSize, TextAlignment: a.TextAlignment, TextFontSize: a.TextFontSize,
 		ShowDetailedDescription: a.ShowDetailedDescription, DetailedDescriptionAlignment: a.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize: a.DetailedDescriptionFontSize,
@@ -2049,10 +2054,15 @@ type EffectResponse struct {
 	Mechanics                    *JSONMap    `json:"mechanics"`
 	Support                      *JSONMap    `json:"support"`
 	Type                         *string     `json:"type"`
+	Author                       string      `json:"author"`
+	Source                       *string     `json:"source"`
 	Tags                         *Properties `json:"tags"`
 	Price                        *int        `json:"price"`
 	Weight                       *float64    `json:"weight"`
 	Properties                   *Properties `json:"properties"`
+	RelatedCards                 *Properties `json:"related_cards"`
+	RelatedActions               *Properties `json:"related_actions"`
+	RelatedEffects               *Properties `json:"related_effects"`
 	Repeatable                   bool        `json:"repeatable"`
 	IsExtended                   *bool       `json:"is_extended"`
 	DescriptionFontSize          *int        `json:"description_font_size"`
@@ -2071,7 +2081,9 @@ func (e Effect) ToEffectResponse() EffectResponse {
 		ID: e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
 		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics, Support: e.Support,
-		Type: e.Type, Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
+		Type: e.Type, Author: e.Author, Source: e.Source,
+		Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
+		RelatedCards: e.RelatedCards, RelatedActions: e.RelatedActions, RelatedEffects: e.RelatedEffects,
 		Repeatable: e.Repeatable,
 		IsExtended: e.IsExtended, DescriptionFontSize: e.DescriptionFontSize, TextAlignment: e.TextAlignment,
 		TextFontSize: e.TextFontSize, ShowDetailedDescription: e.ShowDetailedDescription,

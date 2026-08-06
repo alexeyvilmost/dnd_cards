@@ -1,0 +1,16 @@
+{
+  "id": "free_origin_feat_choice_v1",
+  "version": 1,
+  "provenance": "product_rule",
+  "status": "active",
+  "selection": {
+    "collection": "originFeats",
+    "count": 1,
+    "independentOf": "background"
+  },
+  "replaces": {
+    "grant": "official_background_origin_feat",
+    "count": 1,
+    "mode": "replace_not_add"
+  }
+}

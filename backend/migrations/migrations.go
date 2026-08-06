@@ -557,6 +557,50 @@ func GetAllMigrations() []Migration {
 			// Сертификация не удаляется при откате, чтобы сущности не исчезали из verified-каталога.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "090_create_canonical_runtime",
+			Description: "Additive canonical rules runtime: sessions, commands, jobs, events, snapshots, decisions and outbox",
+			Up:          createCanonicalRuntime,
+			// Canonical runtime records are retained on rollback; destructive cleanup is intentionally manual.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "091_add_attack_runtime_v4",
+			Description: "Additive schema-v4 Attack-action and grapple snapshot guards and indexes",
+			Up:          addAttackRuntimeV4,
+			// Snapshot history and its query/index contract are retained on rollback.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "092_add_world_runtime_v5",
+			Description: "Fail-closed schema-v5 world, release, lifecycle, item and Warlock Pact snapshot guards",
+			Up:          addWorldRuntimeV5,
+			// World snapshots are append-only; the validator and indexes are retained on rollback.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "093_add_content_migration_receipts",
+			Description: "Server-issued ledger for exact guarded content create/rollback",
+			Up:          addContentMigrationReceipts,
+			// Receipts are retained as an audit trail; dropping them would reopen
+			// arbitrary hard-delete and erase proof of completed rollback.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "094_harden_canonical_transport",
+			Description: "Fail-closed canonical transport identities, release/serializer bindings, ACLs and event adjacency",
+			Up:          hardenCanonicalTransport,
+			// Identity and integrity constraints protect durable history and are retained.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "095_add_character_runtime_commands",
+			Description: "Atomic idempotent multi-character runtime persistence with revision CAS",
+			Up:          addCharacterRuntimeCommands,
+			// Runtime revisions and the command ledger are durable consistency
+			// evidence; rollback must not erase or reopen already committed writes.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

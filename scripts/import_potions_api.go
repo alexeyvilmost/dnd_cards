@@ -1,6 +1,7 @@
 package main
 
 import (
+	scriptauth "armor-loader/internal/scriptauth"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -99,42 +100,7 @@ func main() {
 }
 
 func getAuthToken() (string, error) {
-	// Сначала пытаемся зарегистрироваться
-	registerData := map[string]string{
-		"username":     "admin",
-		"password":     "admin123",
-		"email":        "admin@example.com",
-		"display_name": "Admin",
-	}
-
-	jsonData, err := json.Marshal(registerData)
-	if err != nil {
-		return "", err
-	}
-
-	// Регистрируемся (игнорируем ошибку, если пользователь уже существует)
-	http.Post("http://localhost:8080/api/auth/register", "application/json", bytes.NewBuffer(jsonData))
-
-	// Теперь авторизуемся
-	resp, err := http.Post("http://localhost:8080/api/auth/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("ошибка авторизации: %s", string(body))
-	}
-
-	// Парсим ответ
-	var authResp AuthResponse
-	err = json.NewDecoder(resp.Body).Decode(&authResp)
-	if err != nil {
-		return "", err
-	}
-
-	return authResp.Token, nil
+	return scriptauth.Token("http://localhost:8080/api")
 }
 
 func createPotionData(name string) PotionData {

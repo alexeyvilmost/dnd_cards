@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi } from '../api/authApi';
+import {
+  AUTH_UNAUTHORIZED_EVENT,
+  clearPersistedAuthSession,
+  persistAuthSession,
+  readPersistedAuthToken,
+} from '../api/authSession';
 import type { User, AuthRequest, RegisterRequest } from '../types';
 
 interface AuthContextType {
@@ -23,22 +29,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Проверяем, есть ли сохраненные данные авторизации при загрузке
+  // A persisted token is only a bootstrap candidate.  The server profile is
+  // authoritative, so stale JWTs and stale/forged cached users never make the
+  // application authenticated even briefly.
   useEffect(() => {
-    const savedToken = localStorage.getItem('auth_token');
-    const savedUser = localStorage.getItem('user');
+    let active = true;
+    let invalidated = false;
 
-    if (savedToken && savedUser) {
-      try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Ошибка при загрузке данных пользователя:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
+    const clearAuthState = () => {
+      invalidated = true;
+      if (!active) return;
+      setToken(null);
+      setUser(null);
+      setIsLoading(false);
+    };
+
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, clearAuthState);
+
+    const bootstrap = async () => {
+      const savedToken = readPersistedAuthToken();
+      if (!savedToken) {
+        clearPersistedAuthSession();
+        if (active) setIsLoading(false);
+        return;
       }
-    }
-    setIsLoading(false);
+
+      try {
+        const serverProfile = await authApi.getProfile();
+        if (!active || invalidated) return;
+        persistAuthSession(savedToken, serverProfile);
+        setToken(savedToken);
+        setUser(serverProfile);
+      } catch {
+        clearPersistedAuthSession();
+        if (active) {
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    void bootstrap();
+
+    return () => {
+      active = false;
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, clearAuthState);
+    };
   }, []);
 
   const login = async (data: AuthRequest) => {
@@ -46,9 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(response.token);
     setUser(response.user);
 
-    // Сохраняем данные в localStorage
-    localStorage.setItem('auth_token', response.token);
-    localStorage.setItem('user', JSON.stringify(response.user));
+    persistAuthSession(response.token, response.user);
   };
 
   const register = async (data: RegisterRequest) => {
@@ -60,8 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
+    clearPersistedAuthSession();
   };
 
   const value: AuthContextType = {

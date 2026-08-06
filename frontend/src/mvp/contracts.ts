@@ -69,11 +69,30 @@ export type EngineEvent =
   | { type: 'effect_applied'; name: string; sourceAction?: string; source?: string }
   | { type: 'effect_expired'; name: string }
   | { type: 'condition_applied'; condition: string; source?: string }
+  | {
+      type: 'condition_immune';
+      condition: string;
+      sourceEntityIds: string[];
+      source?: string;
+    }
+  /** Geometry adapter consumes this authoritative forced-movement result. */
+  | { type: 'movement'; mode: string; distanceFt: number; source?: string }
   | { type: 'turn_started' }
   | { type: 'turn_ended' }
   | { type: 'short_rest' }
   | { type: 'long_rest' }
-  | { type: 'narrative'; text: string };
+  | {
+    type: 'narrative';
+    text: string;
+    /** Structured audit for resistance/immunity/vulnerability; UI text is not authoritative. */
+    damageAdjustment?: {
+      damageType: string;
+      adjustment: 'resistance' | 'immunity' | 'vulnerability';
+      before: number;
+      after: number;
+      sourceEntityIds: string[];
+    };
+  };
 
 export interface RollD20Options {
   advantage?: AdvantageState;
@@ -107,9 +126,21 @@ export interface ActiveEffectEntry {
   /** 'start_of_next_turn' | 'end_of_turn' | 'until_rest' | 'manual' */
   expiry?: string;
   source: string;
-  /** Id наложившего эффект существа (кастера). Для реляционных правил (E): Очарованный не может
-   *  выбрать очаровавшего целью. undefined — источник неизвестен (ручное наложение и т.п.). */
+  /** Id существа-владельца, в чьём RuntimeState сериализован эффект. */
+  ownerId?: string;
+  /** Id наложившего эффект существа (кастера). Для реляционных правил и source-turn lifecycle. */
   sourceId?: string;
+  /**
+   * PHB durations expressed relative to the source's next turn. End-boundary
+   * effects are armed at that turn's start so they cannot expire on the turn
+   * in which they were created.
+   */
+  sourceTurnExpiry?: {
+    sourceActorId: string;
+    ownerActorId: string;
+    boundary: 'start' | 'end';
+    armed?: true;
+  };
 }
 
 export interface RuntimeState {
@@ -128,6 +159,11 @@ export interface RuntimeState {
   /** Id triggered-эффектов, сработавших с последнего долгого отдыха (uses.per: long_rest/short_rest/…),
    *  чтобы «раз за отдых»-триггеры (Неумолимая стойкость) не срабатывали бесконечно; сброс в longRest. */
   firedThisRest?: string[];
+}
+
+export interface ResourceRestRecovery {
+  short_rest: { mode: 'fixed'; amount: number };
+  long_rest: { mode: 'full' };
 }
 
 export interface CharacterContext {
@@ -158,13 +194,24 @@ export interface CharacterContext {
   hitDie?: string | null;
   /** recharge per ресурс: short_rest | long_rest (R4). */
   resourceRecharge?: Record<string, string>;
-  /** Владения спасбросками/навыками из rule_state (для breakdown, вместо хардкодов). */
+  /**
+   * Явная recovery-политика ресурса. Отсутствующий ключ сохраняет legacy
+   * semantics `resourceRecharge`; null означает невалидные mechanics и запрещает
+   * восстановление fail-closed. Сейчас materializes mechanics.uses.recovery.
+   */
+  resourceRecovery?: Record<string, ResourceRestRecovery | null>;
+  /** Владения спасбросками/навыками/оружием из rule_state (для breakdown и атак). */
   saveProficiencies?: string[];
   skillProficiencies?: string[];
   skillExpertise?: string[];
+  /**
+   * Категории или конкретные виды оружия из CharacterRuleState.  undefined
+   * означает legacy-контекст без проекции; [] означает явно отсутствие владений.
+   */
+  weaponProficiencies?: string[];
   /** Id предметов, на которые персонаж настроен (turn_state.attuned_ids). Для гейтинга
-   * магических бонусов: предмет с requires_attunement без настройки даёт только чистые статы.
-   * undefined — контекст без данных о настройке (тесты) → бонусы не гейтятся. */
+   * бонусов из mechanics.weapon_profile.attunement: требующий настройки предмет без неё
+   * даёт только базовые свойства. undefined — неизвестный факт и отключает бонусы fail-closed. */
   attunedIds?: string[];
   /** Искусность (Weapon Mastery, PHB 2024): ВЫБРАННЫЕ виды оружия (card.weapon_type: longsword…).
    * Свойство искусности оружия работает, только если его вид здесь. undefined/[] — искусности нет
@@ -173,6 +220,10 @@ export interface CharacterContext {
 }
 
 export interface TargetContext {
+  /** Stable world actor id used by persisted cross-actor effect ownership. */
+  id?: string;
+  /** Tiny=0, Small=1, Medium=2, Large=3, Huge=4, Gargantuan=5. */
+  size?: number;
   ac?: number;
   saveMods?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   checkMods?: Record<string, number>;
@@ -180,23 +231,108 @@ export interface TargetContext {
   characterContext?: CharacterContext;
   /** Рантайм цели (фаза E): состояния (projected-модификаторы) и сопротивления. */
   runtimeState?: RuntimeState;
+  /** Compiled target-owned passives used by damage adjustment and other target rules. */
+  passives?: Dict[];
+  /** Target-owned immunities used when an action routes a condition to it. */
+  conditionImmunities?: ConditionImmunityContext[];
+}
+
+export interface ConditionImmunityContext {
+  condition: string;
+  requiredCauseTags?: string[];
+  sourceEntityIds: string[];
+}
+
+/** Canonical spell components copied from immutable content, never from UI facts. */
+export interface SpellComponents {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+}
+
+/** Authoritative spell context retained by serializable rules continuations. */
+export interface SpellCastContext {
+  baseLevel: number;
+  castLevel?: number;
+  sourceClass?: string;
+  components?: SpellComponents;
+  /** Immutable actor-owned grant selected for this cast. */
+  grantId?: string;
+  /** Class, feat, lineage, or invocation that owns the selected grant. */
+  sourceId?: string;
+  /** Source-specific ability; it may differ from the actor's class default. */
+  spellcastingAbility?: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+  mode?: 'normal' | 'ritual';
+  payment?: { kind: 'none' | 'free_use' | 'slot'; resource?: string };
 }
 
 export interface ExecuteContext {
   character: CharacterContext;
+  /** Compiled always-on and triggered rules owned by the acting creature. */
+  passives?: Dict[];
+  /** Actor-owned immunities used when a payload applies a condition to self. */
+  conditionImmunities?: ConditionImmunityContext[];
+  /** Runtime of the acting creature, used by caster-scoped derived values such as spell save DC. */
+  selfRuntime?: RuntimeState;
   /** Id исполнителя действия (кастера). Проставляется в sourceId накладываемых состояний (E). */
   selfId?: string;
+  /** Persisted Attack-action identity available to typed follow-up primitives. */
+  attackActionId?: string;
+  /** Stable command that opened the current attack resolution. */
+  attackCommandId?: string;
   /** Триггерные способности-СЛУШАТЕЛИ (заклинания вроде Божественной кары): пул для emitEvent/реакций.
    *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КЗ
    *  Щита) не применялся пассивно до активации. */
   triggers?: Record<string, unknown>[];
   target?: TargetContext;
+  /** Explicit board/GM facts for rules that need relationships but not full geometry. */
+  attackFacts?: {
+    nearbyEligibleAllyToTarget?: boolean;
+  };
+  /** Explicit board/GM observations keyed by the stable actor that imposed a
+   * relational condition. Required by source-aware rules such as Frightened. */
+  conditionSourceFacts?: Record<string, { lineOfSight: boolean }>;
+  /** Explicit actor relationships consumed by generic condition predicates.
+   * Distances are in feet; visibility is directed observer -> observed actor. */
+  conditionRelationFacts?: {
+    distancesFt?: Record<string, Record<string, number>>;
+    visibility?: Record<string, Record<string, boolean>>;
+  };
   rng: () => number;
+  /**
+   * Optional dedicated tape for damage dice. Area continuations replay this
+   * tape from the beginning for every target, implementing one shared damage
+   * roll without coupling it to saving throws or spell-cast listeners.
+   */
+  damageRng?: () => number;
+  /**
+   * Factory for identifiers that become part of persisted runtime state.
+   * Canonical rules sessions always provide it so equal state/command/RNG
+   * inputs produce byte-identical events. Legacy callers may omit it during
+   * migration and retain the historical timestamp based identifiers.
+   */
+  nextId?: () => string;
+  /** Canonical continuation support: stop after the attack roll is known. */
+  pauseAfterAttackRoll?: boolean;
+  /** Reuse an already committed attack roll when a reaction window resumes. */
+  forcedAttackRoll?: RollLog;
   /** Выборы игрока внутри действия (напр. вариант Толчка). Ключ — сырой choice.id;
    *  значение — одна опция или массив (для count>1). Собирается предпроходом на клике. */
   choices?: Record<string, string | string[]>;
-  /** Контекст каста заклинания (E5): базовый уровень и уровень слота для апкаста. */
-  spell?: { baseLevel: number; castLevel?: number };
+  /** Контекст каста заклинания (E5), включая канонические компоненты из каталога. */
+  spell?: SpellCastContext;
+  /**
+   * Explicit authority hand-off from canonical rules-core after it has
+   * validated and applied `mechanics.primitive`. Ordinary browser/legacy
+   * callers must omit this marker, so they cannot pay for only the legacy
+   * `effects` half of a world primitive.
+   */
+  externalPrimitiveHandled?: true;
+  /**
+   * Keep spell metadata for formulas while suppressing the once-per-cast
+   * lifecycle event when a multi-target action resumes for another creature.
+   */
+  suppressSpellCastEvent?: boolean;
   /** Предзагруженные на листе эффекты, выдаваемые кастом через grant_effect: slug → {name, mechanics}.
    *  Движок синхронный, эффект по slug грузит лист; здесь — уже резолвнутая механика для установки
    *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). repeatable — повторяемый
@@ -216,6 +352,33 @@ export interface ExecuteContext {
    * ЦЕЛЬ кинула спасбросок сама на своём листе. При заданном значении d20 НЕ катится (rng не
    * тратится — иначе съел бы кости урона) и событие спасброска не эмитится. */
   forceSaveOutcome?: 'success' | 'fail';
+  /**
+   * Stop before a nested target saving throw and return a serializable offer.
+   * The caller commits effects that happened before the save, then lets the
+   * target resolve the offer in a separate authoritative command.
+   */
+  deferTargetSaves?: boolean;
+  /** Canonical source metadata attached by a nested rules primitive. */
+  deferredSaveSource?: {
+    kind: 'weapon_mastery' | 'nested_effect';
+    entityId: string;
+    name: string;
+    weaponMod?: number;
+  };
+}
+
+export interface DeferredTargetSave {
+  source: {
+    kind: 'weapon_mastery' | 'nested_effect';
+    entityId: string;
+    name: string;
+    weaponMod?: number;
+  };
+  /** Canonical save interaction; no client-provided mechanics are accepted. */
+  effect: Dict;
+  ability: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+  dc: number;
+  avoidsConditions: string[];
 }
 
 /**
@@ -235,6 +398,8 @@ export interface ExecuteResult {
   events: EngineEvent[];
   /** Реакции/триггеры со стоимостью, требующие решения игрока (фаза A). */
   pendingReactions?: ReactionOffer[];
+  /** Nested target saves paused before any target roll or consequence. */
+  deferredTargetSaves?: DeferredTargetSave[];
   /** Состояние ЦЕЛИ после payload-ов who:'target' (фаза E/C2). undefined — цель без
    *  runtimeState или без изменений (лист персистит только при наличии). */
   targetState?: RuntimeState;
@@ -252,9 +417,23 @@ export interface WeaponContext {
   damages: Array<{ dice: string; type: string }>;
   /** Магический бонус «+N» к броскам атаки и к основному урону. */
   enchant: number;
+  /** Explicit mechanics.weapon_profile enchantment projections. */
+  attackEnchant: number;
+  damageEnchant: number;
   properties: string[];
+  heavyRule?: {
+    minimumAbilityScore: number;
+    abilityByMode: { melee: 'str'; ranged: 'dex' };
+    consequence: 'attack_disadvantage';
+  };
   /** Вид оружия (longsword, scimitar…) — по нему гейтится искусность (выбор персонажа). */
   weaponType?: string | null;
+  proficiencyCategory: 'simple' | 'martial';
+  defaultAttackMode: 'melee' | 'ranged';
+  attackModes: Array<
+    | { kind: 'melee'; reachFt: number }
+    | { kind: 'ranged'; normalFt: number; longFt: number }
+  >;
   /** Свойство искусности (Weapon Mastery 2024): id эффекта-мастерства из card.mastery. */
   mastery?: string | null;
 }

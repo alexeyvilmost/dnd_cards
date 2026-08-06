@@ -3,6 +3,7 @@ import { freshFighterState, FIGHTER_CTX } from '../mvp/fixtures';
 import { resourcesRestoredOnShortRest } from './resources';
 import { endTurn, shortRest, startTurn } from './turn';
 import type { EngineEvent } from '../mvp/contracts';
+import { MechanicsExecutionError } from './execute';
 
 type Dict = Record<string, unknown>;
 const narratives = (events: EngineEvent[]) => events
@@ -50,6 +51,47 @@ describe('C3 слайс 2 — endTurn / turn-события через шину'
     expect(win.state.activeEffects.find((e) => e.name === 'Отравление')).toBeFalsy();
     const lose = mk('99');
     expect(lose.state.activeEffects.find((e) => e.name === 'Отравление')).toBeTruthy();
+  });
+
+  it.each([
+    {
+      label: 'ability',
+      saveEnds: { dc: '10' },
+      path: 'runtime.activeEffects[1].mechanics.save_ends.ability',
+    },
+    {
+      label: 'DC',
+      saveEnds: { ability: 'con' },
+      path: 'runtime.activeEffects[1].mechanics.save_ends.dc',
+    },
+  ])('endTurn rejects save_ends without explicit $label before every roll or transition', ({ saveEnds, path }) => {
+    const state = freshFighterState();
+    state.activeEffects = [
+      {
+        id: 'valid-first',
+        name: 'Явный спасбросок',
+        source: 'test',
+        mechanics: { kind: 'condition', value: 'poisoned', save_ends: { ability: 'con', dc: '10' } },
+      },
+      {
+        id: 'invalid-second',
+        name: 'Неполный спасбросок',
+        source: 'test',
+        mechanics: { kind: 'condition', value: 'poisoned', save_ends: saveEnds },
+      },
+    ];
+    const before = structuredClone(state);
+    let rngCalls = 0;
+    try {
+      endTurn(state, { ...FIGHTER_CTX, rng: () => { rngCalls += 1; return 0.5; } } as typeof FIGHTER_CTX);
+      throw new Error('Expected fail-closed save_ends error');
+    } catch (error) {
+      expect(error).toBeInstanceOf(MechanicsExecutionError);
+      expect((error as MechanicsExecutionError).code).toBe('INVALID_PAYLOAD');
+      expect((error as MechanicsExecutionError).path).toBe(path);
+    }
+    expect(state).toEqual(before);
+    expect(rngCalls).toBe(0);
   });
 
   it('endTurn эмитит turn_end → будит triggered-слушателя', () => {

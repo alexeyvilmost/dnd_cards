@@ -25,6 +25,7 @@ if (typeof globalThis.localStorage === 'undefined') {
 import { assemble, loadBundle, type AssembledCharacter } from '../character/assemble';
 import { emptyDraft, ABILITY_KEYS, type AbilityKey, type CharacterDraft } from '../character/types';
 import { completionIssues, classSkillChoice } from '../character/forgeHelpers';
+import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { getSkillGrantSource, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { LANGUAGES, ORIGIN_FEATS, SKILLS, optionsForChoiceSource } from '../mechanics/registries';
@@ -68,6 +69,7 @@ function pickChoiceOptions(
   pc: PendingChoice,
   ruleState: ReturnType<typeof resolveCharacterRules>,
   already: string[],
+  activeFeats: readonly Feat[],
 ): string[] {
   const picked: string[] = [...already];
   const need = pc.count - picked.length;
@@ -85,16 +87,11 @@ function pickChoiceOptions(
       pool = feats.length ? feats.map((f) => f.id) : ORIGIN_FEATS.map((f) => f.id);
     }
   } else if (pc.source === 'skill') {
-    const isExpertise = pc.filter === 'proficient';
-    const base = Array.isArray(pc.filter)
+    pool = Array.isArray(pc.filter)
       ? (pc.filter as string[])
       : SKILLS.map((s) => s.id);
-    pool = base.filter((id) => {
-      const granted = !!getSkillGrantSource(ruleState, id);
-      return isExpertise ? granted : !granted;
-    });
   } else if (pc.source === 'language') {
-    pool = LANGUAGES.map((l) => l.id).filter((id) => !ruleState.proficiencies.languages.includes(id));
+    pool = LANGUAGES.map((l) => l.id);
   } else if (pc.source === 'spell') {
     // выбор заклинаний закрывается отдельно (spellIds), для валидатора
     // достаточно проставить count позиций слагами из фильтра-списка
@@ -104,6 +101,15 @@ function pickChoiceOptions(
       ? pc.items.map((it) => it.id)
       : optionsForChoiceSource(pc.source).map((it) => it.id);
   }
+  const featByReference = new Map(allFeats.flatMap((feat) => (
+    [[feat.id, feat.id], [feat.card_number, feat.id]] as const
+  )));
+  const unavailable = unavailableChoiceOptions(pc, ruleState, pool, picked, {
+    activeFeatIds: new Set(activeFeats.map((feat) => feat.id)),
+    repeatableFeatIds: new Set(allFeats.filter((feat) => feat.repeatable).map((feat) => feat.id)),
+    canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
+  });
+  pool = pool.filter((id) => !unavailable[id]);
   for (const id of pool) {
     if (picked.length >= pc.count) break;
     if (!picked.includes(id)) picked.push(id);
@@ -144,7 +150,7 @@ async function autoBuild(draft: CharacterDraft): Promise<{
       const sel = current.resolvedChoices[pc.id] || [];
       if (sel.length >= pc.count) continue;
       const ruleState = resolveCharacterRules({ draft: current, assembled });
-      const picked = pickChoiceOptions(pc, ruleState, sel);
+      const picked = pickChoiceOptions(pc, ruleState, sel, assembled.feats);
       if (picked.length !== sel.length) {
         current.resolvedChoices[pc.id] = picked;
         changed = true;

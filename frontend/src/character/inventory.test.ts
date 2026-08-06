@@ -22,6 +22,7 @@ const baseChar = (): ForgeCharacter => ({
   current_hp: 10,
   speed: 30,
   proficiency_bonus: 2,
+  access_mode: 'owner',
   created_at: '',
   updated_at: '',
   currency: { gold: 100 },

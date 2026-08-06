@@ -10,6 +10,10 @@ export function spellMatchesChoice(
   choice: PendingChoice,
   maxSlotLevel = 0,
 ): boolean {
+  if (choice.source === 'prepared_spell') {
+    const allowed = new Set(choice.allowedOptionIds ?? []);
+    return allowed.has(spell.id) || allowed.has(spell.card_number);
+  }
   const options = (choice.options || {}) as Record<string, unknown>;
   const filter = (options.filter || choice.filter || {}) as
     Record<string, unknown> | string | string[];

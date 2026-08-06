@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { X } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
+import type { EncounterApply } from '../battle/encountersApi';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
+import { persistDetachedManualEffects } from '../character/manualEffectPersistence';
+import {
+  assertManualEffectMutationAllowed,
+  manualEffectMutationBlockReason,
+} from '../character/manualEffectMutationPolicy';
 import type { AssembledCharacter } from '../character/assemble';
-import { buildCharacterContext, alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
+import {
+  buildCharacterContext,
+  alignRuntimeHp,
+  forgeToRuntimeState,
+} from '../character/runtime';
 import {
   buildResourceRuntimePatch,
   hpNeedsSync,
@@ -14,9 +24,13 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
-import { expiryLabel, removeActiveEffect } from '../engine/effects';
+import { expiryLabel } from '../engine/effects';
+import {
+  executeManualEffectCommand,
+  nextBrowserManualEffectId,
+} from '../engine/manualEffectCommands';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { EngineEvent } from '../mvp/contracts';
 import { findResource, useResourceOptions } from '../utils/resources';
 import type { ResourceOption } from '../utils/resources';
 import SheetRestButtons from './SheetRestButtons';
@@ -29,6 +43,7 @@ interface Props {
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
   onLongRestComplete?: () => void;
+  encounterApply?: EncounterApply;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -185,7 +200,7 @@ function ResTile({ resKey, option, current, max, maximum }: ResTileProps) {
   );
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onLongRestComplete }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onLongRestComplete, encounterApply }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
@@ -216,32 +231,25 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
     [character, ruleState.maxHP],
   );
+  const effectMutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
 
-  function persistPayload(state: RuntimeState) {
-    return {
-      current_hp: state.hp.current,
-      max_hp: state.hp.max,
-      resources: state.resources,
-      max_resources: state.maxResources,
-      active_effects: state.activeEffects,
-      turn_state: { ...(character.turn_state ?? {}), temp_hp: state.hp.temp },
-    };
-  }
-
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[]) => {
+  const persistManualEffects = useCallback(async (
+    activeEffects: typeof runtime.activeEffects,
+    events: EngineEvent[],
+  ) => {
     setBusy(true);
     setError(null);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, persistPayload(next));
+      const updated = await persistDetachedManualEffects(character, activeEffects);
       onUpdated(updated);
       onEvents?.(events);
     } catch (e) {
       console.error(e);
-      setError('Не удалось сохранить состояние');
+      setError(e instanceof Error ? e.message : 'Не удалось сохранить состояние');
     } finally {
       setBusy(false);
     }
-  }, [character.id, onUpdated, onEvents]);
+  }, [character, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
     const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
@@ -249,7 +257,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     setBusy(true);
     setError(null);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, patch);
+      const updated = await persistCharacterRuntime(character, patch, encounterApply);
       onUpdated(updated);
     } catch (e) {
       console.error(e);
@@ -257,7 +265,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, onUpdated, ruleState.maxHP]);
+  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP]);
 
   useEffect(() => {
     if (syncAttempted.current || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
@@ -275,8 +283,18 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   );
 
   const handleDismissEffect = (effectId: string) => {
-    const { state, events } = removeActiveEffect(runtime, effectId);
-    apply(state, events);
+    try {
+      assertManualEffectMutationAllowed(character.current_encounter_id);
+      const { state, events } = executeManualEffectCommand(runtime, {
+        type: 'RemoveEffect',
+        effectId,
+        ownerActorId: character.id,
+        provenance: 'manual:sheet_runtime',
+      }, { nextId: nextBrowserManualEffectId });
+      void persistManualEffects(state.activeEffects, events);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось снять эффект');
+    }
   };
 
   return (
@@ -318,6 +336,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         onUpdated={onUpdated}
         onEvents={onEvents}
         onLongRestComplete={onLongRestComplete}
+        encounterApply={encounterApply}
       />
 
       {runtime.activeEffects.length > 0 && (
@@ -331,8 +350,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"
-                  disabled={busy}
-                  title="Снять вручную"
+                  disabled={busy || Boolean(effectMutationBlockReason)}
+                  title={effectMutationBlockReason ?? 'Снять вручную'}
                   onClick={() => handleDismissEffect(fx.id)}
                 >
                   <X size={14} />
@@ -340,6 +359,9 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
               </li>
             ))}
           </ul>
+          {effectMutationBlockReason && (
+            <p className="issues" role="alert">{effectMutationBlockReason}</p>
+          )}
         </div>
       )}
 

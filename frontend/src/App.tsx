@@ -1,7 +1,16 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
-import { loadConditions } from './api/conditionsApi';
+import {
+  loadConditions,
+  MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
+  type ConditionLoadResult,
+} from './api/conditionsApi';
+import {
+  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
+  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
+  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
+} from './canon/microMvpL1ReleaseIdentity';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DiceDialogProvider } from './contexts/DiceDialogContext';
@@ -14,6 +23,7 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import MobileSuggestion from './mobile/MobileSuggestion';
+import CharacterV3AccessNotice from './components/CharacterV3AccessNotice';
 
 // Ленивая загрузка страниц (code-splitting по роутам) — уменьшает основной чанк.
 const Settings = lazy(() => import('./pages/Settings'));
@@ -63,14 +73,86 @@ const MobileCharactersPage = lazy(() => import('./mobile/MobileCharactersPage'))
 const MobileCharacterSheet = lazy(() => import('./mobile/MobileCharacterSheet'));
 const MobileCharacterWizard = lazy(() => import('./mobile/MobileCharacterWizard'));
 const MobileEntityCatalog = lazy(() => import('./mobile/MobileEntityCatalog'));
+const RulesLab = lazy(() => import('./pages/RulesLab'));
+const RULE_BOOTSTRAP_TIMEOUT_MS = 5_000;
+const CONDITION_RELEASE_BINDING = Object.freeze({
+  certificationVersion: MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
+  rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
+  releaseContentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
+  releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
+});
 
 function App() {
-  // Догрузить состояния из БД в реестр движка (фаза D); фолбэк — встроенные 13.
-  useEffect(() => { loadConditions(); }, []);
   const location = useLocation();
+  const isRulesLab = location.pathname === '/rules-lab'
+    || location.pathname.startsWith('/rules-lab/');
+  const [conditionsReady, setConditionsReady] = useState(false);
+  const [conditionAuthority, setConditionAuthority] = useState<ConditionLoadResult | null>(null);
+  const conditionLoadRef = useRef<ReturnType<typeof loadConditions> | null>(null);
+  // Активировать только полный сертифицированный набор из 15 состояний БД;
+  // при любой неполноте движок явно остаётся в offline-fixture режиме.
+  useEffect(() => {
+    if (isRulesLab || conditionsReady) return;
+    let active = true;
+    setConditionsReady(false);
+    conditionLoadRef.current ??= loadConditions({
+      timeoutMs: RULE_BOOTSTRAP_TIMEOUT_MS,
+      expectedRelease: CONDITION_RELEASE_BINDING,
+    });
+    void conditionLoadRef.current
+      .then((result) => {
+        if (active) setConditionAuthority(result);
+      })
+      .catch(() => {
+        // `loadConditions` is fail-closed itself. Keep the shell safe even if
+        // a future adapter unexpectedly rejects instead of returning a mode.
+        if (active) setConditionAuthority({
+          mode: 'offline_fixture',
+          reason: 'condition authority bootstrap failed',
+        });
+      })
+      .finally(() => {
+        if (active) setConditionsReady(true);
+      });
+    return () => { active = false; };
+  }, [isRulesLab, conditionsReady]);
+
+  // Acceptance lab deliberately has no API/auth dependency or application-wide providers.
+  if (isRulesLab) {
+    return (
+      <ErrorBoundary resetKey={location.pathname}>
+        <Suspense fallback={<div style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>Загрузка…</div>}>
+          <Routes>
+            <Route path="/rules-lab/:scenarioId?" element={<RulesLab />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // Do not expose an interactive sheet while the engine can still switch
+  // from its recovery fixture to the database release underneath the user.
+  if (!conditionsReady) {
+    return <div style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>Загрузка правил…</div>;
+  }
+
   return (
+    <>
+    {conditionAuthority?.mode === 'offline_fixture' && (
+      <div
+        role="status"
+        data-testid="offline-rules-authority"
+        style={{
+          position: 'sticky', top: 0, zIndex: 10000, padding: '8px 16px',
+          textAlign: 'center', color: '#2f2418', background: '#f3d28b',
+        }}
+      >
+        Офлайн-набор правил: сертифицированные данные сервера сейчас недоступны.
+      </div>
+    )}
     <AuthProvider>
       <ToastProvider>
+        <CharacterV3AccessNotice />
         <CharacterFormulaRoot>
         <DiceDialogProvider>
         <ChoiceDialogProvider>
@@ -84,22 +166,22 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Конструктор персонажа (без авторизации, полноэкранный) */}
-        <Route path="/character-forge" element={<CharacterForge />} />
-        <Route path="/character-forge/:id" element={<CharacterForge />} />
-        <Route path="/characters-forge" element={<CharactersForgeList />} />
+        {/* CharacterV3 хранит личные листы/журналы и требует валидную сессию. */}
+        <Route path="/character-forge" element={<ProtectedRoute><CharacterForge /></ProtectedRoute>} />
+        <Route path="/character-forge/:id" element={<ProtectedRoute><CharacterForge /></ProtectedRoute>} />
+        <Route path="/characters-forge" element={<ProtectedRoute><CharactersForgeList /></ProtectedRoute>} />
         <Route path="/spell/:id" element={<SpellPage />} />
-        <Route path="/characters-v3/:id" element={<CharacterSheetMVP />} />
+        <Route path="/characters-v3/:id" element={<ProtectedRoute><CharacterSheetMVP /></ProtectedRoute>} />
 
         {/* Отдельный мобильный интерфейс игрока */}
         <Route path="/m" element={<Navigate to="/m/characters" replace />} />
-        <Route path="/m/characters" element={<MobileCharactersPage />} />
-        <Route path="/m/characters/new" element={<MobileCharacterWizard />} />
-        <Route path="/m/characters/:id" element={<MobileCharacterSheet />} />
-        <Route path="/m/characters/:id/edit" element={<MobileCharacterWizard />} />
-        <Route path="/m/characters/:id/level-up" element={<MobileCharacterWizard />} />
-        <Route path="/m/characters/:id/add" element={<MobileEntityCatalog />} />
-        <Route path="/m/characters/:id/add/:type" element={<MobileEntityCatalog />} />
+        <Route path="/m/characters" element={<ProtectedRoute><MobileCharactersPage /></ProtectedRoute>} />
+        <Route path="/m/characters/new" element={<ProtectedRoute><MobileCharacterWizard /></ProtectedRoute>} />
+        <Route path="/m/characters/:id" element={<ProtectedRoute><MobileCharacterSheet /></ProtectedRoute>} />
+        <Route path="/m/characters/:id/edit" element={<ProtectedRoute><MobileCharacterWizard /></ProtectedRoute>} />
+        <Route path="/m/characters/:id/level-up" element={<ProtectedRoute><MobileCharacterWizard /></ProtectedRoute>} />
+        <Route path="/m/characters/:id/add" element={<ProtectedRoute><MobileEntityCatalog /></ProtectedRoute>} />
+        <Route path="/m/characters/:id/add/:type" element={<ProtectedRoute><MobileEntityCatalog /></ProtectedRoute>} />
 
         {/* Защищенные маршруты */}
         <Route path="/" element={
@@ -277,7 +359,7 @@ function App() {
         <Route path="/characters-v3" element={<Navigate to="/characters-forge" replace />} />
         <Route path="/characters-v3/create" element={<Navigate to="/character-forge" replace />} />
         <Route path="/characters/create" element={<Navigate to="/character-forge" replace />} />
-        <Route path="/characters-v3/:id/edit" element={<CharacterForge />} />
+        <Route path="/characters-v3/:id/edit" element={<ProtectedRoute><CharacterForge /></ProtectedRoute>} />
         
         {/* Настройки сайта */}
         <Route path="/settings" element={
@@ -416,6 +498,7 @@ function App() {
         </CharacterFormulaRoot>
       </ToastProvider>
     </AuthProvider>
+    </>
   );
 }
 

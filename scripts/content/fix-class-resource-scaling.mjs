@@ -8,10 +8,11 @@
  * KB-054 — Вдохновение считалось от prof_bonus вместо модификатора Харизмы. RAW: = мод. ХАР,
  *   минимум 1 → формула max(cha, 1). L1 ХАР+3 → 3 (было 2 по prof_bonus).
  *
- * ДВОЙНОЙ ГЕЙТ (почему правки только classes.json мало): у действия есть explicit-cost на
- * класс-ресурс (rage_charge / bardic_inspiration) И mechanics.uses, который normalizeActiveMechanics
- * добавляет как ВТОРОЙ пул uses_<key> (applyActionUsesCost). uses_ACT-rage=2 держал Ярость на 2
- * даже при by_level в rage_charge. usesFromMechanics не знает by_level.
+ * Исторический двойной гейт: у действия был explicit-cost на класс-ресурс
+ * (rage_charge / bardic_inspiration) И legacy mechanics.uses. Современный
+ * движок не превращает uses в скрытую цену: расход возможен только через явно
+ * объявленный activation.cost self_uses. Скрипт всё равно удаляет старое
+ * дублирующее описание пула из продовых данных.
  *
  * Решение: класс-ресурс — ЕДИНСТВЕННЫЙ источник пула; редундантный mechanics.uses УДАЛЯЕМ у
  * обоих действий (у них уже есть explicit-cost на класс-ресурс, поэтому действие остаётся

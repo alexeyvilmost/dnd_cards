@@ -137,11 +137,14 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
       ...reqRowsToRequirements(requirements),
     ];
     if (reqs.length) act.requirements = reqs; else delete act.requirements;
-    // S3-гейты вплетаем в собранную механику.
+    // S3-гейты вплетаем в собранную механику. Саморасход — явная
+    // относительная цена, которую адаптер предмета связывает с card id.
     if (itemWhile) act.while = itemWhile;
-    if (consumesSelf) act.consumes_self = true;
     const extra = costRowsToCost(extraCost);
-    if (extra.length) act.cost = [...((act.cost as unknown[]) || []), ...extra];
+    const contextualCost = consumesSelf ? [{ resource: 'self_item' }] : [];
+    if (extra.length || contextualCost.length) {
+      act.cost = [...((act.cost as unknown[]) || []), ...contextualCost, ...extra];
+    }
     if (recharge.trim()) {
       base.uses = { ...((base.uses as Record<string, unknown>) || {}), recharge: recharge.trim() };
     }

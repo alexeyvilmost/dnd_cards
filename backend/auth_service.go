@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+var ErrJWTSecretNotConfigured = errors.New("JWT_SECRET is required for strict authentication")
 
 // JWTClaims - структура для JWT токена
 type JWTClaims struct {
@@ -134,10 +137,9 @@ func (s *AuthService) Login(req AuthRequest) (*AuthResponse, error) {
 
 // generateJWTToken - генерация JWT токена
 func (s *AuthService) generateJWTToken(user User) (string, error) {
-	// Получаем секретный ключ из переменных окружения
 	secretKey := os.Getenv("JWT_SECRET")
-	if secretKey == "" {
-		secretKey = "default-secret-key" // В продакшене обязательно должен быть установлен
+	if len(secretKey) < 32 || strings.TrimSpace(secretKey) == "" {
+		return "", ErrJWTSecretNotConfigured
 	}
 
 	// Создаем claims
@@ -160,27 +162,38 @@ func (s *AuthService) generateJWTToken(user User) (string, error) {
 
 // ValidateToken - валидация JWT токена
 func (s *AuthService) ValidateToken(tokenString string) (*JWTClaims, error) {
-	// Получаем секретный ключ
+	return s.ValidateTokenStrict(tokenString)
+}
+
+// ValidateTokenStrict is the single validation contract for every presented
+// credential. Anonymous access is represented only by an absent Authorization
+// header; a supplied JWT never receives a weaker prototype parser.
+func (s *AuthService) ValidateTokenStrict(tokenString string) (*JWTClaims, error) {
+	// Use the exact configured bytes, as token issuance does. Trimming only for
+	// the configuration check would otherwise make a secret with intentional
+	// surrounding whitespace sign and verify with different keys.
 	secretKey := os.Getenv("JWT_SECRET")
-	if secretKey == "" {
-		secretKey = "default-secret-key"
+	if len(secretKey) < 32 || strings.TrimSpace(secretKey) == "" {
+		return nil, ErrJWTSecretNotConfigured
 	}
-
-	// Парсим токен
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil
-	})
-
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&JWTClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(secretKey), nil
+		},
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+		jwt.WithIssuer("dnd-cards-backend"),
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	// Проверяем валидность токена
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims, nil
+	claims, ok := token.Claims.(*JWTClaims)
+	if !ok || !token.Valid || claims.UserID == uuid.Nil ||
+		strings.TrimSpace(claims.Username) == "" || claims.Subject != claims.UserID.String() {
+		return nil, errors.New("невалидный токен")
 	}
-
-	return nil, errors.New("невалидный токен")
+	return claims, nil
 }
 
 // GetUserByID - получение пользователя по ID

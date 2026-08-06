@@ -1,12 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Dices, Heart, HeartPulse, Minus, Plus, Shield, Skull } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
+import type { EncounterApply } from '../battle/encountersApi';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
 import {
   applyDamageAtZero, applyDeathSaveRoll, describeDeathSaveOutcome,
   emptyDeathSaves, readDeathSaves, rollDeathSaveDie, type DeathSaveState,
 } from '../character/death';
 import type { FormulaContext } from '../engine/formula';
-import { alignRuntimeHp, forgeToRuntimeState } from '../character/runtime';
+import {
+  alignRuntimeHp,
+  forgeToRuntimeState,
+  writeRulesEngineRuntimeTurnState,
+} from '../character/runtime';
 import type { AbilityKey, ForgeCharacter } from '../character/types';
 import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
@@ -89,11 +94,12 @@ interface Props {
    *  сопротивления/иммунитеты/уязвимости, концентрацию, реакции. Без него — простое вычитание. */
   sheetCtx?: CharacterContext | null;
   passives?: Record<string, unknown>[];
+  encounterApply?: EncounterApply;
 }
 
 export default function SheetHpPanel({
   character, maxHp, maxHpBreakdown, onUpdated, onEvents, conSaveBonus = 0, embedded,
-  sheetCtx, passives,
+  sheetCtx, passives, encounterApply,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState(5);
@@ -122,19 +128,17 @@ export default function SheetHpPanel({
   ) => {
     setBusy(true);
     try {
-      const updated = await charactersV3Api.patchRuntime(character.id, {
+      const updated = await persistCharacterRuntime(character, {
         current_hp: state.hp.current,
         max_hp: state.hp.max,
         // Реакции в конвейере урона могут тратить ресурсы (реакция, заряд Наследия великанов) —
         // персистим resources, иначе трата терялась бы (giant_legacy Каменной стойкости и т.п.).
         resources: state.resources,
         active_effects: state.activeEffects,
-        turn_state: {
-          ...(character.turn_state ?? {}),
-          temp_hp: state.hp.temp,
+        turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, state, {
           death_saves: ds ?? readDeathSaves(character.turn_state),
-        },
-      });
+        }),
+      }, encounterApply);
       onUpdated(updated);
       if (events.length) onEvents?.(events);
     } catch (e) {
@@ -142,7 +146,7 @@ export default function SheetHpPanel({
     } finally {
       setBusy(false);
     }
-  }, [character.id, character.turn_state, onUpdated, onEvents]);
+  }, [character, encounterApply, onUpdated, onEvents]);
 
   // ── Урон: провалы при 0 HP, проверка концентрации при уроне ──
   const handleDamage = async () => {

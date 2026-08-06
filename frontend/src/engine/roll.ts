@@ -17,10 +17,7 @@ import {
   rollTriggers,
   rollD20BonusDice,
 } from './rollRules';
-
-function rollDie(sides: number, rng: () => number): number {
-  return Math.floor(rng() * sides) + 1;
-}
+import { drawDie } from './random';
 
 function formatMod(m: RollModifier): string {
   const sign = m.value >= 0 ? '+' : '';
@@ -89,8 +86,8 @@ export function rollD20(opts: RollD20Options): RollLog {
 
   let natural: number;
   if (advantage === 'advantage' || advantage === 'disadvantage') {
-    const d1 = rollDie(faces, rng);
-    const d2 = rollDie(faces, rng);
+    const d1 = drawDie(rng, faces);
+    const d2 = drawDie(rng, faces);
     const takeHigh = advantage === 'advantage';
     const kept = takeHigh ? Math.max(d1, d2) : Math.min(d1, d2);
     const dropped = takeHigh ? Math.min(d1, d2) : Math.max(d1, d2);
@@ -98,7 +95,7 @@ export function rollD20(opts: RollD20Options): RollLog {
     dice.push({ sides: faces, result: dropped, discarded: true });
     natural = kept;
   } else {
-    natural = rollDie(faces, rng);
+    natural = drawDie(rng, faces);
     dice.push({ sides: faces, result: natural });
   }
 
@@ -106,7 +103,7 @@ export function rollD20(opts: RollD20Options): RollLog {
   if (shouldReroll(rules, natural)) {
     const kept = dice.find((d) => !d.discarded);
     if (kept) kept.discarded = true;
-    natural = rollDie(faces, rng);
+    natural = drawDie(rng, faces);
     dice.push({ sides: faces, result: natural });
   }
 
@@ -144,5 +141,32 @@ export function rollD20(opts: RollD20Options): RollLog {
     outcome,
     text: buildD20Text(dice, modifiers, total, opts.target, outcome, dieBonus, bonusDice),
     ...(triggered.length ? { triggered } : {}),
+  };
+}
+
+/**
+ * Re-evaluate an already rolled attack against a new AC without consuming RNG.
+ * Used by interrupt reactions such as Shield: the dice and modifiers are
+ * immutable, while the target value may change before hit effects are applied.
+ */
+export function retargetAttackRoll(roll: RollLog, targetAc: number): RollLog {
+  if (roll.kind !== 'd20') throw new Error('Only d20 attack rolls can be retargeted');
+  const natural = roll.dice.find((die) => !die.discarded)?.result;
+  if (natural == null) throw new Error('Attack roll has no kept die');
+
+  const outcome: RollLog['outcome'] = roll.outcome === 'crit' || roll.outcome === 'crit_miss'
+    ? roll.outcome
+    : natural <= 1
+      ? 'miss'
+      : roll.total >= targetAc ? 'hit' : 'miss';
+  const baseText = roll.text.replace(/ против КЗ .*$/, '');
+  const suffix = outcome === 'crit' ? ' — крит'
+    : outcome === 'crit_miss' ? ' — крит. промах'
+      : outcome === 'hit' ? ' — попадание' : ' — промах';
+  return {
+    ...roll,
+    target: { type: 'ac', value: targetAc },
+    outcome,
+    text: `${baseText} против КЗ ${targetAc}${suffix}`,
   };
 }

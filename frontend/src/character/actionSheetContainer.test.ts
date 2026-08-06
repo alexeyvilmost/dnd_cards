@@ -24,6 +24,7 @@ describe('S2 — containerUnpackAction (распаковка mode=all)', () => {
     const cost = (a!.mechanics.activation as { cost: Record<string, unknown>[] }).cost;
     expect(cost.some((c) => c.resource === 'item' && c.card_id === 'pack')).toBe(true); // consumes_self
     expect(a!.group).toBe('item');
+    expect(a!.sourceEntityIds).toEqual(['pack']);
   });
 
   it('cycle-guard: само-ссылка в содержимом пропускается (дата-баг)', () => {
@@ -81,6 +82,7 @@ describe('S3 — контейнер-выбор mode=choice (containerChoiceActio
     const cost = (a.mechanics.activation as { cost: Record<string, unknown>[] }).cost;
     expect(cost.some((c) => c.resource === 'item' && c.card_id === 'bag')).toBe(true);
     expect(a.name).toContain('Достать');
+    expect(a.sourceEntityIds).toEqual(['bag']);
   });
 
   it('cycle-guard само-ссылки; mode=all → null', () => {

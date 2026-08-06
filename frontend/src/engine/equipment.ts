@@ -4,6 +4,7 @@
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 import { registerCard } from './cardRegistry';
+import { parseWeaponProfile } from './weaponProfile';
 
 export type EquipmentSlotKey =
   | 'head' | 'body' | 'main_hand' | 'off_hand'
@@ -21,8 +22,21 @@ function cardProps(card: Card): string[] {
   return [];
 }
 
-function isTwoHanded(card: Card): boolean {
-  return card.slot === 'two_hands' || cardProps(card).includes('two_handed');
+function twoHandedRule(card: Card): { valid: true; twoHanded: boolean } | { valid: false; issue: string } {
+  const mechanics = card.mechanics && typeof card.mechanics === 'object' && !Array.isArray(card.mechanics)
+    ? card.mechanics as Record<string, unknown>
+    : null;
+  if (card.type === 'weapon' && mechanics?.weapon_profile !== undefined) {
+    const parsed = parseWeaponProfile(card);
+    return parsed.valid
+      ? { valid: true, twoHanded: parsed.profile.properties.includes('two_handed') }
+      : { valid: false, issue: parsed.issue };
+  }
+  // Compatibility for content outside the profiled micro-MVP slice.
+  return {
+    valid: true,
+    twoHanded: card.slot === 'two_hands' || cardProps(card).includes('two_handed'),
+  };
 }
 
 function isShield(card: Card): boolean {
@@ -100,7 +114,9 @@ export function equipItem(state: RuntimeState, card: Card): { state: RuntimeStat
     return { state: { ...state, equipment } };
   }
 
-  if (isTwoHanded(card)) {
+  const twoHanded = twoHandedRule(card);
+  if (!twoHanded.valid) return { state, error: twoHanded.issue };
+  if (twoHanded.twoHanded) {
     if (!bothHandsFree(equipment)) {
       return { state, error: 'Обе руки заняты — сначала снимите оружие' };
     }
@@ -139,7 +155,9 @@ export interface EquipPlan {
 export function planEquip(state: RuntimeState, card: Card): EquipPlan {
   const eq = cloneEquipment(state);
   if (isBodyArmor(card)) return { slots: ['body'], occupantId: eq.body ?? null };
-  if (isTwoHanded(card)) {
+  const twoHanded = twoHandedRule(card);
+  if (!twoHanded.valid) return { slots: [], occupantId: null, error: twoHanded.issue };
+  if (twoHanded.twoHanded) {
     return { slots: ['main_hand', 'off_hand'], occupantId: eq.main_hand ?? eq.off_hand ?? null };
   }
   if (card.slot === 'one_hand' || card.type === 'weapon' || isShield(card)) {

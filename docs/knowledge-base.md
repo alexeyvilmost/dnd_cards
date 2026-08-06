@@ -1,7 +1,12 @@
-# База знаний проекта (единый источник)
+# Исторический issue ledger проекта
 
-> Этот документ заменяет разрозненные доки-ревью. Он **живой**: правки вносятся сюда, а не в новый файл.
-> Срез: 2026-07-15, HEAD `e868714` (+ `9078764` той же сессии). Прод-снапшот: `officials/canon/prod-snapshot/` от 2026-07-15 16:58.
+> Это исторический срез 2026-07-15 и реестр legacy-находок, а не текущий
+> архитектурный источник. Для актуальной границы читайте
+> `docs/rules-engine-migration-plan.md`, `docs/micro-mvp-roadmap.md` и принятый
+> effects-first инвариант
+> [`docs/engine/effects-first-authoring-invariants.md`](./engine/effects-first-authoring-invariants.md).
+> Текущий разрыв между инвариантом и реализацией отслеживается отдельно в
+> [`docs/engine/effects-first-compliance-audit-2026-08-05.md`](./engine/effects-first-compliance-audit-2026-08-05.md).
 
 ---
 
@@ -469,7 +474,7 @@
 | KB-204 | **34,4 МБ SQL-дампов в корне, два нулевого размера; содержат PII и bcrypt-хэши.** Вместе с KB-203 — 73% веса репо (84,3 из 115,7 МБ) | medium | S | infra | CONFIRMED | 7.2 |
 | KB-205 | **CI никогда не собирает Go-бэкенд** (оффлайн-гейт на PR = tsc + оба vitest; ночной живой прогон + дифф дрейфа снапшота) | medium | S | infra | CONFIRMED | 7.3 |
 | KB-206 | **`npm run lint` сломан навсегда: 5 devDependencies-сирот, конфига не было НИКОГДА** (`git log --diff-filter=D` пуст) | low | S | infra | CONFIRMED | 7.4 |
-| KB-207 | **Контентные скрипты по умолчанию пишут в ПРОДАКШН**; `api.mjs` содержит login с закоммиченными дефолтами (`importer_user/importer_pass123`) | medium | M | infra | CONFIRMED | 7.5 |
+| KB-207 | **Контентные скрипты по умолчанию писали в ПРОДАКШН**; `api.mjs` содержал login с закоммиченными importer credentials (пароль удалён из документа, обязательна production-ротация) | medium | M | infra | REMEDIATED_IN_CODE_ROTATION_PENDING | 7.5 |
 | KB-208 | **Прод-URL захардкожен как fallback в 4 файлах фронта (46 по репо)** | low | S | code | CONFIRMED | 7.6 |
 | KB-209 | **Прочая гигиена:** корневой мусор A7 (`Gortak.json`, `Hara*.json`×3, `dummy.json`, `example.json`, `rage.json`, `modify_attack.json`, `image.png`, `site_logo.png`, `fix_dump_encoding.ps1`, `fix_foreign_key.sql`, `V4 System/`, `Способности/`, `all_cards.json`), 8 стейл-.md, `tsconfig.tsbuildinfo` ×2, `DEPLOYMENT.md`, `docker-compose.prod.yml`. ⚠ Безопасно удалять **только** `railway-backend.json` — `railway-frontend.json` может быть привязан кастомным config path в дашборде | low | S | infra | CONFIRMED | 7.7 |
 

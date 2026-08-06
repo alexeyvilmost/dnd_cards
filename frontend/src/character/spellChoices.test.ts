@@ -34,4 +34,15 @@ describe('spellMatchesChoice', () => {
     expect(spellMatchesChoice(shield, available, 1)).toBe(true);
     expect(spellMatchesChoice(mistyStep, available, 1)).toBe(false);
   });
+
+  it('для подготовки допускает только фактические записи выбранной книги', () => {
+    const prepared = {
+      ...choice({}),
+      source: 'prepared_spell',
+      allowedOptionIds: ['shield-card', 'magic-missile'],
+    };
+    const shield = { ...spell('shield-uuid', 1, ['wizard']), card_number: 'shield-card' };
+    expect(spellMatchesChoice(shield, prepared)).toBe(true);
+    expect(spellMatchesChoice(spell('sleep', 1, ['wizard']), prepared)).toBe(false);
+  });
 });

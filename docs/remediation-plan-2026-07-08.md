@@ -52,7 +52,9 @@
 ### A1. Git-мусор (P1, S)
 Удалить из индекса (`git rm --cached` + физически, где мусор):
 - `backend/main` — 31,5 МБ скомпилированный бинарник (Windows PE; Dockerfile собирает сам — `go build -o main .`);
-- корневые дампы: `dump_20251212_083829.sql` (11 МБ), `dump_correct_utf8.sql` (9 МБ), `dump_fixed_utf8.sql` (15 МБ), пустые `dump_20251212_083750.sql`, `dump_20251216_083948.sql`;
+- корневые дампы из этого исторического аудита удалены из текущего дерева как
+  security incident; очистка старых Git objects описана в
+  `docs/security-public-history-remediation.md`;
 - `frontend/tsconfig.tsbuildinfo`, `frontend/tsconfig.node.tsbuildinfo`.
 
 В `.gitignore` добавить: `backend/main`, `dump_*.sql`, `*.tsbuildinfo`.
@@ -452,7 +454,7 @@ ShopNew.tsx:44-74 — модал-ловушка выбора торговца: f
 3. перестать отдавать User (username/email) в ответах characters-v3 (Preload("User") → DTO);
 4. убрать fallback JWT_SECRET "default-secret-key" (auth_service.go:101-103,127-129);
 5. спрятать/убрать тестовые креды на /login (Login.tsx:53-124), включить редирект на 401 в интерцепторе (client.ts:81), оживить ProtectedRoute;
-6. сменить закоммиченные креды импортёра (scripts/content/api.mjs:36-37 — importer_user/importer_pass123, любой знающий их пишет в прод);
+6. сменить ранее закоммиченные importer credentials (пароль удалён из документа; любой знавший его мог писать в prod) и только после ротации добавлять UUID в `CONTENT_ADMIN_USER_IDS`;
 7. настроить регулярные бэкапы прод-БД (удаление — soft delete GORM, но восстановления в продукте нет);
 8. пересмотреть публичные PUT «для смены изображения» (main.go:163-196).
 

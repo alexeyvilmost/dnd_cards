@@ -111,29 +111,34 @@ export function pay(state: RuntimeState, cost: Dict[]): { state: RuntimeState; e
   return { state: { ...next, resources }, events };
 }
 
-/** Добавляет запись стоимости в activation.cost (S5: боеприпас оружия). Не мутирует вход. */
-export function appendActivationCost(mech: Dict, entry: Dict): Dict {
-  const act: Dict = { ...((mech.activation as Dict | undefined) ?? { mode: 'active' }) };
-  const cost = Array.isArray(act.cost) ? [...(act.cost as Dict[])] : [];
-  cost.push(entry);
-  act.cost = cost;
-  return { ...mech, activation: act };
-}
+export const SELF_ITEM_RESOURCE = 'self_item';
 
 /**
- * S4 «предмет=эффект»: добавляет к активационной стоимости САМОРАСХОД предмета
- * ({resource:'item', card_id:<self>, amount:1}), если механика помечена consumes_self
- * (в activation или top-level). Идемпотентно; по образцу applyActionUsesCost.
+ * Bind an explicitly declared relative item cost to the concrete card.
+ * `consumes_self` is intentionally ignored: costs have one authority,
+ * `activation.cost`, and adapters may only resolve declared references.
  */
-export function applyItemConsumeCost(mech: Dict, selfCardId: string): Dict {
+export function bindSelfItemCost(mech: Dict, selfCardId: string): Dict {
   const activation = mech.activation as Dict | undefined;
-  const consumesSelf = activation?.consumes_self === true || mech.consumes_self === true;
-  if (!consumesSelf || !selfCardId) return mech;
-  const act: Dict = { ...(activation ?? { mode: 'active' }) };
-  const cost = Array.isArray(act.cost) ? [...(act.cost as Dict[])] : [];
-  if (cost.some((c) => c && (c as Dict).resource === 'item' && (c as Dict).card_id === selfCardId)) return mech;
+  if (!Array.isArray(activation?.cost)) return mech;
+  const hasSelfItem = activation.cost.some((entry) => (
+    !!entry && typeof entry === 'object' && (entry as Dict).resource === SELF_ITEM_RESOURCE
+  ));
+  if (!hasSelfItem) return mech;
+  if (!selfCardId.trim()) throw new Error('activation.cost self_item requires a stable card id');
   const name = typeof mech.name === 'string' ? mech.name : undefined;
-  cost.push({ resource: 'item', card_id: selfCardId, amount: 1, ...(name ? { name } : {}) });
-  act.cost = cost;
-  return { ...mech, activation: act };
+  const cost = (activation.cost as Dict[]).map((entry) => {
+    if (entry?.resource !== SELF_ITEM_RESOURCE) return entry;
+    if (entry.card_id !== undefined) {
+      throw new Error('activation.cost self_item must not declare card_id');
+    }
+    return {
+      ...entry,
+      resource: 'item',
+      card_id: selfCardId,
+      ...(entry.amount === undefined ? { amount: 1 } : {}),
+      ...(entry.name === undefined && name ? { name } : {}),
+    };
+  });
+  return { ...mech, activation: { ...activation, cost } };
 }

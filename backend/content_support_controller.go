@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -32,6 +33,19 @@ var validContentSupportStatuses = map[string]bool{
 	"known_mismatch":      true,
 }
 
+var contentSupportSHA256Pattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+var contentSupportUTCTimestampPattern = regexp.MustCompile(
+	`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$`,
+)
+
+func isValidContentSupportUTCTimestamp(value string) bool {
+	if !contentSupportUTCTimestampPattern.MatchString(value) {
+		return false
+	}
+	_, err := time.Parse(time.RFC3339Nano, value)
+	return err == nil
+}
+
 type ContentSupportRequest struct {
 	Status               string   `json:"status" binding:"required"`
 	ContentHash          *string  `json:"content_hash"`
@@ -40,6 +54,24 @@ type ContentSupportRequest struct {
 	CertifiedAt          *string  `json:"certified_at"`
 	Limitations          []string `json:"limitations"`
 	Note                 *string  `json:"note"`
+	EvidenceID           *string  `json:"evidence_id"`
+	EvidenceHash         *string  `json:"evidence_hash"`
+	EvidenceCompletedAt  *string  `json:"evidence_completed_at"`
+	GateSourceHash       *string  `json:"gate_source_hash"`
+	SourceContentHash    *string  `json:"source_content_hash"`
+	RulesHash            *string  `json:"rules_hash"`
+	ReleaseContentHash   *string  `json:"release_content_hash"`
+	ReleaseHash          *string  `json:"release_hash"`
+	PatchHash            *string  `json:"patch_hash"`
+	CatalogHash          *string  `json:"catalog_hash"`
+}
+
+const microMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v3"
+
+func requiredSupportHash(value *string, field string, issues *[]string) {
+	if value == nil || !contentSupportSHA256Pattern.MatchString(*value) {
+		*issues = append(*issues, field+" должен иметь формат sha256:<64 lowercase hex>")
+	}
 }
 
 func validateContentSupportRequest(req ContentSupportRequest) []string {
@@ -52,12 +84,16 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 		issues = append(issues, "verified-статус требует certification_version")
 	}
 	if strings.HasPrefix(req.Status, "verified_") &&
-		(req.ContentHash == nil || strings.TrimSpace(*req.ContentHash) == "") {
-		issues = append(issues, "verified-статус требует content_hash")
+		(req.ContentHash == nil || !contentSupportSHA256Pattern.MatchString(*req.ContentHash)) {
+		issues = append(issues, "verified-статус требует content_hash в формате sha256:<64 lowercase hex>")
 	}
 	if strings.HasPrefix(req.Status, "verified_") &&
-		(req.DependencyHash == nil || strings.TrimSpace(*req.DependencyHash) == "") {
-		issues = append(issues, "verified-статус требует dependency_hash")
+		(req.DependencyHash == nil || !contentSupportSHA256Pattern.MatchString(*req.DependencyHash)) {
+		issues = append(issues, "verified-статус требует dependency_hash в формате sha256:<64 lowercase hex>")
+	}
+	if strings.HasPrefix(req.Status, "verified_") && req.CertifiedAt != nil &&
+		!isValidContentSupportUTCTimestamp(*req.CertifiedAt) {
+		issues = append(issues, "verified-статус допускает certified_at только в явном UTC RFC3339 формате")
 	}
 	if req.Status == "verified_partial" {
 		hasLimitation := false
@@ -69,6 +105,33 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 		}
 		if !hasLimitation {
 			issues = append(issues, "verified_partial требует limitations")
+		}
+	}
+	if req.CertificationVersion != nil &&
+		strings.TrimSpace(*req.CertificationVersion) == microMVPEvidenceCertificationVersion {
+		if *req.CertificationVersion != microMVPEvidenceCertificationVersion {
+			issues = append(issues, "micro-MVP v3 требует канонический certification_version без пробелов")
+		}
+		if req.EvidenceID == nil {
+			issues = append(issues, "micro-MVP v3 требует evidence_id")
+		} else if parsed, err := uuid.Parse(*req.EvidenceID); err != nil || parsed == uuid.Nil ||
+			strings.TrimSpace(*req.EvidenceID) != *req.EvidenceID {
+			issues = append(issues, "micro-MVP v3 требует evidence_id UUID")
+		}
+		requiredSupportHash(req.EvidenceHash, "evidence_hash", &issues)
+		requiredSupportHash(req.GateSourceHash, "gate_source_hash", &issues)
+		requiredSupportHash(req.SourceContentHash, "source_content_hash", &issues)
+		requiredSupportHash(req.RulesHash, "rules_hash", &issues)
+		requiredSupportHash(req.ReleaseContentHash, "release_content_hash", &issues)
+		requiredSupportHash(req.ReleaseHash, "release_hash", &issues)
+		requiredSupportHash(req.PatchHash, "patch_hash", &issues)
+		requiredSupportHash(req.CatalogHash, "catalog_hash", &issues)
+		if req.CertifiedAt == nil || !isValidContentSupportUTCTimestamp(*req.CertifiedAt) {
+			issues = append(issues, "micro-MVP v3 требует явный certified_at UTC RFC3339")
+		}
+		if req.EvidenceCompletedAt == nil ||
+			!isValidContentSupportUTCTimestamp(*req.EvidenceCompletedAt) {
+			issues = append(issues, "micro-MVP v3 требует evidence_completed_at UTC RFC3339")
 		}
 	}
 	return issues
@@ -95,18 +158,25 @@ func isCertificationKeyAuthorized(configured, supplied string) bool {
 	return subtle.ConstantTimeCompare([]byte(configured), []byte(supplied)) == 1
 }
 
-func (cc *ContentSupportController) Update(c *gin.Context) {
+func (cc *ContentSupportController) authorizeCertificationKey(c *gin.Context) bool {
 	if cc.certificationKey == "" {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": "content certification API не настроен",
 		})
-		return
+		return false
 	}
 	if !isCertificationKeyAuthorized(
 		cc.certificationKey,
 		c.GetHeader("X-Content-Certification-Key"),
 	) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "нет доступа к сертификации контента"})
+		return false
+	}
+	return true
+}
+
+func (cc *ContentSupportController) Update(c *gin.Context) {
+	if !cc.authorizeCertificationKey(c) {
 		return
 	}
 
@@ -153,6 +223,18 @@ func (cc *ContentSupportController) Update(c *gin.Context) {
 	}
 	if req.Note != nil {
 		support["note"] = *req.Note
+	}
+	for key, value := range map[string]*string{
+		"evidence_id": req.EvidenceID, "evidence_hash": req.EvidenceHash,
+		"evidence_completed_at": req.EvidenceCompletedAt,
+		"gate_source_hash":      req.GateSourceHash, "source_content_hash": req.SourceContentHash,
+		"rules_hash": req.RulesHash, "release_content_hash": req.ReleaseContentHash,
+		"release_hash": req.ReleaseHash, "patch_hash": req.PatchHash,
+		"catalog_hash": req.CatalogHash,
+	} {
+		if value != nil {
+			support[key] = *value
+		}
 	}
 
 	result := cc.db.Table(table).Where("id = ?", id).Update("support", support)

@@ -74,7 +74,7 @@ const FEAT_FILTER_CATEGORY: Record<string, FeatCategory> = {
   epic_boon: 'epic_boon',
 };
 
-function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[] {
+export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[] {
   // subfeature (подвиды/наследия), explicit (дар договора, «навык А или Б»)
   // и effect (выбор эффектов-бусин) несут варианты прямо в options.items —
   // берём их оттуда.

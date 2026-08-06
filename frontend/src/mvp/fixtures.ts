@@ -132,12 +132,57 @@ const baseCard = {
   card_number: '', is_template: 'false' as unknown as Card['is_template'],
 };
 
+function weaponProfile(input: {
+  weaponType: string;
+  category: 'simple' | 'martial';
+  ability: 'str' | 'dex' | 'finesse';
+  dice: string;
+  damageType: string;
+  properties?: string[];
+  modes?: Array<Record<string, unknown>>;
+  attunement?: boolean;
+  enchant?: number;
+  extraDamage?: Array<{ dice: string; type: string }>;
+}): Record<string, unknown> {
+  const modes = input.modes ?? [{ kind: 'melee', reach_ft: 5 }];
+  const properties = input.properties ?? [];
+  return {
+    weapon_profile: {
+      weapon_type: input.weaponType,
+      proficiency_category: input.category,
+      attack_ability: input.ability,
+      damage_lines: [{ dice: input.dice, type: input.damageType }],
+      default_attack_mode: modes[0].kind,
+      attack_modes: modes,
+      properties,
+      ...(properties.includes('heavy') ? {
+        heavy: {
+          minimum_ability_score: 13,
+          ability_by_mode: { melee: 'str', ranged: 'dex' },
+          consequence: 'attack_disadvantage',
+        },
+      } : {}),
+      mastery_effect_id: `mastery:${input.weaponType}`,
+      ammo: null,
+      enchantment: {
+        attack_bonus: input.enchant ?? 0,
+        damage_bonus: input.enchant ?? 0,
+        extra_damage_lines: input.extraDamage ?? [],
+      },
+      attunement: { required: input.attunement ?? false },
+    },
+  };
+}
+
 export const CARD_LONGSWORD: Card = {
   ...baseCard,
   id: 'card-longsword', name: 'Длинный меч', card_number: 'ITEM-longsword',
   type: 'weapon', slot: 'one_hand', weight: 1.5,
   bonus_type: 'damage' as Card['bonus_type'], bonus_value: '1d8', damage_type: 'slashing',
   properties: ['versatile'] as unknown as Card['properties'],
+  mechanics: weaponProfile({
+    weaponType: 'longsword', category: 'martial', ability: 'str', dice: '1d8', damageType: 'slashing',
+  }),
 } as Card;
 
 export const CARD_DAGGER: Card = {
@@ -146,6 +191,14 @@ export const CARD_DAGGER: Card = {
   type: 'weapon', slot: 'one_hand', weight: 0.5,
   bonus_type: 'damage' as Card['bonus_type'], bonus_value: '1d4', damage_type: 'piercing',
   properties: ['finesse', 'light', 'thrown'] as unknown as Card['properties'],
+  mechanics: weaponProfile({
+    weaponType: 'dagger', category: 'simple', ability: 'finesse', dice: '1d4', damageType: 'piercing',
+    properties: ['finesse', 'light', 'thrown'],
+    modes: [
+      { kind: 'melee', reach_ft: 5 },
+      { kind: 'ranged', normal_ft: 20, long_ft: 60 },
+    ],
+  }),
 } as Card;
 
 export const CARD_GREATAXE: Card = {
@@ -154,6 +207,10 @@ export const CARD_GREATAXE: Card = {
   type: 'weapon', slot: 'two_hands', weight: 3.5,
   bonus_type: 'damage' as Card['bonus_type'], bonus_value: '1d12', damage_type: 'slashing',
   properties: ['heavy', 'two_handed'] as unknown as Card['properties'],
+  mechanics: weaponProfile({
+    weaponType: 'greataxe', category: 'martial', ability: 'str', dice: '1d12', damageType: 'slashing',
+    properties: ['heavy', 'two_handed'],
+  }),
 } as Card;
 
 // Молот мороза +1: двуручный, 2d6 дробящего + 1d6 холода, зачарование +1.
@@ -165,6 +222,11 @@ export const CARD_FROST_HAMMER: Card = {
   elemental_damage_value: '1d6', elemental_damage_type: 'cold', enchant_bonus: 1,
   requires_attunement: true,
   properties: ['two_handed', 'heavy'] as unknown as Card['properties'],
+  mechanics: weaponProfile({
+    weaponType: 'maul', category: 'martial', ability: 'str', dice: '2d6', damageType: 'bludgeoning',
+    properties: ['two_handed', 'heavy'], attunement: true, enchant: 1,
+    extraDamage: [{ dice: '1d6', type: 'cold' }],
+  }),
 } as Card;
 
 export const CARD_SHIELD: Card = {
@@ -196,12 +258,14 @@ export const ALL_CARDS = new Map<string, Card>(
 // ─── Эталонный персонаж: Воин-Человек L1 (стандартный набор) ────────────────
 
 export const FIGHTER_CTX: CharacterContext = {
+  abilityScores: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
   abilityMods: { str: 2, dex: 2, con: 1, int: 1, wis: 0, cha: -1 }, // 15/14/13/12/10/8
   profBonus: 2,
   level: 1,
   classLevels: { fighter: 1 },
   characterSpeed: 30,
   hitDie: 'd10',
+  saveProficiencies: ['str', 'con'],
 };
 
 export function freshFighterState(): RuntimeState {
