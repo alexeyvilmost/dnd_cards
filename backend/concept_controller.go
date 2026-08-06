@@ -27,12 +27,34 @@ func validConceptID(id string) bool {
 
 func (cc *ConceptController) GetConcepts(c *gin.Context) {
 	var concepts []ConceptEntity
-	query := cc.db.Where("deleted_at IS NULL").Order("sort_order ASC, name ASC")
-	if err := query.Find(&concepts).Error; err != nil {
+	query := cc.db.Model(&ConceptEntity{}).Where("deleted_at IS NULL")
+	// Preserve the pre-pagination complete glossary response for UI callers that
+	// omit page/limit, while giving snapshot clients a bounded stable contract.
+	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""
+	page, limit, offset := parseListPaginationWithDefault(c, maxListLimit)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения понятий"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"concepts": concepts})
+	rows := query.Order("sort_order ASC, name ASC, id ASC")
+	if explicitPagination {
+		rows = rows.Offset(offset).Limit(limit)
+	}
+	if err := rows.Find(&concepts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения понятий"})
+		return
+	}
+	if !explicitPagination {
+		page = 1
+		limit = len(concepts)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"concepts": concepts,
+		"total":    total,
+		"page":     page,
+		"limit":    limit,
+	})
 }
 
 func (cc *ConceptController) GetConcept(c *gin.Context) {

@@ -24,15 +24,37 @@ func validResourceID(id string) bool {
 
 func (rc *ResourceController) GetResources(c *gin.Context) {
 	var resources []ResourceDefinition
-	query := rc.db.Where("deleted_at IS NULL").Order("sort_order ASC, name ASC")
+	query := rc.db.Model(&ResourceDefinition{}).Where("deleted_at IS NULL")
 	if category := c.Query("category"); category != "" {
 		query = query.Where("category = ?", category)
 	}
-	if err := query.Find(&resources).Error; err != nil {
+	// This endpoint pre-dates pagination and UI callers expect the whole small
+	// reference catalog when they omit page/limit. Explicit pagination is bounded.
+	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""
+	page, limit, offset := parseListPaginationWithDefault(c, maxListLimit)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ресурсов"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"resources": resources})
+	rows := query.Order("sort_order ASC, name ASC, id ASC")
+	if explicitPagination {
+		rows = rows.Offset(offset).Limit(limit)
+	}
+	if err := rows.Find(&resources).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ресурсов"})
+		return
+	}
+	if !explicitPagination {
+		page = 1
+		limit = len(resources)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"resources": resources,
+		"total":     total,
+		"page":      page,
+		"limit":     limit,
+	})
 }
 
 func (rc *ResourceController) GetResource(c *gin.Context) {

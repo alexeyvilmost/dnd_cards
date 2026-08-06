@@ -16,7 +16,7 @@ export default defineConfig({
   timeout: 180_000,
   expect: { timeout: 30_000 },
   // Do not persist an HTML action report: this suite types real credentials.
-  // Redacted diagnostics and a masked failure screenshot are sufficient.
+  // Console assertions remain available without retaining authenticated media.
   reporter: [['list']],
   outputDir: 'test-results-live',
   use: {
@@ -25,9 +25,9 @@ export default defineConfig({
     navigationTimeout: 30_000,
     // The canary types real account credentials. Persistent trace/video may
     // capture action arguments or authenticated traffic, so production
-    // diagnostics are deliberately limited to the masked failure screenshot.
+    // diagnostics deliberately retain no browser media.
     trace: 'off',
-    screenshot: 'only-on-failure',
+    screenshot: 'off',
     video: 'off',
   },
   projects: [{

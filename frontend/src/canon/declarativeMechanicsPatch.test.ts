@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   assertMicroMvpL1ContentMaterialized,
@@ -16,6 +17,30 @@ import { readProdSnapshotCatalogs } from './prodSnapshotL1Fixtures';
 import { canonicalStringify } from '../rules-core/determinism';
 
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+function readReviewedPreimageCatalogs(): ReturnType<typeof readProdSnapshotCatalogs> {
+  const rawFixture = readFileSync(new URL(
+    '../../../scripts/content/testdata/micro-mvp-l1-reviewed-preimage.v1.json',
+    import.meta.url,
+  ));
+  const fixtureHash = `sha256:${createHash('sha256').update(rawFixture).digest('hex')}`;
+  if (fixtureHash !== 'sha256:029ab1bb4b8ff2d9b3f19fecbbf0746472c5bd9e2511b729bc1c50169914ec27') {
+    throw new Error(`Reviewed preimage fixture hash mismatch: ${fixtureHash}`);
+  }
+  const fixture = JSON.parse(rawFixture.toString('utf8')) as {
+    catalogs: Pick<
+      ReturnType<typeof readProdSnapshotCatalogs>,
+      'effects' | 'actions' | 'spells' | 'races' | 'classes' | 'cards'
+    >;
+  };
+  return {
+    backgrounds: [],
+    feats: [],
+    resources: [],
+    variables: [],
+    ...fixture.catalogs,
+  };
+}
 
 describe('versioned declarative micro-MVP L1 content patch', () => {
   it('owns every migrated rule as JSON data rather than entity branches in the compiler', () => {
@@ -187,7 +212,7 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
   });
 
   it('materializes raw snapshot data once and is then a strict no-op', () => {
-    const raw = readProdSnapshotCatalogs();
+    const raw = readReviewedPreimageCatalogs();
     expect(() => assertMicroMvpL1ContentMaterialized(raw))
       .toThrow(DeclarativeContentPatchError);
 

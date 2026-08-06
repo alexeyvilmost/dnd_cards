@@ -82,11 +82,14 @@ async function createCompiledDraftInForge(
   draft: JsonRecord,
   expectedCharacterId: string,
 ): Promise<void> {
-  await page.goto('/character-forge');
+  // Seed the persisted draft from a route where CharacterForge is not mounted.
+  // This exercises restoration without racing a lazy-route reload against a
+  // service-worker activation and its versioned chunk cache.
+  await page.goto('/');
   await page.evaluate((value) => {
     localStorage.setItem('forge-draft', JSON.stringify(value));
   }, draft);
-  await page.reload();
+  await page.goto('/character-forge');
   await expect(page.getByRole('dialog')).toContainText(
     'Продолжить создание незавершённого персонажа?',
   );

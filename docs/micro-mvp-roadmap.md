@@ -240,11 +240,11 @@ Versioned manifest `2.1.0` фиксирует 14 заклинаний перво
   поэтому это transport consistency, а не server rules authority;
 - PostgreSQL 17 integration проверяет schema-v5 snapshots/events и отклоняет
   некорректные INSERT/UPDATE. Production DB этими тестами не изменяется;
-- финальный content-migration drill на двух независимых PostgreSQL 17 клонах
-  dump `3f1eef557561118c94771a1ef484676370c7b6dd37799e34d534d307e8891cf1`
-  дал plan `90` (`85 update + 5 create`), apply `90/90`, no-op plan `0`,
-  materialized matrix/certification `6/6` и exact rollback `90/90` на каждом
-  клоне. Production-контент на эту дату ещё не изменён.
+- финальная проверка patch `1.5.0` использует два независимых PostgreSQL 17
+  клона: materialized clone K даёт read-only plan `0`, а baseline clone L —
+  plan `105` (`100 update + 5 create`). Локальный drill подтвердил apply
+  `105/105`, последующий no-op plan `0` и exact rollback `105/105`;
+  production-контент на эту дату ещё не изменён.
 
 ## 4. Реализованные архитектурные пути
 

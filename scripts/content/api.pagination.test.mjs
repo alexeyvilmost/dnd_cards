@@ -89,7 +89,7 @@ test('fetchAll rejects an empty page before the advertised total is reached', as
         requestCount += 1;
         const page = Number(new URL(input).searchParams.get('page'));
         return jsonResponse({
-          cards: page === 1 ? Array.from({ length: 500 }, (_, index) => ({ id: index })) : [],
+          cards: page === 1 ? Array.from({ length: 500 }, (_, index) => ({ id: `card-${index}` })) : [],
           total: 766,
           page,
           limit: 500,
@@ -101,6 +101,84 @@ test('fetchAll rejects an empty page before the advertised total is reached', as
     PaginationError,
   );
   assert.equal(requestCount, 2);
+});
+
+test('fetchAll rejects a repeated unpaginated response after the first request', async () => {
+  let requestCount = 0;
+  await assert.rejects(
+    fetchAll('/api/resources', 'resources', {
+      baseUrl: 'https://catalog.example.test',
+      fetchImpl: async () => {
+        requestCount += 1;
+        return jsonResponse({ resources: [{ id: 'resource-1' }] });
+      },
+      retries: 1,
+    }),
+    PaginationError,
+  );
+  assert.equal(requestCount, 1);
+});
+
+test('fetchAll rejects duplicate identities across advertised pages', async () => {
+  await assert.rejects(
+    fetchAll('/api/resources', 'resources', {
+      baseUrl: 'https://catalog.example.test',
+      fetchImpl: async (input) => {
+        const page = Number(new URL(input).searchParams.get('page'));
+        return jsonResponse({
+          resources: [{ id: 'same-resource' }],
+          total: 2,
+          page,
+          limit: 1,
+        });
+      },
+      limit: 1,
+      retries: 1,
+    }),
+    PaginationError,
+  );
+});
+
+test('fetchAll rejects an advertised catalog larger than maxItems before retaining it', async () => {
+  let requestCount = 0;
+  await assert.rejects(
+    fetchAll('/api/cards', 'cards', {
+      baseUrl: 'https://catalog.example.test',
+      fetchImpl: async () => {
+        requestCount += 1;
+        return jsonResponse({ cards: [{ id: 'card-1' }], total: 3, page: 1, limit: 1 });
+      },
+      maxItems: 2,
+      retries: 1,
+    }),
+    PaginationError,
+  );
+  assert.equal(requestCount, 1);
+});
+
+test('fetchAll requires unique non-empty string ids within every page', async (t) => {
+  for (const [name, cards] of [
+    ['missing', [{}]],
+    ['numeric', [{ id: 1 }]],
+    ['empty', [{ id: '' }]],
+    ['duplicate', [{ id: 'same' }, { id: 'same' }]],
+  ]) {
+    await t.test(name, async () => {
+      await assert.rejects(
+        fetchAll('/api/cards', 'cards', {
+          baseUrl: 'https://catalog.example.test',
+          fetchImpl: async () => jsonResponse({
+            cards,
+            total: cards.length,
+            page: 1,
+            limit: cards.length,
+          }),
+          retries: 1,
+        }),
+        PaginationError,
+      );
+    });
+  }
 });
 
 test('login has no tracked credential or auto-registration fallback', async () => {

@@ -701,6 +701,9 @@ export interface ResourceDefinition {
 
 export interface ResourcesResponse {
   resources: ResourceDefinition[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface CreateResourceRequest {
@@ -736,6 +739,9 @@ export interface Variable {
 
 export interface VariablesResponse {
   variables: Variable[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface CreateVariableRequest {
@@ -767,6 +773,9 @@ export interface Concept {
 
 export interface ConceptsResponse {
   concepts: Concept[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface CreateConceptRequest {

@@ -26,15 +26,37 @@ func validVariableID(id string) bool {
 
 func (vc *VariableController) GetVariables(c *gin.Context) {
 	var variables []Variable
-	query := vc.db.Where("deleted_at IS NULL").Order("sort_order ASC, name ASC")
+	query := vc.db.Model(&Variable{}).Where("deleted_at IS NULL")
 	if varType := c.Query("var_type"); varType != "" {
 		query = query.Where("var_type = ?", varType)
 	}
-	if err := query.Find(&variables).Error; err != nil {
+	// Preserve the historical complete-catalog response for callers without
+	// page/limit while exposing an explicit bounded contract to exporters.
+	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""
+	page, limit, offset := parseListPaginationWithDefault(c, maxListLimit)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения переменных"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"variables": variables})
+	rows := query.Order("sort_order ASC, name ASC, id ASC")
+	if explicitPagination {
+		rows = rows.Offset(offset).Limit(limit)
+	}
+	if err := rows.Find(&variables).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения переменных"})
+		return
+	}
+	if !explicitPagination {
+		page = 1
+		limit = len(variables)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"variables": variables,
+		"total":     total,
+		"page":      page,
+		"limit":     limit,
+	})
 }
 
 func (vc *VariableController) GetVariable(c *gin.Context) {

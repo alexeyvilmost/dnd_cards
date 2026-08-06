@@ -67,6 +67,7 @@ export async function fetchAll(path, key, {
   baseUrl = apiUrl(),
   fetchImpl = globalThis.fetch,
   maxPages = 10_000,
+  maxItems = 100_000,
   retryDelayMs = 1500,
 } = {}) {
   if (!Number.isSafeInteger(retries) || retries < 1) {
@@ -78,11 +79,15 @@ export async function fetchAll(path, key, {
   if (!Number.isSafeInteger(maxPages) || maxPages < 1) {
     throw new TypeError('fetchAll maxPages must be a positive integer');
   }
+  if (!Number.isSafeInteger(maxItems) || maxItems < 1) {
+    throw new TypeError('fetchAll maxItems must be a positive integer');
+  }
   if (typeof fetchImpl !== 'function') throw new TypeError('fetchAll fetchImpl must be a function');
 
   const items = [];
   let expectedTotal = null;
   let page = 1;
+  const seenIds = new Set();
   while (true) {
     let batch = null;
     let body = null;
@@ -109,7 +114,16 @@ export async function fetchAll(path, key, {
     }
 
     const responseTotal = asOptionalNonNegativeInteger(body.total, 'total', path);
+    if (responseTotal === null && batch.length > 0) {
+      throw new PaginationError(
+        path,
+        `non-empty page ${page} must advertise total; refusing an unbounded repeated response`,
+      );
+    }
     if (responseTotal !== null) {
+      if (responseTotal > maxItems) {
+        throw new PaginationError(path, `response total ${responseTotal} exceeds maxItems=${maxItems}`);
+      }
       if (expectedTotal !== null && responseTotal !== expectedTotal) {
         throw new PaginationError(
           path,
@@ -119,6 +133,19 @@ export async function fetchAll(path, key, {
       expectedTotal = responseTotal;
     }
 
+    if (items.length + batch.length > maxItems) {
+      throw new PaginationError(path, `received more than maxItems=${maxItems}`);
+    }
+    for (const item of batch) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)
+        || typeof item.id !== 'string' || item.id === '') {
+        throw new PaginationError(path, `page ${page} contains an item without a non-empty string id`);
+      }
+      if (seenIds.has(item.id)) {
+        throw new PaginationError(path, `duplicate id ${item.id} returned on page ${page}`);
+      }
+      seenIds.add(item.id);
+    }
     items.push(...batch);
     if (expectedTotal !== null) {
       if (items.length > expectedTotal) {

@@ -18,16 +18,32 @@ import (
 // справочников, чтобы ?limit=100000 не мог выкачать всю таблицу разом.
 const maxListLimit = 500
 
+// Catalog pagination is an interactive/export boundary, not an arbitrary SQL
+// offset API. Bounding page also prevents integer overflow in offset math.
+const maxListPage = 1_000_000
+
 // parseListPagination читает page/limit из query с дефолтами и клампит их
 // в разумные границы. Общий помощник для всех списковых хендлеров справочников.
 func parseListPagination(c *gin.Context) (page, limit, offset int) {
+	return parseListPaginationWithDefault(c, 20)
+}
+
+// parseListPaginationWithDefault preserves endpoints that historically returned
+// a complete small reference catalog while still enforcing the global limit cap.
+func parseListPaginationWithDefault(c *gin.Context, defaultLimit int) (page, limit, offset int) {
 	page, _ = strconv.Atoi(c.DefaultQuery("page", "1"))
 	if page < 1 {
 		page = 1
 	}
-	limit, _ = strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page > maxListPage {
+		page = maxListPage
+	}
+	if defaultLimit < 1 || defaultLimit > maxListLimit {
+		defaultLimit = 20
+	}
+	limit, _ = strconv.Atoi(c.DefaultQuery("limit", strconv.Itoa(defaultLimit)))
 	if limit < 1 {
-		limit = 20
+		limit = defaultLimit
 	}
 	if limit > maxListLimit {
 		limit = maxListLimit

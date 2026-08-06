@@ -33,6 +33,11 @@ import {
 } from './migrate-micro-mvp-l1-mechanics.mjs';
 import { sha256Canonical } from './certification-hash.mjs';
 import {
+  readReviewedPreimageCatalogs,
+  readReviewedPreimageFixture,
+  REVIEWED_PREIMAGE_FIXTURE_SHA256,
+} from './micro-mvp-reviewed-preimage-fixture.mjs';
+import {
   INCOMPLETE_PHB_ITEM_KITS,
   reviewedMicroMvpEquipmentPlans,
   validateReviewedEquipmentPlans,
@@ -113,16 +118,12 @@ function withoutUpdatedAt(value) {
     .filter(([key]) => key !== 'updated_at'));
 }
 
-function pinnedCatalogs() {
-  const base = join(REPO_ROOT, 'officials/canon/prod-snapshot');
-  return Object.fromEntries(['effects', 'actions', 'spells', 'races', 'classes', 'cards'].map((name) => [
-    name,
-    readJson(join(base, `${name}.json`)),
-  ]));
+function reviewedPreimageCatalogs() {
+  return readReviewedPreimageCatalogs();
 }
 
 function catalogsWithDeployedEffectResponse() {
-  const catalogs = pinnedCatalogs();
+  const catalogs = reviewedPreimageCatalogs();
   for (const collection of Object.keys(catalogs)) {
     catalogs[collection] = catalogs[collection].map((entity) => ({
       ...entity,
@@ -485,9 +486,28 @@ async function simulateAtomicCreateCommit(api, baseUrl, bundle, operation) {
   return response.json();
 }
 
+test('reviewed preimage fixture is schema-validated, hash-pinned and patch-closed', () => {
+  const fixture = readReviewedPreimageFixture();
+  assert.equal(
+    REVIEWED_PREIMAGE_FIXTURE_SHA256,
+    'sha256:029ab1bb4b8ff2d9b3f19fecbbf0746472c5bd9e2511b729bc1c50169914ec27',
+  );
+  assert.equal(fixture.fixtureId, 'dnd5e-2024.micro-mvp-l1.reviewed-source-preimage.v1');
+  assert.equal(fixture.patch.canonicalHash, sha256Canonical(reviewedPatch()));
+  assert.deepEqual(fixture.selection.counts, {
+    effects: 47,
+    actions: 9,
+    spells: 26,
+    races: 2,
+    classes: 7,
+    cards: 28,
+  });
+  assert.equal(fixture.selection.total, 119);
+});
+
 test('plan covers the complete reviewed migration and stores full API preimages', () => {
   const patch = sourceSnapshotPatch();
-  const operations = buildMigrationOperations(pinnedCatalogs(), patch);
+  const operations = buildMigrationOperations(reviewedPreimageCatalogs(), patch);
   assert.equal(patch.mechanicsPatches.effects.length, 34);
   assert.equal(patch.mechanicsPatches.actions.length, 9);
   assert.equal(patch.mechanicsPatches.spells.length, 26);
@@ -520,7 +540,7 @@ test('plan covers the complete reviewed migration and stores full API preimages'
 });
 
 test('every apply and reverse-rollback interruption prefix preserves provider dependencies', () => {
-  const operations = buildMigrationOperations(pinnedCatalogs(), sourceSnapshotPatch());
+  const operations = buildMigrationOperations(reviewedPreimageCatalogs(), sourceSnapshotPatch());
   const provider = operations.find((operation) => operation.cardNumber === 'EFF-rogue-thieves-cant');
   const consumer = operations.find((operation) => operation.cardNumber === 'CLASS-rogue');
   assert.equal(provider?.operation, 'create');
@@ -554,7 +574,7 @@ test('every apply and reverse-rollback interruption prefix preserves provider de
 
 test('starting equipment and javelin corrections are stable-reference data and fail closed', () => {
   const patch = sourceSnapshotPatch();
-  const catalogs = pinnedCatalogs();
+  const catalogs = reviewedPreimageCatalogs();
   const correctedClassCards = [
     'CLASS-warrior',
     'CLASS-rogue',
@@ -610,7 +630,7 @@ test('starting equipment and javelin corrections are stable-reference data and f
     /card_id references lack stable cards cardNumber\/UUID assertions/,
   );
 
-  const splitIdentityCatalogs = pinnedCatalogs();
+  const splitIdentityCatalogs = reviewedPreimageCatalogs();
   splitIdentityCatalogs.cards.find((item) => item.card_number === 'CARD-0283').card_number =
     'CARD-drifted-chain-mail';
   assert.throws(
@@ -632,7 +652,7 @@ test('weapon profile mastery UUID requires an exact stable effect reference', ()
 });
 
 test('legacy class-training seed consumes the reviewed stable plans and reports incomplete kits', () => {
-  const catalogs = pinnedCatalogs();
+  const catalogs = reviewedPreimageCatalogs();
   const plans = reviewedMicroMvpEquipmentPlans(sourceSnapshotPatch());
   assert.equal(plans.size, 7);
   assert.deepEqual(validateReviewedEquipmentPlans(plans, catalogs.classes, catalogs.cards), []);
@@ -653,7 +673,7 @@ test('legacy class-training seed consumes the reviewed stable plans and reports 
 });
 
 test('reviewed-before drift is fail-closed', () => {
-  const catalogs = pinnedCatalogs();
+  const catalogs = reviewedPreimageCatalogs();
   catalogs.effects.find((row) => row.card_number === 'EFF-alert').mechanics = {
     activation: { mode: 'passive' },
     effects: [],
@@ -666,7 +686,7 @@ test('reviewed-before drift is fail-closed', () => {
 });
 
 test('source and production CAS hashes are independent contracts', () => {
-  const catalogs = pinnedCatalogs();
+  const catalogs = reviewedPreimageCatalogs();
   const patch = sourceSnapshotPatch();
   assert.doesNotThrow(() => buildMigrationOperations(catalogs, patch));
   patch.mechanicsPatches.effects[0].productionExpectedBeforeMechanicsHash =
@@ -728,14 +748,14 @@ test('schema and interpreter allowlists accept weapon primitives and reject unkn
 
 test('migration schema accepts declarative replacement/rest/sight/condition policies and rejects drift', () => {
   const patch = sourceSnapshotPatch();
-  assert.doesNotThrow(() => buildMigrationOperations(pinnedCatalogs(), patch));
+  assert.doesNotThrow(() => buildMigrationOperations(reviewedPreimageCatalogs(), patch));
 
   const invalidReplacement = clone(patch);
   invalidReplacement.mechanicsPatches.actions.find((item) => (
     item.cardNumber === 'ACT-breath-fire'
   )).mechanics.attack_replacement.replaces_attacks = 2;
   assert.throws(
-    () => buildMigrationOperations(pinnedCatalogs(), invalidReplacement),
+    () => buildMigrationOperations(reviewedPreimageCatalogs(), invalidReplacement),
     /Mechanics validation failed/,
   );
 
@@ -744,14 +764,14 @@ test('migration schema accepts declarative replacement/rest/sight/condition poli
     item.cardNumber === 'ACTION-0001'
   )).mechanics.rest_decision.slot_resource.maximum_level = 0;
   assert.throws(
-    () => buildMigrationOperations(pinnedCatalogs(), invalidRest),
+    () => buildMigrationOperations(reviewedPreimageCatalogs(), invalidRest),
     /Mechanics validation failed/,
   );
 
   const invalidCondition = clone(patch);
   invalidCondition.conditionPatches[0].fields.mechanics.condition.id = 'Blinded';
   assert.throws(
-    () => buildMigrationOperations(pinnedCatalogs(), invalidCondition),
+    () => buildMigrationOperations(reviewedPreimageCatalogs(), invalidCondition),
     /Mechanics validation failed/,
   );
 });
@@ -1001,7 +1021,7 @@ test('apply validates every non-null support preimage before network or mutation
 
 test('apply preflight rejects legacy effect/action responses that cannot form full preimages', () => {
   assert.throws(
-    () => assertMigrationApiContract(pinnedCatalogs()),
+    () => assertMigrationApiContract(reviewedPreimageCatalogs()),
     /Effects API response is not rollback-complete/,
   );
   const deployed = catalogsWithDeployedEffectResponse();
@@ -1022,7 +1042,7 @@ test('apply requires a token or explicit content-admin login after local guards'
   });
   const bundle = await createMigrationBundle({
     baseUrl: 'https://production.invalid',
-    catalogs: pinnedCatalogs(),
+    catalogs: reviewedPreimageCatalogs(),
     patchDeclaration,
     createdAt: '2026-08-05T10:02:00Z',
   });
@@ -1050,7 +1070,7 @@ test('edited preimage bundle is rejected before authentication or network access
   const patchDeclaration = sourceSnapshotPatch();
   const bundle = await createMigrationBundle({
     baseUrl: 'https://production.invalid',
-    catalogs: pinnedCatalogs(),
+    catalogs: reviewedPreimageCatalogs(),
     patchDeclaration,
   });
   bundle.operations[0].request.mechanics = { activation: { mode: 'passive' }, effects: [] };

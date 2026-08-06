@@ -14,6 +14,7 @@
 import {
   existsSync,
   mkdirSync,
+  readFileSync,
   renameSync,
   rmSync,
   writeFileSync,
@@ -21,6 +22,7 @@ import {
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fetchRequiredCollection } from './api.mjs';
+import { sha256Canonical } from './certification-hash.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '../..');
@@ -39,8 +41,51 @@ export const PROD_SNAPSHOT_ENTITIES = [
   ['cards', '/api/cards', 'cards'],
   ['resources', '/api/resources', 'resources'],
   ['variables', '/api/variables', 'variables'],
-  ['conditions', '/api/conditions', 'conditions'],
+  ['concepts', '/api/concepts', 'concepts'],
 ];
+
+// Conditions intentionally have no parallel catalog endpoint or snapshot.
+// Since migration 065 they are Effect rows with effect_type="condition";
+// exporting a second collection would recreate two competing authorities.
+
+const contentPatch = JSON.parse(readFileSync(join(
+  ROOT,
+  'frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json',
+), 'utf8'));
+
+const PINNED_CONTENT_PATCH = Object.freeze({
+  id: 'dnd5e-2024.micro-mvp-l1.content-patch.v1',
+  version: '1.5.0',
+  sourceReleaseId: 'prod-snapshot@2026-07-15.micro-mvp-l1.v1',
+  hash: 'sha256:7a07f8b1ed3483370093c67277363d0b1a95852126db1ab124eabc813b6c5bc7',
+  conditionCount: 15,
+});
+
+export function requiredConditionCardNumbers(patch) {
+  if (patch?.patchId !== PINNED_CONTENT_PATCH.id
+    || patch?.patchVersion !== PINNED_CONTENT_PATCH.version
+    || patch?.sourceReleaseId !== PINNED_CONTENT_PATCH.sourceReleaseId) {
+    throw new Error('Production export content patch identity is not the pinned micro-MVP release');
+  }
+  if (!Array.isArray(patch.conditionPatches)) {
+    throw new Error('Production export content patch conditionPatches must be an array');
+  }
+  const cardNumbers = patch.conditionPatches.map((declaration) => declaration?.cardNumber);
+  if (cardNumbers.length !== PINNED_CONTENT_PATCH.conditionCount
+    || cardNumbers.some((cardNumber) => typeof cardNumber !== 'string' || cardNumber === '')) {
+    throw new Error(`Production export requires exactly ${PINNED_CONTENT_PATCH.conditionCount} condition card numbers`);
+  }
+  if (new Set(cardNumbers).size !== cardNumbers.length) {
+    throw new Error('Production export condition card numbers must be unique');
+  }
+  const actualHash = sha256Canonical(patch);
+  if (actualHash !== PINNED_CONTENT_PATCH.hash) {
+    throw new Error(`Production export content patch hash mismatch: ${PINNED_CONTENT_PATCH.hash} -> ${actualHash}`);
+  }
+  return Object.freeze([...cardNumbers]);
+}
+
+export const REQUIRED_CONDITION_CARD_NUMBERS = requiredConditionCardNumbers(contentPatch);
 
 /** Детерминированная сортировка: сперва card_number, затем id, затем name. */
 export function sortKey(x) {
@@ -131,6 +176,25 @@ export async function exportProductionSnapshot({
     const withMech = items.filter((x) => x.mechanics && Object.keys(x.mechanics).length > 0).length;
     index.entities[name] = { count: items.length, with_mechanics: withMech };
     log(`  ${name}: ${items.length}${withMech ? ` (с механикой ${withMech})` : ''}`);
+  }
+
+  const conditionEffects = catalogs.get('effects')?.filter(
+    (effect) => effect.effect_type === 'condition',
+  ) ?? [];
+  const conditionsByCardNumber = new Map();
+  for (const effect of conditionEffects) {
+    if (typeof effect.card_number !== 'string' || effect.card_number === '') continue;
+    const matches = conditionsByCardNumber.get(effect.card_number) ?? [];
+    matches.push(effect);
+    conditionsByCardNumber.set(effect.card_number, matches);
+  }
+  const invalidConditions = REQUIRED_CONDITION_CARD_NUMBERS.filter(
+    (cardNumber) => conditionsByCardNumber.get(cardNumber)?.length !== 1,
+  );
+  if (invalidConditions.length > 0) {
+    throw new Error(
+      `effects: required condition Effect identities must be unique: ${invalidConditions.join(', ')}`,
+    );
   }
 
   const files = [...catalogs.entries()].map(([name, items]) => [
