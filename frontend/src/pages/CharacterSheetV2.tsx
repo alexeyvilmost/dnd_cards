@@ -98,6 +98,7 @@ const CharacterSheetV2 = ({
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
   const [targetAc, setTargetAc] = useState<number | null>(null);
   const [targetSaveMod, setTargetSaveMod] = useState<number | null>(null);
+  const [targetCharacterId, setTargetCharacterId] = useState<string | null>(null);
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
 
@@ -403,6 +404,8 @@ const CharacterSheetV2 = ({
               onTargetAcChange={setTargetAc}
               targetSaveMod={targetSaveMod}
               onTargetSaveModChange={setTargetSaveMod}
+              targetCharacterId={targetCharacterId}
+              onTargetCharacterChange={setTargetCharacterId}
               encounterId={character.current_encounter_id ?? undefined}
               encounterApply={encounterApply}
             />}
@@ -432,6 +435,8 @@ const CharacterSheetV2 = ({
                 onTargetAcChange={setTargetAc}
                 targetSaveMod={targetSaveMod}
                 onTargetSaveModChange={setTargetSaveMod}
+                targetCharacterId={targetCharacterId}
+                onTargetCharacterChange={setTargetCharacterId}
                 encounterId={character.current_encounter_id ?? undefined}
                 encounterApply={encounterApply}
               />}

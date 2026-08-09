@@ -25,7 +25,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { apiUrl, fetchAll, login } from './api.mjs';
 import { canonicalJson, sha256Canonical } from './certification-hash.mjs';
 import { microMvpCatalogFingerprint } from './micro-mvp-release-evidence.mjs';
@@ -1828,7 +1828,7 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
