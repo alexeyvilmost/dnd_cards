@@ -1,6 +1,7 @@
 import type { AbilityKey, AbilityScores, CharacterDraft } from '../types';
 import type { AssembledCharacter } from '../assemble';
 import type { FreeuseSpec } from '../../engine/freeuse';
+import type { RollModifier } from '../../mvp/contracts';
 
 export type RuleSourceType =
   | 'character_base'
@@ -65,10 +66,20 @@ export interface RuleInput {
   runtimeSources?: RuntimeRuleSource[];
 }
 
+export interface AbilityMethodCandidate {
+  value: number;
+  name: string;
+  reason: string;
+}
+
 export interface CharacterRuleState {
   version: 1;
   abilities: Partial<AbilityScores>;
   abilityMods: Record<AbilityKey, number>;
+  /** Аддитивная раскладка итоговых характеристик по постоянным источникам. */
+  abilitySources?: Partial<Record<AbilityKey, RollModifier[]>>;
+  /** Альтернативные методы, если характеристика выбирается не обычной суммой. */
+  abilityMethods?: Partial<Record<AbilityKey, AbilityMethodCandidate[]>>;
   proficiencyBonus: number;
   proficiencies: {
     skills: string[];

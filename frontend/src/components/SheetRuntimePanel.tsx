@@ -19,6 +19,7 @@ import {
   hpNeedsSync,
   resourcesNeedSync,
   resourceMaximumBreakdown,
+  syncRuntimeResources,
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -233,6 +234,11 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   );
   const effectMutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
 
+  const resourceBreakdowns = useMemo(
+    () => syncRuntimeResources(ctx, assembled, runtime, ruleState.freeuseSpells).sources,
+    [ctx, assembled, runtime, ruleState.freeuseSpells],
+  );
+
   const persistManualEffects = useCallback(async (
     activeEffects: typeof runtime.activeEffects,
     events: EngineEvent[],
@@ -318,6 +324,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           freeuseSpells={ruleState.freeuseSpells}
           spells={assembled.spells}
           resourceOptions={resourceOptions}
+          resourceSources={resourceBreakdowns}
         />
         {!resourceKeys.length && (
           <p className="forge-note">

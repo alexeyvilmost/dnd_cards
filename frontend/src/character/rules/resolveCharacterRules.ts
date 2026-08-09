@@ -3,7 +3,7 @@ import type { OriginAction, OriginEffect } from '../assemble';
 import { computeMaxHP, spellcasting } from '../derive';
 import { armorClassValue } from '../../engine/ac';
 import { foldModifiers, type ModifierOp } from '../../engine/modifiers';
-import type { CharacterContext, RuntimeState } from '../../mvp/contracts';
+import type { CharacterContext, RollModifier, RuntimeState } from '../../mvp/contracts';
 import { evaluate, type FormulaContext } from '../../engine/formula';
 import type { FreeuseSpec } from '../../engine/freeuse';
 import { normalizeSkillId, normalizeSkillList } from '../skillNormalize';
@@ -16,6 +16,7 @@ import {
   resolveSourceSpellcastingAbility,
 } from '../spellcastingAbility';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
+import { bonusOf } from '../pointBuy';
 import type {
   AppliedGrant,
   CharacterRuleState,
@@ -234,7 +235,12 @@ type SenseEntry = { sense: string; range: number };
 
 /** grant_ability_score → накопление дельты характеристики (D3, пред-скан ДО расчёта
  *  модов: прирост должен дойти до maxHP/спасбросков/заклинательства/навыков). */
-function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
+function applyAbilityDelta(
+  payload: Dict,
+  deltas: Record<AbilityKey, number>,
+  sources: Record<AbilityKey, { value: number; source: string; reason?: string }[]>,
+  source: RuleSource,
+) {
   if (String(payload.kind ?? '') !== 'grant_ability_score') return;
   // Прямой грант: ability задан, amount/value — прибавка. Выбор характеристики: apply-шаблон
   // `{kind:'grant_ability_score', amount:N}`, выбранная характеристика приходит в value —
@@ -245,7 +251,11 @@ function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
   const amount = hasExplicitAbility
     ? Number(payload.amount ?? payload.value ?? 0)
     : Number(payload.amount ?? 0);
-  if (!Number.isNaN(amount) && amount !== 0) deltas[ability as AbilityKey] += amount;
+  if (!Number.isNaN(amount) && amount !== 0) {
+    const key = ability as AbilityKey;
+    deltas[key] += amount;
+    sources[key].push({ value: amount, source: source.name, reason: String(payload.reason ?? 'постоянный бонус') });
+  }
 }
 
 /** C8: value_method характеристики (парадигма №3) — кандидат-значение для СИЛ/ЛВК/… «Пояс силы огра» =
@@ -254,7 +264,12 @@ function applyAbilityDelta(payload: Dict, deltas: Record<AbilityKey, number>) {
  *  эффекты/действия (черта/класс/раса) И предметы через runtimeSources (слайс 1 «предмет=эффект»: надетый/
  *  настроенный Пояс силы огра теперь поднимает СИЛ на живом листе). target — только характеристики
  *  (speed/save_dc/ac — продолжение). Уменьшение (drain «СИЛ=3») невыразимо (max). */
-function applyAbilityMethod(payload: Dict, methods: Record<AbilityKey, number[]>, fctx: FormulaContext) {
+function applyAbilityMethod(
+  payload: Dict,
+  methods: Record<AbilityKey, { value: number; name: string; reason: string }[]>,
+  fctx: FormulaContext,
+  source: RuleSource,
+) {
   if (String(payload.kind ?? '') !== 'value_method') return;
   const target = String(payload.target ?? '').toLowerCase();
   if (!(ABILITY_KEYS as readonly string[]).includes(target)) return; // C8: пока только характеристики
@@ -263,7 +278,13 @@ function applyAbilityMethod(payload: Dict, methods: Record<AbilityKey, number[]>
   let v: number;
   try { const r = evaluate(raw, fctx); v = typeof r === 'number' ? r : NaN; }
   catch { v = NaN; }
-  if (!Number.isNaN(v)) methods[target as AbilityKey].push(v);
+  if (!Number.isNaN(v)) {
+    methods[target as AbilityKey].push({
+      value: v,
+      name: source.name,
+      reason: String(payload.reason ?? `метод value_method: ${raw}`),
+    });
+  }
 }
 
 /** Пред-скан характеристик по всем источникам (эффекты/действия/runtime), с разворачиванием choice и
@@ -273,9 +294,14 @@ function collectAbilityDeltas(
   input: RuleInput,
   effects: OriginEffect[],
   actions: OriginAction[],
-): { deltas: Record<AbilityKey, number>; methods: Record<AbilityKey, number[]> } {
+): {
+  deltas: Record<AbilityKey, number>;
+  sources: Record<AbilityKey, { value: number; source: string; reason?: string }[]>;
+  methods: Record<AbilityKey, { value: number; name: string; reason: string }[]>;
+} {
   const deltas = Object.fromEntries(ABILITY_KEYS.map((a) => [a, 0])) as Record<AbilityKey, number>;
-  const methods = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as number[]])) as Record<AbilityKey, number[]>;
+  const sources = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as { value: number; source: string; reason?: string }[]])) as Record<AbilityKey, { value: number; source: string; reason?: string }[]>;
+  const methods = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as { value: number; name: string; reason: string }[]])) as Record<AbilityKey, { value: number; name: string; reason: string }[]>;
   const level = input.draft.level ?? 1;
   // C8: ctx для value_method-формул на пред-скане. selfLevel/classLevels/переменные доступны;
   // характеристики (abilityMods) НАМЕРЕННО нет — они и вычисляются здесь (цикличность), поэтому
@@ -298,8 +324,8 @@ function collectAbilityDeltas(
       return;
     }
     if (passesLevelGate(payload, level)) {
-      applyAbilityDelta(payload, deltas);
-      applyAbilityMethod(payload, methods, preFctx);
+      applyAbilityDelta(payload, deltas, sources, source);
+      applyAbilityMethod(payload, methods, preFctx, source);
     }
   };
   for (const { effect, origin } of effects) {
@@ -311,7 +337,7 @@ function collectAbilityDeltas(
   for (const runtime of input.runtimeSources || []) {
     for (const p of payloadsFromMechanics(runtime.mechanics)) walk(p, runtime.source);
   }
-  return { deltas, methods };
+  return { deltas, sources, methods };
 }
 
 /** Строковый размер расы (RU) → числовая категория: Крошечный 0 … Громадный 5. «Средний или
@@ -492,7 +518,28 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   // D3: grant_ability_score — пред-скан ДО расчёта модов, чтобы прирост дошёл до ВСЕХ
   // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
-  const { deltas: abilityDeltas, methods: abilityMethods } = collectAbilityDeltas(input, buildEffects, buildActions);
+  const { deltas: abilityDeltas, sources: abilityDeltaSources, methods: abilityMethods } = collectAbilityDeltas(input, buildEffects, buildActions);
+  const abilitySources = Object.fromEntries(
+    ABILITY_KEYS.map((a) => {
+      const finalDraftValue = draft.abilities[a] ?? 10;
+      const backgroundBonus = draft.abilityMethod === 'point_buy' ? bonusOf(draft.abilityBonuses, a) : 0;
+      const baseValue = finalDraftValue - backgroundBonus;
+      const parts: RollModifier[] = [{
+        value: baseValue,
+        source: draft.abilityMethod === 'manual' ? 'Ручной ввод' : 'Point-buy',
+        reason: draft.abilityMethod === 'manual' ? 'введённое значение' : 'база до бонуса предыстории',
+      }];
+      if (backgroundBonus) {
+        parts.push({
+          value: backgroundBonus,
+          source: `Предыстория: ${assembled.background?.name || 'предыстория'}`,
+          reason: 'бонус распределения характеристик',
+        });
+      }
+      parts.push(...abilityDeltaSources[a]);
+      return [a, parts];
+    }),
+  ) as Record<AbilityKey, { value: number; source: string; reason?: string }[]>;
   const scoresFinal = Object.fromEntries(
     ABILITY_KEYS.map((a) => {
       const base = draft.abilities[a] ?? 10;
@@ -501,9 +548,24 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
       // базу (ручной ввод/особые источники) не режем. Уменьшения (drain) не ограничиваем.
       const ceiling = Math.max(base, 20);
       const additive = delta > 0 ? Math.min(base + delta, ceiling) : base + delta;
+      const sourceTotal = abilitySources[a].reduce((sum, part) => sum + part.value, 0);
+      if (sourceTotal !== additive) {
+        abilitySources[a].push({
+          value: additive - sourceTotal,
+          source: 'Предел характеристики',
+          reason: 'значение ограничено правилами максимума',
+        });
+      }
       // C8: value_method-кандидаты (Пояс силы огра СИЛ=19) — берём МАКСИМУМ(аддитив, ...методы).
       // Методы НЕ режутся потолком 20 (магия: Пояс силы великана 25). Пустой список → аддитив.
-      const final = Math.max(additive, ...abilityMethods[a]);
+      const final = Math.max(additive, ...abilityMethods[a].map((candidate) => candidate.value));
+      if (final !== additive) {
+        abilitySources[a].push({
+          value: final - additive,
+          source: 'Метод расчёта',
+          reason: 'альтернативный метод выбран вместо аддитивной суммы',
+        });
+      }
       return [a, Math.max(1, final)];
     }),
   ) as Record<AbilityKey, number>;
@@ -673,6 +735,8 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     version: 1,
     abilities: scores,
     abilityMods,
+    abilitySources,
+    abilityMethods,
     proficiencyBonus: pb,
     proficiencies: {
       skills: [...maps.skill.keys()],

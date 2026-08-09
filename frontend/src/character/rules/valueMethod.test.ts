@@ -44,6 +44,13 @@ describe('C8 — value_method характеристики (Пояс силы о
   it('прирост от метода доходит до модификатора характеристики (СИЛ 19 → +4)', () => {
     expect(build(belt('19'), 12).abilityMods.str).toBe(4);
   });
+  it('stores the selected value_method source', () => {
+    const rs = build(belt('19'), 12);
+    expect(rs.abilityMethods?.str).toEqual([
+      { value: 19, name: 'Пояс силы огра: Пояс', reason: 'метод value_method: 19' },
+    ]);
+    expect(rs.abilitySources?.str?.reduce((sum, part) => sum + part.value, 0)).toBe(19);
+  });
   it('уровневая формула резолвится (preFctx: self_level)', () => {
     expect(build(belt('10 + self_level'), 12).abilities.str).toBe(15); // level 5 → 10+5=15
   });
