@@ -143,6 +143,9 @@ interface Props {
    *  (передаётся во все ability; движок берёт нужный по механике действия). */
   targetSaveMod?: number | null;
   onTargetSaveModChange?: (n: number | null) => void;
+  /** Shared selection for action and spell panels of the same character sheet. */
+  targetCharacterId?: string | null;
+  onTargetCharacterChange?: (id: string | null) => void;
   /** Онлайн-бой: если персонаж сейчас в бою — id боя. Тогда пикер целей в диалоге кубов
    *  ограничивается комбатантами этого боя, а урон/лечение/эффекты применяются к комбатанту
    *  через encountersApi.apply (синк на доску боя и другие устройства), а не в запись персонажа. */
@@ -365,6 +368,8 @@ export default function SheetActionsPanel({
   onTargetAcChange,
   targetSaveMod: targetSaveModProp,
   onTargetSaveModChange,
+  targetCharacterId: targetCharacterIdProp,
+  onTargetCharacterChange,
   encounterId,
   encounterApply,
   onInspectAction,
@@ -396,6 +401,24 @@ export default function SheetActionsPanel({
   const setTargetSaveMod = (n: number | null) => {
     if (onTargetSaveModChange) onTargetSaveModChange(n);
     else setLocalTargetSaveMod(n);
+  };
+  // One selected sheet supplies real AC, saves, HP and effects. Manual target
+  // facts remain available when the target is not represented by a sheet.
+  const targetCharsRef = useRef<ForgeCharacter[] | null>(null);
+  const loadTargetChars = useCallback(async (): Promise<ForgeCharacter[]> => {
+    if (targetCharsRef.current) return targetCharsRef.current;
+    try {
+      const list = await charactersV3Api.list();
+      targetCharsRef.current = list;
+      return list;
+    } catch { return []; }
+  }, []);
+  const [availableSheetTargets, setAvailableSheetTargets] = useState<ForgeCharacter[]>([]);
+  const [localSelectedSheetTargetId, setLocalSelectedSheetTargetId] = useState('');
+  const selectedSheetTargetId = targetCharacterIdProp ?? localSelectedSheetTargetId;
+  const setSelectedSheetTargetId = (id: string) => {
+    if (onTargetCharacterChange) onTargetCharacterChange(id || null);
+    else setLocalSelectedSheetTargetId(id);
   };
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
@@ -466,6 +489,16 @@ export default function SheetActionsPanel({
     }
     return out;
   }, [runtime]);
+  const selectedSheetTarget = useMemo(() => (
+    availableSheetTargets.find((candidate) => candidate.id === selectedSheetTargetId)
+  ), [availableSheetTargets, selectedSheetTargetId]);
+  useEffect(() => {
+    let active = true;
+    void loadTargetChars().then((candidates) => {
+      if (active) setAvailableSheetTargets(candidates.filter((candidate) => candidate.id !== character.id));
+    });
+    return () => { active = false; };
+  }, [character.id, loadTargetChars]);
 
   // D: причина запрета действия недееспособностью (стоимость с запрещённым типом / концентрация).
   const CAP_RU: Record<string, string> = {
@@ -809,17 +842,6 @@ export default function SheetActionsPanel({
     const base = action.spellRef.level ?? action.level ?? 0;
     return { key, current: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0, level: spec?.level ?? base };
   };
-
-  // Кандидаты-цели (все персонажи, кроме себя) — для пикера в диалоге кубов. Кэш на панель.
-  const targetCharsRef = useRef<ForgeCharacter[] | null>(null);
-  const loadTargetChars = useCallback(async (): Promise<ForgeCharacter[]> => {
-    if (targetCharsRef.current) return targetCharsRef.current;
-    try {
-      const list = await charactersV3Api.list();
-      targetCharsRef.current = list;
-      return list;
-    } catch { return []; }
-  }, []);
 
   const [companionTargets, setCompanionTargets] = useState<ForgeCharacter[]>([]);
   useEffect(() => {
@@ -1412,14 +1434,20 @@ export default function SheetActionsPanel({
     if (!authoritativePrimitive && cost.length && !payableWithUpcast(runtime, cost, !!freeuse)) return;
     // Оружейное действие без нужного оружия в руке — не запускаем.
     if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
+    const requiresActorTarget = canonical
+      ? sheetActionRequiresActorTargets(canonical.action)
+      : actionInteractsWithTarget(mech);
+    const selectedTargetForAction = requiresActorTarget ? selectedSheetTarget : undefined;
     if (!authoritativePrimitive) {
-      const targetFactsIssue = explicitSheetTargetFactsIssue(mech, {
-        armorClass: targetAc,
-        savingThrowModifier: targetSaveMod,
-      });
-      if (targetFactsIssue) {
-        setError(targetFactsIssue);
-        return;
+      if (!selectedTargetForAction) {
+        const targetFactsIssue = explicitSheetTargetFactsIssue(mech, {
+          armorClass: targetAc,
+          savingThrowModifier: targetSaveMod,
+        });
+        if (targetFactsIssue) {
+          setError(targetFactsIssue);
+          return;
+        }
       }
     }
 
@@ -1472,10 +1500,12 @@ export default function SheetActionsPanel({
 
     const target = authoritativePrimitive
       ? undefined
-      : explicitSheetTargetContext(mech, {
-        armorClass: targetAc,
-        savingThrowModifier: targetSaveMod,
-      });
+      : selectedTargetForAction
+        ? buildTargetFromCharacter(selectedTargetForAction)
+        : explicitSheetTargetContext(mech, {
+          armorClass: targetAc,
+          savingThrowModifier: targetSaveMod,
+        });
 
     // passives нужны движку и для модификаторов (фаза C), и для триггеров/реакций (фаза A).
     // planning=true у плана кубов: спасброски берут ветку провала (кости урона попадают в план).
@@ -1714,9 +1744,7 @@ export default function SheetActionsPanel({
       const needsConfirm = spendsResource(mech) || !!action.spellRef;
       // Действие взаимодействует с другим персонажем → предложить выбор цели в окне (при включённом
       // диалоге кубов). Список всех персонажей, кроме себя. При выключенном диалоге — dummy, как раньше.
-      const interactsWithTarget = canonical
-        ? sheetActionRequiresActorTargets(canonical.action)
-        : actionInteractsWithTarget(mech);
+      const interactsWithTarget = requiresActorTarget;
       let targetOptions: { id: string; name: string }[] | undefined;
       if (interactsWithTarget && getSettings().diceDialog) {
         if (encounterId) {
@@ -1735,7 +1763,9 @@ export default function SheetActionsPanel({
         }
       }
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
-        { targets: targetOptions, needsTarget: interactsWithTarget }, undefined, canonical);
+        { targets: targetOptions, needsTarget: interactsWithTarget },
+        selectedTargetForAction?.id,
+        canonical);
       if (!main) return;
       let { state, events } = main;
       // Применённое к цели состояние (урон/лечение/эффекты) — на комбатанта боя или в запись персонажа.
@@ -1869,7 +1899,7 @@ export default function SheetActionsPanel({
     }
     const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards);
     if (!avail.available) return { disabled: true, reason: avail.reason };
-    if (!primitive) {
+    if (!primitive && !(selectedSheetTarget && actionInteractsWithTarget(action.mechanics))) {
       const targetFactsIssue = explicitSheetTargetFactsIssue(action.mechanics, {
         armorClass: targetAc,
         savingThrowModifier: targetSaveMod,
@@ -2091,6 +2121,25 @@ export default function SheetActionsPanel({
       {!spellsOnly && (
         <div className="sheet-target-inputs">
           <label className="sheet-target-field">
+            <span>Персонаж-цель</span>
+            <select
+              className="forge-input"
+              aria-label="Персонаж-цель"
+              value={selectedSheetTargetId}
+              onChange={(event) => setSelectedSheetTargetId(event.target.value)}
+            >
+              <option value="">Ручные параметры цели</option>
+              {availableSheetTargets.map((candidate) => {
+                const option = characterInteractionTargetOption(candidate, charmerIds);
+                return (
+                  <option key={option.id} value={option.id} disabled={option.disabled}>
+                    {option.name}{option.disabled ? ` — ${option.reason}` : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          <label className="sheet-target-field">
             <span>КЗ цели</span>
             <input
               type="number"
@@ -2099,6 +2148,7 @@ export default function SheetActionsPanel({
               min={1}
               max={30}
               placeholder="—"
+              disabled={Boolean(selectedSheetTarget)}
               onChange={(e) => setTargetAc(e.target.value === '' ? null : Number(e.target.value))}
             />
           </label>
@@ -2111,9 +2161,15 @@ export default function SheetActionsPanel({
               min={-5}
               max={20}
               placeholder="—"
+              disabled={Boolean(selectedSheetTarget)}
               onChange={(e) => setTargetSaveMod(e.target.value === '' ? null : Number(e.target.value))}
             />
           </label>
+          {selectedSheetTarget && (
+            <p className="forge-note" role="status">
+              Используются рассчитанные параметры «{selectedSheetTarget.name}»; результат применится к его листу.
+            </p>
+          )}
         </div>
       )}
 

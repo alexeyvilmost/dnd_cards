@@ -36,7 +36,7 @@ export default function ValueBreakdownTip({ breakdown, children, label }: Props)
           {label && <span className="value-breakdown-popover-title">{label}</span>}
           {breakdown.selectedMethod && (
             <span className="value-breakdown-method">
-              <b>Используется: {breakdown.selectedMethod.name}</b>
+              <b>Используется: {breakdown.selectedMethod.name}{breakdown.selectedMethod.value != null ? ` (${breakdown.selectedMethod.value})` : ''}</b>
               <small>{breakdown.selectedMethod.reason}</small>
             </span>
           )}

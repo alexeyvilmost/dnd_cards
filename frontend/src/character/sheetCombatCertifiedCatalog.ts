@@ -14,6 +14,7 @@ import {
   parseDeclaredWeaponActionPolicy,
   WEAPON_ATTACK_PRIMITIVE,
 } from '../rules-core/weaponActionPolicies';
+import generatedSheetCombatArtifact from './sheetCombatCertification.generated.json';
 
 export const SHEET_COMBAT_CERTIFICATION_SCHEMA_VERSION = 1 as const;
 export const SHEET_COMBAT_CERTIFICATION_ARTIFACT_VERSION = '1.0.0' as const;
@@ -669,10 +670,13 @@ export async function certifySheetCombatArtifact(
   };
 }
 
-/** Loads only the independently generated 448-root combat certificate. */
+/** Loads only the independently generated 448-root combat certificate.
+ *
+ * The certificate stays in the route chunk: a nested dynamic JSON import can
+ * be omitted by a static host even when the sheet route itself is available.
+ */
 export async function loadCertifiedSheetCombatCatalog(): Promise<CertifiedSheetCombatCatalog> {
-  const module = await import('./sheetCombatCertification.generated.json');
-  return certifySheetCombatArtifact(module.default);
+  return certifySheetCombatArtifact(generatedSheetCombatArtifact);
 }
 
 /** Exact-byte semantic membership: a DB/sheet action must be in the reviewed release. */

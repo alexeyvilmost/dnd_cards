@@ -170,6 +170,10 @@ export interface CharacterContext {
   /** Итоговые значения характеристик после всех постоянных источников. */
   abilityScores?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   abilityMods: Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>;
+  /** Источники итоговых характеристик, собранные резолвером листа. */
+  abilitySources?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', RollModifier[]>>;
+  /** Альтернативные методы расчёта характеристик (например, value_method). */
+  abilityMethods?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', { value: number; name: string; reason: string }[]>>;
   profBonus: number;
   level: number;
   classLevels?: Record<string, number>;
@@ -442,7 +446,7 @@ export interface ValueBreakdown {
   value: number;
   parts: RollModifier[];
   /** Выбранный способ расчёта, если значение допускает несколько методов. */
-  selectedMethod?: { name: string; reason: string };
+  selectedMethod?: { name: string; reason: string; value?: number };
   /** Отвергнутые методы-кандидаты (парадигма №3): показываются в превью «прочие способы». */
   rejected?: { name: string; value: number }[];
 }

@@ -164,6 +164,8 @@ export function buildCharacterContext(
   return {
     abilityScores: ruleState.abilities,
     abilityMods: ruleState.abilityMods,
+    abilitySources: ruleState.abilitySources,
+    abilityMethods: ruleState.abilityMethods,
     profBonus: ruleState.proficiencyBonus,
     level: draft.level,
     classLevels: classKey ? { [classKey]: draft.level } : undefined,

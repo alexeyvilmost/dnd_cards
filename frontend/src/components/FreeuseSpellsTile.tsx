@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import type { RuntimeState } from '../mvp/contracts';
+import type { RollModifier } from '../mvp/contracts';
 import type { FreeuseSpec } from '../engine/freeuse';
 import { freeuseKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import type { Spell } from '../types';
@@ -17,16 +18,17 @@ interface Props {
   freeuseSpells: FreeuseSpec[];
   spells: Spell[];
   resourceOptions: ResourceOption[];
+  resourceSources?: Record<string, RollModifier[]>;
 }
 
-export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, resourceOptions }: Props) {
+export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, resourceOptions, resourceSources }: Props) {
   const [hovered, setHovered] = useState(false);
 
   const rows = freeuseSpells
     .map((spec) => {
       const key = freeuseKey(spec.spell);
       const spell = spells.find((s) => s.card_number === spec.spell || s.id === spec.spell);
-      return { key, name: spell?.name ?? spec.spell, cur: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0 };
+      return { key, name: spell?.name ?? spec.spell, cur: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0, sources: resourceSources?.[key] ?? [] };
     })
     .filter((r) => r.max > 0);
   if (!rows.length) return null;
@@ -62,9 +64,16 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
           <div style={{ fontSize: 12, color: '#d8b978', marginBottom: 4 }}>{label}</div>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {rows.map((r) => (
-              <li key={r.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, opacity: r.cur <= 0 ? 0.5 : 1 }}>
-                <span>{r.name}</span>
-                <span style={{ color: r.cur <= 0 ? '#a99f8b' : '#d8b978', whiteSpace: 'nowrap' }}>{r.cur}/{r.max}</span>
+              <li key={r.key} style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 13, opacity: r.cur <= 0 ? 0.5 : 1 }}>
+                <span style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <span>{r.name}</span>
+                  <span style={{ color: r.cur <= 0 ? '#a99f8b' : '#d8b978', whiteSpace: 'nowrap' }}>{r.cur}/{r.max}</span>
+                </span>
+                {r.sources.map((part, index) => (
+                  <small key={`${part.source}-${index}`} style={{ paddingLeft: 8, color: '#b9ad99' }}>
+                    {part.source}: +{part.value}{part.reason ? ` — ${part.reason}` : ''}
+                  </small>
+                ))}
               </li>
             ))}
           </ul>

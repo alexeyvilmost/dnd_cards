@@ -2,8 +2,8 @@ import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools } from './actionSheet';
 import { hitDiceResourceKey, initResources, resolveByLevel, resolveCount } from '../engine/resources';
 import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
-import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ValueBreakdown } from '../mvp/contracts';
+import type { CharacterContext, RollModifier, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
 import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
@@ -146,16 +146,64 @@ export function resourceMaximumBreakdown(
   return { value, parts };
 }
 
+function collectResourceGrantDetails(passives: Dict[]): { payload: Dict; source: string }[] {
+  const out: { payload: Dict; source: string }[] = [];
+  for (const mech of passives) {
+    const effects = mech.effects as Dict[] | undefined;
+    if (!Array.isArray(effects)) continue;
+    for (const eff of effects) {
+      const results = (eff.result ?? eff.results) as Dict[] | undefined;
+      if (!Array.isArray(results)) continue;
+      for (const r of results) {
+        if (r.kind === 'resource' && r.op === 'grant') {
+          out.push({ payload: r, source: String(mech.name ?? 'Пассивная способность') });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function addResourceSource(
+  sources: Record<string, RollModifier[]>,
+  id: string,
+  value: number,
+  source: string,
+  reason: string,
+) {
+  if (!id || !Number.isFinite(value) || value <= 0) return;
+  (sources[id] ??= []).push({ value, source, reason });
+}
+
 /** Синхронизация max-пулов с классом и пассивками; сохраняет потраченные заряды. */
 export function syncRuntimeResources(
   ctx: CharacterContext,
   assembled: AssembledCharacter,
   existing?: RuntimeState,
   freeuseSpells: FreeuseSpec[] = [],
-): { resources: Record<string, number>; maxResources: Record<string, number> } {
+): { resources: Record<string, number>; maxResources: Record<string, number>; sources: Record<string, RollModifier[]> } {
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
-  const grants = collectResourceGrantPayloads(collectPassiveMechanics(assembled));
+  const passiveMechanics = collectPassiveMechanics(assembled);
+  const grantDetails = collectResourceGrantDetails(passiveMechanics);
+  const grants = grantDetails.map(({ payload }) => payload);
   const fresh = initResources(ctx, classRes, grants);
+  const sources: Record<string, RollModifier[]> = {};
+  addResourceSource(sources, 'action', 1, 'Базовый ресурс хода', 'один ресурс на ход');
+  addResourceSource(sources, 'bonus_action', 1, 'Базовый ресурс хода', 'один ресурс на ход');
+  addResourceSource(sources, 'reaction', 1, 'Базовый ресурс хода', 'одна реакция на ход');
+
+  if (classRes) {
+    for (const [id, def] of Object.entries(classRes)) {
+      const row = def as Dict;
+      const count = resolveByLevel(row.by_level, ctx.level) ?? resolveCount(row.count ?? row.max, ctx);
+      if (count > 0) addResourceSource(sources, id, count, assembled.klass?.name || 'Класс', 'классовый максимум');
+    }
+  }
+  for (const { payload, source } of grantDetails) {
+    const id = String(payload.id ?? '');
+    const amount = resolveCount(payload.amount ?? 1, ctx);
+    addResourceSource(sources, id, amount, source, 'грант ресурса');
+  }
 
   // Виртуальные пулы использований действий (mechanics.uses → uses_<key>).
   for (const pool of collectActionUsesPools(assembled)) {
@@ -163,6 +211,7 @@ export function syncRuntimeResources(
     if (count > 0) {
       fresh.maxResources[pool.key] = count;
       fresh.resources[pool.key] = count;
+      addResourceSource(sources, pool.key, count, `Действие: ${pool.key.replace(/^uses_/, '')}`, 'число использований');
     }
   }
 
@@ -173,10 +222,11 @@ export function syncRuntimeResources(
       const key = freeuseKey(spec.spell);
       fresh.maxResources[key] = count;
       fresh.resources[key] = count;
+      addResourceSource(sources, key, count, `Заклинание: ${spec.spell}`, 'бесплатные использования');
     }
   }
 
-  if (!existing) return fresh;
+  if (!existing) return { ...fresh, sources };
 
   const maxResources = { ...fresh.maxResources };
   const resources = { ...fresh.resources };
@@ -192,7 +242,7 @@ export function syncRuntimeResources(
     }
   }
 
-  return { resources, maxResources };
+  return { resources, maxResources, sources };
 }
 
 export function resourcesNeedSync(character: ForgeCharacter): boolean {

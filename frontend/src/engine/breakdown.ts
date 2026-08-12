@@ -192,18 +192,43 @@ export function breakdownValue(
   if (what.startsWith('ability:')) {
     const ability = what.slice(8) as AbilityKey;
     const score = character.abilityScores?.[ability] ?? ((character.abilityMods[ability] ?? 0) * 2 + 10);
+    const sourceParts = character.abilitySources?.[ability];
+    const parts = sourceParts?.length
+      ? sourceParts
+      : [{ value: score, source: ABILITY_LABEL[ability], reason: 'итог после всех постоянных источников' }];
+    const additive = parts.reduce((sum, part) => sum + part.value, 0);
+    const methods = character.abilityMethods?.[ability] ?? [];
+    const selected = methods.reduce<typeof methods[number] | undefined>(
+      (best, candidate) => (!best || candidate.value > best.value ? candidate : best),
+      undefined,
+    );
+    if (selected && selected.value > additive) {
+      return {
+        value: score,
+        parts,
+        selectedMethod: { name: selected.name, reason: selected.reason },
+        rejected: [{ name: 'аддитивная сумма', value: additive }, ...methods
+          .filter((candidate) => candidate !== selected)
+          .map((candidate) => ({ name: candidate.name, value: candidate.value }))],
+      };
+    }
     return {
       value: score,
-      parts: [{ value: score, source: ABILITY_LABEL[ability], reason: 'итог после всех постоянных источников' }],
+      parts,
     };
   }
   if (what.startsWith('ability_mod:')) {
     const ability = what.slice(12) as AbilityKey;
     const score = character.abilityScores?.[ability] ?? ((character.abilityMods[ability] ?? 0) * 2 + 10);
     const value = character.abilityMods[ability] ?? 0;
+    const sourceParts = character.abilitySources?.[ability];
     return {
       value,
-      parts: [{ value, source: ABILITY_LABEL[ability], reason: `⌊(${score} − 10) / 2⌋` }],
+      parts: [{
+        value,
+        source: sourceParts?.length ? `модификатор ${ABILITY_LABEL[ability]}` : ABILITY_LABEL[ability],
+        reason: `⌊(${score} − 10) / 2⌋`,
+      }],
     };
   }
   if (what === 'passive_perception') {
