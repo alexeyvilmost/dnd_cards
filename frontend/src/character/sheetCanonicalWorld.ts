@@ -635,8 +635,7 @@ function baseSpellAccess(input: {
       access,
       spellcastingAbility: ability,
       ...(sheet.spellRef.ritual === true
-        && (access === 'spellbook'
-          || (access === 'always_prepared' && spellGrant.source.type === 'class'))
+        && (access === 'spellbook' || access === 'always_prepared')
         ? { ritual: true }
         : {}),
       ...(spellGrant.grant.freeuse

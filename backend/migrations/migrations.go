@@ -615,6 +615,14 @@ func GetAllMigrations() []Migration {
 			// The corrected identity may be referenced by durable sessions immediately.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "098_repair_magic_initiate_2024",
+			Description: "Exact guarded 2024 Magic Initiate spellcasting, preparation and free-use mechanics",
+			Up:          repairMagicInitiate2024,
+			// Existing and recreated sheets may reference the corrected declaration;
+			// rollback must not silently reintroduce incomplete spell grants.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

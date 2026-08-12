@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "repairId": "dnd5e-2024.magic-initiate-cleric-druid.v1",
+  "variants": [
+    {
+      "feat": {
+        "id": "7e4eb876-fc8e-42a7-8865-e3ee4e2247fd",
+        "cardNumber": "FEAT-0077"
+      },
+      "effect": {
+        "id": "dc152bb2-4254-47ac-bab9-e23370546714",
+        "cardNumber": "magic_initiate_cleric"
+      },
+      "spellList": "жрец",
+      "expectedBeforeMechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Подготовка заклинаний из книги заклинаний. INT — характеристика заклинаний."
+              }
+            ]
+          },
+          {
+            "id": "magic_initiate_cleric_cantrips",
+            "kind": "choice",
+            "count": 2,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "cantrip"
+            },
+            "prompt": "Выберите 2 заговора жреца",
+            "options": {
+              "filter": {
+                "levels": [
+                  0
+                ],
+                "classes": [
+                  "жрец"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "magic_initiate_cleric_level_1",
+            "kind": "choice",
+            "count": 1,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "spellbook"
+            },
+            "prompt": "Выберите 1 заклинание 1 уровня в книгу заклинаний",
+            "options": {
+              "filter": {
+                "levels": [
+                  1
+                ],
+                "classes": [
+                  "жрец"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          }
+        ]
+      },
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [
+          {
+            "id": "magic_initiate_cleric_spellcasting_ability",
+            "kind": "choice",
+            "count": 1,
+            "grant": {
+              "kind": "spellcasting_ability"
+            },
+            "prompt": "Выберите характеристику заклинаний черты «Посвящённый в магию: Жрец»",
+            "options": {
+              "source": "ability",
+              "items": [
+                {
+                  "id": "int",
+                  "name": "INT"
+                },
+                {
+                  "id": "wis",
+                  "name": "WIS"
+                },
+                {
+                  "id": "cha",
+                  "name": "CHA"
+                }
+              ]
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "magic_initiate_cleric_cantrips",
+            "kind": "choice",
+            "count": 2,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "cantrip"
+            },
+            "prompt": "Выберите 2 заговора жреца",
+            "options": {
+              "filter": {
+                "levels": [
+                  0
+                ],
+                "classes": [
+                  "жрец"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "magic_initiate_cleric_level_1",
+            "kind": "choice",
+            "count": 1,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "always_prepared",
+              "freeuse": {
+                "count": 1,
+                "recharge": "long_rest"
+              }
+            },
+            "prompt": "Выберите 1 всегда подготовленное заклинание 1 уровня",
+            "options": {
+              "filter": {
+                "levels": [
+                  1
+                ],
+                "classes": [
+                  "жрец"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          }
+        ]
+      }
+    },
+    {
+      "feat": {
+        "id": "19e4ee14-6da6-4bd1-88f7-0eeca1649f8d",
+        "cardNumber": "FEAT-0078"
+      },
+      "effect": {
+        "id": "5b4e7fc3-fe53-459e-9d58-763dc5206696",
+        "cardNumber": "EFFECT-0006"
+      },
+      "spellList": "друид",
+      "expectedBeforeMechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Подготовка заклинаний из книги заклинаний. WIS — характеристика заклинаний."
+              }
+            ]
+          },
+          {
+            "id": "magic_initiate_druid_cantrips",
+            "kind": "choice",
+            "count": 2,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "cantrip"
+            },
+            "prompt": "Выберите 2 заговора друида",
+            "options": {
+              "filter": {
+                "levels": [
+                  0
+                ],
+                "classes": [
+                  "друид"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "magic_initiate_druid_level_1",
+            "kind": "choice",
+            "count": 1,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "spellbook"
+            },
+            "prompt": "Выберите 1 заклинание 1 уровня в книгу заклинаний",
+            "options": {
+              "filter": {
+                "levels": [
+                  1
+                ],
+                "classes": [
+                  "друид"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          }
+        ]
+      },
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [
+          {
+            "id": "magic_initiate_druid_spellcasting_ability",
+            "kind": "choice",
+            "count": 1,
+            "grant": {
+              "kind": "spellcasting_ability"
+            },
+            "prompt": "Выберите характеристику заклинаний черты «Посвящённый в магию: Друид»",
+            "options": {
+              "source": "ability",
+              "items": [
+                {
+                  "id": "int",
+                  "name": "INT"
+                },
+                {
+                  "id": "wis",
+                  "name": "WIS"
+                },
+                {
+                  "id": "cha",
+                  "name": "CHA"
+                }
+              ]
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "magic_initiate_druid_cantrips",
+            "kind": "choice",
+            "count": 2,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "cantrip"
+            },
+            "prompt": "Выберите 2 заговора друида",
+            "options": {
+              "filter": {
+                "levels": [
+                  0
+                ],
+                "classes": [
+                  "друид"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "magic_initiate_druid_level_1",
+            "kind": "choice",
+            "count": 1,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "always_prepared",
+              "freeuse": {
+                "count": 1,
+                "recharge": "long_rest"
+              }
+            },
+            "prompt": "Выберите 1 всегда подготовленное заклинание 1 уровня",
+            "options": {
+              "filter": {
+                "levels": [
+                  1
+                ],
+                "classes": [
+                  "друид"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          }
+        ]
+      }
+    }
+  ]
+}

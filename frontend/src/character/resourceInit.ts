@@ -264,7 +264,9 @@ export function hpNeedsSync(character: ForgeCharacter, computedMaxHp: number): b
  * authoritative command commits or the shared session is closed. Automatic
  * mount-time initialization must not advance one participant independently.
  */
-export function hasPendingSheetCombatSession(character: ForgeCharacter): boolean {
+export function hasPendingSheetCombatSession(
+  character: Pick<ForgeCharacter, 'turn_state'>,
+): boolean {
   return character.turn_state?.canonical_pending_combat_v1 != null;
 }
 
