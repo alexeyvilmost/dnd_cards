@@ -1,7 +1,7 @@
 # План миграции rules engine и тестирования D&D 2024
 
-**Статус:** фундамент micro-MVP реализован; серверный authority — следующий этап
-**Дата:** 2026-08-04
+**Статус:** micro-MVP подключён к server-authoritative command path; legacy encounter остаётся compatibility path
+**Дата:** 2026-08-12
 **База приёмки:** micro-MVP
 **Связанные документы:** [micro-MVP Implementation Roadmap](./micro-mvp-roadmap.md),
 [Product Requirements Document](./product-prd.md)
@@ -27,17 +27,17 @@ WorldState + Command + SpatialFacts + Decisions + deterministic Env
     -> next WorldState
 ```
 
-Для micro-MVP авторитетным может быть локальный adapter: пользователь управляет
-обоими персонажами, а состояние и журнал сохраняются в браузере. Серверный
-adapter не блокирует приёмку micro-MVP, но обязан использовать тот же контракт
-и тот же rules artifact. Для общего сетевого encounter авторитетным позднее
-становится сервер.
+Локальный adapter остаётся offline-режимом и быстрым prediction. Для связанных
+листов micro-MVP авторитетен backend: браузер отправляет только `GameCommand`,
+Go проверяет ACL/revision/release, генерирует deterministic RNG tape и передаёт
+команду локальному Node worker, собранному из того же `rules-core`. Только
+возвращённые worker events и WorldState атомарно коммитятся в PostgreSQL.
 
 Недельный AI-agent остаётся полезным как исследовательский UI-регресс и поиск
 неожиданных комбинаций. Он не является основным oracle правил и не заменяет
 детерминированные unit, property, scenario, replay и persistence tests.
 
-### 1.1. Реализованное состояние на 2026-08-04
+### 1.1. Реализованное состояние на 2026-08-12
 
 - `frontend/src/rules-core` содержит чистый детерминированный `WorldState +
   Command -> events -> next state` с типизированными pending decisions,
@@ -54,14 +54,25 @@ adapter не блокирует приёмку micro-MVP, но обязан ис
   checkpoint;
 - `/rules-lab` исполняет тот же checked-in compiled artifact в браузере,
   сохраняет изолированный мир в IndexedDB и работает после отключения сети;
-- PostgreSQL migrations уже вводят schema/event constraints будущего
-  server-authoritative runtime, но command worker/API ещё не реализованы.
+- checked-in Node worker исполняет тот же `rules-core` и exact pinned artifact;
+  differential test воспроизводит production compiled two-PC trace и требует
+  byte-semantic равенства событий и следующего мира;
+- `POST /api/rules/canonical-sessions` проверяет exact release/hash, импортирует
+  два листа, сверяет HP/resources/effects/equipment/inventory и rule-значимые
+  поля карточек с БД и создаёт один server-authority writer;
+- `POST /api/rules/canonical-sessions/:id/commands` принимает только intent,
+  проверяет membership/controller/declared targets/revision и коммитит command,
+  events, snapshot, actor projections и summoned-actor lifecycle транзакционно;
+- exact retry по `commandId` возвращает прежнюю квитанцию и не вызывает worker
+  повторно; прямые runtime/build writes заблокированы на время активной сессии;
+- browser использует локальное исполнение только как prediction, принимает
+  server snapshot как источник истины и умеет явно завершить сессию; закрытие
+  атомарно снимает writer lock и удаляет compatibility mirror из листов.
 
-Следовательно, для micro-MVP авторитетен локальный `PersistentRulesSession` и
-его журнал событий. Сервер пока авторитетен только для хранения существующих
-персонажей, но не для разрешения команд общего боя. Перенос authority на сервер
-не должен создавать второй движок: worker обязан исполнять тот же rules bundle
-и сверяться differential replay-тестами.
+Серверный путь сейчас является целевым для совместной сессии micro-MVP. Старый
+`/api/transport` выключен по умолчанию и остаётся только явно включаемым
+unverified shadow-инструментом. Старый `/encounters` ещё не переведён на этот
+command API и не считается доказательством server rules authority.
 
 ## 2. Зафиксированная граница micro-MVP
 

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import SheetAuthorityNotice from './SheetAuthorityNotice';
 
 describe('SheetAuthorityNotice', () => {
-  it('labels the real sheet as local execution without claiming shared authority', () => {
+  it('labels the server as authority and the browser result as a preview', () => {
     const markup = renderToStaticMarkup(createElement(
       MemoryRouter,
       null,
@@ -14,12 +14,12 @@ describe('SheetAuthorityNotice', () => {
 
     expect(markup).toContain('data-testid="sheet-authority-notice"');
     expect(markup).toContain('aria-label="Режим исполнения правил"');
-    expect(markup).toContain('Локальный движок правил');
-    expect(markup).toContain('результат сохраняется в листе или бою');
+    expect(markup).toContain('Сервер — источник правил');
+    expect(markup).toContain('взаимодействия листов подтверждаются сервером');
+    expect(markup).toContain('локальный расчёт — предварительный');
     expect(markup).toContain('Изолированная сценарная проверка — Rules Session Lab');
     expect(markup).toContain('href="/rules-lab"');
     expect(markup).not.toContain('legacy');
-    expect(markup).not.toContain('Общий движок');
-    expect(markup).not.toContain('shared authority');
+    expect(markup).not.toContain('Локальный движок правил');
   });
 });

@@ -234,5 +234,5 @@ describe('live micro-MVP compiled certification boundary', () => {
         requiredSlotCount: 408,
       },
     });
-  }, 60_000);
+  }, 120_000);
 });

@@ -16,6 +16,7 @@ import {
 } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
+  hasPendingSheetCombatSession,
   hpNeedsSync,
   resourcesNeedSync,
   resourceMaximumBreakdown,
@@ -274,7 +275,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP]);
 
   useEffect(() => {
-    if (syncAttempted.current || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
+    if (syncAttempted.current || hasPendingSheetCombatSession(character)
+      || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
     syncAttempted.current = true;
     syncResources();
   }, [character, ruleState.maxHP, syncResources]);

@@ -601,6 +601,20 @@ func GetAllMigrations() []Migration {
 			// evidence; rollback must not erase or reopen already committed writes.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "096_register_micro_mvp_rules_release",
+			Description: "Register the immutable checked-in micro-MVP rules worker release",
+			Up:          registerMicroMVPRulesRelease,
+			// Released artifacts remain addressable for replaying existing sessions.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "097_repair_micro_mvp_rules_release_identity",
+			Description: "Bind the micro-MVP release row to its WorldState ruleset.releaseId",
+			Up:          repairMicroMVPRulesReleaseIdentity,
+			// The corrected identity may be referenced by durable sessions immediately.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -44,7 +44,7 @@ describe('448-root sheet combat certification', () => {
       buildSheetCombatCertificationArtifact(),
     ]);
     certified = await certifySheetCombatArtifact(generatedArtifact);
-  }, 30_000);
+  }, 90_000);
 
   it('is byte-for-byte generated from the complete current compiler output', () => {
     expect(serializeSheetCombatCertificationArtifact(

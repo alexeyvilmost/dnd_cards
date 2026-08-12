@@ -373,6 +373,17 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 			}
 			return err
 		}
+		canonicalSessionID, err := activeServerRulesSessionForCharacters(tx, []uuid.UUID{characterID})
+		if err != nil {
+			return err
+		}
+		if canonicalSessionID != uuid.Nil {
+			return &characterRuntimeCommandError{
+				Status: http.StatusConflict, Code: "canonical_session_active",
+				Message:     "character build and runtime are locked by an active server rules session",
+				CharacterID: characterID.String(),
+			}
+		}
 
 		if req.Name != "" {
 			locked.Name = req.Name
@@ -457,6 +468,11 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})
 		return
 	}
+	var canonicalConflict *characterRuntimeCommandError
+	if errors.As(txErr, &canonicalConflict) {
+		writeCharacterRuntimeCommandError(c, txErr)
+		return
+	}
 	if txErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка обновления персонажа", "details": txErr.Error()})
 		return
@@ -495,6 +511,17 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 		if locked.CurrentEncounterID != nil {
 			return errCharacterV3InEncounter
 		}
+		canonicalSessionID, err := activeServerRulesSessionForCharacters(tx, []uuid.UUID{characterID})
+		if err != nil {
+			return err
+		}
+		if canonicalSessionID != uuid.Nil {
+			return &characterRuntimeCommandError{
+				Status: http.StatusConflict, Code: "canonical_session_active",
+				Message:     "character cannot be deleted while its server rules session is active",
+				CharacterID: characterID.String(),
+			}
+		}
 		result := tx.Where("id = ? AND user_id = ?", characterID, userID).Delete(&CharacterV3{})
 		if result.Error != nil {
 			return result.Error
@@ -510,6 +537,11 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 	}
 	if errors.Is(txErr, errCharacterV3OwnerChanged) {
 		c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})
+		return
+	}
+	var canonicalConflict *characterRuntimeCommandError
+	if errors.As(txErr, &canonicalConflict) {
+		writeCharacterRuntimeCommandError(c, txErr)
 		return
 	}
 	if txErr != nil {
@@ -676,6 +708,17 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 				return errCharacterV3OwnerChanged
 			}
 			return err
+		}
+		canonicalSessionID, err := activeServerRulesSessionForCharacters(tx, []uuid.UUID{characterID})
+		if err != nil {
+			return err
+		}
+		if canonicalSessionID != uuid.Nil {
+			return &characterRuntimeCommandError{
+				Status: http.StatusConflict, Code: "canonical_session_active",
+				Message:     "runtime is controlled by an active server rules session",
+				CharacterID: characterID.String(),
+			}
 		}
 		updates := runtimeUpdatesForLockedCharacter(locked, req)
 		if req.ExpectedRuntimeRevision != nil && locked.RuntimeRevision != *req.ExpectedRuntimeRevision {

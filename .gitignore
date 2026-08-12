@@ -62,6 +62,7 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/playwright-report-live/
 frontend/test-results-live/
+frontend/e2e/generated/*.mjs
 frontend/.micro-mvp-evidence/
 frontend/.coverage-*/
 officials/canon/.prod-snapshot.staging-*/

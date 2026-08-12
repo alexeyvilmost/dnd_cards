@@ -258,10 +258,13 @@ Versioned manifest `2.1.0` фиксирует 14 заклинаний перво
 | Локальное authority | `PersistentRulesSession`, immutable genesis/event stream и IndexedDB snapshot |
 | Хранение legacy-листа | `characters_v3`, runtime patch, `character_events` |
 | Проверка механик | manifest/matrix, semantic obligations, exact structural coverage и Playwright |
-| Shared encounter transport | обязательный `expected_seq`/CAS под row lock, ownership/GM authorization, durable `encounter_events`, SSE и восстановление потока; payload остаётся client-calculated |
+| Server-authoritative two-sheet runtime | `/api/rules/canonical-sessions`: browser intent → Go ACL/CAS/RNG → pinned Node `rules-core` worker → atomic commands/events/snapshots/projections |
+| Legacy shared encounter transport | обязательный `expected_seq`/CAS под row lock, ownership/GM authorization, durable `encounter_events`, SSE и восстановление потока; payload остаётся client-calculated compatibility path |
 
-Серверный command worker ещё не реализован. До него локальный Rules Lab
-авторитетен для micro-MVP, а общий сетевой encounter остаётся legacy relay.
+Серверный command worker и connected sheet adapter реализованы для
+сертифицированного двух-PC среза micro-MVP. Rules Lab остаётся offline oracle и
+браузерным acceptance harness. Общая доска `/encounters` пока остаётся legacy
+relay и должна быть переведена на тот же command API отдельным rollout.
 
 ## 5. Остаточные разрывы
 
@@ -294,11 +297,11 @@ certification на точных materialized bytes. Локальный drill и�
    доступны авторизованным пользователям только для чтения до отдельной
    миграции владения.
 2. `Group` ещё не является полной моделью Campaign и authority.
-3. Encounter transport уже сериализует готовые клиентские patches через
+3. Legacy encounter transport уже сериализует готовые клиентские patches через
    обязательный `expected_seq`/CAS под row lock, ownership/GM authorization и
    SSE, но не валидирует семантику action/spell, цену, DC или release hash.
-4. Сервер не исполняет игровые намерения через rules engine; source и target
-   сохраняются разными запросами, а не одной игровой транзакцией.
+4. Server rules path исполняет намерения одной транзакцией для связанных
+   листов, но legacy encounter board ещё не переключён на этот путь.
 5. Журнал encounter хранит операции, но состояние пока не строится полноценным
    replay с отменой произвольного события и разрешением конфликтов.
 

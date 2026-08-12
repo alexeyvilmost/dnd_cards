@@ -85,10 +85,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // A new release must not activate and delete the old precache while an
-      // existing page can still request one of its lazy chunks. The waiting
-      // worker activates after the old clients close/reload as one version.
-      registerType: 'prompt',
+      // There is no update-confirmation UI. Activate the new immutable bundle
+      // automatically; otherwise an installed PWA can retain an expired auth
+      // lifecycle and old lazy chunks indefinitely after a production deploy.
+      registerType: 'autoUpdate',
       includeAssets: [
         'site_logo.png',
         'pwa-192x192.png',
@@ -123,6 +123,8 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/proxy\//],
         globPatterns: ['**/*.{js,css,html,woff,woff2}'],

@@ -87,6 +87,10 @@ export interface SheetCombatParticipantSeed {
 
 export interface SheetCombatTransition {
   commandId: string;
+  /** Present for rules-core transitions; omitted only by the legacy-genesis projection bridge. */
+  command?: GameCommand;
+  /** Exact ordered intents for transitions composed from several domain commands. */
+  commands?: readonly GameCommand[];
   base: SheetCombatSession;
   nextWorld: WorldState;
   events: readonly UncommittedRuleEvent[];
@@ -553,6 +557,8 @@ function acceptedTransition(
   }
   return {
     commandId: command.commandId,
+    command: clone(command),
+    commands: [clone(command)],
     base,
     nextWorld: session.getState(),
     events: session.getEvents(),
@@ -650,11 +656,13 @@ function acceptedWeaponTransition(input: {
     clock: createLogicalClock(input.base.world.logicalClock),
     nextId: createSequentialIdFactory(`sheet-combat:${input.commandId}`),
   });
+  const commands: GameCommand[] = [];
   const dispatch = (command: GameCommand): void => {
     const result = session.dispatch(command);
     if (result.status === 'rejected') {
       throw new SheetCombatSessionError(`${result.code}: ${result.message}`);
     }
+    commands.push(clone(command));
   };
 
   if (input.primitive === WEAPON_ATTACK_PRIMITIVE) {
@@ -666,7 +674,7 @@ function acceptedWeaponTransition(input: {
       dispatch({
         schemaVersion: 1,
         type: 'BeginAttackAction',
-        commandId: `${input.commandId}:begin-attack`,
+        commandId: derivedSheetCombatCommandId(input.commandId),
         expectedRevision: current.revision,
         rulesetContentHash: current.ruleset.contentHash,
         actorId: input.actorId,
@@ -714,10 +722,17 @@ function acceptedWeaponTransition(input: {
   }
   return {
     commandId: input.commandId,
+    command: commands[commands.length - 1],
+    commands,
     base: input.base,
     nextWorld: session.getState(),
     events: session.getEvents(),
   };
+}
+
+function derivedSheetCombatCommandId(commandId: string): string {
+  const replacement = commandId.endsWith('0') ? '1' : '0';
+  return `${commandId.slice(0, -1)}${replacement}`;
 }
 
 export function executeSheetCombatAction(input: {

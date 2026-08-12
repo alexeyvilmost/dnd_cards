@@ -76,11 +76,14 @@ import SheetCompanionControls, {
 } from './SheetCompanionControls';
 import {
   buildSheetCanonicalRuntime,
+  canonicalActorCards,
   projectSheetCanonicalPersistence,
   synchronizeSheetCanonicalRuntime,
   writeSheetCanonicalWorld,
 } from '../character/sheetCanonicalWorld';
 import type { DecisionResponse, GameCommand, WorldState } from '../rules-core/domain';
+import { createLogicalClock, createSequentialIdFactory } from '../rules-core/determinism';
+import { ConnectedRulesSession } from '../rules-session';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { buildSheetCombatDeclaration } from '../character/sheetCombatDeclaration';
 import {
@@ -720,10 +723,10 @@ export default function SheetActionsPanel({
           passives,
           grantedEffects: grantedEffectsBySlug,
           masteryEffects: masteryById,
-          cards: [...new Map([
+          cards: canonicalActorCards(runtime, new Map([
             ...cardsIndex.entries(),
             ...equipCards.entries(),
-          ]).values()],
+          ])),
           ac: ruleState.armorClass,
         }),
         error: null,
@@ -1225,8 +1228,114 @@ export default function SheetActionsPanel({
     transition: SheetCombatTransition,
     characters: Readonly<Record<string, ForgeCharacter>>,
   ) => {
-    const prepared = prepareSheetCombatCommit({ transition, characters });
-    return commitCombat(prepared, sheetCombatEngineEvents(transition.events));
+    const commands = transition.commands?.length
+      ? [...transition.commands]
+      : transition.command ? [transition.command] : [];
+    if (!commands.length) {
+      throw new Error('Сценарная команда не содержит сериализуемого rules-core intent');
+    }
+    const certified = requireCertifiedCombatSession(transition.base);
+    let base = transition.base;
+    let currentCharacters: Readonly<Record<string, ForgeCharacter>> = characters;
+
+    // One-time, explicitly non-authoritative legacy import. It gives the
+    // backend exact immutable bytes to compare before it creates genesis.
+    if (!combatContinuation.session) {
+      const first = transition.commandId[0] === '0' ? '1' : '0';
+      const importTransition: SheetCombatTransition = {
+        // Stable for an exact action retry, and distinct from both the action
+        // id and the weapon prelude id (which changes the final nibble).
+        commandId: `${first}${transition.commandId.slice(1)}`,
+        base,
+        nextWorld: base.world,
+        events: [],
+      };
+      const imported = prepareSheetCombatCommit({
+        transition: importTransition,
+        characters: currentCharacters,
+      });
+      let response: Awaited<ReturnType<typeof charactersV3Api.postRuntimeCommand>>;
+      try {
+        response = await charactersV3Api.postRuntimeCommand(imported.request);
+      } catch {
+        // The import command is an idempotent CAS transaction. Replaying its
+        // exact bytes distinguishes a lost response from an uncommitted call.
+        response = await charactersV3Api.postRuntimeCommand(imported.request);
+      }
+      await applyCombatResponse(imported, response, []);
+      base = imported.committedSession;
+      const refreshed = await charactersV3Api.list();
+      currentCharacters = Object.fromEntries(refreshed.map((candidate) => [candidate.id, candidate]));
+    }
+
+    const connected = await ConnectedRulesSession.create({
+      characterIds: Object.keys(base.participantRevisions).sort(),
+      rulesArtifactHash: certified.artifact.source.release.releaseHash,
+      world: base.world,
+      catalog: base.catalog,
+      previewEnv: {
+        rng: Math.random,
+        clock: createLogicalClock(base.world.logicalClock),
+        nextId: createSequentialIdFactory(`worker:${commands[0].commandId}`),
+      },
+    });
+    const serverBase: SheetCombatSession = { ...base, world: connected.getState() };
+    const committedEvents = [] as typeof transition.events[number][];
+    let committedWorld = connected.getState();
+    for (const command of commands) {
+      const committed = await connected.dispatch(command);
+      committedEvents.push(...committed.result.events);
+      committedWorld = committed.result.nextState;
+    }
+    const authoritativeTransition: SheetCombatTransition = {
+      commandId: transition.commandId,
+      command: commands[commands.length - 1],
+      commands,
+      base: serverBase,
+      nextWorld: committedWorld,
+      events: committedEvents,
+    };
+    const prepared = prepareSheetCombatCommit({
+      transition: authoritativeTransition,
+      characters: currentCharacters,
+    });
+    return commitCombat(prepared, sheetCombatEngineEvents(authoritativeTransition.events));
+  };
+
+  const closeCombatSession = async () => {
+    const session = combatContinuation.session;
+    if (!session || session.world.pendingResolution) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const certified = requireCertifiedCombatSession(session);
+      // create() is also the idempotent discovery operation for the active
+      // participant set. This keeps recovery possible when the command was
+      // committed server-side but its compatibility projection response was lost.
+      const connected = await ConnectedRulesSession.create({
+        characterIds: Object.keys(session.participantRevisions).sort(),
+        rulesArtifactHash: certified.artifact.source.release.releaseHash,
+        world: session.world,
+        catalog: session.catalog,
+        previewEnv: {
+          rng: Math.random,
+          clock: createLogicalClock(session.world.logicalClock),
+          nextId: createSequentialIdFactory('worker:close'),
+        },
+      });
+      await connected.close();
+      const refreshed = await charactersV3Api.list();
+      targetCharsRef.current = refreshed.filter((candidate) => candidate.id !== character.id);
+      const current = refreshed.find((candidate) => candidate.id === character.id);
+      if (!current) throw new Error('Закрытый лист не найден после завершения сессии');
+      setCombatRetry(null);
+      onUpdated(current);
+    } catch (cause) {
+      console.error(cause);
+      setError(cause instanceof Error ? cause.message : 'Не удалось завершить общую сессию');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const requireCertifiedCombatSession = (session: SheetCombatSession) => {
@@ -2046,6 +2155,14 @@ export default function SheetActionsPanel({
               {combatScene.turnStarted ? 'Завершить ход' : 'Начать ход'}
             </button>
           )}
+          <button
+            type="button"
+            className="forge-btn ghost"
+            disabled={busy || !!combatRetry}
+            onClick={() => { void closeCombatSession(); }}
+          >
+            Завершить общую сессию
+          </button>
         </section>
       )}
 

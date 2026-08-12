@@ -13,6 +13,7 @@ import {
 } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
+  hasPendingSheetCombatSession,
   collectPassiveMechanics,
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
@@ -157,7 +158,7 @@ export default function SheetRestButtons({
   // Один прогон синка на маунт: buildResourceRuntimePatch сам вернёт null,
   // если пулы (включая uses_<key> действий) и HP уже актуальны.
   useEffect(() => {
-    if (syncAttempted.current) return;
+    if (syncAttempted.current || hasPendingSheetCombatSession(character)) return;
     syncAttempted.current = true;
     syncResources();
   }, [syncResources]);

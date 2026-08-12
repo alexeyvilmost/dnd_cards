@@ -309,8 +309,8 @@ async function openPendingSpell(
     await expect(retry).toBeVisible();
     await retry.getByRole('button', { name: 'Безопасно повторить' }).click();
   }
-  await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
-  const request = api.runtimeCommandRequests[0];
+  await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(2);
+  const request = api.runtimeCommandRequests.at(-1)!;
   expect(request.ruleset_ref).toEqual({
     system_id: compiled.source.ruleset.systemId,
     release_id: compiled.source.ruleset.releaseId,
@@ -363,12 +363,14 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
 
     const retry = page.getByTestId('sheet-combat-retry').first();
     await expect(retry).toBeVisible();
-    const committedRequest = api.runtimeCommandRequests[0];
+    // Request 0 is the one-time legacy genesis import. The next request is the
+    // server-authoritative compatibility projection; only it is retried.
+    const committedRequest = api.runtimeCommandRequests[1];
     await retry.getByRole('button', { name: 'Безопасно повторить' }).click();
-    await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
-    expect(api.runtimeCommandRequests).toHaveLength(2);
-    expect(api.runtimeCommandRequests[1]).toEqual(committedRequest);
-    expect(Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(1);
+    await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(2);
+    expect(api.runtimeCommandRequests).toHaveLength(3);
+    expect(api.runtimeCommandRequests[2]).toEqual(committedRequest);
+    expect(Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(2);
     expect(Number(api.getCharacter(IDS.target)?.current_hp)).toBeLessThan(targetHpBefore);
     expect((api.getCharacter(IDS.source)?.resources as JsonRecord).action).toBe(0);
     expect(api.getCharacter(IDS.source)?.inventory_items).toEqual([
@@ -402,7 +404,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     await dismissMobileSuggestion(page);
     await expect(page.locator(`[data-action-id="${weaponActionId}"]`).getByRole('button'))
       .toBeDisabled({ timeout: 30_000 });
-    expect(Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
+    expect(Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(2);
     expect(api.getCharacter(IDS.source)?.inventory_items).toEqual([
       { card_id: weapon.id, qty: 1 },
       { card_id: ammo.id, qty: 2 },
@@ -421,8 +423,8 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       api.seedCharacter(character(compiled.roots.fighter, IDS.target, 'Target'));
       const hpBefore = Number(api.getCharacter(IDS.target)?.current_hp);
       const first = await openPendingSpell(page, api, type, { loseResponse: true });
-      expect(api.runtimeCommandRequests).toHaveLength(2);
-      expect(api.runtimeCommandRequests[1]).toEqual(first);
+      expect(api.runtimeCommandRequests).toHaveLength(3);
+      expect(api.runtimeCommandRequests[2]).toEqual(first);
 
       await page.goto(`/characters-v3/${IDS.target}`);
       await dismissMobileSuggestion(page);
@@ -434,8 +436,8 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       await reloaded.getByRole('spinbutton', { name: 'Результат d20 спасброска' }).fill('1');
       await reloaded.getByRole('button', { name: 'Применить d20' }).click();
       await expect.poll(() => Number(api.getCharacter(IDS.target)?.current_hp)).toBeLessThan(hpBefore);
-      expect(Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(2);
-      expect(Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(2);
+      expect(Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(3);
+      expect(Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(3);
       expect(api.runtimePatchRequests).toHaveLength(0);
       await page.reload();
       await expect(page.getByTestId('sheet-combat-target-save')).toHaveCount(0);
@@ -444,11 +446,11 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
         await page.goto(`/characters-v3/${IDS.source}`);
         await page.getByTestId('sheet-combat-turn-state').first()
           .getByRole('button', { name: 'Завершить ход' }).click();
-        await expect.poll(() => Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(3);
+        await expect.poll(() => Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(4);
         await page.goto(`/characters-v3/${IDS.target}`);
         await page.getByTestId('sheet-combat-turn-state').first()
           .getByRole('button', { name: 'Начать ход' }).click();
-        await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(4);
+        await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(5);
       }
     });
   }
@@ -459,7 +461,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     api.seedCharacter(character(compiled.roots.wizard, IDS.target, 'Target'));
     const hpBefore = Number(api.getCharacter(IDS.target)?.current_hp);
     await openPendingSpell(page, api, 'magic_missile', { darts: 3 });
-    expect(api.runtimeCommandRequests).toHaveLength(1);
+    expect(api.runtimeCommandRequests).toHaveLength(2);
 
     await page.goto(`/characters-v3/${IDS.target}`);
     await dismissMobileSuggestion(page);
@@ -469,7 +471,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     const reloaded = page.getByTestId('sheet-combat-magic-missile-reaction').first();
     await expect(reloaded).toBeVisible({ timeout: 30_000 });
     await reloaded.getByRole('button', { name: /Щит|Shield/ }).click();
-    await expect.poll(() => Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(2);
+    await expect.poll(() => Number(api.getCharacter(IDS.target)?.runtime_revision)).toBe(3);
     expect(Number(api.getCharacter(IDS.target)?.current_hp)).toBe(hpBefore);
     const resources = api.getCharacter(IDS.target)?.resources as JsonRecord;
     expect(resources.reaction).toBe(0);

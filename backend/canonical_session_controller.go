@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"math"
 	"net/http"
 	"regexp"
@@ -32,11 +33,16 @@ const (
 var canonicalTransportSHA256Pattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
 type CanonicalSessionController struct {
-	db *gorm.DB
+	db     *gorm.DB
+	worker rulesWorkerExecutor
 }
 
 func NewCanonicalSessionController(db *gorm.DB) *CanonicalSessionController {
-	return &CanonicalSessionController{db: db}
+	return &CanonicalSessionController{db: db, worker: newRulesWorkerClientFromEnvironment()}
+}
+
+func newCanonicalSessionControllerWithWorker(db *gorm.DB, worker rulesWorkerExecutor) *CanonicalSessionController {
+	return &CanonicalSessionController{db: db, worker: worker}
 }
 
 type canonicalActorBinding struct {
@@ -89,6 +95,52 @@ type canonicalTransitionResponse struct {
 	SemanticAuthority     string                   `json:"semanticAuthority"`
 	SchemaValidation      string                   `json:"schemaValidation"`
 	Idempotent            bool                     `json:"idempotent"`
+	EngineVersion         string                   `json:"engineVersion,omitempty"`
+	Events                json.RawMessage          `json:"events,omitempty"`
+	Snapshot              json.RawMessage          `json:"snapshot,omitempty"`
+}
+
+type canonicalExecutionProfile struct {
+	serverVerified      bool
+	engineVersion       string
+	events              json.RawMessage
+	semanticCommand     json.RawMessage
+	semanticCommandHash string
+	actorCreates        []canonicalServerActorCreate
+	actorRemovals       []uuid.UUID
+}
+
+type canonicalServerActorCreate struct {
+	ActorID          uuid.UUID
+	WorldActorID     string
+	OwnerUserID      uuid.UUID
+	ControllerUserID uuid.UUID
+	Projection       []byte
+}
+
+const canonicalExecutionProfileKey = "canonical_execution_profile"
+
+func canonicalProfile(c *gin.Context) canonicalExecutionProfile {
+	value, exists := c.Get(canonicalExecutionProfileKey)
+	if !exists {
+		return canonicalExecutionProfile{}
+	}
+	profile, _ := value.(canonicalExecutionProfile)
+	return profile
+}
+
+func (profile canonicalExecutionProfile) authority() string {
+	if profile.serverVerified {
+		return rulesWorkerAuthority
+	}
+	return canonicalTransportAuthority
+}
+
+func (profile canonicalExecutionProfile) schemaValidation() string {
+	if profile.serverVerified {
+		return rulesWorkerSchemaValidation
+	}
+	return canonicalTransportSchemaValidation
 }
 
 type canonicalDecisionResult struct {
@@ -491,6 +543,12 @@ func (controller *CanonicalSessionController) GetCurrent(c *gin.Context) {
 		if err != nil {
 			return err
 		}
+		authority := canonicalTransportAuthority
+		schemaValidation := canonicalTransportSchemaValidation
+		if session.AuthorityMode == "server" {
+			authority = rulesWorkerAuthority
+			schemaValidation = rulesWorkerSchemaValidation
+		}
 		response = canonicalSessionReadResponse{
 			SessionID: session.ID, RulesetReleaseID: session.RulesetReleaseID,
 			RulesArtifactHash: session.RulesArtifactHash, Revision: session.Revision,
@@ -498,8 +556,8 @@ func (controller *CanonicalSessionController) GetCurrent(c *gin.Context) {
 			SchemaVersion:     session.SnapshotSchemaVersion,
 			SerializerVersion: session.SerializerVersion,
 			Snapshot:          json.RawMessage(append([]byte(nil), session.SnapshotCanonicalBytes...)),
-			ActorBindings:     bindings, SemanticAuthority: canonicalTransportAuthority,
-			SchemaValidation: canonicalTransportSchemaValidation,
+			ActorBindings:     bindings, SemanticAuthority: authority,
+			SchemaValidation: schemaValidation,
 		}
 		return nil
 	})
@@ -511,6 +569,7 @@ func (controller *CanonicalSessionController) GetCurrent(c *gin.Context) {
 }
 
 func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
+	profile := canonicalProfile(c)
 	userID, err := GetCurrentUserID(c)
 	if err != nil || userID == uuid.Nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication is required"})
@@ -557,6 +616,16 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 		if caller.Role == "observer" {
 			return canonicalProblem(http.StatusForbidden, "observer membership cannot apply canonical transitions")
 		}
+		// An exact retry by the still-active original caller returns its immutable
+		// receipt even after a later freeze or actor-control change. Mutable ACLs
+		// or authority mode cannot turn a committed command into a non-idempotent
+		// operation. The receipt has its own canonical integrity and envelope
+		// checks, so it must be read before validating the mutable session head.
+		if found, err := loadIdempotentCanonicalResult(tx, sessionID, userID, prepared, profile, &response); err != nil {
+			return err
+		} else if found {
+			return nil
+		}
 		oldWorld, _, err := verifyStoredCanonicalSession(session)
 		if err != nil {
 			return err
@@ -568,19 +637,15 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 			prepared.request.RulesArtifactHash != session.RulesArtifactHash {
 			return canonicalProblem(http.StatusConflict, "rules release envelope does not match the canonical session")
 		}
-		// An exact retry by the still-active original caller returns its immutable
-		// receipt even after a later freeze or actor-control change. Mutable ACLs
-		// cannot turn a committed command into a non-idempotent operation.
-		if found, err := loadIdempotentCanonicalResult(tx, sessionID, userID, prepared, &response); err != nil {
-			return err
-		} else if found {
-			return nil
-		}
 		if session.Status != "active" {
 			return canonicalProblem(http.StatusConflict, "canonical session is not active")
 		}
-		if session.AuthorityMode != "local" {
-			return canonicalProblem(http.StatusConflict, "transport-only transitions require authority_mode=local")
+		expectedAuthorityMode := "local"
+		if profile.serverVerified {
+			expectedAuthorityMode = "server"
+		}
+		if session.AuthorityMode != expectedAuthorityMode {
+			return canonicalProblem(http.StatusConflict, "canonical execution authority does not match authority_mode")
 		}
 		actors, err := loadCanonicalActors(tx, sessionID, true)
 		if err != nil {
@@ -627,8 +692,8 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 		if prepared.newWorld.logicalClock < oldWorld.logicalClock {
 			return canonicalProblem(http.StatusUnprocessableEntity, "WorldState logicalClock cannot move backwards")
 		}
-		if prepared.newWorld.worldID != oldWorld.worldID || prepared.newWorld.mode != session.Mode || oldWorld.mode != session.Mode {
-			return canonicalProblem(http.StatusUnprocessableEntity, "WorldState identity or scene mode does not match the session")
+		if prepared.newWorld.worldID != oldWorld.worldID || oldWorld.mode != session.Mode {
+			return canonicalProblem(http.StatusUnprocessableEntity, "WorldState identity or stored scene mode does not match the session")
 		}
 		oldRuleset, err := canonicalJSON(oldWorld.root["ruleset"])
 		if err != nil {
@@ -644,8 +709,47 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 		if computed := canonicalSHA256(prepared.snapshotCanonical); computed != prepared.request.StateHash {
 			return canonicalProblem(http.StatusUnprocessableEntity, "stateHash does not match canonical snapshot bytes")
 		}
+		if profile.serverVerified && (len(profile.actorCreates) > 0 || len(profile.actorRemovals) > 0) {
+			for _, created := range profile.actorCreates {
+				if err = tx.Exec(`
+					INSERT INTO game_session_actors (
+						id, session_id, ruleset_release_id, rules_artifact_hash,
+						owner_user_id, controller_user_id, actor_kind, lifecycle_status,
+						build_snapshot, build_canonical_bytes, build_hash,
+						state_projection, state_hash, projection_schema_version, projection_seq
+					) VALUES (?, ?, ?, ?, ?, ?, 'summoned_actor', 'active',
+						?::jsonb, ?, ?, ?::jsonb, ?, ?, ?)
+				`, created.ActorID, sessionID, session.RulesetReleaseID, session.RulesArtifactHash,
+					created.OwnerUserID, created.ControllerUserID,
+					string(created.Projection), created.Projection, canonicalSHA256(created.Projection),
+					string(created.Projection), canonicalSHA256(created.Projection),
+					prepared.request.SnapshotSchemaVersion, session.SnapshotSeq+1).Error; err != nil {
+					return normalizeCanonicalDatabaseError(err)
+				}
+			}
+			for _, removedID := range profile.actorRemovals {
+				result := tx.Exec(`
+					UPDATE game_session_actors
+					SET lifecycle_status = 'removed', updated_at = ?
+					WHERE session_id = ? AND id = ? AND actor_kind = 'summoned_actor'
+						AND lifecycle_status = 'active'
+				`, time.Now().UTC(), sessionID, removedID)
+				if result.Error != nil {
+					return normalizeCanonicalDatabaseError(result.Error)
+				}
+				if result.RowsAffected != 1 {
+					return canonicalProblem(http.StatusConflict, "summoned actor lifecycle changed concurrently")
+				}
+			}
+			actors, err = loadCanonicalActors(tx, sessionID, true)
+			if err != nil {
+				return err
+			}
+		}
 
-		projectionPlan, err := prepareCanonicalActorProjections(prepared, oldWorld, actors, members, userID)
+		projectionPlan, err := prepareCanonicalActorProjections(
+			prepared, oldWorld, actors, members, userID, profile.serverVerified,
+		)
 		if err != nil {
 			return err
 		}
@@ -664,8 +768,14 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 		for index, targetID := range prepared.request.TargetActorIDs {
 			eventTargetIDs[index] = targetID.String()
 		}
+		eventType := canonicalTransportEventType
+		commandType := canonicalTransportCommandType
+		if profile.serverVerified {
+			eventType = "canonical_rules_command_committed"
+			commandType = "rules.command.v1"
+		}
 		eventBody := map[string]any{
-			"type":              canonicalTransportEventType,
+			"type":              eventType,
 			"sessionId":         sessionID.String(),
 			"commandId":         prepared.request.CommandID.String(),
 			"semanticCommandId": prepared.request.SemanticCommandID,
@@ -681,8 +791,8 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 			"stateHashBefore":   session.StateHash,
 			"stateHashAfter":    prepared.request.StateHash,
 			"metadata":          prepared.eventMetadata,
-			"semanticAuthority": canonicalTransportAuthority,
-			"schemaValidation":  canonicalTransportSchemaValidation,
+			"semanticAuthority": profile.authority(),
+			"schemaValidation":  profile.schemaValidation(),
 			"occurredAt":        now.Format(time.RFC3339Nano),
 		}
 		eventCanonical, err := canonicalJSON(eventBody)
@@ -692,9 +802,9 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 		eventHash := canonicalSHA256(eventCanonical)
 
 		executionInput := map[string]any{
-			"transportOnly":      true,
-			"semanticAuthority":  canonicalTransportAuthority,
-			"schemaValidation":   canonicalTransportSchemaValidation,
+			"transportOnly":      !profile.serverVerified,
+			"semanticAuthority":  profile.authority(),
+			"schemaValidation":   profile.schemaValidation(),
 			"transportCommandId": prepared.request.CommandID.String(),
 			"semanticCommandId":  prepared.request.SemanticCommandID,
 			"rulesetReleaseId":   session.RulesetReleaseID.String(),
@@ -704,6 +814,16 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 			"baseSnapshotSeq":    session.SnapshotSeq,
 			"baseStateHash":      session.StateHash,
 			"stateHash":          prepared.request.StateHash,
+		}
+		if profile.serverVerified {
+			executionInput["engineVersion"] = profile.engineVersion
+			executionInput["ruleEvents"] = prepared.eventMetadata
+			semanticCommand, _, semanticErr := canonicalizeRawJSON(profile.semanticCommand)
+			if semanticErr != nil {
+				return canonicalProblem(http.StatusInternalServerError, "verified semantic command is not canonical JSON")
+			}
+			executionInput["semanticCommand"] = semanticCommand
+			executionInput["semanticCommandHash"] = profile.semanticCommandHash
 		}
 		executionCanonical, err := canonicalJSON(executionInput)
 		if err != nil {
@@ -724,7 +844,7 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 			)
 		`, uuid.New(), sessionID, prepared.request.CommandID, prepared.request.SemanticCommandID, session.RulesetReleaseID,
 			session.RulesArtifactHash, prepared.request.SourceActorID, userID,
-			canonicalTransportCommandType, session.Revision, session.SnapshotSeq,
+			commandType, session.Revision, session.SnapshotSeq,
 			session.StateHash, session.SerializerVersion, string(prepared.requestCanonical),
 			prepared.requestCanonical, prepared.requestHash, string(executionCanonical),
 			executionCanonical, canonicalSHA256(executionCanonical), now, now, now).Error; err != nil {
@@ -758,7 +878,7 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 		`, eventID, sessionID, eventSeq, prepared.request.CommandID,
 			canonicalTransportFencingToken, session.RulesetReleaseID,
 			session.RulesArtifactHash, prepared.request.SourceActorID,
-			string(targetIDsCanonical), canonicalTransportEventType,
+			string(targetIDsCanonical), eventType,
 			session.SerializerVersion, prepared.newWorld.logicalClock,
 			string(eventCanonical), eventCanonical, eventHash,
 			session.StateHash, prepared.request.StateHash, now, now).Error; err != nil {
@@ -802,12 +922,12 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 			UPDATE game_sessions
 			SET current_snapshot = ?::jsonb, snapshot_canonical_bytes = ?,
 				snapshot_schema_version = ?, serializer_version = ?, snapshot_seq = ?,
-				revision = ?, state_hash = ?, updated_at = ?
+				revision = ?, state_hash = ?, mode = ?, updated_at = ?
 			WHERE id = ? AND revision = ? AND snapshot_seq = ? AND state_hash = ?
 		`, string(prepared.snapshotCanonical), prepared.snapshotCanonical,
 			prepared.request.SnapshotSchemaVersion, session.SerializerVersion,
 			newSnapshotSeq, prepared.newWorld.revision, prepared.request.StateHash,
-			now, sessionID, session.Revision, session.SnapshotSeq, session.StateHash)
+			prepared.newWorld.mode, now, sessionID, session.Revision, session.SnapshotSeq, session.StateHash)
 		if update.Error != nil {
 			return normalizeCanonicalDatabaseError(update.Error)
 		}
@@ -828,9 +948,14 @@ func (controller *CanonicalSessionController) ApplyTransition(c *gin.Context) {
 			Revision:          prepared.newWorld.revision, SnapshotSeq: newSnapshotSeq,
 			StateHash: prepared.request.StateHash, EventSeq: eventSeq,
 			EventHash: eventHash, ActorProjectionHashes: projectionHashes,
-			Decision: decisionResult, SemanticAuthority: canonicalTransportAuthority,
-			SchemaValidation: canonicalTransportSchemaValidation,
+			Decision: decisionResult, SemanticAuthority: profile.authority(),
+			SchemaValidation: profile.schemaValidation(),
 			Idempotent:       true,
+		}
+		if profile.serverVerified {
+			response.EngineVersion = profile.engineVersion
+			response.Events = append(json.RawMessage(nil), profile.events...)
+			response.Snapshot = append(json.RawMessage(nil), prepared.snapshotCanonical...)
 		}
 		resultValue, err := transitionResponseValue(response)
 		if err != nil {
@@ -1087,17 +1212,25 @@ func canonicalEventPayloadMatchesHead(value any, session canonicalSessionRow, ev
 	eventSeq, eventSeqOK := canonicalJSONInteger(payload["eventSeq"])
 	snapshotSeq, snapshotSeqOK := canonicalJSONInteger(payload["snapshotSeq"])
 	revisionAfter, revisionAfterOK := canonicalJSONInteger(payload["revisionAfter"])
+	eventType := canonicalTransportEventType
+	authority := canonicalTransportAuthority
+	schemaValidation := canonicalTransportSchemaValidation
+	if session.AuthorityMode == "server" {
+		eventType = "canonical_rules_command_committed"
+		authority = rulesWorkerAuthority
+		schemaValidation = rulesWorkerSchemaValidation
+	}
 	return eventSeqOK && snapshotSeqOK && revisionAfterOK &&
 		eventSeq == event.Seq && snapshotSeq == session.SnapshotSeq && revisionAfter == session.Revision &&
-		payload["type"] == canonicalTransportEventType && payload["sessionId"] == session.ID.String() &&
+		payload["type"] == eventType && payload["sessionId"] == session.ID.String() &&
 		payload["commandId"] == event.CommandID.String() &&
 		payload["semanticCommandId"] == event.SemanticCommandID &&
 		payload["rulesetReleaseId"] == session.RulesetReleaseID.String() &&
 		payload["rulesArtifactHash"] == session.RulesArtifactHash &&
 		payload["serializerVersion"] == session.SerializerVersion &&
 		payload["stateHashBefore"] == event.StateHashBefore && payload["stateHashAfter"] == event.StateHashAfter &&
-		payload["semanticAuthority"] == canonicalTransportAuthority &&
-		payload["schemaValidation"] == canonicalTransportSchemaValidation
+		payload["semanticAuthority"] == authority &&
+		payload["schemaValidation"] == schemaValidation
 }
 
 func inferCanonicalActorBindings(actors []canonicalSessionActorRow, world canonicalWorldView) ([]canonicalActorBinding, error) {
@@ -1184,6 +1317,7 @@ func prepareCanonicalActorProjections(
 	actors []canonicalSessionActorRow,
 	members map[uuid.UUID]canonicalMemberAccess,
 	userID uuid.UUID,
+	serverVerified bool,
 ) ([]canonicalProjectionUpdate, error) {
 	if len(prepared.request.ActorBindings) != len(actors) || len(prepared.newWorld.actors) != len(actors) {
 		return nil, canonicalProblem(http.StatusUnprocessableEntity, "actorBindings must cover the complete active WorldState actor set")
@@ -1223,7 +1357,7 @@ func prepareCanonicalActorProjections(
 		}
 		oldWorldProjection, oldExists := oldWorld.actors[binding.WorldActorID]
 		newWorldProjection, newExists := prepared.newWorld.actors[binding.WorldActorID]
-		if !oldExists || !newExists {
+		if !newExists || (!oldExists && (!serverVerified || row.ActorKind != "summoned_actor")) {
 			return nil, canonicalProblem(http.StatusUnprocessableEntity, "actorBindings must preserve the complete WorldState actor identity set")
 		}
 		newObject, ok := newWorldProjection.(map[string]any)
@@ -1236,21 +1370,24 @@ func prepareCanonicalActorProjections(
 		if newObject["kind"] != expectedKind {
 			return nil, canonicalProblem(http.StatusUnprocessableEntity, "canonical transition cannot change actor kind")
 		}
-		oldWorldCanonical, err := canonicalJSON(oldWorldProjection)
-		if err != nil || !bytes.Equal(oldWorldCanonical, oldProjectionCanonical) {
-			return nil, canonicalProblem(http.StatusInternalServerError, "stored actor projection does not match the base WorldState")
+		oldWorldCanonical := []byte(nil)
+		if oldExists {
+			oldWorldCanonical, err = canonicalJSON(oldWorldProjection)
+			if err != nil || !bytes.Equal(oldWorldCanonical, oldProjectionCanonical) {
+				return nil, canonicalProblem(http.StatusInternalServerError, "stored actor projection does not match the base WorldState")
+			}
 		}
 		newCanonical, err := canonicalJSON(newWorldProjection)
 		if err != nil {
 			return nil, canonicalProblem(http.StatusUnprocessableEntity, "WorldState actor projection cannot be canonicalized")
 		}
-		changed := !bytes.Equal(oldWorldCanonical, newCanonical)
+		changed := !oldExists || !bytes.Equal(oldWorldCanonical, newCanonical)
 		if changed && binding.ActorID != prepared.request.SourceActorID {
 			if _, declaredTarget := targets[binding.ActorID]; !declaredTarget {
 				return nil, canonicalProblem(http.StatusForbidden, "transition changes an actor that is neither source nor a declared target")
 			}
 		}
-		if changed && !canonicalMemberMayMutateActor(members[userID], userID, row) {
+		if changed && !serverVerified && !canonicalMemberMayMutateActor(members[userID], userID, row) {
 			return nil, canonicalProblem(http.StatusForbidden, "client semantics cannot mutate an actor controlled by another member")
 		}
 		seenWorld[binding.WorldActorID] = struct{}{}
@@ -1270,6 +1407,7 @@ func loadIdempotentCanonicalResult(
 	sessionID uuid.UUID,
 	userID uuid.UUID,
 	prepared canonicalPreparedRequest,
+	profile canonicalExecutionProfile,
 	response *canonicalTransitionResponse,
 ) (bool, error) {
 	var command struct {
@@ -1310,8 +1448,8 @@ func loadIdempotentCanonicalResult(
 		response.RulesArtifactHash != prepared.request.RulesArtifactHash ||
 		response.SerializerVersion != prepared.request.SerializerVersion ||
 		response.StateHash != prepared.request.StateHash ||
-		response.SemanticAuthority != canonicalTransportAuthority ||
-		response.SchemaValidation != canonicalTransportSchemaValidation {
+		response.SemanticAuthority != profile.authority() ||
+		response.SchemaValidation != profile.schemaValidation() {
 		return false, canonicalProblem(http.StatusInternalServerError, "stored canonical command result envelope is inconsistent")
 	}
 	return true, nil
@@ -1618,5 +1756,6 @@ func writeCanonicalError(c *gin.Context, err error) {
 		c.JSON(problem.status, gin.H{"error": problem.message})
 		return
 	}
+	log.Printf("canonical session operation failed: %v", err)
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "canonical session transition failed"})
 }

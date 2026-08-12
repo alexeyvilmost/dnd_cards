@@ -231,10 +231,13 @@ func TestCanonicalSessionRoutesUseStrictAuthAndBoundedTransition(t *testing.T) {
 	text := string(source)
 	for label, pattern := range map[string]string{
 		"transport namespace": `/transport/canonical-sessions`,
-		"strict auth":         `routes\.Use\(StrictAuthMiddleware\(authService\)\)`,
+		"rules namespace":     `/rules/canonical-sessions`,
+		"transport auth":      `transport\.Use\(StrictAuthMiddleware\(authService\)\)`,
+		"rules auth":          `rules\.Use\(StrictAuthMiddleware\(authService\)\)`,
 		"bounded JSON":        `JSONBodyLimitMiddleware\(maxCanonicalTransitionBodyBytes\)`,
 		"bounded stream":      `RequestBodyLimitMiddleware\(maxCanonicalTransitionBodyBytes\)`,
-		"transition handler":  `routes\.POST\(`,
+		"transition handler":  `transport\.POST\(`,
+		"command handler":     `controller\.ApplyRulesCommand`,
 	} {
 		if !regexp.MustCompile(pattern).MatchString(text) {
 			t.Errorf("canonical route is missing %s", label)
@@ -251,8 +254,21 @@ func TestCanonicalSessionRoutesUseStrictAuthAndBoundedTransition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !regexp.MustCompile(`(?s)if canonicalTransportEnabled\(\) \{\s*log\.Printf.*registerCanonicalSessionRoutes`).Match(mainSource) {
+	if !regexp.MustCompile(`(?s)if canonicalTransportEnabled\(\) \|\| canonicalServerRulesEnabled\(\).*registerCanonicalSessionRoutes`).Match(mainSource) {
 		t.Fatal("canonical routes are not guarded by the default-off feature flag")
+	}
+}
+
+func TestCanonicalServerRulesFeatureFlagIsStrictOptIn(t *testing.T) {
+	for _, disabled := range []string{"", "0", "true", "yes", " 1 "} {
+		t.Setenv(canonicalServerRulesFeatureFlag, disabled)
+		if canonicalServerRulesEnabled() {
+			t.Fatalf("feature flag value %q unexpectedly enabled server rules", disabled)
+		}
+	}
+	t.Setenv(canonicalServerRulesFeatureFlag, "1")
+	if !canonicalServerRulesEnabled() {
+		t.Fatal("feature flag value 1 did not enable server rules")
 	}
 }
 

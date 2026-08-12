@@ -89,6 +89,23 @@ func openCharacterV3AccessFixture(t *testing.T) characterV3AccessFixture {
 	); err != nil {
 		t.Fatal(err)
 	}
+	// Character mutations now consult the canonical writer lock. These minimal
+	// tables are the explicit boundary needed by this CharacterV3 fixture; the
+	// canonical transport itself has its own full migration fixtures.
+	if err = db.Exec(`
+		CREATE TABLE game_sessions (
+			id UUID PRIMARY KEY,
+			status TEXT NOT NULL,
+			authority_mode TEXT NOT NULL
+		);
+		CREATE TABLE game_session_actors (
+			session_id UUID NOT NULL,
+			character_id UUID,
+			lifecycle_status TEXT NOT NULL
+		);
+	`).Error; err != nil {
+		t.Fatal(err)
+	}
 
 	fixture := characterV3AccessFixture{db: db}
 	fixture.owner = User{

@@ -429,6 +429,194 @@ func runtimeCommandUpdates(character CharacterV3, patch CharacterRuntimeCommandP
 	return updates, nil
 }
 
+func activeServerRulesSessionForCharacters(tx *gorm.DB, participantIDs []uuid.UUID) (uuid.UUID, error) {
+	var rows []struct {
+		SessionID uuid.UUID `gorm:"column:session_id"`
+	}
+	if err := tx.Raw(`
+		SELECT DISTINCT actor.session_id
+		FROM game_session_actors actor
+		JOIN game_sessions session ON session.id = actor.session_id
+		WHERE actor.character_id IN ? AND actor.lifecycle_status = 'active'
+			AND session.status = 'active' AND session.authority_mode = 'server'
+	`, participantIDs).Scan(&rows).Error; err != nil {
+		return uuid.Nil, err
+	}
+	if len(rows) == 0 {
+		return uuid.Nil, nil
+	}
+	if len(rows) != 1 {
+		return uuid.Nil, &characterRuntimeCommandError{
+			Status: http.StatusConflict, Code: "canonical_session_conflict",
+			Message: "runtime participants belong to different active canonical sessions",
+		}
+	}
+	var activeCharacterIDs []string
+	if err := tx.Raw(`
+		SELECT character_id::text FROM game_session_actors
+		WHERE session_id = ? AND lifecycle_status = 'active' AND character_id IS NOT NULL
+		ORDER BY character_id::text
+	`, rows[0].SessionID).Scan(&activeCharacterIDs).Error; err != nil {
+		return uuid.Nil, err
+	}
+	expectedCharacterIDs := make([]string, len(participantIDs))
+	for index, participantID := range participantIDs {
+		expectedCharacterIDs[index] = participantID.String()
+	}
+	sort.Strings(expectedCharacterIDs)
+	if !sameStringSlice(activeCharacterIDs, expectedCharacterIDs) {
+		return uuid.Nil, &characterRuntimeCommandError{
+			Status: http.StatusConflict, Code: "canonical_session_conflict",
+			Message: "a runtime command must project the exact canonical session participant set",
+		}
+	}
+	return rows[0].SessionID, nil
+}
+
+func canonicalProjectionWorld(turnState *JSONMap) (map[string]any, map[string]any, error) {
+	if turnState == nil {
+		return nil, nil, invalidRuntimeCommand("canonical projection misses turn_state")
+	}
+	envelope, ok := (*turnState)["canonical_pending_combat_v1"].(map[string]any)
+	if !ok {
+		return nil, nil, invalidRuntimeCommand("canonical projection misses its combat envelope")
+	}
+	world, ok := envelope["world"].(map[string]any)
+	if !ok {
+		return nil, nil, invalidRuntimeCommand("canonical projection contains an invalid WorldState")
+	}
+	bindings, _ := envelope["resourceBindingsByActor"].(map[string]any)
+	return world, bindings, nil
+}
+
+func canonicalRuntimeProjectionValue(value any) ([]byte, error) {
+	return canonicalJSON(jsonCompatible(value))
+}
+
+func validateServerRulesProjection(
+	tx *gorm.DB,
+	sessionID uuid.UUID,
+	userID uuid.UUID,
+	commandID uuid.UUID,
+	request CharacterRuntimeCommandRequest,
+	characters map[string]CharacterV3,
+) error {
+	var session struct {
+		Snapshot json.RawMessage `gorm:"column:current_snapshot"`
+	}
+	result := tx.Raw(`
+		SELECT current_snapshot FROM game_sessions
+		WHERE id = ? AND authority_mode = 'server' AND status = 'active'
+	`, sessionID).Scan(&session)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return invalidRuntimeCommand("active canonical session disappeared during projection")
+	}
+	var receipt int64
+	if err := tx.Raw(`
+		SELECT count(*) FROM game_commands
+		WHERE session_id = ? AND command_id = ? AND controller_user_id = ?
+			AND status = 'committed' AND command_type = 'rules.command.v1'
+	`, sessionID, commandID, userID).Scan(&receipt).Error; err != nil {
+		return err
+	}
+	if receipt != 1 {
+		return &characterRuntimeCommandError{
+			Status: http.StatusConflict, Code: "canonical_projection_unverified",
+			Message: "active canonical runtime accepts only a committed server command projection",
+		}
+	}
+	worldValue, worldCanonical, err := canonicalizeRawJSON(session.Snapshot)
+	if err != nil {
+		return err
+	}
+	world := worldValue.(map[string]any)
+	actors := world["actors"].(map[string]any)
+	for _, participant := range request.Participants {
+		projectedWorld, resourceBindings, projectionErr := canonicalProjectionWorld(participant.Patch.TurnState)
+		if projectionErr != nil {
+			return projectionErr
+		}
+		projectionCanonical, projectionErr := canonicalJSON(projectedWorld)
+		if projectionErr != nil || !bytes.Equal(projectionCanonical, worldCanonical) {
+			return invalidRuntimeCommand("character projection WorldState differs from the committed server snapshot")
+		}
+		actor, ok := actors[participant.CharacterID].(map[string]any)
+		runtime, runtimeOK := actor["runtime"].(map[string]any)
+		if !ok || !runtimeOK {
+			return invalidRuntimeCommand("committed server snapshot misses a projected character actor")
+		}
+		hp, _ := runtime["hp"].(map[string]any)
+		currentHP, hpOK := canonicalJSONInteger(hp["current"])
+		if participant.Patch.CurrentHP == nil || !hpOK || int64(*participant.Patch.CurrentHP) != currentHP {
+			return invalidRuntimeCommand("current_hp differs from the committed server snapshot")
+		}
+		bindings, _ := resourceBindings[participant.CharacterID].(map[string]any)
+		serverResources, _ := runtime["resources"].(map[string]any)
+		serverMaximums, _ := runtime["maxResources"].(map[string]any)
+		projectedResources := cloneJSONMapValue((*JSONMap)(&serverResources))
+		projectedMaximums := cloneJSONMapValue((*JSONMap)(&serverMaximums))
+		for resource := range bindings {
+			delete(projectedResources, resource)
+			delete(projectedMaximums, resource)
+		}
+		for label, values := range map[string][2]any{
+			"resources":      {participant.Patch.Resources, projectedResources},
+			"max_resources":  {participant.Patch.MaxResources, projectedMaximums},
+			"active_effects": {participant.Patch.ActiveEffects, runtime["activeEffects"]},
+		} {
+			left, leftErr := canonicalRuntimeProjectionValue(values[0])
+			right, rightErr := canonicalRuntimeProjectionValue(values[1])
+			if leftErr != nil || rightErr != nil || !bytes.Equal(left, right) {
+				return invalidRuntimeCommand(label + " differs from the committed server snapshot")
+			}
+		}
+		if participant.Patch.InventoryItems != nil {
+			expectedInventory := make([]map[string]any, 0)
+			if inventory, inventoryOK := runtime["inventory"].([]any); inventoryOK {
+				for _, rawRow := range inventory {
+					row, rowOK := rawRow.(map[string]any)
+					if !rowOK {
+						return invalidRuntimeCommand("committed server inventory is invalid")
+					}
+					projected := map[string]any{"card_id": row["cardId"], "qty": row["qty"]}
+					if containerID, exists := row["containerId"]; exists {
+						projected["container_id"] = containerID
+					}
+					expectedInventory = append(expectedInventory, projected)
+				}
+			}
+			left, _ := canonicalRuntimeProjectionValue(participant.Patch.InventoryItems)
+			right, _ := canonicalRuntimeProjectionValue(expectedInventory)
+			if !bytes.Equal(left, right) {
+				return invalidRuntimeCommand("inventory_items differs from the committed server snapshot")
+			}
+		}
+		if participant.Patch.Currency != nil {
+			expected := cloneJSONMapValue(characters[participant.CharacterID].Currency)
+			for resource, rawBinding := range bindings {
+				binding, _ := rawBinding.(map[string]any)
+				currency, _ := binding["currency"].(string)
+				remaining, remainingOK := canonicalJSONInteger(serverResources[resource])
+				maximum, maximumOK := canonicalJSONInteger(serverMaximums[resource])
+				current, currentOK := jsonNumberAsInt64(expected[currency])
+				if currency == "" || !remainingOK || !maximumOK || !currentOK || maximum < remaining {
+					return invalidRuntimeCommand("canonical currency binding is invalid")
+				}
+				expected[currency] = current - (maximum - remaining)
+			}
+			left, _ := canonicalRuntimeProjectionValue(participant.Patch.Currency)
+			right, _ := canonicalRuntimeProjectionValue(&expected)
+			if !bytes.Equal(left, right) {
+				return invalidRuntimeCommand("currency differs from the committed server snapshot projection")
+			}
+		}
+	}
+	return nil
+}
+
 func jsonNumberAsInt64(value any) (int64, bool) {
 	if !boundedJSONInteger(value, 0, maxEncounterRuntimeValue) {
 		return 0, false
@@ -555,6 +743,17 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 		byID := make(map[string]CharacterV3, len(characters))
 		for _, character := range characters {
 			byID[character.ID.String()] = character
+		}
+		canonicalSessionID, err := activeServerRulesSessionForCharacters(tx, participantIDs)
+		if err != nil {
+			return err
+		}
+		if canonicalSessionID != uuid.Nil {
+			if err = validateServerRulesProjection(
+				tx, canonicalSessionID, userID, commandID, request, byID,
+			); err != nil {
+				return err
+			}
 		}
 		for _, participant := range request.Participants {
 			character := byID[participant.CharacterID]

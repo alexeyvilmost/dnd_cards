@@ -5,7 +5,7 @@ import { loadAssembly } from './assemble';
 import { characterToDraft } from './forgeHelpers';
 import { buildCharacterContext, forgeToRuntimeState } from './runtime';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
-import { buildSheetCanonicalRuntime } from './sheetCanonicalWorld';
+import { buildSheetCanonicalRuntime, canonicalActorCards } from './sheetCanonicalWorld';
 import type { SheetCombatParticipantSeed } from './sheetCombatSession';
 import { isCharacterReadOnly, type ForgeCharacter } from './types';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
@@ -73,7 +73,7 @@ export async function loadSheetCombatParticipant(input: {
       runtime,
       characterContext,
       passives,
-      cards: [...input.cards.values()],
+      cards: canonicalActorCards(runtime, input.cards),
       ac: ruleState.armorClass,
     }),
   };

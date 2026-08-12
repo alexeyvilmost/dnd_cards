@@ -9,6 +9,7 @@ import { collectSheetActions, type SheetAction } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
 import {
   buildSheetCanonicalRuntime,
+  canonicalActorCards,
   projectSheetCanonicalPersistence,
   readSheetCanonicalWorld,
   writeSheetCanonicalWorld,
@@ -247,6 +248,21 @@ function wizardRuleState(
 }
 
 describe('real sheet canonical world materialization', () => {
+  it('projects only actor-owned equipment and inventory Cards into WorldState', () => {
+    const equipped = { id: 'card:equipped' } as Card;
+    const carried = { id: 'card:carried' } as Card;
+    const unrelated = { id: 'card:global' } as Card;
+    const cards = new Map([equipped, carried, unrelated].map((card) => [card.id, card]));
+
+    expect(canonicalActorCards({
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: {}, maxResources: {},
+      equipment: { main_hand: equipped.id },
+      inventory: [{ cardId: carried.id, qty: 1 }],
+      activeEffects: [],
+    }, cards).map((card) => card.id)).toEqual([carried.id, equipped.id]);
+  });
+
   it('keeps bound ammunition in canonical activation.cost and pays it as an item', () => {
     const entity = patchAction('action_basic_weapon');
     const bow = withDeclaredTestWeaponProfile({

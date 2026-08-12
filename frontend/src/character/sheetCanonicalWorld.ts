@@ -77,6 +77,25 @@ export interface SheetCanonicalRuntime {
   actionFor(sheetAction: SheetAction): RuleActionDefinition;
 }
 
+/**
+ * A canonical actor carries only immutable Card data it can actually resolve
+ * from equipment or inventory. The global catalog belongs to the rules
+ * release, not to every WorldState actor snapshot.
+ */
+export function canonicalActorCards(
+  runtime: RuntimeState,
+  cards: ReadonlyMap<string, Card>,
+): Card[] {
+  const ids = new Set([
+    ...Object.values(runtime.equipment).filter((id): id is string => typeof id === 'string'),
+    ...runtime.inventory.map((row) => row.cardId),
+  ]);
+  return [...ids]
+    .sort()
+    .map((id) => cards.get(id))
+    .filter((card): card is Card => card != null);
+}
+
 export class SheetCanonicalWorldError extends Error {
   constructor(message: string) {
     super(message);

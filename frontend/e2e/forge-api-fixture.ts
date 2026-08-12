@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
 import type { SnapshotCatalogs } from '../src/canon/prodSnapshotL1Fixtures';
+import { canonicalSha256 } from '../src/rules-core/determinism';
+import type { GameCommand, WorldState } from '../src/rules-core/domain';
+import { executeRulesWorkerRequest } from './generated/rules-worker-execute.mjs';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -248,9 +251,18 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
     request: string;
     response: JsonRecord;
   }>();
+  const canonicalSessions = new Map<string, {
+    artifactHash: string;
+    world: WorldState;
+    snapshotSeq: number;
+  }>();
+  const canonicalSessionId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
   let loseNextRuntimeCommandResponse = false;
   await page.addInitScript(() => {
-    localStorage.setItem('auth_token', 'playwright-character-v3-jwt');
+    // authSession deliberately rejects opaque legacy tokens before any API
+    // request. Keep the fixture token JWT-shaped so the real auth bootstrap is
+    // exercised and /api/auth/profile remains the source of the user record.
+    localStorage.setItem('auth_token', 'playwright.header.signature');
   });
   await page.route('**/api/**', async (route) => {
     const request = route.request();
@@ -271,6 +283,97 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
         updated_at: '2026-08-05T00:00:00Z',
       });
       return;
+    }
+
+    if (segments[1] === 'rules' && segments[2] === 'canonical-sessions') {
+      const sessionId = segments[3];
+      if (request.method() === 'POST' && !sessionId) {
+        const payload = request.postDataJSON() as {
+          rulesArtifactHash: string;
+          world: WorldState;
+        };
+        const existing = canonicalSessions.get(canonicalSessionId);
+        if (!existing) {
+          canonicalSessions.set(canonicalSessionId, {
+            artifactHash: payload.rulesArtifactHash,
+            world: cloneJson(payload.world),
+            snapshotSeq: 0,
+          });
+        }
+        const session = canonicalSessions.get(canonicalSessionId)!;
+        await json(route, 200, {
+          sessionId: canonicalSessionId,
+          rulesetReleaseId: '54abf005-a210-4ce7-8511-6f03eea02ed7',
+          rulesArtifactHash: session.artifactHash,
+          revision: session.world.revision,
+          snapshotSeq: session.snapshotSeq,
+          stateHash: await canonicalSha256(session.world),
+          snapshotSchemaVersion: 5,
+          serializerVersion: 'rules-core-canonical-json-v1',
+          snapshot: cloneJson(session.world),
+          semanticAuthority: 'server_rules_core_verified',
+          schemaValidation: 'rules-core-world-v5-verified',
+        });
+        return;
+      }
+      const session = sessionId ? canonicalSessions.get(sessionId) : undefined;
+      if (!session) {
+        await json(route, 404, { error: 'unknown isolated canonical session' });
+        return;
+      }
+      if (request.method() === 'POST' && segments[4] === 'commands') {
+        const payload = request.postDataJSON() as { command: GameCommand };
+        const baseStateHash = await canonicalSha256(session.world);
+        const result = await executeRulesWorkerRequest({
+          protocolVersion: 1,
+          rulesArtifactHash: session.artifactHash,
+          baseStateHash,
+          world: cloneJson(session.world),
+          command: cloneJson(payload.command),
+          rngTape: Array.from({ length: 1024 }, () => 0xf0000000),
+        });
+        if (result.status === 'rejected') {
+          await json(route, 422, { code: result.code, error: result.message });
+          return;
+        }
+        session.world = cloneJson(result.nextState);
+        session.snapshotSeq += 1;
+        await json(route, 200, {
+          sessionId,
+          commandId: payload.command.commandId,
+          semanticCommandId: payload.command.commandId,
+          revision: session.world.revision,
+          snapshotSeq: session.snapshotSeq,
+          stateHash: result.stateHash,
+          semanticAuthority: 'server_rules_core_verified',
+          schemaValidation: 'rules-core-world-v5-verified',
+          engineVersion: 'rules-core-worker-v1',
+          events: result.events,
+          snapshot: cloneJson(session.world),
+        });
+        return;
+      }
+      if (request.method() === 'POST' && segments[4] === 'close') {
+        canonicalSessions.delete(sessionId!);
+        await json(route, 200, { sessionId, status: 'closed' });
+        return;
+      }
+      if (request.method() === 'GET' && segments.length === 4) {
+        await json(route, 200, {
+          sessionId,
+          rulesetReleaseId: '54abf005-a210-4ce7-8511-6f03eea02ed7',
+          rulesArtifactHash: session.artifactHash,
+          revision: session.world.revision,
+          snapshotSeq: session.snapshotSeq,
+          stateHash: await canonicalSha256(session.world),
+          snapshotSchemaVersion: 5,
+          serializerVersion: 'rules-core-canonical-json-v1',
+          snapshot: cloneJson(session.world),
+          semanticAuthority: 'server_rules_core_verified',
+          schemaValidation: 'rules-core-world-v5-verified',
+        });
+        return;
+      }
     }
 
     if (segments[1] === 'characters-v3') {
@@ -359,7 +462,7 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
           }),
         };
         runtimeCommandLedger.set(commandId, { request: bytes, response });
-        if (loseNextRuntimeCommandResponse) {
+        if (loseNextRuntimeCommandResponse && eventRows.length > 0) {
           loseNextRuntimeCommandResponse = false;
           await route.abort('failed');
           return;

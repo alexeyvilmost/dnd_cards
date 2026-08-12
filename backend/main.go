@@ -264,8 +264,13 @@ func main() {
 		// требует строгий JWT; контроллер разрешает authenticated read старых
 		// public-листов, но оставляет их неизменяемыми.
 		registerCharacterV3Routes(api, authService, characterV3Controller)
-		if canonicalTransportEnabled() {
-			log.Printf("WARNING: %s=1 exposes the partial, client-semantics-unverified canonical transport", canonicalTransportFeatureFlag)
+		if canonicalTransportEnabled() || canonicalServerRulesEnabled() {
+			if canonicalTransportEnabled() {
+				log.Printf("WARNING: %s=1 exposes the partial, client-semantics-unverified canonical transport", canonicalTransportFeatureFlag)
+			}
+			if canonicalServerRulesEnabled() {
+				log.Printf("%s=1 enables server-authoritative canonical rules commands", canonicalServerRulesFeatureFlag)
+			}
 			registerCanonicalSessionRoutes(api, authService, canonicalSessionController)
 		}
 

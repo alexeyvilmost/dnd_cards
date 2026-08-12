@@ -259,6 +259,15 @@ export function hpNeedsSync(character: ForgeCharacter, computedMaxHp: number): b
   return max !== computedMaxHp || cur > computedMaxHp;
 }
 
+/**
+ * A mirrored two-sheet runtime is an immutable CAS snapshot until its
+ * authoritative command commits or the shared session is closed. Automatic
+ * mount-time initialization must not advance one participant independently.
+ */
+export function hasPendingSheetCombatSession(character: ForgeCharacter): boolean {
+  return character.turn_state?.canonical_pending_combat_v1 != null;
+}
+
 export function buildResourceRuntimePatch(
   character: ForgeCharacter,
   ctx: CharacterContext,

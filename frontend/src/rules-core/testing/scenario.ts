@@ -257,6 +257,8 @@ export interface ScenarioFixtureProvider {
 export interface ScenarioRun {
   initialState: WorldState;
   finalState: WorldState;
+  /** Exact JSON-compatible commands, including expected rejections, for worker differential replay. */
+  commands: GameCommand[];
   events: UncommittedRuleEvent[];
   assertionIds: string[];
   observedTrace: RequiredScenarioTrace[];
@@ -1024,17 +1026,20 @@ export function runScenario(
   });
   let session = new InMemoryRulesSession(initialState, fixtures.catalog, resolvedEnv);
   const events: UncommittedRuleEvent[] = [];
+  const commands: GameCommand[] = [];
   const checkpoints: string[] = [];
   const assertionIds: string[] = [];
   const rejections: ScenarioRun['rejections'] = [];
 
   if (spec.autoStartEncounter !== false) {
     const startActor = spec.initiative[0];
-    const startResult = session.dispatch({
+    const startCommand: GameCommand = {
       ...baseCommand(spec, startActor, `${spec.id}:start`, 0),
       type: 'StartEncounter',
       initiative: spec.initiative,
-    });
+    };
+    commands.push(startCommand);
+    const startResult = session.dispatch(startCommand);
     if (startResult.status !== 'accepted') throw new Error(`${spec.id}: StartEncounter rejected: ${startResult.code}`);
     events.push(...startResult.events);
   }
@@ -1049,7 +1054,9 @@ export function runScenario(
       continue;
     }
     const before = canonicalStringify(session.getState());
-    const result = session.dispatch(commandForStep(spec, step, index, session.getState()));
+    const command = commandForStep(spec, step, index, session.getState());
+    commands.push(command);
+    const result = session.dispatch(command);
     if (result.status !== 'accepted') {
       if (step.expectedResult?.status !== 'rejected') {
         throw new Error(`${spec.id}: step ${index + 1} (${step.do}) rejected: ${result.code} — ${result.message}`);
@@ -1114,6 +1121,7 @@ export function runScenario(
   return {
     initialState,
     finalState,
+    commands,
     events,
     assertionIds,
     observedTrace: trace,
