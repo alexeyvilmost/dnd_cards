@@ -192,9 +192,7 @@ function artifactFor(inputCatalogs = catalogs(), completed = new Date('2026-08-0
     outputBytes: 10,
     reportHash: gate.tests ? `sha256:${'b'.repeat(64)}` : null,
     testSummary: gate.tests
-      ? (gate.id === 'frontend_mvp'
-          ? { total: 5, passed: 2, failed: 0, skipped: 0, todo: 3 }
-          : { total: 2, passed: 2, failed: 0, skipped: 0, todo: 0 })
+      ? { total: 2, passed: 2, failed: 0, skipped: 0, todo: 0 }
       : null,
     ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
   }));
@@ -325,7 +323,7 @@ test('release evidence has the complete exact command contract and strict gates 
     apiBase: API_BASE, catalogs: inputCatalogs, now: new Date('2026-08-05T18:01:00Z'),
   }));
   assert.equal(artifact.skippedTests, 0, 'release gates must not contain anonymous skips');
-  assert.equal(artifact.todoTests, 3, 'only the three exact post-micro-MVP TODO identities are allowed');
+  assert.equal(artifact.todoTests, 0, 'release gates must not contain TODO tests');
 
   const hiddenSkip = clone(artifact);
   hiddenSkip.skippedTests = 1;
@@ -690,9 +688,7 @@ test('generator executes the exact mandatory gate set before writing evidence', 
         outputBytes: 1,
         reportHash: gate.tests ? `sha256:${'b'.repeat(64)}` : null,
         testSummary: gate.tests
-          ? (gate.id === 'frontend_mvp'
-            ? { total: 4, passed: 1, failed: 0, skipped: 0, todo: 3 }
-            : { total: 1, passed: 1, failed: 0, skipped: 0, todo: 0 })
+          ? { total: 1, passed: 1, failed: 0, skipped: 0, todo: 0 }
           : null,
         ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
       };

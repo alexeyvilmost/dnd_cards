@@ -69,11 +69,9 @@ export function validateMicroMvpTestCoverageSummary(summary, release = null) {
   return summary;
 }
 
-export const FRONTEND_MVP_ALLOWED_TODOS = Object.freeze([
-  'НЕреализованные payload-ы исполнителя (roadmap до MVP) set_die: подмена кубика заранее (Предсказание)',
-  'НЕреализованные payload-ы исполнителя (roadmap до MVP) grant_action во время исполнения (Хитрое действие → варианты бонусного действия)',
-  'НЕреализованные payload-ы исполнителя (roadmap до MVP) movement: применяет фактическое перемещение цели, а не только лог',
-]);
+// The former set_die, grant_action, and movement roadmap TODOs are executable
+// release tests now.  Keep the policy explicit and fail closed on every TODO.
+export const FRONTEND_MVP_ALLOWED_TODOS = Object.freeze([]);
 
 export const REQUIRED_RELEASE_GATES = Object.freeze([
   Object.freeze({
