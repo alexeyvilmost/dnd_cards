@@ -172,6 +172,39 @@ test('coverage and certification expand to every exercised DB dependency and loc
   assert.deepEqual(record.support.test_coverage, expanded.entities[record.key]);
 });
 
+test('partial dependency certification names its limited standalone scope and fails closed when erased', () => {
+  const catalogs = syntheticCatalogs();
+  const card = {
+    id: '00000000-0000-4000-8000-999999999998',
+    card_number: 'CARD-dependency-probe',
+    name: 'Partial dependency probe',
+    support: { status: 'untested' },
+    updated_at: '2026-08-05T09:00:00Z',
+  };
+  catalogs.card.push(card);
+  catalogs.class[0].starting_equipment = { required: [card.id] };
+  const evidence = testEvidenceBinding(catalogs);
+  evidence.testCoverage = expandMicroMvpCoverageSummaryForCatalogs(
+    completeTestCoverage(),
+    catalogs,
+  );
+  const plan = createMicroMvpCertificationPlanFromCatalogs(catalogs, {
+    baseUrl: evidence.apiBase,
+    evidence,
+  });
+  const record = plan.records.find((item) => item.key === 'dependency.card.CARD-dependency-probe');
+  assert.ok(record);
+  assert.equal(record.support.status, 'verified_partial');
+  assert.ok(record.support.limitations.some((limitation) => limitation.trim().length > 0));
+  assert.doesNotThrow(() => assertCertificationPlanIntegrity(plan));
+
+  record.support.limitations = [];
+  assert.throws(
+    () => assertCertificationPlanIntegrity(plan),
+    /certification limitations differ from the verified status/,
+  );
+});
+
 test('certification evidence binding rejects a missing or malformed frontend origin', () => {
   const catalogs = syntheticCatalogs();
   for (const invalid of [undefined, '', 'not-a-url', 'https://frontend.example.test/']) {

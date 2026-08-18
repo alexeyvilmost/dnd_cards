@@ -311,7 +311,11 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
         ? 'verified_mechanical'
         : 'verified_partial';
       expect(item.support.status, item.key).toBe(expectedStatus);
-      expect(item.support.limitations ?? [], item.key).toEqual([]);
+      if (expectedStatus === 'verified_mechanical') {
+        expect(item.support.limitations ?? [], item.key).toEqual([]);
+      } else {
+        expect(item.support.limitations?.filter(Boolean).length, item.key).toBeGreaterThan(0);
+      }
       expect(item.support.note, item.key).toContain('транзитивно');
       expect(item.support.certification_version, item.key).toBe('micro-mvp-l1-rules-core-v4');
     }

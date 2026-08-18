@@ -159,6 +159,10 @@ export const MICRO_MVP_LIMITATIONS = Object.freeze({
 // scope; milestone boundaries stay in MICRO_MVP_LIMITATIONS above.
 export const MICRO_MVP_ENTITY_LIMITATIONS = Object.freeze({});
 
+const MICRO_MVP_PARTIAL_DEPENDENCY_LIMITATIONS = Object.freeze([
+  'Сертифицировано только транзитивное использование этой сущности в сценариях micro-MVP 1-го уровня; её самостоятельные сценарии и контент следующих уровней в этот scope не входят.',
+]);
+
 const coreDenominator = () => Object.values(MICRO_MVP_COLLECTION_SIZES)
   .reduce((total, size) => total + size, 0);
 const expectedDenominator = () => coreDenominator() + MICRO_MVP_CONDITION_TARGETS.length;
@@ -666,6 +670,7 @@ export function prepareMicroMvpCertifications(entityGroups, {
       const entityType = indexed.type;
       const key = dependencyCoverageKey(entityType, entity);
       const hashes = certificationHashes(entity, entityType, index);
+      const mechanicallyCertified = ['action', 'effect', 'spell'].includes(entityType);
       return {
         key,
         collection: 'dependencies',
@@ -677,14 +682,12 @@ export function prepareMicroMvpCertifications(entityGroups, {
         before: stableClone(entity),
         beforeHash: sha256Canonical(entity),
         support: {
-          status: ['action', 'effect', 'spell'].includes(entityType)
-            ? 'verified_mechanical'
-            : 'verified_partial',
+          status: mechanicallyCertified ? 'verified_mechanical' : 'verified_partial',
           content_hash: hashes.contentHash,
           dependency_hash: hashes.dependencyHash,
           certification_version: MICRO_MVP_CERTIFICATION_VERSION,
           certified_at: certifiedAt,
-          limitations: [],
+          limitations: mechanicallyCertified ? [] : [...MICRO_MVP_PARTIAL_DEPENDENCY_LIMITATIONS],
           note: 'Проверено во всех micro-MVP корневых сценариях, которые транзитивно используют эту сущность.',
           ...releaseEvidenceSupport(evidence),
           ...entityCoverageSupport(evidence, key, entityType),
@@ -769,6 +772,12 @@ export function assertCertificationPlanIntegrity(plan, { requireEvidence = false
       || record.support?.certification_version !== plan.certificationVersion
       || record.support?.certified_at !== plan.certifiedAt) {
       throw new Error(`${record.key}: certification evidence differs from the plan release identity`);
+    }
+    const limitations = record.support?.limitations;
+    if (!Array.isArray(limitations)
+      || (expectedStatus === 'verified_partial' && !limitations.some(nonEmptyString))
+      || (expectedStatus === 'verified_mechanical' && limitations.length !== 0)) {
+      throw new Error(`${record.key}: certification limitations differ from the verified status`);
     }
     const expectedReleaseEvidence = releaseEvidenceSupport(plan.evidence);
     for (const [field, expected] of Object.entries(expectedReleaseEvidence)) {
