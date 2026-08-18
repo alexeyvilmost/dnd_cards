@@ -608,6 +608,13 @@ func GetAllMigrations() []Migration {
 			// Снятие защиты требует отдельной явно проверяемой policy-миграции.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "097_repair_live_mvp_content_contracts",
+			Description: "Исправить ссылки и явную экономику live-MVP механик до сертификации",
+			Up:          repairLiveMvpContentContracts,
+			// Исправленные механические контракты не откатываются к неисполняемому состоянию.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

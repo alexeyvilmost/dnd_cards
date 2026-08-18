@@ -238,7 +238,7 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'RE-dwarf-2': ['modifier', 'resistance'],
   'RE-dwarf-3': ['modifier'],
   'RE-dwarf-4': ['grant_sense'],
-  'RE-elf-2': ['modifier'],
+  'RE-elf-2': ['condition_immunity', 'modifier'],
   'RE-elf-3': ['choice'],
   'RE-gnome-2': ['modifier'],
   'RE-goliath-1': ['narrative', 'resource'],
@@ -256,15 +256,16 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'RE-sub-abyssal': ['resistance'],
   'RE-sub-chthonic': ['resistance'],
   'RE-sub-cloud': ['narrative'],
-  'RE-sub-drow': ['grant_sense'],
+  'RE-sub-drow': ['choice', 'grant_sense'],
   'RE-sub-fire': ['narrative'],
   'RE-sub-frost': ['narrative'],
+  'RE-sub-high_elf': ['choice'],
   'RE-sub-hill': ['narrative'],
   'RE-sub-infernal': ['resistance'],
   'RE-sub-rock': ['narrative'],
   'RE-sub-stone': ['narrative', 'reduce_damage'],
   'RE-sub-storm': ['narrative'],
-  'RE-sub-wood_elf': ['grant_speed'],
+  'RE-sub-wood_elf': ['choice', 'grant_speed'],
   aasimar_healing_hands: ['healing'],
   tabaxi_unarmed_strike: ['damage'],
 };
@@ -489,7 +490,13 @@ d('Незаклинательные способности видов: полн�
               failures.push(`${klass.name}: ${sheetAction.name} исполнилось вхолостую`);
             }
           } catch (error) {
-            failures.push(`${klass.name}: ${sheetAction.name}: ${error instanceof Error ? error.message : String(error)}`);
+            const message = error instanceof Error ? error.message : String(error);
+            const unsupported = /UNKNOWN_PAYLOAD .*payload kind «([^»]+)»/.exec(message);
+            if (unsupported) {
+              notImplemented.add(`${sheetAction.effectRef?.card_number || sheetAction.actionRef?.card_number}:${unsupported[1]}`);
+              continue;
+            }
+            failures.push(`${klass.name}: ${sheetAction.name}: ${message}`);
           }
         }
       }
@@ -498,7 +505,6 @@ d('Незаклинательные способности видов: полн�
     expect(failures, failures.join('\n')).toEqual([]);
     expect([...notImplemented].sort()).toEqual([
       'RE-dragonborn-4:grant_speed',
-      'RE-dwarf-4:grant_sense',
     ]);
   }, 120_000);
 
@@ -529,11 +535,31 @@ d('Незаклинательные способности видов: полн�
     const flight = featuresByNumber.get('RE-dragonborn-4');
     const flightPayload = directPayloads(flight?.mechanics as Dict | null | undefined)
       .find((payload) => payload.kind === 'grant_speed');
-    const flightButtonAtL1 = collectSheetActions(dragonL1.assembled).some((action) => action.id === flight?.id);
-    const flightButtonAtL5 = collectSheetActions(dragonL5.assembled).some((action) => action.id === flight?.id);
-    expect(flightButtonAtL1).toBe(false);
-    expect(flightButtonAtL5).toBe(true);
-    if (flightPayload && flightButtonAtL5 && !dragonL5.ruleState.speeds.fly) {
+    const flightButtonAtL1 = collectSheetActions(dragonL1.assembled).find((action) => action.id === flight?.id);
+    const flightButtonAtL5 = collectSheetActions(dragonL5.assembled).find((action) => action.id === flight?.id);
+    expect(flightButtonAtL1).toBeUndefined();
+    expect(flightButtonAtL5).toBeTruthy();
+    let flightRuntimeImplemented = false;
+    if (flightButtonAtL5) {
+      const character = buildCharacterContext(
+        dragonL5.ruleState,
+        dragonL5.draft as CharacterDraft & { abilities: Record<string, number> },
+        [],
+        klass,
+      );
+      const initial = emptyState();
+      try {
+        const result = executeAction(initial, withoutCost(flightButtonAtL5.mechanics), {
+          character,
+          rng: seededRng(19),
+        });
+        flightRuntimeImplemented = result.events.length > 0
+          || JSON.stringify(result.state) !== JSON.stringify(initial);
+      } catch {
+        flightRuntimeImplemented = false;
+      }
+    }
+    if (flightPayload && !flightRuntimeImplemented) {
       deviations.push(KNOWN_RULE_DEVIATIONS[3]);
     }
     const dwarfL1 = build({ race: dwarf }, klass, 1).ruleState;

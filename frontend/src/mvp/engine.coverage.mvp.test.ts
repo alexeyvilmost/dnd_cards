@@ -1,10 +1,12 @@
 /**
  * Расширенное покрытие рантайм-движка (фазы D–E): краевые случаи сбора
  * модификаторов, стоимости, инициализации ресурсов, хода/отдыха и маршрутизации
- * исполнителя. Плюс карта нереализованных payload-ов унифицированной схемы —
- * помечены `it.todo`, чтобы явно фиксировать пробелы до MVP, не ломая набор.
+ * исполнителя. Пограничные примитивы проверяются в том слое, который ими
+ * владеет: бросок, проекция действий листа и geometry hand-off.
  */
 import { describe, expect, it } from 'vitest';
+import { collectGrantActionSlugs } from '../character/actionSheet';
+import { rollD20 } from '../engine/roll';
 import type { ActiveEffectEntry, RuntimeState } from './contracts';
 import {
   canPay, collectRollModifiers, executeAction, initResources, longRest, pay, startTurn,
@@ -321,13 +323,40 @@ describe('payload-ы боёвки: boon / reroll / transform / модифика�
   });
 });
 
-// ─── Карта пробелов унифицированной схемы (payload-kind → рантайм) ───────────
-// Помечено it.todo: конструкции схемы, ещё не исполняемые движком. Снимать
-// пометку по мере реализации соответствующего исхода в engine/execute.ts.
-describe('НЕреализованные payload-ы исполнителя (roadmap до MVP)', () => {
-  it.todo('set_die: подмена кубика заранее (Предсказание)');
-  it.todo('grant_action во время исполнения (Хитрое действие → варианты бонусного действия)');
-  it.todo('movement: применяет фактическое перемещение цели, а не только лог');
+// ─── Межслойные примитивы унифицированной схемы ─────────────────────────────
+describe('межслойные payload-ы имеют исполняемый и типизированный hand-off', () => {
+  it('set_die меняет кость d20-пайплайна до броска', () => {
+    const result = rollD20({
+      rng: () => (22 - 0.5) / 24,
+      rules: [{ op: 'set_die', applies_to: { roll: 'ability_check' }, faces: 24 }],
+    });
+    expect(result.dice[0]).toMatchObject({ sides: 24, result: 22 });
+  });
+
+  it('grant_action проецирует стабильные ссылки в библиотеку действий', () => {
+    expect(collectGrantActionSlugs({
+      effects: [{
+        resolution: 'auto',
+        result: [{ kind: 'grant_action', values: ['dash', 'disengage'] }],
+      }],
+    })).toEqual(['dash', 'disengage']);
+  });
+
+  it('movement выдаёт структурированную команду geometry-адаптеру', () => {
+    const target = freshFighterState();
+    const result = executeAction(freshFighterState(), {
+      activation: { mode: 'active', cost: [] },
+      effects: [{
+        resolution: 'auto', who: 'target',
+        result: [{ kind: 'movement', value: 'push', distance: 10 }],
+      }],
+    }, {
+      character: FIGHTER_CTX,
+      target: { ac: 10, runtimeState: target },
+      rng: seededRng(1),
+    });
+    expect(result.events).toContainEqual({ type: 'movement', mode: 'push', distanceFt: 10 });
+  });
 });
 
 describe('реализованные защитные payload-ы исполнителя', () => {

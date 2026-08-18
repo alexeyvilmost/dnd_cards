@@ -220,7 +220,7 @@ describe.skipIf(!RUN)('Свип кузницы: все классы и расы 
         if (!res.assembled.race) failures.push(`${cls.name}: bundle не загрузил вид`);
         // выбор заклинаний в кузнице закрывается отдельным UI — не считаем проблемой валидатора
         const issues = res.issues.filter((i) => !/заклинан|заговор/i.test(i));
-        const unresolved = res.unresolved.filter((u) => !u.includes('[spell]'));
+        const unresolved = res.unresolved.filter((u) => !/\[[^\]]*spell[^\]]*\]/i.test(u));
         if (issues.length || unresolved.length) {
           failures.push(`${cls.name}: issues=[${issues.join('; ')}] unresolved=[${unresolved.join('; ')}]`);
         }
@@ -257,7 +257,7 @@ describe.skipIf(!RUN)('Свип кузницы: все классы и расы 
         const res = await autoBuild(draft);
         if (!res.assembled.race) failures.push(`${label}: bundle не загрузил вид (сеть/apiClient?)`);
         const issues = res.issues.filter((i) => !/заклинан|заговор/i.test(i));
-        const unresolved = res.unresolved.filter((u) => !u.includes('[spell]'));
+        const unresolved = res.unresolved.filter((u) => !/\[[^\]]*spell[^\]]*\]/i.test(u));
         if (issues.length || unresolved.length) {
           failures.push(`${label}: issues=[${issues.join('; ')}] unresolved=[${unresolved.join('; ')}]`);
         }
