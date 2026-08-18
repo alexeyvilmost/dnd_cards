@@ -533,6 +533,7 @@ export async function generateMicroMvpReleaseEvidence({
   catalogLoader = () => loadCertificationCatalogs(undefined, { baseUrl: apiBase }),
   coverageExpander = expandMicroMvpCoverageSummaryForCatalogs,
   sourceCommitVerifier = assertCurrentMicroMvpSourceMatchesCommit,
+  environment = process.env,
 } = {}) {
   if (!apiBase || !frontendBase || !artifactPath || !sourceCommit || !expectedDeployedCommit) {
     throw new Error(
@@ -550,10 +551,10 @@ export async function generateMicroMvpReleaseEvidence({
     throw new Error('--source-commit must exactly equal local HEAD');
   }
   await sourceCommitVerifier(sourceCommit);
-  if (process.env.API_URL && process.env.API_URL !== apiBase) {
+  if (environment.API_URL && environment.API_URL !== apiBase) {
     throw new Error('--api must exactly equal API_URL when API_URL is set');
   }
-  if (process.env.FRONTEND_URL && process.env.FRONTEND_URL !== frontendBase) {
+  if (environment.FRONTEND_URL && environment.FRONTEND_URL !== frontendBase) {
     throw new Error('--frontend must exactly equal FRONTEND_URL when FRONTEND_URL is set');
   }
   const parsedApi = new URL(apiBase);

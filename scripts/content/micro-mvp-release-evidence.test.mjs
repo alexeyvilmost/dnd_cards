@@ -553,6 +553,7 @@ test('schema-v3 evidence and generator reject missing or malformed frontend orig
     expectedDeployedCommit: CURRENT_COMMIT,
     sourceCommitVerifier: () => CURRENT_COMMIT,
     gateExecutor: async () => { executions += 1; },
+    environment: {},
   });
   await assert.rejects(generate(undefined), /--api, --frontend, --artifact/);
   await assert.rejects(generate('https://frontend.example.test/'), /--frontend must be an exact/);
@@ -674,6 +675,7 @@ test('generator executes the exact mandatory gate set before writing evidence', 
     sourceCommitVerifier: () => CURRENT_COMMIT,
     catalogLoader: async () => catalogs(),
     coverageExpander: (coverage) => coverage,
+    environment: {},
     gateExecutor: async (gate) => {
       executed.push(gate.id);
       const startedAt = new Date().toISOString();
@@ -715,8 +717,32 @@ test('generator requires an exact local-HEAD deployment expectation before runni
       expectedDeployedCommit: 'f'.repeat(40),
       sourceCommitVerifier: () => CURRENT_COMMIT,
       gateExecutor: async () => { executions += 1; },
+      environment: {},
     }),
     /must exactly equal --source-commit/,
+  );
+  assert.equal(executions, 0);
+});
+
+test('generator binds operator endpoint environment before running gates', async () => {
+  let executions = 0;
+  const generate = (environment) => generateMicroMvpReleaseEvidence({
+    apiBase: API_BASE,
+    frontendBase: FRONTEND_BASE,
+    artifactPath: '/does/not/matter.json',
+    sourceCommit: CURRENT_COMMIT,
+    expectedDeployedCommit: CURRENT_COMMIT,
+    sourceCommitVerifier: () => CURRENT_COMMIT,
+    gateExecutor: async () => { executions += 1; },
+    environment,
+  });
+  await assert.rejects(
+    generate({ API_URL: 'https://other-api.example.test' }),
+    /--api must exactly equal API_URL/,
+  );
+  await assert.rejects(
+    generate({ FRONTEND_URL: 'https://other-frontend.example.test' }),
+    /--frontend must exactly equal FRONTEND_URL/,
   );
   assert.equal(executions, 0);
 });
