@@ -275,7 +275,6 @@ const KNOWN_RULE_DEVIATIONS = [
   'Аасимар — Небесное откровение: все три варианта дают только narrative-события',
   'Драконорождённый — Оружие дыхания: тратит всё действие и имеет только конус 15 фт вместо замены атаки с выбором конус/линия',
   'Драконорождённый — Драконий полёт с 5 уровня пока не меняет runtime-скорость после нажатия',
-  'Дворф — Камнечувствие: tremorsense применяется постоянно, а при нажатии не исполняется движком',
   'Голиаф — Большая форма: длится 10 раундов и восстанавливается после короткого отдыха вместо 10 минут и длинного отдыха',
   'Голиаф — Мощное телосложение: преимущество на спасбросок для окончания Схваченного осталось narrative',
   'Эльф — Транс отсутствует и среди traits, и среди механических карточек',
@@ -528,7 +527,6 @@ d('Незаклинательные способности видов: полн�
       && area?.kind === 'cone') deviations.push(KNOWN_RULE_DEVIATIONS[2]);
 
     const dragon = races.find((race) => race.card_number === 'RACE-0008')!;
-    const dwarf = races.find((race) => race.card_number === 'RACE-0003')!;
     const klass = classes[0];
     const dragonL1 = build({ race: dragon }, klass, 1);
     const dragonL5 = build({ race: dragon }, klass, 5);
@@ -562,15 +560,12 @@ d('Незаклинательные способности видов: полн�
     if (flightPayload && !flightRuntimeImplemented) {
       deviations.push(KNOWN_RULE_DEVIATIONS[3]);
     }
-    const dwarfL1 = build({ race: dwarf }, klass, 1).ruleState;
-    if (dwarfL1.senses.some((sense) => sense.sense === 'tremorsense')) deviations.push(KNOWN_RULE_DEVIATIONS[4]);
-
     const largeForm = featuresByNumber.get('RE-goliath-2');
     const largeUses = largeForm?.mechanics?.uses as Dict | undefined;
     const largeDuration = directPayloads(largeForm?.mechanics as Dict | null | undefined)
       .find((payload) => payload.kind === 'modifier')?.duration as Dict | undefined;
     if (largeUses?.per === 'short_rest' && largeDuration?.type === 'rounds' && largeDuration.amount === 10) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[5]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[4]);
     }
 
     const powerfulBuild = featuresByNumber.get('RE-goliath-3');
@@ -578,16 +573,16 @@ d('Незаклинательные способности видов: полн�
       payload.kind === 'modifier'
       && (payload.applies_to as Dict | undefined)?.roll === 'saving_throw'
       && JSON.stringify(payload).includes('grappled'));
-    if (!hasGrappleSave) deviations.push(KNOWN_RULE_DEVIATIONS[6]);
+    if (!hasGrappleSave) deviations.push(KNOWN_RULE_DEVIATIONS[5]);
 
     const elf = races.find((race) => race.card_number === 'RACE-0004')!;
     const hasTrance = (elf.traits || []).some((trait) => /транс/i.test(`${trait.name} ${trait.description}`))
       || (elf.related_effects || []).some((id) => /транс/i.test(effectsById.get(id)?.name || ''));
-    if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[7]);
+    if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[6]);
 
     const cloud = featuresByNumber.get('ACT-goliath-cloud');
     if (nonSpellKinds(cloud!).every((kind) => kind === 'narrative')) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[8]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[7]);
     }
 
     const manuallyActivatedGiantGifts = [
@@ -597,17 +592,17 @@ d('Незаклинательные способности видов: полн�
       'ACT-goliath-storm',
     ].every((cardNumber) =>
       (featuresByNumber.get(cardNumber)?.mechanics?.activation as Dict | undefined)?.mode === 'active');
-    if (manuallyActivatedGiantGifts) deviations.push(KNOWN_RULE_DEVIATIONS[9]);
+    if (manuallyActivatedGiantGifts) deviations.push(KNOWN_RULE_DEVIATIONS[8]);
 
     const narrativeOnly = (cardNumber: string) => {
       const feature = featuresByNumber.get(cardNumber);
       return !!feature && nonSpellKinds(feature).every((kind) => kind === 'narrative');
     };
     if (narrativeOnly('RE-halfling-2') && narrativeOnly('RE-halfling-4')) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[10]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[9]);
     }
-    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[11]);
-    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[12]);
+    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[10]);
+    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[11]);
 
     const dragonCombo = combos.find((combo) => combo.race.id === dragon.id)!;
     const dragonBuild = build(dragonCombo, klass, 20);
@@ -618,7 +613,7 @@ d('Незаклинательные способности видов: полн�
     );
     const hasMisgroupedRacialAction = collectSheetActions(dragonBuild.assembled)
       .some((action) => racialActionIds.has(action.id) && action.group === 'class');
-    if (hasMisgroupedRacialAction) deviations.push(KNOWN_RULE_DEVIATIONS[13]);
+    if (hasMisgroupedRacialAction) deviations.push(KNOWN_RULE_DEVIATIONS[12]);
 
     expect(deviations).toEqual(KNOWN_RULE_DEVIATIONS);
   });
