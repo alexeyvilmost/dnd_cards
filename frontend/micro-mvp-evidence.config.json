@@ -1,6 +1,7 @@
 {
   "schemaVersion": 2,
   "manifestRelativePath": ".micro-mvp-evidence/execution-manifest.json",
+  "coverageSummaryRelativePath": ".micro-mvp-evidence/coverage-summary.json",
   "reporter": "./scripts/micro-mvp-evidence-reporter.mjs",
   "hashInputs": [
     "micro-mvp-evidence.config.json",

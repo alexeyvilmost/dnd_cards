@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Copy } from 'lucide-react';
+import { Edit, Trash2, Copy, Lock } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import { effectsApi } from '../api/client';
@@ -8,6 +8,7 @@ import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
 import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
+import { isMechanicsLocked } from '../content/supportStatus';
 
 interface EffectDetailModalProps {
   effect: PassiveEffect | null;
@@ -25,6 +26,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
   onUpdated,
 }) => {
   if (!isOpen || !effect) return null;
+  const locked = isMechanicsLocked(effect);
 
   const typeLabel = PASSIVE_EFFECT_TYPE_OPTIONS.find((o) => o.value === effect.effect_type)?.label || effect.effect_type;
 
@@ -35,7 +37,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       title={effect.name}
       titleEn={effect.name_en}
       preview={(
-        <EntityImageEditor
+        locked ? <EffectPreview effect={effect} disableHover /> : <EntityImageEditor
           entityId={effect.id}
           initialUrl={effect.image_url || ''}
           persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
@@ -46,15 +48,23 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       )}
       actions={(
         <>
-          <Link to={`/effect-creator?edit=${effect.id}`} className="edm-btn">
-            <Edit size={18} /><span>Редактировать</span>
-          </Link>
+          {locked ? (
+            <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
+              <Lock size={18} /><span>Закреплено</span>
+            </span>
+          ) : (
+            <Link to={`/effect-creator?edit=${effect.id}`} className="edm-btn">
+              <Edit size={18} /><span>Редактировать</span>
+            </Link>
+          )}
           <Link to={`/effect-creator?template_id=${effect.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>
-          <button type="button" onClick={() => onDelete(effect.id)} className="edm-btn edm-btn--danger">
-            <Trash2 size={18} /><span>Удалить</span>
-          </button>
+          {!locked && (
+            <button type="button" onClick={() => onDelete(effect.id)} className="edm-btn edm-btn--danger">
+              <Trash2 size={18} /><span>Удалить</span>
+            </button>
+          )}
         </>
       )}
     >

@@ -5,9 +5,11 @@ import {
   filterEntitiesBySupport,
   isDefaultVisibleSupportStatus,
   isEntityVisibleBySupport,
+  isMechanicsLocked,
   supportSelectionWarning,
   supportStatusOf,
   supportStatusPresentation,
+  testCoverageOf,
   type EntitySupportCertification,
 } from './supportStatus';
 
@@ -90,6 +92,44 @@ describe('content support status', () => {
     };
     expect(certificationContractIssues(complete)).toEqual([]);
     expect(supportStatusOf({ support: complete })).toBe('verified_mechanical');
+  });
+
+  it('v4 публикует точное покрытие и закрепляет только полностью покрытую механику', () => {
+    const hash = `sha256:${'a'.repeat(64)}`;
+    const complete: EntitySupportCertification = {
+      status: 'verified_partial',
+      certification_version: 'micro-mvp-l1-rules-core-v4',
+      content_hash: hash,
+      dependency_hash: hash,
+      certified_at: '2026-08-05T00:00:00Z',
+      evidence_id: '00000000-0000-4000-8000-000000000001',
+      evidence_completed_at: '2026-08-05T00:01:00Z',
+      evidence_hash: hash,
+      gate_source_hash: hash,
+      source_content_hash: hash,
+      rules_hash: hash,
+      release_content_hash: hash,
+      release_hash: hash,
+      patch_hash: hash,
+      catalog_hash: hash,
+      limitations: ['Сертифицирован только scope первого уровня'],
+      test_coverage: {
+        schema_version: 1, scope: 'micro-mvp-l1', required: 12, passed: 12, percent: 100,
+      },
+      mechanics_locked: true,
+    };
+    expect(certificationContractIssues(complete)).toEqual([]);
+    expect(testCoverageOf({ support: complete })?.percent).toBe(100);
+    expect(isMechanicsLocked({ support: complete })).toBe(true);
+
+    const partial = {
+      ...complete,
+      test_coverage: { ...complete.test_coverage!, passed: 11, percent: 91 },
+    };
+    expect(certificationContractIssues(partial)).toContain(
+      'mechanics_locked требует 100% покрытия заявленного scope',
+    );
+    expect(isMechanicsLocked({ support: partial })).toBe(false);
   });
 
   it('фильтр сохраняет выбранную неподтверждённую сущность', () => {

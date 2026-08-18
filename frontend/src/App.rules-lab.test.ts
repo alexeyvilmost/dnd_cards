@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({ loadConditions: vi.fn(), useAuth: vi.fn() }));
 
 vi.mock('./api/conditionsApi', () => ({
   loadConditions: mocks.loadConditions,
-  MICRO_MVP_CONDITION_CERTIFICATION_VERSION: 'micro-mvp-l1-rules-core-v3',
+  MICRO_MVP_CONDITION_CERTIFICATION_VERSION: 'micro-mvp-l1-rules-core-v4',
 }));
 vi.mock('./contexts/AuthContext', () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
@@ -95,7 +95,7 @@ describe('/rules-lab route', () => {
     expect(mocks.loadConditions).toHaveBeenCalledWith({
       timeoutMs: 5_000,
       expectedRelease: {
-        certificationVersion: 'micro-mvp-l1-rules-core-v3',
+        certificationVersion: 'micro-mvp-l1-rules-core-v4',
         rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
         releaseContentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
         releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,

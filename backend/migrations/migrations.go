@@ -601,6 +601,13 @@ func GetAllMigrations() []Migration {
 			// evidence; rollback must not erase or reopen already committed writes.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "096_lock_certified_content_mechanics",
+			Description: "Необратимый DB-guard для полностью сертифицированных действий, эффектов и заклинаний",
+			Up:          lockCertifiedContentMechanics,
+			// Снятие защиты требует отдельной явно проверяемой policy-миграции.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

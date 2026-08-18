@@ -14,6 +14,7 @@ import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { registryItems, useResourceOptions } from '../utils/resources';
 import { validateMechanics } from '../engine/validateMechanics';
 import { isEntityIdTaken, validateEntityIdFormat } from '../utils/entityId';
+import { isMechanicsLocked } from '../content/supportStatus';
 
 const EffectCreator = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const EffectCreator = () => {
   const [loadingEffect, setLoadingEffect] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
+  const [lockedEntity, setLockedEntity] = useState(false);
   const [activeSection, setActiveSection] = useState('main');
   const [showPreview, setShowPreview] = useState(true);
   const [knownTypes, setKnownTypes] = useState<string[]>([]);
@@ -62,6 +64,9 @@ const EffectCreator = () => {
         try {
           setLoadingEffect(true);
           const effect = await effectsApi.getEffect(sourceId);
+          const locked = isEditMode && isMechanicsLocked(effect);
+          setLockedEntity(locked);
+          if (locked) setError('Механика эффекта закреплена полной тестовой сертификацией. Редактирование запрещено.');
           
           // Заполняем форму данными эффекта
           
@@ -98,7 +103,7 @@ const EffectCreator = () => {
       
       loadEffect();
     }
-  }, [sourceId, asTemplate, reset]);
+  }, [sourceId, asTemplate, isEditMode, reset]);
 
   const formData = watch();
   const previewEffect: PassiveEffect = {
@@ -131,6 +136,10 @@ const EffectCreator = () => {
   };
 
   const onSubmit = async (data: CreatePassiveEffectRequest) => {
+    if (lockedEntity) {
+      setError('Закреплённый эффект нельзя изменить через UI.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setIdError(null);

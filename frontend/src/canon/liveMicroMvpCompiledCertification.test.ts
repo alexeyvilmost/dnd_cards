@@ -72,7 +72,7 @@ describe('live micro-MVP compiled certification boundary', () => {
     try {
       await compileLiveMicroMvpCertification({
         catalogs: drifted,
-        certificationVersion: 'micro-mvp-l1-rules-core-v3',
+        certificationVersion: 'micro-mvp-l1-rules-core-v4',
       });
       throw new Error('expected compiled semantic drift');
     } catch (error) {
@@ -100,7 +100,7 @@ describe('live micro-MVP compiled certification boundary', () => {
 
     const result = await compileLiveMicroMvpCertification({
       catalogs: live,
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
     });
     expect(result.catalogInput.liveSemanticProjectionHash)
       .toBe(result.catalogInput.reviewedSemanticProjectionHash);
@@ -127,7 +127,7 @@ describe('live micro-MVP compiled certification boundary', () => {
 
     const result = await compileLiveMicroMvpCertification({
       catalogs: live,
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
     });
     expect(result.catalogInput.liveSemanticProjectionHash)
       .toBe(result.catalogInput.reviewedSemanticProjectionHash);
@@ -161,7 +161,7 @@ describe('live micro-MVP compiled certification boundary', () => {
 
     const result = await compileLiveMicroMvpCertification({
       catalogs: live,
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
     });
     expect(result.catalogInput.compilerRaw.contentHashMatchesReviewed).toBe(false);
     expect(result.catalogInput.compilerRaw.releaseHashMatchesReviewed).toBe(false);
@@ -173,7 +173,7 @@ describe('live micro-MVP compiled certification boundary', () => {
   it('refuses the unmaterialized legacy snapshot on the production verification path', async () => {
     await expect(compileLiveMicroMvpCertification({
       catalogs: copy(readProdSnapshotCatalogs()),
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
     })).rejects.toThrow();
   }, 60_000);
 
@@ -181,7 +181,7 @@ describe('live micro-MVP compiled certification boundary', () => {
     const materialized = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
     const result = await compileLiveMicroMvpCertification({
       catalogs: copy(materialized),
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
     });
 
     expect(result.catalogInput).toMatchObject({
@@ -206,7 +206,7 @@ describe('live micro-MVP compiled certification boundary', () => {
     expect(result.semanticEvidenceProfile).toEqual({
       schemaVersion: 1,
       id: MICRO_MVP_L1_SEMANTIC_EVIDENCE_PROFILE_ID,
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
       release: {
         releaseId: result.provider.release.id,
         rulesHash: result.provider.release.overlayHash,

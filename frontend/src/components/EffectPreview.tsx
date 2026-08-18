@@ -10,6 +10,7 @@ import { actionCostResourceIds, resourceCostIcon, resourceLabel, useResourceOpti
 import { useSiteSettings } from '../settings';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import SupportStatusBadge from './forge/SupportStatusBadge';
 
 // Превью эффекта в едином стиле карточек заклинаний/действий/предметов (SPELL_CARD_CSS, классы .sp-*).
 // Тип эффекта → sp-subtype (или sourceLabel в контексте листа/кузни), условие → sp-saveline,
@@ -75,6 +76,7 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
 
       <h3>{effect.name || 'Название эффекта'}</h3>
       <div className="sp-subtype"><OriginalName nameEn={effect.name_en} suffix={subtype || 'Эффект'} /></div>
+      <SupportStatusBadge entity={effect} />
 
       {hasStats && (
         <div className="sp-stats">

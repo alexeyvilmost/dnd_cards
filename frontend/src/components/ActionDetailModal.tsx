@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Copy } from 'lucide-react';
+import { Edit, Trash2, Copy, Lock } from 'lucide-react';
 import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { actionsApi } from '../api/client';
@@ -9,6 +9,7 @@ import { FormattedText } from '../utils/formattedText';
 import ActionPreview from './ActionPreview';
 import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
+import { isMechanicsLocked } from '../content/supportStatus';
 
 interface ActionDetailModalProps {
   action: Action | null;
@@ -28,6 +29,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
   const resources = useResourceOptions();
 
   if (!isOpen || !action) return null;
+  const locked = isMechanicsLocked(action);
 
   const typeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type;
   const rechargeLabel = action.recharge
@@ -46,7 +48,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       title={action.name}
       titleEn={action.name_en}
       preview={(
-        <EntityImageEditor
+        locked ? <ActionPreview action={action} disableHover resources={resources} /> : <EntityImageEditor
           entityId={action.id}
           initialUrl={action.image_url || ''}
           persist={async (id, url) => (await actionsApi.updateAction(id, { image_url: url })).image_url || url}
@@ -57,15 +59,23 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       )}
       actions={(
         <>
-          <Link to={`/action-creator?edit=${action.id}`} className="edm-btn">
-            <Edit size={18} /><span>Редактировать</span>
-          </Link>
+          {locked ? (
+            <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
+              <Lock size={18} /><span>Закреплено</span>
+            </span>
+          ) : (
+            <Link to={`/action-creator?edit=${action.id}`} className="edm-btn">
+              <Edit size={18} /><span>Редактировать</span>
+            </Link>
+          )}
           <Link to={`/action-creator?template_id=${action.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>
-          <button type="button" onClick={() => onDelete(action.id)} className="edm-btn edm-btn--danger">
-            <Trash2 size={18} /><span>Удалить</span>
-          </button>
+          {!locked && (
+            <button type="button" onClick={() => onDelete(action.id)} className="edm-btn edm-btn--danger">
+              <Trash2 size={18} /><span>Удалить</span>
+            </button>
+          )}
         </>
       )}
     >

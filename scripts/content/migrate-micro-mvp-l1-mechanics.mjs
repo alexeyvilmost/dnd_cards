@@ -298,11 +298,13 @@ export function writeMigrationBundleAtomic(path, value) {
     closeSync(descriptor);
     descriptor = null;
     renameSync(temporary, path);
-    const directoryDescriptor = openSync(directory, 'r');
-    try {
-      fsyncSync(directoryDescriptor);
-    } finally {
-      closeSync(directoryDescriptor);
+    if (process.platform !== 'win32') {
+      const directoryDescriptor = openSync(directory, 'r');
+      try {
+        fsyncSync(directoryDescriptor);
+      } finally {
+        closeSync(directoryDescriptor);
+      }
     }
   } finally {
     if (descriptor !== null) closeSync(descriptor);

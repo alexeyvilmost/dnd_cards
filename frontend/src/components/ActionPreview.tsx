@@ -11,6 +11,7 @@ import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useSiteSettings } from '../settings';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import SupportStatusBadge from './forge/SupportStatusBadge';
 
 interface ActionPreviewProps {
   action: Action;
@@ -80,6 +81,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
 
       <h3>{action.name || 'Название действия'}</h3>
       <div className="sp-subtype"><OriginalName nameEn={action.name_en} suffix={subtype || 'Действие'} /></div>
+      <SupportStatusBadge entity={action} />
 
       {hasStats && (
         <div className="sp-stats">

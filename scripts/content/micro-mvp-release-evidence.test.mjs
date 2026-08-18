@@ -18,6 +18,7 @@ import {
 } from './generate-micro-mvp-release-evidence.mjs';
 import {
   REQUIRED_RELEASE_GATES,
+  MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
   assertMicroMvpSourceTreeMatchesCommit,
   currentMicroMvpReleaseIdentity,
   currentMicroMvpSourceCommit,
@@ -34,6 +35,23 @@ const API_BASE = 'https://api.example.test';
 const FRONTEND_BASE = 'https://frontend.example.test';
 const CURRENT_RELEASE_IDENTITY = currentMicroMvpReleaseIdentity();
 const CURRENT_COMMIT = currentMicroMvpSourceCommit();
+
+function completeTestCoverage() {
+  const entities = Object.fromEntries(Array.from({ length: 64 }, (_, index) => [
+    `entity.${String(index + 1).padStart(2, '0')}`,
+    { schema_version: 1, scope: 'micro-mvp-l1', required: 2, passed: 2, percent: 100 },
+  ]));
+  return {
+    schemaVersion: 1,
+    scope: 'micro-mvp-l1',
+    rulesHash: CURRENT_RELEASE_IDENTITY.rulesHash,
+    contentHash: CURRENT_RELEASE_IDENTITY.contentHash,
+    required: 128,
+    passed: 128,
+    percent: 100,
+    entities,
+  };
+}
 
 test('release source fingerprint covers canonical data and every non-TypeScript Vite/Docker input', () => {
   const paths = new Set(currentMicroMvpSourcePaths());
@@ -153,13 +171,14 @@ function artifactFor(inputCatalogs = catalogs(), completed = new Date('2026-08-0
           ? { total: 5, passed: 2, failed: 0, skipped: 0, todo: 3 }
           : { total: 2, passed: 2, failed: 0, skipped: 0, todo: 0 })
       : null,
+    ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
   }));
   const aggregate = gates.reduce((totals, gate) => {
     for (const key of Object.keys(totals)) totals[key] += gate.testSummary?.[key] ?? 0;
     return totals;
   }, { total: 0, passed: 0, failed: 0, skipped: 0, todo: 0 });
   return {
-    schemaVersion: 3,
+    schemaVersion: MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
     kind: 'micro-mvp-release-gate-evidence',
     evidenceId: '00000000-0000-4000-8000-000000000001',
     apiBase: API_BASE,
@@ -204,7 +223,9 @@ test('release evidence writer is atomic 0600 and the artifact binds current sour
   const artifact = artifactFor(inputCatalogs);
   writeMicroMvpReleaseEvidenceAtomic(path, artifact);
 
-  assert.equal(statSync(path).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') {
+    assert.equal(statSync(path).mode & 0o777, 0o600);
+  }
   const result = readMicroMvpReleaseEvidence(path, {
     apiBase: API_BASE,
     catalogs: inputCatalogs,
@@ -629,6 +650,7 @@ test('generator executes the exact mandatory gate set before writing evidence', 
     expectedDeployedCommit: CURRENT_COMMIT,
     sourceCommitVerifier: () => CURRENT_COMMIT,
     catalogLoader: async () => catalogs(),
+    coverageExpander: (coverage) => coverage,
     gateExecutor: async (gate) => {
       executed.push(gate.id);
       const startedAt = new Date().toISOString();
@@ -647,13 +669,16 @@ test('generator executes the exact mandatory gate set before writing evidence', 
             ? { total: 4, passed: 1, failed: 0, skipped: 0, todo: 3 }
             : { total: 1, passed: 1, failed: 0, skipped: 0, todo: 0 })
           : null,
+        ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
       };
     },
   });
 
   assert.deepEqual(executed, REQUIRED_RELEASE_GATES.map((gate) => gate.id));
   assert.equal(result.destination, path);
-  assert.equal(statSync(path).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') {
+    assert.equal(statSync(path).mode & 0o777, 0o600);
+  }
   assert.equal(result.artifact.status, 'passed');
   assert.equal(result.artifact.deploymentAttestation.sourceCommit, CURRENT_COMMIT);
 });

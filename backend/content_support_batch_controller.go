@@ -152,7 +152,7 @@ func validateBatchCertificationSupport(support any) error {
 		"evidence_id": true, "evidence_hash": true, "evidence_completed_at": true,
 		"gate_source_hash": true, "source_content_hash": true, "rules_hash": true,
 		"release_content_hash": true, "release_hash": true, "patch_hash": true,
-		"catalog_hash": true,
+		"catalog_hash": true, "test_coverage": true, "mechanics_locked": true,
 	}
 	for key := range object {
 		if !allowedFields[key] {
@@ -211,6 +211,10 @@ func (cc *ContentMigrationController) applyExactSupportBatch(
 			current, mapErr := apiResponseAsJSONMap(response)
 			if mapErr != nil {
 				return mapErr
+			}
+			if isContentMechanicsLockedValue(current["support"]) &&
+				!isContentMechanicsLockedValue(entry.Support) {
+				return errContentMigrationConflict
 			}
 			isPreimage := reflect.DeepEqual(current, entry.ExpectedCurrent)
 			isDesired := contentMigrationSupportAlreadyRestored(

@@ -109,8 +109,10 @@ let cachedFixture;
 
 export function readReviewedPreimageFixture() {
   if (!cachedFixture) {
-    const rawBytes = readFileSync(FIXTURE_PATH);
-    cachedFixture = validateFixture(JSON.parse(rawBytes.toString('utf8')), rawBytes);
+    // Pin repository text bytes, not the checkout's CRLF/LF materialization.
+    const normalizedText = readFileSync(FIXTURE_PATH, 'utf8').replace(/\r\n/g, '\n');
+    const normalizedBytes = Buffer.from(normalizedText, 'utf8');
+    cachedFixture = validateFixture(JSON.parse(normalizedText), normalizedBytes);
   }
   return JSON.parse(JSON.stringify(cachedFixture));
 }

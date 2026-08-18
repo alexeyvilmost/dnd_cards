@@ -129,6 +129,68 @@
             "wis": 1,
             "cha": 0
           },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
+          },
           "profBonus": 2,
           "level": 1,
           "classLevels": {
@@ -806,6 +868,68 @@
             "int": 2,
             "wis": 1,
             "cha": 0
+          },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
           },
           "profBonus": 2,
           "level": 1,
@@ -2302,6 +2426,68 @@
             "wis": 1,
             "cha": 2
           },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
+          },
           "profBonus": 2,
           "level": 1,
           "classLevels": {
@@ -3213,6 +3399,68 @@
             "int": 0,
             "wis": 1,
             "cha": 2
+          },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
           },
           "profBonus": 2,
           "level": 1,
@@ -4189,6 +4437,68 @@
             "int": 0,
             "wis": 1,
             "cha": 2
+          },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
           },
           "profBonus": 2,
           "level": 1,
@@ -7075,6 +7385,68 @@
             "int": 2,
             "wis": 1,
             "cha": 0
+          },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
           },
           "profBonus": 2,
           "level": 1,

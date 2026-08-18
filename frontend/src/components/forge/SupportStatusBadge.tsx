@@ -1,8 +1,11 @@
 import {
   supportStatusOf,
   supportStatusPresentation,
+  testCoverageOf,
+  isMechanicsLocked,
   type SupportableEntity,
 } from '../../content/supportStatus';
+import { useSiteSettings } from '../../settings';
 
 type SupportStatusBadgeProps = {
   entity: SupportableEntity | null | undefined;
@@ -10,10 +13,16 @@ type SupportStatusBadgeProps = {
 };
 
 const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps) => {
+  const { playerMode } = useSiteSettings();
+  if (playerMode) return null;
   const status = supportStatusOf(entity);
   const presentation = supportStatusPresentation(status);
+  const coverage = testCoverageOf(entity);
+  const locked = isMechanicsLocked(entity);
   const title = [
     presentation.label,
+    coverage ? `Тесты: ${coverage.passed}/${coverage.required} (${coverage.percent}%), scope ${coverage.scope}` : 'Точное покрытие не опубликовано',
+    locked ? 'Механика закреплена' : null,
     entity?.support?.note,
     ...(entity?.support?.limitations ?? []),
   ].filter(Boolean).join(' · ');
@@ -25,7 +34,8 @@ const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps
       aria-label={presentation.label}
     >
       <span className="support-status-badge__dot" aria-hidden />
-      {!compact && <span>{presentation.label}</span>}
+      <span>{coverage ? `${coverage.percent}%` : (compact ? '—' : presentation.label)}</span>
+      {!compact && coverage && <span> · {presentation.label}{locked ? ' · закреплено' : ''}</span>}
     </span>
   );
 };

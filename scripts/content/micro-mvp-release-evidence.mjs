@@ -20,13 +20,54 @@ import { assertPrivateRegularFile } from './private-artifact.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(HERE, '../..');
-export const MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION = 3;
+export const MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION = 4;
 export const MICRO_MVP_RELEASE_EVIDENCE_KIND = 'micro-mvp-release-gate-evidence';
 export const MICRO_MVP_RELEASE_EVIDENCE_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const GIT_COMMIT = /^[0-9a-f]{40}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MICRO_MVP_BASE_CERTIFICATION_ENTITY_COUNT = 64;
+
+export function validateMicroMvpTestCoverageSummary(summary, release = null) {
+  if (!summary || summary.schemaVersion !== 1 || summary.scope !== 'micro-mvp-l1'
+    || !SHA256.test(summary.rulesHash ?? '') || !SHA256.test(summary.contentHash ?? '')
+    || !Number.isSafeInteger(summary.required) || summary.required < 1
+    || !Number.isSafeInteger(summary.passed) || summary.passed < 0
+    || summary.passed > summary.required
+    || summary.percent !== Math.floor((summary.passed * 100) / summary.required)
+    || !summary.entities || typeof summary.entities !== 'object' || Array.isArray(summary.entities)) {
+    throw new Error('release evidence test coverage summary is invalid');
+  }
+  const entries = Object.entries(summary.entities);
+  if (entries.length < MICRO_MVP_BASE_CERTIFICATION_ENTITY_COUNT) {
+    throw new Error(
+      `release evidence test coverage must contain at least ${MICRO_MVP_BASE_CERTIFICATION_ENTITY_COUNT} entities`,
+    );
+  }
+  let required = 0;
+  let passed = 0;
+  for (const [entityId, coverage] of entries) {
+    if (!entityId || coverage?.schema_version !== 1 || coverage?.scope !== summary.scope
+      || !Number.isSafeInteger(coverage?.required) || coverage.required < 1
+      || !Number.isSafeInteger(coverage?.passed) || coverage.passed < 0
+      || coverage.passed > coverage.required
+      || coverage.percent !== Math.floor((coverage.passed * 100) / coverage.required)) {
+      throw new Error(`release evidence test coverage is invalid for ${entityId || '<empty>'}`);
+    }
+    required += coverage.required;
+    passed += coverage.passed;
+  }
+  if (required !== summary.required || passed !== summary.passed
+    || summary.passed !== summary.required || summary.percent !== 100) {
+    throw new Error('release evidence test coverage aggregate is incomplete');
+  }
+  if (release && (summary.rulesHash !== release.rulesHash
+    || summary.contentHash !== release.contentHash)) {
+    throw new Error('release evidence test coverage belongs to another rules/content release');
+  }
+  return summary;
+}
 
 export const FRONTEND_MVP_ALLOWED_TODOS = Object.freeze([
   'НЕреализованные payload-ы исполнителя (roadmap до MVP) set_die: подмена кубика заранее (Предсказание)',
@@ -499,6 +540,8 @@ export function validateMicroMvpReleaseEvidenceArtifact(artifact, {
       throw new Error(`${gate.id} must not claim a test summary/report`);
     }
   }
+  const semanticCoverageGate = artifact.gates.find((gate) => gate.id === 'semantic_coverage');
+  validateMicroMvpTestCoverageSummary(semanticCoverageGate?.testCoverage, artifact.release);
   if (!Number.isSafeInteger(artifact.totalTests) || !Number.isSafeInteger(artifact.passedTests)
     || !Number.isSafeInteger(artifact.skippedTests) || !Number.isSafeInteger(artifact.failedTests)
     || !Number.isSafeInteger(artifact.todoTests)
@@ -547,11 +590,16 @@ export function writeMicroMvpReleaseEvidenceAtomic(path, artifact, { refuseOverw
     closeSync(descriptor);
     descriptor = null;
     renameSync(temporary, destination);
-    const directoryDescriptor = openSync(directory, 'r');
-    try {
-      fsyncSync(directoryDescriptor);
-    } finally {
-      closeSync(directoryDescriptor);
+    // Windows does not permit fsync on directory handles. The file itself is
+    // already durable before the atomic rename; POSIX additionally persists
+    // the directory entry so a power loss cannot lose the rename.
+    if (process.platform !== 'win32') {
+      const directoryDescriptor = openSync(directory, 'r');
+      try {
+        fsyncSync(directoryDescriptor);
+      } finally {
+        closeSync(directoryDescriptor);
+      }
     }
   } finally {
     if (descriptor !== null) closeSync(descriptor);
@@ -596,6 +644,7 @@ export function microMvpReleaseEvidenceBinding(readEvidence) {
     deploymentAttestation: artifact.deploymentAttestation,
     release: artifact.release,
     catalog: artifact.catalog,
+    testCoverage: artifact.gates.find((gate) => gate.id === 'semantic_coverage')?.testCoverage,
     gateIds: artifact.gates.map((gate) => gate.id),
   };
 }

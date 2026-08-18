@@ -58,7 +58,9 @@ function engineEvents(events: readonly UncommittedRuleEvent[]) {
 const noActions: RulesCatalog = { getAction: () => undefined };
 
 describe('rules-core interaction primitives', () => {
-  it('applies Help and a generic one-shot bonus to the matching check and consumes only matching next-check effects', () => {
+  it('applies Help and a generic one-shot bonus to the matching check and consumes only matching next-check effects', {
+    meta: { basicPrimitive: 'ability_check', evidenceKind: 'unit' },
+  }, () => {
     const rogue = actor('rogue');
     rogue.runtime.activeEffects = [
       {
@@ -240,7 +242,9 @@ describe('rules-core interaction primitives', () => {
     expect(denied.getState()).toBe(ineligibleWorld);
   });
 
-  it('opens a catalog-owned environment save and resumes its canonical consequence after JSON reload', () => {
+  it('opens a catalog-owned environment save and resumes its canonical consequence after JSON reload', {
+    meta: { basicPrimitive: 'saving_throw', evidenceKind: 'unit' },
+  }, () => {
     const hazard: RuleHazardDefinition = {
       id: 'hazard.poison-spores',
       name: 'Poison Spores',

@@ -171,7 +171,9 @@ function engineEvents(events: readonly UncommittedRuleEvent[]): EngineEvent[] {
 }
 
 describe('schema-v4 canonical Attack runtime', () => {
-  it('uses the ruleset-owned weapon action, actor proficiency, durable budget, and byte-stable replay', () => {
+  it('uses the ruleset-owned weapon action, actor proficiency, durable budget, and byte-stable replay', {
+    meta: { basicPrimitive: 'attack', evidenceKind: 'two_pc' },
+  }, () => {
     const test = started({ weapon: true, weaponProficiencies: [] });
     const { attackAction } = begin(test.session);
     const executed = accepted(test.session.dispatch({

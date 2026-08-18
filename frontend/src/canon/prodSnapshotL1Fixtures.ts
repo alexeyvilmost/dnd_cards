@@ -248,7 +248,10 @@ function hashCanonical(value: unknown): string {
 function sourceArtifactHashes(): Record<string, string> {
   return Object.fromEntries(RULE_SOURCE_ARTIFACTS.map((relativePath) => [
     relativePath,
-    sha256(readFileSync(join(REPO_ROOT, relativePath))),
+    // Git may materialize text fixtures with CRLF on Windows. Rule-source
+    // identities are repository identities, so normalize line endings before
+    // hashing instead of making release hashes depend on the checkout OS.
+    sha256(readFileSync(join(REPO_ROOT, relativePath), 'utf8').replace(/\r\n/g, '\n')),
   ]));
 }
 

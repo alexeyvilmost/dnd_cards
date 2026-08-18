@@ -315,7 +315,10 @@ beforeAll(async () => {
 describe('compiled Warlock Pact mandatory two-PC acceptance', () => {
   it('runs Pact Blade bond, replacement, focus, attack, pending-safe checkpoints, and explicit terminal lifecycle', {
     timeout: 60_000,
-    meta: { semanticProtocol: 'mandatory-two-pc-v1', scenarioId: PACT_BLADE_SCENARIO_ID },
+    meta: {
+      semanticProtocol: 'mandatory-two-pc-v1', scenarioId: PACT_BLADE_SCENARIO_ID,
+      basicPrimitive: 'ability_check', evidenceKind: 'two_pc',
+    },
   }, () => {
     const ownerId = bladeRoot.actor.id;
     const targetId = fighterRoot.actor.id;

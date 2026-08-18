@@ -167,7 +167,9 @@ describe('source-scoped spell execution preparation', () => {
     ]);
   });
 
-  it('honors a declaration that preserves the free use and pays the ordinary slot', () => {
+  it('honors a declaration that preserves the free use and pays the ordinary slot', {
+    meta: { basicPrimitive: 'resource_spend', evidenceKind: 'unit' },
+  }, () => {
     const action = spellAction();
     const grant = {
       ...wizardDetectMagic,

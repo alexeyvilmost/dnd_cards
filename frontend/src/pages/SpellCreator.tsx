@@ -25,6 +25,7 @@ import ResourceMultiSelect from '../components/ResourceMultiSelect';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { validateMechanics } from '../engine/validateMechanics';
 import { validateEntityIdFormat } from '../utils/entityId';
+import { isMechanicsLocked } from '../content/supportStatus';
 
 type ScalarForm = {
   name: string;
@@ -94,6 +95,7 @@ const SpellCreator = () => {
   const [loadingSpell, setLoadingSpell] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
+  const [lockedEntity, setLockedEntity] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('main');
   const [showPreview, setShowPreview] = useState(true);
   const isMobile = useIsMobile();
@@ -104,6 +106,9 @@ const SpellCreator = () => {
         try {
           setLoadingSpell(true);
           const spell = await spellsApi.getSpell(sourceId);
+          const locked = isEditMode && isMechanicsLocked(spell);
+          setLockedEntity(locked);
+          if (locked) setError('Механика заклинания закреплена полной тестовой сертификацией. Редактирование запрещено.');
           reset({
             name: spell.name,
             name_en: spell.name_en || '',
@@ -143,7 +148,7 @@ const SpellCreator = () => {
       };
       load();
     }
-  }, [sourceId, asTemplate, reset]);
+  }, [sourceId, asTemplate, isEditMode, reset]);
 
   const fd = watch();
 
@@ -187,6 +192,10 @@ const SpellCreator = () => {
   };
 
   const onSubmit = async (data: ScalarForm) => {
+    if (lockedEntity) {
+      setError('Закреплённое заклинание нельзя изменить через UI.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setIdError(null);

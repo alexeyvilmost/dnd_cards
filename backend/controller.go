@@ -1162,6 +1162,9 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действия"})
 		return
 	}
+	if rejectLockedContentMutation(c, action.Support) {
+		return
+	}
 
 	// Обновление полей
 	if req.Name != "" {
@@ -1282,7 +1285,20 @@ func (ac *ActionController) DeleteAction(c *gin.Context) {
 		return
 	}
 
-	if err := ac.db.Delete(&Action{}, "id = ?", id).Error; err != nil {
+	var action Action
+	if err := ac.db.Select("id", "support").Where("id = ?", id).First(&action).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Действие не найдено"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действия"})
+		return
+	}
+	if rejectLockedContentMutation(c, action.Support) {
+		return
+	}
+
+	if err := ac.db.Delete(&action).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления действия"})
 		return
 	}
@@ -1528,6 +1544,9 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффекта"})
 		return
 	}
+	if rejectLockedContentMutation(c, effect.Support) {
+		return
+	}
 
 	// Обновление полей
 	if req.Name != "" {
@@ -1641,7 +1660,20 @@ func (ec *EffectController) DeleteEffect(c *gin.Context) {
 		return
 	}
 
-	if err := ec.db.Delete(&Effect{}, "id = ?", id).Error; err != nil {
+	var effect Effect
+	if err := ec.db.Select("id", "support").Where("id = ?", id).First(&effect).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Эффект не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффекта"})
+		return
+	}
+	if rejectLockedContentMutation(c, effect.Support) {
+		return
+	}
+
+	if err := ec.db.Delete(&effect).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления эффекта"})
 		return
 	}

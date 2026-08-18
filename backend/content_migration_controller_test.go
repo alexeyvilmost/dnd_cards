@@ -442,6 +442,11 @@ func verifiedV3BatchSupport() map[string]any {
 	} {
 		support[field] = hash
 	}
+	support["test_coverage"] = map[string]any{
+		"schema_version": 1, "scope": "micro-mvp-l1",
+		"required": 12, "passed": 12, "percent": 100,
+	}
+	support["mechanics_locked"] = true
 	return support
 }
 
@@ -589,7 +594,7 @@ func TestExactSupportBatchValidationFailsClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err = prepareContentSupportBatch(v3Request); err != nil {
-		t.Fatalf("complete v3 release evidence was rejected: %v", err)
+		t.Fatalf("complete current release evidence was rejected: %v", err)
 	}
 	v3Body["entries"].([]map[string]any)[0]["support"] = verifiedBatchSupport()
 	v3Body["entries"].([]map[string]any)[0]["support"].(map[string]any)["certification_version"] =
@@ -602,7 +607,7 @@ func TestExactSupportBatchValidationFailsClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err = prepareContentSupportBatch(v3Request); err == nil {
-		t.Fatal("v3 certification without release evidence was accepted")
+		t.Fatal("current certification without release evidence was accepted")
 	}
 }
 

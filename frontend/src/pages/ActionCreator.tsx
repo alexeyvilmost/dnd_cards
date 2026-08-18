@@ -14,6 +14,7 @@ import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { validateMechanics } from '../engine/validateMechanics';
 import { isEntityIdTaken, validateEntityIdFormat } from '../utils/entityId';
+import { isMechanicsLocked } from '../content/supportStatus';
 
 // Секции конструктора действия для сквозного рейла (как у эффекта: основное + механика).
 const SECTIONS: NavRailItem[] = [
@@ -42,6 +43,7 @@ const ActionCreator = () => {
   const [loadingAction, setLoadingAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
+  const [lockedEntity, setLockedEntity] = useState(false);
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState('main');
   const isMobile = useIsMobile();
@@ -64,6 +66,9 @@ const ActionCreator = () => {
         try {
           setLoadingAction(true);
           const action = await actionsApi.getAction(sourceId);
+          const locked = isEditMode && isMechanicsLocked(action);
+          setLockedEntity(locked);
+          if (locked) setError('Механика действия закреплена полной тестовой сертификацией. Редактирование запрещено.');
           
           // Заполняем форму данными действия
           
@@ -114,7 +119,7 @@ const ActionCreator = () => {
       
       loadAction();
     }
-  }, [sourceId, asTemplate, reset]);
+  }, [sourceId, asTemplate, isEditMode, reset]);
 
   const previewAction = {
     id: '',
@@ -159,6 +164,10 @@ const ActionCreator = () => {
   };
 
   const onSubmit = async (data: CreateActionRequest) => {
+    if (lockedEntity) {
+      setError('Закреплённое действие нельзя изменить через UI.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setIdError(null);

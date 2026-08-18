@@ -174,7 +174,9 @@ describe('Attack-action sequence and replacement primitives', () => {
     })).toThrow(/stable weapon Card ID/);
   });
 
-  it('is pure across attack counts and survives a JSON checkpoint', () => {
+  it('is pure across attack counts and survives a JSON checkpoint', {
+    meta: { basicPrimitive: 'attack', evidenceKind: 'unit' },
+  }, () => {
     for (let totalAttacks = 1; totalAttacks <= 8; totalAttacks += 1) {
       const started = beginAttackSequence({
         id: `property:${totalAttacks}`,

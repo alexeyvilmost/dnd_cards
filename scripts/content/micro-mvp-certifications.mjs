@@ -39,6 +39,7 @@ import {
   microMvpCatalogFingerprint,
   microMvpReleaseEvidenceBinding,
   readMicroMvpReleaseEvidence,
+  validateMicroMvpTestCoverageSummary,
 } from './micro-mvp-release-evidence.mjs';
 import { assertPrivateRegularFile } from './private-artifact.mjs';
 
@@ -47,7 +48,7 @@ import { assertPrivateRegularFile } from './private-artifact.mjs';
  * Changing the executable obligation suite requires a new version even when
  * the catalog bytes themselves stay unchanged.
  */
-export const MICRO_MVP_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v3';
+export const MICRO_MVP_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v4';
 
 /**
  * A release timestamp is data, not wall-clock state.  The CLI may override it
@@ -184,6 +185,19 @@ function releaseEvidenceSupport(evidence) {
   };
 }
 
+function entityCoverageSupport(evidence, key, entityType) {
+  if (!evidence) return {};
+  const coverage = evidence.testCoverage?.entities?.[key];
+  if (!coverage) throw new Error(`${key}: release evidence has no entity test coverage`);
+  if (coverage.passed !== coverage.required || coverage.percent !== 100) {
+    throw new Error(`${key}: release evidence entity coverage is incomplete`);
+  }
+  return {
+    test_coverage: stableClone(coverage),
+    ...(['action', 'effect', 'spell'].includes(entityType) ? { mechanics_locked: true } : {}),
+  };
+}
+
 function assertReleaseEvidenceBinding(evidence, { apiBase, catalogs } = {}) {
   const requiredGateIds = REQUIRED_RELEASE_GATES.map((gate) => gate.id);
   const deployment = evidence?.deploymentAttestation;
@@ -224,6 +238,7 @@ function assertReleaseEvidenceBinding(evidence, { apiBase, catalogs } = {}) {
   })) {
     if (!SHA256_PATTERN.test(value ?? '')) throw new Error(`release evidence ${field} is invalid`);
   }
+  validateMicroMvpTestCoverageSummary(evidence.testCoverage, evidence.release);
   if (catalogs
     && canonicalJson(evidence.catalog) !== canonicalJson(microMvpCatalogFingerprint(catalogs))) {
     throw new Error('release evidence catalog fingerprint differs from the certification preimages');
@@ -280,6 +295,116 @@ export function assertCertificationCatalogIntegrity(entityGroups, {
   }
 }
 
+function certificationBaseTargets(entityGroups, index) {
+  const core = flattenMicroMvpManifest(MICRO_MVP_MANIFEST).map((item) => {
+    const type = COLLECTION_ENTITY_TYPES[item.collection];
+    const resolved = resolveManifestEntry(item, entityGroups[type] ?? []);
+    if (!resolved.entity || !['not_certified', 'ready'].includes(resolved.status)) {
+      throw new Error(`${item.key}: невозможно построить покрытие (${resolved.status})`);
+    }
+    return { key: item.key, type, entity: resolved.entity };
+  });
+  const conditions = MICRO_MVP_CONDITION_TARGETS.map((target) => {
+    const matches = (entityGroups.effect ?? []).filter((entity) => (
+      entity?.card_number === target.cardNumber
+      && entity?.mechanics?.condition?.id === target.id
+    ));
+    if (matches.length !== 1) {
+      throw new Error(`${target.key}: невозможно однозначно построить покрытие состояния`);
+    }
+    return { key: target.key, type: 'effect', entity: matches[0] };
+  });
+  return [...core, ...conditions].map((target) => ({
+    ...target,
+    identity: `${target.type}:${target.entity.id}`,
+    dependencies: certificationHashes(target.entity, target.type, index).dependencies,
+  }));
+}
+
+function dependencyCoverageKey(type, entity) {
+  if (!nonEmptyString(entity?.card_number)) {
+    throw new Error(`${type}:${entity?.id ?? '<unknown>'}: dependency has no stable card_number`);
+  }
+  return `dependency.${type}.${entity.card_number}`;
+}
+
+function addCoverageContributor(contributors, identity, key) {
+  const keys = contributors.get(identity) ?? new Set();
+  keys.add(key);
+  contributors.set(identity, keys);
+}
+
+/**
+ * Expand the 64 independently tested root/state rows to the exact transitive
+ * DB closure they exercised. A dependency is green only if every root usage
+ * that reaches it is green; counts remain auditable rather than becoming a
+ * boolean inherited badge.
+ */
+export function expandMicroMvpCoverageSummaryForCatalogs(summary, entityGroups) {
+  validateMicroMvpTestCoverageSummary(summary);
+  assertCertificationCatalogIntegrity(entityGroups);
+  const index = buildCertificationIndex(entityGroups);
+  const targets = certificationBaseTargets(entityGroups, index);
+  const expectedBaseKeys = new Set(targets.map((target) => target.key));
+  const actualBaseKeys = Object.keys(summary.entities).filter((key) => !key.startsWith('dependency.'));
+  if (actualBaseKeys.length !== expectedBaseKeys.size
+    || actualBaseKeys.some((key) => !expectedBaseKeys.has(key))) {
+    throw new Error('base test coverage does not exactly match the micro-MVP roots and conditions');
+  }
+
+  const contributors = new Map();
+  const entitiesByIdentity = new Map();
+  const baseKeyByIdentity = new Map();
+  for (const target of targets) {
+    if (baseKeyByIdentity.has(target.identity)) {
+      throw new Error(`${target.identity}: duplicate base certification identity`);
+    }
+    baseKeyByIdentity.set(target.identity, target.key);
+    entitiesByIdentity.set(target.identity, { type: target.type, entity: target.entity });
+    addCoverageContributor(contributors, target.identity, target.key);
+    for (const dependency of target.dependencies) {
+      if (!ENTITY_ENDPOINTS[dependency.type]) continue;
+      const indexed = index.byIdentity.get(dependency.identity);
+      if (!indexed) throw new Error(`${dependency.identity}: dependency disappeared from catalog index`);
+      entitiesByIdentity.set(dependency.identity, indexed);
+      addCoverageContributor(contributors, dependency.identity, target.key);
+    }
+  }
+
+  const entries = [...contributors.entries()].map(([identity, contributorKeys]) => {
+    const indexed = entitiesByIdentity.get(identity);
+    const key = baseKeyByIdentity.get(identity)
+      ?? dependencyCoverageKey(indexed.type, indexed.entity);
+    const coverages = [...contributorKeys].sort().map((contributorKey) => {
+      const coverage = summary.entities[contributorKey];
+      if (!coverage) throw new Error(`${identity}: missing contributor coverage ${contributorKey}`);
+      return coverage;
+    });
+    const required = coverages.reduce((total, coverage) => total + coverage.required, 0);
+    const passed = coverages.reduce((total, coverage) => total + coverage.passed, 0);
+    return [key, {
+      schema_version: 1,
+      scope: 'micro-mvp-l1',
+      required,
+      passed,
+      percent: Math.floor((passed * 100) / required),
+    }];
+  }).sort(([left], [right]) => left.localeCompare(right));
+  if (new Set(entries.map(([key]) => key)).size !== entries.length) {
+    throw new Error('expanded test coverage contains duplicate stable entity keys');
+  }
+  const entities = Object.fromEntries(entries);
+  const required = entries.reduce((total, [, coverage]) => total + coverage.required, 0);
+  const passed = entries.reduce((total, [, coverage]) => total + coverage.passed, 0);
+  return validateMicroMvpTestCoverageSummary({
+    ...summary,
+    required,
+    passed,
+    percent: Math.floor((passed * 100) / required),
+    entities,
+  });
+}
+
 export async function loadCertificationCatalogs(fetcher = fetchAll, {
   baseUrl = apiUrl(),
   fetchImpl = globalThis.fetch,
@@ -301,15 +426,15 @@ export function assertExactCertificationDenominator(records) {
   }
 
   const manifestEntries = flattenMicroMvpManifest(MICRO_MVP_MANIFEST);
-  const denominator = expectedDenominator();
+  const baseDenominator = expectedDenominator();
   if (manifestEntries.length !== coreDenominator()) {
     throw new Error(
       `micro-MVP manifest denominator drift: collections declare ${coreDenominator()}, manifest has ${manifestEntries.length}`,
     );
   }
-  if (!Array.isArray(records) || records.length !== denominator) {
+  if (!Array.isArray(records) || records.length < baseDenominator) {
     throw new Error(
-      `micro-MVP certification denominator must be exactly ${denominator}, got ${records?.length ?? '<non-array>'}`,
+      `micro-MVP certification denominator must contain at least ${baseDenominator} records, got ${records?.length ?? '<non-array>'}`,
     );
   }
 
@@ -324,7 +449,9 @@ export function assertExactCertificationDenominator(records) {
   ];
   const expectedKeys = new Set(expectedTargets.map((item) => item.key));
   const expectedByKey = new Map(expectedTargets.map((item) => [item.key, item]));
-  const actualKeys = records.map((record) => record?.key);
+  const baseRecords = records.filter((record) => record?.collection !== 'dependencies');
+  const dependencyRecords = records.filter((record) => record?.collection === 'dependencies');
+  const actualKeys = baseRecords.map((record) => record?.key);
   const duplicateKeys = duplicateValues(records, (record) => record?.key);
   const missingKeys = [...expectedKeys].filter((key) => !actualKeys.includes(key));
   const unexpectedKeys = actualKeys.filter((key) => !expectedKeys.has(key));
@@ -361,7 +488,7 @@ export function assertExactCertificationDenominator(records) {
     );
   }
 
-  for (const record of records) {
+  for (const record of baseRecords) {
     const expected = expectedByKey.get(record.key);
     if (record.collection !== expected.collection
       || record.entity_type !== expected.entity_type
@@ -384,6 +511,47 @@ export function assertExactCertificationDenominator(records) {
     throw new Error(
       `micro-MVP certification collection conditions must contain ${MICRO_MVP_CONDITION_TARGETS.length}, got ${conditionCount}`,
     );
+  }
+
+  const baseIdentities = new Set(baseRecords.map((record) => `${record.entity_type}:${record.id}`));
+  const expectedDependencies = new Map();
+  for (const record of baseRecords) {
+    if (!Array.isArray(record.dependencies)) {
+      throw new Error(`${record.key}: certification dependencies must be an array`);
+    }
+    for (const dependency of record.dependencies) {
+      if (!ENTITY_ENDPOINTS[dependency?.type] || baseIdentities.has(dependency?.identity)) continue;
+      const existing = expectedDependencies.get(dependency.identity);
+      if (existing && existing.content_hash !== dependency.content_hash) {
+        throw new Error(`${dependency.identity}: inconsistent dependency content hashes`);
+      }
+      expectedDependencies.set(dependency.identity, dependency);
+    }
+  }
+  const actualDependencyIdentities = new Set(dependencyRecords.map((record) => (
+    `${record.entity_type}:${record.id}`
+  )));
+  const missingDependencies = [...expectedDependencies.keys()]
+    .filter((identity) => !actualDependencyIdentities.has(identity));
+  const unexpectedDependencies = [...actualDependencyIdentities]
+    .filter((identity) => !expectedDependencies.has(identity));
+  if (dependencyRecords.length !== expectedDependencies.size
+    || missingDependencies.length || unexpectedDependencies.length) {
+    throw new Error(
+      'micro-MVP dependency certification closure is incomplete'
+      + `${missingDependencies.length ? `; missing: ${missingDependencies.join(', ')}` : ''}`
+      + `${unexpectedDependencies.length ? `; unexpected: ${unexpectedDependencies.join(', ')}` : ''}`,
+    );
+  }
+  for (const record of dependencyRecords) {
+    const identity = `${record.entity_type}:${record.id}`;
+    const expected = expectedDependencies.get(identity);
+    if (record.key !== dependencyCoverageKey(record.entity_type, record.before)
+      || record.table !== ENTITY_ENDPOINTS[record.entity_type]?.[0].replace('/api/', '')
+      || contentHash(record.before) !== expected.content_hash
+      || record.card_number !== record.before?.card_number) {
+      throw new Error(`${record.key}: dependency certification identity or content is invalid`);
+    }
   }
 }
 
@@ -427,6 +595,7 @@ export function prepareMicroMvpCertifications(entityGroups, {
         limitations,
         note: 'Полностью проверено автоматическим rules-core acceptance-аудитом в границах micro-MVP первого уровня.',
         ...releaseEvidenceSupport(evidence),
+        ...entityCoverageSupport(evidence, item.key, entityType),
       },
       dependencies: hashes.dependencies,
     };
@@ -473,11 +642,58 @@ export function prepareMicroMvpCertifications(entityGroups, {
         limitations: [],
         note: 'Полностью проверено micro-MVP атомарными unit- и two-PC обязательствами состояний PHB 2024.',
         ...releaseEvidenceSupport(evidence),
+        ...entityCoverageSupport(evidence, target.key, 'effect'),
       },
       dependencies: hashes.dependencies,
     };
   });
-  const records = [...coreRecords, ...conditionRecords];
+  const baseRecords = [...coreRecords, ...conditionRecords];
+  const baseIdentities = new Set(baseRecords.map((record) => (
+    `${record.entity_type}:${record.id}`
+  )));
+  const dependencyTargets = new Map();
+  for (const record of baseRecords) {
+    for (const dependency of record.dependencies) {
+      if (!ENTITY_ENDPOINTS[dependency.type] || baseIdentities.has(dependency.identity)) continue;
+      dependencyTargets.set(dependency.identity, dependency);
+    }
+  }
+  const dependencyRecords = [...dependencyTargets.values()]
+    .sort((left, right) => left.identity.localeCompare(right.identity))
+    .map((target) => {
+      const indexed = index.byIdentity.get(target.identity);
+      if (!indexed) throw new Error(`${target.identity}: dependency disappeared from catalog index`);
+      const entity = indexed.entity;
+      const entityType = indexed.type;
+      const key = dependencyCoverageKey(entityType, entity);
+      const hashes = certificationHashes(entity, entityType, index);
+      return {
+        key,
+        collection: 'dependencies',
+        entity_type: entityType,
+        table: ENTITY_ENDPOINTS[entityType][0].replace('/api/', ''),
+        id: entity.id,
+        card_number: entity.card_number,
+        name: entity.name,
+        before: stableClone(entity),
+        beforeHash: sha256Canonical(entity),
+        support: {
+          status: ['action', 'effect', 'spell'].includes(entityType)
+            ? 'verified_mechanical'
+            : 'verified_partial',
+          content_hash: hashes.contentHash,
+          dependency_hash: hashes.dependencyHash,
+          certification_version: MICRO_MVP_CERTIFICATION_VERSION,
+          certified_at: certifiedAt,
+          limitations: [],
+          note: 'Проверено во всех micro-MVP корневых сценариях, которые транзитивно используют эту сущность.',
+          ...releaseEvidenceSupport(evidence),
+          ...entityCoverageSupport(evidence, key, entityType),
+        },
+        dependencies: hashes.dependencies,
+      };
+    });
+  const records = [...baseRecords, ...dependencyRecords];
   assertExactCertificationDenominator(records);
   return records;
 }
@@ -527,9 +743,9 @@ export function assertCertificationPlanIntegrity(plan, { requireEvidence = false
   assertRfc3339Utc(plan.certifiedAt, 'plan certifiedAt');
   assertRfc3339Utc(plan.createdAt, 'bundle createdAt');
   assertExactCertificationDenominator(plan.records);
-  if (plan.denominator !== expectedDenominator()) {
+  if (plan.denominator !== plan.records.length) {
     throw new Error(
-      `micro-MVP certification plan denominator must be ${expectedDenominator()}, got ${String(plan.denominator)}`,
+      `micro-MVP certification plan denominator must equal its ${plan.records.length} exact records, got ${String(plan.denominator)}`,
     );
   }
   if (!nonEmptyString(plan.apiBase)) throw new Error('certification plan API base is empty');
@@ -546,6 +762,8 @@ export function assertCertificationPlanIntegrity(plan, { requireEvidence = false
   }
   for (const record of plan.records) {
     const expectedStatus = record.collection === 'conditions'
+      || (record.collection === 'dependencies'
+        && ['action', 'effect', 'spell'].includes(record.entity_type))
       ? 'verified_mechanical'
       : 'verified_partial';
     if (record.support?.status !== expectedStatus
@@ -557,6 +775,16 @@ export function assertCertificationPlanIntegrity(plan, { requireEvidence = false
     for (const [field, expected] of Object.entries(expectedReleaseEvidence)) {
       if (record.support?.[field] !== expected) {
         throw new Error(`${record.key}: support release evidence differs from the immutable plan`);
+      }
+    }
+    const expectedCoverage = entityCoverageSupport(
+      plan.evidence,
+      record.key,
+      record.entity_type,
+    );
+    for (const [field, expected] of Object.entries(expectedCoverage)) {
+      if (canonicalJson(record.support?.[field]) !== canonicalJson(expected)) {
+        throw new Error(`${record.key}: support test coverage differs from the immutable plan`);
       }
     }
     if (!record.before || typeof record.before !== 'object' || Array.isArray(record.before)
@@ -593,7 +821,7 @@ export function createMicroMvpCertificationPlanFromCatalogs(entityGroups, {
     certificationVersion: MICRO_MVP_CERTIFICATION_VERSION,
     certifiedAt,
     evidence: evidence ? stableClone(evidence) : null,
-    denominator: expectedDenominator(),
+    denominator: records.length,
     records,
   };
   plan.planHash = certificationPlanHash(plan);
@@ -635,11 +863,16 @@ export function writeCertificationBundleAtomic(path, bundle, { refuseOverwrite =
     closeSync(descriptor);
     descriptor = null;
     renameSync(temporary, destination);
-    const directoryDescriptor = openSync(directory, 'r');
-    try {
-      fsyncSync(directoryDescriptor);
-    } finally {
-      closeSync(directoryDescriptor);
+    // Windows does not permit fsync on directory handles. The file itself is
+    // already durable before the atomic rename; POSIX additionally persists
+    // the directory entry so a power loss cannot lose the rename.
+    if (process.platform !== 'win32') {
+      const directoryDescriptor = openSync(directory, 'r');
+      try {
+        fsyncSync(directoryDescriptor);
+      } finally {
+        closeSync(directoryDescriptor);
+      }
     }
   } finally {
     if (descriptor !== null) closeSync(descriptor);
@@ -1068,7 +1301,7 @@ function parseArgs(argv) {
 
 function usage() {
   return [
-    `Пакетная сертификация ровно ${expectedDenominator()} сущностей micro-MVP (49 core + 15 состояний; по умолчанию read-only plan):`,
+    `Пакетная сертификация минимум ${expectedDenominator()} сущностей micro-MVP (49 core + 15 состояний + точное транзитивное DB-замыкание; по умолчанию read-only plan):`,
     '  npm run content:certify:micro -- --bundle backups/micro-mvp-certification.json \\',
     '    --evidence backups/micro-mvp-release-evidence.json \\',
     '    --certified-at 2026-08-05T00:00:00Z',

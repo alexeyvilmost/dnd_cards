@@ -5,7 +5,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import { loadCertificationCatalogs } from './micro-mvp-certifications.mjs';
+import {
+  expandMicroMvpCoverageSummaryForCatalogs,
+  loadCertificationCatalogs,
+} from './micro-mvp-certifications.mjs';
 import {
   MICRO_MVP_RELEASE_EVIDENCE_KIND,
   MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
@@ -16,6 +19,7 @@ import {
   currentMicroMvpSourceCommit,
   microMvpCatalogFingerprint,
   validateMicroMvpReleaseEvidenceArtifact,
+  validateMicroMvpTestCoverageSummary,
   writeMicroMvpReleaseEvidenceAtomic,
 } from './micro-mvp-release-evidence.mjs';
 
@@ -306,6 +310,7 @@ export async function executeMicroMvpReleaseGate(definition, {
   let execution;
   let testSummary = null;
   let reportHash = null;
+  let testCoverage = null;
   switch (definition.id) {
     case 'backend_go_test': {
       const integrationVariables = ['CANONICAL_RUNTIME_TEST_DSN', 'CONTENT_MIGRATION_TEST_DSN'];
@@ -395,7 +400,12 @@ export async function executeMicroMvpReleaseGate(definition, {
       execution = await runCommand({ command: NPM, args: ['run', 'test:micro:coverage'] });
       if (execution.exitCode === 0) {
         const manifestPath = resolve(FRONTEND_ROOT, '.micro-mvp-evidence/execution-manifest.json');
+        const coveragePath = resolve(FRONTEND_ROOT, '.micro-mvp-evidence/coverage-summary.json');
         const manifest = readJson(manifestPath, definition.id);
+        testCoverage = validateMicroMvpTestCoverageSummary(
+          readJson(coveragePath, `${definition.id} coverage`),
+          currentMicroMvpReleaseIdentity(),
+        );
         const states = manifest.tests?.map((item) => item.state) ?? [];
         testSummary = passedTestSummary({
           total: manifest.testCount,
@@ -407,7 +417,10 @@ export async function executeMicroMvpReleaseGate(definition, {
         if (manifest.runResult !== 'passed' || manifest.unhandledErrorCount !== 0) {
           throw new Error('offline coverage execution manifest did not pass cleanly');
         }
-        reportHash = sha256File(manifestPath);
+        reportHash = `sha256:${createHash('sha256')
+          .update(readFileSync(manifestPath))
+          .update(readFileSync(coveragePath))
+          .digest('hex')}`;
       }
       break;
     }
@@ -486,6 +499,7 @@ export async function executeMicroMvpReleaseGate(definition, {
     outputBytes: execution.outputBytes,
     reportHash,
     testSummary,
+    ...(testCoverage ? { testCoverage } : {}),
   };
 }
 
@@ -497,6 +511,7 @@ export async function generateMicroMvpReleaseEvidence({
   expectedDeployedCommit,
   gateExecutor = executeMicroMvpReleaseGate,
   catalogLoader = () => loadCertificationCatalogs(undefined, { baseUrl: apiBase }),
+  coverageExpander = expandMicroMvpCoverageSummaryForCatalogs,
   sourceCommitVerifier = assertCurrentMicroMvpSourceMatchesCommit,
 } = {}) {
   if (!apiBase || !frontendBase || !artifactPath || !sourceCommit || !expectedDeployedCommit) {
@@ -543,6 +558,11 @@ export async function generateMicroMvpReleaseEvidence({
       }));
     }
     const catalogs = await catalogLoader();
+    const semanticCoverageGate = gates.find((gate) => gate.id === 'semantic_coverage');
+    semanticCoverageGate.testCoverage = coverageExpander(
+      semanticCoverageGate.testCoverage,
+      catalogs,
+    );
     const sourceAfter = currentMicroMvpReleaseIdentity();
     if (JSON.stringify(sourceBefore) !== JSON.stringify(sourceAfter)) {
       throw new Error('release source changed while mandatory gates were running');

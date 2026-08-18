@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -44,7 +44,7 @@ describe('rules-core import boundary', () => {
   it('does not select production behavior through literal entity UUIDs', () => {
     const nonRuntimeRoots = [join(ROOT, 'testing'), join(ROOT, 'coverage')];
     const violations = sourceFiles(ROOT)
-      .filter((path) => !nonRuntimeRoots.some((directory) => path.startsWith(`${directory}/`)))
+      .filter((path) => !nonRuntimeRoots.some((directory) => path.startsWith(`${directory}${sep}`)))
       .filter((path) => LITERAL_ENTITY_UUID.test(readFileSync(path, 'utf8')));
     expect(violations).toEqual([]);
   });

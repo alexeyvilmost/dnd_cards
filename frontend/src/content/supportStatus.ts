@@ -45,6 +45,17 @@ export interface EntitySupportCertification {
   release_hash?: string | null;
   patch_hash?: string | null;
   catalog_hash?: string | null;
+  test_coverage?: EntityTestCoverage | null;
+  mechanics_locked?: boolean | null;
+}
+
+export interface EntityTestCoverage {
+  schema_version: 1;
+  /** Explicit milestone/rules scope; 100% never means all future D&D content. */
+  scope: string;
+  required: number;
+  passed: number;
+  percent: number;
 }
 
 export interface SupportableEntity {
@@ -52,6 +63,7 @@ export interface SupportableEntity {
 }
 
 const MICRO_MVP_V3_CERTIFICATION = 'micro-mvp-l1-rules-core-v3';
+const MICRO_MVP_V4_CERTIFICATION = 'micro-mvp-l1-rules-core-v4';
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UTC_RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
@@ -62,7 +74,8 @@ const MICRO_MVP_V3_HASH_FIELDS = [
 ] as const satisfies readonly (keyof EntitySupportCertification)[];
 
 function microMvpV3EvidenceIssues(certification: EntitySupportCertification): string[] {
-  if (certification.certification_version !== MICRO_MVP_V3_CERTIFICATION) return [];
+  if (![MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION]
+    .includes(certification.certification_version ?? '')) return [];
   const issues: string[] = [];
   if (!UUID.test(certification.evidence_id ?? '')) issues.push('micro-MVP v3 требует evidence_id UUID');
   for (const field of MICRO_MVP_V3_HASH_FIELDS) {
@@ -74,6 +87,25 @@ function microMvpV3EvidenceIssues(certification: EntitySupportCertification): st
     const value = certification[field] ?? '';
     if (!UTC_RFC3339.test(value) || Number.isNaN(Date.parse(value))) {
       issues.push(`micro-MVP v3 требует ${field} UTC RFC3339`);
+    }
+  }
+  if (certification.certification_version === MICRO_MVP_V4_CERTIFICATION) {
+    const coverage = certification.test_coverage;
+    if (!coverage || coverage.schema_version !== 1 || !coverage.scope?.trim()
+      || !Number.isInteger(coverage.required) || coverage.required < 1
+      || !Number.isInteger(coverage.passed) || coverage.passed < 0
+      || coverage.passed > coverage.required
+      || !Number.isInteger(coverage.percent)
+      || coverage.percent !== Math.floor((coverage.passed * 100) / coverage.required)) {
+      issues.push('micro-MVP v4 требует точный test_coverage');
+    }
+    if (certification.mechanics_locked === true
+      && (!coverage || coverage.passed !== coverage.required || coverage.percent !== 100)) {
+      issues.push('mechanics_locked требует 100% покрытия заявленного scope');
+    }
+    if (certification.mechanics_locked === true
+      && !certification.status.startsWith('verified_')) {
+      issues.push('mechanics_locked требует verified-статус');
     }
   }
   return issues;
@@ -125,11 +157,30 @@ export function supportStatusPresentation(status: EntitySupportStatus): SupportS
 export function supportStatusOf(entity: SupportableEntity | null | undefined): EntitySupportStatus {
   const support = entity?.support;
   if (!support) return 'untested';
-  if (support.certification_version === MICRO_MVP_V3_CERTIFICATION
+  if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION]
+    .includes(support.certification_version ?? '')
     && certificationContractIssues(support).length > 0) {
     return 'untested';
   }
   return support.status;
+}
+
+export function testCoverageOf(
+  entity: SupportableEntity | null | undefined,
+): EntityTestCoverage | null {
+  const coverage = entity?.support?.test_coverage;
+  if (!coverage || coverage.schema_version !== 1 || !coverage.scope?.trim()
+    || !Number.isInteger(coverage.required) || coverage.required < 1
+    || !Number.isInteger(coverage.passed) || coverage.passed < 0
+    || coverage.passed > coverage.required
+    || coverage.percent !== Math.floor((coverage.passed * 100) / coverage.required)) return null;
+  return coverage;
+}
+
+export function isMechanicsLocked(
+  entity: SupportableEntity | null | undefined,
+): boolean {
+  return entity?.support?.mechanics_locked === true && testCoverageOf(entity)?.percent === 100;
 }
 
 export function isDefaultVisibleSupportStatus(status: EntitySupportStatus): boolean {
@@ -201,7 +252,9 @@ export function effectiveSupportStatus(
   currentDependencyHash?: string,
 ): EntitySupportStatus {
   if (!isCertificationFresh(certification, currentContentHash, currentDependencyHash)
-    || (certification?.certification_version === MICRO_MVP_V3_CERTIFICATION
+    || (certification != null
+      && [MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION]
+      .includes(certification?.certification_version ?? '')
       && certificationContractIssues(certification).length > 0)) {
     return 'untested';
   }

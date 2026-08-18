@@ -33,6 +33,9 @@ func TestValidateContentSupportRequest(t *testing.T) {
 	validHash := "sha256:" + strings.Repeat("a", 64)
 	validDependencyHash := "sha256:" + strings.Repeat("b", 64)
 	validEvidenceID := "00000000-0000-4000-8000-000000000001"
+	completeCoverage := &ContentTestCoverage{
+		SchemaVersion: 1, Scope: "micro-mvp-l1", Required: 12, Passed: 12, Percent: 100,
+	}
 	tests := []struct {
 		name    string
 		request ContentSupportRequest
@@ -91,7 +94,7 @@ func TestValidateContentSupportRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "micro MVP v3 requires release evidence",
+			name: "micro MVP evidence requires release evidence",
 			request: ContentSupportRequest{
 				Status:               "verified_mechanical",
 				CertificationVersion: contentSupportString(microMVPEvidenceCertificationVersion),
@@ -102,7 +105,29 @@ func TestValidateContentSupportRequest(t *testing.T) {
 			want: "evidence_id",
 		},
 		{
-			name: "valid micro MVP v3 evidence",
+			name: "valid current micro MVP evidence and lock",
+			request: ContentSupportRequest{
+				Status:               "verified_mechanical",
+				CertificationVersion: contentSupportString(microMVPEvidenceCertificationVersion),
+				ContentHash:          &validHash,
+				DependencyHash:       &validDependencyHash,
+				CertifiedAt:          contentSupportString("2026-08-05T12:00:00Z"),
+				EvidenceID:           &validEvidenceID,
+				EvidenceHash:         &validHash,
+				EvidenceCompletedAt:  contentSupportString("2026-08-05T11:59:00Z"),
+				GateSourceHash:       &validHash,
+				SourceContentHash:    &validHash,
+				RulesHash:            &validHash,
+				ReleaseContentHash:   &validHash,
+				ReleaseHash:          &validHash,
+				PatchHash:            &validHash,
+				CatalogHash:          &validHash,
+				TestCoverage:         completeCoverage,
+				MechanicsLocked:      func() *bool { value := true; return &value }(),
+			},
+		},
+		{
+			name: "current micro MVP evidence requires exact coverage",
 			request: ContentSupportRequest{
 				Status:               "verified_mechanical",
 				CertificationVersion: contentSupportString(microMVPEvidenceCertificationVersion),
@@ -120,9 +145,36 @@ func TestValidateContentSupportRequest(t *testing.T) {
 				PatchHash:            &validHash,
 				CatalogHash:          &validHash,
 			},
+			want: "test_coverage",
 		},
 		{
-			name: "micro MVP v3 rejects non-canonical evidence hash whitespace",
+			name: "lock rejects partial coverage",
+			request: ContentSupportRequest{
+				Status:               "verified_partial",
+				CertificationVersion: contentSupportString(microMVPEvidenceCertificationVersion),
+				ContentHash:          &validHash,
+				DependencyHash:       &validDependencyHash,
+				CertifiedAt:          contentSupportString("2026-08-05T12:00:00Z"),
+				Limitations:          []string{"explicit scope boundary"},
+				EvidenceID:           &validEvidenceID,
+				EvidenceHash:         &validHash,
+				EvidenceCompletedAt:  contentSupportString("2026-08-05T11:59:00Z"),
+				GateSourceHash:       &validHash,
+				SourceContentHash:    &validHash,
+				RulesHash:            &validHash,
+				ReleaseContentHash:   &validHash,
+				ReleaseHash:          &validHash,
+				PatchHash:            &validHash,
+				CatalogHash:          &validHash,
+				TestCoverage: &ContentTestCoverage{
+					SchemaVersion: 1, Scope: "micro-mvp-l1", Required: 12, Passed: 11, Percent: 91,
+				},
+				MechanicsLocked: func() *bool { value := true; return &value }(),
+			},
+			want: "100%",
+		},
+		{
+			name: "micro MVP evidence rejects non-canonical evidence hash whitespace",
 			request: ContentSupportRequest{
 				Status:               "verified_mechanical",
 				CertificationVersion: contentSupportString(microMVPEvidenceCertificationVersion),
@@ -161,5 +213,23 @@ func TestValidateContentSupportRequest(t *testing.T) {
 				t.Fatalf("expected issue containing %q, got %v", tt.want, issues)
 			}
 		})
+	}
+}
+
+func TestContentMechanicsLockMarkerFailsClosed(t *testing.T) {
+	if isContentMechanicsLocked(nil) {
+		t.Fatal("nil support must not be locked")
+	}
+	legacy := JSONMap{"status": "verified_mechanical"}
+	if isContentMechanicsLocked(&legacy) {
+		t.Fatal("legacy verified status must not become locked implicitly")
+	}
+	locked := JSONMap{"status": "verified_partial", "mechanics_locked": true}
+	if !isContentMechanicsLocked(&locked) {
+		t.Fatal("explicit durable mechanics lock was ignored")
+	}
+	malformed := JSONMap{"mechanics_locked": "true"}
+	if isContentMechanicsLocked(&malformed) {
+		t.Fatal("string marker must not unlock the typed fail-closed contract")
 	}
 }

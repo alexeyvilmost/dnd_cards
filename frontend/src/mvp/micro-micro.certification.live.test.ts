@@ -239,7 +239,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
     expect(compiledCertification.provider.capabilityGaps).toEqual([]);
     const profile = compiledCertification.semanticEvidenceProfile;
     expect(profile).toMatchObject({
-      certificationVersion: 'micro-mvp-l1-rules-core-v3',
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
       release: {
         releaseId: compiledCertification.provider.release.id,
         rulesHash: compiledCertification.provider.release.overlayHash,
@@ -280,7 +280,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
         expect(item.support.limitations?.filter(Boolean).length, item.key).toBeGreaterThan(0);
         expect(item.support.note, item.key).toContain('rules-core acceptance');
       }
-      expect(item.support.certification_version, item.key).toBe('micro-mvp-l1-rules-core-v3');
+      expect(item.support.certification_version, item.key).toBe('micro-mvp-l1-rules-core-v4');
     }
   });
 

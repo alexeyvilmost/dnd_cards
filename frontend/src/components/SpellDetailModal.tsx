@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Copy } from 'lucide-react';
+import { Edit, Trash2, Copy, Lock } from 'lucide-react';
 import type { Spell } from '../types';
 import {
   SPELL_SCHOOL_OPTIONS,
@@ -12,6 +12,7 @@ import { FormattedText } from '../utils/formattedText';
 import SpellPreview from './SpellPreview';
 import EntityImageEditor from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock, EdmTag } from './EntityDetailShell';
+import { isMechanicsLocked } from '../content/supportStatus';
 
 interface SpellDetailModalProps {
   spell: Spell | null;
@@ -58,6 +59,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   onUpdated,
 }) => {
   if (!isOpen || !spell) return null;
+  const locked = isMechanicsLocked(spell);
 
   // Атака/спасбросок — из механики (легаси-флаги удалены).
   const mstats = parseMechanicsStats((spell as { mechanics?: Record<string, unknown> | null }).mechanics);
@@ -83,7 +85,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       title={spell.name}
       titleEn={spell.name_en}
       preview={(
-        <EntityImageEditor
+        locked ? <SpellPreview spell={spell} disableHover /> : <EntityImageEditor
           entityId={spell.id}
           initialUrl={spell.image_url || ''}
           persist={async (id, url) => (await spellsApi.updateSpell(id, { image_url: url })).image_url || url}
@@ -94,15 +96,23 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       )}
       actions={(
         <>
-          <Link to={`/spell-creator?edit=${spell.id}`} className="edm-btn">
-            <Edit size={18} /><span>Редактировать</span>
-          </Link>
+          {locked ? (
+            <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
+              <Lock size={18} /><span>Закреплено</span>
+            </span>
+          ) : (
+            <Link to={`/spell-creator?edit=${spell.id}`} className="edm-btn">
+              <Edit size={18} /><span>Редактировать</span>
+            </Link>
+          )}
           <Link to={`/spell-creator?template_id=${spell.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>
-          <button type="button" onClick={() => onDelete(spell.id)} className="edm-btn edm-btn--danger">
-            <Trash2 size={18} /><span>Удалить</span>
-          </button>
+          {!locked && (
+            <button type="button" onClick={() => onDelete(spell.id)} className="edm-btn edm-btn--danger">
+              <Trash2 size={18} /><span>Удалить</span>
+            </button>
+          )}
         </>
       )}
     >

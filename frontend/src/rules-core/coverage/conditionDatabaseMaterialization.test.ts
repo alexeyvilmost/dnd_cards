@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { MICRO_MVP_L1_CONTENT_PATCH } from '../../canon/declarativeMechanicsPatch';
 import {
@@ -17,16 +19,17 @@ function versionedRows(): ConditionEffectRecord[] {
 }
 
 describe('condition database materialization release gate', () => {
-  it('uses the same certification suite identity as the production batch', async () => {
+  it('uses the same certification suite identity as the production batch', () => {
     const moduleUrl = new URL(
       '../../../../scripts/content/micro-mvp-certifications.mjs',
       import.meta.url,
     );
-    const certification = await import(/* @vite-ignore */ moduleUrl.href) as {
-      MICRO_MVP_CERTIFICATION_VERSION: string;
-    };
+    const source = readFileSync(fileURLToPath(moduleUrl), 'utf8');
+    const certificationVersion = source.match(
+      /export const MICRO_MVP_CERTIFICATION_VERSION\s*=\s*'([^']+)'/,
+    )?.[1];
     expect(MICRO_MVP_CONDITION_CERTIFICATION_VERSION)
-      .toBe(certification.MICRO_MVP_CERTIFICATION_VERSION);
+      .toBe(certificationVersion);
   });
 
   it('materializes every versioned DB record into the atomically tested executable rule', () => {

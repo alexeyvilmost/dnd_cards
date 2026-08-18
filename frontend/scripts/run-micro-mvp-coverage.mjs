@@ -13,6 +13,10 @@ if (descriptor.manifestRelativePath !== '.micro-mvp-evidence/execution-manifest.
   throw new Error('Refusing to remove an unexpected evidence manifest target');
 }
 const manifestPath = resolve(frontendRoot, descriptor.manifestRelativePath);
+if (descriptor.coverageSummaryRelativePath !== '.micro-mvp-evidence/coverage-summary.json') {
+  throw new Error('Refusing to remove an unexpected coverage summary target');
+}
+const coverageSummaryPath = resolve(frontendRoot, descriptor.coverageSummaryRelativePath);
 const vitestEntry = resolve(frontendRoot, 'node_modules/vitest/vitest.mjs');
 const runId = randomUUID();
 const startedAt = new Date().toISOString();
@@ -28,11 +32,12 @@ const childEnvironment = {
   MICRO_MVP_EVIDENCE_MANIFEST_PATH: manifestPath,
   MICRO_MVP_EVIDENCE_RUN_ID: runId,
   MICRO_MVP_EVIDENCE_RUN_STARTED_AT: startedAt,
+  MICRO_MVP_COVERAGE_SUMMARY_PATH: coverageSummaryPath,
 };
 
-async function removeStaleManifest() {
+async function removeStaleFile(path) {
   try {
-    await unlink(manifestPath);
+    await unlink(path);
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
   }
@@ -57,7 +62,7 @@ function runVitest(configFile) {
   });
 }
 
-await removeStaleManifest();
+await Promise.all([removeStaleFile(manifestPath), removeStaleFile(coverageSummaryPath)]);
 const collectionExitCode = await runVitest('vitest.micro-coverage.config.ts');
 if (collectionExitCode !== 0) {
   process.exitCode = collectionExitCode;

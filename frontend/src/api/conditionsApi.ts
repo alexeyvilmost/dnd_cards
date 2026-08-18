@@ -34,7 +34,7 @@ const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CONDITION_ID = /^[a-z][a-z0-9_-]*$/;
 const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
-export const MICRO_MVP_CONDITION_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v3';
+export const MICRO_MVP_CONDITION_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v4';
 const CERTIFICATION_VOLATILE_FIELDS = new Set([
   'support', 'created_at', 'updated_at', 'deleted_at',
 ]);

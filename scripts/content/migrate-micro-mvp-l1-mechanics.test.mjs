@@ -63,7 +63,9 @@ test('migration progress bundle uses a unique crash-durable atomic writer', () =
   writeMigrationBundleAtomic(bundlePath, { revision: 2 });
 
   assert.deepEqual(readJson(bundlePath), { revision: 2 });
-  assert.equal(statSync(bundlePath).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') {
+    assert.equal(statSync(bundlePath).mode & 0o777, 0o600);
+  }
   assert.equal(readFileSync(legacyTemporary, 'utf8'), 'do-not-touch');
   assert.equal(
     readdirSync(directory).filter((name) => name !== 'progress.json.tmp' && name.endsWith('.tmp')).length,

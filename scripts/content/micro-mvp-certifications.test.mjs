@@ -29,6 +29,7 @@ import {
   assertCertificationCatalogIntegrity,
   assertCertificationPlanIntegrity,
   createMicroMvpCertificationPlanFromCatalogs,
+  expandMicroMvpCoverageSummaryForCatalogs,
   loadCertificationCatalogs,
   readCertificationBundle,
   rollbackMicroMvpCertificationPlan,
@@ -37,6 +38,7 @@ import {
 } from './micro-mvp-certifications.mjs';
 import {
   REQUIRED_RELEASE_GATES,
+  MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
   currentMicroMvpReleaseIdentity,
   currentMicroMvpSourceCommit,
   microMvpCatalogFingerprint,
@@ -48,6 +50,27 @@ import {
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const CURRENT_RELEASE_IDENTITY = currentMicroMvpReleaseIdentity();
 const CURRENT_COMMIT = currentMicroMvpSourceCommit();
+
+function completeTestCoverage() {
+  const keys = [
+    ...flattenMicroMvpManifest().map((item) => item.key),
+    ...MICRO_MVP_CONDITION_TARGETS.map((target) => target.key),
+  ].sort();
+  const entities = Object.fromEntries(keys.map((key) => [
+    key,
+    { schema_version: 1, scope: 'micro-mvp-l1', required: 2, passed: 2, percent: 100 },
+  ]));
+  return {
+    schemaVersion: 1,
+    scope: 'micro-mvp-l1',
+    rulesHash: CURRENT_RELEASE_IDENTITY.rulesHash,
+    contentHash: CURRENT_RELEASE_IDENTITY.contentHash,
+    required: keys.length * 2,
+    passed: keys.length * 2,
+    percent: 100,
+    entities,
+  };
+}
 
 function syntheticCatalogs() {
   const catalogs = Object.fromEntries(
@@ -83,7 +106,7 @@ function syntheticCatalogs() {
 function testEvidenceBinding(catalogs, baseUrl = 'https://api.example.test') {
   const now = '2026-08-05T07:59:00Z';
   return {
-    schemaVersion: 3,
+    schemaVersion: MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
     evidenceId: '00000000-0000-4000-8000-000000000998',
     sha256: `sha256:${'e'.repeat(64)}`,
     apiBase: baseUrl,
@@ -98,6 +121,7 @@ function testEvidenceBinding(catalogs, baseUrl = 'https://api.example.test') {
     },
     release: clone(CURRENT_RELEASE_IDENTITY),
     catalog: microMvpCatalogFingerprint(catalogs),
+    testCoverage: completeTestCoverage(),
     gateIds: REQUIRED_RELEASE_GATES.map((gate) => gate.id),
   };
 }
@@ -110,6 +134,43 @@ function createTestPlan(catalogs, options = {}) {
     evidence: options.evidence ?? testEvidenceBinding(catalogs, baseUrl),
   });
 }
+
+test('coverage and certification expand to every exercised DB dependency and lock mechanics', () => {
+  const catalogs = syntheticCatalogs();
+  const action = {
+    id: '00000000-0000-4000-8000-999999999999',
+    card_number: 'ACT-dependency-probe',
+    name: 'Dependency probe',
+    mechanics: { effects: [] },
+    support: { status: 'untested' },
+    updated_at: '2026-08-05T09:00:00Z',
+  };
+  catalogs.action.push(action);
+  catalogs.class[0].level_progression = { 1: { actions: [action.id] } };
+  const baseCoverage = completeTestCoverage();
+  const expanded = expandMicroMvpCoverageSummaryForCatalogs(baseCoverage, catalogs);
+  assert.equal(Object.keys(expanded.entities).length, 65);
+  assert.deepEqual(expanded.entities['dependency.action.ACT-dependency-probe'], {
+    schema_version: 1,
+    scope: 'micro-mvp-l1',
+    required: 2,
+    passed: 2,
+    percent: 100,
+  });
+
+  const evidence = testEvidenceBinding(catalogs);
+  evidence.testCoverage = expanded;
+  const plan = createMicroMvpCertificationPlanFromCatalogs(catalogs, {
+    baseUrl: evidence.apiBase,
+    evidence,
+  });
+  assert.equal(plan.denominator, 65);
+  assert.equal(plan.records.length, 65);
+  const record = plan.records.find((item) => item.key === 'dependency.action.ACT-dependency-probe');
+  assert.equal(record.support.status, 'verified_mechanical');
+  assert.equal(record.support.mechanics_locked, true);
+  assert.deepEqual(record.support.test_coverage, expanded.entities[record.key]);
+});
 
 test('certification evidence binding rejects a missing or malformed frontend origin', () => {
   const catalogs = syntheticCatalogs();
@@ -146,6 +207,7 @@ function passingEvidenceArtifact(catalogs, baseUrl = 'https://api.example.test',
       testSummary: gate.tests
         ? { total: 1 + skipped + todo, passed: 1, failed: 0, skipped, todo }
         : null,
+      ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
     };
   });
   const aggregate = gates.reduce((totals, gate) => {
@@ -153,7 +215,7 @@ function passingEvidenceArtifact(catalogs, baseUrl = 'https://api.example.test',
     return totals;
   }, { total: 0, passed: 0, failed: 0, skipped: 0, todo: 0 });
   return {
-    schemaVersion: 3,
+    schemaVersion: MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
     kind: 'micro-mvp-release-gate-evidence',
     evidenceId: '00000000-0000-4000-8000-000000000997',
     apiBase: baseUrl,
@@ -421,7 +483,7 @@ test('tampered plan denominator fails closed before authentication or writes', a
       certificationKey: 'key',
       fetchImpl: api.fetchImpl,
     }),
-    /denominator must be exactly 64/,
+    /denominator must contain at least 64 records/,
   );
   assert.equal(api.requests.filter((request) => request.method === 'POST').length, 0);
 });
@@ -598,7 +660,9 @@ test('persisted bundle is 0600 and apply uses one atomic 64-entry request', asyn
     baseUrl, certifiedAt, evidence: evidence.binding,
   });
   const bundlePath = persistedTestBundle(t, plan);
-  assert.equal(statSync(bundlePath).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') {
+    assert.equal(statSync(bundlePath).mode & 0o777, 0o600);
+  }
   const result = await runMicroMvpCertificationCommand({
     argv: [
       '--apply',
@@ -639,7 +703,9 @@ test('persisted bundle is 0600 and apply uses one atomic 64-entry request', asyn
   const persisted = readCertificationBundle(bundlePath);
   assert.equal(persisted.status, 'applied');
   assert.ok(persisted.records.every((record) => record.after && record.afterHash));
-  assert.equal(statSync(bundlePath).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') {
+    assert.equal(statSync(bundlePath).mode & 0o777, 0o600);
+  }
   assert.match(output.join('\n'), /APPLIED ATOMIC 64\/64/);
 });
 

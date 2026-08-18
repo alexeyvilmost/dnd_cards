@@ -411,7 +411,10 @@ class FocusedMasteryHarness {
 
 describe('Fighter mandatory protocol scenario evidence', () => {
   it('runs the Fighter L1 mandatory two-PC protocol through Second Wind and Topple with exact migration and replay', {
-    meta: { semanticProtocol: 'mandatory-two-pc-v1', scenarioId: 'SC-FIGHTER-L1-01' },
+    meta: {
+      semanticProtocol: 'mandatory-two-pc-v1', scenarioId: 'SC-FIGHTER-L1-01',
+      basicPrimitive: 'resource_spend', evidenceKind: 'two_pc',
+    },
   }, () => {
     const run = assertMandatoryTwoPlayerFighterProtocol();
     const fighterState = run.finalState.actors.fighter;
@@ -438,7 +441,10 @@ describe('Fighter mandatory protocol scenario evidence', () => {
   });
 
   it('runs the mandatory two-PC protocol then resumes one Topple save after accepted Shield without repeating damage or costs', {
-    meta: { semanticProtocol: 'mandatory-two-pc-v1', scenarioId: 'SC-FIGHTER-TOPPLE-SHIELD-01' },
+    meta: {
+      semanticProtocol: 'mandatory-two-pc-v1', scenarioId: 'SC-FIGHTER-TOPPLE-SHIELD-01',
+      basicPrimitive: 'saving_throw', evidenceKind: 'two_pc',
+    },
   }, () => {
     assertMandatoryTwoPlayerFighterProtocol();
 

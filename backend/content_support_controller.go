@@ -47,26 +47,69 @@ func isValidContentSupportUTCTimestamp(value string) bool {
 }
 
 type ContentSupportRequest struct {
-	Status               string   `json:"status" binding:"required"`
-	ContentHash          *string  `json:"content_hash"`
-	DependencyHash       *string  `json:"dependency_hash"`
-	CertificationVersion *string  `json:"certification_version"`
-	CertifiedAt          *string  `json:"certified_at"`
-	Limitations          []string `json:"limitations"`
-	Note                 *string  `json:"note"`
-	EvidenceID           *string  `json:"evidence_id"`
-	EvidenceHash         *string  `json:"evidence_hash"`
-	EvidenceCompletedAt  *string  `json:"evidence_completed_at"`
-	GateSourceHash       *string  `json:"gate_source_hash"`
-	SourceContentHash    *string  `json:"source_content_hash"`
-	RulesHash            *string  `json:"rules_hash"`
-	ReleaseContentHash   *string  `json:"release_content_hash"`
-	ReleaseHash          *string  `json:"release_hash"`
-	PatchHash            *string  `json:"patch_hash"`
-	CatalogHash          *string  `json:"catalog_hash"`
+	Status               string               `json:"status" binding:"required"`
+	ContentHash          *string              `json:"content_hash"`
+	DependencyHash       *string              `json:"dependency_hash"`
+	CertificationVersion *string              `json:"certification_version"`
+	CertifiedAt          *string              `json:"certified_at"`
+	Limitations          []string             `json:"limitations"`
+	Note                 *string              `json:"note"`
+	EvidenceID           *string              `json:"evidence_id"`
+	EvidenceHash         *string              `json:"evidence_hash"`
+	EvidenceCompletedAt  *string              `json:"evidence_completed_at"`
+	GateSourceHash       *string              `json:"gate_source_hash"`
+	SourceContentHash    *string              `json:"source_content_hash"`
+	RulesHash            *string              `json:"rules_hash"`
+	ReleaseContentHash   *string              `json:"release_content_hash"`
+	ReleaseHash          *string              `json:"release_hash"`
+	PatchHash            *string              `json:"patch_hash"`
+	CatalogHash          *string              `json:"catalog_hash"`
+	TestCoverage         *ContentTestCoverage `json:"test_coverage"`
+	MechanicsLocked      *bool                `json:"mechanics_locked"`
 }
 
-const microMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v3"
+type ContentTestCoverage struct {
+	SchemaVersion int    `json:"schema_version"`
+	Scope         string `json:"scope"`
+	Required      int    `json:"required"`
+	Passed        int    `json:"passed"`
+	Percent       int    `json:"percent"`
+}
+
+const legacyMicroMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v3"
+const microMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v4"
+
+func isMicroMVPEvidenceCertificationVersion(value string) bool {
+	return value == legacyMicroMVPEvidenceCertificationVersion ||
+		value == microMVPEvidenceCertificationVersion
+}
+
+func validateContentTestCoverage(coverage *ContentTestCoverage) []string {
+	if coverage == nil {
+		return []string{"test_coverage отсутствует"}
+	}
+	issues := []string{}
+	if coverage.SchemaVersion != 1 {
+		issues = append(issues, "test_coverage.schema_version должен быть 1")
+	}
+	if strings.TrimSpace(coverage.Scope) == "" || coverage.Scope != strings.TrimSpace(coverage.Scope) {
+		issues = append(issues, "test_coverage.scope должен быть непустым каноническим идентификатором")
+	}
+	if coverage.Required < 1 {
+		issues = append(issues, "test_coverage.required должен быть положительным")
+	}
+	if coverage.Passed < 0 || coverage.Passed > coverage.Required {
+		issues = append(issues, "test_coverage.passed должен находиться между 0 и required")
+	}
+	expectedPercent := 0
+	if coverage.Required > 0 {
+		expectedPercent = coverage.Passed * 100 / coverage.Required
+	}
+	if coverage.Percent != expectedPercent {
+		issues = append(issues, "test_coverage.percent должен точно соответствовать passed/required")
+	}
+	return issues
+}
 
 func requiredSupportHash(value *string, field string, issues *[]string) {
 	if value == nil || !contentSupportSHA256Pattern.MatchString(*value) {
@@ -108,15 +151,15 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 		}
 	}
 	if req.CertificationVersion != nil &&
-		strings.TrimSpace(*req.CertificationVersion) == microMVPEvidenceCertificationVersion {
-		if *req.CertificationVersion != microMVPEvidenceCertificationVersion {
-			issues = append(issues, "micro-MVP v3 требует канонический certification_version без пробелов")
+		isMicroMVPEvidenceCertificationVersion(strings.TrimSpace(*req.CertificationVersion)) {
+		if !isMicroMVPEvidenceCertificationVersion(*req.CertificationVersion) {
+			issues = append(issues, "micro-MVP evidence требует канонический certification_version без пробелов")
 		}
 		if req.EvidenceID == nil {
-			issues = append(issues, "micro-MVP v3 требует evidence_id")
+			issues = append(issues, "micro-MVP evidence требует evidence_id")
 		} else if parsed, err := uuid.Parse(*req.EvidenceID); err != nil || parsed == uuid.Nil ||
 			strings.TrimSpace(*req.EvidenceID) != *req.EvidenceID {
-			issues = append(issues, "micro-MVP v3 требует evidence_id UUID")
+			issues = append(issues, "micro-MVP evidence требует evidence_id UUID")
 		}
 		requiredSupportHash(req.EvidenceHash, "evidence_hash", &issues)
 		requiredSupportHash(req.GateSourceHash, "gate_source_hash", &issues)
@@ -127,11 +170,27 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 		requiredSupportHash(req.PatchHash, "patch_hash", &issues)
 		requiredSupportHash(req.CatalogHash, "catalog_hash", &issues)
 		if req.CertifiedAt == nil || !isValidContentSupportUTCTimestamp(*req.CertifiedAt) {
-			issues = append(issues, "micro-MVP v3 требует явный certified_at UTC RFC3339")
+			issues = append(issues, "micro-MVP evidence требует явный certified_at UTC RFC3339")
 		}
 		if req.EvidenceCompletedAt == nil ||
 			!isValidContentSupportUTCTimestamp(*req.EvidenceCompletedAt) {
-			issues = append(issues, "micro-MVP v3 требует evidence_completed_at UTC RFC3339")
+			issues = append(issues, "micro-MVP evidence требует evidence_completed_at UTC RFC3339")
+		}
+	}
+	if req.CertificationVersion != nil && *req.CertificationVersion == microMVPEvidenceCertificationVersion {
+		issues = append(issues, validateContentTestCoverage(req.TestCoverage)...)
+	}
+	if req.MechanicsLocked != nil && *req.MechanicsLocked {
+		if req.CertificationVersion == nil || *req.CertificationVersion != microMVPEvidenceCertificationVersion {
+			issues = append(issues, "mechanics_locked требует текущую micro-MVP evidence certification")
+		}
+		if !strings.HasPrefix(req.Status, "verified_") {
+			issues = append(issues, "mechanics_locked требует verified-статус")
+		}
+		if coverageIssues := validateContentTestCoverage(req.TestCoverage); len(coverageIssues) > 0 {
+			issues = append(issues, coverageIssues...)
+		} else if req.TestCoverage.Passed != req.TestCoverage.Required || req.TestCoverage.Percent != 100 {
+			issues = append(issues, "mechanics_locked требует 100% покрытия заявленного scope")
 		}
 	}
 	return issues
@@ -200,6 +259,21 @@ func (cc *ContentSupportController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Невалидная certification", "issues": issues})
 		return
 	}
+	var current struct {
+		Support *JSONMap `gorm:"column:support"`
+	}
+	if result := cc.db.Table(table).Select("support").Where("id = ?", id).Take(&current); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Сущность не найдена"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось прочитать certification"})
+		return
+	}
+	if isContentMechanicsLocked(current.Support) && (req.MechanicsLocked == nil || !*req.MechanicsLocked) {
+		rejectLockedContentMutation(c, current.Support)
+		return
+	}
 
 	certifiedAt := time.Now().UTC().Format(time.RFC3339)
 	if req.CertifiedAt != nil && strings.TrimSpace(*req.CertifiedAt) != "" {
@@ -220,6 +294,12 @@ func (cc *ContentSupportController) Update(c *gin.Context) {
 	}
 	if len(req.Limitations) > 0 {
 		support["limitations"] = req.Limitations
+	}
+	if req.TestCoverage != nil {
+		support["test_coverage"] = req.TestCoverage
+	}
+	if req.MechanicsLocked != nil {
+		support["mechanics_locked"] = *req.MechanicsLocked
 	}
 	if req.Note != nil {
 		support["note"] = *req.Note
@@ -243,7 +323,7 @@ func (cc *ContentSupportController) Update(c *gin.Context) {
 		return
 	}
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Сущность не найдена"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Certification не была обновлена"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{

@@ -250,6 +250,9 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинания"})
 		return
 	}
+	if rejectLockedContentMutation(c, spell.Support) {
+		return
+	}
 
 	// Обновление полей
 	if req.Name != "" {
@@ -383,7 +386,20 @@ func (sc *SpellController) DeleteSpell(c *gin.Context) {
 		return
 	}
 
-	if err := sc.db.Delete(&Spell{}, "id = ?", id).Error; err != nil {
+	var spell Spell
+	if err := sc.db.Select("id", "support").Where("id = ?", id).First(&spell).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Заклинание не найдено"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинания"})
+		return
+	}
+	if rejectLockedContentMutation(c, spell.Support) {
+		return
+	}
+
+	if err := sc.db.Delete(&spell).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления заклинания"})
 		return
 	}

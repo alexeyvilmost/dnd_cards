@@ -14,6 +14,7 @@ import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics'
 import { formatFormulaDisplay } from '../engine/formula';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import SupportStatusBadge from './forge/SupportStatusBadge';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -124,6 +125,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
       <h3>{spell.name || 'Название заклинания'}</h3>
       <div className="sp-subtype"><OriginalName nameEn={spell.name_en} suffix={subtype || 'Заговор'} /></div>
+      <SupportStatusBadge entity={spell} />
 
       {spell.id && (
         <Link className="sp-pagelink" to={`/spell/${spell.id}`} onClick={(e) => e.stopPropagation()}>

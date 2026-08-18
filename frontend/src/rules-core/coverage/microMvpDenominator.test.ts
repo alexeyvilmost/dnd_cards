@@ -157,7 +157,10 @@ describe('executable micro-MVP semantic denominator', () => {
   });
 
   it('pins every PHB obligation to the independent reviewed source corpus rather than the overlay', () => {
-    const source = readFileSync(join(FRONTEND_ROOT, '../officials/Player\'s Handbook 2024.txt'));
+    const source = readFileSync(
+      join(FRONTEND_ROOT, '../officials/Player\'s Handbook 2024.txt'),
+      'utf8',
+    ).replace(/\r\n/g, '\n');
     const actual = `sha256:${createHash('sha256').update(source).digest('hex')}`;
     expect(actual).toBe(PINNED_PHB_2024_CORPUS_HASH);
     expect(new Set(denominator.obligations

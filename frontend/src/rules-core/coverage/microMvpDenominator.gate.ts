@@ -17,6 +17,10 @@ import { validateCapabilityEvidenceStrict } from './validator';
 import { validatePhb2024ConditionEvidenceExecution } from './phb2024ConditionEvidence';
 import { MICRO_MVP_L1_CONTENT_PATCH } from '../../canon/declarativeMechanicsPatch';
 import { validateConditionDatabaseMaterialization } from '../../canon/conditionDatabaseMaterialization';
+import { createMicroMvpTestCoverageSummary } from './microMvpCoverageSummary';
+import { validateBasicInteractionEvidenceExecution } from './basicInteractionEvidence';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 
 describe('micro-MVP semantic acceptance gate', () => {
   it('requires current unit, scenario, and compiled-release evidence for every entity and derived obligation', async () => {
@@ -25,6 +29,7 @@ describe('micro-MVP semantic acceptance gate', () => {
     expect(denominator.currentEntityIds).toHaveLength(MICRO_MVP_ENTITY_DENOMINATOR_CARDINALITY);
     const executionManifest = readCurrentMicroMvpEvidenceExecutionManifest();
     validatePhb2024ConditionEvidenceExecution(executionManifest);
+    validateBasicInteractionEvidenceExecution(executionManifest);
     validateConditionDatabaseMaterialization(
       MICRO_MVP_L1_CONTENT_PATCH.conditionPatches.map((declaration) => ({
         card_number: declaration.cardNumber,
@@ -49,7 +54,7 @@ describe('micro-MVP semantic acceptance gate', () => {
       executionManifest,
     );
 
-    validateCapabilityEvidenceStrict({
+    const report = validateCapabilityEvidenceStrict({
       currentRelease: denominator.currentRelease,
       currentEntityIds: denominator.currentEntityIds,
       obligations: denominator.obligations,
@@ -61,5 +66,19 @@ describe('micro-MVP semantic acceptance gate', () => {
         ...compiledReleaseEvidence,
       ],
     });
+    const coverage = createMicroMvpTestCoverageSummary(denominator, report.evidenceIndex);
+    expect(Object.keys(coverage.entities)).toHaveLength(64);
+    expect(coverage.entities).toHaveProperty('class.fighter');
+    expect(coverage.entities).toHaveProperty('condition.unconscious');
+    expect(coverage.required).toBeGreaterThan(0);
+    expect(coverage.passed).toBe(coverage.required);
+    expect(coverage.percent).toBe(100);
+
+    const outputPath = process.env.MICRO_MVP_COVERAGE_SUMMARY_PATH;
+    if (outputPath) {
+      const destination = resolve(outputPath);
+      mkdirSync(dirname(destination), { recursive: true });
+      writeFileSync(destination, `${JSON.stringify(coverage, null, 2)}\n`, 'utf8');
+    }
   }, 60_000);
 });

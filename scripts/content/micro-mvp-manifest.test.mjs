@@ -179,7 +179,7 @@ test('canonical certification consumer covers 49 manifest entries plus all 15 co
   assert.equal(certifications.length, 64);
   assert.equal(new Set(certifications.map((item) => item.key)).size, 64);
   assert.ok(certifications.every((item) => item.support.note.includes('micro-MVP')));
-  assert.equal(MICRO_MVP_CERTIFICATION_VERSION, 'micro-mvp-l1-rules-core-v3');
+  assert.equal(MICRO_MVP_CERTIFICATION_VERSION, 'micro-mvp-l1-rules-core-v4');
   assert.ok(certifications.every((item) => (
     item.support.certification_version === MICRO_MVP_CERTIFICATION_VERSION
       && (item.collection === 'conditions'
