@@ -274,17 +274,21 @@ describe('micro-MVP D&D 2024 Fighting Styles', () => {
         }],
       }],
     });
-    expect(mechanics('defense')).toEqual(expect.objectContaining({
-      name: 'Fighting Style: Defense',
+    expect(mechanics('defense')).toEqual({
+      fighting_style: { id: 'defense', mode: 'passive_modifier' },
+      name: 'Боевой стиль: Оборона',
       sourceEntityIds: MICRO_MVP_FIGHTING_STYLE_ENTITIES.defense.sourceEntityIds,
+      activation: { mode: 'passive' },
       effects: [{
         resolution: 'auto',
-        result: [expect.objectContaining({
+        result: [{
+          kind: 'modifier',
           applies_to: { roll: 'ac', filter: { wearingArmor: true } },
-          value: '+1',
-        })],
+          op: 'add', value: '+1', source: 'Боевой стиль: Оборона',
+          when: [{ kind: 'wearing_armor' }],
+        }],
       }],
-    }));
+    });
     expect(mechanics('twoWeaponFighting')).toEqual(expect.objectContaining({
       name: 'Fighting Style: Two-Weapon Fighting',
       sourceEntityIds: MICRO_MVP_FIGHTING_STYLE_ENTITIES.twoWeaponFighting.sourceEntityIds,
