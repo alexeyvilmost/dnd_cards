@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { fileURLToPath } from 'node:url';
 import {
   MICRO_MVP_COLLECTION_ENTITY_TYPES,

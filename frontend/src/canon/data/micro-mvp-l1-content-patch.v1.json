@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "patchId": "dnd5e-2024.micro-mvp-l1.content-patch.v1",
-  "patchVersion": "1.5.0",
+  "patchVersion": "1.6.0",
   "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
   "authorityTarget": "database-entity-mechanics",
   "mechanicsPatches": {
@@ -68,7 +68,12 @@
                   },
                   "op": "add",
                   "value": "+1",
-                  "source": "Fighting Style: Defense"
+                  "source": "Боевой стиль: Оборона",
+                  "when": [
+                    {
+                      "kind": "wearing_armor"
+                    }
+                  ]
                 }
               ]
             }
@@ -6281,6 +6286,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "blinded"
           },
@@ -6328,6 +6336,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "blinded"
           },
@@ -6389,6 +6400,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "charmed"
           }
@@ -6436,6 +6450,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "charmed"
           }
@@ -6476,6 +6493,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "deafened"
           }
@@ -6505,6 +6525,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "deafened"
           }
@@ -6563,6 +6586,9 @@
               "outcome": "death"
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "exhaustion"
           }
@@ -6611,6 +6637,9 @@
               "outcome": "death"
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "exhaustion"
           }
@@ -6677,6 +6706,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "frightened"
           }
@@ -6732,6 +6764,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "frightened"
           }
@@ -6782,6 +6817,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "grappled"
           }
@@ -6821,6 +6859,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "grappled"
           }
@@ -6893,6 +6934,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "incapacitated"
           }
@@ -6954,6 +6998,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "incapacitated"
           }
@@ -7023,6 +7070,9 @@
           "world_facts": {
             "cannot_be_targeted_by_requires_sight_unless_seen": true
           },
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "invisible"
           }
@@ -7080,6 +7130,9 @@
           ],
           "world_facts": {
             "cannot_be_targeted_by_requires_sight_unless_seen": true
+          },
+          "activation": {
+            "mode": "passive"
           },
           "condition": {
             "id": "invisible"
@@ -7166,6 +7219,9 @@
           "includes": [
             "incapacitated"
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "paralyzed"
           }
@@ -7240,6 +7296,9 @@
           "includes": [
             "incapacitated"
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "paralyzed"
           }
@@ -7323,6 +7382,9 @@
             "weight_multiplier": 10,
             "aging_paused": true
           },
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "petrified"
           }
@@ -7396,6 +7458,9 @@
             "weight_multiplier": 10,
             "aging_paused": true
           },
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "petrified"
           }
@@ -7440,6 +7505,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "poisoned"
           }
@@ -7473,6 +7541,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "poisoned"
           }
@@ -7550,6 +7621,9 @@
             ],
             "stand_cost": "half_speed"
           },
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "prone"
           }
@@ -7616,6 +7690,9 @@
             ],
             "stand_cost": "half_speed"
           },
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "prone"
           }
@@ -7679,6 +7756,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "restrained"
           }
@@ -7731,6 +7811,9 @@
               ]
             }
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "restrained"
           }
@@ -7792,6 +7875,9 @@
           "includes": [
             "incapacitated"
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "stunned"
           }
@@ -7842,6 +7928,9 @@
           "includes": [
             "incapacitated"
           ],
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "stunned"
           }
@@ -7935,6 +8024,9 @@
             "drops_held_items": true,
             "unaware_of_surroundings": true
           },
+          "activation": {
+            "mode": "passive"
+          },
           "condition": {
             "id": "unconscious"
           }
@@ -8016,6 +8108,9 @@
           "world_facts": {
             "drops_held_items": true,
             "unaware_of_surroundings": true
+          },
+          "activation": {
+            "mode": "passive"
           },
           "condition": {
             "id": "unconscious"

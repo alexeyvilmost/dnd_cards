@@ -20,6 +20,7 @@ import {
   type MicroMvpMatrixEntity,
 } from '../canon/microMicroMatrix';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
+import { readLiveJson } from './liveJsonRead';
 
 type ManifestEntry = {
   key: string;
@@ -42,11 +43,10 @@ async function fetchAll<T extends { id: string }>(path: string, key: string): Pr
   const seenIds = new Set<string>();
   let expectedTotal: number | null = null;
   for (let page = 1; page <= 100; page += 1) {
-    const response = await fetch(`${API_BASE_URL}${path}?page=${page}&limit=1000`, {
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
-    const body = await response.json() as Record<string, unknown>;
+    const body = await readLiveJson<Record<string, unknown>>(
+      `${API_BASE_URL}${path}?page=${page}&limit=1000`,
+      { label: path },
+    );
     if (!Array.isArray(body[key])) throw new Error(`${path}: required collection ${key} is missing`);
     const batch = body[key] as T[];
     const responseTotal = Number(body.total);

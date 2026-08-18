@@ -615,6 +615,13 @@ func GetAllMigrations() []Migration {
 			// Исправленные механические контракты не откатываются к неисполняемому состоянию.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "098_restore_live_mvp_starting_equipment",
+			Description: "Восстановить soft-deleted карточки стартовых доспехов, на которые ссылаются live-MVP классы",
+			Up:          restoreLiveMvpStartingEquipment,
+			// Повторное soft-delete снова создаст висячие ссылки, поэтому откат намеренно пуст.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

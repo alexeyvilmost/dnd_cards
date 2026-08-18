@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { readLiveJson } from './liveJsonRead';
 
 if (typeof globalThis.localStorage === 'undefined') {
   const store = new Map<string, string>();
@@ -67,6 +68,20 @@ type PreparedCertification = {
   dependencies: Array<{ identity: string; type: string }>;
 };
 
+async function runCertificationSetupStage<T>(
+  stage: string,
+  task: () => T | Promise<T>,
+): Promise<T> {
+  try {
+    return await task();
+  } catch (error) {
+    const detail = error instanceof Error
+      ? `${error.name}: ${error.message}${error.stack ? `\n${error.stack}` : ''}`
+      : String(error);
+    throw new Error(`live certification setup failed at ${stage}: ${detail}`);
+  }
+}
+
 const PATHS: Record<string, [string, string]> = {
   class: ['/api/classes', 'classes'],
   race: ['/api/races', 'races'],
@@ -93,11 +108,10 @@ async function fetchAll<T extends { id: string }>(path: string, key: string): Pr
   const seenIds = new Set<string>();
   let expectedTotal: number | null = null;
   for (let page = 1; page <= 100; page += 1) {
-    const response = await fetch(`${API_BASE_URL}${path}?page=${page}&limit=1000`, {
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
-    const body = await response.json() as Record<string, unknown>;
+    const body = await readLiveJson<Record<string, unknown>>(
+      `${API_BASE_URL}${path}?page=${page}&limit=1000`,
+      { label: path },
+    );
     if (!Array.isArray(body[key])) throw new Error(`${path}: required collection ${key} is missing`);
     const batch = body[key] as T[];
     const responseTotal = Number(body.total);
@@ -188,26 +202,30 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
   let compiledCertification: LiveMicroMvpCompiledCertification;
 
   beforeAll(async () => {
-    groups = Object.fromEntries(await Promise.all(
+    groups = await runCertificationSetupStage('catalog reads', async () => Object.fromEntries(await Promise.all(
       Object.entries(PATHS).map(async ([type, [path, key]]) => [
         type,
         await fetchAll<CatalogEntity>(path, key),
       ]),
-    ));
+    )));
     const moduleUrl = new URL('../../../scripts/content/micro-mvp-certifications.mjs', import.meta.url);
-    const module = await import(/* @vite-ignore */ moduleUrl.href) as {
+    const module = await runCertificationSetupStage('certification module import', async () => (
+      await import(/* @vite-ignore */ moduleUrl.href) as {
       MICRO_MVP_CERTIFICATION_VERSION: string;
       prepareMicroMvpCertifications: (
         entityGroups: Record<string, CatalogEntity[]>,
         options: { certifiedAt: string },
       ) => PreparedCertification[];
-    };
+      }
+    ));
     const certificationGroups = Object.fromEntries(CERTIFICATION_ENTITY_TYPES.map((type) => (
       [type, groups[type]]
     )));
-    certifications = module.prepareMicroMvpCertifications(certificationGroups, {
-      certifiedAt: '2026-07-28T00:00:00Z',
-    });
+    certifications = await runCertificationSetupStage('certification preparation', () => (
+      module.prepareMicroMvpCertifications(certificationGroups, {
+        certifiedAt: '2026-07-28T00:00:00Z',
+      })
+    ));
     const catalogs: SnapshotCatalogs = {
       cards: groups.card as unknown as Card[],
       classes: groups.class as unknown as CharacterClass[],
@@ -220,10 +238,12 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
       resources: groups.resource as unknown as ResourceDefinition[],
       variables: groups.variable as unknown as Variable[],
     };
-    compiledCertification = await compileLiveMicroMvpCertification({
-      catalogs,
-      certificationVersion: module.MICRO_MVP_CERTIFICATION_VERSION,
-    });
+    compiledCertification = await runCertificationSetupStage('compiled semantic audit', () => (
+      compileLiveMicroMvpCertification({
+        catalogs,
+        certificationVersion: module.MICRO_MVP_CERTIFICATION_VERSION,
+      })
+    ));
   }, 180_000);
 
   it('компилирует фактически полученный GET-каталог тем же release и связывает semantic evidence profile', () => {
