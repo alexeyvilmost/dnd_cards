@@ -4,20 +4,20 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0",
-      "contentHash": "sha256:6b04b93ad93476c2e57224f902d1a0739e1ff3fa4994e9d36f6e77d7b927ff48",
+      "releaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0",
+      "contentHash": "sha256:a07e1dfadcba503918753b09318b09791441d01049a2dfb4610ab937847d4325",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0",
+      "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
       "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
       "sourceContentHash": "sha256:0d7677988be340531fc2fdb13f17825b8f136b5d8dfdf5c1937a6a5428fca04b",
-      "overlayHash": "sha256:980678c4ab6c2d696b150142ce3ab2e3fa52bbc49cee5c9844b2535542aed108",
-      "contentHash": "sha256:6b04b93ad93476c2e57224f902d1a0739e1ff3fa4994e9d36f6e77d7b927ff48",
-      "releaseHash": "sha256:8568dc40ae99dd4ea3d981799941e510445a682a107aece7c62a752593a8689c"
+      "overlayHash": "sha256:f973f8a300a34069252e5e3731967fdbe058b4f8b7a72431432b9c7a000b4b9a",
+      "contentHash": "sha256:a07e1dfadcba503918753b09318b09791441d01049a2dfb4610ab937847d4325",
+      "releaseHash": "sha256:576426e498c3760f080224ae7e37599fd0ea8afa34a65fb243f5013b64413db2"
     },
     "rootStableKeys": {
       "fighter": "class.fighter|species.human|background.soldier|feat.alert",
@@ -30,7 +30,7 @@
   "roots": {
     "fighter": {
       "stableKey": "class.fighter|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.fighter|species.human|background.soldier|feat.alert",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.fighter|species.human|background.soldier|feat.alert",
       "draft": {
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0001",
         "description": "",
@@ -94,7 +94,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.fighter|species.human|background.soldier|feat.alert",
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.fighter|species.human|background.soldier|feat.alert",
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -737,7 +737,7 @@
     },
     "wizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.wizard|species.human|background.soldier|feat.alert",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.wizard|species.human|background.soldier|feat.alert",
       "draft": {
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "description": "",
@@ -822,7 +822,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.wizard|species.human|background.soldier|feat.alert",
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.wizard|species.human|background.soldier|feat.alert",
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -2379,9 +2379,9 @@
     },
     "blade": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
       "actor": {
-        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -2866,7 +2866,7 @@
           "blade": {
             "kind": "blade",
             "sourceEntityId": "d0988f8f-15b8-4b9a-b201-99841460be44",
-            "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+            "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
             "bondActionId": "d0988f8f-15b8-4b9a-b201-99841460be44@5a0403b5-3185-43a2-b187-38397d3d01b7",
             "lifecyclePolicy": {
               "separationDistanceFt": 5,
@@ -3353,9 +3353,9 @@
     },
     "chain": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
       "actor": {
-        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -3876,7 +3876,7 @@
           "chain": {
             "kind": "chain",
             "sourceEntityId": "808d727d-7e58-4ae4-9ed4-b4d49cd0a704",
-            "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+            "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
             "template": {
               "findFamiliarActionId": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@808d727d-7e58-4ae4-9ed4-b4d49cd0a704",
               "normalFormSource": "find_familiar_spell",
@@ -4387,9 +4387,9 @@
     },
     "tome": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
       "actor": {
-        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -4930,25 +4930,25 @@
               "slotResource": "spell_slot_1"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "always_prepared",
               "level": 1,
               "spellcastingAbility": "cha",
@@ -4956,17 +4956,17 @@
               "slotResource": "spell_slot_1"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "always_prepared",
               "level": 1,
               "spellcastingAbility": "cha",
@@ -4980,11 +4980,11 @@
           "tome": {
             "kind": "tome",
             "sourceEntityId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-            "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+            "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
             "tome": {
               "sourceEntityId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-              "bookObjectId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+              "bookObjectId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "cantripActionIds": [
                 "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
                 "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
@@ -4995,11 +4995,11 @@
                 "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
               ],
               "spellGrantIds": [
-                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
+                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
               ],
               "createdAfterRest": "long"
             }
@@ -7315,13 +7315,13 @@
       ],
       "initialWorldObjects": [
         {
-          "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+          "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
           "name": "Book of Shadows",
           "kind": "item",
           "size": "small",
-          "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-          "carriedByActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-          "sourceActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "ownerActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "carriedByActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "sourceActorId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
           "sourceActionId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
           "magicalAura": {
             "school": "conjuration",
@@ -7337,9 +7337,9 @@
     },
     "familiarWizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
       "actor": {
-        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -9023,7 +9023,7 @@
         "familiarActionId": "mm2025.owl.talons"
       },
       "tome": {
-        "initialBookObjectId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.9.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+        "initialBookObjectId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
         "cantripActionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
         "cantripActionIds": [
           "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",

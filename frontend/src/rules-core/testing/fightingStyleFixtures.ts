@@ -102,7 +102,8 @@ export function createMicroMvpFightingStylePassiveMechanics(
       ? {
         kind: 'modifier',
         applies_to: { roll: 'ac', filter: { wearingArmor: true } },
-        op: 'add', value: '+1', source: 'Fighting Style: Defense',
+        op: 'add', value: '+1', source: 'Боевой стиль: Оборона',
+        when: [{ kind: 'wearing_armor' }],
       }
       : {
         kind: 'modifier',
