@@ -202,12 +202,13 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
   let compiledCertification: LiveMicroMvpCompiledCertification;
 
   beforeAll(async () => {
-    groups = await runCertificationSetupStage('catalog reads', async () => Object.fromEntries(await Promise.all(
-      Object.entries(PATHS).map(async ([type, [path, key]]) => [
-        type,
-        await fetchAll<CatalogEntity>(path, key),
-      ]),
-    )));
+    groups = await runCertificationSetupStage('catalog reads', async () => {
+      const entries: Array<[string, CatalogEntity[]]> = [];
+      for (const [type, [path, key]] of Object.entries(PATHS)) {
+        entries.push([type, await fetchAll<CatalogEntity>(path, key)]);
+      }
+      return Object.fromEntries(entries);
+    });
     const moduleUrl = new URL('../../../scripts/content/micro-mvp-certifications.mjs', import.meta.url);
     const module = await runCertificationSetupStage('certification module import', async () => (
       await import(/* @vite-ignore */ moduleUrl.href) as {
@@ -287,10 +288,13 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
       .toBeGreaterThanOrEqual(profile.denominator.coverageCellCount);
   });
 
-  it('формирует 49 milestone-partial и 15 fully-mechanical сертификатов одной rules-core версии', () => {
-    expect(certifications).toHaveLength(64);
-    expect(new Set(certifications.map((item) => item.key)).size).toBe(64);
-    for (const item of certifications) {
+  it('формирует 49 partial, 15 mechanical и полное транзитивное покрытие одной rules-core версии', () => {
+    const base = certifications.filter((item) => item.collection !== 'dependencies');
+    const dependencies = certifications.filter((item) => item.collection === 'dependencies');
+    expect(base).toHaveLength(64);
+    expect(dependencies.length).toBeGreaterThan(0);
+    expect(new Set(certifications.map((item) => item.key)).size).toBe(certifications.length);
+    for (const item of base) {
       if (item.collection === 'conditions') {
         expect(item.support.status, item.key).toBe('verified_mechanical');
         expect(item.support.limitations ?? [], item.key).toEqual([]);
@@ -300,6 +304,15 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
         expect(item.support.limitations?.filter(Boolean).length, item.key).toBeGreaterThan(0);
         expect(item.support.note, item.key).toContain('rules-core acceptance');
       }
+      expect(item.support.certification_version, item.key).toBe('micro-mvp-l1-rules-core-v4');
+    }
+    for (const item of dependencies) {
+      const expectedStatus = ['action', 'effect', 'spell'].includes(item.entity_type)
+        ? 'verified_mechanical'
+        : 'verified_partial';
+      expect(item.support.status, item.key).toBe(expectedStatus);
+      expect(item.support.limitations ?? [], item.key).toEqual([]);
+      expect(item.support.note, item.key).toContain('транзитивно');
       expect(item.support.certification_version, item.key).toBe('micro-mvp-l1-rules-core-v4');
     }
   });

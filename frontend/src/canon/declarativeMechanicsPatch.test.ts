@@ -277,6 +277,14 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
     ))!;
     const declaredEntityId = thievesCant.id;
     thievesCant.id = '22222222-2222-4222-8222-222222222222';
+    const rogue = materialized.classes.find((klass) => klass.card_number === 'CLASS-rogue')!;
+    const levelOne = (rogue.level_progression as Record<
+      string,
+      { effects: string[] }
+    >)['1'];
+    levelOne.effects = levelOne.effects.map((id) => (
+      id === thievesCant.card_number ? thievesCant.id : id
+    ));
 
     expect(() => assertMicroMvpL1ContentMaterialized(materialized)).not.toThrow();
     const provider = await compileMicroMvpL1MaterializedCatalogs(materialized);

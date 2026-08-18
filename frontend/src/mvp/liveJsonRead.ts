@@ -19,7 +19,7 @@ export async function readLiveJson<T>(
   options: LiveJsonReadOptions = {},
 ): Promise<T> {
   const label = options.label ?? url;
-  const timeoutMs = options.timeoutMs ?? 15_000;
+  const timeoutMs = options.timeoutMs ?? 30_000;
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= SAFE_READ_MAX_ATTEMPTS; attempt += 1) {

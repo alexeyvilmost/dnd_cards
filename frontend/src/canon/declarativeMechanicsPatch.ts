@@ -127,6 +127,37 @@ function declaredMutableFields(entity: JsonObject): JsonObject {
   )));
 }
 
+function replaceStringAliases(value: unknown, aliases: ReadonlyMap<string, string>): unknown {
+  if (typeof value === 'string') return aliases.get(value) ?? value;
+  if (Array.isArray(value)) return value.map((item) => replaceStringAliases(item, aliases));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => (
+      [key, replaceStringAliases(item, aliases)]
+    )));
+  }
+  return value;
+}
+
+function declaredCreateIdentityAliases(catalogs: SnapshotCatalogs): {
+  actualToDeclared: Map<string, string>;
+  declaredToActual: Map<string, string>;
+} {
+  const actualToDeclared = new Map<string, string>();
+  const declaredToActual = new Map<string, string>();
+  for (const declaration of MICRO_MVP_L1_CONTENT_PATCH.createEntities) {
+    const declared = declaration.entity;
+    const matches = catalogs.effects.filter((entity) => entity.card_number === declared.card_number);
+    if (matches.length !== 1 || matches[0].id === declared.id) continue;
+    // Relationships in declarative fields use stable card_number tokens; the
+    // backend replaces those tokens with the assigned UUID after creating the
+    // row. Normalize that surrogate UUID back to the stable token for CAS.
+    actualToDeclared.set(matches[0].id, declared.card_number);
+    declaredToActual.set(declared.id, matches[0].id);
+    declaredToActual.set(declared.card_number, matches[0].id);
+  }
+  return { actualToDeclared, declaredToActual };
+}
+
 /**
  * The only compiler-side content adapter. Every entity rule is ordinary JSON
  * in the versioned patch; this function knows only identity, CAS hashes and
@@ -141,6 +172,7 @@ export function materializeMicroMvpL1ContentPatch(
   const changes: ContentPatchChange[] = [];
   const alreadyMaterialized: ContentPatchChange[] = [];
   const problems: string[] = [];
+  const createIdentityAliases = declaredCreateIdentityAliases(catalogs);
 
   for (const collection of ['effects', 'actions', 'spells'] as const) {
     for (const patch of MICRO_MVP_L1_CONTENT_PATCH.mechanicsPatches[collection]) {
@@ -223,13 +255,17 @@ export function materializeMicroMvpL1ContentPatch(
     }
     if (referenceFailure) continue;
     const currentFields = selectedFields(entity as unknown as JsonObject, patch.fields);
+    const comparableFields = replaceStringAliases(
+      currentFields,
+      createIdentityAliases.actualToDeclared,
+    );
     const change: ContentPatchChange = {
       collection: patch.collection,
       entityId: patch.entityId,
       cardNumber: patch.cardNumber,
       operation: 'replace-fields',
     };
-    if (same(currentFields, patch.fields)) {
+    if (same(comparableFields, patch.fields)) {
       alreadyMaterialized.push(change);
       continue;
     }
@@ -244,7 +280,10 @@ export function materializeMicroMvpL1ContentPatch(
       problems.push(`${patch.collection}:${patch.cardNumber}: declarative fields are not materialized`);
       continue;
     }
-    Object.assign(entity, cloneJson(patch.fields));
+    Object.assign(entity, cloneJson(replaceStringAliases(
+      patch.fields,
+      createIdentityAliases.declaredToActual,
+    ) as JsonObject));
     changes.push(change);
   }
 
