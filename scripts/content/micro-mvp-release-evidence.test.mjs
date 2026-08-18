@@ -15,7 +15,7 @@ import test from 'node:test';
 import {
   executeMicroMvpReleaseGate,
   generateMicroMvpReleaseEvidence,
-  releaseExecutable,
+  releaseInvocation,
 } from './generate-micro-mvp-release-evidence.mjs';
 import {
   REQUIRED_RELEASE_GATES,
@@ -37,10 +37,28 @@ const FRONTEND_BASE = 'https://frontend.example.test';
 const CURRENT_RELEASE_IDENTITY = currentMicroMvpReleaseIdentity();
 const CURRENT_COMMIT = currentMicroMvpSourceCommit();
 
-test('release gate resolves npm through the Windows command shim', () => {
-  assert.equal(releaseExecutable('npm', 'win32'), 'npm.cmd');
-  assert.equal(releaseExecutable('node', 'win32'), 'node');
-  assert.equal(releaseExecutable('npm', 'linux'), 'npm');
+test('release gate runs npm through its JavaScript CLI on Windows', () => {
+  const args = ['run', 'test'];
+  assert.deepEqual(releaseInvocation('npm', args, {
+    platform: 'win32',
+    nodeExecutable: 'C:\\node\\node.exe',
+    npmExecPath: 'C:\\node\\node_modules\\npm\\bin\\npm-cli.js',
+  }), {
+    command: 'C:\\node\\node.exe',
+    args: ['C:\\node\\node_modules\\npm\\bin\\npm-cli.js', ...args],
+  });
+  assert.deepEqual(releaseInvocation('npm.cmd', args, {
+    platform: 'win32',
+    nodeExecutable: 'C:\\node\\node.exe',
+    npmExecPath: 'C:\\node\\npm.cmd',
+  }), {
+    command: 'C:\\node\\node.exe',
+    args: ['C:\\node\\node_modules\\npm\\bin\\npm-cli.js', ...args],
+  });
+  assert.deepEqual(releaseInvocation('npm', args, { platform: 'linux' }), {
+    command: 'npm',
+    args,
+  });
 });
 
 function completeTestCoverage() {

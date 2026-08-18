@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +26,7 @@ import {
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FRONTEND_ROOT = resolve(HERE, '../../frontend');
 const BACKEND_ROOT = resolve(HERE, '../../backend');
-const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const NPM = 'npm';
 const PLAYWRIGHT_CLI = resolve(FRONTEND_ROOT, 'node_modules/@playwright/test/cli.js');
 
 function parseArgs(argv) {
@@ -79,8 +79,18 @@ function readJson(path, label) {
   }
 }
 
-export function releaseExecutable(command, platform = process.platform) {
-  return platform === 'win32' && command === 'npm' ? 'npm.cmd' : command;
+export function releaseInvocation(command, args, {
+  platform = process.platform,
+  nodeExecutable = process.execPath,
+  npmExecPath = process.env.npm_execpath,
+} = {}) {
+  if (platform !== 'win32' || !/^npm(?:\.cmd)?$/i.test(command)) {
+    return { command, args };
+  }
+  const npmCli = npmExecPath && /npm-cli\.(?:c?js|mjs)$/i.test(npmExecPath)
+    ? resolve(npmExecPath)
+    : resolve(dirname(nodeExecutable), 'node_modules/npm/bin/npm-cli.js');
+  return { command: nodeExecutable, args: [npmCli, ...args] };
 }
 
 async function runCommand({
@@ -91,7 +101,13 @@ async function runCommand({
   let bytes = 0;
   const startedAt = new Date().toISOString();
   const exitCode = await new Promise((resolveExit, reject) => {
-    const child = spawn(releaseExecutable(command), args, {
+    const invocation = releaseInvocation(command, args);
+    if (process.platform === 'win32' && /^npm(?:\.cmd)?$/i.test(command)
+      && !existsSync(invocation.args[0])) {
+      reject(new Error(`Unable to locate npm CLI at ${invocation.args[0]}`));
+      return;
+    }
+    const child = spawn(invocation.command, invocation.args, {
       cwd,
       env: { ...process.env, ...env },
       stdio: ['ignore', 'pipe', 'pipe'],
