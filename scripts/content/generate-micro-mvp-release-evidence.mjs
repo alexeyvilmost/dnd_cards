@@ -79,6 +79,10 @@ function readJson(path, label) {
   }
 }
 
+export function releaseExecutable(command, platform = process.platform) {
+  return platform === 'win32' && command === 'npm' ? 'npm.cmd' : command;
+}
+
 async function runCommand({
   command, args, env = {}, cwd = FRONTEND_ROOT, captureStdout = false,
 }) {
@@ -87,7 +91,7 @@ async function runCommand({
   let bytes = 0;
   const startedAt = new Date().toISOString();
   const exitCode = await new Promise((resolveExit, reject) => {
-    const child = spawn(command, args, {
+    const child = spawn(releaseExecutable(command), args, {
       cwd,
       env: { ...process.env, ...env },
       stdio: ['ignore', 'pipe', 'pipe'],

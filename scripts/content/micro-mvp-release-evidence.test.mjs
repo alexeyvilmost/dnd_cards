@@ -15,6 +15,7 @@ import test from 'node:test';
 import {
   executeMicroMvpReleaseGate,
   generateMicroMvpReleaseEvidence,
+  releaseExecutable,
 } from './generate-micro-mvp-release-evidence.mjs';
 import {
   REQUIRED_RELEASE_GATES,
@@ -35,6 +36,12 @@ const API_BASE = 'https://api.example.test';
 const FRONTEND_BASE = 'https://frontend.example.test';
 const CURRENT_RELEASE_IDENTITY = currentMicroMvpReleaseIdentity();
 const CURRENT_COMMIT = currentMicroMvpSourceCommit();
+
+test('release gate resolves npm through the Windows command shim', () => {
+  assert.equal(releaseExecutable('npm', 'win32'), 'npm.cmd');
+  assert.equal(releaseExecutable('node', 'win32'), 'node');
+  assert.equal(releaseExecutable('npm', 'linux'), 'npm');
+});
 
 function completeTestCoverage() {
   const entities = Object.fromEntries(Array.from({ length: 64 }, (_, index) => [
