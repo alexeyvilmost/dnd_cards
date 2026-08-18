@@ -678,7 +678,7 @@ Preflight до первой mutation также проверяет rollbackabili
 из 5.1 дальнейшая приёмка относится к exact commit B. Для текущего кандидата
 эти production-шаги ещё не выполнялись:
 
-1. Сформировать единый release evidence artifact schema v3. Генератор запускает
+1. Сформировать единый release evidence artifact schema v4. Генератор запускает
    все 16 обязательных product/rules gate: backend `go test` с PostgreSQL
    integration и `go vet`, frontend `npm test` и `test:mvp`, manifest, offline
    matrix, 100% structural rules-core и primitive coverage, semantic coverage,
@@ -743,10 +743,12 @@ Preflight до первой mutation также проверяет rollbackabili
 ### 7. Пакетная certification micro-MVP
 
 Пакетный CLI по умолчанию работает только на чтение. Он загружает все страницы
-каталогов, запрещает неоднозначные `id`/`card_number` и строит ровно 64 записи:
-49 core-записей denominator манифеста и 15 condition Effect. Для любого будущего
+каталогов, запрещает неоднозначные `id`/`card_number` и строит 64 корневые записи
+(49 core-записей denominator манифеста и 15 condition Effect), затем добавляет их
+точное транзитивное DB-замыкание. Для текущего production snapshot это 243 записи;
+число зависимостей может меняться в следующих release. Для любого будущего
 apply сначала обязателен schema-v2 bundle с полными preimage и certification
-version `micro-mvp-l1-rules-core-v3`; `--bundle` не должен существовать,
+version `micro-mvp-l1-rules-core-v4`; `--bundle` не должен существовать,
 `--evidence` указывает на свежий artifact из шага 6, а release timestamp
 задаётся явно:
 
@@ -767,7 +769,7 @@ npm run content:certify:micro -- \
 
 Bundle создаётся с mode `0600`, получает UUID и immutable `planHash` и
 атомарно сохраняется через temporary file, `fsync` и rename. Он содержит полный
-API preimage и SHA-256 каждой из 64 строк. Immutable `planHash` также включает
+API preimage и SHA-256 каждой строки полного замыкания (243 в текущем snapshot). Immutable `planHash` также включает
 ID и raw-file SHA-256 evidence, exact API, gate/source/release/patch/catalog
 identity. Время certification выбирают один раз; apply не может заменить его
 текущим временем или другим `--certified-at`.
@@ -800,12 +802,12 @@ support-запись v3 попадают `evidence_id`, `evidence_hash`,
 `rules_hash`, `release_content_hash`, `release_hash`, `patch_hash` и
 `catalog_hash`. Backend и browser runtime отвергают неполную v3 запись.
 
-Apply не выполняет 64 отдельных PUT. Клиент сначала проверяет, что все строки
+Apply не выполняет отдельные PUT для записей замыкания. Клиент сначала проверяет, что все строки
 одновременно находятся либо в точных preimage, либо в точных requested
 postimage, сохраняет статус `applying` до HTTP-вызова и отправляет один запрос
 `POST /api/content-support/batch-exact`. Сервер в одном transaction:
 
-1. блокирует все 64 строки в глобальном порядке `entity_type` + UUID;
+1. блокирует все строки замыкания в глобальном порядке `entity_type` + UUID;
 2. сверяет полный API response каждой строки, включая исходный `support`;
 3. отвергает mixed/third state с `409` до первого UPDATE;
 4. обновляет все `support` и post-verify-ит их либо откатывает весь transaction.
@@ -814,7 +816,11 @@ Per-row fallback отсутствует. Повтор после потерян�
 сервер принимает только all-preimage или all-requested, а CLI повторно читает
 полный каталог и сохраняет `apply-failed` либо `apply-outcome-unknown`, если
 исход нельзя доказать. После commit CLI сохраняет полные postimage и проверяет
-точные `support`, `content_hash` и `dependency_hash` всех 64 записей.
+точные `support`, `content_hash` и `dependency_hash` всех записей замыкания.
+
+Административный batch-маршрут изолирован от обычного API-лимита 2 MiB,
+требует content-admin JWT до чтения увеличенного тела и имеет жёсткие границы:
+8 MiB, 512 записей и 10 mutation-запросов в час.
 
 Rollback использует тот же transaction и exact CAS, восстанавливая исходные
 `support` как есть — в том числе `null` и nested legacy JSON:
