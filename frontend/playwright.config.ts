@@ -6,6 +6,10 @@ export default defineConfig({
   forbidOnly: true,
   retries: 0,
   workers: 1,
+  // Multi-character combat scenarios intentionally cross several full reloads.
+  // Keep the enclosing test budget above their explicit 30s readiness waits so
+  // a slow mobile renderer cannot cancel the fixture while data is still loading.
+  timeout: 60_000,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',
