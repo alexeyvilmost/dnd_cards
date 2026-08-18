@@ -611,6 +611,63 @@ func TestExactSupportBatchValidationFailsClosed(t *testing.T) {
 	}
 }
 
+func TestExactSupportBatchAcceptsCompleteMicroMVPClosure(t *testing.T) {
+	const certifiedClosureEntries = 243
+	support, err := json.Marshal(verifiedBatchSupport())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	entries := make([]ContentSupportBatchEntryRequest, 0, certifiedClosureEntries)
+	for index := 0; index < certifiedClosureEntries; index++ {
+		entityID := uuid.MustParse(fmt.Sprintf("00000000-0000-4000-8000-%012d", index+1))
+		expectedCurrent, marshalErr := json.Marshal(map[string]any{
+			"id":      entityID,
+			"name":    fmt.Sprintf("certified-effect-%03d", index+1),
+			"support": nil,
+		})
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		entries = append(entries, ContentSupportBatchEntryRequest{
+			EntityType:      "effect",
+			EntityID:        entityID,
+			ExpectedCurrent: expectedCurrent,
+			Support:         support,
+		})
+	}
+
+	request := ContentSupportBatchRequest{
+		SchemaVersion: 1,
+		Mode:          "certification_apply",
+		PlanHash:      "sha256:" + strings.Repeat("c", 64),
+		OperationID:   "complete-micro-mvp-closure-test",
+		ExpectedCount: certifiedClosureEntries,
+		Entries:       entries,
+	}
+	prepared, err := prepareContentSupportBatch(request)
+	if err != nil {
+		t.Fatalf("complete %d-entity certification closure was rejected: %v", certifiedClosureEntries, err)
+	}
+	if len(prepared) != certifiedClosureEntries {
+		t.Fatalf("prepared %d entries, want %d", len(prepared), certifiedClosureEntries)
+	}
+
+	request.ExpectedCount = contentSupportBatchMaxEntries + 1
+	if _, err = prepareContentSupportBatch(request); err == nil {
+		t.Fatalf("batch above the hard %d-entry bound was accepted", contentSupportBatchMaxEntries)
+	}
+}
+
+func TestExactSupportBatchHasIsolatedBoundedCapacity(t *testing.T) {
+	if contentSupportBatchMaxEntries < 243 {
+		t.Fatalf("entry bound %d cannot contain the certified micro-MVP closure", contentSupportBatchMaxEntries)
+	}
+	if maxContentSupportBatchBodyBytes != 8<<20 {
+		t.Fatalf("unexpected atomic certification body bound: %d", maxContentSupportBatchBodyBytes)
+	}
+}
+
 func stableCloneTestMap(t *testing.T, value map[string]any) map[string]any {
 	t.Helper()
 	raw, err := json.Marshal(value)

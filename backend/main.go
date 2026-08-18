@@ -143,6 +143,19 @@ func main() {
 		// Глобальные справочники читаются публично, но любое изменение требует
 		// строгий JWT без public fallback и UUID из server-side admin allowlist.
 		contentAdminAuth := ContentAdminAuthMiddleware(authService)
+		// The atomic certification request contains exact full API preimages for
+		// the complete dependency closure. Keep its larger bound isolated from the
+		// ordinary 2 MiB API group and authenticate before reading the body.
+		contentSupportBatchAPI := r.Group("/api/content-support")
+		contentSupportBatchAPI.Use(MutationAuditMiddleware())
+		contentSupportBatchAPI.Use(NewFixedWindowRateLimiter(10, time.Hour).MutationsOnly())
+		contentSupportBatchAPI.POST(
+			"/batch-exact",
+			contentAdminAuth,
+			JSONBodyLimitMiddleware(maxContentSupportBatchBodyBytes),
+			RequestBodyLimitMiddleware(maxContentSupportBatchBodyBytes),
+			contentMigrationController.ApplyExactSupportBatch,
+		)
 		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
 		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
 
@@ -223,7 +236,6 @@ func main() {
 		// Отдельный путь сертификации: обычный CRUD не принимает support и
 		// миграционный trigger инвалидирует прежний статус после правки контента.
 		api.PUT("/content-support/:entityType/:id", contentAdminAuth, contentSupportController.Update)
-		api.POST("/content-support/batch-exact", contentAdminAuth, contentMigrationController.ApplyExactSupportBatch)
 		// Create и физический rollback создаваемых migration-сущностей связаны
 		// server-issued receipt в одной транзакции. Endpoint намеренно effect-only:
 		// versioned patch schema не разрешает create для других коллекций.

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"reflect"
 	"sort"
@@ -13,7 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const contentSupportBatchMaxEntries = 100
+const (
+	contentSupportBatchMaxEntries   = 512
+	maxContentSupportBatchBodyBytes = 8 << 20
+)
 
 var exactSupportBatchEntityTypes = map[string]bool{
 	"card": true, "effect": true, "action": true, "spell": true, "race": true,
@@ -71,7 +75,10 @@ func prepareContentSupportBatch(
 	}
 	if request.ExpectedCount < 1 || request.ExpectedCount > contentSupportBatchMaxEntries ||
 		request.ExpectedCount != len(request.Entries) {
-		return nil, errors.New("expected_count must exactly match 1..100 entries")
+		return nil, fmt.Errorf(
+			"expected_count must exactly match 1..%d entries",
+			contentSupportBatchMaxEntries,
+		)
 	}
 
 	seen := make(map[string]bool, len(request.Entries))

@@ -71,7 +71,6 @@ func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
 	}
 	for _, routePattern := range []string{
 		`api\.PUT\("/content-support/:entityType/:id",\s*contentAdminAuth,`,
-		`api\.POST\("/content-support/batch-exact",\s*contentAdminAuth,`,
 		`api\.POST\("/content-migrations/:bundleId/effects",\s*contentAdminAuth,`,
 		`api\.POST\("/content-migrations/:bundleId/:entityType/:id/exact-update",\s*contentAdminAuth,`,
 		`api\.POST\("/content-rollback/effect/:id/hard-delete-created",\s*contentAdminAuth,`,
@@ -80,6 +79,14 @@ func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
 		if !regexp.MustCompile(routePattern).MatchString(source) {
 			t.Errorf("certification/migration mutation is not content-admin-only: %s", routePattern)
 		}
+	}
+	batchRoute := regexp.MustCompile(
+		`contentSupportBatchAPI\.POST\(\s*"/batch-exact",\s*contentAdminAuth,\s*` +
+			`JSONBodyLimitMiddleware\(maxContentSupportBatchBodyBytes\),\s*` +
+			`RequestBodyLimitMiddleware\(maxContentSupportBatchBodyBytes\),`,
+	)
+	if !batchRoute.MatchString(source) {
+		t.Error("atomic certification batch must authenticate before its isolated hard body limit")
 	}
 	if !regexp.MustCompile(
 		`protected\.POST\("/shops",\s*shopCreateRateLimit\.Handler\(\),`,
