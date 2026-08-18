@@ -1,6 +1,11 @@
 import axios from 'axios';
 import { cached, bustPrefix } from './apiCache';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
+import {
+  isTransientReadFailure,
+  SAFE_READ_MAX_ATTEMPTS,
+  waitForSafeReadRetry,
+} from './readRetry';
 import type { 
   Card, 
   CreateCardRequest, 
@@ -102,10 +107,19 @@ apiClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
     const status = typeof error.response?.status === 'number'
       ? error.response.status
       : undefined;
+    const config = error.config as (typeof error.config & { __dndSafeReadAttempts?: number }) | undefined;
+    const completedAttempts = config?.__dndSafeReadAttempts ?? 1;
+    if (config
+      && completedAttempts < SAFE_READ_MAX_ATTEMPTS
+      && isTransientReadFailure(config.method, status)) {
+      config.__dndSafeReadAttempts = completedAttempts + 1;
+      await waitForSafeReadRetry(completedAttempts);
+      return apiClient.request(config);
+    }
     if (status === 401) {
       signalUnauthorized();
     }

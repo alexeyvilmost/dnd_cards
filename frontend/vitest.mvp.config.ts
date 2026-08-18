@@ -6,5 +6,10 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/mvp/**/*.mvp.test.ts'],
+    setupFiles: ['src/mvp/liveReadRetry.setup.ts'],
+    // Live suites share one production catalog. Running files in parallel can
+    // overload the API with repeated bundle expansion and create partial,
+    // mutually inconsistent reads that no real character build performs.
+    fileParallelism: false,
   },
 });
