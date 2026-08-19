@@ -31,6 +31,11 @@ import {
   type SheetRuntimeCommandStore,
 } from './sheetCombatSession';
 import type { ForgeCharacter } from './types';
+import {
+  createSheetSceneTargetActor,
+  TRAINING_DUMMY,
+  TRAINING_DUMMY_TARGET_ID,
+} from './sheetSceneTargets';
 
 const fixture = compiledFixtureJson as unknown as {
   source: { ruleset: RulesetReference };
@@ -264,6 +269,60 @@ async function openSpell(type: 'burning_hands_objects' | 'area_object_push') {
 }
 
 describe('CharacterV3 atomic pending-combat session', () => {
+  it('runs Thunderwave against a scene target and persists only the source sheet', async () => {
+    const source = seed('wizard', IDS.source);
+    const thunderwave = action('area_object_push');
+    const session = await createSheetCombatSession({
+      source,
+      targets: [],
+      sceneActors: [createSheetSceneTargetActor(TRAINING_DUMMY)],
+    });
+    expect(session.world.actors[TRAINING_DUMMY_TARGET_ID]).toMatchObject({
+      name: 'Пугало',
+      ac: 10,
+      kind: 'monster',
+    });
+    const opened = executeSheetCombatAction({
+      session,
+      actorId: IDS.source,
+      actionId: thunderwave.id,
+      declaration: declaration(source, thunderwave, TRAINING_DUMMY_TARGET_ID),
+      commandId: '10101010-1010-4010-8010-101010101010',
+      rng: () => 0,
+    });
+    expect(opened.nextWorld.pendingResolution).toMatchObject({
+      type: 'target_save',
+      targetActorId: TRAINING_DUMMY_TARGET_ID,
+    });
+    const characters = { [IDS.source]: source.character };
+    const first = prepareSheetCombatCommit({ transition: opened, characters });
+    expect(first.request.participants.map((row) => row.character_id)).toEqual([IDS.source]);
+    const store = new AtomicMemoryStore([source.character]);
+    const firstResponse = await commitPreparedSheetCombat(store, first);
+    const reloadedCharacters = acceptedSheetCombatCharacters(first, firstResponse);
+    const reloaded = readSheetCombatSession(
+      reloadedCharacters[IDS.source].turn_state,
+      IDS.source,
+    )!;
+    const resolved = resolveSheetCombatDecision({
+      session: reloaded,
+      commandId: '20202020-2020-4020-8020-202020202020',
+      response: { kind: 'roll', roll: { mode: 'manual', dice: [{ sides: 20, value: 1 }] } },
+      rng: () => 0,
+    });
+    const second = prepareSheetCombatCommit({
+      transition: resolved,
+      characters: reloadedCharacters,
+    });
+    expect(second.request.participants.map((row) => row.character_id)).toEqual([IDS.source]);
+    const secondResponse = await commitPreparedSheetCombat(store, second);
+    const completed = acceptedSheetCombatCharacters(second, secondResponse);
+    const completedSession = readSheetCombatSession(completed[IDS.source].turn_state, IDS.source)!;
+    expect(completedSession.world.actors[TRAINING_DUMMY_TARGET_ID].runtime.hp.current)
+      .toBeLessThan(TRAINING_DUMMY.hitPoints);
+    expect(completedSession.world.pendingResolution).toBeNull();
+  });
+
   it.each([
     ['Burning Hands', 'burning_hands_objects'],
     ['Thunderwave', 'area_object_push'],

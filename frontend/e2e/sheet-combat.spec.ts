@@ -301,6 +301,19 @@ async function declareTarget(
   await dialog.getByRole('button', { name: 'Подтвердить цели' }).click();
 }
 
+async function declareTrainingDummy(page: Page, distanceFt: number): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: 'Цели и факты боя' });
+  await expect(dialog).toBeVisible();
+  const fieldset = dialog.locator('[data-target-id="scene-target:training-dummy"]');
+  await expect(fieldset).toContainText('Пугало');
+  await expect(fieldset.getByRole('checkbox')).toBeChecked();
+  await expect(fieldset.getByRole('combobox')).toHaveCount(0);
+  const distance = fieldset.locator('input[type="number"]');
+  await expect(distance).toHaveCount(1);
+  await distance.fill(String(distanceFt));
+  await dialog.getByRole('button', { name: 'Подтвердить цели' }).click();
+}
+
 async function openPendingSpell(
   page: Page,
   api: ForgeApiFixture,
@@ -350,6 +363,156 @@ async function openPendingSpell(
 }
 
 test.describe('real CharacterV3 sheet pending-combat bridge', () => {
+  test('ranged weapon attacks the scene dummy from a real sheet without a second character', async ({ page }) => {
+    const api = await installForgeApiFixture(page);
+    await page.addInitScript(() => {
+      Math.random = () => 0.99;
+    });
+    const { weapon, ammo } = rangedWeaponFixture(api);
+    const weaponActionId = fixtureActionId(api, 'weapon_attack');
+    const source = character(compiled.roots.fighter, IDS.source, 'Archer');
+    source.equipment = { main_hand: weapon.id };
+    source.inventory_items = [
+      { card_id: weapon.id, qty: 1 },
+      { card_id: ammo.id, qty: 3 },
+    ];
+    api.seedCharacter(source);
+
+    await page.goto(`/characters-v3/${IDS.source}`);
+    await dismissMobileSuggestion(page);
+    const button = page.locator(`[data-action-id="${weaponActionId}"]`).getByRole('button');
+    await expect(button).toBeEnabled({ timeout: 30_000 });
+    await button.click();
+    await declareTrainingDummy(page, 30);
+
+    await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
+    expect(api.runtimeCommandRequests).toHaveLength(1);
+    expect((api.runtimeCommandRequests[0].participants as JsonRecord[]).map((row) => (
+      row.character_id
+    ))).toEqual([IDS.source]);
+    expect(api.getCharacter(IDS.source)?.inventory_items).toEqual([
+      { card_id: weapon.id, qty: 1 },
+      { card_id: ammo.id, qty: 2 },
+    ]);
+    await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+    const turnState = api.getCharacter(IDS.source)?.turn_state as JsonRecord;
+    const continuation = turnState.canonical_pending_combat_v1 as JsonRecord;
+    const world = continuation.world as JsonRecord;
+    const actors = world.actors as Record<string, JsonRecord>;
+    expect(actors['scene-target:training-dummy']).toMatchObject({ name: 'Пугало', ac: 10 });
+    expect(((actors['scene-target:training-dummy'].runtime as JsonRecord).hp as JsonRecord).current)
+      .toBeLessThan(100);
+  });
+
+  test('Thunderwave selected in Forge is usable against the scene dummy', async ({ page }) => {
+    const api = await installForgeApiFixture(page);
+    api.seedCharacter(character(compiled.roots.wizard, IDS.source, 'Thunder Wizard'));
+    const binding = certifiedWizardSpellBinding(api, 'area_object_push');
+
+    await page.goto(`/characters-v3/${IDS.source}`);
+    await dismissMobileSuggestion(page);
+    const button = page.locator(`[data-action-id="${binding.sheetActionId}"]`)
+      .getByRole('button')
+      .filter({ visible: true })
+      .first();
+    await expect(button).toBeEnabled({ timeout: 30_000 });
+    await button.click();
+    const cast = page.getByRole('dialog', { name: 'Выбор при действии' });
+    await expect(cast).toBeVisible();
+    await cast.getByRole('button', { name: 'Применить', exact: true }).click();
+    await declareTrainingDummy(page, 10);
+
+    await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
+    expect((api.runtimeCommandRequests[0].participants as JsonRecord[]).map((row) => (
+      row.character_id
+    ))).toEqual([IDS.source]);
+    const save = page.getByTestId('sheet-combat-target-save').first();
+    await expect(save).toBeVisible({ timeout: 30_000 });
+    await expect(save).toContainText('Пугало');
+    await save.getByRole('spinbutton', { name: 'Результат d20 спасброска' }).fill('1');
+    await save.getByRole('button', { name: 'Применить d20' }).click();
+    await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(2);
+    const turnState = api.getCharacter(IDS.source)?.turn_state as JsonRecord;
+    const continuation = turnState.canonical_pending_combat_v1 as JsonRecord;
+    const actors = ((continuation.world as JsonRecord).actors) as Record<string, JsonRecord>;
+    expect(((actors['scene-target:training-dummy'].runtime as JsonRecord).hp as JsonRecord).current)
+      .toBeLessThan(100);
+    await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+  });
+
+  test('unarmed strike uses the same scene-target declaration before its roll', async ({ page }) => {
+    const api = await installForgeApiFixture(page);
+    api.seedCharacter(character(compiled.roots.fighter, IDS.source, 'Brawler'));
+    const unarmed = api.getCatalogRows('actions').find((row) => (
+      row.card_number === 'action_basic_unarmed'
+    ));
+    if (typeof unarmed?.id !== 'string') throw new Error('Unarmed Strike action is missing');
+
+    await page.goto(`/characters-v3/${IDS.source}`);
+    await dismissMobileSuggestion(page);
+    const button = page.locator(`[data-action-id="${unarmed.id}"]`).getByRole('button');
+    await expect(button).toBeEnabled({ timeout: 30_000 });
+    await button.click();
+    await declareTrainingDummy(page, 5);
+    const roll = page.getByRole('dialog', { name: 'Бросок кубов' });
+    await expect(roll).toBeVisible();
+    await roll.getByRole('button', { name: 'Автобросок' }).click();
+
+    await expect.poll(() => api.runtimePatchRequests.length).toBe(1);
+    expect((api.getCharacter(IDS.source)?.resources as JsonRecord).action).toBe(0);
+    await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+  });
+
+  test('Dash, Disengage and Dodge execute from their real basic-action rows', async ({ page }) => {
+    const api = await installForgeApiFixture(page);
+    for (const [index, cardNumber] of [
+      'action_basic_dash',
+      'action_basic_disengage',
+      'action_basic_dodge',
+    ].entries()) {
+      const row = api.getCatalogRows('actions').find((candidate) => (
+        candidate.card_number === cardNumber
+      ));
+      if (typeof row?.id !== 'string') throw new Error(`${cardNumber} is missing`);
+      const source = character(compiled.roots.fighter, IDS.source, `Basic ${index}`);
+      api.seedCharacter(source);
+      const requestCount = api.runtimePatchRequests.length;
+      await page.goto(`/characters-v3/${IDS.source}`);
+      await dismissMobileSuggestion(page);
+      const button = page.locator(`[data-action-id="${row.id}"]`).getByRole('button');
+      await expect(button).toBeEnabled({ timeout: 30_000 });
+      await button.click();
+      const confirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
+      await expect(confirm).toBeVisible();
+      await confirm.getByRole('button', { name: 'Применить', exact: true }).click();
+      await expect.poll(() => api.runtimePatchRequests.length).toBe(requestCount + 1);
+      expect((api.getCharacter(IDS.source)?.resources as JsonRecord).action).toBe(0);
+      await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+    }
+  });
+
+  test('Help executes from the real sheet row and exposes its certified target limitation', async ({ page }) => {
+    const api = await installForgeApiFixture(page);
+    api.seedCharacter(character(compiled.roots.fighter, IDS.source, 'Helper'));
+    api.seedCharacter(character(compiled.roots.fighter, IDS.target, 'Ally'));
+    const help = api.getCatalogRows('actions').find((row) => row.card_number === 'action_help');
+    if (typeof help?.id !== 'string') throw new Error('Help action is missing');
+
+    await page.goto(`/characters-v3/${IDS.source}`);
+    await dismissMobileSuggestion(page);
+    const button = page.locator(`[data-action-id="${help.id}"]`).getByRole('button');
+    await expect(button).toBeEnabled({ timeout: 30_000 });
+    await button.click();
+    const confirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
+    await expect(confirm).toBeVisible();
+    await expect(confirm.getByRole('combobox')).toHaveCount(0);
+    await confirm.getByRole('button', { name: 'Применить', exact: true }).click();
+
+    await expect.poll(() => api.runtimePatchRequests.length).toBeGreaterThan(0);
+    expect((api.getCharacter(IDS.source)?.resources as JsonRecord).action).toBe(0);
+    await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+  });
+
   test('ranged weapon: dialog facts, atomic Attack, ammo/events and response-loss reload', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 600 });
     const api = await installForgeApiFixture(page);
@@ -383,6 +546,8 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
 
     const retry = page.getByTestId('sheet-combat-retry').first();
     await expect(retry).toBeVisible();
+    await expect(page.getByText('Действие не подтверждено сервером', { exact: true }))
+      .toBeVisible();
     const committedRequest = api.runtimeCommandRequests[0];
     await retry.getByRole('button', { name: 'Безопасно повторить' }).click();
     await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);

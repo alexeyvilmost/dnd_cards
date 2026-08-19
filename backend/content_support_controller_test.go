@@ -148,6 +148,35 @@ func TestValidateContentSupportRequest(t *testing.T) {
 			want: "test_coverage",
 		},
 		{
+			name: "valid basic actions evidence and lock",
+			request: ContentSupportRequest{
+				Status:               "verified_mechanical",
+				CertificationVersion: contentSupportString(basicActionsEvidenceCertificationVersion),
+				ContentHash:          &validHash,
+				DependencyHash:       &validDependencyHash,
+				CertifiedAt:          contentSupportString("2026-08-19T07:00:00Z"),
+				EvidenceID:           &validEvidenceID,
+				EvidenceHash:         &validHash,
+				EvidenceCompletedAt:  contentSupportString("2026-08-19T06:59:00Z"),
+				TestCoverage:         completeCoverage,
+				MechanicsLocked:      func() *bool { value := true; return &value }(),
+			},
+		},
+		{
+			name: "basic actions evidence requires exact coverage",
+			request: ContentSupportRequest{
+				Status:               "verified_mechanical",
+				CertificationVersion: contentSupportString(basicActionsEvidenceCertificationVersion),
+				ContentHash:          &validHash,
+				DependencyHash:       &validDependencyHash,
+				CertifiedAt:          contentSupportString("2026-08-19T07:00:00Z"),
+				EvidenceID:           &validEvidenceID,
+				EvidenceHash:         &validHash,
+				EvidenceCompletedAt:  contentSupportString("2026-08-19T06:59:00Z"),
+			},
+			want: "test_coverage",
+		},
+		{
 			name: "lock rejects partial coverage",
 			request: ContentSupportRequest{
 				Status:               "verified_partial",

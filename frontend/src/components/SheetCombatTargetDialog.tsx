@@ -17,8 +17,13 @@ import './SheetCombatTargetDialog.css';
 export interface SheetCombatTargetCandidate {
   id: string;
   name: string;
+  description?: string;
   disabled?: boolean;
   reason?: string;
+  defaultSelected?: boolean;
+  defaultFacts?: Partial<SpatialFacts>;
+  /** Scene targets already own provenance/geometry facts; the user supplies distance only. */
+  factEntryMode?: 'full' | 'distance_only';
 }
 
 export interface SheetCombatTargetDialogResult {
@@ -52,7 +57,7 @@ export interface SheetCombatTargetDialogApi {
     action: RuleActionDefinition;
     castLevel?: number;
     candidates: SheetCombatTargetCandidate[];
-    /** Product workflow constraint: this command must exercise at least two sheets. */
+    /** Product workflow constraint: this command must declare at least one actor target. */
     requireTarget?: boolean;
   }): Promise<SheetCombatTargetDialogResult | null>;
   dialog: ReactNode;
@@ -64,12 +69,18 @@ function initialDraft(
 ): TargetDraft {
   return {
     selected: select && !candidate.disabled,
-    factsSource: '',
-    boardRevision: '',
-    relation: '',
-    distanceFt: '',
-    lineOfSight: 'unknown',
-    cover: '',
+    factsSource: candidate.defaultFacts?.factsSource ?? '',
+    boardRevision: candidate.defaultFacts?.boardRevision === undefined
+      ? ''
+      : String(candidate.defaultFacts.boardRevision),
+    relation: candidate.defaultFacts?.relation ?? '',
+    distanceFt: candidate.defaultFacts?.distanceFt === undefined
+      ? ''
+      : String(candidate.defaultFacts.distanceFt),
+    lineOfSight: candidate.defaultFacts?.lineOfSight === undefined
+      ? 'unknown'
+      : candidate.defaultFacts.lineOfSight ? 'yes' : 'no',
+    cover: candidate.defaultFacts?.cover ?? '',
     darts: '',
   };
 }
@@ -105,7 +116,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
     const drafts = Object.fromEntries(input.candidates.map((candidate) => {
       return [candidate.id, initialDraft(
         candidate,
-        false,
+        candidate.defaultSelected ?? false,
       )];
     }));
     setError(null);
@@ -139,6 +150,26 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
       },
     } : current
   ));
+
+  const toggleCandidate = (id: string, selected: boolean) => setState((current) => {
+    if (!current) return current;
+    const policy = sheetCombatDeclarationPolicy(current.action, current.castLevel);
+    const drafts = { ...current.drafts };
+    if (selected) {
+      for (const candidate of current.candidates) {
+        if (candidate.id === id) continue;
+        // A scene target is selected initially to make the common one-target
+        // flow immediate. Choosing a real sheet replaces that implicit
+        // default. For multi-target actions the user can explicitly add the
+        // scene target again afterwards.
+        if (policy.maxTargets === 1 || candidate.defaultSelected) {
+          drafts[candidate.id] = { ...drafts[candidate.id], selected: false };
+        }
+      }
+    }
+    drafts[id] = { ...drafts[id], selected };
+    return { ...current, drafts };
+  });
 
   const submit = () => {
     if (!state) return;
@@ -215,64 +246,73 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
               {state.candidates.map((candidate) => {
                 const draft = state.drafts[candidate.id];
                 return (
-                  <fieldset key={candidate.id} className="sheet-target-card">
+                  <fieldset
+                    key={candidate.id}
+                    className={`sheet-target-card${candidate.factEntryMode === 'distance_only' ? ' sheet-target-card--scene' : ''}`}
+                    data-target-id={candidate.id}
+                  >
                     <legend>
                       <label>
                         <input
                           type="checkbox"
                           checked={draft.selected}
                           disabled={candidate.disabled}
-                          onChange={(event) => patch(candidate.id, {
-                            selected: event.target.checked,
-                          })}
+                          onChange={(event) => toggleCandidate(candidate.id, event.target.checked)}
                         />{' '}{candidate.name}
                       </label>
                     </legend>
+                    {candidate.description && <p className="sheet-target-description">{candidate.description}</p>}
                     {candidate.disabled && <p className="sheet-target-disabled-reason">{candidate.reason}</p>}
                     {draft.selected && !candidate.disabled && (
                       <>
-                        <label className="sheet-target-row">
-                          <span>Отношение</span>
-                          <select value={draft.relation} onChange={(event) => patch(candidate.id, { relation: event.target.value as Relation })}>
-                            <option value="">Укажите отношение</option>
-                            {policy.allowedRelations.map((relation) => <option key={relation} value={relation}>{relation}</option>)}
-                          </select>
-                        </label>
+                        {candidate.factEntryMode !== 'distance_only' && (
+                          <label className="sheet-target-row">
+                            <span>Отношение</span>
+                            <select value={draft.relation} onChange={(event) => patch(candidate.id, { relation: event.target.value as Relation })}>
+                              <option value="">Укажите отношение</option>
+                              {policy.allowedRelations.map((relation) => <option key={relation} value={relation}>{relation}</option>)}
+                            </select>
+                          </label>
+                        )}
                         <label className="sheet-target-row">
                           <span>Дистанция, футы</span>
                           <input type="number" min={0} max={policy.rangeFt} value={draft.distanceFt} onChange={(event) => patch(candidate.id, { distanceFt: event.target.value })} />
                         </label>
-                        <label className="sheet-target-row">
-                          <span>Ревизия сцены</span>
-                          <input type="number" min={0} step={1} value={draft.boardRevision} onChange={(event) => patch(candidate.id, { boardRevision: event.target.value })} />
-                        </label>
-                        <label className="sheet-target-row">
-                          <span>Источник фактов</span>
-                          <select value={draft.factsSource} onChange={(event) => patch(candidate.id, { factsSource: event.target.value as SpatialFacts['factsSource'] })}>
-                            <option value="">Укажите источник</option>
-                            <option value="scenario">Сценарий</option>
-                            <option value="board">Доска</option>
-                            <option value="gm_ruling">Решение мастера</option>
-                          </select>
-                        </label>
-                        <label className="sheet-target-row">
-                          <span>Линия обзора</span>
-                          <select value={draft.lineOfSight} onChange={(event) => patch(candidate.id, { lineOfSight: event.target.value as TargetDraft['lineOfSight'] })}>
-                            <option value="unknown">Укажите явно</option>
-                            <option value="yes">Есть</option>
-                            <option value="no">Нет</option>
-                          </select>
-                        </label>
-                        <label className="sheet-target-row">
-                          <span>Укрытие</span>
-                          <select value={draft.cover} onChange={(event) => patch(candidate.id, { cover: event.target.value as TargetDraft['cover'] })}>
-                            <option value="">Укажите укрытие</option>
-                            <option value="none">Нет</option>
-                            <option value="half">Половина</option>
-                            <option value="three_quarters">Три четверти</option>
-                            <option value="total">Полное</option>
-                          </select>
-                        </label>
+                        {candidate.factEntryMode !== 'distance_only' && (
+                          <>
+                            <label className="sheet-target-row">
+                              <span>Ревизия сцены</span>
+                              <input type="number" min={0} step={1} value={draft.boardRevision} onChange={(event) => patch(candidate.id, { boardRevision: event.target.value })} />
+                            </label>
+                            <label className="sheet-target-row">
+                              <span>Источник фактов</span>
+                              <select value={draft.factsSource} onChange={(event) => patch(candidate.id, { factsSource: event.target.value as SpatialFacts['factsSource'] })}>
+                                <option value="">Укажите источник</option>
+                                <option value="scenario">Сцена</option>
+                                <option value="board">Доска</option>
+                                <option value="gm_ruling">Решение мастера</option>
+                              </select>
+                            </label>
+                            <label className="sheet-target-row">
+                              <span>Линия обзора</span>
+                              <select value={draft.lineOfSight} onChange={(event) => patch(candidate.id, { lineOfSight: event.target.value as TargetDraft['lineOfSight'] })}>
+                                <option value="unknown">Укажите явно</option>
+                                <option value="yes">Есть</option>
+                                <option value="no">Нет</option>
+                              </select>
+                            </label>
+                            <label className="sheet-target-row">
+                              <span>Укрытие</span>
+                              <select value={draft.cover} onChange={(event) => patch(candidate.id, { cover: event.target.value as TargetDraft['cover'] })}>
+                                <option value="">Укажите укрытие</option>
+                                <option value="none">Нет</option>
+                                <option value="half">Половина</option>
+                                <option value="three_quarters">Три четверти</option>
+                                <option value="total">Полное</option>
+                              </select>
+                            </label>
+                          </>
+                        )}
                         {policy.dartCount !== undefined && (
                           <label className="sheet-target-row">
                             <span>Дротиков</span>

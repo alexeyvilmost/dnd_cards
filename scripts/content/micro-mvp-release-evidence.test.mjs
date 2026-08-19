@@ -566,7 +566,7 @@ test('frontend image publishes an atomic no-cache build-info endpoint contract',
   const dockerfile = readFileSync(new URL('../../frontend/Dockerfile', import.meta.url), 'utf8');
 
   assert.match(start, /^set -eu$/m);
-  assert.match(start, /SOURCE_COMMIT="\$\{RAILWAY_GIT_COMMIT_SHA:-\}"/);
+  assert.match(start, /SOURCE_COMMIT="\$\{SOURCE_COMMIT:-\$\{RAILWAY_GIT_COMMIT_SHA:-\}\}"/);
   assert.match(start, /grep -Eq '\^\[0-9A-Fa-f\]\{40\}\$'/);
   assert.match(start, /printf '\{"source_commit":"%s"\}\\n'/);
   assert.match(start, /printf '\{"source_commit":null\}\\n'/);

@@ -174,4 +174,95 @@ describe('SheetCombatTargetDialog explicit facts', () => {
       }],
     });
   });
+
+  it('preselects a scene target and asks only for its distance', async () => {
+    let result: Awaited<ReturnType<SheetCombatTargetDialogApi['request']>> | undefined;
+    await act(async () => {
+      void api.request({
+        title: 'Атака: цели и факты',
+        action: realBoundWeaponAction(),
+        candidates: [{
+          id: 'scene-target:training-dummy',
+          name: 'Пугало',
+          description: 'Тренировочная цель · КЗ 10',
+          defaultSelected: true,
+          factEntryMode: 'distance_only',
+          defaultFacts: {
+            factsSource: 'scenario',
+            boardRevision: 12,
+            relation: 'enemy',
+            lineOfSight: true,
+            cover: 'none',
+          },
+        }],
+        requireTarget: true,
+      }).then((value) => { result = value; });
+    });
+    const fieldset = document.querySelector<HTMLFieldSetElement>(
+      '[data-target-id="scene-target:training-dummy"]',
+    )!;
+    expect(fieldset.classList.contains('sheet-target-card--scene')).toBe(true);
+    expect(fieldset.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(true);
+    expect(fieldset.querySelectorAll('select')).toHaveLength(0);
+    const numbers = fieldset.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    expect(numbers).toHaveLength(1);
+    await act(async () => changeValue(numbers[0], '30'));
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click();
+      await Promise.resolve();
+    });
+    expect(result).toEqual({
+      targets: [{
+        targetId: 'scene-target:training-dummy',
+        factsSource: 'scenario',
+        boardRevision: 12,
+        relation: 'enemy',
+        distanceFt: 30,
+        lineOfSight: true,
+        cover: 'none',
+      }],
+    });
+  });
+
+  it('replaces the implicit scene default when a real single target is selected', async () => {
+    let pending!: Promise<unknown>;
+    await act(async () => {
+      pending = api.request({
+        title: 'Атака: выбор цели',
+        action: realBoundWeaponAction(),
+        candidates: [{
+          id: 'scene-target:training-dummy',
+          name: 'Пугало',
+          defaultSelected: true,
+          factEntryMode: 'distance_only',
+          defaultFacts: {
+            factsSource: 'scenario',
+            boardRevision: 0,
+            relation: 'enemy',
+            lineOfSight: true,
+            cover: 'none',
+          },
+        }, {
+          id: 'character:target',
+          name: 'Настоящий персонаж',
+        }],
+        requireTarget: true,
+      });
+    });
+    const dummy = document.querySelector<HTMLInputElement>(
+      '[data-target-id="scene-target:training-dummy"] input[type="checkbox"]',
+    )!;
+    const character = document.querySelector<HTMLInputElement>(
+      '[data-target-id="character:target"] input[type="checkbox"]',
+    )!;
+    expect(dummy.checked).toBe(true);
+    expect(character.checked).toBe(false);
+    await act(async () => character.click());
+    expect(dummy.checked).toBe(false);
+    expect(character.checked).toBe(true);
+    await act(async () => {
+      document.querySelectorAll<HTMLButtonElement>('.dice-dialog-btn')[1].click();
+      await pending;
+    });
+  });
 });

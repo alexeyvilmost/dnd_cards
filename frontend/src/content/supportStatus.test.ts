@@ -132,6 +132,34 @@ describe('content support status', () => {
     expect(isMechanicsLocked({ support: partial })).toBe(false);
   });
 
+  it('basic-actions certificate fails closed without its exact browser evidence', () => {
+    const hash = `sha256:${'b'.repeat(64)}`;
+    const certificate: EntitySupportCertification = {
+      status: 'verified_mechanical',
+      certification_version: 'micro-mvp-basic-actions-v1',
+      content_hash: hash,
+      dependency_hash: hash,
+      certified_at: '2026-08-19T07:00:00Z',
+      evidence_id: '00000000-0000-4000-8000-000000000002',
+      evidence_hash: hash,
+      evidence_completed_at: '2026-08-19T06:59:00Z',
+      test_coverage: {
+        schema_version: 1,
+        scope: 'micro-mvp-basic-actions-v1',
+        required: 3,
+        passed: 3,
+        percent: 100,
+      },
+      mechanics_locked: true,
+    };
+    expect(certificationContractIssues(certificate)).toEqual([]);
+    expect(supportStatusOf({ support: certificate })).toBe('verified_mechanical');
+    expect(isMechanicsLocked({ support: certificate })).toBe(true);
+    expect(supportStatusOf({
+      support: { ...certificate, evidence_hash: 'missing' },
+    })).toBe('untested');
+  });
+
   it('фильтр сохраняет выбранную неподтверждённую сущность', () => {
     const entities = [
       { id: 'verified', support: { status: 'verified_narrative' as const } },

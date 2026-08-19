@@ -30,7 +30,7 @@
     "test:rules:replay": "vitest run src/rules-core/determinism.test.ts src/rules-core/worldMigration.test.ts src/rules-core/world.test.ts",
     "test:rules:coverage": "vitest run --config vitest.rules-core.config.ts",
     "test:rules:primitives": "vitest run --config vitest.rules-primitives.config.ts --coverage",
-    "test:micro:manifest": "node --test ../scripts/content/micro-mvp-manifest.test.mjs ../scripts/content/micro-micro-manifest.test.mjs ../scripts/content/api.pagination.test.mjs ../scripts/content/export-prod.test.mjs ../scripts/content/migrate-micro-mvp-l1-mechanics.test.mjs ../scripts/content/micro-mvp-certifications.test.mjs ../scripts/content/micro-mvp-release-evidence.test.mjs",
+    "test:micro:manifest": "node --test ../scripts/content/micro-mvp-manifest.test.mjs ../scripts/content/micro-micro-manifest.test.mjs ../scripts/content/api.pagination.test.mjs ../scripts/content/export-prod.test.mjs ../scripts/content/migrate-micro-mvp-l1-mechanics.test.mjs ../scripts/content/micro-mvp-certifications.test.mjs ../scripts/content/micro-mvp-release-evidence.test.mjs ../scripts/content/basic-actions-certifications.test.mjs",
     "test:micro:live": "node ../scripts/content/micro-micro-gate.mjs --strict",
     "test:micro:matrix": "vitest run --config vitest.matrix.config.ts",
     "test:micro:live-matrix": "vitest run --config vitest.live-matrix.config.ts",

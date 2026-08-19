@@ -78,10 +78,16 @@ type ContentTestCoverage struct {
 
 const legacyMicroMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v3"
 const microMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v4"
+const basicActionsEvidenceCertificationVersion = "micro-mvp-basic-actions-v1"
 
 func isMicroMVPEvidenceCertificationVersion(value string) bool {
 	return value == legacyMicroMVPEvidenceCertificationVersion ||
 		value == microMVPEvidenceCertificationVersion
+}
+
+func isMechanicsLockCertificationVersion(value string) bool {
+	return value == microMVPEvidenceCertificationVersion ||
+		value == basicActionsEvidenceCertificationVersion
 }
 
 func validateContentTestCoverage(coverage *ContentTestCoverage) []string {
@@ -180,9 +186,30 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 	if req.CertificationVersion != nil && *req.CertificationVersion == microMVPEvidenceCertificationVersion {
 		issues = append(issues, validateContentTestCoverage(req.TestCoverage)...)
 	}
+	if req.CertificationVersion != nil &&
+		strings.TrimSpace(*req.CertificationVersion) == basicActionsEvidenceCertificationVersion {
+		if *req.CertificationVersion != basicActionsEvidenceCertificationVersion {
+			issues = append(issues, "basic-actions evidence требует канонический certification_version без пробелов")
+		}
+		if req.EvidenceID == nil {
+			issues = append(issues, "basic-actions evidence требует evidence_id")
+		} else if parsed, err := uuid.Parse(*req.EvidenceID); err != nil || parsed == uuid.Nil ||
+			strings.TrimSpace(*req.EvidenceID) != *req.EvidenceID {
+			issues = append(issues, "basic-actions evidence требует evidence_id UUID")
+		}
+		requiredSupportHash(req.EvidenceHash, "evidence_hash", &issues)
+		if req.CertifiedAt == nil || !isValidContentSupportUTCTimestamp(*req.CertifiedAt) {
+			issues = append(issues, "basic-actions evidence требует явный certified_at UTC RFC3339")
+		}
+		if req.EvidenceCompletedAt == nil ||
+			!isValidContentSupportUTCTimestamp(*req.EvidenceCompletedAt) {
+			issues = append(issues, "basic-actions evidence требует evidence_completed_at UTC RFC3339")
+		}
+		issues = append(issues, validateContentTestCoverage(req.TestCoverage)...)
+	}
 	if req.MechanicsLocked != nil && *req.MechanicsLocked {
-		if req.CertificationVersion == nil || *req.CertificationVersion != microMVPEvidenceCertificationVersion {
-			issues = append(issues, "mechanics_locked требует текущую micro-MVP evidence certification")
+		if req.CertificationVersion == nil || !isMechanicsLockCertificationVersion(*req.CertificationVersion) {
+			issues = append(issues, "mechanics_locked требует текущую evidence certification")
 		}
 		if !strings.HasPrefix(req.Status, "verified_") {
 			issues = append(issues, "mechanics_locked требует verified-статус")

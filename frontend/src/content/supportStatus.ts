@@ -64,6 +64,7 @@ export interface SupportableEntity {
 
 const MICRO_MVP_V3_CERTIFICATION = 'micro-mvp-l1-rules-core-v3';
 const MICRO_MVP_V4_CERTIFICATION = 'micro-mvp-l1-rules-core-v4';
+const BASIC_ACTIONS_CERTIFICATION = 'micro-mvp-basic-actions-v1';
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UTC_RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
@@ -107,6 +108,30 @@ function microMvpV3EvidenceIssues(certification: EntitySupportCertification): st
       && !certification.status.startsWith('verified_')) {
       issues.push('mechanics_locked требует verified-статус');
     }
+  }
+  return issues;
+}
+
+function basicActionsEvidenceIssues(certification: EntitySupportCertification): string[] {
+  if (certification.certification_version !== BASIC_ACTIONS_CERTIFICATION) return [];
+  const issues: string[] = [];
+  if (!UUID.test(certification.evidence_id ?? '')) {
+    issues.push('basic-actions evidence требует evidence_id UUID');
+  }
+  if (!SHA256.test(certification.evidence_hash ?? '')) {
+    issues.push('basic-actions evidence требует evidence_hash sha256');
+  }
+  for (const field of ['certified_at', 'evidence_completed_at'] as const) {
+    const value = certification[field] ?? '';
+    if (!UTC_RFC3339.test(value) || Number.isNaN(Date.parse(value))) {
+      issues.push(`basic-actions evidence требует ${field} UTC RFC3339`);
+    }
+  }
+  const coverage = certification.test_coverage;
+  if (!coverage || coverage.schema_version !== 1 || coverage.scope !== 'micro-mvp-basic-actions-v1'
+    || !Number.isInteger(coverage.required) || coverage.required < 1
+    || coverage.passed !== coverage.required || coverage.percent !== 100) {
+    issues.push('basic-actions evidence требует точное 100% test_coverage');
   }
   return issues;
 }
@@ -157,7 +182,7 @@ export function supportStatusPresentation(status: EntitySupportStatus): SupportS
 export function supportStatusOf(entity: SupportableEntity | null | undefined): EntitySupportStatus {
   const support = entity?.support;
   if (!support) return 'untested';
-  if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION]
+  if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
     .includes(support.certification_version ?? '')
     && certificationContractIssues(support).length > 0) {
     return 'untested';
@@ -253,7 +278,7 @@ export function effectiveSupportStatus(
 ): EntitySupportStatus {
   if (!isCertificationFresh(certification, currentContentHash, currentDependencyHash)
     || (certification != null
-      && [MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION]
+      && [MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
       .includes(certification?.certification_version ?? '')
       && certificationContractIssues(certification).length > 0)) {
     return 'untested';
@@ -285,5 +310,6 @@ export function certificationContractIssues(
     issues.push(`${certification.status} требует dependency_hash`);
   }
   issues.push(...microMvpV3EvidenceIssues(certification));
+  issues.push(...basicActionsEvidenceIssues(certification));
   return issues;
 }

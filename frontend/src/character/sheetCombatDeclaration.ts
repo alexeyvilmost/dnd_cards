@@ -11,6 +11,8 @@ import {
 } from '../rules-core/weaponActionPolicies';
 import type { SheetCanonicalCommandInput } from './sheetCanonicalCommand';
 
+export const UNARMED_STRIKE_PRIMITIVE = 'unarmed_strike' as const;
+
 export interface SheetCombatTargetFactDraft {
   targetId: string;
   factsSource: SpatialFacts['factsSource'];
@@ -26,6 +28,7 @@ export interface SheetCombatDeclarationPolicy {
     | 'burning_hands_objects'
     | 'area_object_push'
     | 'magic_missile'
+    | typeof UNARMED_STRIKE_PRIMITIVE
     | typeof WEAPON_ATTACK_PRIMITIVE
     | typeof LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE;
   minTargets: number;
@@ -47,6 +50,7 @@ function object(value: unknown): Record<string, unknown> | null {
 
 function primitive(action: RuleActionDefinition): SheetCombatDeclarationPolicy['primitiveType'] {
   const type = object(action.mechanics.primitive)?.type;
+  if (type === UNARMED_STRIKE_PRIMITIVE) return type;
   if (type === WEAPON_ATTACK_PRIMITIVE || type === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {
     const parsed = parseDeclaredWeaponActionPolicy(action, 'bound');
     if (parsed.status !== 'valid') throw new Error(parsed.issue);

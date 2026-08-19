@@ -30,6 +30,18 @@
   color: #e8e0d0;
 }
 
+.sheet-target-card--scene {
+  border-color: #8b6f3d;
+  background: linear-gradient(145deg, rgba(126, 91, 38, 0.14), rgba(19, 16, 12, 0.12));
+}
+
+.sheet-target-description {
+  margin: 2px 0 4px;
+  color: #bfb39d;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .sheet-target-row {
   display: grid;
   grid-template-columns: minmax(118px, 0.9fr) minmax(0, 1.35fr);
@@ -50,6 +62,38 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  min-height: 34px;
+  border: 1px solid #76613d;
+  border-radius: 6px;
+  background-color: #211c15;
+  color: #eee5d4;
+  font: inherit;
+  padding: 5px 9px;
+  outline: none;
+}
+
+.sheet-target-row > select {
+  appearance: none;
+  padding-right: 30px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #c7a35d 50%),
+    linear-gradient(135deg, #c7a35d 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.sheet-target-row > input:focus,
+.sheet-target-row > select:focus {
+  border-color: #c7a35d;
+  box-shadow: 0 0 0 2px rgba(199, 163, 93, 0.18);
+}
+
+.sheet-target-row > select option {
+  background: #211c15;
+  color: #eee5d4;
 }
 
 .sheet-target-disabled-reason {

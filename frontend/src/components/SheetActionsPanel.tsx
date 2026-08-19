@@ -37,6 +37,7 @@ import { inventoryQty } from '../character/inventory';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
+import { useToast } from '../contexts/ToastContext';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
@@ -69,7 +70,10 @@ import {
 import { projectRunnableSheetCanonicalActions } from '../character/sheetCanonicalActionProjection';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import { useSheetWorldInputDialog } from './SheetWorldInputDialog';
-import { useSheetCombatTargetDialog } from './SheetCombatTargetDialog';
+import {
+  useSheetCombatTargetDialog,
+  type SheetCombatTargetCandidate,
+} from './SheetCombatTargetDialog';
 import SheetPendingCombatPanel from './SheetPendingCombatPanel';
 import SheetCompanionControls, {
   type SheetCompanionTouchDeclaration,
@@ -80,9 +84,17 @@ import {
   synchronizeSheetCanonicalRuntime,
   writeSheetCanonicalWorld,
 } from '../character/sheetCanonicalWorld';
-import type { DecisionResponse, GameCommand, WorldState } from '../rules-core/domain';
+import type {
+  DecisionResponse,
+  GameCommand,
+  RuleActionDefinition,
+  WorldState,
+} from '../rules-core/domain';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
-import { buildSheetCombatDeclaration } from '../character/sheetCombatDeclaration';
+import {
+  buildSheetCombatDeclaration,
+  UNARMED_STRIKE_PRIMITIVE,
+} from '../character/sheetCombatDeclaration';
 import {
   advanceSheetCombatTurn,
   commitPreparedSheetCombat,
@@ -117,6 +129,12 @@ import {
   type PreparedSheetCompanionInteraction,
 } from '../character/sheetCompanionInteraction';
 import { currentRuntimeCommandCharacters } from '../character/sheetRuntimeCommand';
+import {
+  createSheetSceneTargetActor,
+  buildSheetSceneTargetContext,
+  TRAINING_DUMMY,
+  TRAINING_DUMMY_TARGET_ID,
+} from '../character/sheetSceneTargets';
 
 interface Props {
   character: ForgeCharacter;
@@ -364,6 +382,56 @@ function mechanicsPrimitiveType(mechanics: Record<string, unknown>): string | nu
   return typeof type === 'string' && type ? type : null;
 }
 
+/**
+ * Compatibility projection for the data-owned basic Unarmed Strike row. It is
+ * structural (not tied to an id/name), so another entity with the same generic
+ * attack contract can reuse the scene-target flow.
+ */
+export function legacyUnarmedTargetAction(action: SheetAction): RuleActionDefinition | null {
+  const effects = Array.isArray(action.mechanics.effects)
+    ? action.mechanics.effects as Record<string, unknown>[]
+    : [];
+  if (mechanicsPrimitiveType(action.mechanics)
+    || !effects.some((effect) => (
+      effect.resolution === 'attack_roll' && effect.attack_kind === 'unarmed'
+    ))) return null;
+  const targeting = action.mechanics.targeting;
+  const declared = targeting && typeof targeting === 'object' && !Array.isArray(targeting)
+    ? targeting as Record<string, unknown>
+    : {};
+  const rangeMatch = String(declared.range ?? '').match(/\d+/);
+  const rangeFt = rangeMatch ? Number(rangeMatch[0]) : 5;
+  const sourceId = action.actionRef?.id ?? action.id;
+  const sourceCard = action.actionRef?.card_number ?? action.id;
+  return {
+    id: action.id,
+    name: action.name,
+    kind: 'nonSpell',
+    sourceEntityIds: [sourceId, sourceCard],
+    mechanics: {
+      ...action.mechanics,
+      primitive: { type: UNARMED_STRIKE_PRIMITIVE },
+      targeting: {
+        domain: 'actor',
+        actor_targets: true,
+        shape: 'single',
+        min_targets: 1,
+        max_targets: 1,
+        range_ft: rangeFt,
+        requires_line_of_sight: true,
+        allowed_relations: ['enemy'],
+      },
+    },
+    targeting: {
+      minTargets: 1,
+      maxTargets: 1,
+      rangeFt,
+      requiresLineOfSight: true,
+      allowedRelations: ['enemy'],
+    },
+  };
+}
+
 export default function SheetActionsPanel({
   character,
   assembled,
@@ -438,6 +506,7 @@ export default function SheetActionsPanel({
   const worldInputDialog = useSheetWorldInputDialog();
   const combatTargetDialog = useSheetCombatTargetDialog();
   const reactionPrompt = useReactionPrompt();
+  const { showToast } = useToast();
   const [combatRetry, setCombatRetry] = useState<{
     prepared: PreparedSheetCombatCommit;
     events: EngineEvent[];
@@ -1209,9 +1278,16 @@ export default function SheetActionsPanel({
       // Keep the exact command bytes and command_id. A retry may be an
       // idempotent replay of a transaction whose response was lost.
       setCombatRetry({ prepared, events });
-      setError(cause instanceof Error
+      const message = cause instanceof Error
         ? `${cause.message}. Повтор отправит ту же атомарную команду.`
-        : 'Не удалось подтвердить атомарную команду; её можно безопасно повторить.');
+        : 'Не удалось подтвердить атомарную команду; её можно безопасно повторить.';
+      setError(message);
+      showToast({
+        type: 'error',
+        title: 'Действие не подтверждено сервером',
+        message,
+        duration: 15000,
+      });
       return false;
     } finally {
       setBusy(false);
@@ -1353,7 +1429,7 @@ export default function SheetActionsPanel({
       const allowedIds = existing
         ? new Set(Object.keys(existing.participantRevisions))
         : null;
-      const targetCandidates = allCharacters
+      const characterCandidates: SheetCombatTargetCandidate[] = allCharacters
         .filter((candidate) => candidate.id !== character.id)
         .filter((candidate) => !isCharacterReadOnly(candidate))
         .filter((candidate) => !allowedIds || allowedIds.has(candidate.id))
@@ -1362,10 +1438,37 @@ export default function SheetActionsPanel({
           if (candidate.current_encounter_id) reason = 'персонаж уже в онлайн-бою';
           else if (!Number.isSafeInteger(candidate.runtime_revision)) reason = 'нет серверной runtime_revision';
           else if (candidate.system_id !== character.system_id) reason = 'другая система правил';
-          return { id: candidate.id, name: candidate.name, ...(reason ? { disabled: true, reason } : {}) };
+          return {
+            id: candidate.id,
+            name: candidate.name,
+            defaultFacts: {
+              factsSource: 'scenario',
+              boardRevision: existing?.world.revision ?? canonical.runtime.world.revision,
+              relation: 'enemy',
+              lineOfSight: true,
+              cover: 'none',
+            },
+            ...(reason ? { disabled: true, reason } : {}),
+          };
         });
+      const dummyAvailable = !existing || Boolean(existing.world.actors[TRAINING_DUMMY_TARGET_ID]);
+      const targetCandidates: SheetCombatTargetCandidate[] = [{
+        id: TRAINING_DUMMY.id,
+        name: TRAINING_DUMMY.name,
+        description: TRAINING_DUMMY.description,
+        defaultSelected: dummyAvailable,
+        defaultFacts: {
+          ...TRAINING_DUMMY.defaultFacts,
+          boardRevision: existing?.world.revision ?? canonical.runtime.world.revision,
+        },
+        factEntryMode: 'distance_only',
+        ...(!dummyAvailable ? {
+          disabled: true,
+          reason: 'Завершите старое продолжение боя, чтобы добавить цель сцены',
+        } : {}),
+      }, ...characterCandidates];
       if (!targetCandidates.some((candidate) => !candidate.disabled)) {
-        throw new Error('Нет доступного второго персонажа для атомарного сценария');
+        throw new Error('Нет доступной цели для этого действия');
       }
       const declarationFacts = await combatTargetDialog.request({
         title: `${action.name}: цели и факты`,
@@ -1386,9 +1489,13 @@ export default function SheetActionsPanel({
         const targets = await Promise.all(selectedTargets.map((target) => (
           loadSheetCombatParticipant({ character: target, basicActions, cards })
         )));
+        const sceneActors = selectedIds.has(TRAINING_DUMMY_TARGET_ID)
+          ? [createSheetSceneTargetActor(TRAINING_DUMMY)]
+          : [];
         session = await createSheetCombatSession({
           source: { character, canonical: canonical.runtime },
           targets,
+          sceneActors,
           sceneMode: 'encounter',
         });
         characters = Object.fromEntries([
@@ -1410,10 +1517,26 @@ export default function SheetActionsPanel({
         commandId: newSheetRuntimeCommandId(),
         rng: Math.random,
       });
-      await commitCombatTransition(transition, characters);
+      const committed = await commitCombatTransition(transition, characters);
+      if (committed) {
+        showToast({
+          type: 'success',
+          title: 'Действие принято',
+          message: transition.nextWorld.pendingResolution
+            ? `${action.name}: ожидается решение цели`
+            : `${action.name}: результат сохранён`,
+        });
+      }
     } catch (cause) {
       console.error(cause);
-      setError(cause instanceof Error ? cause.message : String(cause));
+      const message = cause instanceof Error ? cause.message : String(cause);
+      setError(message);
+      showToast({
+        type: 'error',
+        title: 'Действие не выполнено',
+        message,
+        duration: 15000,
+      });
     }
   };
 
@@ -1453,8 +1576,27 @@ export default function SheetActionsPanel({
       ? sheetActionRequiresActorTargets(canonical.action)
       : actionInteractsWithTarget(mech);
     const selectedTargetForAction = requiresActorTarget ? selectedSheetTarget : undefined;
+    const unarmedTargetAction = legacyUnarmedTargetAction(action);
+    let sceneTarget: TargetContext | undefined;
+    if (unarmedTargetAction && !selectedTargetForAction) {
+      const declaration = await combatTargetDialog.request({
+        title: `${action.name}: цели и факты`,
+        action: unarmedTargetAction,
+        candidates: [{
+          id: TRAINING_DUMMY.id,
+          name: TRAINING_DUMMY.name,
+          description: TRAINING_DUMMY.description,
+          defaultSelected: true,
+          defaultFacts: TRAINING_DUMMY.defaultFacts,
+          factEntryMode: 'distance_only',
+        }],
+        requireTarget: true,
+      });
+      if (!declaration) return;
+      sceneTarget = buildSheetSceneTargetContext(TRAINING_DUMMY);
+    }
     if (!authoritativePrimitive) {
-      if (!selectedTargetForAction) {
+      if (!selectedTargetForAction && !sceneTarget) {
         const targetFactsIssue = explicitSheetTargetFactsIssue(mech, {
           armorClass: targetAc,
           savingThrowModifier: targetSaveMod,
@@ -1517,6 +1659,8 @@ export default function SheetActionsPanel({
       ? undefined
       : selectedTargetForAction
         ? buildTargetFromCharacter(selectedTargetForAction)
+        : sceneTarget
+          ? sceneTarget
         : explicitSheetTargetContext(mech, {
           armorClass: targetAc,
           savingThrowModifier: targetSaveMod,
@@ -1759,7 +1903,7 @@ export default function SheetActionsPanel({
       const needsConfirm = spendsResource(mech) || !!action.spellRef;
       // Действие взаимодействует с другим персонажем → предложить выбор цели в окне (при включённом
       // диалоге кубов). Список всех персонажей, кроме себя. При выключенном диалоге — dummy, как раньше.
-      const interactsWithTarget = requiresActorTarget;
+      const interactsWithTarget = requiresActorTarget && !sceneTarget;
       let targetOptions: { id: string; name: string }[] | undefined;
       if (interactsWithTarget && getSettings().diceDialog) {
         if (encounterId) {
@@ -1914,7 +2058,9 @@ export default function SheetActionsPanel({
     }
     const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards);
     if (!avail.available) return { disabled: true, reason: avail.reason };
-    if (!primitive && !(selectedSheetTarget && actionInteractsWithTarget(action.mechanics))) {
+    if (!primitive
+      && !legacyUnarmedTargetAction(action)
+      && !(selectedSheetTarget && actionInteractsWithTarget(action.mechanics))) {
       const targetFactsIssue = explicitSheetTargetFactsIssue(action.mechanics, {
         armorClass: targetAc,
         savingThrowModifier: targetSaveMod,
@@ -2005,7 +2151,7 @@ export default function SheetActionsPanel({
     <>
       {worldInputDialog.dialog}
       {combatTargetDialog.dialog}
-      {error && <p className="issues">{error}</p>}
+      {error && <p className="issues" role="alert" data-testid="sheet-action-error">{error}</p>}
       {companionRetry && (
         <section className="sheet-group" role="alert" data-testid="sheet-companion-retry">
           <h3 className="sheet-h3">Ответ операции спутника не подтверждён</h3>
@@ -2039,6 +2185,12 @@ export default function SheetActionsPanel({
         <SheetPendingCombatPanel
           pending={combatSession.world.pendingResolution}
           viewingCharacterId={character.id}
+          decisionProxyCharacterId={
+            combatSession.world.pendingResolution.request.actorId
+              in combatSession.participantRevisions
+              ? undefined
+              : combatSession.sourceCharacterId
+          }
           actorNames={combatActorNames}
           busy={busy || !!combatRetry}
           onResolve={resolveCombatDecision}

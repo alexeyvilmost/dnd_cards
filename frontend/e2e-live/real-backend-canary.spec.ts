@@ -104,6 +104,23 @@ interface CharacterResponse extends JsonRecord {
   max_hp: number;
   current_encounter_id?: string | null;
   active_effects?: RuntimeEffect[] | null;
+  runtime_revision?: number;
+  equipment?: JsonRecord;
+  inventory_items?: Array<{ card_id: string; qty: number }>;
+  resources?: JsonRecord;
+  turn_state?: JsonRecord;
+}
+
+interface CatalogCard extends JsonRecord {
+  id: string;
+  card_number: string;
+  name: string;
+}
+
+interface CatalogAction extends JsonRecord {
+  id: string;
+  card_number: string;
+  name: string;
 }
 
 interface EncounterCombatant extends JsonRecord {
@@ -596,6 +613,9 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     expect(authA.user.id).not.toBe(authB.user.id);
 
     contextA = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'block' });
+    await contextA.addInitScript(() => {
+      Math.random = () => 0.99;
+    });
     const browserOrigins = new Set([frontendOrigin, apiOrigin]);
     await installBrowserOriginFence(contextA, browserOrigins);
     const pageAForge = await contextA.newPage();
@@ -613,6 +633,72 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       marker,
       apiOrigin,
     );
+    const cards = await checkedJSON<{ cards?: CatalogCard[] }>(
+      authA.api,
+      'get',
+      '/api/cards?limit=1000',
+    );
+    const longbow = cards.cards?.find((card) => card.card_number === 'CARD-0563');
+    const arrow = cards.cards?.find((card) => card.card_number === 'CARD-0728');
+    if (!longbow || !arrow) throw new Error('Live catalog misses Longbow or Arrow');
+    characterA = await checkedJSON<CharacterResponse>(
+      authA.api,
+      'patch',
+      `/api/characters-v3/${characterA.id}/runtime`,
+      {
+        equipment: { main_hand: longbow.id },
+        inventory_items: [
+          { card_id: longbow.id, qty: 1 },
+          { card_id: arrow.id, qty: 3 },
+        ],
+      },
+    );
+    const basicActions = await checkedJSON<{ actions?: CatalogAction[] }>(
+      authA.api,
+      'get',
+      '/api/actions?type=basic&limit=50',
+    );
+    const weaponAction = basicActions.actions?.find((action) => (
+      action.card_number === 'action_basic_weapon'
+    ));
+    if (!weaponAction) throw new Error('Live catalog misses the basic Weapon Attack');
+    await pageAForge.goto(`/characters-v3/${characterA.id}`);
+    const weaponButton = pageAForge.locator(`[data-action-id="${weaponAction.id}"]`)
+      .getByRole('button')
+      .filter({ visible: true })
+      .first();
+    await expect(weaponButton).toBeEnabled({ timeout: 30_000 });
+    await weaponButton.click();
+    const targetDialog = pageAForge.getByRole('dialog', { name: 'Цели и факты боя' });
+    await expect(targetDialog).toBeVisible();
+    const dummy = targetDialog.locator('[data-target-id="scene-target:training-dummy"]');
+    await expect(dummy.getByRole('checkbox')).toBeChecked();
+    await expect(dummy.getByRole('combobox')).toHaveCount(0);
+    await dummy.locator('input[type="number"]').fill('30');
+    const commandResponsePromise = pageAForge.waitForResponse((response) => {
+      try {
+        return response.request().method() === 'POST'
+          && new URL(response.url()).pathname === '/api/characters-v3/runtime-command';
+      } catch {
+        return false;
+      }
+    });
+    await targetDialog.getByRole('button', { name: 'Подтвердить цели' }).click();
+    const commandResponse = await commandResponsePromise;
+    assertLiveCanaryRequestOrigin(commandResponse.url(), apiOrigin, 'live sheet weapon command');
+    expect(commandResponse.ok(), 'live sheet weapon command').toBe(true);
+    await expect(pageAForge.getByText('Действие принято', { exact: true })).toBeVisible();
+    characterA = await checkedJSON<CharacterResponse>(
+      authA.api,
+      'get',
+      `/api/characters-v3/${characterA.id}`,
+    );
+    expect(characterA.inventory_items).toEqual([
+      { card_id: longbow.id, qty: 1 },
+      { card_id: arrow.id, qty: 2 },
+    ]);
+    expect(characterA.resources?.action).toBe(0);
+    expect(characterA.turn_state?.canonical_pending_combat_v1).toBeTruthy();
     await pageAForge.close();
     characterB = await checkedJSON<CharacterResponse>(
       authB.api,

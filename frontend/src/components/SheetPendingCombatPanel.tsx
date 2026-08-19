@@ -9,6 +9,8 @@ import type {
 export interface SheetPendingCombatPanelProps {
   pending: PendingResolution;
   viewingCharacterId: string;
+  /** Writable character sheet allowed to answer for a scene-owned actor. */
+  decisionProxyCharacterId?: string;
   actorNames?: Readonly<Record<string, string>>;
   busy?: boolean;
   onResolve: (response: DecisionResponse) => void | Promise<void>;
@@ -67,6 +69,7 @@ export function pendingSheetCombatDecisionActorId(pending: PendingResolution): s
 export default function SheetPendingCombatPanel({
   pending,
   viewingCharacterId,
+  decisionProxyCharacterId,
   actorNames = {},
   busy = false,
   onResolve,
@@ -90,14 +93,18 @@ export default function SheetPendingCombatPanel({
     );
   }
 
-  if (decidingActorId !== viewingCharacterId) {
+  const canResolve = decidingActorId === viewingCharacterId
+    || decisionProxyCharacterId === viewingCharacterId;
+  if (!canResolve) {
     return (
       <section className="sheet-group" role="status" data-testid="sheet-combat-awaiting-target">
         <h3 className="sheet-h3">Ожидается решение</h3>
         <p>Решение принимает {decidingName} в своём листе.</p>
-        <a className="forge-btn ghost" href={`/characters-v3/${decidingActorId}`}>
-          Открыть лист цели
-        </a>
+        {decidingActorId ? (
+          <a className="forge-btn ghost" href={`/characters-v3/${decidingActorId}`}>
+            Открыть лист цели
+          </a>
+        ) : null}
       </section>
     );
   }

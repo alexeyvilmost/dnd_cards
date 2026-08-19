@@ -242,6 +242,8 @@ function insertExact<T>(
  */
 export function mergeSheetCombatParticipantWorlds(input: {
   seeds: readonly SheetCombatParticipantSeed[];
+  /** Scene-owned creatures take part in resolution but are not CharacterV3 rows. */
+  sceneActors?: readonly ActorState[];
   ruleset: WorldState['ruleset'];
   worldId: string;
   sceneMode: 'exploration' | 'encounter';
@@ -316,6 +318,12 @@ export function mergeSheetCombatParticipantWorlds(input: {
 
   for (const actorId of participantSet) {
     if (!actors[actorId]) throw new SheetCombatSessionError(`Merged world misses ${actorId}`);
+  }
+  for (const sceneActor of input.sceneActors ?? []) {
+    if (participantSet.has(sceneActor.id)) {
+      throw new SheetCombatSessionError(`Scene actor conflicts with participant ${sceneActor.id}`);
+    }
+    insertExact(actors, sceneActor.id, sceneActor, 'scene actor');
   }
   for (const object of Object.values(objects)) {
     const missing = actorReferencesForObject(object).filter((actorId) => !actors[actorId]);
@@ -464,6 +472,8 @@ export function assertCertifiedSheetCombatSession(
 export async function createSheetCombatSession(input: {
   source: SheetCombatParticipantSeed;
   targets: readonly SheetCombatParticipantSeed[];
+  /** Ephemeral targets owned by the scene, not by a writable character sheet. */
+  sceneActors?: readonly ActorState[];
   /** The local two-sheet canary models a real ordered encounter without using online encounter state. */
   sceneMode?: 'exploration' | 'encounter';
 }): Promise<SheetCombatSession> {
@@ -509,6 +519,7 @@ export async function createSheetCombatSession(input: {
   const ruleset = clone(certified.ruleset);
   const world = mergeSheetCombatParticipantWorlds({
     seeds,
+    sceneActors: input.sceneActors,
     ruleset,
     worldId: `sheet-combat:${input.source.character.id}`,
     sceneMode: input.sceneMode ?? 'encounter',
