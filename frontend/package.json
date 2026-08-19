@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:browser": "npm run build && playwright test",
     "test:browser:live": "playwright test --config playwright.live.config.ts",
-    "test:browser:live:sheet": "playwright test --config playwright.live.config.ts --grep \"^public sheet certificate:\"",
+    "test:browser:live:sheet": "playwright test --config playwright.live.config.ts --grep \"public sheet certificate:\"",
     "test:browser:live:typecheck": "tsc -p tsconfig.live.json --noEmit",
     "test:browser:headed": "npm run build && playwright test --headed",
     "test:e2e:micro": "npm run test:browser",
