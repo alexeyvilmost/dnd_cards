@@ -6,6 +6,7 @@ export const LIVE_PRODUCTION_ORIGINS = {
 export type LiveCanaryTarget = keyof typeof LIVE_PRODUCTION_ORIGINS;
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1']);
+const PROVIDER_NEUTRAL_ORIGIN_ENV = 'LIVE_BROWSER_ALLOWED_ORIGIN';
 
 function parseURL(value: string, label: string): URL {
   try {
@@ -13,6 +14,27 @@ function parseURL(value: string, label: string): URL {
   } catch {
     throw new Error(`${label} must be an absolute URL`);
   }
+}
+
+function assertOriginOnly(parsed: URL, label: string): void {
+  if (parsed.username || parsed.password) {
+    throw new Error(`${label} must not contain URL userinfo`);
+  }
+  if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    throw new Error(`${label} must contain an origin only (no path, query, or fragment)`);
+  }
+}
+
+function providerNeutralOrigin(): string | null {
+  const raw = process.env[PROVIDER_NEUTRAL_ORIGIN_ENV]?.trim();
+  if (!raw) return null;
+
+  const parsed = parseURL(raw, PROVIDER_NEUTRAL_ORIGIN_ENV);
+  assertOriginOnly(parsed, PROVIDER_NEUTRAL_ORIGIN_ENV);
+  if (parsed.protocol !== 'https:') {
+    throw new Error(`${PROVIDER_NEUTRAL_ORIGIN_ENV} must use HTTPS`);
+  }
+  return parsed.origin;
 }
 
 /**
@@ -29,12 +51,7 @@ export function requiredLiveCanaryOrigin(
   if (!raw) throw new Error(`${environmentName} is required for the live browser canary`);
 
   const parsed = parseURL(raw, environmentName);
-  if (parsed.username || parsed.password) {
-    throw new Error(`${environmentName} must not contain URL userinfo`);
-  }
-  if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
-    throw new Error(`${environmentName} must contain an origin only (no path, query, or fragment)`);
-  }
+  assertOriginOnly(parsed, environmentName);
 
   const loopback = LOOPBACK_HOSTS.has(parsed.hostname);
   if (loopback) {
@@ -44,9 +61,16 @@ export function requiredLiveCanaryOrigin(
     return parsed.origin;
   }
 
+  const explicitOrigin = providerNeutralOrigin();
+  if (explicitOrigin && parsed.protocol === 'https:' && parsed.origin === explicitOrigin) {
+    return explicitOrigin;
+  }
+
   const expected = LIVE_PRODUCTION_ORIGINS[target];
   if (parsed.protocol !== 'https:' || parsed.origin !== expected) {
-    throw new Error(`${environmentName} must be exactly ${expected}, or an explicit loopback origin`);
+    throw new Error(
+      `${environmentName} must be exactly ${expected}, ${PROVIDER_NEUTRAL_ORIGIN_ENV}, or an explicit loopback origin`,
+    );
   }
   return expected;
 }

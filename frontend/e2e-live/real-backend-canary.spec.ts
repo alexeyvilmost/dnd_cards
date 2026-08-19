@@ -835,8 +835,9 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     ]));
 
     await expect(pageBSheet.locator('.sheet-hp-main strong')).toHaveText(String(hpAfter));
-    await expect(pageBSheet.locator('.sheet-condition-name')).toContainText('Распластан');
-    await expect(pageAEncounter.getByText(prone.name).first()).toBeVisible();
+    await expect(pageBSheet.locator('.sheet-condition-name')).toContainText(prone.name);
+    await expect(pageAEncounter.locator('[title="Снять"]').filter({ hasText: prone.name }).first())
+      .toBeVisible();
     await expect(pageBEncounter.getByText(
       `${characterB.name}: спасбросок Ловкость — провал, урон 3`,
     ).first()).toBeVisible();
@@ -854,7 +855,7 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
 
     await pageBSheet.reload();
     await expect(pageBSheet.locator('.sheet-hp-main strong')).toHaveText(String(hpAfter));
-    await expect(pageBSheet.locator('.sheet-condition-name')).toContainText('Распластан');
+    await expect(pageBSheet.locator('.sheet-condition-name')).toContainText(prone.name);
     if (browserDiagnostics.length > 0) {
       throw new Error(`Browser diagnostics are not clean:\n${browserDiagnostics.join('\n')}`);
     }
