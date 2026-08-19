@@ -158,6 +158,15 @@ const compiledFixture = JSON.parse(readFileSync(new URL(
   roots: { fighter: CompiledDraftRoot; wizard: CompiledDraftRoot };
 };
 
+const CERTIFIED_LONGBOW = {
+  id: 'cc1ac793-af4f-45aa-87e2-bd563c734bef',
+  card_number: 'CARD-0327',
+} as const;
+const CERTIFIED_ARROW = {
+  id: '59b10a1e-8669-4bf6-88a5-69d0abfc76a6',
+  card_number: 'CARD-0728',
+} as const;
+
 function required(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`${name} is required for the live browser canary`);
@@ -612,7 +621,10 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     authB = await authenticatedAPI(playwright, apiOrigin, accountB, 'account B');
     expect(authA.user.id).not.toBe(authB.user.id);
 
-    contextA = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'block' });
+    // Every canary uses a fresh non-persistent context, so it cannot inherit a
+    // stale worker. Keep service workers enabled to exercise the real PWA
+    // registration/update path instead of manufacturing console failures.
+    contextA = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
     await contextA.addInitScript(() => {
       Math.random = () => 0.99;
     });
@@ -633,17 +645,18 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       marker,
       apiOrigin,
     );
-    const cards = await checkedJSON<{ cards?: CatalogCard[] }>(
+    const longbow = await checkedJSON<CatalogCard>(
       authA.api,
       'get',
-      '/api/cards?limit=1000',
+      `/api/cards/${CERTIFIED_LONGBOW.id}`,
     );
-    // CARD-0327 is the certified PHB 2024 Longbow used by the micro-MVP
-    // starting-equipment graph. CARD-0563 is a legacy duplicate without the
-    // required data-driven weapon_profile and must remain visibly unusable.
-    const longbow = cards.cards?.find((card) => card.card_number === 'CARD-0327');
-    const arrow = cards.cards?.find((card) => card.card_number === 'CARD-0728');
-    if (!longbow || !arrow) throw new Error('Live catalog misses Longbow or Arrow');
+    const arrow = await checkedJSON<CatalogCard>(
+      authA.api,
+      'get',
+      `/api/cards/${CERTIFIED_ARROW.id}`,
+    );
+    expect(longbow).toMatchObject(CERTIFIED_LONGBOW);
+    expect(arrow).toMatchObject(CERTIFIED_ARROW);
     characterA = await checkedJSON<CharacterResponse>(
       authA.api,
       'patch',
@@ -855,7 +868,7 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       avoidsConditions: ['prone'],
     };
 
-    contextB = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'block' });
+    contextB = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
     await installBrowserOriginFence(contextB, browserOrigins);
     const pageAEncounter = await contextA.newPage();
     const pageBEncounter = await contextB.newPage();
