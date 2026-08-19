@@ -100,9 +100,6 @@ jobs:
       - name: Полный semantic gate micro-MVP
         working-directory: frontend
         run: npm run test:micro:coverage
-      - name: Установка Chromium для browser acceptance
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
       - name: Browser acceptance Rules Lab + isolated sheet API fixture (desktop + mobile)
         working-directory: frontend
         run: npx playwright test --project=desktop-chromium --project=mobile-chromium

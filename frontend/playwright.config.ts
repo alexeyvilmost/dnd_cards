@@ -1,5 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// GitHub's ubuntu runner already ships Google Chrome. Using that production
+// channel in CI keeps browser acceptance deterministic without downloading a
+// second ~browser image on every push. Local runs keep Playwright's managed
+// Chromium so contributors can continue to use `playwright install` normally.
+const ciBrowser = process.env.CI ? { channel: 'chrome' as const } : {};
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -20,11 +26,11 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop-chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], ...ciBrowser },
     },
     {
       name: 'mobile-chromium',
-      use: { ...devices['Pixel 7'] },
+      use: { ...devices['Pixel 7'], ...ciBrowser },
     },
   ],
   webServer: {
