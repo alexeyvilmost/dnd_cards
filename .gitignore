@@ -70,6 +70,7 @@ officials/canon/.prod-snapshot.previous-*/
 # Docker
 .dockerignore
 !frontend/.dockerignore
+!backend/.dockerignore
 
 # Temporary files
 *.tmp

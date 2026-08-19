@@ -56,10 +56,13 @@ import type {
   ActiveEffect
 } from '../types';
 
-// Railway production URL по умолчанию; VITE_API_URL позволяет переключить
-// локальную разработку на свой backend, например http://localhost:8080.
-export const API_BASE_URL = import.meta.env.VITE_API_URL
-  || 'https://backend-production-41c3.up.railway.app';
+// Production is served through a same-origin reverse proxy (`/api/*`).  This
+// keeps the browser bundle independent from a particular hosting provider and
+// removes CORS from the normal production path.  Development still defaults to
+// the standalone local backend; live tests can override either mode explicitly.
+const configuredApiBaseUrl = import.meta.env.VITE_API_URL?.trim();
+export const API_BASE_URL = configuredApiBaseUrl
+  || (import.meta.env.DEV ? 'http://localhost:8080' : '');
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

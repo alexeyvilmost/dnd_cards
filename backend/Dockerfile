@@ -1,25 +1,21 @@
-# Используем официальный образ Go (go.mod требует go >= 1.25 после апгрейда зависимостей)
-FROM golang:1.25-alpine
+FROM golang:1.25-alpine AS build
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
-
-# Копируем файлы зависимостей (go.sum тоже — детерминированная загрузка)
+WORKDIR /src
 COPY go.mod go.sum ./
-
-# Инициализируем модуль и загружаем зависимости
 RUN go mod download
-
-# Копируем исходный код
 COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/dnd-cards .
 
+FROM alpine:3.22
 
-# Собираем приложение
-RUN go build -o main .
+RUN apk add --no-cache ca-certificates tzdata \
+    && addgroup -S -g 10001 app \
+    && adduser -S -D -H -u 10001 -G app app
 
-# Открываем порт
+WORKDIR /app
+COPY --from=build --chown=app:app /out/dnd-cards /app/dnd-cards
+
+USER app
 EXPOSE 8080
-
-# Запускаем приложение
-CMD ["./main"]
+ENTRYPOINT ["/app/dnd-cards"]
 

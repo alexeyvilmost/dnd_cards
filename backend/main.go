@@ -59,26 +59,19 @@ func main() {
 	r.Use(RequestIDMiddleware())
 	r.Use(SecurityHeadersMiddleware())
 
-	// CORS настройки
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{
-		"http://localhost:3000",
-		"http://localhost:5173",
-		"http://127.0.0.1:3000",
-		"http://127.0.0.1:5173",
-		"https://frontend-production-550b.up.railway.app", // Ваш конкретный frontend URL
-		"https://bagofholding.up.railway.app",             // Домен на Railway
-		"https://bagofholding.ru",                         // Публичный custom domain
-		"https://*.vercel.app",
-		"https://*.netlify.app",
-		"https://*.render.com",
-		"https://*.digitalocean.app",
+	// Same-origin production does not require CORS, but explicit origins remain
+	// available for local development, canaries and a temporary rollback host.
+	allowedOrigins, err := configuredAllowedOrigins()
+	if err != nil {
+		log.Fatal("Ошибка CORS-конфигурации:", err)
 	}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"}
-	config.ExposeHeaders = []string{"X-Request-ID", "Retry-After"}
-	config.AllowCredentials = true
-	r.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = allowedOrigins
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"}
+	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After"}
+	corsConfig.AllowCredentials = true
+	r.Use(cors.New(corsConfig))
 
 	// Инициализация сервисов для работы с изображениями
 	yandexStorage, err := NewYandexStorageService()

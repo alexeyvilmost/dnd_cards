@@ -1,0 +1,23 @@
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	log {
+		output stdout
+		format json
+	}
+
+	@edge_health path /_edge-health
+	respond @edge_health "ok" 200
+
+	handle /api/* {
+		reverse_proxy backend:8080 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:3000 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+}

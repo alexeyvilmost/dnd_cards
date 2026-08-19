@@ -6,11 +6,9 @@ export PORT
 
 echo ">>> dnd-cards frontend: PORT=${PORT}"
 
-# Runtime deployment attestation. Railway supplies the Git-triggered commit as
-# a system variable; local images remain usable and advertise null instead of
-# inventing an identity. The no-cache endpoint is checked immediately before
-# production content mutation and by browser canaries.
-SOURCE_COMMIT="${RAILWAY_GIT_COMMIT_SHA:-}"
+# Runtime deployment attestation. Provider-neutral deployments supply
+# SOURCE_COMMIT; Railway remains a rollback-compatible fallback.
+SOURCE_COMMIT="${SOURCE_COMMIT:-${RAILWAY_GIT_COMMIT_SHA:-}}"
 BUILD_INFO_TMP="/usr/share/nginx/html/.build-info.json.tmp"
 BUILD_INFO_PATH="/usr/share/nginx/html/build-info.json"
 if printf '%s' "$SOURCE_COMMIT" | grep -Eq '^[0-9A-Fa-f]{40}$'; then
