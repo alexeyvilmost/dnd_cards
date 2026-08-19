@@ -93,7 +93,7 @@ export const imagesApi = {
 
   // Загрузка изображения
   uploadImage: async (
-    entityType: 'card' | 'weapon_template',
+    entityType: 'card' | 'weapon_template' | 'monster',
     entityId: string,
     imageFile: File
   ): Promise<ImageUploadResponse> => {
@@ -112,7 +112,7 @@ export const imagesApi = {
 
   // Генерация изображения
   generateImage: async (
-    entityType: 'card' | 'weapon_template',
+    entityType: 'card' | 'weapon_template' | 'monster',
     entityId: string,
     prompt?: string,
     entityData?: {
@@ -141,7 +141,7 @@ export const imagesApi = {
 
   // Удаление изображения
   deleteImage: async (
-    entityType: 'card' | 'weapon_template',
+    entityType: 'card' | 'weapon_template' | 'monster',
     entityId: string
   ): Promise<{ success: boolean; message: string }> => {
     const response = await apiClient.delete(`/api/images/${entityType}/${entityId}`);

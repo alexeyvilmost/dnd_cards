@@ -74,6 +74,9 @@ const MobileCharacterSheet = lazy(() => import('./mobile/MobileCharacterSheet'))
 const MobileCharacterWizard = lazy(() => import('./mobile/MobileCharacterWizard'));
 const MobileEntityCatalog = lazy(() => import('./mobile/MobileEntityCatalog'));
 const RulesLab = lazy(() => import('./pages/RulesLab'));
+const MonsterLibrary = lazy(() => import('./pages/MonsterLibrary'));
+const MonsterCreator = lazy(() => import('./pages/MonsterCreator'));
+const SoloCombatPage = lazy(() => import('./pages/SoloCombatPage'));
 const RULE_BOOTSTRAP_TIMEOUT_MS = 15_000;
 const RULE_BOOTSTRAP_RETRY_MS = 5_000;
 const CONDITION_RELEASE_BINDING = Object.freeze({
@@ -162,6 +165,7 @@ function App() {
         style={{
           position: 'sticky', top: 0, zIndex: 10000, padding: '8px 16px',
           textAlign: 'center', color: '#2f2418', background: '#f3d28b',
+          pointerEvents: 'none',
         }}
       >
         Офлайн-набор правил: сертифицированные данные сервера сейчас недоступны.{' '}
@@ -193,6 +197,7 @@ function App() {
         <Route path="/characters-forge" element={<ProtectedRoute><CharactersForgeList /></ProtectedRoute>} />
         <Route path="/spell/:id" element={<SpellPage />} />
         <Route path="/characters-v3/:id" element={<ProtectedRoute><CharacterSheetMVP /></ProtectedRoute>} />
+        <Route path="/characters-v3/:id/combat" element={<ProtectedRoute><SoloCombatPage /></ProtectedRoute>} />
 
         {/* Отдельный мобильный интерфейс игрока */}
         <Route path="/m" element={<Navigate to="/m/characters" replace />} />
@@ -397,6 +402,16 @@ function App() {
               <InitiativeTracker />
             </Layout>
           </ProtectedRoute>
+        } />
+
+        <Route path="/monsters" element={
+          <ProtectedRoute><Layout><MonsterLibrary /></Layout></ProtectedRoute>
+        } />
+        <Route path="/monster-forge" element={
+          <ProtectedRoute><Layout><MonsterCreator /></Layout></ProtectedRoute>
+        } />
+        <Route path="/monster-forge/:id" element={
+          <ProtectedRoute><Layout><MonsterCreator /></Layout></ProtectedRoute>
         } />
 
         {/* Shop routes */}

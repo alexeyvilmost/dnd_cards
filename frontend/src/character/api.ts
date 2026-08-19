@@ -173,6 +173,16 @@ export const charactersV3Api = {
     );
     return data;
   }),
+  uploadAvatar: (characterId: string, file: File): Promise<string> => characterV3Request('update', async () => {
+    const body = new FormData();
+    body.append('image', file);
+    const { data } = await apiClient.post<{ success: boolean; image_url: string }>(
+      `/api/characters-v3/${characterId}/avatar`,
+      body,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return data.image_url;
+  }),
 };
 
 export interface PatchCharacterRuntimeRequest {

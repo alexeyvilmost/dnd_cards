@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, LogOut, User, Users, Store, ChevronDown, Menu, X, Sparkles, Swords, Radio, MoreHorizontal, type LucideIcon } from 'lucide-react';
+import { BookOpen, LogOut, User, Users, Store, ChevronDown, Menu, X, Sparkles, Swords, Radio, MoreHorizontal, PawPrint, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
@@ -20,6 +20,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems: NavItem[] = [
     { path: '/characters-forge', label: 'Персонажи', icon: Users },
     { path: '/encounters', label: 'Бои', icon: Radio },
+    { path: '/monsters', label: 'Монстры', icon: PawPrint },
     { path: '/shop/new', label: 'Магазин', icon: Store },
     { path: '/initiative', label: 'Инициатива', icon: Swords },
     { path: '/image-generator', label: 'Генерация', icon: Sparkles },

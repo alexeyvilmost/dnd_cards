@@ -51,10 +51,11 @@ export const BASIC_ACTION_CERTIFICATION_CONTRACT = Object.freeze([
     status: 'verified_partial',
     mechanicsLocked: false,
     limitations: [
-      'Трата действия и модификатор доступного перемещения проверены; сама геометрия перемещения пока ведётся игроком на сцене.',
+      'Трата действия и удвоение бюджета перемещения проверены на тактической solo-combat сетке; другие типы сцен ещё не проецируют геометрию.',
     ],
     evidence: [
       'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage persistence and Dodge execute from their real basic-action rows',
+      'frontend/src/solo-combat/soloCombat.engine.integration.test.ts::connects the reusable Dash and Disengage data rows to tactical movement',
     ],
   },
   {
@@ -62,10 +63,11 @@ export const BASIC_ACTION_CERTIFICATION_CONTRACT = Object.freeze([
     status: 'verified_partial',
     mechanicsLocked: false,
     limitations: [
-      'Лист сохраняет эффект запрета провоцируемой атаки и снимает его в начале следующего хода; сама система атак по возможности ещё не подключена к этому модификатору.',
+      'Тактический solo-combat проверяет общий deny-модификатор перед провоцируемой атакой; другие сцены ещё не имеют тактического адаптера.',
     ],
     evidence: [
       'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage persistence and Dodge execute from their real basic-action rows',
+      'frontend/src/solo-combat/soloCombat.engine.integration.test.ts::connects the reusable Dash and Disengage data rows to tactical movement',
     ],
   },
   {

@@ -67,6 +67,7 @@ import CharacterSheetV2 from './CharacterSheetV2';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import SheetAuthorityNotice from '../components/SheetAuthorityNotice';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
+import SoloCombatSetupDialog from '../components/SoloCombatSetupDialog';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { activeConditionsOf } from '../engine/circumstances';
@@ -133,6 +134,7 @@ const CharacterSheetMVP = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [entityAddOpen, setEntityAddOpen] = useState(false);
   const [speedDialogOpen, setSpeedDialogOpen] = useState(false);
+  const [combatSetupOpen, setCombatSetupOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
@@ -1017,6 +1019,16 @@ const CharacterSheetMVP = () => {
               <button
                 type="button"
                 className="sheet-header-btn"
+                onClick={() => setCombatSetupOpen(true)}
+                title="Запустить одиночную проверку персонажа в бою"
+                data-testid="open-solo-combat"
+              >
+                <Swords size={16} />
+                <span className="sheet-header-btn-label">Проверить в бою</span>
+              </button>
+              <button
+                type="button"
+                className="sheet-header-btn"
                 onClick={rollInitiative}
                 disabled={rollingInit}
                 title="Бросок инициативы"
@@ -1540,6 +1552,17 @@ const CharacterSheetMVP = () => {
           speedBreakdown={speedBreakdown}
           speeds={ruleState.speeds}
           onClose={() => setSpeedDialogOpen(false)}
+        />
+      )}
+      {combatSetupOpen && (
+        <SoloCombatSetupDialog
+          characterName={character.name}
+          onClose={() => setCombatSetupOpen(false)}
+          onStart={(selected) => {
+            const params = new URLSearchParams();
+            selected.forEach(({ monster, quantity }) => params.set(monster.id, String(quantity)));
+            navigate(`/characters-v3/${character.id}/combat?${params.toString()}`);
+          }}
         />
       )}
 

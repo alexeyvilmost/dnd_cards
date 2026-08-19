@@ -46,6 +46,7 @@ import SpellPreview from '../components/SpellPreview';
 import FeatPreview from '../components/FeatPreview';
 import ForgeFeatLine from '../components/forge/ForgeFeatLine';
 import SupportStatusBadge from '../components/forge/SupportStatusBadge';
+import ImageUploader from '../components/ImageUploader';
 import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { spellMatchesChoice } from '../character/spellChoices';
@@ -503,7 +504,11 @@ const CharacterForge = () => {
     setSaving(true); setError(null);
     try {
       const isCreate = !draft.id;
+      const localAvatar = draft.avatarUrl?.startsWith('data:') ? draft.avatarUrl : null;
       const payload = buildSavePayload(draft, assembled, ruleState, savedHpRef.current ?? undefined);
+      // A data URL is only the local preview. The durable row receives the
+      // object-storage URL after the owner-scoped upload below.
+      if (localAvatar) payload.avatar_url = '';
       const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
       let res: ForgeCharacter;
       if (isCreate) {
@@ -543,8 +548,14 @@ const CharacterForge = () => {
         );
         if (runtimePatch) res = await charactersV3Api.patchRuntime(res.id, runtimePatch);
       }
+      if (localAvatar) {
+        const avatarBlob = await fetch(localAvatar).then((response) => response.blob());
+        const avatarFile = new File([avatarBlob], 'character-token.png', { type: avatarBlob.type || 'image/png' });
+        const avatarUrl = await charactersV3Api.uploadAvatar(res.id, avatarFile);
+        res = { ...res, avatar_url: avatarUrl };
+      }
       setSavedId(res.id);
-      setDraft((d) => ({ ...d, id: res.id }));
+      setDraft((d) => ({ ...d, id: res.id, avatarUrl: res.avatar_url || d.avatarUrl }));
       // Последующие сохранения в этой же сессии тоже не должны лечить (E3).
       savedHpRef.current = payload.current_hp ?? null;
       // Успешно сохранён — черновик-автосейв больше не нужен.
@@ -1048,6 +1059,13 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
           <button type="button" className="pb-btn" disabled={draft.level >= 20}
             onClick={() => patch({ level: Math.min(20, draft.level + 1) })}>+</button>
         </div>
+        <div className="forge-section-h" style={{ marginTop: 14 }}>Токен на поле боя</div>
+        <ImageUploader
+          currentImageUrl={draft.avatarUrl}
+          onImageUpload={(avatarUrl) => patch({ avatarUrl })}
+          className="forge-token-uploader"
+        />
+        <p className="forge-token-hint">Квадратное изображение лучше всего читается на сетке.</p>
       </div>
 
       <SummaryPanel

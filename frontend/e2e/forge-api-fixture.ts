@@ -59,6 +59,8 @@ export interface ForgeApiFixture {
   /** Read-only materialized catalog used by this isolated browser server. */
   getCatalogRows: (collection: string) => readonly JsonRecord[];
   seedCharacter: (character: JsonRecord) => void;
+  seedMonster: (monster: JsonRecord) => void;
+  seedCatalogRow: (collection: string, row: JsonRecord) => void;
   /** Commit the next command but drop its response, exercising idempotent replay. */
   loseNextRuntimeCommandResponse: () => void;
 }
@@ -181,6 +183,20 @@ function materializeFixturePatch(source: Record<string, JsonRecord[]>): Record<s
       attunement: { required: false },
     },
   };
+  const tacticalSelfTargeting = {
+    domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0,
+    max_targets: 1, range_ft: 0, requires_line_of_sight: false,
+    allowed_relations: ['self'],
+  };
+  for (const cardNumber of ['action_basic_dash', 'action_basic_disengage', 'action_basic_dodge']) {
+    const action = catalogs.actions.find((row) => row.card_number === cardNumber);
+    if (action) {
+      action.mechanics = {
+        ...((action.mechanics as JsonRecord | undefined) ?? {}),
+        targeting: tacticalSelfTargeting,
+      };
+    }
+  }
   return catalogs;
 }
 
@@ -244,6 +260,7 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
   const runtimeCommandRequests: JsonRecord[] = [];
   const runtimePatchRequests: JsonRecord[] = [];
   const eventsByCharacterId = new Map<string, JsonRecord[]>();
+  const monstersById = new Map<string, JsonRecord>();
   const runtimeCommandLedger = new Map<string, {
     request: string;
     response: JsonRecord;
@@ -410,6 +427,19 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
       return;
     }
 
+    if (segments[1] === 'monsters' && request.method() === 'GET') {
+      const reference = segments[2] ? decodeURIComponent(segments[2]) : null;
+      if (reference) {
+        const monster = monstersById.get(reference)
+          ?? [...monstersById.values()].find((row) => row.slug === reference);
+        await json(route, monster ? 200 : 404, monster ?? { error: 'missing isolated monster' });
+        return;
+      }
+      const monsters = [...monstersById.values()];
+      await json(route, 200, { monsters, total: monsters.length, page: 1, limit: monsters.length });
+      return;
+    }
+
     const collection = COLLECTIONS[segments[1]];
     if (!collection || request.method() !== 'GET') {
       await json(route, 404, { error: `unsupported isolated API path ${url.pathname}` });
@@ -447,6 +477,18 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
         updated_at: '2026-08-06T00:00:00Z',
         ...character,
       });
+    },
+    seedMonster: (monster) => {
+      const id = String(monster.id ?? '');
+      if (!id) throw new Error('seeded Monster requires id');
+      monstersById.set(id, cloneJson(monster));
+    },
+    seedCatalogRow: (collection, row) => {
+      const target = COLLECTIONS[collection]?.rows;
+      if (!target) throw new Error(`unknown fixture collection ${collection}`);
+      const index = target.findIndex((candidate) => candidate.id === row.id);
+      if (index >= 0) target[index] = cloneJson(row);
+      else target.push(cloneJson(row));
     },
     loseNextRuntimeCommandResponse: () => { loseNextRuntimeCommandResponse = true; },
   };

@@ -6,7 +6,7 @@ interface ImageUploaderProps {
   onImageUpload: (imageUrl: string) => void;
   currentImageUrl?: string;
   className?: string;
-  entityType?: 'card' | 'weapon_template';
+  entityType?: 'card' | 'weapon_template' | 'monster';
   entityId?: string;
   enableCloudUpload?: boolean;
 }

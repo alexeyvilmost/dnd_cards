@@ -629,8 +629,179 @@ func GetAllMigrations() []Migration {
 			// Возврат к narrative-only снова сделал бы действие механически пустым.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "100_create_data_driven_monsters",
+			Description: "Каталог data-driven монстров и стартовые SRD 5.2.1 существа ближнего боя",
+			Up:          createDataDrivenMonsters,
+			// Монстры могут стать пользовательским контентом; откат схемы не должен удалять их.
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "101_pin_tactical_basic_action_targets",
+			Description: "Закрепить явные self-targeting факты базовых действий для тактической доски",
+			Up:          pinTacticalBasicActionTargets,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
+}
+
+func pinTacticalBasicActionTargets(db *sql.DB) error {
+	const targeting = `{
+		"domain":"actor","actor_targets":false,"shape":"self",
+		"min_targets":0,"max_targets":1,"range_ft":0,
+		"requires_line_of_sight":false,"allowed_relations":["self"]
+	}`
+	if _, err := db.Exec(`
+		UPDATE actions
+		SET mechanics = jsonb_set(COALESCE(mechanics, '{}'::jsonb), '{targeting}', $1::jsonb, true),
+			updated_at = NOW()
+		WHERE card_number IN ('action_basic_dash', 'action_basic_disengage', 'action_basic_dodge')
+		  AND deleted_at IS NULL
+		  AND COALESCE(mechanics->'targeting', 'null'::jsonb) IS DISTINCT FROM $1::jsonb
+	`, targeting); err != nil {
+		return fmt.Errorf("pin tactical basic action targeting: %w", err)
+	}
+	return nil
+}
+
+func createDataDrivenMonsters(db *sql.DB) error {
+	if _, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS monsters (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			slug VARCHAR(100) UNIQUE NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			name_en VARCHAR(255),
+			description TEXT NOT NULL DEFAULT '',
+			size VARCHAR(30) NOT NULL DEFAULT 'medium',
+			creature_type VARCHAR(100) NOT NULL DEFAULT 'humanoid',
+			alignment VARCHAR(100) NOT NULL DEFAULT '',
+			challenge_rating VARCHAR(20) NOT NULL DEFAULT '0',
+			armor_class INTEGER NOT NULL DEFAULT 10 CHECK (armor_class > 0),
+			max_hp INTEGER NOT NULL DEFAULT 1 CHECK (max_hp > 0),
+			speed INTEGER NOT NULL DEFAULT 30 CHECK (speed > 0),
+			initiative_bonus INTEGER NOT NULL DEFAULT 0,
+			proficiency_bonus INTEGER NOT NULL DEFAULT 2 CHECK (proficiency_bonus > 0),
+			abilities JSONB NOT NULL DEFAULT '{}'::jsonb,
+			action_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+			effect_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+			ai JSONB NOT NULL DEFAULT '{"strategy":"melee_chase"}'::jsonb,
+			token_url TEXT NOT NULL DEFAULT '',
+			token_storage_id VARCHAR(255) NOT NULL DEFAULT '',
+			source VARCHAR(255) NOT NULL DEFAULT '',
+			support JSONB,
+			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP WITH TIME ZONE
+		);
+		CREATE INDEX IF NOT EXISTS idx_monsters_name ON monsters USING gin(to_tsvector('russian', name));
+		CREATE INDEX IF NOT EXISTS idx_monsters_deleted_at ON monsters(deleted_at);
+		DROP TRIGGER IF EXISTS update_monsters_updated_at ON monsters;
+		CREATE TRIGGER update_monsters_updated_at
+			BEFORE UPDATE ON monsters
+			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+	`); err != nil {
+		return fmt.Errorf("failed to create monsters table: %w", err)
+	}
+
+	type seededAction struct {
+		id, cardNumber, name, nameEn, description string
+		mechanics                                 map[string]interface{}
+	}
+	attack := func(ability, die, damageType string) map[string]interface{} {
+		return map[string]interface{}{
+			"interaction": map[string]interface{}{"intent": "harmful"},
+			"activation": map[string]interface{}{
+				"mode": "active",
+				"cost": []interface{}{map[string]interface{}{"resource": "action", "amount": 1}},
+			},
+			"targeting": map[string]interface{}{
+				"domain": "actor", "actor_targets": true, "shape": "single",
+				"min_targets": 1, "max_targets": 1, "range_ft": 5,
+				"requires_line_of_sight": true,
+				"allowed_relations":      []interface{}{"enemy"},
+			},
+			"effects": []interface{}{map[string]interface{}{
+				"resolution": "attack_roll", "ability": ability, "attack_kind": "weapon_melee", "vs": "ac",
+				"on_hit": []interface{}{map[string]interface{}{
+					"kind": "damage", "dice": die, "ability": ability, "type": damageType,
+				}},
+			}},
+		}
+	}
+	actions := []seededAction{
+		{"b1000000-0000-4000-8000-000000000001", "MONSTER-ACTION-GOBLIN-SCIMITAR", "Скимитар", "Scimitar", "Рукопашная атака гоблина-воина.", attack("dex", "1d6", "slashing")},
+		{"b1000000-0000-4000-8000-000000000002", "MONSTER-ACTION-GOBLIN-DAGGER", "Кинжал", "Dagger", "Рукопашная атака гоблина-прислужника.", attack("dex", "1d4", "piercing")},
+		{"b1000000-0000-4000-8000-000000000003", "MONSTER-ACTION-WOLF-BITE", "Укус", "Bite", "Рукопашная атака волка. Эффект опрокидывания вынесен за границы первой версии.", attack("str", "1d6", "piercing")},
+	}
+	for index := range actions {
+		action := &actions[index]
+		mechanics, err := json.Marshal(action.mechanics)
+		if err != nil {
+			return fmt.Errorf("failed to encode %s mechanics: %w", action.cardNumber, err)
+		}
+		if _, err := db.Exec(`
+			INSERT INTO actions (
+				id, name, name_en, description, rarity, card_number, resource,
+				mechanics, action_type, type, author, source, created_at, updated_at
+			) VALUES ($1,$2,$3,$4,'common',$5,'action',$6::jsonb,'base_action','monster','System','SRD 5.2.1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
+			ON CONFLICT (card_number) DO NOTHING
+		`, action.id, action.name, action.nameEn, action.description, action.cardNumber, string(mechanics)); err != nil {
+			return fmt.Errorf("failed to seed monster action %s: %w", action.cardNumber, err)
+		}
+		if err := db.QueryRow(`SELECT id::text FROM actions WHERE card_number = $1 AND deleted_at IS NULL`, action.cardNumber).
+			Scan(&action.id); err != nil {
+			return fmt.Errorf("resolve seeded monster action %s: %w", action.cardNumber, err)
+		}
+	}
+
+	support, err := json.Marshal(map[string]interface{}{
+		"status":                "verified_partial",
+		"certification_version": "solo-combat-v1",
+		"note":                  "Проверены компиляция stat block, инициатива, движение ИИ и рукопашная атака.",
+		"limitations":           []string{"Особые черты и вторичные эффекты атак пока не моделируются"},
+		"test_coverage": map[string]interface{}{
+			"schema_version": 1, "scope": "solo-combat-v1", "required": 4, "passed": 4, "percent": 100,
+		},
+		"mechanics_locked": false,
+	})
+	if err != nil {
+		return err
+	}
+
+	type seededMonster struct {
+		id, slug, name, nameEn, description, size, creatureType, alignment, cr string
+		ac, hp, speed, initiative, proficiency                                 int
+		abilities                                                              map[string]int
+		actionID                                                               string
+	}
+	monsters := []seededMonster{
+		{"c1000000-0000-4000-8000-000000000001", "goblin-warrior", "Гоблин-воин", "Goblin Warrior", "Маленький гоблиноид, вооружённый скимитаром.", "small", "fey (goblinoid)", "neutral evil", "1/4", 15, 10, 30, 2, 2, map[string]int{"str": 8, "dex": 15, "con": 10, "int": 10, "wis": 8, "cha": 8}, actions[0].id},
+		{"c1000000-0000-4000-8000-000000000002", "goblin-minion", "Гоблин-прислужник", "Goblin Minion", "Простой противник ближнего боя с кинжалом.", "small", "fey (goblinoid)", "neutral evil", "1/8", 12, 7, 30, 2, 2, map[string]int{"str": 8, "dex": 15, "con": 10, "int": 10, "wis": 8, "cha": 8}, actions[1].id},
+		{"c1000000-0000-4000-8000-000000000003", "wolf", "Волк", "Wolf", "Быстрый зверь, преследующий ближайшего противника.", "medium", "beast", "unaligned", "1/4", 12, 11, 40, 2, 2, map[string]int{"str": 14, "dex": 15, "con": 12, "int": 3, "wis": 12, "cha": 6}, actions[2].id},
+	}
+	for _, monster := range monsters {
+		abilities, err := json.Marshal(monster.abilities)
+		if err != nil {
+			return err
+		}
+		actionIDs, _ := json.Marshal([]string{monster.actionID})
+		if _, err := db.Exec(`
+			INSERT INTO monsters (
+				id, slug, name, name_en, description, size, creature_type, alignment,
+				challenge_rating, armor_class, max_hp, speed, initiative_bonus,
+				proficiency_bonus, abilities, action_ids, effect_ids, ai, source, support
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16::jsonb,'[]'::jsonb,
+				'{"strategy":"melee_chase","preferred_range_ft":5}'::jsonb,'SRD 5.2.1',$17::jsonb)
+			ON CONFLICT (slug) DO NOTHING
+		`, monster.id, monster.slug, monster.name, monster.nameEn, monster.description,
+			monster.size, monster.creatureType, monster.alignment, monster.cr, monster.ac,
+			monster.hp, monster.speed, monster.initiative, monster.proficiency,
+			string(abilities), string(actionIDs), string(support)); err != nil {
+			return fmt.Errorf("failed to seed monster %s: %w", monster.slug, err)
+		}
+	}
+	return nil
 }
 
 func addCharacterSystemMetadata(db *sql.DB) error {

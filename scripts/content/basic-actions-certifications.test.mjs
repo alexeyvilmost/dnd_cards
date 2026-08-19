@@ -28,7 +28,7 @@ test('basic-action certificate has an exact seven-row denominator and reviewed h
   assert.equal(new Set(BASIC_ACTION_CERTIFICATION_CONTRACT.map((entry) => entry.cardNumber)).size, 7);
   assert.equal(
     BASIC_ACTIONS_EVIDENCE_HASH,
-    'sha256:64e356cef7bdda49c508cdffc7a28ef2efb0bdc2c89aeeb43dce8fd15799780e',
+    'sha256:c8efaba47b6918a148d9dbfda589119423f7be6165795875b3bdba4204a066f1',
   );
 });
 

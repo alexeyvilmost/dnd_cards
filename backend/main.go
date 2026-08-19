@@ -107,6 +107,7 @@ func main() {
 	contentSupportController := NewContentSupportController(db)
 	contentMigrationController := NewContentMigrationController(db)
 	canonicalSessionController := NewCanonicalSessionController(db)
+	monsterController := NewMonsterController(db)
 
 	// Онлайн-бои: серверная истина + realtime-рассылка (SSE + Postgres LISTEN/NOTIFY).
 	encounterHub := NewEncounterHub(dbConfig.GetDSN())
@@ -172,6 +173,13 @@ func main() {
 		api.POST("/actions", contentAdminAuth, actionController.CreateAction)
 		api.PUT("/actions/:id", contentAdminAuth, actionController.UpdateAction)
 		api.DELETE("/actions/:id", contentAdminAuth, actionController.DeleteAction)
+
+		// Монстры — data-driven stat blocks, ссылающиеся на общие действия и эффекты.
+		api.GET("/monsters", OptionalAuthMiddleware(authService), monsterController.List)
+		api.GET("/monsters/:id", OptionalAuthMiddleware(authService), monsterController.Get)
+		api.POST("/monsters", contentAdminAuth, monsterController.Create)
+		api.PUT("/monsters/:id", contentAdminAuth, monsterController.Update)
+		api.DELETE("/monsters/:id", contentAdminAuth, monsterController.Delete)
 
 		// Эффекты (публичные, но с опциональной авторизацией)
 		api.GET("/effects", OptionalAuthMiddleware(authService), effectController.GetEffects)
@@ -269,6 +277,13 @@ func main() {
 		// требует строгий JWT; контроллер разрешает authenticated read старых
 		// public-листов, но оставляет их неизменяемыми.
 		registerCharacterV3Routes(api, authService, characterV3Controller)
+		api.POST(
+			"/characters-v3/:id/avatar",
+			StrictAuthMiddleware(authService),
+			RequestBodyLimitMiddleware(12<<20),
+			uploadRateLimit.Handler(),
+			imageController.UploadCharacterAvatar,
+		)
 		if canonicalTransportEnabled() {
 			log.Printf("WARNING: %s=1 exposes the partial, client-semantics-unverified canonical transport", canonicalTransportFeatureFlag)
 			registerCanonicalSessionRoutes(api, authService, canonicalSessionController)

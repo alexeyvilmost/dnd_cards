@@ -1109,6 +1109,26 @@
 .levelup-footer { display: flex; flex-direction: column; gap: 8px; }
 .levelup-actions { display: flex; gap: 10px; }
 
+.forge-token-uploader {
+  margin-top: 7px;
+  border-color: var(--forge-line) !important;
+  background: var(--forge-panel-2);
+  color: var(--forge-text);
+}
+.forge-token-uploader img {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--forge-gold);
+}
+.forge-token-hint {
+  margin: 6px 0 0;
+  color: var(--forge-text-dim);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 /* #2: выданные ресурсы на уровень-апе (ячейки, заряды) */
 .levelup-resources { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .levelup-resource {

@@ -78,6 +78,8 @@ func (ic *ImageController) UploadImage(c *gin.Context) {
 	folder := "cards"
 	if entityType == "weapon_template" {
 		folder = "weapon_templates"
+	} else if entityType == "monster" {
+		folder = "monster_tokens"
 	}
 
 	// Загружаем изображение в Yandex Cloud Storage
@@ -104,6 +106,70 @@ func (ic *ImageController) UploadImage(c *gin.Context) {
 		ImageURL:     imageURL,
 		CloudinaryID: cloudinaryID,
 		Message:      "Изображение успешно загружено",
+	})
+}
+
+// UploadCharacterAvatar stores a player-owned CharacterV3 token. Unlike the
+// content image endpoint this route is available to every authenticated owner,
+// but it never accepts an entity type from the client and always scopes the
+// database update by both character and user id.
+func (ic *ImageController) UploadCharacterAvatar(c *gin.Context) {
+	userID, ok := requireCharacterV3UserID(c)
+	if !ok {
+		return
+	}
+	characterID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный id персонажа"})
+		return
+	}
+
+	var character CharacterV3
+	if err := ic.db.Select("id", "user_id").
+		Where("id = ? AND user_id = ?", characterID, userID).
+		First(&character).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка проверки персонажа"})
+		}
+		return
+	}
+	if ic.yandexStorage == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "хранилище изображений не настроено"})
+		return
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "файл изображения не найден"})
+		return
+	}
+	if !isValidImageType(file.Header.Get("Content-Type")) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неподдерживаемый тип файла"})
+		return
+	}
+
+	ctx := c.Request.Context()
+	imageURL, storageID, err := ic.yandexStorage.UploadImage(ctx, file, "character_tokens")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка загрузки изображения: %v", err)})
+		return
+	}
+	result := ic.db.Model(&CharacterV3{}).
+		Where("id = ? AND user_id = ?", characterID, userID).
+		Update("avatar_url", imageURL)
+	if result.Error != nil || result.RowsAffected != 1 {
+		_ = ic.yandexStorage.DeleteImage(ctx, storageID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось сохранить токен персонажа"})
+		return
+	}
+
+	c.JSON(http.StatusOK, ImageUploadResponse{
+		Success:      true,
+		ImageURL:     imageURL,
+		CloudinaryID: storageID,
+		Message:      "Токен персонажа загружен",
 	})
 }
 
@@ -390,6 +456,14 @@ func (ic *ImageController) updateEntityImage(entityType, entityID, imageURL, clo
 		}
 
 		return ic.db.Model(&Card{}).Where("id = ?", cardID).Updates(updates).Error
+	case "monster":
+		monsterID, err := uuid.Parse(entityID)
+		if err != nil {
+			return fmt.Errorf("неверный ID монстра: %v", err)
+		}
+		return ic.db.Model(&Monster{}).Where("id = ?", monsterID).Updates(map[string]interface{}{
+			"token_url": imageURL, "token_storage_id": cloudinaryID,
+		}).Error
 
 	default:
 		return fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
@@ -411,6 +485,16 @@ func (ic *ImageController) getEntityImageID(entityType, entityID string) (string
 		}
 
 		return card.ImageCloudinaryID, nil
+	case "monster":
+		monsterID, err := uuid.Parse(entityID)
+		if err != nil {
+			return "", fmt.Errorf("неверный ID монстра: %v", err)
+		}
+		var monster Monster
+		if err := ic.db.Where("id = ?", monsterID).First(&monster).Error; err != nil {
+			return "", err
+		}
+		return monster.TokenStorageID, nil
 
 	default:
 		return "", fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
@@ -432,6 +516,19 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 		}
 
 		return cardToEntityInfo(card), nil
+	case "monster":
+		monsterID, err := uuid.Parse(entityID)
+		if err != nil {
+			return nil, fmt.Errorf("неверный ID монстра: %v", err)
+		}
+		var monster Monster
+		if err := ic.db.Where("id = ?", monsterID).First(&monster).Error; err != nil {
+			return nil, err
+		}
+		return map[string]interface{}{
+			"name": monster.Name, "description": monster.Description,
+			"type": monster.CreatureType, "rarity": "common",
+		}, nil
 
 	default:
 		return nil, fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)

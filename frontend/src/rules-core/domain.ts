@@ -823,6 +823,17 @@ export interface UseActionCommand extends CommandBase, ProtectionAttackWindowInp
 }
 
 /**
+ * Executes a data-driven reaction whose observable trigger is owned by an
+ * adapter (for example a tactical board observing a reach exit).  The catalog
+ * must declare the same trigger and reaction activation/cost; the caller cannot
+ * turn an ordinary action into an off-turn action.
+ */
+export type UseReactionActionCommand = Omit<UseActionCommand, 'type'> & {
+  type: 'UseReactionAction';
+  trigger: 'opportunity_attack';
+};
+
+/**
  * Takes the Attack action and replaces one of its compiled attacks with the
  * named catalog capability. The command supplies targets/facts only; sequence
  * size and replacement policy remain authoritative catalog data.
@@ -1169,6 +1180,7 @@ export type GameCommand =
   | StartTurnCommand
   | EndTurnCommand
   | UseActionCommand
+  | UseReactionActionCommand
   | UseAttackReplacementCommand
   | BeginAttackActionCommand
   | PerformWeaponAttackCommand

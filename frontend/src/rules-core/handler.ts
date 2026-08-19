@@ -262,6 +262,8 @@ function validateCommon(world: WorldState, command: GameCommand): CommandResult 
 
 function validateTurn(world: WorldState, command: GameCommand): CommandResult | null {
   if (command.type === 'ResolveDecision') return null;
+  // Reaction actions are catalog-gated in the UseReactionAction handler below.
+  if (command.type === 'UseReactionAction') return null;
   if (command.type === 'SwapInitiative') return null;
   if (command.type === 'ReleaseGrapple' || command.type === 'BreakGrappleRange') return null;
   if (command.type === 'ObserveProtectionProximity') return null;
@@ -9982,6 +9984,7 @@ function executeCommand(
       return breakGrappleRange(world, command);
     case 'ObserveProtectionProximity':
       return observeProtectionProximity(world, command);
+    case 'UseReactionAction':
     case 'UseAction': {
       if (actor.warlockPacts?.blade?.bondActionId === command.actionId) {
         return rejected(
@@ -10004,7 +10007,15 @@ function executeCommand(
           `${action.id} must replace an attack through the Attack-action sequence`,
         );
       }
-      if (activationMode(action) === 'reaction') {
+      if (command.type === 'UseReactionAction') {
+        if (activationMode(action) !== 'reaction' || !hasReactionTrigger(action, command.trigger)) {
+          return rejected(
+            world,
+            'InvalidActionTiming',
+            `${action.id} does not declare the ${command.trigger} reaction trigger`,
+          );
+        }
+      } else if (activationMode(action) === 'reaction') {
         return rejected(world, 'InvalidActionTiming', `${action.id} can only be used in a reaction window`);
       }
       const requiredCapability = requiredActionCapability(action);
@@ -10203,14 +10214,14 @@ function executeCommand(
         preparedSpell,
         spellAudit,
       );
-      const authoritativeCommand: AuthoritativeUseActionCommand = { ...command, spell };
+      const authoritativeCommand: AuthoritativeUseActionCommand = { ...command, type: 'UseAction', spell };
       if ((executableAction.mechanics.primitive as Record<string, unknown> | undefined)?.type
         === FIND_FAMILIAR_PRIMITIVE) {
         const declaration = actionDeclaredEvent({
           actorId: actor.id,
           action: executableAction,
           targetIds: authoritativeCommand.targetIds,
-          timing: 'active',
+          timing: command.type === 'UseReactionAction' ? 'reaction' : 'active',
           spell,
           facts: {
             choices: JSON.parse(JSON.stringify(authoritativeCommand.choices ?? {})) as Record<string, unknown>,
@@ -10242,7 +10253,7 @@ function executeCommand(
         actorId: actor.id,
         action: executableAction,
         targetIds: authoritativeCommand.targetIds,
-        timing: 'active',
+        timing: command.type === 'UseReactionAction' ? 'reaction' : 'active',
         spell,
         ...(authoritativeCommand.targetIds.length || authoritativeCommand.worldInput ? {
           facts: {
