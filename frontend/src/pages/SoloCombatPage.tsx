@@ -24,6 +24,8 @@ import {
 import { readSoloCombatState, writeSoloCombatState } from '../solo-combat/persistence';
 import type { GridPosition, SoloCombatState } from '../solo-combat/types';
 import { getCardsIndex } from '../utils/cardsIndex';
+import './CharacterForge.css';
+import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
 
 function querySelection(params: URLSearchParams): Array<{ id: string; quantity: number }> {
@@ -199,7 +201,7 @@ export default function SoloCombatPage() {
     ? 'По вам попали'
     : 'Открыто окно реакции';
   return (
-    <main className="solo-combat-page">
+    <main className="solo-combat-page forge">
       <MonsterTurnController state={state} disabled={busy} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
         <Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link>

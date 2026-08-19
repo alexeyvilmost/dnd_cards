@@ -21,6 +21,23 @@ export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world
   }));
 }
 
+/** Exact destination set accepted by the current five-foot tactical movement rule. */
+export function reachablePositions(
+  state: Pick<SoloCombatState, 'tokens' | 'world'>,
+  actorId: string,
+  maximumFeet: number,
+): GridPosition[] {
+  const origin = state.tokens[actorId]?.position;
+  if (!origin || maximumFeet < TACTICAL_CELL_FT) return [];
+  const occupied = occupiedPositions(state, actorId);
+  return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
+    x: index % TACTICAL_WIDTH,
+    y: Math.floor(index / TACTICAL_WIDTH),
+  })).filter((position) => !samePosition(position, origin)
+    && !occupied.has(`${position.x}:${position.y}`)
+    && gridDistanceFt(origin, position) <= maximumFeet);
+}
+
 function inside(position: GridPosition): boolean {
   return position.x >= 0 && position.y >= 0
     && position.x < TACTICAL_WIDTH && position.y < TACTICAL_HEIGHT;

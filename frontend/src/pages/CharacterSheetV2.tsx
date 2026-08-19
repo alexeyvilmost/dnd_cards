@@ -1,9 +1,9 @@
-import { Fragment, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
 import { effectAbilityPresentation } from '../character/abilityDisplay';
 import type { CharacterRuleState } from '../character/rules/types';
 import type { CharacterDraft, ForgeCharacter } from '../character/types';
-import { ABILITY_KEYS, ABILITY_LABEL_RU } from '../character/types';
+import { ABILITY_LABEL_RU } from '../character/types';
 import type { CharacterContext, EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { breakdownValue } from '../engine/breakdown';
 import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
@@ -11,9 +11,7 @@ import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
-import { abilityOfSkill } from '../character/rules/foundation';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
-import { SKILLS } from '../mechanics/registries';
 import { type Card, type Spell } from '../types';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
@@ -30,21 +28,11 @@ import SheetRestButtons from '../components/SheetRestButtons';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import type { EncounterApply } from '../battle/encountersApi';
 import { charactersV3Api } from '../character/api';
+import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from '../components/CharacterSheetFirstColumn';
 import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
-const abbr3 = (label: string) => label.slice(0, 3).toUpperCase();
-const ABILITY_ORDER = new Map(ABILITY_KEYS.map((ability, index) => [ability, index]));
-const SORTED_SKILLS = [...SKILLS].sort((left, right) => {
-  const byAbility = (ABILITY_ORDER.get(abilityOfSkill(left.id)) ?? ABILITY_KEYS.length)
-    - (ABILITY_ORDER.get(abilityOfSkill(right.id)) ?? ABILITY_KEYS.length);
-  return byAbility || left.label.localeCompare(right.label, 'ru');
-});
 // D3: локализация особых чувств и небазовых режимов перемещения.
-const SENSE_LABEL: Record<string, string> = {
-  darkvision: 'Тёмное зрение', blindsight: 'Слепое зрение',
-  tremorsense: 'Чувство вибрации', truesight: 'Истинное зрение',
-};
 const SPEED_MODE_LABEL: Record<string, string> = {
   fly: 'Полёт', swim: 'Плавание', climb: 'Лазание', burrow: 'Копание',
 };
@@ -261,142 +249,45 @@ const CharacterSheetV2 = ({
 
       <div className="csheet-cols">
         {/* ЛЕВАЯ: характеристики, навыки, чувства */}
-        <div className="csheet-col">
-          <CollapsibleSection title="Характеристики">
-            <div className="cs-abils">
-              {ABILITY_KEYS.map((k) => {
-                const score = scores[k] ?? 10;
-                const mod = ruleState.abilityMods[k];
-                const proficient = saves.includes(k);
-                const saveBonus = ruleState.savingThrowBonuses[k];
-                const saveBd = sheetCtx && runtimeState ? breakdownValue(`save:${k}`, sheetCtx, runtimeState, passives) : null;
-                const scoreBd = sheetCtx && runtimeState ? breakdownValue(`ability:${k}`, sheetCtx, runtimeState, passives) : null;
-                const modBd = sheetCtx && runtimeState ? breakdownValue(`ability_mod:${k}`, sheetCtx, runtimeState, passives) : null;
-                return (
-                  <div key={k} className="cs-abil">
-                    <div className="cs-abil-id">
-                      <span className="cs-abil-ab">{abbr3(ABILITY_LABEL_RU[k])}</span>
-                      {scoreBd ? (
-                        <ValueBreakdownTip breakdown={scoreBd} label={ABILITY_LABEL_RU[k]}>
-                          <span className="cs-abil-sc">{score}</span>
-                        </ValueBreakdownTip>
-                      ) : <span className="cs-abil-sc">{score}</span>}
-                    </div>
-                    <div className="cs-abil-mod">
-                      {modBd ? (
-                        <ValueBreakdownTip breakdown={modBd} label={`Модификатор ${ABILITY_LABEL_RU[k]}`}>
-                          <span>{fmtMod(mod)}</span>
-                        </ValueBreakdownTip>
-                      ) : fmtMod(mod)}
-                    </div>
-                    <div
-                      className={`cs-abil-save${proficient ? ' on' : ''} cs-rollable`}
-                      title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
-                      role={readOnly ? undefined : 'button'}
-                      tabIndex={readOnly ? -1 : 0}
-                      onClick={readOnly ? undefined : () => rollCheck(
-                        `Спасбросок (${ABILITY_LABEL_RU[k]})`,
-                        saveBd?.parts ?? [{ value: saveBonus, source: abbr3(ABILITY_LABEL_RU[k]) }],
-                        'saving_throw',
-                        { ability: k },
-                      )}
-                    >
-                      <i className="cs-dot" />
-                      {saveBd ? (
-                        <ValueBreakdownTip breakdown={saveBd} label={`Спасбросок ${ABILITY_LABEL_RU[k]}`}>
-                          <span>спас {fmtMod(saveBonus)}</span>
-                        </ValueBreakdownTip>
-                      ) : <span>спас {fmtMod(saveBonus)}</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Навыки">
-            <ul className="cs-skills cs-skills--col">
-              {SORTED_SKILLS.map((skill, index) => {
-                const proficient = skills.includes(skill.id);
-                const expert = ruleState.expertise.skills.includes(skill.id);
-                const bonus = ruleState.skillBonuses[skill.id];
-                const ability = abilityOfSkill(skill.id);
-                const prevAbility = index > 0 ? abilityOfSkill(SORTED_SKILLS[index - 1].id) : null;
-                const abilitySep = prevAbility != null && prevAbility !== ability;
-                const skillBd = sheetCtx && runtimeState ? breakdownValue(`skill:${skill.id}`, sheetCtx, runtimeState, passives) : null;
-                const grant = getSkillGrantSource(ruleState, skill.id);
-                const tip = [
-                  `${abbr3(ABILITY_LABEL_RU[ability])} ${fmtMod(ruleState.abilityMods[ability])}`,
-                  proficient ? `влад ${fmtMod(pb)}${grant ? ` (${grantReason(grant)})` : ''}` : null,
-                  expert ? `эксп ${fmtMod(pb)}` : null,
-                ].filter(Boolean).join(' + ');
-                return (
-                  <Fragment key={skill.id}>
-                  {!readOnly && onRollInitiative && ability === 'dex' && prevAbility !== 'dex' && (
-                    <li className="cs-rollable cs-initiative-skill cs-skill-sep" title="Бросить инициативу (Ловкость)" onClick={rollingInitiative ? undefined : onRollInitiative}>
-                      <i className="cs-dot" /><span className="cs-skill-nm">Инициатива</span><span className="cs-skill-ab">ЛОВ</span><span className="cs-skill-v">{rollingInitiative ? '…' : fmtMod(initiative)}</span>
-                    </li>
-                  )}
-                  <li
-                    className={`${proficient ? 'on' : ''} cs-rollable${abilitySep ? ' cs-skill-sep' : ''}`}
-                    title={`${fmtMod(bonus)} = ${tip} · клик — бросок`}
-                    onClick={readOnly ? undefined : () => rollCheck(
-                      `Проверка (${skill.label})`,
-                      skillBd?.parts ?? [{ value: bonus, source: skill.label }],
-                      'ability_check',
-                      { skill: skill.id },
-                    )}
-                  >
-                    <i className="cs-dot" />
-                    <span className="cs-skill-nm">{skill.label}{expert ? ' ⁑' : ''}</span>
-                    <span className="cs-skill-ab">{abbr3(ABILITY_LABEL_RU[ability])}</span>
-                    {skillBd ? (
-                      <ValueBreakdownTip breakdown={skillBd} label={skill.label}><span className="cs-skill-v">{fmtMod(bonus)}</span></ValueBreakdownTip>
-                    ) : <span className="cs-skill-v">{fmtMod(bonus)}</span>}
-                  </li>
-                  </Fragment>
-                );
-              })}
-            </ul>
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Чувства">
-            <div className="cs-kv">
-              <span>Пассивное восприятие</span>
-              {passivePerceptionBd ? (
-                <ValueBreakdownTip breakdown={passivePerceptionBd} label="Пассивное восприятие">
-                  <b>{passivePerceptionBd.value}</b>
-                </ValueBreakdownTip>
-              ) : <b>{ruleState.passivePerception}</b>}
-            </div>
-            {effectiveSenses.length > 0
-              ? effectiveSenses.map((s) => (
-                  <div key={s.sense} className="cs-kv"><span>{SENSE_LABEL[s.sense] ?? s.sense}</span><b><EffectiveSenseValue sense={s} /></b></div>
-                ))
-              : <div className="cs-kv cs-muted"><span>Тёмное зрение</span><b>—</b></div>}
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Состояния">
-            {readOnly ? (
-              runtimeState?.activeEffects.length ? (
-                <div className="cs-tags">
-                  {runtimeState.activeEffects.map((effect) => (
-                    <span key={effect.id} className="cs-tag">{effect.name}</span>
-                  ))}
-                </div>
-              ) : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>
-            ) : (
-              <SheetConditionsPanel
-                character={character}
-                onUpdated={onUpdated}
-                onEvents={onEvents}
-                passives={passives}
-                embedded
-                encounterApply={encounterApply}
-              />
-            )}
-          </CollapsibleSection>
-        </div>
+        <CharacterSheetFirstColumn
+          abilities={scores}
+          abilityMods={ruleState.abilityMods}
+          savingThrowProficiencies={saves}
+          savingThrowBonuses={ruleState.savingThrowBonuses}
+          skillProficiencies={skills}
+          skillExpertise={ruleState.expertise.skills}
+          skillBonuses={ruleState.skillBonuses}
+          proficiencyBonus={pb}
+          passivePerception={passivePerceptionBd
+            ? <ValueBreakdownTip breakdown={passivePerceptionBd} label="Пассивное восприятие"><span>{passivePerceptionBd.value}</span></ValueBreakdownTip>
+            : ruleState.passivePerception}
+          senses={effectiveSenses.map((sense) => ({
+            key: sense.sense,
+            label: CHARACTER_SENSE_LABELS[sense.sense] ?? sense.sense,
+            value: <EffectiveSenseValue sense={sense} />,
+          }))}
+          conditions={readOnly
+            ? runtimeState?.activeEffects.length
+              ? <div className="cs-tags">{runtimeState.activeEffects.map((effect) => <span key={effect.id} className="cs-tag">{effect.name}</span>)}</div>
+              : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>
+            : <SheetConditionsPanel character={character} onUpdated={onUpdated} onEvents={onEvents} passives={passives} embedded encounterApply={encounterApply} />}
+          breakdownFor={sheetCtx && runtimeState
+            ? (key) => breakdownValue(key, sheetCtx, runtimeState, passives)
+            : undefined}
+          skillSourceReason={(skillId) => {
+            const grant = getSkillGrantSource(ruleState, skillId);
+            return grant ? grantReason(grant) : undefined;
+          }}
+          onRollSave={readOnly ? undefined : (ability, parts) => { void rollCheck(
+            `Спасбросок (${ABILITY_LABEL_RU[ability]})`, parts, 'saving_throw', { ability },
+          ); }}
+          onRollSkill={readOnly ? undefined : (skillId, label, _ability, parts) => { void rollCheck(
+            `Проверка (${label})`, parts, 'ability_check', { skill: skillId },
+          ); }}
+          initiative={!readOnly && onRollInitiative
+            ? { value: initiative, rolling: rollingInitiative, onRoll: onRollInitiative }
+            : undefined}
+        />
 
         {/* ЦЕНТР: действия и заклинания — игрок обращается к ним чаще всего, потому в центре. */}
         <div className="csheet-col csheet-col--ctrl">

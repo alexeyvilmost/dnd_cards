@@ -5,6 +5,7 @@ import type {
   WorldState,
 } from '../rules-core/domain';
 import type { SheetCanonicalResourceBindings } from '../character/sheetCanonicalWorld';
+import type { Action, Spell } from '../types';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -43,6 +44,9 @@ export interface CombatActionPresentation {
   sourceLabel?: string;
   entityType?: 'action' | 'spell';
   entityId?: string;
+  /** Exact content entities used by SheetActionLine previews on the character sheet. */
+  actionRef?: Action;
+  spellRef?: Spell;
 }
 
 export interface SoloCombatState {

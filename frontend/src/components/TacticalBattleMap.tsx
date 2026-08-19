@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { GridPosition, SoloCombatState } from '../solo-combat/types';
 import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
-import { areaPositionsForAction } from '../solo-combat/tacticalGrid';
+import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
 
 export default function TacticalBattleMap({
   state,
@@ -15,6 +15,7 @@ export default function TacticalBattleMap({
   onCell: (position: GridPosition, actorId?: string) => void;
 }) {
   const [hovered, setHovered] = useState<GridPosition | null>(null);
+  const [zoom, setZoom] = useState(1);
   const activeId = state.world.scene.mode === 'encounter'
     ? state.world.scene.initiative[state.world.scene.activeIndex]
     : '';
@@ -27,8 +28,31 @@ export default function TacticalBattleMap({
       ? areaPositionsForAction(selectedAction, hovered).map((position) => `${position.x}:${position.y}`)
       : [],
   ), [selectedAction, hovered]);
+  const reachableCells = useMemo(() => new Set(
+    movementMode
+      ? reachablePositions(
+        state,
+        state.characterId,
+        state.movementRemainingFt[state.characterId] ?? 0,
+      ).map((position) => `${position.x}:${position.y}`)
+      : [],
+  ), [movementMode, state]);
   return (
-    <div className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}`} data-testid="tactical-map">
+    <div
+      className="tactical-map-viewport site-scrollbar"
+      data-testid="tactical-map-viewport"
+      title={`Масштаб ${Math.round(zoom * 100)}% · колесо мыши меняет масштаб`}
+      onWheel={(event) => {
+        event.preventDefault();
+        setZoom((current) => Math.min(1.8, Math.max(0.45, Number((current + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)))));
+      }}
+    >
+    <div
+      className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}`}
+      data-testid="tactical-map"
+      data-zoom={zoom}
+      style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px` } as React.CSSProperties}
+    >
       {Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => {
         const position = { x: index % TACTICAL_WIDTH, y: Math.floor(index / TACTICAL_WIDTH) };
         const token = tokenByCell.get(`${position.x}:${position.y}`);
@@ -38,7 +62,7 @@ export default function TacticalBattleMap({
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${token?.actorId === activeId ? ' is-active' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}`}
+            className={`tactical-cell${token ? ' has-token' : ''}${token?.actorId === activeId ? ' is-active' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
             aria-label={token ? `${actor?.name}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : `Клетка ${position.x + 1}, ${position.y + 1}`}
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
@@ -55,6 +79,7 @@ export default function TacticalBattleMap({
           </button>
         );
       })}
+    </div>
     </div>
   );
 }

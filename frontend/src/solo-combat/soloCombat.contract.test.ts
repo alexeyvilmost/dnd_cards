@@ -4,7 +4,7 @@ import type { ActorState } from '../rules-core/domain';
 import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
-import { areaPositionsForAction, gridDistanceFt, pathToward, pushAway } from './tacticalGrid';
+import { areaPositionsForAction, gridDistanceFt, pathToward, pushAway, reachablePositions } from './tacticalGrid';
 import type { SoloCombatState } from './types';
 
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
@@ -83,6 +83,16 @@ describe('solo combat tactical contract', () => {
     })).toEqual({ x: 2, y: 0 });
     expect(pushAway({ source: { x: 9, y: 0 }, target: { x: 10, y: 0 }, distanceFt: 20 }))
       .toEqual({ x: 11, y: 0 });
+  });
+
+  it('projects exactly the free destinations accepted by remaining movement', () => {
+    const { state } = aiState({ x: 2, y: 2 }, { x: 4, y: 2 });
+    const cells = reachablePositions(state, 'monster', 10);
+    expect(cells).toContainEqual({ x: 0, y: 0 });
+    expect(cells).toContainEqual({ x: 3, y: 3 });
+    expect(cells).not.toContainEqual({ x: 4, y: 2 });
+    expect(cells).not.toContainEqual({ x: 5, y: 2 });
+    expect(reachablePositions(state, 'monster', 0)).toEqual([]);
   });
 
   it('projects a 15-foot cube as the same three-by-three target area shown on hover', () => {

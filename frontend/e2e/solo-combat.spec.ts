@@ -94,6 +94,36 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(page.getByRole('button', { name: /Огненный снаряд/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Малая иллюзия/ })).toBeVisible();
 
+  const map = page.getByTestId('tactical-map');
+  const firstCellBox = await map.locator('.tactical-cell').first().boundingBox();
+  expect(firstCellBox).not.toBeNull();
+  expect(Math.abs(firstCellBox!.width - firstCellBox!.height)).toBeLessThan(0.5);
+  const viewport = page.getByTestId('tactical-map-viewport');
+  await viewport.hover();
+  await page.mouse.wheel(0, 120);
+  await expect(map).toHaveAttribute('data-zoom', '0.9');
+
+  const utility = page.getByRole('group', { name: 'Управление полем' });
+  await expect(utility.getByRole('button', { name: /Движение/ })).toBeVisible();
+  await expect(utility.getByRole('button', { name: /Лист/ })).toBeVisible();
+  await expect(page.getByLabel('Действия персонажа').getByRole('button', { name: /Движение|Лист/ })).toHaveCount(0);
+  await utility.getByRole('button', { name: /Движение/ }).click();
+  await expect(page.locator('.tactical-cell.is-move-reachable').first()).toBeVisible();
+  expect(await page.locator('.tactical-cell.is-move-reachable.has-token').count()).toBe(0);
+  await utility.getByRole('button', { name: /Движение/ }).click();
+  await expect(page.locator('.tactical-cell.is-move-reachable')).toHaveCount(0);
+
+  const resourceTile = page.locator('.combat-hotbar__resource-tiles .res-tile').first();
+  await expect(resourceTile).toBeVisible();
+  await resourceTile.hover();
+  await expect(page.getByRole('tooltip')).toBeVisible();
+
+  const thunderwaveTile = page.getByRole('button', { name: /Волна грома/ }).last();
+  await expect(thunderwaveTile.locator('img')).toBeVisible();
+  await expect(thunderwaveTile.locator('.forge-entity-icon--placeholder')).toHaveCount(0);
+  await thunderwaveTile.hover();
+  await expect(page.locator('.forge-effect-popover .sp-tip')).toContainText('Волна грома');
+
   await page.locator('.combat-topbar').getByRole('link', { name: 'Лист' }).click();
   await dismissMobileSuggestion(page);
   await expect(page.locator('.sheet-in-battle').first()).toContainText('В бою');
@@ -105,6 +135,7 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
 
   await page.getByRole('button', { name: 'Лист', exact: true }).last().click();
   const drawer = page.locator('.combat-sheet-drawer');
+  await expect(drawer.locator('.combat-sheet-sidebar.csheet-col')).toBeVisible();
   await expect(drawer).toContainText('Характеристики');
   await expect(drawer).toContainText('Навыки');
   await expect(drawer).toContainText('спас');

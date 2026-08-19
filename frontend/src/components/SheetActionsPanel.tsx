@@ -49,7 +49,7 @@ import SheetActionLine from './SheetActionLine';
 import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
-import ResourceHoverPreview from './ResourceHoverPreview';
+import SheetResourceTile from './SheetResourceTile';
 import { loadMasteryEffects } from '../utils/mastery';
 import {
   collectSheetPrimitiveChoices,
@@ -252,13 +252,6 @@ function outcomeDelta(baseHp: number, baseTemp: number, prevEffects: { id?: stri
   return { hpDelta: ts.hp.current - baseHp, tempDelta: (ts.hp.temp ?? 0) - baseTemp, addEffects };
 }
 
-const RESOURCE_LABELS: Record<string, string> = {
-  action: 'Действие',
-  bonus_action: 'Бонус',
-  reaction: 'Реакция',
-  heroic_inspiration: 'Вдохновение',
-};
-
 const GROUP_DETAIL: Record<SheetAction['group'], string> = {
   basic: 'Базовое действие', race: 'Вид', class: 'Класс', item: 'Предмет', spell: 'Заклинание',
 };
@@ -284,14 +277,6 @@ const actionDetail = (a: SheetAction): string => {
   }
   if (a.group === 'basic') return 'Базовое действие';
   return a.sourceLabel ?? GROUP_DETAIL[a.group] ?? '';
-};
-
-const RESOURCE_ICONS: Record<string, string> = {
-  action: '/icons/resources/action.png',
-  bonus_action: '/icons/resources/bonus_action.png',
-  reaction: '/icons/resources/reaction.png',
-  spell_slot: '/icons/resources/spell_slot.png',
-  warlock_spell_slot: '/icons/resources/warlock_spell_slot.png',
 };
 
 /** Выбор источника оплаты каста: за ячейку уровня level или бесплатно (freeuse-пул). */
@@ -2259,32 +2244,9 @@ export default function SheetActionsPanel({
           {resourceKeys.map((key) => {
             const cur = runtime.resources[key] ?? 0;
             const max = runtime.maxResources[key];
-            const spent = cur <= 0;
-            const slot = /^spell_slot_(\d)$/.exec(key);
-            const warlockSlot = /^warlock_spell_slot(?:_(\d))?$/.exec(key);
-            // Иконка: справочник ресурсов (кастомная, incl. spent) → хардкод → ячейки.
             const def = findResource(resourceOptions, key);
-            const dictIcon = def?.imageUrl && !def.imageUrl.startsWith('/charges/') ? def.imageUrl : undefined;
-            const dictSpent = def?.imageUrlSpent && !def.imageUrlSpent.startsWith('/charges/') ? def.imageUrlSpent : undefined;
-            const icon = (spent && dictSpent) || dictIcon
-              || RESOURCE_ICONS[key]
-              || (slot ? RESOURCE_ICONS.spell_slot : undefined)
-              || (warlockSlot ? RESOURCE_ICONS.warlock_spell_slot : undefined);
-            const useSpentImg = spent && !!dictSpent; // если своя spent-картинка — CSS-фильтр не нужен
-            const label = slot ? `Ячейка ${slot[1]}-го круга`
-              : warlockSlot ? 'Ячейка колдуна'
-              : (def?.label || RESOURCE_LABELS[key] || key);
-            const roman = slot ? ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Number(slot[1])] : '';
             return (
-              <ResourceHoverPreview key={key} resourceId={key} option={def}>
-                <span className={`res-tile${spent ? ' res-tile--spent' : ''}`}>
-                  {roman && <span className="res-tile-corner">{roman}</span>}
-                  {icon
-                    ? <img src={icon} alt="" className={`res-tile-icon${spent && !useSpentImg ? ' res-tile-icon--dim' : ''}`} />
-                    : <span className={`res-tile-mono${spent ? ' res-tile-mono--dim' : ''}`}>{label.slice(0, 2)}</span>}
-                  {max > 1 && cur !== 1 && <span className="res-tile-count">{cur}</span>}
-                </span>
-              </ResourceHoverPreview>
+              <SheetResourceTile key={key} resourceId={key} option={def} current={cur} maximum={max} />
             );
           })}
           <FreeuseSpellsTile

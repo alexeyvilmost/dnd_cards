@@ -77,9 +77,14 @@
   min-height: 0; overflow-y: auto; padding-right: 4px;
   display: flex; flex-direction: column; gap: 10px;
 }
-.csheet-col::-webkit-scrollbar { width: 8px; }
-.csheet-col::-webkit-scrollbar-thumb { background: var(--forge-line); border-radius: 4px; }
-.csheet-col::-webkit-scrollbar-track { background: transparent; }
+.csheet-col,
+.site-scrollbar { scrollbar-width: thin; scrollbar-color: var(--forge-line) transparent; }
+.csheet-col::-webkit-scrollbar,
+.site-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.csheet-col::-webkit-scrollbar-thumb,
+.site-scrollbar::-webkit-scrollbar-thumb { background: var(--forge-line); border-radius: 4px; }
+.csheet-col::-webkit-scrollbar-track,
+.site-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
 /* ── Карточки / сворачивание ── */
 .cs-card { border: 1px solid var(--forge-line); border-radius: 8px; background: var(--forge-panel); padding: 9px 11px; }

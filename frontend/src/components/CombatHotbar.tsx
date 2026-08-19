@@ -1,10 +1,10 @@
-import { Footprints, MoreHorizontal, Swords } from 'lucide-react';
+import { Footprints, MoreHorizontal } from 'lucide-react';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import type { SoloCombatState } from '../solo-combat/types';
 import { findResource, useResourceOptions } from '../utils/resources';
-import HoverCard from './HoverCard';
-import ResourceHoverPreview from './ResourceHoverPreview';
+import SheetActionLine from './SheetActionLine';
+import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
 
 const RESOURCE_LABELS: Record<string, string> = {
   action: 'Действие',
@@ -29,13 +29,6 @@ export function actionCost(action: RuleActionDefinition): string {
 function actionLabel(action: RuleActionDefinition): string {
   const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
   return primitive?.type === 'weapon_attack' ? 'Атака' : action.name;
-}
-
-function rangeLabel(action: RuleActionDefinition): string {
-  const targeting = action.mechanics.targeting as Record<string, unknown> | undefined;
-  if (targeting?.shape === 'self') return 'На себя';
-  const range = Number(targeting?.range_ft ?? action.targeting?.rangeFt);
-  return Number.isFinite(range) && range > 0 ? `${range} фт.` : 'По ситуации';
 }
 
 export function combatActionAvailability(
@@ -90,14 +83,25 @@ export default function CombatHotbar({
 }) {
   const resourceOptions = useResourceOptions();
   const actor = state.world.actors[state.characterId];
+  const spellcasting = actor.character.spellcastingMod == null
+    ? undefined
+    : {
+      saveDC: 8 + actor.character.profBonus + actor.character.spellcastingMod,
+      attack: actor.character.profBonus + actor.character.spellcastingMod,
+    };
   const actions = state.playerActionIds.flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
     return action ? [action] : [];
   });
-  const resources = Object.entries(actor.runtime.maxResources).filter(([key, maximum]) => (
-    maximum > 0 && (['action', 'bonus_action', 'reaction'].includes(key)
-      || key.startsWith('spell_slot_') || key.startsWith('freeuse-'))
-  ));
+  const resources = Object.entries(actor.runtime.maxResources)
+    .filter(([key, maximum]) => maximum > 0 && (
+      ['action', 'bonus_action', 'reaction'].includes(key)
+      || key.startsWith('spell_slot_')
+      || key.startsWith('freeuse-')
+    ))
+    .sort(([left], [right]) => sheetResourceTileOrder(left, resourceOptions)
+      - sheetResourceTileOrder(right, resourceOptions) || left.localeCompare(right));
+
   return (
     <section className="combat-hotbar" aria-label="Панель действий">
       <div className="combat-hotbar__resources">
@@ -106,51 +110,59 @@ export default function CombatHotbar({
             ? <img src={state.tokens[state.characterId].tokenUrl} alt="" />
             : actor.name.slice(0, 1)}
         </span>
-        <div><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
-        {resources.map(([key, maximum]) => (
-          <ResourceHoverPreview key={key} resourceId={key} option={findResource(resourceOptions, key)}>
-            <span className={`combat-resource combat-resource--${key}`}>
-              {resourceLabel(key)}: {actor.runtime.resources[key] ?? 0}/{maximum}
-            </span>
-          </ResourceHoverPreview>
-        ))}
+        <div className="combat-hotbar__identity"><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
+        <div className="res-tile-row combat-hotbar__resource-tiles">
+          {resources.map(([key, maximum]) => (
+            <SheetResourceTile
+              key={key}
+              resourceId={key}
+              option={findResource(resourceOptions, key)}
+              current={actor.runtime.resources[key] ?? 0}
+              maximum={maximum}
+            />
+          ))}
+        </div>
       </div>
-      <div className="combat-hotbar__actions">
-        <button type="button" className={`combat-action combat-action--move${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение"><Footprints /><span>Движение</span><small>{state.movementRemainingFt[state.characterId] ?? 0} фт.</small></button>
+
+      <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
+        <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
+          <Footprints /><span>Движение</span><small>{state.movementRemainingFt[state.characterId] ?? 0} фт.</small>
+        </button>
+        <button type="button" className="combat-utility-button" onClick={onSheet} title="Открыть сокращённый лист">
+          <MoreHorizontal /><span>Лист</span>
+        </button>
+      </div>
+
+      <div className="combat-hotbar__actions cs-action-tiles site-scrollbar" aria-label="Действия персонажа">
         {actions.map((action) => {
           const availability = combatActionAvailability(state, action);
           const presentation = state.actionPresentation?.[action.id];
-          const title = availability.enabled
-            ? `${action.name} · ${actionCost(action)}`
-            : `${action.name} · ${availability.reason}`;
+          const actionDisabled = disabled || !availability.enabled;
           return (
-            <HoverCard
+            <div
               key={action.id}
-              content={(
-                <article className="combat-hover-card" role="tooltip">
-                  <div className="combat-hover-card__head">
-                    {presentation?.imageUrl && <img src={presentation.imageUrl} alt="" />}
-                    <div><small>{action.kind === 'spell' ? 'Заклинание' : presentation?.sourceLabel ?? 'Действие'}</small><h3>{action.name}</h3></div>
-                  </div>
-                  {presentation?.description && <p>{presentation.description}</p>}
-                  <dl><div><dt>Цена</dt><dd>{actionCost(action) || 'Свободно'}</dd></div><div><dt>Дальность</dt><dd>{rangeLabel(action)}</dd></div></dl>
-                  {!availability.enabled && <strong>{availability.reason}</strong>}
-                </article>
-              )}
+              className={`combat-sheet-action${selectedActionId === action.id ? ' is-selected' : ''}`}
+              data-action-id={action.id}
             >
-              <button type="button" className={`combat-action${selectedActionId === action.id ? ' is-selected' : ''}`} disabled={disabled || !availability.enabled} onClick={() => onAction(action)} title={title} data-action-id={action.id}>
-                <span className="combat-action__icon">
-                  {presentation?.imageUrl
-                    ? <img src={presentation.imageUrl} alt="" />
-                    : action.mechanics.primitive ? <Swords /> : action.kind === 'spell' ? '✦' : action.name.slice(0, 1)}
-                </span>
-                <span>{actionLabel(action)}</span><small>{availability.enabled ? actionCost(action) || 'свободно' : 'Нет ресурса'}</small>
-              </button>
-            </HoverCard>
+              <SheetActionLine
+                name={actionLabel(action)}
+                imageUrl={presentation?.imageUrl}
+                sourceLabel={presentation?.sourceLabel ?? (action.kind === 'spell' ? 'Заклинание' : 'Действие')}
+                description={presentation?.description}
+                level={presentation?.spellRef?.level}
+                actionRef={presentation?.actionRef}
+                spellRef={presentation?.spellRef}
+                spellcasting={spellcasting}
+                variant="icon"
+                disabled={actionDisabled}
+                disabledTitle={availability.reason ?? (disabled ? 'Сейчас действие недоступно' : 'Недостаточно ресурсов')}
+                onActivate={() => onAction(action)}
+              />
+            </div>
           );
         })}
-        <button type="button" className="combat-action combat-action--more" onClick={onSheet}><MoreHorizontal /><span>Лист</span></button>
       </div>
+
       <button type="button" className="combat-end-turn" disabled={disabled} onClick={onEndTurn}>Завершить ход</button>
     </section>
   );

@@ -63,25 +63,32 @@ export async function loadSheetCombatParticipant(input: {
     ),
     passives,
   };
+  const canonical = buildSheetCanonicalRuntime({
+    character: input.character,
+    assembled,
+    ruleState,
+    sheetActions: actions,
+    runtime,
+    characterContext,
+    passives,
+    cards: [...input.cards.values()],
+    ac: ruleState.armorClass,
+  });
   return {
     character: input.character,
-    actionPresentation: Object.fromEntries(actions.map((action) => [action.id, {
+    // A spell's canonical rule action is identified by the immutable spell
+    // entity, while its SheetAction id describes the grant row. Key the UI
+    // projection by the executable id so combat renders the very same entity
+    // icon and preview as the sheet instead of losing them at this boundary.
+    actionPresentation: Object.fromEntries(actions.map((action) => [canonical.actionFor(action).id, {
       imageUrl: action.imageUrl,
       description: action.description,
       sourceLabel: action.sourceLabel,
       entityType: action.group === 'spell' ? 'spell' : 'action',
       entityId: action.spellRef?.id ?? action.actionRef?.id ?? action.effectRef?.id,
+      actionRef: action.actionRef,
+      spellRef: action.spellRef,
     }])),
-    canonical: buildSheetCanonicalRuntime({
-      character: input.character,
-      assembled,
-      ruleState,
-      sheetActions: actions,
-      runtime,
-      characterContext,
-      passives,
-      cards: [...input.cards.values()],
-      ac: ruleState.armorClass,
-    }),
+    canonical,
   };
 }

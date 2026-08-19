@@ -643,6 +643,7 @@ export async function createSoloCombatState(input: {
         sourceLabel: 'Базовое действие',
         entityType: 'action' as const,
         entityId: action.id,
+        actionRef: action,
       }])),
       ...Object.fromEntries(monsters.flatMap((monster) => monster.template.action_ids.flatMap((actionId) => {
         const action = input.actions.find((candidate) => candidate.id === actionId);
@@ -653,6 +654,7 @@ export async function createSoloCombatState(input: {
           sourceLabel: monster.template.name,
           entityType: 'action' as const,
           entityId: action.id,
+          actionRef: action,
         }] as const] : [];
       }))),
     },

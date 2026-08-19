@@ -38,6 +38,7 @@ import {
   type SheetCanonicalCommandInput,
 } from './sheetCanonicalCommand';
 import type { ForgeCharacter } from './types';
+import type { Action, Spell } from '../types';
 import { acceptedRuntimeCommandReceipt } from './sheetRuntimeCommand';
 import {
   actionBelongsToSheetCombatSlice,
@@ -91,6 +92,8 @@ export interface SheetCombatParticipantSeed {
     sourceLabel?: string;
     entityType?: 'action' | 'spell';
     entityId?: string;
+    actionRef?: Action;
+    spellRef?: Spell;
   }>;
 }
 
