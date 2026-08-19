@@ -113,6 +113,60 @@ function stableIds(values: readonly unknown[]): [string, ...string[]] {
   return ids as [string, ...string[]];
 }
 
+/**
+ * Persist only the transitive Card closure that the actor/runtime/mechanics can
+ * actually address. The UI's name resolver owns the full Card library, but a
+ * canonical world must not copy hundreds of unrelated database rows into every
+ * turn_state commit.
+ */
+function canonicalCardClosure(
+  cards: readonly Card[],
+  roots: readonly unknown[],
+): Card[] {
+  const byId = new Map<string, Card>();
+  const byReference = new Map<string, Card>();
+  for (const card of cards) {
+    const previous = byId.get(card.id);
+    if (previous && canonicalStringify(previous) !== canonicalStringify(card)) {
+      throw new SheetCanonicalWorldError(`Several incompatible Cards use id ${card.id}`);
+    }
+    byId.set(card.id, card);
+    for (const reference of [card.id, card.card_number]) {
+      if (!reference) continue;
+      const aliased = byReference.get(reference);
+      if (aliased && aliased.id !== card.id) {
+        throw new SheetCanonicalWorldError(`Several Cards use reference ${reference}`);
+      }
+      byReference.set(reference, card);
+    }
+  }
+
+  const selected = new Map<string, Card>();
+  const visited = new WeakSet<object>();
+  const visit = (value: unknown): void => {
+    if (typeof value === 'string') {
+      const card = byReference.get(value);
+      if (card && !selected.has(card.id)) {
+        selected.set(card.id, card);
+        visit(card);
+      }
+      return;
+    }
+    if (!value || typeof value !== 'object') return;
+    if (visited.has(value)) return;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    Object.values(value as Record<string, unknown>).forEach(visit);
+  };
+  roots.forEach(visit);
+  return [...selected.values()]
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map(cloneJson);
+}
+
 function persistedResourceBindings(
   turnState: Record<string, unknown> | null | undefined,
 ): SheetCanonicalResourceBindings {
@@ -834,15 +888,14 @@ export function buildSheetCanonicalRuntime(input: {
       [resource]: 'never',
     };
   }
-  const cardById = new Map<string, Card>();
-  for (const card of input.cards ?? []) {
-    const previous = cardById.get(card.id);
-    if (previous && canonicalStringify(previous) !== canonicalStringify(card)) {
-      throw new SheetCanonicalWorldError(`Several incompatible Cards use id ${card.id}`);
-    }
-    cardById.set(card.id, cloneJson(card));
-  }
-  const cards = [...cardById.values()].sort((left, right) => left.id.localeCompare(right.id));
+  const cards = canonicalCardClosure(input.cards ?? [], [
+    runtime,
+    characterContext,
+    uniqueActions,
+    input.passives,
+    input.grantedEffects,
+    input.masteryEffects,
+  ]);
   const catalog: RulesCatalog = {
     getAction: (id) => actionById.get(id),
     listActions: () => uniqueActions,

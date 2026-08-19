@@ -262,6 +262,13 @@ describe('real sheet canonical world materialization', () => {
     const arrow = {
       id: 'card:arrow', card_number: 'CARD-arrow', name: 'Arrows', type: 'item',
     } as unknown as Card;
+    const unrelatedCards = Array.from({ length: 790 }, (_, index) => ({
+      id: `card:unrelated:${index}`,
+      card_number: `CARD-unrelated-${index}`,
+      name: `Unrelated ${index}`,
+      description: 'x'.repeat(2_000),
+      type: 'item',
+    } as unknown as Card));
     const mechanics = bindEquippedWeaponAmmoCost(
       entity.mechanics as Record<string, unknown>,
       { main_hand: bow.id },
@@ -295,7 +302,7 @@ describe('real sheet canonical world materialization', () => {
         profBonus: 2,
         level: 1,
       },
-      cards: [bow, arrow],
+      cards: [bow, arrow, ...unrelatedCards],
       ac: 13,
     });
     const canonical = built.actionFor(sheetAction);
@@ -307,6 +314,9 @@ describe('real sheet canonical world materialization', () => {
     const paid = pay(built.world.actors[built.actorId].runtime, cost);
     expect(paid.state.resources.action).toBe(0);
     expect(paid.state.inventory).toEqual([{ cardId: arrow.id, qty: 1 }]);
+    expect(built.world.actors[built.actorId].character.knownCards?.map((card) => card.id).sort())
+      .toEqual([arrow.id, bow.id].sort());
+    expect(JSON.stringify(built.world).length).toBeLessThan(768 << 10);
   });
 
   it('promotes an active class effect into a real sheet action with provenance', () => {
