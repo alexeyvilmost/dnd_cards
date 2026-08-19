@@ -638,7 +638,10 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       'get',
       '/api/cards?limit=1000',
     );
-    const longbow = cards.cards?.find((card) => card.card_number === 'CARD-0563');
+    // CARD-0327 is the certified PHB 2024 Longbow used by the micro-MVP
+    // starting-equipment graph. CARD-0563 is a legacy duplicate without the
+    // required data-driven weapon_profile and must remain visibly unusable.
+    const longbow = cards.cards?.find((card) => card.card_number === 'CARD-0327');
     const arrow = cards.cards?.find((card) => card.card_number === 'CARD-0728');
     if (!longbow || !arrow) throw new Error('Live catalog misses Longbow or Arrow');
     characterA = await checkedJSON<CharacterResponse>(
