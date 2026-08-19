@@ -42,6 +42,7 @@ vi.mock('./pages/RulesLab', () => ({
 
 describe('/rules-lab route', () => {
   afterEach(() => {
+    vi.useRealTimers();
     mocks.loadConditions.mockReset();
     mocks.useAuth.mockReset();
     document.body.replaceChildren();
@@ -93,7 +94,7 @@ describe('/rules-lab route', () => {
 
     expect(mocks.loadConditions).toHaveBeenCalledTimes(1);
     expect(mocks.loadConditions).toHaveBeenCalledWith({
-      timeoutMs: 5_000,
+      timeoutMs: 15_000,
       expectedRelease: {
         certificationVersion: 'micro-mvp-l1-rules-core-v4',
         rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
@@ -130,6 +131,43 @@ describe('/rules-lab route', () => {
         .not.toBeNull();
     });
     expect(container.textContent).toContain('Офлайн-набор правил');
+
+    await act(async () => root.unmount());
+  });
+
+  it('recovers from a temporary offline authority without reloading the page', async () => {
+    vi.useFakeTimers();
+    mocks.loadConditions
+      .mockResolvedValueOnce({
+        mode: 'offline_fixture',
+        reason: 'request timed out after 15000ms',
+      })
+      .mockResolvedValueOnce({
+        mode: 'database_release', count: 15, setHash: 'recovered',
+      });
+    mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(createElement(
+        MemoryRouter,
+        { initialEntries: ['/login'] },
+        createElement(App),
+      ));
+      await Promise.resolve();
+    });
+    expect(container.querySelector('[data-testid="offline-rules-authority"]')?.textContent)
+      .toContain('request timed out after 15000ms');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+      await Promise.resolve();
+    });
+    expect(mocks.loadConditions).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('[data-testid="offline-rules-authority"]')).toBeNull();
+    expect(container.querySelector('[data-testid="login-route-marker"]')).not.toBeNull();
 
     await act(async () => root.unmount());
   });

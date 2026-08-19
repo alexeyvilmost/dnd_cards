@@ -248,6 +248,45 @@ describe('strict mechanics.weapon_profile authority', () => {
     );
     expect(bound.targeting).toEqual({ shape: 'single', filter: 'enemy', range_ft: 60 });
     expect((bound.activation as Dict).cost).toEqual([{ resource: 'action' }]);
+    expect((bound.effects as Dict[])[0]).toMatchObject({ attack_kind: 'weapon_melee' });
+  });
+
+  it('materializes a reusable equipped-weapon action as ranged for a ranged-only weapon', () => {
+    const card = weapon(profile({
+      weapon_type: 'shortbow',
+      attack_ability: 'dex',
+      default_attack_mode: 'ranged',
+      attack_modes: [{ kind: 'ranged', normal_ft: 80, long_ft: 320 }],
+      properties: ['ammunition', 'two_handed'],
+      ammo: { card_id: 'card:arrow', name: 'Стрела' },
+    }), { id: 'card:shortbow', name: 'Короткий лук' });
+    const mechanics = {
+      activation: {
+        mode: 'active',
+        cost: [
+          { resource: 'action' },
+          { resource: EQUIPPED_WEAPON_AMMO_RESOURCE, amount: 1 },
+        ],
+      },
+      targeting: { shape: 'single', filter: 'enemy', range_ft: 600 },
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'weapon_melee',
+        on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon' }],
+      }],
+    };
+
+    const bound = bindEquippedWeaponActionContext(
+      mechanics,
+      { main_hand: card.id },
+      new Map([[card.id, card]]),
+    );
+
+    expect(bound.targeting).toEqual({ shape: 'single', filter: 'enemy', range_ft: 320 });
+    expect((bound.effects as Dict[])[0]).toMatchObject({ attack_kind: 'weapon_ranged' });
+    expect((bound.activation as Dict).cost).toEqual([
+      { resource: 'action' },
+      { resource: 'item', card_id: 'card:arrow', amount: 1, name: 'Стрела' },
+    ]);
   });
 
   it('documents the current deterministic close-range thrown-mode limitation', () => {

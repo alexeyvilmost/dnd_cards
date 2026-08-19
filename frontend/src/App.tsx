@@ -74,7 +74,8 @@ const MobileCharacterSheet = lazy(() => import('./mobile/MobileCharacterSheet'))
 const MobileCharacterWizard = lazy(() => import('./mobile/MobileCharacterWizard'));
 const MobileEntityCatalog = lazy(() => import('./mobile/MobileEntityCatalog'));
 const RulesLab = lazy(() => import('./pages/RulesLab'));
-const RULE_BOOTSTRAP_TIMEOUT_MS = 5_000;
+const RULE_BOOTSTRAP_TIMEOUT_MS = 15_000;
+const RULE_BOOTSTRAP_RETRY_MS = 5_000;
 const CONDITION_RELEASE_BINDING = Object.freeze({
   certificationVersion: MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
   rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
@@ -90,32 +91,48 @@ function App() {
   const [conditionAuthority, setConditionAuthority] = useState<ConditionLoadResult | null>(null);
   const conditionLoadRef = useRef<ReturnType<typeof loadConditions> | null>(null);
   // Активировать только полный сертифицированный набор из 15 состояний БД;
-  // при любой неполноте движок явно остаётся в offline-fixture режиме.
+  // при любой неполноте движок явно остаётся в offline-fixture режиме и
+  // автоматически повторяет bootstrap. Временный cold start backend не должен
+  // оставлять вкладку в offline-режиме до ручной перезагрузки.
   useEffect(() => {
-    if (isRulesLab || conditionsReady) return;
+    if (isRulesLab) return undefined;
     let active = true;
+    let retryTimer: number | undefined;
     setConditionsReady(false);
-    conditionLoadRef.current ??= loadConditions({
-      timeoutMs: RULE_BOOTSTRAP_TIMEOUT_MS,
-      expectedRelease: CONDITION_RELEASE_BINDING,
-    });
-    void conditionLoadRef.current
-      .then((result) => {
-        if (active) setConditionAuthority(result);
-      })
-      .catch(() => {
-        // `loadConditions` is fail-closed itself. Keep the shell safe even if
-        // a future adapter unexpectedly rejects instead of returning a mode.
-        if (active) setConditionAuthority({
-          mode: 'offline_fixture',
-          reason: 'condition authority bootstrap failed',
-        });
-      })
-      .finally(() => {
-        if (active) setConditionsReady(true);
+    const bootstrap = () => {
+      conditionLoadRef.current ??= loadConditions({
+        timeoutMs: RULE_BOOTSTRAP_TIMEOUT_MS,
+        expectedRelease: CONDITION_RELEASE_BINDING,
       });
-    return () => { active = false; };
-  }, [isRulesLab, conditionsReady]);
+      void conditionLoadRef.current
+        .then((result) => {
+          if (!active) return;
+          setConditionAuthority(result);
+          setConditionsReady(true);
+          if (result.mode === 'offline_fixture') {
+            conditionLoadRef.current = null;
+            retryTimer = window.setTimeout(bootstrap, RULE_BOOTSTRAP_RETRY_MS);
+          }
+        })
+        .catch(() => {
+          // `loadConditions` is fail-closed itself. Keep the shell safe even if
+          // a future adapter unexpectedly rejects instead of returning a mode.
+          if (!active) return;
+          setConditionAuthority({
+            mode: 'offline_fixture',
+            reason: 'condition authority bootstrap failed',
+          });
+          setConditionsReady(true);
+          conditionLoadRef.current = null;
+          retryTimer = window.setTimeout(bootstrap, RULE_BOOTSTRAP_RETRY_MS);
+        });
+    };
+    bootstrap();
+    return () => {
+      active = false;
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+    };
+  }, [isRulesLab]);
 
   // Acceptance lab deliberately has no API/auth dependency or application-wide providers.
   if (isRulesLab) {
@@ -147,7 +164,11 @@ function App() {
           textAlign: 'center', color: '#2f2418', background: '#f3d28b',
         }}
       >
-        Офлайн-набор правил: сертифицированные данные сервера сейчас недоступны.
+        Офлайн-набор правил: сертифицированные данные сервера сейчас недоступны.{' '}
+        Повторяем подключение автоматически.
+        {conditionAuthority.reason && (
+          <span title={conditionAuthority.reason}> Причина: {conditionAuthority.reason}</span>
+        )}
       </div>
     )}
     <AuthProvider>

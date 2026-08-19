@@ -100,7 +100,10 @@ describe('SheetCombatTargetDialog explicit facts', () => {
         requireTarget: true,
       });
     });
-    const fieldset = container.querySelector('fieldset')!;
+    const fieldset = document.querySelector('fieldset')!;
+    expect(document.querySelector('[data-testid="sheet-combat-target-list"]')).not.toBeNull();
+    expect(fieldset.classList.contains('sheet-target-card')).toBe(true);
+    expect(fieldset.classList.contains('dice-dialog-list')).toBe(false);
     const checkbox = fieldset.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(checkbox.checked).toBe(false);
     await act(async () => checkbox.click());
@@ -109,11 +112,11 @@ describe('SheetCombatTargetDialog explicit facts', () => {
     const selects = fieldset.querySelectorAll<HTMLSelectElement>('select');
     expect([...selects].map((select) => select.value)).toEqual(['', '', 'unknown', '']);
     await act(async () => {
-      container.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click();
+      document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click();
     });
-    expect(container.querySelector('[role="alert"]')?.textContent).toContain('явно укажите');
+    expect(document.querySelector('[role="alert"]')?.textContent).toContain('явно укажите');
     await act(async () => {
-      container.querySelectorAll<HTMLButtonElement>('.dice-dialog-btn')[1].click();
+      document.querySelectorAll<HTMLButtonElement>('.dice-dialog-btn')[1].click();
       await pending;
     });
   });
@@ -141,7 +144,7 @@ describe('SheetCombatTargetDialog explicit facts', () => {
     await act(async () => {
       container.querySelector<HTMLButtonElement>('button')!.click();
     });
-    const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!;
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
     expect(dialog.textContent).toContain('47 фт.');
     const fieldset = dialog.querySelector('fieldset')!;
     await act(async () => fieldset.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());

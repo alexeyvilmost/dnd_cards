@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   explicitSheetTargetContext,
   explicitSheetTargetFactsIssue,
+  sheetActionDisplayName,
 } from './SheetActionsPanel';
 
 const attack = {
@@ -51,5 +52,26 @@ describe('explicit legacy sheet target facts', () => {
       armorClass: null,
       savingThrowModifier: null,
     })).toBeUndefined();
+  });
+});
+
+describe('contextual weapon action presentation', () => {
+  it('names a generic weapon primitive from its actor-materialized attack mode', () => {
+    const action = (attackKind: string) => ({
+      name: 'Атака оружием',
+      mechanics: {
+        primitive: { type: 'weapon_attack' },
+        effects: [{ resolution: 'attack_roll', attack_kind: attackKind }],
+      },
+    });
+    expect(sheetActionDisplayName(action('weapon_ranged'))).toBe('Дальнобойная атака оружием');
+    expect(sheetActionDisplayName(action('weapon_melee'))).toBe('Рукопашная атака оружием');
+  });
+
+  it('preserves data-owned names for every other action primitive', () => {
+    expect(sheetActionDisplayName({
+      name: 'Особая атака',
+      mechanics: { primitive: { type: 'custom_attack' } },
+    })).toBe('Особая атака');
   });
 });

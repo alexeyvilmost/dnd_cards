@@ -85,10 +85,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // A new release must not activate and delete the old precache while an
-      // existing page can still request one of its lazy chunks. The waiting
-      // worker activates after the old clients close/reload as one version.
-      registerType: 'prompt',
+      // Engine code and its certified release identity are one atomic client
+      // artifact. A waiting worker can strand an open tab on old pinned hashes
+      // after the DB release changes, so updates activate automatically.
+      registerType: 'autoUpdate',
       includeAssets: [
         'site_logo.png',
         'pwa-192x192.png',

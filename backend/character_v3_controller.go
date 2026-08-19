@@ -298,18 +298,13 @@ func (cc *CharacterV3Controller) GetCharactersV3(c *gin.Context) {
 
 	var characters []CharacterV3
 	if err := cc.db.Preload("User").Preload("Group").
-		Joins("JOIN users AS character_owner ON character_owner.id = characters_v3.user_id AND character_owner.deleted_at IS NULL").
-		Where("characters_v3.user_id = ? OR character_owner.username = ?", userID, legacyPublicUsername).
+		Where("characters_v3.user_id = ?", userID).
 		Order("characters_v3.created_at DESC").Find(&characters).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения списка персонажей"})
 		return
 	}
 	for index := range characters {
-		if characters[index].User.Username == legacyPublicUsername {
-			characters[index].AccessMode = characterV3AccessLegacyPublicReadonly
-		} else {
-			characters[index].AccessMode = characterV3AccessOwner
-		}
+		characters[index].AccessMode = characterV3AccessOwner
 	}
 	c.JSON(http.StatusOK, characters)
 }

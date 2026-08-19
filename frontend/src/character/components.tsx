@@ -75,12 +75,11 @@ const FEAT_FILTER_CATEGORY: Record<string, FeatCategory> = {
 };
 
 export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[] {
-  // subfeature (подвиды/наследия), explicit (дар договора, «навык А или Б»)
-  // и effect (выбор эффектов-бусин) несут варианты прямо в options.items —
-  // берём их оттуда.
-  // 'item' (S3 контейнер-выбор / выбор предмета-в-моменте) тоже несёт варианты прямо в options.items.
-  if (choice.source === 'subfeature' || choice.source === 'explicit' || choice.source === 'effect' || choice.source === 'item') {
-    return (choice.items || []).map((it) => ({ id: it.id, label: it.name }));
+  // Любой choice может сузить общий реестр явным options.items. Это единый
+  // data-driven домен вариантов: например source:"ability" обычно даёт все
+  // характеристики, а «Посвящённый в магию» объявляет только INT/WIS/CHA.
+  if (choice.items?.length) {
+    return choice.items.map((it) => ({ id: it.id, label: it.name }));
   }
   // Черты (боевые стили, черты происхождения, «Получение черты» на ASI-уровнях):
   // варианты — реальные черты из справочника, суженные по категории из filter или

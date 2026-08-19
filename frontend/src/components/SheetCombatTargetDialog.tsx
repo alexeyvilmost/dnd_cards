@@ -5,12 +5,14 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import type { Relation, RuleActionDefinition, SpatialFacts } from '../rules-core/domain';
 import {
   sheetCombatDeclarationPolicy,
   type SheetCombatTargetFactDraft,
 } from '../character/sheetCombatDeclaration';
 import '../contexts/DiceDialog.css';
+import './SheetCombatTargetDialog.css';
 
 export interface SheetCombatTargetCandidate {
   id: string;
@@ -196,12 +198,12 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
     }
   };
 
-  const dialog = state ? (() => {
+  const dialogContent = state ? (() => {
     const policy = sheetCombatDeclarationPolicy(state.action, state.castLevel);
     return (
       <div className="dice-dialog-backdrop" onClick={() => finish(null)}>
         <div className="dice-dialog-wrap" onClick={(event) => event.stopPropagation()}>
-          <div className="dice-dialog" role="dialog" aria-modal="true" aria-label="Цели и факты боя">
+          <div className="dice-dialog sheet-target-dialog" role="dialog" aria-modal="true" aria-label="Цели и факты боя">
             <div className="dice-dialog-title">{state.title}</div>
             <p className="dice-dialog-summary">
               {policy.targetingShape === 'area'
@@ -209,11 +211,11 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                 : `Дистанция: до ${policy.rangeFt} фт.`}
               {policy.dartCount ? ` Дротиков: ${policy.dartCount}.` : ''}
             </p>
-            <div className="dice-dialog-list">
+            <div className="sheet-target-list" data-testid="sheet-combat-target-list">
               {state.candidates.map((candidate) => {
                 const draft = state.drafts[candidate.id];
                 return (
-                  <fieldset key={candidate.id} className="dice-dialog-list">
+                  <fieldset key={candidate.id} className="sheet-target-card">
                     <legend>
                       <label>
                         <input
@@ -226,25 +228,25 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                         />{' '}{candidate.name}
                       </label>
                     </legend>
-                    {candidate.disabled && <p>{candidate.reason}</p>}
+                    {candidate.disabled && <p className="sheet-target-disabled-reason">{candidate.reason}</p>}
                     {draft.selected && !candidate.disabled && (
                       <>
-                        <label className="dice-dialog-row">
+                        <label className="sheet-target-row">
                           <span>Отношение</span>
                           <select value={draft.relation} onChange={(event) => patch(candidate.id, { relation: event.target.value as Relation })}>
                             <option value="">Укажите отношение</option>
                             {policy.allowedRelations.map((relation) => <option key={relation} value={relation}>{relation}</option>)}
                           </select>
                         </label>
-                        <label className="dice-dialog-row">
+                        <label className="sheet-target-row">
                           <span>Дистанция, футы</span>
                           <input type="number" min={0} max={policy.rangeFt} value={draft.distanceFt} onChange={(event) => patch(candidate.id, { distanceFt: event.target.value })} />
                         </label>
-                        <label className="dice-dialog-row">
+                        <label className="sheet-target-row">
                           <span>Ревизия сцены</span>
                           <input type="number" min={0} step={1} value={draft.boardRevision} onChange={(event) => patch(candidate.id, { boardRevision: event.target.value })} />
                         </label>
-                        <label className="dice-dialog-row">
+                        <label className="sheet-target-row">
                           <span>Источник фактов</span>
                           <select value={draft.factsSource} onChange={(event) => patch(candidate.id, { factsSource: event.target.value as SpatialFacts['factsSource'] })}>
                             <option value="">Укажите источник</option>
@@ -253,7 +255,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                             <option value="gm_ruling">Решение мастера</option>
                           </select>
                         </label>
-                        <label className="dice-dialog-row">
+                        <label className="sheet-target-row">
                           <span>Линия обзора</span>
                           <select value={draft.lineOfSight} onChange={(event) => patch(candidate.id, { lineOfSight: event.target.value as TargetDraft['lineOfSight'] })}>
                             <option value="unknown">Укажите явно</option>
@@ -261,7 +263,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                             <option value="no">Нет</option>
                           </select>
                         </label>
-                        <label className="dice-dialog-row">
+                        <label className="sheet-target-row">
                           <span>Укрытие</span>
                           <select value={draft.cover} onChange={(event) => patch(candidate.id, { cover: event.target.value as TargetDraft['cover'] })}>
                             <option value="">Укажите укрытие</option>
@@ -272,7 +274,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                           </select>
                         </label>
                         {policy.dartCount !== undefined && (
-                          <label className="dice-dialog-row">
+                          <label className="sheet-target-row">
                             <span>Дротиков</span>
                             <input type="number" min={1} max={policy.dartCount} step={1} value={draft.darts} onChange={(event) => patch(candidate.id, { darts: event.target.value })} />
                           </label>
@@ -294,5 +296,11 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
     );
   })() : null;
 
+  // The sheet has transformed/sticky layout layers. A document-level portal
+  // gives this modal a real top-level stacking context so banners and the
+  // mobile-version suggestion cannot intercept its controls.
+  const dialog = dialogContent && typeof document !== 'undefined'
+    ? createPortal(dialogContent, document.body)
+    : dialogContent;
   return { request, dialog };
 }

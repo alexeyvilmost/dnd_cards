@@ -390,6 +390,37 @@ export function bindEquippedWeaponProfileTargeting(
   };
 }
 
+/**
+ * Materialize the attack mode of a generic equipped-weapon action. The
+ * equipped_weapon_ammo marker is also the action template's declaration that
+ * its attack facts come from whichever weapon is selected by the ordinary
+ * main/off markers. Specialized weapon actions without that declaration keep
+ * their explicit attack_kind unchanged.
+ */
+export function bindEquippedWeaponAttackMode(
+  mechanics: Dict | null | undefined,
+  equipment: Record<string, string | null | undefined> | undefined,
+  cardsById: Map<string, Card>,
+): Dict {
+  if (!mechanics) return {};
+  const activation = mechanics.activation as Dict | undefined;
+  const costs = Array.isArray(activation?.cost) ? activation.cost as Dict[] : [];
+  if (!costs.some((entry) => entry?.resource === EQUIPPED_WEAPON_AMMO_RESOURCE)) {
+    return mechanics;
+  }
+  const selected = selectedWeaponForMechanics(mechanics, equipment, cardsById);
+  const attack = matchedAttackEffect(mechanics);
+  if (!selected || !attack) {
+    throw new Error('equipped weapon action requires one materializable weapon attack');
+  }
+  const effects = (mechanics.effects as Dict[]).map((effect) => (
+    effect === attack
+      ? { ...effect, attack_kind: `weapon_${selected.profile.defaultAttackMode}` }
+      : effect
+  ));
+  return { ...mechanics, effects };
+}
+
 function declaredWeaponAmmo(weapon: Card): { cardId: string; name?: string } | null {
   const parsed = parseWeaponProfile(weapon);
   if (!parsed.valid) throw new Error(parsed.issue);
@@ -452,7 +483,8 @@ export function bindEquippedWeaponActionContext(
   cardsById: Map<string, Card>,
 ): Dict {
   const targeted = bindEquippedWeaponProfileTargeting(mechanics, equipment, cardsById);
-  return bindEquippedWeaponAmmoCost(targeted, equipment, cardsById);
+  const attackMode = bindEquippedWeaponAttackMode(targeted, equipment, cardsById);
+  return bindEquippedWeaponAmmoCost(attackMode, equipment, cardsById);
 }
 
 // ─── Предпросмотр атаки/урона (парадигма №2) ────────────────────────────────

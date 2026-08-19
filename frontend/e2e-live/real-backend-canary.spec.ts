@@ -99,6 +99,7 @@ interface CharacterResponse extends JsonRecord {
   id: string;
   name: string;
   notes?: string;
+  access_mode?: 'owner' | 'legacy_public_readonly';
   current_hp: number;
   max_hp: number;
   current_encounter_id?: string | null;
@@ -344,6 +345,61 @@ async function loginInBrowser(
   expect(new URL(page.url()).origin).toBe(frontendOrigin);
 }
 
+async function createCompiledCharacterInForge(
+  page: Page,
+  root: CompiledDraftRoot,
+  name: string,
+  cleanupMarker: string,
+  apiOrigin: string,
+): Promise<CharacterResponse> {
+  const draft = structuredClone(root.draft);
+  draft.name = name;
+  draft.description = 'Temporary automated release canary; safe to delete.';
+  draft.notes = cleanupMarker;
+
+  // Restore a complete canonical draft through the real Forge UI. This keeps
+  // the live canary deterministic while still exercising Forge assembly,
+  // validation, POST serialization, navigation and the resulting live sheet.
+  await page.goto('/');
+  await page.evaluate((value) => {
+    localStorage.setItem('forge-draft', JSON.stringify(value));
+  }, draft);
+  await page.goto('/character-forge');
+  await expect(page.getByRole('dialog')).toContainText(
+    'Продолжить создание незавершённого персонажа?',
+  );
+  await page.getByRole('button', { name: 'Продолжить', exact: true }).click();
+  const mobileSuggestion = page.getByRole('complementary', {
+    name: 'Предложение мобильной версии',
+  });
+  if (await mobileSuggestion.isVisible()) {
+    await mobileSuggestion.getByRole('button', { name: 'Не сейчас', exact: true }).click();
+  }
+  const createButton = page.getByRole('button', { name: 'Создать персонажа', exact: true });
+  if (await createButton.count() === 0) {
+    await page.getByRole('button', { name: 'Общее', exact: true }).click();
+  }
+  await expect(createButton).toBeEnabled();
+  const responsePromise = page.waitForResponse((response) => {
+    try {
+      return response.request().method() === 'POST'
+        && new URL(response.url()).pathname === '/api/characters-v3';
+    } catch {
+      return false;
+    }
+  });
+  await createButton.click();
+  const response = await responsePromise;
+  assertLiveCanaryRequestOrigin(response.url(), apiOrigin, 'Forge character creation');
+  expect(response.status(), 'Forge character creation response').toBe(201);
+  const character = await response.json() as CharacterResponse;
+  expect(character).toMatchObject({ name, notes: cleanupMarker, access_mode: 'owner' });
+  await expect(page).toHaveURL(new RegExp(`/characters-v3/${character.id}$`));
+  await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
+  await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
+  return character;
+}
+
 function redactDiagnostic(value: string, secrets: string[]): string {
   let redacted = value
     .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
@@ -539,12 +595,25 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     authB = await authenticatedAPI(playwright, apiOrigin, accountB, 'account B');
     expect(authA.user.id).not.toBe(authB.user.id);
 
-    characterA = await checkedJSON<CharacterResponse>(
-      authA.api,
-      'post',
-      '/api/characters-v3',
-      characterPayload(compiledFixture.roots.fighter, `Canary Fighter ${suffix}`, marker),
+    contextA = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'block' });
+    const browserOrigins = new Set([frontendOrigin, apiOrigin]);
+    await installBrowserOriginFence(contextA, browserOrigins);
+    const pageAForge = await contextA.newPage();
+    stopDiagnostics.push(captureBrowserDiagnostics(
+      pageAForge,
+      'account A forge and sheet',
+      [accountA.password, accountB.password],
+      browserDiagnostics,
+    ));
+    await loginInBrowser(pageAForge, accountA, frontendOrigin, apiOrigin);
+    characterA = await createCompiledCharacterInForge(
+      pageAForge,
+      compiledFixture.roots.fighter,
+      `Canary Fighter ${suffix}`,
+      marker,
+      apiOrigin,
     );
+    await pageAForge.close();
     characterB = await checkedJSON<CharacterResponse>(
       authB.api,
       'post',
@@ -656,10 +725,7 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       avoidsConditions: ['prone'],
     };
 
-    contextA = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'block' });
     contextB = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'block' });
-    const browserOrigins = new Set([frontendOrigin, apiOrigin]);
-    await installBrowserOriginFence(contextA, browserOrigins);
     await installBrowserOriginFence(contextB, browserOrigins);
     const pageAEncounter = await contextA.newPage();
     const pageBEncounter = await contextB.newPage();
@@ -675,7 +741,6 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       [accountA.password, accountB.password],
       browserDiagnostics,
     ));
-    await loginInBrowser(pageAEncounter, accountA, frontendOrigin, apiOrigin);
     await loginInBrowser(pageBEncounter, accountB, frontendOrigin, apiOrigin);
 
     await pageAEncounter.goto(`/encounter/${encounter.id}`);
@@ -793,6 +858,32 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     if (browserDiagnostics.length > 0) {
       throw new Error(`Browser diagnostics are not clean:\n${browserDiagnostics.join('\n')}`);
     }
+
+    // Complete the same live flow through the personal library and its UI
+    // deletion. Legacy-public rows must not be injected into this private list.
+    await expectStatus(authA.api, 'delete', `/api/encounters/${encounter.id}`, 200);
+    encounter = undefined;
+    await pageAEncounter.goto('/characters-forge');
+    await expect(pageAEncounter.getByText('только чтение')).toHaveCount(0);
+    const characterCard = pageAEncounter.locator('.forge-char-card').filter({
+      hasText: characterA.name,
+    });
+    await expect(characterCard).toBeVisible();
+    await characterCard.getByTitle('Удалить персонажа').click();
+    const deleteResponsePromise = pageAEncounter.waitForResponse((response) => {
+      try {
+        return response.request().method() === 'DELETE'
+          && new URL(response.url()).pathname === `/api/characters-v3/${characterA!.id}`;
+      } catch {
+        return false;
+      }
+    });
+    await characterCard.getByRole('button', { name: 'Удалить?', exact: true }).click();
+    const deleteResponse = await deleteResponsePromise;
+    assertLiveCanaryRequestOrigin(deleteResponse.url(), apiOrigin, 'character library deletion');
+    expect(deleteResponse.status()).toBe(200);
+    await expect(characterCard).toHaveCount(0);
+    await expectStatus(authA.api, 'get', `/api/characters-v3/${characterA.id}`, 404);
   } catch (error) {
     bodyError = error;
   } finally {

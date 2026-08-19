@@ -245,6 +245,19 @@ const GROUP_DETAIL: Record<SheetAction['group'], string> = {
   basic: 'Базовое действие', race: 'Вид', class: 'Класс', item: 'Предмет', spell: 'Заклинание',
 };
 const spellSchoolLabel = (s?: string | null) => SPELL_SCHOOL_OPTIONS.find((o) => o.value === s)?.label || s || '';
+export function sheetActionDisplayName(
+  action: Pick<SheetAction, 'name' | 'mechanics'>,
+): string {
+  const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
+  if (primitive?.type !== 'weapon_attack') return action.name;
+  const effects = Array.isArray(action.mechanics.effects)
+    ? action.mechanics.effects as Array<Record<string, unknown>>
+    : [];
+  const attackKind = effects.find((effect) => effect.resolution === 'attack_roll')?.attack_kind;
+  if (attackKind === 'weapon_ranged') return 'Дальнобойная атака оружием';
+  if (attackKind === 'weapon_melee') return 'Рукопашная атака оружием';
+  return action.name;
+}
 // Вторая строка ряда действия (как у предметов, но без веса/цены).
 const actionDetail = (a: SheetAction): string => {
   if (a.spellRef) {
@@ -495,7 +508,9 @@ export default function SheetActionsPanel({
   useEffect(() => {
     let active = true;
     void loadTargetChars().then((candidates) => {
-      if (active) setAvailableSheetTargets(candidates.filter((candidate) => candidate.id !== character.id));
+      if (active) setAvailableSheetTargets(candidates.filter((candidate) => (
+        candidate.id !== character.id && !isCharacterReadOnly(candidate)
+      )));
     });
     return () => { active = false; };
   }, [character.id, loadTargetChars]);
@@ -1340,11 +1355,11 @@ export default function SheetActionsPanel({
         : null;
       const targetCandidates = allCharacters
         .filter((candidate) => candidate.id !== character.id)
+        .filter((candidate) => !isCharacterReadOnly(candidate))
         .filter((candidate) => !allowedIds || allowedIds.has(candidate.id))
         .map((candidate) => {
           let reason: string | undefined;
-          if (isCharacterReadOnly(candidate)) reason = 'лист доступен только для чтения';
-          else if (candidate.current_encounter_id) reason = 'персонаж уже в онлайн-бою';
+          if (candidate.current_encounter_id) reason = 'персонаж уже в онлайн-бою';
           else if (!Number.isSafeInteger(candidate.runtime_revision)) reason = 'нет серверной runtime_revision';
           else if (candidate.system_id !== character.system_id) reason = 'другая система правил';
           return { id: candidate.id, name: candidate.name, ...(reason ? { disabled: true, reason } : {}) };
@@ -2183,7 +2198,7 @@ export default function SheetActionsPanel({
               return (
                 <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>
                 <SheetActionLine
-                  name={action.name}
+                  name={sheetActionDisplayName(action)}
                   imageUrl={action.imageUrl}
                   sourceLabel={action.sourceLabel ?? (action.group === 'basic' ? 'Базовое действие' : undefined)}
                   description={action.group === 'basic' ? action.description ?? action.name : undefined}

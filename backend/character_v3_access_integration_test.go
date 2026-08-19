@@ -262,21 +262,20 @@ func TestCharacterV3OwnerAndLegacyPublicAccessPolicy(t *testing.T) {
 	listedIDs := make(map[uuid.UUID]bool, len(listed))
 	for _, character := range listed {
 		listedIDs[character.ID] = true
-		wantMode := characterV3AccessOwner
-		if character.ID == fixture.publicCharacter.ID {
-			wantMode = characterV3AccessLegacyPublicReadonly
-		}
-		if character.AccessMode != wantMode {
-			t.Errorf("listed character %s access_mode=%q, want %q", character.ID, character.AccessMode, wantMode)
+		if character.AccessMode != characterV3AccessOwner {
+			t.Errorf("listed character %s access_mode=%q, want %q", character.ID, character.AccessMode, characterV3AccessOwner)
 		}
 	}
 	for _, expected := range []uuid.UUID{
 		fixture.ownerCharacter.ID, fixture.deleteCharacter.ID,
-		fixture.publicCharacter.ID, createdCharacter.ID,
+		createdCharacter.ID,
 	} {
 		if !listedIDs[expected] {
-			t.Errorf("owner/public character %s missing from authenticated list", expected)
+			t.Errorf("owner character %s missing from authenticated list", expected)
 		}
+	}
+	if listedIDs[fixture.publicCharacter.ID] {
+		t.Error("legacy public character leaked into the private character library")
 	}
 	if listedIDs[fixture.otherCharacter.ID] {
 		t.Error("another user's private character leaked into list")

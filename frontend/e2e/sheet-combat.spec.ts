@@ -271,6 +271,24 @@ async function declareTarget(
   await expect(dialog).toBeVisible();
   const fieldset = dialog.locator('fieldset').filter({ hasText: targetName });
   await fieldset.getByRole('checkbox').check();
+  const horizontalLayout = await dialog.evaluate((element) => {
+    const dialogBox = element.getBoundingClientRect();
+    const controls = [...element.querySelectorAll('input, select')]
+      .filter((control) => (control as HTMLElement).offsetParent !== null)
+      .map((control) => control.getBoundingClientRect());
+    return {
+      scrollOverflow: element.scrollWidth - element.clientWidth,
+      nestedGenericLists: element.querySelectorAll('fieldset.dice-dialog-list').length,
+      controlsWithinDialog: controls.every((box) => (
+        box.left >= dialogBox.left - 1 && box.right <= dialogBox.right + 1
+      )),
+    };
+  });
+  expect(horizontalLayout).toEqual({
+    scrollOverflow: 0,
+    nestedGenericLists: 0,
+    controlsWithinDialog: true,
+  });
   const selects = fieldset.getByRole('combobox');
   await selects.nth(0).selectOption('enemy');
   await selects.nth(1).selectOption('scenario');
@@ -333,6 +351,7 @@ async function openPendingSpell(
 
 test.describe('real CharacterV3 sheet pending-combat bridge', () => {
   test('ranged weapon: dialog facts, atomic Attack, ammo/events and response-loss reload', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 600 });
     const api = await installForgeApiFixture(page);
     await page.addInitScript(() => {
       Math.random = () => 0.99;
@@ -353,6 +372,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     await dismissMobileSuggestion(page);
     const line = page.locator(`[data-action-id="${weaponActionId}"]`);
     await expect(line).toBeVisible({ timeout: 30_000 });
+    await expect(line.getByText('Дальнобойная атака оружием', { exact: true })).toBeVisible();
     const button = line.getByRole('button');
     await expect(button).toBeEnabled({ timeout: 30_000 });
     api.loseNextRuntimeCommandResponse();
