@@ -21,7 +21,11 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // The CI path intentionally uses the runner's system Chrome and therefore
+    // does not install Playwright's separate ffmpeg bundle. Traces and failure
+    // screenshots still provide diagnostics without making video recording a
+    // hidden browser-runtime dependency.
+    video: process.env.CI ? 'off' : 'retain-on-failure',
   },
   projects: [
     {
