@@ -158,8 +158,8 @@ const CharacterSheetMVP = () => {
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
   // E4: единое «КЗ цели» на весь лист — оба инстанса SheetActionsPanel
   // (действия и заклинания) целятся в один и тот же AC.
-  const [targetAc, setTargetAc] = useState<number | null>(null);
-  const [targetSaveMod, setTargetSaveMod] = useState<number | null>(null);
+  const [targetAc, setTargetAc] = useState<number | null>(10);
+  const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
   const readOnly = character ? isCharacterReadOnly(character) : false;
   // Онлайн-бой: если персонаж в бою (current_encounter_id) — подписываемся на общий стол боя,
   // чтобы (а) показывать индикатор «в бою», (б) отражать боевое HP/temp/состояния на листе в
@@ -173,6 +173,14 @@ const CharacterSheetMVP = () => {
     apply: applyEncounter,
   } = useEncounterStream(encId ?? undefined);
   const activeEncounter = encId ? { id: encId, name: encMeta?.name ?? 'Бой' } : null;
+  const soloCombatEnvelope = character?.turn_state?.solo_combat_v1;
+  const activeSoloCombat = Boolean(
+    soloCombatEnvelope
+      && typeof soloCombatEnvelope === 'object'
+      && !Array.isArray(soloCombatEnvelope)
+      && (soloCombatEnvelope as Record<string, unknown>).outcome === 'active',
+  );
+  const combatLocked = Boolean(activeEncounter || activeSoloCombat);
   const encStateRef = useRef(encState);
   encStateRef.current = encState;
   const encSeqRef = useRef(encSeq);
@@ -193,11 +201,11 @@ const CharacterSheetMVP = () => {
       return next;
     });
   }, []);
-  const rootCls = paperTheme ? 'forge sheet-paper' : 'forge';
+  const rootCls = isMobile && paperTheme ? 'forge sheet-paper' : 'forge';
   const [useV2, setUseV2] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-layout') === 'v2'; } catch { return false; }
   });
-  const renderedV2 = useV2 || readOnly;
+  const renderedV2 = !isMobile || useV2 || readOnly;
   const toggleLayout = useCallback(() => {
     setUseV2((prev) => {
       const next = !prev;
@@ -965,9 +973,9 @@ const CharacterSheetMVP = () => {
         <div className="sheet-header-center">
           <span className="sheet-header-name">{character.name || 'Без имени'}</span>
           <CharacterAccessBadge character={character} />
-          {activeEncounter ? (
-            <Link to={`/encounter/${activeEncounter.id}`} className="sheet-in-battle" title="Открыть онлайн-бой">
-              <Swords size={12} /> В бою: {activeEncounter.name}
+          {combatLocked ? (
+            <Link to={activeEncounter ? `/encounter/${activeEncounter.id}` : `/characters-v3/${character.id}/combat`} className="sheet-in-battle" title="Вернуться в активный бой">
+              <Swords size={12} /> В бою: {activeEncounter?.name ?? 'одиночная проверка'}
             </Link>
           ) : (
             <span className="sheet-header-sub">{characterMetadataLabel(character)}</span>
@@ -994,7 +1002,7 @@ const CharacterSheetMVP = () => {
             <SettingsIcon size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
           </button>
-          {!readOnly && (
+          {!readOnly && isMobile && (
             <button
               type="button"
               className="sheet-header-btn"
@@ -1005,7 +1013,7 @@ const CharacterSheetMVP = () => {
               <span className="sheet-header-btn-label">{useV2 ? 'Классический' : '✦ Новый'}</span>
             </button>
           )}
-          <button
+          {isMobile && <button
             type="button"
             className="sheet-header-btn"
             onClick={toggleTheme}
@@ -1013,29 +1021,26 @@ const CharacterSheetMVP = () => {
           >
             {paperTheme ? <Moon size={16} /> : <Sun size={16} />}
             <span className="sheet-header-btn-label">{paperTheme ? 'Тёмная' : 'Бумага'}</span>
-          </button>
+          </button>}
           {!readOnly && (
             <>
+              {activeSoloCombat ? (
+                <Link className="sheet-header-btn sheet-in-battle" to={`/characters-v3/${character.id}/combat`}>
+                  <Swords size={16} /><span className="sheet-header-btn-label">Вернуться в бой</span>
+                </Link>
+              ) : (
               <button
                 type="button"
                 className="sheet-header-btn"
                 onClick={() => setCombatSetupOpen(true)}
-                title="Запустить одиночную проверку персонажа в бою"
+                disabled={Boolean(activeEncounter)}
+                title={activeEncounter ? 'Персонаж уже находится в онлайн-бою' : 'Запустить одиночную проверку персонажа в бою'}
                 data-testid="open-solo-combat"
               >
                 <Swords size={16} />
                 <span className="sheet-header-btn-label">Проверить в бою</span>
               </button>
-              <button
-                type="button"
-                className="sheet-header-btn"
-                onClick={rollInitiative}
-                disabled={rollingInit}
-                title="Бросок инициативы"
-              >
-                <Dices size={16} />
-                <span className="sheet-header-btn-label">{rollingInit ? '…' : 'Инициатива'}</span>
-              </button>
+              )}
               <Link
                 to={`/character-forge/${character.id}?levelup=1`}
                 className="sheet-header-btn"
@@ -1082,6 +1087,9 @@ const CharacterSheetMVP = () => {
           onEvents={appendRuntimeEvents}
           readOnly={readOnly}
           encounterApply={applyEncounter}
+          combatActive={combatLocked}
+          onRollInitiative={rollInitiative}
+          rollingInitiative={rollingInit}
         />
       ) : (
       <div className="sheet-scroll">
@@ -1134,6 +1142,7 @@ const CharacterSheetMVP = () => {
             onEvents={appendRuntimeEvents}
             onLongRestComplete={() => setLongRestOpen(true)}
             encounterApply={applyEncounter}
+            combatLocked={combatLocked}
           />
           )}
 

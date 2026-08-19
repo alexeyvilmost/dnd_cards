@@ -37,12 +37,22 @@ export interface CombatLogEntry {
   events?: EngineEvent[];
 }
 
+export interface CombatActionPresentation {
+  imageUrl?: string | null;
+  description?: string;
+  sourceLabel?: string;
+  entityType?: 'action' | 'spell';
+  entityId?: string;
+}
+
 export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
   runtimeRevision: number;
   world: WorldState;
   catalogActions: RuleActionDefinition[];
+  /** Persisted UI projection from the same data-driven entities as the sheet. */
+  actionPresentation?: Record<string, CombatActionPresentation>;
   playerActionIds: string[];
   certifiedPlayerActionIds: string[];
   monsterActionIds: Record<string, string[]>;

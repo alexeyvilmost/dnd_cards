@@ -28,6 +28,26 @@ function activeId(state: { world: { scene: import('../rules-core/domain').SceneS
 function fighterSeed(): SheetCombatParticipantSeed {
   const actor = clone(fixture.roots.magicInitiateFighter.actor);
   const actions = clone(fixture.roots.magicInitiateFighter.actions);
+  const cantrip: RuleActionDefinition = {
+    id: 'd1000000-0000-4000-8000-000000000001',
+    name: 'Волшебная рука',
+    kind: 'spell',
+    spell: { level: 0 },
+    sourceEntityIds: ['test-feat', 'test-cantrip'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 30, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+      effects: [{ resolution: 'auto', result: [{ kind: 'narrative', description: 'Канонический data-driven заговор.' }] }],
+    },
+    targeting: { minTargets: 1, maxTargets: 1, rangeFt: 30, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+  };
+  actions.push(cantrip);
+  actor.capabilities.actionIds.push(cantrip.id);
+  actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+  actor.spellcastingAccess.grants.push({
+    grantId: 'test-cantrip-grant', actionId: cantrip.id, sourceId: 'test-feat',
+    access: 'cantrip', level: 0, spellcastingAbility: 'int',
+  });
   const byId = new Map(actions.map((action) => [action.id, action]));
   const catalog: RulesCatalog = { getAction: (id) => byId.get(id), listActions: () => actions };
   const canonical: SheetCanonicalRuntime = {
@@ -116,6 +136,8 @@ describe('solo combat engine vertical integration', () => {
     expect(state.initiative.find((entry) => entry.actorId === monsterId)?.bonus).toBe(2);
     expect(state.world.scene.mode).toBe('encounter');
     expect(activeId(state)).toBe(participant.character.id);
+    expect(state.log.at(-1)?.text).toContain(participant.character.name);
+    expect(state.playerActionIds).toContain('d1000000-0000-4000-8000-000000000001');
 
     state = {
       ...state,
@@ -136,6 +158,28 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
     expect(state.tokens[monsterId].position.y).toBeLessThan(7);
     expect(state.log.some((entry) => entry.text.includes(thunderwave!.name))).toBe(true);
+  });
+
+  it('keeps and executes a granted generic cantrip outside the strict primitive slice', async () => {
+    const participant = fighterSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const cantripId = 'd1000000-0000-4000-8000-000000000001';
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state = {
+      ...state,
+      tokens: { ...state.tokens, [monsterId]: { ...state.tokens[monsterId], position: { x: 6, y: 6 } } },
+      boardRevision: state.boardRevision + 1,
+    };
+    state = executeCombatAction({
+      state, actorId: participant.character.id, actionId: cantripId, targetIds: [monsterId], rng: () => 0,
+    });
+    expect(state.log.at(-1)?.text).toContain('Волшебная рука');
+    expect(state.world.actors[participant.character.id].runtime.resources.action).toBe(0);
   });
 
   it('runs a catalog-gated off-turn opportunity attack and spends exactly the reactor resource', async () => {

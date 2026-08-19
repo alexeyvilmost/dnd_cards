@@ -263,10 +263,11 @@ async function runPersistedSheetWeaponAttack(
     : 0).toBeGreaterThan(0);
 
   await page.goto(`/characters-v3/${targetId}`);
-  await expect(page.locator('.sheet-hp-main strong')).toHaveText(String(hpAfter));
+  const sheetHp = page.locator('.cs-hp-cur, .sheet-hp-main strong').first();
+  await expect(sheetHp).toHaveText(String(hpAfter));
   await expect(page.getByText('Ослабляющее', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.locator('.sheet-hp-main strong')).toHaveText(String(hpAfter));
+  await expect(page.locator('.cs-hp-cur, .sheet-hp-main strong').first()).toHaveText(String(hpAfter));
   await expect(page.getByText('Ослабляющее', { exact: true })).toBeVisible();
 }
 

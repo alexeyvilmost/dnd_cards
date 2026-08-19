@@ -122,8 +122,9 @@ function appendLog(
   events: readonly ReturnType<typeof sheetCombatEngineEvents>[number][] = [],
 ): SoloCombatState {
   const round = state.world.scene.mode === 'encounter' ? state.world.scene.round : 1;
+  const actorName = state.world.actors[actorId]?.name ?? 'Неизвестный участник';
   const entry: CombatLogEntry = {
-    id: newSheetRuntimeCommandId(), round, actorId, text,
+    id: newSheetRuntimeCommandId(), round, actorId, text: `${actorName}: ${text}`,
     ...(events.length ? { events: clone([...events]) } : {}),
   };
   return { ...state, log: [...state.log.slice(-79), entry] };
@@ -257,11 +258,15 @@ function declarationFor(
 }
 
 function sheetSession(state: SoloCombatState): SheetCombatSession {
-  const catalog = buildCatalog(state.catalogActions);
+  // The strict sheet bridge receives only the reviewed slice. Generic data-driven
+  // actions use the ordinary rules-core UseAction pipeline below.
+  const certifiedIds = new Set(state.certifiedPlayerActionIds);
+  const catalogActions = state.catalogActions.filter((action) => certifiedIds.has(action.id));
+  const catalog = buildCatalog(catalogActions);
   return {
     sourceCharacterId: state.characterId,
     participantRevisions: { [state.characterId]: state.runtimeRevision },
-    catalogActions: state.catalogActions,
+    catalogActions,
     certifiedActionIdsByActor: {
       [state.characterId]: state.certifiedPlayerActionIds,
       ...state.monsterActionIds,
@@ -565,6 +570,12 @@ export async function createSoloCombatState(input: {
     sceneActors: monsters.map((monster) => monster.actor), sceneMode: 'exploration',
   });
   const catalogActions = [...base.catalogActions];
+  // The ordinary character sheet exposes every runnable data-owned action. Keep
+  // that complete capability set in solo combat; only the reviewed primitive
+  // subset is routed through executeSheetCombatAction.
+  for (const action of input.participant.canonical.actions) {
+    if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
+  }
   const playerAttack = catalogActions.find((action) => (
     primitiveType(action) === 'weapon_attack' && isAttackAction(action)
   ));
@@ -621,9 +632,30 @@ export async function createSoloCombatState(input: {
     runtimeRevision: Number(input.character.runtime_revision ?? 0),
     world: clone(base.world), catalogActions: catalogActions.sort((a, b) => a.id.localeCompare(b.id)),
     playerActionIds: [...new Set([
-      ...base.certifiedActionIdsByActor[input.character.id],
+      ...input.participant.canonical.actions.map((action) => action.id),
       ...tacticalBasics.map((action) => action.id),
     ])],
+    actionPresentation: {
+      ...(input.participant.actionPresentation ?? {}),
+      ...Object.fromEntries(basicRows.map((action, index) => [tacticalBasics[index].id, {
+        imageUrl: action.image_url,
+        description: action.description,
+        sourceLabel: 'Базовое действие',
+        entityType: 'action' as const,
+        entityId: action.id,
+      }])),
+      ...Object.fromEntries(monsters.flatMap((monster) => monster.template.action_ids.flatMap((actionId) => {
+        const action = input.actions.find((candidate) => candidate.id === actionId);
+        const projected = monster.actions.find((candidate) => candidate.id === actionId);
+        return action && projected ? [[projected.id, {
+          imageUrl: action.image_url,
+          description: action.description,
+          sourceLabel: monster.template.name,
+          entityType: 'action' as const,
+          entityId: action.id,
+        }] as const] : [];
+      }))),
+    },
     certifiedPlayerActionIds: [...base.certifiedActionIdsByActor[input.character.id]],
     monsterActionIds, opportunityActionIds,
     ...(dash ? { dashActionId: dash.id } : {}),

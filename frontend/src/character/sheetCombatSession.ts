@@ -84,6 +84,14 @@ export interface SheetCombatSession {
 export interface SheetCombatParticipantSeed {
   character: ForgeCharacter;
   canonical: SheetCanonicalRuntime;
+  /** Optional presentation data; mechanics remain owned by canonical.actions. */
+  actionPresentation?: Record<string, {
+    imageUrl?: string | null;
+    description?: string;
+    sourceLabel?: string;
+    entityType?: 'action' | 'spell';
+    entityId?: string;
+  }>;
 }
 
 export interface SheetCombatTransition {

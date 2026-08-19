@@ -4,7 +4,7 @@ import type { ActorState } from '../rules-core/domain';
 import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
-import { gridDistanceFt, pathToward, pushAway } from './tacticalGrid';
+import { areaPositionsForAction, gridDistanceFt, pathToward, pushAway } from './tacticalGrid';
 import type { SoloCombatState } from './types';
 
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
@@ -83,6 +83,16 @@ describe('solo combat tactical contract', () => {
     })).toEqual({ x: 2, y: 0 });
     expect(pushAway({ source: { x: 9, y: 0 }, target: { x: 10, y: 0 }, distanceFt: 20 }))
       .toEqual({ x: 11, y: 0 });
+  });
+
+  it('projects a 15-foot cube as the same three-by-three target area shown on hover', () => {
+    const cells = areaPositionsForAction({
+      mechanics: { targeting: { shape: 'area', area: { shape: 'cube', size_ft: 15 } } },
+      targeting: { rangeFt: 15 },
+    }, { x: 5, y: 5 });
+    expect(cells).toHaveLength(9);
+    expect(cells).toContainEqual({ x: 4, y: 4 });
+    expect(cells).toContainEqual({ x: 6, y: 6 });
   });
 
   it('compiles a monster entirely from referenced Action and Effect entities', () => {

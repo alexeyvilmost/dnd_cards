@@ -2,6 +2,9 @@ import { Footprints, MoreHorizontal, Swords } from 'lucide-react';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import type { SoloCombatState } from '../solo-combat/types';
+import { findResource, useResourceOptions } from '../utils/resources';
+import HoverCard from './HoverCard';
+import ResourceHoverPreview from './ResourceHoverPreview';
 
 const RESOURCE_LABELS: Record<string, string> = {
   action: 'Действие',
@@ -26,6 +29,13 @@ export function actionCost(action: RuleActionDefinition): string {
 function actionLabel(action: RuleActionDefinition): string {
   const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
   return primitive?.type === 'weapon_attack' ? 'Атака' : action.name;
+}
+
+function rangeLabel(action: RuleActionDefinition): string {
+  const targeting = action.mechanics.targeting as Record<string, unknown> | undefined;
+  if (targeting?.shape === 'self') return 'На себя';
+  const range = Number(targeting?.range_ft ?? action.targeting?.rangeFt);
+  return Number.isFinite(range) && range > 0 ? `${range} фт.` : 'По ситуации';
 }
 
 export function combatActionAvailability(
@@ -78,6 +88,7 @@ export default function CombatHotbar({
   onEndTurn: () => void;
   onSheet: () => void;
 }) {
+  const resourceOptions = useResourceOptions();
   const actor = state.world.actors[state.characterId];
   const actions = state.playerActionIds.flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
@@ -90,22 +101,52 @@ export default function CombatHotbar({
   return (
     <section className="combat-hotbar" aria-label="Панель действий">
       <div className="combat-hotbar__resources">
-        <span className="combat-hotbar__portrait">{actor.name.slice(0, 1)}</span>
+        <span className="combat-hotbar__portrait">
+          {state.tokens[state.characterId]?.tokenUrl
+            ? <img src={state.tokens[state.characterId].tokenUrl} alt="" />
+            : actor.name.slice(0, 1)}
+        </span>
         <div><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
-        {resources.map(([key, maximum]) => <span key={key} className={`combat-resource combat-resource--${key}`}>{resourceLabel(key)}: {actor.runtime.resources[key] ?? 0}/{maximum}</span>)}
+        {resources.map(([key, maximum]) => (
+          <ResourceHoverPreview key={key} resourceId={key} option={findResource(resourceOptions, key)}>
+            <span className={`combat-resource combat-resource--${key}`}>
+              {resourceLabel(key)}: {actor.runtime.resources[key] ?? 0}/{maximum}
+            </span>
+          </ResourceHoverPreview>
+        ))}
       </div>
       <div className="combat-hotbar__actions">
         <button type="button" className={`combat-action combat-action--move${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение"><Footprints /><span>Движение</span><small>{state.movementRemainingFt[state.characterId] ?? 0} фт.</small></button>
         {actions.map((action) => {
           const availability = combatActionAvailability(state, action);
+          const presentation = state.actionPresentation?.[action.id];
           const title = availability.enabled
             ? `${action.name} · ${actionCost(action)}`
             : `${action.name} · ${availability.reason}`;
           return (
-            <button type="button" key={action.id} className={`combat-action${selectedActionId === action.id ? ' is-selected' : ''}`} disabled={disabled || !availability.enabled} onClick={() => onAction(action)} title={title} data-action-id={action.id}>
-              <span className="combat-action__icon">{action.mechanics.primitive ? <Swords /> : action.kind === 'spell' ? '✦' : action.name.slice(0, 1)}</span>
-              <span>{actionLabel(action)}</span><small>{availability.enabled ? actionCost(action) || 'свободно' : 'Нет ресурса'}</small>
-            </button>
+            <HoverCard
+              key={action.id}
+              content={(
+                <article className="combat-hover-card" role="tooltip">
+                  <div className="combat-hover-card__head">
+                    {presentation?.imageUrl && <img src={presentation.imageUrl} alt="" />}
+                    <div><small>{action.kind === 'spell' ? 'Заклинание' : presentation?.sourceLabel ?? 'Действие'}</small><h3>{action.name}</h3></div>
+                  </div>
+                  {presentation?.description && <p>{presentation.description}</p>}
+                  <dl><div><dt>Цена</dt><dd>{actionCost(action) || 'Свободно'}</dd></div><div><dt>Дальность</dt><dd>{rangeLabel(action)}</dd></div></dl>
+                  {!availability.enabled && <strong>{availability.reason}</strong>}
+                </article>
+              )}
+            >
+              <button type="button" className={`combat-action${selectedActionId === action.id ? ' is-selected' : ''}`} disabled={disabled || !availability.enabled} onClick={() => onAction(action)} title={title} data-action-id={action.id}>
+                <span className="combat-action__icon">
+                  {presentation?.imageUrl
+                    ? <img src={presentation.imageUrl} alt="" />
+                    : action.mechanics.primitive ? <Swords /> : action.kind === 'spell' ? '✦' : action.name.slice(0, 1)}
+                </span>
+                <span>{actionLabel(action)}</span><small>{availability.enabled ? actionCost(action) || 'свободно' : 'Нет ресурса'}</small>
+              </button>
+            </HoverCard>
           );
         })}
         <button type="button" className="combat-action combat-action--more" onClick={onSheet}><MoreHorizontal /><span>Лист</span></button>

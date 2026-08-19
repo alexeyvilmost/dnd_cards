@@ -26,6 +26,21 @@ function inside(position: GridPosition): boolean {
     && position.x < TACTICAL_WIDTH && position.y < TACTICAL_HEIGHT;
 }
 
+export function areaPositionsForAction(
+  action: { mechanics: Record<string, unknown>; targeting?: { rangeFt: number } },
+  selectedPosition: GridPosition,
+): GridPosition[] {
+  const rawTargeting = action.mechanics.targeting as Record<string, unknown> | undefined;
+  if (rawTargeting?.shape !== 'area') return [];
+  const rawArea = rawTargeting.area as Record<string, unknown> | undefined;
+  const sizeFt = Number(rawArea?.size_ft ?? action.targeting?.rangeFt ?? TACTICAL_CELL_FT);
+  const radius = Math.max(TACTICAL_CELL_FT, Math.floor(sizeFt / 2));
+  return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
+    x: index % TACTICAL_WIDTH,
+    y: Math.floor(index / TACTICAL_WIDTH),
+  })).filter((position) => gridDistanceFt(position, selectedPosition) <= radius);
+}
+
 const DIRECTIONS: GridPosition[] = [
   { x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 },
   { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 },
@@ -82,14 +97,12 @@ export function areaActorIds(input: {
   selectedPosition: GridPosition;
   action: { mechanics: Record<string, unknown>; targeting?: { rangeFt: number } };
 }): string[] {
-  const rawTargeting = input.action.mechanics.targeting as Record<string, unknown> | undefined;
-  const rawArea = rawTargeting?.area as Record<string, unknown> | undefined;
-  const sizeFt = Number(rawArea?.size_ft ?? input.action.targeting?.rangeFt ?? 5);
-  const radius = Math.max(TACTICAL_CELL_FT, Math.floor(sizeFt / 2));
+  const area = new Set(areaPositionsForAction(input.action, input.selectedPosition)
+    .map((position) => `${position.x}:${position.y}`));
   return Object.values(input.state.tokens).flatMap((token) => {
     if (token.actorId === input.sourceActorId) return [];
     const actor = input.state.world.actors[token.actorId];
     if (!actor || actor.runtime.hp.current <= 0) return [];
-    return gridDistanceFt(token.position, input.selectedPosition) <= radius ? [token.actorId] : [];
+    return area.has(`${token.position.x}:${token.position.y}`) ? [token.actorId] : [];
   });
 }

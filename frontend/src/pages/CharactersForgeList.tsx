@@ -90,6 +90,9 @@ const CharactersForgeList = () => {
           {chars.map((c) => (
             <div key={c.id} className="entity-card forge-char-card">
               <Link to={`/characters-v3/${c.id}`} className="forge-char-card-link">
+                <span className="forge-char-token" aria-hidden>
+                  {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.name || '?').slice(0, 1)}
+                </span>
                 <span className="ec-name">{c.name || 'Без имени'}</span>
                 <span className="ec-sub">{subtitle(c)}</span>
                 <span className="ec-sub">{characterMetadataLabel(c)}</span>

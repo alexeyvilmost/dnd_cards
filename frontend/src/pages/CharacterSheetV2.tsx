@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { Fragment, useRef, useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
 import { effectAbilityPresentation } from '../character/abilityDisplay';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -29,6 +29,7 @@ import SheetHpDialog from '../components/SheetHpDialog';
 import SheetRestButtons from '../components/SheetRestButtons';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import type { EncounterApply } from '../battle/encountersApi';
+import { charactersV3Api } from '../character/api';
 import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -86,21 +87,43 @@ interface Props {
   onEvents: (events: EngineEvent[]) => void;
   readOnly: boolean;
   encounterApply?: EncounterApply;
+  combatActive?: boolean;
+  onRollInitiative?: () => void;
+  rollingInitiative?: boolean;
 }
 
 const CharacterSheetV2 = ({
   character, assembled, ruleState, effectiveSenses, draft, sheetCtx, runtimeState, passives, equipCards,
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown,
   lineageName, inPlayChoices, onUpdated, onEvents, readOnly, encounterApply,
+  combatActive, onRollInitiative, rollingInitiative,
 }: Props) => {
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
-  const [targetAc, setTargetAc] = useState<number | null>(null);
-  const [targetSaveMod, setTargetSaveMod] = useState<number | null>(null);
+  const [targetAc, setTargetAc] = useState<number | null>(10);
+  const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
   const [targetCharacterId, setTargetCharacterId] = useState<string | null>(null);
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const uploadAvatar = async (file?: File) => {
+    if (!file || readOnly) return;
+    setAvatarBusy(true);
+    setAvatarError(null);
+    try {
+      const avatarUrl = await charactersV3Api.uploadAvatar(character.id, file);
+      onUpdated({ ...character, avatar_url: avatarUrl });
+    } catch (reason) {
+      setAvatarError(reason instanceof Error ? reason.message : 'Не удалось загрузить токен');
+    } finally {
+      setAvatarBusy(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   // Клик по спасброску/навыку — бросок к20 в журнал (учёт активных эффектов).
   const rollCheck = async (
@@ -184,11 +207,12 @@ const CharacterSheetV2 = ({
     <div className="csheet">
       <div className="csheet-top">
         <div className="cs-ident">
-          <div className="cs-portrait">
+          <button type="button" className="cs-portrait cs-portrait-btn" disabled={readOnly || avatarBusy} onClick={() => avatarInputRef.current?.click()} title={readOnly ? 'Лист открыт только для чтения' : 'Загрузить токен персонажа'}>
             {character.avatar_url
               ? <img src={character.avatar_url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
               : <span>{(character.name || '?').slice(0, 1)}</span>}
-          </div>
+          </button>
+          <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
           <div className="cs-ident-txt">
             <div className="cs-name">{character.name || 'Без имени'}</div>
             <div className="cs-sub">{subLine || '—'}</div>
@@ -205,6 +229,7 @@ const CharacterSheetV2 = ({
             compact
             onLongRestComplete={() => setLongRestOpen(true)}
             encounterApply={encounterApply}
+            disabledReason={combatActive ? 'Персонаж находится в бою: управляйте ходом и отдыхом на поле' : undefined}
           />
         )}
 
@@ -232,6 +257,7 @@ const CharacterSheetV2 = ({
           {spellcasting && pill('Атака закл.', fmtMod(spellcasting.attack), spellAttackBd)}
         </div>
       </div>
+      {avatarError && <p className="issues cs-avatar-error" role="alert">{avatarError}</p>}
 
       <div className="csheet-cols">
         {/* ЛЕВАЯ: характеристики, навыки, чувства */}
@@ -305,8 +331,13 @@ const CharacterSheetV2 = ({
                   expert ? `эксп ${fmtMod(pb)}` : null,
                 ].filter(Boolean).join(' + ');
                 return (
+                  <Fragment key={skill.id}>
+                  {!readOnly && onRollInitiative && ability === 'dex' && prevAbility !== 'dex' && (
+                    <li className="cs-rollable cs-initiative-skill cs-skill-sep" title="Бросить инициативу (Ловкость)" onClick={rollingInitiative ? undefined : onRollInitiative}>
+                      <i className="cs-dot" /><span className="cs-skill-nm">Инициатива</span><span className="cs-skill-ab">ЛОВ</span><span className="cs-skill-v">{rollingInitiative ? '…' : fmtMod(initiative)}</span>
+                    </li>
+                  )}
                   <li
-                    key={skill.id}
                     className={`${proficient ? 'on' : ''} cs-rollable${abilitySep ? ' cs-skill-sep' : ''}`}
                     title={`${fmtMod(bonus)} = ${tip} · клик — бросок`}
                     onClick={readOnly ? undefined : () => rollCheck(
@@ -323,6 +354,7 @@ const CharacterSheetV2 = ({
                       <ValueBreakdownTip breakdown={skillBd} label={skill.label}><span className="cs-skill-v">{fmtMod(bonus)}</span></ValueBreakdownTip>
                     ) : <span className="cs-skill-v">{fmtMod(bonus)}</span>}
                   </li>
+                  </Fragment>
                 );
               })}
             </ul>

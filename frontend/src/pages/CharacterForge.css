@@ -1083,6 +1083,8 @@
 /* Карточка персонажа в списке */
 .forge-char-card { position: relative; }
 .forge-char-card-link { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+.forge-char-token { width: 64px; height: 64px; margin-bottom: 5px; display: grid; place-items: center; overflow: hidden; border: 2px solid var(--forge-gold-dim); border-radius: 50%; background: var(--forge-panel-2); color: var(--forge-gold); font: 700 27px Georgia,serif; }
+.forge-char-token img { width: 100%; height: 100%; object-fit: cover; }
 .forge-char-card-delete {
   position: absolute; top: 8px; right: 8px; width: 24px; height: 24px;
   display: inline-flex; align-items: center; justify-content: center;

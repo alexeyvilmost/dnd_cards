@@ -45,6 +45,7 @@ interface Props {
   onEvents?: (events: EngineEvent[]) => void;
   onLongRestComplete?: () => void;
   encounterApply?: EncounterApply;
+  combatLocked?: boolean;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -201,7 +202,7 @@ function ResTile({ resKey, option, current, max, maximum }: ResTileProps) {
   );
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onLongRestComplete, encounterApply }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onLongRestComplete, encounterApply, combatLocked }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
@@ -344,6 +345,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         onEvents={onEvents}
         onLongRestComplete={onLongRestComplete}
         encounterApply={encounterApply}
+        disabledReason={combatLocked ? 'Управляйте ходами и отдыхом из активного боя' : undefined}
       />
 
       {runtime.activeEffects.length > 0 && (

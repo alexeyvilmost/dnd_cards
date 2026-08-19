@@ -34,6 +34,7 @@ interface Props {
   /** Вызывается после успешного долгого отдыха (диалог действий отдыха). */
   onLongRestComplete?: () => void;
   encounterApply?: EncounterApply;
+  disabledReason?: string;
 }
 
 /** Pure adapter used by the real sheet: action mechanics remain the authority. */
@@ -53,11 +54,19 @@ export default function SheetRestButtons({
   compact,
   onLongRestComplete,
   encounterApply,
+  disabledReason,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
   const syncAttempted = useRef(false);
   const diceDialog = useDiceDialog();
+  const soloCombat = character.turn_state?.solo_combat_v1;
+  const activeSoloCombat = Boolean(soloCombat && typeof soloCombat === 'object'
+    && !Array.isArray(soloCombat)
+    && (soloCombat as Record<string, unknown>).outcome === 'active');
+  const lockReason = disabledReason ?? (character.current_encounter_id || activeSoloCombat
+    ? 'Персонаж находится в бою: управляйте ходом и отдыхом на поле'
+    : undefined);
 
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
   const actionUseRestPolicies = useMemo(
@@ -227,33 +236,33 @@ export default function SheetRestButtons({
   return (
     <>
     <div className={cls}>
-      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy} onClick={handleStartTurn}>
+      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} title={lockReason} onClick={handleStartTurn}>
         <Swords size={14} /> Новый ход
       </button>
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy}
+        disabled={busy || Boolean(lockReason)}
         onClick={handleEndTurn}
-        title="Конец хода: спасброски в конце хода, истечение эффектов, тикающие эффекты"
+        title={lockReason ?? 'Конец хода: спасброски в конце хода, истечение эффектов, тикающие эффекты'}
       >
         <Hourglass size={14} /> Конец хода
       </button>
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || unconscious}
+        disabled={busy || unconscious || Boolean(lockReason)}
         onClick={handleShortRest}
-        title={restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
+        title={lockReason ?? restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
       >
         <Sun size={14} /> Короткий отдых
       </button>
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || unconscious}
+        disabled={busy || unconscious || Boolean(lockReason)}
         onClick={handleLongRest}
-        title={restTitle('Долгий отдых')}
+        title={lockReason ?? restTitle('Долгий отдых')}
       >
         <Moon size={14} /> Долгий отдых
       </button>

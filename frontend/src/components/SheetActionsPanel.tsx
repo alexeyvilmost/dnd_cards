@@ -469,14 +469,14 @@ export default function SheetActionsPanel({
   const requestCastChoice = (baseLevel: number, options: number[], freeuse?: { current: number; max: number; level: number }) =>
     new Promise<CastChoice | null>((resolve) => setSlotPick({ baseLevel, options, freeuse, resolve }));
   const resolveCast = (v: CastChoice | null) => { slotPick?.resolve(v); setSlotPick(null); };
-  const [localTargetAc, setLocalTargetAc] = useState<number | null>(null);
+  const [localTargetAc, setLocalTargetAc] = useState<number | null>(10);
   // E4: если родитель управляет «КЗ цели» — используем его; иначе локальный стейт.
   const targetAc = targetAcProp ?? localTargetAc;
   const setTargetAc = (n: number | null) => {
     if (onTargetAcChange) onTargetAcChange(n);
     else setLocalTargetAc(n);
   };
-  const [localTargetSaveMod, setLocalTargetSaveMod] = useState<number | null>(null);
+  const [localTargetSaveMod, setLocalTargetSaveMod] = useState<number | null>(0);
   // E5: единый модификатор спасброска цели (раньше saveMods жёстко = 0).
   const targetSaveMod = targetSaveModProp ?? localTargetSaveMod;
   const setTargetSaveMod = (n: number | null) => {

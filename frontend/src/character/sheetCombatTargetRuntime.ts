@@ -65,6 +65,13 @@ export async function loadSheetCombatParticipant(input: {
   };
   return {
     character: input.character,
+    actionPresentation: Object.fromEntries(actions.map((action) => [action.id, {
+      imageUrl: action.imageUrl,
+      description: action.description,
+      sourceLabel: action.sourceLabel,
+      entityType: action.group === 'spell' ? 'spell' : 'action',
+      entityId: action.spellRef?.id ?? action.actionRef?.id ?? action.effectRef?.id,
+    }])),
     canonical: buildSheetCanonicalRuntime({
       character: input.character,
       assembled,
