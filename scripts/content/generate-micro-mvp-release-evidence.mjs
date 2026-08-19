@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import {
@@ -88,8 +88,8 @@ export function releaseInvocation(command, args, {
     return { command, args };
   }
   const npmCli = npmExecPath && /npm-cli\.(?:c?js|mjs)$/i.test(npmExecPath)
-    ? resolve(npmExecPath)
-    : resolve(dirname(nodeExecutable), 'node_modules/npm/bin/npm-cli.js');
+    ? win32.resolve(npmExecPath)
+    : win32.resolve(win32.dirname(nodeExecutable), 'node_modules/npm/bin/npm-cli.js');
   return { command: nodeExecutable, args: [npmCli, ...args] };
 }
 
