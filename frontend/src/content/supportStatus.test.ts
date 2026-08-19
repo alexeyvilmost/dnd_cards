@@ -14,6 +14,15 @@ import {
 } from './supportStatus';
 
 describe('content support status', () => {
+  it('fails closed for the superseded basic-action certificate', () => {
+    expect(supportStatusOf({
+      support: {
+        status: 'verified_mechanical',
+        certification_version: 'micro-mvp-basic-actions-v1',
+      },
+    })).toBe('untested');
+  });
+
   it('по умолчанию показывает три проверенных статуса', () => {
     expect(isDefaultVisibleSupportStatus('verified_mechanical')).toBe(true);
     expect(isDefaultVisibleSupportStatus('verified_partial')).toBe(true);
@@ -136,7 +145,7 @@ describe('content support status', () => {
     const hash = `sha256:${'b'.repeat(64)}`;
     const certificate: EntitySupportCertification = {
       status: 'verified_mechanical',
-      certification_version: 'micro-mvp-basic-actions-v1',
+      certification_version: 'micro-mvp-basic-actions-v2',
       content_hash: hash,
       dependency_hash: hash,
       certified_at: '2026-08-19T07:00:00Z',
@@ -145,7 +154,7 @@ describe('content support status', () => {
       evidence_completed_at: '2026-08-19T06:59:00Z',
       test_coverage: {
         schema_version: 1,
-        scope: 'micro-mvp-basic-actions-v1',
+        scope: 'micro-mvp-basic-actions-v2',
         required: 3,
         passed: 3,
         percent: 100,

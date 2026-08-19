@@ -9,9 +9,9 @@ import {
   sha256Canonical,
 } from './certification-hash.mjs';
 
-export const BASIC_ACTIONS_CERTIFICATION_VERSION = 'micro-mvp-basic-actions-v1';
+export const BASIC_ACTIONS_CERTIFICATION_VERSION = 'micro-mvp-basic-actions-v2';
 export const BASIC_ACTIONS_EVIDENCE_ID = '9a983f0b-f3df-4aaf-a124-e8b78eec06a1';
-export const BASIC_ACTIONS_SCOPE = 'micro-mvp-basic-actions-v1';
+export const BASIC_ACTIONS_SCOPE = 'micro-mvp-basic-actions-v2';
 
 export const BASIC_ACTION_CERTIFICATION_CONTRACT = Object.freeze([
   {
@@ -19,7 +19,8 @@ export const BASIC_ACTION_CERTIFICATION_CONTRACT = Object.freeze([
     status: 'verified_mechanical',
     mechanicsLocked: true,
     evidence: [
-      'frontend/e2e/sheet-combat.spec.ts::ranged weapon attacks the scene dummy from a real sheet without a second character',
+      'frontend/e2e/sheet-combat.spec.ts::Magic Initiate Fighter attacks the scene dummy from a real sheet without catalog poisoning',
+      'frontend/e2e-live/real-backend-canary.spec.ts::public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Thunderwave',
       'frontend/src/character/sheetCombatWeaponActions.integration.test.ts',
       'frontend/src/character/sheetCombatWeaponCertification.test.ts',
     ],
@@ -53,16 +54,18 @@ export const BASIC_ACTION_CERTIFICATION_CONTRACT = Object.freeze([
       'Трата действия и модификатор доступного перемещения проверены; сама геометрия перемещения пока ведётся игроком на сцене.',
     ],
     evidence: [
-      'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage and Dodge execute from their real basic-action rows',
+      'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage persistence and Dodge execute from their real basic-action rows',
     ],
   },
   {
     cardNumber: 'action_basic_disengage',
-    status: 'verified_narrative',
+    status: 'verified_partial',
     mechanicsLocked: false,
-    note: 'Проверены доступность и трата действия; атаки по возможности ещё не автоматизированы.',
+    limitations: [
+      'Лист сохраняет эффект запрета провоцируемой атаки и снимает его в начале следующего хода; сама система атак по возможности ещё не подключена к этому модификатору.',
+    ],
     evidence: [
-      'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage and Dodge execute from their real basic-action rows',
+      'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage persistence and Dodge execute from their real basic-action rows',
     ],
   },
   {
@@ -73,7 +76,7 @@ export const BASIC_ACTION_CERTIFICATION_CONTRACT = Object.freeze([
       'Преимущество спасбросков Ловкости и помеха атакам проверены; доска пока не завершает эффект автоматически при Скорости 0.',
     ],
     evidence: [
-      'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage and Dodge execute from their real basic-action rows',
+      'frontend/e2e/sheet-combat.spec.ts::Dash, Disengage persistence and Dodge execute from their real basic-action rows',
       'frontend/src/mvp/runtime.mvp.test.ts::Уклонение вешает активный эффект; атаки по себе получают помеху',
       'frontend/src/engine/weapon.test.ts::Уклонение (R2 / KB-025): помеха проецируется на атакующего',
     ],

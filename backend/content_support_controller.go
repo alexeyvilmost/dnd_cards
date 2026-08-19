@@ -78,7 +78,7 @@ type ContentTestCoverage struct {
 
 const legacyMicroMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v3"
 const microMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v4"
-const basicActionsEvidenceCertificationVersion = "micro-mvp-basic-actions-v1"
+const basicActionsEvidenceCertificationVersion = "micro-mvp-basic-actions-v2"
 
 func isMicroMVPEvidenceCertificationVersion(value string) bool {
 	return value == legacyMicroMVPEvidenceCertificationVersion ||

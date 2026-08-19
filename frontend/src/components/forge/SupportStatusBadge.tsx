@@ -21,7 +21,9 @@ const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps
   const locked = isMechanicsLocked(entity);
   const title = [
     presentation.label,
-    coverage ? `Тесты: ${coverage.passed}/${coverage.required} (${coverage.percent}%), scope ${coverage.scope}` : 'Точное покрытие не опубликовано',
+    coverage
+      ? `Сценарии заявленного scope: ${coverage.passed}/${coverage.required}; scope ${coverage.scope}`
+      : 'Точное покрытие не опубликовано',
     locked ? 'Механика закреплена' : null,
     entity?.support?.note,
     ...(entity?.support?.limitations ?? []),
@@ -34,8 +36,8 @@ const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps
       aria-label={presentation.label}
     >
       <span className="support-status-badge__dot" aria-hidden />
-      <span>{coverage ? `${coverage.percent}%` : (compact ? '—' : presentation.label)}</span>
-      {!compact && coverage && <span> · {presentation.label}{locked ? ' · закреплено' : ''}</span>}
+      <span>{coverage ? `${coverage.passed}/${coverage.required}` : (compact ? '—' : presentation.label)}</span>
+      {!compact && coverage && <span> сценариев · {presentation.label}{locked ? ' · закреплено' : ''}</span>}
     </span>
   );
 };

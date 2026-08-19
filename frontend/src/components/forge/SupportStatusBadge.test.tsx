@@ -40,9 +40,11 @@ describe('SupportStatusBadge', () => {
 
   it('shows exact coverage and the immutable-mechanics marker outside player mode', () => {
     act(() => root.render(<SupportStatusBadge entity={entity} />));
-    expect(container.textContent).toContain('100%');
+    expect(container.textContent).toContain('12/12 сценариев');
+    expect(container.textContent).not.toContain('100%');
     expect(container.textContent).toContain('закреплено');
-    expect(container.querySelector('[title]')?.getAttribute('title')).toContain('Тесты: 12/12');
+    expect(container.querySelector('[title]')?.getAttribute('title'))
+      .toContain('Сценарии заявленного scope: 12/12');
   });
 
   it('renders no certification information in player mode', () => {

@@ -1745,8 +1745,16 @@
           "resolution": "auto",
           "result": [
             {
-              "description": "Ваше перемещение не провоцирует атаки до начала следующего хода.",
-              "kind": "narrative"
+              "applies_to": {
+                "interaction": "opportunity_attack",
+                "trigger": "self_movement"
+              },
+              "duration": {
+                "type": "until_start_of_next_turn"
+              },
+              "kind": "modifier",
+              "op": "deny",
+              "stack_id": "basic-action:disengage"
             }
           ]
         }

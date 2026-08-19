@@ -96,6 +96,13 @@ export async function buildRulesLabFixtureArtifact(): Promise<JsonObject> {
     provider.roots.find((root) => root.stableKey === RULES_LAB_WIZARD_ROOT_KEY),
     `compiled Wizard root ${RULES_LAB_WIZARD_ROOT_KEY}`,
   );
+  const magicInitiateFighterSourceRoot = required(
+    provider.roots.find((root) => (
+      root.matrixCase.klass.card_number === 'CLASS-warrior'
+      && root.matrixCase.originFeat.card_number === 'FEAT-0009'
+    )),
+    'compiled Fighter / Magic Initiate root',
+  );
   const warlockRoot = required(
     provider.roots.find((root) => root.matrixCase.klass.card_number === 'CLASS-warlock'),
     'compiled Warlock root',
@@ -104,7 +111,13 @@ export async function buildRulesLabFixtureArtifact(): Promise<JsonObject> {
     catalogs.spells.find((spell) => spell.card_number === cardNumber)?.id,
     `snapshot spell ${cardNumber}`,
   );
-  const [bladeRoot, chainRoot, tomeRoot, rawFamiliarWizardRoot] = await compileMicroMvpL1ChoiceVariants([
+  const [
+    bladeRoot,
+    chainRoot,
+    tomeRoot,
+    rawFamiliarWizardRoot,
+    magicInitiateFighterRoot,
+  ] = await compileMicroMvpL1ChoiceVariants([
     {
       stableKey: warlockRoot.stableKey,
       overrides: { warlock_invocation_l1: ['EFF-pact-blade'] },
@@ -133,6 +146,13 @@ export async function buildRulesLabFixtureArtifact(): Promise<JsonObject> {
           RULES_LAB_SHIELD_CARD_NUMBER,
           'SPELL-0190',
         ].map(spellEntityId),
+      },
+    },
+    {
+      stableKey: magicInitiateFighterSourceRoot.stableKey,
+      overrides: {
+        magic_initiate_wizard_level_1: [spellEntityId(RULES_LAB_WIZARD_SPELL_CARD_NUMBER)],
+        magic_initiate_spellcasting_ability: ['int'],
       },
     },
   ]);
@@ -198,6 +218,15 @@ export async function buildRulesLabFixtureArtifact(): Promise<JsonObject> {
         draft: fighterRoot.draft,
         actor: fighterRoot.actor,
         actions: fighterRoot.rulesActions,
+      },
+      magicInitiateFighter: {
+        stableKey: magicInitiateFighterRoot.stableKey,
+        fixtureId: magicInitiateFighterRoot.fixtureId,
+        // Exact cross-feature build that used to make a Longbow session fail
+        // while Thunderwave was granted by Magic Initiate.
+        draft: magicInitiateFighterRoot.draft,
+        actor: magicInitiateFighterRoot.actor,
+        actions: magicInitiateFighterRoot.rulesActions,
       },
       wizard: {
         stableKey: wizardRoot.stableKey,

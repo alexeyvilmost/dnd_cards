@@ -74,6 +74,24 @@ describe('checked-in Rules Lab compiled artifact', () => {
       actor: wizardRoot!.actor,
       actions: wizardRoot!.rulesActions,
     });
+    expect(artifact.roots.magicInitiateFighter).toMatchObject({
+      stableKey: 'class.fighter|species.human|background.soldier|feat.magic-initiate',
+      draft: {
+        featIds: ['51832580-68f5-4e96-8afe-93e4af045283'],
+        spellIds: expect.arrayContaining(['34518f38-b737-4a91-88ac-d5858d2d04a0']),
+      },
+      actor: {
+        spellcastingAccess: {
+          grants: expect.arrayContaining([
+            expect.objectContaining({
+              actionId: '34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283',
+              sourceId: 'FEAT-0009',
+              spellcastingAbility: 'int',
+            }),
+          ]),
+        },
+      },
+    });
 
     expect(artifact.weaponCard).toEqual(weaponCard);
     expect(artifact.execution.fighterWeaponCardId).toBe(weaponCard!.id);

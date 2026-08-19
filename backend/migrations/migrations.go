@@ -622,6 +622,13 @@ func GetAllMigrations() []Migration {
 			// Повторное soft-delete снова создаст висячие ссылки, поэтому откат намеренно пуст.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "099_apply_disengage_runtime_effect",
+			Description: "Выразить Отход общим deny-модификатором до начала следующего хода",
+			Up:          applyDisengageRuntimeEffect,
+			// Возврат к narrative-only снова сделал бы действие механически пустым.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

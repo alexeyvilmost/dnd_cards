@@ -158,14 +158,22 @@ CharacterV3-записи. Он намеренно не входит в изол�
 
 ```bash
 LIVE_BROWSER_CANARY=1 \
-LIVE_BROWSER_BASE_URL=https://bagofholding.up.railway.app \
-LIVE_BROWSER_API_URL=https://backend-production-41c3.up.railway.app \
+LIVE_BROWSER_BASE_URL=https://bagofholding.ru \
+LIVE_BROWSER_API_URL=https://bagofholding.ru \
+EXPECTED_DEPLOYED_COMMIT=<exact-40-hex-commit> \
 LIVE_BROWSER_USER_A=<configured-user-a> \
 LIVE_BROWSER_PASSWORD_A=<from-secret-store> \
 LIVE_BROWSER_USER_B=<configured-user-b> \
 LIVE_BROWSER_PASSWORD_B=<from-secret-store> \
 npm run test:browser:live
 ```
+
+Критический сертификат одного реального листа (Кузня → Воин с «Посвящённым
+в магию» → Длинный лук → Пугало → новый ход → «Волна грома») требует только
+аккаунт A и запускается отдельно через `npm run test:browser:live:sheet`.
+Перед действиями он сравнивает exact commit из `/api/health` и
+`/build-info.json` с `EXPECTED_DEPLOYED_COMMIT`, поэтому старый публичный релиз
+не может выдать новый сертификат.
 
 Production-target жёстко закреплён за этими двумя origin; альтернативой может
 быть только явный `localhost`/`127.0.0.1` origin без path/query/fragment/userinfo.

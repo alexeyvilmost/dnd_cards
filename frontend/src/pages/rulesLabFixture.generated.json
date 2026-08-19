@@ -735,6 +735,1116 @@
         }
       ]
     },
+    "magicInitiateFighter": {
+      "stableKey": "class.fighter|species.human|background.soldier|feat.magic-initiate",
+      "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
+      "draft": {
+        "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0009",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "51832580-68f5-4e96-8afe-93e4af045283"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "50626b5a-33c5-46e0-af0e-50599f4306a0",
+          "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7"
+        ],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7:human_skill": [
+            "arcana"
+          ],
+          "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:human_feat": [
+            "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "bca8edf6-27ce-4399-8e34-bdadd59674b3"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "longsword",
+            "longbow",
+            "greatsword"
+          ],
+          "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_spellcasting_ability": [
+            "int"
+          ],
+          "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_wizard_cantrips": [
+            "50626b5a-33c5-46e0-af0e-50599f4306a0",
+            "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7"
+          ],
+          "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_wizard_level_1": [
+            "34518f38-b737-4a91-88ac-d5858d2d04a0"
+          ]
+        },
+        "swapFeat": true
+      },
+      "actor": {
+        "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
+        "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0009",
+        "kind": "playerCharacter",
+        "controllerId": "micro-mvp-overlay-controller",
+        "ac": 12,
+        "capabilities": {
+          "actionIds": [
+            "1cd19d26-3011-4859-9430-c8787fe99ba7@2705eb12-1556-40c8-bdae-671e8f5c67eb",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "50626b5a-33c5-46e0-af0e-50599f4306a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7@51832580-68f5-4e96-8afe-93e4af045283"
+          ]
+        },
+        "character": {
+          "abilityScores": {
+            "str": 17,
+            "dex": 14,
+            "con": 14,
+            "int": 8,
+            "wis": 12,
+            "cha": 10
+          },
+          "abilityMods": {
+            "str": 3,
+            "dex": 2,
+            "con": 2,
+            "int": -1,
+            "wis": 1,
+            "cha": 0
+          },
+          "abilitySources": {
+            "str": [
+              {
+                "value": 15,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 2,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "dex": [
+              {
+                "value": 13,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              },
+              {
+                "value": 1,
+                "source": "Предыстория: Солдат",
+                "reason": "бонус распределения характеристик"
+              }
+            ],
+            "con": [
+              {
+                "value": 14,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "int": [
+              {
+                "value": 8,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "wis": [
+              {
+                "value": 12,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ],
+            "cha": [
+              {
+                "value": 10,
+                "source": "Point-buy",
+                "reason": "база до бонуса предыстории"
+              }
+            ]
+          },
+          "abilityMethods": {
+            "str": [],
+            "dex": [],
+            "con": [],
+            "int": [],
+            "wis": [],
+            "cha": []
+          },
+          "profBonus": 2,
+          "level": 1,
+          "classLevels": {
+            "warrior": 1
+          },
+          "variables": {},
+          "characterSpeed": 30,
+          "baseSpeed": 30,
+          "baseSize": 2,
+          "weaponMasteries": [
+            "longsword",
+            "longbow",
+            "greatsword"
+          ],
+          "hitDie": "d10",
+          "equippedCards": [],
+          "knownCards": [],
+          "saveProficiencies": [
+            "str",
+            "con"
+          ],
+          "skillProficiencies": [
+            "acrobatics",
+            "animal_handling",
+            "athletics",
+            "intimidation",
+            "arcana"
+          ],
+          "skillExpertise": [],
+          "weaponProficiencies": [
+            "simple",
+            "martial"
+          ],
+          "resourceRecharge": {
+            "uses_ACT-second-wind": "short_rest",
+            "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0": "long_rest"
+          },
+          "resourceRecovery": {
+            "uses_ACT-second-wind": {
+              "short_rest": {
+                "mode": "fixed",
+                "amount": 1
+              },
+              "long_rest": {
+                "mode": "full"
+              }
+            }
+          }
+        },
+        "runtime": {
+          "hp": {
+            "current": 14,
+            "max": 14,
+            "temp": 0
+          },
+          "resources": {
+            "action": 1,
+            "bonus_action": 1,
+            "reaction": 1,
+            "hit_dice_d10": 1,
+            "heroic_inspiration": 1,
+            "uses_ACT-second-wind": 2,
+            "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0": 1
+          },
+          "maxResources": {
+            "action": 1,
+            "bonus_action": 1,
+            "reaction": 1,
+            "hit_dice_d10": 1,
+            "heroic_inspiration": 1,
+            "uses_ACT-second-wind": 2,
+            "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0": 1
+          },
+          "equipment": {},
+          "inventory": [],
+          "activeEffects": [],
+          "firedThisTurn": [],
+          "firedThisRest": []
+        },
+        "passives": [
+          {
+            "id": "RE-human-1",
+            "activation": {
+              "mode": "triggered",
+              "trigger": {
+                "event": "long_rest",
+                "timing": "after"
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "amount": 1,
+                    "id": "heroic_inspiration",
+                    "kind": "resource",
+                    "op": "grant"
+                  }
+                ]
+              }
+            ],
+            "name": "Находчивый"
+          },
+          {
+            "id": "RE-human-2",
+            "activation": {
+              "mode": "triggered",
+              "trigger": {
+                "event": "on_acquire",
+                "timing": "before"
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "count": 1,
+                    "grant": {
+                      "kind": "grant_proficiency",
+                      "prof": "skill"
+                    },
+                    "id": "human_skill",
+                    "kind": "choice",
+                    "options": {
+                      "filter": "all",
+                      "source": "skill"
+                    },
+                    "prompt": "Выберите навык",
+                    "resolution": "on_acquire"
+                  }
+                ]
+              }
+            ],
+            "name": "Умелый"
+          },
+          {
+            "id": "RE-human-3",
+            "activation": {
+              "mode": "triggered",
+              "trigger": {
+                "event": "on_acquire",
+                "timing": "before"
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "count": 1,
+                    "grant": {
+                      "kind": "grant_feat"
+                    },
+                    "id": "human_feat",
+                    "kind": "choice",
+                    "options": {
+                      "filter": "origin_feats",
+                      "source": "feat"
+                    },
+                    "prompt": "Выберите черту Происхождения",
+                    "recommended": [
+                      "skilled"
+                    ],
+                    "resolution": "on_acquire"
+                  }
+                ]
+              }
+            ],
+            "name": "Гибкий"
+          },
+          {
+            "id": "EFF-fighting-style",
+            "activation": {
+              "mode": "passive"
+            },
+            "effects": [
+              {
+                "count": 1,
+                "grant": {
+                  "kind": "grant_feat"
+                },
+                "id": "fighter_fighting_style",
+                "kind": "choice",
+                "options": {
+                  "filter": "fighting_style",
+                  "source": "feat"
+                },
+                "prompt": "Выберите боевой стиль",
+                "resolution": "on_acquire"
+              }
+            ],
+            "name": "Боевой стиль"
+          },
+          {
+            "id": "EFF-weapon-mastery-3",
+            "activation": {
+              "mode": "passive"
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "context": "in_play",
+                    "count": 3,
+                    "grant": {
+                      "kind": "weapon_mastery"
+                    },
+                    "id": "weapon-mastery",
+                    "kind": "choice",
+                    "options": {
+                      "source": "weapon"
+                    },
+                    "prompt": "Искусность: выберите 3 вида оружия"
+                  }
+                ]
+              }
+            ],
+            "name": "Искусное владение оружием"
+          },
+          {
+            "id": "magic_initiate_wizard",
+            "activation": {
+              "mode": "passive"
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "description": "Подготовка заклинаний из книги заклинаний. INT — характеристика заклинаний.",
+                    "kind": "narrative"
+                  },
+                  {
+                    "kind": "choice",
+                    "id": "magic_initiate_spellcasting_ability",
+                    "prompt": "Выберите характеристику заклинаний черты «Посвящённый в магию»",
+                    "count": 1,
+                    "options": {
+                      "source": "ability",
+                      "items": [
+                        {
+                          "id": "int",
+                          "name": "INT"
+                        },
+                        {
+                          "id": "wis",
+                          "name": "WIS"
+                        },
+                        {
+                          "id": "cha",
+                          "name": "CHA"
+                        }
+                      ]
+                    },
+                    "grant": {
+                      "kind": "spellcasting_ability"
+                    }
+                  }
+                ]
+              },
+              {
+                "count": 2,
+                "grant": {
+                  "kind": "grant_spell",
+                  "label": "cantrip"
+                },
+                "id": "magic_initiate_wizard_cantrips",
+                "kind": "choice",
+                "options": {
+                  "filter": {
+                    "classes": [
+                      "волшебник"
+                    ],
+                    "levels": [
+                      0
+                    ]
+                  },
+                  "source": "spell"
+                },
+                "prompt": "Выберите 2 заговора волшебника",
+                "resolution": "on_acquire"
+              },
+              {
+                "count": 1,
+                "grant": {
+                  "freeuse": {
+                    "count": 1,
+                    "recharge": "long_rest"
+                  },
+                  "kind": "grant_spell",
+                  "label": "always_prepared"
+                },
+                "id": "magic_initiate_wizard_level_1",
+                "kind": "choice",
+                "options": {
+                  "filter": {
+                    "classes": [
+                      "волшебник"
+                    ],
+                    "levels": [
+                      1
+                    ]
+                  },
+                  "source": "spell"
+                },
+                "prompt": "Выберите 1 всегда подготовленное заклинание 1 уровня",
+                "resolution": "on_acquire"
+              }
+            ],
+            "name": "Посвященный в магию: Волшебник"
+          },
+          {
+            "id": "EFF-tough",
+            "activation": {
+              "mode": "passive"
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "applies_to": {
+                      "roll": "max_hp"
+                    },
+                    "kind": "modifier",
+                    "op": "add",
+                    "source": "Крепкий",
+                    "value": "2 * self_level"
+                  },
+                  {
+                    "description": "Максимум хитов увеличивается на 2 за каждый уровень персонажа.",
+                    "kind": "narrative"
+                  }
+                ]
+              }
+            ],
+            "name": "Крепкий"
+          },
+          {
+            "id": "fs_archery",
+            "fighting_style": {
+              "id": "archery",
+              "mode": "passive_modifier"
+            },
+            "activation": {
+              "mode": "passive"
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "kind": "modifier",
+                    "applies_to": {
+                      "roll": "attack",
+                      "filter": {
+                        "attackKind": "weapon",
+                        "weaponCategory": "ranged"
+                      }
+                    },
+                    "op": "add",
+                    "value": "+2",
+                    "source": "Fighting Style: Archery"
+                  }
+                ]
+              }
+            ],
+            "name": "Fighting Style: Archery",
+            "sourceEntityIds": [
+              "bca8edf6-27ce-4399-8e34-bdadd59674b3",
+              "FEAT-0063",
+              "76acce68-ebbe-4cef-ba2c-3ca4042c3656",
+              "fs_archery"
+            ]
+          }
+        ],
+        "grantedEffects": {},
+        "masteryEffects": {
+          "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3": {
+            "name": "Ослабляющее",
+            "mechanics": {
+              "activation": {
+                "mode": "triggered",
+                "trigger": {
+                  "event": "hit"
+                }
+              },
+              "effects": [
+                {
+                  "resolution": "auto",
+                  "result": [
+                    {
+                      "applies_to": {
+                        "roll": "attack"
+                      },
+                      "duration": {
+                        "type": "until_start_of_next_turn"
+                      },
+                      "kind": "modifier",
+                      "op": "disadvantage",
+                      "stack_id": "mastery-sap",
+                      "stack_type": "overwrite"
+                    },
+                    {
+                      "description": "Ослабляющее: цель совершает с помехой следующий бросок атаки до начала вашего следующего хода.",
+                      "kind": "narrative"
+                    }
+                  ],
+                  "who": "target"
+                }
+              ],
+              "weapon_mastery": {
+                "type": "sap",
+                "consume": "next",
+                "expires": "start_of_source_next_turn"
+              }
+            },
+            "weaponTypes": [
+              "longsword"
+            ],
+            "sourceEntityIds": [
+              "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "CLASS-warrior",
+              "bfd9a78c-4676-4b6f-8318-e5aee7f1d89b",
+              "EFF-weapon-mastery-3",
+              "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3",
+              "EFFECT-0249"
+            ]
+          },
+          "c7d07a67-374c-49f6-b34b-40e85c26674e": {
+            "name": "Замедляющее",
+            "mechanics": {
+              "activation": {
+                "mode": "triggered",
+                "trigger": {
+                  "event": "hit"
+                }
+              },
+              "effects": [
+                {
+                  "resolution": "auto",
+                  "result": [
+                    {
+                      "applies_to": {
+                        "roll": "speed"
+                      },
+                      "duration": {
+                        "type": "until_start_of_next_turn"
+                      },
+                      "kind": "modifier",
+                      "op": "add",
+                      "stack_id": "mastery-slow",
+                      "stack_type": "overwrite",
+                      "value": "-10"
+                    },
+                    {
+                      "description": "Замедляющее: Скорость цели снижена на 10 футов до начала вашего следующего хода (несколько попаданий не складываются).",
+                      "kind": "narrative"
+                    }
+                  ],
+                  "who": "target"
+                }
+              ],
+              "weapon_mastery": {
+                "type": "slow",
+                "penaltyFt": 10,
+                "requiresDamage": true,
+                "expires": "start_of_source_next_turn",
+                "choiceId": "weapon_mastery.slow.use"
+              }
+            },
+            "weaponTypes": [
+              "longbow"
+            ],
+            "sourceEntityIds": [
+              "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "CLASS-warrior",
+              "bfd9a78c-4676-4b6f-8318-e5aee7f1d89b",
+              "EFF-weapon-mastery-3",
+              "c7d07a67-374c-49f6-b34b-40e85c26674e",
+              "EFFECT-0250"
+            ]
+          },
+          "651f4b6a-74c1-4ecf-a787-d98580bc9495": {
+            "name": "Задевающее",
+            "mechanics": {
+              "activation": {
+                "mode": "triggered",
+                "trigger": {
+                  "event": "miss"
+                }
+              },
+              "effects": [
+                {
+                  "resolution": "auto",
+                  "result": [
+                    {
+                      "amount": "weapon_mod",
+                      "kind": "damage",
+                      "type": "weapon"
+                    },
+                    {
+                      "description": "Задевающее: даже при промахе вы наносите урон, равный модификатору характеристики броска атаки.",
+                      "kind": "narrative"
+                    }
+                  ],
+                  "who": "target"
+                }
+              ],
+              "weapon_mastery": {
+                "type": "graze",
+                "damage": "max(weapon_mod,0)",
+                "choiceId": "weapon_mastery.graze.use"
+              }
+            },
+            "weaponTypes": [
+              "greatsword"
+            ],
+            "sourceEntityIds": [
+              "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "CLASS-warrior",
+              "bfd9a78c-4676-4b6f-8318-e5aee7f1d89b",
+              "EFF-weapon-mastery-3",
+              "651f4b6a-74c1-4ecf-a787-d98580bc9495",
+              "EFFECT-0255"
+            ]
+          }
+        },
+        "spellcastingAccess": {
+          "grants": [
+            {
+              "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+              "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+              "sourceId": "FEAT-0009",
+              "access": "always_prepared",
+              "level": 1,
+              "spellcastingAbility": "int",
+              "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0",
+              "slotResource": "spell_slot_1"
+            },
+            {
+              "grantId": "spell-grant:FEAT-0009:50626b5a-33c5-46e0-af0e-50599f4306a0@51832580-68f5-4e96-8afe-93e4af045283",
+              "actionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@51832580-68f5-4e96-8afe-93e4af045283",
+              "sourceId": "FEAT-0009",
+              "access": "cantrip",
+              "level": 0,
+              "spellcastingAbility": "int"
+            },
+            {
+              "grantId": "spell-grant:FEAT-0009:dc59ce91-4e89-4f1d-89a5-e25650f3a6b7@51832580-68f5-4e96-8afe-93e4af045283",
+              "actionId": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7@51832580-68f5-4e96-8afe-93e4af045283",
+              "sourceId": "FEAT-0009",
+              "access": "cantrip",
+              "level": 0,
+              "spellcastingAbility": "int"
+            }
+          ],
+          "preparedSources": {}
+        }
+      },
+      "actions": [
+        {
+          "id": "1cd19d26-3011-4859-9430-c8787fe99ba7@2705eb12-1556-40c8-bdae-671e8f5c67eb",
+          "name": "Второе дыхание",
+          "mechanics": {
+            "activation": {
+              "cost": [
+                {
+                  "resource": "bonus_action"
+                },
+                {
+                  "resource": "uses_ACT-second-wind"
+                }
+              ],
+              "mode": "active"
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "amount": "1d10 + self_level",
+                    "kind": "healing"
+                  }
+                ]
+              }
+            ],
+            "uses": {
+              "count": 2,
+              "per": "short_rest",
+              "recovery": {
+                "short_rest": {
+                  "mode": "fixed",
+                  "amount": 1
+                },
+                "long_rest": {
+                  "mode": "full"
+                }
+              }
+            },
+            "targeting": {
+              "domain": "actor",
+              "actor_targets": false,
+              "shape": "self",
+              "min_targets": 0,
+              "max_targets": 1,
+              "range_ft": 0,
+              "requires_line_of_sight": false,
+              "allowed_relations": [
+                "self"
+              ]
+            }
+          },
+          "sourceEntityIds": [
+            "1cd19d26-3011-4859-9430-c8787fe99ba7",
+            "2705eb12-1556-40c8-bdae-671e8f5c67eb"
+          ],
+          "targeting": {
+            "minTargets": 0,
+            "maxTargets": 1,
+            "rangeFt": 0,
+            "requiresLineOfSight": false,
+            "allowedRelations": [
+              "self"
+            ]
+          },
+          "kind": "nonSpell"
+        },
+        {
+          "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+          "name": "Волна грома",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-bard",
+              "CLASS-druid",
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "interaction": {
+              "intent": "harmful"
+            },
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                },
+                {
+                  "amount": 1,
+                  "level": 1,
+                  "resource": "spell_slot"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "ability": "con",
+                "dc": "8 + prof + spellcasting",
+                "on_fail": [
+                  {
+                    "dice": "2d8",
+                    "kind": "damage",
+                    "scaling": {
+                      "dice": "1d8",
+                      "per": "spell_slot_above"
+                    },
+                    "type": "thunder"
+                  },
+                  {
+                    "kind": "movement",
+                    "value": "push",
+                    "distance": 10
+                  }
+                ],
+                "on_success": [
+                  {
+                    "dice": "2d8",
+                    "kind": "damage",
+                    "scaling": {
+                      "dice": "1d8",
+                      "per": "spell_slot_above"
+                    },
+                    "type": "thunder",
+                    "on_success": "half"
+                  }
+                ],
+                "resolution": "save",
+                "who": "target"
+              }
+            ],
+            "targeting": {
+              "domain": "mixed",
+              "actor_targets": true,
+              "range_ft": 15,
+              "allowed_relations": [
+                "ally",
+                "enemy",
+                "neutral"
+              ],
+              "requires_line_of_sight": false,
+              "shape": "area",
+              "min_targets": 0,
+              "max_targets": 8,
+              "range": "15 футов",
+              "filter": "creature",
+              "area": {
+                "kind": "cube",
+                "size_ft": 15
+              }
+            },
+            "primitive": {
+              "type": "area_object_push",
+              "object_push_distance_ft": 10,
+              "object_max_distance_ft": 15,
+              "object_area_requirement": "entirely_in_area",
+              "exclude_secured_objects": true,
+              "exclude_carried_objects": true
+            }
+          },
+          "sourceEntityIds": [
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "51832580-68f5-4e96-8afe-93e4af045283",
+            "2023be11-201d-4f3a-b9c3-a8019b972b80"
+          ],
+          "targeting": {
+            "minTargets": 0,
+            "maxTargets": 8,
+            "rangeFt": 15,
+            "requiresLineOfSight": false,
+            "allowedRelations": [
+              "ally",
+              "enemy",
+              "neutral"
+            ]
+          },
+          "kind": "spell",
+          "spell": {
+            "level": 1,
+            "ritual": false,
+            "classListIds": [
+              "CLASS-bard",
+              "CLASS-druid",
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            }
+          }
+        },
+        {
+          "id": "50626b5a-33c5-46e0-af0e-50599f4306a0@51832580-68f5-4e96-8afe-93e4af045283",
+          "name": "Огненный снаряд",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "ability": "spellcasting",
+                "attack_kind": "spell_ranged",
+                "on_hit": [
+                  {
+                    "dice": "1d10",
+                    "kind": "damage",
+                    "scaling": {
+                      "dice": "1d10",
+                      "per": "character_level"
+                    },
+                    "type": "fire"
+                  }
+                ],
+                "resolution": "attack_roll",
+                "vs": "ac"
+              }
+            ],
+            "targeting": {
+              "domain": "mixed",
+              "actor_targets": true,
+              "shape": "single",
+              "min_targets": 1,
+              "max_targets": 1,
+              "range_ft": 120,
+              "requires_line_of_sight": true,
+              "allowed_relations": [
+                "self",
+                "ally",
+                "enemy",
+                "neutral"
+              ],
+              "filter": "any",
+              "range": "120 футов"
+            },
+            "interaction": {
+              "intent": "harmful"
+            }
+          },
+          "sourceEntityIds": [
+            "50626b5a-33c5-46e0-af0e-50599f4306a0",
+            "51832580-68f5-4e96-8afe-93e4af045283",
+            "2023be11-201d-4f3a-b9c3-a8019b972b80"
+          ],
+          "targeting": {
+            "minTargets": 1,
+            "maxTargets": 1,
+            "rangeFt": 120,
+            "requiresLineOfSight": true,
+            "allowedRelations": [
+              "self",
+              "ally",
+              "enemy",
+              "neutral"
+            ]
+          },
+          "kind": "spell",
+          "spell": {
+            "level": 0,
+            "ritual": false,
+            "classListIds": [
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            }
+          }
+        },
+        {
+          "id": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7@51832580-68f5-4e96-8afe-93e4af045283",
+          "name": "Малая иллюзия",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-bard",
+              "CLASS-sorcerer",
+              "CLASS-warlock",
+              "CLASS-wizard"
+            ],
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "description": "Малая иллюзия: см. описание заклинания.",
+                    "kind": "narrative"
+                  }
+                ]
+              }
+            ],
+            "targeting": {
+              "domain": "world",
+              "actor_targets": false,
+              "min_targets": 0,
+              "max_targets": 1,
+              "range_ft": 30,
+              "allowed_relations": [],
+              "requires_line_of_sight": false,
+              "filter": "any",
+              "range": "30 футов",
+              "shape": "single"
+            },
+            "primitive": {
+              "type": "minor_illusion_world_object",
+              "policy": {
+                "image_max_cube_side_ft": 5,
+                "duration_rounds": 10,
+                "max_active_per_source": 1,
+                "study_ability": "int",
+                "study_skill": "investigation"
+              }
+            }
+          },
+          "sourceEntityIds": [
+            "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+            "51832580-68f5-4e96-8afe-93e4af045283",
+            "2023be11-201d-4f3a-b9c3-a8019b972b80"
+          ],
+          "targeting": {
+            "minTargets": 0,
+            "maxTargets": 1,
+            "rangeFt": 30,
+            "requiresLineOfSight": false,
+            "allowedRelations": []
+          },
+          "kind": "spell",
+          "spell": {
+            "level": 0,
+            "ritual": false,
+            "classListIds": [
+              "CLASS-bard",
+              "CLASS-sorcerer",
+              "CLASS-warlock",
+              "CLASS-wizard"
+            ],
+            "components": {
+              "verbal": false,
+              "somatic": true,
+              "material": true
+            }
+          }
+        }
+      ]
+    },
     "wizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
       "fixtureId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0:class.wizard|species.human|background.soldier|feat.alert",

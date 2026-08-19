@@ -15,6 +15,16 @@ afterEach(() => {
 });
 
 describe('provider-neutral live browser target safety', () => {
+  it('pins both production services to the public product origin', () => {
+    process.env.LIVE_BROWSER_BASE_URL = 'https://bagofholding.ru';
+    process.env.LIVE_BROWSER_API_URL = 'https://bagofholding.ru';
+
+    expect(requiredLiveCanaryOrigin('LIVE_BROWSER_BASE_URL', 'frontend'))
+      .toBe('https://bagofholding.ru');
+    expect(requiredLiveCanaryOrigin('LIVE_BROWSER_API_URL', 'backend'))
+      .toBe('https://bagofholding.ru');
+  });
+
   it('accepts the explicitly pinned HTTPS deployment origin for both services', () => {
     process.env.LIVE_BROWSER_ALLOWED_ORIGIN = 'https://77-95-206-239.sslip.io';
     process.env.LIVE_BROWSER_BASE_URL = 'https://77-95-206-239.sslip.io';

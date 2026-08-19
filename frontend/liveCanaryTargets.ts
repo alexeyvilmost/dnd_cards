@@ -1,6 +1,6 @@
 export const LIVE_PRODUCTION_ORIGINS = {
-  frontend: 'https://bagofholding.up.railway.app',
-  backend: 'https://backend-production-41c3.up.railway.app',
+  frontend: 'https://bagofholding.ru',
+  backend: 'https://bagofholding.ru',
 } as const;
 
 export type LiveCanaryTarget = keyof typeof LIVE_PRODUCTION_ORIGINS;
@@ -40,7 +40,7 @@ function providerNeutralOrigin(): string | null {
 /**
  * Resolve a mutation target without accepting a look-alike Railway host or a
  * URL that embeds credentials/data in components which are irrelevant to an
- * origin. Production canaries are pinned to our two deployed services;
+ * origin. Production canaries are pinned to the public product boundary;
  * explicit loopback origins remain available for rehearsing the spec locally.
  */
 export function requiredLiveCanaryOrigin(

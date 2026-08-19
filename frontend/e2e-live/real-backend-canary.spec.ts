@@ -155,7 +155,11 @@ const compiledFixture = JSON.parse(readFileSync(new URL(
   '../src/pages/rulesLabFixture.generated.json',
   import.meta.url,
 ), 'utf8')) as {
-  roots: { fighter: CompiledDraftRoot; wizard: CompiledDraftRoot };
+  roots: {
+    fighter: CompiledDraftRoot;
+    wizard: CompiledDraftRoot;
+    magicInitiateFighter: CompiledDraftRoot;
+  };
 };
 
 const CERTIFIED_LONGBOW = {
@@ -166,6 +170,7 @@ const CERTIFIED_ARROW = {
   id: '59b10a1e-8669-4bf6-88a5-69d0abfc76a6',
   card_number: 'CARD-0728',
 } as const;
+const THUNDERWAVE_SPELL_ID = '34518f38-b737-4a91-88ac-d5858d2d04a0';
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -588,6 +593,198 @@ async function closeContext(
     cleanupErrors.push(`${label} browser cleanup: ${errorMessage(error)}`);
   }
 }
+
+test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Thunderwave', async ({
+  browser,
+  playwright,
+}, testInfo) => {
+  const frontendOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_BASE_URL', 'frontend');
+  const apiOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_API_URL', 'backend');
+  const expectedCommit = required('EXPECTED_DEPLOYED_COMMIT').toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(expectedCommit)) {
+    throw new Error('EXPECTED_DEPLOYED_COMMIT must be an exact 40-hex Git commit');
+  }
+  const account = credentials('A');
+  const marker = `public-sheet-certificate:${randomUUID()}`;
+  const suffix = marker.slice(-8);
+  const diagnostics: string[] = [];
+  const cleanupErrors: string[] = [];
+  let bodyError: unknown;
+  let auth: AuthenticatedAPI | undefined;
+  let context: BrowserContext | undefined;
+  let character: CharacterResponse | undefined;
+  let stopDiagnostics: (() => void) | undefined;
+
+  try {
+    auth = await authenticatedAPI(playwright, apiOrigin, account, 'sheet certificate account');
+    const health = await checkedJSON<{ source_commit?: string }>(
+      auth.api,
+      'get',
+      '/api/health',
+    );
+    const build = await checkedJSON<{ source_commit?: string }>(
+      auth.api,
+      'get',
+      `/build-info.json?release=${expectedCommit}`,
+    );
+    expect(health.source_commit, 'public backend commit').toBe(expectedCommit);
+    expect(build.source_commit, 'public frontend commit').toBe(expectedCommit);
+
+    context = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
+    await context.addInitScript(() => {
+      Math.random = () => 0.99;
+    });
+    await installBrowserOriginFence(context, new Set([frontendOrigin, apiOrigin]));
+    const page = await context.newPage();
+    stopDiagnostics = captureBrowserDiagnostics(
+      page,
+      'public Magic Initiate sheet certificate',
+      [account.password],
+      diagnostics,
+    );
+    await loginInBrowser(page, account, frontendOrigin, apiOrigin);
+    character = await createCompiledCharacterInForge(
+      page,
+      compiledFixture.roots.magicInitiateFighter,
+      `Canary Magic Archer ${suffix}`,
+      marker,
+      apiOrigin,
+    );
+
+    const [longbow, arrow, basicActions] = await Promise.all([
+      checkedJSON<CatalogCard>(auth.api, 'get', `/api/cards/${CERTIFIED_LONGBOW.id}`),
+      checkedJSON<CatalogCard>(auth.api, 'get', `/api/cards/${CERTIFIED_ARROW.id}`),
+      checkedJSON<{ actions?: CatalogAction[] }>(auth.api, 'get', '/api/actions?type=basic&limit=50'),
+    ]);
+    expect(longbow).toMatchObject(CERTIFIED_LONGBOW);
+    expect(arrow).toMatchObject(CERTIFIED_ARROW);
+    const weaponAction = basicActions.actions?.find((action) => (
+      action.card_number === 'action_basic_weapon'
+    ));
+    if (!weaponAction) throw new Error('Live catalog misses the basic Weapon Attack');
+    character = await checkedJSON<CharacterResponse>(
+      auth.api,
+      'patch',
+      `/api/characters-v3/${character.id}/runtime`,
+      {
+        equipment: { main_hand: longbow.id },
+        inventory_items: [
+          { card_id: longbow.id, qty: 1 },
+          { card_id: arrow.id, qty: 2 },
+        ],
+      },
+    );
+
+    await page.goto(`/characters-v3/${character.id}`);
+    await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
+    const weaponButton = page.locator(`[data-action-id="${weaponAction.id}"]`)
+      .getByRole('button')
+      .filter({ visible: true })
+      .first();
+    await expect(weaponButton).toBeEnabled({ timeout: 30_000 });
+    await weaponButton.click();
+    const targetDialog = page.getByRole('dialog', { name: 'Цели и факты боя' });
+    await expect(targetDialog).toBeVisible();
+    let dummy = targetDialog.locator('[data-target-id="scene-target:training-dummy"]');
+    await expect(dummy.getByRole('checkbox')).toBeChecked();
+    await dummy.locator('input[type="number"]').fill('30');
+    let commandResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
+    ));
+    await targetDialog.getByRole('button', { name: 'Подтвердить цели' }).click();
+    let commandResponse = await commandResponsePromise;
+    assertLiveCanaryRequestOrigin(commandResponse.url(), apiOrigin, 'public Longbow command');
+    expect(commandResponse.ok(), 'public Longbow command').toBe(true);
+    await expect(page.getByText('Действие принято', { exact: true })).toBeVisible();
+
+    const newTurnResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await page.getByRole('button', { name: 'Новый ход', exact: true }).click();
+    expect((await newTurnResponsePromise).ok(), 'new turn before Thunderwave').toBe(true);
+
+    const thunderwaveButton = page.locator(`[data-action-id="${THUNDERWAVE_SPELL_ID}"]`)
+      .getByRole('button')
+      .filter({ visible: true })
+      .first();
+    await expect(thunderwaveButton).toBeEnabled({ timeout: 30_000 });
+    await thunderwaveButton.click();
+    const cast = page.getByRole('dialog', { name: 'Выбор при действии' });
+    await expect(cast).toBeVisible();
+    await cast.getByRole('button', { name: 'Применить', exact: true }).click();
+    await expect(targetDialog).toBeVisible();
+    dummy = targetDialog.locator('[data-target-id="scene-target:training-dummy"]');
+    await expect(dummy.getByRole('checkbox')).toBeChecked();
+    await dummy.locator('input[type="number"]').fill('10');
+    commandResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
+    ));
+    await targetDialog.getByRole('button', { name: 'Подтвердить цели' }).click();
+    commandResponse = await commandResponsePromise;
+    assertLiveCanaryRequestOrigin(commandResponse.url(), apiOrigin, 'public Thunderwave command');
+    expect(commandResponse.ok(), 'public Thunderwave command').toBe(true);
+
+    const save = page.getByTestId('sheet-combat-target-save').first();
+    await expect(save).toBeVisible({ timeout: 30_000 });
+    await expect(save).toContainText('Пугало');
+    await save.getByRole('spinbutton', { name: 'Результат d20 спасброска' }).fill('1');
+    const saveResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
+    ));
+    await save.getByRole('button', { name: 'Применить d20' }).click();
+    expect((await saveResponsePromise).ok(), 'public Thunderwave save resolution').toBe(true);
+
+    character = await checkedJSON<CharacterResponse>(
+      auth.api,
+      'get',
+      `/api/characters-v3/${character.id}`,
+    );
+    expect(character.inventory_items).toEqual([
+      { card_id: longbow.id, qty: 1 },
+      { card_id: arrow.id, qty: 1 },
+    ]);
+    expect(character.resources?.action).toBe(0);
+    expect(character.resources?.[`freeuse-${THUNDERWAVE_SPELL_ID}`]).toBe(0);
+    await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+    if (diagnostics.length > 0) {
+      throw new Error(`Browser diagnostics are not clean:\n${diagnostics.join('\n')}`);
+    }
+  } catch (error) {
+    bodyError = error;
+  } finally {
+    if (diagnostics.length > 0) {
+      await testInfo.attach('public-sheet-certificate-diagnostics', {
+        body: diagnostics.join('\n'),
+        contentType: 'text/plain',
+      });
+    }
+    stopDiagnostics?.();
+    await closeContext(context, 'public sheet certificate', cleanupErrors);
+    if (auth) {
+      await cleanupCharacterArtifacts(auth.api, character?.id, marker, cleanupErrors);
+      try {
+        await auth.api.request.dispose();
+      } catch (error) {
+        cleanupErrors.push(`API context cleanup: ${errorMessage(error)}`);
+      }
+    }
+  }
+
+  if (bodyError !== undefined) {
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [bodyError, ...cleanupErrors.map((message) => new Error(message))],
+        'Public sheet certificate and cleanup both failed',
+      );
+    }
+    throw bodyError;
+  }
+  if (cleanupErrors.length > 0) throw new Error(cleanupErrors.join('; '));
+});
 
 test('persists a two-account UI turn, failed save, HP loss and canonical condition', async ({
   browser,

@@ -91,7 +91,11 @@ const compiled = JSON.parse(readFileSync(new URL(
   import.meta.url,
 ), 'utf8')) as {
   source: { ruleset: JsonRecord };
-  roots: { wizard: CompiledRoot; fighter: CompiledRoot };
+  roots: {
+    wizard: CompiledRoot;
+    fighter: CompiledRoot;
+    magicInitiateFighter: CompiledRoot;
+  };
 };
 
 const sheetCombatCertification = JSON.parse(readFileSync(new URL(
@@ -195,6 +199,48 @@ function certifiedWizardSpellBinding(
     .filter((values) => values.includes(sheetActionId));
   if (selectedByDraft.length < 2) {
     throw new Error(`Fixture Wizard draft does not select ${type} in spellbook and preparation`);
+  }
+  return { sheetActionId, certifiedActionId: action.id };
+}
+
+function certifiedMagicInitiateSpellBinding(
+  api: ForgeApiFixture,
+  type: string,
+): { sheetActionId: string; certifiedActionId: string } {
+  const sourceId = 'FEAT-0009';
+  const root = compiled.roots.magicInitiateFighter;
+  const actions = sheetCombatCertification.actions.filter((action) => (
+    primitive(action) === type
+    && root.draft.featIds.some((featId) => action.sourceEntityIds.includes(featId))
+  ));
+  if (actions.length !== 1) {
+    throw new Error(`Certified sheet combat catalog has ${actions.length} Magic Initiate ${type} actions`);
+  }
+  const action = actions[0];
+  const sourceRows = api.getCatalogRows('spells').filter((row) => (
+    typeof row.id === 'string'
+    && action.sourceEntityIds.includes(row.id)
+    && primitive({ mechanics: (row.mechanics ?? {}) as JsonRecord }) === type
+  ));
+  if (sourceRows.length !== 1 || typeof sourceRows[0].id !== 'string') {
+    throw new Error(`Materialized spell catalog has ${sourceRows.length} Magic Initiate ${type} sources`);
+  }
+  const sheetActionId = sourceRows[0].id;
+  const grant = root.actor.spellcastingAccess?.grants.find((candidate) => (
+    candidate.actionId === action.id && candidate.sourceId === sourceId
+  ));
+  const signatures = sheetCombatCertification.accessSignaturesByAction[action.id] ?? [];
+  const matching = signatures.filter((signature) => signature.grants.some((candidate) => (
+    grant !== undefined
+    && candidate.actionId === grant.actionId
+    && candidate.sourceId === grant.sourceId
+    && candidate.access === grant.access
+    && candidate.level === grant.level
+    && candidate.spellcastingAbility === grant.spellcastingAbility
+    && (candidate.slotResource ?? undefined) === grant.slotResource
+  )));
+  if (!root.draft.spellIds.includes(sheetActionId) || !grant || matching.length !== 1) {
+    throw new Error(`Fixture Fighter / Magic Initiate access is not certified for ${type}`);
   }
   return { sheetActionId, certifiedActionId: action.id };
 }
@@ -363,14 +409,14 @@ async function openPendingSpell(
 }
 
 test.describe('real CharacterV3 sheet pending-combat bridge', () => {
-  test('ranged weapon attacks the scene dummy from a real sheet without a second character', async ({ page }) => {
+  test('Magic Initiate Fighter attacks the scene dummy from a real sheet without catalog poisoning', async ({ page }) => {
     const api = await installForgeApiFixture(page);
     await page.addInitScript(() => {
       Math.random = () => 0.99;
     });
     const { weapon, ammo } = rangedWeaponFixture(api);
     const weaponActionId = fixtureActionId(api, 'weapon_attack');
-    const source = character(compiled.roots.fighter, IDS.source, 'Archer');
+    const source = character(compiled.roots.magicInitiateFighter, IDS.source, 'Magic Archer');
     source.equipment = { main_hand: weapon.id };
     source.inventory_items = [
       { card_id: weapon.id, qty: 1 },
@@ -404,10 +450,10 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       .toBeLessThan(100);
   });
 
-  test('Thunderwave selected in Forge is usable against the scene dummy', async ({ page }) => {
+  test('Thunderwave selected by a Magic Initiate Fighter is usable against the scene dummy', async ({ page }) => {
     const api = await installForgeApiFixture(page);
-    api.seedCharacter(character(compiled.roots.wizard, IDS.source, 'Thunder Wizard'));
-    const binding = certifiedWizardSpellBinding(api, 'area_object_push');
+    api.seedCharacter(character(compiled.roots.magicInitiateFighter, IDS.source, 'Thunder Fighter'));
+    const binding = certifiedMagicInitiateSpellBinding(api, 'area_object_push');
 
     await page.goto(`/characters-v3/${IDS.source}`);
     await dismissMobileSuggestion(page);
@@ -463,7 +509,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
   });
 
-  test('Dash, Disengage and Dodge execute from their real basic-action rows', async ({ page }) => {
+  test('Dash, Disengage persistence and Dodge execute from their real basic-action rows', async ({ page }) => {
     const api = await installForgeApiFixture(page);
     for (const [index, cardNumber] of [
       'action_basic_dash',
@@ -488,6 +534,28 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       await expect.poll(() => api.runtimePatchRequests.length).toBe(requestCount + 1);
       expect((api.getCharacter(IDS.source)?.resources as JsonRecord).action).toBe(0);
       await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+      if (cardNumber === 'action_basic_disengage') {
+        expect(api.getCharacter(IDS.source)?.active_effects).toEqual([
+          expect.objectContaining({
+            name: 'Отход',
+            expiry: 'start_of_next_turn',
+            mechanics: expect.objectContaining({
+              kind: 'modifier',
+              op: 'deny',
+              applies_to: {
+                interaction: 'opportunity_attack',
+                trigger: 'self_movement',
+              },
+            }),
+          }),
+        ]);
+        await page.reload();
+        await expect(page.getByText('Отход', { exact: true }).first()).toBeVisible();
+        const expiryPatchCount = api.runtimePatchRequests.length;
+        await page.getByRole('button', { name: 'Новый ход', exact: true }).click();
+        await expect.poll(() => api.runtimePatchRequests.length).toBe(expiryPatchCount + 1);
+        expect(api.getCharacter(IDS.source)?.active_effects).toEqual([]);
+      }
     }
   });
 

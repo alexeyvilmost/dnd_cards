@@ -64,7 +64,8 @@ export interface SupportableEntity {
 
 const MICRO_MVP_V3_CERTIFICATION = 'micro-mvp-l1-rules-core-v3';
 const MICRO_MVP_V4_CERTIFICATION = 'micro-mvp-l1-rules-core-v4';
-const BASIC_ACTIONS_CERTIFICATION = 'micro-mvp-basic-actions-v1';
+const BASIC_ACTIONS_CERTIFICATION = 'micro-mvp-basic-actions-v2';
+const DEPRECATED_CERTIFICATIONS = new Set(['micro-mvp-basic-actions-v1']);
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UTC_RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
@@ -128,7 +129,7 @@ function basicActionsEvidenceIssues(certification: EntitySupportCertification): 
     }
   }
   const coverage = certification.test_coverage;
-  if (!coverage || coverage.schema_version !== 1 || coverage.scope !== 'micro-mvp-basic-actions-v1'
+  if (!coverage || coverage.schema_version !== 1 || coverage.scope !== 'micro-mvp-basic-actions-v2'
     || !Number.isInteger(coverage.required) || coverage.required < 1
     || coverage.passed !== coverage.required || coverage.percent !== 100) {
     issues.push('basic-actions evidence требует точное 100% test_coverage');
@@ -182,6 +183,7 @@ export function supportStatusPresentation(status: EntitySupportStatus): SupportS
 export function supportStatusOf(entity: SupportableEntity | null | undefined): EntitySupportStatus {
   const support = entity?.support;
   if (!support) return 'untested';
+  if (DEPRECATED_CERTIFICATIONS.has(support.certification_version ?? '')) return 'untested';
   if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
     .includes(support.certification_version ?? '')
     && certificationContractIssues(support).length > 0) {
