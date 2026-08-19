@@ -31,7 +31,8 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf.template /etc/nginx/templates/app.conf.template
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Keep the image executable even when the checkout was produced on Windows.
+RUN sed -i 's/\r$//' /start.sh && chmod +x /start.sh
 
 # 3000 — исторический порт фронтенда на Railway (vite dev)
 ENV PORT=3000
