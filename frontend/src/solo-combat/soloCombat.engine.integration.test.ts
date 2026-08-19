@@ -7,6 +7,7 @@ import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
 import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, runMonsterTurn } from './engine';
+import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 
 const fixture = compiledFixtureJson as unknown as {
@@ -123,6 +124,41 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('restores sheet previews in fights persisted before scoped presentation keys', async () => {
+    const participant = fighterSeed();
+    const state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const legacyEntityId = 'legacy-spell-id';
+    const scopedActionId = `${legacyEntityId}@magic-initiate-grant`;
+    const legacyState = {
+      ...state,
+      playerActionIds: [...state.playerActionIds, scopedActionId],
+      actionPresentation: {
+        ...state.actionPresentation,
+        [legacyEntityId]: {
+          imageUrl: '/legacy-thunderwave.png',
+          entityType: 'spell' as const,
+          entityId: legacyEntityId,
+        },
+      },
+    };
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, legacyState),
+      participant.character.id,
+      7,
+    );
+
+    expect(restored?.runtimeRevision).toBe(7);
+    expect(restored?.actionPresentation?.[scopedActionId]).toEqual(
+      legacyState.actionPresentation[legacyEntityId],
+    );
+  });
+
   it('starts certified sheet + data-driven monster in initiative and resolves the real sheet Thunderwave pipeline', async () => {
     const participant = fighterSeed();
     let state = await createSoloCombatState({
