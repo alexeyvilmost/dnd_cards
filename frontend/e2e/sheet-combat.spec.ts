@@ -301,6 +301,20 @@ function character(root: CompiledRoot, id: string, name: string): JsonRecord {
   };
 }
 
+function seedPreviousDeploymentCanonicalCache(value: JsonRecord): void {
+  value.turn_state = {
+    temp_hp: 0,
+    canonical_rules_world_v1: {
+      schemaVersion: 1,
+      primaryActorId: value.id,
+      rulesetContentHash: 'sheet:previous-deployment',
+      // A stale envelope is discarded before its release-specific world is
+      // decoded. This reproduces a real CharacterV3 sheet left by an older UI.
+      world: {},
+    },
+  };
+}
+
 async function dismissMobileSuggestion(page: Page): Promise<void> {
   const suggestion = page.getByRole('complementary', { name: 'Предложение мобильной версии' });
   if (await suggestion.isVisible()) {
@@ -417,6 +431,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     const { weapon, ammo } = rangedWeaponFixture(api);
     const weaponActionId = fixtureActionId(api, 'weapon_attack');
     const source = character(compiled.roots.magicInitiateFighter, IDS.source, 'Magic Archer');
+    seedPreviousDeploymentCanonicalCache(source);
     source.equipment = { main_hand: weapon.id };
     source.inventory_items = [
       { card_id: weapon.id, qty: 1 },
@@ -452,7 +467,9 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
 
   test('Thunderwave selected by a Magic Initiate Fighter is usable against the scene dummy', async ({ page }) => {
     const api = await installForgeApiFixture(page);
-    api.seedCharacter(character(compiled.roots.magicInitiateFighter, IDS.source, 'Thunder Fighter'));
+    const source = character(compiled.roots.magicInitiateFighter, IDS.source, 'Thunder Fighter');
+    seedPreviousDeploymentCanonicalCache(source);
+    api.seedCharacter(source);
     const binding = certifiedMagicInitiateSpellBinding(api, 'area_object_push');
 
     await page.goto(`/characters-v3/${IDS.source}`);

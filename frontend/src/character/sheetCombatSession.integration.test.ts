@@ -279,6 +279,23 @@ describe('CharacterV3 atomic pending-combat session', () => {
     expect(readSheetCombatSession(turnState, IDS.source, 1)).toBeNull();
   });
 
+  it('drops a completed continuation from a previous certified release', async () => {
+    const source = seed('wizard', IDS.source);
+    const session = await createSheetCombatSession({ source, targets: [] });
+    const turnState = writeSheetCombatSession({}, session);
+    const nextRuleset = {
+      ...fixture.source.ruleset,
+      contentHash: 'sha256:next-certified-release',
+    };
+
+    expect(readSheetCombatSession(
+      turnState,
+      IDS.source,
+      0,
+      nextRuleset,
+    )).toBeNull();
+  });
+
   it('fails closed when a sheet changes during a pending target decision', async () => {
     const source = seed('wizard', IDS.source);
     const thunderwave = action('area_object_push');
@@ -302,6 +319,12 @@ describe('CharacterV3 atomic pending-combat session', () => {
 
     expect(() => readSheetCombatSession(turnState, IDS.source, 1))
       .toThrow('Ожидающее боевое решение устарело');
+    expect(() => readSheetCombatSession(
+      turnState,
+      IDS.source,
+      0,
+      { ...fixture.source.ruleset, contentHash: 'sha256:next-certified-release' },
+    )).toThrow('Ожидающее боевое решение относится к другой версии правил');
   });
 
   it('runs Thunderwave against a scene target and persists only the source sheet', async () => {

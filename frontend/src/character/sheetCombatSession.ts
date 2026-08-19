@@ -6,6 +6,7 @@ import {
   type GameCommand,
   type RuleActionDefinition,
   type RulesCatalog,
+  type RulesetReference,
   type UncommittedRuleEvent,
   type WorldState,
 } from '../rules-core/domain';
@@ -409,6 +410,7 @@ export function readSheetCombatSession(
   turnState: Record<string, unknown> | null | undefined,
   viewingCharacterId: string,
   currentRuntimeRevision?: number,
+  expectedRuleset?: RulesetReference,
 ): SheetCombatSession | null {
   const raw = turnState?.[SHEET_COMBAT_SESSION_KEY];
   if (raw == null) return null;
@@ -426,6 +428,17 @@ export function readSheetCombatSession(
   const session = sessionFromEnvelope(value as unknown as SheetCombatSessionEnvelope);
   if (!(viewingCharacterId in session.participantRevisions)) {
     throw new SheetCombatSessionError('This sheet is not a combat-continuation participant');
+  }
+  if (expectedRuleset
+    && canonicalStringify(session.world.ruleset) !== canonicalStringify(expectedRuleset)) {
+    // A completed continuation is only a convenience snapshot: actor runtime
+    // has already been committed to CharacterV3 and a new action may safely
+    // create a session from the current certified release. An unresolved
+    // decision may already have spent resources, so it remains fail-closed.
+    if (!session.world.pendingResolution) return null;
+    throw new SheetCombatSessionError(
+      'Ожидающее боевое решение относится к другой версии правил; завершите или сбросьте его явно',
+    );
   }
   if (currentRuntimeRevision !== undefined
     && session.participantRevisions[viewingCharacterId] !== currentRuntimeRevision) {

@@ -547,6 +547,7 @@ export default function SheetActionsPanel({
           character.turn_state,
           character.id,
           character.runtime_revision,
+          certifiedCombat.catalog?.ruleset,
         ),
         error: null,
       };
@@ -556,7 +557,12 @@ export default function SheetActionsPanel({
         error: cause instanceof Error ? cause : new Error(String(cause)),
       };
     }
-  }, [character.id, character.runtime_revision, character.turn_state]);
+  }, [
+    character.id,
+    character.runtime_revision,
+    character.turn_state,
+    certifiedCombat.catalog?.ruleset,
+  ]);
   // Пассивки персонажа + механики надетых предметов (с учётом настройки).
   const passives = useMemo(() => {
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory)

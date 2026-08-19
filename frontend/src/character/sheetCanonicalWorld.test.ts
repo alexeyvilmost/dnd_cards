@@ -324,6 +324,16 @@ describe('real sheet canonical world materialization', () => {
       .toBeUndefined();
     expect(built.world.actors[built.actorId].passives).toEqual(passives);
     expect(JSON.stringify(built.world).length).toBeLessThan(768 << 10);
+
+    const persisted = writeSheetCanonicalWorld({}, built.actorId, built.world);
+    const stale = clone(persisted);
+    (stale.canonical_rules_world_v1 as Record<string, unknown>).rulesetContentHash =
+      'sheet:previous-deployment';
+    expect(readSheetCanonicalWorld(
+      stale,
+      built.actorId,
+      built.world.ruleset.contentHash,
+    )).toBeNull();
   });
 
   it('promotes an active class effect into a real sheet action with provenance', () => {

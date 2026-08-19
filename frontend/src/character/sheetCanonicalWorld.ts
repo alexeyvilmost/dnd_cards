@@ -773,15 +773,24 @@ export function readSheetCanonicalWorld(
   const envelope = object(raw);
   if (envelope?.schemaVersion !== SHEET_CANONICAL_WORLD_ENVELOPE_VERSION
     || envelope.primaryActorId !== expectedActorId
-    || envelope.rulesetContentHash !== expectedRulesetContentHash
+    || !nonBlank(envelope.rulesetContentHash)
     || !object(envelope.world)) {
-    throw new SheetCanonicalWorldError('Persisted canonical sheet world envelope is malformed or stale');
+    throw new SheetCanonicalWorldError('Persisted canonical sheet world envelope is malformed');
+  }
+  // This envelope is a derived execution cache, not the source of truth for
+  // CharacterV3. Content changes are expected during a deployment, so an old
+  // release must rebuild from the live sheet instead of disabling every
+  // canonical action forever. Structurally malformed data still fails closed.
+  if (envelope.rulesetContentHash !== expectedRulesetContentHash) {
+    return null;
   }
   persistedResourceBindings(turnState);
   const world = migrateWorldState(envelope.world);
-  if (!world.actors[expectedActorId]
-    || world.ruleset.contentHash !== expectedRulesetContentHash) {
-    throw new SheetCanonicalWorldError('Persisted canonical sheet world has the wrong actor or ruleset');
+  if (!world.actors[expectedActorId]) {
+    throw new SheetCanonicalWorldError('Persisted canonical sheet world has the wrong actor');
+  }
+  if (world.ruleset.contentHash !== expectedRulesetContentHash) {
+    return null;
   }
   return world;
 }

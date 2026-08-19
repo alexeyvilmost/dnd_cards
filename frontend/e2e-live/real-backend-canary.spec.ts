@@ -672,6 +672,15 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
           { card_id: longbow.id, qty: 1 },
           { card_id: arrow.id, qty: 2 },
         ],
+        turn_state: {
+          ...(character.turn_state ?? {}),
+          canonical_rules_world_v1: {
+            schemaVersion: 1,
+            primaryActorId: character.id,
+            rulesetContentHash: 'sheet:previous-deployment',
+            world: {},
+          },
+        },
       },
     );
 
