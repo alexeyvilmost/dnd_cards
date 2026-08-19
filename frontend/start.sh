@@ -66,6 +66,21 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    location = /sw.js {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    location = /registerSW.js {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    location = /manifest.webmanifest {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache";
+    }
+
     location / {
         try_files $uri /index.html;
     }
