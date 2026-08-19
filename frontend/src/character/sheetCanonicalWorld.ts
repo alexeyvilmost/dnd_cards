@@ -896,6 +896,7 @@ export function buildSheetCanonicalRuntime(input: {
     input.grantedEffects,
     input.masteryEffects,
   ]);
+  const cardById = new Map(cards.map((card) => [card.id, card]));
   const catalog: RulesCatalog = {
     getAction: (id) => actionById.get(id),
     listActions: () => uniqueActions,
