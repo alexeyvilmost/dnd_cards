@@ -9,10 +9,16 @@ import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   compileMicroMvpL1Overlay,
+  compileMicroMvpL1ChoiceVariants,
   type CompiledMicroMvpL1Provider,
 } from '../canon/microMvpL1Overlay';
+import {
+  readMicroMvpSnapshotManifest,
+  readProdSnapshotCatalogs,
+} from '../canon/prodSnapshotL1Fixtures';
 import { canonicalStringify } from '../rules-core/determinism';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
+import { buildMicroMvpSpellScopePolicy } from '../rules-core/microMvpSpellScope';
 import { buildRulesLabFixtureArtifact } from '../pages/rulesLabFixtureGenerator';
 import {
   actionBelongsToSheetCombatSlice,
@@ -20,6 +26,7 @@ import {
   projectCertifiedActorAccess,
   SHEET_COMBAT_CERTIFICATION_ARTIFACT_VERSION,
   SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT,
+  SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT,
   SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT,
   SHEET_COMBAT_CERTIFICATION_SCHEMA_VERSION,
   sheetCombatCertificationSourceProjection,
@@ -50,11 +57,22 @@ function uniqueCanonical<T>(values: readonly T[]): T[] {
     .map(([, value]) => value);
 }
 
-function exactActionCatalog(provider: CompiledMicroMvpL1Provider): RuleActionDefinition[] {
+interface SupplementalCombatActor {
+  actor: ActorState;
+  actions: readonly RuleActionDefinition[];
+  /** Root whose declared choice branch was compiled for this supplemental actor. */
+  stableKey?: string;
+}
+
+function exactActionCatalog(
+  provider: CompiledMicroMvpL1Provider,
+  supplementalActors: readonly SupplementalCombatActor[] = [],
+): RuleActionDefinition[] {
   const byId = new Map<string, RuleActionDefinition>();
   for (const sourceActions of [
     ...provider.roots.map((root) => root.rulesActions),
     provider.globalActions,
+    ...supplementalActors.map((supplemental) => supplemental.actions),
   ]) {
     for (const action of sourceActions.filter(actionBelongsToSheetCombatSlice)) {
       const previous = byId.get(action.id);
@@ -72,10 +90,7 @@ function exactActionCatalog(provider: CompiledMicroMvpL1Provider): RuleActionDef
 function accessSignatures(
   provider: CompiledMicroMvpL1Provider,
   actions: readonly RuleActionDefinition[],
-  supplementalActors: readonly {
-    actor: ActorState;
-    actions: readonly RuleActionDefinition[];
-  }[] = [],
+  supplementalActors: readonly SupplementalCombatActor[] = [],
 ): Record<string, CertifiedActorAccessProjection[]> {
   const actionIds = new Set(actions.map((action) => action.id));
   const signatures = new Map<string, CertifiedActorAccessProjection[]>();
@@ -142,8 +157,11 @@ function magicInitiateProvenance(
       grantSignatures: grants as CertifiedSpellGrantProjection[],
     }];
   });
-  if (rows.length !== 2) {
-    throw new Error(`Cannot certify Magic Initiate: expected 2 combat actions, got ${rows.length}`);
+  if (rows.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT) {
+    throw new Error(
+      `Cannot certify Magic Initiate: expected `
+      + `${SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT} combat actions, got ${rows.length}`,
+    );
   }
   return {
     grantSourceId: MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID,
@@ -158,16 +176,13 @@ function magicInitiateProvenance(
  */
 export function buildSheetCombatCertificationArtifactFromProvider(
   provider: CompiledMicroMvpL1Provider,
-  supplementalActors: readonly {
-    actor: ActorState;
-    actions: readonly RuleActionDefinition[];
-  }[] = [],
+  supplementalActors: readonly SupplementalCombatActor[] = [],
 ): SheetCombatCertificationArtifact {
   const roots = [...provider.roots].sort((left, right) => left.stableKey.localeCompare(right.stableKey));
   if (roots.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT) {
     throw new Error(`Cannot certify combat: expected 448 roots, got ${roots.length}`);
   }
-  const actions = exactActionCatalog(provider);
+  const actions = exactActionCatalog(provider, supplementalActors);
   if (actions.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT) {
     throw new Error(
       `Cannot certify combat: expected ${SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT} exact actions, got ${actions.length}`,
@@ -176,6 +191,15 @@ export function buildSheetCombatCertificationArtifactFromProvider(
   const universalActionIds = provider.globalActions
     .filter(actionBelongsToSheetCombatSlice)
     .map((action) => action.id);
+  const supplementalActionIdsByRoot = new Map<string, string[]>();
+  for (const supplemental of supplementalActors) {
+    if (!supplemental.stableKey) continue;
+    const ids = supplementalActionIdsByRoot.get(supplemental.stableKey) ?? [];
+    ids.push(...supplemental.actions
+      .filter(actionBelongsToSheetCombatSlice)
+      .map((action) => action.id));
+    supplementalActionIdsByRoot.set(supplemental.stableKey, ids);
+  }
   const coverage = roots.map((root) => ({
     stableKey: root.stableKey,
     actionIds: sortedUnique([
@@ -183,6 +207,7 @@ export function buildSheetCombatCertificationArtifactFromProvider(
         .filter(actionBelongsToSheetCombatSlice)
         .map((action) => action.id),
       ...universalActionIds,
+      ...(supplementalActionIdsByRoot.get(root.stableKey) ?? []),
     ]),
   }));
   const signatures = accessSignatures(provider, actions, supplementalActors);
@@ -211,6 +236,52 @@ export function buildSheetCombatCertificationArtifactFromProvider(
   return { ...content, contentHash: sha256Canonical(content) };
 }
 
+/**
+ * The 448-root denominator intentionally chooses one deterministic option for
+ * each Forge choice. Runtime certification must additionally include every
+ * legal combat-capable Magic Initiate spell and every legal mental casting
+ * ability; otherwise a valid non-default Forge build poisons the whole combat
+ * session even when the action being used is a certified weapon attack.
+ */
+async function magicInitiateCombatChoiceSupplementals(
+  provider: CompiledMicroMvpL1Provider,
+): Promise<SupplementalCombatActor[]> {
+  const sourceRoot = [...provider.roots]
+    .filter((root) => (
+      root.matrixCase.originFeat.card_number === MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID
+      && root.stableKey.startsWith('class.fighter|')
+    ))
+    .sort((left, right) => left.stableKey.localeCompare(right.stableKey))[0];
+  if (!sourceRoot) throw new Error('Cannot certify Magic Initiate choice branches: no Fighter root');
+
+  const [catalogs, manifest] = await Promise.all([
+    Promise.resolve(readProdSnapshotCatalogs()),
+    readMicroMvpSnapshotManifest(),
+  ]);
+  const policy = buildMicroMvpSpellScopePolicy({
+    manifest,
+    snapshotSpells: catalogs.spells,
+  });
+  const spellIds = policy.choices.magic_initiate_wizard_level_1.spellIds;
+  const abilities = ['int', 'wis', 'cha'] as const;
+  const variants = await compileMicroMvpL1ChoiceVariants(spellIds.flatMap((spellId) => (
+    abilities.map((ability) => ({
+      stableKey: sourceRoot.stableKey,
+      overrides: {
+        magic_initiate_wizard_level_1: [spellId],
+        magic_initiate_spellcasting_ability: [ability],
+      },
+    }))
+  )));
+  return variants.map((variant) => ({
+    stableKey: sourceRoot.stableKey,
+    actor: variant.actor,
+    actions: variant.rulesActions.filter((action) => (
+      action.sourceEntityIds.includes(variant.matrixCase.originFeat.id)
+    )),
+  }));
+}
+
 export async function buildSheetCombatCertificationArtifact(): Promise<SheetCombatCertificationArtifact> {
   const [provider, fixture] = await Promise.all([
     compileMicroMvpL1Overlay(),
@@ -224,8 +295,10 @@ export async function buildSheetCombatCertificationArtifact(): Promise<SheetComb
   if (!familiarWizard?.actor || !Array.isArray(familiarWizard.actions)) {
     throw new Error('Cannot certify Rules Lab familiar Wizard access variant');
   }
+  const magicInitiateSupplementals = await magicInitiateCombatChoiceSupplementals(provider);
   return buildSheetCombatCertificationArtifactFromProvider(provider, [
     { actor: familiarWizard.actor, actions: familiarWizard.actions },
+    ...magicInitiateSupplementals,
   ]);
 }
 

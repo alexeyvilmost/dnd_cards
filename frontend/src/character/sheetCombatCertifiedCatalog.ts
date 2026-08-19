@@ -19,7 +19,8 @@ import generatedSheetCombatArtifact from './sheetCombatCertification.generated.j
 export const SHEET_COMBAT_CERTIFICATION_SCHEMA_VERSION = 1 as const;
 export const SHEET_COMBAT_CERTIFICATION_ARTIFACT_VERSION = '1.0.0' as const;
 export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT = 448 as const;
-export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT = 11 as const;
+export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT = 13 as const;
+export const SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT = 4 as const;
 export const MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID = 'FEAT-0009' as const;
 
 const COMBAT_PRIMITIVES = new Set([
@@ -586,7 +587,7 @@ function validateMagicInitiateProvenance(artifact: SheetCombatCertificationArtif
     || typeof provenance.originFeatEntityId !== 'string'
     || !provenance.originFeatEntityId.length
     || !Array.isArray(provenance.actions)
-    || provenance.actions.length !== 2) {
+    || provenance.actions.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT) {
     throw new Error('Sheet combat certification Magic Initiate provenance is incomplete');
   }
   const expectedActionIds = Object.entries(artifact.accessSignaturesByAction)

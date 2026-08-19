@@ -54,8 +54,8 @@ describe('448-root sheet combat certification', () => {
     expect(artifact.summary).toEqual({
       rootCount: 448,
       combatRootCount: 448,
-      actionOccurrenceCount: 1440,
-      uniqueActionCount: 11,
+      actionOccurrenceCount: 1443,
+      uniqueActionCount: 13,
     });
   });
 
@@ -69,7 +69,13 @@ describe('448-root sheet combat certification', () => {
         ].map((action) => action.id).sort(),
       }))
       .sort((left, right) => left.stableKey.localeCompare(right.stableKey));
-    expect(artifact.coverage).toEqual(expectedRows);
+    for (const expected of expectedRows) {
+      const actual = required(
+        artifact.coverage.find((row) => row.stableKey === expected.stableKey),
+        expected.stableKey,
+      );
+      expect(actual.actionIds).toEqual(expect.arrayContaining(expected.actionIds));
+    }
 
     const coveredActionIds = [...new Set(artifact.coverage.flatMap((row) => row.actionIds))].sort();
     expect(coveredActionIds).toEqual(artifact.actions.map((action) => action.id));
@@ -103,11 +109,18 @@ describe('448-root sheet combat certification', () => {
     expect(occurrences).toBe(1440);
   });
 
-  it('records both Magic Initiate combat actions with exact feat/effect/action provenance', () => {
+  it('records every Magic Initiate combat spell choice and mental casting ability', () => {
     expect(artifact.magicInitiate.grantSourceId).toBe(MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID);
     expect(artifact.magicInitiate.originFeatEntityId)
       .toBe('51832580-68f5-4e96-8afe-93e4af045283');
-    expect(artifact.magicInitiate.actions).toHaveLength(2);
+    expect(artifact.magicInitiate.actions.map((row) => (
+      artifact.actions.find((candidate) => candidate.id === row.actionId)?.name
+    )).sort()).toEqual([
+      'Волна грома',
+      'Волшебная стрела',
+      'Огненные ладони',
+      'Щит',
+    ].sort());
     for (const row of artifact.magicInitiate.actions) {
       const action = required(
         artifact.actions.find((candidate) => candidate.id === row.actionId),
@@ -115,15 +128,18 @@ describe('448-root sheet combat certification', () => {
       );
       expect(row.sourceEntityIds).toEqual(action.sourceEntityIds);
       expect(row.sourceEntityIds).toContain(artifact.magicInitiate.originFeatEntityId);
-      expect(row.grantSignatures).toHaveLength(1);
-      expect(row.grantSignatures[0]).toMatchObject({
-        actionId: row.actionId,
-        sourceId: MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID,
-        access: 'always_prepared',
-        ritual: false,
-        slotResource: 'spell_slot_1',
-      });
-      expect(row.grantSignatures[0].freeUseResource).toMatch(/^freeuse-/);
+      expect(row.grantSignatures.map((grant) => grant.spellcastingAbility).sort())
+        .toEqual(['cha', 'int', 'wis']);
+      for (const grant of row.grantSignatures) {
+        expect(grant).toMatchObject({
+          actionId: row.actionId,
+          sourceId: MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID,
+          access: 'always_prepared',
+          ritual: false,
+          slotResource: 'spell_slot_1',
+        });
+        expect(grant.freeUseResource).toMatch(/^freeuse-/);
+      }
     }
   });
 

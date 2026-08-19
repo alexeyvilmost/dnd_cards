@@ -23,8 +23,8 @@
   "summary": {
     "rootCount": 448,
     "combatRootCount": 448,
-    "actionOccurrenceCount": 1440,
-    "uniqueActionCount": 11
+    "actionOccurrenceCount": 1443,
+    "uniqueActionCount": 13
   },
   "coverage": [
     {
@@ -1029,9 +1029,12 @@
     {
       "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.magic-initiate",
       "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
         "6812f780-de8a-4509-9253-b4be711a9212",
+        "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
-        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
+        "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+        "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283"
       ]
     },
     {
@@ -3710,6 +3713,134 @@
   ],
   "actions": [
     {
+      "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+      "name": "Волна грома",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "con",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder"
+              },
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 10
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cube",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "area_object_push",
+          "object_push_distance_ft": 10,
+          "object_max_distance_ft": 15,
+          "object_area_requirement": "entirely_in_area",
+          "exclude_secured_objects": true,
+          "exclude_carried_objects": true
+        }
+      },
+      "sourceEntityIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0",
+        "51832580-68f5-4e96-8afe-93e4af045283",
+        "2023be11-201d-4f3a-b9c3-a8019b972b80"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "ritual": false,
+        "classListIds": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
       "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
       "name": "Волна грома",
       "mechanics": {
@@ -4035,6 +4166,125 @@
         ]
       },
       "kind": "nonSpell"
+    },
+    {
+      "id": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+      "name": "Огненные ладони",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "dex",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "3d6",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d6",
+                  "per": "spell_slot_above"
+                },
+                "type": "fire"
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "3d6",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d6",
+                  "per": "spell_slot_above"
+                },
+                "type": "fire",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cone",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "burning_hands_objects",
+          "policy": {
+            "require_in_area": true,
+            "require_flammable": true,
+            "exclude_carried": true
+          }
+        }
+      },
+      "sourceEntityIds": [
+        "732c2287-dd4d-46cd-9315-67447549abfa",
+        "51832580-68f5-4e96-8afe-93e4af045283",
+        "2023be11-201d-4f3a-b9c3-a8019b972b80"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
     },
     {
       "id": "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
@@ -4846,6 +5096,56 @@
     }
   ],
   "accessSignaturesByAction": {
+    "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0"
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
     "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid": [
       {
         "grants": [
@@ -4904,6 +5204,56 @@
     "6812f780-de8a-4509-9253-b4be711a9212": [
       {
         "grants": [],
+        "preparedSources": []
+      }
+    ],
+    "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-732c2287-dd4d-46cd-9315-67447549abfa"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-732c2287-dd4d-46cd-9315-67447549abfa"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-732c2287-dd4d-46cd-9315-67447549abfa"
+          }
+        ],
         "preparedSources": []
       }
     ],
@@ -5006,7 +5356,39 @@
             "sourceId": "FEAT-0009",
             "access": "always_prepared",
             "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
             "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
             "ritual": false,
             "slotResource": "spell_slot_1",
             "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
@@ -5120,7 +5502,39 @@
             "sourceId": "FEAT-0009",
             "access": "always_prepared",
             "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
             "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
+          }
+        ],
+        "preparedSources": []
+      },
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:FEAT-0009:d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
             "ritual": false,
             "slotResource": "spell_slot_1",
             "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
@@ -5245,6 +5659,92 @@
     "originFeatEntityId": "51832580-68f5-4e96-8afe-93e4af045283",
     "actions": [
       {
+        "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+        "sourceEntityIds": [
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "51832580-68f5-4e96-8afe-93e4af045283",
+          "2023be11-201d-4f3a-b9c3-a8019b972b80"
+        ],
+        "grantSignatures": [
+          {
+            "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0"
+          }
+        ]
+      },
+      {
+        "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+        "sourceEntityIds": [
+          "732c2287-dd4d-46cd-9315-67447549abfa",
+          "51832580-68f5-4e96-8afe-93e4af045283",
+          "2023be11-201d-4f3a-b9c3-a8019b972b80"
+        ],
+        "grantSignatures": [
+          {
+            "grantId": "spell-grant:FEAT-0009:732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-732c2287-dd4d-46cd-9315-67447549abfa"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-732c2287-dd4d-46cd-9315-67447549abfa"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-732c2287-dd4d-46cd-9315-67447549abfa"
+          }
+        ]
+      },
+      {
         "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "sourceEntityIds": [
           "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
@@ -5258,7 +5758,29 @@
             "sourceId": "FEAT-0009",
             "access": "always_prepared",
             "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
             "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
             "ritual": false,
             "slotResource": "spell_slot_1",
             "freeUseResource": "freeuse-938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
@@ -5279,7 +5801,29 @@
             "sourceId": "FEAT-0009",
             "access": "always_prepared",
             "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
             "spellcastingAbility": "int",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
+          },
+          {
+            "grantId": "spell-grant:FEAT-0009:d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@51832580-68f5-4e96-8afe-93e4af045283",
+            "sourceId": "FEAT-0009",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "wis",
             "ritual": false,
             "slotResource": "spell_slot_1",
             "freeUseResource": "freeuse-d87f4507-849f-450b-b328-0198cb011587"
@@ -5288,6 +5832,6 @@
       }
     ]
   },
-  "sourceProjectionHash": "sha256:d084d97dece14a7f3f11afd947cee172b787ceb814130f94adfd8d77e6914839",
-  "contentHash": "sha256:7f0b63ea06faf21ac898977984bdf1dd2e75eafd9abbe264f358c5c3572ae0df"
+  "sourceProjectionHash": "sha256:c9d8b50bfaf6baf9879c21495e1aabc4d8f92ca451c1fb6413ac9321aac47695",
+  "contentHash": "sha256:56131b0fc9771eb6b835b8c0457c9a2729d03bc9ea9cd98c13b993ba6c2e2172"
 }
