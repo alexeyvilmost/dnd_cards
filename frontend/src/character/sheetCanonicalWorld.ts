@@ -872,7 +872,12 @@ export function buildSheetCanonicalRuntime(input: {
     );
   }
   const runtime = cloneJson(input.runtime);
-  const characterContext = cloneJson(input.characterContext);
+  const characterContext = cloneJson(input.characterContext) as CharacterContext & Record<string, unknown>;
+  // `passives` is an execution-context convenience added by the sheet UI, not
+  // part of CharacterContext. ActorState already persists the same mechanics in
+  // actor.passives, so retaining the excess property duplicated every passive
+  // inside each combat continuation.
+  delete characterContext.passives;
   for (const [resource, binding] of Object.entries(resourceBindings)) {
     const sourceAmount = input.character.currency?.[binding.currency];
     if (!Number.isFinite(sourceAmount) || Number(sourceAmount) < 0) {

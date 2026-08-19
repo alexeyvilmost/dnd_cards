@@ -678,7 +678,7 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     const commandResponsePromise = pageAForge.waitForResponse((response) => {
       try {
         return response.request().method() === 'POST'
-          && new URL(response.url()).pathname === '/api/characters-v3/runtime-command';
+          && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands';
       } catch {
         return false;
       }
@@ -699,6 +699,47 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     ]);
     expect(characterA.resources?.action).toBe(0);
     expect(characterA.turn_state?.canonical_pending_combat_v1).toBeTruthy();
+
+    // A real sheet turn write increments runtime_revision outside the atomic
+    // combat endpoint. The next attack must rebuild from that fresh sheet and
+    // must not keep an obsolete continuation that makes the button a dead end.
+    const newTurnResponsePromise = pageAForge.waitForResponse((response) => {
+      try {
+        return response.request().method() === 'PATCH'
+          && new URL(response.url()).pathname === `/api/characters-v3/${characterA!.id}/runtime`;
+      } catch {
+        return false;
+      }
+    });
+    await pageAForge.getByRole('button', { name: 'Новый ход', exact: true }).click();
+    const newTurnResponse = await newTurnResponsePromise;
+    expect(newTurnResponse.ok(), 'live sheet new turn').toBe(true);
+    await expect(weaponButton).toBeEnabled({ timeout: 30_000 });
+    await weaponButton.click();
+    await expect(targetDialog).toBeVisible();
+    await expect(dummy.getByRole('checkbox')).toBeChecked();
+    await dummy.locator('input[type="number"]').fill('30');
+    const secondCommandResponsePromise = pageAForge.waitForResponse((response) => {
+      try {
+        return response.request().method() === 'POST'
+          && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands';
+      } catch {
+        return false;
+      }
+    });
+    await targetDialog.getByRole('button', { name: 'Подтвердить цели' }).click();
+    const secondCommandResponse = await secondCommandResponsePromise;
+    expect(secondCommandResponse.ok(), 'live sheet weapon command after a new turn').toBe(true);
+    characterA = await checkedJSON<CharacterResponse>(
+      authA.api,
+      'get',
+      `/api/characters-v3/${characterA.id}`,
+    );
+    expect(characterA.inventory_items).toEqual([
+      { card_id: longbow.id, qty: 1 },
+      { card_id: arrow.id, qty: 1 },
+    ]);
+    expect(characterA.resources?.action).toBe(0);
     await pageAForge.close();
     characterB = await checkedJSON<CharacterResponse>(
       authB.api,

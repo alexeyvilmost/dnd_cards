@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import contentPatch from '../canon/data/micro-mvp-l1-content-patch.v1.json';
 import compiledFixture from '../pages/rulesLabFixture.generated.json';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
+import type { CharacterContext } from '../mvp/contracts';
 import type { Action, Card, CharacterClass, PassiveEffect, Spell } from '../types';
 import { collectChoices, type ChoiceOrigin } from '../mechanics/collectChoices';
 import { collectSheetPrimitiveChoices } from './sheetActionOrchestrator';
@@ -291,6 +292,7 @@ describe('real sheet canonical world materialization', () => {
       inventory: [{ cardId: arrow.id, qty: 2 }],
       activeEffects: [],
     };
+    const passives = [{ activation: { mode: 'passive' }, source: 'archer-test' }];
     const built = buildSheetCanonicalRuntime({
       character: character('sheet-archer'),
       assembled: { ...baseAssembly, klass: null, effects: [] },
@@ -301,7 +303,9 @@ describe('real sheet canonical world materialization', () => {
         abilityMods: { str: 0, dex: 3, con: 1, int: 0, wis: 0, cha: 0 },
         profBonus: 2,
         level: 1,
-      },
+        passives,
+      } as CharacterContext,
+      passives,
       cards: [bow, arrow, ...unrelatedCards],
       ac: 13,
     });
@@ -316,6 +320,9 @@ describe('real sheet canonical world materialization', () => {
     expect(paid.state.inventory).toEqual([{ cardId: arrow.id, qty: 1 }]);
     expect(built.world.actors[built.actorId].character.knownCards?.map((card) => card.id).sort())
       .toEqual([arrow.id, bow.id].sort());
+    expect((built.world.actors[built.actorId].character as CharacterContext & { passives?: unknown }).passives)
+      .toBeUndefined();
+    expect(built.world.actors[built.actorId].passives).toEqual(passives);
     expect(JSON.stringify(built.world).length).toBeLessThan(768 << 10);
   });
 

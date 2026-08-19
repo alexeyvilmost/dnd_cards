@@ -408,6 +408,7 @@ function sessionFromEnvelope(envelope: SheetCombatSessionEnvelope): SheetCombatS
 export function readSheetCombatSession(
   turnState: Record<string, unknown> | null | undefined,
   viewingCharacterId: string,
+  currentRuntimeRevision?: number,
 ): SheetCombatSession | null {
   const raw = turnState?.[SHEET_COMBAT_SESSION_KEY];
   if (raw == null) return null;
@@ -425,6 +426,17 @@ export function readSheetCombatSession(
   const session = sessionFromEnvelope(value as unknown as SheetCombatSessionEnvelope);
   if (!(viewingCharacterId in session.participantRevisions)) {
     throw new SheetCombatSessionError('This sheet is not a combat-continuation participant');
+  }
+  if (currentRuntimeRevision !== undefined
+    && session.participantRevisions[viewingCharacterId] !== currentRuntimeRevision) {
+    // Every accepted combat step has already persisted actor runtime to the
+    // ordinary CharacterV3 columns. A later non-combat write therefore makes a
+    // completed continuation disposable: the next action must rebuild from the
+    // fresh sheets instead of failing forever on an obsolete CAS revision.
+    if (!session.world.pendingResolution) return null;
+    throw new SheetCombatSessionError(
+      'Ожидающее боевое решение устарело после изменения листа; перезагрузите участников боя',
+    );
   }
   return session;
 }

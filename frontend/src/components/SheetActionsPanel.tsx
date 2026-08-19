@@ -542,14 +542,21 @@ export default function SheetActionsPanel({
     error: Error | null;
   } => {
     try {
-      return { session: readSheetCombatSession(character.turn_state, character.id), error: null };
+      return {
+        session: readSheetCombatSession(
+          character.turn_state,
+          character.id,
+          character.runtime_revision,
+        ),
+        error: null,
+      };
     } catch (cause) {
       return {
         session: null,
         error: cause instanceof Error ? cause : new Error(String(cause)),
       };
     }
-  }, [character.id, character.turn_state]);
+  }, [character.id, character.runtime_revision, character.turn_state]);
   // Пассивки персонажа + механики надетых предметов (с учётом настройки).
   const passives = useMemo(() => {
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory)

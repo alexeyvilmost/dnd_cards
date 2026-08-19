@@ -26,6 +26,7 @@ import {
   readSheetCombatSession,
   resolveSheetCombatDecision,
   SHEET_COMBAT_SESSION_KEY,
+  writeSheetCombatSession,
   type PreparedSheetCombatCommit,
   type SheetCombatParticipantSeed,
   type SheetRuntimeCommandStore,
@@ -269,6 +270,40 @@ async function openSpell(type: 'burning_hands_objects' | 'area_object_push') {
 }
 
 describe('CharacterV3 atomic pending-combat session', () => {
+  it('drops a completed continuation after an ordinary sheet revision changes', async () => {
+    const source = seed('wizard', IDS.source);
+    const session = await createSheetCombatSession({ source, targets: [] });
+    const turnState = writeSheetCombatSession({}, session);
+
+    expect(readSheetCombatSession(turnState, IDS.source, 0)).not.toBeNull();
+    expect(readSheetCombatSession(turnState, IDS.source, 1)).toBeNull();
+  });
+
+  it('fails closed when a sheet changes during a pending target decision', async () => {
+    const source = seed('wizard', IDS.source);
+    const thunderwave = action('area_object_push');
+    const session = await createSheetCombatSession({
+      source,
+      targets: [],
+      sceneActors: [createSheetSceneTargetActor(TRAINING_DUMMY)],
+    });
+    const pending = executeSheetCombatAction({
+      session,
+      actorId: IDS.source,
+      actionId: thunderwave.id,
+      declaration: declaration(source, thunderwave, TRAINING_DUMMY_TARGET_ID),
+      commandId: '09090909-0909-4090-8090-090909090909',
+      rng: () => 0,
+    });
+    const turnState = writeSheetCombatSession({}, {
+      ...session,
+      world: pending.nextWorld,
+    });
+
+    expect(() => readSheetCombatSession(turnState, IDS.source, 1))
+      .toThrow('Ожидающее боевое решение устарело');
+  });
+
   it('runs Thunderwave against a scene target and persists only the source sheet', async () => {
     const source = seed('wizard', IDS.source);
     const thunderwave = action('area_object_push');
