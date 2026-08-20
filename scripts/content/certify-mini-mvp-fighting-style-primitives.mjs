@@ -23,11 +23,39 @@ import { MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES } from './upgrade-mini-mvp-fi
 
 export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE_ID = '503b36da-2750-4cdd-9058-ecaf1229b254';
 
+const EXISTING_FIGHTING_STYLE_DEFINITIONS = JSON.parse(readFileSync(new URL(
+  './data/mini-mvp-existing-fighting-styles.v1.json',
+  import.meta.url,
+), 'utf8'));
+
 export const FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS = Object.freeze([
   { featCardNumber: 'FEAT-0054', effectCardNumber: 'fs_dueling' },
   { featCardNumber: 'FEAT-0059', effectCardNumber: 'fs_great_weapon' },
   { featCardNumber: 'FEAT-0060', effectCardNumber: 'fs_blind_fighting' },
   { featCardNumber: 'FEAT-0062', effectCardNumber: 'fs_thrown_weapon' },
+  ...EXISTING_FIGHTING_STYLE_DEFINITIONS.map((definition) => ({
+    featCardNumber: definition.feat_card_number,
+    effectCardNumber: definition.card_number,
+  })),
+]);
+
+export const REVIEWED_FIGHTING_STYLE_EFFECT_SPECS = Object.freeze([
+  ...MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch) => ({
+    cardNumber: patch.cardNumber,
+    name: patch.name,
+    mechanics: patch.mechanics,
+    expectedBeforeHash: patch.expectedBeforeHash,
+    expectedAfterHash: patch.expectedAfterHash,
+    origin: 'primitive-upgrade',
+  })),
+  ...EXISTING_FIGHTING_STYLE_DEFINITIONS.map((definition) => ({
+    cardNumber: definition.card_number,
+    name: definition.name,
+    mechanics: definition.mechanics,
+    expectedBeforeHash: null,
+    expectedAfterHash: sha256Canonical(definition.mechanics),
+    origin: 'locked-reviewed-postimage',
+  })),
 ]);
 
 export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE = Object.freeze({
@@ -45,13 +73,16 @@ export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE = Object.freeze({
       id: 'reviewed-data-and-schema',
       evidence: [
         'scripts/content/data/mini-mvp-fighting-style-primitives.v1.json',
+        'scripts/content/data/mini-mvp-existing-fighting-styles.v1.json',
         'frontend/src/rules-core/miniMvpFightingStylePrimitives.test.ts::schema-valid executable definitions',
+        'frontend/src/rules-core/miniMvpExistingFightingStyles.test.ts::exact schema-valid locked definitions',
       ],
     },
     {
       id: 'unit-and-live-db-mechanics',
       evidence: [
         'frontend/src/rules-core/miniMvpFightingStylePrimitives.test.ts::complete positive and negative scenario matrix',
+        'frontend/src/rules-core/miniMvpExistingFightingStyles.test.ts::modifier and Protection Reaction scenario matrix',
         'frontend/src/mvp/mini-mvp.fighting-style-primitives.live.test.ts::byte-exact live mechanics and behavior matrix',
       ],
     },
@@ -158,9 +189,9 @@ export async function buildFightingStylePrimitiveReleaseEvidence(catalogs, {
 
   const gateSourceHash = FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH;
   const sourceContentHash = sha256Canonical({
-    definitions: MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch) => ({
-      cardNumber: patch.cardNumber,
-      expectedAfterHash: patch.expectedAfterHash,
+    definitions: REVIEWED_FIGHTING_STYLE_EFFECT_SPECS.map((spec) => ({
+      cardNumber: spec.cardNumber,
+      expectedAfterHash: spec.expectedAfterHash,
     })),
     specs: FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS,
     sourceRules: FIGHTING_STYLE_PRIMITIVE_EVIDENCE.sourceRules,
@@ -170,10 +201,11 @@ export async function buildFightingStylePrimitiveReleaseEvidence(catalogs, {
     hash: normalizedFileHash(path),
   })));
   const contentHashValue = selectedContentFingerprint(catalogs);
-  const patchHash = sha256Canonical(MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch) => ({
-    cardNumber: patch.cardNumber,
-    expectedBeforeHash: patch.expectedBeforeHash,
-    expectedAfterHash: patch.expectedAfterHash,
+  const patchHash = sha256Canonical(REVIEWED_FIGHTING_STYLE_EFFECT_SPECS.map((spec) => ({
+    cardNumber: spec.cardNumber,
+    origin: spec.origin,
+    expectedBeforeHash: spec.expectedBeforeHash,
+    expectedAfterHash: spec.expectedAfterHash,
   })));
   const catalogHash = catalogFingerprint(catalogs);
   const releaseHash = sha256Canonical({
@@ -226,10 +258,10 @@ function assertUtc(value, label) {
 }
 
 function patchByCardNumber(cardNumber) {
-  const matches = MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.filter((patch) => (
-    patch.cardNumber === cardNumber
+  const matches = REVIEWED_FIGHTING_STYLE_EFFECT_SPECS.filter((spec) => (
+    spec.cardNumber === cardNumber
   ));
-  if (matches.length !== 1) throw new Error(`${cardNumber}: expected one reviewed primitive patch`);
+  if (matches.length !== 1) throw new Error(`${cardNumber}: expected one reviewed effect specification`);
   return matches[0];
 }
 

@@ -2,17 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS,
+  REVIEWED_FIGHTING_STYLE_EFFECT_SPECS,
   buildFightingStylePrimitiveReleaseEvidence,
   buildFightingStylePrimitiveCertificationBatch,
   prepareFightingStylePrimitiveCertifications,
 } from './certify-mini-mvp-fighting-style-primitives.mjs';
-import { MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES } from './upgrade-mini-mvp-fighting-style-primitives.mjs';
 
 const CERTIFIED_AT = '2026-08-20T13:00:00Z';
 const SOURCE_COMMIT = '0123456789abcdef0123456789abcdef01234567';
 
 function fixture() {
-  const effects = MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch, index) => ({
+  const effects = REVIEWED_FIGHTING_STYLE_EFFECT_SPECS.map((patch, index) => ({
     id: `00000000-0000-4000-8000-0000000001${index}`,
     card_number: patch.cardNumber,
     name: patch.name,
@@ -44,7 +44,7 @@ function fixture() {
   return { catalogs, report };
 }
 
-test('prepares exactly four locked effects and four fully covered Fighting Style roots', () => {
+test('prepares exactly eight locked effects and eight fully covered Fighting Style roots', () => {
   const { catalogs, report } = fixture();
   const releaseEvidence = {
     sourceCommit: SOURCE_COMMIT,
@@ -61,9 +61,9 @@ test('prepares exactly four locked effects and four fully covered Fighting Style
     certifiedAt: CERTIFIED_AT,
     releaseEvidence,
   });
-  assert.equal(records.length, 8);
-  assert.equal(records.filter((record) => record.entityType === 'effect').length, 4);
-  assert.equal(records.filter((record) => record.support.mechanics_locked).length, 4);
+  assert.equal(records.length, 16);
+  assert.equal(records.filter((record) => record.entityType === 'effect').length, 8);
+  assert.equal(records.filter((record) => record.support.mechanics_locked).length, 8);
   for (const record of records) {
     assert.equal(record.support.certification_version, 'mini-mvp-l1-v1');
     assert.deepEqual(record.support.test_coverage, {
@@ -74,8 +74,8 @@ test('prepares exactly four locked effects and four fully covered Fighting Style
     assert.deepEqual(record.support.limitations, []);
   }
   const batch = buildFightingStylePrimitiveCertificationBatch(records, 'test-operation');
-  assert.equal(batch.expected_count, 8);
-  assert.equal(batch.entries.length, 8);
+  assert.equal(batch.expected_count, 16);
+  assert.equal(batch.entries.length, 16);
   assert.match(batch.plan_hash, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(batch.operation_id, 'mini-mvp-fighting-styles:test-operation');
 });

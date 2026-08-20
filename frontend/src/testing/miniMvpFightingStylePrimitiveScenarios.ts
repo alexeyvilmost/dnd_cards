@@ -4,9 +4,11 @@ import {
   CARD_DAGGER,
   CARD_FROST_HAMMER,
   CARD_GREATAXE,
+  CARD_LEATHER_ARMOR,
   CARD_LONGSWORD,
   CARD_SHIELD,
   FIGHTER_CTX,
+  MECH_OFFHAND_ATTACK,
   MECH_WEAPON_ATTACK,
   freshFighterState,
 } from '../mvp/fixtures';
@@ -15,6 +17,13 @@ import { emptyDraft } from '../character/types';
 import type { AssembledCharacter } from '../character/assemble';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import { withDeclaredTestWeaponProfile } from './weaponProfileFixtures';
+import { armorClassValue } from '../engine/ac';
+import { bindDeclarativeFightingStyleProjection } from '../rules-core/fightingStyles';
+import {
+  protectionReactionEligibility,
+  resolveProtectionReaction,
+  type ProtectionTriggerFacts,
+} from '../rules-core/testing/fightingStyleFixtures';
 
 type Dict = Record<string, unknown>;
 
@@ -60,6 +69,21 @@ const SHORTBOW = withDeclaredTestWeaponProfile({
   properties: ['ammunition', 'two_handed'],
   masteryEffectId: 'effect:test:vex',
   ammo: { card_id: 'card:test-arrow' },
+});
+
+const SCIMITAR = withDeclaredTestWeaponProfile({
+  ...CARD_DAGGER,
+  id: 'test-scimitar-existing-style',
+  name: 'Скимитар',
+}, {
+  weaponType: 'scimitar',
+  proficiencyCategory: 'martial',
+  attackAbility: 'finesse',
+  damageLines: [{ dice: '1d6', type: 'slashing' }],
+  defaultAttackMode: 'melee',
+  attackModes: [{ kind: 'melee', reach_ft: 5 }],
+  properties: ['finesse', 'light'],
+  masteryEffectId: 'effect:test:nick',
 });
 
 function sequenceRng(values: number[]): () => number {
@@ -190,3 +214,116 @@ export function evaluateMiniMvpFightingStylePrimitiveScenarios(
     },
   };
 }
+
+function attackModifier(events: EngineEvent[]): number {
+  const roll = events.find((event): event is Extract<EngineEvent, { type: 'roll' }> => (
+    event.type === 'roll' && event.roll.kind === 'd20'
+  ));
+  if (!roll) throw new Error('Expected attack roll');
+  return roll.roll.modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
+}
+
+/** Behavioral matrix for the four locked styles inherited from micro-MVP. */
+export function evaluateExistingMiniMvpFightingStyleScenarios(
+  styles: ReadonlyMap<string, Dict>,
+) {
+  const archery = requiredStyle(styles, 'fs_archery');
+  const defense = requiredStyle(styles, 'fs_defense');
+  const protection = requiredStyle(styles, 'fs_protection');
+  const twoWeapon = requiredStyle(styles, 'fs_two_weapon');
+
+  const armoredCharacter = characterWithCards([CARD_LEATHER_ARMOR, CARD_SHIELD]);
+  const acDelta = (equipment: RuntimeState['equipment']) => (
+    armorClassValue(armoredCharacter, stateWithEquipment(equipment), [defense]).value
+    - armorClassValue(armoredCharacter, stateWithEquipment(equipment), []).value
+  );
+
+  const protectionBinding = bindDeclarativeFightingStyleProjection({
+    featEntityId: 'feat-protection',
+    featCardNumber: 'FEAT-0055',
+    relatedEffectEntityIds: ['effect-protection'],
+    effectEntityId: 'effect-protection',
+    effectCardNumber: 'fs_protection',
+    effectMechanics: protection,
+  });
+  if (!protectionBinding) throw new Error('Live Protection mechanics did not bind');
+  const eligibleFacts: ProtectionTriggerFacts = {
+    factsSource: 'scenario',
+    boardRevision: 17,
+    defenderActorId: 'fighter',
+    attackerActorId: 'goblin',
+    targetActorId: 'wizard',
+    targetRelationToDefender: 'ally',
+    defenderDistanceToTargetFt: 5,
+    defenderCanSeeAttacker: true,
+    defenderHasEquippedShield: true,
+    defenderReactionAvailable: true,
+  };
+  const protectionAccepted = resolveProtectionReaction({
+    triggeringAttackId: 'attack-1',
+    sourceEntityIds: protectionBinding.sourceEntityIds,
+    facts: eligibleFacts,
+  });
+
+  return {
+    archery: {
+      rangedWeaponAttackDelta: attackModifier(runAttack({
+        card: SHORTBOW, mechanics: RANGED_WEAPON_ATTACK, style: archery,
+      })) - attackModifier(runAttack({ card: SHORTBOW, mechanics: RANGED_WEAPON_ATTACK })),
+      meleeWeaponAttackDelta: attackModifier(runAttack({ card: CARD_DAGGER, style: archery }))
+        - attackModifier(runAttack({ card: CARD_DAGGER })),
+      thrownMeleeWeaponDelta: attackModifier(runAttack({
+        card: CARD_DAGGER, mechanics: RANGED_WEAPON_ATTACK, style: archery,
+      })) - attackModifier(runAttack({ card: CARD_DAGGER, mechanics: RANGED_WEAPON_ATTACK })),
+    },
+    defense: {
+      armorDelta: acDelta({ body: CARD_LEATHER_ARMOR.id }),
+      unarmoredDelta: acDelta({}),
+      shieldOnlyDelta: acDelta({ off_hand: CARD_SHIELD.id }),
+    },
+    twoWeapon: {
+      lightExtraAttackDelta: damageTotal({
+        card: CARD_DAGGER, offHand: SCIMITAR, mechanics: MECH_OFFHAND_ATTACK, style: twoWeapon,
+      }) - damageTotal({ card: CARD_DAGGER, offHand: SCIMITAR, mechanics: MECH_OFFHAND_ATTACK }),
+      normalAttackDelta: damageTotal({ card: CARD_DAGGER, offHand: SCIMITAR, style: twoWeapon })
+        - damageTotal({ card: CARD_DAGGER, offHand: SCIMITAR }),
+      nonLightPairDelta: damageTotal({
+        card: CARD_LONGSWORD, offHand: CARD_DAGGER, mechanics: MECH_OFFHAND_ATTACK, style: twoWeapon,
+      }) - damageTotal({ card: CARD_LONGSWORD, offHand: CARD_DAGGER, mechanics: MECH_OFFHAND_ATTACK }),
+    },
+    protection: {
+      binding: {
+        styleId: protectionBinding.styleId,
+        mode: protectionBinding.mode,
+        capabilityId: protectionBinding.capabilityId,
+      },
+      eligible: protectionReactionEligibility(eligibleFacts),
+      outOfRange: protectionReactionEligibility({
+        ...eligibleFacts, defenderDistanceToTargetFt: 10,
+      }),
+      accepted: protectionAccepted.status === 'accepted'
+        ? { status: protectionAccepted.status, reactionSpent: protectionAccepted.reactionSpent }
+        : protectionAccepted,
+    },
+  };
+}
+
+export const EXISTING_STYLE_EXPECTED_SCENARIOS = {
+  archery: {
+    rangedWeaponAttackDelta: 2,
+    meleeWeaponAttackDelta: 0,
+    thrownMeleeWeaponDelta: 0,
+  },
+  defense: { armorDelta: 1, unarmoredDelta: 0, shieldOnlyDelta: 0 },
+  twoWeapon: { lightExtraAttackDelta: 2, normalAttackDelta: 0, nonLightPairDelta: 0 },
+  protection: {
+    binding: {
+      styleId: 'protection',
+      mode: 'reaction_capability',
+      capabilityId: 'fighting_style.protection.reaction',
+    },
+    eligible: { eligible: true },
+    outOfRange: { eligible: false, reason: 'target_out_of_range' },
+    accepted: { status: 'accepted', reactionSpent: true },
+  },
+} as const;

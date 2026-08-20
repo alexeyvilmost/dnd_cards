@@ -1,0 +1,108 @@
+[
+  {
+    "feat_card_number": "FEAT-0063",
+    "card_number": "fs_archery",
+    "name": "Боевой стиль: Стрельба",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "applies_to": {
+                "filter": { "attackKind": "weapon", "weaponCategory": "ranged" },
+                "roll": "attack"
+              },
+              "kind": "modifier",
+              "op": "add",
+              "source": "Fighting Style: Archery",
+              "value": "+2"
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "archery", "mode": "passive_modifier" }
+    }
+  },
+  {
+    "feat_card_number": "FEAT-0056",
+    "card_number": "fs_defense",
+    "name": "Боевой стиль: Оборона",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "applies_to": { "filter": { "wearingArmor": true }, "roll": "ac" },
+              "kind": "modifier",
+              "op": "add",
+              "source": "Боевой стиль: Оборона",
+              "value": "+1",
+              "when": [{ "kind": "wearing_armor" }]
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "defense", "mode": "passive_modifier" }
+    }
+  },
+  {
+    "feat_card_number": "FEAT-0055",
+    "card_number": "fs_protection",
+    "name": "Боевой стиль: Защита",
+    "mechanics": {
+      "activation": { "cost": [{ "resource": "reaction" }], "mode": "reaction" },
+      "capabilities": [
+        {
+          "id": "fighting_style.protection.reaction",
+          "requirements": {
+            "defender_can_see_attacker": true,
+            "defender_distance_to_target_ft": { "max": 5 },
+            "equipped_shield": true,
+            "target": "not_self"
+          },
+          "trigger": "other_target_attacked"
+        }
+      ],
+      "effects": [],
+      "fighting_style": {
+        "capability_id": "fighting_style.protection.reaction",
+        "id": "protection",
+        "mode": "reaction_capability"
+      }
+    }
+  },
+  {
+    "feat_card_number": "FEAT-0061",
+    "card_number": "fs_two_weapon",
+    "name": "Боевой стиль: Сражение двумя оружиями",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "applies_to": {
+                "filter": {
+                  "abilityModifierAlreadyIncluded": false,
+                  "attackKind": "weapon",
+                  "extraAttackSource": "light_property"
+                },
+                "roll": "damage"
+              },
+              "kind": "modifier",
+              "op": "add",
+              "source": "Fighting Style: Two-Weapon Fighting",
+              "value": "weapon_mod"
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "two_weapon_fighting", "mode": "passive_modifier" }
+    }
+  }
+]
