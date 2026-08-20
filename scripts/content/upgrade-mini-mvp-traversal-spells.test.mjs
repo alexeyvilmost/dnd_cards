@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   MINI_MVP_TRAVERSAL_SPELL_PATCHES,
+  assertMiniMvpTraversalSpellPlanUnlocked,
   planMiniMvpTraversalSpellUpgrade,
 } from './upgrade-mini-mvp-traversal-spells.mjs';
 
@@ -43,5 +44,26 @@ test('traversal spell planner rejects drift and is idempotent', () => {
       index === 1 ? { ...spell, mechanics: { activation: {} } } : spell
     ))),
     /mechanics drift/,
+  );
+});
+
+test('traversal spell plan preserves live lock metadata for atomic apply preflight', () => {
+  const after = MINI_MVP_TRAVERSAL_SPELL_PATCHES.map((patch, index) => ({
+    id: `spell-${index}`,
+    card_number: patch.cardNumber,
+    name: patch.name,
+    mechanics: patch.mechanics,
+    support: index === 1 ? { mechanics_locked: true } : null,
+  }));
+  const plan = planMiniMvpTraversalSpellUpgrade(after);
+  assert.equal(plan[1].support.mechanics_locked, true);
+  assert.equal(plan[1].changeRequired, false);
+  assert.doesNotThrow(() => assertMiniMvpTraversalSpellPlanUnlocked(plan));
+  assert.throws(
+    () => assertMiniMvpTraversalSpellPlanUnlocked([
+      { ...plan[1], changeRequired: true },
+      { ...plan[0], changeRequired: true },
+    ]),
+    /SPELL-0253/,
   );
 });

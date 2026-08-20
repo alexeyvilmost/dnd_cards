@@ -642,6 +642,13 @@ func GetAllMigrations() []Migration {
 			Up:          pinTacticalBasicActionTargets,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "102_revoke_invalid_feather_fall_certification",
+			Description: "Отозвать ложную полную сертификацию narrative-only механики Падения пёрышком",
+			Up:          revokeInvalidFeatherFallCertification,
+			// Журнал отзыва и восстановленный DB-guard являются аудиторским следом и не откатываются.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

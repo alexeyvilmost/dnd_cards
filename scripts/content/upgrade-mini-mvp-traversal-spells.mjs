@@ -42,10 +42,20 @@ export function planMiniMvpTraversalSpellUpgrade(spells) {
     return {
       ...spec,
       entityId: spell.id,
+      support: spell.support ?? null,
       currentHash,
       changeRequired: currentHash !== spec.expectedAfterHash,
     };
   });
+}
+
+export function assertMiniMvpTraversalSpellPlanUnlocked(plan) {
+  const blocked = plan.filter((item) => item.changeRequired && item.support?.mechanics_locked === true);
+  if (blocked.length > 0) {
+    throw new Error(
+      `Locked mechanics must be revoked before apply: ${blocked.map((item) => item.cardNumber).join(', ')}`,
+    );
+  }
 }
 
 export async function runMiniMvpTraversalSpellUpgrade({
@@ -58,6 +68,8 @@ export async function runMiniMvpTraversalSpellUpgrade({
     console.log(`  ${item.changeRequired ? '↻' : '✓'} ${item.cardNumber} ${item.name}`);
   }
   if (!apply || plan.every((item) => !item.changeRequired)) return plan;
+
+  assertMiniMvpTraversalSpellPlanUnlocked(plan);
 
   const token = await login();
   for (const item of plan.filter((candidate) => candidate.changeRequired)) {
