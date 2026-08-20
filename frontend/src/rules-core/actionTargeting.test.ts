@@ -120,6 +120,19 @@ describe('compileMechanicsTargeting', () => {
 });
 
 describe('materializeDeclaredMechanicsTargeting', () => {
+  it('preserves an already strict declaration including supported shape aliases', () => {
+    const declared: JsonObject = {
+      targeting: {
+        shape: 'multiple', domain: 'actor', actor_targets: true,
+        min_targets: 1, max_targets: 11, range_ft: 120,
+        requires_line_of_sight: true, allowed_relations: ['enemy'],
+      },
+    };
+    expect(materializeDeclaredMechanicsTargeting(declared)).toBe(declared);
+    expect((materializeDeclaredMechanicsTargeting(declared).targeting as JsonObject).shape)
+      .toBe('multiple');
+  });
+
   it('turns legacy self and single declarations into strict canonical contracts', () => {
     const self = materializeDeclaredMechanicsTargeting({ targeting: { shape: 'self' } });
     const enemy = materializeDeclaredMechanicsTargeting({

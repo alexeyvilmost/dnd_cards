@@ -236,6 +236,13 @@ function materializeArea(value: unknown): JsonObject | undefined {
  * canonical engine. Certified source bytes remain untouched.
  */
 export function materializeDeclaredMechanicsTargeting(mechanics: JsonObject): JsonObject {
+  try {
+    compileDeclaredMechanicsTargeting(mechanics);
+    return mechanics;
+  } catch {
+    // Compatibility materialization below is intentionally limited to rows
+    // that do not already satisfy the strict canonical declaration.
+  }
   const legacy = object(mechanics.targeting, 'mechanics.targeting');
   const area = materializeArea(legacy.area);
   const shape = String(legacy.shape ?? (area ? 'area' : 'single')) === 'multiple'
