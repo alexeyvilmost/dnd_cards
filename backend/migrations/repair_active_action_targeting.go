@@ -89,12 +89,14 @@ func applyActiveActionTargetingRepair(tx *sql.Tx, repair activeActionTargetingRe
 		return fmt.Errorf("unsupported targeting repair table %q", repair.Table)
 	}
 	query := fmt.Sprintf(`
-		SELECT mechanics
+		SELECT mechanics,
+		       COALESCE((support->>'mechanics_locked')::boolean, false)
 		FROM %s
 		WHERE card_number = $1 AND deleted_at IS NULL
 	`, repair.Table)
 	var beforeRaw []byte
-	if err := tx.QueryRow(query, repair.CardNumber).Scan(&beforeRaw); err != nil {
+	var mechanicsLocked bool
+	if err := tx.QueryRow(query, repair.CardNumber).Scan(&beforeRaw, &mechanicsLocked); err != nil {
 		return fmt.Errorf("read %s:%s targeting preimage: %w", repair.Table, repair.CardNumber, err)
 	}
 	var before map[string]any
@@ -118,6 +120,15 @@ func applyActiveActionTargetingRepair(tx *sql.Tx, repair activeActionTargetingRe
 		if repair.ExpectedLegacyTargeting == nil || !reflect.DeepEqual(existing, repair.ExpectedLegacyTargeting) {
 			return fmt.Errorf("%s:%s already has a different targeting contract", repair.Table, repair.CardNumber)
 		}
+		// Certified mechanics are immutable by policy. The runtime compiler still
+		// accepts the explicitly declared legacy contract, so preserving that
+		// known preimage is safer than bypassing the lock and invalidating every
+		// transitive certification. Unlocked rows continue to be normalized below.
+		if mechanicsLocked {
+			return nil
+		}
+	} else if mechanicsLocked && !exists {
+		return fmt.Errorf("%s:%s is mechanics-locked without targeting", repair.Table, repair.CardNumber)
 	}
 	after["targeting"] = repair.Targeting
 	if repair.EnsureWhoTarget {

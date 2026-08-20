@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 )
 
@@ -50,11 +51,13 @@ func TestActiveActionTargetingRepairExecutesIdempotently(t *testing.T) {
 		CREATE TABLE actions (
 			card_number TEXT PRIMARY KEY,
 			mechanics JSONB NOT NULL,
+			support JSONB NOT NULL DEFAULT '{}'::jsonb,
 			deleted_at TIMESTAMPTZ
 		);
 		CREATE TABLE cards (
 			card_number TEXT PRIMARY KEY,
 			mechanics JSONB NOT NULL,
+			support JSONB NOT NULL DEFAULT '{}'::jsonb,
 			deleted_at TIMESTAMPTZ
 		);
 	`); err != nil {
@@ -88,5 +91,53 @@ func TestActiveActionTargetingRepairExecutesIdempotently(t *testing.T) {
 		if domain != "actor" || (repair.EnsureWhoTarget && who != "target") {
 			t.Fatalf("%s:%s domain=%q who=%q", repair.Table, repair.CardNumber, domain, who)
 		}
+	}
+}
+
+func TestActiveActionTargetingRepairPreservesExpectedLockedLegacyContract(t *testing.T) {
+	db := openIsolatedPostgresSchema(t, "CONTENT_MIGRATION_TEST_DSN")
+	if _, err := db.Exec(`
+		CREATE TABLE actions (
+			card_number TEXT PRIMARY KEY,
+			mechanics JSONB NOT NULL,
+			support JSONB NOT NULL DEFAULT '{}'::jsonb,
+			deleted_at TIMESTAMPTZ
+		)
+	`); err != nil {
+		t.Fatal(err)
+	}
+	repair := activeActionTargetingRepairs[2]
+	legacy, err := json.Marshal(repair.ExpectedLegacyTargeting)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mechanics := `{"activation":{"mode":"active","cost":[{"resource":"bonus_action"}]},"effects":[],"targeting":` + string(legacy) + `}`
+	if _, err := db.Exec(`
+		INSERT INTO actions (card_number, mechanics, support)
+		VALUES ($1, $2::jsonb, '{"mechanics_locked":true}'::jsonb)
+	`, repair.CardNumber, mechanics); err != nil {
+		t.Fatal(err)
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	if err := applyActiveActionTargetingRepair(tx, repair); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	var targeting []byte
+	if err := db.QueryRow(`SELECT mechanics->'targeting' FROM actions WHERE card_number=$1`, repair.CardNumber).Scan(&targeting); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(targeting, &got); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, repair.ExpectedLegacyTargeting) {
+		t.Fatalf("locked targeting changed: got %#v want %#v", got, repair.ExpectedLegacyTargeting)
 	}
 }
