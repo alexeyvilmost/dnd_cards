@@ -14,6 +14,7 @@ import { CARD_LONGSWORD, FIGHTER_CTX, freshFighterState } from '../mvp/fixtures'
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
 import { parseWeaponProfile } from './weaponProfile';
+import { compileDeclaredMechanicsTargeting } from './actionTargeting';
 import type { Card } from '../types';
 
 type Dict = Record<string, unknown>;
@@ -62,6 +63,7 @@ describe('mini-MVP: data-driven utility cantrips', () => {
         name: definition.name,
         kind: 'spell',
       })).toEqual({ valid: true, errors: [] });
+      expect(() => compileDeclaredMechanicsTargeting(definition.mechanics as Dict)).not.toThrow();
     }
     for (const definition of weaponDefinitions) {
       expect(parseWeaponProfile({

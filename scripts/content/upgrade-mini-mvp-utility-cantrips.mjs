@@ -26,6 +26,14 @@ const PREIMAGE_HASHES = Object.freeze({
   'SPELL-0298': 'sha256:46b9090348d7506ef79ad4f61e92457e4e9cf8f41a038febc7ecda9b544a24c8',
   'SPELL-0312': 'sha256:df3f2b4b0297ce70ce32ddced62eede1245b2203dad3d87afe8e2e76c989c0ef',
 });
+// Exact first-pass postimages reached production before the real sheet canary
+// exposed stricter canonical targeting requirements. They are accepted only as
+// an audited bridge to the corrected declarations below.
+const INTERMEDIATE_HASHES = Object.freeze({
+  'SPELL-0173': 'sha256:8cb8be27b826af78a6ea55abebdca5ec12191bcdc0114a21c79be0482bcaa569',
+  'SPELL-0194': 'sha256:6ec4e4255badb8c2eee95af49371f51b3683dc63b801b06e234422305e324cf2',
+  'SPELL-0298': 'sha256:5084000a43cabe3aea8180e9c08fe88f12dee80c250621696b8943f782fd72ef',
+});
 const SUPPORT_VERSION = 'mini-mvp-utility-cantrips-v1';
 const SUPPORT = Object.freeze({
   'SPELL-0173': { passed: 2, required: 3, limitation: 'Состояние руки и ограничения команд проверены; выбор объекта и применение мутации к сцене ещё не встроены в UI карты.' },
@@ -43,6 +51,7 @@ export const MINI_MVP_UTILITY_CANTRIP_PATCHES = Object.freeze(definitions.map((d
   cardNumber: definition.card_number,
   name: definition.name,
   expectedBeforeHash: PREIMAGE_HASHES[definition.card_number],
+  expectedIntermediateHash: INTERMEDIATE_HASHES[definition.card_number],
   expectedAfterHash: sha256Canonical(definition.mechanics),
   mechanics: definition.mechanics,
 })));
@@ -66,9 +75,15 @@ export function planMiniMvpUtilityCantripUpgrade(spells) {
       throw new Error(`${spec.cardNumber}: expected «${spec.name}», got «${spell.name}»`);
     }
     const currentHash = sha256Canonical(spell.mechanics);
-    if (currentHash !== spec.expectedBeforeHash && currentHash !== spec.expectedAfterHash) {
+    if (currentHash !== spec.expectedBeforeHash
+      && currentHash !== spec.expectedIntermediateHash
+      && currentHash !== spec.expectedAfterHash) {
       throw new Error(
-        `${spec.cardNumber}: mechanics drift; expected ${spec.expectedBeforeHash} or ${spec.expectedAfterHash}, got ${currentHash}`,
+        `${spec.cardNumber}: mechanics drift; expected ${[
+          spec.expectedBeforeHash,
+          spec.expectedIntermediateHash,
+          spec.expectedAfterHash,
+        ].filter(Boolean).join(' or ')}, got ${currentHash}`,
       );
     }
     return {

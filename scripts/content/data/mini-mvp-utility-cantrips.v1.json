@@ -27,7 +27,11 @@
         }
       ],
       "spell_class_list_ids": ["CLASS-bard", "CLASS-sorcerer", "CLASS-warlock", "CLASS-wizard"],
-      "targeting": { "shape": "self", "domain": "actor", "actor_targets": false }
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
     }
   },
   {
@@ -95,7 +99,11 @@
         }
       ],
       "spell_class_list_ids": ["CLASS-druid"],
-      "targeting": { "shape": "self", "domain": "actor", "actor_targets": false }
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
     }
   },
   {
@@ -204,7 +212,11 @@
         }
       ],
       "spell_class_list_ids": ["CLASS-druid", "CLASS-sorcerer", "CLASS-wizard"],
-      "targeting": { "shape": "single", "domain": "world", "actor_targets": false, "range_ft": 30, "requires_line_of_sight": true }
+      "targeting": {
+        "shape": "single", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 30,
+        "requires_line_of_sight": true, "allowed_relations": []
+      }
     }
   },
   {
