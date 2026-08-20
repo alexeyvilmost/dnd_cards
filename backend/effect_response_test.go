@@ -65,3 +65,34 @@ func TestActionResponseExposesEveryMutableRelationshipAndProvenanceField(t *test
 		t.Fatalf("relationship fields were lost: %#v", response)
 	}
 }
+
+func TestCardResponseExposesEveryMutableRelationshipAndProvenanceField(t *testing.T) {
+	nameEn := "Spellbook"
+	source := "Player's Handbook 2024"
+	relatedCards := Properties{"CARD-0002"}
+	relatedActions := Properties{"ACTION-0001"}
+	relatedEffects := Properties{"EFFECT-0001"}
+	card := Card{
+		ID:             uuid.New(),
+		Name:           "Книга заклинаний",
+		NameEn:         &nameEn,
+		Description:    "Описание",
+		Rarity:         RarityCommon,
+		CardNumber:     "CARD-0001",
+		Author:         "Wizards of the Coast",
+		Source:         &source,
+		RelatedCards:   &relatedCards,
+		RelatedActions: &relatedActions,
+		RelatedEffects: &relatedEffects,
+	}
+
+	response := card.ToCardResponse()
+	if response.Author != card.Author || response.Source != card.Source {
+		t.Fatalf("provenance fields were lost: %#v", response)
+	}
+	if response.RelatedCards != card.RelatedCards ||
+		response.RelatedActions != card.RelatedActions ||
+		response.RelatedEffects != card.RelatedEffects {
+		t.Fatalf("relationship fields were lost: %#v", response)
+	}
+}

@@ -547,6 +547,11 @@ type CardResponse struct {
 	DetailedDescriptionAlignment *string        `json:"detailed_description_alignment"`
 	DetailedDescriptionFontSize  *int           `json:"detailed_description_font_size"`
 	IsExtended                   *bool          `json:"is_extended"`
+	Author                       string         `json:"author"`
+	Source                       *string        `json:"source"`
+	RelatedCards                 *Properties    `json:"related_cards"`
+	RelatedActions               *Properties    `json:"related_actions"`
+	RelatedEffects               *Properties    `json:"related_effects"`
 	Attunement                   *string        `json:"attunement"`
 	RequiresAttunement           *bool          `json:"requires_attunement"`
 	Range                        *string        `json:"range"`
@@ -836,6 +841,11 @@ func (card Card) ToCardResponse() CardResponse {
 		DetailedDescriptionAlignment: card.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize:  card.DetailedDescriptionFontSize,
 		IsExtended:                   card.IsExtended,
+		Author:                       card.Author,
+		Source:                       card.Source,
+		RelatedCards:                 card.RelatedCards,
+		RelatedActions:               card.RelatedActions,
+		RelatedEffects:               card.RelatedEffects,
 		Attunement:                   card.Attunement,
 		RequiresAttunement:           card.RequiresAttunement,
 		Range:                        card.Range,
