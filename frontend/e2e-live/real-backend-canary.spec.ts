@@ -17,6 +17,7 @@ import {
   assertLiveCanaryRequestOrigin,
   requiredLiveCanaryOrigin,
 } from '../liveCanaryTargets';
+import type { Background, Card, CharacterClass, Feat, Race } from '../src/types';
 
 type JsonRecord = Record<string, unknown>;
 type RequestMethod = 'get' | 'post' | 'patch' | 'delete';
@@ -98,6 +99,7 @@ interface RuntimeEffect extends JsonRecord {
 interface CharacterResponse extends JsonRecord {
   id: string;
   name: string;
+  class_id?: string | null;
   notes?: string;
   access_mode?: 'owner' | 'legacy_public_readonly';
   current_hp: number;
@@ -109,6 +111,7 @@ interface CharacterResponse extends JsonRecord {
   inventory_items?: Array<{ card_id: string; qty: number }>;
   resources?: JsonRecord;
   turn_state?: JsonRecord;
+  currency?: Record<string, number>;
 }
 
 interface CatalogCard extends JsonRecord {
@@ -168,6 +171,22 @@ const compiledFixture = JSON.parse(readFileSync(new URL(
   };
 };
 
+const miniMvpForgeSheetFixture = JSON.parse(readFileSync(new URL(
+  '../src/canon/data/mini-mvp-forge-sheet-fixture.v1.json',
+  import.meta.url,
+), 'utf8')) as {
+  schemaVersion: 1;
+  strategy: 'cyclic-covering-set-v1';
+  coverage: Record<'classes' | 'species' | 'backgrounds' | 'originFeats', string[]>;
+  roots: Array<{
+    classCardNumber: string;
+    raceCardNumber: string;
+    backgroundCardNumber: string;
+    featCardNumber: string;
+    draft: CompiledDraftRoot['draft'];
+  }>;
+};
+
 const CERTIFIED_LONGBOW = {
   id: 'cc1ac793-af4f-45aa-87e2-bd563c734bef',
   card_number: 'CARD-0327',
@@ -223,6 +242,48 @@ async function checkedJSON<T>(
     throw new Error(`${method.toUpperCase()} ${path} failed with HTTP ${response.status()}`);
   }
   return response.json() as Promise<T>;
+}
+
+async function fetchAllLive<T extends { id: string }>(
+  api: LiveAPI,
+  path: string,
+  key: string,
+): Promise<T[]> {
+  const items: T[] = [];
+  const seenIds = new Set<string>();
+  let total: number | null = null;
+  for (let page = 1; page <= 100; page += 1) {
+    const body = await checkedJSON<Record<string, unknown>>(
+      api,
+      'get',
+      `${path}?page=${page}&limit=1000`,
+    );
+    const batch = body[key];
+    if (!Array.isArray(batch)) throw new Error(`${path}: response is missing ${key}`);
+    const responseTotal = Number(body.total);
+    if (Number.isSafeInteger(responseTotal) && responseTotal >= 0) {
+      if (total !== null && total !== responseTotal) {
+        throw new Error(`${path}: total changed from ${total} to ${responseTotal}`);
+      }
+      total = responseTotal;
+    }
+    for (const item of batch as T[]) {
+      if (!item?.id || seenIds.has(item.id)) {
+        throw new Error(`${path}: repeated or blank entity id ${item?.id ?? '<blank>'}`);
+      }
+      seenIds.add(item.id);
+      items.push(item);
+    }
+    if (total !== null) {
+      if (items.length === total) return items;
+      if (items.length > total || batch.length === 0) {
+        throw new Error(`${path}: received ${items.length}/${total} rows`);
+      }
+    } else if (batch.length < 1000) {
+      return items;
+    }
+  }
+  throw new Error(`${path}: pagination exceeded 100 pages`);
 }
 
 async function expectStatus(
@@ -386,10 +447,11 @@ async function loginInBrowser(
 
 async function createCompiledCharacterInForge(
   page: Page,
-  root: CompiledDraftRoot,
+  root: Pick<CompiledDraftRoot, 'draft'>,
   name: string,
   cleanupMarker: string,
   apiOrigin: string,
+  inspectCreateRequest?: (body: JsonRecord) => void,
 ): Promise<CharacterResponse> {
   const draft = structuredClone(root.draft);
   draft.name = name;
@@ -431,6 +493,7 @@ async function createCompiledCharacterInForge(
   const response = await responsePromise;
   assertLiveCanaryRequestOrigin(response.url(), apiOrigin, 'Forge character creation');
   expect(response.status(), 'Forge character creation response').toBe(201);
+  inspectCreateRequest?.(response.request().postDataJSON() as JsonRecord);
   const character = await response.json() as CharacterResponse;
   expect(character).toMatchObject({ name, notes: cleanupMarker, access_mode: 'owner' });
   await expect(page).toHaveURL(new RegExp(`/characters-v3/${character.id}$`));
@@ -1053,6 +1116,209 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
       throw new AggregateError(
         [bodyError, ...cleanupErrors.map((message) => new Error(message))],
         'Public utility sheet certificate and cleanup both failed',
+      );
+    }
+    throw bodyError;
+  }
+  if (cleanupErrors.length > 0) throw new Error(cleanupErrors.join('; '));
+});
+
+test('public mini-MVP sheet certificate: every root entity crosses Forge and the live sheet', async ({
+  browser,
+  playwright,
+}, testInfo) => {
+  test.setTimeout(900_000);
+  const frontendOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_BASE_URL', 'frontend');
+  const apiOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_API_URL', 'backend');
+  const expectedCommit = required('EXPECTED_DEPLOYED_COMMIT').toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(expectedCommit)) {
+    throw new Error('EXPECTED_DEPLOYED_COMMIT must be an exact 40-hex Git commit');
+  }
+  const account = credentials('A');
+  const runMarker = `public-mini-forge-sheet:${randomUUID()}`;
+  const diagnostics: string[] = [];
+  const cleanupErrors: string[] = [];
+  const characters: CharacterResponse[] = [];
+  let bodyError: unknown;
+  let auth: AuthenticatedAPI | undefined;
+  let context: BrowserContext | undefined;
+  let stopDiagnostics: (() => void) | undefined;
+
+  try {
+    auth = await authenticatedAPI(playwright, apiOrigin, account, 'mini-MVP Forge sheet account');
+    const [health, build, classes, races, backgrounds, feats, cards] = await Promise.all([
+      checkedJSON<{ source_commit?: string }>(auth.api, 'get', '/api/health'),
+      checkedJSON<{ source_commit?: string }>(
+        auth.api,
+        'get',
+        `/build-info.json?release=${expectedCommit}`,
+      ),
+      fetchAllLive<CharacterClass>(auth.api, '/api/classes', 'classes'),
+      fetchAllLive<Race>(auth.api, '/api/races', 'races'),
+      fetchAllLive<Background>(auth.api, '/api/backgrounds', 'backgrounds'),
+      fetchAllLive<Feat>(auth.api, '/api/feats', 'feats'),
+      fetchAllLive<Card>(auth.api, '/api/cards', 'cards'),
+    ]);
+    expect(health.source_commit, 'public backend commit').toBe(expectedCommit);
+    expect(build.source_commit, 'public frontend commit').toBe(expectedCommit);
+
+    const manifestUrl = new URL('../../scripts/content/mini-mvp-manifest.mjs', import.meta.url);
+    const { MINI_MVP_MANIFEST } = await import(/* @vite-ignore */ manifestUrl.href) as {
+      MINI_MVP_MANIFEST: {
+        collections: Record<string, Array<{
+          key: string;
+          selector: { cardNumber?: string };
+        }>>;
+      };
+    };
+    const resolveManifest = <T extends { card_number: string }>(
+      collection: string,
+      catalog: T[],
+    ): T[] => MINI_MVP_MANIFEST.collections[collection].map((entry) => {
+      const matches = catalog.filter((entity) => entity.card_number === entry.selector.cardNumber);
+      if (matches.length !== 1) {
+        throw new Error(`${entry.key}: expected one ${entry.selector.cardNumber}, got ${matches.length}`);
+      }
+      return matches[0];
+    });
+    const scopedClasses = resolveManifest('classes', classes);
+    const scopedRaces = resolveManifest('species', races);
+    const scopedBackgrounds = resolveManifest('backgrounds', backgrounds);
+    const scopedFeats = resolveManifest('originFeats', feats);
+    expect(scopedClasses).toHaveLength(12);
+    expect(scopedRaces).toHaveLength(10);
+    expect(scopedBackgrounds).toHaveLength(16);
+    expect(scopedFeats).toHaveLength(10);
+
+    const cardById = new Map(cards.map((card) => [card.id, card]));
+    expect(miniMvpForgeSheetFixture.schemaVersion).toBe(1);
+    expect(miniMvpForgeSheetFixture.roots).toHaveLength(16);
+    expect(miniMvpForgeSheetFixture.coverage).toEqual({
+      classes: scopedClasses.map((entity) => entity.card_number),
+      species: scopedRaces.map((entity) => entity.card_number),
+      backgrounds: scopedBackgrounds.map((entity) => entity.card_number),
+      originFeats: scopedFeats.map((entity) => entity.card_number),
+    });
+
+    context = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
+    await installBrowserOriginFence(context, new Set([frontendOrigin, apiOrigin]));
+    const page = await context.newPage();
+    stopDiagnostics = captureBrowserDiagnostics(
+      page,
+      'public mini-MVP Forge sheet certificate',
+      [account.password],
+      diagnostics,
+    );
+    await loginInBrowser(page, account, frontendOrigin, apiOrigin);
+
+    // This 16-row covering set reaches every class/species/background/origin
+    // feat at least once.  It is deliberately
+    // smaller than the cartesian product while retaining per-entity evidence.
+    for (const [index, root] of miniMvpForgeSheetFixture.roots.entries()) {
+      const exact = <T extends { id: string; card_number: string }>(
+        catalog: T[],
+        cardNumber: string,
+      ): T => {
+        const matches = catalog.filter((entity) => entity.card_number === cardNumber);
+        if (matches.length !== 1) throw new Error(`${cardNumber}: expected one live entity, got ${matches.length}`);
+        return matches[0];
+      };
+      const klass = exact(classes, root.classCardNumber);
+      const race = exact(races, root.raceCardNumber);
+      const background = exact(backgrounds, root.backgroundCardNumber);
+      const feat = exact(feats, root.featCardNumber);
+      expect(root.draft.classId, `${klass.card_number} fixture class`).toBe(klass.id);
+      expect(root.draft.raceId, `${race.card_number} fixture species`).toBe(race.id);
+      expect(root.draft.backgroundId, `${background.card_number} fixture background`).toBe(background.id);
+      expect(root.draft.featIds, `${feat.card_number} fixture origin feat`).toContain(feat.id);
+
+      const marker = `${runMarker}:${index}:${klass.card_number}`;
+      let submittedCreate: JsonRecord | undefined;
+      const character = await createCompiledCharacterInForge(
+        page,
+        { draft: root.draft },
+        `Canary ${klass.name} ${index + 1} ${runMarker.slice(-8)}`,
+        marker,
+        apiOrigin,
+        (body) => { submittedCreate = body; },
+      );
+      characters.push(character);
+      const persisted = await checkedJSON<CharacterResponse>(
+        auth.api,
+        'get',
+        `/api/characters-v3/${character.id}`,
+      );
+      expect(persisted.class_id, `${klass.card_number} persisted class`).toBe(klass.id);
+
+      const classOption = klass.equipment_options?.option_a;
+      const backgroundOption = background.equipment_options?.option_a;
+      expect(classOption, `${klass.card_number} option A`).toBeTruthy();
+      expect(backgroundOption, `${background.card_number} option A`).toBeTruthy();
+      const actualQuantities = new Map(
+        (persisted.inventory_items ?? []).map((item) => [item.card_id, item.qty]),
+      );
+      const submittedQuantities = new Map(
+        ((submittedCreate?.inventory_items ?? []) as Array<{ card_id: string; qty: number }>)
+          .map((item) => [item.card_id, item.qty]),
+      );
+      for (const item of classOption?.items ?? []) {
+        expect(
+          submittedQuantities.get(item.card_id) ?? 0,
+          `${klass.card_number} submitted ${cardById.get(item.card_id)?.card_number ?? item.card_id}; `
+            + `inventory=${JSON.stringify(submittedCreate?.inventory_items ?? null)}`,
+        ).toBeGreaterThanOrEqual(item.quantity);
+        expect(
+          actualQuantities.get(item.card_id) ?? 0,
+          `${klass.card_number} ${cardById.get(item.card_id)?.card_number ?? item.card_id}`,
+        ).toBeGreaterThanOrEqual(item.quantity);
+      }
+      const expectedGold = Number(classOption?.gold ?? 0) + Number(backgroundOption?.gold ?? 0);
+      expect(persisted.currency?.gold ?? 0, `${klass.card_number} starting gold`).toBe(expectedGold);
+
+      const visibleClassItem = (classOption?.items ?? [])
+        .map((item) => cardById.get(item.card_id))
+        .find((card): card is Card => Boolean(card));
+      if (visibleClassItem) {
+        await expect(
+          page.getByTitle(visibleClassItem.name, { exact: true }).first(),
+          `${klass.card_number} item on the real sheet`,
+        ).toBeVisible();
+      }
+      await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
+      await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+    }
+
+    if (diagnostics.length > 0) {
+      throw new Error(`Browser diagnostics are not clean:\n${diagnostics.join('\n')}`);
+    }
+  } catch (error) {
+    bodyError = error;
+  } finally {
+    if (diagnostics.length > 0) {
+      await testInfo.attach('public-mini-forge-sheet-certificate-diagnostics', {
+        body: diagnostics.join('\n'),
+        contentType: 'text/plain',
+      });
+    }
+    stopDiagnostics?.();
+    await closeContext(context, 'public mini-MVP Forge sheet certificate', cleanupErrors);
+    if (auth) {
+      for (const character of characters) {
+        await cleanupCharacterArtifacts(auth.api, character.id, character.notes ?? '', cleanupErrors);
+      }
+      try {
+        await auth.api.request.dispose();
+      } catch (error) {
+        cleanupErrors.push(`API context cleanup: ${errorMessage(error)}`);
+      }
+    }
+  }
+
+  if (bodyError !== undefined) {
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [bodyError, ...cleanupErrors.map((message) => new Error(message))],
+        'Public mini-MVP Forge sheet certificate and cleanup both failed',
       );
     }
     throw bodyError;

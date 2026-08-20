@@ -2,6 +2,7 @@ import backgrounds from '../../../officials/canon/prod-snapshot/backgrounds.json
 import { describe, expect, it } from 'vitest';
 import type { PatchCharacterRuntimeRequest } from './api';
 import {
+  projectCharacterStartingEquipmentPatch,
   projectStartingEquipmentPatch,
   type StartingEquipmentOption,
 } from './startingEquipment';
@@ -68,6 +69,35 @@ function optionA(cardNumber: string): StartingEquipmentOption {
 }
 
 describe('starting equipment runtime projection', () => {
+  it('uses the assembled class without waiting for a separate class catalog', () => {
+    const projected = projectCharacterStartingEquipmentPatch(
+      {},
+      { equipmentOption: 'a', classEquipmentOption: 'a' },
+      {
+        background: {
+          equipment_options: {
+            option_a: { items: [{ card_id: 'background-item', quantity: 1 }], gold: 12 },
+            option_b: { items: [], gold: 50 },
+          },
+        },
+        klass: {
+          equipment_options: {
+            option_a: { items: [{ card_id: 'class-item', quantity: 2 }], gold: 7 },
+            option_b: { items: [], gold: 75 },
+          },
+        },
+      } as never,
+    );
+
+    expect(projected).toEqual({
+      inventory_items: [
+        { card_id: 'background-item', qty: 1 },
+        { card_id: 'class-item', qty: 2 },
+      ],
+      currency: { gold: 19 },
+    });
+  });
+
   for (const fixture of BACKGROUND_BRANCHES) {
     it(`projects the literal ${fixture.name} option-A branch`, () => {
       const option = optionA(fixture.cardNumber);

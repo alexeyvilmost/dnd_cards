@@ -1,4 +1,6 @@
 import type { PatchCharacterRuntimeRequest } from './api';
+import type { AssembledCharacter } from './assemble';
+import type { CharacterDraft } from './types';
 
 export interface StartingEquipmentOption {
   items?: readonly {
@@ -44,4 +46,26 @@ export function projectStartingEquipmentPatch(
   }
 
   return projected;
+}
+
+/**
+ * Selects both creation-time equipment branches from the already assembled
+ * Forge bundle. The bundle is the creation gate's authority; catalog lists may
+ * still be loading and must never be a hidden prerequisite for inventory.
+ */
+export function projectCharacterStartingEquipmentPatch(
+  patch: PatchCharacterRuntimeRequest,
+  draft: Pick<CharacterDraft, 'equipmentOption' | 'classEquipmentOption'>,
+  assembled: Pick<AssembledCharacter, 'background' | 'klass'>,
+): PatchCharacterRuntimeRequest {
+  const backgroundOptions = assembled.background?.equipment_options;
+  const backgroundOption = backgroundOptions?.[
+    draft.equipmentOption === 'b' ? 'option_b' : 'option_a'
+  ];
+  const classOptions = assembled.klass?.equipment_options;
+  const classKey = draft.classEquipmentOption === 'b'
+    ? 'option_b'
+    : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
+  const classOption = classOptions?.[classKey] ?? classOptions?.option_a;
+  return projectStartingEquipmentPatch(patch, backgroundOption, classOption);
 }

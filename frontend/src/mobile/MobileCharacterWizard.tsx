@@ -8,7 +8,7 @@ import { AbilityAssigner, ChoiceResolver, optionsForChoice } from '../character/
 import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
-import { projectStartingEquipmentPatch } from '../character/startingEquipment';
+import { projectCharacterStartingEquipmentPatch } from '../character/startingEquipment';
 import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveCharacter';
 import { spellMatchesChoice } from '../character/spellChoices';
 import {
@@ -556,16 +556,7 @@ export default function MobileCharacterWizard() {
           undefined,
           resolvedRules.freeuseSpells,
         ) ?? {};
-        const backgroundOptions = assembled.background?.equipment_options;
-        const backgroundOption = backgroundOptions?.[
-          draft.equipmentOption === 'b' ? 'option_b' : 'option_a'
-        ];
-        const classOptions = selectedClass?.equipment_options;
-        const classKey = draft.classEquipmentOption === 'b'
-          ? 'option_b'
-          : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
-        const classOption = classOptions?.[classKey] ?? classOptions?.option_a;
-        runtimePatch = projectStartingEquipmentPatch(runtimePatch, backgroundOption, classOption);
+        runtimePatch = projectCharacterStartingEquipmentPatch(runtimePatch, draft, assembled);
         character = await saveCharacter(charactersV3Api, {
           mode: 'create',
           payload,

@@ -1,0 +1,114 @@
+import { autoBuildAt, type BuildContent } from './autoBuild';
+import type { CharacterDraft } from '../character/types';
+import type { Background, CharacterClass, Feat, Race } from '../types';
+
+type ManifestEntry = {
+  key: string;
+  selector: { cardNumber?: string };
+};
+
+export interface MiniMvpForgeManifest {
+  collections: Record<string, ManifestEntry[]>;
+}
+
+export interface MiniMvpForgeSheetRoot {
+  classCardNumber: string;
+  raceCardNumber: string;
+  backgroundCardNumber: string;
+  featCardNumber: string;
+  draft: CharacterDraft;
+}
+
+export interface MiniMvpForgeSheetFixture {
+  schemaVersion: 1;
+  strategy: 'cyclic-covering-set-v1';
+  coverage: {
+    classes: string[];
+    species: string[];
+    backgrounds: string[];
+    originFeats: string[];
+  };
+  roots: MiniMvpForgeSheetRoot[];
+}
+
+function resolveManifest<T extends { card_number: string }>(
+  manifest: MiniMvpForgeManifest,
+  collection: string,
+  catalog: readonly T[],
+): T[] {
+  const entries = manifest.collections[collection];
+  if (!Array.isArray(entries)) throw new Error(`mini-MVP manifest is missing ${collection}`);
+  return entries.map((entry) => {
+    const cardNumber = entry.selector.cardNumber;
+    const matches = catalog.filter((entity) => entity.card_number === cardNumber);
+    if (matches.length !== 1) {
+      throw new Error(`${entry.key}: expected one ${cardNumber ?? '<missing>'}, got ${matches.length}`);
+    }
+    return matches[0];
+  });
+}
+
+function cardNumbers(values: ReadonlyArray<{ card_number: string }>): string[] {
+  return values.map((value) => value.card_number);
+}
+
+/**
+ * Builds a compact covering set with the same assembler and completion gate as
+ * CharacterForge.  Sixteen roots cover every mini-MVP class, species,
+ * background and origin feat at least once without a 19,200-row cartesian run.
+ */
+export async function buildMiniMvpForgeSheetFixture(
+  manifest: MiniMvpForgeManifest,
+  content: BuildContent,
+): Promise<MiniMvpForgeSheetFixture> {
+  const classes = resolveManifest<CharacterClass>(manifest, 'classes', content.classes);
+  const species = resolveManifest<Race>(manifest, 'species', content.races);
+  const backgrounds = resolveManifest<Background>(manifest, 'backgrounds', content.backgrounds);
+  const originFeats = resolveManifest<Feat>(manifest, 'originFeats', content.feats);
+  const roots: MiniMvpForgeSheetRoot[] = [];
+
+  for (let index = 0; index < backgrounds.length; index += 1) {
+    const klass = classes[index % classes.length];
+    const race = species[index % species.length];
+    const background = backgrounds[index];
+    const feat = originFeats[index % originFeats.length];
+    const result = await autoBuildAt({
+      classId: klass.id,
+      raceId: race.id,
+      backgroundId: background.id,
+      featIds: [feat.id],
+      replaceBackgroundFeat: true,
+      level: 1,
+    }, content);
+    const failures = [
+      ...result.unresolvedNonSpell.map((issue) => `non-spell: ${issue}`),
+      ...result.unresolvedSpell.map((issue) => `spell: ${issue}`),
+      ...result.issues.map((issue) => `completion: ${issue}`),
+    ];
+    if (failures.length > 0) {
+      throw new Error(`${klass.card_number}/${background.card_number}: ${failures.join('; ')}`);
+    }
+    result.draft.name = `Mini-MVP · ${klass.card_number} · ${background.card_number}`;
+    result.draft.classEquipmentOption = 'a';
+    result.draft.equipmentOption = 'a';
+    roots.push({
+      classCardNumber: klass.card_number,
+      raceCardNumber: race.card_number,
+      backgroundCardNumber: background.card_number,
+      featCardNumber: feat.card_number,
+      draft: result.draft,
+    });
+  }
+
+  return {
+    schemaVersion: 1,
+    strategy: 'cyclic-covering-set-v1',
+    coverage: {
+      classes: cardNumbers(classes),
+      species: cardNumbers(species),
+      backgrounds: cardNumbers(backgrounds),
+      originFeats: cardNumbers(originFeats),
+    },
+    roots,
+  };
+}

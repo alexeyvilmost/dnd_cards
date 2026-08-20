@@ -7,7 +7,7 @@ import { getSpellLevelLabel } from '../types';
 import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
-import { projectStartingEquipmentPatch } from '../character/startingEquipment';
+import { projectCharacterStartingEquipmentPatch } from '../character/startingEquipment';
 import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveCharacter';
 import { maxAvailableSpellSlotLevel, resolveByLevel } from '../engine/resources';
 import { useResourceOptions } from '../utils/resources';
@@ -521,16 +521,9 @@ const CharacterForge = () => {
           ruleState.freeuseSpells,
         ) ?? {};
         // Стартовое снаряжение и деньги входят в тот же POST, что и персонаж.
-        const bgOptions = assembled.background?.equipment_options as
-          | Record<'option_a' | 'option_b', { items?: Array<{ card_id: string; quantity?: number }>; gold?: number }>
-          | null | undefined;
-        const bgOpt = bgOptions?.[draft.equipmentOption === 'b' ? 'option_b' : 'option_a'];
-        const clOptions = classes.find((c) => c.id === draft.classId)?.equipment_options;
-        const clKey = draft.classEquipmentOption === 'b' ? 'option_b'
-          : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
-        // Устаревший выбор (вариант удалили из класса) — падаем на вариант А.
-        const clOpt = clOptions?.[clKey] ?? clOptions?.option_a;
-        runtimePatch = projectStartingEquipmentPatch(runtimePatch, bgOpt, clOpt);
+        // Берём обе ветки из assembled bundle: он уже прошёл creation gate, в
+        // отличие от параллельно загружаемого списка превью классов.
+        runtimePatch = projectCharacterStartingEquipmentPatch(runtimePatch, draft, assembled);
         res = await saveCharacter(charactersV3Api, {
           mode: 'create',
           payload,

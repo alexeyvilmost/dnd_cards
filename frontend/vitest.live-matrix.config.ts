@@ -12,6 +12,7 @@ export default defineConfig({
       'src/mvp/mini-mvp.control-spells.live.test.ts',
       'src/mvp/mini-mvp.utility-cantrips.live.test.ts',
       'src/mvp/mini-mvp.utility-level1-spells.live.test.ts',
+      'src/mvp/mini-mvp.forge-roots.live.test.ts',
     ],
     setupFiles: ['src/mvp/liveReadRetry.setup.ts'],
     fileParallelism: false,

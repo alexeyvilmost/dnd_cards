@@ -1,0 +1,1201 @@
+{
+  "schemaVersion": 1,
+  "strategy": "cyclic-covering-set-v1",
+  "coverage": {
+    "classes": [
+      "CLASS-barbarian",
+      "CLASS-bard",
+      "CLASS-warrior",
+      "CLASS-wizard",
+      "CLASS-druid",
+      "CLASS-cleric",
+      "CLASS-warlock",
+      "CLASS-monk",
+      "CLASS-paladin",
+      "CLASS-rogue",
+      "CLASS-ranger",
+      "CLASS-sorcerer"
+    ],
+    "species": [
+      "RACE-0010",
+      "RACE-0005",
+      "RACE-0011",
+      "RACE-0003",
+      "RACE-0008",
+      "RACE-0007",
+      "RACE-0006",
+      "RACE-0009",
+      "RACE-0002",
+      "RACE-0004"
+    ],
+    "backgrounds": [
+      "BG-0001",
+      "BG-0002",
+      "BG-0003",
+      "BG-0004",
+      "BG-0005",
+      "BG-0006",
+      "BG-0007",
+      "BG-0008",
+      "BG-0009",
+      "BG-0010",
+      "BG-0011",
+      "BG-0012",
+      "BG-0013",
+      "BG-0014",
+      "BG-0015",
+      "BG-0016"
+    ],
+    "originFeats": [
+      "FEAT-0001",
+      "FEAT-0002",
+      "FEAT-0003",
+      "FEAT-0004",
+      "FEAT-0005",
+      "FEAT-0006",
+      "FEAT-0007",
+      "FEAT-0008",
+      "FEAT-0009",
+      "FEAT-0010"
+    ]
+  },
+  "roots": [
+    {
+      "classCardNumber": "CLASS-barbarian",
+      "raceCardNumber": "RACE-0010",
+      "backgroundCardNumber": "BG-0001",
+      "featCardNumber": "FEAT-0001",
+      "draft": {
+        "name": "Mini-MVP · CLASS-barbarian · BG-0001",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3b63e5cd-fd0b-4887-a187-a6f11ab17dfc",
+        "lineageId": null,
+        "classId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+        "subclassId": null,
+        "backgroundId": "f63ca302-2fa2-4e58-b790-3f03429cfa69",
+        "level": 1,
+        "featIds": [
+          "642812ee-4ac3-44b8-bdda-beeeee15213a"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "animal_handling",
+          "athletics"
+        ],
+        "resolvedChoices": {
+          "class:9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-bard",
+      "raceCardNumber": "RACE-0005",
+      "backgroundCardNumber": "BG-0002",
+      "featCardNumber": "FEAT-0002",
+      "draft": {
+        "name": "Mini-MVP · CLASS-bard · BG-0002",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "a81e448f-34f6-417e-ae3c-8f92f5259edf",
+        "lineageId": null,
+        "classId": "be96272c-8585-438d-ac32-b2788f1b1741",
+        "subclassId": null,
+        "backgroundId": "1084c6ac-d70d-4ef3-8cdb-caf9872017e5",
+        "level": 1,
+        "featIds": [
+          "1868ee2c-185c-486b-b6c1-457497e89820"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+          "8821d595-ec03-42b8-aeaf-f50f7d72b726"
+        ],
+        "abilities": {
+          "str": 12,
+          "dex": 14,
+          "con": 13,
+          "int": 9,
+          "wis": 12,
+          "cha": 15
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "int": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling",
+          "arcana"
+        ],
+        "resolvedChoices": {
+          "class:be96272c-8585-438d-ac32-b2788f1b1741:1ea222f0-2d5b-47a3-91b2-3f683af5d007:bard_cantrips": [
+            "70e35366-5446-49ff-b0b9-759dbbff347e",
+            "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2"
+          ],
+          "class:be96272c-8585-438d-ac32-b2788f1b1741:1ea222f0-2d5b-47a3-91b2-3f683af5d007:bard_spells_l1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+            "8821d595-ec03-42b8-aeaf-f50f7d72b726"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-warrior",
+      "raceCardNumber": "RACE-0011",
+      "backgroundCardNumber": "BG-0003",
+      "featCardNumber": "FEAT-0003",
+      "draft": {
+        "name": "Mini-MVP · CLASS-warrior · BG-0003",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "ddde0222-b594-4bac-8103-d32395c294c2",
+        "level": 1,
+        "featIds": [
+          "d782baf6-6682-49d1-aee5-a8ee920f87fd"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 15,
+          "dex": 15,
+          "con": 14,
+          "int": 8,
+          "wis": 13,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "dex": 2,
+            "wis": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "e28c558d-5239-4008-837f-6cda8fa47d3a"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-wizard",
+      "raceCardNumber": "RACE-0003",
+      "backgroundCardNumber": "BG-0004",
+      "featCardNumber": "FEAT-0004",
+      "draft": {
+        "name": "Mini-MVP · CLASS-wizard · BG-0004",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "subclassId": null,
+        "backgroundId": "57c2fc4d-0e06-4868-a653-5baaea15563a",
+        "level": 1,
+        "featIds": [
+          "bfc32df7-f1a1-4abc-9d1f-3569937133b1"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "96a02044-6274-4e68-a06e-853c206824b8",
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+          "db6433bf-f779-4b65-8766-0feffefd1930",
+          "4abefac8-329b-4c70-a59a-84dca2d194d3"
+        ],
+        "abilities": {
+          "str": 10,
+          "dex": 14,
+          "con": 14,
+          "int": 15,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "arcana",
+          "history"
+        ],
+        "resolvedChoices": {
+          "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_cantrips": [
+            "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+            "70e35366-5446-49ff-b0b9-759dbbff347e",
+            "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2"
+          ],
+          "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_spellbook_level_1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "96a02044-6274-4e68-a06e-853c206824b8",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+            "db6433bf-f779-4b65-8766-0feffefd1930",
+            "4abefac8-329b-4c70-a59a-84dca2d194d3"
+          ],
+          "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_prepared_spells_level_1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "96a02044-6274-4e68-a06e-853c206824b8",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-druid",
+      "raceCardNumber": "RACE-0008",
+      "backgroundCardNumber": "BG-0005",
+      "featCardNumber": "FEAT-0005",
+      "draft": {
+        "name": "Mini-MVP · CLASS-druid · BG-0005",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
+        "lineageId": null,
+        "classId": "932a15ad-a7c5-4062-b13a-899933b94231",
+        "subclassId": null,
+        "backgroundId": "169eef1a-4572-413c-86ae-4ecdd804c6af",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+          "7f7d92ed-0d5c-4567-990b-3395247b9266",
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "4291b817-6869-4f87-afae-5bd1a37aee3f",
+          "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+          "85b05dba-9662-43a2-afb9-050ce2bf6136",
+          "3c68b9a7-d143-4b39-b06c-3d78e3276117"
+        ],
+        "abilities": {
+          "str": 8,
+          "dex": 13,
+          "con": 16,
+          "int": 13,
+          "wis": 15,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "con": 2,
+            "int": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "animal_handling",
+          "insight"
+        ],
+        "resolvedChoices": {
+          "class:932a15ad-a7c5-4062-b13a-899933b94231:0a5724ae-fb9f-4d32-82e9-a4bfe3e48858:druid_cantrips": [
+            "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+            "7f7d92ed-0d5c-4567-990b-3395247b9266"
+          ],
+          "class:932a15ad-a7c5-4062-b13a-899933b94231:0a5724ae-fb9f-4d32-82e9-a4bfe3e48858:druid_spells_l1": [
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "4291b817-6869-4f87-afae-5bd1a37aee3f",
+            "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+            "85b05dba-9662-43a2-afb9-050ce2bf6136"
+          ],
+          "class:932a15ad-a7c5-4062-b13a-899933b94231:ccaf0064-4564-4e2c-9f57-1d3efb8b47c2:druid_primal_order": [
+            "magician"
+          ],
+          "class:932a15ad-a7c5-4062-b13a-899933b94231:ccaf0064-4564-4e2c-9f57-1d3efb8b47c2:druid_magician_cantrip": [
+            "3c68b9a7-d143-4b39-b06c-3d78e3276117"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-cleric",
+      "raceCardNumber": "RACE-0007",
+      "backgroundCardNumber": "BG-0006",
+      "featCardNumber": "FEAT-0006",
+      "draft": {
+        "name": "Mini-MVP · CLASS-cleric · BG-0006",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "c8664de4-e485-43e5-9dce-d3022d44781a",
+        "lineageId": null,
+        "classId": "de7259fa-305e-429d-a209-fa79ec302afd",
+        "subclassId": null,
+        "backgroundId": "090600ef-7536-43ef-a285-a03ede11200c",
+        "level": 1,
+        "featIds": [
+          "3df05ae6-c766-444e-89cc-c44a0fcada6a"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+          "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+          "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+          "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+          "85b05dba-9662-43a2-afb9-050ce2bf6136",
+          "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+          "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9"
+        ],
+        "abilities": {
+          "str": 14,
+          "dex": 12,
+          "con": 15,
+          "int": 8,
+          "wis": 16,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "con": 2,
+            "wis": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "history",
+          "insight"
+        ],
+        "resolvedChoices": {
+          "class:de7259fa-305e-429d-a209-fa79ec302afd:438229f4-ac52-4250-af9a-8be69435ef4b:cleric_cantrips": [
+            "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+            "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+            "5b79a37b-e7a9-482a-9efc-46b57e3a79de"
+          ],
+          "class:de7259fa-305e-429d-a209-fa79ec302afd:438229f4-ac52-4250-af9a-8be69435ef4b:cleric_spells_l1": [
+            "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+            "85b05dba-9662-43a2-afb9-050ce2bf6136",
+            "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+            "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9"
+          ],
+          "class:de7259fa-305e-429d-a209-fa79ec302afd:46aec414-906e-4b1f-a2f9-629ec220a9c4:cleric_divine_order": [
+            "protector"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-warlock",
+      "raceCardNumber": "RACE-0006",
+      "backgroundCardNumber": "BG-0007",
+      "featCardNumber": "FEAT-0007",
+      "draft": {
+        "name": "Mini-MVP · CLASS-warlock · BG-0007",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "6f19d163-7382-49a1-ac97-b75fb9067daa",
+        "lineageId": null,
+        "classId": "5a0403b5-3185-43a2-b187-38397d3d01b7",
+        "subclassId": null,
+        "backgroundId": "fc0e2f06-8835-42e5-a016-80a1b55fc78f",
+        "level": 1,
+        "featIds": [
+          "d4f9bc32-674e-45b5-8287-9afe7d2ba1ce"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "3f618918-5477-4526-a123-da9dda136c7e",
+          "96a02044-6274-4e68-a06e-853c206824b8"
+        ],
+        "abilities": {
+          "str": 8,
+          "dex": 15,
+          "con": 14,
+          "int": 11,
+          "wis": 12,
+          "cha": 15
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "dex": 2,
+            "int": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "arcana",
+          "deception"
+        ],
+        "resolvedChoices": {
+          "class:5a0403b5-3185-43a2-b187-38397d3d01b7:567f000b-6554-41d2-9888-8b601afd7f6f:warlock_cantrips": [
+            "70e35366-5446-49ff-b0b9-759dbbff347e",
+            "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2"
+          ],
+          "class:5a0403b5-3185-43a2-b187-38397d3d01b7:567f000b-6554-41d2-9888-8b601afd7f6f:warlock_spells_known": [
+            "3f618918-5477-4526-a123-da9dda136c7e",
+            "96a02044-6274-4e68-a06e-853c206824b8"
+          ],
+          "class:5a0403b5-3185-43a2-b187-38397d3d01b7:39f2a896-dda5-4424-b976-bc7ceb60152b:warlock_invocation_l1": [
+            "EFF-invoc-armor_of_shadows"
+          ],
+          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
+            "bagpipes",
+            "drum",
+            "dulcimer"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-monk",
+      "raceCardNumber": "RACE-0009",
+      "backgroundCardNumber": "BG-0008",
+      "featCardNumber": "FEAT-0008",
+      "draft": {
+        "name": "Mini-MVP · CLASS-monk · BG-0008",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "fac3f998-75c3-4fe3-9ff0-8adbe1e1e3fa",
+        "lineageId": null,
+        "classId": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
+        "subclassId": null,
+        "backgroundId": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
+        "level": 1,
+        "featIds": [
+          "5b5e2cb6-3a2d-4b6d-ba95-b313c413db28"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 12,
+          "dex": 17,
+          "con": 14,
+          "int": 10,
+          "wis": 14,
+          "cha": 8
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "dex": 2,
+            "con": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "athletics"
+        ],
+        "resolvedChoices": {
+          "feat:5b5e2cb6-3a2d-4b6d-ba95-b313c413db28:bfa97845-1f04-4057-9890-3503320b30c7:feat_skilled": [
+            "skill:animal_handling",
+            "skill:arcana",
+            "skill:deception"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-paladin",
+      "raceCardNumber": "RACE-0002",
+      "backgroundCardNumber": "BG-0009",
+      "featCardNumber": "FEAT-0009",
+      "draft": {
+        "name": "Mini-MVP · CLASS-paladin · BG-0009",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
+        "lineageId": null,
+        "classId": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
+        "subclassId": null,
+        "backgroundId": "7eb8a9bb-c710-42b3-99e3-e74b03b4d7c8",
+        "level": 1,
+        "featIds": [
+          "51832580-68f5-4e96-8afe-93e4af045283"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+          "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+          "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1"
+        ],
+        "abilities": {
+          "str": 15,
+          "dex": 10,
+          "con": 13,
+          "int": 10,
+          "wis": 13,
+          "cha": 14
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "int": 2,
+            "wis": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "athletics",
+          "intimidation"
+        ],
+        "resolvedChoices": {
+          "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7:human_skill": [
+            "acrobatics"
+          ],
+          "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:human_feat": [
+            "642812ee-4ac3-44b8-bdda-beeeee15213a"
+          ],
+          "class:03265901-3b0a-4d3e-ab2c-001a6cab59c3:ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c:paladin_spells_l1": [
+            "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+            "fe0a8d3c-318c-4308-9ff0-3838367f75e6"
+          ],
+          "class:03265901-3b0a-4d3e-ab2c-001a6cab59c3:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
+          ],
+          "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_spellcasting_ability": [
+            "int"
+          ],
+          "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_wizard_cantrips": [
+            "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+            "70e35366-5446-49ff-b0b9-759dbbff347e"
+          ],
+          "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_wizard_level_1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-rogue",
+      "raceCardNumber": "RACE-0004",
+      "backgroundCardNumber": "BG-0010",
+      "featCardNumber": "FEAT-0010",
+      "draft": {
+        "name": "Mini-MVP · CLASS-rogue · BG-0010",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "4c9dd44e-cf60-46b1-9971-f717572d8a43",
+        "lineageId": null,
+        "classId": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
+        "subclassId": null,
+        "backgroundId": "e3505422-e7f8-479b-928e-b5dbbbc694b3",
+        "level": 1,
+        "featIds": [
+          "58444ab1-32a6-4a50-8eff-03ef7a1bce10"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 8,
+          "dex": 17,
+          "con": 15,
+          "int": 13,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "dex": 2,
+            "con": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "athletics",
+          "deception",
+          "insight"
+        ],
+        "resolvedChoices": {
+          "race:4c9dd44e-cf60-46b1-9971-f717572d8a43:1ef48eda-663a-4e37-b6b3-500e8a89630d:elf_skill": [
+            "perception"
+          ],
+          "class:aa30f40a-88e5-4a0a-a79e-f3f5119bfa41:083ca63a-be75-4b3b-81b4-bcba905aa8af:rogue_expertise_l1": [
+            "acrobatics",
+            "athletics"
+          ],
+          "class:aa30f40a-88e5-4a0a-a79e-f3f5119bfa41:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
+          ],
+          "class:aa30f40a-88e5-4a0a-a79e-f3f5119bfa41:112c7397-1f14-4899-92a6-479845c07db1:rogue_additional_language": [
+            "common"
+          ],
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
+            "alchemist",
+            "brewer",
+            "calligrapher"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-ranger",
+      "raceCardNumber": "RACE-0010",
+      "backgroundCardNumber": "BG-0011",
+      "featCardNumber": "FEAT-0001",
+      "draft": {
+        "name": "Mini-MVP · CLASS-ranger · BG-0011",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3b63e5cd-fd0b-4887-a187-a6f11ab17dfc",
+        "lineageId": null,
+        "classId": "7eda481c-0474-4443-9b8a-be08c53564c2",
+        "subclassId": null,
+        "backgroundId": "10559b70-2f82-42f1-84a0-7017c1980835",
+        "level": 1,
+        "featIds": [
+          "642812ee-4ac3-44b8-bdda-beeeee15213a"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+          "4291b817-6869-4f87-afae-5bd1a37aee3f"
+        ],
+        "abilities": {
+          "str": 14,
+          "dex": 16,
+          "con": 13,
+          "int": 10,
+          "wis": 14,
+          "cha": 8
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "animal_handling",
+          "athletics",
+          "insight"
+        ],
+        "resolvedChoices": {
+          "class:7eda481c-0474-4443-9b8a-be08c53564c2:c4d0a9b1-90e8-49d4-8201-fc0aff542ae6:ranger_spells_l1": [
+            "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+            "4291b817-6869-4f87-afae-5bd1a37aee3f"
+          ],
+          "class:7eda481c-0474-4443-9b8a-be08c53564c2:e0bca40f-dd27-4e71-bdc6-2d6e7c36b305:ranger_favored_enemy": [
+            "beasts"
+          ],
+          "class:7eda481c-0474-4443-9b8a-be08c53564c2:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-sorcerer",
+      "raceCardNumber": "RACE-0005",
+      "backgroundCardNumber": "BG-0012",
+      "featCardNumber": "FEAT-0002",
+      "draft": {
+        "name": "Mini-MVP · CLASS-sorcerer · BG-0012",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "a81e448f-34f6-417e-ae3c-8f92f5259edf",
+        "lineageId": null,
+        "classId": "66a58227-41e6-4c56-b548-1253d98f6f09",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "1868ee2c-185c-486b-b6c1-457497e89820"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "73d4195c-5da4-444d-a0c1-19572df641b2",
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "96a02044-6274-4e68-a06e-853c206824b8"
+        ],
+        "abilities": {
+          "str": 10,
+          "dex": 14,
+          "con": 14,
+          "int": 12,
+          "wis": 10,
+          "cha": 15
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "arcana",
+          "deception"
+        ],
+        "resolvedChoices": {
+          "class:66a58227-41e6-4c56-b548-1253d98f6f09:4ae38b98-12af-4829-85ef-2ce26b987357:sorcerer_cantrips": [
+            "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+            "70e35366-5446-49ff-b0b9-759dbbff347e",
+            "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+            "73d4195c-5da4-444d-a0c1-19572df641b2"
+          ],
+          "class:66a58227-41e6-4c56-b548-1253d98f6f09:4ae38b98-12af-4829-85ef-2ce26b987357:sorcerer_spells_known": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "96a02044-6274-4e68-a06e-853c206824b8"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-barbarian",
+      "raceCardNumber": "RACE-0011",
+      "backgroundCardNumber": "BG-0013",
+      "featCardNumber": "FEAT-0003",
+      "draft": {
+        "name": "Mini-MVP · CLASS-barbarian · BG-0013",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
+        "lineageId": null,
+        "classId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+        "subclassId": null,
+        "backgroundId": "04c222c1-c202-4cbe-aa06-5663a4e36ab5",
+        "level": 1,
+        "featIds": [
+          "d782baf6-6682-49d1-aee5-a8ee920f87fd"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 13,
+          "con": 14,
+          "int": 9,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "int": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "animal_handling",
+          "intimidation"
+        ],
+        "resolvedChoices": {
+          "class:9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-bard",
+      "raceCardNumber": "RACE-0003",
+      "backgroundCardNumber": "BG-0014",
+      "featCardNumber": "FEAT-0004",
+      "draft": {
+        "name": "Mini-MVP · CLASS-bard · BG-0014",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "be96272c-8585-438d-ac32-b2788f1b1741",
+        "subclassId": null,
+        "backgroundId": "06014c1a-4eaa-406d-9875-220a9bbc5098",
+        "level": 1,
+        "featIds": [
+          "bfc32df7-f1a1-4abc-9d1f-3569937133b1"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+          "8821d595-ec03-42b8-aeaf-f50f7d72b726"
+        ],
+        "abilities": {
+          "str": 10,
+          "dex": 14,
+          "con": 15,
+          "int": 9,
+          "wis": 12,
+          "cha": 15
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "con": 2,
+            "int": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "arcana",
+          "athletics"
+        ],
+        "resolvedChoices": {
+          "class:be96272c-8585-438d-ac32-b2788f1b1741:1ea222f0-2d5b-47a3-91b2-3f683af5d007:bard_cantrips": [
+            "70e35366-5446-49ff-b0b9-759dbbff347e",
+            "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2"
+          ],
+          "class:be96272c-8585-438d-ac32-b2788f1b1741:1ea222f0-2d5b-47a3-91b2-3f683af5d007:bard_spells_l1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+            "8821d595-ec03-42b8-aeaf-f50f7d72b726"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-warrior",
+      "raceCardNumber": "RACE-0008",
+      "backgroundCardNumber": "BG-0015",
+      "featCardNumber": "FEAT-0005",
+      "draft": {
+        "name": "Mini-MVP · CLASS-warrior · BG-0015",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 13,
+          "con": 15,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "con": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "athletics"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "e28c558d-5239-4008-837f-6cda8fa47d3a"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "classCardNumber": "CLASS-wizard",
+      "raceCardNumber": "RACE-0007",
+      "backgroundCardNumber": "BG-0016",
+      "featCardNumber": "FEAT-0006",
+      "draft": {
+        "name": "Mini-MVP · CLASS-wizard · BG-0016",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "c8664de4-e485-43e5-9dce-d3022d44781a",
+        "lineageId": null,
+        "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "subclassId": null,
+        "backgroundId": "c9cea42f-e5cc-4596-b03a-61c2689b7777",
+        "level": 1,
+        "featIds": [
+          "3df05ae6-c766-444e-89cc-c44a0fcada6a"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [
+          "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+          "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "96a02044-6274-4e68-a06e-853c206824b8",
+          "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+          "db6433bf-f779-4b65-8766-0feffefd1930",
+          "4abefac8-329b-4c70-a59a-84dca2d194d3"
+        ],
+        "abilities": {
+          "str": 8,
+          "dex": 15,
+          "con": 15,
+          "int": 15,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "dex": 2,
+            "con": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "arcana",
+          "history"
+        ],
+        "resolvedChoices": {
+          "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_cantrips": [
+            "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+            "70e35366-5446-49ff-b0b9-759dbbff347e",
+            "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2"
+          ],
+          "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_spellbook_level_1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "96a02044-6274-4e68-a06e-853c206824b8",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+            "db6433bf-f779-4b65-8766-0feffefd1930",
+            "4abefac8-329b-4c70-a59a-84dca2d194d3"
+          ],
+          "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_prepared_spells_level_1": [
+            "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+            "96a02044-6274-4e68-a06e-853c206824b8",
+            "34518f38-b737-4a91-88ac-d5858d2d04a0",
+            "938a86fd-e0bf-4845-b4b3-acfe2fed2b59"
+          ]
+        },
+        "swapFeat": true
+      }
+    }
+  ]
+}
