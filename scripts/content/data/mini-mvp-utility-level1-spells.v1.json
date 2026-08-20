@@ -263,7 +263,7 @@
   },
   {
     "card_number": "SPELL-0277",
-    "name": "Разговор с Животными",
+    "name": "Разговор с животными",
     "mechanics": {
       "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
       "effects": [{
