@@ -129,9 +129,11 @@ describe('runnable canonical sheet-action projection', () => {
   });
 
   it('retains non-primitive spell rows required by complete prepared-spell provenance', () => {
+    const spell = legacySpell('mage-armor');
+    spell.mechanics = { ...spell.mechanics, name: 'Mage Armor' };
     const projection = projectRunnableSheetCanonicalActions({
       actions: [
-        legacySpell('mage-armor'),
+        spell,
         { id: 'legacy', name: 'Legacy', group: 'basic', mechanics: {} },
       ],
       equipment: {},
@@ -140,9 +142,25 @@ describe('runnable canonical sheet-action projection', () => {
 
     expect(projection.actions.map((action) => action.id)).toEqual(['mage-armor']);
     expect(projection.issues.size).toBe(0);
+    expect(projection.actions[0].mechanics).not.toHaveProperty('name');
+    expect(projection.actions[0].spellRef?.mechanics).not.toHaveProperty('name');
     expect(projection.actions[0].spellRef?.mechanics?.targeting).toMatchObject({
       domain: 'world', actor_targets: false, min_targets: 0, max_targets: 0,
     });
+  });
+
+  it('preserves a name only when the immutable entity mechanics declared it', () => {
+    const spell = legacySpell('declared-name');
+    spell.spellRef!.mechanics = { ...spell.spellRef!.mechanics, name: 'Reviewed name' };
+    spell.mechanics = { ...spell.mechanics, name: 'Reviewed name' };
+
+    const projection = projectRunnableSheetCanonicalActions({
+      actions: [spell], equipment: {}, cards: new Map(),
+    });
+
+    expect(projection.issues.size).toBe(0);
+    expect(projection.actions[0].mechanics.name).toBe('Reviewed name');
+    expect(projection.actions[0].spellRef?.mechanics?.name).toBe('Reviewed name');
   });
 
   it('materializes legacy targeting before strict canonical compilation', () => {

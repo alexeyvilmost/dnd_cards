@@ -58,16 +58,32 @@ function declaresActorInteraction(mechanics: Record<string, unknown>): boolean {
  * declaration is inferred only when effects contain no target interaction.
  */
 function canonicalMechanics(action: SheetAction): Record<string, unknown> {
-  if (action.mechanics.targeting !== undefined) {
-    return materializeDeclaredMechanicsTargeting(action.mechanics);
+  // SheetAction carries a legacy presentation-only `name` field so the old
+  // executor can label its journal events. It is not part of immutable entity
+  // mechanics and must never enter the rules catalog or its certification hash.
+  // A few older immutable Action rows do explicitly declare mechanics.name;
+  // preserve those exact reviewed bytes and remove only the UI-added copy.
+  const immutableMechanics = action.actionRef?.mechanics
+    ?? action.effectRef?.mechanics
+    ?? action.spellRef?.mechanics;
+  const immutableDeclaresName = Object.prototype.hasOwnProperty.call(
+    immutableMechanics ?? {},
+    'name',
+  );
+  const { name: _presentationName, ...mechanicsWithoutPresentationName } = action.mechanics;
+  const mechanics = immutableDeclaresName
+    ? action.mechanics
+    : mechanicsWithoutPresentationName;
+  if (mechanics.targeting !== undefined) {
+    return materializeDeclaredMechanicsTargeting(mechanics);
   }
-  if (!isDeclaredActiveAction(action.mechanics)) {
-    return action.mechanics;
+  if (!isDeclaredActiveAction(mechanics)) {
+    return mechanics;
   }
-  if (declaresActorInteraction(action.mechanics)) {
+  if (declaresActorInteraction(mechanics)) {
     throw new Error(`${action.id} interacts with an actor but declares no mechanics.targeting`);
   }
-  return { ...action.mechanics, targeting: TARGETLESS_ACTOR_CONTRACT };
+  return { ...mechanics, targeting: TARGETLESS_ACTOR_CONTRACT };
 }
 
 /**

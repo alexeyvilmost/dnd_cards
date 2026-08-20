@@ -21,6 +21,12 @@ interface FixtureContentPatch {
     cardNumber: string;
     fields: JsonRecord;
     entityReferences?: Array<{ collection: string; entityId: string; cardNumber: string }>;
+    productionFieldOverrides?: JsonRecord;
+    productionEntityReferences?: Array<{
+      collection: string;
+      entityId: string;
+      cardNumber: string;
+    }>;
   }>;
   createEntities: Array<{ collection: string; entity: JsonRecord }>;
   conditionPatches: Array<{
@@ -115,12 +121,18 @@ function materializeFixturePatch(source: Record<string, JsonRecord[]>): Record<s
     }
   }
   for (const declaration of patch.fieldPatches) {
-    for (const reference of declaration.entityReferences ?? []) {
+    for (const reference of [
+      ...(declaration.entityReferences ?? []),
+      ...(declaration.productionEntityReferences ?? []),
+    ]) {
       exactFixtureEntity(catalogs, reference.collection, reference);
     }
+    const productionFields = declaration.productionFieldOverrides
+      ? { ...declaration.fields, ...declaration.productionFieldOverrides }
+      : declaration.fields;
     Object.assign(
       exactFixtureEntity(catalogs, declaration.collection, declaration),
-      cloneJson(declaration.fields),
+      cloneJson(productionFields),
     );
   }
   for (const declaration of patch.createEntities) {
