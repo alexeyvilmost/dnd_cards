@@ -1,10 +1,10 @@
 package migrations
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"reflect"
 )
 
 const (
@@ -89,6 +89,12 @@ var activeActionTargetingRepairs = []activeActionTargetingRepair{
 	},
 }
 
+func equivalentTargetingJSON(left, right any) bool {
+	leftRaw, leftErr := json.Marshal(left)
+	rightRaw, rightErr := json.Marshal(right)
+	return leftErr == nil && rightErr == nil && bytes.Equal(leftRaw, rightRaw)
+}
+
 func applyActiveActionTargetingRepair(
 	tx *sql.Tx,
 	repair activeActionTargetingRepair,
@@ -128,8 +134,8 @@ func applyActiveActionTargetingRepair(
 	if err := json.Unmarshal(afterRaw, &after); err != nil {
 		return err
 	}
-	if existing, exists := after["targeting"]; exists && !reflect.DeepEqual(existing, repair.Targeting) {
-		if repair.ExpectedLegacyTargeting == nil || !reflect.DeepEqual(existing, repair.ExpectedLegacyTargeting) {
+	if existing, exists := after["targeting"]; exists && !equivalentTargetingJSON(existing, repair.Targeting) {
+		if repair.ExpectedLegacyTargeting == nil || !equivalentTargetingJSON(existing, repair.ExpectedLegacyTargeting) {
 			return fmt.Errorf("%s:%s already has a different targeting contract", repair.Table, repair.CardNumber)
 		}
 	}
@@ -148,7 +154,7 @@ func applyActiveActionTargetingRepair(
 		}
 		first["who"] = "target"
 	}
-	if reflect.DeepEqual(before, after) {
+	if equivalentTargetingJSON(before, after) {
 		return nil
 	}
 	var supportBefore any

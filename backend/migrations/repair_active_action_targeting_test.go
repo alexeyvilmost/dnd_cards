@@ -63,6 +63,21 @@ func TestActiveActionTargetingRepairCatalogIsCompleteAndUnique(t *testing.T) {
 	}
 }
 
+func TestEquivalentTargetingJSONIgnoresDecodedNumberRepresentation(t *testing.T) {
+	staticContract := actorTargeting(5, []string{"enemy"}, false)
+	encoded, err := json.Marshal(staticContract)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decodedContract map[string]any
+	if err := json.Unmarshal(encoded, &decodedContract); err != nil {
+		t.Fatal(err)
+	}
+	if !equivalentTargetingJSON(staticContract, decodedContract) {
+		t.Fatal("semantically identical static and PostgreSQL-decoded targeting differ")
+	}
+}
+
 func TestActiveActionTargetingRepairExecutesIdempotently(t *testing.T) {
 	db := openIsolatedPostgresSchema(t, "CONTENT_MIGRATION_TEST_DSN")
 	if _, err := db.Exec(`
