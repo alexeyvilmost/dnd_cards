@@ -57,6 +57,14 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 		t.Fatal(err)
 	}
 	defer db.Unscoped().Delete(&supportEffect)
+	supportRecommendation := ContentChoiceRecommendation{
+		EntityType: "effect", EntityReference: supportEffect.CardNumber,
+		ChoiceID: "support_choice", RecommendedOptions: Properties{"recommended-option"},
+	}
+	if err = db.Create(&supportRecommendation).Error; err != nil {
+		t.Fatal(err)
+	}
+	defer db.Delete(&supportRecommendation)
 	_, beforeSupportResponse, err := loadContentMigrationEntityForUpdate(
 		db, "effect", supportEffect.ID,
 	)
@@ -66,6 +74,48 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 	beforeSupportMap, err := apiResponseAsJSONMap(beforeSupportResponse)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(
+		beforeSupportMap["choice_recommendations"],
+		map[string]any{"support_choice": []any{"recommended-option"}},
+	) {
+		t.Fatalf(
+			"exact migration preimage omitted public choice recommendations: %#v",
+			beforeSupportMap["choice_recommendations"],
+		)
+	}
+	supportClass := Class{
+		Name: "Support class " + suffix, Description: "Disposable class adapter",
+		Rarity: RarityCommon, CardNumber: "CLASS-support-" + suffix, Author: "Admin",
+	}
+	if err = db.Create(&supportClass).Error; err != nil {
+		t.Fatal(err)
+	}
+	defer db.Unscoped().Delete(&supportClass)
+	classRecommendation := ContentChoiceRecommendation{
+		EntityType: "class", EntityReference: supportClass.CardNumber,
+		ChoiceID: "class_skills", RecommendedOptions: Properties{"perception"},
+	}
+	if err = db.Create(&classRecommendation).Error; err != nil {
+		t.Fatal(err)
+	}
+	defer db.Delete(&classRecommendation)
+	_, classResponse, err := loadContentMigrationEntityForUpdate(db, "class", supportClass.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	classMap, err := apiResponseAsJSONMap(classResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(
+		classMap["choice_recommendations"],
+		map[string]any{"class_skills": []any{"perception"}},
+	) {
+		t.Fatalf(
+			"exact class preimage omitted public choice recommendations: %#v",
+			classMap["choice_recommendations"],
+		)
 	}
 	exactDescription := "CAS-updated disposable support fixture"
 	exactMechanics := map[string]any{
@@ -430,7 +480,10 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 // from silently turning an arbitrary database into a test fixture.
 func prepareContentMigrationIntegrationSchema(t *testing.T, db *gorm.DB) {
 	t.Helper()
-	tables := []any{&Effect{}, &Feat{}, &Background{}, &ContentMigrationCreateReceipt{}}
+	tables := []any{
+		&Effect{}, &Feat{}, &Background{}, &Class{}, &ContentMigrationCreateReceipt{},
+		&ContentChoiceRecommendation{},
+	}
 	present := 0
 	for _, table := range tables {
 		if db.Migrator().HasTable(table) {

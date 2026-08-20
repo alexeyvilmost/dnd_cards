@@ -292,7 +292,18 @@ func loadContentMigrationEntityForUpdate(
 	case "effect":
 		var entity Effect
 		err = query.First(&entity).Error
-		return &entity, entity.ToEffectResponse(), err
+		response := entity.ToEffectResponse()
+		if err != nil {
+			return &entity, response, err
+		}
+		recommendations, recommendationErr := loadChoiceRecommendations(
+			tx, "effect", []string{entity.CardNumber},
+		)
+		if recommendationErr != nil {
+			return &entity, response, recommendationErr
+		}
+		response.ChoiceRecommendations = recommendations[entity.CardNumber]
+		return &entity, response, nil
 	case "action":
 		var entity Action
 		err = query.First(&entity).Error
@@ -308,7 +319,18 @@ func loadContentMigrationEntityForUpdate(
 	case "class":
 		var entity Class
 		err = query.First(&entity).Error
-		return &entity, entity.ToClassResponse(), err
+		response := entity.ToClassResponse()
+		if err != nil {
+			return &entity, response, err
+		}
+		recommendations, recommendationErr := loadChoiceRecommendations(
+			tx, "class", []string{entity.CardNumber},
+		)
+		if recommendationErr != nil {
+			return &entity, response, recommendationErr
+		}
+		response.ChoiceRecommendations = recommendations[entity.CardNumber]
+		return &entity, response, nil
 	case "feat":
 		var entity Feat
 		err = query.First(&entity).Error
