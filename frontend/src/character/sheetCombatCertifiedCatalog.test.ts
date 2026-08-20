@@ -165,17 +165,6 @@ describe('448-root sheet combat certification', () => {
       },
     },
     {
-      label: 'prepared exact set',
-      mutate: (actor: ActorState) => {
-        const source = actor.spellcastingAccess!.preparedSources['CLASS-wizard']!;
-        const replacement = required(
-          source.availableActionIds.find((id) => !source.preparedActionIds.includes(id)),
-          'unprepared Wizard spell',
-        );
-        source.preparedActionIds = [...source.preparedActionIds.slice(1), replacement];
-      },
-    },
-    {
       label: 'available exact set',
       mutate: (actor: ActorState) => {
         actor.spellcastingAccess!.preparedSources['CLASS-wizard']!.availableActionIds.pop();
@@ -199,7 +188,23 @@ describe('448-root sheet combat certification', () => {
     const actor = clone(root.actor);
     mutate(actor, actionIds[0]);
     expect(() => assertCertifiedSheetCombatActorAccess(actor, actionIds, certified))
-      .toThrow(/differs|invalid|available/);
+      .toThrow(/differs|invalid|available|capacity/);
+  });
+
+  it('accepts a valid runtime-owned prepared subset without weakening grant certification', () => {
+    const root = required(
+      provider.roots.find((candidate) => candidate.matrixCase.klass.card_number === 'CLASS-wizard'),
+      'Wizard root',
+    );
+    const actionIds = combatActions(root).map((action) => action.id);
+    const actor = clone(root.actor);
+    const source = actor.spellcastingAccess!.preparedSources['CLASS-wizard']!;
+    const replacement = required(
+      source.availableActionIds.find((id) => !source.preparedActionIds.includes(id)),
+      'unprepared Wizard spell',
+    );
+    source.preparedActionIds = [...source.preparedActionIds.slice(1), replacement];
+    expect(() => assertCertifiedSheetCombatActorAccess(actor, actionIds, certified)).not.toThrow();
   });
 
   it('rejects action bytes and generated artifact bytes after either is changed', async () => {

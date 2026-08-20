@@ -182,6 +182,7 @@ const alert = {
         op: 'add',
         value: 'prof_bonus',
         source: 'Бонус мастерства',
+        modifier_kind: 'proficiency',
       },
       {
         kind: 'narrative',

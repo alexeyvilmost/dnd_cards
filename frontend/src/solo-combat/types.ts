@@ -30,11 +30,37 @@ export interface InitiativeEntry {
   total: number;
 }
 
+export type CombatLogTone =
+  | 'neutral'
+  | 'enemy-damage'
+  | 'ally-damage'
+  | 'ally-death'
+  | 'ally-healing'
+  | 'ally-critical'
+  | 'hostile-critical';
+
+/**
+ * Replayable log projection retaining the rules event's authoritative actor and
+ * target envelope. Bare EngineEvent arrays from early schema-v1 saves are
+ * migrated into this shape by persistence.ts.
+ */
+export interface CombatLogEventRecord {
+  kind: 'engine' | 'death';
+  ordinal: number;
+  sourceActorId: string;
+  actorId: string;
+  targetIds: string[];
+  event?: EngineEvent;
+  facts?: Record<string, unknown>;
+}
+
 export interface CombatLogEntry {
   id: string;
   round: number;
   actorId: string;
   text: string;
+  records?: CombatLogEventRecord[];
+  /** Legacy schema-v1 representation. New entries use `records`. */
   events?: EngineEvent[];
 }
 
@@ -49,6 +75,27 @@ export interface CombatActionPresentation {
   spellRef?: Spell;
 }
 
+export interface CombatActorTraitPresentation {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string | null;
+  mechanics: Record<string, unknown>;
+}
+
+/** Immutable content snapshot used to present a persisted encounter actor. */
+export interface CombatActorPresentation {
+  templateId?: string;
+  description?: string;
+  size?: string;
+  creatureType?: string;
+  alignment?: string;
+  challengeRating?: string;
+  source?: string;
+  actionIds: string[];
+  traits: CombatActorTraitPresentation[];
+}
+
 export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
@@ -57,6 +104,10 @@ export interface SoloCombatState {
   catalogActions: RuleActionDefinition[];
   /** Persisted UI projection from the same data-driven entities as the sheet. */
   actionPresentation?: Record<string, CombatActionPresentation>;
+  /** Board-owned allegiance. Equal side ids are allies; different ids are enemies. */
+  sideByActorId: Record<string, string>;
+  /** Persisted content presentation for actors whose source rows are not re-fetched. */
+  actorPresentation: Record<string, CombatActorPresentation>;
   playerActionIds: string[];
   certifiedPlayerActionIds: string[];
   monsterActionIds: Record<string, string[]>;
@@ -77,8 +128,20 @@ export interface TacticalActionSelection {
   mode: 'single' | 'area';
 }
 
+export function combatRelation(
+  state: { sideByActorId?: Record<string, string> },
+  sourceActorId: string,
+  targetActorId: string,
+): SpatialFacts['relation'] {
+  if (sourceActorId === targetActorId) return 'self';
+  const sourceSide = state.sideByActorId?.[sourceActorId];
+  const targetSide = state.sideByActorId?.[targetActorId];
+  if (!sourceSide || !targetSide) return 'neutral';
+  return sourceSide === targetSide ? 'ally' : 'enemy';
+}
+
 export function spatialFacts(
-  state: Pick<SoloCombatState, 'tokens' | 'boardRevision'>,
+  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId'>,
   sourceActorId: string,
   targetActorId: string,
 ): SpatialFacts {
@@ -91,7 +154,7 @@ export function spatialFacts(
     distanceFt: Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT,
     lineOfSight: true,
     cover: 'none',
-    relation: sourceActorId === targetActorId ? 'self' : 'enemy',
+    relation: combatRelation(state, sourceActorId, targetActorId),
     canSeeTarget: true,
     targetCanSeeSource: true,
   };

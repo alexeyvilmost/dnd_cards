@@ -11,6 +11,7 @@ import {
   type RulesetReference,
   type WorldState,
 } from '../rules-core/domain';
+import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 import { canonicalStringify } from '../rules-core/determinism';
 import { migrateWorldState } from '../rules-core/worldMigration';
 import { bindWarlockPactDeclaration } from '../rules-core/warlockPactDeclaration';
@@ -21,7 +22,10 @@ import {
   createPactTomeInvocationState,
   type WarlockPactStates,
 } from '../rules-core/warlockPacts';
-import type { SpellGrantAccess } from '../rules-core/spellcastingAccess';
+import {
+  resolveSpellAccess,
+  type SpellGrantAccess,
+} from '../rules-core/spellcastingAccess';
 import { FAMILIAR_ACTOR_CATALOG } from '../rules-core/familiarActorCatalog';
 import type { Card, PassiveEffect, Spell } from '../types';
 import {
@@ -36,7 +40,9 @@ import {
   type SpellGrantProjection,
 } from '../canon/spellcastingAccessProjection';
 import { freeuseKey } from '../engine/freeuse';
+import { actionUsesKey, restoreSelfUsesCost } from '../engine/actionUses';
 import { preparedSpellSelectionIssues } from '../mechanics/collectChoices';
+import { readSheetSpellPreparation } from './sheetSpellPreparation';
 
 export const SHEET_CANONICAL_WORLD_KEY = 'canonical_rules_world_v1' as const;
 export const SHEET_CANONICAL_WORLD_ENVELOPE_VERSION = 1 as const;
@@ -74,6 +80,8 @@ export interface SheetCanonicalRuntime {
     cantripActionIds: string[];
     ritualActionIds: string[];
   };
+  /** All source-scoped canonical actions represented by one visual sheet row. */
+  actionsFor?(sheetAction: SheetAction): readonly RuleActionDefinition[];
   actionFor(sheetAction: SheetAction): RuleActionDefinition;
 }
 
@@ -366,19 +374,13 @@ type CompiledSheetAction = {
   spellGrant?: SpellGrantBinding;
 };
 
-function exactSpellGrant(
+function appliedSpellGrants(
   spell: Spell,
   ruleState: Pick<CharacterRuleState, 'appliedGrants'>,
-): AppliedGrant {
-  const matches = ruleState.appliedGrants.filter((grant) => (
+): AppliedGrant[] {
+  return ruleState.appliedGrants.filter((grant) => (
     grant.kind === 'spell' && spellMatchesReference(spell, grant.value)
   ));
-  if (matches.length !== 1) {
-    throw new SheetCanonicalWorldError(
-      `${spell.card_number || spell.id} requires exactly one applied grant; got ${matches.length}`,
-    );
-  }
-  return matches[0];
 }
 
 function sourceFeature(input: {
@@ -499,28 +501,34 @@ function spellGrantBinding(input: {
   };
 }
 
-function ruleAction(input: {
+function ruleActions(input: {
   sheet: SheetAction;
   assembled: AssembledCharacter;
   ruleState: Pick<CharacterRuleState, 'appliedGrants'>;
-}): CompiledSheetAction {
+}): CompiledSheetAction[] {
   if (input.sheet.spellRef) {
-    const grant = exactSpellGrant(input.sheet.spellRef, input.ruleState);
-    const binding = spellGrantBinding({
-      spell: input.sheet.spellRef,
-      grant,
-      assembled: input.assembled,
+    // One visual spell row may be owned by several immutable grants (for
+    // example a class spellbook and an origin feat). Compile every grant into
+    // its own source-scoped action. A stale/manual row with no grant is safely
+    // absent from actor capabilities instead of preventing unrelated combat
+    // actions from starting.
+    return appliedSpellGrants(input.sheet.spellRef, input.ruleState).map((grant) => {
+      const binding = spellGrantBinding({
+        spell: input.sheet.spellRef!,
+        grant,
+        assembled: input.assembled,
+      });
+      const spell = applySpellCastingOverride(input.sheet.spellRef!, binding.castingOverride);
+      return {
+        sheet: input.sheet,
+        spellGrant: binding,
+        action: projectRuleAction(spell, {
+          sourceEntityIds: binding.sourceEntityIds,
+          sourceClass: binding.sourceClass,
+          grantScopeId: binding.grantScopeId,
+        }),
+      };
     });
-    const spell = applySpellCastingOverride(input.sheet.spellRef, binding.castingOverride);
-    return {
-      sheet: input.sheet,
-      spellGrant: binding,
-      action: projectRuleAction(spell, {
-        sourceEntityIds: binding.sourceEntityIds,
-        sourceClass: binding.sourceClass,
-        grantScopeId: binding.grantScopeId,
-      }),
-    };
   }
 
   // Non-spell sheet actions keep their existing synthetic/item adapters. Raw
@@ -536,7 +544,7 @@ function ruleAction(input: {
         `Action ${entity.id} has ambiguous immutable grant origins: ${originIds.length}`,
       );
     }
-    return {
+    return [{
       sheet: input.sheet,
       // Contextual costs (for example equipped_weapon_ammo) have already
       // resolved against the sheet's selected equipment. Project that bound
@@ -544,12 +552,15 @@ function ruleAction(input: {
       // still owns identity, display data, and provenance.
       action: projectRuleAction({
         ...entity,
-        mechanics: cloneJson(input.sheet.mechanics),
+        mechanics: restoreSelfUsesCost(
+          cloneJson(input.sheet.mechanics),
+          actionUsesKey(entity.card_number || entity.id),
+        ),
       } as never, {
         sourceEntityIds: originIds,
         ...(originIds[0] ? { grantScopeId: originIds[0] } : {}),
       }),
-    };
+    }];
   }
   const mechanics = cloneJson(input.sheet.mechanics);
   const primitive = primitiveType(mechanics);
@@ -559,7 +570,7 @@ function ruleAction(input: {
       `Primitive ${primitive} on ${input.sheet.id} requires explicit mechanics.targeting`,
     );
   }
-  return {
+  return [{
     sheet: input.sheet,
     action: {
       id: input.sheet.id,
@@ -567,8 +578,11 @@ function ruleAction(input: {
       mechanics,
       sourceEntityIds: stableIds(input.sheet.sourceEntityIds ?? []),
       kind: 'nonSpell',
+      ...(targetingDeclaration
+        ? { targeting: compileDeclaredMechanicsTargeting(mechanics) }
+        : {}),
     },
-  };
+  }];
 }
 
 function accessForGrant(grant: AppliedGrant, spell: Spell, override?: SpellCastingOverride) {
@@ -606,6 +620,7 @@ function declaredSlotResource(action: RuleActionDefinition): string | undefined 
 function preparedSourceProjections(input: {
   assembled: AssembledCharacter;
   resolvedChoices: Record<string, string[]> | null | undefined;
+  runtimePreparedChoices?: Readonly<Record<string, readonly string[]>>;
   compiled: readonly CompiledSheetAction[];
   grants: readonly SpellGrantProjection[];
 }): PreparedSourceProjection[] {
@@ -618,7 +633,9 @@ function preparedSourceProjections(input: {
     );
   }
   const choice = choices[0];
-  const selected = input.resolvedChoices?.[choice.id] ?? [];
+  const selected = input.runtimePreparedChoices?.[choice.id]
+    ?? input.resolvedChoices?.[choice.id]
+    ?? [];
   const issues = preparedSpellSelectionIssues(choice, selected);
   if (issues.length) {
     throw new SheetCanonicalWorldError(
@@ -653,6 +670,7 @@ function baseSpellAccess(input: {
   compiled: readonly CompiledSheetAction[];
   assembled: AssembledCharacter;
   resolvedChoices: Record<string, string[]> | null | undefined;
+  runtimePreparedChoices?: Readonly<Record<string, readonly string[]>>;
   tomeActionIds: ReadonlySet<string>;
 }): ReturnType<typeof projectSpellcastingAccess> {
   const grants: SpellGrantProjection[] = input.compiled.flatMap(({ sheet, action, spellGrant }) => {
@@ -685,6 +703,7 @@ function baseSpellAccess(input: {
     preparedSources: preparedSourceProjections({
       assembled: input.assembled,
       resolvedChoices: input.resolvedChoices,
+      runtimePreparedChoices: input.runtimePreparedChoices,
       compiled: input.compiled,
       grants,
     }),
@@ -856,7 +875,7 @@ export function buildSheetCanonicalRuntime(input: {
 }): SheetCanonicalRuntime {
   const actorId = input.character.id;
   const bindings = pactBindings(input.assembled, input.character.resolved_choices);
-  const compiled = input.sheetActions.map((sheet) => ruleAction({
+  const compiled = input.sheetActions.flatMap((sheet) => ruleActions({
     sheet,
     assembled: input.assembled,
     ruleState: input.ruleState,
@@ -978,6 +997,7 @@ export function buildSheetCanonicalRuntime(input: {
     compiled,
     assembled: input.assembled,
     resolvedChoices: input.character.resolved_choices,
+    runtimePreparedChoices: readSheetSpellPreparation(input.character.turn_state)?.choices,
     tomeActionIds,
   });
   const spellGrants: SpellGrantAccess[] = [...baseSpellcastingAccess.grants];
@@ -1131,14 +1151,53 @@ export function buildSheetCanonicalRuntime(input: {
         ritualActionIds: deferredTomes[0].selected.rituals.map((action) => action.id).sort(),
       },
     } : {}),
+    actionsFor: (sheetAction) => compiled
+      .filter(({ sheet }) => sheet === sheetAction || sheet.id === sheetAction.id)
+      .map(({ action }) => action),
     actionFor: (sheetAction) => {
       const matches = compiled.filter(({ sheet }) => sheet === sheetAction || sheet.id === sheetAction.id);
-      if (matches.length !== 1) {
+      if (matches.length && sheetAction.spellRef) {
+        const actor = world.actors[actorId];
+        if (!actor.spellcastingAccess) {
+          throw new SheetCanonicalWorldError(
+            `Spell ${sheetAction.id} has no actor-owned spellcasting access`,
+          );
+        }
+        const failures: string[] = [];
+        const candidates = matches.flatMap((match) => {
+          const grants = actor.spellcastingAccess?.grants.filter((grant) => (
+            grant.actionId === match.action.id
+          )) ?? [];
+          return grants.flatMap((grant) => {
+            const resolution = resolveSpellAccess({
+              state: actor.spellcastingAccess!,
+              actionId: match.action.id,
+              grantId: grant.grantId,
+              resources: actor.runtime.resources,
+            });
+            if (resolution.status === 'rejected') failures.push(resolution.message);
+            return resolution.status === 'allowed'
+              ? [{ action: match.action, grantId: grant.grantId, payment: resolution.payment.kind }]
+              : [];
+          });
+        }).sort((left, right) => {
+          const priority = { free_use: 0, none: 1, slot: 2 } as const;
+          return priority[left.payment] - priority[right.payment]
+            || left.grantId.localeCompare(right.grantId)
+            || left.action.id.localeCompare(right.action.id);
+        });
+        if (candidates.length) return candidates[0].action;
+        throw new SheetCanonicalWorldError(
+          failures.sort((left, right) => left.localeCompare(right))[0]
+            ?? `Spell ${sheetAction.id} has no actor-owned grant`,
+        );
+      }
+      if (matches.length === 1) return matches[0].action;
+      {
         throw new SheetCanonicalWorldError(
           `Expected one canonical action for sheet action ${sheetAction.id}; got ${matches.length}`,
         );
       }
-      return matches[0].action;
     },
   };
 }

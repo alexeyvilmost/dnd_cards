@@ -39,10 +39,26 @@ describe('abilityDisplay — боевые стили', () => {
   });
 
   it('показывает имя как в кузне и подпись «Боевой стиль»', () => {
-    const p = effectAbilityPresentation(effect(), origin, [feat()], (k) => (k === 'feat' ? 'Черта' : k));
+    const p = effectAbilityPresentation(
+      effect(),
+      origin,
+      [feat({ image_url: 'https://cdn.test/fighting-style.png' })],
+      (k) => (k === 'feat' ? 'Черта' : k),
+    );
     expect(p.name).toBe('Оборона');
     expect(p.sourceLabel).toBe('Боевой стиль · Оборона');
     expect(p.effect.name).toBe('Оборона');
+    expect(p.fallbackImageUrl).toBe('https://cdn.test/fighting-style.png');
+  });
+
+  it('uses the owning feat artwork for any feat-owned effect without hardcoded style ids', () => {
+    const e = effect({ name: 'Эффект черты', card_number: 'EFF-generic', image_url: '' });
+    const p = effectAbilityPresentation(
+      e,
+      origin,
+      [feat({ category: 'origin', image_url: '/feat.png' })],
+    );
+    expect(p.fallbackImageUrl).toBe('/feat.png');
   });
 
   it('обычные эффекты не трогает', () => {

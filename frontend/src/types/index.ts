@@ -952,6 +952,8 @@ export interface PassiveEffect {
   condition_description?: string | null;
   script?: Record<string, any> | null;
   mechanics?: Record<string, unknown> | null;
+  /** Non-certified UX metadata keyed by the raw mechanics choice id. */
+  choice_recommendations?: Record<string, string[]> | null;
   type?: string | null;
   author?: string;
   source?: string | null;
@@ -1499,6 +1501,8 @@ export interface CharacterClass {
   weapon_proficiencies?: string[] | null;
   tool_proficiencies?: string[] | null;
   skill_choices?: Record<string, unknown> | null;
+  /** Non-certified UX metadata keyed by a stable choice name (`class_skills`). */
+  choice_recommendations?: Record<string, string[]> | null;
   starting_equipment?: Record<string, unknown> | null;
   equipment_options?: ClassEquipmentOptions | null;
   level_progression?: LevelProgression | null;

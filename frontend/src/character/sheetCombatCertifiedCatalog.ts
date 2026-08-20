@@ -772,7 +772,9 @@ function assertCertifiedPreparedSources(
   if (canonicalStringify(actualSourceIds) !== canonicalStringify(expectedSourceIds)) {
     throw new Error(`Actor ${actor.id} prepared source set differs from certified spellbook access`);
   }
-  const certifiedProfiles = new Set(certified.preparedSourceProfiles.map(canonicalStringify));
+  const certifiedCapacities = new Set(certified.preparedSourceProfiles.map((profile) => (
+    canonicalStringify({ sourceId: profile.sourceId, capacity: profile.capacity })
+  )));
   for (const [sourceKey, source] of preparedEntries) {
     if (!source || source.sourceId !== sourceKey) {
       throw new Error(`Actor ${actor.id} prepared source ${sourceKey} has invalid identity`);
@@ -783,15 +785,18 @@ function assertCertifiedPreparedSources(
       throw new Error(`Actor ${actor.id} prepared source ${sourceKey} has invalid capacity or duplicates`);
     }
     const projected = projectCertifiedPreparedSource(source);
+    if (!certifiedCapacities.has(canonicalStringify({
+      sourceId: projected.sourceId,
+      capacity: projected.capacity,
+    }))) {
+      throw new Error(`Actor ${actor.id} prepared source ${sourceKey} has uncertified capacity`);
+    }
     const grantedActionIds = sortedUnique(spellbookBySource.get(sourceKey) ?? []);
     if (canonicalStringify(projected.availableActionIds) !== canonicalStringify(grantedActionIds)) {
       throw new Error(`Actor ${actor.id} available spells for ${sourceKey} differ from its grants`);
     }
     if (projected.preparedActionIds.some((actionId) => !projected.availableActionIds.includes(actionId))) {
       throw new Error(`Actor ${actor.id} prepares an unavailable spell for ${sourceKey}`);
-    }
-    if (!certifiedProfiles.has(canonicalStringify(projected))) {
-      throw new Error(`Actor ${actor.id} prepared source ${sourceKey} differs from certified access`);
     }
   }
 }
@@ -817,10 +822,11 @@ export function assertCertifiedSheetCombatActorAccess(
     }
     if (action.kind !== 'spell') continue;
     const expected = new Set(
-      (certified.accessSignaturesByAction[actionId] ?? []).map(canonicalStringify),
+      (certified.accessSignaturesByAction[actionId] ?? [])
+        .map((signature) => canonicalStringify(signature.grants)),
     );
     const actual = projectCertifiedActorAccess(actor, actionId);
-    if (!actual.grants.length || !expected.has(canonicalStringify(actual))) {
+    if (!actual.grants.length || !expected.has(canonicalStringify(actual.grants))) {
       throw new Error(`Actor ${actor.id} access for ${actionId} differs from certified access`);
     }
   }

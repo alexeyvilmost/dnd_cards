@@ -1396,9 +1396,19 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 
 	// Преобразование в ответы
 	light := wantsListView(c)
+	references := make([]string, 0, len(effects))
+	for _, effect := range effects {
+		references = append(references, effect.CardNumber)
+	}
+	recommendations, recommendationErr := loadChoiceRecommendations(ec.db, "effect", references)
+	if recommendationErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения рекомендаций эффектов"})
+		return
+	}
 	responses := make([]EffectResponse, 0, len(effects))
 	for _, effect := range effects {
 		r := effect.ToEffectResponse()
+		r.ChoiceRecommendations = recommendations[effect.CardNumber]
 		if light {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
@@ -1437,7 +1447,14 @@ func (ec *EffectController) GetEffect(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, effect.ToEffectResponse())
+	recommendations, recommendationErr := loadChoiceRecommendations(ec.db, "effect", []string{effect.CardNumber})
+	if recommendationErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения рекомендаций эффекта"})
+		return
+	}
+	response := effect.ToEffectResponse()
+	response.ChoiceRecommendations = recommendations[effect.CardNumber]
+	c.JSON(http.StatusOK, response)
 }
 
 // CreateEffect - создание нового эффекта

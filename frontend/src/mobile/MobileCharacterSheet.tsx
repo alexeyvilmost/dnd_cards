@@ -582,7 +582,7 @@ export default function MobileCharacterSheet() {
                     key={`${effect.id}:${origin.id}`}
                     name={p.name}
                     detail={p.sourceLabel}
-                    imageUrl={effect.image_url}
+                    imageUrl={effect.image_url?.trim() || p.fallbackImageUrl}
                     onClick={() => setOverlay({ type: 'entity', view: { kind: 'effect', entity: p.effect, sourceLabel: p.sourceLabel } })}
                   />
                   );

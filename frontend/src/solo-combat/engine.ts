@@ -4,7 +4,6 @@ import {
   createSheetCombatSession,
   executeSheetCombatAction,
   newSheetRuntimeCommandId,
-  sheetCombatEngineEvents,
   type SheetCombatSession,
   type SheetCombatParticipantSeed,
   type SheetCombatTransition,
@@ -28,8 +27,10 @@ import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
+import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
+  effectiveActorSpeedFt,
   gridDistanceFt,
   occupiedPositions,
   pushAway,
@@ -38,8 +39,10 @@ import {
   SOLO_COMBAT_SCHEMA_VERSION,
   TACTICAL_HEIGHT,
   TACTICAL_WIDTH,
+  combatRelation,
   spatialFacts,
   type CombatLogEntry,
+  type CombatLogEventRecord,
   type GridPosition,
   type SoloCombatState,
 } from './types';
@@ -119,19 +122,21 @@ function appendLog(
   state: SoloCombatState,
   actorId: string,
   text: string,
-  events: readonly ReturnType<typeof sheetCombatEngineEvents>[number][] = [],
+  records: readonly CombatLogEventRecord[] = [],
 ): SoloCombatState {
   const round = state.world.scene.mode === 'encounter' ? state.world.scene.round : 1;
   const actorName = state.world.actors[actorId]?.name ?? 'Неизвестный участник';
   const entry: CombatLogEntry = {
     id: newSheetRuntimeCommandId(), round, actorId, text: `${actorName}: ${text}`,
-    ...(events.length ? { events: clone([...events]) } : {}),
+    ...(records.length ? { records: clone([...records]) } : {}),
   };
   return { ...state, log: [...state.log.slice(-79), entry] };
 }
 
-function eventSummary(events: readonly ReturnType<typeof sheetCombatEngineEvents>[number][]): string {
-  const fragments = events.flatMap((event) => {
+function eventSummary(records: readonly CombatLogEventRecord[]): string {
+  const fragments = records.flatMap((record) => {
+    const event = record.event;
+    if (!event) return [];
     switch (event.type) {
       case 'damage': return [`урон ${event.amount} (${event.damageType})`];
       case 'healing': return [`лечение ${event.amount}`];
@@ -175,9 +180,11 @@ function applyForcedMovement(
 function outcome(state: SoloCombatState): SoloCombatState {
   const player = state.world.actors[state.characterId];
   if (!player || player.runtime.hp.current <= 0) return { ...state, outcome: 'defeat' };
-  const livingMonster = Object.values(state.world.actors)
-    .some((actor) => actor.kind === 'monster' && actor.runtime.hp.current > 0);
-  return livingMonster ? state : { ...state, outcome: 'victory' };
+  const livingOpponent = Object.values(state.world.actors).some((actor) => (
+    actor.runtime.hp.current > 0
+      && combatRelation(state, state.characterId, actor.id) === 'enemy'
+  ));
+  return livingOpponent ? state : { ...state, outcome: 'victory' };
 }
 
 function transitionState(
@@ -187,10 +194,10 @@ function transitionState(
   nextWorld: WorldState,
   rawEvents: readonly UncommittedRuleEvent[],
 ): SoloCombatState {
-  const engineEvents = sheetCombatEngineEvents(rawEvents);
+  const records = projectCombatLogRecords(rawEvents);
   let next = { ...state, world: nextWorld };
   next = applyForcedMovement(next, rawEvents);
-  next = appendLog(next, actorId, `${label}: ${eventSummary(engineEvents)}`, engineEvents);
+  next = appendLog(next, actorId, `${label}: ${eventSummary(records)}`, records);
   return outcome(next);
 }
 
@@ -235,17 +242,20 @@ function declarationFor(
   actorId: string,
   action: RuleActionDefinition,
   targetIds: string[],
+  suppliedChoices: Readonly<Record<string, readonly string[]>> = {},
 ): SheetCanonicalCommandInput {
   const primitive = primitiveType(action);
   const factsByTarget = Object.fromEntries(targetIds.map((targetId) => [
     targetId, spatialFacts(state, actorId, targetId),
   ]));
-  const choices: Record<string, string[]> = {};
+  const choices: Record<string, string[]> = Object.fromEntries(
+    Object.entries(suppliedChoices).map(([id, values]) => [id, [...values]]),
+  );
   if (primitive === 'magic_missile' && targetIds.length) {
     const policy = (action.mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>;
     const count = Number(policy?.base_dart_count ?? 3);
     const choiceId = String(policy?.allocation_choice_id ?? 'magic_missile_dart_targets');
-    choices[choiceId] = Array(count).fill(targetIds[0]);
+    if (!choices[choiceId]) choices[choiceId] = Array(count).fill(targetIds[0]);
   }
   return {
     sceneMode: 'encounter', targetIds, factsByTarget,
@@ -290,13 +300,20 @@ export function executeCombatAction(input: {
   actorId: string;
   actionId: string;
   targetIds: string[];
+  choices?: Readonly<Record<string, readonly string[]>>;
   rng?: Rng;
 }): SoloCombatState {
   if (input.state.outcome !== 'active') return input.state;
   if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
-  const declaration = declarationFor(input.state, input.actorId, action, input.targetIds);
+  const declaration = declarationFor(
+    input.state,
+    input.actorId,
+    action,
+    input.targetIds,
+    input.choices,
+  );
   const rng = input.rng ?? Math.random;
   if (input.actorId === input.state.characterId && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
     const transition = executeSheetCombatAction({
@@ -328,7 +345,7 @@ export function executeCombatAction(input: {
     movementRemainingFt: {
       ...next.movementRemainingFt,
       [input.actorId]: (next.movementRemainingFt[input.actorId] ?? 0)
-        + Number(next.world.actors[input.actorId].character.characterSpeed ?? 30),
+        + effectiveActorSpeedFt(next.world.actors[input.actorId]),
     },
   };
 }
@@ -400,7 +417,7 @@ function executeOpportunityAttacks(
   if (!mover || !start || deniesOpportunityAttack(mover)) return state;
   let next = state;
   const enemies = Object.values(state.world.actors).filter((actor) => (
-    actor.id !== moverId && actor.kind !== mover.kind && actor.runtime.hp.current > 0
+    combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
       && actor.runtime.resources.reaction > 0
       && gridDistanceFt(state.tokens[actor.id].position, start) <= 5
       && gridDistanceFt(state.tokens[actor.id].position, destination) > 5
@@ -435,8 +452,15 @@ export function moveActor(input: {
     throw new Error('Клетка находится за пределами поля');
   }
   const distance = gridDistanceFt(token.position, input.destination);
+  const actor = input.state.world.actors[input.actorId];
+  if (!actor) throw new Error('Участник перемещения отсутствует');
+  // The turn ledger is authoritative once materialized: Dash legitimately adds
+  // another speed allotment, so clamping the stored value to base speed here
+  // would erase that data-driven action. Effective speed is projected whenever
+  // a turn starts (and when combat is created), which is where speed conditions
+  // such as Ray of Frost establish the next turn's movement budget.
   const available = input.state.movementRemainingFt[input.actorId]
-    ?? Number(input.state.world.actors[input.actorId].character.characterSpeed ?? 30);
+    ?? effectiveActorSpeedFt(actor);
   const maxFeet = input.maxFeet ?? available;
   if (distance > maxFeet) throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
   if (occupiedPositions(input.state, input.actorId).has(`${input.destination.x}:${input.destination.y}`)) {
@@ -479,7 +503,7 @@ export function advanceTurn(state: SoloCombatState): SoloCombatState {
     ...next,
     movementRemainingFt: {
       ...next.movementRemainingFt,
-      [startingActorId]: Number(next.world.actors[startingActorId].character.characterSpeed ?? 30),
+      [startingActorId]: effectiveActorSpeedFt(next.world.actors[startingActorId]),
     },
   };
 }
@@ -658,13 +682,44 @@ export async function createSoloCombatState(input: {
         }] as const] : [];
       }))),
     },
+    sideByActorId: {
+      [input.character.id]: 'side:party',
+      ...Object.fromEntries(monsters.map((monster) => [monster.actor.id, 'side:opposition'])),
+    },
+    actorPresentation: {
+      [input.character.id]: {
+        creatureType: base.world.actors[input.character.id].character.creatureType,
+        actionIds: input.participant.canonical.actions.map((action) => action.id),
+        traits: [],
+      },
+      ...Object.fromEntries(monsters.map((monster) => [monster.actor.id, {
+        templateId: monster.template.id,
+        description: monster.template.description,
+        size: monster.template.size,
+        creatureType: monster.template.creature_type,
+        alignment: monster.template.alignment,
+        challengeRating: monster.template.challenge_rating,
+        source: monster.template.source,
+        actionIds: monster.actions.map((action) => action.id),
+        traits: monster.template.effect_ids.flatMap((effectId) => {
+          const effect = input.effects.find((candidate) => candidate.id === effectId);
+          return effect?.mechanics ? [{
+            id: effect.id,
+            name: effect.name,
+            description: effect.description,
+            imageUrl: effect.image_url,
+            mechanics: clone(effect.mechanics),
+          }] : [];
+        }),
+      }])),
+    },
     certifiedPlayerActionIds: [...base.certifiedActionIdsByActor[input.character.id]],
     monsterActionIds, opportunityActionIds,
     ...(dash ? { dashActionId: dash.id } : {}),
     resourceBindings: clone(base.resourceBindingsByActor[input.character.id]),
     tokens, boardRevision: 1,
     movementRemainingFt: Object.fromEntries(Object.values(base.world.actors).map((actor) => [
-      actor.id, Number(actor.character.characterSpeed ?? 30),
+      actor.id, effectiveActorSpeedFt(actor),
     ])),
     initiativeBonuses: {
       [input.character.id]: Number(input.character.initiative_bonus
@@ -695,7 +750,7 @@ export function selectedTargetsForAction(input: {
   if (rawTargeting?.shape === 'area') {
     return areaActorIds({
       state: input.state, sourceActorId: input.state.characterId,
-      selectedPosition: input.clickedPosition, action,
+      aimPosition: input.clickedPosition, action,
     }).slice(0, action.targeting?.maxTargets ?? 8);
   }
   return input.clickedActorId ? [input.clickedActorId] : [];

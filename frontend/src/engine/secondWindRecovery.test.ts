@@ -4,6 +4,7 @@ import type { EngineEvent, ResourceRestRecovery, RuntimeState } from '../mvp/con
 import {
   actionUsesKey,
   bindActionUsesCost,
+  restoreSelfUsesCost,
   declaresSelfUsesCost,
   resolveActionUsesRecovery,
 } from './actionUses';
@@ -49,6 +50,15 @@ describe('generic mechanics.uses.recovery policy', () => {
         cost: [{ resource: 'bonus_action' }, { resource: USES_KEY }],
       },
     });
+    expect(restoreSelfUsesCost(bindActionUsesCost(declared, USES_KEY), USES_KEY)).toEqual(declared);
+  });
+
+  it('does not reinterpret another resource as this action uses pool', () => {
+    const mechanics = {
+      uses: { count: 2, per: 'short_rest' },
+      activation: { mode: 'active', cost: [{ resource: 'other_pool' }] },
+    };
+    expect(restoreSelfUsesCost(mechanics, USES_KEY)).toBe(mechanics);
   });
 
   it('does not invent a self-use price from mechanics.uses', () => {

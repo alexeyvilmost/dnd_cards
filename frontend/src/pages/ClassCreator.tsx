@@ -331,7 +331,7 @@ const ClassCreator = () => {
             <>
               <div>
                 <label className={labelCls}>Выбор навыков (JSON)</label>
-                <textarea {...register('skill_choices_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"count":2,"options":["athletics","perception"]}' />
+                <textarea {...register('skill_choices_json')} rows={5} className={`${inputCls} font-mono text-xs`} placeholder='{"count":2,"options":["athletics","perception"],"recommended":["athletics"]}' />
               </div>
             </>
           )}

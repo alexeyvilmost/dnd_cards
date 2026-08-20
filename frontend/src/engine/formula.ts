@@ -740,6 +740,29 @@ export function formatFormulaDisplay(formula: string | number, ctx?: FormulaCont
   if (typeof formula === 'number') return String(formula);
   const raw = String(formula);
   if (!raw.trim()) return '';
+  // Fully known scalar arithmetic is presentation noise rather than useful
+  // provenance. Fold it without ever evaluating dice or unresolved values:
+  // an unarmed-strike payload such as `1 + str` becomes `3`, while formulas
+  // such as `1d8 + str` keep their readable components.
+  try {
+    const tokens = tokenize(raw);
+    const hasArithmetic = tokens.some((token) => token.t === 'op' && token.v !== ',');
+    const isKnownScalarArithmetic = tokens.length > 0
+      && hasArithmetic
+      && tokens.every((token) => (
+        token.t === 'num'
+        || token.t === 'lparen'
+        || token.t === 'rparen'
+        || (token.t === 'op' && token.v !== ',')
+        || (token.t === 'id' && Boolean(ctx) && isNumericScalarKnown(token.v, ctx ?? {}))
+      ));
+    if (isKnownScalarArithmetic) {
+      const value = evalTokens(tokens, ctx ?? {}, false);
+      if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+    }
+  } catch {
+    // Invalid authoring data still follows the existing readable fallback.
+  }
   if (ctx) {
     try {
       return describe(raw, ctx);

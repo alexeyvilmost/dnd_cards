@@ -6823,6 +6823,7 @@ function performLightWeaponExtraAttack(
 
   const result = executeAction(markedRuntime, action.mechanics, {
     ...actionContext(sourceForAttack, env, targetForAttack, target.runtime, command.facts),
+    choices: command.choices,
   });
   const armor = resolveTemporaryHpMeleeRetaliationAfterAttack({
     world,

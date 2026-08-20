@@ -49,10 +49,21 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения классов"})
 		return
 	}
+	references := make([]string, 0, len(classes))
+	for _, cl := range classes {
+		references = append(references, cl.CardNumber)
+	}
+	recommendations, err := loadChoiceRecommendations(cc.db, "class", references)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения рекомендаций классов"})
+		return
+	}
 
 	responses := make([]ClassResponse, 0)
 	for _, cl := range classes {
-		responses = append(responses, cl.ToClassResponse())
+		response := cl.ToClassResponse()
+		response.ChoiceRecommendations = recommendations[cl.CardNumber]
+		responses = append(responses, response)
 	}
 	c.JSON(http.StatusOK, gin.H{"classes": responses, "total": total, "page": page, "limit": limit})
 }
@@ -72,7 +83,14 @@ func (cc *ClassController) GetClass(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения класса"})
 		return
 	}
-	c.JSON(http.StatusOK, cl.ToClassResponse())
+	recommendations, recommendationErr := loadChoiceRecommendations(cc.db, "class", []string{cl.CardNumber})
+	if recommendationErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения рекомендаций класса"})
+		return
+	}
+	response := cl.ToClassResponse()
+	response.ChoiceRecommendations = recommendations[cl.CardNumber]
+	c.JSON(http.StatusOK, response)
 }
 
 func (cc *ClassController) CreateClass(c *gin.Context) {

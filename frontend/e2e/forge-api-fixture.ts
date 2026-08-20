@@ -197,6 +197,30 @@ function materializeFixturePatch(source: Record<string, JsonRecord[]>): Record<s
       };
     }
   }
+  // Mirrors migration 105 for this unlocked partial-certification row. The
+  // checked-in production snapshot is an immutable pre-migration fixture.
+  const unarmed = catalogs.actions.find((row) => row.card_number === 'action_basic_unarmed');
+  if (unarmed) {
+    unarmed.mechanics = {
+      ...((unarmed.mechanics as JsonRecord | undefined) ?? {}),
+      targeting: {
+        domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+        max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+        allowed_relations: ['enemy'],
+      },
+    };
+  }
+  const help = catalogs.actions.find((row) => row.card_number === 'action_help');
+  if (help) {
+    help.mechanics = {
+      ...((help.mechanics as JsonRecord | undefined) ?? {}),
+      targeting: {
+        domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+        max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+        allowed_relations: ['ally'],
+      },
+    };
+  }
   return catalogs;
 }
 
@@ -451,11 +475,18 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
       await json(route, entity ? 200 : 404, entity ?? { error: `missing ${segments[1]} ${reference}` });
       return;
     }
+    const rows = segments[1] === 'actions'
+      ? collection.rows.filter((row) => (
+          (!url.searchParams.get('type') || row.type === url.searchParams.get('type'))
+          && (!url.searchParams.get('action_type')
+            || row.action_type === url.searchParams.get('action_type'))
+        ))
+      : collection.rows;
     await json(route, 200, {
-      [collection.responseKey]: collection.rows,
-      total: collection.rows.length,
+      [collection.responseKey]: rows,
+      total: rows.length,
       page: 1,
-      limit: collection.rows.length,
+      limit: rows.length,
     });
   });
   return {

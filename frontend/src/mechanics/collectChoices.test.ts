@@ -83,6 +83,42 @@ describe('collectChoices — всплытие вложенных выборов'
     expect(p1).toBeDefined();
     expect(p1?.count).toBe(2);
   });
+
+  it('overlays sidecar recommendations by raw choice id, including nested choices', () => {
+    const out = collectChoices(
+      {
+        effects: [{
+          kind: 'choice',
+          id: 'outer',
+          recommended: ['embedded'],
+          options: {
+            source: 'subfeature',
+            items: [{
+              id: 'branch',
+              name: 'Ветка',
+              grants: [{
+                kind: 'choice',
+                id: 'human_skill',
+                recommended: ['embedded-skill'],
+                options: { source: 'skill' },
+              }],
+            }],
+          },
+        }],
+      },
+      ORIGIN,
+      { [choiceKey(ORIGIN, 'outer')]: ['branch'] },
+      {
+        outer: ['branch'],
+        human_skill: ['perception'],
+      },
+    );
+
+    expect(out.find((candidate) => candidate.id.endsWith(':outer'))?.recommended)
+      .toEqual(['branch']);
+    expect(out.find((candidate) => candidate.id.endsWith(':human_skill'))?.recommended)
+      .toEqual(['perception']);
+  });
 });
 
 describe('prepared_spell_choice', () => {

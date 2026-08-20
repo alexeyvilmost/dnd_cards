@@ -41,6 +41,7 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
   return (
     <span
       className={`res-tile${allSpent ? ' res-tile--spent' : ''}`}
+      aria-label={`${label}: ${totalRemaining}`}
       style={{ position: 'relative' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

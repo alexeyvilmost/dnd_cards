@@ -4,7 +4,7 @@ import type { ActorState } from '../rules-core/domain';
 import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
-import { areaPositionsForAction, gridDistanceFt, pathToward, pushAway, reachablePositions } from './tacticalGrid';
+import { areaPositionsForAction, effectiveActorSpeedFt, gridDistanceFt, pathToward, pushAway, reachablePositions } from './tacticalGrid';
 import type { SoloCombatState } from './types';
 
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
@@ -53,6 +53,12 @@ function aiState(monsterPosition: { x: number; y: number }, playerPosition: { x:
   const monster = {
     id: 'monster',
     character: { characterSpeed: speed },
+    runtime: {
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: {}, maxResources: {}, activeEffects: [],
+      concentration: null, inventory: [], equipment: {}, turn: 0,
+    },
+    passives: [],
   } as unknown as ActorState;
   const worldActor = (id: string) => ({ id, runtime: { hp: { current: 10 } } });
   const state = {
@@ -97,12 +103,50 @@ describe('solo combat tactical contract', () => {
 
   it('projects a 15-foot cube as the same three-by-three target area shown on hover', () => {
     const cells = areaPositionsForAction({
-      mechanics: { targeting: { shape: 'area', area: { shape: 'cube', size_ft: 15 } } },
-      targeting: { rangeFt: 15 },
-    }, { x: 5, y: 5 });
+      action: {
+        mechanics: { targeting: { shape: 'area', area: { kind: 'cube', size_ft: 15 } } },
+        targeting: { rangeFt: 15 },
+      },
+      sourcePosition: { x: 5, y: 8 },
+      aimPosition: { x: 5, y: 5 },
+    });
     expect(cells).toHaveLength(9);
     expect(cells).toContainEqual({ x: 4, y: 4 });
     expect(cells).toContainEqual({ x: 6, y: 6 });
+  });
+
+  it('projects spheres by radius and keeps them distinct from cubes', () => {
+    const cells = areaPositionsForAction({
+      action: {
+        mechanics: { targeting: { shape: 'area', area: { kind: 'sphere', radius_ft: 5 } } },
+        targeting: { rangeFt: 30 },
+      },
+      sourcePosition: { x: 5, y: 8 },
+      aimPosition: { x: 5, y: 5 },
+    });
+    expect(cells).toHaveLength(5);
+    expect(cells).toContainEqual({ x: 5, y: 5 });
+    expect(cells).toContainEqual({ x: 5, y: 4 });
+    expect(cells).not.toContainEqual({ x: 4, y: 4 });
+  });
+
+  it('anchors cones at the source and rotates them toward the aim cell', () => {
+    const action = {
+      mechanics: { targeting: { shape: 'area', area: { kind: 'cone', size_ft: 15 } } },
+      targeting: { rangeFt: 15 },
+    };
+    const north = areaPositionsForAction({
+      action, sourcePosition: { x: 5, y: 5 }, aimPosition: { x: 5, y: 2 },
+    });
+    const east = areaPositionsForAction({
+      action, sourcePosition: { x: 5, y: 5 }, aimPosition: { x: 8, y: 5 },
+    });
+    expect(north).toContainEqual({ x: 5, y: 2 });
+    expect(north).toContainEqual({ x: 4, y: 3 });
+    expect(north).not.toContainEqual({ x: 8, y: 5 });
+    expect(east).toContainEqual({ x: 8, y: 5 });
+    expect(east).toContainEqual({ x: 7, y: 4 });
+    expect(east).not.toContainEqual({ x: 5, y: 2 });
   });
 
   it('compiles a monster entirely from referenced Action and Effect entities', () => {
@@ -132,6 +176,20 @@ describe('solo combat tactical contract', () => {
     const plan = planMonsterTurn(far.state, far.monster, 'player');
     expect(plan.attacks).toBe(false);
     expect(plan.usesDash).toBe(true);
+    expect(plan.firstMove).toHaveLength(4);
+    expect(plan.dashMove).toHaveLength(4);
+  });
+
+  it('uses active speed modifiers for both movement and monster planning', () => {
+    const slowed = aiState({ x: 0, y: 0 }, { x: 11, y: 9 }, 30);
+    slowed.monster.runtime.activeEffects = [{
+      id: 'effect:slow', name: 'Slow', source: 'test',
+      ownerId: slowed.monster.id, sourceId: 'caster',
+      roundsLeft: 1, expiry: 'source_turn',
+      mechanics: { kind: 'modifier', applies_to: { roll: 'speed' }, op: 'add', value: '-10' },
+    }];
+    expect(effectiveActorSpeedFt(slowed.monster)).toBe(20);
+    const plan = planMonsterTurn(slowed.state, slowed.monster, 'player');
     expect(plan.firstMove).toHaveLength(4);
     expect(plan.dashMove).toHaveLength(4);
   });

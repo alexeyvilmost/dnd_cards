@@ -656,6 +656,19 @@ func GetAllMigrations() []Migration {
 			// Журнал отзыва и восстановленный DB-guard являются аудиторским следом и не откатываются.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "104_seed_recommended_skill_choices",
+			Description: "Добавить sidecar-рекомендации навыков без изменения сертифицированного контента",
+			Up:          seedRecommendedSkillChoices,
+			Down:        removeRecommendedSkillChoices,
+		},
+		{
+			Version:     "105_repair_active_action_targeting",
+			Description: "Добавить явные actor-target контракты активным расовым и предметным действиям",
+			Up:          repairActiveActionTargeting,
+			// Контракты исправляют исполняемость контента и намеренно не откатываются.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -1511,6 +1511,11 @@
         },
         "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "minimum_die", "die_bonus", "bonus_die", "explode"] },
         "value": { "$ref": "#/$defs/formula" },
+        "modifier_kind": {
+          "enum": ["base", "ability", "proficiency", "expertise", "effect"],
+          "description": "Semantic role carried into roll/value breakdown UI. Use proficiency for bonuses that should display the proficiency marker."
+        },
+        "reason": { "type": "string", "description": "Optional human-readable explanation shown in roll/value breakdowns." },
         "scope": { "enum": ["self", "target"] },
         "range": { "enum": ["melee", "ranged"] },
         "natural": {

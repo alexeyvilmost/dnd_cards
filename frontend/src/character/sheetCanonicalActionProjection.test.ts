@@ -140,4 +140,53 @@ describe('runnable canonical sheet-action projection', () => {
     expect(projection.actions.map((action) => action.id)).toEqual(['mage-armor']);
     expect(projection.issues.size).toBe(0);
   });
+
+  it('keeps every explicitly active data action and derives a zero-target contract', () => {
+    const active = (id: string, group: SheetAction['group']): SheetAction => ({
+      id,
+      name: id,
+      group,
+      sourceEntityIds: [`source:${id}`],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+        effects: [{ resolution: 'auto', result: [{ kind: 'narrative', description: id }] }],
+      },
+    });
+    const projection = projectRunnableSheetCanonicalActions({
+      actions: [
+        active('item', 'item'),
+        active('race', 'race'),
+        active('class', 'class'),
+        { id: 'legacy', name: 'Legacy', group: 'basic', mechanics: {} },
+      ],
+      equipment: {},
+      cards: new Map(),
+    });
+
+    expect(projection.actions.map(({ id }) => id)).toEqual(['item', 'race', 'class']);
+    for (const action of projection.actions) {
+      expect(action.mechanics.targeting).toEqual({
+        shape: 'single', domain: 'world', actor_targets: false,
+        min_targets: 0, max_targets: 0, range_ft: 0,
+        requires_line_of_sight: false, allowed_relations: [],
+      });
+    }
+  });
+
+  it('fails closed when target-interacting active mechanics omit targeting', () => {
+    const projection = projectRunnableSheetCanonicalActions({
+      actions: [{
+        id: 'bad-target', name: 'Bad target', group: 'item',
+        mechanics: {
+          activation: { mode: 'active', cost: [] },
+          effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'heal', amount: 1 }] }],
+        },
+      }],
+      equipment: {},
+      cards: new Map(),
+    });
+
+    expect(projection.actions).toEqual([]);
+    expect(projection.issues.get('bad-target')).toMatch(/declares no mechanics\.targeting/);
+  });
 });

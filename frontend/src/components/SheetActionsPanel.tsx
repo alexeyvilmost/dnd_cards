@@ -310,6 +310,62 @@ export function characterInteractionTargetOption(
   return { id: candidate.id, name: candidate.name };
 }
 
+/** Target relations are mechanics-owned; localized names never decide picker membership. */
+export function sheetMechanicsAllowsSelfTarget(mechanics: Record<string, unknown>): boolean {
+  const targeting = mechanics.targeting as Record<string, unknown> | undefined;
+  return Array.isArray(targeting?.allowed_relations)
+    && targeting.allowed_relations.includes('self');
+}
+
+export function sheetSelectedTargetRelationIssue(input: {
+  actorId: string;
+  targetId?: string;
+  allowsSelf: boolean;
+}): string | null {
+  return input.targetId === input.actorId && !input.allowsSelf
+    ? 'Выбранное действие не разрешает цель «на себя»'
+    : null;
+}
+
+function sameRuntimeValue(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function runtimeRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Legacy execution projects source and target state separately. When both are
+ * the same actor, perform a three-way merge and reject genuinely conflicting
+ * mutations instead of losing either the action cost or the target effect.
+ */
+function mergeSelfTargetValue(
+  before: unknown,
+  source: unknown,
+  target: unknown,
+  path: string,
+): unknown {
+  if (sameRuntimeValue(source, before)) return target;
+  if (sameRuntimeValue(target, before) || sameRuntimeValue(source, target)) return source;
+  if (runtimeRecord(before) && runtimeRecord(source) && runtimeRecord(target)) {
+    const keys = new Set([...Object.keys(before), ...Object.keys(source), ...Object.keys(target)]);
+    return Object.fromEntries([...keys].map((key) => [
+      key,
+      mergeSelfTargetValue(before[key], source[key], target[key], `${path}.${key}`),
+    ]));
+  }
+  throw new Error(`Self-targeted action changes ${path} through conflicting source and target paths`);
+}
+
+export function mergeSelfTargetRuntime(
+  before: RuntimeState,
+  source: RuntimeState,
+  target: RuntimeState,
+): RuntimeState {
+  return mergeSelfTargetValue(before, source, target, 'runtime') as RuntimeState;
+}
+
 /** Keep subsequent interactions in this tab on the exact server-committed runtime snapshot. */
 export function replaceCachedInteractionTarget(
   cached: readonly ForgeCharacter[],
@@ -370,6 +426,13 @@ function mechanicsPrimitiveType(mechanics: Record<string, unknown>): string | nu
   if (!primitive || typeof primitive !== 'object' || Array.isArray(primitive)) return null;
   const type = (primitive as Record<string, unknown>).type;
   return typeof type === 'string' && type ? type : null;
+}
+
+/** Every spell row uses canonical grant/preparation access, primitive or not. */
+export function sheetActionNeedsCanonicalAvailability(
+  action: Pick<SheetAction, 'mechanics' | 'spellRef'>,
+): boolean {
+  return action.spellRef !== undefined || mechanicsPrimitiveType(action.mechanics) !== null;
 }
 
 /**
@@ -581,7 +644,7 @@ export default function SheetActionsPanel({
     let active = true;
     void loadTargetChars().then((candidates) => {
       if (active) setAvailableSheetTargets(candidates.filter((candidate) => (
-        candidate.id !== character.id && !isCharacterReadOnly(candidate)
+        !isCharacterReadOnly(candidate)
       )));
     });
     return () => { active = false; };
@@ -782,7 +845,7 @@ export default function SheetActionsPanel({
 
   const canonicalBuild = useMemo(() => {
     const needsCanonical = allActions.some((candidate) => (
-      mechanicsPrimitiveType(candidate.mechanics) != null
+      sheetActionNeedsCanonicalAvailability(candidate)
     )) || assembled.effects.some(({ effect }) => (
       mechanicsPrimitiveType((effect.mechanics ?? {}) as Record<string, unknown>)?.startsWith('pact_') === true
     ));
@@ -839,7 +902,7 @@ export default function SheetActionsPanel({
   ]);
 
   const canonicalFor = (action: SheetAction): SheetCanonicalActionContext | undefined => {
-    if (!mechanicsPrimitiveType(action.mechanics)) return undefined;
+    if (!sheetActionNeedsCanonicalAvailability(action)) return undefined;
     if (canonicalBuild.error) throw canonicalBuild.error;
     if (!canonicalBuild.runtime) {
       throw new Error('Каноническое состояние правил листа недоступно');
@@ -1433,7 +1496,10 @@ export default function SheetActionsPanel({
         ? new Set(Object.keys(existing.participantRevisions))
         : null;
       const characterCandidates: SheetCombatTargetCandidate[] = allCharacters
-        .filter((candidate) => candidate.id !== character.id)
+        .filter((candidate) => (
+          candidate.id !== character.id
+          || canonical.action.targeting?.allowedRelations.includes('self')
+        ))
         .filter((candidate) => !isCharacterReadOnly(candidate))
         .filter((candidate) => !allowedIds || allowedIds.has(candidate.id))
         .map((candidate) => {
@@ -1447,7 +1513,8 @@ export default function SheetActionsPanel({
             defaultFacts: {
               factsSource: 'scenario',
               boardRevision: existing?.world.revision ?? canonical.runtime.world.revision,
-              relation: 'enemy',
+              relation: candidate.id === character.id ? 'self' : 'enemy',
+              ...(candidate.id === character.id ? { distanceFt: 0, willing: true } : {}),
               lineOfSight: true,
               cover: 'none',
             },
@@ -1487,7 +1554,9 @@ export default function SheetActionsPanel({
       if (session) {
         characters = await combatCharacters(session);
       } else {
-        const selectedTargets = allCharacters.filter((candidate) => selectedIds.has(candidate.id));
+        const selectedTargets = allCharacters.filter((candidate) => (
+          candidate.id !== character.id && selectedIds.has(candidate.id)
+        ));
         const cards = new Map([...cardsIndex.entries(), ...equipCards.entries()]);
         const targets = await Promise.all(selectedTargets.map((target) => (
           loadSheetCombatParticipant({ character: target, basicActions, cards })
@@ -1553,7 +1622,7 @@ export default function SheetActionsPanel({
     const primitive = mechanicsPrimitiveType(mech);
     const authoritativePrimitive = primitive !== null && isSheetNoPendingPrimitive(primitive);
     let canonical: SheetCanonicalActionContext | undefined;
-    if (primitive) {
+    if (sheetActionNeedsCanonicalAvailability(action)) {
       try {
         canonical = canonicalFor(action);
       } catch (cause) {
@@ -1579,6 +1648,17 @@ export default function SheetActionsPanel({
       ? sheetActionRequiresActorTargets(canonical.action)
       : actionInteractsWithTarget(mech);
     const selectedTargetForAction = requiresActorTarget ? selectedSheetTarget : undefined;
+    const allowsSelfTarget = canonical?.action.targeting?.allowedRelations.includes('self')
+      ?? sheetMechanicsAllowsSelfTarget(mech);
+    const selectedTargetIssue = sheetSelectedTargetRelationIssue({
+      actorId: character.id,
+      targetId: selectedTargetForAction?.id,
+      allowsSelf: allowsSelfTarget,
+    });
+    if (selectedTargetIssue) {
+      setError(selectedTargetIssue);
+      return;
+    }
     const unarmedTargetAction = legacyUnarmedTargetAction(action);
     let sceneTarget: TargetContext | undefined;
     if (unarmedTargetAction && !selectedTargetForAction) {
@@ -1880,8 +1960,11 @@ export default function SheetActionsPanel({
       if (r.pendingResolution) {
         throw new UnsupportedSheetPendingResolutionError(r.pendingResolution.type);
       }
+      const selfTargetState = targetChar?.id === character.id && r.targetState
+        ? mergeSelfTargetRuntime(baseState, r.state, r.targetState)
+        : null;
       let commitTarget: (() => Promise<void>) | undefined;
-      if (r.targetState) {
+      if (r.targetState && !selfTargetState) {
         const tstate = r.targetState;
         if (targetCb) {
           // Реакции на попадание: если АТАКА попала по персонажу-комбатанту и нанесла урон,
@@ -1898,7 +1981,7 @@ export default function SheetActionsPanel({
         } else if (targetChar) commitTarget = () => persistTarget(targetChar!, tstate);
       }
       return {
-        state: r.state,
+        state: selfTargetState ?? r.state,
         events: r.events,
         pending: r.pendingReactions ?? [],
         targetState: r.targetState,
@@ -1921,7 +2004,9 @@ export default function SheetActionsPanel({
         if (encounterId) {
           // В бою: цели — комбатанты боя (по actorId, включая монстров), кроме себя.
           const combatants = await loadEncounterCombatants();
-          targetOptions = combatants.filter((c) => c.characterId !== character.id).map((c) => ({
+          targetOptions = combatants
+            .filter((c) => c.characterId !== character.id || allowsSelfTarget)
+            .map((c) => ({
             id: c.actorId, name: c.name,
             // E: очаровавшего нельзя выбрать целью (с подсказкой почему).
             ...(c.characterId && charmerIds.has(c.characterId) ? { disabled: true, reason: 'вы очарованы им' } : {}),
@@ -1929,14 +2014,14 @@ export default function SheetActionsPanel({
         } else {
           const chars = await loadTargetChars();
           targetOptions = chars
-            .filter((c) => c.id !== character.id)
+            .filter((c) => c.id !== character.id || allowsSelfTarget)
             .map((c) => characterInteractionTargetOption(c, charmerIds));
         }
       }
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
         { targets: targetOptions, needsTarget: interactsWithTarget },
         selectedTargetForAction?.id,
-        canonical);
+        primitive ? canonical : undefined);
       if (!main) return;
       let { state, events } = main;
       // Применённое к цели состояние (урон/лечение/эффекты) — на комбатанта боя или в запись персонажа.
@@ -2008,6 +2093,17 @@ export default function SheetActionsPanel({
     if (contextualCostIssue) return { disabled: true, reason: contextualCostIssue };
     const primitive = mechanicsPrimitiveType(action.mechanics);
     const pendingCombat = primitive ? isSheetPendingCombatPrimitive(primitive) : false;
+    if (action.spellRef && !primitive) {
+      if (canonicalBuild.error) return { disabled: true, reason: canonicalBuild.error.message };
+      try {
+        canonicalFor(action);
+      } catch (cause) {
+        return {
+          disabled: true,
+          reason: cause instanceof Error ? cause.message : String(cause),
+        };
+      }
+    }
     if (primitive) {
       const primitiveReason = sheetPrimitiveDisabledReason(primitive);
       if (primitiveReason) return { disabled: true, reason: primitiveReason };

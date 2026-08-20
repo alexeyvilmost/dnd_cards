@@ -4,10 +4,12 @@ import { ArrowLeft, RotateCcw, X } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
-import { writeRulesEngineRuntimeTurnState } from '../character/runtime';
+import { runtimeInventoryPayload, writeRulesEngineRuntimeTurnState } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import CombatHotbar from '../components/CombatHotbar';
+import CombatActorInspector from '../components/CombatActorInspector';
 import CombatCharacterSidebar from '../components/CombatCharacterSidebar';
+import CombatLogPanel from '../components/CombatLogPanel';
 import MonsterTurnController from '../components/MonsterTurnController';
 import TacticalBattleMap from '../components/TacticalBattleMap';
 import { monstersApi } from '../monsters/api';
@@ -23,6 +25,11 @@ import {
 } from '../solo-combat/engine';
 import { readSoloCombatState, writeSoloCombatState } from '../solo-combat/persistence';
 import type { GridPosition, SoloCombatState } from '../solo-combat/types';
+import {
+  collectSoloCombatActionChoices,
+  immediateSoloCombatTargetIds,
+} from '../solo-combat/actionChoices';
+import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
@@ -45,11 +52,14 @@ export default function SoloCombatPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const choiceDialog = useChoiceDialog();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const characterRef = useRef<ForgeCharacter | null>(null);
   const [state, setState] = useState<SoloCombatState | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  const [selectedActionChoices, setSelectedActionChoices] = useState<Record<string, string[]>>({});
   const [movementMode, setMovementMode] = useState(false);
+  const [inspectedActorId, setInspectedActorId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +83,7 @@ export default function SoloCombatPage() {
         resources: actor.runtime.resources,
         max_resources: actor.runtime.maxResources,
         active_effects: actor.runtime.activeEffects,
+        inventory_items: runtimeInventoryPayload(actor.runtime),
         turn_state: turnState,
       });
       const accepted = { ...predicted, runtimeRevision: Number(saved.runtime_revision ?? predicted.runtimeRevision) };
@@ -140,16 +151,39 @@ export default function SoloCombatPage() {
   }, [persist]);
 
   const playerTurn = state ? activeActor(state).id === state.characterId : false;
-  const chooseAction = (action: SoloCombatState['catalogActions'][number]) => {
+  const chooseAction = async (action: SoloCombatState['catalogActions'][number]) => {
     if (!state || !playerTurn || busy) return;
-    const targeting = action.mechanics.targeting as Record<string, unknown> | undefined;
-    if (targeting?.shape === 'self') {
-      try { apply(autoResolveSystemDecisions(executeCombatAction({ state, actorId: state.characterId, actionId: action.id, targetIds: [state.characterId] }))); }
-      catch (reason) { setError(reason instanceof Error ? reason.message : 'Действие не выполнено'); }
-      return;
-    }
+    const wasSelected = selectedActionId === action.id;
+    setError(null);
     setMovementMode(false);
-    setSelectedActionId((current) => current === action.id ? null : action.id);
+    setSelectedActionId(null);
+    setSelectedActionChoices({});
+    if (wasSelected) return;
+    try {
+      const requiredChoices = collectSoloCombatActionChoices(
+        state.world.actors[state.characterId],
+        action,
+      );
+      const choices = requiredChoices.length
+        ? await choiceDialog.request(requiredChoices, action.name)
+        : {};
+      if (!choices) return;
+      const immediateTargets = immediateSoloCombatTargetIds(action, state.characterId);
+      if (immediateTargets) {
+        apply(autoResolveSystemDecisions(executeCombatAction({
+          state,
+          actorId: state.characterId,
+          actionId: action.id,
+          targetIds: immediateTargets,
+          choices,
+        })));
+        return;
+      }
+      setSelectedActionId(action.id);
+      setSelectedActionChoices(choices);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Действие не выполнено');
+    }
   };
 
   const clickCell = (position: GridPosition, actorId?: string) => {
@@ -158,14 +192,20 @@ export default function SoloCombatPage() {
       if (movementMode) {
         if (actorId) throw new Error('Для перемещения выберите свободную клетку');
         const next = moveActor({ state, actorId: state.characterId, destination: position, voluntary: true });
-        setMovementMode(false); apply(next); return;
+        setMovementMode(false); setSelectedActionChoices({}); apply(next); return;
       }
       if (!selectedActionId) return;
       const targetIds = selectedTargetsForAction({ state, actionId: selectedActionId, clickedActorId: actorId, clickedPosition: position });
       const action = state.catalogActions.find((candidate) => candidate.id === selectedActionId)!;
       if (!targetIds.length && (action.targeting?.minTargets ?? 0) > 0) throw new Error('В выбранной области нет допустимой цели');
-      const next = autoResolveSystemDecisions(executeCombatAction({ state, actorId: state.characterId, actionId: selectedActionId, targetIds }));
-      setSelectedActionId(null); apply(next);
+      const next = autoResolveSystemDecisions(executeCombatAction({
+        state,
+        actorId: state.characterId,
+        actionId: selectedActionId,
+        targetIds,
+        choices: selectedActionChoices,
+      }));
+      setSelectedActionId(null); setSelectedActionChoices({}); apply(next);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Действие не выполнено'); }
   };
 
@@ -215,8 +255,27 @@ export default function SoloCombatPage() {
         <div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${actor.name}`}</b></div>
       </header>
       {error && <div className="combat-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
-      <section className="combat-stage"><TacticalBattleMap state={state} selectedActionId={selectedActionId} movementMode={movementMode} onCell={clickCell} /><aside className="combat-log"><h2>Журнал боя</h2>{[...state.log].reverse().map((entry) => { const entryActor = state.world.actors[entry.actorId]; return <article key={entry.id}><span>Раунд {entry.round} · {entryActor?.name ?? 'Участник'}</span><p>{entry.text}</p></article>; })}</aside></section>
-      <CombatHotbar state={state} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || state.outcome !== 'active'} onAction={chooseAction} onMove={() => { setSelectedActionId(null); setMovementMode((value) => !value); }} onEndTurn={() => apply(advanceTurn(state))} onSheet={() => setSheetOpen(true)} />
+      <section className="combat-stage">
+        <TacticalBattleMap
+          state={state}
+          selectedActionId={selectedActionId}
+          movementMode={movementMode}
+          inspectedActorId={inspectedActorId}
+          onCell={clickCell}
+          onInspectActor={(actorId) => {
+            if (actorId === state.characterId) {
+              setSheetOpen(true);
+              return;
+            }
+            setInspectedActorId((current) => current === actorId ? null : actorId);
+          }}
+        />
+        <CombatLogPanel state={state} />
+      </section>
+      {inspectedActorId && state.world.actors[inspectedActorId] && (
+        <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
+      )}
+      <CombatHotbar state={state} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => setSheetOpen(true)} />
       {sheetOpen && <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{character.name}</h2><p>Уровень {character.level} · КЗ {state.world.actors[id!].ac} · скорость {character.speed} фт.</p></header><CombatCharacterSidebar character={character} state={state} /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${id}`}>Открыть полный лист ↗</Link></aside>}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2><div>{reactionOptions.map((option) => <button type="button" key={option.actionId} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.actionId))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, null))}>Пропустить</button></div></section></div>}
       {state.outcome !== 'active' && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}

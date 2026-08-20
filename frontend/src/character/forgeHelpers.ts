@@ -121,11 +121,34 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   };
 }
 
-// Разбор class.skill_choices вида {count, options[]}
-export function classSkillChoice(assembled: AssembledCharacter): { count: number; options: string[] } | null {
-  const sc = assembled.klass?.skill_choices as { count?: number; options?: string[] } | undefined;
-  if (!sc || !sc.count) return null;
-  return { count: Number(sc.count), options: Array.isArray(sc.options) ? sc.options : [] };
+export interface ClassSkillChoice {
+  count: number;
+  options: string[];
+  recommended: string[];
+}
+
+const CLASS_SKILL_RECOMMENDATION_KEY = 'class_skills';
+
+// Разбор структурного class.skill_choices вида {count, options[]}. Рекомендации
+// приходят из отдельного UX-слоя choice_recommendations, чтобы подсказки не
+// меняли сертифицированное содержимое сущности. Они всё равно валидируются
+// внутри объявленного домена класса.
+export function classSkillChoice(assembled: AssembledCharacter): ClassSkillChoice | null {
+  const sc = assembled.klass?.skill_choices as {
+    count?: number;
+    options?: string[];
+  } | undefined;
+  const count = Math.max(0, Math.floor(Number(sc?.count ?? 0)));
+  if (!sc || !count) return null;
+  const options = normalizeSkillList(Array.isArray(sc.options) ? sc.options.map(String) : []);
+  const optionSet = new Set(options);
+  const recommendationValues = assembled.klass?.choice_recommendations?.[
+    CLASS_SKILL_RECOMMENDATION_KEY
+  ];
+  const recommended = normalizeSkillList(
+    Array.isArray(recommendationValues) ? recommendationValues.map(String) : [],
+  ).filter((skill) => optionSet.has(skill)).slice(0, count);
+  return { count, options, recommended };
 }
 
 export function finalSkills(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
@@ -219,7 +242,11 @@ export function requiredChoiceIssues(draft: CharacterDraft, assembled: Assembled
 }
 
 // Полная проверка готовности к созданию.
-export function completionIssues(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
+export function completionIssues(
+  draft: CharacterDraft,
+  assembled: AssembledCharacter,
+  resolvedRules?: ReturnType<typeof resolveCharacterRules>,
+): string[] {
   const issues: string[] = [];
   if (!draft.name.trim()) issues.push('Введите имя');
   if (!draft.raceId) issues.push('Выберите вид');
@@ -232,7 +259,7 @@ export function completionIssues(draft: CharacterDraft, assembled: AssembledChar
   }
   issues.push(...bonusIssues(draft.abilityBonuses, !!draft.backgroundId));
   issues.push(...requiredChoiceIssues(draft, assembled));
-  const ruleState = resolveCharacterRules({ draft, assembled });
+  const ruleState = resolvedRules ?? resolveCharacterRules({ draft, assembled });
   issues.push(...ruleState.conflicts.filter((c) => c.severity === 'error').map((c) => c.message));
   return issues;
 }

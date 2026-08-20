@@ -28,6 +28,7 @@ export interface SlotRecoveryRestDecisionPolicy {
   };
   charge: {
     resource: string;
+    /** Cost per recovered indexed level (a recovered level-3 slot costs 3 units). */
     amount: number;
   };
   maximumPerRest: number;
@@ -129,7 +130,8 @@ export function resolveSlotRecoveryRestDecision(input: {
   }
 
   const charge = input.policy.charge;
-  if ((input.state.resources[charge.resource] ?? 0) < charge.amount) {
+  const chargeAmount = charge.amount * selectedTotal;
+  if ((input.state.resources[charge.resource] ?? 0) < chargeAmount) {
     return rejected(
       'RestDecisionUnavailable',
       `${input.policy.decisionType} has no remaining ${charge.resource}`,
@@ -153,7 +155,7 @@ export function resolveSlotRecoveryRestDecision(input: {
   }
 
   const resources = { ...input.state.resources };
-  resources[charge.resource] -= charge.amount;
+  resources[charge.resource] -= chargeAmount;
   const restoredResources = [...requestedByResource].map(([resource, amount]) => {
     resources[resource] = (resources[resource] ?? 0) + amount;
     return { resource, amount, current: resources[resource] };
@@ -166,7 +168,7 @@ export function resolveSlotRecoveryRestDecision(input: {
     recoveryBudget,
     spentResource: {
       resource: charge.resource,
-      amount: charge.amount,
+      amount: chargeAmount,
       remaining: resources[charge.resource],
     },
     restoredResources,

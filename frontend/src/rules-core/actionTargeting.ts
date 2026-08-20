@@ -112,7 +112,14 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   const multiple = shape === 'multi' || shape === 'multiple';
   const self = shape === 'self';
   const fallbackMaximum = area ? 8 : multiple ? 3 : 1;
-  const maxTargets = positiveInteger(targeting.max_targets, fallbackMaximum, 'targeting.max_targets');
+  // A world-only action can explicitly declare that it consumes no actor
+  // targets. This is the canonical contract used by inventory/container and
+  // other target-independent actions; callers then dispatch targetIds: [].
+  // Actor/self targeting remains strictly positive.
+  const worldOnly = targeting.domain === 'world' && actorTargets === false;
+  const maxTargets = worldOnly
+    ? nonNegativeInteger(targeting.max_targets ?? 0, 'targeting.max_targets')
+    : positiveInteger(targeting.max_targets, fallbackMaximum, 'targeting.max_targets');
   const minTargets = targeting.min_targets === undefined
     ? (area || !actorTargets ? 0 : 1)
     : nonNegativeInteger(targeting.min_targets, 'targeting.min_targets');

@@ -9,10 +9,14 @@ import type { Monster } from '../monsters/types';
 import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, runMonsterTurn } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
+import { SOLO_COMBAT_KEY } from './types';
 
 const fixture = compiledFixtureJson as unknown as {
   source: { ruleset: RulesetReference };
-  roots: { magicInitiateFighter: { actor: ActorState; actions: RuleActionDefinition[] } };
+  roots: {
+    magicInitiateFighter: { actor: ActorState; actions: RuleActionDefinition[] };
+    wizard: { actor: ActorState; actions: RuleActionDefinition[] };
+  };
 };
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
@@ -34,7 +38,7 @@ function fighterSeed(): SheetCombatParticipantSeed {
     name: 'Волшебная рука',
     kind: 'spell',
     spell: { level: 0 },
-    sourceEntityIds: ['test-feat', 'test-cantrip'],
+    sourceEntityIds: ['test-feat', 'SPELL-0173'],
     mechanics: {
       activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
       targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 30, requires_line_of_sight: true, allowed_relations: ['enemy'] },
@@ -58,6 +62,29 @@ function fighterSeed(): SheetCombatParticipantSeed {
     catalog,
     cards: [],
     resourceBindings: {},
+    actionFor: () => { throw new Error('not used'); },
+  };
+  const character = {
+    id: actor.id, name: actor.name, user_id: 'solo-test-user', access_mode: 'owner',
+    system_id: 'dnd5e-2024', ruleset_version: '2024', runtime_revision: 0,
+    current_hp: actor.runtime.hp.current, max_hp: actor.runtime.hp.max,
+    resources: clone(actor.runtime.resources), max_resources: clone(actor.runtime.maxResources),
+    active_effects: clone(actor.runtime.activeEffects), turn_state: {},
+    initiative_bonus: 9, speed: actor.character.characterSpeed ?? 30,
+  } as unknown as ForgeCharacter;
+  return { character, canonical };
+}
+
+function wizardSeed(): SheetCombatParticipantSeed {
+  const actor = clone(fixture.roots.wizard.actor);
+  const actions = clone(fixture.roots.wizard.actions);
+  const byId = new Map(actions.map((action) => [action.id, action]));
+  const canonical: SheetCanonicalRuntime = {
+    actorId: actor.id,
+    world: createWorld({ id: `solo-test:${actor.id}`, ruleset: fixture.source.ruleset, actors: [actor] }),
+    actions,
+    catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    cards: [], resourceBindings: {},
     actionFor: () => { throw new Error('not used'); },
   };
   const character = {
@@ -147,8 +174,16 @@ describe('solo combat engine vertical integration', () => {
       },
     };
 
+    const legacyTurnState = writeSoloCombatState({}, legacyState);
+    const legacySnapshot = legacyTurnState[SOLO_COMBAT_KEY] as Record<string, unknown>;
+    delete legacySnapshot.sideByActorId;
+    delete legacySnapshot.actorPresentation;
+    legacySnapshot.log = [{
+      id: 'legacy-log', round: 1, actorId: participant.character.id, text: 'Старый журнал',
+      events: [{ type: 'healing', amount: 2 }],
+    }];
     const restored = readSoloCombatState(
-      writeSoloCombatState({}, legacyState),
+      legacyTurnState,
       participant.character.id,
       7,
     );
@@ -157,6 +192,11 @@ describe('solo combat engine vertical integration', () => {
     expect(restored?.actionPresentation?.[scopedActionId]).toEqual(
       legacyState.actionPresentation[legacyEntityId],
     );
+    const monsterId = Object.keys(restored!.world.actors).find((actorId) => actorId !== participant.character.id)!;
+    expect(restored?.sideByActorId[participant.character.id]).toBe('side:party');
+    expect(restored?.sideByActorId[monsterId]).toBe('side:opposition');
+    expect(restored?.actorPresentation[monsterId].templateId).toBe(goblin().id);
+    expect(restored?.log[0].records?.[0].event).toEqual({ type: 'healing', amount: 2 });
   });
 
   it('starts certified sheet + data-driven monster in initiative and resolves the real sheet Thunderwave pipeline', async () => {
@@ -196,7 +236,7 @@ describe('solo combat engine vertical integration', () => {
     expect(state.log.some((entry) => entry.text.includes(thunderwave!.name))).toBe(true);
   });
 
-  it('keeps and executes a granted generic cantrip outside the strict primitive slice', async () => {
+  it('starts combat with SPELL-0173 and executes it outside the strict combat slice', async () => {
     const participant = fighterSeed();
     let state = await createSoloCombatState({
       character: participant.character,
@@ -216,6 +256,31 @@ describe('solo combat engine vertical integration', () => {
     });
     expect(state.log.at(-1)?.text).toContain('Волшебная рука');
     expect(state.world.actors[participant.character.id].runtime.resources.action).toBe(0);
+  });
+
+  it('starts a Wizard fight and resolves prepared Magic Missile through the real combat pipeline', async () => {
+    const participant = wizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const missile = state.catalogActions.find((action) => (
+      state.playerActionIds.includes(action.id) && primitive(action) === 'magic_missile'
+    ));
+    expect(missile, 'Wizard should expose certified Magic Missile').toBeDefined();
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    const hpBefore = state.world.actors[monsterId].runtime.hp.current;
+    state = autoResolveSystemDecisions(executeCombatAction({
+      state,
+      actorId: participant.character.id,
+      actionId: missile!.id,
+      targetIds: [monsterId],
+      rng: () => 0,
+    }), () => 0);
+    expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
+    expect(state.log.at(-1)?.text).toContain(missile!.name);
   });
 
   it('runs a catalog-gated off-turn opportunity attack and spends exactly the reactor resource', async () => {

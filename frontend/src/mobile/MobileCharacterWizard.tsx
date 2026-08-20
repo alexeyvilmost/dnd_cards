@@ -4,7 +4,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { backgroundsApi, classesApi, featsApi, racesApi, spellsApi } from '../api/client';
 import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { loadAssembly, type AssembledCharacter } from '../character/assemble';
-import { AbilityAssigner, ChoiceResolver, optionsForChoice } from '../character/components';
+import {
+  AbilityAssigner,
+  choiceOptionIdByReference,
+  ChoiceResolver,
+  optionsForChoice,
+  recommendedOptionSelection,
+  useAutoRecommendedChoices,
+} from '../character/components';
 import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
@@ -14,7 +21,7 @@ import { spellMatchesChoice } from '../character/spellChoices';
 import {
   buildSavePayload, characterToDraft, classSkillChoice, completionIssues,
 } from '../character/forgeHelpers';
-import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
+import { getSkillGrantSource, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import {
   ABILITY_KEYS, emptyDraft, isCharacterReadOnly, type AbilityKey, type CharacterDraft, type ForgeCharacter,
 } from '../character/types';
@@ -258,6 +265,7 @@ export default function MobileCharacterWizard() {
   const [entityView, setEntityView] = useState<MobileEntityView | null>(null);
   const [linkedEntity, setLinkedEntity] = useState<{ type: EntityRefType; id: string } | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const classSkillAutoSeededForRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -359,6 +367,50 @@ export default function MobileCharacterWizard() {
     () => assembled ? resolveCharacterRules({ draft, assembled }) : null,
     [assembled, draft],
   );
+  const recommendedMechanicsReady = buildChoices
+    .filter((choice) => (choice.recommended?.length ?? 0) > 0)
+    .every((choice) => Object.prototype.hasOwnProperty.call(draft.resolvedChoices, choice.id));
+  const recommendedClassSkillKey = classSkills
+    ? `${classSkills.count}:${classSkills.recommended.join(',')}`
+    : '';
+  useEffect(() => {
+    const classId = draft.classId;
+    if (
+      !classId
+      || !classSkills
+      || !ruleState
+      || !recommendedMechanicsReady
+      || assembled?.klass?.id !== classId
+      || classSkillAutoSeededForRef.current === classId
+    ) return;
+    if (draft.classSkillChoices.length) {
+      classSkillAutoSeededForRef.current = classId;
+      return;
+    }
+    const seed = classSkills.recommended.length
+      ? recommendedOptionSelection({
+          count: classSkills.count,
+          recommended: classSkills.recommended,
+          optionIds: classSkills.options,
+          unavailable: (skill) => Boolean(getSkillGrantSource(ruleState, skill)),
+        })
+      : [];
+    classSkillAutoSeededForRef.current = classId;
+    if (seed.length) {
+      setDraft((current) => (
+        current.classId === classId && current.classSkillChoices.length === 0
+          ? { ...current, classSkillChoices: seed }
+          : current
+      ));
+    }
+  }, [
+    draft.classId,
+    draft.classSkillChoices.length,
+    assembled?.klass?.id,
+    recommendedMechanicsReady,
+    recommendedClassSkillKey,
+    ruleState,
+  ]);
   const formulaCtx = useMemo(
     () => (assembled && ruleState
       ? formulaCtxFromCharacter(buildCharacterContext(ruleState, draft, [], assembled.klass))
@@ -395,9 +447,91 @@ export default function MobileCharacterWizard() {
       resolvedChoices: { ...prev.resolvedChoices, [choiceId]: values },
     }));
   }, []);
+  const setResolvedBatch = useCallback((values: Record<string, string[]>) => {
+    setDraft((prev) => ({
+      ...prev,
+      resolvedChoices: { ...prev.resolvedChoices, ...values },
+    }));
+  }, []);
+  const assemblyMatchesDraft = (assembled?.race?.id ?? null) === (draft.raceId ?? null)
+    && (assembled?.klass?.id ?? null) === (draft.classId ?? null)
+    && (assembled?.background?.id ?? null) === (draft.backgroundId ?? null);
+  const recommendedChoicePolicy = useMemo(() => {
+    const featByReference = new Map(feats.flatMap((feat) => (
+      [[feat.id, feat.id], [feat.card_number, feat.id]] as const
+    )));
+    const spellByReference = new Map(spells.flatMap((spell) => (
+      [[spell.id, spell.id], [spell.card_number, spell.id]] as const
+    )));
+    const choiceOptions = (choice: PendingChoice) => (
+      isSpellSelectionChoice(choice)
+        ? spells
+            .filter((spell) => spellMatchesChoice(spell, choice, maxSlotLevel))
+            .map((spell) => ({
+              id: spell.id,
+              label: spell.name,
+              aliases: [spell.card_number],
+            }))
+        : optionsForChoice(choice, feats)
+    );
+    return {
+      optionIds: (choice: PendingChoice) => choiceOptions(choice).map((option) => option.id),
+      canonicalOptionId: (choice: PendingChoice, reference: string) => (
+        choiceOptionIdByReference(choiceOptions(choice), reference)
+      ),
+      unavailableOptions: ({
+        choice,
+        optionIds,
+        selectedOptionIds,
+        resolvedChoices,
+      }: {
+        choice: PendingChoice;
+        optionIds: readonly string[];
+        selectedOptionIds: readonly string[];
+        resolvedChoices: Readonly<Record<string, string[]>>;
+      }) => unavailableChoiceOptions(
+        choice,
+        resolveCharacterRules({
+          draft: { ...draft, resolvedChoices: { ...resolvedChoices } },
+          assembled: assembled!,
+        }),
+        optionIds,
+        selectedOptionIds,
+        {
+          activeFeatIds: new Set((assembled?.feats ?? []).map((feat) => feat.id)),
+          repeatableFeatIds: new Set(feats.filter((feat) => feat.repeatable).map((feat) => feat.id)),
+          canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
+          canonicalSpellId: (reference) => spellByReference.get(reference) ?? reference,
+        },
+      ),
+    };
+  }, [assembled, draft, feats, maxSlotLevel, spells]);
+  useAutoRecommendedChoices(
+    assemblyMatchesDraft ? buildChoices : [],
+    draft.resolvedChoices,
+    setResolved,
+    setResolvedBatch,
+    recommendedChoicePolicy,
+  );
   const activePickerChoice = picker?.kind === 'mechanic'
     ? buildChoices.find((choice) => choice.id === picker.choiceId)
     : undefined;
+  const activeRecommendedOptionIds = useMemo(() => {
+    if (!activePickerChoice) return new Set<string>();
+    const options = isSpellSelectionChoice(activePickerChoice)
+      ? spells
+          .filter((spell) => spellMatchesChoice(spell, activePickerChoice, maxSlotLevel))
+          .map((spell) => ({
+            id: spell.id,
+            label: spell.name,
+            aliases: [spell.card_number],
+          }))
+      : optionsForChoice(activePickerChoice, feats);
+    return new Set((activePickerChoice.recommended ?? []).flatMap((reference) => {
+      const optionId = choiceOptionIdByReference(options, reference);
+      return optionId ? [optionId] : [];
+    }));
+  }, [activePickerChoice, feats, maxSlotLevel, spells]);
   const activeChoiceUnavailable = useMemo(() => {
     if (!activePickerChoice || !ruleState) return {};
     const optionIds = isSpellSelectionChoice(activePickerChoice)
@@ -701,7 +835,10 @@ export default function MobileCharacterWizard() {
             <SelectGrid
               values={rootClasses}
               selected={draft.classId}
-                onSelect={(klass) => patch({ classId: klass.id, subclassId: null, classSkillChoices: [] })}
+              onSelect={(klass) => {
+                classSkillAutoSeededForRef.current = null;
+                patch({ classId: klass.id, subclassId: null, classSkillChoices: [] });
+              }}
             />
             {subclasses.length > 0 && (
               <>
@@ -908,11 +1045,12 @@ export default function MobileCharacterWizard() {
               <p className="m-picker-note">Выберите {classSkills.count}</p>
               {classSkills.options.map((skill) => {
                 const selected = draft.classSkillChoices.includes(skill);
+                const recommended = classSkills.recommended.includes(skill);
                 return (
                   <button
                     type="button"
                     key={skill}
-                    className={selected ? 'is-selected' : ''}
+                    className={`${selected ? 'is-selected ' : ''}${recommended ? 'is-recommended' : ''}`.trim()}
                     onClick={() => {
                       const current = draft.classSkillChoices;
                       patch({
@@ -922,7 +1060,10 @@ export default function MobileCharacterWizard() {
                       });
                     }}
                   >
-                    <span>{labelOf(SKILLS, skill)}</span>
+                    <span>
+                      {labelOf(SKILLS, skill)}
+                      {recommended && <small>Рекомендуется</small>}
+                    </span>
                     {selected && <Check size={18} />}
                   </button>
                 );
@@ -936,9 +1077,10 @@ export default function MobileCharacterWizard() {
               {spells.filter((spell) => spellMatchesChoice(spell, activePickerChoice, maxSlotLevel)).map((spell) => {
                 const values = draft.resolvedChoices[activePickerChoice.id] ?? [];
                 const selected = values.includes(spell.id);
+                const recommended = activeRecommendedOptionIds.has(spell.id);
                 const disabledReason = activeChoiceUnavailable[spell.id];
                 return (
-                  <div key={spell.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
+                  <div key={spell.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}${recommended ? ' is-recommended' : ''}`}>
                     <button
                       type="button"
                       className="m-wizard-option-select"
@@ -957,7 +1099,10 @@ export default function MobileCharacterWizard() {
                       <span className="m-wizard-option-image">
                         {spell.image_url ? <img src={spell.image_url} alt="" /> : <Sparkles size={19} />}
                       </span>
-                      <span><strong>{spell.name}</strong><small>{getSpellLevelLabel(spell.level)}</small></span>
+                      <span>
+                        <strong>{spell.name}</strong>
+                        <small>{getSpellLevelLabel(spell.level)}{recommended ? ' · Рекомендуется' : ''}</small>
+                      </span>
                       {selected && <Check size={18} />}
                     </button>
                     <button
@@ -985,9 +1130,10 @@ export default function MobileCharacterWizard() {
                 .map((feat) => {
                   const values = draft.resolvedChoices[activePickerChoice.id] ?? [];
                   const selected = values.includes(feat.id);
+                  const recommended = activeRecommendedOptionIds.has(feat.id);
                   const disabledReason = activeChoiceUnavailable[feat.id];
                   return (
-                    <div key={feat.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}`}>
+                    <div key={feat.id} className={`m-wizard-option-row${selected ? ' is-selected' : ''}${recommended ? ' is-recommended' : ''}`}>
                       <button
                         type="button"
                         className="m-wizard-option-select"
@@ -1006,7 +1152,10 @@ export default function MobileCharacterWizard() {
                         <span className="m-wizard-option-image">
                           {feat.image_url ? <img src={feat.image_url} alt="" /> : <Sparkles size={19} />}
                         </span>
-                        <span><strong>{feat.name}</strong><small>{feat.description || 'Черта'}</small></span>
+                        <span>
+                          <strong>{feat.name}</strong>
+                          <small>{recommended ? 'Рекомендуется' : feat.description || 'Черта'}</small>
+                        </span>
                         {selected && <Check size={18} />}
                       </button>
                       <button

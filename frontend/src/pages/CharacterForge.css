@@ -659,26 +659,6 @@
   text-overflow: ellipsis;
 }
 .sheet-in-battle:hover { color: var(--forge-gold); text-decoration: underline; }
-.sheet-authority-notice {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  flex: 0 0 auto;
-  padding: 5px 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--forge-gold-dim) 42%, transparent);
-  background: color-mix(in srgb, var(--forge-panel) 88%, var(--forge-gold) 12%);
-  color: var(--forge-text-dim);
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: center;
-}
-.sheet-authority-notice strong { color: var(--forge-text); }
-.sheet-authority-notice a {
-  color: var(--forge-gold);
-  text-underline-offset: 2px;
-}
-.sheet-authority-notice a:hover { color: var(--forge-text); }
 .sheet-back, .sheet-edit {
   position: absolute;
   top: 50%;
@@ -853,19 +833,30 @@
 .sheet-target-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--forge-text-dim); }
 .sheet-target-num { width: 72px; padding: 4px 8px !important; }
 .value-breakdown-wrap { position: relative; cursor: help; }
-.value-breakdown-popover {
-  position: absolute; z-index: 20; left: 50%; transform: translateX(-50%); top: calc(100% + 6px);
+.value-breakdown-panel {
   min-width: 160px; padding: 8px 10px; border-radius: 8px;
-  background: var(--forge-panel-2); border: 1px solid var(--forge-line);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25); font-size: 12px;
+  color: var(--forge-text, #e8e0d0);
+  background: var(--forge-panel-2, #241f18); border: 1px solid var(--forge-line, #6b5836);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25); font-size: 12px; text-align: left;
 }
-.value-breakdown-popover-title { display: block; font-weight: 600; margin-bottom: 6px; color: var(--forge-gold-dim); }
+.value-breakdown-popover {
+  z-index: 9999;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  pointer-events: none;
+}
+.value-breakdown-popover-title { display: block; font-weight: 600; margin-bottom: 6px; color: var(--forge-gold-dim, #c9a45f); }
 .value-breakdown-method { display: flex; flex-direction: column; gap: 2px; padding: 0 0 6px; margin-bottom: 4px; border-bottom: 1px solid var(--forge-line); }
 .value-breakdown-method small,
-.value-breakdown-list li > span:first-child small { display: block; color: var(--forge-muted); font-size: 10px; font-weight: 400; }
+.value-breakdown-list li > span:first-child small { display: block; color: var(--forge-muted, #8f8778); font-size: 10px; font-weight: 400; }
 .value-breakdown-list { list-style: none; padding: 0; margin: 0; }
 .value-breakdown-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
 .value-breakdown-total { border-top: 1px solid var(--forge-line); margin-top: 4px; padding-top: 4px; font-weight: 600; }
+.value-breakdown-alts { list-style: none; padding: 5px 0 0; margin: 5px 0 0; border-top: 1px dashed var(--forge-line); color: var(--forge-text-dim, #a99f8b); }
+.value-breakdown-alts li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.dice-dialog-preview .value-breakdown-panel { width: min(300px, calc(100vw - 52px)); }
 .sheet-hp-display { margin-bottom: 12px; }
 .sheet-hp-main { display: flex; align-items: center; gap: 8px; font-size: 20px; }
 .sheet-hp-temp { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--forge-gold); margin-left: 8px; }
@@ -979,10 +970,6 @@
 .forge.sheet-paper .sheet-back:hover,
 .forge.sheet-paper .sheet-edit:hover { background: rgba(0, 0, 0, 0.08); }
 .forge.sheet-paper .sheet-header-sub { color: var(--forge-text-dim); }
-.forge.sheet-paper .sheet-authority-notice {
-  background: #e9e2d2;
-  border-bottom-color: var(--forge-line);
-}
 
 /* Панели — белые «карточки» листа с чёткой тонкой рамкой */
 .forge.sheet-paper .sheet-panel { box-shadow: 0 1px 2px rgba(60, 50, 30, 0.06); }
@@ -1193,9 +1180,4 @@
   }
   .sheet-header-btn-label { display: none; }
   .sheet-header-btn { padding: 7px 9px; }
-  .sheet-authority-notice {
-    flex-wrap: wrap;
-    gap: 2px 6px;
-    padding-inline: 10px;
-  }
 }

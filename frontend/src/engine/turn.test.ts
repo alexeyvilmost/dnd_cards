@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { freshFighterState, FIGHTER_CTX } from '../mvp/fixtures';
 import { resourcesRestoredOnShortRest } from './resources';
-import { endTurn, shortRest, startTurn } from './turn';
+import { endTurn, nextTurn, nextTurnWithReactions, shortRest, startTurn } from './turn';
 import type { EngineEvent } from '../mvp/contracts';
 import { MechanicsExecutionError } from './execute';
 
@@ -133,6 +133,57 @@ describe('C3 слайс 2 — endTurn / turn-события через шину'
     const afterEnd = endTurn(state, FIGHTER_CTX).state;
     expect(afterEnd.activeEffects).toHaveLength(1);
     expect(startTurn(afterEnd).state.activeEffects).toHaveLength(0);
+  });
+
+  it('nextTurn проходит обе границы и уменьшает длительность ровно один раз', () => {
+    const state = freshFighterState();
+    state.activeEffects = [
+      {
+        id: 'rounds', name: 'Два хода', source: 'тест', roundsLeft: 2, mechanics: {},
+      },
+      {
+        id: 'until-start', name: 'До начала', source: 'тест',
+        expiry: 'start_of_next_turn', mechanics: {},
+      },
+    ];
+    const result = nextTurn(state, {
+      ...FIGHTER_CTX,
+      passives: [listener('Конец', 'turn_end'), listener('Начало', 'turn_start')],
+    } as typeof FIGHTER_CTX);
+    expect(result.events.some((event) => event.type === 'turn_ended')).toBe(true);
+    expect(result.events.some((event) => event.type === 'turn_started')).toBe(true);
+    expect(narratives(result.events)).toEqual(expect.arrayContaining(['Сработало: Конец', 'Сработало: Начало']));
+    expect(result.state.activeEffects.find((effect) => effect.id === 'rounds')?.roundsLeft).toBe(1);
+    expect(result.state.activeEffects.some((effect) => effect.id === 'until-start')).toBe(false);
+  });
+
+  it('resolves end-turn offers before applying the next start boundary', async () => {
+    const state = freshFighterState();
+    state.resources.action = 0;
+    const optionalEnd: Dict = {
+      id: 'optional-end', name: 'Решение конца хода',
+      activation: { mode: 'triggered', optional: true, trigger: { event: 'turn_end' } },
+      effects: [{ resolution: 'auto', result: [{ kind: 'narrative', description: 'решено' }] }],
+    };
+    const ctx = { ...FIGHTER_CTX, passives: [optionalEnd] } as typeof FIGHTER_CTX;
+    expect(() => nextTurn(state, ctx)).toThrow(/reaction resolver/);
+
+    const observedAction: number[] = [];
+    const result = await nextTurnWithReactions(state, ctx, async (current, offer) => {
+      observedAction.push(current.resources.action);
+      expect(offer.listenerId).toBe('optional-end');
+      return {
+        state: current,
+        events: [{ type: 'narrative', text: 'Решение принято' }],
+      };
+    });
+    expect(observedAction).toEqual([0]);
+    expect(result.state.resources.action).toBe(result.state.maxResources.action);
+    expect(result.events.map((event) => event.type)).toEqual(expect.arrayContaining([
+      'turn_ended', 'narrative', 'turn_started',
+    ]));
+    expect(result.events.findIndex((event) => event.type === 'narrative'))
+      .toBeLessThan(result.events.findIndex((event) => event.type === 'turn_started'));
   });
 
   it('startTurn с ctx эмитит turn_start → будит слушателя; startTurn(state) — нет (обр. совм.)', () => {

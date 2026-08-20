@@ -1,9 +1,12 @@
 import { Footprints, MoreHorizontal } from 'lucide-react';
+import { canPay, costKey } from '../engine/cost';
+import { isFreeusePoolKey } from '../engine/freeuse';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import type { SoloCombatState } from '../solo-combat/types';
 import { findResource, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
+import FreeuseSpellsTile from './FreeuseSpellsTile';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -36,6 +39,7 @@ export function combatActionAvailability(
   action: RuleActionDefinition,
 ): { enabled: boolean; reason?: string } {
   const actor = state.world.actors[state.characterId];
+  let spellSlotResource: string | undefined;
   if (action.kind === 'spell') {
     if (!actor.spellcastingAccess) {
       return { enabled: false, reason: 'У персонажа нет источника этого заклинания' };
@@ -53,17 +57,30 @@ export function combatActionAvailability(
           : 'Заклинание недоступно из выбранного источника';
       return { enabled: false, reason };
     }
+    // SpellcastingAccess owns selection between a grant's free-use and slot
+    // payment. The shared generic cost engine still validates every remaining
+    // declared cost (action economy, items, charges, and custom resources).
+    spellSlotResource = access.grant.slotResource;
   }
 
   const activation = action.mechanics.activation as Record<string, unknown> | undefined;
   const costs = Array.isArray(activation?.cost) ? activation.cost as Array<Record<string, unknown>> : [];
-  for (const cost of costs) {
+  const genericCosts = costs.filter((cost) => {
+    if (action.kind !== 'spell') return true;
     const resource = String(cost.resource ?? '');
-    if (!['action', 'bonus_action', 'reaction'].includes(resource)) continue;
-    const amount = typeof cost.amount === 'number' ? cost.amount : 1;
-    if ((actor.runtime.resources[resource] ?? 0) < amount) {
-      return { enabled: false, reason: `Не хватает ресурса «${resourceLabel(resource)}»` };
-    }
+    return resource !== 'spell_slot' && costKey(cost) !== spellSlotResource;
+  });
+  const payable = canPay(actor.runtime, genericCosts);
+  if (!payable.ok) {
+    const missing = payable.missing.map((key) => (
+      key.startsWith('item:') ? `предмет ${key.slice('item:'.length)}` : resourceLabel(key)
+    ));
+    return {
+      enabled: false,
+      reason: missing.length === 1
+        ? `Не хватает ресурса «${missing[0]}»`
+        : `Не хватает: ${missing.join(', ')}`,
+    };
   }
   return { enabled: true };
 }
@@ -93,12 +110,23 @@ export default function CombatHotbar({
     const action = state.catalogActions.find((candidate) => candidate.id === id);
     return action ? [action] : [];
   });
+  const freeuseResources = Object.entries(actor.runtime.maxResources)
+    .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key));
+  const freeuseSpells = freeuseResources.map(([key, maximum]) => ({
+    spell: key.slice('freeuse-'.length),
+    count: maximum,
+    recharge: 'long_rest',
+  }));
+  const freeuseSpellRefs = freeuseResources.flatMap(([key]) => {
+    const grant = actor.spellcastingAccess?.grants.find((candidate) => candidate.freeUseResource === key);
+    const spell = grant ? state.actionPresentation?.[grant.actionId]?.spellRef : undefined;
+    return spell ? [{ ...spell, card_number: key.slice('freeuse-'.length) }] : [];
+  });
   const resources = Object.entries(actor.runtime.maxResources)
     .filter(([key, maximum]) => maximum > 0 && (
       ['action', 'bonus_action', 'reaction'].includes(key)
       || key.startsWith('spell_slot_')
-      || key.startsWith('freeuse-')
-    ))
+    ) && !isFreeusePoolKey(key))
     .sort(([left], [right]) => sheetResourceTileOrder(left, resourceOptions)
       - sheetResourceTileOrder(right, resourceOptions) || left.localeCompare(right));
 
@@ -112,6 +140,12 @@ export default function CombatHotbar({
         </span>
         <div className="combat-hotbar__identity"><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
         <div className="res-tile-row combat-hotbar__resource-tiles">
+          <FreeuseSpellsTile
+            runtime={actor.runtime}
+            freeuseSpells={freeuseSpells}
+            spells={freeuseSpellRefs}
+            resourceOptions={resourceOptions}
+          />
           {resources.map(([key, maximum]) => (
             <SheetResourceTile
               key={key}

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePinMode } from '../hooks/usePinMode';
-import { Plus, Search, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { MAX_ATTUNED, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
 import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import type { EncounterApply } from '../battle/encountersApi';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import {
-  addToInventory,
   carryingCapacity,
   forgeToRuntimeState,
   removeFromInventory,
@@ -88,10 +87,7 @@ export default function SheetEquipmentPanel({
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<Card[]>([]);
-  const [searching, setSearching] = useState(false);
-  const { entityDisplay, itemPreview, allowSheetEntityAdditions } = useSiteSettings();
+  const { entityDisplay, itemPreview } = useSiteSettings();
   const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -128,28 +124,6 @@ export default function SheetEquipmentPanel({
     })();
     return () => { stale = true; };
   }, [cardIds.join('|')]);
-
-  useEffect(() => {
-    const q = search.trim();
-    if (q.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    let stale = false;
-    const timer = window.setTimeout(async () => {
-      setSearching(true);
-      try {
-        const res = await cardsApi.getCards({ search: q, limit: 12, exclude_template_only: true });
-        if (!stale) setSearchResults(res.cards);
-      } catch (e) {
-        console.error(e);
-        if (!stale) setSearchResults([]);
-      } finally {
-        if (!stale) setSearching(false);
-      }
-    }, 350);
-    return () => { stale = true; window.clearTimeout(timer); };
-  }, [search]);
 
   const cardMap = cards;
   // Контейнеры-цели «убрать в контейнер»: носимые предметы type='container' на верхнем уровне.
@@ -233,12 +207,6 @@ export default function SheetEquipmentPanel({
     } finally {
       setBusy(false);
     }
-  };
-
-  const handleAdd = async (card: Card) => {
-    registerCard(card);
-    setCards((prev) => new Map(prev).set(card.id, card));
-    await persist(addToInventory(runtime, card.id, 1));
   };
 
   const handleRemove = async (cardId: string) => {
@@ -422,47 +390,6 @@ export default function SheetEquipmentPanel({
     );
   };
 
-  // ── Результаты поиска (в том же виде, что инвентарь; клик — добавить) ──
-  const renderSearchResults = () => {
-    if (asIcons) {
-      return (
-        <div className="forge-spell-icon-grid sheet-inv-icon-grid">
-          {searchResults.map((card) => (
-            <button
-              key={card.id}
-              type="button"
-              className="forge-spell-icon ready sheet-inv-tile-icon"
-              title={`${card.name} — добавить`}
-              disabled={busy}
-              onClick={() => handleAdd(card)}
-              {...hoverHandlers(card)}
-            >
-              <img
-                src={card.image_url?.trim() || '/default_image.png'}
-                alt={card.name}
-                onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
-              />
-              <span className="sheet-add-badge"><Plus size={12} /></span>
-            </button>
-          ))}
-        </div>
-      );
-    }
-    return (
-      <div className="sheet-item-cols">
-        {searchResults.map((card) => (
-          <SheetItemRow
-            key={card.id}
-            card={card}
-            onClick={() => handleAdd(card)}
-            right={<span className="sheet-add-chip"><Plus size={14} /></span>}
-            {...hoverHandlers(card)}
-          />
-        ))}
-      </div>
-    );
-  };
-
   const dialogCardAttuned = dialog ? attuned.includes(dialog.card.id) : false;
 
   const body = (
@@ -498,24 +425,6 @@ export default function SheetEquipmentPanel({
         </div>
       </div>
 
-      {allowSheetEntityAdditions && <div className="sheet-group">
-        <h3 className="sheet-h3">Добавить предмет</h3>
-        <div className="sheet-inv-search">
-          <Search size={16} className="sheet-inv-search-icon" />
-          <input
-            className="forge-input sheet-inv-search-input"
-            placeholder="Поиск: «Длинный меч», «Щит» (MVP-LONGSWORD / MVP-SHIELD)…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        {searching && <p className="forge-note">Поиск…</p>}
-        {!searching && search.trim().length >= 2 && searchResults.length === 0 && (
-          <p className="forge-note">Ничего не найдено.</p>
-        )}
-        {searchResults.length > 0 && renderSearchResults()}
-      </div>}
-
       <div className="sheet-group">
         <h3 className="sheet-h3">Слоты</h3>
         {renderSlots()}
@@ -523,7 +432,9 @@ export default function SheetEquipmentPanel({
 
       <div className="sheet-group">
         <h3 className="sheet-h3">Инвентарь</h3>
-        {!character.inventory_items?.length && <p className="forge-note">Пусто — найдите предмет выше и нажмите «Добавить».</p>}
+        {!character.inventory_items?.length && (
+          <p className="forge-note">Инвентарь пуст — используйте «Добавить» вверху листа.</p>
+        )}
         {renderInventory()}
       </div>
 

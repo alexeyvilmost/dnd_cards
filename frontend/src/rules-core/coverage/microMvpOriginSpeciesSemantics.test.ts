@@ -106,6 +106,7 @@ describe('compiled micro-MVP origin feat and species semantics', () => {
       expect(initiative.modifiers).toEqual([{
         value: root.actor.character.profBonus,
         source: 'Бонус мастерства',
+        kind: 'proficiency',
       }]);
       expect(root.ruleState.initiativeBonus).toBe(
         root.actor.character.abilityMods.dex + root.actor.character.profBonus,

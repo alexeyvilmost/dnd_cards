@@ -18,6 +18,9 @@ type Dict = Record<string, unknown>;
 
 /** d20-тесты, которым соответствует правило с applies_to.roll:'d20' (любой бросок к20). */
 const D20_TESTS = new Set(['attack', 'saving_throw', 'ability_check', 'initiative']);
+const MODIFIER_KINDS = new Set<NonNullable<RollModifier['kind']>>([
+  'base', 'ability', 'proficiency', 'expertise', 'effect',
+]);
 
 /**
  * Engine-derived facts available to structured modifier filters. The index
@@ -152,7 +155,20 @@ function collectFromPayload(
       value = undefined;
     }
     if (value != null && !Number.isNaN(value) && value !== 0) {
-      out.modifiers.push({ value, source: String(payload.source ?? sourceName) });
+      const declaredKind = String(payload.modifier_kind ?? '');
+      // `prof_bonus` is itself a semantic rules primitive: unlike a localized
+      // source label it safely identifies proficiency wherever content uses it.
+      const kind = MODIFIER_KINDS.has(declaredKind as NonNullable<RollModifier['kind']>)
+        ? declaredKind as NonNullable<RollModifier['kind']>
+        : (raw.toLowerCase() === 'prof_bonus' || raw.toLowerCase() === 'prof'
+          ? 'proficiency'
+          : undefined);
+      out.modifiers.push({
+        value,
+        source: String(payload.source ?? sourceName),
+        ...(typeof payload.reason === 'string' && payload.reason ? { reason: payload.reason } : {}),
+        ...(kind ? { kind } : {}),
+      });
     }
     return;
   }

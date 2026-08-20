@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Hourglass, Moon, Sun, Swords } from 'lucide-react';
+import { Moon, Sun, Swords } from 'lucide-react';
 import type { EncounterApply } from '../battle/encountersApi';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import { collectActionUsesRecharge, collectActionUsesRecovery } from '../character/actionSheet';
@@ -19,10 +19,24 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { hitDiceResourceKey, hitDieSides } from '../engine/resources';
-import { endTurn, longRest, shortRest, spendHitDie, startTurn } from '../engine/turn';
+import { longRest, nextTurnWithReactions, shortRest, spendHitDie } from '../engine/turn';
+import { canPay } from '../engine/cost';
+import { executeAction } from '../engine/execute';
+import { describeMechanicsLine } from '../engine/describeMechanics';
 import { emptyDeathSaves } from '../character/death';
 import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
+import { useReactionPrompt } from '../contexts/ReactionPromptContext';
+import {
+  collectLongRestPreparationChoices,
+  writeSheetSpellPreparation,
+} from '../character/sheetSpellPreparation';
+import {
+  applySheetSlotRecoverySelections,
+  collectSheetSlotRecoveryPolicies,
+  slotRecoveryPickerState,
+} from '../character/sheetRestDecisions';
 
 interface Props {
   character: ForgeCharacter;
@@ -58,8 +72,12 @@ export default function SheetRestButtons({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
+  const [shortRestSelections, setShortRestSelections] = useState<Record<string, number[]>>({});
+  const [shortRestError, setShortRestError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
   const diceDialog = useDiceDialog();
+  const choiceDialog = useChoiceDialog();
+  const reactionPrompt = useReactionPrompt();
   const soloCombat = character.turn_state?.solo_combat_v1;
   const activeSoloCombat = Boolean(soloCombat && typeof soloCombat === 'object'
     && !Array.isArray(soloCombat)
@@ -71,6 +89,14 @@ export default function SheetRestButtons({
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
   const actionUseRestPolicies = useMemo(
     () => collectSheetActionUseRestPolicies(assembled),
+    [assembled],
+  );
+  const preparationChoices = useMemo(() => collectLongRestPreparationChoices({
+    assembled,
+    character,
+  }), [assembled, character]);
+  const slotRecoveryPolicies = useMemo(
+    () => collectSheetSlotRecoveryPolicies(assembled),
     [assembled],
   );
 
@@ -116,26 +142,37 @@ export default function SheetRestButtons({
   // подняли отдыхом из 0 HP, оставался с {failures:3, dead:true} в БД при полном current_hp —
   // и следующее падение убивало его с первого урона без единого броска. Сброс ТОЛЬКО на отдыхе:
   // на start/end хода спасброски обязаны сохраняться между ходами (бой при 0 HP).
-  function persistPayload(state: RuntimeState, attunementUnlocked?: boolean, resetDeathSaves?: boolean) {
+  function persistPayload(
+    state: RuntimeState,
+    attunementUnlocked?: boolean,
+    resetDeathSaves?: boolean,
+    baseTurnState: Record<string, unknown> | null | undefined = character.turn_state,
+  ) {
     return {
       current_hp: state.hp.current,
       max_hp: state.hp.max,
       resources: state.resources,
       max_resources: state.maxResources,
       active_effects: state.activeEffects,
-      turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, state, {
+      turn_state: writeRulesEngineRuntimeTurnState(baseTurnState, state, {
         ...(attunementUnlocked !== undefined ? { attunement_unlocked: attunementUnlocked } : {}),
         ...(resetDeathSaves ? { death_saves: emptyDeathSaves() } : {}),
       }),
     };
   }
 
-  const apply = useCallback(async (next: RuntimeState, events: EngineEvent[], attunementUnlocked?: boolean, resetDeathSaves?: boolean) => {
+  const apply = useCallback(async (
+    next: RuntimeState,
+    events: EngineEvent[],
+    attunementUnlocked?: boolean,
+    resetDeathSaves?: boolean,
+    baseTurnState?: Record<string, unknown> | null,
+  ) => {
     setBusy(true);
     try {
       const updated = await persistCharacterRuntime(
         character,
-        persistPayload(next, attunementUnlocked, resetDeathSaves),
+        persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState),
         encounterApply,
       );
       onUpdated(updated);
@@ -173,18 +210,30 @@ export default function SheetRestButtons({
 
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 
-  const handleStartTurn = () => {
-    const { state, events } = startTurn(runtime, restCtx);
-    void apply(state, events, false);
-  };
-
-  const handleEndTurn = () => {
-    const { state, events } = endTurn(runtime, restCtx);
-    void apply(state, events, false);
+  const handleStartTurn = async () => {
+    try {
+      const result = await nextTurnWithReactions(runtime, restCtx, async (state, offer) => {
+        if (!canPay(state, offer.cost).ok) return null;
+        const decision = await reactionPrompt.request(offer, {
+          describe: describeMechanicsLine(offer.mechanics),
+        });
+        if (decision.decision !== 'accept') return null;
+        return executeAction(state, { ...offer.mechanics, name: offer.name }, {
+          character: restCtx,
+          passives,
+          rng: () => Math.random(),
+        });
+      });
+      await apply(result.state, result.events, false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleShortRest = () => {
     const { state, events } = shortRest(runtime, restCtx);
+    setShortRestSelections({});
+    setShortRestError(null);
     setShortRestDraft({ state, events });
   };
 
@@ -209,18 +258,76 @@ export default function SheetRestButtons({
 
   const handleFinishShortRest = async () => {
     if (!shortRestDraft) return;
-    const ok = await apply(shortRestDraft.state, shortRestDraft.events, true, true);
-    if (ok) setShortRestDraft(null);
+    try {
+      const recovery = applySheetSlotRecoverySelections({
+        state: shortRestDraft.state,
+        classLevels: ctx.classLevels,
+        policies: slotRecoveryPolicies,
+        selections: shortRestSelections,
+      });
+      const ok = await apply(
+        recovery.state,
+        [...shortRestDraft.events, ...recovery.events],
+        true,
+        true,
+      );
+      if (ok) {
+        setShortRestDraft(null);
+        setShortRestSelections({});
+        setShortRestError(null);
+      }
+    } catch (cause) {
+      setShortRestError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
+
+  const addRecoveryLevel = (decisionType: string, level: number) => {
+    if (!shortRestDraft) return;
+    const entry = slotRecoveryPolicies.find(({ policy }) => policy.decisionType === decisionType);
+    if (!entry) return;
+    const picker = slotRecoveryPickerState({
+      state: shortRestDraft.state,
+      classLevels: ctx.classLevels,
+      policy: entry.policy,
+    });
+    setShortRestSelections((current) => {
+      const selected = current[decisionType] ?? [];
+      const occurrences = selected.filter((candidate) => candidate === level).length;
+      if (occurrences >= (picker.recoverableByLevel[level] ?? 0)
+        || selected.reduce((sum, candidate) => sum + candidate, 0) + level > picker.budget) {
+        return current;
+      }
+      return { ...current, [decisionType]: [...selected, level] };
+    });
+    setShortRestError(null);
+  };
+
+  const removeRecoveryLevel = (decisionType: string, index: number) => {
+    setShortRestSelections((current) => ({
+      ...current,
+      [decisionType]: (current[decisionType] ?? []).filter((_, row) => row !== index),
+    }));
+    setShortRestError(null);
   };
 
   const handleLongRest = async () => {
+    const picked = preparationChoices.length
+      ? await choiceDialog.request(
+        preparationChoices,
+        'Долгий отдых — подготовка заклинаний',
+      )
+      : {};
+    if (!picked) return;
+    const turnState = preparationChoices.length
+      ? writeSheetSpellPreparation(character.turn_state, picked)
+      : character.turn_state;
     const { state, events } = longRest(runtime, restCtx);
-    const ok = await apply(state, events, true, true);
+    const ok = await apply(state, events, true, true, turnState);
     if (ok) onLongRestComplete?.();
   };
 
   // KB-037: без сознания (0 HP) нельзя брать короткий/долгий отдых — персонаж умирает/стабилизируется,
-  // а не отдыхает. Ходы (Новый ход/Конец хода) при 0 HP остаются доступны — идут спасброски смерти.
+  // а не отдыхает. Новый ход при 0 HP остаётся доступен — идут спасброски смерти.
   const unconscious = runtime.hp.current <= 0;
   const restTitle = (base: string) => (unconscious ? 'Недоступно при 0 HP — сначала стабилизируйтесь или получите лечение' : base);
 
@@ -236,17 +343,8 @@ export default function SheetRestButtons({
   return (
     <>
     <div className={cls}>
-      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} title={lockReason} onClick={handleStartTurn}>
+      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} title={lockReason} onClick={() => { void handleStartTurn(); }}>
         <Swords size={14} /> Новый ход
-      </button>
-      <button
-        type="button"
-        className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || Boolean(lockReason)}
-        onClick={handleEndTurn}
-        title={lockReason ?? 'Конец хода: спасброски в конце хода, истечение эффектов, тикающие эффекты'}
-      >
-        <Hourglass size={14} /> Конец хода
       </button>
       <button
         type="button"
@@ -280,6 +378,58 @@ export default function SheetRestButtons({
               После каждого броска вы решаете, тратить ли ещё одну кость. К каждому броску
               добавляется модификатор Телосложения (минимум 1 HP).
             </p>
+            {slotRecoveryPolicies.map(({ actionId, name, policy }) => {
+              const picker = slotRecoveryPickerState({
+                state: shortRestDraft.state,
+                classLevels: ctx.classLevels,
+                policy,
+              });
+              const selected = shortRestSelections[policy.decisionType] ?? [];
+              const spentBudget = selected.reduce((sum, level) => sum + level, 0);
+              return (
+                <div className="choice-box" key={actionId}>
+                  <div className="choice-title">{name}</div>
+                  <div className="choice-count">
+                    Бюджет уровней ячеек: {spentBudget} из {picker.budget}
+                  </div>
+                  <div className="chips">
+                    {Object.entries(picker.recoverableByLevel).map(([rawLevel, count]) => {
+                      const level = Number(rawLevel);
+                      const used = selected.filter((candidate) => candidate === level).length;
+                      return (
+                        <button
+                          type="button"
+                          className="chip"
+                          key={level}
+                          disabled={!picker.available || used >= count || spentBudget + level > picker.budget}
+                          onClick={() => addRecoveryLevel(policy.decisionType, level)}
+                        >
+                          Ячейка {level} ур. · доступно {count - used}
+                        </button>
+                      );
+                    })}
+                    {!picker.available && (
+                      <span className="ec-sub">Нет доступного заряда или потраченных подходящих ячеек.</span>
+                    )}
+                  </div>
+                  {selected.length > 0 && (
+                    <div className="chips">
+                      {selected.map((level, index) => (
+                        <button
+                          type="button"
+                          className="chip on"
+                          key={`${level}:${index}`}
+                          onClick={() => removeRecoveryLevel(policy.decisionType, index)}
+                        >
+                          Восстановить {level} ур. ×
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {shortRestError && <p className="dice-dialog-note" role="alert">{shortRestError}</p>}
             <div className="dice-dialog-actions">
               <button type="button" className="dice-dialog-btn primary" disabled={busy || !canSpendHitDie} onClick={() => void handleSpendHitDie()}>
                 Потратить 1 кость

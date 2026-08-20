@@ -23,7 +23,19 @@ describe('collectModifiers (фаза C)', () => {
   it('формульный модификатор с переменной вычисляется', () => {
     const eff = modEffect({ kind: 'modifier', applies_to: { roll: 'attack' }, op: 'add', value: 'prof_bonus' }, 'Благословение');
     const out = collectModifiers(stateWith([eff]), [], { roll: 'attack', formulaCtx: { profBonus: 3 } });
-    expect(out.modifiers).toEqual([{ value: 3, source: 'Благословение' }]);
+    expect(out.modifiers).toEqual([{ value: 3, source: 'Благословение', kind: 'proficiency' }]);
+  });
+
+  it('declarative modifier_kind carries presentation semantics without entity checks', () => {
+    const eff = modEffect({
+      kind: 'modifier',
+      applies_to: { roll: 'initiative' },
+      op: 'add',
+      value: 2,
+      modifier_kind: 'proficiency',
+    }, 'Любой источник');
+    const out = collectModifiers(stateWith([eff]), [], { roll: 'initiative' });
+    expect(out.modifiers[0]).toMatchObject({ value: 2, kind: 'proficiency' });
   });
 
   it('без formulaCtx формульный модификатор мягко пропускается', () => {

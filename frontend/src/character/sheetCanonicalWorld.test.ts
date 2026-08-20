@@ -24,6 +24,7 @@ import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import { bindEquippedWeaponAmmoCost } from '../engine/weapon';
 import { pay } from '../engine/cost';
 import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
+import { writeSheetSpellPreparation } from './sheetSpellPreparation';
 
 type PatchRow = {
   entityId: string;
@@ -579,6 +580,38 @@ describe('real sheet canonical world materialization', () => {
       })).toMatchObject({ status: 'allowed', payment: { kind: 'slot', resource: 'spell_slot_1' } });
     }
 
+    const newlyPrepared = book.find((spellId) => !prepared.includes(spellId))!;
+    const preparedSheetAction = sheetActions.find((candidate) => (
+      candidate.spellRef?.id === prepared[0]
+    ))!;
+    const unpreparedSheetAction = sheetActions.find((candidate) => (
+      candidate.spellRef?.id === newlyPrepared
+    ))!;
+    expect(built.actionFor(preparedSheetAction).id).toBe(`${prepared[0]}@CLASS-wizard`);
+    expect(() => built.actionFor(unpreparedSheetAction)).toThrow(/not prepared/i);
+    const restSelection = [...prepared.slice(1), newlyPrepared];
+    const afterLongRest = buildSheetCanonicalRuntime({
+      character: {
+        ...character('sheet-wizard', persistedChoices),
+        turn_state: writeSheetSpellPreparation({}, {
+          [preparedChoice.id]: restSelection,
+        }),
+      },
+      assembled: assembly,
+      ruleState: resolvedRuleState,
+      sheetActions,
+      runtime: root.actor.runtime,
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+    expect(afterLongRest.world.actors[afterLongRest.actorId].spellcastingAccess
+      ?.preparedSources['CLASS-wizard']?.preparedActionIds)
+      .toEqual(restSelection.map((id) => `${id}@CLASS-wizard`).sort());
+    expect(afterLongRest.world.actors[afterLongRest.actorId].spellcastingAccess
+      ?.preparedSources['CLASS-wizard']?.availableActionIds)
+      .toEqual(source.availableActionIds);
+
     const persisted = writeSheetCanonicalWorld({}, built.actorId, built.world);
     const reloaded = buildSheetCanonicalRuntime({
       character: {
@@ -639,5 +672,28 @@ describe('real sheet canonical world materialization', () => {
     expect(() => attempt([book[0], book[0], book[1], book[2]])).toThrow(/различны/);
     expect(() => attempt([book[0], book[1], book[2], cantrips[0]])).toThrow(/вне выбранной книги/);
     expect(() => attempt(book.slice(0, 3))).toThrow(/ровно 4/);
+  });
+
+  it('does not let a stale grantless SPELL-0173 row poison combat startup', () => {
+    const root = clone(generated.roots.wizard);
+    const spellAction = sheetSpell(root.actions.find((candidate) => candidate.kind === 'spell')!);
+    spellAction.spellRef = { ...spellAction.spellRef!, card_number: 'SPELL-0173' };
+    const base = assembled({
+      effect: patchEffect('EFF-wizard-spellcasting'),
+      spells: [spellAction.spellRef!],
+    });
+    const runtime = buildSheetCanonicalRuntime({
+      character: character('sheet-with-stale-spell'),
+      assembled: { ...base, klass: null, effects: [], pendingChoices: [] },
+      ruleState: { appliedGrants: [] },
+      sheetActions: [spellAction],
+      runtime: root.actor.runtime,
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+    expect(runtime.actionsFor?.(spellAction)).toEqual([]);
+    expect(runtime.world.actors[runtime.actorId].capabilities.actionIds).toEqual([]);
+    expect(runtime.world.actors[runtime.actorId].spellcastingAccess).toBeUndefined();
   });
 });

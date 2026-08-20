@@ -105,11 +105,11 @@ function breakdownSave(
 ): ValueBreakdown {
   const mod = character.abilityMods[ability] ?? 0;
   const parts: RollModifier[] = [
-    { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики' },
+    { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики', kind: 'ability' },
   ];
   let total = mod;
   if (saveProficiencies(character).has(ability)) {
-    parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение' });
+    parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение', kind: 'proficiency' });
     total += character.profBonus;
   }
   const fxParts = effectModifiers('saving_throw', { ability }, character, state, passives);
@@ -126,14 +126,14 @@ function breakdownSkill(
   const ability = abilityOfSkill(skillId) as AbilityKey;
   const mod = character.abilityMods[ability] ?? 0;
   const parts: RollModifier[] = [
-    { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики' },
+    { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики', kind: 'ability' },
   ];
   let total = mod;
   if (character.skillExpertise?.includes(skillId)) {
-    parts.push({ value: character.profBonus * 2, source: 'БМ×2', reason: 'экспертиза' });
+    parts.push({ value: character.profBonus * 2, source: 'БМ×2', reason: 'экспертиза', kind: 'expertise' });
     total += character.profBonus * 2;
   } else if (character.skillProficiencies?.includes(skillId)) {
-    parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение' });
+    parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение', kind: 'proficiency' });
     total += character.profBonus;
   }
   const fxParts = effectModifiers('ability_check', { skill: skillId }, character, state, passives);
@@ -164,7 +164,12 @@ export function breakdownValue(
   if (what === 'initiative') {
     const base = character.abilityMods.dex ?? 0;
     const fxParts = effectModifiers('initiative', undefined, character, state, passives);
-    const parts = [{ value: base, source: 'ЛВК', reason: 'модификатор инициативы' }, ...fxParts];
+    const parts: RollModifier[] = [{
+      value: base,
+      source: 'ЛВК',
+      reason: 'модификатор инициативы',
+      kind: 'ability',
+    }, ...fxParts];
     return { value: parts.reduce((s, p) => s + p.value, 0), parts };
   }
   if (what === 'speed') {

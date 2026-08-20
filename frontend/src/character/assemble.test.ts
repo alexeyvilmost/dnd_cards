@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  assemble,
   collectEffectGrantRefs,
   collectFeatChoiceRefs,
   expandEffectGrants,
@@ -179,6 +180,34 @@ describe('collectFeatChoiceRefs — идентичность повторяем�
       featId: 'feat-skilled',
       instanceKey: 'picker#slot-b',
     }]);
+  });
+});
+
+describe('assemble — recommendation sidecars', () => {
+  it('projects effect choice recommendations without mutating certified mechanics', () => {
+    const effect = mkEffect('human-versatile', 'EFF-human-versatile', {
+      effects: [{
+        kind: 'choice',
+        id: 'human_skill',
+        options: { source: 'skill' },
+        recommended: ['embedded-value'],
+      }],
+    });
+    effect.choice_recommendations = { human_skill: ['perception'] };
+    const assembled = assemble({
+      race: null,
+      klass: null,
+      background: null,
+      feats: [],
+      effects: [oe(effect)],
+      actions: [],
+      spells: [],
+      resources: [],
+    }, draftWith());
+
+    expect(assembled.pendingChoices[0]?.recommended).toEqual(['perception']);
+    expect(((effect.mechanics?.effects as Array<Record<string, unknown>>)[0]).recommended)
+      .toEqual(['embedded-value']);
   });
 });
 

@@ -32,7 +32,7 @@ function runtime(input: {
   };
   const maxResources: Record<string, number> = {
     action: 1,
-    study_recovery_charge: 1,
+    study_recovery_charge: input.charge ?? 1,
   };
   for (const [level, slots] of Object.entries(input.slots ?? { 1: { current: 1, max: 2 } })) {
     resources[`study_rank_${level}`] = slots.current;
@@ -75,7 +75,7 @@ describe('generic catalog-owned slot recovery rest decision', () => {
 
   it('supports multiple recovered resources within the declared rounded-up level budget', () => {
     const result = resolveSlotRecoveryRestDecision({
-      state: runtime({ slots: { 1: { current: 1, max: 4 }, 2: { current: 1, max: 3 } } }),
+      state: runtime({ charge: 3, slots: { 1: { current: 1, max: 4 }, 2: { current: 1, max: 3 } } }),
       classLevels: { scholar: 6 },
       policy: POLICY,
       decision: { type: 'study_recovery', slotLevels: [2, 1] },
@@ -85,8 +85,19 @@ describe('generic catalog-owned slot recovery rest decision', () => {
       status: 'allowed',
       recoveryBudget: 3,
       recoveredSlotLevels: [1, 2],
+      spentResource: { amount: 3, remaining: 0 },
       state: { resources: { study_rank_1: 2, study_rank_2: 2, study_recovery_charge: 0 } },
     });
+  });
+
+  it('prices recovery by selected level total instead of multiplying the level budget by uses', () => {
+    const result = resolveSlotRecoveryRestDecision({
+      state: runtime({ charge: 2, slots: { 3: { current: 0, max: 1 } } }),
+      classLevels: { scholar: 6 },
+      policy: POLICY,
+      decision: { type: 'study_recovery', slotLevels: [3] },
+    });
+    expect(result).toMatchObject({ status: 'rejected', code: 'RestDecisionUnavailable' });
   });
 
   it.each([

@@ -1,5 +1,10 @@
 import type { ActorState } from '../rules-core/domain';
-import { gridDistanceFt, occupiedPositions, pathToward } from './tacticalGrid';
+import {
+  effectiveActorSpeedFt,
+  gridDistanceFt,
+  occupiedPositions,
+  pathToward,
+} from './tacticalGrid';
 import type { GridPosition, SoloCombatState } from './types';
 
 export interface MonsterTurnPlan {
@@ -20,7 +25,7 @@ export function planMonsterTurn(
   if (gridDistanceFt(start, target) <= 5) {
     return { firstMove: [], dashMove: [], usesDash: false, attacks: true };
   }
-  const speed = Number(monster.character.characterSpeed ?? 30);
+  const speed = effectiveActorSpeedFt(monster);
   const occupied = occupiedPositions(state, monster.id);
   const firstMove = pathToward({ start, target, maxFeet: speed, occupied });
   const afterMove = firstMove.at(-1) ?? start;

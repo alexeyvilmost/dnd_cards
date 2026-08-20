@@ -931,7 +931,9 @@ describe('compiled species, Origin feat, and Fighting Style runtime scenarios', 
       },
     );
     expect(initiative.modifiers).toEqual([{
-      value: alert.actor.character.profBonus, source: 'Бонус мастерства',
+      value: alert.actor.character.profBonus,
+      source: 'Бонус мастерства',
+      kind: 'proficiency',
     }]);
     expect(collectModifiers(
       run.finalState.actors.subject.runtime,

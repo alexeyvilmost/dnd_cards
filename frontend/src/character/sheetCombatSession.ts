@@ -631,10 +631,6 @@ function requireSingleWeaponTarget(input: {
       `${input.action.id} requires exactly one actor target and no spell/world declaration`,
     );
   }
-  if (input.primitive === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE
-    && Object.keys(input.declaration.choices ?? {}).length) {
-    throw new SheetCombatSessionError('The Light extra attack accepts no user-authored choices');
-  }
   const targetActorId = input.declaration.targetIds[0];
   const facts = input.declaration.factsByTarget?.[targetActorId];
   if (!facts) throw new SheetCombatSessionError(`Missing explicit weapon facts for ${targetActorId}`);
@@ -757,6 +753,7 @@ function acceptedWeaponTransition(input: {
       weaponCardId,
       targetActorId,
       facts,
+      ...(input.declaration.choices ? { choices: clone(input.declaration.choices) } : {}),
     });
   }
   return {

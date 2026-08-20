@@ -326,6 +326,87 @@ export function endTurn(
 }
 
 /**
+ * Complete the current turn and start the next one as a single player-facing
+ * transition. Round durations advance at the start boundary exactly once,
+ * while both data-driven event buses (turn_end and turn_start) still run.
+ */
+export function nextTurn(state: RuntimeState, ctx: CharacterContext): ExecuteResult {
+  const ended = endTurn(state, ctx, { advanceRoundDurations: false });
+  if (ended.pendingReactions?.length) {
+    throw new MechanicsExecutionError(
+      'INVALID_MECHANICS',
+      'turn_end.pendingReactions',
+      'nextTurn requires a reaction resolver before the next start boundary',
+    );
+  }
+  const started = startTurn(ended.state, ctx);
+  if (started.pendingReactions?.length) {
+    throw new MechanicsExecutionError(
+      'INVALID_MECHANICS',
+      'turn_start.pendingReactions',
+      'nextTurn requires a reaction resolver after the start boundary',
+    );
+  }
+  return {
+    state: started.state,
+    events: [...ended.events, ...started.events],
+  };
+}
+
+export type TurnReactionResolver = (
+  state: RuntimeState,
+  offer: ReactionOffer,
+) => Promise<ExecuteResult | null>;
+
+async function resolveTurnBoundaryOffers(
+  result: ExecuteResult,
+  resolveReaction: TurnReactionResolver,
+): Promise<ExecuteResult> {
+  let state = result.state;
+  const events = [...result.events];
+  const queue = [...(result.pendingReactions ?? [])];
+  let resolvedCount = 0;
+  while (queue.length) {
+    if (resolvedCount >= 32) {
+      throw new MechanicsExecutionError(
+        'INVALID_MECHANICS',
+        'turn.pendingReactions',
+        'turn reaction chain exceeded 32 offers',
+      );
+    }
+    resolvedCount += 1;
+    const offer = queue.shift()!;
+    const resolved = await resolveReaction(state, offer);
+    if (!resolved) continue;
+    state = resolved.state;
+    events.push(...resolved.events);
+    queue.push(...(resolved.pendingReactions ?? []));
+  }
+  return { state, events };
+}
+
+/**
+ * Async player-facing turn transition. End-boundary offers are completely
+ * accepted/declined before start-turn resources and effects are applied; start
+ * offers are then resolved against that new state.
+ */
+export async function nextTurnWithReactions(
+  state: RuntimeState,
+  ctx: CharacterContext,
+  resolveReaction: TurnReactionResolver,
+): Promise<ExecuteResult> {
+  const ended = await resolveTurnBoundaryOffers(
+    endTurn(state, ctx, { advanceRoundDurations: false }),
+    resolveReaction,
+  );
+  return resolveTurnBoundaryOffers(startTurn(ended.state, ctx), resolveReaction)
+    .then((started) => ({
+      state: started.state,
+      events: [...ended.events, ...started.events],
+    }));
+}
+
+/**
  * Потратить одну кость хитов во время короткого отдыха (PHB 2024):
  * лечение = результат кости + ТЕЛ, минимум 1. UI вызывает функцию по одной
  * кости, чтобы игрок решал после каждого броска, тратить ли следующую.

@@ -43,9 +43,24 @@
 
 .cs-vitals { display: flex; align-items: stretch; gap: 8px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 .cs-ac {
-  width: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  border: 1px solid var(--forge-gold-dim); border-radius: 8px; background: var(--forge-panel-2);
-  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); padding: 6px 0 10px;
+  width: 58px;
+  display: flex;
+  padding: 1px;
+  box-sizing: border-box;
+  background: var(--forge-gold-dim);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
+}
+.cs-ac-inner {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 5px 0 9px;
+  background: var(--forge-panel-2);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
 }
 .cs-ac-v { font-size: 22px; font-weight: 700; color: var(--forge-text); line-height: 1; }
 .cs-ac-l { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--forge-text-dim); }

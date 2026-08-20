@@ -2,6 +2,9 @@ import { createHash } from 'node:crypto';
 
 const VOLATILE_ROOT_FIELDS = new Set([
   'support',
+  // Forge presentation defaults are served from a sidecar catalog and are
+  // intentionally not part of certified rules/content bytes.
+  'choice_recommendations',
   'created_at',
   'updated_at',
   'deleted_at',

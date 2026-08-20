@@ -23,6 +23,46 @@ function restoreScopedActionPresentation(value: SoloCombatState): SoloCombatStat
   return migrated ? { ...value, actionPresentation: migrated } : value;
 }
 
+/** Fill additive schema-v1 combat fields without invalidating an in-progress fight. */
+function migrateCombatPresentation(value: SoloCombatState): SoloCombatState {
+  const savedSides = value.sideByActorId ?? {};
+  const partySide = savedSides[value.characterId] ?? 'side:party';
+  const sideByActorId = Object.fromEntries(Object.keys(value.world.actors).map((actorId) => [
+    actorId,
+    savedSides[actorId] ?? (actorId === value.characterId ? partySide : 'side:opposition'),
+  ]));
+  const savedPresentation = value.actorPresentation ?? {};
+  const actorPresentation = Object.fromEntries(Object.values(value.world.actors).map((actor) => {
+    const existing = savedPresentation[actor.id];
+    if (existing) return [actor.id, existing];
+    return [actor.id, {
+      templateId: value.tokens[actor.id]?.templateId,
+      creatureType: actor.character.creatureType,
+      actionIds: [...actor.capabilities.actionIds],
+      traits: (actor.passives ?? []).map((mechanics, index) => ({
+        id: `legacy:${actor.id}:${index}`,
+        name: `Особенность ${index + 1}`,
+        mechanics: clone(mechanics),
+      })),
+    }];
+  }));
+  const log = (Array.isArray(value.log) ? value.log : []).map((entry) => {
+    if (entry.records?.length || !entry.events?.length) return entry;
+    return {
+      ...entry,
+      records: entry.events.map((event, ordinal) => ({
+        kind: 'engine' as const,
+        ordinal,
+        sourceActorId: entry.actorId,
+        actorId: entry.actorId,
+        targetIds: [],
+        event,
+      })),
+    };
+  });
+  return { ...value, sideByActorId, actorPresentation, log };
+}
+
 export function readSoloCombatState(
   turnState: Record<string, unknown> | null | undefined,
   characterId: string,
@@ -35,11 +75,11 @@ export function readSoloCombatState(
     || value.characterId !== characterId
     || !value.world || !Array.isArray(value.catalogActions)
     || !value.tokens || !Array.isArray(value.initiative)) return null;
-  return restoreScopedActionPresentation({
+  return restoreScopedActionPresentation(migrateCombatPresentation({
     ...value,
     runtimeRevision,
     world: migrateWorldState(value.world),
-  });
+  }));
 }
 export function writeSoloCombatState(
   turnState: Record<string, unknown> | null | undefined,

@@ -17,19 +17,36 @@ export const MASTERY_EFFECT_TYPE = 'Эффект мастерства';
 let cache: PassiveEffect[] | null = null;
 let inflight: Promise<PassiveEffect[]> | null = null;
 
-/** Загрузить эффекты-мастерства (кэш на сессию — список статичный и маленький). */
-export function loadMasteryEffects(): Promise<PassiveEffect[]> {
+/**
+ * Strict catalog loader for authoritative flows such as combat startup.
+ * Callers that need mastery semantics must see transport/empty-catalog errors
+ * instead of silently constructing an actor with missing capabilities.
+ */
+export function loadMasteryEffectsStrict(): Promise<PassiveEffect[]> {
   if (cache) return Promise.resolve(cache);
   if (!inflight) {
     inflight = effectsApi.getEffects({ type: MASTERY_EFFECT_TYPE, limit: 100 })
       .then((r) => {
         // Бэкенд может игнорировать фильтр type — подстраховываемся клиентским отбором.
         cache = (r.effects || []).filter((e) => e.type === MASTERY_EFFECT_TYPE);
+        if (!cache.length) {
+          cache = null;
+          throw new Error('Каталог искусностей оружия пуст');
+        }
         return cache;
       })
-      .catch(() => { inflight = null; return []; });
+      .catch((error) => {
+        cache = null;
+        inflight = null;
+        throw error;
+      });
   }
   return inflight;
+}
+
+/** Tolerant preview/select loader; unavailable content renders as an empty list. */
+export function loadMasteryEffects(): Promise<PassiveEffect[]> {
+  return loadMasteryEffectsStrict().catch(() => []);
 }
 
 /** Эффекты-мастерства для селектов/превью. [] пока грузятся или если бэкенд недоступен. */

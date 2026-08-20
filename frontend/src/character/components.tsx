@@ -31,6 +31,12 @@ export type ForgeSectionDef = {
   status?: 'ok' | 'todo' | null;
 };
 
+export type ChoiceOption = RegistryItem & {
+  /** Alternate content references (for example a card number or legacy
+   * registry key) that resolve to the canonical persisted option id. */
+  aliases?: readonly string[];
+};
+
 export function ForgeNav({
   sections, active, onSelect,
 }: { sections: ForgeSectionDef[]; active: string; onSelect: (id: string) => void }) {
@@ -74,7 +80,7 @@ const FEAT_FILTER_CATEGORY: Record<string, FeatCategory> = {
   epic_boon: 'epic_boon',
 };
 
-export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): RegistryItem[] {
+export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): ChoiceOption[] {
   // Любой choice может сузить общий реестр явным options.items. Это единый
   // data-driven домен вариантов: например source:"ability" обычно даёт все
   // характеристики, а «Посвящённый в магию» объявляет только INT/WIS/CHA.
@@ -96,7 +102,24 @@ export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): Registr
       const category = FEAT_FILTER_CATEGORY[choice.filter];
       pool = category ? feats.filter((f) => f.category === category) : feats;
     }
-    return pool.map((f) => ({ id: f.id, label: f.name }));
+    const registryOptions = optionsForChoiceSource(choice.source);
+    const normalizedLabel = (value: string) => value.trim().toLocaleLowerCase('ru-RU');
+    return pool.map((f) => {
+      // Older mechanics use the stable feat registry key (for example
+      // `skilled`) while live catalogs persist UUIDs. Resolve that alias from
+      // the two declared catalogs instead of branching on a feat identity.
+      const labels = new Set(
+        [f.name, f.name_en].filter((value): value is string => Boolean(value)).map(normalizedLabel),
+      );
+      const registryAliases = registryOptions
+        .filter((option) => labels.has(normalizedLabel(option.label)))
+        .map((option) => option.id);
+      return {
+        id: f.id,
+        label: f.name,
+        aliases: [...new Set([f.card_number, ...registryAliases])],
+      };
+    });
   }
   const opts = optionsForChoiceSource(choice.source);
   if (opts.length) {
@@ -105,6 +128,18 @@ export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): Registr
     return opts;
   }
   return [];
+}
+
+/** Resolve any declared option reference to the canonical id persisted by the
+ * picker. Unknown references fail closed rather than selecting a different
+ * recommendation by accident. */
+export function choiceOptionIdByReference(
+  options: readonly ChoiceOption[],
+  reference: string,
+): string | undefined {
+  return options.find((option) => (
+    option.id === reference || option.aliases?.includes(reference)
+  ))?.id;
 }
 
 export function ChoiceResolver({
@@ -118,6 +153,10 @@ export function ChoiceResolver({
   feats?: Feat[];
 }) {
   const options = optionsForChoice(choice, feats);
+  const recommendedIds = new Set((choice.recommended ?? []).flatMap((reference) => {
+    const optionId = choiceOptionIdByReference(options, reference);
+    return optionId ? [optionId] : [];
+  }));
   const toggle = (id: string) => {
     if (unavailableOptions[id] && !value.includes(id)) return;
     if (value.includes(id)) {
@@ -166,7 +205,7 @@ export function ChoiceResolver({
             <button
               key={o.id}
               type="button"
-              className={`chip ${value.includes(o.id) ? 'on' : ''} ${choice.recommended?.includes(o.id) ? 'rec' : ''}`}
+              className={`chip ${value.includes(o.id) ? 'on' : ''} ${recommendedIds.has(o.id) ? 'rec' : ''}`}
               disabled={!!unavailableOptions[o.id] && !value.includes(o.id)}
               title={unavailableOptions[o.id]}
               onClick={() => toggle(o.id)}
@@ -190,21 +229,92 @@ export function ChoiceResolver({
  *  • выборы контекста in_play (разрешаются диалогом в момент действия);
  *  • уже применённые в этой сессии (`applied`) — очистка выбора игроком не должна
  *    триггерить повторное авто-заполнение;
- *  • уже выбранные (непустой `resolved`) — сохранённый выбор персонажа не перетираем.
+ *  • уже затронутые (ключ есть в `resolved`, даже если массив пуст) — выбор игрока не перетираем.
  */
 export function recommendedChoiceSeed(
   choices: PendingChoice[],
   resolved: Record<string, string[]>,
   applied: ReadonlySet<string>,
+  policy: RecommendedChoiceSeedPolicy = {},
 ): Record<string, string[]> {
   const out: Record<string, string[]> = {};
+  const projectedResolved = { ...resolved };
   for (const pc of choices) {
     if (pc.context === 'in_play' || applied.has(pc.id)) continue;
-    if ((resolved[pc.id] ?? []).length) continue;
-    const rec = (pc.recommended ?? []).slice(0, pc.count);
-    if (rec.length) out[pc.id] = rec;
+    // Presence, not length, is the durable "touched" signal. An explicitly
+    // cleared choice must stay cleared after a remount or draft restore.
+    if (Object.prototype.hasOwnProperty.call(resolved, pc.id)) continue;
+    const rawRecommended = pc.recommended ?? [];
+    if (!rawRecommended.length) continue;
+    const recommended = policy.canonicalOptionId
+      ? rawRecommended.flatMap((reference) => {
+          const optionId = policy.canonicalOptionId?.(pc, reference);
+          return optionId ? [optionId] : [];
+        })
+      : rawRecommended;
+    const optionIds = policy.optionIds?.(pc) ?? recommended;
+    const selection = recommendedOptionSelection({
+      count: pc.count,
+      recommended,
+      optionIds,
+      unavailable: (candidate, selected) => Boolean(policy.unavailableOptions?.({
+        choice: pc,
+        optionIds,
+        selectedOptionIds: selected,
+        resolvedChoices: projectedResolved,
+      })[candidate]),
+    });
+    // Persist even an empty/partial legal result. That records that this
+    // recommendation was considered once, while the normal completion gate
+    // still asks the player to finish a genuinely under-specified choice.
+    out[pc.id] = selection;
+    projectedResolved[pc.id] = selection;
   }
   return out;
+}
+
+export interface RecommendedChoiceAvailabilityInput {
+  choice: PendingChoice;
+  optionIds: readonly string[];
+  selectedOptionIds: readonly string[];
+  /** Existing choices plus earlier recommendations from this atomic seed. */
+  resolvedChoices: Readonly<Record<string, string[]>>;
+}
+
+export interface RecommendedChoiceSeedPolicy {
+  /** Complete, ordered option domain declared by the choice UI. */
+  optionIds?: (choice: PendingChoice) => readonly string[];
+  /** Resolve aliases in recommendation metadata to persisted option ids. */
+  canonicalOptionId?: (choice: PendingChoice, reference: string) => string | undefined;
+  /** The same generic grant-conflict projection used to disable manual picks. */
+  unavailableOptions?: (
+    input: RecommendedChoiceAvailabilityInput,
+  ) => Readonly<Record<string, string>>;
+}
+
+/**
+ * Pick recommendations first, then fill missing slots from the declared option
+ * order. Legality is caller-projected from mechanics; names and entity IDs are
+ * never interpreted here.
+ */
+export function recommendedOptionSelection(input: {
+  count: number;
+  recommended: readonly string[];
+  optionIds: readonly string[];
+  unavailable?: (candidate: string, selected: readonly string[]) => boolean;
+}): string[] {
+  const count = Math.max(0, Math.floor(input.count));
+  if (!count) return [];
+  const domain = new Set(input.optionIds);
+  const ordered = [...new Set([...input.recommended, ...input.optionIds])]
+    .filter((candidate) => domain.has(candidate));
+  const selected: string[] = [];
+  for (const candidate of ordered) {
+    if (selected.length >= count) break;
+    if (input.unavailable?.(candidate, selected)) continue;
+    selected.push(candidate);
+  }
+  return selected;
 }
 
 /**
@@ -218,15 +328,19 @@ export function useAutoRecommendedChoices(
   choices: PendingChoice[],
   resolved: Record<string, string[]>,
   setResolved: (id: string, vals: string[]) => void,
+  setResolvedBatch?: (values: Record<string, string[]>) => void,
+  policy?: RecommendedChoiceSeedPolicy,
 ): void {
   const applied = useRef<Set<string>>(new Set());
   useEffect(() => {
-    const seed = recommendedChoiceSeed(choices, resolved, applied.current);
+    const seed = recommendedChoiceSeed(choices, resolved, applied.current, policy);
     for (const pc of choices) {
       if (pc.context !== 'in_play') applied.current.add(pc.id);   // отметить как обработанные
     }
-    for (const [id, vals] of Object.entries(seed)) setResolved(id, vals);
-  }, [choices, resolved, setResolved]);
+    if (!Object.keys(seed).length) return;
+    if (setResolvedBatch) setResolvedBatch(seed);
+    else for (const [id, vals] of Object.entries(seed)) setResolved(id, vals);
+  }, [choices, resolved, setResolved, setResolvedBatch, policy]);
 }
 
 // ─── Раскладка характеристик ─────────────────────────────────────────────────
@@ -532,7 +646,7 @@ export function SummaryPanel({
                 key={e.effect.id}
                 name={p.name}
                 imageUrl={e.effect.image_url}
-                fallbackImageUrl={f.image_url}
+                fallbackImageUrl={p.fallbackImageUrl ?? f.image_url}
                 sourceLabel={p.sourceLabel}
                 effect={p.effect}
               />

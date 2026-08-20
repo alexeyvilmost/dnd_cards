@@ -144,6 +144,74 @@ export interface EntityBundle {
   variableDefs?: Variable[];
 }
 
+const BUNDLE_EXPANDING_CHOICE_SOURCES = new Set(['effect', 'feat']);
+
+/**
+ * Stable dependency key for the asynchronous entity bundle.
+ *
+ * Most forge choices (skills, spells, languages, subfeatures) are resolved by
+ * the synchronous rules projection and must not invalidate the entity bundle.
+ * Only choices that can attach more effects or feats participate here.  The
+ * currently loaded bundle is used to discover those declarations from data,
+ * so adding another `choice(source: "effect" | "feat")` needs no UI branch.
+ */
+export function bundleDependencyKey(
+  draft: CharacterDraft,
+  currentBundle?: EntityBundle | null,
+): string {
+  const expansionChoiceIds = new Set<string>();
+  if (currentBundle) {
+    for (const { effect, origin } of currentBundle.effects) {
+      const choices = collectChoices(
+        effect.mechanics,
+        {
+          ...origin,
+          featureId: instanceFeatureId(effect.id, origin.instanceKey),
+          featureName: effect.name,
+        },
+        draft.resolvedChoices,
+        effect.choice_recommendations ?? undefined,
+      );
+      for (const choice of choices) {
+        if (BUNDLE_EXPANDING_CHOICE_SOURCES.has(choice.source)) expansionChoiceIds.add(choice.id);
+      }
+    }
+    for (const { action, origin } of currentBundle.actions) {
+      const choices = collectChoices(
+        action.mechanics,
+        {
+          ...origin,
+          featureId: instanceFeatureId(action.id, origin.instanceKey),
+          featureName: action.name,
+        },
+        draft.resolvedChoices,
+      );
+      for (const choice of choices) {
+        if (BUNDLE_EXPANDING_CHOICE_SOURCES.has(choice.source)) expansionChoiceIds.add(choice.id);
+      }
+    }
+  }
+
+  const expansionSelections = [...expansionChoiceIds]
+    .sort()
+    .map((id) => [id, draft.resolvedChoices[id] ?? []] as const);
+
+  return JSON.stringify({
+    raceId: draft.raceId ?? null,
+    lineageId: draft.lineageId ?? null,
+    classId: draft.classId ?? null,
+    subclassId: draft.subclassId ?? null,
+    backgroundId: draft.backgroundId ?? null,
+    level: draft.level,
+    swapFeat: Boolean(draft.swapFeat),
+    featIds: draft.featIds ?? [],
+    effectIds: draft.effectIds ?? [],
+    actionIds: draft.actionIds ?? [],
+    resourceIds: draft.resourceIds ?? [],
+    expansionSelections,
+  });
+}
+
 // Чистая сборка из уже загруженных сущностей.
 export function assemble(bundle: EntityBundle, draft: CharacterDraft): AssembledCharacter {
   const scores = draft.abilities;
@@ -151,7 +219,16 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
 
   const pendingChoices: PendingChoice[] = [];
   for (const { effect, origin } of bundle.effects) {
-    pendingChoices.push(...collectChoices(effect.mechanics, { ...origin, featureId: instanceFeatureId(effect.id, origin.instanceKey), featureName: effect.name }, draft.resolvedChoices));
+    pendingChoices.push(...collectChoices(
+      effect.mechanics,
+      {
+        ...origin,
+        featureId: instanceFeatureId(effect.id, origin.instanceKey),
+        featureName: effect.name,
+      },
+      draft.resolvedChoices,
+      effect.choice_recommendations ?? undefined,
+    ));
   }
   for (const { action, origin } of bundle.actions) {
     pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: instanceFeatureId(action.id, origin.instanceKey), featureName: action.name }, draft.resolvedChoices));
@@ -221,12 +298,12 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // race/klass/background → manualFeats → subrace → subclass). Зависят только от
   // полей draft, поэтому запускаются параллельно. subrace/subclass — по UUID из draft.
   const [race, klass, background, manualFeatsRaw, subrace, subclass] = await Promise.all([
-    draft.raceId ? racesApi.getRace(draft.raceId).catch(() => null) : Promise.resolve(null),
-    draft.classId ? classesApi.getClass(draft.classId).catch(() => null) : Promise.resolve(null),
-    draft.backgroundId ? backgroundsApi.getBackground(draft.backgroundId).catch(() => null) : Promise.resolve(null),
-    Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id).catch(() => null))),
-    draft.lineageId && isEntityUuid(draft.lineageId) ? racesApi.getRace(draft.lineageId).catch(() => null) : Promise.resolve(null),
-    draft.subclassId && isEntityUuid(draft.subclassId) ? classesApi.getClass(draft.subclassId).catch(() => null) : Promise.resolve(null),
+    draft.raceId ? racesApi.getRace(draft.raceId) : Promise.resolve(null),
+    draft.classId ? classesApi.getClass(draft.classId) : Promise.resolve(null),
+    draft.backgroundId ? backgroundsApi.getBackground(draft.backgroundId) : Promise.resolve(null),
+    Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id))),
+    draft.lineageId && isEntityUuid(draft.lineageId) ? racesApi.getRace(draft.lineageId) : Promise.resolve(null),
+    draft.subclassId && isEntityUuid(draft.subclassId) ? classesApi.getClass(draft.subclassId) : Promise.resolve(null),
   ]);
   const manualFeats = manualFeatsRaw.filter((f): f is Feat => !!f);
 
@@ -235,7 +312,7 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // предыстории попадает в сборку и overview даже без «Сменить черту».
   // Зависит от background + manualFeats, поэтому после Promise.all выше.
   const originFeat = !draft.swapFeat && background?.origin_feat
-    ? await featsApi.getFeat(background.origin_feat).catch(() => null)
+    ? await featsApi.getFeat(background.origin_feat)
     : null;
   const feats = originFeat && !manualFeats.some((f) => f.id === originFeat.id)
     ? [...manualFeats, originFeat]
@@ -407,8 +484,7 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // B5: загрузка стартовала в начале функции (variableDefsP) — здесь только ждём.
   const [variableDefs, resources] = await Promise.all([
     variableDefsP,
-    Promise.all((draft.resourceIds || []).map((id) => resourcesApi.getResource(id).catch(() => null)))
-      .then((items) => items.filter((item): item is ResourceDefinition => !!item)),
+    Promise.all((draft.resourceIds || []).map((id) => resourcesApi.getResource(id))),
   ]);
 
   return {

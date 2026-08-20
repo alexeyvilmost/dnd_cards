@@ -25,6 +25,9 @@ export interface RollModifier {
   source: string;
   /** Пояснение для лога: «модификатор характеристики», «бонус мастерства»… */
   reason?: string;
+  /** Semantic role for presentation. It comes from the mechanics primitive (or
+   *  an unambiguous formula such as `prof_bonus`), never an entity name/id. */
+  kind?: 'base' | 'ability' | 'proficiency' | 'expertise' | 'effect';
 }
 
 export interface DieRoll {

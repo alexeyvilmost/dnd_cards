@@ -214,4 +214,13 @@ describe('formatFormulaDisplay', () => {
     expect(formatFormulaDisplay('1d10 + self_level')).toBe('1к10 + self_level');
     expect(formatFormulaDisplay('1d10 + self_level', baseCtx)).toBe('1к10 + 5');
   });
+
+  it('сворачивает только статическую арифметику, не бросая кости', async () => {
+    const { formatFormulaDisplay } = await import('./formula');
+    expect(formatFormulaDisplay('1 + 2', baseCtx)).toBe('3');
+    expect(formatFormulaDisplay('1 + str', baseCtx)).toBe('4');
+    expect(formatFormulaDisplay('(8 - 2) / 3')).toBe('2');
+    expect(formatFormulaDisplay('1 + unknown', baseCtx)).toBe('1 + unknown');
+    expect(formatFormulaDisplay('1d4 + 2', baseCtx)).toBe('1к4 + 2');
+  });
 });

@@ -30,19 +30,25 @@ export function effectAbilityPresentation(
   origin: ChoiceOrigin,
   feats: Feat[] = [],
   originKindLabel: (kind: string) => string = (k) => k,
-): { name: string; sourceLabel: string; effect: PassiveEffect } {
+): { name: string; sourceLabel: string; effect: PassiveEffect; fallbackImageUrl?: string | null } {
+  // Effect rows are the executable projection of a feat. Content may keep the
+  // artwork on the owning feat (the canonical fighting-style data does), so the
+  // presentation carries that relationship instead of teaching each sheet a
+  // list of styles or card numbers.
+  const feat = origin.kind === 'feat' ? feats.find((candidate) => candidate.id === origin.id) : undefined;
   if (!isFightingStyleEffect(effect, origin, feats)) {
     return {
       name: effect.name,
       sourceLabel: `${originKindLabel(origin.kind)} · ${origin.name}`,
       effect,
+      fallbackImageUrl: feat?.image_url,
     };
   }
-  const feat = origin.kind === 'feat' ? feats.find((f) => f.id === origin.id) : undefined;
   const name = feat?.name ?? stripFightingStylePrefix(effect.name);
   return {
     name,
     sourceLabel: `Боевой стиль · ${name}`,
     effect: effect.name === name ? effect : { ...effect, name },
+    fallbackImageUrl: feat?.image_url,
   };
 }

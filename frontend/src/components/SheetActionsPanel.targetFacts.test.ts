@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   explicitSheetTargetContext,
   explicitSheetTargetFactsIssue,
+  mergeSelfTargetRuntime,
   sheetActionDisplayName,
+  sheetMechanicsAllowsSelfTarget,
+  sheetActionNeedsCanonicalAvailability,
+  sheetSelectedTargetRelationIssue,
 } from './SheetActionsPanel';
+import type { RuntimeState } from '../mvp/contracts';
 
 const attack = {
   effects: [{ resolution: 'attack_roll', who: 'target' }],
@@ -52,6 +57,61 @@ describe('explicit legacy sheet target facts', () => {
       armorClass: null,
       savingThrowModifier: null,
     })).toBeUndefined();
+  });
+
+  it('derives self picker membership from targeting relations', () => {
+    expect(sheetMechanicsAllowsSelfTarget({
+      targeting: { allowed_relations: ['self', 'ally'] },
+    })).toBe(true);
+    expect(sheetMechanicsAllowsSelfTarget({
+      targeting: { allowed_relations: ['enemy'] },
+    })).toBe(false);
+    expect(sheetSelectedTargetRelationIssue({
+      actorId: 'hero', targetId: 'hero', allowsSelf: false,
+    })).toMatch(/не разрешает/);
+    expect(sheetSelectedTargetRelationIssue({
+      actorId: 'hero', targetId: 'hero', allowsSelf: true,
+    })).toBeNull();
+  });
+
+  it('routes non-primitive spell rows through canonical access checks', () => {
+    expect(sheetActionNeedsCanonicalAvailability({
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        effects: [{ resolution: 'auto', result: [] }],
+      },
+      spellRef: { id: 'spell:legacy' } as never,
+    })).toBe(true);
+    expect(sheetActionNeedsCanonicalAvailability({
+      mechanics: {
+        primitive: { type: 'magic_missile' },
+      },
+    })).toBe(true);
+    expect(sheetActionNeedsCanonicalAvailability({ mechanics: {} })).toBe(false);
+  });
+
+  it('merges a self-target effect with the source spell-slot payment', () => {
+    const before: RuntimeState = {
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: { action: 1, spell_slot_1: 1 },
+      maxResources: { action: 1, spell_slot_1: 2 },
+      equipment: {}, inventory: [], activeEffects: [],
+    };
+    const source: RuntimeState = {
+      ...before,
+      resources: { ...before.resources, action: 0, spell_slot_1: 0 },
+    };
+    const target: RuntimeState = {
+      ...before,
+      activeEffects: [{
+        id: 'mage-armor', name: 'Mage Armor', source: 'spell',
+        mechanics: { effects: [{ result: [{ kind: 'set_value', target: 'ac_base' }] }] },
+      }],
+    };
+    expect(mergeSelfTargetRuntime(before, source, target)).toMatchObject({
+      resources: { action: 0, spell_slot_1: 0 },
+      activeEffects: [{ id: 'mage-armor' }],
+    });
   });
 });
 

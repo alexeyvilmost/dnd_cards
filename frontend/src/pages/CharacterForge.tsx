@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText, Settings } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
@@ -12,7 +12,13 @@ import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveChar
 import { maxAvailableSpellSlotLevel, resolveByLevel } from '../engine/resources';
 import { useResourceOptions } from '../utils/resources';
 import { resourceView } from '../utils/eventDisplay';
-import { assemble, loadBundle, type EntityBundle, type AssembledCharacter } from '../character/assemble';
+import {
+  assemble,
+  bundleDependencyKey,
+  loadBundle,
+  type EntityBundle,
+  type AssembledCharacter,
+} from '../character/assemble';
 import {
   emptyDraft,
   ABILITY_KEYS,
@@ -29,7 +35,17 @@ import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
-import { ForgeNav, SummaryPanel, ChoiceResolver, AbilityAssigner, optionsForChoice, useAutoRecommendedChoices, type ForgeSectionDef } from '../character/components';
+import {
+  ForgeNav,
+  SummaryPanel,
+  ChoiceResolver,
+  AbilityAssigner,
+  choiceOptionIdByReference,
+  optionsForChoice,
+  recommendedOptionSelection,
+  useAutoRecommendedChoices,
+  type ForgeSectionDef,
+} from '../character/components';
 import { useIsMobile } from '../hooks/useIsMobile';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
@@ -93,6 +109,7 @@ const CharacterForge = () => {
     refsKey: string;
     value: EntityBundle;
   } | null>(null);
+  const bundleCacheRef = useRef(new Map<string, Promise<EntityBundle>>());
   const [active, setActive] = useState('race');
   const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
@@ -114,6 +131,7 @@ const CharacterForge = () => {
   }, []);
   const savedSkillsRef = useRef<string[]>([]);
   const restoredClassSkillsRef = useRef(false);
+  const classSkillAutoSeededForRef = useRef<string | null>(null);
   // HP существующего персонажа при редактировании — чтобы правка посреди сессии
   // не восстанавливала хиты (E3). null = создание нового (полный HP).
   const savedHpRef = useRef<number | null>(null);
@@ -240,22 +258,49 @@ const CharacterForge = () => {
 
   }, [editId, navigate]);
 
-  // Перезагрузка bundle при смене ссылок (не характеристик/заклинаний).
-  // resolvedChoices включён, т.к. выбор в choice(source:effect) меняет набор
-  // разворачиваемых эффектов-бусин; резолв эффектов кэшируется в реестре.
-  const refsKey = `${draft.raceId}|${draft.lineageId}|${draft.classId}|${draft.subclassId}|${draft.backgroundId}|${draft.level}|${draft.featIds.join(',')}|${JSON.stringify(draft.resolvedChoices)}`;
-  // The reference key changes during render, before the loading effect runs;
-  // this comparison therefore closes the one-frame stale-bundle save window.
-  const bundle = loadedBundle?.refsKey === refsKey ? loadedBundle.value : null;
+  // Асинхронный bundle зависит только от прямых ссылок и тех data-driven
+  // choice, которые способны прикрепить новые эффекты/черты. Обычные выборы
+  // навыков/заклинаний/языков остаются синхронной проекцией и не перезагружают
+  // весь граф сущностей.
+  const refsKey = bundleDependencyKey(draft, loadedBundle?.value);
+  const bundleReady = loadedBundle?.refsKey === refsKey;
+  // Во время разрешения нового графа сохраняем предыдущую проекцию на экране:
+  // кнопка сохранения закрыта через bundleReady, но кузня больше не моргает пустым
+  // состоянием между каждым кликом.
+  const bundle = loadedBundle?.value ?? null;
   useEffect(() => {
     let stale = false;
-    // Never expose a save action against a bundle assembled for the previous
-    // set of entity references.
-    setLoadedBundle(null);
-    (async () => {
-      const b = await loadBundle(draft);
-      if (!stale) setLoadedBundle({ refsKey, value: b });
-    })();
+    const draftSnapshot = draft;
+    let request = bundleCacheRef.current.get(refsKey);
+    if (!request) {
+      request = loadBundle(draftSnapshot);
+      bundleCacheRef.current.set(refsKey, request);
+      // Forge-сессия короткая; ограничиваем кэш последними вариантами, чтобы
+      // перебор множества черт не удерживал весь каталог до закрытия страницы.
+      if (bundleCacheRef.current.size > 32) {
+        const oldest = bundleCacheRef.current.keys().next().value;
+        if (oldest) bundleCacheRef.current.delete(oldest);
+      }
+    }
+    void request.then((value) => {
+      if (stale) return;
+      // Первый запрос мог стартовать до того, как были известны динамические
+      // choice-id. Кэшируем и под окончательным ключом, чтобы не делать второй
+      // идентичный проход после обнаружения деклараций в загруженном bundle.
+      const resolvedKey = bundleDependencyKey(draftSnapshot, value);
+      bundleCacheRef.current.set(resolvedKey, Promise.resolve(value));
+      setLoadedBundle({ refsKey: resolvedKey, value });
+    }).catch((reason) => {
+      // Rejected promises must not poison the session cache: the next render or
+      // retry should perform a fresh read after a transient backend failure.
+      if (bundleCacheRef.current.get(refsKey) === request) {
+        bundleCacheRef.current.delete(refsKey);
+      }
+      if (!stale) {
+        console.error('forge bundle', reason);
+        setError(characterV3ErrorMessage(reason, 'Не удалось загрузить данные персонажа'));
+      }
+    });
     return () => { stale = true; };
 
   }, [refsKey]);
@@ -282,8 +327,8 @@ const CharacterForge = () => {
   }, [chosenSpellUuids, spellIndex]);
 
   const assembled: AssembledCharacter = useMemo(
-    () => assemble({ ...(bundle ?? EMPTY_BUNDLE), spells: persistedSpells }, draft),
-    [bundle, persistedSpells, draft],
+    () => ({ ...baseAssembled, spells: persistedSpells }),
+    [baseAssembled, persistedSpells],
   );
   const ruleState = useMemo(
     () => resolveCharacterRules({ draft, assembled }),
@@ -369,7 +414,7 @@ const CharacterForge = () => {
   // и без choiceId в appliedGrants) — восстановить из skill_proficiencies ∩ список класса,
   // исключая фиксированные навыки предыстории (иначе конфликт вроде Артист/Воин вернётся).
   useEffect(() => {
-    if (!editId || restoredClassSkillsRef.current || !bundle?.klass) return;
+    if (!editId || restoredClassSkillsRef.current || !bundleReady || !bundle?.klass) return;
     if (draft.classSkillChoices.length) {
       restoredClassSkillsRef.current = true;
       return;
@@ -385,17 +430,125 @@ const CharacterForge = () => {
       .filter((s) => opts.has(s) && !bgSkills.has(s));
     if (classSkills.length) setDraft((d) => ({ ...d, classSkillChoices: classSkills }));
     restoredClassSkillsRef.current = true;
-  }, [editId, bundle?.klass, draft.classId, draft.classSkillChoices.length]);
+  }, [editId, bundleReady, bundle?.klass, draft.classId, draft.classSkillChoices.length]);
 
   // ─── Апдейтеры черновика ───────────────────────────────────────────────────
   const patch = (p: Partial<CharacterDraft>) => setDraft((d) => ({ ...d, ...p }));
   const setResolved = useCallback((choiceId: string, vals: string[]) => {
     setDraft((d) => ({ ...d, resolvedChoices: { ...d.resolvedChoices, [choiceId]: vals } }));
   }, []);
+  const setResolvedBatch = useCallback((values: Record<string, string[]>) => {
+    setDraft((d) => ({ ...d, resolvedChoices: { ...d.resolvedChoices, ...values } }));
+  }, []);
+  const recommendedChoicePolicy = useMemo(() => {
+    const featByReference = new Map(feats.flatMap((feat) => (
+      [[feat.id, feat.id], [feat.card_number, feat.id]] as const
+    )));
+    const spellByReference = new Map(spells.flatMap((spell) => (
+      [[spell.id, spell.id], [spell.card_number, spell.id]] as const
+    )));
+    const choiceOptions = (choice: PendingChoice) => (
+      isSpellSelectionChoice(choice)
+        ? spells
+            .filter((spell) => spellMatchesChoice(spell, choice, maxSlotLevel))
+            .map((spell) => ({
+              id: spell.id,
+              label: spell.name,
+              aliases: [spell.card_number],
+            }))
+        : optionsForChoice(choice, feats)
+    );
+    return {
+      optionIds: (choice: PendingChoice) => choiceOptions(choice).map((option) => option.id),
+      canonicalOptionId: (choice: PendingChoice, reference: string) => (
+        choiceOptionIdByReference(choiceOptions(choice), reference)
+      ),
+      unavailableOptions: ({
+        choice,
+        optionIds,
+        selectedOptionIds,
+        resolvedChoices,
+      }: {
+        choice: PendingChoice;
+        optionIds: readonly string[];
+        selectedOptionIds: readonly string[];
+        resolvedChoices: Readonly<Record<string, string[]>>;
+      }) => unavailableChoiceOptions(
+        choice,
+        resolveCharacterRules({
+          draft: { ...draft, resolvedChoices: { ...resolvedChoices } },
+          assembled,
+        }),
+        optionIds,
+        selectedOptionIds,
+        {
+          activeFeatIds: new Set(assembled.feats.map((feat) => feat.id)),
+          repeatableFeatIds: new Set(feats.filter((feat) => feat.repeatable).map((feat) => feat.id)),
+          canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
+          canonicalSpellId: (reference) => spellByReference.get(reference) ?? reference,
+        },
+      ),
+    };
+  }, [assembled, draft, feats, maxSlotLevel, spells]);
   // Рекомендованные варианты (recommended в choice-механике) — предвыбираем автоматически,
   // снижая число решений новичку. Покрывает ChoiceList, SpellsSection и выбор заклинаний,
   // т.к. все они читают из assembled.pendingChoices + setResolved.
-  useAutoRecommendedChoices(assembled.pendingChoices, draft.resolvedChoices, setResolved);
+  useAutoRecommendedChoices(
+    bundleReady ? assembled.pendingChoices : [],
+    draft.resolvedChoices,
+    setResolved,
+    setResolvedBatch,
+    recommendedChoicePolicy,
+  );
+  const recommendedClassSkillChoice = classSkillChoice(assembled);
+  const recommendedClassSkillKey = recommendedClassSkillChoice
+    ? `${recommendedClassSkillChoice.count}:${recommendedClassSkillChoice.recommended.join(',')}`
+    : '';
+  const recommendedMechanicsReady = assembled.pendingChoices
+    .filter((choice) => choice.context !== 'in_play' && (choice.recommended?.length ?? 0) > 0)
+    .every((choice) => Object.prototype.hasOwnProperty.call(draft.resolvedChoices, choice.id));
+  useEffect(() => {
+    const classId = draft.classId;
+    const choice = recommendedClassSkillChoice;
+    if (
+      !classId
+      || !choice
+      || !bundleReady
+      || !recommendedMechanicsReady
+      || assembled.klass?.id !== classId
+      || classSkillAutoSeededForRef.current === classId
+    ) return;
+    // Existing/edit-mode choices are authoritative. Once observed, clearing
+    // them is a player action and must not trigger another auto-fill.
+    if (draft.classSkillChoices.length) {
+      classSkillAutoSeededForRef.current = classId;
+      return;
+    }
+    const seed = choice.recommended.length
+      ? recommendedOptionSelection({
+          count: choice.count,
+          recommended: choice.recommended,
+          optionIds: choice.options,
+          unavailable: (skill) => Boolean(getSkillGrantSource(ruleState, skill)),
+        })
+      : [];
+    classSkillAutoSeededForRef.current = classId;
+    if (seed.length) {
+      setDraft((current) => (
+        current.classId === classId && current.classSkillChoices.length === 0
+          ? { ...current, classSkillChoices: seed }
+          : current
+      ));
+    }
+  }, [
+    draft.classId,
+    draft.classSkillChoices.length,
+    bundleReady,
+    recommendedMechanicsReady,
+    assembled.klass?.id,
+    recommendedClassSkillKey,
+    ruleState,
+  ]);
   // Ручная правка (+/− point-buy, ручной ввод) — помечает характеристики
   // «тронутыми»: смена класса их больше не перезаписывает.
   const setAbility = useCallback((k: AbilityKey, v: number | undefined) => {
@@ -430,6 +583,7 @@ const CharacterForge = () => {
   };
   const selectClass = (cid: string) => {
     if (!confirmSupportChoice(classes.find((klass) => klass.id === cid))) return;
+    classSkillAutoSeededForRef.current = null;
     setDraft((d) => {
       const next = { ...d, classId: cid, subclassId: null, classSkillChoices: [] as string[] };
       // Оптимальный расклад класса применяется при каждой смене класса,
@@ -497,10 +651,14 @@ const CharacterForge = () => {
 
   }, [levelUp, draft.classId, draft.raceId]);
 
-  const issues = completionIssues(draft, assembled);
-  const canCreate = bundle !== null && issues.length === 0;
+  const issues = useMemo(
+    () => completionIssues(draft, assembled, ruleState),
+    [draft, assembled, ruleState],
+  );
+  const canCreate = bundleReady && issues.length === 0;
 
   const save = async () => {
+    if (!bundleReady) return;
     setSaving(true); setError(null);
     try {
       const isCreate = !draft.id;
@@ -1039,6 +1197,22 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
   issues: string[]; canCreate: boolean; saving: boolean; onSave: () => void; savedId: string | null;
   error: string | null; onOpenSheet: () => void;
 }) {
+  // The editor controls stay immediate while the potentially long abilities /
+  // spells summary is allowed to trail a rapid sequence of selections.
+  const summarySnapshot = useMemo(
+    () => ({ draft, assembled, ruleState, spells, lineageName }),
+    [draft, assembled, ruleState, spells, lineageName],
+  );
+  const deferredSummary = useDeferredValue(summarySnapshot);
+  const deferredLineageName = deferredSummary.lineageName ?? resolveLineageName(
+    deferredSummary.draft.lineageId,
+    {
+      subraces,
+      lineages: deferredSummary.assembled.race?.lineages,
+      subChoices,
+    },
+  );
+
   return (
     <div className="forge-overview">
       <div className="forge-block">
@@ -1062,15 +1236,11 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
       </div>
 
       <SummaryPanel
-        draft={draft}
-        assembled={assembled}
-        ruleState={ruleState}
-        spells={spells}
-        lineageName={lineageName ?? resolveLineageName(draft.lineageId, {
-          subraces,
-          lineages: assembled.race?.lineages,
-          subChoices,
-        })}
+        draft={deferredSummary.draft}
+        assembled={deferredSummary.assembled}
+        ruleState={deferredSummary.ruleState}
+        spells={deferredSummary.spells}
+        lineageName={deferredLineageName}
       />
 
       <div className="forge-overview-footer">
@@ -1347,7 +1517,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
               const existing = getSkillGrantSource(ruleState, skill);
               const disabled = !!existing && !selected;
               return (
-                <button key={skill} type="button" className={`chip ${selected ? 'on' : ''}`} disabled={disabled}
+                <button key={skill} type="button" className={`chip ${selected ? 'on' : ''} ${sc.recommended.includes(skill) ? 'rec' : ''}`} disabled={disabled}
                   title={disabled ? grantReason(existing) : undefined} onClick={() => onToggleSkill(skill)}>
                   {labelOf(SKILLS, skill)}
                 </button>

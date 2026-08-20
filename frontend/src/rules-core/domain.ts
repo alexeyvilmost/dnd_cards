@@ -896,6 +896,8 @@ export interface PerformLightWeaponExtraAttackCommand
   weaponCardId: string;
   targetActorId: string;
   facts: SpatialFacts;
+  /** In-play choices declared by the selected weapon mastery. */
+  choices?: Record<string, string | string[]>;
 }
 
 /** Consume the typed Cleave opportunity produced by a prior melee hit. */

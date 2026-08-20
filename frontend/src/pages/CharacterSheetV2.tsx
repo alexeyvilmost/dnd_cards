@@ -16,6 +16,7 @@ import { type Card, type Spell } from '../types';
 import { useSiteSettings } from '../settings';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
+import ValueBreakdownPanel from '../components/ValueBreakdownPanel';
 import CollapsibleSection from '../components/CollapsibleSection';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
@@ -116,11 +117,12 @@ const CharacterSheetV2 = ({
   // Клик по спасброску/навыку — бросок к20 в журнал (учёт активных эффектов).
   const rollCheck = async (
     label: string,
-    parts: { value: number; source: string; reason?: string }[],
+    breakdown: ValueBreakdown,
     rollKind: 'saving_throw' | 'ability_check',
     filter?: Record<string, unknown>,
   ) => {
     if (readOnly) return;
+    const parts = breakdown.parts;
     // C14: числовые модификаторы эффектов УЖЕ входят в parts (breakdownSave/Skill добавляют
     // effectModifiers). collected нужен только для advantage — его модификаторы НЕ подмешиваем,
     // иначе литеральные бонусы задваивались бы (parts + collected).
@@ -138,7 +140,11 @@ const CharacterSheetV2 = ({
       }),
     );
     plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
-    const decision = await diceDialog.request(plan, label);
+    const decision = await diceDialog.request(
+      plan,
+      label,
+      <ValueBreakdownPanel breakdown={breakdown} label={label} />,
+    );
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
       ? plannedValuesRng(plan, decision.values)
@@ -223,10 +229,12 @@ const CharacterSheetV2 = ({
 
         <div className="cs-vitals">
           <div className="cs-ac">
-            <ValueBreakdownTip breakdown={acBreakdown ?? { value: ac, parts: [] }} label="Класс доспеха">
-              <span className="cs-ac-v">{ac}</span>
-            </ValueBreakdownTip>
-            <span className="cs-ac-l">КД</span>
+            <div className="cs-ac-inner">
+              <ValueBreakdownTip breakdown={acBreakdown ?? { value: ac, parts: [] }} label="Класс доспеха">
+                <span className="cs-ac-v">{ac}</span>
+              </ValueBreakdownTip>
+              <span className="cs-ac-l">КД</span>
+            </div>
           </div>
           <button type="button" className="cs-hp cs-hp-btn" disabled={readOnly} onClick={() => setHpOpen(true)} title={readOnly ? 'Лист открыт только для чтения' : 'Управление хитами'}>
             <div className="cs-hp-top">
@@ -278,14 +286,19 @@ const CharacterSheetV2 = ({
             const grant = getSkillGrantSource(ruleState, skillId);
             return grant ? grantReason(grant) : undefined;
           }}
-          onRollSave={readOnly ? undefined : (ability, parts) => { void rollCheck(
-            `Спасбросок (${ABILITY_LABEL_RU[ability]})`, parts, 'saving_throw', { ability },
+          onRollSave={readOnly ? undefined : (ability, breakdown) => { void rollCheck(
+            `Спасбросок (${ABILITY_LABEL_RU[ability]})`, breakdown, 'saving_throw', { ability },
           ); }}
-          onRollSkill={readOnly ? undefined : (skillId, label, _ability, parts) => { void rollCheck(
-            `Проверка (${label})`, parts, 'ability_check', { skill: skillId },
+          onRollSkill={readOnly ? undefined : (skillId, label, _ability, breakdown) => { void rollCheck(
+            `Проверка (${label})`, breakdown, 'ability_check', { skill: skillId },
           ); }}
           initiative={!readOnly && onRollInitiative
-            ? { value: initiative, rolling: rollingInitiative, onRoll: onRollInitiative }
+            ? {
+                value: initiative,
+                rolling: rollingInitiative,
+                onRoll: onRollInitiative,
+                breakdown: initBreakdown,
+              }
             : undefined}
         />
 
@@ -406,6 +419,7 @@ const CharacterSheetV2 = ({
                   key: effect.id,
                   name: p.name,
                   imageUrl: effect.image_url,
+                  fallbackImageUrl: p.fallbackImageUrl,
                   sourceLabel: p.sourceLabel,
                   effect: p.effect,
                 };

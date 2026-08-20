@@ -133,3 +133,23 @@ export function bindActionUsesCost(mech: Dict, usesKey: string): Dict {
   ));
   return { ...mech, activation: { ...activation, cost } };
 }
+
+/**
+ * Restore the relative authoring marker before an already sheet-bound action
+ * is passed through the immutable content compiler again. This is the exact
+ * inverse of bindActionUsesCost for one declared pool; it never invents a
+ * charge or rewrites a different resource.
+ */
+export function restoreSelfUsesCost(mech: Dict, usesKey: string): Dict {
+  if (!usesFromMechanics(mech) || declaresSelfUsesCost(mech)) return mech;
+  const activation = mech.activation as Dict | undefined;
+  if (!Array.isArray(activation?.cost)) return mech;
+  const matches = (activation.cost as Dict[]).filter((entry) => entry?.resource === usesKey);
+  if (matches.length !== 1) return mech;
+  const cost = (activation.cost as Dict[]).map((entry) => (
+    entry?.resource === usesKey
+      ? { ...entry, resource: SELF_USES_RESOURCE }
+      : entry
+  ));
+  return { ...mech, activation: { ...activation, cost } };
+}

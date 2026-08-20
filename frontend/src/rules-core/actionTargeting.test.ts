@@ -75,6 +75,19 @@ describe('compileMechanicsTargeting', () => {
     });
   });
 
+  it('supports an explicit world-only action with zero actor targets', () => {
+    expect(compileDeclaredMechanicsTargeting({
+      targeting: {
+        domain: 'world', actor_targets: false, shape: 'single',
+        min_targets: 0, max_targets: 0, range_ft: 0,
+        requires_line_of_sight: false, allowed_relations: [],
+      },
+    })).toEqual({
+      minTargets: 0, maxTargets: 0, rangeFt: 0,
+      requiresLineOfSight: false, allowedRelations: [],
+    });
+  });
+
   it.each([
     [{ domain: 'world', actor_targets: true }, /contradicts/],
     [{ domain: 'actor', actor_targets: false, shape: 'single' }, /contradicts/],

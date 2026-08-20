@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from 'react';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { ABILITY_KEYS, ABILITY_LABEL_RU, type AbilityKey } from '../character/types';
 import { SKILLS } from '../mechanics/registries';
-import type { RollModifier, ValueBreakdown } from '../mvp/contracts';
+import type { ValueBreakdown } from '../mvp/contracts';
 import CollapsibleSection from './CollapsibleSection';
 import ValueBreakdownTip from './ValueBreakdownTip';
 
@@ -40,9 +40,15 @@ export interface CharacterSheetFirstColumnProps {
   conditions: ReactNode;
   breakdownFor?: (key: FirstColumnBreakdownKey) => ValueBreakdown | null;
   skillSourceReason?: (skillId: string) => string | undefined;
-  onRollSave?: (ability: AbilityKey, parts: RollModifier[]) => void;
-  onRollSkill?: (skillId: string, label: string, ability: AbilityKey, parts: RollModifier[]) => void;
-  initiative?: { value: number; rolling?: boolean; onRoll?: () => void };
+  onRollSave?: (ability: AbilityKey, breakdown: ValueBreakdown) => void;
+  onRollSkill?: (skillId: string, label: string, ability: AbilityKey, breakdown: ValueBreakdown) => void;
+  initiative?: {
+    value: number;
+    rolling?: boolean;
+    onRoll?: () => void;
+    breakdown?: ValueBreakdown | null;
+    proficient?: boolean;
+  };
 }
 
 /** The actual first column of the character sheet, shared verbatim with combat. */
@@ -68,6 +74,17 @@ export default function CharacterSheetFirstColumn({
   const saveProficiencies = new Set(savingThrowProficiencies);
   const proficientSkills = new Set(skillProficiencies);
   const expertise = new Set(skillExpertise);
+  const initiativeBreakdown = initiative
+    ? initiative.breakdown ?? {
+        value: initiative.value,
+        parts: [{ value: initiative.value, source: 'ЛОВ', reason: 'инициатива' }],
+      }
+    : null;
+  const initiativeProficient = initiative
+    ? initiative.proficient
+      ?? initiativeBreakdown?.parts.some((part) => part.kind === 'proficiency')
+      ?? false
+    : false;
 
   return (
     <div className={`csheet-col${className ? ` ${className}` : ''}`}>
@@ -81,7 +98,10 @@ export default function CharacterSheetFirstColumn({
             const scoreBreakdown = breakdownFor?.(`ability:${ability}`) ?? null;
             const modifierBreakdown = breakdownFor?.(`ability_mod:${ability}`) ?? null;
             const saveBreakdown = breakdownFor?.(`save:${ability}`) ?? null;
-            const saveParts = saveBreakdown?.parts ?? [{ value: saveBonus, source: abbreviation(ABILITY_LABEL_RU[ability]) }];
+            const resolvedSaveBreakdown = saveBreakdown ?? {
+              value: saveBonus,
+              parts: [{ value: saveBonus, source: abbreviation(ABILITY_LABEL_RU[ability]) }],
+            };
             const saveInteractive = Boolean(onRollSave);
             return (
               <div key={ability} className="cs-abil">
@@ -101,7 +121,7 @@ export default function CharacterSheetFirstColumn({
                   title={saveInteractive ? `Бросить спасбросок ${ABILITY_LABEL_RU[ability]}` : undefined}
                   role={saveInteractive ? 'button' : undefined}
                   tabIndex={saveInteractive ? 0 : -1}
-                  onClick={saveInteractive ? () => onRollSave?.(ability, saveParts) : undefined}
+                  onClick={saveInteractive ? () => onRollSave?.(ability, resolvedSaveBreakdown) : undefined}
                 >
                   <i className="cs-dot" />
                   {saveBreakdown
@@ -132,19 +152,31 @@ export default function CharacterSheetFirstColumn({
               proficient ? `влад ${formatModifier(proficiencyBonus)}${sourceReason ? ` (${sourceReason})` : ''}` : null,
               expert ? `эксп ${formatModifier(proficiencyBonus)}` : null,
             ].filter(Boolean).join(' + ');
-            const skillParts = skillBreakdown?.parts ?? [{ value: bonus, source: skill.label }];
+            const resolvedSkillBreakdown = skillBreakdown ?? {
+              value: bonus,
+              parts: [{ value: bonus, source: skill.label }],
+            };
             const skillInteractive = Boolean(onRollSkill);
             return (
               <Fragment key={skill.id}>
-                {initiative?.onRoll && ability === 'dex' && previousAbility !== 'dex' && (
-                  <li className="cs-rollable cs-initiative-skill cs-skill-sep" title="Бросить инициативу (Ловкость)" onClick={initiative.rolling ? undefined : initiative.onRoll}>
-                    <i className="cs-dot" /><span className="cs-skill-nm">Инициатива</span><span className="cs-skill-ab">ЛОВ</span><span className="cs-skill-v">{initiative.rolling ? '…' : formatModifier(initiative.value)}</span>
+                {initiative && initiativeBreakdown && ability === 'dex' && previousAbility !== 'dex' && (
+                  <li
+                    className={`${initiativeProficient ? 'on ' : ''}${initiative.onRoll ? 'cs-rollable ' : ''}cs-initiative-skill cs-skill-sep`}
+                    title={initiative.onRoll ? 'Бросить инициативу (Ловкость)' : undefined}
+                    onClick={initiative.rolling ? undefined : initiative.onRoll}
+                  >
+                    <i className="cs-dot" />
+                    <span className="cs-skill-nm">Инициатива</span>
+                    <span className="cs-skill-ab">ЛОВ</span>
+                    <ValueBreakdownTip breakdown={initiativeBreakdown} label="Инициатива">
+                      <span className="cs-skill-v">{initiative.rolling ? '…' : formatModifier(initiative.value)}</span>
+                    </ValueBreakdownTip>
                   </li>
                 )}
                 <li
                   className={`${proficient ? 'on ' : ''}${skillInteractive ? 'cs-rollable' : ''}${abilitySeparator ? ' cs-skill-sep' : ''}`.trim()}
                   title={skillInteractive ? `${formatModifier(bonus)} = ${tip} · клик — бросок` : undefined}
-                  onClick={skillInteractive ? () => onRollSkill?.(skill.id, skill.label, ability, skillParts) : undefined}
+                  onClick={skillInteractive ? () => onRollSkill?.(skill.id, skill.label, ability, resolvedSkillBreakdown) : undefined}
                 >
                   <i className="cs-dot" />
                   <span className="cs-skill-nm">{skill.label}{expert ? ' ⁑' : ''}</span>

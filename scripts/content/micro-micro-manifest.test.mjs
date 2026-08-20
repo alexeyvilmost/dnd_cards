@@ -38,7 +38,7 @@ test('stable selector plus visible verified status is ready', () => {
   assert.equal(result.status, 'ready');
 });
 
-test('canonical content hash ignores support and timestamps but detects content edits', () => {
+test('canonical content hash ignores support, presentation hints, and timestamps but detects content edits', () => {
   const entity = {
     id: 'entity-1',
     name: 'До',
@@ -50,6 +50,7 @@ test('canonical content hash ignores support and timestamps but detects content 
   assert.equal(contentHash({
     ...entity,
     support: { status: 'known_mismatch' },
+    choice_recommendations: { class_skills: ['arcana'] },
     updated_at: '2026-07-28',
   }), before);
   assert.notEqual(contentHash({ ...entity, name: 'После' }), before);

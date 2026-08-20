@@ -20,7 +20,7 @@ import {
 } from '../battle/pendingAttack';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { executeAction } from '../engine/execute';
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
 import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { characterToDraft, resolveLineageName } from '../character/forgeHelpers';
@@ -63,9 +63,9 @@ import SheetSpeedDialog from '../components/SheetSpeedDialog';
 import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import SheetInPlayController from '../components/SheetInPlayController';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
+import ValueBreakdownPanel from '../components/ValueBreakdownPanel';
 import CharacterSheetV2 from './CharacterSheetV2';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
-import SheetAuthorityNotice from '../components/SheetAuthorityNotice';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import SoloCombatSetupDialog from '../components/SoloCombatSetupDialog';
 import { rollEvent } from '../engine/events';
@@ -898,10 +898,11 @@ const CharacterSheetMVP = () => {
   // Клик по спасброску/навыку — бросок к20 с разбивкой в журнал.
   const rollCheck = async (
     label: string,
-    parts: import('../mvp/contracts').RollModifier[],
+    breakdown: ValueBreakdown,
     rollKind: 'saving_throw' | 'ability_check',
     filter?: Record<string, unknown>,
   ) => {
+    const parts = breakdown.parts;
     // C14: числовые модификаторы эффектов УЖЕ входят в parts (breakdownSave/Skill добавляют
     // effectModifiers). collected нужен только для advantage — его модификаторы НЕ подмешиваем,
     // иначе литеральные бонусы задваивались бы (parts + collected).
@@ -925,7 +926,11 @@ const CharacterSheetMVP = () => {
       }),
     );
     plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
-    const decision = await diceDialog.request(plan, label);
+    const decision = await diceDialog.request(
+      plan,
+      label,
+      <ValueBreakdownPanel breakdown={breakdown} label={label} />,
+    );
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
       ? plannedValuesRng(plan, decision.values)
@@ -1057,7 +1062,6 @@ const CharacterSheetMVP = () => {
         </div>
       </div>
 
-      <SheetAuthorityNotice />
       {readOnly && (
         <p className="forge-note" role="note" style={{ margin: '12px auto', maxWidth: 900, padding: '0 16px' }}>
           Архивный публичный лист открыт только для чтения. Создайте свою копию, чтобы менять HP,
@@ -1308,6 +1312,7 @@ const CharacterSheetMVP = () => {
                   : null;
                 const parts = saveBd?.parts
                   ?? [{ value: bonus, source: ABILITY_LABEL_RU[k], reason: 'спасбросок' }];
+                const saveBreakdown = saveBd ?? { value: bonus, parts };
                 return (
                   <li key={k}>
                     <span className={proficient ? 'sheet-prof' : ''}>{ABILITY_LABEL_RU[k]}</span>
@@ -1326,7 +1331,7 @@ const CharacterSheetMVP = () => {
                         type="button"
                         className="sheet-dice-btn"
                         title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
-                        onClick={() => rollCheck(`Спасбросок (${ABILITY_LABEL_RU[k]})`, parts, 'saving_throw', { ability: k })}
+                        onClick={() => rollCheck(`Спасбросок (${ABILITY_LABEL_RU[k]})`, saveBreakdown, 'saving_throw', { ability: k })}
                       >
                         <Dices size={13} />
                       </button>
@@ -1358,6 +1363,7 @@ const CharacterSheetMVP = () => {
                 ].filter(Boolean).join(' + ');
                 const parts = skillBd?.parts
                   ?? [{ value: bonus, source: skill.label, reason: 'навык' }];
+                const skillBreakdown = skillBd ?? { value: bonus, parts };
                 return (
                   <li key={skill.id} title={`${fmtMod(bonus)} = ${formula}`}>
                     <span className={proficient ? 'sheet-prof' : ''}>{skill.label}{expert ? ' (эксп.)' : ''}</span>
@@ -1374,7 +1380,7 @@ const CharacterSheetMVP = () => {
                         type="button"
                         className="sheet-dice-btn"
                         title={`Проверка: ${skill.label}`}
-                        onClick={() => rollCheck(`Проверка (${skill.label})`, parts, 'ability_check', { skill: skill.id })}
+                        onClick={() => rollCheck(`Проверка (${skill.label})`, skillBreakdown, 'ability_check', { skill: skill.id })}
                       >
                         <Dices size={13} />
                       </button>
@@ -1416,6 +1422,7 @@ const CharacterSheetMVP = () => {
                       key: effect.id,
                       name: p.name,
                       imageUrl: effect.image_url,
+                      fallbackImageUrl: p.fallbackImageUrl,
                       sourceLabel: p.sourceLabel,
                       detail: p.sourceLabel.includes('Боевой стиль')
                         ? p.sourceLabel

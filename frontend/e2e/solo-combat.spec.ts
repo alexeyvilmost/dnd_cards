@@ -94,6 +94,11 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(page.getByRole('button', { name: /Огненный снаряд/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Малая иллюзия/ })).toBeVisible();
 
+  // Initiative is randomized. Let an opening monster turn finish before testing
+  // map gestures and inspection against a stable board.
+  const endTurn = page.getByRole('button', { name: 'Завершить ход' });
+  await expect(endTurn).toBeEnabled({ timeout: 30_000 });
+
   const map = page.getByTestId('tactical-map');
   const firstCellBox = await map.locator('.tactical-cell').first().boundingBox();
   expect(firstCellBox).not.toBeNull();
@@ -102,6 +107,30 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await viewport.hover();
   await page.mouse.wheel(0, 120);
   await expect(map).toHaveAttribute('data-zoom', '0.9');
+  for (let index = 0; index < 5; index += 1) await page.mouse.wheel(0, -120);
+  await expect(map).toHaveAttribute('data-zoom', '1.4');
+  await viewport.evaluate((node) => { node.scrollLeft = 0; node.scrollTop = 0; });
+  const viewportBox = await viewport.boundingBox();
+  expect(viewportBox).not.toBeNull();
+  await page.mouse.move(viewportBox!.x + viewportBox!.width / 2, viewportBox!.y + viewportBox!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(viewportBox!.x + viewportBox!.width / 2 - 120, viewportBox!.y + viewportBox!.height / 2 - 80, { steps: 6 });
+  await page.mouse.up();
+  const panOffset = await viewport.evaluate((node) => ({ left: node.scrollLeft, top: node.scrollTop }));
+  expect(panOffset.left + panOffset.top).toBeGreaterThan(0);
+  await expect(page.locator('.combat-actor-inspector')).toHaveCount(0);
+
+  const inspectedMonsterCell = page.locator(`.tactical-cell[data-actor-id^="${MONSTER_ID}:"]`);
+  await inspectedMonsterCell.click();
+  const inspector = page.getByRole('complementary', { name: 'Информация: Гоблин-воин' });
+  await expect(inspector).toBeVisible();
+  await expect(inspector).toContainText('Класс доспеха');
+  await expect(inspector).toContainText('Скорость, фт.');
+  await expect(inspector).toContainText('Скимитар');
+  const inspectorBox = await inspector.boundingBox();
+  expect(inspectorBox).not.toBeNull();
+  expect(inspectorBox!.x).toBeLessThan((page.viewportSize()?.width ?? 0) / 2);
+  await inspector.getByRole('button', { name: 'Закрыть информацию' }).click();
 
   const utility = page.getByRole('group', { name: 'Управление полем' });
   await expect(utility.getByRole('button', { name: /Движение/ })).toBeVisible();
@@ -117,6 +146,10 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(resourceTile).toBeVisible();
   await resourceTile.hover();
   await expect(page.getByRole('tooltip')).toBeVisible();
+  const freeuseTile = page.getByLabel(/Бесплатные заклинания:/);
+  await expect(freeuseTile).toBeVisible();
+  await freeuseTile.hover();
+  await expect(page.getByRole('tooltip')).toContainText('Бесплатные заклинания');
 
   const thunderwaveTile = page.getByRole('button', { name: /Волна грома/ }).last();
   await expect(thunderwaveTile.locator('img')).toBeVisible();
@@ -128,7 +161,7 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await dismissMobileSuggestion(page);
   await expect(page.locator('.sheet-in-battle').first()).toContainText('В бою');
   await expect(page.getByRole('button', { name: 'Новый ход' }).first()).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Конец хода' }).first()).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Конец хода' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Короткий отдых' }).first()).toBeDisabled();
   await page.locator(`a.sheet-in-battle[href="/characters-v3/${CHARACTER_ID}/combat"]`).first().click();
   await expect(page.getByTestId('tactical-map')).toBeVisible();
@@ -141,7 +174,6 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(drawer).toContainText('спас');
   await drawer.getByRole('button', { name: 'Закрыть' }).click();
 
-  const endTurn = page.getByRole('button', { name: 'Завершить ход' });
   await expect(endTurn).toBeEnabled({ timeout: 30_000 });
   const distance = await page.getByTestId('tactical-map').evaluate((map, ids) => {
     const cells = [...map.querySelectorAll<HTMLButtonElement>('.tactical-cell')];
@@ -166,6 +198,11 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(page.locator('.tactical-cell.is-area-preview')).toHaveCount(9);
   await monsterCell.click();
   await expect(page.locator('.combat-log')).toContainText('Лучник-дварф: Волна грома', { timeout: 30_000 });
+  const allyDamageEntry = page.locator('.combat-log-entry--ally-damage').first();
+  if ((page.viewportSize()?.width ?? 0) > 900) await expect(allyDamageEntry).toBeVisible();
+  else await expect(allyDamageEntry).toHaveAttribute('data-tone', 'ally-damage');
+  await expect(allyDamageEntry.locator('.combat-log-detail--roll').first()).toContainText('Спасбросок');
+  await expect(allyDamageEntry.locator('.combat-log-detail--damage').first()).toContainText('Урон');
   await expect(page.locator('.combat-error')).toHaveCount(0);
   expect(api.runtimePatchRequests.length).toBeGreaterThan(0);
 });
