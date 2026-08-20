@@ -123,6 +123,12 @@ interface CatalogAction extends JsonRecord {
   name: string;
 }
 
+interface CatalogSpell extends JsonRecord {
+  id: string;
+  card_number: string;
+  name: string;
+}
+
 interface EncounterCombatant extends JsonRecord {
   actorId: string;
   characterId?: string;
@@ -853,6 +859,201 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
       throw new AggregateError(
         [bodyError, ...cleanupErrors.map((message) => new Error(message))],
         'Public sheet certificate and cleanup both failed',
+      );
+    }
+    throw bodyError;
+  }
+  if (cleanupErrors.length > 0) throw new Error(cleanupErrors.join('; '));
+});
+
+test('public sheet certificate: Forge Wizard casts utility world primitives', async ({
+  browser,
+  playwright,
+}, testInfo) => {
+  const frontendOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_BASE_URL', 'frontend');
+  const apiOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_API_URL', 'backend');
+  const expectedCommit = required('EXPECTED_DEPLOYED_COMMIT').toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(expectedCommit)) {
+    throw new Error('EXPECTED_DEPLOYED_COMMIT must be an exact 40-hex Git commit');
+  }
+  const account = credentials('A');
+  const marker = `public-sheet-utility-certificate:${randomUUID()}`;
+  const suffix = marker.slice(-8);
+  const diagnostics: string[] = [];
+  const cleanupErrors: string[] = [];
+  let bodyError: unknown;
+  let auth: AuthenticatedAPI | undefined;
+  let context: BrowserContext | undefined;
+  let character: CharacterResponse | undefined;
+  let stopDiagnostics: (() => void) | undefined;
+
+  try {
+    auth = await authenticatedAPI(playwright, apiOrigin, account, 'utility sheet certificate account');
+    const [health, build, catalog] = await Promise.all([
+      checkedJSON<{ source_commit?: string }>(auth.api, 'get', '/api/health'),
+      checkedJSON<{ source_commit?: string }>(
+        auth.api, 'get', `/build-info.json?release=${expectedCommit}`,
+      ),
+      checkedJSON<{ spells?: CatalogSpell[] }>(auth.api, 'get', '/api/spells?page=1&limit=1000'),
+    ]);
+    expect(health.source_commit, 'public backend commit').toBe(expectedCommit);
+    expect(build.source_commit, 'public frontend commit').toBe(expectedCommit);
+
+    const requiredSpellNumbers = [
+      'SPELL-0161', // illusion
+      'SPELL-0232', // world entity
+      'SPELL-0245', // information reveal
+      'SPELL-0288', // world zone + in-play choice
+    ] as const;
+    const utilitySpells = requiredSpellNumbers.map((cardNumber) => {
+      const matches = (catalog.spells ?? []).filter((spell) => spell.card_number === cardNumber);
+      if (matches.length !== 1) throw new Error(`${cardNumber}: expected one live spell, got ${matches.length}`);
+      return matches[0];
+    });
+
+    context = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
+    await context.addInitScript(() => { Math.random = () => 0.99; });
+    await installBrowserOriginFence(context, new Set([frontendOrigin, apiOrigin]));
+    const page = await context.newPage();
+    stopDiagnostics = captureBrowserDiagnostics(
+      page,
+      'public Wizard utility sheet certificate',
+      [account.password],
+      diagnostics,
+    );
+    await loginInBrowser(page, account, frontendOrigin, apiOrigin);
+
+    const root = structuredClone(compiledFixture.roots.wizard);
+    const cantripChoice = Object.keys(root.draft.resolvedChoices)
+      .find((key) => key.endsWith(':wizard_cantrips'));
+    const spellbookChoice = Object.keys(root.draft.resolvedChoices)
+      .find((key) => key.endsWith(':wizard_spellbook_level_1'));
+    const preparedChoice = Object.keys(root.draft.resolvedChoices)
+      .find((key) => key.endsWith(':wizard_prepared_spells_level_1'));
+    if (!cantripChoice || !spellbookChoice || !preparedChoice) {
+      throw new Error('Wizard spell choices are missing from the compiled Forge root');
+    }
+    const originalSpellbook = root.draft.resolvedChoices[spellbookChoice];
+    const utilityIds = utilitySpells.map((spell) => spell.id);
+    const fillers = originalSpellbook.filter((id) => !utilityIds.includes(id)).slice(0, 2);
+    root.draft.resolvedChoices[spellbookChoice] = [...utilityIds, ...fillers];
+    root.draft.resolvedChoices[preparedChoice] = [...utilityIds];
+    root.draft.spellIds = [
+      ...root.draft.resolvedChoices[cantripChoice],
+      ...root.draft.resolvedChoices[spellbookChoice],
+    ];
+
+    character = await createCompiledCharacterInForge(
+      page,
+      root,
+      `Canary Utility Wizard ${suffix}`,
+      marker,
+      apiOrigin,
+    );
+    character = await checkedJSON<CharacterResponse>(
+      auth.api,
+      'patch',
+      `/api/characters-v3/${character.id}/runtime`,
+      { resources: { ...(character.resources ?? {}), spell_slot_1: 6 } },
+    );
+    await page.goto(`/characters-v3/${character.id}`);
+    await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
+
+    const castWorldSpell = async (
+      spell: CatalogSpell,
+      choiceName?: string,
+    ): Promise<void> => {
+      const turnResponse = page.waitForResponse((response) => (
+        response.request().method() === 'PATCH'
+        && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+      ));
+      await page.getByRole('button', { name: 'Новый ход', exact: true }).click();
+      expect((await turnResponse).ok(), `new turn before ${spell.card_number}`).toBe(true);
+
+      const actionButton = page.locator(`[data-action-id="${spell.id}"]`)
+        .getByRole('button').filter({ visible: true }).first();
+      await expect(actionButton, `${spell.card_number} sheet action`).toBeEnabled({ timeout: 30_000 });
+      await actionButton.click();
+
+      const choiceDialog = page.getByRole('dialog', { name: 'Выбор при действии' });
+      if (await choiceDialog.isVisible()) {
+        if (choiceName) {
+          await choiceDialog.getByRole('button', { name: choiceName, exact: true }).click();
+        }
+        await choiceDialog.getByRole('button', { name: 'Применить', exact: true }).click();
+      }
+      const confirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
+      await expect(confirm).toBeVisible();
+      const runtimeResponse = page.waitForResponse((response) => (
+        response.request().method() === 'PATCH'
+        && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+      ));
+      await confirm.getByRole('button', { name: 'Применить', exact: true }).click();
+      expect((await runtimeResponse).ok(), `${spell.card_number} runtime persistence`).toBe(true);
+      await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+    };
+
+    await castWorldSpell(utilitySpells[0]);
+    character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
+    expect((character.active_effects ?? []).some((effect) => (
+      (effect.mechanics as JsonRecord)?.kind === 'illusion'
+    ))).toBe(true);
+
+    await castWorldSpell(utilitySpells[1]);
+    character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
+    expect((character.active_effects ?? []).some((effect) => (
+      (effect.mechanics as JsonRecord)?.kind === 'world_entity'
+    ))).toBe(true);
+
+    await castWorldSpell(utilitySpells[2]);
+    const identifyEvents = await checkedJSON<CharacterEventRow[]>(
+      auth.api, 'get', `/api/characters-v3/${character.id}/events`,
+    );
+    expect(identifyEvents).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        type: 'world_interaction',
+        payload: expect.objectContaining({
+          type: 'world_interaction', operation: 'reveal_information',
+        }),
+      }),
+    ]));
+
+    await castWorldSpell(utilitySpells[3], 'Мысленная тревога');
+    character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
+    expect((character.active_effects ?? []).some((effect) => (
+      (effect.mechanics as JsonRecord)?.kind === 'world_zone'
+      && (effect.mechanics as JsonRecord)?.alarm_mode === 'mental'
+    ))).toBe(true);
+
+    if (diagnostics.length > 0) {
+      throw new Error(`Browser diagnostics are not clean:\n${diagnostics.join('\n')}`);
+    }
+  } catch (error) {
+    bodyError = error;
+  } finally {
+    if (diagnostics.length > 0) {
+      await testInfo.attach('public-utility-sheet-certificate-diagnostics', {
+        body: diagnostics.join('\n'),
+        contentType: 'text/plain',
+      });
+    }
+    stopDiagnostics?.();
+    await closeContext(context, 'public utility sheet certificate', cleanupErrors);
+    if (auth) {
+      await cleanupCharacterArtifacts(auth.api, character?.id, marker, cleanupErrors);
+      try {
+        await auth.api.request.dispose();
+      } catch (error) {
+        cleanupErrors.push(`API context cleanup: ${errorMessage(error)}`);
+      }
+    }
+  }
+
+  if (bodyError !== undefined) {
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [bodyError, ...cleanupErrors.map((message) => new Error(message))],
+        'Public utility sheet certificate and cleanup both failed',
       );
     }
     throw bodyError;

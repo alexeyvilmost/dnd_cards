@@ -100,6 +100,12 @@ function payloadPhrase(p: Dict, ctx?: FormulaContext | null): string {
     case 'remote_manipulator': return `создаёт дистанционный манипулятор до ${p.max_distance_ft ?? '?'} фт`;
     case 'communication_link': return `приватное сообщение до ${p.range_ft ?? '?'} фт`;
     case 'world_interaction': return `взаимодействие с миром: ${p.operation ?? ''}`;
+    case 'illusion': return `создаёт иллюзию: ${p.form ?? ''}`;
+    case 'temporary_consumable': return `создаёт временный предмет ×${p.count ?? '?'}`;
+    case 'world_entity': return `создаёт сущность мира: ${p.entity_type ?? ''}`;
+    case 'information_access': return `открывает доступ: ${p.capability ?? ''}`;
+    case 'information_reveal': return `раскрывает сведения: ${p.reveal ?? ''}`;
+    case 'world_zone': return `создаёт зону: ${p.zone_type ?? ''}`;
     case 'add_item': return `выдаёт предмет${p.qty && Number(p.qty) > 1 ? ` ×${p.qty}` : ''} в инвентарь`;
     case 'grant_action': {
       const vals = Array.isArray(p.values) ? (p.values as string[]) : (p.value != null ? [String(p.value)] : []);

@@ -1,0 +1,401 @@
+[
+  {
+    "card_number": "SPELL-0161",
+    "name": "Безмолвный образ",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "illusion",
+          "form": "visual_area",
+          "max_cube_ft": 15,
+          "sensory_channels": ["visual"],
+          "physical_interaction_reveals": true,
+          "investigation_dc": "8 + prof + spellcasting",
+          "control": { "resource": "action", "range_ft": 60, "operations": ["move_illusion", "change_appearance_for_natural_motion"] },
+          "duration": { "type": "rounds", "amount": 100 },
+          "stack_id": "spell:silent-image",
+          "stack_type": "overwrite"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-sorcerer", "CLASS-wizard"],
+      "targeting": {
+        "shape": "area", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 60,
+        "requires_line_of_sight": true, "allowed_relations": [],
+        "area": { "kind": "cube", "size_ft": 15 }
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0188",
+    "name": "Добряника",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "temporary_consumable",
+          "id": "goodberry",
+          "count": 10,
+          "consume_resource": "bonus_action",
+          "healing": 1,
+          "nourishment_days": 1,
+          "duration": { "type": "rounds", "amount": 14400 },
+          "stack_id": "spell:goodberry",
+          "stack_type": "overwrite"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-druid", "CLASS-ranger"],
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0206",
+    "name": "Иллюзорные письмена",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [
+          {
+            "kind": "illusion",
+            "form": "inscription",
+            "physical_interaction_reveals": false,
+            "authorized_readers": "declared_at_cast",
+            "unauthorized_appearance": ["unintelligible_magical_script", "alternate_meaning_handwriting_or_language"],
+            "truesight_reads_hidden_message": true,
+            "dispel_erases_original_and_illusion": true,
+            "duration": { "type": "rounds", "amount": 144000 },
+            "stack_id": "spell:illusory-script",
+            "stack_type": "separate"
+          },
+          {
+            "kind": "narrative",
+            "description": "Список допущенных читателей и текст документа хранит адаптер предметов; движок хранит политику чтения и жизненный цикл иллюзии."
+          }
+        ]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-warlock", "CLASS-wizard"],
+      "targeting": {
+        "shape": "single", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 5,
+        "requires_line_of_sight": true, "allowed_relations": []
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0222",
+    "name": "Маскировка",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "illusion",
+          "form": "self_disguise",
+          "height_delta_ft": { "min": -1, "max": 1 },
+          "requires_same_limb_arrangement": true,
+          "includes_equipment": true,
+          "physical_interaction_reveals": true,
+          "investigation_dc": "8 + prof + spellcasting",
+          "duration": { "type": "rounds", "amount": 600 },
+          "stack_id": "spell:disguise-self",
+          "stack_type": "overwrite"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-sorcerer", "CLASS-wizard"],
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0232",
+    "name": "Невидимый слуга",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "world_entity",
+          "entity_type": "unseen_servant",
+          "stat_block": { "size": "medium", "ac": 10, "hp": 1, "str": 2, "can_attack": false, "visible": false, "mindless": true },
+          "constraints": { "spawn_range_ft": 60, "tether_ft": 60, "move_per_command_ft": 15, "grounded": true },
+          "command": {
+            "resource": "bonus_action",
+            "once_per_turn": true,
+            "operations": ["move_and_manipulate_object", "fetch", "clean", "mend_clothes", "fold_clothes", "light_fire", "serve_food", "pour_wine"]
+          },
+          "duration": { "type": "rounds", "amount": 600 },
+          "stack_id": "spell:unseen-servant",
+          "stack_type": "separate"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-warlock", "CLASS-wizard"],
+      "targeting": {
+        "shape": "single", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 60,
+        "requires_line_of_sight": true, "allowed_relations": []
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0237",
+    "name": "Обнаружение добра и зла",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "information_access",
+          "capability": "detect_creature_types_and_hallow",
+          "policy": {
+            "range_ft": 30,
+            "creature_types": ["aberration", "celestial", "elemental", "fey", "fiend", "undead"],
+            "detects_active_hallow": true,
+            "blockers": { "max_thickness_ft": { "stone": 1, "dirt": 1, "wood": 1, "metal": 0.0833333333, "lead": 0.001 } }
+          },
+          "duration": { "type": "rounds", "amount": 100 },
+          "stack_id": "spell:detect-evil-and-good",
+          "stack_type": "overwrite"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-cleric", "CLASS-paladin"],
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0245",
+    "name": "Опознание",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "information_reveal",
+          "reveal": "identify_magic",
+          "fields": ["properties", "usage", "attunement_required", "charges_remaining", "active_spells", "creating_spell"]
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-wizard"],
+      "targeting": {
+        "shape": "single", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 5,
+        "requires_line_of_sight": true, "allowed_relations": []
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0256",
+    "name": "Парящий диск Тензера",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "world_entity",
+          "entity_type": "floating_disk",
+          "stat_block": { "diameter_ft": 3, "hover_height_ft": 3 },
+          "constraints": {
+            "capacity_lb": 500,
+            "stationary_within_ft": 20,
+            "follow_beyond_ft": 20,
+            "max_distance_ft": 100,
+            "max_vertical_step_ft": 10,
+            "follows_over": ["uneven_terrain", "stairs", "slopes"],
+            "overload_ends_spell": true
+          },
+          "duration": { "type": "rounds", "amount": 600 },
+          "stack_id": "spell:tensers-floating-disk",
+          "stack_type": "separate"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-wizard"],
+      "targeting": {
+        "shape": "single", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 30,
+        "requires_line_of_sight": true, "allowed_relations": []
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0265",
+    "name": "Понимание языков",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "information_access",
+          "capability": "literal_language_comprehension",
+          "policy": {
+            "modes": ["heard", "signed", "written"],
+            "written_requires_touch": true,
+            "written_page_time_rounds": 10,
+            "literal_meaning_only": true,
+            "deciphers_secret_messages": false,
+            "deciphers_special_symbols": false
+          },
+          "duration": { "type": "rounds", "amount": 600 },
+          "stack_id": "spell:comprehend-languages",
+          "stack_type": "overwrite"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-sorcerer", "CLASS-warlock", "CLASS-wizard"],
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0277",
+    "name": "Разговор с Животными",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "information_access",
+          "capability": "beast_communication_and_influence",
+          "policy": {
+            "creature_types": ["beast"],
+            "modes": ["understand", "speak", "influence_action"],
+            "minimum_knowledge": ["nearby_locations", "nearby_monsters", "observations_last_day"]
+          },
+          "duration": { "type": "rounds", "amount": 100 },
+          "stack_id": "spell:speak-with-animals",
+          "stack_type": "overwrite"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-druid", "CLASS-ranger", "CLASS-warlock"],
+      "targeting": {
+        "shape": "self", "domain": "actor", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 0,
+        "requires_line_of_sight": false, "allowed_relations": ["self"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0288",
+    "name": "Сигнал тревоги",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [
+        {
+          "kind": "choice",
+          "id": "alarm_mode",
+          "context": "in_play",
+          "count": 1,
+          "prompt": "Выберите способ оповещения",
+          "options": {
+            "source": "explicit",
+            "items": [
+              { "id": "audible", "name": "Слышимая тревога", "grants": [{
+                "kind": "world_zone", "zone_type": "alarm", "geometry": { "shape": "cube", "size_ft": 20 },
+                "alarm_mode": "audible", "audible_range_ft": 60, "audible_duration_rounds": 1,
+                "exemptions": "declared_at_cast", "duration": { "type": "rounds", "amount": 4800 },
+                "stack_id": "spell:alarm", "stack_type": "separate"
+              }] },
+              { "id": "mental", "name": "Мысленная тревога", "grants": [{
+                "kind": "world_zone", "zone_type": "alarm", "geometry": { "shape": "cube", "size_ft": 20 },
+                "alarm_mode": "mental", "mental_range_ft": 5280, "wakes_caster": true,
+                "exemptions": "declared_at_cast", "duration": { "type": "rounds", "amount": 4800 },
+                "stack_id": "spell:alarm", "stack_type": "separate"
+              }] }
+            ]
+          }
+        },
+        { "resolution": "auto", "result": [{
+          "kind": "narrative",
+          "description": "Геометрию охраняемой двери, окна или области и список исключений хранит сцена; движок хранит режим, дальность и срабатывание."
+        }] }
+      ],
+      "spell_class_list_ids": ["CLASS-ranger", "CLASS-wizard"],
+      "targeting": {
+        "shape": "area", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 30,
+        "requires_line_of_sight": true, "allowed_relations": [],
+        "area": { "kind": "cube", "size_ft": 20 }
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0296",
+    "name": "Сотворение или уничтожение воды",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "kind": "choice",
+        "id": "create_destroy_water_mode",
+        "context": "in_play",
+        "count": 1,
+        "prompt": "Выберите эффект воды",
+        "options": {
+          "source": "explicit",
+          "items": [
+            { "id": "create_container", "name": "Создать воду в ёмкости", "grants": [{
+              "kind": "world_interaction", "operation": "create_water_in_open_container", "parameters": { "gallons": 10, "range_ft": 30 }
+            }] },
+            { "id": "create_rain", "name": "Создать дождь", "grants": [{
+              "kind": "world_interaction", "operation": "create_rain", "parameters": { "area_shape": "cube", "area_size_ft": 30, "extinguishes_exposed_flames": true }
+            }] },
+            { "id": "destroy_container", "name": "Уничтожить воду в ёмкости", "grants": [{
+              "kind": "world_interaction", "operation": "destroy_water_in_open_container", "parameters": { "gallons": 10, "range_ft": 30 }
+            }] },
+            { "id": "destroy_fog", "name": "Уничтожить туман", "grants": [{
+              "kind": "world_interaction", "operation": "destroy_fog", "parameters": { "area_shape": "cube", "area_size_ft": 30 }
+            }] }
+          ]
+        }
+      }],
+      "spell_class_list_ids": ["CLASS-cleric", "CLASS-druid"],
+      "targeting": {
+        "shape": "area", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 30,
+        "requires_line_of_sight": true, "allowed_relations": [],
+        "area": { "kind": "cube", "size_ft": 30 }
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0303",
+    "name": "Туманное облако",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }, { "resource": "spell_slot", "level": 1, "amount": 1 }] },
+      "effects": [{
+        "resolution": "auto",
+        "result": [{
+          "kind": "world_zone",
+          "zone_type": "heavily_obscured_fog",
+          "geometry": { "shape": "sphere", "size_ft": 20, "measurement": "radius" },
+          "dispersed_by_strong_wind": true,
+          "radius_scaling_ft_per_slot_above_1": 20,
+          "duration": { "type": "rounds", "amount": 600 },
+          "stack_id": "spell:fog-cloud",
+          "stack_type": "separate"
+        }]
+      }],
+      "spell_class_list_ids": ["CLASS-druid", "CLASS-ranger", "CLASS-sorcerer", "CLASS-wizard"],
+      "targeting": {
+        "shape": "area", "domain": "world", "actor_targets": false,
+        "min_targets": 0, "max_targets": 1, "range_ft": 120,
+        "requires_line_of_sight": true, "allowed_relations": [],
+        "area": { "kind": "sphere", "radius_ft": 20 }
+      }
+    }
+  }
+]

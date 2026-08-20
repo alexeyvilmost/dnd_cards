@@ -151,7 +151,8 @@ const EXECUTABLE_PAYLOAD_KINDS = new Set([
   'condition_immunity', 'triggered_effect', 'fall_protection', 'movement_option',
   'targeting_ward', 'turn_command',
   'stabilize', 'weapon_enchantment', 'remote_manipulator', 'communication_link',
-  'world_interaction',
+  'world_interaction', 'illusion', 'temporary_consumable', 'world_entity',
+  'information_access', 'information_reveal', 'world_zone',
   'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
 ]);
@@ -793,6 +794,84 @@ function preflightPayload(
       if (typeof value.operation !== 'string' || !value.operation.trim()
         || !isDict(value.parameters)) {
         throw mechanicsError('INVALID_PAYLOAD', path, 'world interaction requires operation and parameters');
+      }
+      break;
+    }
+    case 'illusion': {
+      if (typeof value.form !== 'string' || !value.form.trim()
+        || !isDict(value.duration)
+        || typeof value.physical_interaction_reveals !== 'boolean') {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', path,
+          'illusion requires form, duration, and an explicit physical-interaction policy',
+        );
+      }
+      if (value.investigation_dc !== undefined) {
+        explicitPositiveDc(value.investigation_dc, `${path}.investigation_dc`, ctx);
+      }
+      if (value.control !== undefined) {
+        const control = isDict(value.control) ? value.control : null;
+        if (!control || !['action', 'bonus_action'].includes(String(control.resource ?? ''))
+          || !Number.isFinite(control.range_ft) || Number(control.range_ft) <= 0
+          || !Array.isArray(control.operations) || control.operations.length === 0
+          || control.operations.some((operation) => typeof operation !== 'string' || !operation.trim())) {
+          throw mechanicsError('INVALID_PAYLOAD', `${path}.control`, 'illusion control policy is invalid');
+        }
+      }
+      break;
+    }
+    case 'temporary_consumable': {
+      if (typeof value.id !== 'string' || !value.id.trim()
+        || !Number.isSafeInteger(value.count) || Number(value.count) <= 0
+        || !['action', 'bonus_action'].includes(String(value.consume_resource ?? ''))
+        || !isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'temporary consumable policy is invalid');
+      }
+      if (value.healing !== undefined
+        && (!Number.isFinite(value.healing) || Number(value.healing) < 0)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.healing`, 'temporary consumable healing must be non-negative');
+      }
+      break;
+    }
+    case 'world_entity': {
+      if (typeof value.entity_type !== 'string' || !value.entity_type.trim()
+        || !isDict(value.duration) || !isDict(value.constraints)) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'world entity requires type, constraints, and duration');
+      }
+      const command = value.command;
+      if (command !== undefined) {
+        if (!isDict(command) || !['action', 'bonus_action'].includes(String(command.resource ?? ''))
+          || !Array.isArray(command.operations) || command.operations.length === 0
+          || command.operations.some((operation) => typeof operation !== 'string' || !operation.trim())) {
+          throw mechanicsError('INVALID_PAYLOAD', `${path}.command`, 'world entity command policy is invalid');
+        }
+      }
+      break;
+    }
+    case 'information_access': {
+      if (typeof value.capability !== 'string' || !value.capability.trim()
+        || !isDict(value.policy) || !isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'information access requires capability, policy, and duration');
+      }
+      break;
+    }
+    case 'information_reveal': {
+      if (typeof value.reveal !== 'string' || !value.reveal.trim()
+        || !Array.isArray(value.fields) || value.fields.length === 0
+        || value.fields.some((field) => typeof field !== 'string' || !field.trim())) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'information reveal requires a reveal id and fields');
+      }
+      break;
+    }
+    case 'world_zone': {
+      if (typeof value.zone_type !== 'string' || !value.zone_type.trim()
+        || !isDict(value.geometry) || !isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'world zone requires type, geometry, and duration');
+      }
+      const geometry = value.geometry as Dict;
+      if (!['cube', 'sphere'].includes(String(geometry.shape ?? ''))
+        || !Number.isFinite(geometry.size_ft) || Number(geometry.size_ft) <= 0) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.geometry`, 'world zone geometry is invalid');
       }
       break;
     }
@@ -1832,10 +1911,15 @@ function applyPersistentAdapterPayload(
   ownerActorId?: string,
 ): RuntimeState {
   const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const persisted: Dict = payload.kind === 'illusion' && payload.investigation_dc !== undefined
+    ? { ...payload, investigation_dc: evalDc(String(payload.investigation_dc), ctx) }
+    : payload.kind === 'temporary_consumable'
+      ? { ...payload, remaining: Number(payload.count) }
+      : { ...payload };
   const entry: ActiveEffectEntry = {
-    id: runtimeEffectId(ctx, String(payload.kind), state.activeEffects.length),
+    id: runtimeEffectId(ctx, String(persisted.kind), state.activeEffects.length),
     name: source,
-    mechanics: payload,
+    mechanics: persisted,
     roundsLeft,
     expiry,
     source,
@@ -1843,7 +1927,7 @@ function applyPersistentAdapterPayload(
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
   };
   events.push({ type: 'effect_applied', name: source });
-  if (payload.kind === 'communication_link') {
+  if (persisted.kind === 'communication_link') {
     events.push({
       type: 'communication',
       mode: 'message',
@@ -1852,7 +1936,7 @@ function applyPersistentAdapterPayload(
       private: true,
     });
   }
-  return stackApply(state, entry, payload);
+  return stackApply(state, entry, persisted);
 }
 
 /** Runtime sense grants such as Dwarf Stonecunning are persisted effects. */
@@ -2739,7 +2823,12 @@ function applyPayloads(
         whoTarget ? ctx.target?.id : ctx.selfId,
       )); break;
       case 'remote_manipulator':
-      case 'communication_link': route((s) => applyPersistentAdapterPayload(
+      case 'communication_link':
+      case 'illusion':
+      case 'temporary_consumable':
+      case 'world_entity':
+      case 'information_access':
+      case 'world_zone': route((s) => applyPersistentAdapterPayload(
         s,
         p,
         source,
@@ -2752,6 +2841,17 @@ function applyPayloads(
           type: 'world_interaction',
           operation: String(p.operation),
           parameters: { ...(p.parameters as Dict) },
+          source,
+        });
+        break;
+      case 'information_reveal':
+        events.push({
+          type: 'world_interaction',
+          operation: 'reveal_information',
+          parameters: {
+            reveal: String(p.reveal),
+            fields: [...(p.fields as string[])],
+          },
           source,
         });
         break;
@@ -4036,6 +4136,242 @@ export function resolveCommunicationLink(
       private: true,
     }],
   };
+}
+
+export interface IllusionInspectionFacts {
+  physicalInteraction?: boolean;
+  investigationTotal?: number;
+}
+
+/** Resolve an observation against a persisted illusion. The caller supplies
+ * observable contact or a completed Investigation total; the data-owned DC and
+ * reveal policy stay authoritative in the engine. */
+export function inspectIllusion(
+  state: RuntimeState,
+  facts: IllusionInspectionFacts,
+): ExecuteResult & { revealed: boolean } {
+  const active = activePayloadEntries(state, 'illusion')[0];
+  if (!active) throw mechanicsError('INVALID_MECHANICS', 'illusion', 'no active illusion exists');
+  const physical = facts.physicalInteraction === true
+    && active.payload.physical_interaction_reveals === true;
+  const dc = Number(active.payload.investigation_dc);
+  const investigated = facts.investigationTotal !== undefined
+    && Number.isFinite(facts.investigationTotal)
+    && Number.isFinite(dc)
+    && Number(facts.investigationTotal) >= dc;
+  const revealed = physical || investigated;
+  return {
+    state: cloneState(state),
+    revealed,
+    events: [{
+      type: 'world_interaction',
+      operation: 'inspect_illusion',
+      parameters: { revealed, physical_interaction: physical, investigation_dc: dc || null },
+      source: active.entry.name,
+    }],
+  };
+}
+
+export interface IllusionControlCommand {
+  operation: string;
+  distanceFt: number;
+  parameters?: Dict;
+}
+
+/** Spend the declared turn resource to manipulate a persisted illusion. */
+export function controlIllusion(
+  state: RuntimeState,
+  command: IllusionControlCommand,
+): ExecuteResult {
+  const active = activePayloadEntries(state, 'illusion')[0];
+  if (!active || !isDict(active.payload.control)) {
+    throw mechanicsError('INVALID_MECHANICS', 'illusion.control', 'illusion is not controllable');
+  }
+  const policy = active.payload.control as Dict;
+  const operations = Array.isArray(policy.operations) ? policy.operations.map(String) : [];
+  if (!operations.includes(command.operation)) {
+    throw mechanicsError('INVALID_MECHANICS', 'illusion.control.operation', 'operation is not permitted');
+  }
+  if (!Number.isFinite(command.distanceFt) || command.distanceFt < 0
+    || command.distanceFt > Number(policy.range_ft)) {
+    throw mechanicsError('INVALID_MECHANICS', 'illusion.control.distanceFt', 'illusion is outside control range');
+  }
+  const resource = String(policy.resource);
+  const payment = canPay(state, [{ resource, amount: 1 }]);
+  if (!payment.ok) throw new InsufficientResourcesError(payment.missing);
+  const paid = pay(state, [{ resource, amount: 1 }]);
+  return {
+    state: paid.state,
+    events: [...paid.events, {
+      type: 'world_interaction', operation: command.operation,
+      parameters: { ...(command.parameters ?? {}), distance_ft: command.distanceFt },
+      source: active.entry.name,
+    }],
+  };
+}
+
+/** Consume one actor-owned temporary item. Transfer between actors remains a
+ * scene/inventory adapter concern, but quantity, expiry, action cost, and
+ * healing are enforced here. */
+export function consumeTemporaryConsumable(state: RuntimeState): ExecuteResult {
+  const active = activePayloadEntries(state, 'temporary_consumable')[0];
+  if (!active) throw mechanicsError('INVALID_MECHANICS', 'temporary_consumable', 'no consumable remains');
+  const remaining = Number(active.payload.remaining);
+  if (!Number.isSafeInteger(remaining) || remaining <= 0) {
+    throw mechanicsError('INVALID_MECHANICS', 'temporary_consumable.remaining', 'no consumable remains');
+  }
+  const resource = String(active.payload.consume_resource);
+  const payment = canPay(state, [{ resource, amount: 1 }]);
+  if (!payment.ok) throw new InsufficientResourcesError(payment.missing);
+  const paid = pay(state, [{ resource, amount: 1 }]);
+  const next = cloneState(paid.state);
+  const updatedRemaining = remaining - 1;
+  if (updatedRemaining === 0) {
+    next.activeEffects = next.activeEffects.filter((entry) => entry.id !== active.entry.id);
+  } else {
+    next.activeEffects = next.activeEffects.map((entry) => entry.id === active.entry.id
+      ? { ...entry, mechanics: { ...active.payload, remaining: updatedRemaining } }
+      : entry);
+  }
+  const healing = Math.max(0, Number(active.payload.healing ?? 0));
+  const healed = Math.min(healing, next.hp.max - next.hp.current);
+  next.hp.current += healed;
+  return {
+    state: next,
+    events: [
+      ...paid.events,
+      ...(healed > 0 ? [{ type: 'healing' as const, amount: healed, source: active.entry.name }] : []),
+      { type: 'world_interaction', operation: 'consume_temporary_item', parameters: {
+        item_id: String(active.payload.id), remaining: updatedRemaining,
+        nourishment_days: Number(active.payload.nourishment_days ?? 0),
+      }, source: active.entry.name },
+    ],
+  };
+}
+
+export interface WorldEntityCommand {
+  operation: string;
+  distanceFt?: number;
+  loadLb?: number;
+  parameters?: Dict;
+}
+
+/** Validate and pay a command issued to a spell-created servant or object. */
+export function commandWorldEntity(state: RuntimeState, command: WorldEntityCommand): ExecuteResult {
+  const active = activePayloadEntries(state, 'world_entity')[0];
+  if (!active || !isDict(active.payload.command)) {
+    throw mechanicsError('INVALID_MECHANICS', 'world_entity.command', 'world entity is not commandable');
+  }
+  const policy = active.payload.command as Dict;
+  const operations = Array.isArray(policy.operations) ? policy.operations.map(String) : [];
+  if (!operations.includes(command.operation)) {
+    throw mechanicsError('INVALID_MECHANICS', 'world_entity.command.operation', 'operation is not permitted');
+  }
+  const constraints = active.payload.constraints as Dict;
+  if (command.distanceFt !== undefined) {
+    const maximum = Number(constraints.max_distance_ft ?? constraints.tether_ft);
+    if (!Number.isFinite(command.distanceFt) || command.distanceFt < 0
+      || (Number.isFinite(maximum) && command.distanceFt > maximum)) {
+      throw mechanicsError('INVALID_MECHANICS', 'world_entity.command.distanceFt', 'entity is outside its limit');
+    }
+  }
+  if (command.loadLb !== undefined) {
+    const capacity = Number(constraints.capacity_lb);
+    if (!Number.isFinite(command.loadLb) || command.loadLb < 0
+      || (Number.isFinite(capacity) && command.loadLb > capacity)) {
+      throw mechanicsError('INVALID_MECHANICS', 'world_entity.command.loadLb', 'entity is overloaded');
+    }
+  }
+  const resource = String(policy.resource);
+  const payment = canPay(state, [{ resource, amount: 1 }]);
+  if (!payment.ok) throw new InsufficientResourcesError(payment.missing);
+  const paid = pay(state, [{ resource, amount: 1 }]);
+  return { state: paid.state, events: [...paid.events, {
+    type: 'world_interaction', operation: command.operation,
+    parameters: {
+      entity_type: String(active.payload.entity_type),
+      ...(command.distanceFt !== undefined ? { distance_ft: command.distanceFt } : {}),
+      ...(command.loadLb !== undefined ? { load_lb: command.loadLb } : {}),
+      ...(command.parameters ?? {}),
+    }, source: active.entry.name,
+  }] };
+}
+
+export interface InformationAccessFacts {
+  distanceFt?: number;
+  creatureType?: string;
+  barrier?: { material: string; thicknessFt: number };
+  mode?: string;
+  touching?: boolean;
+}
+
+/** Query a persisted magical sense/language capability using scene facts. */
+export function queryInformationAccess(
+  state: RuntimeState,
+  facts: InformationAccessFacts,
+): ExecuteResult & { accessible: boolean } {
+  const active = activePayloadEntries(state, 'information_access')[0];
+  if (!active) throw mechanicsError('INVALID_MECHANICS', 'information_access', 'no information access exists');
+  const policy = active.payload.policy as Dict;
+  let accessible = true;
+  const range = Number(policy.range_ft);
+  if (facts.distanceFt !== undefined && Number.isFinite(range)) {
+    accessible = Number.isFinite(facts.distanceFt) && facts.distanceFt >= 0 && facts.distanceFt <= range;
+  }
+  if (facts.creatureType !== undefined && Array.isArray(policy.creature_types)) {
+    accessible = accessible && policy.creature_types.map(String).includes(facts.creatureType);
+  }
+  if (facts.mode !== undefined && Array.isArray(policy.modes)) {
+    accessible = accessible && policy.modes.map(String).includes(facts.mode);
+  }
+  if (facts.mode === 'written' && policy.written_requires_touch === true) {
+    accessible = accessible && facts.touching === true;
+  }
+  if (facts.barrier && isDict(policy.blockers)) {
+    const limits = (policy.blockers as Dict).max_thickness_ft;
+    if (isDict(limits)) {
+      const limit = Number(limits[facts.barrier.material]);
+      if (Number.isFinite(limit) && facts.barrier.thicknessFt >= limit) accessible = false;
+    }
+  }
+  return { state: cloneState(state), accessible, events: [{
+    type: 'world_interaction', operation: 'query_information_access', parameters: {
+      capability: String(active.payload.capability), accessible,
+    }, source: active.entry.name,
+  }] };
+}
+
+export interface WorldZoneFacts {
+  operation: string;
+  exempt?: boolean;
+  distanceFromCasterFt?: number;
+  strongWind?: boolean;
+}
+
+/** Resolve an entry/dispersal/query against a persisted spell zone. */
+export function resolveWorldZone(
+  state: RuntimeState,
+  facts: WorldZoneFacts,
+): ExecuteResult & { triggered: boolean } {
+  const active = activePayloadEntries(state, 'world_zone')[0];
+  if (!active) throw mechanicsError('INVALID_MECHANICS', 'world_zone', 'no active world zone exists');
+  const payload = active.payload;
+  let triggered = facts.exempt !== true;
+  if (facts.operation === 'disperse' && payload.dispersed_by_strong_wind === true) {
+    triggered = facts.strongWind === true;
+  }
+  if (facts.operation === 'mental_alarm' && facts.distanceFromCasterFt !== undefined) {
+    triggered = triggered && facts.distanceFromCasterFt <= Number(payload.mental_range_ft ?? 0);
+  }
+  const next = cloneState(state);
+  if (facts.operation === 'disperse' && triggered) {
+    next.activeEffects = next.activeEffects.filter((entry) => entry.id !== active.entry.id);
+  }
+  return { state: next, triggered, events: [{
+    type: 'world_interaction', operation: `world_zone_${facts.operation}`, parameters: {
+      zone_type: String(payload.zone_type), triggered,
+    }, source: active.entry.name,
+  }] };
 }
 
 export type TurnCommandDirective =

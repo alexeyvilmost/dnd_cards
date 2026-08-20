@@ -981,7 +981,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "stabilize", "weapon_enchantment", "remote_manipulator", "communication_link", "world_interaction", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "stabilize", "weapon_enchantment", "remote_manipulator", "communication_link", "world_interaction", "illusion", "temporary_consumable", "world_entity", "information_access", "information_reveal", "world_zone", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -1176,6 +1176,77 @@
             "properties": {
               "operation": { "type": "string", "minLength": 1 },
               "parameters": { "type": "object" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "illusion" } } },
+          "then": {
+            "required": ["form", "physical_interaction_reveals", "duration"],
+            "properties": {
+              "form": { "type": "string", "minLength": 1 },
+              "physical_interaction_reveals": { "type": "boolean" },
+              "investigation_dc": { "$ref": "#/$defs/formula" },
+              "control": { "type": "object" },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "temporary_consumable" } } },
+          "then": {
+            "required": ["id", "count", "consume_resource", "duration"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "minimum": 1 },
+              "consume_resource": { "enum": ["action", "bonus_action"] },
+              "healing": { "type": "number", "minimum": 0 },
+              "nourishment_days": { "type": "number", "minimum": 0 },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "world_entity" } } },
+          "then": {
+            "required": ["entity_type", "constraints", "duration"],
+            "properties": {
+              "entity_type": { "type": "string", "minLength": 1 },
+              "constraints": { "type": "object" },
+              "command": { "type": "object" },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "information_access" } } },
+          "then": {
+            "required": ["capability", "policy", "duration"],
+            "properties": {
+              "capability": { "type": "string", "minLength": 1 },
+              "policy": { "type": "object" },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "information_reveal" } } },
+          "then": {
+            "required": ["reveal", "fields"],
+            "properties": {
+              "reveal": { "type": "string", "minLength": 1 },
+              "fields": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "world_zone" } } },
+          "then": {
+            "required": ["zone_type", "geometry", "duration"],
+            "properties": {
+              "zone_type": { "type": "string", "minLength": 1 },
+              "geometry": { "type": "object" },
+              "duration": { "$ref": "#/$defs/duration" }
             }
           }
         },
