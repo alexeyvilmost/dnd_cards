@@ -24,6 +24,11 @@ import {
   resolveProtectionReaction,
   type ProtectionTriggerFacts,
 } from '../rules-core/testing/fightingStyleFixtures';
+import {
+  resolveInterceptionReaction,
+  resolveTurnStartGrappleDamage,
+  resolveUnarmedDamageProfile,
+} from '../rules-core/fightingStyleComplexPrimitives';
 
 type Dict = Record<string, unknown>;
 
@@ -325,5 +330,94 @@ export const EXISTING_STYLE_EXPECTED_SCENARIOS = {
     eligible: { eligible: true },
     outOfRange: { eligible: false, reason: 'target_out_of_range' },
     accepted: { status: 'accepted', reactionSpent: true },
+  },
+} as const;
+
+export function evaluateComplexMiniMvpFightingStyleScenarios(
+  styles: ReadonlyMap<string, Dict>,
+) {
+  const interception = requiredStyle(styles, 'fs_interception');
+  const unarmed = requiredStyle(styles, 'fs_unarmed');
+  const interceptionFacts = {
+    interceptorActorId: 'fighter',
+    attackerActorId: 'goblin',
+    targetActorId: 'wizard',
+    attackHit: true,
+    interceptorCanSeeAttacker: true,
+    interceptorDistanceToTargetFt: 5,
+    interceptorHoldingShieldOrSimpleOrMartialWeapon: true,
+    interceptorReactionAvailable: true,
+    proficiencyBonus: 2,
+    incomingDamage: 9,
+  };
+  return {
+    unarmed: {
+      armed: resolveUnarmedDamageProfile([unarmed], { holdingWeaponOrShield: true }),
+      emptyHands: resolveUnarmedDamageProfile([unarmed], { holdingWeaponOrShield: false }),
+      grappleDamage: resolveTurnStartGrappleDamage({
+        passives: [unarmed],
+        sourceActorId: 'fighter',
+        selectedCapabilityId: 'fighting_style.unarmed.turn_start_grapple_damage',
+        selectedTargetActorId: 'goblin',
+        grapples: [{ grapplerActorId: 'fighter', targetActorId: 'goblin' }],
+        rng: () => 0.999,
+      }),
+      invalidGrappleTarget: resolveTurnStartGrappleDamage({
+        passives: [unarmed],
+        sourceActorId: 'fighter',
+        selectedCapabilityId: 'fighting_style.unarmed.turn_start_grapple_damage',
+        selectedTargetActorId: 'wolf',
+        grapples: [{ grapplerActorId: 'fighter', targetActorId: 'goblin' }],
+        rng: () => 0.999,
+      }),
+    },
+    interception: {
+      resolved: resolveInterceptionReaction({
+        mechanics: interception, facts: interceptionFacts, decision: 'use', rng: () => 0,
+      }),
+      outOfRange: resolveInterceptionReaction({
+        mechanics: interception,
+        facts: { ...interceptionFacts, interceptorDistanceToTargetFt: 10 },
+        decision: 'use',
+        rng: () => 0,
+      }),
+      noEquipment: resolveInterceptionReaction({
+        mechanics: interception,
+        facts: { ...interceptionFacts, interceptorHoldingShieldOrSimpleOrMartialWeapon: false },
+        decision: 'use',
+        rng: () => 0,
+      }),
+    },
+  };
+}
+
+export const COMPLEX_STYLE_EXPECTED_SCENARIOS = {
+  unarmed: {
+    armed: {
+      dice: '1d6', ability: 'str', damageType: 'bludgeoning',
+      source: 'Боевой стиль: Сражение без оружия',
+    },
+    emptyHands: {
+      dice: '1d8', ability: 'str', damageType: 'bludgeoning',
+      source: 'Боевой стиль: Сражение без оружия',
+    },
+    grappleDamage: {
+      status: 'resolved',
+      capabilityId: 'fighting_style.unarmed.turn_start_grapple_damage',
+      targetActorId: 'goblin', amount: 4, damageType: 'bludgeoning', dice: '1d4', values: [4],
+      source: 'Боевой стиль: Сражение без оружия',
+    },
+    invalidGrappleTarget: { status: 'invalid_target' },
+  },
+  interception: {
+    resolved: {
+      status: 'resolved', capabilityId: 'fighting_style.interception.reaction',
+      reactionSpent: true, rolledReduction: 3, appliedReduction: 3,
+      damageAfter: 6, diceValues: [1],
+    },
+    outOfRange: { status: 'rejected', reason: 'target_out_of_range', reactionSpent: false },
+    noEquipment: {
+      status: 'rejected', reason: 'equipment_requirement_failed', reactionSpent: false,
+    },
   },
 } as const;

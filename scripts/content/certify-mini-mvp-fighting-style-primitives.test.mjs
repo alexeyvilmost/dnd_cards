@@ -44,7 +44,7 @@ function fixture() {
   return { catalogs, report };
 }
 
-test('prepares exactly eight locked effects and eight fully covered Fighting Style roots', () => {
+test('prepares exactly ten locked effects and ten fully covered Fighting Style roots', () => {
   const { catalogs, report } = fixture();
   const releaseEvidence = {
     sourceCommit: SOURCE_COMMIT,
@@ -61,9 +61,9 @@ test('prepares exactly eight locked effects and eight fully covered Fighting Sty
     certifiedAt: CERTIFIED_AT,
     releaseEvidence,
   });
-  assert.equal(records.length, 16);
-  assert.equal(records.filter((record) => record.entityType === 'effect').length, 8);
-  assert.equal(records.filter((record) => record.support.mechanics_locked).length, 8);
+  assert.equal(records.length, 20);
+  assert.equal(records.filter((record) => record.entityType === 'effect').length, 10);
+  assert.equal(records.filter((record) => record.support.mechanics_locked).length, 10);
   for (const record of records) {
     assert.equal(record.support.certification_version, 'mini-mvp-l1-v1');
     assert.deepEqual(record.support.test_coverage, {
@@ -74,8 +74,8 @@ test('prepares exactly eight locked effects and eight fully covered Fighting Sty
     assert.deepEqual(record.support.limitations, []);
   }
   const batch = buildFightingStylePrimitiveCertificationBatch(records, 'test-operation');
-  assert.equal(batch.expected_count, 16);
-  assert.equal(batch.entries.length, 16);
+  assert.equal(batch.expected_count, 20);
+  assert.equal(batch.entries.length, 20);
   assert.match(batch.plan_hash, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(batch.operation_id, 'mini-mvp-fighting-styles:test-operation');
 });

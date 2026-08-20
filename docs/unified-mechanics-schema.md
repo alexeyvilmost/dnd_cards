@@ -292,6 +292,16 @@
 // Модификатор (ядро пассивных эффектов и баффов) — см. §6.6
 { "kind": "modifier", ... }
 
+// Профиль урона Безоружного удара: системное действие остаётся общим,
+// а источник данных заменяет только формулу его урона.
+{ "kind": "unarmed_damage_profile", "dice": "1d6", "empty_hands_dice": "1d8",
+  "ability": "str", "damage_type": "bludgeoning" }
+
+// Добровольный урон в начале хода по одной сохраняемой grapple-связи.
+{ "kind": "turn_start_grapple_damage",
+  "capability_id": "fighting_style.unarmed.turn_start_grapple_damage",
+  "selection": "one_creature_grappled_by_self", "dice": "1d4", "damage_type": "bludgeoning" }
+
 // Перемещение
 { "kind": "movement", "value": "push", "distance": 10 }     // push|pull|teleport|extra_speed|knock_prone
 

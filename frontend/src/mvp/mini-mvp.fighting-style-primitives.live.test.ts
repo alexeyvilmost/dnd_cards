@@ -1,9 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import reviewedDefinitions from '../../../scripts/content/data/mini-mvp-fighting-style-primitives.v1.json';
 import existingDefinitions from '../../../scripts/content/data/mini-mvp-existing-fighting-styles.v1.json';
+import complexDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
 import { API_BASE_URL } from '../api/client';
 import {
+  COMPLEX_STYLE_EXPECTED_SCENARIOS,
   EXISTING_STYLE_EXPECTED_SCENARIOS,
+  evaluateComplexMiniMvpFightingStyleScenarios,
   evaluateExistingMiniMvpFightingStyleScenarios,
   evaluateMiniMvpFightingStylePrimitiveScenarios,
 } from '../testing/miniMvpFightingStylePrimitiveScenarios';
@@ -11,7 +14,7 @@ import type { PassiveEffect } from '../types';
 import { readLiveJson } from './liveJsonRead';
 
 type Dict = Record<string, unknown>;
-const allDefinitions = [...reviewedDefinitions, ...existingDefinitions];
+const allDefinitions = [...reviewedDefinitions, ...existingDefinitions, ...complexDefinitions];
 
 async function fetchReviewedEffects(): Promise<Map<string, PassiveEffect>> {
   const body = await readLiveJson<Record<string, unknown>>(
@@ -43,6 +46,9 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: Fighting Sty
     for (const reviewed of existingDefinitions) {
       expect(effects.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
     }
+    for (const reviewed of complexDefinitions) {
+      expect(effects.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
+    }
 
     const actual = evaluateMiniMvpFightingStylePrimitiveScenarios(new Map(
       [...effects].map(([cardNumber, effect]) => [cardNumber, effect.mechanics as Dict]),
@@ -72,5 +78,8 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: Fighting Sty
     expect(evaluateExistingMiniMvpFightingStyleScenarios(new Map(
       [...effects].map(([cardNumber, effect]) => [cardNumber, effect.mechanics as Dict]),
     ))).toEqual(EXISTING_STYLE_EXPECTED_SCENARIOS);
+    expect(evaluateComplexMiniMvpFightingStyleScenarios(new Map(
+      [...effects].map(([cardNumber, effect]) => [cardNumber, effect.mechanics as Dict]),
+    ))).toEqual(COMPLEX_STYLE_EXPECTED_SCENARIOS);
   });
 });

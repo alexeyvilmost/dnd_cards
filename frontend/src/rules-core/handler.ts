@@ -144,6 +144,10 @@ import {
   SYSTEM_ACTION_IDS,
 } from './systemActions';
 import {
+  resolveTurnStartGrappleDamage,
+  resolveUnarmedDamageProfile,
+} from './fightingStyleComplexPrimitives';
+import {
   lightWeaponExtraAttackDamageAbility,
   lightWeaponExtraAttackEligibility,
   lightWeaponExtraAttackUseKey,
@@ -805,9 +809,37 @@ const CORE_UNARMED_DAMAGE = systemActionAsRuleDefinition(SYSTEM_ACTION_IDS.unarm
     attack_kind: 'unarmed',
     resolution: 'attack_roll',
     vs: 'ac',
-    on_hit: [{ ability: 'str', dice: '1', kind: 'damage', type: 'bludgeoning' }],
+    on_hit: [{ amount: '1 + str', kind: 'damage', type: 'bludgeoning' }],
   }],
 });
+
+function unarmedDamageActionFor(actor: ActorState): RuleActionDefinition {
+  const holdsWeapon = (['main_hand', 'off_hand'] as const).some((slot) => {
+    const cardId = actor.runtime.equipment[slot];
+    return !!cardId && actorCard(actor, cardId)?.type === 'weapon';
+  });
+  const profile = resolveUnarmedDamageProfile(actor.passives ?? [], {
+    holdingWeaponOrShield: holdsWeapon || actorHoldsCanonicalShield(actor),
+  });
+  if (!profile) return CORE_UNARMED_DAMAGE;
+  return {
+    ...CORE_UNARMED_DAMAGE,
+    mechanics: {
+      ...CORE_UNARMED_DAMAGE.mechanics,
+      effects: [{
+        ability: 'str',
+        attack_kind: 'unarmed',
+        resolution: 'attack_roll',
+        vs: 'ac',
+        on_hit: [{
+          amount: `${profile.dice} + ${profile.ability}`,
+          kind: 'damage',
+          type: profile.damageType,
+        }],
+      }],
+    },
+  };
+}
 
 const CORE_STUDY_WORLD_OBJECT_ACTION: RuleActionDefinition = {
   id: 'core.action.study-world-object',
@@ -4134,7 +4166,7 @@ function resolvePendingAttack(
         )
         : null
     : pending.actionId === SYSTEM_ACTION_IDS.unarmedDamage
-      ? CORE_UNARMED_DAMAGE
+      ? unarmedDamageActionFor(sourceForAttack)
       : catalog.getAction(pending.actionId)
         ?? familiarAttackRuleAction(sourceForAttack, pending.actionId);
   const attack = baseAttack && pending.pactBladeProjection
@@ -7199,7 +7231,7 @@ function executeUnarmedStrike(
     ...system.sourceEntityIds.map((id) => `entity:${id}`),
   ];
   const ruleAction = command.option === 'damage'
-    ? CORE_UNARMED_DAMAGE
+    ? unarmedDamageActionFor(source)
     : systemActionAsRuleDefinition(system.id, {
       activation: { mode: 'attack_entry', cost: [] },
     });
@@ -7481,7 +7513,9 @@ function protectionContinuationAction(
           : weaponAttackAction(pending.weaponHand, rangeKind);
     }
     case 'unarmed_damage':
-      return pending.actionId === SYSTEM_ACTION_IDS.unarmedDamage ? CORE_UNARMED_DAMAGE : null;
+      return pending.actionId === SYSTEM_ACTION_IDS.unarmedDamage
+        ? unarmedDamageActionFor(source)
+        : null;
     case 'familiar_attack':
       return familiarAttackRuleAction(source, pending.actionId);
     default:
@@ -9695,6 +9729,51 @@ function executeCommand(
       };
       const result = startTurn(before, turnContext);
       const scene = world.scene as EncounterScene;
+      const turnStartChoices = command.turnStartChoices ?? [];
+      if (turnStartChoices.length > 1) {
+        return rejected(world, 'InvalidDecision', 'Only one start-of-turn grapple-damage target can be selected');
+      }
+      const turnStartChoice = turnStartChoices[0];
+      const grappleDamage = resolveTurnStartGrappleDamage({
+        passives: actor.passives ?? [],
+        sourceActorId: actor.id,
+        selectedCapabilityId: turnStartChoice?.capabilityId,
+        selectedTargetActorId: turnStartChoice?.targetActorId,
+        grapples: Object.values(world.grapples),
+        rng: env.rng,
+      });
+      if (grappleDamage.status === 'invalid_capability'
+        || grappleDamage.status === 'invalid_target'
+        || (grappleDamage.status === 'unavailable' && turnStartChoices.length)) {
+        return rejected(world, 'InvalidDecision', `Invalid start-of-turn Fighting Style choice: ${grappleDamage.status}`);
+      }
+      const grappleDamageEvents: EventInput[] = [];
+      if (grappleDamage.status === 'resolved') {
+        const target = world.actors[grappleDamage.targetActorId];
+        if (!target) return rejected(world, 'ActorNotFound', `Unknown grapple target ${grappleDamage.targetActorId}`);
+        const targetBefore = boundary.runtimes.get(target.id) ?? target.runtime;
+        const incoming = applyIncomingDamage(
+          targetBefore,
+          grappleDamage.amount,
+          actionContext({ ...target, runtime: targetBefore }, env),
+          { damageType: grappleDamage.damageType },
+        );
+        const obligations = [
+          'system:turn-start',
+          `capability:${grappleDamage.capabilityId}`,
+          'system:grapple',
+        ];
+        grappleDamageEvents.push(
+          ...runtimeTransition(actor.id, target.id, targetBefore, incoming.state, 'start_turn', obligations),
+          ...engineTrace(actor.id, [target.id], [
+            {
+              type: 'narrative',
+              text: `${grappleDamage.source}: ${grappleDamage.dice} = ${grappleDamage.amount}`,
+            },
+            ...incoming.events,
+          ], obligations),
+        );
+      }
       const familiarLifecycleEvents: EventInput[] = [];
       if (actor.familiarState) {
         familiarLifecycleEvents.push(familiarStateChangedEvent({
@@ -9759,6 +9838,7 @@ function executeCommand(
         ...boundary.events,
         ...runtimeTransition(actor.id, actor.id, before, result.state, 'start_turn', ['system:turn-start']),
         ...engineTrace(actor.id, [], result.events, ['system:turn-start']),
+        ...grappleDamageEvents,
         ...familiarLifecycleEvents,
         ...protectionLifecycleEvents,
         {

@@ -719,6 +719,8 @@ export interface StartEncounterCommand extends CommandBase {
 
 export interface StartTurnCommand extends CommandBase {
   type: 'StartTurn';
+  /** Optional data-owned start-of-turn capability choices; omission declines them. */
+  turnStartChoices?: Array<{ capabilityId: string; targetActorId: string }>;
 }
 
 export interface EndTurnCommand extends CommandBase {

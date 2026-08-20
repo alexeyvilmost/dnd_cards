@@ -1,0 +1,61 @@
+[
+  {
+    "feat_card_number": "FEAT-0057",
+    "card_number": "fs_interception",
+    "name": "Боевой стиль: Перехват",
+    "mechanics": {
+      "activation": { "cost": [{ "amount": 1, "resource": "reaction" }], "mode": "reaction" },
+      "capabilities": [
+        {
+          "id": "fighting_style.interception.reaction",
+          "reduction": { "bonus": "prof", "dice": "1d10", "minimum_damage": 0 },
+          "requirements": {
+            "attacker_visible": true,
+            "held_equipment": ["shield", "simple_weapon", "martial_weapon"],
+            "interceptor_distance_to_target_ft": { "max": 5 },
+            "target": "not_self"
+          },
+          "trigger": "other_target_hit"
+        }
+      ],
+      "effects": [],
+      "fighting_style": {
+        "capability_id": "fighting_style.interception.reaction",
+        "id": "interception",
+        "mode": "reaction_capability"
+      }
+    }
+  },
+  {
+    "feat_card_number": "FEAT-0058",
+    "card_number": "fs_unarmed",
+    "name": "Боевой стиль: Сражение без оружия",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "ability": "str",
+              "damage_type": "bludgeoning",
+              "dice": "1d6",
+              "empty_hands_dice": "1d8",
+              "kind": "unarmed_damage_profile",
+              "source": "Боевой стиль: Сражение без оружия"
+            },
+            {
+              "capability_id": "fighting_style.unarmed.turn_start_grapple_damage",
+              "damage_type": "bludgeoning",
+              "dice": "1d4",
+              "kind": "turn_start_grapple_damage",
+              "selection": "one_creature_grappled_by_self",
+              "source": "Боевой стиль: Сражение без оружия"
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "unarmed_fighting", "mode": "passive_feature" }
+    }
+  }
+]

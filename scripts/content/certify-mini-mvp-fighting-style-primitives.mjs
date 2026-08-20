@@ -27,12 +27,20 @@ const EXISTING_FIGHTING_STYLE_DEFINITIONS = JSON.parse(readFileSync(new URL(
   './data/mini-mvp-existing-fighting-styles.v1.json',
   import.meta.url,
 ), 'utf8'));
+const COMPLEX_FIGHTING_STYLE_DEFINITIONS = JSON.parse(readFileSync(new URL(
+  './data/mini-mvp-complex-fighting-styles.v1.json',
+  import.meta.url,
+), 'utf8'));
 
 export const FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS = Object.freeze([
   { featCardNumber: 'FEAT-0054', effectCardNumber: 'fs_dueling' },
   { featCardNumber: 'FEAT-0059', effectCardNumber: 'fs_great_weapon' },
   { featCardNumber: 'FEAT-0060', effectCardNumber: 'fs_blind_fighting' },
   { featCardNumber: 'FEAT-0062', effectCardNumber: 'fs_thrown_weapon' },
+  ...COMPLEX_FIGHTING_STYLE_DEFINITIONS.map((definition) => ({
+    featCardNumber: definition.feat_card_number,
+    effectCardNumber: definition.card_number,
+  })),
   ...EXISTING_FIGHTING_STYLE_DEFINITIONS.map((definition) => ({
     featCardNumber: definition.feat_card_number,
     effectCardNumber: definition.card_number,
@@ -67,6 +75,8 @@ export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE = Object.freeze({
     'https://www.dndbeyond.com/sources/dnd/br-2024/feats#GreatWeaponFighting',
     'https://www.dndbeyond.com/sources/dnd/br-2024/feats#BlindFighting',
     'https://www.dndbeyond.com/sources/dnd/br-2024/feats#ThrownWeaponFighting',
+    'https://www.dndbeyond.com/sources/dnd/br-2024/feats#Interception',
+    'https://www.dndbeyond.com/sources/dnd/br-2024/feats#UnarmedFighting',
   ],
   lanes: [
     {
@@ -74,8 +84,10 @@ export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE = Object.freeze({
       evidence: [
         'scripts/content/data/mini-mvp-fighting-style-primitives.v1.json',
         'scripts/content/data/mini-mvp-existing-fighting-styles.v1.json',
+        'scripts/content/data/mini-mvp-complex-fighting-styles.v1.json',
         'frontend/src/rules-core/miniMvpFightingStylePrimitives.test.ts::schema-valid executable definitions',
         'frontend/src/rules-core/miniMvpExistingFightingStyles.test.ts::exact schema-valid locked definitions',
+        'frontend/src/rules-core/miniMvpComplexFightingStyles.test.ts::exact schema-valid complex definitions',
       ],
     },
     {
@@ -83,6 +95,8 @@ export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE = Object.freeze({
       evidence: [
         'frontend/src/rules-core/miniMvpFightingStylePrimitives.test.ts::complete positive and negative scenario matrix',
         'frontend/src/rules-core/miniMvpExistingFightingStyles.test.ts::modifier and Protection Reaction scenario matrix',
+        'frontend/src/rules-core/complexFightingStyles.integration.test.ts::canonical Unarmed Strike and turn-start grapple damage',
+        'frontend/src/rules-core/miniMvpComplexFightingStyles.test.ts::Interception eligibility and reduction matrix',
         'frontend/src/mvp/mini-mvp.fighting-style-primitives.live.test.ts::byte-exact live mechanics and behavior matrix',
       ],
     },
@@ -108,6 +122,9 @@ const RULE_SOURCE_FILES = Object.freeze([
   'frontend/src/engine/modifiers.ts',
   'frontend/src/engine/rollRules.ts',
   'frontend/src/rules-core/fightingStyles.ts',
+  'frontend/src/rules-core/fightingStyleComplexPrimitives.ts',
+  'frontend/src/rules-core/handler.ts',
+  'frontend/src/rules-core/domain.ts',
   'frontend/src/testing/miniMvpFightingStylePrimitiveScenarios.ts',
   'frontend/src/schemas/mechanics.schema.json',
 ]);

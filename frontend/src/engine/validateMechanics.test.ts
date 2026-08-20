@@ -368,7 +368,8 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
     'grant_ability_score', 'grant_sense', 'grant_speed',// D3: применяются резолвером (resolveCharacterRules.ts:253-364)
     'spellcasting_ability',                            // primary build projection + source-scoped persisted choices
     'weapon_mastery',                                   // искусность 2024: резолвер → ruleState.weaponMasteries,
-                                                        // движок гейтит свойство оружия (engine/mastery.ts)
+                                                         // движок гейтит свойство оружия (engine/mastery.ts)
+    'unarmed_damage_profile', 'turn_start_grapple_damage', // каноническая Attack/StartTurn RulesSession
     'choice',                                           // мета-kind (ChoiceResolver / expandChoices)
   ];
   // ЧАСТИЧНО: kind исполняется, но не полностью (чип+нарратив, один путь, лог-only).

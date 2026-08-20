@@ -5,16 +5,23 @@ import { fileURLToPath } from 'node:url';
 import { apiRequest, apiUrl, fetchAll, login } from './api.mjs';
 import { sha256Canonical } from './certification-hash.mjs';
 
-const definitions = JSON.parse(await readFile(new URL(
+const primitiveDefinitions = JSON.parse(await readFile(new URL(
   './data/mini-mvp-fighting-style-primitives.v1.json',
   import.meta.url,
 ), 'utf8'));
+const complexDefinitions = JSON.parse(await readFile(new URL(
+  './data/mini-mvp-complex-fighting-styles.v1.json',
+  import.meta.url,
+), 'utf8'));
+const definitions = [...primitiveDefinitions, ...complexDefinitions];
 
 const PREIMAGE_HASHES = Object.freeze({
   fs_dueling: 'sha256:4f466c9700cebb5cf09fc96380007c8fc8338b0b5dc289257e10e6804256291f',
   fs_great_weapon: 'sha256:2fc033d7179afc20acbbfc522b9ab18b6c895223cdbcd561ad4f290f18ed230d',
   fs_blind_fighting: 'sha256:20e0c47da5379ce8ddd331412d1e5e25eaeae785e1be1b5116a9badd98fb7aa1',
   fs_thrown_weapon: 'sha256:8818befe7a71bc21cfbaf2064d0f026cac43d741b5cfb273115b68fc164cf295',
+  fs_interception: 'sha256:f8357092078d441a4c5abc18852ae32c72f7d8633a032b1b21b1d0155f28feba',
+  fs_unarmed: 'sha256:f582813e3e59584c7250203d325b5271173f689f7a3eea89c81b457f37700e2b',
 });
 
 export const MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES = Object.freeze(

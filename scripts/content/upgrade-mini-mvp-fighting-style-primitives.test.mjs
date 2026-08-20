@@ -6,9 +6,9 @@ import {
   planMiniMvpFightingStylePrimitiveUpgrade,
 } from './upgrade-mini-mvp-fighting-style-primitives.mjs';
 
-test('four narrative Fighting Styles receive reusable executable primitives', () => {
-  assert.equal(MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.length, 4);
-  assert.equal(new Set(MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((item) => item.cardNumber)).size, 4);
+test('all six formerly narrative Fighting Styles receive reusable executable primitives', () => {
+  assert.equal(MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.length, 6);
+  assert.equal(new Set(MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((item) => item.cardNumber)).size, 6);
   for (const patch of MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES) {
     assert.notEqual(patch.expectedBeforeHash, patch.expectedAfterHash, patch.cardNumber);
     assert.doesNotMatch(JSON.stringify(patch.mechanics), /"kind":"narrative"/u);
