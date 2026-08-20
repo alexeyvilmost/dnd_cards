@@ -738,7 +738,7 @@
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
-        "mode": { "enum": ["passive_modifier", "reaction_capability"] },
+        "mode": { "enum": ["passive_modifier", "passive_feature", "reaction_capability"] },
         "capability_id": { "type": "string", "minLength": 1 }
       },
       "allOf": [
@@ -1509,7 +1509,7 @@
             "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "die_bonus", "bonus_die", "explode"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "minimum_die", "die_bonus", "bonus_die", "explode"] },
         "value": { "$ref": "#/$defs/formula" },
         "scope": { "enum": ["self", "target"] },
         "range": { "enum": ["melee", "ranged"] },

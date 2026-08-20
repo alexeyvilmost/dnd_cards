@@ -12,6 +12,7 @@
  *  - on_roll    — сработать payload-ами при натуральном значении (на 15 при атаке → парализовать
  *                 цель): natural + then[].
  * Правила урона (применяет execute.ts resolveDamageAmounts):
+ *  - minimum_die — считать натуральный результат каждой подходящей кости не ниже value.
  *  - die_bonus  — +value к каждой кости заданных граней (+1 к каждой к8): applies_to.die + value.
  *  - explode    — взрывные кости: на натуральном максимуме добросить ещё (Чародейский выброс):
  *                 limit (сколько всего добросов; формула вычисляется вызывающим). Может задаваться
@@ -23,7 +24,7 @@ import { drawDie } from './random';
 type Dict = Record<string, unknown>;
 
 export const D20_RULE_OPS = new Set(['reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die']);
-export const DAMAGE_RULE_OPS = new Set(['die_bonus', 'explode']);
+export const DAMAGE_RULE_OPS = new Set(['minimum_die', 'die_bonus', 'explode']);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
 const num = (v: unknown, d = 0): number => { const n = Number(v); return Number.isFinite(n) ? n : d; };
@@ -117,7 +118,7 @@ export function rollTriggers(rules: Dict[], natural: number): Dict[] {
 /**
  * Применить правила урона к костям формулы (мутирует копию): сначала explode (на натуральном
  * максимуме добросить ещё того же размера, до limit суммарно — учитывая цепные взрывы), затем
- * die_bonus (+value к каждой кости заданных граней, включая добавленные взрывом). Возвращает новый
+ * minimum_die и die_bonus. Возвращает новый
  * массив костей и дельту к сумме.
  */
 export function applyDamageDieRules(
@@ -140,6 +141,18 @@ export function applyDamageDieRules(
       out.push({ sides: d.sides, result: nv });
       delta += nv;
       budget -= 1;
+    }
+  }
+
+  for (const rule of rules) {
+    if (rule.op !== 'minimum_die') continue;
+    const dieSize = num((rule.applies_to as Dict)?.die);
+    const minimum = Math.max(1, Math.floor(num(rule.value ?? rule.minimum, 0)));
+    if (!minimum) continue;
+    for (const die of out) {
+      if (die.discarded || (dieSize && die.sides !== dieSize) || die.result >= minimum) continue;
+      delta += minimum - die.result;
+      die.result = minimum;
     }
   }
 

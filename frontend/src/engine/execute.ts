@@ -161,9 +161,11 @@ const ATTACK_ABILITIES = new Set([...ABILITY_KEYS, 'auto', 'spellcasting']);
 const MODIFIER_OPS = new Set([
   'add', 'set', 'advantage', 'disadvantage', 'reroll', 'multiply', 'upgrade',
   'downgrade', 'auto_fail', 'auto_crit', 'deny', 'set_die', 'crit_range',
-  'outcome', 'on_roll', 'die_bonus', 'bonus_die', 'explode',
+  'outcome', 'on_roll', 'minimum_die', 'die_bonus', 'bonus_die', 'explode',
 ]);
-const NUMERIC_MODIFIER_OPS = new Set(['add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'die_bonus']);
+const NUMERIC_MODIFIER_OPS = new Set([
+  'add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'minimum_die', 'die_bonus',
+]);
 const MOVEMENT_MODES = new Set(['push', 'pull', 'teleport', 'extra_speed', 'double', 'knock_prone', 'move']);
 const RESISTANCE_LEVELS = new Set(['resistance', 'immunity', 'vulnerability']);
 const TARGETING_WARD_INTERACTIONS = new Set(['attack_roll', 'damaging_spell']);
@@ -2342,7 +2344,14 @@ function applyResource(
 }
 
 type DamageInstance = { amount: number; damageType: string; roll?: import('../mvp/contracts').RollLog };
-type AttackDamageQueryFacts = Pick<ModifierQueryFacts, 'attackKind' | 'extraAttackSource'> & {
+type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
+  | 'attackKind'
+  | 'weaponCategory'
+  | 'extraAttackSource'
+  | 'weaponHasThrownProperty'
+  | 'weaponWieldedInTwoHands'
+  | 'otherWeaponEquipped'
+> & {
   /** Ability modifier used for this attack, independent of the weapon's default ability. */
   weaponMod?: number;
 };
@@ -2364,10 +2373,18 @@ function collectDamageModifiers(
   }).modifiers;
 }
 
-/** Правила урона (die_bonus/explode) — глобальные пассивы/эффекты для текущего контекста. */
-function damageRules(ctx: ExecuteContext, state: RuntimeState): Dict[] {
+/** Data-driven die rules for the exact immutable attack/damage-line facts. */
+function damageRules(
+  ctx: ExecuteContext,
+  state: RuntimeState,
+  filter: ModifierQueryFacts,
+  weaponMod?: number,
+): Dict[] {
   return collectModifiers(state, passivesFromCtx(ctx), {
-    roll: 'damage', formulaCtx: formulaCtx(ctx), evalCtx: evalCtxOf(state, ctx),
+    roll: 'damage',
+    filter,
+    formulaCtx: { ...formulaCtx(ctx), ...(weaponMod !== undefined ? { weaponMod } : {}) },
+    evalCtx: evalCtxOf(state, ctx),
   }).rules;
 }
 
@@ -2407,7 +2424,6 @@ function resolveDamageAmounts(
 ): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment, state);
   const declaredDamageType = String(payload.type).trim();
-  const dmgRules = damageRules(ctx, state); // die_bonus/explode (глобальные)
   const explodeLimit = explodeLimitOf(payload, ctx);
   const damageRng = ctx.damageRng ?? ctx.rng;
 
@@ -2422,6 +2438,17 @@ function resolveDamageAmounts(
     const lines = handWeapon.damages;
     const ab = String(payload.ability ?? 'auto');
     return lines.map((line, i) => {
+      const usedAbility = ab === 'auto'
+        ? handWeapon?.ability
+        : (ab !== 'none' && ab !== 'spellcasting' ? (ab as AbilityKey) : undefined);
+      const damageFilter: ModifierQueryFacts = {
+        hand,
+        ...attackFacts,
+        ...(usedAbility ? { ability: usedAbility } : {}),
+        abilityModifierAlreadyIncluded: ab !== 'none',
+        weaponDamageLine: i === 0 ? 'base' : 'extra',
+      };
+      const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
       const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: damageRng });
       // Правила кости (die_bonus/explode) — на кости строки, до модов характеристики/зачарования.
       const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
@@ -2454,18 +2481,9 @@ function resolveDamageAmounts(
           weaponMods.push({ value: handWeapon.damageEnchant, source: 'Зачарование оружия' });
         }
         // C1: модификаторы урона из эффектов (Ярость и т.п.) — на основную строку, отдельными частями.
-        const usedAbility = ab === 'auto'
-          ? handWeapon?.ability
-          : (ab !== 'none' && ab !== 'spellcasting' ? (ab as AbilityKey) : undefined);
         extraMods = [
           ...weaponMods,
-          ...collectDamageModifiers(ctx, state, {
-            hand,
-            ...(usedAbility ? { ability: usedAbility } : {}),
-            attackKind: attackFacts?.attackKind ?? 'weapon',
-            extraAttackSource: attackFacts?.extraAttackSource ?? 'none',
-            abilityModifierAlreadyIncluded: ab !== 'none',
-          }, attackWeaponMod),
+          ...collectDamageModifiers(ctx, state, damageFilter, attackWeaponMod),
         ];
         for (const m of extraMods) total += m.value;
       }
@@ -2492,15 +2510,21 @@ function resolveDamageAmounts(
   const flat = payload.amount != null ? String(payload.amount) : payload.dice != null ? String(payload.dice) : null;
   if (flat != null) {
     const scaled = withScaling(flat, payload, ctx);
+    const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
+      ? (payload.ability as AbilityKey) : undefined;
+    const damageFilter: ModifierQueryFacts = {
+      ...attackFacts,
+      ...(usedAbility ? { ability: usedAbility } : {}),
+      weaponDamageLine: 'none',
+    };
+    const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
     const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: damageRng });
     const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
     // если задан; иначе ability в фильтр не кладём (эффект без ability-фильтра всё равно применится).
-    const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
-      ? (payload.ability as AbilityKey) : undefined;
     const extraMods = payload.suppress_damage_modifiers === true
       ? []
-      : collectDamageModifiers(ctx, state, usedAbility ? { ability: usedAbility } : {});
+      : collectDamageModifiers(ctx, state, damageFilter, attackFacts?.weaponMod);
     let total = fr.total + ruled.delta;
     for (const m of extraMods) total += m.value;
     return [{
@@ -3161,6 +3185,20 @@ function runAttackRoll(
         effect, hand, ctx.character, state.equipment,
       ),
       weaponMod: attackWeaponMod,
+      ...(attackFacts.attackKind === 'weapon' && currentWeapon ? {
+        weaponCategory: attackRange ?? currentWeapon.defaultAttackMode,
+        weaponHasThrownProperty: currentWeapon.properties.includes('thrown'),
+        weaponWieldedInTwoHands: currentWeapon.properties.includes('two_handed')
+          || (hand === 'main'
+            && currentWeapon.properties.includes('versatile')
+            && !state.equipment.off_hand),
+        otherWeaponEquipped: Boolean(weaponContext(
+          ctx.character,
+          hand === 'main' ? 'off' : 'main',
+          state.equipment,
+          state,
+        )),
+      } : {}),
     };
     const damageEventStart = events.length;
     if (Array.isArray(payloads)) {

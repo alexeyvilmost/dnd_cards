@@ -102,6 +102,18 @@ describe('D20-правила (roll.ts)', () => {
 });
 
 describe('Правила урона (applyDamageDieRules)', () => {
+  it('minimum_die — поднимает только подходящие натуральные результаты до минимума', () => {
+    const dice: DieRoll[] = [
+      { sides: 6, result: 1 }, { sides: 6, result: 2 }, { sides: 6, result: 5 },
+      { sides: 8, result: 1 },
+    ];
+    const { dice: out, delta } = applyDamageDieRules(dice, [{
+      op: 'minimum_die', applies_to: { die: 6 }, value: 3,
+    }], { rng: seq([]) });
+    expect(out.map((die) => die.result)).toEqual([3, 3, 5, 1]);
+    expect(delta).toBe(3);
+  });
+
   it('die_bonus — +1 к каждой к8 (к6 не трогает)', () => {
     const dice: DieRoll[] = [{ sides: 8, result: 5 }, { sides: 8, result: 3 }, { sides: 6, result: 6 }];
     const { dice: out, delta } = applyDamageDieRules(dice, [{ op: 'die_bonus', applies_to: { die: 8 }, value: 1 }], { rng: seq([]) });

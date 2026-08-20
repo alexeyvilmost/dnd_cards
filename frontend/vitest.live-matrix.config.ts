@@ -14,6 +14,7 @@ export default defineConfig({
       'src/mvp/mini-mvp.utility-level1-spells.live.test.ts',
       'src/mvp/mini-mvp.forge-roots.live.test.ts',
       'src/mvp/mini-mvp.fighting-styles-forge.live.test.ts',
+      'src/mvp/mini-mvp.fighting-style-primitives.live.test.ts',
     ],
     setupFiles: ['src/mvp/liveReadRetry.setup.ts'],
     fileParallelism: false,

@@ -31,6 +31,11 @@ export interface ModifierQueryFacts {
   wearingArmor?: boolean;
   extraAttackSource?: 'light_property' | 'other' | 'none';
   abilityModifierAlreadyIncluded?: boolean;
+  /** Immutable weapon/profile facts derived by the engine, never accepted from UI input. */
+  weaponHasThrownProperty?: boolean;
+  weaponWieldedInTwoHands?: boolean;
+  otherWeaponEquipped?: boolean;
+  weaponDamageLine?: 'base' | 'extra' | 'none';
   /** Stable defender identity for target-locked effects such as Vex. */
   targetActorId?: string;
 }
@@ -84,7 +89,7 @@ export interface CollectResult {
   autoFail: boolean;
   /** op:'deny' — запрошенная способность (action/bonus_action/reaction/concentration) запрещена (Недееспособен). */
   denied: boolean;
-  /** Правила бросков (reroll/set_die/crit_range/outcome/on_roll/die_bonus/explode), см. engine/rollRules.ts. */
+  /** Правила бросков (reroll/set_die/crit_range/outcome/on_roll/minimum_die/die_bonus/explode), см. engine/rollRules.ts. */
   rules: Dict[];
 }
 
@@ -122,7 +127,7 @@ function collectFromPayload(
     : undefined;
   if (!matchesWhen(payload.when as Dict[] | undefined, whenCtx)) return;
 
-  // Правило броска (reroll/set_die/crit_range/outcome/on_roll/die_bonus/explode) — не числовой
+  // Правило броска (reroll/set_die/crit_range/outcome/on_roll/minimum_die/die_bonus/explode) — не числовой
   // модификатор: складываем сырой payload, интерпретирует roll.ts / расчёт урона.
   if (ROLL_RULE_OPS.has(String(payload.op ?? ''))) { out.rules.push(payload); return; }
 

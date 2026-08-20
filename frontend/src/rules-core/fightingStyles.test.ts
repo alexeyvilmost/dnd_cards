@@ -168,6 +168,27 @@ describe('micro-MVP D&D 2024 Fighting Styles', () => {
     }
   });
 
+  it('binds a generic passive feature without pretending it is a roll modifier', () => {
+    expect(bindDeclarativeFightingStyleProjection({
+      featEntityId: 'feat-blind',
+      featCardNumber: 'FEAT-blind',
+      relatedEffectEntityIds: ['effect-blind'],
+      effectEntityId: 'effect-blind',
+      effectCardNumber: 'fs_blind',
+      effectMechanics: {
+        activation: { mode: 'passive' },
+        effects: [{ resolution: 'auto', result: [{
+          kind: 'grant_sense', sense: 'blindsight', range: 10,
+        }] }],
+        fighting_style: { id: 'blind_fighting', mode: 'passive_feature' },
+      },
+    })).toEqual({
+      styleId: 'blind_fighting',
+      mode: 'passive_feature',
+      sourceEntityIds: ['feat-blind', 'FEAT-blind', 'effect-blind', 'fs_blind'],
+    });
+  });
+
   it('pins every style to the exact feat and effect entities in the production snapshot', () => {
     expect(MICRO_MVP_FIGHTING_STYLE_ENTITIES).toEqual({
       archery: {

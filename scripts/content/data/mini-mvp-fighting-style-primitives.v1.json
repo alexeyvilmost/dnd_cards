@@ -1,0 +1,108 @@
+[
+  {
+    "card_number": "fs_dueling",
+    "name": "Боевой стиль: Дуэлянт",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "modifier",
+              "applies_to": {
+                "roll": "damage",
+                "filter": {
+                  "attackKind": "weapon",
+                  "weaponCategory": "melee",
+                  "weaponWieldedInTwoHands": false,
+                  "otherWeaponEquipped": false,
+                  "weaponDamageLine": "base"
+                }
+              },
+              "op": "add",
+              "value": "+2",
+              "source": "Боевой стиль: Дуэлянт"
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "dueling", "mode": "passive_modifier" }
+    }
+  },
+  {
+    "card_number": "fs_great_weapon",
+    "name": "Боевой стиль: Сражение большим оружием",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "modifier",
+              "applies_to": {
+                "roll": "damage",
+                "filter": {
+                  "attackKind": "weapon",
+                  "weaponCategory": "melee",
+                  "weaponWieldedInTwoHands": true
+                }
+              },
+              "op": "minimum_die",
+              "value": 3,
+              "source": "Боевой стиль: Сражение большим оружием"
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "great_weapon_fighting", "mode": "passive_modifier" }
+    }
+  },
+  {
+    "card_number": "fs_blind_fighting",
+    "name": "Боевой стиль: Сражение вслепую",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            { "kind": "grant_sense", "sense": "blindsight", "range": 10 }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "blind_fighting", "mode": "passive_feature" }
+    }
+  },
+  {
+    "card_number": "fs_thrown_weapon",
+    "name": "Боевой стиль: Сражение метательным оружием",
+    "mechanics": {
+      "activation": { "mode": "passive" },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "modifier",
+              "applies_to": {
+                "roll": "damage",
+                "filter": {
+                  "attackKind": "weapon",
+                  "weaponCategory": "ranged",
+                  "weaponHasThrownProperty": true,
+                  "weaponDamageLine": "base"
+                }
+              },
+              "op": "add",
+              "value": "+2",
+              "source": "Боевой стиль: Сражение метательным оружием"
+            }
+          ]
+        }
+      ],
+      "fighting_style": { "id": "thrown_weapon_fighting", "mode": "passive_modifier" }
+    }
+  }
+]

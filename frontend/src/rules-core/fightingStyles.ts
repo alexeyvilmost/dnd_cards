@@ -8,7 +8,7 @@ export interface FightingStyleEntityReference {
 
 export interface DeclarativeFightingStyleProjectionBinding {
   styleId: string;
-  mode: 'passive_modifier' | 'reaction_capability';
+  mode: 'passive_modifier' | 'passive_feature' | 'reaction_capability';
   sourceEntityIds: readonly [string, ...string[]];
   capabilityId?: string;
 }
@@ -38,18 +38,26 @@ export function bindDeclarativeFightingStyleProjection(
   if (!declaration) return null;
   const styleId = typeof declaration?.id === 'string' ? declaration.id.trim() : '';
   const mode = declaration?.mode;
-  if (!styleId || (mode !== 'passive_modifier' && mode !== 'reaction_capability')) return null;
-  if (mode === 'passive_modifier') {
+  if (!styleId || (mode !== 'passive_modifier'
+    && mode !== 'passive_feature'
+    && mode !== 'reaction_capability')) return null;
+  if (mode === 'passive_modifier' || mode === 'passive_feature') {
     const interactions = Array.isArray(mechanics.effects)
       ? mechanics.effects as Record<string, unknown>[]
       : [];
-    const hasModifier = interactions.some((interaction) => (
+    const resultPayloads = interactions.flatMap((interaction) => (
       Array.isArray(interaction.result)
-        && (interaction.result as Record<string, unknown>[]).some((payload) => (
-          payload.kind === 'modifier'
-        ))
+        ? interaction.result as Record<string, unknown>[]
+        : []
     ));
-    if (activation?.mode !== 'passive' || !hasModifier || declaration?.capability_id !== undefined) {
+    const hasExecutablePayload = mode === 'passive_modifier'
+      ? resultPayloads.some((payload) => payload.kind === 'modifier')
+      : resultPayloads.some((payload) => (
+        typeof payload.kind === 'string' && payload.kind !== 'narrative'
+      ));
+    if (activation?.mode !== 'passive'
+      || !hasExecutablePayload
+      || declaration?.capability_id !== undefined) {
       return null;
     }
     return {
