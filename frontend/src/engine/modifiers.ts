@@ -188,7 +188,14 @@ export function collectModifiers(
   for (const effect of state.activeEffects) {
     const src = effect.name || 'эффект';
     for (const payload of payloadsOf(effect.mechanics)) {
-      collectFromPayload(payload, opts, src, out);
+      collectFromPayload(payload, {
+        ...opts,
+        ...(opts.evalCtx ? { evalCtx: {
+          ...(opts.evalCtx ?? {}),
+          conditionSourceId: effect.sourceId,
+          conditionOwnerId: effect.ownerId ?? opts.evalCtx?.rollerActorId,
+        } } : {}),
+      }, src, out);
       // Состояние (kind:'condition') влияет на броски по правилам 2024.
       if (payload.kind === 'condition' && payload.value) {
         // Condition-owned `when` predicates are always evaluated fail-closed,

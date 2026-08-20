@@ -5,6 +5,7 @@ type Dict = Record<string, unknown>;
 
 const PAYLOAD_KINDS = new Set([
   'modifier', 'damage', 'damage_rider', 'healing', 'resource', 'condition', 'movement',
+  'triggered_effect',
   'narrative', 'temp_hp', 'set_value', 'boon', 'transform', 'reroll',
   'grant_action', 'resistance', 'variable', 'add_item',
   'condition_immunity',

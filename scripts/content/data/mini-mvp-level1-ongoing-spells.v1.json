@@ -1,0 +1,158 @@
+[
+  {
+    "card_number": "SPELL-0179",
+    "name": "Вызов на дуэль",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "bonus_action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "save",
+          "who": "target",
+          "ability": "wis",
+          "dc": "8 + prof + spellcasting",
+          "on_fail": [
+            {
+              "kind": "modifier",
+              "applies_to": { "roll": "attack" },
+              "op": "disadvantage",
+              "when": [{ "kind": "roll_target_is_not_condition_source" }],
+              "duration": { "type": "rounds", "amount": 10, "concentration": true },
+              "stack_id": "spell:compelled-duel",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "Запрет добровольно уходить дальше 30 футов и досрочные условия завершения пока требуют авторитетного адаптера геометрии и союзников."
+            }
+          ],
+          "on_success": []
+        }
+      ],
+      "interaction": { "intent": "harmful" },
+      "spell_class_list_ids": ["CLASS-paladin"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 30,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["enemy", "neutral"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0181",
+    "name": "Героизм",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "condition_immunity",
+              "condition": "frightened",
+              "duration": { "type": "rounds", "amount": 10, "concentration": true },
+              "stack_id": "spell:heroism:frightened-immunity",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "triggered_effect",
+              "event": "turn_start",
+              "formula_bindings": { "heroism_temp_hp": "spellcasting" },
+              "effects": [
+                {
+                  "resolution": "auto",
+                  "result": [{ "kind": "temp_hp", "amount": "heroism_temp_hp" }]
+                }
+              ],
+              "duration": { "type": "rounds", "amount": 10, "concentration": true },
+              "stack_id": "spell:heroism:turn-start-temp-hp",
+              "stack_type": "overwrite"
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-paladin"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 5,
+        "requires_touch": true,
+        "requires_line_of_sight": false,
+        "allowed_relations": ["self", "ally"]
+      }
+    }
+  },
+  {
+    "card_number": "faerie_fire",
+    "name": "Огонь фей",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "save",
+          "who": "target",
+          "ability": "dex",
+          "dc": "8 + prof + spellcasting",
+          "on_fail": [
+            {
+              "kind": "modifier",
+              "scope": "target",
+              "applies_to": { "roll": "attack" },
+              "op": "advantage",
+              "when": [
+                { "kind": "observer_can_see_condition_owner", "observer": "roller", "value": true }
+              ],
+              "duration": { "type": "rounds", "amount": 10, "concentration": true },
+              "stack_id": "spell:faerie-fire",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "Затронутая цель излучает тусклый свет в радиусе 10 футов и не может получать преимущества от состояния «Невидимый»; свет и мировые объекты пока учитываются адаптером сцены."
+            }
+          ],
+          "on_success": []
+        }
+      ],
+      "interaction": { "intent": "harmful" },
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-druid"],
+      "targeting": {
+        "shape": "area",
+        "domain": "mixed",
+        "actor_targets": true,
+        "min_targets": 0,
+        "max_targets": 64,
+        "range_ft": 60,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["self", "ally", "enemy", "neutral"],
+        "area": { "kind": "cube", "size_ft": 20 }
+      }
+    }
+  }
+]

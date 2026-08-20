@@ -144,6 +144,7 @@ const EXECUTABLE_RESOLUTIONS = new Set(['auto', 'attack_roll', 'save', 'ability_
 const EXECUTABLE_PAYLOAD_KINDS = new Set([
   'damage', 'damage_rider', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
   'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
+  'condition_immunity', 'triggered_effect',
   'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
 ]);
@@ -325,6 +326,33 @@ function explicitContestSkills(effect: Dict, path: string, ctx: ExecuteContext):
     }
   }
   return skills;
+}
+
+function assertDeterministicFiniteFormula(
+  value: unknown,
+  path: string,
+  ctx: ExecuteContext,
+): number {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    throw mechanicsError('INVALID_FORMULA', path, 'expected a formula string or number');
+  }
+  try {
+    const result = evaluate(value, {
+      ...preflightFormulaCtx(ctx),
+      rng: () => { throw new FormulaError('formula binding cannot contain a random die'); },
+    });
+    if (typeof result !== 'number' || !Number.isFinite(result)) {
+      throw new FormulaError('formula binding must resolve to a finite number');
+    }
+    return result;
+  } catch (error) {
+    throw mechanicsError(
+      'INVALID_FORMULA',
+      path,
+      error instanceof Error ? error.message : String(error),
+      error,
+    );
+  }
 }
 
 /** Activation costs must be deterministic: a price may use actor variables,
@@ -608,6 +636,69 @@ function preflightPayload(
           'source_actor_only is valid only for a target-scoped rider',
         );
       }
+      break;
+    }
+    case 'condition_immunity': {
+      if (typeof value.condition !== 'string' || !value.condition.trim()) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          `${path}.condition`,
+          'condition_immunity requires a non-empty condition id',
+        );
+      }
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'condition_immunity requires duration');
+      }
+      break;
+    }
+    case 'triggered_effect': {
+      const event = typeof value.event === 'string' ? value.event : '';
+      if (!EMITTED_EVENTS.includes(event as (typeof EMITTED_EVENTS)[number])) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          `${path}.event`,
+          `triggered_effect requires an emitted engine event, received «${event || '?'}»`,
+        );
+      }
+      if (!Array.isArray(value.effects) || value.effects.length === 0) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.effects`, 'triggered_effect requires effects');
+      }
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'triggered_effect requires duration');
+      }
+      const bindings = value.formula_bindings;
+      const variables: Record<string, number | { sides: number; count: number }> = {
+        ...(ctx.character.variables ?? {}),
+      };
+      if (bindings !== undefined) {
+        if (!isDict(bindings) || Object.keys(bindings).length === 0) {
+          throw mechanicsError(
+            'INVALID_PAYLOAD', `${path}.formula_bindings`, 'formula_bindings must be a non-empty object',
+          );
+        }
+        for (const [key, expression] of Object.entries(bindings)) {
+          if (!/^[a-z][a-z0-9_]*$/u.test(key)) {
+            throw mechanicsError(
+              'INVALID_PAYLOAD', `${path}.formula_bindings.${key}`, 'binding id must be a stable lowercase slug',
+            );
+          }
+          variables[key] = assertDeterministicFiniteFormula(
+            expression,
+            `${path}.formula_bindings.${key}`,
+            ctx,
+          );
+        }
+      }
+      const nestedContext: ExecuteContext = {
+        ...ctx,
+        character: { ...ctx.character, variables },
+      };
+      value.effects.forEach((effect, index) => preflightEffect(
+        effect,
+        `${path}.effects[${index}]`,
+        state,
+        nestedContext,
+      ));
       break;
     }
     case 'healing':
@@ -981,7 +1072,7 @@ export function projectedAgainst(
         consider(rule as unknown as Dict, String(mech.value), e.sourceId);
       }
     } else {
-      for (const p of payloadsOf(mech)) if (p.kind === 'modifier') consider(p, e.name);
+      for (const p of payloadsOf(mech)) if (p.kind === 'modifier') consider(p, e.name, e.sourceId);
     }
   }
   return out;
@@ -1272,6 +1363,8 @@ function applyModifierPayload(
     roundsLeft, // C6: раньше не выставлялся — модификатор с duration.rounds не истекал
     expiry,
     source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
     ...(relative ?? {}),
   };
   events.push({ type: 'effect_applied', name: source });
@@ -1302,6 +1395,86 @@ function applyDamageRiderPayload(
   };
   events.push({ type: 'effect_applied', name: source });
   return stackApply(state, entry, payload);
+}
+
+/** Persist a generic condition immunity granted by an action or spell. */
+function applyConditionImmunityPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'immunity', state.activeEffects.length),
+    name: source,
+    mechanics: payload,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
+function resolveTriggeredFormulaBindings(
+  payload: Dict,
+  ctx: ExecuteContext,
+): Record<string, number> {
+  if (!isDict(payload.formula_bindings)) return {};
+  return Object.fromEntries(Object.entries(payload.formula_bindings).map(([key, expression]) => {
+    const value = evaluate(expression as string | number, {
+      ...formulaCtx(ctx),
+      rng: () => { throw new FormulaError('triggered_effect formula bindings cannot roll dice'); },
+    });
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new FormulaError(`triggered_effect binding «${key}» must resolve to a finite number`);
+    }
+    return [key, value];
+  }));
+}
+
+/** Convert a payload declaration into the ordinary triggered-listener shape
+ * already consumed by the event bus. Formula bindings are frozen at apply
+ * time, so an effect on another actor retains the caster-owned value. */
+function applyTriggeredEffectPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const formulaVariables = resolveTriggeredFormulaBindings(payload, ctx);
+  const mechanics: Dict = {
+    activation: {
+      mode: 'triggered',
+      trigger: { event: payload.event },
+    },
+    effects: payload.effects,
+    duration: payload.duration,
+    ...(Object.keys(formulaVariables).length ? { formula_variables: formulaVariables } : {}),
+    ...(Array.isArray(payload.end_triggers) ? { end_triggers: payload.end_triggers } : {}),
+    ...(payload.stack_id !== undefined ? { stack_id: payload.stack_id } : {}),
+    ...(payload.stack_type !== undefined ? { stack_type: payload.stack_type } : {}),
+  };
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'trigger', state.activeEffects.length),
+    name: source,
+    mechanics,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, mechanics);
 }
 
 /** Runtime sense grants such as Dwarf Stonecunning are persisted effects. */
@@ -1605,8 +1778,10 @@ function applyCondition(
   );
   const conditionOwnedImmunities = state.activeEffects.flatMap((entry) => {
     const mechanics = entry.mechanics as Dict;
-    if (mechanics.kind !== 'condition' || !mechanics.value) return [];
-    return conditionRuntimePayloads(String(mechanics.value)).flatMap((candidate) => (
+    const candidates = mechanics.kind === 'condition' && mechanics.value
+      ? conditionRuntimePayloads(String(mechanics.value))
+      : payloadsOf(mechanics);
+    return candidates.flatMap((candidate) => (
       candidate.kind === 'condition_immunity' && candidate.condition
         ? [{
           condition: String(candidate.condition),
@@ -2121,6 +2296,22 @@ function applyPayloads(
         whoTarget ? ctx.target?.id : ctx.selfId,
       )); break;
       case 'damage_rider': route((s) => applyDamageRiderPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'condition_immunity': route((s) => applyConditionImmunityPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'triggered_effect': route((s) => applyTriggeredEffectPayload(
         s,
         p,
         source,
@@ -2932,10 +3123,22 @@ export function emitEvent(
     const effs = (lm.mechanics.effects as Dict[]) ?? [];
     if (effs.length) {
       events.push(narrativeEvent(`Сработало: ${lm.name}`));
+      const listenerCtx: ExecuteContext = lm.formulaVariables
+        ? {
+          ...ctx,
+          character: {
+            ...ctx.character,
+            variables: {
+              ...(ctx.character.variables ?? {}),
+              ...lm.formulaVariables,
+            },
+          },
+        }
+        : ctx;
       next = runMechanicEffects(
         effs,
         next,
-        ctx,
+        listenerCtx,
         events,
         lm.name,
         pending,

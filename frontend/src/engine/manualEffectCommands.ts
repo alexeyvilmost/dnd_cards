@@ -183,8 +183,10 @@ function validateImmunities(value: unknown): ConditionImmunityContext[] {
 function activeConditionImmunities(state: RuntimeState): ConditionImmunityContext[] {
   return state.activeEffects.flatMap((entry) => {
     const condition = conditionValueOf(entry, `runtime.activeEffects[${entry.id}]`);
-    if (!condition) return [];
-    return conditionRuntimePayloads(condition).flatMap((payload, payloadIndex) => {
+    const payloads = condition
+      ? conditionRuntimePayloads(condition)
+      : payloadsOf(entry.mechanics as Record<string, unknown>);
+    return payloads.flatMap((payload, payloadIndex) => {
       if (payload.kind !== 'condition_immunity') return [];
       const immuneTo = requiredString(
         payload.condition,

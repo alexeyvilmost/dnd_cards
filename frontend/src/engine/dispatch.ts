@@ -40,6 +40,8 @@ export interface ListenerMatch {
   /** activation.optional — свободный, но НЕОБЯЗАТЕЛЬНЫЙ триггер: предлагается игроку, а не срабатывает
    *  сам (особенности Голиафа «свободное действие при попадании» — игрок решает применять или нет). */
   optional?: boolean;
+  /** Formulas snapshotted when a durable triggered effect was applied. */
+  formulaVariables?: Record<string, number>;
 }
 
 function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
@@ -48,6 +50,13 @@ function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
   if (mode !== 'triggered' && mode !== 'reaction') return null;
   const uses = mech.uses as Dict | undefined;
   const trig = act?.trigger as Dict | undefined;
+  const rawFormulaVariables = mech.formula_variables;
+  const formulaVariables = rawFormulaVariables && typeof rawFormulaVariables === 'object'
+    && !Array.isArray(rawFormulaVariables)
+    ? Object.fromEntries(Object.entries(rawFormulaVariables as Dict).flatMap(([key, value]) => (
+      typeof value === 'number' && Number.isFinite(value) ? [[key, value]] : []
+    )))
+    : undefined;
   return {
     id: String(mech.id ?? name),
     name,
@@ -56,6 +65,7 @@ function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
     cost: (act?.cost as Dict[]) ?? [],
     usesPer: uses?.per != null ? String(uses.per) : undefined,
     optional: act?.optional === true || trig?.prompt === true,
+    ...(formulaVariables && Object.keys(formulaVariables).length ? { formulaVariables } : {}),
   };
 }
 

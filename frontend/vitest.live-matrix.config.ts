@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'src/mvp/micro-micro.matrix.live.test.ts',
       'src/mvp/micro-micro.certification.live.test.ts',
+      'src/mvp/mini-mvp.ongoing-spells.live.test.ts',
     ],
     setupFiles: ['src/mvp/liveReadRetry.setup.ts'],
     fileParallelism: false,
