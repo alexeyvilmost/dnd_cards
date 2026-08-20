@@ -981,7 +981,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "damage_rider", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -1005,6 +1005,22 @@
                 "description": "Взрывные кости: на натуральном максимуме добросить ещё того же размера, до limit раз (Чародейский выброс).",
                 "properties": { "limit": { "$ref": "#/$defs/formula" } }
               }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "damage_rider" } } },
+          "then": {
+            "required": ["trigger", "dice", "type", "duration"],
+            "properties": {
+              "trigger": { "const": "hit_by_attack_roll" },
+              "dice": { "type": "string", "minLength": 1 },
+              "type": { "type": "string", "minLength": 1 },
+              "scope": { "enum": ["self", "target"] },
+              "source_actor_only": { "type": "boolean" },
+              "filter": { "type": "object" },
+              "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+              "duration": { "$ref": "#/$defs/duration" }
             }
           }
         },

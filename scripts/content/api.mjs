@@ -1,7 +1,7 @@
 /**
  * Общие утилиты API для контентных скриптов (фаза G1).
  */
-const DEFAULT_API = 'https://backend-production-41c3.up.railway.app';
+const DEFAULT_API = 'https://bagofholding.ru';
 
 export function apiUrl() {
   return process.env.API_URL || DEFAULT_API;

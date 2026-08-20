@@ -1,0 +1,219 @@
+[
+  {
+    "card_number": "SPELL-0165",
+    "name": "Божественное благоволение",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "bonus_action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "damage_rider",
+              "trigger": "hit_by_attack_roll",
+              "dice": "1d4",
+              "type": "radiant",
+              "filter": { "attackKind": "weapon" },
+              "duration": { "type": "rounds", "amount": 10 },
+              "stack_id": "spell:divine-favor",
+              "stack_type": "overwrite"
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-paladin"],
+      "targeting": {
+        "shape": "self",
+        "domain": "actor",
+        "actor_targets": false,
+        "min_targets": 0,
+        "max_targets": 1,
+        "range_ft": 0,
+        "requires_line_of_sight": false,
+        "allowed_relations": ["self"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0223",
+    "name": "Метка охотника",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "bonus_action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "damage_rider",
+              "trigger": "hit_by_attack_roll",
+              "dice": "1d6",
+              "type": "force",
+              "scope": "target",
+              "source_actor_only": true,
+              "duration": { "type": "hours", "amount": 1, "concentration": true },
+              "stack_type": "stack"
+            },
+            {
+              "kind": "narrative",
+              "description": "Преимущество на проверки Мудрости (Восприятие и Выживание) для поиска отмеченной цели и перенос метки после падения цели требуют явного выбора связанной цели."
+            }
+          ]
+        }
+      ],
+      "interaction": { "intent": "harmful" },
+      "spell_class_list_ids": ["CLASS-ranger"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 90,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["enemy", "neutral"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0267",
+    "name": "Порча",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "save",
+          "who": "target",
+          "ability": "cha",
+          "dc": "8 + prof + spellcasting",
+          "on_fail": [
+            {
+              "kind": "modifier",
+              "applies_to": { "roll": "attack" },
+              "op": "bonus_die",
+              "faces": 4,
+              "sign": -1,
+              "duration": { "type": "rounds", "amount": 10, "concentration": true },
+              "stack_id": "spell:bane:attack",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "modifier",
+              "applies_to": { "roll": "saving_throw" },
+              "op": "bonus_die",
+              "faces": 4,
+              "sign": -1,
+              "duration": { "type": "rounds", "amount": 10, "concentration": true },
+              "stack_id": "spell:bane:save",
+              "stack_type": "overwrite"
+            }
+          ],
+          "on_success": []
+        }
+      ],
+      "interaction": { "intent": "harmful" },
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-cleric", "CLASS-warlock"],
+      "targeting": {
+        "shape": "multiple",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 3,
+        "range_ft": 30,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["enemy", "neutral"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0287",
+    "name": "Сглаз",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "bonus_action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "choice",
+              "id": "hex_ability",
+              "context": "in_play",
+              "count": 1,
+              "prompt": "Выберите характеристику для Помехи на проверки",
+              "options": {
+                "source": "explicit",
+                "items": [
+                  { "id": "str", "name": "Сила", "grants": [
+                    { "kind": "modifier", "applies_to": { "roll": "ability_check", "filter": { "ability": "str" } }, "op": "disadvantage", "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" },
+                    { "kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d6", "type": "necrotic", "scope": "target", "source_actor_only": true, "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" }
+                  ] },
+                  { "id": "dex", "name": "Ловкость", "grants": [
+                    { "kind": "modifier", "applies_to": { "roll": "ability_check", "filter": { "ability": "dex" } }, "op": "disadvantage", "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" },
+                    { "kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d6", "type": "necrotic", "scope": "target", "source_actor_only": true, "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" }
+                  ] },
+                  { "id": "con", "name": "Телосложение", "grants": [
+                    { "kind": "modifier", "applies_to": { "roll": "ability_check", "filter": { "ability": "con" } }, "op": "disadvantage", "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" },
+                    { "kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d6", "type": "necrotic", "scope": "target", "source_actor_only": true, "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" }
+                  ] },
+                  { "id": "int", "name": "Интеллект", "grants": [
+                    { "kind": "modifier", "applies_to": { "roll": "ability_check", "filter": { "ability": "int" } }, "op": "disadvantage", "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" },
+                    { "kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d6", "type": "necrotic", "scope": "target", "source_actor_only": true, "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" }
+                  ] },
+                  { "id": "wis", "name": "Мудрость", "grants": [
+                    { "kind": "modifier", "applies_to": { "roll": "ability_check", "filter": { "ability": "wis" } }, "op": "disadvantage", "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" },
+                    { "kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d6", "type": "necrotic", "scope": "target", "source_actor_only": true, "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" }
+                  ] },
+                  { "id": "cha", "name": "Харизма", "grants": [
+                    { "kind": "modifier", "applies_to": { "roll": "ability_check", "filter": { "ability": "cha" } }, "op": "disadvantage", "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" },
+                    { "kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d6", "type": "necrotic", "scope": "target", "source_actor_only": true, "duration": { "type": "hours", "amount": 1, "concentration": true }, "stack_type": "stack" }
+                  ] }
+                ]
+              }
+            },
+            {
+              "kind": "narrative",
+              "description": "Перенос Сглаза после падения цели требует отдельного Бонусного действия и выбора новой цели."
+            }
+          ]
+        }
+      ],
+      "interaction": { "intent": "harmful" },
+      "spell_class_list_ids": ["CLASS-warlock"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 90,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["enemy", "neutral"]
+      }
+    }
+  }
+]

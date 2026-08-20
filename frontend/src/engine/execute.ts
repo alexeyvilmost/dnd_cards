@@ -142,7 +142,7 @@ function targetFormulaCtx(target: ExecuteContext['target']): FormulaContext | nu
 
 const EXECUTABLE_RESOLUTIONS = new Set(['auto', 'attack_roll', 'save', 'ability_check']);
 const EXECUTABLE_PAYLOAD_KINDS = new Set([
-  'damage', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
+  'damage', 'damage_rider', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
   'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
   'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
@@ -580,6 +580,33 @@ function preflightPayload(
         assertFiniteFormula(explode.limit, `${path}.explode.limit`, ctx);
       } else if (explode !== undefined && typeof explode !== 'boolean') {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.explode`, 'expected a boolean or an object');
+      }
+      break;
+    }
+    case 'damage_rider': {
+      if (value.trigger !== 'hit_by_attack_roll') {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          `${path}.trigger`,
+          'damage_rider requires trigger hit_by_attack_roll',
+        );
+      }
+      if (typeof value.dice !== 'string' || !value.dice.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.dice`, 'damage_rider requires dice');
+      }
+      if (typeof value.type !== 'string' || !value.type.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.type`, 'damage_rider requires a damage type');
+      }
+      assertFiniteFormula(withScaling(value.dice, value, ctx), `${path}.dice`, ctx);
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'damage_rider requires duration');
+      }
+      if (value.source_actor_only === true && value.scope !== 'target') {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          `${path}.source_actor_only`,
+          'source_actor_only is valid only for a target-scoped rider',
+        );
       }
       break;
     }
@@ -1251,6 +1278,32 @@ function applyModifierPayload(
   return stackApply(state, entry, payload);
 }
 
+/** Persist one generic on-hit damage rider. Unlike an ordinary modifier it
+ * always records actor ownership: target marks must never benefit a different
+ * attacker merely because that attacker hits the same creature. */
+function applyDamageRiderPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'rider', state.activeEffects.length),
+    name: source,
+    mechanics: payload,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
 /** Runtime sense grants such as Dwarf Stonecunning are persisted effects. */
 function applySensePayload(
   state: RuntimeState,
@@ -1825,6 +1878,101 @@ function resolveDamageAmounts(
  *  aliasesSelf означает цель без runtimeState: всё идёт в self для обратной совместимости. */
 type TargetRef = { state?: RuntimeState; mutated: boolean; aliasesSelf?: boolean };
 
+function riderFilterMatches(filter: Dict | undefined, facts: Dict): boolean {
+  if (!filter || Object.keys(filter).length === 0) return true;
+  return Object.entries(filter).every(([key, value]) => facts[key] === value);
+}
+
+type DamageRiderCandidate = { payload: Dict; name: string; sourceId?: string };
+
+/** Collects one-hit damage additions from actor-owned runtime/passive effects
+ * and target-owned marks. Target marks are source-bound by persisted actor id,
+ * so a second attacker cannot borrow Hunter's Mark or Hex. */
+function attackDamageRiders(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  facts: AttackDamageQueryFacts,
+): DamageRiderCandidate[] {
+  const candidates: DamageRiderCandidate[] = [];
+  const collect = (
+    mechanics: Dict,
+    name: string,
+    expectedScope: 'self' | 'target',
+    sourceId?: string,
+  ): void => {
+    for (const payload of payloadsOf(mechanics)) {
+      if (payload.kind !== 'damage_rider'
+        || payload.trigger !== 'hit_by_attack_roll'
+        || String(payload.scope ?? 'self') !== expectedScope
+        || !riderFilterMatches(payload.filter as Dict | undefined, facts)) continue;
+      if (expectedScope === 'target' && payload.source_actor_only === true
+        && (!ctx.selfId || sourceId !== ctx.selfId)) continue;
+      if (!matchesWhen(payload.when as Dict[] | undefined, {
+        ...evalCtxOf(state, ctx),
+        event: { kind: 'hit', data: facts },
+      })) continue;
+      candidates.push({ payload, name, sourceId });
+    }
+  };
+  for (const effect of state.activeEffects) {
+    collect(effect.mechanics as Dict, effect.name, 'self', effect.sourceId);
+  }
+  for (const passive of passivesFromCtx(ctx)) {
+    collect(passive, String(passive.name ?? 'пассивный райдер'), 'self');
+  }
+  for (const effect of ctx.target?.runtimeState?.activeEffects ?? []) {
+    collect(effect.mechanics as Dict, effect.name, 'target', effect.sourceId);
+  }
+  return candidates;
+}
+
+function applyAttackDamageRiders(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  hand: 'main' | 'off',
+  targetRef: TargetRef,
+  crit: boolean,
+  facts: AttackDamageQueryFacts,
+): RuntimeState {
+  let next = state;
+  for (const rider of attackDamageRiders(next, ctx, facts)) {
+    const payload = {
+      ...rider.payload,
+      kind: 'damage',
+      suppress_damage_modifiers: true,
+    };
+    const routedTarget = targetRef.aliasesSelf ? next : targetRef.state;
+    if (routedTarget) {
+      const targetContext: ExecuteContext = {
+        ...ctx,
+        character: ctx.target?.characterContext ?? ctx.character,
+        passives: ctx.target?.passives ?? ctx.passives,
+      };
+      let damagedTarget = routedTarget;
+      for (const damage of resolveDamageAmounts(payload, ctx, next, hand, crit, facts)) {
+        const applied = applyIncomingDamage(damagedTarget, damage.amount, targetContext, {
+          damageType: damage.damageType,
+          roll: damage.roll,
+          crit,
+        });
+        damagedTarget = applied.state;
+        events.push(...applied.events);
+      }
+      if (targetRef.aliasesSelf) next = damagedTarget;
+      else {
+        targetRef.state = damagedTarget;
+        targetRef.mutated = true;
+      }
+    } else {
+      for (const damage of resolveDamageAmounts(payload, ctx, next, hand, crit, facts)) {
+        events.push(damageEvent(damage.amount, damage.damageType, damage.roll));
+      }
+    }
+  }
+  return next;
+}
+
 /** «Талон» (Вдохновение барда): чип-эффект с костью, снимается вручную; кость вводится
  *  диалогом бросков получателя. Вынесен в хелпер, чтобы who:'target' мог класть его цели. */
 function applyBoon(
@@ -1965,6 +2113,14 @@ function applyPayloads(
       )); break;
       case 'resource': route((s) => applyResource(s, p, ctx, events)); break;
       case 'modifier': route((s) => applyModifierPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'damage_rider': route((s) => applyDamageRiderPayload(
         s,
         p,
         source,
@@ -2295,6 +2451,15 @@ function runAttackRoll(
         attackDamageFacts,
       );
     }
+    next = applyAttackDamageRiders(
+      next,
+      ctx,
+      events,
+      hand,
+      targetRef,
+      outcome === 'crit',
+      attackDamageFacts,
+    );
     const dealtDamage = events.slice(damageEventStart).some((entry) => (
       entry.type === 'damage' && entry.amount > 0
     ));
