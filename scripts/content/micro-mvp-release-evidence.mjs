@@ -87,7 +87,7 @@ export const REQUIRED_RELEASE_GATES = Object.freeze([
   }),
   Object.freeze({
     id: 'frontend_mvp',
-    command: 'MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:mvp -- --reporter=json --outputFile=<report>',
+    command: 'API_URL=<apiBase> MVP_CONTENT=1 VITE_API_URL=<apiBase> node node_modules/vitest/vitest.mjs run --config vitest.mvp.config.ts --reporter=json --outputFile=<report>',
     tests: true,
     allowedTodoTests: FRONTEND_MVP_ALLOWED_TODOS,
   }),
@@ -98,23 +98,23 @@ export const REQUIRED_RELEASE_GATES = Object.freeze([
   }),
   Object.freeze({
     id: 'micro_matrix',
-    command: 'npm run test:micro:matrix -- --reporter=json --outputFile=<report>',
+    command: 'node node_modules/vitest/vitest.mjs run --config vitest.matrix.config.ts --reporter=json --outputFile=<report>',
     tests: true,
   }),
   Object.freeze({
     id: 'rules_core_coverage',
-    command: 'npm run test:rules:coverage -- --reporter=json --outputFile=<report>',
+    command: 'node node_modules/vitest/vitest.mjs run --config vitest.rules-core.config.ts --reporter=json --outputFile=<report>',
     tests: true,
   }),
   Object.freeze({
     id: 'rules_primitive_coverage',
-    command: 'npm run test:rules:primitives -- --reporter=json --outputFile=<report>',
+    command: 'node node_modules/vitest/vitest.mjs run --config vitest.rules-primitives.config.ts --coverage --reporter=json --outputFile=<report>',
     tests: true,
   }),
   Object.freeze({ id: 'semantic_coverage', command: 'npm run test:micro:coverage', tests: true }),
   Object.freeze({
     id: 'live_matrix',
-    command: 'MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:micro:live-matrix -- --reporter=json',
+    command: 'API_URL=<apiBase> MVP_CONTENT=1 VITE_API_URL=<apiBase> node node_modules/vitest/vitest.mjs run --config vitest.live-matrix.config.ts --reporter=json --outputFile=<report>',
     tests: true,
   }),
   Object.freeze({

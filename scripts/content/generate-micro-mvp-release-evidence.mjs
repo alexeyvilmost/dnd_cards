@@ -29,6 +29,13 @@ const BACKEND_ROOT = resolve(HERE, '../../backend');
 const NPM = 'npm';
 const VITEST_CLI = resolve(FRONTEND_ROOT, 'node_modules/vitest/vitest.mjs');
 const PLAYWRIGHT_CLI = resolve(FRONTEND_ROOT, 'node_modules/@playwright/test/cli.js');
+const VITEST_SCRIPT_ARGS = Object.freeze({
+  'test:mvp': ['--config', 'vitest.mvp.config.ts'],
+  'test:micro:matrix': ['--config', 'vitest.matrix.config.ts'],
+  'test:rules:coverage': ['--config', 'vitest.rules-core.config.ts'],
+  'test:rules:primitives': ['--config', 'vitest.rules-primitives.config.ts', '--coverage'],
+  'test:micro:live-matrix': ['--config', 'vitest.live-matrix.config.ts'],
+});
 
 function parseArgs(argv) {
   const values = new Map();
@@ -308,7 +315,7 @@ async function executeVitestGate(definition, {
   const execution = await runCommand({
     command: invocation.command,
     args: invocation.args,
-    env: live ? { MVP_CONTENT: '1', VITE_API_URL: apiBase } : {},
+    env: live ? { API_URL: apiBase, MVP_CONTENT: '1', VITE_API_URL: apiBase } : {},
   });
   if (execution.exitCode !== 0) return { execution, testSummary: null, reportHash: null };
   const report = readJson(reportPath, definition.id);
@@ -443,23 +450,10 @@ export async function executeMicroMvpReleaseGate(definition, {
       }
       break;
     }
-    case 'live_matrix': {
-      const reportPath = join(temporaryDirectory, 'live-matrix.json');
-      execution = await runCommand({
-        command: NPM,
-        args: [
-          'run', 'test:micro:live-matrix', '--',
-          '--reporter=json', `--outputFile=${reportPath}`,
-        ],
-        env: { MVP_CONTENT: '1', VITE_API_URL: apiBase },
-      });
-      if (execution.exitCode === 0) {
-        const report = readJson(reportPath, definition.id);
-        testSummary = vitestSummary(report, definition);
-        reportHash = sha256File(reportPath);
-      }
-      break;
-    }
+    case 'live_matrix': ({ execution, testSummary, reportHash } = await executeVitestGate(
+      definition,
+      { temporaryDirectory, apiBase, script: 'test:micro:live-matrix', live: true },
+    )); break;
     case 'rules_lab_fixture':
       execution = await runCommand({ command: NPM, args: ['run', 'rules-lab:check'] });
       break;
@@ -522,11 +516,10 @@ export async function executeMicroMvpReleaseGate(definition, {
   };
 }
 
-/** The full default suite is the largest release gate. Launching it through
- * npm on Windows can return the lifecycle wrapper's exit code 1 after Vitest
- * has written a complete, successful JSON report. The direct, version-pinned
- * CLI invocation removes that wrapper without changing Vitest configuration
- * or weakening report validation. Named npm scripts keep their own configs. */
+/** Long Vitest release gates can make npm's Windows lifecycle wrapper return
+ * exit code 1 after Vitest has written a complete, successful JSON report.
+ * Resolve every approved script to its exact version-pinned CLI arguments so
+ * the wrapper is absent without changing configs or weakening validation. */
 export function vitestGateInvocation({
   script,
   npmTest,
@@ -535,10 +528,14 @@ export function vitestGateInvocation({
   vitestCli = VITEST_CLI,
 }) {
   const reportArgs = ['--reporter=json', `--outputFile=${reportPath}`];
-  if (npmTest) {
-    return { command: nodeExecutable, args: [vitestCli, 'run', ...reportArgs] };
+  const scriptArgs = npmTest ? [] : VITEST_SCRIPT_ARGS[script];
+  if (!scriptArgs) {
+    throw new Error(`unsupported direct Vitest release script ${script ?? '<missing>'}`);
   }
-  return { command: NPM, args: ['run', script, '--', ...reportArgs] };
+  return {
+    command: nodeExecutable,
+    args: [vitestCli, 'run', ...scriptArgs, ...reportArgs],
+  };
 }
 
 export async function generateMicroMvpReleaseEvidence({

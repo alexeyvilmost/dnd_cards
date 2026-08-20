@@ -13,12 +13,29 @@ import { executeAction, type RuntimeState } from './contracts';
 import { CARD_LONGSWORD, seededRng } from './fixtures';
 import { validateMechanics, type MechanicKind } from '../engine/validateMechanics';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
+import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
 
 const RUN = !!process.env.MVP_CONTENT;
 const BASE = process.env.API_URL || 'http://localhost:8080';
 
 type Dict = Record<string, unknown>;
 type Entity = { id: string; name: string; card_number?: string; level?: number; mechanics?: Dict | null };
+
+const SWEEP_CLUB = withDeclaredTestWeaponProfile({
+  ...CARD_LONGSWORD,
+  id: 'mvp-sweep:club',
+  name: 'Дубинка (свип)',
+}, {
+  weaponType: 'club',
+  proficiencyCategory: 'simple',
+  attackAbility: 'str',
+  damageLines: [{ dice: '1d4', type: 'bludgeoning' }],
+  defaultAttackMode: 'melee',
+  attackModes: [{ kind: 'melee', reach_ft: 5 }],
+  properties: ['light'],
+  masteryEffectId: 'mastery:slow',
+});
+const SWEEP_WEAPONS = [SWEEP_CLUB, CARD_LONGSWORD] as const;
 
 async function fetchAll(path: string, key: string): Promise<Entity[]> {
   const items: Entity[] = [];
@@ -46,8 +63,12 @@ function richState(equipWeapon = false): RuntimeState {
     hp: { current: 5, max: 60, temp: 0 },
     resources: { ...res },
     maxResources: { ...res },
-    equipment: equipWeapon ? { main_hand: CARD_LONGSWORD.id } : {},
-    inventory: equipWeapon ? [{ cardId: CARD_LONGSWORD.id, qty: 1 }] : [],
+    equipment: equipWeapon
+      ? { main_hand: SWEEP_CLUB.id, off_hand: CARD_LONGSWORD.id }
+      : {},
+    inventory: equipWeapon
+      ? SWEEP_WEAPONS.map((card) => ({ cardId: card.id, qty: 1 }))
+      : [],
     activeEffects: [],
   } as unknown as RuntimeState;
 }
@@ -56,7 +77,7 @@ function richState(equipWeapon = false): RuntimeState {
 const CTX = {
   abilityMods: { str: 3, dex: 3, con: 3, int: 5, wis: 5, cha: 5 },
   profBonus: 6, level: 17, classLevels: { wizard: 17 }, characterSpeed: 30,
-  spellcastingMod: 5,
+  spellcastingAbility: 'wis', spellcastingMod: 5,
 } as unknown as Parameters<typeof executeAction>[2]['character'];
 
 function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<string, string[]> {
@@ -66,12 +87,42 @@ function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<str
     name: label,
   });
   return Object.fromEntries(choices.flatMap((choice) => {
-    const selected = choice.items?.slice(0, choice.count).map((item) => item.id) ?? [];
+    let selected = choice.items?.slice(0, choice.count).map((item) => item.id) ?? [];
+    if (selected.length === 0 && choice.source === 'equipped_weapon') {
+      const allowedTypes = new Set(
+        (Array.isArray(choice.filter) ? choice.filter : [choice.filter])
+          .filter((item): item is string => typeof item === 'string' && item.length > 0),
+      );
+      selected = SWEEP_WEAPONS
+        .filter((card) => {
+          const profile = (card.mechanics as Dict | undefined)?.weapon_profile as Dict | undefined;
+          return allowedTypes.size === 0 || allowedTypes.has(String(profile?.weapon_type));
+        })
+        .slice(0, choice.count)
+        .map((card) => card.id);
+    }
     return selected.length > 0 ? [[choice.id, selected]] : [];
   }));
 }
 
-const TARGET = { ac: 1, saveMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 } };
+const TARGET_FACTS = {
+  ac: 1,
+  saveMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+};
+
+function containsPayloadKind(value: unknown, kind: string): boolean {
+  if (Array.isArray(value)) return value.some((item) => containsPayloadKind(item, kind));
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Dict;
+  return record.kind === kind
+    || Object.values(record).some((item) => containsPayloadKind(item, kind));
+}
+
+function targetForMechanics(mechanics: Dict) {
+  const runtimeState = richState();
+  if (containsPayloadKind(mechanics, 'stabilize')) runtimeState.hp.current = 0;
+  return { ...TARGET_FACTS, runtimeState };
+}
 
 function isActive(mech: Dict): boolean {
   // Только активируемые: пассивные эффекты/черты исполняются через
@@ -159,8 +210,8 @@ function runSweep(entities: Entity[], kind: MechanicKind, checkInert: boolean): 
       const spellCtx = kind === 'spell' ? { baseLevel: e.level ?? 1, castLevel: Math.max(e.level ?? 1, 1) } : undefined;
       const label = `${id}: ${e.name}`;
       const { events } = executeAction(richState(kind === 'spell'), stripCost(mech), {
-        character: kind === 'spell' ? { ...CTX, equippedCards: [CARD_LONGSWORD] } : CTX,
-        target: TARGET,
+        character: kind === 'spell' ? { ...CTX, equippedCards: [...SWEEP_WEAPONS] } : CTX,
+        target: targetForMechanics(mech),
         rng: seededRng(7),
         choices: firstInPlayChoiceSelections(mech, label),
         ...(spellCtx ? { spell: spellCtx } : {}),

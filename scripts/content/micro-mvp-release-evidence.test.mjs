@@ -62,7 +62,7 @@ test('release gate runs npm through its JavaScript CLI on Windows', () => {
   });
 });
 
-test('default frontend gate bypasses the npm lifecycle wrapper', () => {
+test('all Vitest release gates bypass the npm lifecycle wrapper', () => {
   assert.deepEqual(vitestGateInvocation({
     npmTest: true,
     reportPath: 'C:\\temp\\frontend.json',
@@ -77,14 +77,36 @@ test('default frontend gate bypasses the npm lifecycle wrapper', () => {
       '--outputFile=C:\\temp\\frontend.json',
     ],
   });
-  assert.deepEqual(vitestGateInvocation({
-    script: 'test:mvp',
+  const scripts = [
+    ['test:mvp', ['--config', 'vitest.mvp.config.ts']],
+    ['test:micro:matrix', ['--config', 'vitest.matrix.config.ts']],
+    ['test:rules:coverage', ['--config', 'vitest.rules-core.config.ts']],
+    ['test:rules:primitives', ['--config', 'vitest.rules-primitives.config.ts', '--coverage']],
+    ['test:micro:live-matrix', ['--config', 'vitest.live-matrix.config.ts']],
+  ];
+  for (const [script, scriptArgs] of scripts) {
+    assert.deepEqual(vitestGateInvocation({
+      script,
+      npmTest: false,
+      reportPath: '/tmp/report.json',
+      nodeExecutable: '/node',
+      vitestCli: '/repo/frontend/node_modules/vitest/vitest.mjs',
+    }), {
+      command: '/node',
+      args: [
+        '/repo/frontend/node_modules/vitest/vitest.mjs',
+        'run',
+        ...scriptArgs,
+        '--reporter=json',
+        '--outputFile=/tmp/report.json',
+      ],
+    });
+  }
+  assert.throws(() => vitestGateInvocation({
+    script: 'test:unknown',
     npmTest: false,
-    reportPath: '/tmp/mvp.json',
-  }), {
-    command: 'npm',
-    args: ['run', 'test:mvp', '--', '--reporter=json', '--outputFile=/tmp/mvp.json'],
-  });
+    reportPath: '/tmp/report.json',
+  }), /unsupported direct Vitest release script/);
 });
 
 function completeTestCoverage() {
@@ -182,13 +204,13 @@ const EXPECTED_GATES = [
   ['backend_go_test', 'CANONICAL_RUNTIME_TEST_DSN=<configured> CONTENT_MIGRATION_TEST_DSN=<configured> go test -race -count=1 -p 1 -json ./...'],
   ['backend_go_vet', 'go vet ./...'],
   ['frontend_test', 'node node_modules/vitest/vitest.mjs run --reporter=json --outputFile=<report>'],
-  ['frontend_mvp', 'MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:mvp -- --reporter=json --outputFile=<report>'],
+  ['frontend_mvp', 'API_URL=<apiBase> MVP_CONTENT=1 VITE_API_URL=<apiBase> node node_modules/vitest/vitest.mjs run --config vitest.mvp.config.ts --reporter=json --outputFile=<report>'],
   ['micro_manifest', 'NODE_OPTIONS="--test-reporter=tap --test-reporter-destination=<report>" npm run test:micro:manifest'],
-  ['micro_matrix', 'npm run test:micro:matrix -- --reporter=json --outputFile=<report>'],
-  ['rules_core_coverage', 'npm run test:rules:coverage -- --reporter=json --outputFile=<report>'],
-  ['rules_primitive_coverage', 'npm run test:rules:primitives -- --reporter=json --outputFile=<report>'],
+  ['micro_matrix', 'node node_modules/vitest/vitest.mjs run --config vitest.matrix.config.ts --reporter=json --outputFile=<report>'],
+  ['rules_core_coverage', 'node node_modules/vitest/vitest.mjs run --config vitest.rules-core.config.ts --reporter=json --outputFile=<report>'],
+  ['rules_primitive_coverage', 'node node_modules/vitest/vitest.mjs run --config vitest.rules-primitives.config.ts --coverage --reporter=json --outputFile=<report>'],
   ['semantic_coverage', 'npm run test:micro:coverage'],
-  ['live_matrix', 'MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:micro:live-matrix -- --reporter=json'],
+  ['live_matrix', 'API_URL=<apiBase> MVP_CONTENT=1 VITE_API_URL=<apiBase> node node_modules/vitest/vitest.mjs run --config vitest.live-matrix.config.ts --reporter=json --outputFile=<report>'],
   ['sheet_combat_certification', 'npm run sheet-combat-certification:check'],
   ['rules_lab_fixture', 'npm run rules-lab:check'],
   ['build', 'VITE_API_URL=<apiBase> npm run build'],
