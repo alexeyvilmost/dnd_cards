@@ -31,7 +31,12 @@ import { deniedCapabilities } from '../engine/modifiers';
 import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { readTargetSave, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
-import { bindEquippedWeaponActionContext, weaponActionAvailability, weaponAttackPreview } from '../engine/weapon';
+import {
+  bindEquippedWeaponActionContext,
+  equippedWeaponChoices,
+  weaponActionAvailability,
+  weaponAttackPreview,
+} from '../engine/weapon';
 import { costAmount } from '../engine/cost';
 import { inventoryQty } from '../character/inventory';
 import { expiryLabel, removeActiveEffect } from '../engine/effects';
@@ -1741,7 +1746,16 @@ export default function SheetActionsPanel({
           canonicalContext,
           encounterId ? 'encounter' : 'exploration',
         ),
-      ];
+      ].map((choice) => choice.source === 'equipped_weapon'
+        ? {
+            ...choice,
+            items: equippedWeaponChoices(
+              ctx,
+              baseState.equipment,
+              Array.isArray(choice.filter) ? choice.filter : [],
+            ),
+          }
+        : choice);
       const choices: Record<string, string[]> = {};
       if (inPlay.length) {
         const picked = await choiceDialog.request(inPlay, title);

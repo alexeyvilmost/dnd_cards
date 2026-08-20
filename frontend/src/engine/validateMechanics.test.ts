@@ -357,6 +357,7 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
   const HANDLED = [
     'damage', 'damage_rider', 'triggered_effect', 'fall_protection', 'movement_option',
     'targeting_ward', 'turn_command', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource', 'modifier',
+    'stabilize', 'weapon_enchantment', 'remote_manipulator', 'communication_link', 'world_interaction',
     'condition_immunity', 'resistance', 'set_value',    // condition-owned defense + урон/AC runtime
     'value_method',                                     // сборка: методы характеристик (C8, Пояс силы огра)
     'narrative', 'add_item',                            // add_item: S1 контейнеры

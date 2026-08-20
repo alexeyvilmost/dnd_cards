@@ -152,6 +152,12 @@ export function describeEngineEvent(event: EngineEvent): string {
       return `${src}Иммунитет к состоянию: ${event.condition}`;
     case 'movement':
       return `${src}Перемещение: ${event.mode} ${event.distanceFt} фт`;
+    case 'stabilized':
+      return `${src}Цель стабилизирована`;
+    case 'world_interaction':
+      return `${src}Взаимодействие с миром: ${event.operation}`;
+    case 'communication':
+      return event.mode === 'reply' ? 'Приватный ответ отправлен' : 'Приватное сообщение отправлено';
     case 'turn_started':
       return 'Начало хода';
     case 'turn_ended':

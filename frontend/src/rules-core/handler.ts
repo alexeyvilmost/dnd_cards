@@ -5877,7 +5877,7 @@ function lightWeaponExtraAttackAction(
   rangeKind: 'melee' | 'ranged',
   actionEconomy: 'bonus_action' | 'attack_action' = 'bonus_action',
 ): RuleActionDefinition | null {
-  const weapon = weaponContext(source.character, hand, source.runtime.equipment);
+  const weapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime);
   if (!weapon) return null;
   const effect = (
     CORE_LIGHT_WEAPON_EXTRA_ATTACK.mechanics.effects as Record<string, unknown>[]
@@ -5924,7 +5924,7 @@ function selectedWeaponUsesMastery(
       : null;
   if (!hand) return false;
   return actorWeaponHasMasteryPrimitive({
-    weapon: weaponContext(actor.character, hand, actor.runtime.equipment),
+    weapon: weaponContext(actor.character, hand, actor.runtime.equipment, actor.runtime),
     selectedWeaponTypes: actor.character.weaponMasteries,
     masteryEffects: actor.masteryEffects,
     type,
@@ -5954,7 +5954,7 @@ function cleaveWeaponAttackAction(
   source: ActorState,
   hand: 'main' | 'off',
 ): RuleActionDefinition | null {
-  const weapon = weaponContext(source.character, hand, source.runtime.equipment);
+  const weapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime);
   if (!weapon) return null;
   const base = weaponAttackAction(hand, 'melee');
   const effect = (base.mechanics.effects as Record<string, unknown>[])[0];
@@ -6246,7 +6246,7 @@ function performWeaponAttack(
       && !Object.values(source.runtime.equipment).includes(card.id)) {
       return rejected(world, 'ItemNotOwned', `${source.id} does not own ${card.id}`);
     }
-    if (!weaponContext(source.character, hand, source.runtime.equipment)) {
+    if (!weaponContext(source.character, hand, source.runtime.equipment, source.runtime)) {
       return rejected(world, 'InvalidEquipmentState', `${card.id} cannot resolve from ${hand}_hand`);
     }
   }
@@ -6261,6 +6261,7 @@ function performWeaponAttack(
     executionSource.character,
     hand,
     executionSource.runtime.equipment,
+    executionSource.runtime,
   );
   if (!resolvedWeapon || resolvedWeapon.cardId !== card.id) {
     return rejected(world, 'InvalidEquipmentState', `${card.id} has no valid equipped weapon_profile`);
@@ -6618,7 +6619,7 @@ function performLightWeaponExtraAttack(
     && !Object.values(source.runtime.equipment).includes(extraWeapon.id)) {
     return rejected(world, 'ItemNotOwned', `${source.id} does not own ${extraWeapon.id}`);
   }
-  const selectedWeapon = weaponContext(source.character, hand, source.runtime.equipment);
+  const selectedWeapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime);
   if (!selectedWeapon || selectedWeapon.cardId !== extraWeapon.id) {
     return rejected(world, 'InvalidEquipmentState', `${extraWeapon.id} cannot resolve from ${hand}_hand`);
   }

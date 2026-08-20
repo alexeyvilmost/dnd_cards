@@ -95,6 +95,11 @@ function payloadPhrase(p: Dict, ctx?: FormulaContext | null): string {
     }
     case 'resource': return String(p.op) === 'restore' ? `восстанавливает ${p.id}` : `выдаёт ${p.amount ?? 1} ${p.id}`;
     case 'movement': return `${p.value ?? 'перемещение'} ${p.distance ?? ''} фт`.trim();
+    case 'stabilize': return 'стабилизирует цель при 0 хитах';
+    case 'weapon_enchantment': return 'зачаровывает выбранное оружие';
+    case 'remote_manipulator': return `создаёт дистанционный манипулятор до ${p.max_distance_ft ?? '?'} фт`;
+    case 'communication_link': return `приватное сообщение до ${p.range_ft ?? '?'} фт`;
+    case 'world_interaction': return `взаимодействие с миром: ${p.operation ?? ''}`;
     case 'add_item': return `выдаёт предмет${p.qty && Number(p.qty) > 1 ? ` ×${p.qty}` : ''} в инвентарь`;
     case 'grant_action': {
       const vals = Array.isArray(p.values) ? (p.values as string[]) : (p.value != null ? [String(p.value)] : []);

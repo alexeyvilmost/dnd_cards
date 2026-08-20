@@ -1,0 +1,80 @@
+[
+  {
+    "card_number": "CARD-0504",
+    "name": "Посох жажды",
+    "mechanics": {
+      "weapon_profile": {
+        "weapon_type": "quarterstaff",
+        "proficiency_category": "simple",
+        "attack_ability": "str",
+        "damage_lines": [{ "dice": "1d6", "type": "bludgeoning" }],
+        "versatile_grip": { "dice": "1d8", "type": "bludgeoning" },
+        "default_attack_mode": "melee",
+        "attack_modes": [{ "kind": "melee", "reach_ft": 5 }],
+        "properties": ["versatile"],
+        "mastery_effect_id": "1464fb09-59c1-4bc5-8143-92abae8657b1",
+        "ammo": null,
+        "enchantment": { "attack_bonus": 0, "damage_bonus": 0, "extra_damage_lines": [] },
+        "attunement": { "required": true }
+      }
+    }
+  },
+  {
+    "card_number": "CARD-0568",
+    "name": "Дубинка",
+    "mechanics": {
+      "weapon_profile": {
+        "weapon_type": "club",
+        "proficiency_category": "simple",
+        "attack_ability": "str",
+        "damage_lines": [{ "dice": "1d4", "type": "bludgeoning" }],
+        "default_attack_mode": "melee",
+        "attack_modes": [{ "kind": "melee", "reach_ft": 5 }],
+        "properties": ["light"],
+        "mastery_effect_id": "c7d07a67-374c-49f6-b34b-40e85c26674e",
+        "ammo": null,
+        "enchantment": { "attack_bonus": 0, "damage_bonus": 0, "extra_damage_lines": [] },
+        "attunement": { "required": false }
+      }
+    }
+  },
+  {
+    "card_number": "CARD-0569",
+    "name": "Боевой посох",
+    "mechanics": {
+      "weapon_profile": {
+        "weapon_type": "quarterstaff",
+        "proficiency_category": "simple",
+        "attack_ability": "str",
+        "damage_lines": [{ "dice": "1d6", "type": "bludgeoning" }],
+        "versatile_grip": { "dice": "1d8", "type": "bludgeoning" },
+        "default_attack_mode": "melee",
+        "attack_modes": [{ "kind": "melee", "reach_ft": 5 }],
+        "properties": ["versatile"],
+        "mastery_effect_id": "1464fb09-59c1-4bc5-8143-92abae8657b1",
+        "ammo": null,
+        "enchantment": { "attack_bonus": 0, "damage_bonus": 0, "extra_damage_lines": [] },
+        "attunement": { "required": false }
+      }
+    }
+  },
+  {
+    "card_number": "CARD-0857",
+    "name": "Дубинка",
+    "mechanics": {
+      "weapon_profile": {
+        "weapon_type": "club",
+        "proficiency_category": "simple",
+        "attack_ability": "str",
+        "damage_lines": [{ "dice": "1d4", "type": "bludgeoning" }],
+        "default_attack_mode": "melee",
+        "attack_modes": [{ "kind": "melee", "reach_ft": 5 }],
+        "properties": ["light"],
+        "mastery_effect_id": "c7d07a67-374c-49f6-b34b-40e85c26674e",
+        "ammo": null,
+        "enchantment": { "attack_bonus": 0, "damage_bonus": 0, "extra_damage_lines": [] },
+        "attunement": { "required": false }
+      }
+    }
+  }
+]

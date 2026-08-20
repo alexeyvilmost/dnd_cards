@@ -981,7 +981,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "stabilize", "weapon_enchantment", "remote_manipulator", "communication_link", "world_interaction", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -1117,6 +1117,65 @@
             "properties": {
               "command": { "enum": ["approach", "drop", "flee", "grovel", "halt"] },
               "execute_at": { "const": "next_turn" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "weapon_enchantment" } } },
+          "then": {
+            "required": ["weapon_choice_id", "damage_type_choice_id", "eligible_weapon_types", "damage_scaling", "duration"],
+            "properties": {
+              "weapon_choice_id": { "type": "string", "minLength": 1 },
+              "damage_type_choice_id": { "type": "string", "minLength": 1 },
+              "eligible_weapon_types": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+              "damage_scaling": {
+                "type": "array", "minItems": 1,
+                "items": {
+                  "type": "object", "required": ["min_level", "dice"],
+                  "properties": {
+                    "min_level": { "type": "integer", "minimum": 1 },
+                    "dice": { "type": "string", "minLength": 1 }
+                  }
+                }
+              },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "remote_manipulator" } } },
+          "then": {
+            "required": ["max_distance_ft", "move_per_action_ft", "max_load_lb", "allowed_operations", "forbidden_operations", "duration"],
+            "properties": {
+              "max_distance_ft": { "type": "number", "exclusiveMinimum": 0 },
+              "move_per_action_ft": { "type": "number", "exclusiveMinimum": 0 },
+              "max_load_lb": { "type": "number", "exclusiveMinimum": 0 },
+              "allowed_operations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+              "forbidden_operations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "communication_link" } } },
+          "then": {
+            "required": ["range_ft", "private", "allows_reply", "blockers", "duration"],
+            "properties": {
+              "range_ft": { "type": "number", "exclusiveMinimum": 0 },
+              "private": { "const": true },
+              "allows_reply": { "type": "boolean" },
+              "blockers": { "type": "object" },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "world_interaction" } } },
+          "then": {
+            "required": ["operation", "parameters"],
+            "properties": {
+              "operation": { "type": "string", "minLength": 1 },
+              "parameters": { "type": "object" }
             }
           }
         },

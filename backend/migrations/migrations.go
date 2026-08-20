@@ -649,6 +649,13 @@ func GetAllMigrations() []Migration {
 			// Журнал отзыва и восстановленный DB-guard являются аудиторским следом и не откатываются.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "103_revoke_invalid_mage_hand_certification",
+			Description: "Отозвать ложную полную сертификацию narrative-only механики Волшебной руки",
+			Up:          revokeInvalidMageHandCertification,
+			// Журнал отзыва и восстановленный DB-guard являются аудиторским следом и не откатываются.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

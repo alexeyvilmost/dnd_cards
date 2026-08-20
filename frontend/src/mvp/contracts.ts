@@ -77,6 +77,20 @@ export type EngineEvent =
     }
   /** Geometry adapter consumes this authoritative forced-movement result. */
   | { type: 'movement'; mode: string; distanceFt: number; source?: string }
+  | { type: 'stabilized'; source?: string }
+  | {
+      type: 'world_interaction';
+      operation: string;
+      parameters: Dict;
+      source?: string;
+    }
+  | {
+      type: 'communication';
+      mode: 'message' | 'reply';
+      sourceActorId?: string;
+      targetActorId?: string;
+      private: true;
+    }
   | { type: 'turn_started' }
   | { type: 'turn_ended' }
   | { type: 'short_rest' }
@@ -143,6 +157,14 @@ export interface ActiveEffectEntry {
   };
 }
 
+/** Persisted creature lifecycle facts used by death saves and stabilization. */
+export interface DeathSaveState {
+  successes: number;
+  failures: number;
+  stable: boolean;
+  dead: boolean;
+}
+
 export interface RuntimeState {
   hp: { current: number; max: number; temp: number };
   /** Текущие значения ресурсов (включая action/bonus_action/reaction как 0|1). */
@@ -154,6 +176,8 @@ export interface RuntimeState {
    *  Стопка различается по cardId+containerId. Идентичные контейнеры пока пулятся (без instance-id). */
   inventory: Array<{ cardId: string; qty: number; containerId?: string }>;
   activeEffects: ActiveEffectEntry[];
+  /** Character-sheet lifecycle state. Monsters may omit it until they reach 0 HP. */
+  deathSaves?: DeathSaveState;
   /** Id triggered-эффектов, сработавших за этот ход (для uses.per:"turn"); сброс в startTurn. */
   firedThisTurn?: string[];
   /** Id triggered-эффектов, сработавших с последнего долгого отдыха (uses.per: long_rest/short_rest/…),
@@ -419,7 +443,7 @@ export interface WeaponContext {
   name: string;
   /** Кость основного урона, например «1d8» (зеркало damages[0].dice). */
   dice: string;
-  ability: 'str' | 'dex';
+  ability: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
   /** Тип основного урона (зеркало damages[0].type). */
   damageType: string;
   /** Все строки урона оружия: основной + стихийный (гранулярность №4). */

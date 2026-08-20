@@ -171,6 +171,8 @@ const CERTIFIED_ARROW = {
   card_number: 'CARD-0728',
 } as const;
 const THUNDERWAVE_SPELL_ID = '34518f38-b737-4a91-88ac-d5858d2d04a0';
+const MAGE_HAND_SPELL_ID = '70e35366-5446-49ff-b0b9-759dbbff347e';
+const ELEMENTALISM_SPELL_ID = 'b84d904f-4768-4a05-8803-7a0d0da28a00';
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -643,9 +645,19 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
       diagnostics,
     );
     await loginInBrowser(page, account, frontendOrigin, apiOrigin);
+    const utilityRoot = structuredClone(compiledFixture.roots.magicInitiateFighter);
+    utilityRoot.draft.spellIds = [
+      THUNDERWAVE_SPELL_ID,
+      MAGE_HAND_SPELL_ID,
+      ELEMENTALISM_SPELL_ID,
+    ];
+    const cantripChoice = Object.keys(utilityRoot.draft.resolvedChoices)
+      .find((key) => key.endsWith(':magic_initiate_wizard_cantrips'));
+    if (!cantripChoice) throw new Error('Magic Initiate cantrip choice is missing from the compiled Forge root');
+    utilityRoot.draft.resolvedChoices[cantripChoice] = [MAGE_HAND_SPELL_ID, ELEMENTALISM_SPELL_ID];
     character = await createCompiledCharacterInForge(
       page,
-      compiledFixture.roots.magicInitiateFighter,
+      utilityRoot,
       `Canary Magic Archer ${suffix}`,
       marker,
       apiOrigin,
@@ -758,6 +770,53 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     ]);
     expect(character.resources?.action).toBe(0);
     expect(character.resources?.[`freeuse-${THUNDERWAVE_SPELL_ID}`]).toBe(0);
+
+    const mageTurnPromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await page.getByRole('button', { name: 'Новый ход', exact: true }).click();
+    expect((await mageTurnPromise).ok(), 'new turn before Mage Hand').toBe(true);
+    const mageHandButton = page.locator(`[data-action-id="${MAGE_HAND_SPELL_ID}"]`)
+      .getByRole('button').filter({ visible: true }).first();
+    await expect(mageHandButton).toBeEnabled({ timeout: 30_000 });
+    await mageHandButton.click();
+    const mageConfirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
+    await expect(mageConfirm).toBeVisible();
+    const mageRuntimePromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await mageConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
+    expect((await mageRuntimePromise).ok(), 'public Mage Hand runtime persistence').toBe(true);
+    character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
+    expect((character.active_effects ?? []).some((effect) => (
+      (effect.mechanics as JsonRecord)?.kind === 'remote_manipulator'
+    ))).toBe(true);
+
+    const elementalismTurnPromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await page.getByRole('button', { name: 'Новый ход', exact: true }).click();
+    expect((await elementalismTurnPromise).ok(), 'new turn before Elementalism').toBe(true);
+    const elementalismButton = page.locator(`[data-action-id="${ELEMENTALISM_SPELL_ID}"]`)
+      .getByRole('button').filter({ visible: true }).first();
+    await expect(elementalismButton).toBeEnabled({ timeout: 30_000 });
+    await elementalismButton.click();
+    const elementalismChoice = page.getByRole('dialog', { name: 'Выбор при действии' });
+    await expect(elementalismChoice).toBeVisible();
+    await elementalismChoice.getByRole('button', { name: 'Призыв воды', exact: true }).click();
+    await elementalismChoice.getByRole('button', { name: 'Применить', exact: true }).click();
+    const elementalismConfirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
+    await expect(elementalismConfirm).toBeVisible();
+    const elementalismRuntimePromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await elementalismConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
+    expect((await elementalismRuntimePromise).ok(), 'public Elementalism runtime persistence').toBe(true);
+    await expect(page.getByText('Взаимодействие с миром: beckon_water', { exact: true })).toBeVisible();
     await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
     if (diagnostics.length > 0) {
       throw new Error(`Browser diagnostics are not clean:\n${diagnostics.join('\n')}`);

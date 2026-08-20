@@ -1,0 +1,231 @@
+[
+  {
+    "card_number": "SPELL-0173",
+    "name": "Волшебная рука",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }] },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "remote_manipulator",
+              "max_distance_ft": 30,
+              "move_per_action_ft": 30,
+              "max_load_lb": 10,
+              "allowed_operations": ["move_object", "open_unlocked_door", "open_unlocked_container", "stow_item", "retrieve_item", "pour_vial"],
+              "forbidden_operations": ["attack", "activate_magic_item", "carry_over_limit"],
+              "duration": { "type": "rounds", "amount": 10 },
+              "stack_id": "spell:mage-hand",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "Движок валидирует действие, дальность, переносимый вес и стоимость последующего управления; выбор объекта и применение world_interaction остаются обязанностью адаптера сцены."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-sorcerer", "CLASS-warlock", "CLASS-wizard"],
+      "targeting": { "shape": "self", "domain": "actor", "actor_targets": false }
+    }
+  },
+  {
+    "card_number": "SPELL-0194",
+    "name": "Дубинка",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "bonus_action" }] },
+      "effects": [
+        {
+          "kind": "choice",
+          "id": "shillelagh_weapon",
+          "context": "in_play",
+          "count": 1,
+          "prompt": "Выберите удерживаемую дубинку или боевой посох",
+          "options": {
+            "source": "equipped_weapon",
+            "filter": ["club", "quarterstaff"]
+          }
+        },
+        {
+          "kind": "choice",
+          "id": "shillelagh_damage_type",
+          "context": "in_play",
+          "count": 1,
+          "prompt": "Выберите тип урона",
+          "options": {
+            "source": "explicit",
+            "items": [
+              {
+                "id": "weapon",
+                "name": "Обычный тип оружия",
+                "grants": [{ "kind": "narrative", "description": "Сохраняется обычный тип урона оружия." }]
+              },
+              {
+                "id": "force",
+                "name": "Силовое поле",
+                "grants": [{ "kind": "narrative", "description": "Основной урон оружия становится уроном силовым полем." }]
+              }
+            ]
+          }
+        },
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "weapon_enchantment",
+              "weapon_choice_id": "shillelagh_weapon",
+              "damage_type_choice_id": "shillelagh_damage_type",
+              "eligible_weapon_types": ["club", "quarterstaff"],
+              "damage_scaling": [
+                { "min_level": 1, "dice": "1d8" },
+                { "min_level": 5, "dice": "1d10" },
+                { "min_level": 11, "dice": "1d12" },
+                { "min_level": 17, "dice": "2d6" }
+              ],
+              "duration": { "type": "rounds", "amount": 10 },
+              "stack_id": "spell:shillelagh",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "Эффект применяется только пока выбранная карта остаётся в руке; физическое отпускание оружия вне листа требует события адаптера экипировки."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-druid"],
+      "targeting": { "shape": "self", "domain": "actor", "actor_targets": false }
+    }
+  },
+  {
+    "card_number": "SPELL-0294",
+    "name": "Сообщение",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }] },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "communication_link",
+              "range_ft": 120,
+              "private": true,
+              "allows_reply": true,
+              "blockers": {
+                "magical_silence": true,
+                "max_thickness_ft": { "stone": 1, "metal": 1, "wood": 1, "lead": 0.001 }
+              },
+              "duration": { "type": "rounds", "amount": 1 },
+              "stack_id": "spell:message",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "Доставка и ответ типизированы; знакомство с целью и фактический материал препятствия должны быть объявлены адаптером сцены."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-druid", "CLASS-sorcerer", "CLASS-wizard"],
+      "targeting": {
+        "shape": "single", "domain": "actor", "actor_targets": true,
+        "min_targets": 1, "max_targets": 1, "range_ft": 120,
+        "requires_line_of_sight": false,
+        "allowed_relations": ["self", "ally", "enemy", "neutral"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0298",
+    "name": "Стихийность",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }] },
+      "effects": [
+        {
+          "kind": "choice",
+          "id": "elementalism_effect",
+          "context": "in_play",
+          "count": 1,
+          "prompt": "Выберите стихийный эффект",
+          "options": {
+            "source": "explicit",
+            "items": [
+              {
+                "id": "air",
+                "name": "Призыв воздуха",
+                "grants": [{
+                  "kind": "world_interaction", "operation": "beckon_air",
+                  "parameters": { "area_shape": "cube", "area_size_ft": 5, "may_close_unheld_openings": true }
+                }]
+              },
+              {
+                "id": "earth",
+                "name": "Призыв земли",
+                "grants": [{
+                  "kind": "world_interaction", "operation": "beckon_earth",
+                  "parameters": { "area_shape": "square", "area_size_ft": 5, "may_write_single_word": true }
+                }]
+              },
+              {
+                "id": "fire",
+                "name": "Призыв огня",
+                "grants": [{
+                  "kind": "world_interaction", "operation": "beckon_fire",
+                  "parameters": { "area_shape": "cube", "area_size_ft": 5, "harmless": true, "may_light_small_flames": true, "scent_duration_rounds": 10 }
+                }]
+              },
+              {
+                "id": "water",
+                "name": "Призыв воды",
+                "grants": [{
+                  "kind": "world_interaction", "operation": "beckon_water",
+                  "parameters": { "area_shape": "cube", "area_size_ft": 5, "created_water_cups": 1, "created_water_duration_rounds": 10 }
+                }]
+              },
+              {
+                "id": "sculpt",
+                "name": "Ваяние стихии",
+                "grants": [{
+                  "kind": "world_interaction", "operation": "sculpt_element",
+                  "parameters": { "max_cube_ft": 1, "duration_rounds": 600, "shape_quality": "crude" }
+                }]
+              }
+            ]
+          }
+        },
+        {
+          "resolution": "auto",
+          "result": [{
+            "kind": "narrative",
+            "description": "Движок выдаёт типизированную мутацию окружения; её визуальное применение к объектам карты остаётся обязанностью world adapter."
+          }]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-druid", "CLASS-sorcerer", "CLASS-wizard"],
+      "targeting": { "shape": "single", "domain": "world", "actor_targets": false, "range_ft": 30, "requires_line_of_sight": true }
+    }
+  },
+  {
+    "card_number": "SPELL-0312",
+    "name": "Уход за умирающим",
+    "mechanics": {
+      "activation": { "mode": "active", "cost": [{ "resource": "action" }] },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [{ "kind": "stabilize" }]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-cleric", "CLASS-druid"],
+      "targeting": {
+        "shape": "single", "domain": "actor", "actor_targets": true,
+        "min_targets": 1, "max_targets": 1, "range_ft": 15,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["self", "ally", "neutral"]
+      }
+    }
+  }
+]

@@ -131,17 +131,40 @@ function cardToWeapon(
   card: Card,
   character: CharacterContext,
   twoHandedGrip = false,
+  runtime?: RuntimeState,
 ): WeaponContext | null {
   const parsed = parseWeaponProfile(card);
   if (!parsed.valid) return null;
   const { profile } = parsed;
   const magic = itemBonusesActive(card, profile, character);
   const damages = weaponDamages(profile, twoHandedGrip, magic);
+  const enchantment = runtime?.activeEffects
+    .flatMap((entry) => {
+      const mechanics = entry.mechanics as Dict;
+      if (mechanics.kind === 'weapon_enchantment') return [mechanics];
+      const effects = Array.isArray(mechanics.effects) ? mechanics.effects as Dict[] : [];
+      return effects.flatMap((effect) => {
+        const result = Array.isArray(effect.result) ? effect.result as Dict[] : [];
+        return result.filter((payload) => payload.kind === 'weapon_enchantment');
+      });
+    })
+    .find((payload) => payload.weapon_card_id === card.id);
+  const enchantedDice = typeof enchantment?.damage_dice === 'string'
+    ? enchantment.damage_dice
+    : damages[0].dice;
+  const enchantedType = enchantment?.damage_type === 'force'
+    ? 'force'
+    : damages[0].type;
+  const enchantedAbility = typeof enchantment?.attack_ability === 'string'
+    && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(enchantment.attack_ability)
+    ? enchantment.attack_ability as WeaponContext['ability']
+    : pickAbility(profile, character);
+  damages[0] = { dice: enchantedDice, type: enchantedType };
   return {
     cardId: card.id,
     name: card.name,
     dice: damages[0].dice,
-    ability: pickAbility(profile, character),
+    ability: enchantedAbility,
     damageType: damages[0].type,
     damages,
     enchant: magic ? profile.enchantment.attackBonus : 0,
@@ -168,20 +191,40 @@ export function weaponContext(
   character: CharacterContext,
   hand: 'main' | 'off',
   equipment?: Record<string, string | null | undefined>,
+  runtime?: RuntimeState,
 ): WeaponContext | null {
   const slot = hand === 'main' ? 'main_hand' : 'off_hand';
   if (equipment) {
     const card = cardById(character, equipment[slot]);
     // Хват двумя руками: универсальное оружие в основной руке при пустой второй.
     const twoHandedGrip = hand === 'main' && !equipment.off_hand;
-    if (card?.type === 'weapon') return cardToWeapon(card, character, twoHandedGrip);
+    if (card?.type === 'weapon') return cardToWeapon(card, character, twoHandedGrip, runtime);
     return null;
   }
 
   const weapons = (character.equippedCards ?? []).filter((c) => c.type === 'weapon');
   const card = hand === 'main' ? weapons[0] : weapons[1];
   if (!card) return null;
-  return cardToWeapon(card, character);
+  return cardToWeapon(card, character, false, runtime);
+}
+
+/** Data-driven option domain for in-play choices over currently equipped weapons. */
+export function equippedWeaponChoices(
+  character: CharacterContext,
+  equipment: Record<string, string | null | undefined>,
+  allowedWeaponTypes: readonly string[] = [],
+): Array<{ id: string; name: string }> {
+  const allowed = new Set(allowedWeaponTypes.map(normalizeWeaponProficiencyId));
+  return [...new Set(Object.values(equipment).filter((id): id is string => !!id))]
+    .flatMap((id) => {
+      const card = cardById(character, id);
+      if (!card || card.type !== 'weapon') return [];
+      const parsed = parseWeaponProfile(card);
+      if (!parsed.valid) return [];
+      const weaponType = normalizeWeaponProficiencyId(parsed.profile.weaponType ?? '');
+      if (allowed.size && !allowed.has(weaponType)) return [];
+      return [{ id: card.id, name: card.name }];
+    });
 }
 
 export function abilityForWeapon(card: Card, character: CharacterContext): AbilityKey {
@@ -573,7 +616,7 @@ export function weaponAttackPreview(
   }
 
   const hand: 'main' | 'off' = kind === 'off' ? 'off' : 'main';
-  const w = weaponContext(character, hand, equipment);
+  const w = weaponContext(character, hand, equipment, state);
   if (!w) return null;
   const prof = isWeaponProficient(
     character,

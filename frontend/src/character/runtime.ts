@@ -3,6 +3,7 @@ import type { CharacterContext, RuntimeState, TargetContext } from '../mvp/contr
 import type { Card } from '../types';
 import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
+import { readDeathSaves } from './death';
 
 export const RULES_ENGINE_RUNTIME_TURN_STATE_KEY = 'rules_engine_runtime_v1' as const;
 export const RULES_ENGINE_RUNTIME_TURN_STATE_VERSION = 1 as const;
@@ -49,13 +50,14 @@ function readRulesEngineRuntimeTurnState(
 /** Persist the trigger/mastery usage ledgers together with ordinary turn state. */
 export function writeRulesEngineRuntimeTurnState(
   turnState: Record<string, unknown> | null | undefined,
-  state: Pick<RuntimeState, 'hp' | 'firedThisTurn' | 'firedThisRest'>,
+  state: Pick<RuntimeState, 'hp' | 'firedThisTurn' | 'firedThisRest' | 'deathSaves'>,
   additions: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     ...(turnState ?? {}),
     ...additions,
     temp_hp: state.hp.temp,
+    ...(state.deathSaves ? { death_saves: { ...state.deathSaves } } : {}),
     [RULES_ENGINE_RUNTIME_TURN_STATE_KEY]: {
       schemaVersion: RULES_ENGINE_RUNTIME_TURN_STATE_VERSION,
       firedThisTurn: [...new Set(state.firedThisTurn ?? [])],
@@ -95,6 +97,7 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
     equipment: { ...(c.equipment ?? {}) },
     inventory: inv,
     activeEffects: parseActiveEffects(c.active_effects),
+    deathSaves: readDeathSaves(c.turn_state),
     firedThisTurn: engineRuntime.firedThisTurn,
     firedThisRest: engineRuntime.firedThisRest,
   };

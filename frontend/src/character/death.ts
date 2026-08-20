@@ -8,14 +8,8 @@
 import { collectModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import type { FormulaContext } from '../engine/formula';
-import type { RollLog, RuntimeState } from '../mvp/contracts';
-
-export interface DeathSaveState {
-  successes: number;
-  failures: number;
-  stable: boolean;
-  dead: boolean;
-}
+import type { DeathSaveState, RollLog, RuntimeState } from '../mvp/contracts';
+export type { DeathSaveState } from '../mvp/contracts';
 
 export type DeathSaveOutcome =
   | 'success'

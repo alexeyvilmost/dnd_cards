@@ -46,6 +46,7 @@ import { applyDamageDieRules } from './rollRules';
 import {
   attackRangeFromEffect,
   attackRollQueryFacts,
+  equippedWeaponChoices,
   extraAttackSourceFromEffect,
   isWeaponProficient,
   weaponContext,
@@ -103,6 +104,7 @@ function cloneState(state: RuntimeState): RuntimeState {
     equipment: { ...state.equipment },
     inventory: state.inventory.map((r) => ({ ...r })),
     activeEffects: state.activeEffects.map((e) => ({ ...e })),
+    deathSaves: state.deathSaves ? { ...state.deathSaves } : undefined,
     firedThisTurn: state.firedThisTurn ? [...state.firedThisTurn] : undefined,
     firedThisRest: state.firedThisRest ? [...state.firedThisRest] : undefined,
   };
@@ -148,6 +150,8 @@ const EXECUTABLE_PAYLOAD_KINDS = new Set([
   'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
   'condition_immunity', 'triggered_effect', 'fall_protection', 'movement_option',
   'targeting_ward', 'turn_command',
+  'stabilize', 'weapon_enchantment', 'remote_manipulator', 'communication_link',
+  'world_interaction',
   'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
 ]);
@@ -544,6 +548,23 @@ function preflightChoice(
       `runtime choice «${id}» requires ${expected} distinct selection(s)`,
     );
   }
+  const options = isDict(payload.options) ? payload.options : {};
+  const source = String(options.source ?? payload.source ?? '');
+  if (source === 'equipped_weapon') {
+    const filter = Array.isArray(options.filter ?? payload.filter)
+      ? (options.filter ?? payload.filter) as string[]
+      : [];
+    const eligible = new Set(equippedWeaponChoices(ctx.character, state.equipment, filter)
+      .map((weapon) => weapon.id));
+    const invalid = selected.filter((id) => !eligible.has(id));
+    if (invalid.length) {
+      throw mechanicsError(
+        'INVALID_CHOICE', path,
+        `runtime choice «${id}» contains a weapon that is not currently equipped and eligible`,
+      );
+    }
+    return;
+  }
   const expanded = selectedChoicePayloads(payload, selected).map(normalizeChoicePayload);
   if (!expanded.length) {
     throw mechanicsError('INVALID_CHOICE', path, `runtime choice «${id}» has no executable selected branch`);
@@ -598,7 +619,7 @@ function preflightPayload(
         );
       }
       if ((base === 'weapon' || value.type === 'weapon')
-        && !weaponContext(ctx.character, hand, state.equipment)) {
+        && !weaponContext(ctx.character, hand, state.equipment, state)) {
         throw mechanicsError(
           'INVALID_MECHANICS',
           'context.character.equipment',
@@ -693,6 +714,85 @@ function preflightPayload(
       }
       if (value.execute_at !== 'next_turn') {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.execute_at`, 'turn command must execute at next turn');
+      }
+      break;
+    }
+    case 'stabilize': {
+      const target = targetOwned ? ctx.target?.runtimeState : state;
+      if (!target || target.hp.current !== 0 || target.deathSaves?.dead === true) {
+        throw mechanicsError(
+          'INVALID_MECHANICS', path,
+          'stabilize requires a living target at exactly 0 HP',
+        );
+      }
+      break;
+    }
+    case 'weapon_enchantment': {
+      const weaponChoiceId = String(value.weapon_choice_id ?? '');
+      const damageChoiceId = String(value.damage_type_choice_id ?? '');
+      const weaponSelection = ctx.choices?.[weaponChoiceId];
+      const damageSelection = ctx.choices?.[damageChoiceId];
+      const weaponId = Array.isArray(weaponSelection) ? weaponSelection[0] : weaponSelection;
+      const damageType = Array.isArray(damageSelection) ? damageSelection[0] : damageSelection;
+      const eligibleTypes = Array.isArray(value.eligible_weapon_types)
+        ? value.eligible_weapon_types.map(String)
+        : [];
+      if (typeof weaponId !== 'string'
+        || !equippedWeaponChoices(ctx.character, state.equipment, eligibleTypes)
+          .some((weapon) => weapon.id === weaponId)) {
+        throw mechanicsError('INVALID_CHOICE', `${path}.weapon_choice_id`, 'selected weapon is not eligible');
+      }
+      if (damageType !== 'weapon' && damageType !== 'force') {
+        throw mechanicsError('INVALID_CHOICE', `${path}.damage_type_choice_id`, 'damage type must be weapon or force');
+      }
+      const ability = ctx.spell?.spellcastingAbility ?? ctx.character.spellcastingAbility;
+      if (!ability || !ABILITY_KEYS.has(ability)) {
+        throw mechanicsError('INVALID_MECHANICS', path, 'weapon enchantment requires an explicit spellcasting ability');
+      }
+      if (!Array.isArray(value.damage_scaling) || value.damage_scaling.length === 0
+        || value.damage_scaling.some((entry) => !isDict(entry)
+          || !Number.isInteger(entry.min_level) || Number(entry.min_level) < 1
+          || typeof entry.dice !== 'string' || !entry.dice.trim())) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.damage_scaling`, 'weapon enchantment requires valid level scaling');
+      }
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'weapon enchantment requires duration');
+      }
+      break;
+    }
+    case 'remote_manipulator': {
+      for (const key of ['max_distance_ft', 'move_per_action_ft', 'max_load_lb'] as const) {
+        const amount = Number(value[key]);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          throw mechanicsError('INVALID_PAYLOAD', `${path}.${key}`, `${key} must be positive`);
+        }
+      }
+      if (!Array.isArray(value.allowed_operations) || value.allowed_operations.length === 0
+        || value.allowed_operations.some((operation) => typeof operation !== 'string' || !operation.trim())) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.allowed_operations`, 'remote manipulator requires operations');
+      }
+      if (!Array.isArray(value.forbidden_operations) || value.forbidden_operations.length === 0) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.forbidden_operations`, 'remote manipulator requires explicit limits');
+      }
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'remote manipulator requires duration');
+      }
+      break;
+    }
+    case 'communication_link': {
+      const range = Number(value.range_ft);
+      if (!Number.isFinite(range) || range <= 0 || value.private !== true) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'communication link requires positive range and private delivery');
+      }
+      if (!isDict(value.blockers) || !isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'communication link requires blockers and duration');
+      }
+      break;
+    }
+    case 'world_interaction': {
+      if (typeof value.operation !== 'string' || !value.operation.trim()
+        || !isDict(value.parameters)) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'world interaction requires operation and parameters');
       }
       break;
     }
@@ -966,7 +1066,7 @@ function preflightEffect(
       );
     }
     if (ability === 'auto') {
-      const weapon = weaponContext(ctx.character, resolveHand(value), state.equipment);
+      const weapon = weaponContext(ctx.character, resolveHand(value), state.equipment, state);
       if (!weapon) {
         throw mechanicsError(
           'INVALID_MECHANICS',
@@ -1342,7 +1442,7 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
   const ability = String(effect.ability);
   const attackKind = attackRollQueryFacts(effect, hand, ctx.character, state.equipment).attackKind;
   const currentWeapon = attackKind === 'weapon'
-    ? weaponContext(ctx.character, hand, state.equipment)
+    ? weaponContext(ctx.character, hand, state.equipment, state)
     : null;
   const proficiencyBonus = attackKind !== 'weapon'
     || (currentWeapon !== null
@@ -1360,7 +1460,7 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
       mods.push({ value: proficiencyBonus, source: 'БМ', reason: 'бонус мастерства' });
     }
   } else if (ability === 'auto') {
-    const w = currentWeapon ?? weaponContext(ctx.character, hand, state.equipment);
+    const w = currentWeapon ?? weaponContext(ctx.character, hand, state.equipment, state);
     if (w) {
       mods.push({
         value: ctx.character.abilityMods[w.ability],
@@ -1648,6 +1748,110 @@ function applyTurnCommandPayload(
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
   };
   events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
+function applyStabilizePayload(
+  state: RuntimeState,
+  events: EngineEvent[],
+): RuntimeState {
+  if (state.hp.current !== 0 || state.deathSaves?.dead === true) {
+    throw mechanicsError(
+      'INVALID_MECHANICS', 'runtime.payload',
+      'stabilize requires a living target at exactly 0 HP',
+    );
+  }
+  events.push({ type: 'stabilized' });
+  return {
+    ...state,
+    deathSaves: { successes: 0, failures: 0, stable: true, dead: false },
+  };
+}
+
+function selectedChoice(ctx: ExecuteContext, id: unknown): string | undefined {
+  const raw = ctx.choices?.[String(id ?? '')];
+  return Array.isArray(raw) ? raw[0] : raw;
+}
+
+function scaledWeaponDice(payload: Dict, level: number): string {
+  return (payload.damage_scaling as Dict[])
+    .filter((entry) => Number(entry.min_level) <= level)
+    .sort((left, right) => Number(right.min_level) - Number(left.min_level))
+    .map((entry) => String(entry.dice))[0];
+}
+
+function applyWeaponEnchantmentPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const weaponCardId = selectedChoice(ctx, payload.weapon_choice_id);
+  const damageType = selectedChoice(ctx, payload.damage_type_choice_id);
+  const ability = ctx.spell?.spellcastingAbility ?? ctx.character.spellcastingAbility;
+  const eligible = equippedWeaponChoices(
+    ctx.character,
+    state.equipment,
+    Array.isArray(payload.eligible_weapon_types) ? payload.eligible_weapon_types.map(String) : [],
+  );
+  if (!weaponCardId || !eligible.some((weapon) => weapon.id === weaponCardId)
+    || (damageType !== 'weapon' && damageType !== 'force')
+    || !ability || !ABILITY_KEYS.has(ability)) {
+    throw mechanicsError('INVALID_CHOICE', 'runtime.payload', 'weapon enchantment choices are invalid');
+  }
+  const persisted: Dict = {
+    ...payload,
+    weapon_card_id: weaponCardId,
+    damage_type: damageType,
+    attack_ability: ability,
+    damage_dice: scaledWeaponDice(payload, ctx.character.level ?? 1),
+  };
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict);
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'weapon-enchantment', state.activeEffects.length),
+    name: source,
+    mechanics: persisted,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, persisted);
+}
+
+function applyPersistentAdapterPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, String(payload.kind), state.activeEffects.length),
+    name: source,
+    mechanics: payload,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  if (payload.kind === 'communication_link') {
+    events.push({
+      type: 'communication',
+      mode: 'message',
+      sourceActorId: ctx.selfId,
+      targetActorId: ownerActorId,
+      private: true,
+    });
+  }
   return stackApply(state, entry, payload);
 }
 
@@ -2117,7 +2321,7 @@ function resolveDamageAmounts(
   crit = false,
   attackFacts?: AttackDamageQueryFacts,
 ): DamageInstance[] {
-  const handWeapon = weaponContext(ctx.character, hand, state.equipment);
+  const handWeapon = weaponContext(ctx.character, hand, state.equipment, state);
   const declaredDamageType = String(payload.type).trim();
   const dmgRules = damageRules(ctx, state); // die_bonus/explode (глобальные)
   const explodeLimit = explodeLimitOf(payload, ctx);
@@ -2525,6 +2729,32 @@ function applyPayloads(
         ctx,
         whoTarget ? ctx.target?.id : ctx.selfId,
       )); break;
+      case 'stabilize': route((s) => applyStabilizePayload(s, events)); break;
+      case 'weapon_enchantment': route((s) => applyWeaponEnchantmentPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'remote_manipulator':
+      case 'communication_link': route((s) => applyPersistentAdapterPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'world_interaction':
+        events.push({
+          type: 'world_interaction',
+          operation: String(p.operation),
+          parameters: { ...(p.parameters as Dict) },
+          source,
+        });
+        break;
       // Typed, short-lived opportunity consumed by an authoritative follow-up
       // command (Cleave today; reusable for later attack riders).
       case 'attack_follow_up': route((s) => applyModifierPayload(
@@ -2738,7 +2968,7 @@ function runAttackRoll(
   const hand = resolveHand(effect);
   const ac = ctx.target!.ac!;
   const passives = passivesFromCtx(ctx);
-  const currentWeapon = weaponContext(ctx.character, hand, state.equipment);
+  const currentWeapon = weaponContext(ctx.character, hand, state.equipment, state);
   const attackRange = attackRangeFromEffect(effect, hand, ctx.character, state.equipment);
   const heavy = currentWeapon ? evaluateWeaponHeavyRule(
     currentWeapon,
@@ -3700,6 +3930,112 @@ function activePayloadEntries(state: RuntimeState, kind: string): Array<{
   return state.activeEffects.flatMap((entry) => payloadsOf(entry.mechanics as Dict)
     .filter((payload) => payload.kind === kind)
     .map((payload) => ({ entry, payload })));
+}
+
+export interface RemoteManipulatorCommand {
+  operation: string;
+  distanceFt: number;
+  objectWeightLb?: number;
+  moveDistanceFt?: number;
+  parameters?: Dict;
+}
+
+/** Spend a Magic action to control a persisted remote manipulator. The world
+ * adapter applies the structured interaction to the selected object. */
+export function executeRemoteManipulator(
+  state: RuntimeState,
+  command: RemoteManipulatorCommand,
+): ExecuteResult {
+  const active = activePayloadEntries(state, 'remote_manipulator')[0];
+  if (!active) {
+    throw mechanicsError('INVALID_MECHANICS', 'remote_manipulator', 'no active remote manipulator exists');
+  }
+  const allowed = Array.isArray(active.payload.allowed_operations)
+    ? active.payload.allowed_operations.map(String)
+    : [];
+  const forbidden = Array.isArray(active.payload.forbidden_operations)
+    ? active.payload.forbidden_operations.map(String)
+    : [];
+  if (!allowed.includes(command.operation) || forbidden.includes(command.operation)) {
+    throw mechanicsError('INVALID_MECHANICS', 'remote_manipulator.operation', 'operation is not permitted');
+  }
+  if (!Number.isFinite(command.distanceFt) || command.distanceFt < 0
+    || command.distanceFt > Number(active.payload.max_distance_ft)) {
+    throw mechanicsError('INVALID_MECHANICS', 'remote_manipulator.distanceFt', 'object is outside control range');
+  }
+  const objectWeight = command.objectWeightLb ?? 0;
+  if (!Number.isFinite(objectWeight) || objectWeight < 0
+    || objectWeight > Number(active.payload.max_load_lb)) {
+    throw mechanicsError('INVALID_MECHANICS', 'remote_manipulator.objectWeightLb', 'object exceeds load limit');
+  }
+  const moveDistance = command.moveDistanceFt ?? 0;
+  if (!Number.isFinite(moveDistance) || moveDistance < 0
+    || moveDistance > Number(active.payload.move_per_action_ft)) {
+    throw mechanicsError('INVALID_MECHANICS', 'remote_manipulator.moveDistanceFt', 'movement exceeds per-action limit');
+  }
+  const payment = canPay(state, [{ resource: 'action', amount: 1 }]);
+  if (!payment.ok) throw new InsufficientResourcesError(payment.missing);
+  const paid = pay(state, [{ resource: 'action', amount: 1 }]);
+  return {
+    state: paid.state,
+    events: [
+      ...paid.events,
+      {
+        type: 'world_interaction',
+        operation: command.operation,
+        parameters: {
+          ...(command.parameters ?? {}),
+          distance_ft: command.distanceFt,
+          object_weight_lb: objectWeight,
+          move_distance_ft: moveDistance,
+        },
+        source: active.entry.name,
+      },
+    ],
+  };
+}
+
+export interface CommunicationLinkFacts {
+  distanceFt: number;
+  magicalSilence?: boolean;
+  barrier?: { material: 'stone' | 'metal' | 'wood' | 'lead'; thicknessFt: number };
+}
+
+/** Validate delivery/reply against the link's explicit range and blockers. */
+export function resolveCommunicationLink(
+  state: RuntimeState,
+  facts: CommunicationLinkFacts,
+  mode: 'message' | 'reply' = 'reply',
+): ExecuteResult {
+  const active = activePayloadEntries(state, 'communication_link')[0];
+  if (!active) {
+    throw mechanicsError('INVALID_MECHANICS', 'communication_link', 'no active communication link exists');
+  }
+  if (!Number.isFinite(facts.distanceFt) || facts.distanceFt < 0
+    || facts.distanceFt > Number(active.payload.range_ft)) {
+    throw mechanicsError('INVALID_MECHANICS', 'communication_link.distanceFt', 'recipient is outside range');
+  }
+  const blockers = active.payload.blockers as Dict;
+  if (facts.magicalSilence && blockers.magical_silence === true) {
+    throw mechanicsError('INVALID_MECHANICS', 'communication_link.magicalSilence', 'magical silence blocks the link');
+  }
+  if (facts.barrier) {
+    const limits = isDict(blockers.max_thickness_ft) ? blockers.max_thickness_ft : {};
+    const limit = Number(limits[facts.barrier.material]);
+    if (Number.isFinite(limit) && facts.barrier.thicknessFt >= limit) {
+      throw mechanicsError('INVALID_MECHANICS', 'communication_link.barrier', 'barrier blocks the link');
+    }
+  }
+  return {
+    state: cloneState(state),
+    events: [{
+      type: 'communication',
+      mode,
+      sourceActorId: mode === 'reply' ? active.entry.ownerId : active.entry.sourceId,
+      targetActorId: mode === 'reply' ? active.entry.sourceId : active.entry.ownerId,
+      private: true,
+    }],
+  };
 }
 
 export type TurnCommandDirective =
