@@ -1006,17 +1006,16 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
     ))).toBe(true);
 
     await castWorldSpell(utilitySpells[2]);
-    const identifyEvents = await checkedJSON<CharacterEventRow[]>(
-      auth.api, 'get', `/api/characters-v3/${character.id}/events`,
-    );
-    expect(identifyEvents).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        type: 'world_interaction',
-        payload: expect.objectContaining({
-          type: 'world_interaction', operation: 'reveal_information',
-        }),
-      }),
-    ]));
+    await expect.poll(async () => {
+      const identifyEvents = await checkedJSON<CharacterEventRow[]>(
+        auth!.api, 'get', `/api/characters-v3/${character!.id}/events`,
+      );
+      return identifyEvents.some((event) => (
+        event.type === 'world_interaction'
+        && event.payload.type === 'world_interaction'
+        && event.payload.operation === 'reveal_information'
+      ));
+    }, { message: 'Identify world-interaction event must reach the durable journal' }).toBe(true);
 
     await castWorldSpell(utilitySpells[3], 'Мысленная тревога');
     character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
