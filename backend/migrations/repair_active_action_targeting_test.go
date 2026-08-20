@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
 )
 
@@ -49,16 +48,30 @@ func TestActiveActionTargetingRepairExecutesIdempotently(t *testing.T) {
 	db := openIsolatedPostgresSchema(t, "CONTENT_MIGRATION_TEST_DSN")
 	if _, err := db.Exec(`
 		CREATE TABLE actions (
-			card_number TEXT PRIMARY KEY,
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			card_number TEXT UNIQUE NOT NULL,
 			mechanics JSONB NOT NULL,
-			support JSONB NOT NULL DEFAULT '{}'::jsonb,
+			support JSONB,
+			updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 			deleted_at TIMESTAMPTZ
 		);
 		CREATE TABLE cards (
-			card_number TEXT PRIMARY KEY,
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			card_number TEXT UNIQUE NOT NULL,
 			mechanics JSONB NOT NULL,
-			support JSONB NOT NULL DEFAULT '{}'::jsonb,
+			support JSONB,
+			updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 			deleted_at TIMESTAMPTZ
+		);
+		CREATE TABLE effects (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			support JSONB,
+			updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE spells (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			support JSONB,
+			updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 		);
 	`); err != nil {
 		t.Fatal(err)
@@ -72,9 +85,18 @@ func TestActiveActionTargetingRepairExecutesIdempotently(t *testing.T) {
 			}
 			mechanics = `{"activation":{"mode":"active","cost":[{"resource":"action"}]},"effects":[{"resolution":"auto","result":[{"kind":"narrative"}]}],"targeting":` + string(encoded) + `}`
 		}
-		if _, err := db.Exec(`INSERT INTO `+repair.Table+` (card_number, mechanics) VALUES ($1, $2::jsonb)`, repair.CardNumber, mechanics); err != nil {
+		var support any
+		if repair.CardNumber == "ACT-bardic-inspiration" {
+			support = `{"status":"verified_mechanical","certification_version":"micro-mvp-l1-rules-core-v4","mechanics_locked":true,"content_hash":"sha256:old"}`
+		} else if repair.CardNumber == "action_help" {
+			support = `{"status":"verified_partial","certification_version":"micro-mvp-basic-actions-v2","mechanics_locked":false}`
+		}
+		if _, err := db.Exec(`INSERT INTO `+repair.Table+` (card_number, mechanics, support) VALUES ($1, $2::jsonb, $3::jsonb)`, repair.CardNumber, mechanics, support); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if _, err := db.Exec(certifiedContentMechanicsLockDDL); err != nil {
+		t.Fatal(err)
 	}
 	if err := repairActiveActionTargeting(db); err != nil {
 		t.Fatal(err)
@@ -92,52 +114,61 @@ func TestActiveActionTargetingRepairExecutesIdempotently(t *testing.T) {
 			t.Fatalf("%s:%s domain=%q who=%q", repair.Table, repair.CardNumber, domain, who)
 		}
 	}
-}
-
-func TestActiveActionTargetingRepairPreservesExpectedLockedLegacyContract(t *testing.T) {
-	db := openIsolatedPostgresSchema(t, "CONTENT_MIGRATION_TEST_DSN")
+	for _, cardNumber := range []string{"ACT-bardic-inspiration", "action_help"} {
+		var status string
+		var mechanicsLocked bool
+		if err := db.QueryRow(`
+			SELECT support->>'status', (support->>'mechanics_locked')::boolean
+			FROM actions WHERE card_number=$1
+		`, cardNumber).Scan(&status, &mechanicsLocked); err != nil {
+			t.Fatal(err)
+		}
+		if status != "untested" || mechanicsLocked {
+			t.Fatalf("%s retained stale certification: status=%q locked=%v", cardNumber, status, mechanicsLocked)
+		}
+	}
+	var revocations int
+	if err := db.QueryRow(`
+		SELECT COUNT(*) FROM content_certification_revocations
+		WHERE migration_version='105_repair_active_action_targeting'
+	`).Scan(&revocations); err != nil {
+		t.Fatal(err)
+	}
+	if revocations != 2 {
+		t.Fatalf("targeting certification revocations = %d, want 2", revocations)
+	}
+	var priorStatus string
+	if err := db.QueryRow(`
+		SELECT prior_support->>'status'
+		FROM content_certification_revocations
+		WHERE migration_version='105_repair_active_action_targeting'
+		  AND card_number='ACT-bardic-inspiration'
+	`).Scan(&priorStatus); err != nil {
+		t.Fatal(err)
+	}
+	if priorStatus != "verified_mechanical" {
+		t.Fatalf("bardic inspiration revocation lost its preimage: %q", priorStatus)
+	}
+	var nullSupport bool
+	if err := db.QueryRow(`
+		SELECT support IS NULL FROM actions WHERE card_number='ACT-goliath-fire'
+	`).Scan(&nullSupport); err != nil {
+		t.Fatal(err)
+	}
+	if !nullSupport {
+		t.Fatal("targeting repair invented certification support for an unreviewed action")
+	}
 	if _, err := db.Exec(`
-		CREATE TABLE actions (
-			card_number TEXT PRIMARY KEY,
-			mechanics JSONB NOT NULL,
-			support JSONB NOT NULL DEFAULT '{}'::jsonb,
-			deleted_at TIMESTAMPTZ
-		)
+		UPDATE actions
+		SET support='{"status":"verified_mechanical","mechanics_locked":true}'::jsonb
+		WHERE card_number='ACT-bardic-inspiration'
 	`); err != nil {
 		t.Fatal(err)
 	}
-	repair := activeActionTargetingRepairs[2]
-	legacy, err := json.Marshal(repair.ExpectedLegacyTargeting)
-	if err != nil {
-		t.Fatal(err)
-	}
-	mechanics := `{"activation":{"mode":"active","cost":[{"resource":"bonus_action"}]},"effects":[],"targeting":` + string(legacy) + `}`
 	if _, err := db.Exec(`
-		INSERT INTO actions (card_number, mechanics, support)
-		VALUES ($1, $2::jsonb, '{"mechanics_locked":true}'::jsonb)
-	`, repair.CardNumber, mechanics); err != nil {
-		t.Fatal(err)
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer tx.Rollback()
-	if err := applyActiveActionTargetingRepair(tx, repair); err != nil {
-		t.Fatal(err)
-	}
-	if err := tx.Commit(); err != nil {
-		t.Fatal(err)
-	}
-	var targeting []byte
-	if err := db.QueryRow(`SELECT mechanics->'targeting' FROM actions WHERE card_number=$1`, repair.CardNumber).Scan(&targeting); err != nil {
-		t.Fatal(err)
-	}
-	var got map[string]any
-	if err := json.Unmarshal(targeting, &got); err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(got, repair.ExpectedLegacyTargeting) {
-		t.Fatalf("locked targeting changed: got %#v want %#v", got, repair.ExpectedLegacyTargeting)
+		UPDATE actions SET mechanics='{}'::jsonb
+		WHERE card_number='ACT-bardic-inspiration'
+	`); err == nil {
+		t.Fatal("restored certification guard accepted a mechanics update")
 	}
 }
