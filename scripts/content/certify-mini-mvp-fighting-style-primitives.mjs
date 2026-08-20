@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { apiUrl, login } from './api.mjs';
 import {
   buildCertificationIndex,
   certificationHashes,
+  contentHash,
   sha256Canonical,
 } from './certification-hash.mjs';
 import {
@@ -64,6 +68,156 @@ export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH = sha256Canonical(
   FIGHTING_STYLE_PRIMITIVE_EVIDENCE,
 );
 
+const HERE = dirname(fileURLToPath(import.meta.url));
+const REPOSITORY_ROOT = resolve(HERE, '../..');
+const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/u;
+const SOURCE_COMMIT_PATTERN = /^[0-9a-f]{40}$/u;
+const RULE_SOURCE_FILES = Object.freeze([
+  'frontend/src/engine/execute.ts',
+  'frontend/src/engine/modifiers.ts',
+  'frontend/src/engine/rollRules.ts',
+  'frontend/src/rules-core/fightingStyles.ts',
+  'frontend/src/testing/miniMvpFightingStylePrimitiveScenarios.ts',
+  'frontend/src/schemas/mechanics.schema.json',
+]);
+
+function normalizedFileHash(relativePath) {
+  const source = readFileSync(resolve(REPOSITORY_ROOT, relativePath), 'utf8')
+    .replace(/\r\n/gu, '\n');
+  return `sha256:${createHash('sha256').update(source).digest('hex')}`;
+}
+
+function catalogFingerprint(catalogs) {
+  return sha256Canonical(Object.entries(catalogs)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([entityType, entities]) => (entities ?? [])
+      .map((entity) => ({
+        entityType,
+        id: entity.id,
+        cardNumber: entity.card_number ?? null,
+        contentHash: contentHash(entity),
+      }))
+      .sort((left, right) => String(left.id).localeCompare(String(right.id)))));
+}
+
+function selectedContentFingerprint(catalogs) {
+  return sha256Canonical(FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS.flatMap((spec) => [
+    {
+      entityType: 'effect',
+      cardNumber: spec.effectCardNumber,
+      contentHash: contentHash(exactByCardNumber(catalogs.effect, spec.effectCardNumber, 'effect')),
+    },
+    {
+      entityType: 'feat',
+      cardNumber: spec.featCardNumber,
+      contentHash: contentHash(exactByCardNumber(catalogs.feat, spec.featCardNumber, 'feat')),
+    },
+  ]));
+}
+
+async function assertDeployedCommit(sourceCommit) {
+  const [healthResponse, buildResponse] = await Promise.all([
+    fetch(`${apiUrl()}/api/health`, { signal: AbortSignal.timeout(15_000) }),
+    fetch(`${apiUrl()}/build-info.json?release=${sourceCommit}`, { signal: AbortSignal.timeout(15_000) }),
+  ]);
+  if (!healthResponse.ok || !buildResponse.ok) {
+    throw new Error('production deployment attestation endpoints are not healthy');
+  }
+  const [health, build] = await Promise.all([healthResponse.json(), buildResponse.json()]);
+  if (health?.status !== 'ok'
+    || health?.source_commit !== sourceCommit
+    || build?.source_commit !== sourceCommit) {
+    throw new Error(`production deployment does not match ${sourceCommit}`);
+  }
+}
+
+export async function buildFightingStylePrimitiveReleaseEvidence(catalogs, {
+  sourceCommit,
+  verifyDeployment = true,
+  localSourceCommit = null,
+} = {}) {
+  if (!SOURCE_COMMIT_PATTERN.test(sourceCommit ?? '')) {
+    throw new Error('sourceCommit must be an exact 40-hex Git commit');
+  }
+  const localCommit = localSourceCommit ?? execFileSync(
+    'git', ['rev-parse', 'HEAD'], { cwd: REPOSITORY_ROOT, encoding: 'utf8' },
+  ).trim().toLowerCase();
+  if (localSourceCommit === null) {
+    const trackedStatus = execFileSync(
+      'git', ['status', '--porcelain', '--untracked-files=no'],
+      { cwd: REPOSITORY_ROOT, encoding: 'utf8' },
+    ).trim();
+    if (trackedStatus) {
+      throw new Error('tracked working tree must be clean before deriving release evidence');
+    }
+  }
+  if (localCommit !== sourceCommit) {
+    throw new Error(`local source commit ${localCommit} differs from ${sourceCommit}`);
+  }
+  if (verifyDeployment) await assertDeployedCommit(sourceCommit);
+
+  const gateSourceHash = FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH;
+  const sourceContentHash = sha256Canonical({
+    definitions: MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch) => ({
+      cardNumber: patch.cardNumber,
+      expectedAfterHash: patch.expectedAfterHash,
+    })),
+    specs: FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS,
+    sourceRules: FIGHTING_STYLE_PRIMITIVE_EVIDENCE.sourceRules,
+  });
+  const rulesHash = sha256Canonical(RULE_SOURCE_FILES.map((path) => ({
+    path,
+    hash: normalizedFileHash(path),
+  })));
+  const contentHashValue = selectedContentFingerprint(catalogs);
+  const patchHash = sha256Canonical(MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch) => ({
+    cardNumber: patch.cardNumber,
+    expectedBeforeHash: patch.expectedBeforeHash,
+    expectedAfterHash: patch.expectedAfterHash,
+  })));
+  const catalogHash = catalogFingerprint(catalogs);
+  const releaseHash = sha256Canonical({
+    sourceCommit,
+    gateSourceHash,
+    sourceContentHash,
+    rulesHash,
+    contentHash: contentHashValue,
+    patchHash,
+    catalogHash,
+  });
+  const evidenceHash = sha256Canonical({
+    evidenceId: FIGHTING_STYLE_PRIMITIVE_EVIDENCE_ID,
+    contract: FIGHTING_STYLE_PRIMITIVE_EVIDENCE,
+    sourceCommit,
+    releaseHash,
+  });
+  return {
+    sourceCommit,
+    evidenceHash,
+    gateSourceHash,
+    sourceContentHash,
+    rulesHash,
+    contentHash: contentHashValue,
+    releaseHash,
+    patchHash,
+    catalogHash,
+  };
+}
+
+function assertReleaseEvidence(releaseEvidence) {
+  if (!releaseEvidence || !SOURCE_COMMIT_PATTERN.test(releaseEvidence.sourceCommit ?? '')) {
+    throw new Error('exact release evidence is required');
+  }
+  for (const key of [
+    'evidenceHash', 'gateSourceHash', 'sourceContentHash', 'rulesHash',
+    'contentHash', 'releaseHash', 'patchHash', 'catalogHash',
+  ]) {
+    if (!SHA256_PATTERN.test(releaseEvidence[key] ?? '')) {
+      throw new Error(`${key} must be an exact sha256 hash`);
+    }
+  }
+}
+
 function assertUtc(value, label) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u.test(value)
     || Number.isNaN(Date.parse(value))) {
@@ -95,7 +249,7 @@ function nonCertificationProblems(record) {
   ));
 }
 
-function supportPayload(entity, entityType, index, certifiedAt) {
+function supportPayload(entity, entityType, index, certifiedAt, releaseEvidence) {
   const hashes = certificationHashes(entity, entityType, index);
   return {
     status: 'verified_mechanical',
@@ -104,8 +258,15 @@ function supportPayload(entity, entityType, index, certifiedAt) {
     certification_version: MINI_MVP_CERTIFICATION_VERSION,
     certified_at: certifiedAt,
     evidence_id: FIGHTING_STYLE_PRIMITIVE_EVIDENCE_ID,
-    evidence_hash: FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH,
+    evidence_hash: releaseEvidence.evidenceHash,
     evidence_completed_at: certifiedAt,
+    gate_source_hash: releaseEvidence.gateSourceHash,
+    source_content_hash: releaseEvidence.sourceContentHash,
+    rules_hash: releaseEvidence.rulesHash,
+    release_content_hash: releaseEvidence.contentHash,
+    release_hash: releaseEvidence.releaseHash,
+    patch_hash: releaseEvidence.patchHash,
+    catalog_hash: releaseEvidence.catalogHash,
     limitations: [],
     note: 'Проверены точные данные, позитивные и негативные механические сценарии из live DB, а также production Forge→sheet.',
     test_coverage: {
@@ -121,8 +282,10 @@ function supportPayload(entity, entityType, index, certifiedAt) {
 
 export function prepareFightingStylePrimitiveCertifications(catalogs, report, {
   certifiedAt,
+  releaseEvidence,
 } = {}) {
   assertUtc(certifiedAt, 'certifiedAt');
+  assertReleaseEvidence(releaseEvidence);
   const fixtureProblems = fightingStyleForgeSheetCoverageProblems();
   if (fixtureProblems.length > 0) throw new Error(fixtureProblems.join('; '));
   const index = buildCertificationIndex(catalogs);
@@ -161,13 +324,13 @@ export function prepareFightingStylePrimitiveCertifications(catalogs, report, {
     records.push({
       entityType: 'effect',
       entity: effect,
-      support: supportPayload(effect, 'effect', index, certifiedAt),
+      support: supportPayload(effect, 'effect', index, certifiedAt, releaseEvidence),
       cardNumber: effect.card_number,
     });
     records.push({
       entityType: 'feat',
       entity: feat,
-      support: supportPayload(feat, 'feat', index, certifiedAt),
+      support: supportPayload(feat, 'feat', index, certifiedAt, releaseEvidence),
       cardNumber: feat.card_number,
     });
   }
@@ -232,13 +395,22 @@ function option(name) {
 export async function runFightingStylePrimitiveCertification({
   apply = process.argv.includes('--apply'),
   certifiedAt = option('certified-at'),
+  sourceCommit = option('source-commit'),
 } = {}) {
   if (!certifiedAt) throw new Error('--certified-at is required');
+  if (!sourceCommit) throw new Error('--source-commit is required');
   const catalogs = await fetchMiniMvpCatalogs();
   const report = assessMiniMvpCatalogs(catalogs);
-  const records = prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt });
+  const releaseEvidence = await buildFightingStylePrimitiveReleaseEvidence(catalogs, {
+    sourceCommit: sourceCommit.toLowerCase(),
+  });
+  const records = prepareFightingStylePrimitiveCertifications(catalogs, report, {
+    certifiedAt,
+    releaseEvidence,
+  });
   console.log(`${apply ? 'APPLY' : 'DRY-RUN'} ${apiUrl()}: ${records.length} exact records`);
-  console.log(`evidence ${FIGHTING_STYLE_PRIMITIVE_EVIDENCE_ID} ${FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH}`);
+  console.log(`evidence ${FIGHTING_STYLE_PRIMITIVE_EVIDENCE_ID} ${releaseEvidence.evidenceHash}`);
+  console.log(`release ${releaseEvidence.releaseHash} commit ${releaseEvidence.sourceCommit}`);
   for (const record of records) {
     console.log(`  ${record.entityType} ${record.cardNumber}: 3/3, locked=${record.support.mechanics_locked}`);
   }

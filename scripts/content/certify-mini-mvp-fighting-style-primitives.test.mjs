@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   FIGHTING_STYLE_PRIMITIVE_CERTIFICATION_SPECS,
-  FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH,
+  buildFightingStylePrimitiveReleaseEvidence,
   buildFightingStylePrimitiveCertificationBatch,
   prepareFightingStylePrimitiveCertifications,
 } from './certify-mini-mvp-fighting-style-primitives.mjs';
 import { MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES } from './upgrade-mini-mvp-fighting-style-primitives.mjs';
 
 const CERTIFIED_AT = '2026-08-20T13:00:00Z';
+const SOURCE_COMMIT = '0123456789abcdef0123456789abcdef01234567';
 
 function fixture() {
   const effects = MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES.map((patch, index) => ({
@@ -45,8 +46,20 @@ function fixture() {
 
 test('prepares exactly four locked effects and four fully covered Fighting Style roots', () => {
   const { catalogs, report } = fixture();
+  const releaseEvidence = {
+    sourceCommit: SOURCE_COMMIT,
+    evidenceHash: `sha256:${'1'.repeat(64)}`,
+    gateSourceHash: `sha256:${'2'.repeat(64)}`,
+    sourceContentHash: `sha256:${'3'.repeat(64)}`,
+    rulesHash: `sha256:${'4'.repeat(64)}`,
+    contentHash: `sha256:${'5'.repeat(64)}`,
+    releaseHash: `sha256:${'6'.repeat(64)}`,
+    patchHash: `sha256:${'7'.repeat(64)}`,
+    catalogHash: `sha256:${'8'.repeat(64)}`,
+  };
   const records = prepareFightingStylePrimitiveCertifications(catalogs, report, {
     certifiedAt: CERTIFIED_AT,
+    releaseEvidence,
   });
   assert.equal(records.length, 8);
   assert.equal(records.filter((record) => record.entityType === 'effect').length, 4);
@@ -56,7 +69,8 @@ test('prepares exactly four locked effects and four fully covered Fighting Style
     assert.deepEqual(record.support.test_coverage, {
       schema_version: 1, scope: 'mini-mvp-l1', required: 3, passed: 3, percent: 100,
     });
-    assert.equal(record.support.evidence_hash, FIGHTING_STYLE_PRIMITIVE_EVIDENCE_HASH);
+    assert.equal(record.support.evidence_hash, releaseEvidence.evidenceHash);
+    assert.equal(record.support.release_hash, releaseEvidence.releaseHash);
     assert.deepEqual(record.support.limitations, []);
   }
   const batch = buildFightingStylePrimitiveCertificationBatch(records, 'test-operation');
@@ -67,11 +81,22 @@ test('prepares exactly four locked effects and four fully covered Fighting Style
 });
 
 test('refuses mechanics drift, reference drift, and structural blockers', () => {
+  const releaseEvidence = {
+    sourceCommit: SOURCE_COMMIT,
+    evidenceHash: `sha256:${'1'.repeat(64)}`,
+    gateSourceHash: `sha256:${'2'.repeat(64)}`,
+    sourceContentHash: `sha256:${'3'.repeat(64)}`,
+    rulesHash: `sha256:${'4'.repeat(64)}`,
+    contentHash: `sha256:${'5'.repeat(64)}`,
+    releaseHash: `sha256:${'6'.repeat(64)}`,
+    patchHash: `sha256:${'7'.repeat(64)}`,
+    catalogHash: `sha256:${'8'.repeat(64)}`,
+  };
   {
     const { catalogs, report } = fixture();
     catalogs.effect[0].mechanics = { activation: { mode: 'active' } };
     assert.throws(
-      () => prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt: CERTIFIED_AT }),
+      () => prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt: CERTIFIED_AT, releaseEvidence }),
       /live mechanics differ from reviewed postimage/u,
     );
   }
@@ -79,7 +104,7 @@ test('refuses mechanics drift, reference drift, and structural blockers', () => 
     const { catalogs, report } = fixture();
     catalogs.feat[0].related_effects = ['00000000-0000-4000-8000-000000009999'];
     assert.throws(
-      () => prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt: CERTIFIED_AT }),
+      () => prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt: CERTIFIED_AT, releaseEvidence }),
       /must reference only/u,
     );
   }
@@ -87,8 +112,35 @@ test('refuses mechanics drift, reference drift, and structural blockers', () => 
     const { catalogs, report } = fixture();
     report.records[0].issues.push({ kind: 'mechanics', code: 'feat_mechanics_missing' });
     assert.throws(
-      () => prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt: CERTIFIED_AT }),
+      () => prepareFightingStylePrimitiveCertifications(catalogs, report, { certifiedAt: CERTIFIED_AT, releaseEvidence }),
       /structural\/mechanical blockers/u,
     );
   }
+});
+
+test('derives every release-level hash reproducibly from source and exact catalog content', async () => {
+  const { catalogs } = fixture();
+  const first = await buildFightingStylePrimitiveReleaseEvidence(catalogs, {
+    sourceCommit: SOURCE_COMMIT,
+    localSourceCommit: SOURCE_COMMIT,
+    verifyDeployment: false,
+  });
+  const second = await buildFightingStylePrimitiveReleaseEvidence(catalogs, {
+    sourceCommit: SOURCE_COMMIT,
+    localSourceCommit: SOURCE_COMMIT,
+    verifyDeployment: false,
+  });
+  assert.deepEqual(first, second);
+  for (const [key, value] of Object.entries(first)) {
+    if (key !== 'sourceCommit') assert.match(value, /^sha256:[0-9a-f]{64}$/u, key);
+  }
+  catalogs.effect[0].description = 'drift';
+  const drifted = await buildFightingStylePrimitiveReleaseEvidence(catalogs, {
+    sourceCommit: SOURCE_COMMIT,
+    localSourceCommit: SOURCE_COMMIT,
+    verifyDeployment: false,
+  });
+  assert.notEqual(drifted.catalogHash, first.catalogHash);
+  assert.notEqual(drifted.contentHash, first.contentHash);
+  assert.notEqual(drifted.releaseHash, first.releaseHash);
 });
