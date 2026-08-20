@@ -89,7 +89,11 @@ var activeActionTargetingRepairs = []activeActionTargetingRepair{
 	},
 }
 
-func applyActiveActionTargetingRepair(tx *sql.Tx, repair activeActionTargetingRepair) error {
+func applyActiveActionTargetingRepair(
+	tx *sql.Tx,
+	repair activeActionTargetingRepair,
+	migrationVersion string,
+) error {
 	if repair.Table != "actions" && repair.Table != "cards" {
 		return fmt.Errorf("unsupported targeting repair table %q", repair.Table)
 	}
@@ -165,11 +169,16 @@ func applyActiveActionTargetingRepair(tx *sql.Tx, repair activeActionTargetingRe
 				entity_type, entity_id, card_number, prior_support, prior_mechanics,
 				reason, migration_version
 			)
-			SELECT $2, id, card_number, support, mechanics, $3, '105_repair_active_action_targeting'
+			SELECT $2, id, card_number, support, mechanics, $3, $4
 			FROM %s
 			WHERE id = $1::uuid AND support IS NOT NULL
 			ON CONFLICT (migration_version, entity_type, entity_id) DO NOTHING
-		`, repair.Table), entityID, repair.Table[:len(repair.Table)-1], activeActionTargetingRevocationReason); err != nil {
+		`, repair.Table),
+			entityID,
+			repair.Table[:len(repair.Table)-1],
+			activeActionTargetingRevocationReason,
+			migrationVersion,
+		); err != nil {
 			return fmt.Errorf("record %s:%s certification revocation: %w", repair.Table, repair.CardNumber, err)
 		}
 	}
@@ -211,7 +220,7 @@ func applyActiveActionTargetingRepair(tx *sql.Tx, repair activeActionTargetingRe
 	return nil
 }
 
-func repairActiveActionTargeting(db *sql.DB) error {
+func repairActiveActionTargetingWithVersion(db *sql.DB, migrationVersion string) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -228,7 +237,7 @@ func repairActiveActionTargeting(db *sql.DB) error {
 		return fmt.Errorf("temporarily disable action certification guard: %w", err)
 	}
 	for _, repair := range activeActionTargetingRepairs {
-		if err := applyActiveActionTargetingRepair(tx, repair); err != nil {
+		if err := applyActiveActionTargetingRepair(tx, repair, migrationVersion); err != nil {
 			return err
 		}
 	}
@@ -240,4 +249,15 @@ func repairActiveActionTargeting(db *sql.DB) error {
 		return fmt.Errorf("restore action certification guard: %w", err)
 	}
 	return tx.Commit()
+}
+
+func repairActiveActionTargeting(db *sql.DB) error {
+	return repairActiveActionTargetingWithVersion(db, "105_repair_active_action_targeting")
+}
+
+// Migration 105 briefly existed in main with a preservation policy for locked
+// legacy targeting. Some databases can therefore have 105 recorded while the
+// locked Bardic Inspiration row still needs the strict audited repair.
+func repairPreservedLockedActionTargeting(db *sql.DB) error {
+	return repairActiveActionTargetingWithVersion(db, "106_repair_preserved_locked_action_targeting")
 }

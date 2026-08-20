@@ -24,6 +24,25 @@ func TestActiveActionTargetingMigrationIsRegisteredAfter104(t *testing.T) {
 	}
 }
 
+func TestPreservedLockedTargetingRepairIsRegisteredAfter105(t *testing.T) {
+	migrations := GetAllMigrations()
+	index := -1
+	for candidate, migration := range migrations {
+		if migration.Version == "106_repair_preserved_locked_action_targeting" {
+			index = candidate
+			if migration.Up == nil || migration.Down == nil {
+				t.Fatal("106 must register Up and safe Down")
+			}
+		}
+	}
+	if index < 1 {
+		t.Fatal("106_repair_preserved_locked_action_targeting is not registered")
+	}
+	if previous := migrations[index-1].Version; previous != "105_repair_active_action_targeting" {
+		t.Fatalf("migration before 106 = %q, want 105", previous)
+	}
+}
+
 func TestActiveActionTargetingRepairCatalogIsCompleteAndUnique(t *testing.T) {
 	seen := map[string]bool{}
 	for _, repair := range activeActionTargetingRepairs {

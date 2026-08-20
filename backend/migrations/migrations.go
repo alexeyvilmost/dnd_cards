@@ -669,6 +669,13 @@ func GetAllMigrations() []Migration {
 			// Контракты исправляют исполняемость контента и намеренно не откатываются.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "106_repair_preserved_locked_action_targeting",
+			Description: "Отозвать устаревший сертификат и исправить actor-target контракт, пропущенный ранней версией 105",
+			Up:          repairPreservedLockedActionTargeting,
+			// Отзыв сертификата и исправленный контракт являются аудиторским фактом и не откатываются.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
