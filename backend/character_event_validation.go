@@ -209,6 +209,43 @@ func validateCharacterEvent(eventType string, payload JSONMap) error {
 		}
 		return optionalString(normalized, "source", "payload.source", false)
 
+	case "stabilized":
+		if err := exactKeys(normalized, "payload", []string{"type"}, []string{"source"}); err != nil {
+			return err
+		}
+		return optionalString(normalized, "source", "payload.source", false)
+
+	case "world_interaction":
+		if err := exactKeys(normalized, "payload", []string{"type", "operation", "parameters"}, []string{"source"}); err != nil {
+			return err
+		}
+		if _, err := requiredString(normalized, "operation", "payload.operation", false); err != nil {
+			return err
+		}
+		if parameters, ok := normalized["parameters"].(map[string]any); !ok || parameters == nil {
+			return invalidCharacterEvent("payload.parameters", "must be a JSON object")
+		}
+		return optionalString(normalized, "source", "payload.source", false)
+
+	case "communication":
+		if err := exactKeys(normalized, "payload", []string{"type", "mode", "private"}, []string{"sourceActorId", "targetActorId"}); err != nil {
+			return err
+		}
+		mode, err := requiredString(normalized, "mode", "payload.mode", false)
+		if err != nil {
+			return err
+		}
+		if !oneOf(mode, "message", "reply") {
+			return invalidCharacterEvent("payload.mode", "is unsupported")
+		}
+		if private, ok := normalized["private"].(bool); !ok || !private {
+			return invalidCharacterEvent("payload.private", "must be true")
+		}
+		if err := optionalString(normalized, "sourceActorId", "payload.sourceActorId", false); err != nil {
+			return err
+		}
+		return optionalString(normalized, "targetActorId", "payload.targetActorId", false)
+
 	case "turn_started", "turn_ended", "short_rest", "long_rest":
 		return exactKeys(normalized, "payload", []string{"type"}, nil)
 
