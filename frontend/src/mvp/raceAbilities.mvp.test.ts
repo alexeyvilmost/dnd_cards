@@ -29,7 +29,7 @@ import { seededRng } from './fixtures';
 import type { Action, CharacterClass, PassiveEffect, Race } from '../types';
 
 const RUN = !!process.env.MVP_CONTENT;
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'http://localhost:8080';
 const d = describe.skipIf(!RUN);
 
 type Dict = Record<string, unknown>;

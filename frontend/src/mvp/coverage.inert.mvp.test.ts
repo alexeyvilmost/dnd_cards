@@ -22,7 +22,7 @@ import { describe, expect, it } from 'vitest';
 declare const process: { env: Record<string, string | undefined> };
 
 const RUN = !!(typeof process !== 'undefined' && process.env.MVP_CONTENT);
-const BASE = (typeof process !== 'undefined' && process.env.API_URL) || 'https://backend-production-41c3.up.railway.app';
+const BASE = (typeof process !== 'undefined' && process.env.API_URL) || 'http://localhost:8080';
 const d = describe.skipIf(!RUN);
 
 /**

@@ -23,7 +23,7 @@ import { freeuseKey } from '../engine/freeuse';
 import type { Background, CharacterClass, Feat, Race } from '../types';
 
 const RUN = !!process.env.MVP_CONTENT;
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'http://localhost:8080';
 const d = describe.skipIf(!RUN);
 
 async function fetchAll<T>(path: string, key: string): Promise<T[]> {

@@ -14,7 +14,7 @@ import { seededRng } from './fixtures';
 import { validateMechanics, type MechanicKind } from '../engine/validateMechanics';
 
 const RUN = !!process.env.MVP_CONTENT;
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'http://localhost:8080';
 
 type Dict = Record<string, unknown>;
 type Entity = { id: string; name: string; card_number?: string; level?: number; mechanics?: Dict | null };

@@ -127,6 +127,20 @@ test('audit rejects micro-MVP coverage and an unlocked canonical spell', () => {
   assert.ok(record.issues.some((item) => item.code === 'mechanics_unlocked'));
 });
 
+test('audit accepts triggered spells and specialized primitives as executable mechanics', () => {
+  const catalogs = validCatalogs();
+  const spell = catalogs.spell.find((entity) => entity.card_number === 'SPELL-0174');
+  spell.mechanics = {
+    activation: { mode: 'triggered' },
+    primitive: { type: 'multi_projectile_auto_hit' },
+  };
+  const index = buildCertificationIndex(catalogs);
+  spell.support = supportFor(spell, 'spell', index);
+  const report = assessMiniMvpCatalogs(catalogs);
+  const record = report.records.find((item) => item.cardNumber === 'SPELL-0174');
+  assert.equal(record.ready, true);
+});
+
 test('audit rejects dangling data-driven references', () => {
   const catalogs = validCatalogs();
   const feat = catalogs.feat.find((entity) => entity.card_number === 'FEAT-0001');
@@ -138,4 +152,3 @@ test('audit rejects dangling data-driven references', () => {
   assert.equal(record.ready, false);
   assert.ok(record.issues.some((item) => item.code === 'reference_unresolved'));
 });
-

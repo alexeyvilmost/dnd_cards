@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { CharacterClass, Feat, PassiveEffect, Race, Spell } from '../types';
 
 const RUN = !!process.env.MVP_CONTENT;
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'http://localhost:8080';
 type Dict = Record<string, unknown>;
 
 let effects: PassiveEffect[] = [];
