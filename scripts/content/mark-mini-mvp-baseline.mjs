@@ -35,6 +35,31 @@ export function planMiniMvpBaseline(report, catalogs) {
   });
 }
 
+export function miniMvpBaselineSupportPayload(entity, entityType, index, {
+  note = 'Базовый маркер 1/3: он делает отсутствие сценарного покрытия видимым и не подтверждает механику.',
+} = {}) {
+  const hashes = certificationHashes(entity, entityType, index);
+  return {
+    status: 'verified_partial',
+    content_hash: hashes.contentHash,
+    dependency_hash: hashes.dependencyHash,
+    certification_version: SUPPORT_VERSION,
+    limitations: [
+      'Пройдены только идентичность mini-MVP manifest, базовая структура live-данных и разрешение ссылок.',
+      'Нет отдельного механического сценария и живого прогона этой сущности через реальный лист персонажа.',
+    ],
+    note,
+    test_coverage: {
+      schema_version: 1,
+      scope: SUPPORT_VERSION,
+      required: 3,
+      passed: 1,
+      percent: 33,
+    },
+    mechanics_locked: false,
+  };
+}
+
 export async function runMiniMvpBaseline({
   apply = process.argv.includes('--apply'),
 } = {}) {
@@ -53,26 +78,7 @@ export async function runMiniMvpBaseline({
   const index = buildCertificationIndex(catalogs);
   for (const item of plan) {
     const entityType = item.record.entityType;
-    const hashes = certificationHashes(item.entity, entityType, index);
-    const payload = {
-      status: 'verified_partial',
-      content_hash: hashes.contentHash,
-      dependency_hash: hashes.dependencyHash,
-      certification_version: SUPPORT_VERSION,
-      limitations: [
-        'Пройдены только идентичность mini-MVP manifest, базовая структура live-данных и разрешение ссылок.',
-        'Нет отдельного механического сценария и живого прогона этой сущности через реальный лист персонажа.',
-      ],
-      note: 'Базовый маркер 1/3: он делает отсутствие сценарного покрытия видимым и не подтверждает механику.',
-      test_coverage: {
-        schema_version: 1,
-        scope: SUPPORT_VERSION,
-        required: 3,
-        passed: 1,
-        percent: 33,
-      },
-      mechanics_locked: false,
-    };
+    const payload = miniMvpBaselineSupportPayload(item.entity, entityType, index);
     const response = await fetch(
       `${apiUrl()}/api/content-support/${entityType}/${item.entity.id}`,
       {
