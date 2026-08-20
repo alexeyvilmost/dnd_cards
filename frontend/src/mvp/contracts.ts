@@ -167,6 +167,10 @@ export interface ResourceRestRecovery {
 }
 
 export interface CharacterContext {
+  /** Canonical creature type used by source/target-filtered mechanics. A subtype
+   * may follow a colon (for example `fiend:devil`); broad filters match either
+   * the exact value or its prefix. Missing data always fails closed. */
+  creatureType?: string;
   /** Итоговые значения характеристик после всех постоянных источников. */
   abilityScores?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   abilityMods: Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>;
@@ -244,6 +248,7 @@ export interface TargetContext {
 export interface ConditionImmunityContext {
   condition: string;
   requiredCauseTags?: string[];
+  sourceCreatureTypes?: string[];
   sourceEntityIds: string[];
 }
 

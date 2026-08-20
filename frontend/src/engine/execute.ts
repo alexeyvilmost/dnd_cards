@@ -25,7 +25,9 @@ import {
   foldModifiers,
   type ModifierQueryFacts,
 } from './modifiers';
-import { activeConditionsOf, matchesWhen, type EvalContext } from './circumstances';
+import {
+  activeConditionsOf, creatureTypeMatches, matchesWhen, type EvalContext,
+} from './circumstances';
 import {
   conditionLevel,
   conditionModifierPayloads,
@@ -145,6 +147,7 @@ const EXECUTABLE_PAYLOAD_KINDS = new Set([
   'damage', 'damage_rider', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
   'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
   'condition_immunity', 'triggered_effect', 'fall_protection', 'movement_option',
+  'targeting_ward', 'turn_command',
   'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
 ]);
@@ -158,6 +161,8 @@ const MODIFIER_OPS = new Set([
 const NUMERIC_MODIFIER_OPS = new Set(['add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'die_bonus']);
 const MOVEMENT_MODES = new Set(['push', 'pull', 'teleport', 'extra_speed', 'double', 'knock_prone', 'move']);
 const RESISTANCE_LEVELS = new Set(['resistance', 'immunity', 'vulnerability']);
+const TARGETING_WARD_INTERACTIONS = new Set(['attack_roll', 'damaging_spell']);
+const TURN_COMMANDS = new Set(['approach', 'drop', 'flee', 'grovel', 'halt']);
 const MAX_PREFLIGHT_DEPTH = 12;
 const PREFLIGHT_RNG = () => 0.5;
 
@@ -649,6 +654,46 @@ function preflightPayload(
       if (!isDict(value.duration)) {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'condition_immunity requires duration');
       }
+      if (value.source_creature_types !== undefined
+        && (!Array.isArray(value.source_creature_types)
+          || value.source_creature_types.length === 0
+          || value.source_creature_types.some((candidate) => typeof candidate !== 'string' || !candidate.trim()))) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.source_creature_types`,
+          'source creature types must be a non-empty string array',
+        );
+      }
+      break;
+    }
+    case 'targeting_ward': {
+      const protects = value.protects;
+      if (!Array.isArray(protects) || protects.length === 0
+        || protects.some((candidate) => typeof candidate !== 'string'
+          || !TARGETING_WARD_INTERACTIONS.has(candidate))) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.protects`, 'targeting ward requires supported protected interactions',
+        );
+      }
+      explicitAbility(value.save_ability, `${path}.save_ability`, ABILITY_KEYS, 'targeting ward');
+      explicitPositiveDc(value.dc, `${path}.dc`, ctx);
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'targeting ward requires duration');
+      }
+      if (!Array.isArray(value.end_triggers) || value.end_triggers.length === 0
+        || value.end_triggers.some((candidate) => typeof candidate !== 'string' || !candidate.trim())) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.end_triggers`, 'targeting ward requires observable end triggers',
+        );
+      }
+      break;
+    }
+    case 'turn_command': {
+      if (typeof value.command !== 'string' || !TURN_COMMANDS.has(value.command)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.command`, 'turn command requires a supported command');
+      }
+      if (value.execute_at !== 'next_turn') {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.execute_at`, 'turn command must execute at next turn');
+      }
       break;
     }
     case 'triggered_effect': {
@@ -1046,6 +1091,7 @@ function evalCtxOf(state: RuntimeState, ctx: ExecuteContext): EvalContext {
     targetConditions: activeConditionsOf(ctx.target?.runtimeState),
     rollerActorId: ctx.selfId,
     rollTargetActorId: ctx.target?.id,
+    rollerCreatureType: ctx.character.creatureType,
     conditionSourceFacts: ctx.conditionSourceFacts,
     distancesFt: ctx.conditionRelationFacts?.distancesFt,
     visibility: ctx.conditionRelationFacts?.visibility,
@@ -1554,6 +1600,57 @@ function applyTraversalPayload(
   return stackApply(state, entry, payload);
 }
 
+/** Persist a target-owned pre-resolution ward.  The save DC is frozen from the
+ * caster at application time, so later incoming actions never trust a client
+ * supplied DC or accidentally use the attacker's spellcasting ability. */
+function applyTargetingWardPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const persisted: Dict = { ...payload, dc: evalDc(String(payload.dc), ctx) };
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'ward', state.activeEffects.length),
+    name: source,
+    mechanics: persisted,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, persisted);
+}
+
+/** Persist an instruction for the target's next turn.  Geometry and held-item
+ * mutation are intentionally delegated to the board adapter, while the command
+ * vocabulary and lifecycle remain content-owned and reusable. */
+function applyTurnCommandPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, `command-${String(payload.command)}`, state.activeEffects.length),
+    name: source,
+    mechanics: payload,
+    expiry: 'manual',
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
+}
+
 /** Runtime sense grants such as Dwarf Stonecunning are persisted effects. */
 function applySensePayload(
   state: RuntimeState,
@@ -1865,6 +1962,9 @@ function applyCondition(
           ...(Array.isArray(candidate.requiredCauseTags)
             ? { requiredCauseTags: candidate.requiredCauseTags.map(String) }
             : {}),
+          ...(Array.isArray(candidate.source_creature_types)
+            ? { sourceCreatureTypes: candidate.source_creature_types.map(String) }
+            : {}),
           sourceEntityIds: [entry.id],
         }]
         : []
@@ -1873,6 +1973,10 @@ function applyCondition(
   const immunity = [...(conditionImmunities ?? []), ...conditionOwnedImmunities].find((candidate) => (
     normalizeTag(candidate.condition) === normalizeTag(condition)
       && (candidate.requiredCauseTags ?? []).every((tag) => causeTags.has(normalizeTag(tag)))
+      && ((candidate.sourceCreatureTypes ?? []).length === 0
+        || candidate.sourceCreatureTypes!.some((requiredType) => (
+          creatureTypeMatches(ctx.character.creatureType, requiredType)
+        )))
   ));
   if (immunity) {
     events.push({
@@ -2398,6 +2502,22 @@ function applyPayloads(
       )); break;
       case 'fall_protection':
       case 'movement_option': route((s) => applyTraversalPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'targeting_ward': route((s) => applyTargetingWardPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'turn_command': route((s) => applyTurnCommandPayload(
         s,
         p,
         source,
@@ -3237,6 +3357,92 @@ export function emitEvent(
   return next;
 }
 
+function mechanicsHasResolution(mechanics: Dict, resolution: string): boolean {
+  return Array.isArray(mechanics.effects) && mechanics.effects.some((effect) => (
+    isDict(effect) && effect.resolution === resolution
+  ));
+}
+
+function mechanicsTargetsArea(mechanics: Dict): boolean {
+  const targeting = mechanics.targeting;
+  if (!isDict(targeting)) return false;
+  const shape = String(targeting.shape ?? '');
+  return targeting.domain === 'area'
+    || ['area', 'cone', 'cube', 'cylinder', 'line', 'sphere', 'emanation'].includes(shape)
+    || isDict(targeting.area);
+}
+
+function resolveTargetingWard(
+  state: RuntimeState,
+  targetState: RuntimeState | undefined,
+  mechanics: Dict,
+  ctx: ExecuteContext,
+): { blocked: boolean; events: EngineEvent[] } {
+  if (!targetState) return { blocked: false, events: [] };
+  const attackRoll = mechanicsHasResolution(mechanics, 'attack_roll');
+  const damagingSpell = ctx.spell != null
+    && mechanicsContainsPayloadKind(mechanics, 'damage')
+    && !mechanicsTargetsArea(mechanics);
+  if (!attackRoll && !damagingSpell) return { blocked: false, events: [] };
+
+  const ward = activePayloadEntries(targetState, 'targeting_ward').find(({ payload }) => {
+    const protects = Array.isArray(payload.protects) ? payload.protects.map(String) : [];
+    return (attackRoll && protects.includes('attack_roll'))
+      || (damagingSpell && protects.includes('damaging_spell'));
+  });
+  if (!ward) return { blocked: false, events: [] };
+
+  const ability = String(ward.payload.save_ability) as AbilityKey;
+  const base = explicitCharacterAbilityModifier(ctx, ability)
+    + (ctx.character.saveProficiencies?.includes(ability)
+      ? explicitCharacterProficiencyBonus(ctx)
+      : 0);
+  const collected = collectModifiers(state, passivesFromCtx(ctx), {
+    roll: 'saving_throw',
+    filter: { ability },
+    formulaCtx: formulaCtx(ctx),
+    evalCtx: evalCtxOf(state, ctx),
+  });
+  const dc = Number(ward.payload.dc);
+  const roll = rollD20({
+    advantage: collected.advantage,
+    modifiers: [{ value: base, source: ABILITY_LABEL[ability] }, ...collected.modifiers],
+    rules: collected.rules,
+    target: { type: 'dc', value: dc },
+    rng: ctx.rng,
+  });
+  const events: EngineEvent[] = [
+    rollEvent(`${ward.entry.name}: спасбросок ${ABILITY_LABEL[ability]} (СЛ ${dc})`, {
+      ...roll, kind: 'save',
+    }),
+  ];
+  if (roll.outcome === 'success') return { blocked: false, events };
+  events.push(narrativeEvent(
+    `${ward.entry.name}: цель нельзя атаковать; выберите новую цель или потеряйте атаку/заклинание.`,
+  ));
+  return { blocked: true, events };
+}
+
+function emitSpellCastLifecycle(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  pending: ReactionOffer[],
+  targetRef: TargetRef,
+  deferredSaves: DeferredTargetSave[],
+): RuntimeState {
+  if (!ctx.spell || ctx.suppressSpellCastEvent) return state;
+  let next = emitEvent(
+    { kind: 'spell_cast', source: 'self', data: { level: ctx.spell.castLevel ?? ctx.spell.baseLevel } },
+    state, ctx, events, pending, targetRef, deferredSaves,
+  );
+  next = expireEffectsForTrigger(next, 'actor_casts_spell', events);
+  if (ctx.spell.components?.verbal === true) {
+    next = expireEffectsForTrigger(next, 'actor_casts_spell_with_verbal_component', events);
+  }
+  return next;
+}
+
 export function executeAction(
   state: RuntimeState,
   mechanics: Dict,
@@ -3269,6 +3475,21 @@ export function executeAction(
     events.push(...paid.events);
   }
 
+  const targetStateForWard = targetRef.aliasesSelf
+    ? next
+    : targetRef.state ?? ctx.target?.runtimeState;
+  const ward = resolveTargetingWard(next, targetStateForWard, mechanics, ctx);
+  events.push(...ward.events);
+  if (ward.blocked) {
+    next = emitSpellCastLifecycle(next, ctx, events, pending, targetRef, deferredSaves);
+    return {
+      state: next,
+      events,
+      ...(pending.length ? { pendingReactions: pending } : {}),
+      ...(deferredSaves.length ? { deferredTargetSaves: deferredSaves } : {}),
+    };
+  }
+
   const effects = mechanics.effects as Dict[] | undefined;
   if (Array.isArray(effects)) {
     const sourceName = String(mechanics.name ?? 'действие');
@@ -3277,22 +3498,14 @@ export function executeAction(
     );
   }
 
+  if (events.some((event) => event.type === 'damage' && event.amount > 0)) {
+    next = expireEffectsForTrigger(next, 'actor_deals_damage', events);
+  }
+
   // Событие «сотворено заклинание» → триггеры на каст (напр. отклик оружия/предмета).
   // Активируется, когда лист/кузня передают ctx.spell (пикер уровня слота — D1 слайс 2);
   // до этого не фигурирует (аддитивно, без изменения текущего поведения).
-  if (ctx.spell && !ctx.suppressSpellCastEvent) {
-    next = emitEvent(
-      { kind: 'spell_cast', source: 'self', data: { level: ctx.spell.castLevel ?? ctx.spell.baseLevel } },
-      next, ctx, events, pending, targetRef, deferredSaves,
-    );
-    if (ctx.spell.components?.verbal === true) {
-      next = expireEffectsForTrigger(
-        next,
-        'actor_casts_spell_with_verbal_component',
-        events,
-      );
-    }
-  }
+  next = emitSpellCastLifecycle(next, ctx, events, pending, targetRef, deferredSaves);
 
   void (ctx.character as CharacterContext);
   return {
@@ -3487,6 +3700,116 @@ function activePayloadEntries(state: RuntimeState, kind: string): Array<{
   return state.activeEffects.flatMap((entry) => payloadsOf(entry.mechanics as Dict)
     .filter((payload) => payload.kind === kind)
     .map((payload) => ({ entry, payload })));
+}
+
+export type TurnCommandDirective =
+  | { type: 'approach_source'; sourceActorId?: string; shortestDirectRoute: true }
+  | { type: 'drop_held_items' }
+  | { type: 'flee_source'; sourceActorId?: string; fastestAvailableMeans: true }
+  | { type: 'grovel_prone' }
+  | { type: 'halt' };
+
+export interface TurnCommandResolution extends ExecuteResult {
+  command: 'approach' | 'drop' | 'flee' | 'grovel' | 'halt';
+  directive: TurnCommandDirective;
+  endsTurn: boolean | 'within_5ft_of_source';
+}
+
+/** Consume one data-owned command at the beginning of its owner's next turn.
+ * The pure runtime owns condition/capability mutations; a board controller owns
+ * actual pathfinding and held-item placement using the returned directive. */
+export function resolveNextTurnCommand(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+): TurnCommandResolution | null {
+  const commandEffect = activePayloadEntries(state, 'turn_command')[0];
+  if (!commandEffect) return null;
+  const command = String(commandEffect.payload.command) as TurnCommandResolution['command'];
+  let next = cloneState(state);
+  next.activeEffects = next.activeEffects.filter((entry) => entry.id !== commandEffect.entry.id);
+  const events: EngineEvent[] = [{ type: 'effect_expired', name: commandEffect.entry.name }];
+  const speed = Math.max(0, Number(ctx.character.characterSpeed ?? ctx.character.baseSpeed ?? 0));
+
+  if (command === 'grovel') {
+    next = applyCondition(
+      next,
+      { kind: 'condition', value: 'prone', op: 'apply' },
+      commandEffect.entry.name,
+      events,
+      ctx,
+      commandEffect.entry.sourceId,
+    );
+    return {
+      state: next,
+      events,
+      command,
+      directive: { type: 'grovel_prone' },
+      endsTurn: true,
+    };
+  }
+
+  if (command === 'halt') {
+    next.activeEffects.push({
+      id: runtimeEffectId(ctx, 'command-halt', next.activeEffects.length),
+      name: commandEffect.entry.name,
+      source: commandEffect.entry.source,
+      ownerId: commandEffect.entry.ownerId,
+      sourceId: commandEffect.entry.sourceId,
+      expiry: 'end_of_turn',
+      mechanics: {
+        activation: { mode: 'passive' },
+        effects: [{
+          resolution: 'auto',
+          result: ['movement', 'action', 'bonus_action'].map((capability) => ({
+            kind: 'modifier', applies_to: { roll: capability }, op: 'deny', value: '1',
+          })),
+        }],
+      },
+    });
+    events.push({ type: 'effect_applied', name: `${commandEffect.entry.name}: Стой` });
+    return {
+      state: next,
+      events,
+      command,
+      directive: { type: 'halt' },
+      endsTurn: true,
+    };
+  }
+
+  if (command === 'approach') {
+    events.push({ type: 'movement', mode: 'approach_source', distanceFt: speed });
+    return {
+      state: next,
+      events,
+      command,
+      directive: {
+        type: 'approach_source', sourceActorId: commandEffect.entry.sourceId, shortestDirectRoute: true,
+      },
+      endsTurn: 'within_5ft_of_source',
+    };
+  }
+
+  if (command === 'flee') {
+    events.push({ type: 'movement', mode: 'flee_source', distanceFt: speed });
+    return {
+      state: next,
+      events,
+      command,
+      directive: {
+        type: 'flee_source', sourceActorId: commandEffect.entry.sourceId, fastestAvailableMeans: true,
+      },
+      endsTurn: true,
+    };
+  }
+
+  events.push(narrativeEvent(`${commandEffect.entry.name}: цель бросает удерживаемые предметы.`));
+  return {
+    state: next,
+    events,
+    command: 'drop',
+    directive: { type: 'drop_held_items' },
+    endsTurn: true,
+  };
 }
 
 /** Authoritative descent cap exposed to a board/hazard adapter. */

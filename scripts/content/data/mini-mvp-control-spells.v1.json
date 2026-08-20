@@ -1,0 +1,238 @@
+[
+  {
+    "card_number": "SPELL-0201",
+    "name": "Защита от добра и зла",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "modifier",
+              "applies_to": { "roll": "attack" },
+              "scope": "target",
+              "op": "disadvantage",
+              "value": "0",
+              "when": [
+                {
+                  "kind": "roller_creature_type_in",
+                  "values": ["aberration", "celestial", "elemental", "fey", "fiend", "undead"]
+                }
+              ],
+              "duration": { "type": "minutes", "amount": 10, "concentration": true },
+              "stack_id": "spell:protection-evil-good:attacks",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "condition_immunity",
+              "condition": "charmed",
+              "source_creature_types": ["aberration", "celestial", "elemental", "fey", "fiend", "undead"],
+              "duration": { "type": "minutes", "amount": 10, "concentration": true },
+              "stack_id": "spell:protection-evil-good:charmed",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "condition_immunity",
+              "condition": "frightened",
+              "source_creature_types": ["aberration", "celestial", "elemental", "fey", "fiend", "undead"],
+              "duration": { "type": "minutes", "amount": 10, "concentration": true },
+              "stack_id": "spell:protection-evil-good:frightened",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "Защита от одержимости и преимущество на новые спасброски против уже действующего Очарования, Испуга или одержимости требуют source-aware связи состояния с типом наложившего существа."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-cleric", "CLASS-druid", "CLASS-paladin", "CLASS-warlock", "CLASS-wizard"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 5,
+        "requires_touch": true,
+        "requires_line_of_sight": false,
+        "allowed_relations": ["self", "ally"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0272",
+    "name": "Приказ",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "save",
+          "who": "target",
+          "ability": "wis",
+          "dc": "8 + prof + spellcasting",
+          "on_fail": [
+            {
+              "kind": "choice",
+              "id": "command_option",
+              "context": "in_play",
+              "count": 1,
+              "prompt": "Выберите приказ",
+              "options": {
+                "source": "explicit",
+                "items": [
+                  {
+                    "id": "approach",
+                    "name": "Подойди",
+                    "grants": [
+                      {
+                        "kind": "turn_command",
+                        "command": "approach",
+                        "execute_at": "next_turn",
+                        "stack_id": "spell:command",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "drop",
+                    "name": "Брось",
+                    "grants": [
+                      {
+                        "kind": "turn_command",
+                        "command": "drop",
+                        "execute_at": "next_turn",
+                        "stack_id": "spell:command",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "flee",
+                    "name": "Убегай",
+                    "grants": [
+                      {
+                        "kind": "turn_command",
+                        "command": "flee",
+                        "execute_at": "next_turn",
+                        "stack_id": "spell:command",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "grovel",
+                    "name": "Падай",
+                    "grants": [
+                      {
+                        "kind": "turn_command",
+                        "command": "grovel",
+                        "execute_at": "next_turn",
+                        "stack_id": "spell:command",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "halt",
+                    "name": "Стой",
+                    "grants": [
+                      {
+                        "kind": "turn_command",
+                        "command": "halt",
+                        "execute_at": "next_turn",
+                        "stack_id": "spell:command",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "on_success": []
+        },
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "narrative",
+              "description": "При сотворении ячейкой выше 1-го круга можно выбрать ещё одну цель за каждый дополнительный круг; масштабирование числа целей пока требует multi-target адаптера слота."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-bard", "CLASS-cleric", "CLASS-paladin"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 60,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["enemy", "neutral", "ally"]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0306",
+    "name": "Убежище",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "bonus_action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "targeting_ward",
+              "protects": ["attack_roll", "damaging_spell"],
+              "save_ability": "wis",
+              "dc": "8 + prof + spellcasting",
+              "duration": { "type": "rounds", "amount": 10 },
+              "end_triggers": ["actor_makes_attack_roll", "actor_casts_spell", "actor_deals_damage"],
+              "stack_id": "spell:sanctuary",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "При провале спасброска движок отменяет выбранную атаку или заклинание; интерактивный выбор новой цели остаётся обязанностью encounter UI."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": ["CLASS-cleric"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 30,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["self", "ally", "enemy", "neutral"]
+      }
+    }
+  }
+]

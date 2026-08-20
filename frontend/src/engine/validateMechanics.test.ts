@@ -355,7 +355,8 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
 
   // ПОЛНОСТЬЮ исполняемые: рантайм-роутер меняет состояние либо сборка применяет грант.
   const HANDLED = [
-    'damage', 'damage_rider', 'triggered_effect', 'fall_protection', 'movement_option', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource', 'modifier',
+    'damage', 'damage_rider', 'triggered_effect', 'fall_protection', 'movement_option',
+    'targeting_ward', 'turn_command', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource', 'modifier',
     'condition_immunity', 'resistance', 'set_value',    // condition-owned defense + урон/AC runtime
     'value_method',                                     // сборка: методы характеристик (C8, Пояс силы огра)
     'narrative', 'add_item',                            // add_item: S1 контейнеры

@@ -36,6 +36,8 @@ export interface EvalContext {
   /** Stable actor identities for condition-source predicates. */
   rollerActorId?: string;
   rollTargetActorId?: string;
+  /** Canonical broad/subtyped creature type of the creature making the roll. */
+  rollerCreatureType?: string;
   /** ActiveEffectEntry.sourceId of the condition whose payload is evaluated. */
   conditionSourceId?: string;
   /** Stable id of the creature that carries the evaluated condition. */
@@ -46,6 +48,14 @@ export interface EvalContext {
   distancesFt?: Record<string, Record<string, number>>;
   /** Explicit directed visibility facts keyed observer -> observed actor. */
   visibility?: Record<string, Record<string, boolean>>;
+}
+
+export function creatureTypeMatches(actual: unknown, expected: unknown): boolean {
+  if (typeof actual !== 'string' || typeof expected !== 'string') return false;
+  const normalizedActual = actual.trim().toLowerCase();
+  const normalizedExpected = expected.trim().toLowerCase();
+  if (!normalizedActual || !normalizedExpected) return false;
+  return normalizedActual === normalizedExpected || normalizedActual.startsWith(`${normalizedExpected}:`);
 }
 
 /** Собрать множество активных состояний владельца из RuntimeState (с раскрытием композиции F:
@@ -170,6 +180,10 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       const key = typeof cond.key === 'string' ? cond.key : '';
       if (!key || !ctx.event?.data) return false;
       return ctx.event.data[key] === cond.value;
+    }
+    case 'roller_creature_type_in': {
+      if (!Array.isArray(cond.values) || cond.values.length === 0) return false;
+      return cond.values.some((candidate) => creatureTypeMatches(ctx.rollerCreatureType, candidate));
     }
     case 'd20_equals':
       return ctx.lastD20 != null && ctx.lastD20 === Number(cond.value);

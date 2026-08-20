@@ -981,7 +981,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -1088,6 +1088,39 @@
           }
         },
         {
+          "if": { "properties": { "kind": { "const": "targeting_ward" } } },
+          "then": {
+            "required": ["protects", "save_ability", "dc", "duration", "end_triggers"],
+            "properties": {
+              "protects": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "enum": ["attack_roll", "damaging_spell"] }
+              },
+              "save_ability": { "enum": ["str", "dex", "con", "int", "wis", "cha"] },
+              "dc": { "$ref": "#/$defs/formula" },
+              "duration": { "$ref": "#/$defs/duration" },
+              "end_triggers": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "turn_command" } } },
+          "then": {
+            "required": ["command", "execute_at"],
+            "properties": {
+              "command": { "enum": ["approach", "drop", "flee", "grovel", "halt"] },
+              "execute_at": { "const": "next_turn" }
+            }
+          }
+        },
+        {
           "if": { "properties": { "kind": { "const": "healing" } } },
           "then": { "properties": { "amount": { "$ref": "#/$defs/formula" }, "scaling": { "type": "object" } } }
         },
@@ -1121,7 +1154,11 @@
             "properties": {
               "condition": { "type": "string" },
               "requiredCauseTags": { "type": "array", "items": { "type": "string" } },
-              "required_cause_tags": { "type": "array", "items": { "type": "string" } }
+              "required_cause_tags": { "type": "array", "items": { "type": "string" } },
+              "source_creature_types": {
+                "type": "array", "minItems": 1, "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
             }
           }
         },

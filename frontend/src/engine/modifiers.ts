@@ -274,8 +274,8 @@ export function collectRollModifiers(
   return collectModifiers(state, passives, appliesTo);
 }
 
-/** Способности экономики хода, запрещённые состояниями (D: Недееспособный → все четыре). */
-const ACTION_CAPABILITIES = ['action', 'bonus_action', 'reaction', 'concentration'] as const;
+/** Способности экономики хода, которые могут запрещаться состояниями/командами. */
+const ACTION_CAPABILITIES = ['action', 'bonus_action', 'reaction', 'concentration', 'movement'] as const;
 
 /** Множество запрещённых способностей (op:'deny') из активных состояний/эффектов (Недееспособность). */
 export function deniedCapabilities(state: RuntimeState, passives: Dict[] = []): Set<string> {

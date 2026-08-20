@@ -52,6 +52,7 @@ export function compileMonsterInstance(input: {
       ac: input.monster.armor_class,
       capabilities: { actionIds: actions.map((action) => action.id).sort() },
       character: {
+        creatureType: input.monster.creature_type,
         abilityScores: scores,
         abilityMods: mods,
         profBonus: input.monster.proficiency_bonus,

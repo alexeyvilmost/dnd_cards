@@ -9,6 +9,7 @@ export default defineConfig({
       'src/mvp/micro-micro.certification.live.test.ts',
       'src/mvp/mini-mvp.ongoing-spells.live.test.ts',
       'src/mvp/mini-mvp.traversal-spells.live.test.ts',
+      'src/mvp/mini-mvp.control-spells.live.test.ts',
     ],
     setupFiles: ['src/mvp/liveReadRetry.setup.ts'],
     fileParallelism: false,
