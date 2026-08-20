@@ -816,7 +816,13 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     ));
     await elementalismConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
     expect((await elementalismRuntimePromise).ok(), 'public Elementalism runtime persistence').toBe(true);
-    await expect(page.getByText('Взаимодействие с миром: beckon_water', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Открыть журнал', exact: true }).click();
+    const journal = page.getByRole('dialog', { name: 'Журнал действий' });
+    await expect(journal).toBeVisible();
+    await expect(journal.getByText(
+      'Стихийность: Взаимодействие с миром: beckon_water',
+      { exact: true },
+    )).toBeVisible();
     await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
     if (diagnostics.length > 0) {
       throw new Error(`Browser diagnostics are not clean:\n${diagnostics.join('\n')}`);
