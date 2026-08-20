@@ -503,6 +503,11 @@ describe('real sheet canonical world materialization', () => {
       { kind: 'spell' }
     > => candidate.kind === 'spell');
     const sheetActions = spellActions.map(sheetSpell);
+    // Production still contains legacy spell cards without the newer stable
+    // class-list field. Runtime must derive that metadata from the immutable
+    // class grant, not from localized spell.classes display text.
+    const legacyClassListSpell = sheetActions.find((action) => action.spellRef?.level === 1)!;
+    delete legacyClassListSpell.spellRef!.mechanics!.spell_class_list_ids;
     const spells = sheetActions.map((action) => action.spellRef!);
     const origin: ChoiceOrigin = {
       kind: 'class',

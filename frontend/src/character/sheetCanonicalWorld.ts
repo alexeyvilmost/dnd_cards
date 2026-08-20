@@ -519,6 +519,16 @@ function ruleActions(input: {
         assembled: input.assembled,
       });
       const spell = applySpellCastingOverride(input.sheet.spellRef!, binding.castingOverride);
+      // Legacy catalog spells predate stable class-list metadata. The applied
+      // grant already owns the immutable class authority, so materialize it on
+      // this runtime copy rather than consulting localized spell.classes or
+      // weakening the strict release compiler.
+      if (spell.mechanics?.spell_class_list_ids === undefined && binding.sourceClass) {
+        spell.mechanics = {
+          ...spell.mechanics,
+          spell_class_list_ids: [binding.sourceClass],
+        };
+      }
       return {
         sheet: input.sheet,
         spellGrant: binding,
