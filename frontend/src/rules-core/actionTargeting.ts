@@ -52,6 +52,19 @@ function legacyRangeFt(targeting: JsonObject): number {
   return 5;
 }
 
+function legacyAllowedRelations(targeting: JsonObject, fallback: Relation[]): Relation[] {
+  if (targeting.allowed_relations !== undefined) return fallback;
+  switch (String(targeting.filter ?? '').trim().toLowerCase()) {
+    case 'self': return ['self'];
+    case 'ally': return ['ally'];
+    case 'ally_and_self': return ['self', 'ally'];
+    case 'enemy': return ['enemy'];
+    case 'neutral': return ['neutral'];
+    case 'any': return ['self', 'ally', 'enemy', 'neutral'];
+    default: return fallback;
+  }
+}
+
 function validateArea(value: unknown): void {
   if (value === undefined) return;
   const area = object(value, 'targeting.area');
@@ -150,7 +163,7 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   }
 
   const defaultRelations: Relation[] = self ? ['self'] : ['self', 'ally', 'enemy', 'neutral'];
-  let allowedRelations = defaultRelations;
+  let allowedRelations = legacyAllowedRelations(targeting, defaultRelations);
   if (targeting.allowed_relations !== undefined) {
     if (!Array.isArray(targeting.allowed_relations)
       || targeting.allowed_relations.some((relation) => (
@@ -185,6 +198,72 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
     ...(targeting.requires_stonework_contact === true
       ? { requiresStoneworkContact: true as const }
       : {}),
+  };
+}
+
+function materializeArea(value: unknown): JsonObject | undefined {
+  if (value === undefined) return undefined;
+  const legacy = object(value, 'targeting.area');
+  const kind = String(legacy.kind ?? legacy.shape ?? '');
+  if (!['sphere', 'cube', 'cone', 'line', 'cylinder', 'emanation'].includes(kind)) {
+    throw new ActionTargetingDefinitionError('targeting.area.kind is invalid');
+  }
+  const explicitSize = legacy.size_ft;
+  const explicitRadius = legacy.radius_ft;
+  const legacySize = legacy.size ?? legacy.radius;
+  const numericAuthority = explicitSize !== undefined
+    ? { size_ft: finiteNonNegative(explicitSize, 'targeting.area.size_ft') }
+    : explicitRadius !== undefined
+      ? { radius_ft: finiteNonNegative(explicitRadius, 'targeting.area.radius_ft') }
+      : legacySize !== undefined
+        ? (kind === 'sphere' || kind === 'cylinder'
+          ? { radius_ft: finiteNonNegative(Number(legacySize), 'targeting.area.radius') }
+          : { size_ft: finiteNonNegative(Number(legacySize), 'targeting.area.size') })
+        : null;
+  if (!numericAuthority || Object.values(numericAuthority)[0] <= 0) {
+    throw new ActionTargetingDefinitionError(
+      'targeting.area requires an explicit positive size authority',
+    );
+  }
+  const { size: _size, radius: _radius, shape: _shape, ...rest } = legacy;
+  return { ...rest, kind, ...numericAuthority };
+}
+
+/**
+ * Runtime compatibility boundary for catalog rows created before targeting
+ * became a fully declared mechanics contract. It resolves legacy geometry and
+ * filters once, then emits the same explicit structure consumed by the strict
+ * canonical engine. Certified source bytes remain untouched.
+ */
+export function materializeDeclaredMechanicsTargeting(mechanics: JsonObject): JsonObject {
+  const legacy = object(mechanics.targeting, 'mechanics.targeting');
+  const area = materializeArea(legacy.area);
+  const shape = String(legacy.shape ?? (area ? 'area' : 'single')) === 'multiple'
+    ? 'multi'
+    : String(legacy.shape ?? (area ? 'area' : 'single'));
+  const compatibleMechanics: JsonObject = {
+    ...mechanics,
+    targeting: { ...legacy, shape, ...(area ? { area } : {}) },
+  };
+  const compiled = compileMechanicsTargeting(compatibleMechanics);
+  const actorTargets = legacy.actor_targets === undefined
+    ? shape !== 'self'
+    : legacy.actor_targets;
+  const domain = legacy.domain === undefined ? 'actor' : legacy.domain;
+  return {
+    ...mechanics,
+    targeting: {
+      ...legacy,
+      shape,
+      domain,
+      actor_targets: actorTargets,
+      min_targets: compiled.minTargets,
+      max_targets: compiled.maxTargets,
+      range_ft: compiled.rangeFt,
+      requires_line_of_sight: compiled.requiresLineOfSight,
+      allowed_relations: compiled.allowedRelations,
+      ...(area ? { area } : {}),
+    },
   };
 }
 

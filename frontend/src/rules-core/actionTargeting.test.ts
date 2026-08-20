@@ -3,6 +3,7 @@ import {
   ActionTargetingDefinitionError,
   compileDeclaredMechanicsTargeting,
   compileMechanicsTargeting,
+  materializeDeclaredMechanicsTargeting,
 } from './actionTargeting';
 import type { JsonObject } from './domain';
 
@@ -58,6 +59,15 @@ describe('compileMechanicsTargeting', () => {
     });
   });
 
+  it('projects legacy relation filters without inspecting action identity', () => {
+    expect(compileMechanicsTargeting({
+      targeting: { shape: 'single', range: '60 feet', filter: 'enemy' },
+    })).toMatchObject({ allowedRelations: ['enemy'] });
+    expect(compileMechanicsTargeting({
+      targeting: { shape: 'single', range: 'touch', filter: 'ally_and_self' },
+    })).toMatchObject({ allowedRelations: ['self', 'ally'] });
+  });
+
   it('compiles a data-owned world area and keeps actor relations empty', () => {
     expect(compileMechanicsTargeting({
       targeting: {
@@ -106,6 +116,46 @@ describe('compileMechanicsTargeting', () => {
   it('exposes a stable definition error type', () => {
     expect(() => compileMechanicsTargeting(explicitTargeting({ range_ft: -1 })))
       .toThrow(ActionTargetingDefinitionError);
+  });
+});
+
+describe('materializeDeclaredMechanicsTargeting', () => {
+  it('turns legacy self and single declarations into strict canonical contracts', () => {
+    const self = materializeDeclaredMechanicsTargeting({ targeting: { shape: 'self' } });
+    const enemy = materializeDeclaredMechanicsTargeting({
+      targeting: { shape: 'single', range: '60 feet', filter: 'enemy' },
+    });
+
+    expect(() => compileDeclaredMechanicsTargeting(self)).not.toThrow();
+    expect(self.targeting).toMatchObject({
+      shape: 'self', domain: 'actor', actor_targets: false, min_targets: 0,
+      max_targets: 1, range_ft: 5, requires_line_of_sight: false,
+      allowed_relations: ['self'],
+    });
+    expect(() => compileDeclaredMechanicsTargeting(enemy)).not.toThrow();
+    expect(enemy.targeting).toMatchObject({
+      domain: 'actor', actor_targets: true, min_targets: 1, max_targets: 1,
+      range_ft: 60, requires_line_of_sight: true, allowed_relations: ['enemy'],
+    });
+  });
+
+  it('normalizes legacy area shape and size aliases', () => {
+    const cone = materializeDeclaredMechanicsTargeting({
+      targeting: {
+        shape: 'area', range: 'self', filter: 'enemy',
+        area: { kind: 'cone', size: 15 },
+      },
+    });
+    const sphere = materializeDeclaredMechanicsTargeting({
+      targeting: { range: '120 feet', area: { shape: 'sphere', radius: 20 } },
+    });
+
+    expect((cone.targeting as JsonObject).area).toEqual({ kind: 'cone', size_ft: 15 });
+    expect((sphere.targeting as JsonObject)).toMatchObject({
+      shape: 'area', area: { kind: 'sphere', radius_ft: 20 },
+    });
+    expect(() => compileDeclaredMechanicsTargeting(cone)).not.toThrow();
+    expect(() => compileDeclaredMechanicsTargeting(sphere)).not.toThrow();
   });
 });
 

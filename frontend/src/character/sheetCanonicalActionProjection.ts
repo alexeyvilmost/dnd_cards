@@ -2,6 +2,7 @@ import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { Card } from '../types';
 import type { SheetAction } from './actionSheet';
 import { sheetActionNeedsCanonicalRuntime } from './sheetPrimitiveUi';
+import { materializeDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 
 export interface RunnableSheetCanonicalActionProjection {
   actions: SheetAction[];
@@ -57,7 +58,10 @@ function declaresActorInteraction(mechanics: Record<string, unknown>): boolean {
  * declaration is inferred only when effects contain no target interaction.
  */
 function canonicalMechanics(action: SheetAction): Record<string, unknown> {
-  if (action.mechanics.targeting !== undefined || !isDeclaredActiveAction(action.mechanics)) {
+  if (action.mechanics.targeting !== undefined) {
+    return materializeDeclaredMechanicsTargeting(action.mechanics);
+  }
+  if (!isDeclaredActiveAction(action.mechanics)) {
     return action.mechanics;
   }
   if (declaresActorInteraction(action.mechanics)) {
@@ -88,13 +92,20 @@ export function projectRunnableSheetCanonicalActions(input: {
       && !declaredActive
       && !sheetActionNeedsCanonicalRuntime(action.mechanics)) continue;
     try {
+      const mechanics = bindEquippedWeaponActionContext(
+        canonicalMechanics(action),
+        input.equipment,
+        cards,
+      );
       actions.push({
         ...action,
-        mechanics: bindEquippedWeaponActionContext(
-          canonicalMechanics(action),
-          input.equipment,
-          cards,
-        ),
+        mechanics,
+        // Spell compilation intentionally starts from the immutable entity
+        // reference to preserve grant provenance. Carry the same normalized
+        // runtime copy there so it cannot bypass this compatibility boundary.
+        ...(action.spellRef
+          ? { spellRef: { ...action.spellRef, mechanics } }
+          : {}),
       });
     } catch (cause) {
       issues.set(action.id, cause instanceof Error ? cause.message : String(cause));

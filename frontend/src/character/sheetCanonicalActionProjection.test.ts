@@ -6,6 +6,7 @@ import {
 } from '../rules-core/weaponActionPolicies';
 import type { SheetAction } from './actionSheet';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
+import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 
 const WEAPON = {
   id: 'card:test-bow',
@@ -139,6 +140,42 @@ describe('runnable canonical sheet-action projection', () => {
 
     expect(projection.actions.map((action) => action.id)).toEqual(['mage-armor']);
     expect(projection.issues.size).toBe(0);
+    expect(projection.actions[0].spellRef?.mechanics?.targeting).toMatchObject({
+      domain: 'world', actor_targets: false, min_targets: 0, max_targets: 0,
+    });
+  });
+
+  it('materializes legacy targeting before strict canonical compilation', () => {
+    const selfAction: SheetAction = {
+      id: 'rage', name: 'Rage', group: 'class',
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'bonus_action' }] },
+        targeting: { shape: 'self' },
+        effects: [{ resolution: 'auto', result: [{ kind: 'narrative' }] }],
+      },
+    };
+    const enemySpell = legacySpell('legacy-enemy');
+    enemySpell.mechanics = {
+      ...enemySpell.mechanics,
+      targeting: { shape: 'single', range: '60 feet', filter: 'enemy' },
+    };
+    const projection = projectRunnableSheetCanonicalActions({
+      actions: [selfAction, enemySpell], equipment: {}, cards: new Map(),
+    });
+
+    expect(projection.issues.size).toBe(0);
+    for (const action of projection.actions) {
+      expect(() => compileDeclaredMechanicsTargeting(action.mechanics)).not.toThrow();
+    }
+    expect(projection.actions[0].mechanics.targeting).toMatchObject({
+      domain: 'actor', actor_targets: false, allowed_relations: ['self'],
+    });
+    expect(projection.actions[1].mechanics.targeting).toMatchObject({
+      domain: 'actor', actor_targets: true, allowed_relations: ['enemy'], range_ft: 60,
+    });
+    expect(projection.actions[1].spellRef?.mechanics?.targeting).toEqual(
+      projection.actions[1].mechanics.targeting,
+    );
   });
 
   it('keeps every explicitly active data action and derives a zero-target contract', () => {
