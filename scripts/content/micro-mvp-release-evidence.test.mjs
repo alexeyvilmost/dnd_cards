@@ -16,6 +16,7 @@ import {
   executeMicroMvpReleaseGate,
   generateMicroMvpReleaseEvidence,
   releaseInvocation,
+  vitestGateInvocation,
 } from './generate-micro-mvp-release-evidence.mjs';
 import {
   REQUIRED_RELEASE_GATES,
@@ -58,6 +59,31 @@ test('release gate runs npm through its JavaScript CLI on Windows', () => {
   assert.deepEqual(releaseInvocation('npm', args, { platform: 'linux' }), {
     command: 'npm',
     args,
+  });
+});
+
+test('default frontend gate bypasses the npm lifecycle wrapper', () => {
+  assert.deepEqual(vitestGateInvocation({
+    npmTest: true,
+    reportPath: 'C:\\temp\\frontend.json',
+    nodeExecutable: 'C:\\node\\node.exe',
+    vitestCli: 'C:\\repo\\frontend\\node_modules\\vitest\\vitest.mjs',
+  }), {
+    command: 'C:\\node\\node.exe',
+    args: [
+      'C:\\repo\\frontend\\node_modules\\vitest\\vitest.mjs',
+      'run',
+      '--reporter=json',
+      '--outputFile=C:\\temp\\frontend.json',
+    ],
+  });
+  assert.deepEqual(vitestGateInvocation({
+    script: 'test:mvp',
+    npmTest: false,
+    reportPath: '/tmp/mvp.json',
+  }), {
+    command: 'npm',
+    args: ['run', 'test:mvp', '--', '--reporter=json', '--outputFile=/tmp/mvp.json'],
   });
 });
 
@@ -155,7 +181,7 @@ test('source-to-commit binding rejects both path omissions and byte drift', () =
 const EXPECTED_GATES = [
   ['backend_go_test', 'CANONICAL_RUNTIME_TEST_DSN=<configured> CONTENT_MIGRATION_TEST_DSN=<configured> go test -race -count=1 -p 1 -json ./...'],
   ['backend_go_vet', 'go vet ./...'],
-  ['frontend_test', 'npm test -- --reporter=json --outputFile=<report>'],
+  ['frontend_test', 'node node_modules/vitest/vitest.mjs run --reporter=json --outputFile=<report>'],
   ['frontend_mvp', 'MVP_CONTENT=1 VITE_API_URL=<apiBase> npm run test:mvp -- --reporter=json --outputFile=<report>'],
   ['micro_manifest', 'NODE_OPTIONS="--test-reporter=tap --test-reporter-destination=<report>" npm run test:micro:manifest'],
   ['micro_matrix', 'npm run test:micro:matrix -- --reporter=json --outputFile=<report>'],

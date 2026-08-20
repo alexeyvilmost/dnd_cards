@@ -82,7 +82,7 @@ export const REQUIRED_RELEASE_GATES = Object.freeze([
   Object.freeze({ id: 'backend_go_vet', command: 'go vet ./...', tests: false }),
   Object.freeze({
     id: 'frontend_test',
-    command: 'npm test -- --reporter=json --outputFile=<report>',
+    command: 'node node_modules/vitest/vitest.mjs run --reporter=json --outputFile=<report>',
     tests: true,
   }),
   Object.freeze({

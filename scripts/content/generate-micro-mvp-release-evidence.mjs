@@ -27,6 +27,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const FRONTEND_ROOT = resolve(HERE, '../../frontend');
 const BACKEND_ROOT = resolve(HERE, '../../backend');
 const NPM = 'npm';
+const VITEST_CLI = resolve(FRONTEND_ROOT, 'node_modules/vitest/vitest.mjs');
 const PLAYWRIGHT_CLI = resolve(FRONTEND_ROOT, 'node_modules/@playwright/test/cli.js');
 
 function parseArgs(argv) {
@@ -303,12 +304,10 @@ async function executeVitestGate(definition, {
   temporaryDirectory, script, apiBase, npmTest = false, live = false,
 }) {
   const reportPath = join(temporaryDirectory, `${definition.id}.json`);
+  const invocation = vitestGateInvocation({ script, npmTest, reportPath });
   const execution = await runCommand({
-    command: NPM,
-    args: [
-      ...(npmTest ? ['test'] : ['run', script]),
-      '--', '--reporter=json', `--outputFile=${reportPath}`,
-    ],
+    command: invocation.command,
+    args: invocation.args,
     env: live ? { MVP_CONTENT: '1', VITE_API_URL: apiBase } : {},
   });
   if (execution.exitCode !== 0) return { execution, testSummary: null, reportHash: null };
@@ -521,6 +520,25 @@ export async function executeMicroMvpReleaseGate(definition, {
     testSummary,
     ...(testCoverage ? { testCoverage } : {}),
   };
+}
+
+/** The full default suite is the largest release gate. Launching it through
+ * npm on Windows can return the lifecycle wrapper's exit code 1 after Vitest
+ * has written a complete, successful JSON report. The direct, version-pinned
+ * CLI invocation removes that wrapper without changing Vitest configuration
+ * or weakening report validation. Named npm scripts keep their own configs. */
+export function vitestGateInvocation({
+  script,
+  npmTest,
+  reportPath,
+  nodeExecutable = process.execPath,
+  vitestCli = VITEST_CLI,
+}) {
+  const reportArgs = ['--reporter=json', `--outputFile=${reportPath}`];
+  if (npmTest) {
+    return { command: nodeExecutable, args: [vitestCli, 'run', ...reportArgs] };
+  }
+  return { command: NPM, args: ['run', script, '--', ...reportArgs] };
 }
 
 export async function generateMicroMvpReleaseEvidence({
