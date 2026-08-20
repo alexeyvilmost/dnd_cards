@@ -22,7 +22,7 @@ export const REQUIRED_BOOK_SPECS = Object.freeze([
       weight: 3,
       source: PHB_2024,
       author: 'Admin',
-      is_template: 'not_template',
+      is_template: 'false',
     }),
   }),
   Object.freeze({
@@ -38,7 +38,7 @@ export const REQUIRED_BOOK_SPECS = Object.freeze([
       weight: 5,
       source: PHB_2024,
       author: 'Admin',
-      is_template: 'not_template',
+      is_template: 'false',
     }),
   }),
 ]);

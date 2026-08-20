@@ -367,6 +367,13 @@ func emptyToNil(s string) interface{} {
 }
 
 // CreateCard - создание новой карточки
+func normalizeCreateCardTemplateType(value TemplateType) (TemplateType, bool) {
+	if value == "" {
+		return TemplateFalse, true
+	}
+	return value, IsValidTemplateType(value)
+}
+
 func (cc *CardController) CreateCard(c *gin.Context) {
 	var req CreateCardRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -424,6 +431,13 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый слот экипировки"})
 		return
 	}
+
+	templateType, validTemplateType := normalizeCreateCardTemplateType(req.IsTemplate)
+	if !validTemplateType {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип шаблона"})
+		return
+	}
+	req.IsTemplate = templateType
 
 	// Валидация эффектов
 	if req.Effects != nil {
@@ -568,6 +582,11 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 
 	if req.Slot != nil && !IsValidEquipmentSlot(*req.Slot) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый слот экипировки"})
+		return
+	}
+
+	if req.IsTemplate != "" && !IsValidTemplateType(req.IsTemplate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип шаблона"})
 		return
 	}
 

@@ -19,6 +19,7 @@ const klass = (entry) => ({
 test('required PHB books are exact and idempotent', () => {
   const missing = planRequiredBooks([]);
   assert.deepEqual(missing.create.map((item) => item.key), ['spellbook', 'occultBook']);
+  assert.ok(missing.create.every((item) => item.payload.is_template === 'false'));
   const cards = REQUIRED_BOOK_SPECS.map((spec, index) => ({
     id: `book-${index}`,
     name: spec.name,
