@@ -48,7 +48,15 @@ function captureBrowserErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    // Chromium exposes neither URL nor resource type for these two messages.
+    // The fixture serves external presentation assets locally, while offline
+    // reload scenarios deliberately make any late decorative request fail.
+    if (/^Failed to load resource: net::ERR_(?:INTERNET_DISCONNECTED|CONNECTION_TIMED_OUT)$/.test(text)) {
+      return;
+    }
+    errors.push(`console: ${text}`);
   });
   return errors;
 }

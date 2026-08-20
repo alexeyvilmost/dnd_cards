@@ -286,6 +286,29 @@ async function json(route: Route, status: number, body: unknown): Promise<void> 
   });
 }
 
+const TRANSPARENT_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64',
+);
+
+async function installPresentationAssetFixture(page: Page): Promise<void> {
+  // The exact catalog intentionally retains production image URLs. Browser
+  // mechanics tests must not depend on an external object store or Google
+  // Fonts being reachable, especially while they deliberately switch offline.
+  await page.route(
+    /^https:\/\/dnd-cards-images\.storage\.yandexcloud\.net\//,
+    (route) => route.fulfill({ status: 200, contentType: 'image/png', body: TRANSPARENT_PNG }),
+  );
+  await page.route(
+    /^https:\/\/fonts\.googleapis\.com\//,
+    (route) => route.fulfill({ status: 200, contentType: 'text/css; charset=utf-8', body: '' }),
+  );
+  await page.route(
+    /^https:\/\/fonts\.gstatic\.com\//,
+    (route) => route.fulfill({ status: 200, contentType: 'font/woff2', body: Buffer.alloc(0) }),
+  );
+}
+
 /**
  * GET-only catalog responses are exact repository snapshot rows. Character
  * writes are captured in memory and never reach a backend or production DB.
@@ -305,6 +328,7 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
   await page.addInitScript(() => {
     localStorage.setItem('auth_token', 'playwright-character-v3-jwt');
   });
+  await installPresentationAssetFixture(page);
   await page.route('**/api/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
