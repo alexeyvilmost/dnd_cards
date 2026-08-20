@@ -2605,12 +2605,24 @@
         "gold": 15,
         "items": [
           {
-            "card_id": "b01fb65d-ac69-45b1-b9e1-593756ce2d55",
+            "card_id": "0e678d76-70ba-4036-b55b-60532f18e2e8",
             "quantity": 1
           },
           {
-            "card_id": "db5d576b-3ae1-4402-b4dc-8f7ec7d88b29",
+            "card_id": "6b8e312e-30e8-4438-bf1f-20df7b9f9503",
+            "quantity": 1
+          },
+          {
+            "card_id": "7ac95f8a-0b8a-4653-b683-19f09ccfb447",
             "quantity": 2
+          },
+          {
+            "card_id": "03ac1b31-7c20-40ef-96a0-cc0b1b06ca6b",
+            "quantity": 1
+          },
+          {
+            "card_id": "fac8645f-83ae-4689-bca4-932d01080498",
+            "quantity": 1
           },
           {
             "card_id": "4abcd64f-6292-4c44-aaa5-6d749a9d9e89",
@@ -2633,7 +2645,6 @@
         "actions": [],
         "effects": [
           "567f000b-6554-41d2-9888-8b601afd7f6f",
-          "cc2aa0c1-8fe5-4d60-a443-f8b81280f5f0",
           "39f2a896-dda5-4424-b976-bc7ceb60152b"
         ]
       },
@@ -3019,11 +3030,19 @@
         "gold": 5,
         "items": [
           {
-            "card_id": "416ce3b6-193e-4186-a481-09375444c090",
+            "card_id": "7ac95f8a-0b8a-4653-b683-19f09ccfb447",
+            "quantity": 2
+          },
+          {
+            "card_id": "03ac1b31-7c20-40ef-96a0-cc0b1b06ca6b",
             "quantity": 1
           },
           {
-            "card_id": "db5d576b-3ae1-4402-b4dc-8f7ec7d88b29",
+            "card_id": "40fc2ff7-f2d9-424b-a2c6-7819ddd7b3a5",
+            "quantity": 1
+          },
+          {
+            "card_id": "74b8aed7-dd82-4cbd-af5b-9037edbff4dd",
             "quantity": 1
           },
           {

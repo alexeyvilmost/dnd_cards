@@ -167,7 +167,11 @@ function sourceSnapshotPatch() {
   for (const declaration of [
     ...patch.fieldPatches,
     ...patch.conditionPatches,
-  ]) delete declaration.productionExpectedBeforeFieldsHash;
+  ]) {
+    delete declaration.productionExpectedBeforeFieldsHash;
+    delete declaration.productionFieldOverrides;
+    delete declaration.productionEntityReferences;
+  }
   return patch;
 }
 
@@ -492,7 +496,7 @@ test('reviewed preimage fixture is schema-validated, hash-pinned and patch-close
   const fixture = readReviewedPreimageFixture();
   assert.equal(
     REVIEWED_PREIMAGE_FIXTURE_SHA256,
-    'sha256:8eb070cfd0edd85836c44c227f2dfea9a49b38522a401ff6734bd31bf54b3259',
+    'sha256:98edc2e2910fd738cfbeb37a7b62742d3a42955b8e3da450bf76a45b0cd508ed',
   );
   assert.equal(fixture.fixtureId, 'dnd5e-2024.micro-mvp-l1.reviewed-source-preimage.v1');
   assert.equal(fixture.patch.canonicalHash, sha256Canonical(reviewedPatch()));

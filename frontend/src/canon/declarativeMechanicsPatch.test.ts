@@ -24,7 +24,7 @@ function readReviewedPreimageCatalogs(): ReturnType<typeof readProdSnapshotCatal
     import.meta.url,
   ), 'utf8').replace(/\r\n/g, '\n');
   const fixtureHash = `sha256:${createHash('sha256').update(rawFixture).digest('hex')}`;
-  if (fixtureHash !== 'sha256:8eb070cfd0edd85836c44c227f2dfea9a49b38522a401ff6734bd31bf54b3259') {
+  if (fixtureHash !== 'sha256:98edc2e2910fd738cfbeb37a7b62742d3a42955b8e3da450bf76a45b0cd508ed') {
     throw new Error(`Reviewed preimage fixture hash mismatch: ${fixtureHash}`);
   }
   const fixture = JSON.parse(rawFixture) as {
@@ -224,6 +224,34 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
     expect(second.changes).toHaveLength(0);
     expect(second.alreadyMaterialized).toHaveLength(108);
     expect(() => assertMicroMvpL1ContentMaterialized(second.catalogs)).not.toThrow();
+  });
+
+  it('accepts explicit production field variants only with stable referenced identities', () => {
+    const catalogs = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const productionPatches = MICRO_MVP_L1_CONTENT_PATCH.fieldPatches.filter((patch) => (
+      patch.productionFieldOverrides !== undefined
+    ));
+    expect(productionPatches.map((patch) => patch.cardNumber).sort())
+      .toEqual(['CLASS-warlock', 'CLASS-wizard']);
+
+    const cardTemplate = catalogs.cards[0];
+    for (const patch of productionPatches) {
+      for (const reference of patch.productionEntityReferences ?? []) {
+        if (catalogs.cards.some((card) => card.id === reference.entityId)) continue;
+        catalogs.cards.push({
+          ...copy(cardTemplate),
+          id: reference.entityId,
+          card_number: reference.cardNumber,
+          name: reference.cardNumber,
+        });
+      }
+      const entity = catalogs.classes.find((item) => item.card_number === patch.cardNumber)!;
+      Object.assign(entity, copy(patch.productionFieldOverrides));
+    }
+
+    const verified = materializeMicroMvpL1ContentPatch(catalogs);
+    expect(verified.changes).toHaveLength(0);
+    expect(verified.alreadyMaterialized).toHaveLength(108);
   });
 
   it('fails closed when source mechanics drift instead of overwriting them', () => {

@@ -154,7 +154,7 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
   });
 
   it('pins overlay, compiled content, and release hashes independently from the raw release', () => {
-    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.10.0');
+    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.11.0');
     expect(provider.release).toMatchObject({
       id: MICRO_MVP_L1_OVERLAY_RELEASE_ID,
       sourceReleaseId: provider.source.release.id,

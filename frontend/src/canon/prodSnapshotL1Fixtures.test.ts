@@ -111,7 +111,7 @@ describe('pinned prod-snapshot micro-MVP L1 fixture provider', () => {
       'SPELL-0241',
       'SPELL-0252',
     ]);
-    expect(provider.release.dependencyEntityCount).toBe(124);
+    expect(provider.release.dependencyEntityCount).toBe(123);
   });
 
   it('replaces, rather than adds, every official background Origin feat', () => {

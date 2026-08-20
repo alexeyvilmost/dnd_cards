@@ -4,20 +4,20 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0",
-      "contentHash": "sha256:a07e1dfadcba503918753b09318b09791441d01049a2dfb4610ab937847d4325",
+      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.11.0",
+      "contentHash": "sha256:ef56284504b61459efee65d0679f25d17a493f3922fd9d026c678fa4c9e766bd",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-07-15.micro-mvp-l1.overlay.1.10.0",
+      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.11.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
-      "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
-      "sourceContentHash": "sha256:0d7677988be340531fc2fdb13f17825b8f136b5d8dfdf5c1937a6a5428fca04b",
-      "overlayHash": "sha256:f973f8a300a34069252e5e3731967fdbe058b4f8b7a72431432b9c7a000b4b9a",
-      "contentHash": "sha256:a07e1dfadcba503918753b09318b09791441d01049a2dfb4610ab937847d4325",
-      "releaseHash": "sha256:576426e498c3760f080224ae7e37599fd0ea8afa34a65fb243f5013b64413db2"
+      "sourceReleaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.v2",
+      "sourceContentHash": "sha256:c7205737ed1f70fa9e2db87370cd59ccd43cc4e2960b2360429e3842a745c22d",
+      "overlayHash": "sha256:d0aeb327930700610a690da3aebc40e861235bd62311505c3c18f8211ea4358a",
+      "contentHash": "sha256:ef56284504b61459efee65d0679f25d17a493f3922fd9d026c678fa4c9e766bd",
+      "releaseHash": "sha256:88a074547cca923566c430dc7af0ee3ff808cabdeb61ea5e6315920f907e1508"
     }
   },
   "summary": {
@@ -5832,6 +5832,6 @@
       }
     ]
   },
-  "sourceProjectionHash": "sha256:c9d8b50bfaf6baf9879c21495e1aabc4d8f92ca451c1fb6413ac9321aac47695",
-  "contentHash": "sha256:56131b0fc9771eb6b835b8c0457c9a2729d03bc9ea9cd98c13b993ba6c2e2172"
+  "sourceProjectionHash": "sha256:9c18b382b0fea946ead2b21bae33a8d0738cc96f0a7b64ee1af65dbe1a2f9b9d",
+  "contentHash": "sha256:ffdd42d0e7801f847e2c1cc1f9d516fdbae29d694647c5ef944dbdb70b5701d1"
 }

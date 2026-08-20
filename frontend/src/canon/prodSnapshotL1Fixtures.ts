@@ -50,13 +50,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, '../../..');
 export const PROD_SNAPSHOT_DIRECTORY = join(REPO_ROOT, 'officials/canon/prod-snapshot');
 
-export const PINNED_PROD_SNAPSHOT_L1_RELEASE_ID = 'prod-snapshot@2026-07-15.micro-mvp-l1.v1';
+export const PINNED_PROD_SNAPSHOT_L1_RELEASE_ID = 'prod-snapshot@2026-08-20.micro-mvp-l1.v2';
 export const PINNED_PROD_SNAPSHOT_L1_RULES_HASH =
   'sha256:743d07a76b6bb459062a055daa360bf80c28de43e16b27be61e1ae2783221c3b' as const;
 export const PINNED_PROD_SNAPSHOT_L1_CONTENT_HASH =
-  'sha256:0d7677988be340531fc2fdb13f17825b8f136b5d8dfdf5c1937a6a5428fca04b' as const;
+  'sha256:c7205737ed1f70fa9e2db87370cd59ccd43cc4e2960b2360429e3842a745c22d' as const;
 export const PINNED_PROD_SNAPSHOT_L1_RELEASE_HASH =
-  'sha256:981e05fff066268f3c363f4ebbda9c6558f11e6a6595b184724a564e9cd7c4ab' as const;
+  'sha256:99d225911a14f27ee1a39b99dbf61ed1d70e1aee6940754f3156f86a520f3b38' as const;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const VOLATILE_FIELDS = new Set(['support', 'created_at', 'updated_at', 'deleted_at']);

@@ -436,62 +436,75 @@ export function validateContentPatchDeclaration(patch) {
     throw new Error(`Content patch has duplicate entity declarations: ${duplicated.join(', ')}`);
   }
   for (const declaration of patch.fieldPatches) {
-    const references = declaration.entityReferences ?? [];
-    const referenceIdentities = references.map((reference) => (
-      `${reference.collection}:${reference.cardNumber}:${reference.entityId}`
-    ));
-    const duplicateReferences = [...new Set(referenceIdentities.filter((identity, index) => (
-      referenceIdentities.indexOf(identity) !== index
-    )))];
-    if (duplicateReferences.length) {
-      throw new Error(
-        `${declaration.collection}:${declaration.cardNumber}: duplicate entityReferences `
-        + duplicateReferences.join(', '),
-      );
-    }
+    const validateReferences = (fields, references, scope) => {
+      const referenceIdentities = references.map((reference) => (
+        `${reference.collection}:${reference.cardNumber}:${reference.entityId}`
+      ));
+      const duplicateReferences = [...new Set(referenceIdentities.filter((identity, index) => (
+        referenceIdentities.indexOf(identity) !== index
+      )))];
+      if (duplicateReferences.length) {
+        throw new Error(
+          `${declaration.collection}:${declaration.cardNumber}: duplicate ${scope}entityReferences `
+          + duplicateReferences.join(', '),
+        );
+      }
 
-    const fieldStrings = [];
-    const namedReferences = { card_id: [], mastery: [], mastery_effect_id: [] };
-    const visit = (value, key = null) => {
-      if (typeof value === 'string') {
-        fieldStrings.push(value);
-        if (key === 'card_id' || key === 'mastery' || key === 'mastery_effect_id') {
-          namedReferences[key].push(value);
+      const fieldStrings = [];
+      const namedReferences = { card_id: [], mastery: [], mastery_effect_id: [] };
+      const visit = (value, key = null) => {
+        if (typeof value === 'string') {
+          fieldStrings.push(value);
+          if (key === 'card_id' || key === 'mastery' || key === 'mastery_effect_id') {
+            namedReferences[key].push(value);
+          }
+          return;
         }
-        return;
-      }
-      if (Array.isArray(value)) {
-        value.forEach((item) => visit(item, key));
-        return;
-      }
-      if (!value || typeof value !== 'object') return;
-      Object.entries(value).forEach(([nestedKey, nested]) => visit(nested, nestedKey));
-    };
-    visit(declaration.fields);
+        if (Array.isArray(value)) {
+          value.forEach((item) => visit(item, key));
+          return;
+        }
+        if (!value || typeof value !== 'object') return;
+        Object.entries(value).forEach(([nestedKey, nested]) => visit(nested, nestedKey));
+      };
+      visit(fields);
 
-    for (const reference of references) {
-      if (!fieldStrings.includes(reference.entityId)) {
-        throw new Error(
-          `${declaration.collection}:${declaration.cardNumber}: entityReference `
-          + `${reference.collection}:${reference.cardNumber}/${reference.entityId} is not used by fields`,
-        );
+      for (const reference of references) {
+        if (!fieldStrings.includes(reference.entityId)) {
+          throw new Error(
+            `${declaration.collection}:${declaration.cardNumber}: ${scope}entityReference `
+            + `${reference.collection}:${reference.cardNumber}/${reference.entityId} is not used by ${scope}fields`,
+          );
+        }
       }
-    }
-    for (const [field, collection] of [
-      ['card_id', 'cards'],
-      ['mastery', 'effects'],
-      ['mastery_effect_id', 'effects'],
-    ]) {
-      const asserted = new Set(references
-        .filter((reference) => reference.collection === collection)
-        .map((reference) => reference.entityId));
-      const missing = [...new Set(namedReferences[field])].filter((id) => !asserted.has(id));
-      if (missing.length) {
-        throw new Error(
-          `${declaration.collection}:${declaration.cardNumber}: ${field} references lack stable `
-          + `${collection} cardNumber/UUID assertions: ${missing.join(', ')}`,
-        );
+      for (const [field, collection] of [
+        ['card_id', 'cards'],
+        ['mastery', 'effects'],
+        ['mastery_effect_id', 'effects'],
+      ]) {
+        const asserted = new Set(references
+          .filter((reference) => reference.collection === collection)
+          .map((reference) => reference.entityId));
+        const missing = [...new Set(namedReferences[field])].filter((id) => !asserted.has(id));
+        if (missing.length) {
+          throw new Error(
+            `${declaration.collection}:${declaration.cardNumber}: ${field} references lack stable `
+            + `${collection} cardNumber/UUID assertions in ${scope}fields: ${missing.join(', ')}`,
+          );
+        }
       }
+    };
+    validateReferences(declaration.fields, declaration.entityReferences ?? [], '');
+    if (declaration.productionFieldOverrides) {
+      validateReferences(
+        declaration.productionFieldOverrides,
+        declaration.productionEntityReferences ?? [],
+        'production ',
+      );
+    } else if ((declaration.productionEntityReferences ?? []).length > 0) {
+      throw new Error(
+        `${declaration.collection}:${declaration.cardNumber}: productionEntityReferences require productionFieldOverrides`,
+      );
     }
   }
   for (const condition of patch.conditionPatches) {
@@ -747,7 +760,13 @@ export function buildMigrationOperations(catalogs, patch) {
 
   for (const declaration of patch.fieldPatches) {
     const entity = exactEntity(catalogs[declaration.collection], declaration, declaration.collection);
-    for (const reference of declaration.entityReferences ?? []) {
+    const targetFields = declaration.productionFieldOverrides
+      ? { ...declaration.fields, ...declaration.productionFieldOverrides }
+      : declaration.fields;
+    for (const reference of [
+      ...(declaration.entityReferences ?? []),
+      ...(declaration.productionEntityReferences ?? []),
+    ]) {
       if (!Array.isArray(catalogs[reference.collection])) {
         throw new Error(
           `${declaration.collection}:${declaration.cardNumber}: missing `
@@ -756,17 +775,17 @@ export function buildMigrationOperations(catalogs, patch) {
       }
       exactEntity(catalogs[reference.collection], reference, reference.collection);
     }
-    const current = projection(entity, declaration.fields);
-    if (declaration.collection === 'cards' && declaration.fields.mechanics !== undefined) {
+    const current = projection(entity, targetFields);
+    if (declaration.collection === 'cards' && targetFields.mechanics !== undefined) {
       mechanicsTargets.push({
         label: `${declaration.collection}:${declaration.cardNumber}`,
         cardNumber: declaration.cardNumber,
         name: entity.name,
         kind: 'passive_effect',
-        mechanics: declaration.fields.mechanics,
+        mechanics: targetFields.mechanics,
       });
     }
-    if (same(current, declaration.fields)) continue;
+    if (same(current, targetFields)) continue;
     const beforeHash = sha256Canonical(current);
     const expectedBeforeHash = declaration.productionExpectedBeforeFieldsHash
       ?? declaration.expectedBeforeFieldsHash;
@@ -779,7 +798,7 @@ export function buildMigrationOperations(catalogs, patch) {
     operations.push(operationBase(
       declaration.collection,
       entity,
-      exactUpdateFields(declaration.fields),
+      exactUpdateFields(targetFields),
       'update',
     ));
   }

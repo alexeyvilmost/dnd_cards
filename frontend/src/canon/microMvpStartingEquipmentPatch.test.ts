@@ -67,6 +67,25 @@ const EXPECTED_ITEM_OPTIONS = {
       ['CARD-0712', 1],
     ],
   },
+  'CLASS-wizard': {
+    option_a: [
+      ['CARD-0297', 2],
+      ['CARD-0826', 1],
+      ['CARD-0710', 1],
+      ['CARD-0975', 1],
+      ['CARD-0807', 1],
+    ],
+  },
+  'CLASS-warlock': {
+    option_a: [
+      ['CARD-0275', 1],
+      ['CARD-0299', 1],
+      ['CARD-0297', 2],
+      ['CARD-0826', 1],
+      ['CARD-0976', 1],
+      ['CARD-0807', 1],
+    ],
+  },
 } as const;
 
 function optionProjection(
@@ -78,7 +97,7 @@ function optionProjection(
 }
 
 describe('micro-MVP PHB 2024 starting equipment production patch', () => {
-  it('materializes every complete item kit by stable card identity and keeps incomplete kits gold-only', () => {
+  it('materializes every complete item kit by stable card identity', () => {
     const { catalogs } = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs());
 
     for (const [classCardNumber, expected] of Object.entries(EXPECTED_ITEM_OPTIONS)) {
@@ -109,12 +128,10 @@ describe('micro-MVP PHB 2024 starting equipment production patch', () => {
       .equipment_options).toMatchObject({ option_a: { gold: 28 }, option_b: { gold: 50 } });
     expect(catalogs.classes.find((item) => item.card_number === 'CLASS-druid')!
       .equipment_options).toMatchObject({ option_a: { gold: 9 }, option_b: { gold: 50 } });
-
-    for (const [classCardNumber, gold] of [['CLASS-wizard', 55], ['CLASS-warlock', 100]] as const) {
-      const options = catalogs.classes.find((item) => item.card_number === classCardNumber)!
-        .equipment_options;
-      expect(options).toEqual({ option_b: { items: [], gold } });
-    }
+    expect(catalogs.classes.find((item) => item.card_number === 'CLASS-wizard')!
+      .equipment_options).toMatchObject({ option_a: { gold: 5 }, option_b: { gold: 55 } });
+    expect(catalogs.classes.find((item) => item.card_number === 'CLASS-warlock')!
+      .equipment_options).toMatchObject({ option_a: { gold: 15 }, option_b: { gold: 100 } });
   });
 
   it('corrects the referenced mundane Javelin to the Slow mastery identity', () => {

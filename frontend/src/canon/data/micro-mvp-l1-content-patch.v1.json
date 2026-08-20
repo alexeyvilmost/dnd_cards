@@ -5572,11 +5572,33 @@
       "entityId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
       "cardNumber": "CLASS-wizard",
       "expectedBeforeFieldsHash": "sha256:6d16e6c35b2df9e6f94be5300ecb3e95a8ae1885efeb6a1c53dcde1598d273df",
+      "productionFieldOverrides": {
+        "equipment_options": {
+          "option_a": {
+            "items": [
+              { "card_id": "7ac95f8a-0b8a-4653-b683-19f09ccfb447", "quantity": 2 },
+              { "card_id": "03ac1b31-7c20-40ef-96a0-cc0b1b06ca6b", "quantity": 1 },
+              { "card_id": "40fc2ff7-f2d9-424b-a2c6-7819ddd7b3a5", "quantity": 1 },
+              { "card_id": "74b8aed7-dd82-4cbd-af5b-9037edbff4dd", "quantity": 1 },
+              { "card_id": "4abcd64f-6292-4c44-aaa5-6d749a9d9e89", "quantity": 1 }
+            ],
+            "gold": 5
+          },
+          "option_b": { "items": [], "gold": 55 }
+        }
+      },
+      "productionEntityReferences": [
+        { "collection": "cards", "entityId": "7ac95f8a-0b8a-4653-b683-19f09ccfb447", "cardNumber": "CARD-0297" },
+        { "collection": "cards", "entityId": "03ac1b31-7c20-40ef-96a0-cc0b1b06ca6b", "cardNumber": "CARD-0826" },
+        { "collection": "cards", "entityId": "40fc2ff7-f2d9-424b-a2c6-7819ddd7b3a5", "cardNumber": "CARD-0710" },
+        { "collection": "cards", "entityId": "74b8aed7-dd82-4cbd-af5b-9037edbff4dd", "cardNumber": "CARD-0975" },
+        { "collection": "cards", "entityId": "4abcd64f-6292-4c44-aaa5-6d749a9d9e89", "cardNumber": "CARD-0807" }
+      ],
       "fields": {
-      "equipment_options": {
-        "option_b": {
-          "items": [],
-          "gold": 55
+        "equipment_options": {
+          "option_b": {
+            "items": [],
+            "gold": 55
           }
         }
       }
@@ -5586,6 +5608,30 @@
       "entityId": "5a0403b5-3185-43a2-b187-38397d3d01b7",
       "cardNumber": "CLASS-warlock",
       "expectedBeforeFieldsHash": "sha256:a1bad233dabcc64c0962c9d86e2e637818dbfacc32bedb81a4d4e09ada5c7ad2",
+      "productionFieldOverrides": {
+        "equipment_options": {
+          "option_a": {
+            "items": [
+              { "card_id": "0e678d76-70ba-4036-b55b-60532f18e2e8", "quantity": 1 },
+              { "card_id": "6b8e312e-30e8-4438-bf1f-20df7b9f9503", "quantity": 1 },
+              { "card_id": "7ac95f8a-0b8a-4653-b683-19f09ccfb447", "quantity": 2 },
+              { "card_id": "03ac1b31-7c20-40ef-96a0-cc0b1b06ca6b", "quantity": 1 },
+              { "card_id": "fac8645f-83ae-4689-bca4-932d01080498", "quantity": 1 },
+              { "card_id": "4abcd64f-6292-4c44-aaa5-6d749a9d9e89", "quantity": 1 }
+            ],
+            "gold": 15
+          },
+          "option_b": { "items": [], "gold": 100 }
+        }
+      },
+      "productionEntityReferences": [
+        { "collection": "cards", "entityId": "0e678d76-70ba-4036-b55b-60532f18e2e8", "cardNumber": "CARD-0275" },
+        { "collection": "cards", "entityId": "6b8e312e-30e8-4438-bf1f-20df7b9f9503", "cardNumber": "CARD-0299" },
+        { "collection": "cards", "entityId": "7ac95f8a-0b8a-4653-b683-19f09ccfb447", "cardNumber": "CARD-0297" },
+        { "collection": "cards", "entityId": "03ac1b31-7c20-40ef-96a0-cc0b1b06ca6b", "cardNumber": "CARD-0826" },
+        { "collection": "cards", "entityId": "fac8645f-83ae-4689-bca4-932d01080498", "cardNumber": "CARD-0976" },
+        { "collection": "cards", "entityId": "4abcd64f-6292-4c44-aaa5-6d749a9d9e89", "cardNumber": "CARD-0807" }
+      ],
       "fields": {
         "level_progression": {
           "1": {
@@ -5717,10 +5763,10 @@
             ]
           }
         },
-      "equipment_options": {
-        "option_b": {
-          "items": [],
-          "gold": 100
+        "equipment_options": {
+          "option_b": {
+            "items": [],
+            "gold": 100
           }
         }
       }

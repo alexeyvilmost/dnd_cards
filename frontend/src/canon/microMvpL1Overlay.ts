@@ -137,7 +137,7 @@ type JsonObject = Record<string, unknown>;
 export const MICRO_MVP_L1_OVERLAY_SPEC = {
   schemaVersion: 1,
   version: MICRO_MVP_L1_OVERLAY_VERSION,
-  sourceReleaseId: 'prod-snapshot@2026-07-15.micro-mvp-l1.v1',
+  sourceReleaseId: 'prod-snapshot@2026-08-20.micro-mvp-l1.v2',
   rulesLine: 'dnd5e-2024',
   characterLevel: 1,
   contentAuthority: {

@@ -30,8 +30,16 @@ export interface DeclarativeFieldPatch {
   expectedBeforeFieldsHash: string;
   /** Production API CAS; source-snapshot CAS above remains immutable. */
   productionExpectedBeforeFieldsHash?: string;
+  /**
+   * Reviewed production-only top-level replacements. They let the immutable
+   * source snapshot retain its own deterministic materialization while live
+   * data can carry a newer, explicitly declared structural representation.
+   */
+  productionFieldOverrides?: JsonObject;
   /** Stable semantic identities for UUIDs embedded in the declared fields. */
   entityReferences?: DeclarativeEntityReference[];
+  /** Stable identities used only by productionFieldOverrides. */
+  productionEntityReferences?: DeclarativeEntityReference[];
   fields: JsonObject;
 }
 
@@ -117,6 +125,12 @@ function exactEntity<T extends { id: string; card_number: string }>(
 
 function selectedFields(entity: JsonObject, fields: JsonObject): JsonObject {
   return Object.fromEntries(Object.keys(fields).map((key) => [key, entity[key] ?? null]));
+}
+
+function productionFields(patch: DeclarativeFieldPatch): JsonObject | null {
+  return patch.productionFieldOverrides
+    ? { ...patch.fields, ...patch.productionFieldOverrides }
+    : null;
 }
 
 const SERVER_MANAGED_ENTITY_FIELDS = new Set(['id', 'created_at', 'updated_at', 'deleted_at']);
@@ -233,8 +247,23 @@ export function materializeMicroMvpL1ContentPatch(
       problems.push(`${patch.collection}:${patch.cardNumber}/${patch.entityId}: required entity is absent`);
       continue;
     }
+    const currentFields = selectedFields(entity as unknown as JsonObject, patch.fields);
+    const comparableFields = replaceStringAliases(
+      currentFields,
+      createIdentityAliases.actualToDeclared,
+    );
+    const reviewedProductionFields = productionFields(patch);
+    const currentProductionFields = reviewedProductionFields
+      ? selectedFields(entity as unknown as JsonObject, reviewedProductionFields)
+      : null;
+    const isProductionMaterialized = reviewedProductionFields !== null
+      && same(currentProductionFields, reviewedProductionFields);
     let referenceFailure = false;
-    for (const reference of patch.entityReferences ?? []) {
+    const references = [
+      ...(patch.entityReferences ?? []),
+      ...(isProductionMaterialized ? patch.productionEntityReferences ?? [] : []),
+    ];
+    for (const reference of references) {
       try {
         const referenced = exactEntity(
           catalogs[reference.collection] as Array<{ id: string; card_number: string }>,
@@ -254,18 +283,13 @@ export function materializeMicroMvpL1ContentPatch(
       }
     }
     if (referenceFailure) continue;
-    const currentFields = selectedFields(entity as unknown as JsonObject, patch.fields);
-    const comparableFields = replaceStringAliases(
-      currentFields,
-      createIdentityAliases.actualToDeclared,
-    );
     const change: ContentPatchChange = {
       collection: patch.collection,
       entityId: patch.entityId,
       cardNumber: patch.cardNumber,
       operation: 'replace-fields',
     };
-    if (same(comparableFields, patch.fields)) {
+    if (same(comparableFields, patch.fields) || isProductionMaterialized) {
       alreadyMaterialized.push(change);
       continue;
     }

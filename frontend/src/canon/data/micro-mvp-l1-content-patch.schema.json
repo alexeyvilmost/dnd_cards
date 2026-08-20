@@ -72,7 +72,13 @@
         "cardNumber": { "type": "string", "minLength": 1 },
         "expectedBeforeFieldsHash": { "$ref": "#/$defs/sha256" },
         "productionExpectedBeforeFieldsHash": { "$ref": "#/$defs/sha256" },
+        "productionFieldOverrides": { "$ref": "#/$defs/jsonObject" },
         "entityReferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/entityReference" }
+        },
+        "productionEntityReferences": {
           "type": "array",
           "uniqueItems": true,
           "items": { "$ref": "#/$defs/entityReference" }
