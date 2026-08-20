@@ -37,6 +37,21 @@ const refs = (entity) => [...strings(entity?.related_actions), ...strings(entity
 const sorted = (values) => [...values].sort((left, right) => left.localeCompare(right, 'ru'));
 const sameStrings = (left, right) => JSON.stringify(sorted(left)) === JSON.stringify(sorted(right));
 
+function effectResultKinds(blocks) {
+  const kinds = new Set();
+  const visit = (value) => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (!value || typeof value !== 'object') return;
+    if (typeof value.kind === 'string') kinds.add(value.kind);
+    Object.values(value).forEach(visit);
+  };
+  visit(blocks);
+  return kinds;
+}
+
 function validateShape(entry, entity) {
   const issues = [];
   const expected = entry.expected ?? {};
@@ -120,13 +135,19 @@ function validateShape(entry, entity) {
     if (!hasMechanics(entity)) {
       issues.push(issue('mechanics', 'spell_mechanics_missing', 'у заклинания нет data-driven механики'));
     } else {
-      if (!['active', 'triggered'].includes(entity.mechanics?.activation?.mode)) {
-        issues.push(issue('mechanics', 'spell_activation_invalid', 'заклинание не имеет активной или триггерной активации'));
+      if (!['active', 'triggered', 'reaction'].includes(entity.mechanics?.activation?.mode)) {
+        issues.push(issue('mechanics', 'spell_activation_invalid', 'заклинание не имеет исполнимой активации'));
       }
       const hasEffects = Array.isArray(entity.mechanics?.effects) && entity.mechanics.effects.length > 0;
       const hasPrimitive = entity.mechanics?.primitive && typeof entity.mechanics.primitive === 'object';
       if (!hasEffects && !hasPrimitive) {
         issues.push(issue('mechanics', 'spell_resolution_empty', 'заклинание не содержит результатов или исполнимого примитива'));
+      } else if (!hasPrimitive) {
+        const resultKinds = effectResultKinds(entity.mechanics.effects);
+        const hasImmediateResolution = entity.mechanics.effects.some((block) => block?.resolution === 'immediate');
+        if (![...resultKinds].some((kind) => kind !== 'narrative') && !hasImmediateResolution) {
+          issues.push(issue('mechanics', 'spell_narrative_only', 'заклинание описано текстом, но не изменяет состояние движка'));
+        }
       }
     }
   }

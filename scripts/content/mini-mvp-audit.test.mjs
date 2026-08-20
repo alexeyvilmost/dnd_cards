@@ -79,7 +79,7 @@ function validCatalogs() {
         level: entry.expected.level,
         mechanics: {
           activation: { mode: 'active' },
-          effects: [{ resolution: 'auto', result: [{ kind: 'narrative' }] }],
+          effects: [{ resolution: 'auto', result: [{ kind: 'condition', condition: 'test' }] }],
         },
       });
     }
@@ -139,6 +139,18 @@ test('audit accepts triggered spells and specialized primitives as executable me
   const report = assessMiniMvpCatalogs(catalogs);
   const record = report.records.find((item) => item.cardNumber === 'SPELL-0174');
   assert.equal(record.ready, true);
+});
+
+test('audit refuses to call narrative-only spell data mechanically covered', () => {
+  const catalogs = validCatalogs();
+  const spell = catalogs.spell.find((entity) => entity.card_number === 'SPELL-0161');
+  spell.mechanics.effects = [{ resolution: 'auto', result: [{ kind: 'narrative', description: 'illusion' }] }];
+  const index = buildCertificationIndex(catalogs);
+  spell.support = supportFor(spell, 'spell', index);
+  const report = assessMiniMvpCatalogs(catalogs);
+  const record = report.records.find((item) => item.cardNumber === 'SPELL-0161');
+  assert.equal(record.ready, false);
+  assert.ok(record.issues.some((item) => item.code === 'spell_narrative_only'));
 });
 
 test('audit rejects dangling data-driven references', () => {
