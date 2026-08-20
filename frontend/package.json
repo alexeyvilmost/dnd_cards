@@ -18,6 +18,8 @@
     "rules-lab:check": "node scripts/generate-rules-lab-fixture.mjs --check",
     "mini-forge-fixture:generate": "node scripts/generate-mini-mvp-forge-sheet-fixture.mjs",
     "mini-forge-fixture:check": "node scripts/generate-mini-mvp-forge-sheet-fixture.mjs --check",
+    "mini-fighting-styles-fixture:generate": "node scripts/generate-mini-mvp-fighting-style-fixture.mjs",
+    "mini-fighting-styles-fixture:check": "node scripts/generate-mini-mvp-fighting-style-fixture.mjs --check",
     "sheet-combat-certification:generate": "node scripts/generate-sheet-combat-certification.mjs",
     "sheet-combat-certification:check": "node scripts/generate-sheet-combat-certification.mjs --check",
     "test": "vitest run",

@@ -1,0 +1,616 @@
+{
+  "schemaVersion": 1,
+  "strategy": "one-fighter-per-style-v1",
+  "base": {
+    "classCardNumber": "CLASS-warrior",
+    "raceCardNumber": "RACE-0003",
+    "backgroundCardNumber": "BG-0012",
+    "originFeatCardNumber": "FEAT-0005"
+  },
+  "coverage": {
+    "fightingStyles": [
+      "FEAT-0054",
+      "FEAT-0055",
+      "FEAT-0056",
+      "FEAT-0057",
+      "FEAT-0058",
+      "FEAT-0059",
+      "FEAT-0060",
+      "FEAT-0061",
+      "FEAT-0062",
+      "FEAT-0063"
+    ]
+  },
+  "roots": [
+    {
+      "styleCardNumber": "FEAT-0054",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0054",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "e28c558d-5239-4008-837f-6cda8fa47d3a"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0055",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0055",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "c061b389-be25-439b-b9fc-71cfa43e195b"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0056",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0056",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "25896e04-0c1d-4917-97fc-7feef7f836e1"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0057",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0057",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "5d927d9a-6760-4b08-9b1c-d4551010da28"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0058",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0058",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "a1280d91-171b-4cbc-bf89-fa1440fd94c2"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0059",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0059",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "f5e42e2a-9646-4d2f-9561-c47c4f3c1fcd"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0060",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0060",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "e1149e85-3c40-4b67-9d3d-46dc0c8b85b3"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0061",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0061",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "440e7209-1602-415e-a5bb-e8bf42b3f720"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0062",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0062",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "5f56912d-8f52-42b0-89e3-8ced07703d40"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    },
+    {
+      "styleCardNumber": "FEAT-0063",
+      "draft": {
+        "name": "Mini-MVP · FEAT-0063",
+        "description": "",
+        "notes": "",
+        "systemId": "dnd5e-2024",
+        "rulesetVersion": "2024",
+        "characterType": "free",
+        "characterSchemaVersion": 1,
+        "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+        "lineageId": null,
+        "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "subclassId": null,
+        "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+        "level": 1,
+        "featIds": [
+          "2d4da70d-366e-49d6-a621-6c2b171e6ce4"
+        ],
+        "actionIds": [],
+        "effectIds": [],
+        "resourceIds": [],
+        "spellIds": [],
+        "abilities": {
+          "str": 17,
+          "dex": 14,
+          "con": 14,
+          "int": 8,
+          "wis": 12,
+          "cha": 10
+        },
+        "abilityMethod": "point_buy",
+        "abilityBonuses": {
+          "mode": "two_one",
+          "assignments": {
+            "str": 2,
+            "dex": 1
+          },
+          "anyAbilities": false
+        },
+        "equipmentOption": "a",
+        "classEquipmentOption": "a",
+        "classSkillChoices": [
+          "acrobatics",
+          "animal_handling"
+        ],
+        "resolvedChoices": {
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "bca8edf6-27ce-4399-8e34-bdadd59674b3"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
+          ]
+        },
+        "swapFeat": true
+      }
+    }
+  ]
+}

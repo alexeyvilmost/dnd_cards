@@ -112,6 +112,7 @@ interface CharacterResponse extends JsonRecord {
   resources?: JsonRecord;
   turn_state?: JsonRecord;
   currency?: Record<string, number>;
+  resolved_choices?: Record<string, string[]>;
 }
 
 interface CatalogCard extends JsonRecord {
@@ -183,6 +184,25 @@ const miniMvpForgeSheetFixture = JSON.parse(readFileSync(new URL(
     raceCardNumber: string;
     backgroundCardNumber: string;
     featCardNumber: string;
+    draft: CompiledDraftRoot['draft'];
+  }>;
+};
+
+const miniMvpFightingStyleFixture = JSON.parse(readFileSync(new URL(
+  '../src/canon/data/mini-mvp-fighting-style-fixture.v1.json',
+  import.meta.url,
+), 'utf8')) as {
+  schemaVersion: 1;
+  strategy: 'one-fighter-per-style-v1';
+  base: {
+    classCardNumber: string;
+    raceCardNumber: string;
+    backgroundCardNumber: string;
+    originFeatCardNumber: string;
+  };
+  coverage: { fightingStyles: string[] };
+  roots: Array<{
+    styleCardNumber: string;
     draft: CompiledDraftRoot['draft'];
   }>;
 };
@@ -1123,7 +1143,7 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
   if (cleanupErrors.length > 0) throw new Error(cleanupErrors.join('; '));
 });
 
-test('public mini-MVP sheet certificate: every root entity crosses Forge and the live sheet', async ({
+test('public mini-MVP sheet certificate: every root and Fighting Style crosses Forge and the live sheet', async ({
   browser,
   playwright,
 }, testInfo) => {
@@ -1185,10 +1205,12 @@ test('public mini-MVP sheet certificate: every root entity crosses Forge and the
     const scopedRaces = resolveManifest('species', races);
     const scopedBackgrounds = resolveManifest('backgrounds', backgrounds);
     const scopedFeats = resolveManifest('originFeats', feats);
+    const scopedFightingStyles = resolveManifest('fightingStyles', feats);
     expect(scopedClasses).toHaveLength(12);
     expect(scopedRaces).toHaveLength(10);
     expect(scopedBackgrounds).toHaveLength(16);
     expect(scopedFeats).toHaveLength(10);
+    expect(scopedFightingStyles).toHaveLength(10);
 
     const cardById = new Map(cards.map((card) => [card.id, card]));
     expect(miniMvpForgeSheetFixture.schemaVersion).toBe(1);
@@ -1199,6 +1221,18 @@ test('public mini-MVP sheet certificate: every root entity crosses Forge and the
       backgrounds: scopedBackgrounds.map((entity) => entity.card_number),
       originFeats: scopedFeats.map((entity) => entity.card_number),
     });
+    expect(miniMvpFightingStyleFixture).toMatchObject({
+      schemaVersion: 1,
+      strategy: 'one-fighter-per-style-v1',
+      base: {
+        classCardNumber: 'CLASS-warrior',
+        raceCardNumber: 'RACE-0003',
+        backgroundCardNumber: 'BG-0012',
+        originFeatCardNumber: 'FEAT-0005',
+      },
+      coverage: { fightingStyles: scopedFightingStyles.map((entity) => entity.card_number) },
+    });
+    expect(miniMvpFightingStyleFixture.roots).toHaveLength(10);
 
     context = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
     await installBrowserOriginFence(context, new Set([frontendOrigin, apiOrigin]));
@@ -1284,6 +1318,45 @@ test('public mini-MVP sheet certificate: every root entity crosses Forge and the
           `${klass.card_number} item on the real sheet`,
         ).toBeVisible();
       }
+      await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
+      await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+    }
+
+    // Every style is selected through the Fighter's real data-driven choice,
+    // serialized by Forge, reloaded from the API, and rendered in the live sheet.
+    for (const [index, root] of miniMvpFightingStyleFixture.roots.entries()) {
+      const matches = feats.filter((feat) => feat.card_number === root.styleCardNumber);
+      if (matches.length !== 1) {
+        throw new Error(`${root.styleCardNumber}: expected one live Fighting Style, got ${matches.length}`);
+      }
+      const style = matches[0];
+      expect(Object.values(root.draft.resolvedChoices).flat(), `${style.card_number} fixture choice`)
+        .toContain(style.id);
+      const marker = `${runMarker}:style:${index}:${style.card_number}`;
+      let submittedCreate: JsonRecord | undefined;
+      const character = await createCompiledCharacterInForge(
+        page,
+        { draft: root.draft },
+        `Canary ${style.name} ${runMarker.slice(-8)}`,
+        marker,
+        apiOrigin,
+        (body) => { submittedCreate = body; },
+      );
+      characters.push(character);
+      const submittedChoices = submittedCreate?.resolved_choices as Record<string, string[]> | undefined;
+      expect(Object.values(submittedChoices ?? {}).flat(), `${style.card_number} submitted choice`)
+        .toContain(style.id);
+      const persisted = await checkedJSON<CharacterResponse>(
+        auth.api,
+        'get',
+        `/api/characters-v3/${character.id}`,
+      );
+      expect(Object.values(persisted.resolved_choices ?? {}).flat(), `${style.card_number} persisted choice`)
+        .toContain(style.id);
+      await expect(
+        page.getByTitle(style.name, { exact: true }).first(),
+        `${style.card_number} on the real sheet`,
+      ).toBeVisible();
       await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
       await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
     }
