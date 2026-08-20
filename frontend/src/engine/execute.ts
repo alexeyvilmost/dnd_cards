@@ -144,7 +144,7 @@ const EXECUTABLE_RESOLUTIONS = new Set(['auto', 'attack_roll', 'save', 'ability_
 const EXECUTABLE_PAYLOAD_KINDS = new Set([
   'damage', 'damage_rider', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
   'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
-  'condition_immunity', 'triggered_effect',
+  'condition_immunity', 'triggered_effect', 'fall_protection', 'movement_option',
   'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
 ]);
@@ -693,12 +693,59 @@ function preflightPayload(
         ...ctx,
         character: { ...ctx.character, variables },
       };
+      if (value.circumstances !== undefined && !Array.isArray(value.circumstances)) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.circumstances`, 'triggered_effect circumstances must be an array',
+        );
+      }
+      if (value.uses !== undefined && !isDict(value.uses)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.uses`, 'triggered_effect uses must be an object');
+      }
       value.effects.forEach((effect, index) => preflightEffect(
         effect,
         `${path}.effects[${index}]`,
         state,
         nestedContext,
+        depth + 1,
       ));
+      break;
+    }
+    case 'fall_protection': {
+      const descent = Number(value.descent_per_round_ft);
+      if (!Number.isFinite(descent) || descent <= 0) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.descent_per_round_ft`, 'fall protection requires a positive descent rate',
+        );
+      }
+      if (value.prevents_fall_damage !== true || value.ends_on_landing !== true) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', path, 'fall protection must explicitly prevent damage and end on landing',
+        );
+      }
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'fall protection requires duration');
+      }
+      break;
+    }
+    case 'movement_option': {
+      if (typeof value.id !== 'string' || !/^[a-z][a-z0-9_-]*$/u.test(value.id)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.id`, 'movement option requires a stable slug id');
+      }
+      for (const key of ['distance_ft', 'movement_cost_ft'] as const) {
+        const amount = Number(value[key]);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          throw mechanicsError('INVALID_PAYLOAD', `${path}.${key}`, `${key} must be positive`);
+        }
+      }
+      if (!isDict(value.duration)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'movement option requires duration');
+      }
+      const uses = value.uses;
+      if (!isDict(uses) || Number(uses.count) !== 1 || uses.per !== 'turn') {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.uses`, 'movement option currently requires exactly one use per turn',
+        );
+      }
       break;
     }
     case 'healing':
@@ -820,6 +867,7 @@ function preflightEffect(
   path: string,
   state: RuntimeState,
   ctx: ExecuteContext,
+  depth = 0,
 ): void {
   if (!isDict(value)) throw mechanicsError('INVALID_PAYLOAD', path, 'effect must be an object');
   const hand = resolveHand(value);
@@ -831,7 +879,7 @@ function preflightEffect(
         `payload kind «${String(value.kind)}» cannot be used at the interaction layer`,
       );
     }
-    preflightPayload(value, path, state, ctx, String(value.who ?? 'self') === 'target', 0, hand);
+    preflightPayload(value, path, state, ctx, String(value.who ?? 'self') === 'target', depth, hand);
     return;
   }
   const resolution = typeof value.resolution === 'string' ? value.resolution : '';
@@ -851,7 +899,7 @@ function preflightEffect(
   }
   for (const key of outcomes) {
     if (value[key] !== undefined) {
-      assertPayloadArray(value[key], `${path}.${key}`, state, ctx, targetOwned, 0, hand);
+      assertPayloadArray(value[key], `${path}.${key}`, state, ctx, targetOwned, depth, hand);
     }
   }
   if (resolution === 'attack_roll') {
@@ -1454,10 +1502,14 @@ function applyTriggeredEffectPayload(
   const mechanics: Dict = {
     activation: {
       mode: 'triggered',
-      trigger: { event: payload.event },
+      trigger: {
+        event: payload.event,
+        ...(Array.isArray(payload.circumstances) ? { circumstances: payload.circumstances } : {}),
+      },
     },
     effects: payload.effects,
     duration: payload.duration,
+    ...(isDict(payload.uses) ? { uses: payload.uses } : {}),
     ...(Object.keys(formulaVariables).length ? { formula_variables: formulaVariables } : {}),
     ...(Array.isArray(payload.end_triggers) ? { end_triggers: payload.end_triggers } : {}),
     ...(payload.stack_id !== undefined ? { stack_id: payload.stack_id } : {}),
@@ -1475,6 +1527,31 @@ function applyTriggeredEffectPayload(
   };
   events.push({ type: 'effect_applied', name: source });
   return stackApply(state, entry, mechanics);
+}
+
+/** Persist a rules-owned adapter for falling or a special movement mode. */
+function applyTraversalPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const suffix = payload.kind === 'movement_option' ? String(payload.id) : 'fall';
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, suffix, state.activeEffects.length),
+    name: source,
+    mechanics: payload,
+    roundsLeft,
+    expiry,
+    source,
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
+    ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+  };
+  events.push({ type: 'effect_applied', name: source });
+  return stackApply(state, entry, payload);
 }
 
 /** Runtime sense grants such as Dwarf Stonecunning are persisted effects. */
@@ -2312,6 +2389,15 @@ function applyPayloads(
         whoTarget ? ctx.target?.id : ctx.selfId,
       )); break;
       case 'triggered_effect': route((s) => applyTriggeredEffectPayload(
+        s,
+        p,
+        source,
+        events,
+        ctx,
+        whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
+      case 'fall_protection':
+      case 'movement_option': route((s) => applyTraversalPayload(
         s,
         p,
         source,
@@ -3218,6 +3304,76 @@ export function executeAction(
   };
 }
 
+function mechanicsContainsPayloadKind(mechanics: Dict, kind: string): boolean {
+  return payloadsOf(mechanics).some((payload) => payload.kind === kind)
+    || (Array.isArray(mechanics.effects) && mechanics.effects.some((effect) => (
+      isDict(effect) && ['result', 'results', 'on_hit', 'on_crit', 'on_miss', 'on_fail', 'on_success']
+        .some((key) => Array.isArray(effect[key])
+          && (effect[key] as unknown[]).some((payload) => isDict(payload) && payload.kind === kind))
+    )));
+}
+
+/** Resolve automatic once-per-turn damage reducers before HP changes. This is
+ * the reusable bridge used by Resistance and future typed wards; optional
+ * reactions remain owned by the sheet/encounter decision UI. */
+function resolveAutomaticDamageReductions(
+  state: RuntimeState,
+  amount: number,
+  damageType: string,
+  ctx: ExecuteContext,
+): { state: RuntimeState; events: EngineEvent[]; reduction: number } {
+  if (amount <= 0) return { state, events: [], reduction: 0 };
+  let next = state;
+  const events: EngineEvent[] = [];
+  let reduction = 0;
+  const event: DomainEvent = {
+    kind: 'damage_taken',
+    timing: 'before',
+    source: 'self',
+    data: { amount, damageType },
+  };
+  const listeners = collectListeners(event, next, passivesFromCtx(ctx), evalCtxOf(next, ctx));
+  for (const listener of listeners) {
+    if (!isAuto(listener) || listener.usesPer !== 'turn'
+      || !mechanicsContainsPayloadKind(listener.mechanics, 'reduce_damage')) continue;
+    const fired = new Set(next.firedThisTurn ?? []);
+    if (fired.has(listener.id)) continue;
+    fired.add(listener.id);
+    next = { ...next, firedThisTurn: [...fired] };
+
+    const listenerCtx: ExecuteContext = listener.formulaVariables
+      ? {
+        ...ctx,
+        character: {
+          ...ctx.character,
+          variables: {
+            ...(ctx.character.variables ?? {}),
+            ...listener.formulaVariables,
+          },
+        },
+      }
+      : ctx;
+    const before = events.length;
+    events.push(narrativeEvent(`Сработало: ${listener.name}`));
+    const targetRef: TargetRef = { mutated: false };
+    next = runMechanicEffects(
+      (listener.mechanics.effects as Dict[]) ?? [],
+      next,
+      listenerCtx,
+      events,
+      listener.name,
+      [],
+      targetRef,
+      false,
+      [],
+    );
+    reduction += events.slice(before).reduce((sum, candidate) => (
+      candidate.type === 'damage_reduction' ? sum + candidate.amount : sum
+    ), 0);
+  }
+  return { state: next, events, reduction };
+}
+
 /**
  * Применить ВХОДЯЩИЙ урон к владельцу листа (фаза A/E): списывает временные, затем
  * текущие хиты; при активной концентрации — авто-проверка ТЕЛ (СЛ по 2024, помеха при
@@ -3260,9 +3416,14 @@ export function applyIncomingDamage(
       },
     });
   }
+  const automaticReduction = resolveAutomaticDamageReductions(next, resisted, damageType, ctx);
+  next = automaticReduction.state;
+  events.push(...automaticReduction.events);
   // Снижение урона (Каменная стойкость) — ПОСЛЕ сопротивления, ДО списания хитов. Урон не может
   // уйти ниже 0. Так HP не проседает (нет ложных «Окровален»/падения до 0), и это НЕ лечение.
-  const reduction = Math.max(0, Math.floor(opts?.damageReduction ?? 0));
+  const reduction = Math.max(0, Math.floor(
+    (opts?.damageReduction ?? 0) + automaticReduction.reduction,
+  ));
   const dmg = Math.max(0, resisted - reduction);
   if (reduction > 0) {
     events.push(narrativeEvent(`Снижение урона: ${resisted} → ${dmg} (−${Math.min(reduction, resisted)})`));
@@ -3304,7 +3465,11 @@ export function applyIncomingDamage(
   }
 
   // Событие получения урона → реакции (Адское возмездие, Невероятное уклонение…).
-  next = emitEvent({ kind: 'damage_taken', source: 'self', data: { amount: dmg } }, next, ctx, events, pending);
+  next = emitEvent({
+    kind: 'damage_taken',
+    source: 'self',
+    data: { amount: dmg, damageType },
+  }, next, ctx, events, pending);
 
   // Падение до 0 HP → триггеры «при 0 HP» (напр. Отчаянная стойкость, срабатывания черт).
   // Гейт «был >0, стал 0» — чтобы не дублировать эмиссию на добивании уже бессознательного.
@@ -3313,4 +3478,106 @@ export function applyIncomingDamage(
   }
 
   return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
+}
+
+function activePayloadEntries(state: RuntimeState, kind: string): Array<{
+  entry: ActiveEffectEntry;
+  payload: Dict;
+}> {
+  return state.activeEffects.flatMap((entry) => payloadsOf(entry.mechanics as Dict)
+    .filter((payload) => payload.kind === kind)
+    .map((payload) => ({ entry, payload })));
+}
+
+/** Authoritative descent cap exposed to a board/hazard adapter. */
+export function fallDescentRateFt(
+  state: RuntimeState,
+  ordinaryRateFt = 500,
+): number {
+  const declared = activePayloadEntries(state, 'fall_protection')
+    .map(({ payload }) => Number(payload.descent_per_round_ft))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  return declared.length ? Math.min(ordinaryRateFt, ...declared) : ordinaryRateFt;
+}
+
+/** Resolve landing through a persisted fall-protection effect or the ordinary
+ * incoming-damage pipeline. The adapter supplies observed distance and the
+ * rules-derived fall damage; content never writes HP directly. */
+export function resolveFallLanding(
+  state: RuntimeState,
+  input: { distanceFt: number; damage: number },
+  ctx: ExecuteContext,
+): ExecuteResult {
+  if (!Number.isFinite(input.distanceFt) || input.distanceFt < 0
+    || !Number.isFinite(input.damage) || input.damage < 0) {
+    throw mechanicsError('INVALID_MECHANICS', 'fall', 'fall distance and damage must be finite non-negative values');
+  }
+  const protections = activePayloadEntries(state, 'fall_protection')
+    .filter(({ payload }) => payload.prevents_fall_damage === true);
+  if (!protections.length) {
+    const ordinary = applyIncomingDamage(state, input.damage, ctx, { damageType: 'bludgeoning' });
+    return {
+      ...ordinary,
+      events: [{ type: 'movement', mode: 'fall_landing', distanceFt: input.distanceFt }, ...ordinary.events],
+    };
+  }
+
+  const expiring = new Set(protections
+    .filter(({ payload }) => payload.ends_on_landing === true)
+    .map(({ entry }) => entry.id));
+  const next = cloneState(state);
+  next.activeEffects = next.activeEffects.filter((entry) => !expiring.has(entry.id));
+  const events: EngineEvent[] = [
+    { type: 'movement', mode: 'fall_landing', distanceFt: input.distanceFt },
+    ...(input.damage > 0 ? [{ type: 'damage_reduction', amount: Math.floor(input.damage) } as EngineEvent] : []),
+    ...protections
+      .filter(({ entry }) => expiring.has(entry.id))
+      .map(({ entry }) => ({ type: 'effect_expired', name: entry.name } as EngineEvent)),
+  ];
+  return { state: next, events };
+}
+
+export interface MovementOptionExecutionResult extends ExecuteResult {
+  distanceFt: number;
+  movementCostFt: number;
+  remainingMovementFt: number;
+}
+
+/** Spend an external board movement budget on a data-driven special move. */
+export function executeMovementOption(
+  state: RuntimeState,
+  optionId: string,
+  availableMovementFt: number,
+): MovementOptionExecutionResult {
+  if (!Number.isFinite(availableMovementFt) || availableMovementFt < 0) {
+    throw mechanicsError('INVALID_MECHANICS', 'movement.availableMovementFt', 'movement budget must be finite and non-negative');
+  }
+  const matches = activePayloadEntries(state, 'movement_option')
+    .filter(({ payload }) => payload.id === optionId);
+  if (matches.length !== 1) {
+    throw mechanicsError(
+      'INVALID_MECHANICS', 'movement.optionId', `expected one active movement option «${optionId}», got ${matches.length}`,
+    );
+  }
+  const { entry, payload } = matches[0];
+  const useKey = `movement-option:${entry.id}`;
+  if ((state.firedThisTurn ?? []).includes(useKey)) {
+    throw mechanicsError('INVALID_MECHANICS', 'movement.uses', `movement option «${optionId}» was already used this turn`);
+  }
+  const movementCostFt = Number(payload.movement_cost_ft);
+  const distanceFt = Number(payload.distance_ft);
+  if (availableMovementFt < movementCostFt) {
+    throw mechanicsError(
+      'INVALID_MECHANICS', 'movement.availableMovementFt', `movement option «${optionId}» requires ${movementCostFt} ft`,
+    );
+  }
+  const next = cloneState(state);
+  next.firedThisTurn = [...new Set([...(next.firedThisTurn ?? []), useKey])];
+  return {
+    state: next,
+    events: [{ type: 'movement', mode: optionId, distanceFt }],
+    distanceFt,
+    movementCostFt,
+    remainingMovementFt: availableMovementFt - movementCostFt,
+  };
 }

@@ -981,7 +981,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
+        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item"] }
       },
       "allOf": [
         {
@@ -1041,10 +1041,47 @@
                 "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
                 "additionalProperties": { "$ref": "#/$defs/formula" }
               },
+              "circumstances": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/condition" }
+              },
+              "uses": { "$ref": "#/$defs/uses" },
               "end_triggers": {
                 "type": "array",
                 "uniqueItems": true,
                 "items": { "type": "string", "minLength": 1 }
+              },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "fall_protection" } } },
+          "then": {
+            "required": ["descent_per_round_ft", "prevents_fall_damage", "ends_on_landing", "duration"],
+            "properties": {
+              "descent_per_round_ft": { "type": "number", "exclusiveMinimum": 0 },
+              "prevents_fall_damage": { "const": true },
+              "ends_on_landing": { "const": true },
+              "duration": { "$ref": "#/$defs/duration" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "movement_option" } } },
+          "then": {
+            "required": ["id", "distance_ft", "movement_cost_ft", "uses", "duration"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+              "distance_ft": { "type": "number", "exclusiveMinimum": 0 },
+              "movement_cost_ft": { "type": "number", "exclusiveMinimum": 0 },
+              "uses": {
+                "type": "object",
+                "required": ["count", "per"],
+                "properties": {
+                  "count": { "const": 1 },
+                  "per": { "const": "turn" }
+                }
               },
               "duration": { "$ref": "#/$defs/duration" }
             }

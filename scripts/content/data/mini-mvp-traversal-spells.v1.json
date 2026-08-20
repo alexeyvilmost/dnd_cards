@@ -1,0 +1,609 @@
+[
+  {
+    "card_number": "SPELL-0295",
+    "name": "Сопротивление",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          {
+            "resource": "action"
+          }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "choice",
+              "id": "resistance_damage_type",
+              "context": "in_play",
+              "count": 1,
+              "prompt": "Выберите тип урона",
+              "options": {
+                "source": "explicit",
+                "items": [
+                  {
+                    "id": "acid",
+                    "name": "Кислота",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "acid"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "bludgeoning",
+                    "name": "Дробящий",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "bludgeoning"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cold",
+                    "name": "Холод",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "cold"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "fire",
+                    "name": "Огонь",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "fire"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "lightning",
+                    "name": "Молния",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "lightning"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "necrotic",
+                    "name": "Некротический",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "necrotic"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "piercing",
+                    "name": "Колющий",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "piercing"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "poison",
+                    "name": "Яд",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "poison"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "radiant",
+                    "name": "Излучение",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "radiant"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "slashing",
+                    "name": "Рубящий",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "slashing"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "thunder",
+                    "name": "Гром",
+                    "grants": [
+                      {
+                        "kind": "triggered_effect",
+                        "event": "damage_taken",
+                        "circumstances": [
+                          {
+                            "kind": "event_data_equals",
+                            "key": "damageType",
+                            "value": "thunder"
+                          }
+                        ],
+                        "uses": {
+                          "count": 1,
+                          "per": "turn"
+                        },
+                        "effects": [
+                          {
+                            "resolution": "auto",
+                            "result": [
+                              {
+                                "kind": "reduce_damage",
+                                "amount": "1d4"
+                              }
+                            ]
+                          }
+                        ],
+                        "duration": {
+                          "type": "rounds",
+                          "amount": 10,
+                          "concentration": true
+                        },
+                        "stack_id": "spell:resistance",
+                        "stack_type": "overwrite"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-cleric",
+        "CLASS-druid"
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 5,
+        "requires_touch": true,
+        "requires_line_of_sight": false,
+        "allowed_relations": [
+          "self",
+          "ally"
+        ]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0253",
+    "name": "Падение пёрышком",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          {
+            "resource": "reaction"
+          },
+          {
+            "resource": "spell_slot",
+            "level": 1,
+            "amount": 1
+          }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "fall_protection",
+              "descent_per_round_ft": 60,
+              "prevents_fall_damage": true,
+              "ends_on_landing": true,
+              "duration": {
+                "type": "rounds",
+                "amount": 10
+              },
+              "stack_id": "spell:feather-fall",
+              "stack_type": "overwrite"
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-sorcerer",
+        "CLASS-wizard"
+      ],
+      "targeting": {
+        "shape": "multi",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 5,
+        "range_ft": 60,
+        "requires_line_of_sight": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      }
+    }
+  },
+  {
+    "card_number": "SPELL-0274",
+    "name": "Прыжок",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "resource": "spell_slot",
+            "level": 1,
+            "amount": 1
+          }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "movement_option",
+              "id": "jump",
+              "distance_ft": 30,
+              "movement_cost_ft": 10,
+              "uses": {
+                "count": 1,
+                "per": "turn"
+              },
+              "duration": {
+                "type": "rounds",
+                "amount": 10
+              },
+              "stack_id": "spell:jump",
+              "stack_type": "overwrite"
+            },
+            {
+              "kind": "narrative",
+              "description": "При сотворении ячейкой выше 1-го круга можно выбрать ещё одну цель за каждый дополнительный круг; масштабирование числа целей пока требует multi-target адаптера слота."
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-druid",
+        "CLASS-ranger",
+        "CLASS-sorcerer",
+        "CLASS-wizard"
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 5,
+        "requires_touch": true,
+        "requires_line_of_sight": false,
+        "allowed_relations": [
+          "self",
+          "ally"
+        ]
+      }
+    }
+  }
+]

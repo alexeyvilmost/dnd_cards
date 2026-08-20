@@ -166,6 +166,11 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       return ctx.event?.kind === 'hit' && ctx.event.data?.advantage === cond.value;
     case 'nearby_eligible_ally_to_target':
       return ctx.event?.kind === 'hit' && ctx.event.data?.nearbyEligibleAllyToTarget === true;
+    case 'event_data_equals': {
+      const key = typeof cond.key === 'string' ? cond.key : '';
+      if (!key || !ctx.event?.data) return false;
+      return ctx.event.data[key] === cond.value;
+    }
     case 'd20_equals':
       return ctx.lastD20 != null && ctx.lastD20 === Number(cond.value);
     case 'narrative':
