@@ -64,42 +64,47 @@ export interface SupportableEntity {
 
 const MICRO_MVP_V3_CERTIFICATION = 'micro-mvp-l1-rules-core-v3';
 const MICRO_MVP_V4_CERTIFICATION = 'micro-mvp-l1-rules-core-v4';
+const MINI_MVP_V1_CERTIFICATION = 'mini-mvp-l1-v1';
 const BASIC_ACTIONS_CERTIFICATION = 'micro-mvp-basic-actions-v2';
 const DEPRECATED_CERTIFICATIONS = new Set(['micro-mvp-basic-actions-v1']);
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UTC_RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
-const MICRO_MVP_V3_HASH_FIELDS = [
+const RELEASE_EVIDENCE_HASH_FIELDS = [
   'content_hash', 'dependency_hash', 'evidence_hash', 'gate_source_hash',
   'source_content_hash', 'rules_hash', 'release_content_hash', 'release_hash',
   'patch_hash', 'catalog_hash',
 ] as const satisfies readonly (keyof EntitySupportCertification)[];
 
-function microMvpV3EvidenceIssues(certification: EntitySupportCertification): string[] {
-  if (![MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION]
+function releaseEvidenceIssues(certification: EntitySupportCertification): string[] {
+  if (![MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, MINI_MVP_V1_CERTIFICATION]
     .includes(certification.certification_version ?? '')) return [];
   const issues: string[] = [];
-  if (!UUID.test(certification.evidence_id ?? '')) issues.push('micro-MVP v3 требует evidence_id UUID');
-  for (const field of MICRO_MVP_V3_HASH_FIELDS) {
+  if (!UUID.test(certification.evidence_id ?? '')) issues.push('release evidence требует evidence_id UUID');
+  for (const field of RELEASE_EVIDENCE_HASH_FIELDS) {
     if (!SHA256.test(String(certification[field] ?? ''))) {
-      issues.push(`micro-MVP v3 требует ${field} sha256`);
+      issues.push(`release evidence требует ${field} sha256`);
     }
   }
   for (const field of ['certified_at', 'evidence_completed_at'] as const) {
     const value = certification[field] ?? '';
     if (!UTC_RFC3339.test(value) || Number.isNaN(Date.parse(value))) {
-      issues.push(`micro-MVP v3 требует ${field} UTC RFC3339`);
+      issues.push(`release evidence требует ${field} UTC RFC3339`);
     }
   }
-  if (certification.certification_version === MICRO_MVP_V4_CERTIFICATION) {
+  if ([MICRO_MVP_V4_CERTIFICATION, MINI_MVP_V1_CERTIFICATION]
+    .includes(certification.certification_version ?? '')) {
     const coverage = certification.test_coverage;
-    if (!coverage || coverage.schema_version !== 1 || !coverage.scope?.trim()
+    const expectedScope = certification.certification_version === MINI_MVP_V1_CERTIFICATION
+      ? 'mini-mvp-l1'
+      : 'micro-mvp-l1';
+    if (!coverage || coverage.schema_version !== 1 || coverage.scope !== expectedScope
       || !Number.isInteger(coverage.required) || coverage.required < 1
       || !Number.isInteger(coverage.passed) || coverage.passed < 0
       || coverage.passed > coverage.required
       || !Number.isInteger(coverage.percent)
       || coverage.percent !== Math.floor((coverage.passed * 100) / coverage.required)) {
-      issues.push('micro-MVP v4 требует точный test_coverage');
+      issues.push(`${certification.certification_version} требует точный test_coverage`);
     }
     if (certification.mechanics_locked === true
       && (!coverage || coverage.passed !== coverage.required || coverage.percent !== 100)) {
@@ -184,7 +189,7 @@ export function supportStatusOf(entity: SupportableEntity | null | undefined): E
   const support = entity?.support;
   if (!support) return 'untested';
   if (DEPRECATED_CERTIFICATIONS.has(support.certification_version ?? '')) return 'untested';
-  if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
+  if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, MINI_MVP_V1_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
     .includes(support.certification_version ?? '')
     && certificationContractIssues(support).length > 0) {
     return 'untested';
@@ -280,7 +285,7 @@ export function effectiveSupportStatus(
 ): EntitySupportStatus {
   if (!isCertificationFresh(certification, currentContentHash, currentDependencyHash)
     || (certification != null
-      && [MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
+      && [MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, MINI_MVP_V1_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
       .includes(certification?.certification_version ?? '')
       && certificationContractIssues(certification).length > 0)) {
     return 'untested';
@@ -311,7 +316,7 @@ export function certificationContractIssues(
   if (certification.status.startsWith('verified_') && !certification.dependency_hash) {
     issues.push(`${certification.status} требует dependency_hash`);
   }
-  issues.push(...microMvpV3EvidenceIssues(certification));
+  issues.push(...releaseEvidenceIssues(certification));
   issues.push(...basicActionsEvidenceIssues(certification));
   return issues;
 }

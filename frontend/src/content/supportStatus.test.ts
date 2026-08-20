@@ -83,7 +83,7 @@ describe('content support status', () => {
     expect(supportStatusOf({ support: incomplete })).toBe('untested');
     expect(effectiveSupportStatus(incomplete, hash, hash)).toBe('untested');
     expect(certificationContractIssues(incomplete)).toContain(
-      'micro-MVP v3 требует evidence_id UUID',
+      'release evidence требует evidence_id UUID',
     );
 
     const complete: EntitySupportCertification = {
@@ -101,6 +101,40 @@ describe('content support status', () => {
     };
     expect(certificationContractIssues(complete)).toEqual([]);
     expect(supportStatusOf({ support: complete })).toBe('verified_mechanical');
+  });
+
+  it('mini-MVP certificate requires its exact scope before exposing or locking an entity', () => {
+    const hash = `sha256:${'c'.repeat(64)}`;
+    const certificate: EntitySupportCertification = {
+      status: 'verified_mechanical',
+      certification_version: 'mini-mvp-l1-v1',
+      content_hash: hash,
+      dependency_hash: hash,
+      certified_at: '2026-08-20T07:00:00Z',
+      evidence_id: '00000000-0000-4000-8000-000000000003',
+      evidence_completed_at: '2026-08-20T06:59:00Z',
+      evidence_hash: hash,
+      gate_source_hash: hash,
+      source_content_hash: hash,
+      rules_hash: hash,
+      release_content_hash: hash,
+      release_hash: hash,
+      patch_hash: hash,
+      catalog_hash: hash,
+      test_coverage: {
+        schema_version: 1, scope: 'mini-mvp-l1', required: 24, passed: 24, percent: 100,
+      },
+      mechanics_locked: true,
+    };
+    expect(certificationContractIssues(certificate)).toEqual([]);
+    expect(supportStatusOf({ support: certificate })).toBe('verified_mechanical');
+    expect(isMechanicsLocked({ support: certificate })).toBe(true);
+    expect(supportStatusOf({
+      support: {
+        ...certificate,
+        test_coverage: { ...certificate.test_coverage!, scope: 'micro-mvp-l1' },
+      },
+    })).toBe('untested');
   });
 
   it('v4 публикует точное покрытие и закрепляет только полностью покрытую механику', () => {

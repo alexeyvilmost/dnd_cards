@@ -78,6 +78,7 @@ type ContentTestCoverage struct {
 
 const legacyMicroMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v3"
 const microMVPEvidenceCertificationVersion = "micro-mvp-l1-rules-core-v4"
+const miniMVPEvidenceCertificationVersion = "mini-mvp-l1-v1"
 const basicActionsEvidenceCertificationVersion = "micro-mvp-basic-actions-v2"
 
 func isMicroMVPEvidenceCertificationVersion(value string) bool {
@@ -85,8 +86,14 @@ func isMicroMVPEvidenceCertificationVersion(value string) bool {
 		value == microMVPEvidenceCertificationVersion
 }
 
+func isReleaseEvidenceCertificationVersion(value string) bool {
+	return isMicroMVPEvidenceCertificationVersion(value) ||
+		value == miniMVPEvidenceCertificationVersion
+}
+
 func isMechanicsLockCertificationVersion(value string) bool {
 	return value == microMVPEvidenceCertificationVersion ||
+		value == miniMVPEvidenceCertificationVersion ||
 		value == basicActionsEvidenceCertificationVersion
 }
 
@@ -157,15 +164,15 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 		}
 	}
 	if req.CertificationVersion != nil &&
-		isMicroMVPEvidenceCertificationVersion(strings.TrimSpace(*req.CertificationVersion)) {
-		if !isMicroMVPEvidenceCertificationVersion(*req.CertificationVersion) {
-			issues = append(issues, "micro-MVP evidence требует канонический certification_version без пробелов")
+		isReleaseEvidenceCertificationVersion(strings.TrimSpace(*req.CertificationVersion)) {
+		if !isReleaseEvidenceCertificationVersion(*req.CertificationVersion) {
+			issues = append(issues, "release evidence требует канонический certification_version без пробелов")
 		}
 		if req.EvidenceID == nil {
-			issues = append(issues, "micro-MVP evidence требует evidence_id")
+			issues = append(issues, "release evidence требует evidence_id")
 		} else if parsed, err := uuid.Parse(*req.EvidenceID); err != nil || parsed == uuid.Nil ||
 			strings.TrimSpace(*req.EvidenceID) != *req.EvidenceID {
-			issues = append(issues, "micro-MVP evidence требует evidence_id UUID")
+			issues = append(issues, "release evidence требует evidence_id UUID")
 		}
 		requiredSupportHash(req.EvidenceHash, "evidence_hash", &issues)
 		requiredSupportHash(req.GateSourceHash, "gate_source_hash", &issues)
@@ -176,15 +183,24 @@ func validateContentSupportRequest(req ContentSupportRequest) []string {
 		requiredSupportHash(req.PatchHash, "patch_hash", &issues)
 		requiredSupportHash(req.CatalogHash, "catalog_hash", &issues)
 		if req.CertifiedAt == nil || !isValidContentSupportUTCTimestamp(*req.CertifiedAt) {
-			issues = append(issues, "micro-MVP evidence требует явный certified_at UTC RFC3339")
+			issues = append(issues, "release evidence требует явный certified_at UTC RFC3339")
 		}
 		if req.EvidenceCompletedAt == nil ||
 			!isValidContentSupportUTCTimestamp(*req.EvidenceCompletedAt) {
-			issues = append(issues, "micro-MVP evidence требует evidence_completed_at UTC RFC3339")
+			issues = append(issues, "release evidence требует evidence_completed_at UTC RFC3339")
 		}
 	}
-	if req.CertificationVersion != nil && *req.CertificationVersion == microMVPEvidenceCertificationVersion {
+	if req.CertificationVersion != nil &&
+		(*req.CertificationVersion == microMVPEvidenceCertificationVersion ||
+			*req.CertificationVersion == miniMVPEvidenceCertificationVersion) {
 		issues = append(issues, validateContentTestCoverage(req.TestCoverage)...)
+		expectedScope := "micro-mvp-l1"
+		if *req.CertificationVersion == miniMVPEvidenceCertificationVersion {
+			expectedScope = "mini-mvp-l1"
+		}
+		if req.TestCoverage != nil && req.TestCoverage.Scope != expectedScope {
+			issues = append(issues, "test_coverage.scope должен быть "+expectedScope)
+		}
 	}
 	if req.CertificationVersion != nil &&
 		strings.TrimSpace(*req.CertificationVersion) == basicActionsEvidenceCertificationVersion {
