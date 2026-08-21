@@ -84,14 +84,15 @@ func splitWeaponActionsAndUnlockMetadata(db *sql.DB) error {
 		WHERE card_number = 'action_basic_offhand' AND deleted_at IS NULL;
 
 		INSERT INTO actions (
-			id, name, description, image_url, rarity, card_number,
+			id, name, name_en, description, image_url, rarity, card_number,
 			action_type, type, resource, mechanics, author, source
 		) VALUES (
 			'10800000-0000-4000-8000-000000000001',
 			'Дальнобойная атака оружием',
+			'Ranged Weapon Attack',
 			'Атака надетым оружием в дальнобойном режиме. Боеприпас расходуется только если он объявлен профилем оружия.',
 			'/icons/actions/ranged_weapon_attack.png', 'common',
-			'action_basic_weapon_ranged', 'base_action', 'basic', '',
+			'action_basic_weapon_ranged', 'base_action', 'basic', 'action',
 			'{
 			  "primitive":{"type":"weapon_attack"},
 			  "name":"Дальнобойная атака оружием",
@@ -99,15 +100,18 @@ func splitWeaponActionsAndUnlockMetadata(db *sql.DB) error {
 			  "effects":[{"resolution":"attack_roll","attack_kind":"weapon_ranged","ability":"auto","vs":"ac","on_hit":[{"kind":"damage","dice":"weapon","type":"weapon","ability":"auto"}]}],
 			  "targeting":{"domain":"actor","actor_targets":true,"shape":"single","min_targets":1,"max_targets":1,"range_ft":600,"requires_line_of_sight":true,"allowed_relations":["ally","enemy","neutral"]}
 			}'::jsonb,
-			'System', 'PHB 2024'
+			'System', 'PHB 2024; micro-MVP L1 overlay canonical entity v1'
 		)
 		ON CONFLICT (card_number) DO UPDATE SET
 			deleted_at = NULL,
 			name = EXCLUDED.name,
 			description = EXCLUDED.description,
 			image_url = EXCLUDED.image_url,
+			name_en = EXCLUDED.name_en,
 			action_type = EXCLUDED.action_type,
 			type = EXCLUDED.type,
+			resource = EXCLUDED.resource,
+			source = EXCLUDED.source,
 			mechanics = EXCLUDED.mechanics,
 			support = NULL,
 			updated_at = NOW();

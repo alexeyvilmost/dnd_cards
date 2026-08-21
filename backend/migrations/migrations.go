@@ -701,6 +701,12 @@ func GetAllMigrations() []Migration {
 			Up:          deduplicateGoliathAncestry,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "111_align_ranged_weapon_action_declaration",
+			Description: "Выровнять метаданные дальнобойной атаки с единым декларативным release-источником",
+			Up:          alignRangedWeaponActionDeclaration,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
