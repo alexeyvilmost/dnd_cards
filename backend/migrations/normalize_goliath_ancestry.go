@@ -6,16 +6,24 @@ import "database/sql"
 // UI already understands ordinary parent/subrace relationships and action
 // grants, so this migration deliberately contains no character-specific code.
 func normalizeGoliathAncestry(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	// Certified rows may only be changed by an audited migration. Reinstall the
 	// mechanics-only locks after replacing the malformed legacy declarations.
-	if _, err := db.Exec(`
+	// Keep the trigger changes and content rewrite in one transaction so a
+	// malformed data declaration can never leave certified mechanics unlocked.
+	if _, err = tx.Exec(`
 		DROP TRIGGER IF EXISTS protect_actions_certified_mechanics ON actions;
 		DROP TRIGGER IF EXISTS protect_effects_certified_mechanics ON effects;
 	`); err != nil {
 		return err
 	}
 
-	if _, err := db.Exec(`
+	if _, err = tx.Exec(`
 		UPDATE effects SET mechanics = '{
 		  "activation":{"mode":"passive"},
 		  "effects":[{"resolution":"auto","result":[
@@ -59,7 +67,7 @@ func normalizeGoliathAncestry(db *sql.DB) error {
 		UPDATE actions SET mechanics = '{
 		  "activation":{"mode":"reaction","trigger":{"event":"damage_taken"},"cost":[{"resource":"reaction","amount":1},{"resource":"giant_legacy","amount":1}]},
 		  "targeting":{"domain":"actor","actor_targets":true,"shape":"self","min_targets":0,"max_targets":1,"range_ft":0,"requires_line_of_sight":false,"allowed_relations":["self"]},
-		  "effects":[{"resolution":"auto","result":[{"kind":"healing","amount":"1d12+con"}]}]
+		  "effects":[{"resolution":"auto","result":[{"kind":"reduce_damage","amount":"1d12+con"}]}]
 		}'::jsonb, resource = 'reaction,giant_legacy', support = NULL, updated_at = NOW()
 		WHERE card_number = 'ACT-goliath-stone' AND deleted_at IS NULL;
 
@@ -80,7 +88,7 @@ func normalizeGoliathAncestry(db *sql.DB) error {
 			'{
 			  "activation":{"mode":"reaction","trigger":{"event":"damage_taken"},"cost":[{"resource":"reaction","amount":1},{"resource":"giant_legacy","amount":1}]},
 			  "targeting":{"domain":"actor","actor_targets":true,"shape":"self","min_targets":0,"max_targets":1,"range_ft":0,"requires_line_of_sight":false,"allowed_relations":["self"]},
-			  "effects":[{"resolution":"auto","result":[{"kind":"healing","amount":"1d12+con"}]}]
+			  "effects":[{"resolution":"auto","result":[{"kind":"reduce_damage","amount":"1d12+con"}]}]
 			}'::jsonb, 'System', 'PHB 2024'
 		)
 		ON CONFLICT (card_number) DO UPDATE SET
@@ -107,8 +115,9 @@ func normalizeGoliathAncestry(db *sql.DB) error {
 		) AS ancestry(id,name,name_en,description,card_number,action_card_number)
 		JOIN races parent ON parent.card_number = 'RACE-0011' AND parent.deleted_at IS NULL
 		JOIN actions action ON action.card_number = ancestry.action_card_number AND action.deleted_at IS NULL
-		ON CONFLICT (card_number) DO UPDATE SET
-			deleted_at = NULL, name = EXCLUDED.name, name_en = EXCLUDED.name_en,
+		ON CONFLICT (id) DO UPDATE SET
+			deleted_at = NULL, card_number = EXCLUDED.card_number,
+			name = EXCLUDED.name, name_en = EXCLUDED.name_en,
 			description = EXCLUDED.description, is_subrace = true,
 			parent_race_id = EXCLUDED.parent_race_id, subrace_level = 1,
 			related_actions = EXCLUDED.related_actions, updated_at = NOW();
@@ -116,6 +125,8 @@ func normalizeGoliathAncestry(db *sql.DB) error {
 		return err
 	}
 
-	_, err := db.Exec(certifiedContentMechanicsOnlyLockDDL)
-	return err
+	if _, err = tx.Exec(certifiedContentMechanicsOnlyLockDDL); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
