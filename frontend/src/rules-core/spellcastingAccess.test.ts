@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isSpellActionPrepared,
   replacePreparedSpells,
   resolveSpellAccess,
   type SpellcastingAccessState,
@@ -30,6 +31,24 @@ function wizardState(): SpellcastingAccessState {
 }
 
 describe('source-scoped spellcasting access', () => {
+  it('reports preparation across source-scoped grants without treating the visual card as prepared', () => {
+    const state = wizardState();
+    state.grants.push({
+      grantId: 'other-source:magic-missile',
+      actionId: 'magic-missile',
+      sourceId: 'CLASS-sorcerer',
+      access: 'known',
+      level: 1,
+      spellcastingAbility: 'cha',
+      slotResource: 'spell_slot_1',
+    });
+
+    expect(isSpellActionPrepared(state, 'shield')).toBe(true);
+    expect(isSpellActionPrepared(state, 'false-life')).toBe(false);
+    expect(isSpellActionPrepared(state, 'magic-missile')).toBe(true);
+    expect(isSpellActionPrepared(state, 'not-granted')).toBe(false);
+  });
+
   it('rejects unknown spells, mismatched grants, and unknown preparation sources', () => {
     const state = wizardState();
     expect(resolveSpellAccess({ state, actionId: 'unknown', resources: {} }))
