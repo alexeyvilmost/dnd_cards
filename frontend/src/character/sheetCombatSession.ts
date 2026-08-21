@@ -482,6 +482,21 @@ export function writeSheetCombatSession(
   return { ...(turnState ?? {}), [SHEET_COMBAT_SESSION_KEY]: envelope };
 }
 
+export function hasSheetCombatSession(
+  turnState: Record<string, unknown> | null | undefined,
+): boolean {
+  return turnState?.[SHEET_COMBAT_SESSION_KEY] != null;
+}
+
+/** Explicit user-owned discard; runtime HP/resources already committed outside this envelope stay intact. */
+export function clearSheetCombatSession(
+  turnState: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  const next = { ...(turnState ?? {}) };
+  delete next[SHEET_COMBAT_SESSION_KEY];
+  return next;
+}
+
 export function assertCertifiedSheetCombatSession(
   session: SheetCombatSession,
   certified: CertifiedSheetCombatCatalog,

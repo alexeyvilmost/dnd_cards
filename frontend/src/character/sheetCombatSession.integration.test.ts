@@ -19,9 +19,11 @@ import {
   acceptedSheetCombatCharacters,
   advanceSheetCombatTurn,
   assertCertifiedSheetCombatSession,
+  clearSheetCombatSession,
   commitPreparedSheetCombat,
   createSheetCombatSession,
   executeSheetCombatAction,
+  hasSheetCombatSession,
   prepareSheetCombatCommit,
   readSheetCombatSession,
   resolveSheetCombatDecision,
@@ -270,6 +272,16 @@ async function openSpell(type: 'burning_hands_objects' | 'area_object_push') {
 }
 
 describe('CharacterV3 atomic pending-combat session', () => {
+  it('explicitly clears only the combat continuation from turn state', () => {
+    const turnState = {
+      ordinary_runtime: { kept: true },
+      [SHEET_COMBAT_SESSION_KEY]: { stale: true },
+    };
+    expect(hasSheetCombatSession(turnState)).toBe(true);
+    expect(clearSheetCombatSession(turnState)).toEqual({ ordinary_runtime: { kept: true } });
+    expect(hasSheetCombatSession(clearSheetCombatSession(turnState))).toBe(false);
+    expect(turnState).toHaveProperty(SHEET_COMBAT_SESSION_KEY);
+  });
   it('drops a completed continuation after an ordinary sheet revision changes', async () => {
     const source = seed('wizard', IDS.source);
     const session = await createSheetCombatSession({ source, targets: [] });

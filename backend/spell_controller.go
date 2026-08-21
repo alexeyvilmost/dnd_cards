@@ -31,7 +31,11 @@ func NewSpellController(db *gorm.DB) *SpellController {
 func (sc *SpellController) GetSpells(c *gin.Context) {
 	var spells []Spell
 
+	light := wantsListView(c)
 	query := sc.db.Model(&Spell{})
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics")
+	}
 
 	// Фильтрация по редкости
 	if rarity := c.Query("rarity"); rarity != "" {
@@ -91,13 +95,13 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	light := wantsListView(c)
 	responses := make([]SpellResponse, 0, len(spells))
 	for _, spell := range spells {
 		r := spell.ToSpellResponse()
 		if light {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
+			r.ImageURL = listImageURL(spell.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}

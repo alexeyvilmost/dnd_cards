@@ -59,6 +59,15 @@ func wantsListView(c *gin.Context) bool {
 	return c.Query("fields") == "list"
 }
 
+// listImageURL never ships embedded base64 originals in catalog projections.
+// A CDN asset remains useful as a thumbnail; otherwise detail loading owns the image.
+func listImageURL(cloudinaryURL string) string {
+	if strings.HasPrefix(cloudinaryURL, "https://") || strings.HasPrefix(cloudinaryURL, "http://") {
+		return cloudinaryURL
+	}
+	return ""
+}
+
 // CardController - контроллер для работы с карточками
 type CardController struct {
 	db            *gorm.DB

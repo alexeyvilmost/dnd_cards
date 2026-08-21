@@ -394,6 +394,7 @@ export const racesApi = {
   getRaces: async (params?: {
     page?: number; limit?: number; size?: string; creature_type?: string;
     search?: string; sort_by?: string;
+    fields?: 'list';
   }): Promise<RacesResponse> => {
     const response = await apiClient.get<RacesResponse>('/api/races', { params });
     return response.data;
@@ -422,6 +423,7 @@ export const classesApi = {
     limit?: number;
     search?: string;
     sort_by?: string;
+    fields?: 'list';
   }): Promise<ClassesResponse> => {
     const response = await apiClient.get<ClassesResponse>('/api/classes', { params });
     return response.data;

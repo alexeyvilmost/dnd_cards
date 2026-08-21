@@ -3860,7 +3860,7 @@ export function executeAction(
 
   const effects = mechanics.effects as Dict[] | undefined;
   if (Array.isArray(effects)) {
-    const sourceName = String(mechanics.name ?? 'действие');
+    const sourceName = String(ctx.actionName ?? mechanics.name ?? 'действие');
     next = runMechanicEffects(
       effects, next, ctx, events, sourceName, pending, targetRef, false, deferredSaves,
     );

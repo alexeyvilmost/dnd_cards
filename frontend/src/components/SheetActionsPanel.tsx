@@ -103,8 +103,10 @@ import {
 import {
   advanceSheetCombatTurn,
   commitPreparedSheetCombat,
+  clearSheetCombatSession,
   createSheetCombatSession,
   executeSheetCombatAction,
+  hasSheetCombatSession,
   newSheetRuntimeCommandId,
   prepareSheetCombatCommit,
   readSheetCombatSession,
@@ -564,6 +566,35 @@ export default function SheetActionsPanel({
     prepared: PreparedSheetCombatCommit;
     events: EngineEvent[];
   } | null>(null);
+
+  const resetCombatContinuation = useCallback(async () => {
+    if (!hasSheetCombatSession(character.turn_state)) return;
+    if (!window.confirm(
+      'Сбросить сохранённое продолжение одиночного боя? Уже применённые хиты и потраченные ресурсы останутся в листе.',
+    )) return;
+    if (!Number.isSafeInteger(character.runtime_revision)) {
+      setError('Нельзя сбросить бой без server runtime_revision');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await charactersV3Api.patchRuntime(character.id, {
+        expected_runtime_revision: character.runtime_revision,
+        turn_state: clearSheetCombatSession(character.turn_state),
+      });
+      onUpdated(updated);
+      showToast({
+        type: 'success',
+        title: 'Одиночный бой завершён',
+        message: 'Сохранённое продолжение боя сброшено.',
+      });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }, [character, onUpdated, showToast]);
   const [companionRetry, setCompanionRetry] = useState<PreparedSheetCompanionInteraction | null>(null);
   const [certifiedCombat, setCertifiedCombat] = useState<{
     catalog: CertifiedSheetCombatCatalog | null;
@@ -2280,6 +2311,22 @@ export default function SheetActionsPanel({
             onClick={() => { void commitCombat(combatRetry.prepared, combatRetry.events); }}
           >
             Безопасно повторить
+          </button>
+        </section>
+      )}
+      {hasSheetCombatSession(character.turn_state) && (combatContinuation.error || combatScene) && (
+        <section className="sheet-group" role={combatContinuation.error ? 'alert' : 'status'} data-testid="sheet-combat-reset">
+          <h3 className="sheet-h3">
+            {combatContinuation.error ? 'Сохранённое решение устарело' : 'Одиночный бой активен'}
+          </h3>
+          {combatContinuation.error && <p>{combatContinuation.error.message}</p>}
+          <button
+            type="button"
+            className="forge-btn ghost"
+            disabled={busy || !!combatRetry}
+            onClick={() => { void resetCombatContinuation(); }}
+          >
+            {combatContinuation.error ? 'Сбросить устаревшее решение' : 'Завершить одиночный бой'}
           </button>
         </section>
       )}

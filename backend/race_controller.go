@@ -20,7 +20,11 @@ func NewRaceController(db *gorm.DB) *RaceController { return &RaceController{db:
 
 func (rc *RaceController) GetRaces(c *gin.Context) {
 	var races []Race
+	light := wantsListView(c)
 	query := rc.db.Model(&Race{})
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
+	}
 
 	if size := c.Query("size"); size != "" {
 		query = query.Where("size ILIKE ?", "%"+size+"%")
@@ -56,7 +60,12 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 
 	responses := make([]RaceResponse, 0)
 	for _, r := range races {
-		responses = append(responses, r.ToRaceResponse())
+		response := r.ToRaceResponse()
+		if light {
+			response.DetailedDescription = nil
+			response.ImageURL = listImageURL(r.ImageCloudinaryURL)
+		}
+		responses = append(responses, response)
 	}
 	c.JSON(http.StatusOK, gin.H{"races": responses, "total": total, "page": page, "limit": limit})
 }

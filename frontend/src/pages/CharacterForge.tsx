@@ -142,11 +142,11 @@ const CharacterForge = () => {
     setCatalogError(false);
     try {
       const [rr, cc, bb, ff, ss] = await Promise.all([
-        racesApi.getRaces({ limit: 100 }),
-        classesApi.getClasses({ limit: 100 }),
-        backgroundsApi.getBackgrounds({ limit: 100 }),
-        featsApi.getFeats({ limit: 200 }),
-        spellsApi.getSpells({ limit: 500 }),
+        racesApi.getRaces({ limit: 100, fields: 'list' }),
+        classesApi.getClasses({ limit: 100, fields: 'list' }),
+        backgroundsApi.getBackgrounds({ limit: 100, fields: 'list' }),
+        featsApi.getFeats({ limit: 200, fields: 'list' }),
+        spellsApi.getSpells({ limit: 500, fields: 'list' }),
       ]);
       setRaces(rr.races || []);
       setClasses(cc.classes || []);

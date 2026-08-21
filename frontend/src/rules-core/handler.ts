@@ -2194,6 +2194,7 @@ function executeUseAction(
           target ? command.factsByTarget?.[target.id] : undefined,
           command.spell,
         ),
+        actionName: action.name,
         choices: command.choices,
         spell: command.spell,
         suppressSpellCastEvent: index > 0,

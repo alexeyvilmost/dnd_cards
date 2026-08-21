@@ -664,6 +664,7 @@ describe('micro-MVP compiled spell entity semantics', () => {
     expect(sourceAfter.runtime.activeEffects).toEqual([]);
     expect(targetAfter.runtime.activeEffects).toEqual([
       expect.objectContaining({
+        name: spell.action.name,
         ownerId: target.id,
         sourceId: source.id,
         roundsLeft: 4_800,
@@ -964,6 +965,7 @@ describe('micro-MVP compiled spell entity semantics', () => {
     expect(targetAfterHit.runtime.hp.current).toBe(24);
     expect(targetAfterHit.runtime.activeEffects).toEqual([
       expect.objectContaining({
+        name: spell.action.name,
         ownerId: target.id,
         sourceId: source.id,
         expiry: 'source_turn',

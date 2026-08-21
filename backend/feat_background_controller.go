@@ -25,7 +25,11 @@ func NewFeatController(db *gorm.DB) *FeatController { return &FeatController{db:
 
 func (fc *FeatController) GetFeats(c *gin.Context) {
 	var feats []Feat
+	light := wantsListView(c)
 	query := fc.db.Model(&Feat{})
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
+	}
 
 	if category := c.Query("category"); category != "" {
 		query = query.Where("category = ?", category)
@@ -54,12 +58,12 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 		return
 	}
 
-	light := wantsListView(c)
 	responses := make([]FeatResponse, 0, len(feats))
 	for _, f := range feats {
 		r := f.ToFeatResponse()
 		if light {
 			r.DetailedDescription = nil
+			r.ImageURL = listImageURL(f.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}
@@ -238,7 +242,11 @@ func NewBackgroundController(db *gorm.DB) *BackgroundController { return &Backgr
 
 func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 	var backgrounds []Background
+	light := wantsListView(c)
 	query := bc.db.Model(&Background{})
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
+	}
 
 	if ability := c.Query("ability"); ability != "" {
 		query = query.Where("ability_scores::text ILIKE ?", "%"+ability+"%")
@@ -267,12 +275,12 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 		return
 	}
 
-	light := wantsListView(c)
 	responses := make([]BackgroundResponse, 0, len(backgrounds))
 	for _, b := range backgrounds {
 		r := b.ToBackgroundResponse()
 		if light {
 			r.DetailedDescription = nil
+			r.ImageURL = listImageURL(b.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}

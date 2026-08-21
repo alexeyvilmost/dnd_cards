@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"time"
@@ -39,6 +40,18 @@ func main() {
 	if err != nil {
 		log.Fatal("Ошибка получения sql.DB:", err)
 	}
+	// Keep a warm, bounded pool. With DisableAutomaticPing the old process could
+	// defer its first remote PostgreSQL handshake to a user's catalog request.
+	sqlDB.SetMaxOpenConns(20)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	pingContext, cancelPing := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := sqlDB.PingContext(pingContext); err != nil {
+		cancelPing()
+		log.Fatal("Ошибка проверки подключения к базе данных:", err)
+	}
+	cancelPing()
 
 	// Запускаем миграции
 	migrator := migrations.NewMigrator(sqlDB)

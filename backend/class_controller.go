@@ -19,7 +19,11 @@ func NewClassController(db *gorm.DB) *ClassController { return &ClassController{
 
 func (cc *ClassController) GetClasses(c *gin.Context) {
 	var classes []Class
+	light := wantsListView(c)
 	query := cc.db.Model(&Class{})
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
+	}
 
 	if search := c.Query("search"); search != "" {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
@@ -63,6 +67,10 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 	for _, cl := range classes {
 		response := cl.ToClassResponse()
 		response.ChoiceRecommendations = recommendations[cl.CardNumber]
+		if light {
+			response.DetailedDescription = nil
+			response.ImageURL = listImageURL(cl.ImageCloudinaryURL)
+		}
 		responses = append(responses, response)
 	}
 	c.JSON(http.StatusOK, gin.H{"classes": responses, "total": total, "page": page, "limit": limit})

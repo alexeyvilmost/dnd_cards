@@ -539,7 +539,10 @@ export function executeSheetAction(
     }
     return executeCanonicalPrimitive(input, primitive);
   }
-  return { ...executeAction(input.state, input.mechanics, input.context), pendingResolution: null };
+  const context = input.canonical?.action.name
+    ? { ...input.context, actionName: input.canonical.action.name }
+    : input.context;
+  return { ...executeAction(input.state, input.mechanics, context), pendingResolution: null };
 }
 
 /** Deterministic planning pass for the sheet's dice dialog. */

@@ -676,6 +676,13 @@ func GetAllMigrations() []Migration {
 			// Отзыв сертификата и исправленный контракт являются аудиторским фактом и не откатываются.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "107_normalize_live_happy_path_content",
+			Description: "Материализовать legacy-подвиды, оружие, расходники и class-id заклинаний до строгого rules runtime",
+			Up:          normalizeLiveHappyPathContent,
+			// Данные становятся явными правилами; возврат к неисполняемым legacy-полям не поддерживается.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

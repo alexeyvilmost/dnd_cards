@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Languages, PlusCircle, X } from 'lucide-react';
+import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Eye, Languages, PlusCircle, X } from 'lucide-react';
 import {
   setEntityDisplay,
   setSetting,
@@ -8,6 +8,7 @@ import {
   type EntityDisplayMode,
   type ItemPreviewStyle,
 } from '../settings';
+import { useDiceDialog } from '../contexts/DiceDialogContext';
 
 // Тёмная модалка настроек отображения на листе персонажа — те же настройки, что
 // на /settings, но рядом с самим отображением.
@@ -31,6 +32,7 @@ const ITEM_PREVIEW_OPTIONS: Array<{ mode: ItemPreviewStyle; label: string; icon:
 
 export default function SheetSettingsDialog({ onClose }: { onClose: () => void }) {
   const settings = useSiteSettings();
+  const diceDialog = useDiceDialog();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -55,6 +57,58 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
           <span>
             <span className="sheet-settings-row-label"><Dices size={16} /> Диалог бросков кубов</span>
             <span className="sheet-settings-hint">Перед броском показывать окно: авто-бросок или ввод своих кубов.</span>
+          </span>
+        </label>
+
+        <div className="sheet-settings-section">
+          <label className="sheet-settings-check">
+            <input
+              type="checkbox"
+              checked={settings.dice3d}
+              onChange={(e) => setSetting('dice3d', e.target.checked)}
+            />
+            <span>
+              <span className="sheet-settings-row-label"><Dices size={16} /> Физические 3D-кубики</span>
+              <span className="sheet-settings-hint">Бросать кубики поверх листа с физикой и столкновениями.</span>
+            </span>
+          </label>
+          <label className={`sheet-settings-check${settings.dice3d ? '' : ' opacity-50'}`}>
+            <input
+              type="checkbox"
+              checked={settings.dice3dAutoThrow}
+              disabled={!settings.dice3d}
+              onChange={(e) => setSetting('dice3dAutoThrow', e.target.checked)}
+            />
+            <span>
+              <span className="sheet-settings-row-label">Кидать 3D-кубики автоматически</span>
+              <span className="sheet-settings-hint">После загрузки сцены кубики сами начинают бросок.</span>
+            </span>
+          </label>
+          <button
+            type="button"
+            className="forge-btn ghost"
+            disabled={!settings.diceDialog && !settings.dice3d}
+            onClick={() => {
+              void diceDialog.request([
+                { sides: 20, label: 'Бросок атаки' },
+                { sides: 8, label: 'Урон (огонь)' },
+                { sides: 8, label: 'Урон (огонь)' },
+              ], 'Пробный бросок');
+            }}
+          >
+            <Dices size={15} /> Проверить бросок
+          </button>
+        </div>
+
+        <label className="sheet-settings-check">
+          <input
+            type="checkbox"
+            checked={settings.playerMode}
+            onChange={(e) => setSetting('playerMode', e.target.checked)}
+          />
+          <span>
+            <span className="sheet-settings-row-label"><Eye size={16} /> Режим игрока</span>
+            <span className="sheet-settings-hint">Скрывать технические поля механики, сохраняя боевые характеристики.</span>
           </span>
         </label>
 

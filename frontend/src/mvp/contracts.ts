@@ -304,6 +304,8 @@ export interface SpellCastContext {
 
 export interface ExecuteContext {
   character: CharacterContext;
+  /** Immutable catalog display name for effects and audit events. */
+  actionName?: string;
   /** Compiled always-on and triggered rules owned by the acting creature. */
   passives?: Dict[];
   /** Actor-owned immunities used when a payload applies a condition to self. */
