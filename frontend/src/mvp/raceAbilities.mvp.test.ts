@@ -217,10 +217,11 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'ACT-breath-fire': ['damage'],
   'ACT-breath-lightning': ['damage'],
   'ACT-breath-poison': ['damage'],
-  'ACT-goliath-cloud': ['narrative'],
+  'ACT-goliath-cloud': ['movement'],
   'ACT-goliath-fire': ['damage'],
-  'ACT-goliath-frost': ['damage', 'modifier', 'narrative'],
-  'ACT-goliath-hill': ['condition', 'narrative'],
+  'ACT-goliath-frost': ['damage', 'modifier'],
+  'ACT-goliath-hill': ['condition'],
+  'ACT-goliath-stone': ['reduce_damage'],
   'ACT-goliath-storm': ['damage'],
   'ACTION-0002': ['modifier'],
   'EFF-darkvision-120': ['grant_sense'],
@@ -278,8 +279,6 @@ const KNOWN_RULE_DEVIATIONS = [
   'Голиаф — Большая форма: длится 10 раундов и восстанавливается после короткого отдыха вместо 10 минут и длинного отдыха',
   'Голиаф — Мощное телосложение: преимущество на спасбросок для окончания Схваченного осталось narrative',
   'Эльф — Транс отсутствует и среди traits, и среди механических карточек',
-  'Голиаф — Облачная телепортация даёт только narrative-событие и не меняет позицию',
-  'Голиаф — Огненный, Морозный и Холмовой дары и Гром Шторма оформлены ручными active-действиями вместо триггеров попадания/получения урона',
   'Полурослик — Проворство и Природная скрытность существуют только как narrative-подсказки',
   'Табакси — Кошачья ловкость существует только как narrative-подсказка',
   'Кованый — Отдых часового существует только как narrative-подсказка',
@@ -580,29 +579,15 @@ d('Незаклинательные способности видов: полн�
       || (elf.related_effects || []).some((id) => /транс/i.test(effectsById.get(id)?.name || ''));
     if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[6]);
 
-    const cloud = featuresByNumber.get('ACT-goliath-cloud');
-    if (nonSpellKinds(cloud!).every((kind) => kind === 'narrative')) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[7]);
-    }
-
-    const manuallyActivatedGiantGifts = [
-      'ACT-goliath-fire',
-      'ACT-goliath-frost',
-      'ACT-goliath-hill',
-      'ACT-goliath-storm',
-    ].every((cardNumber) =>
-      (featuresByNumber.get(cardNumber)?.mechanics?.activation as Dict | undefined)?.mode === 'active');
-    if (manuallyActivatedGiantGifts) deviations.push(KNOWN_RULE_DEVIATIONS[8]);
-
     const narrativeOnly = (cardNumber: string) => {
       const feature = featuresByNumber.get(cardNumber);
       return !!feature && nonSpellKinds(feature).every((kind) => kind === 'narrative');
     };
     if (narrativeOnly('RE-halfling-2') && narrativeOnly('RE-halfling-4')) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[9]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[7]);
     }
-    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[10]);
-    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[11]);
+    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[8]);
+    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[9]);
 
     const dragonCombo = combos.find((combo) => combo.race.id === dragon.id)!;
     const dragonBuild = build(dragonCombo, klass, 20);
@@ -613,7 +598,7 @@ d('Незаклинательные способности видов: полн�
     );
     const hasMisgroupedRacialAction = collectSheetActions(dragonBuild.assembled)
       .some((action) => racialActionIds.has(action.id) && action.group === 'class');
-    if (hasMisgroupedRacialAction) deviations.push(KNOWN_RULE_DEVIATIONS[12]);
+    if (hasMisgroupedRacialAction) deviations.push(KNOWN_RULE_DEVIATIONS[10]);
 
     expect(deviations).toEqual(KNOWN_RULE_DEVIATIONS);
   });

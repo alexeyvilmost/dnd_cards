@@ -695,6 +695,12 @@ func GetAllMigrations() []Migration {
 			Up:          normalizeGoliathAncestry,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "110_deduplicate_goliath_ancestry",
+			Description: "Перенести выборы на канонические варианты Наследия великанов и скрыть краткоживущие дубликаты",
+			Up:          deduplicateGoliathAncestry,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
