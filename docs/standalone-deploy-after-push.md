@@ -101,7 +101,8 @@ chmod 600 /opt/bagofholding/shared/deploy.env
 
 Следующий runner устанавливается один раз как
 `/opt/bagofholding/bin/deploy-release`. Он ожидает загруженный архив
-`/opt/bagofholding/builds/<SHA>.tar`.
+`/opt/bagofholding/builds/<SHA>.tar`. Каноническая версия runner хранится в
+`infra/deploy-release`; листинг ниже показывает его основные шаги.
 
 ```sh
 #!/bin/sh
@@ -189,8 +190,13 @@ chmod 600 "$deploy_env_tmp"
 mv "$deploy_env_tmp" "$deploy_env"
 rm -f "$normalized_env"
 
-domain=$(tr -d '\r' < "$deploy_env" | sed -n 's/^APP_DOMAIN=//p' | head -n 1)
+domain_list=$(tr -d '\r' < "$deploy_env" | sed -n 's/^APP_DOMAIN=//p' | head -n 1)
+domain=$(printf '%s\n' "$domain_list" | cut -d, -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 test -n "$domain"
+case "$domain" in
+  http://*|https://*) public_origin=$domain ;;
+  *) public_origin="https://$domain" ;;
+esac
 
 rollback() {
   echo "Deployment failed; restoring $old_release" >&2
@@ -216,11 +222,11 @@ fi
 
 verify_release() {
   backend_commit=$(
-    curl -fsS "https://$domain/api/health" \
+    curl -fsS "$public_origin/api/health" \
       | sed -n 's/.*"source_commit":"\([0-9a-f]\{40\}\)".*/\1/p'
   )
   frontend_commit=$(
-    curl -fsS "https://$domain/build-info.json" \
+    curl -fsS "$public_origin/build-info.json" \
       | sed -n 's/.*"source_commit":"\([0-9a-f]\{40\}\)".*/\1/p'
   )
   [ "$backend_commit" = "$sha" ] && [ "$frontend_commit" = "$sha" ]

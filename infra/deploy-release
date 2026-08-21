@@ -1,0 +1,144 @@
+#!/bin/sh
+set -eu
+
+sha="${1:-}"
+case "$sha" in
+  ''|*[!0-9a-f]*)
+    echo "usage: deploy-release <40-char-lowercase-git-sha>" >&2
+    exit 2
+    ;;
+esac
+[ "${#sha}" -eq 40 ] || {
+  echo "release SHA must contain exactly 40 characters" >&2
+  exit 2
+}
+
+root=/opt/bagofholding
+archive="$root/builds/$sha.tar"
+build_root="$root/builds/$sha"
+release="$root/releases/$sha"
+app_env="$root/shared/app.env"
+deploy_env="$root/shared/deploy.env"
+backup_dir="$root/shared/backups"
+backup_file="$backup_dir/pre-$sha-$(date -u +%Y%m%dT%H%M%SZ).dump"
+lock_file="$root/shared/deploy.lock"
+
+exec 9>"$lock_file"
+flock -n 9 || {
+  echo "another deployment is already running" >&2
+  exit 1
+}
+
+test -f "$archive"
+test -f "$app_env"
+test -f "$deploy_env"
+test -L "$root/current"
+test ! -e "$build_root"
+test ! -e "$release"
+
+# APP_DOMAIN is also consumed by Caddy and may contain a comma-separated list.
+# Public verification must use one origin, not the entire Caddy site label.
+domain_list=$(tr -d '\r' < "$deploy_env" | sed -n 's/^APP_DOMAIN=//p' | head -n 1)
+domain=$(printf '%s\n' "$domain_list" | cut -d, -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+test -n "$domain"
+case "$domain" in
+  http://*|https://*) public_origin=$domain ;;
+  *) public_origin="https://$domain" ;;
+esac
+
+mkdir -p "$backup_dir"
+chmod 700 "$backup_dir"
+umask 077
+
+echo "[1/7] Backing up production PostgreSQL"
+docker run --rm \
+  --env-file "$app_env" \
+  postgres:17-alpine \
+  sh -eu -c 'test -n "${DATABASE_URL:-}"; exec pg_dump --format=custom --dbname="$DATABASE_URL"' \
+  > "$backup_file"
+test -s "$backup_file"
+
+echo "[2/7] Extracting immutable release archive"
+mkdir "$build_root"
+tar -xf "$archive" -C "$build_root"
+
+echo "[3/7] Building backend and frontend images"
+docker build -t "bagofholding-backend:$sha" "$build_root/backend"
+docker build \
+  --build-arg VITE_API_URL= \
+  -t "bagofholding-frontend:$sha" \
+  "$build_root/frontend"
+
+echo "[4/7] Preparing release directory"
+mkdir "$release"
+cp "$build_root/infra/compose.prod.yml" "$release/compose.prod.yml"
+cp "$build_root/infra/Caddyfile" "$release/Caddyfile"
+
+old_release=$(readlink -f "$root/current")
+deploy_env_backup="$root/shared/deploy.env.pre-$sha"
+test ! -e "$deploy_env_backup"
+cp "$deploy_env" "$deploy_env_backup"
+
+normalized_env="$root/shared/deploy.env.$sha.normalized"
+tr -d '\r' < "$deploy_env" > "$normalized_env"
+deploy_env_tmp="$root/shared/deploy.env.$sha.tmp"
+if grep -q '^SOURCE_COMMIT=' "$normalized_env"; then
+  sed "s/^SOURCE_COMMIT=.*/SOURCE_COMMIT=$sha/" "$normalized_env" > "$deploy_env_tmp"
+else
+  cp "$normalized_env" "$deploy_env_tmp"
+  printf 'SOURCE_COMMIT=%s\n' "$sha" >> "$deploy_env_tmp"
+fi
+chmod 600 "$deploy_env_tmp"
+mv "$deploy_env_tmp" "$deploy_env"
+rm -f "$normalized_env"
+
+rollback() {
+  echo "Deployment failed; restoring $old_release" >&2
+  rollback_link="$root/current.rollback.$sha"
+  ln -s "$old_release" "$rollback_link"
+  mv -Tf "$rollback_link" "$root/current"
+  cp "$deploy_env_backup" "$deploy_env"
+  cd "$root/current"
+  docker compose --env-file "$deploy_env" -f compose.prod.yml up -d --wait
+}
+
+release_logs() {
+  docker compose --env-file "$deploy_env" -f compose.prod.yml \
+    logs --no-color --tail=200 backend frontend caddy >&2 || true
+}
+
+echo "[5/7] Atomically switching current release"
+next_link="$root/current.$sha"
+ln -s "$release" "$next_link"
+mv -Tf "$next_link" "$root/current"
+
+echo "[6/7] Starting containers and waiting for health checks"
+cd "$root/current"
+if ! docker compose --env-file "$deploy_env" -f compose.prod.yml up -d --wait; then
+  release_logs
+  rollback
+  exit 1
+fi
+
+verify_release() {
+  backend_commit=$(
+    curl -fsS "$public_origin/api/health" \
+      | sed -n 's/.*"source_commit":"\([0-9a-f]\{40\}\)".*/\1/p'
+  )
+  frontend_commit=$(
+    curl -fsS "$public_origin/build-info.json" \
+      | sed -n 's/.*"source_commit":"\([0-9a-f]\{40\}\)".*/\1/p'
+  )
+  [ "$backend_commit" = "$sha" ] && [ "$frontend_commit" = "$sha" ]
+}
+
+echo "[7/7] Verifying public release identity"
+if ! verify_release; then
+  echo "Release identity mismatch: backend=${backend_commit:-missing} frontend=${frontend_commit:-missing}" >&2
+  release_logs
+  rollback
+  exit 1
+fi
+
+echo "DEPLOYED $sha"
+echo "Database backup: $backup_file"
