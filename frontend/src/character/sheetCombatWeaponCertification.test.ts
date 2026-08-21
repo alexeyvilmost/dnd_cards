@@ -30,7 +30,7 @@ function template(marker: Record<string, unknown> = {
         allowed_relations: ['enemy'],
       },
       effects: [{
-        resolution: 'attack_roll', attack_kind: 'weapon_melee', ability: 'auto', vs: 'ac',
+        resolution: 'attack_roll', attack_kind: 'weapon_ranged', ability: 'auto', vs: 'ac',
         on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'auto' }],
       }],
     },
@@ -137,7 +137,16 @@ describe('actor-specific weapon template certification', () => {
       .toThrow('actor-specific certified weapon binding');
   });
 
-  it('rejects UI card_id/amount tampering and accepts a weapon that declares no ammo', () => {
+  it('preserves editable display metadata while certifying the actor-bound mechanics', () => {
+    const value = template();
+    const archer = actor('archer', weapon('bow', 'arrow'));
+    const live = { ...bound(value, archer), name: 'Лук в действии' };
+
+    expect(assertCertifiedSheetCombatActorAction(live, archer, certified(value)).name)
+      .toBe('Лук в действии');
+  });
+
+  it('rejects UI card_id/amount tampering and a melee-only weapon for the ranged action', () => {
     const value = template();
     const archer = actor('archer', weapon('bow', 'arrow'));
     const forged = bound(value, archer);
@@ -148,11 +157,7 @@ describe('actor-specific weapon template certification', () => {
       .toThrow('actor-specific certified weapon binding');
 
     const swordOwner = actor('sword-user', weapon('sword'));
-    expect(assertCertifiedSheetCombatActorAction(
-      bound(value, swordOwner),
-      swordOwner,
-      certified(value),
-    )).toEqual(value);
+    expect(() => bound(value, swordOwner)).toThrow(/does not support ranged attacks/);
   });
 
   it('fails closed on an invalid immutable contextual marker', () => {

@@ -49,6 +49,15 @@ export const REVIEWED_SPELL_SUPPORT_SPECS = Object.freeze([
   ...groupSpecs('control-spells', MINI_MVP_CONTROL_SPELL_PATCHES),
 ]);
 
+// Class-list UUIDs are transport/catalog linkage injected by migration 107.
+// They do not change the reviewed executable spell contract and therefore must
+// not invalidate a semantic postimage produced before that linkage existed.
+function executableSpellMechanics(mechanics) {
+  if (!mechanics || typeof mechanics !== 'object' || Array.isArray(mechanics)) return mechanics;
+  const { spell_class_list_ids: _catalogLinks, ...executable } = mechanics;
+  return executable;
+}
+
 export function planReviewedSpellSupport(spells) {
   const seen = new Set();
   return REVIEWED_SPELL_SUPPORT_SPECS.map((spec) => {
@@ -63,10 +72,12 @@ export function planReviewedSpellSupport(spells) {
       throw new Error(`${spec.cardNumber}: expected «${spec.name}», got «${entity.name}»`);
     }
     const mechanicsHash = sha256Canonical(entity.mechanics);
-    if (mechanicsHash !== spec.expectedAfterHash) {
-      throw new Error(`${spec.cardNumber}: live mechanics differ from reviewed postimage; got ${mechanicsHash}`);
+    const executableHash = sha256Canonical(executableSpellMechanics(entity.mechanics));
+    const reviewedExecutableHash = sha256Canonical(executableSpellMechanics(spec.mechanics));
+    if (executableHash !== reviewedExecutableHash) {
+      throw new Error(`${spec.cardNumber}: live mechanics differ from reviewed postimage; got ${executableHash}`);
     }
-    return { ...spec, entity, mechanicsHash };
+    return { ...spec, entity, mechanicsHash, executableHash, reviewedExecutableHash };
   });
 }
 

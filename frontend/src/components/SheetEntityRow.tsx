@@ -86,8 +86,8 @@ export default function SheetEntityRow({
       type="button"
       className={rowClassName}
       style={accent ? { borderLeftColor: accent } : undefined}
-      onClick={onClick}
-      disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+      aria-disabled={disabled || undefined}
       title={title ?? name}
       onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}

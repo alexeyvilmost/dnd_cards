@@ -95,6 +95,7 @@ func main() {
 
 	openAIService := NewOpenAIService()
 	imageController := NewImageController(db, yandexStorage, openAIService)
+	contentImageController := NewContentImageController(db)
 
 	// Инициализация сервисов и контроллеров
 	cardController := NewCardController(db)
@@ -165,6 +166,7 @@ func main() {
 		)
 		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
 		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
+		api.GET("/content-images/:entityType/:id", contentImageController.Get)
 
 		// Магазины (публичные ссылки на просмотр, создание за авторизацией)
 		api.GET("/shops/:slug", shopController.GetShop)
@@ -251,11 +253,13 @@ func main() {
 		// миграционный trigger инвалидирует прежний статус после правки контента.
 		api.PUT("/content-support/:entityType/:id", contentAdminAuth, contentSupportController.Update)
 		// Create и физический rollback создаваемых migration-сущностей связаны
-		// server-issued receipt в одной транзакции. Endpoint намеренно effect-only:
-		// versioned patch schema не разрешает create для других коллекций.
+		// server-issued receipt в одной транзакции для разрешённых patch-схемой
+		// коллекций с crash-safe apply/rollback протоколом.
 		api.POST("/content-migrations/:bundleId/effects", contentAdminAuth, contentMigrationController.CreateEffect)
+		api.POST("/content-migrations/:bundleId/actions", contentAdminAuth, contentMigrationController.CreateAction)
 		api.POST("/content-migrations/:bundleId/:entityType/:id/exact-update", contentAdminAuth, contentMigrationController.ExactUpdate)
 		api.POST("/content-rollback/effect/:id/hard-delete-created", contentAdminAuth, contentMigrationController.RollbackCreatedEffect)
+		api.POST("/content-rollback/action/:id/hard-delete-created", contentAdminAuth, contentMigrationController.RollbackCreatedAction)
 		api.POST("/content-rollback/:entityType/:id/support", contentAdminAuth, contentMigrationController.RestoreSupport)
 
 		// Ресурсы действий/персонажа

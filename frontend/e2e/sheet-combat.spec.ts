@@ -118,9 +118,20 @@ function primitive(action: { mechanics: JsonRecord }): string {
     : '';
 }
 
-function fixtureActionId(api: ForgeApiFixture, type: string): string {
+function fixtureActionId(
+  api: ForgeApiFixture,
+  type: string,
+  attackKind?: 'weapon_melee' | 'weapon_ranged',
+): string {
   const matches = api.getCatalogRows('actions').filter((row) => (
     primitive({ mechanics: (row.mechanics ?? {}) as JsonRecord }) === type
+      && (!attackKind || (
+        Array.isArray(((row.mechanics ?? {}) as JsonRecord).effects)
+        && (((row.mechanics ?? {}) as JsonRecord).effects as unknown[]).some((effect) => (
+          effect && typeof effect === 'object' && !Array.isArray(effect)
+            && (effect as JsonRecord).attack_kind === attackKind
+        ))
+      ))
   ));
   if (matches.length !== 1 || typeof matches[0].id !== 'string') {
     throw new Error(`Materialized action catalog has ${matches.length} ${type} rows`);
@@ -429,7 +440,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       Math.random = () => 0.99;
     });
     const { weapon, ammo } = rangedWeaponFixture(api);
-    const weaponActionId = fixtureActionId(api, 'weapon_attack');
+    const weaponActionId = fixtureActionId(api, 'weapon_attack', 'weapon_ranged');
     const source = character(compiled.roots.magicInitiateFighter, IDS.source, 'Magic Archer');
     seedPreviousDeploymentCanonicalCache(source);
     source.equipment = { main_hand: weapon.id };
@@ -605,7 +616,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       Math.random = () => 0.99;
     });
     const { weapon, ammo, longFt } = rangedWeaponFixture(api);
-    const weaponActionId = fixtureActionId(api, 'weapon_attack');
+    const weaponActionId = fixtureActionId(api, 'weapon_attack', 'weapon_ranged');
     const source = character(compiled.roots.fighter, IDS.source, 'Source');
     source.equipment = { main_hand: weapon.id };
     source.inventory_items = [

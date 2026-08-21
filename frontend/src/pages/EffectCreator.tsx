@@ -66,7 +66,6 @@ const EffectCreator = () => {
           const effect = await effectsApi.getEffect(sourceId);
           const locked = isEditMode && isMechanicsLocked(effect);
           setLockedEntity(locked);
-          if (locked) setError('Механика эффекта закреплена полной тестовой сертификацией. Редактирование запрещено.');
           
           // Заполняем форму данными эффекта
           
@@ -136,10 +135,6 @@ const EffectCreator = () => {
   };
 
   const onSubmit = async (data: CreatePassiveEffectRequest) => {
-    if (lockedEntity) {
-      setError('Закреплённый эффект нельзя изменить через UI.');
-      return;
-    }
     setLoading(true);
     setError(null);
     setIdError(null);
@@ -191,7 +186,7 @@ const EffectCreator = () => {
           effect_type: data.effect_type,
           type: data.type || null,
           condition_description: data.condition_description,
-          mechanics: data.mechanics ?? null,
+          ...(lockedEntity ? {} : { mechanics: data.mechanics ?? null }),
           repeatable: data.repeatable,
           is_extended: data.is_extended,
           description_font_size: data.description_font_size,
@@ -476,12 +471,18 @@ const EffectCreator = () => {
                     <p className="text-sm text-gray-500">
                       Соберите способность из блоков. JSON сохраняется в поле mechanics.
                     </p>
-                    <MechanicsBuilder
-                      value={(watch('mechanics') as Record<string, unknown>) || null}
-                      onChange={(m) => setValue('mechanics', m)}
-                      resourceOptions={registryItems(resourceOptions)}
-                      aiContext={{ kind: 'passive_effect', name: watch('name') || '', description: [watch('description'), watch('condition_description')].filter(Boolean).join(' ') }}
-                    />
+                    {lockedEntity ? (
+                      <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+                        Исполняемая механика закреплена тестовой сертификацией. Название, иконку, описание и остальные поля можно редактировать.
+                      </p>
+                    ) : (
+                      <MechanicsBuilder
+                        value={(watch('mechanics') as Record<string, unknown>) || null}
+                        onChange={(m) => setValue('mechanics', m)}
+                        resourceOptions={registryItems(resourceOptions)}
+                        aiContext={{ kind: 'passive_effect', name: watch('name') || '', description: [watch('description'), watch('condition_description')].filter(Boolean).join(' ') }}
+                      />
+                    )}
                   </div>
                 )}
 

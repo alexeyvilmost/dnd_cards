@@ -230,10 +230,7 @@ describe('strict mechanics.weapon_profile authority', () => {
     const mechanics = {
       activation: {
         mode: 'active',
-        cost: [
-          { resource: 'action' },
-          { resource: EQUIPPED_WEAPON_AMMO_RESOURCE, amount: 1 },
-        ],
+        cost: [{ resource: 'action' }],
       },
       targeting: { shape: 'single', filter: 'enemy', range_ft: 600 },
       effects: [{
@@ -246,7 +243,7 @@ describe('strict mechanics.weapon_profile authority', () => {
       { main_hand: card.id },
       new Map([[card.id, card]]),
     );
-    expect(bound.targeting).toEqual({ shape: 'single', filter: 'enemy', range_ft: 60 });
+    expect(bound.targeting).toEqual({ shape: 'single', filter: 'enemy', range_ft: 5 });
     expect((bound.activation as Dict).cost).toEqual([{ resource: 'action' }]);
     expect((bound.effects as Dict[])[0]).toMatchObject({ attack_kind: 'weapon_melee' });
   });
@@ -270,7 +267,7 @@ describe('strict mechanics.weapon_profile authority', () => {
       },
       targeting: { shape: 'single', filter: 'enemy', range_ft: 600 },
       effects: [{
-        resolution: 'attack_roll', attack_kind: 'weapon_melee',
+        resolution: 'attack_roll', attack_kind: 'weapon_ranged',
         on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon' }],
       }],
     };

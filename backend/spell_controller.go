@@ -101,7 +101,7 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		if light {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
-			r.ImageURL = listImageURL(spell.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("spells", spell.ID, spell.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}
@@ -254,7 +254,7 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинания"})
 		return
 	}
-	if rejectLockedContentMutation(c, spell.Support) {
+	if rejectLockedMechanicsMutation(c, spell.Support, spell.Mechanics, req.Mechanics) {
 		return
 	}
 

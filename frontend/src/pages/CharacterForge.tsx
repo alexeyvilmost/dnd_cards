@@ -1774,7 +1774,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
           <div className="forge-block" key={choice.id}>
             <div className="forge-section-h">{choice.prompt}</div>
             <div className={`choice-count ${done ? 'done' : ''}`}>Выбрано {selected.length} из {choice.count}</div>
-            <div className={spellRows ? 'sheet-item-cols' : 'forge-spell-icon-grid'}>
+            <div className="forge-spell-icon-grid">
               {filtered.map((spell) => {
                 const isSelected = selected.includes(spell.id);
                 const owner = selectedSpellOwners.get(spell.id);
@@ -1791,26 +1791,11 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                   onMouseMove: (e: React.MouseEvent) => setMouse({ x: e.clientX, y: e.clientY }),
                   onMouseLeave: () => setHovered(null),
                 };
-                if (spellRows) {
-                  return (
-                    <SheetEntityRow
-                      key={spell.id}
-                      imageUrl={spell.image_url}
-                      name={spell.name}
-                      nameSuffix={<SupportStatusBadge entity={spell} compact />}
-                      detail={spellDetail(spell)}
-                      selected={isSelected}
-                      disabled={disabled}
-                      onClick={() => toggleChoiceSpell(choice, spell.id)}
-                      {...hoverHandlers}
-                      title={title}
-                    />
-                  );
-                }
                 return (
                   <button key={spell.id} type="button"
                     className={`forge-spell-icon ${isSelected ? 'selected' : disabled ? 'disabled' : 'ready'}`}
-                    disabled={disabled} onClick={() => toggleChoiceSpell(choice, spell.id)}
+                    aria-disabled={disabled || undefined}
+                    onClick={disabled ? undefined : () => toggleChoiceSpell(choice, spell.id)}
                     {...hoverHandlers} title={title}>
                     <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
                       onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />

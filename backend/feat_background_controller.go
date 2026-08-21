@@ -63,7 +63,7 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 		r := f.ToFeatResponse()
 		if light {
 			r.DetailedDescription = nil
-			r.ImageURL = listImageURL(f.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("feats", f.ID, f.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}
@@ -280,7 +280,7 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 		r := b.ToBackgroundResponse()
 		if light {
 			r.DetailedDescription = nil
-			r.ImageURL = listImageURL(b.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("backgrounds", b.ID, b.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}

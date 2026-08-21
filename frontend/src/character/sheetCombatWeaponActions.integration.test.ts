@@ -45,7 +45,7 @@ function declaredAction(input: { id: string; off?: boolean }): RuleActionDefinit
         mode: 'active',
         cost: [
           { resource: off ? 'bonus_action' : 'action' },
-          { resource: 'equipped_weapon_ammo', amount: 1 },
+          ...(!off ? [{ resource: 'equipped_weapon_ammo', amount: 1 }] : []),
         ],
       },
       targeting: {
@@ -60,7 +60,7 @@ function declaredAction(input: { id: string; off?: boolean }): RuleActionDefinit
       },
       effects: [{
         resolution: 'attack_roll',
-        attack_kind: 'weapon_melee',
+        attack_kind: off ? 'weapon_melee' : 'weapon_ranged',
         ability: 'auto',
         vs: 'ac',
         ...(off ? { tags: ['off_hand', 'two_weapon'] } : {}),

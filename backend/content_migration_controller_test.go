@@ -25,8 +25,10 @@ func contentMigrationTestRouter(controller *ContentMigrationController) *gin.Eng
 		c.Next()
 	})
 	router.POST("/api/content-migrations/:bundleId/effects", controller.CreateEffect)
+	router.POST("/api/content-migrations/:bundleId/actions", controller.CreateAction)
 	router.POST("/api/content-migrations/:bundleId/:entityType/:id/exact-update", controller.ExactUpdate)
 	router.POST("/api/content-rollback/effect/:id/hard-delete-created", controller.RollbackCreatedEffect)
+	router.POST("/api/content-rollback/action/:id/hard-delete-created", controller.RollbackCreatedAction)
 	router.POST("/api/content-rollback/:entityType/:id/support", controller.RestoreSupport)
 	router.POST("/api/content-support/batch-exact", controller.ApplyExactSupportBatch)
 	return router
@@ -339,6 +341,48 @@ func mustJSON(t *testing.T, value any) []byte {
 		t.Fatal(err)
 	}
 	return encoded
+}
+
+func TestAtomicActionCreateHandlerUsesTheSameCrashSafeContract(t *testing.T) {
+	bundleID := uuid.MustParse("00000000-0000-4000-8000-000000000112")
+	entityID := uuid.MustParse("00000000-0000-4000-8000-000000000113")
+	const planHash = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+	called := 0
+	controller := &ContentMigrationController{
+		certificationKey: "migration-secret",
+		createAction: func(gotBundle uuid.UUID, request ContentMigrationActionCreateRequest, actor uuid.UUID) (ContentMigrationActionCreateResponse, error) {
+			called++
+			if gotBundle != bundleID || request.OperationID != "actions:action-ranged:create" || actor == uuid.Nil {
+				t.Fatal("atomic action identity was not forwarded exactly")
+			}
+			return ContentMigrationActionCreateResponse{
+				Entity: ActionResponse{ID: entityID, CardNumber: "action-ranged"},
+				Rollback: ContentMigrationReceiptResponse{
+					BundleID: bundleID, PlanHash: planHash, OperationID: request.OperationID,
+					EntityID: entityID, CardNumber: "action-ranged",
+					PostimageHash: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+				},
+			}, nil
+		},
+	}
+	router := contentMigrationTestRouter(controller)
+	body := map[string]any{
+		"schema_version": 1, "plan_hash": planHash,
+		"operation_id": "actions:action-ranged:create",
+		"entity": map[string]any{
+			"name": "Ranged", "description": "Atomic action", "rarity": "common",
+			"card_number": "action-ranged", "action_type": "base_action",
+			"resources": []string{"action"},
+		},
+	}
+	path := "/api/content-migrations/" + bundleID.String() + "/actions"
+	if response := migrationRequest(t, router, http.MethodPost, path, body, ""); response.Code != http.StatusForbidden {
+		t.Fatalf("action create without key: got %d", response.Code)
+	}
+	response := migrationRequest(t, router, http.MethodPost, path, body, "migration-secret")
+	if response.Code != http.StatusCreated || called != 1 {
+		t.Fatalf("expected one action create, status=%d calls=%d body=%s", response.Code, called, response.Body.String())
+	}
 }
 
 func TestLedgerRollbackHandlerRequiresExactTuple(t *testing.T) {

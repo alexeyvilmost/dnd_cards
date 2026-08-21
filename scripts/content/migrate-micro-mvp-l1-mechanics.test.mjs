@@ -256,7 +256,7 @@ function inMemoryContentApi(initialCatalogs) {
     const url = new URL(String(input));
     const method = init.method || 'GET';
 
-    const atomicCreate = url.pathname.match(/^\/api\/content-migrations\/([^/]+)\/effects$/);
+    const atomicCreate = url.pathname.match(/^\/api\/content-migrations\/([^/]+)\/(effects|actions)$/);
     if (atomicCreate && method === 'POST') {
       mutationCounts.atomicCreate += 1;
       if (!requireProtectedHeaders(init)) return new Response('forbidden', { status: 403 });
@@ -264,13 +264,13 @@ function inMemoryContentApi(initialCatalogs) {
       const receiptKey = `${atomicCreate[1]}:${body.plan_hash}:${body.operation_id}`;
       const existingReceipt = receipts.get(receiptKey);
       if (existingReceipt) {
-        const existing = catalogs.effects.find((row) => row.id === existingReceipt.entity_id);
+        const existing = catalogs[atomicCreate[2]].find((row) => row.id === existingReceipt.entity_id);
         if (!existing || existingReceipt.status !== 'active') {
           return new Response('receipt conflict', { status: 409 });
         }
         return Response.json({ entity: existing, rollback: existingReceipt.response }, { status: 200 });
       }
-      if (catalogs.effects.some((row) => row.card_number === body.entity.card_number)) {
+      if (catalogs[atomicCreate[2]].some((row) => row.card_number === body.entity.card_number)) {
         return new Response('identity conflict', { status: 409 });
       }
       const suffix = String(nextId++).padStart(12, '0');
@@ -281,7 +281,7 @@ function inMemoryContentApi(initialCatalogs) {
         created_at: nextTimestamp(),
         updated_at: nextTimestamp(),
       };
-      catalogs.effects.push(entity);
+      catalogs[atomicCreate[2]].push(entity);
       const response = {
         receipt_id: `10000000-0000-4000-8000-${suffix}`,
         bundle_id: atomicCreate[1],
@@ -313,7 +313,7 @@ function inMemoryContentApi(initialCatalogs) {
     }
 
     const hardDelete = url.pathname.match(
-      /^\/api\/content-rollback\/effect\/([^/]+)\/hard-delete-created$/,
+      /^\/api\/content-rollback\/(effect|action)\/([^/]+)\/hard-delete-created$/,
     );
     if (hardDelete && method === 'POST') {
       mutationCounts.hardDelete += 1;
@@ -321,13 +321,14 @@ function inMemoryContentApi(initialCatalogs) {
       const body = JSON.parse(String(init.body));
       const receiptKey = `${body.bundle_id}:${body.plan_hash}:${body.operation_id}`;
       const receipt = receipts.get(receiptKey);
-      const index = catalogs.effects.findIndex((row) => row.id === hardDelete[1]);
+      const collection = hardDelete[1] === 'action' ? 'actions' : 'effects';
+      const index = catalogs[collection].findIndex((row) => row.id === hardDelete[2]);
       if (receipt?.status === 'rolled_back' && index < 0) {
         return Response.json({ rolled_back: true, already_rolled_back: true });
       }
       if (!receipt
         || receipt.status !== 'active'
-        || receipt.entity_id !== hardDelete[1]
+        || receipt.entity_id !== hardDelete[2]
         || receipt.card_number !== body.card_number
         || receipt.postimage_hash !== body.expected_current_hash
         || index < 0) {
@@ -335,7 +336,7 @@ function inMemoryContentApi(initialCatalogs) {
       }
       // Simulate the backend transaction: soft-delete proof and physical
       // removal either both commit or neither leaves a tombstone.
-      const [deleted] = catalogs.effects.splice(index, 1);
+      const [deleted] = catalogs[collection].splice(index, 1);
       if (!deleted) return new Response('delete conflict', { status: 409 });
       receipt.status = 'rolled_back';
       return Response.json({ rolled_back: true, already_rolled_back: false });
@@ -472,7 +473,7 @@ async function simulateUpdateCommit(api, baseUrl, bundle, operation) {
 
 async function simulateAtomicCreateCommit(api, baseUrl, bundle, operation) {
   const response = await api.fetchImpl(
-    `${baseUrl}/api/content-migrations/${bundle.bundleId}/effects`,
+    `${baseUrl}/api/content-migrations/${bundle.bundleId}/${operation.collection}`,
     {
       method: 'POST',
       headers: {
@@ -496,7 +497,7 @@ test('reviewed preimage fixture is schema-validated, hash-pinned and patch-close
   const fixture = readReviewedPreimageFixture();
   assert.equal(
     REVIEWED_PREIMAGE_FIXTURE_SHA256,
-    'sha256:98edc2e2910fd738cfbeb37a7b62742d3a42955b8e3da450bf76a45b0cd508ed',
+    'sha256:0a8b311b87fc5aba0b811c67e073e35edc4c696ced600aa59b167bece10ea542',
   );
   assert.equal(fixture.fixtureId, 'dnd5e-2024.micro-mvp-l1.reviewed-source-preimage.v1');
   assert.equal(fixture.patch.canonicalHash, sha256Canonical(reviewedPatch()));
@@ -517,13 +518,13 @@ test('plan covers the complete reviewed migration and stores full API preimages'
   assert.equal(patch.mechanicsPatches.effects.length, 34);
   assert.equal(patch.mechanicsPatches.actions.length, 9);
   assert.equal(patch.mechanicsPatches.spells.length, 26);
-  assert.equal(operations.length, 108);
+  assert.equal(operations.length, 109);
   assert.deepEqual(
     Object.fromEntries(['cards', 'effects', 'actions', 'spells', 'races', 'classes'].map((collection) => [
       collection,
       operations.filter((operation) => operation.collection === collection).length,
     ])),
-    { cards: 12, effects: 52, actions: 9, spells: 26, races: 2, classes: 7 },
+    { cards: 12, effects: 52, actions: 10, spells: 26, races: 2, classes: 7 },
   );
 
   for (const operation of operations) {
@@ -1306,7 +1307,9 @@ test('integration: exact plan applies, records postimages and rolls back to ever
   );
   assert.equal(bundle.status, 'applied');
   assert.equal(api.rawCount('effects'), originalEffectsRawCount + (
-    bundle.operations.filter((operation) => operation.operation === 'create').length
+    bundle.operations.filter((operation) => (
+      operation.operation === 'create' && operation.collection === 'effects'
+    )).length
   ));
 
   await rollbackMigrationBundle(bundle, options);
@@ -1413,7 +1416,6 @@ test('apply resumes every persisted atomic-create phase without duplicate rows o
     await t.test(phase.name, async () => {
       const original = catalogsWithDeployedEffectResponse();
       const api = inMemoryContentApi(original);
-      const initialEffects = api.rawCount('effects');
       const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-apply-create-resume-'));
       const { metadataPath } = writeVerifiedBackup(directory);
       const bundlePath = join(directory, 'preimage.json');
@@ -1424,6 +1426,7 @@ test('apply resumes every persisted atomic-create phase without duplicate rows o
       });
       assert.equal(bundle.operations.length, 1);
       const operation = bundle.operations[0];
+      const initialOperationRows = api.rawCount(operation.collection);
       let committed = null;
       if (phase.live !== 'before') {
         committed = await simulateAtomicCreateCommit(api, baseUrl, bundle, operation);
@@ -1449,10 +1452,15 @@ test('apply resumes every persisted atomic-create phase without duplicate rows o
       assert.equal(bundle.status, 'applied');
       assert.equal(operation.state, 'applied');
       assert.equal(bundle.applyResumeCount, 1);
-      assert.equal(api.rawCount('effects'), initialEffects + 1, 'one physical Effect row');
+      assert.equal(
+        api.rawCount(operation.collection),
+        initialOperationRows + 1,
+        `one physical ${operation.collection} row`,
+      );
       assert.equal(api.receipts.size, 1, 'one server receipt');
       assert.equal(
-        api.catalogs.effects.filter((row) => row.card_number === operation.cardNumber).length,
+        api.catalogs[operation.collection]
+          .filter((row) => row.card_number === operation.cardNumber).length,
         1,
       );
       assert.equal(operation.createReceipt.entity_id, operation.entityId);

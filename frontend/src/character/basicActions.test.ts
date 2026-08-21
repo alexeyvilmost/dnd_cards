@@ -52,6 +52,18 @@ describe('базовые действия как сущности (не хард
     expect(out.filter((a) => a.group === 'basic')).toHaveLength(0);
   });
 
+  it('не подменяет заблокированное mechanics.name редактируемым именем сущности', () => {
+    const renamed = {
+      ...basicUnarmed,
+      name: 'Кнопка в листе',
+      mechanics: { ...basicUnarmed.mechanics, name: 'Канонический удар' },
+    } as unknown as Action;
+
+    const [projected] = collectSheetActions(emptyAssembled, [], [renamed]);
+    expect(projected.name).toBe('Кнопка в листе');
+    expect(projected.mechanics.name).toBe('Канонический удар');
+  });
+
   it('не синтезирует механику, цену или narrative из legacy action.resource', () => {
     const legacy = {
       id: 'legacy', card_number: 'ACT-legacy', name: 'Legacy', resource: 'action',

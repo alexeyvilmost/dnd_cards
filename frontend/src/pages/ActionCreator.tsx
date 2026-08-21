@@ -68,7 +68,6 @@ const ActionCreator = () => {
           const action = await actionsApi.getAction(sourceId);
           const locked = isEditMode && isMechanicsLocked(action);
           setLockedEntity(locked);
-          if (locked) setError('Механика действия закреплена полной тестовой сертификацией. Редактирование запрещено.');
           
           // Заполняем форму данными действия
           
@@ -164,10 +163,6 @@ const ActionCreator = () => {
   };
 
   const onSubmit = async (data: CreateActionRequest) => {
-    if (lockedEntity) {
-      setError('Закреплённое действие нельзя изменить через UI.');
-      return;
-    }
     setLoading(true);
     setError(null);
     setIdError(null);
@@ -227,7 +222,7 @@ const ActionCreator = () => {
           distance: data.distance || null,
           recharge: data.recharge || null,
           recharge_custom: data.recharge_custom || null,
-          mechanics: data.mechanics ?? null,
+          ...(lockedEntity ? {} : { mechanics: data.mechanics ?? null }),
           action_type: data.action_type,
           type: data.type || null,
           author: data.author || 'Admin',
@@ -514,12 +509,18 @@ const ActionCreator = () => {
             {activeSection === 'mechanics' && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Механика (унифицированная)</h2>
-                <MechanicsBuilder
-                  value={(watch('mechanics') as Record<string, unknown>) || null}
-                  onChange={(m) => setValue('mechanics', m)}
-                  resourceOptions={resourceItems}
-                  aiContext={{ kind: 'action', name: watch('name') || '', description: watch('description') || '' }}
-                />
+                {lockedEntity ? (
+                  <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+                    Исполняемая механика закреплена тестовой сертификацией. Название, иконку, описание и остальные поля можно редактировать.
+                  </p>
+                ) : (
+                  <MechanicsBuilder
+                    value={(watch('mechanics') as Record<string, unknown>) || null}
+                    onChange={(m) => setValue('mechanics', m)}
+                    resourceOptions={resourceItems}
+                    aiContext={{ kind: 'action', name: watch('name') || '', description: watch('description') || '' }}
+                  />
+                )}
               </div>
             )}
 

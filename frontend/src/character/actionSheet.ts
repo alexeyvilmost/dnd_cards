@@ -139,6 +139,20 @@ export function collectGrantEffectSlugs(mechanics: Record<string, unknown> | nul
 export interface GrantedAction { action: Action; sourceLabel: string; group: SheetAction['group']; }
 
 /**
+ * `mechanics.name` belongs to the locked mechanics document when it is
+ * explicitly declared. A mutable entity display name may label legacy rows,
+ * but must never overwrite those reviewed bytes during sheet projection.
+ */
+function mechanicsWithPresentationName(
+  mechanics: Record<string, unknown>,
+  displayName: string,
+): Record<string, unknown> {
+  return Object.prototype.hasOwnProperty.call(mechanics, 'name')
+    ? mechanics
+    : { ...mechanics, name: displayName };
+}
+
+/**
  * S2 контейнеры: действие «Распаковать» для контейнера mode='all' (Набор артиста) — кладёт ВСЁ
  * содержимое в инвентарь (add_item ×N из card.contents) и расходует сам контейнер явной item-cost.
  * Режим и состав — ДАННЫЕ карты (container_mode+contents), поведение не хардкодится. Cycle-guard:
@@ -224,7 +238,7 @@ export function collectSheetActions(
       return {
         id: action.id,
         name: action.name,
-        mechanics: { ...mechanics, name: action.name },
+        mechanics: mechanicsWithPresentationName(mechanics, action.name),
         group: 'basic' as const,
         imageUrl: action.image_url,
         description: action.description,
@@ -242,7 +256,7 @@ export function collectSheetActions(
       return {
         id: action.id,
         name: action.name,
-        mechanics: { ...mechanics, name: action.name },
+        mechanics: mechanicsWithPresentationName(mechanics, action.name),
         group: 'class' as const,
         imageUrl: action.image_url,
         sourceLabel: `${origin.name}`,
@@ -264,7 +278,7 @@ export function collectSheetActions(
       return {
         id: effect.id,
         name: effect.name,
-        mechanics: { ...mechanics, name: effect.name },
+        mechanics: mechanicsWithPresentationName(mechanics, effect.name),
         group: origin.kind === 'race' ? 'race' as const : 'class' as const,
         imageUrl: effect.image_url,
         sourceLabel: `${origin.name}`,
@@ -282,7 +296,7 @@ export function collectSheetActions(
       return {
         id: spell.id,
         name: spell.name,
-        mechanics: { ...mechanics, name: spell.name },
+        mechanics: mechanicsWithPresentationName(mechanics, spell.name),
         group: 'spell' as const,
         level: spell.level ?? 0,
         imageUrl: spell.image_url,
@@ -305,7 +319,10 @@ export function collectSheetActions(
       // Экономика предмета так же обязана быть объявлена данными. Legacy
       // consumes_self больше не превращается здесь в скрытую стоимость.
       if (!Array.isArray(activation.cost)) return null;
-      const mechanics2 = bindSelfItemCost({ ...mechanics, name: card.name }, card.id);
+      const mechanics2 = bindSelfItemCost(
+        mechanicsWithPresentationName(mechanics, card.name),
+        card.id,
+      );
       return {
         id: `item-${card.id}`,
         name: card.name,
@@ -330,7 +347,7 @@ export function collectSheetActions(
       return {
         id: `granted-${action.id}`,
         name: action.name,
-        mechanics: { ...mechanics, name: action.name },
+        mechanics: mechanicsWithPresentationName(mechanics, action.name),
         group,
         imageUrl: action.image_url,
         sourceLabel,

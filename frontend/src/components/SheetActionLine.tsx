@@ -79,9 +79,9 @@ const SheetActionLine = ({
         <button
           type="button"
           className={`cs-action-tile${disabled ? ' cs-action-tile--disabled' : ''}`}
-          disabled={disabled && !inspectMode}
+          aria-disabled={(disabled && !inspectMode) || undefined}
           title={disabled ? disabledTitle : name}
-          onClick={onActivate}
+          onClick={disabled && !inspectMode ? undefined : onActivate}
           onMouseEnter={onEnter}
           onMouseLeave={onLeave}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}

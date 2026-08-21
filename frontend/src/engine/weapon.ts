@@ -266,6 +266,14 @@ export function weaponAttackKind(mechanics: Dict | null | undefined): WeaponAtta
   return tags.includes('off_hand') ? 'off' : 'main';
 }
 
+function declaredWeaponAttackMode(mechanics: Dict | null | undefined): 'melee' | 'ranged' | null {
+  const effect = matchedAttackEffect(mechanics);
+  const attackKind = String(effect?.attack_kind ?? '');
+  if (attackKind === 'weapon_melee') return 'melee';
+  if (attackKind === 'weapon_ranged') return 'ranged';
+  return null;
+}
+
 /**
  * Рукопашная / дальнобойная атака ОДНОГО effect'а (для дистанционного гейта B/C: автокрит и
  * проекция «Распластан» зависят от типа атаки). unarmed → melee; оружейная (on_hit dice:'weapon')
@@ -368,20 +376,34 @@ export function weaponActionAvailability(
   const mainCard = mainId ? cardsById.get(mainId) : undefined;
   const offCard = offId ? cardsById.get(offId) : undefined;
 
+  const modeAvailability = (card: Card): ActionAvailability => {
+    const requested = declaredWeaponAttackMode(mechanics);
+    if (!requested) return { available: true };
+    const parsed = parseWeaponProfile(card);
+    if (!parsed.valid) return { available: false, reason: parsed.issue };
+    if (!parsed.profile.attackModes.some((mode) => mode.kind === requested)) {
+      return {
+        available: false,
+        reason: requested === 'ranged'
+          ? 'Оружие в руке не поддерживает дальнобойную атаку'
+          : 'Оружие в руке не поддерживает рукопашную атаку',
+      };
+    }
+    return { available: true };
+  };
+
   if (kind === 'unarmed') {
     // По RAW 2024 безоружный удар доступен всегда (свободная рука нужна только для Захвата).
     return { available: true };
   }
   if (kind === 'main') {
-    return isWeaponCard(mainCard)
-      ? { available: true }
-      : { available: false, reason: 'Нет оружия в правой руке' };
+    if (!isWeaponCard(mainCard)) return { available: false, reason: 'Нет оружия в правой руке' };
+    return modeAvailability(mainCard!);
   }
   // 'off': нужен отдельный предмет во второй руке; двуручный хват (off_hand===main_hand) исключён.
   if (!offId || offId === mainId) return { available: false, reason: 'Нет оружия во второй руке' };
-  return isWeaponCard(offCard)
-    ? { available: true }
-    : { available: false, reason: 'Нет оружия во второй руке' };
+  if (!isWeaponCard(offCard)) return { available: false, reason: 'Нет оружия во второй руке' };
+  return modeAvailability(offCard!);
 }
 
 export const EQUIPPED_WEAPON_AMMO_RESOURCE = 'equipped_weapon_ammo' as const;
@@ -421,24 +443,23 @@ export function bindEquippedWeaponProfileTargeting(
   if (!targeting || typeof targeting !== 'object' || Array.isArray(targeting)) {
     throw new Error('weapon action requires explicit mechanics.targeting');
   }
-  const ranges = selected.profile.attackModes.map((mode) => (
-    mode.kind === 'melee' ? mode.reachFt : mode.longFt
-  ));
-  if (!ranges.length || ranges.some((range) => !Number.isFinite(range) || range <= 0)) {
-    throw new Error(`${selected.weapon.id}: weapon_profile has no usable attack range`);
+  const requested = declaredWeaponAttackMode(mechanics);
+  if (!requested) throw new Error('weapon action requires explicit weapon_melee or weapon_ranged');
+  const mode = selected.profile.attackModes.find((candidate) => candidate.kind === requested);
+  if (!mode) throw new Error(`${selected.weapon.id}: weapon_profile does not support ${requested} attacks`);
+  const range = mode.kind === 'melee' ? mode.reachFt : mode.longFt;
+  if (!Number.isFinite(range) || range <= 0) {
+    throw new Error(`${selected.weapon.id}: weapon_profile has no usable ${requested} attack range`);
   }
   return {
     ...mechanics,
-    targeting: { ...(targeting as Dict), range_ft: Math.max(...ranges) },
+    targeting: { ...(targeting as Dict), range_ft: range },
   };
 }
 
 /**
- * Materialize the attack mode of a generic equipped-weapon action. The
- * equipped_weapon_ammo marker is also the action template's declaration that
- * its attack facts come from whichever weapon is selected by the ordinary
- * main/off markers. Specialized weapon actions without that declaration keep
- * their explicit attack_kind unchanged.
+ * Validate the action's explicit attack mode against the selected weapon.
+ * Ammunition is a payment declaration and never selects melee/ranged behavior.
  */
 export function bindEquippedWeaponAttackMode(
   mechanics: Dict | null | undefined,
@@ -446,22 +467,21 @@ export function bindEquippedWeaponAttackMode(
   cardsById: Map<string, Card>,
 ): Dict {
   if (!mechanics) return {};
-  const activation = mechanics.activation as Dict | undefined;
-  const costs = Array.isArray(activation?.cost) ? activation.cost as Dict[] : [];
-  if (!costs.some((entry) => entry?.resource === EQUIPPED_WEAPON_AMMO_RESOURCE)) {
-    return mechanics;
-  }
+  // This adapter is shared by the complete sheet-action inventory. Ordinary
+  // spells, item actions and class/species actions must pass through unchanged;
+  // only an explicit weapon marker opts into weapon-profile validation.
+  const kind = weaponAttackKind(mechanics);
+  if (kind !== 'main' && kind !== 'off') return mechanics;
   const selected = selectedWeaponForMechanics(mechanics, equipment, cardsById);
   const attack = matchedAttackEffect(mechanics);
   if (!selected || !attack) {
     throw new Error('equipped weapon action requires one materializable weapon attack');
   }
-  const effects = (mechanics.effects as Dict[]).map((effect) => (
-    effect === attack
-      ? { ...effect, attack_kind: `weapon_${selected.profile.defaultAttackMode}` }
-      : effect
-  ));
-  return { ...mechanics, effects };
+  const requested = declaredWeaponAttackMode(mechanics);
+  if (!requested || !selected.profile.attackModes.some((mode) => mode.kind === requested)) {
+    throw new Error(`${selected.weapon.id}: weapon_profile does not support ${requested ?? 'undeclared'} attacks`);
+  }
+  return mechanics;
 }
 
 function declaredWeaponAmmo(weapon: Card): { cardId: string; name?: string } | null {
@@ -525,9 +545,9 @@ export function bindEquippedWeaponActionContext(
   equipment: Record<string, string | null | undefined> | undefined,
   cardsById: Map<string, Card>,
 ): Dict {
-  const targeted = bindEquippedWeaponProfileTargeting(mechanics, equipment, cardsById);
-  const attackMode = bindEquippedWeaponAttackMode(targeted, equipment, cardsById);
-  return bindEquippedWeaponAmmoCost(attackMode, equipment, cardsById);
+  const attackMode = bindEquippedWeaponAttackMode(mechanics, equipment, cardsById);
+  const targeted = bindEquippedWeaponProfileTargeting(attackMode, equipment, cardsById);
+  return bindEquippedWeaponAmmoCost(targeted, equipment, cardsById);
 }
 
 // ─── Предпросмотр атаки/урона (парадигма №2) ────────────────────────────────

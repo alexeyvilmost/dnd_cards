@@ -683,6 +683,18 @@ func GetAllMigrations() []Migration {
 			// Данные становятся явными правилами; возврат к неисполняемым legacy-полям не поддерживается.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "108_split_weapon_actions_and_unlock_metadata",
+			Description: "Разделить рукопашную и дальнобойную атаку и ограничить lock только mechanics-блоком",
+			Up:          splitWeaponActionsAndUnlockMetadata,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "109_normalize_goliath_ancestry",
+			Description: "Восстановить шесть вариантов Наследия великанов и их событийные способности",
+			Up:          normalizeGoliathAncestry,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
@@ -1441,10 +1453,17 @@ func seedBasicActions(db *sql.DB) error {
 		},
 		{
 			cardNumber:  "action_basic_weapon",
-			name:        "Атака оружием",
+			name:        "Рукопашная атака оружием",
 			imageURL:    "/icons/actions/weapon_attack.png",
-			description: "Атака надетым оружием ближнего или дальнего боя. Бонус атаки и урон — по характеристике оружия и бонусу мастерства.",
-			mechanics:   `{"name":"Атака оружием","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"ability":"auto","attack_kind":"weapon_melee","resolution":"attack_roll","vs":"ac","on_hit":[{"ability":"auto","dice":"weapon","kind":"damage","type":"weapon"}]}],"targeting":{"filter":"enemy","range":"weapon","shape":"single"}}`,
+			description: "Атака надетым оружием в рукопашном режиме. Боеприпасы не требуются и не расходуются.",
+			mechanics:   `{"name":"Рукопашная атака оружием","activation":{"cost":[{"resource":"action"}],"mode":"active"},"effects":[{"ability":"auto","attack_kind":"weapon_melee","resolution":"attack_roll","vs":"ac","on_hit":[{"ability":"auto","dice":"weapon","kind":"damage","type":"weapon"}]}],"targeting":{"filter":"enemy","range":"weapon","shape":"single"}}`,
+		},
+		{
+			cardNumber:  "action_basic_weapon_ranged",
+			name:        "Дальнобойная атака оружием",
+			imageURL:    "/icons/actions/ranged_weapon_attack.png",
+			description: "Атака надетым оружием в дальнобойном режиме. Боеприпас расходуется только если он объявлен профилем оружия.",
+			mechanics:   `{"name":"Дальнобойная атака оружием","activation":{"cost":[{"resource":"action"},{"resource":"equipped_weapon_ammo","amount":1}],"mode":"active"},"effects":[{"ability":"auto","attack_kind":"weapon_ranged","resolution":"attack_roll","vs":"ac","on_hit":[{"ability":"auto","dice":"weapon","kind":"damage","type":"weapon"}]}],"targeting":{"filter":"enemy","range":"weapon","shape":"single"}}`,
 		},
 		{
 			cardNumber:  "action_basic_offhand",

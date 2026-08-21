@@ -85,6 +85,28 @@ const EFFECT_CREATE_FIELDS = [
   'detailed_description_font_size',
 ];
 
+const ACTION_CREATE_FIELDS = [
+  'name', 'name_en', 'description', 'detailed_description', 'image_url', 'rarity',
+  'card_number', 'resource', 'resources', 'recharge', 'recharge_custom', 'script',
+  'mechanics', 'action_type', 'type', 'author', 'source', 'tags', 'price', 'weight',
+  'properties', 'related_cards', 'related_actions', 'is_extended', 'distance',
+  'description_font_size', 'text_alignment', 'text_font_size',
+  'show_detailed_description', 'detailed_description_alignment',
+  'detailed_description_font_size',
+];
+
+const SPELL_CREATE_FIELDS = [
+  'name', 'name_en', 'description', 'detailed_description', 'image_url', 'rarity',
+  'card_number', 'level', 'school', 'casting_time', 'range', 'duration', 'components',
+  'classes', 'mechanics', 'author', 'source', 'tags', 'is_extended',
+];
+
+const CREATE_FIELDS_BY_COLLECTION = {
+  effects: EFFECT_CREATE_FIELDS,
+  actions: ACTION_CREATE_FIELDS,
+  spells: SPELL_CREATE_FIELDS,
+};
+
 const ALLOWED_PRIMITIVES = new Set([
   'temporary_hp_melee_retaliation',
   'burning_hands_objects',
@@ -804,32 +826,35 @@ export function buildMigrationOperations(catalogs, patch) {
   }
 
   for (const declaration of patch.createEntities) {
-    const matches = catalogs.effects.filter((entity) => (
+    const collection = declaration.collection;
+    const matches = catalogs[collection].filter((entity) => (
       entity.card_number === declaration.entity.card_number
     ));
-    if (matches.length > 1) throw new Error(`effects:${declaration.entity.card_number}: duplicate rows`);
-    const request = Object.fromEntries(EFFECT_CREATE_FIELDS.flatMap((key) => (
+    if (matches.length > 1) throw new Error(`${collection}:${declaration.entity.card_number}: duplicate rows`);
+    const createFields = CREATE_FIELDS_BY_COLLECTION[collection];
+    if (!createFields) throw new Error(`${collection}: create declarations are unsupported`);
+    const request = Object.fromEntries(createFields.flatMap((key) => (
       Object.prototype.hasOwnProperty.call(declaration.entity, key)
         ? [[key, declaration.entity[key]]]
         : []
     )));
     mechanicsTargets.push({
-      label: `effects:${declaration.entity.card_number}`,
+      label: `${collection}:${declaration.entity.card_number}`,
       cardNumber: declaration.entity.card_number,
       name: declaration.entity.name,
-      kind: 'passive_effect',
+      kind: collection === 'effects' ? 'passive_effect' : collection === 'actions' ? 'action' : 'spell',
       mechanics: declaration.entity.mechanics,
     });
     if (matches.length === 1) {
       const current = projection(matches[0], request);
       if (!same(current, request)) {
         throw new Error(
-          `effects:${declaration.entity.card_number}: create identity exists with unreviewed fields`,
+          `${collection}:${declaration.entity.card_number}: create identity exists with unreviewed fields`,
         );
       }
       continue;
     }
-    operations.push(operationBase('effects', null, request, 'create'));
+    operations.push(operationBase(collection, null, request, 'create'));
   }
 
   for (const declaration of patch.conditionPatches) {
@@ -1175,13 +1200,13 @@ async function refetchEntity(baseUrl, collection, cardNumber, fetchImpl = global
   return matches[0] ?? null;
 }
 
-async function createEffectWithServerReceipt(bundle, operation, options) {
+async function createEntityWithServerReceipt(bundle, operation, options) {
   const result = await protectedRequest(
     options.baseUrl,
     options.token,
     options.certificationKey,
     'POST',
-    `/api/content-migrations/${encodeURIComponent(bundle.bundleId)}/effects`,
+    `/api/content-migrations/${encodeURIComponent(bundle.bundleId)}/${operation.collection}`,
     {
       schema_version: 1,
       plan_hash: bundle.planHash,
@@ -1259,7 +1284,7 @@ async function restoreSupportWithCAS(operation, current, support, options) {
   );
 }
 
-async function hardDeleteCreatedEffect(bundle, operation, options) {
+async function hardDeleteCreatedEntity(bundle, operation, options) {
   const receipt = operation.createReceipt;
   if (!receipt) throw new Error(`${operation.id}: server-issued create receipt is missing`);
   await protectedRequest(
@@ -1267,7 +1292,7 @@ async function hardDeleteCreatedEffect(bundle, operation, options) {
     options.token,
     options.certificationKey,
     'POST',
-    `/api/content-rollback/effect/${encodeURIComponent(operation.entityId)}/hard-delete-created`,
+    `/api/content-rollback/${COLLECTION_ENTITY_TYPES[operation.collection]}/${encodeURIComponent(operation.entityId)}/hard-delete-created`,
     {
       schema_version: 1,
       bundle_id: bundle.bundleId,
@@ -1410,7 +1435,7 @@ async function reconcilePersistedApply(bundle, catalogs, options) {
   }
 
   for (const { operation, current } of createRecoveries) {
-    const recovered = await createEffectWithServerReceipt(bundle, operation, options);
+    const recovered = await createEntityWithServerReceipt(bundle, operation, options);
     if (current && recovered.entity.id !== current.id) {
       throw new Error(`${operation.id}: receipt recovery identity drift`);
     }
@@ -1524,7 +1549,7 @@ export async function applyMigrationBundle(bundle, options) {
         writeJsonAtomic(options.bundlePath, bundle);
       }
       if (operation.operation === 'create') {
-        const created = await createEffectWithServerReceipt(bundle, operation, options);
+        const created = await createEntityWithServerReceipt(bundle, operation, options);
         operation.entityId = created.entity.id;
         operation.createReceipt = stableClone(created.receipt);
         writeJsonAtomic(options.bundlePath, bundle);
@@ -1575,7 +1600,7 @@ export async function applyMigrationBundle(bundle, options) {
           // create endpoint. It returns only the server-issued receipt for
           // this bundle/plan/operation tuple; a merely matching card is not
           // sufficient to authorize future hard-delete.
-          const recovered = await createEffectWithServerReceipt(bundle, activeOperation, options);
+          const recovered = await createEntityWithServerReceipt(bundle, activeOperation, options);
           if (recovered.entity.id !== observed.id) {
             throw new Error(`${activeOperation.id}: receipt recovery identity drift`);
           }
@@ -1729,7 +1754,7 @@ export async function rollbackMigrationBundle(bundle, options) {
       if (operation.operation === 'create') {
         operation.state = 'rollback-hard-delete-writing';
         writeJsonAtomic(options.bundlePath, bundle);
-        await hardDeleteCreatedEffect(bundle, operation, options);
+        await hardDeleteCreatedEntity(bundle, operation, options);
         const afterDelete = await refetchEntity(
           options.baseUrl,
           operation.collection,

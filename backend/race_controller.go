@@ -63,7 +63,7 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 		response := r.ToRaceResponse()
 		if light {
 			response.DetailedDescription = nil
-			response.ImageURL = listImageURL(r.ImageCloudinaryURL)
+			response.ImageURL = listImageURL("races", r.ID, r.ImageCloudinaryURL)
 		}
 		responses = append(responses, response)
 	}

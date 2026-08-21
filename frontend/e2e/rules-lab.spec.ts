@@ -174,13 +174,23 @@ function exactCatalogEntityId(
   return matches[0].id;
 }
 
-function exactPrimitiveActionId(api: ForgeApiFixture, type: string): string {
+function exactPrimitiveActionId(
+  api: ForgeApiFixture,
+  type: string,
+  attackKind?: 'weapon_melee' | 'weapon_ranged',
+): string {
   const matches = api.getCatalogRows('actions').filter((row) => {
     const mechanics = row.mechanics;
     if (!mechanics || typeof mechanics !== 'object' || Array.isArray(mechanics)) return false;
     const primitive = (mechanics as JsonRecord).primitive;
-    return primitive && typeof primitive === 'object' && !Array.isArray(primitive)
-      && (primitive as JsonRecord).type === type;
+    if (!(primitive && typeof primitive === 'object' && !Array.isArray(primitive)
+      && (primitive as JsonRecord).type === type)) return false;
+    if (!attackKind) return true;
+    const effects = (mechanics as JsonRecord).effects;
+    return Array.isArray(effects) && effects.some((effect) => (
+      effect && typeof effect === 'object' && !Array.isArray(effect)
+        && (effect as JsonRecord).attack_kind === attackKind
+    ));
   });
   if (matches.length !== 1 || typeof matches[0].id !== 'string') {
     throw new Error(`Materialized action catalog has ${matches.length} ${type} rows`);
@@ -244,7 +254,7 @@ async function runPersistedSheetWeaponAttack(
     'cards',
     PERSISTED_SHEET_WEAPON_FIXTURE.card.cardNumber,
   );
-  const weaponActionId = exactPrimitiveActionId(isolatedApi, 'weapon_attack');
+  const weaponActionId = exactPrimitiveActionId(isolatedApi, 'weapon_attack', 'weapon_melee');
   await equipFixtureLongsword(page, sourceId, weaponId);
   const hpBefore = Number(isolatedApi.getCharacter(targetId)?.current_hp);
   expect(hpBefore).toBeGreaterThan(0);

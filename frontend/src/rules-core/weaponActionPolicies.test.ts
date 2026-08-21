@@ -8,7 +8,7 @@ import {
   WEAPON_ATTACK_PRIMITIVE,
 } from './weaponActionPolicies';
 
-function action(input: { rangeFt?: number; ammoAmount?: number; marker?: boolean } = {}): RuleActionDefinition {
+function action(input: { rangeFt?: number; ammoAmount?: number; marker?: boolean; mode?: 'melee' | 'ranged' } = {}): RuleActionDefinition {
   return {
     id: 'action:generic-weapon-entry',
     name: 'Localized display text is irrelevant',
@@ -35,7 +35,7 @@ function action(input: { rangeFt?: number; ammoAmount?: number; marker?: boolean
       },
       effects: [{
         resolution: 'attack_roll',
-        attack_kind: 'weapon_melee',
+        attack_kind: `weapon_${input.mode ?? 'ranged'}`,
         ability: 'auto',
         vs: 'ac',
         on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'auto' }],
@@ -89,5 +89,12 @@ describe('generic declared weapon-action policy', () => {
       .toMatchObject({ status: 'invalid', issue: expect.stringContaining('requires exactly one') });
     expect(parseDeclaredWeaponActionPolicy(action({ ammoAmount: 0 }), 'template'))
       .toMatchObject({ status: 'invalid', issue: expect.stringContaining('marker') });
+  });
+
+  it('keeps melee attacks independent from ammunition declarations', () => {
+    expect(parseDeclaredWeaponActionPolicy(action({ mode: 'melee', marker: false }), 'template'))
+      .toMatchObject({ status: 'valid', policy: { attackMode: 'melee', activationCost: [{ resource: 'action' }] } });
+    expect(parseDeclaredWeaponActionPolicy(action({ mode: 'melee' }), 'template'))
+      .toMatchObject({ status: 'invalid', issue: expect.stringContaining('melee template') });
   });
 });

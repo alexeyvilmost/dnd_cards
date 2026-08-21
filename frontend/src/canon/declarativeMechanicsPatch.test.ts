@@ -24,7 +24,7 @@ function readReviewedPreimageCatalogs(): ReturnType<typeof readProdSnapshotCatal
     import.meta.url,
   ), 'utf8').replace(/\r\n/g, '\n');
   const fixtureHash = `sha256:${createHash('sha256').update(rawFixture).digest('hex')}`;
-  if (fixtureHash !== 'sha256:98edc2e2910fd738cfbeb37a7b62742d3a42955b8e3da450bf76a45b0cd508ed') {
+  if (fixtureHash !== 'sha256:0a8b311b87fc5aba0b811c67e073e35edc4c696ced600aa59b167bece10ea542') {
     throw new Error(`Reviewed preimage fixture hash mismatch: ${fixtureHash}`);
   }
   const fixture = JSON.parse(rawFixture) as {
@@ -178,6 +178,7 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
     }
     expect(MICRO_MVP_L1_CONTENT_PATCH.createEntities.map((item) => item.entity.card_number))
       .toEqual([
+        'action_basic_weapon_ranged',
         'EFF-invoc-armor_of_shadows',
         'EFF-invoc-eldritch_mind',
         'EFF-rogue-thieves-cant',
@@ -217,12 +218,12 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
       .toThrow(DeclarativeContentPatchError);
 
     const first = materializeMicroMvpL1ContentPatch(raw);
-    expect(first.changes).toHaveLength(108);
+    expect(first.changes).toHaveLength(109);
     expect(first.alreadyMaterialized).toHaveLength(0);
 
     const second = materializeMicroMvpL1ContentPatch(first.catalogs);
     expect(second.changes).toHaveLength(0);
-    expect(second.alreadyMaterialized).toHaveLength(108);
+    expect(second.alreadyMaterialized).toHaveLength(109);
     expect(() => assertMicroMvpL1ContentMaterialized(second.catalogs)).not.toThrow();
   });
 
@@ -251,7 +252,7 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
 
     const verified = materializeMicroMvpL1ContentPatch(catalogs);
     expect(verified.changes).toHaveLength(0);
-    expect(verified.alreadyMaterialized).toHaveLength(108);
+    expect(verified.alreadyMaterialized).toHaveLength(109);
   });
 
   it('fails closed when source mechanics drift instead of overwriting them', () => {

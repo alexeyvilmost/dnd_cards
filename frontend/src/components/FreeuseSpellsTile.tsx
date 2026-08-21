@@ -4,7 +4,6 @@
  * бесплатных использований («Туманный шаг 2/2»). Заменяет прежний список-блок под рядом.
  * Пулы freeuse-<spell> скрыты из ряда (isFreeusePoolKey) и агрегируются здесь.
  */
-import { useState } from 'react';
 import type { RuntimeState } from '../mvp/contracts';
 import type { RollModifier } from '../mvp/contracts';
 import type { FreeuseSpec } from '../engine/freeuse';
@@ -12,6 +11,7 @@ import { freeuseKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import type { Spell } from '../types';
 import { findResource } from '../utils/resources';
 import type { ResourceOption } from '../utils/resources';
+import HoverCard from './HoverCard';
 
 interface Props {
   runtime: RuntimeState;
@@ -22,8 +22,6 @@ interface Props {
 }
 
 export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, resourceOptions, resourceSources }: Props) {
-  const [hovered, setHovered] = useState(false);
-
   const rows = freeuseSpells
     .map((spec) => {
       const key = freeuseKey(spec.spell);
@@ -39,29 +37,13 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
   const totalRemaining = rows.reduce((s, r) => s + Math.max(0, r.cur), 0);
   const allSpent = totalRemaining <= 0;
   return (
-    <span
-      className={`res-tile${allSpent ? ' res-tile--spent' : ''}`}
-      aria-label={`${label}: ${totalRemaining}`}
-      style={{ position: 'relative' }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {icon
-        ? <img src={icon} alt="" className={`res-tile-icon${allSpent ? ' res-tile-icon--dim' : ''}`} />
-        : <span className={`res-tile-mono${allSpent ? ' res-tile-mono--dim' : ''}`}>Бз</span>}
-      {totalRemaining > 0 && <span className="res-tile-count">{totalRemaining}</span>}
-
-      {hovered && (
-        <div
-          role="tooltip"
-          style={{
-            position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-            marginTop: 6, zIndex: 60, minWidth: 180, maxWidth: 260,
-            padding: '6px 8px', borderRadius: 8,
-            border: '1px solid #8a7320', background: '#1c1813', color: '#e8e0d0',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.5)', pointerEvents: 'none',
-          }}
-        >
+    <HoverCard
+      content={(
+        <div role="tooltip" style={{
+          minWidth: 180, maxWidth: 260, padding: '6px 8px', borderRadius: 8,
+          border: '1px solid #8a7320', background: '#1c1813', color: '#e8e0d0',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
+        }}>
           <div style={{ fontSize: 12, color: '#d8b978', marginBottom: 4 }}>{label}</div>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {rows.map((r) => (
@@ -80,6 +62,16 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
           </ul>
         </div>
       )}
-    </span>
+    >
+      <span
+        className={`res-tile${allSpent ? ' res-tile--spent' : ''}`}
+        aria-label={`${label}: ${totalRemaining}`}
+      >
+        {icon
+          ? <img src={icon} alt="" className={`res-tile-icon${allSpent ? ' res-tile-icon--dim' : ''}`} />
+          : <span className={`res-tile-mono${allSpent ? ' res-tile-mono--dim' : ''}`}>Бз</span>}
+        {totalRemaining > 0 && <span className="res-tile-count">{totalRemaining}</span>}
+      </span>
+    </HoverCard>
   );
 }

@@ -6,7 +6,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, runMonsterTurn } from './engine';
+import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, resolvePlayerReaction, resolveTriggeredCombatAction, runMonsterTurn } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -151,6 +151,70 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('opens and resolves a generic owned post-hit rider instead of exposing it proactively', async () => {
+    let participant = fighterSeed();
+    const attack: RuleActionDefinition = {
+      id: 'd2000000-0000-4000-8000-000000000001', name: 'Проверочная атака', kind: 'nonSpell',
+      sourceEntityIds: ['test:attack'],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 600, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'attack_roll', ability: 'str', vs: 'ac', on_hit: [{ kind: 'damage', dice: '1d4', type: 'fire', ability: 'none' }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 600, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const rider: RuleActionDefinition = {
+      id: 'd2000000-0000-4000-8000-000000000002', name: 'Наследие великанов', kind: 'nonSpell',
+      sourceEntityIds: ['test:goliath-ancestry'],
+      mechanics: {
+        activation: { mode: 'triggered', optional: true, trigger: { event: 'hit' }, cost: [{ resource: 'giant_legacy', amount: 1 }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 600, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'damage', dice: '1d6', type: 'cold', ability: 'none' }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 600, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.capabilities.actionIds.push(attack.id, rider.id);
+    actor.runtime.resources.action = 1;
+    actor.runtime.maxResources.action = 1;
+    actor.runtime.resources.giant_legacy = 1;
+    actor.runtime.maxResources.giant_legacy = 1;
+    participant.character.resources = clone(actor.runtime.resources);
+    participant.character.max_resources = clone(actor.runtime.maxResources);
+    const actions = [...participant.canonical.actions, attack, rider];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    participant = { ...participant, canonical: { ...participant.canonical, actions, catalog: {
+      getAction: (id) => byId.get(id),
+      listActions: () => [...actions],
+    } } };
+
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    const hpBefore = state.world.actors[monsterId].runtime.hp.current;
+    state = autoResolveSystemDecisions(executeCombatAction({
+      state, actorId: participant.character.id, actionId: attack.id,
+      targetIds: [monsterId], rng: () => 0.99,
+    }), () => 0.99);
+
+    expect(state.pendingTriggeredAction).toEqual(expect.objectContaining({
+      event: 'hit', sourceActionId: attack.id,
+      optionActionIds: [rider.id], targetIds: [monsterId],
+    }));
+    expect(state.world.actors[participant.character.id].runtime.resources.giant_legacy).toBe(1);
+    const hpAfterAttack = state.world.actors[monsterId].runtime.hp.current;
+    expect(hpAfterAttack).toBeLessThan(hpBefore);
+
+    state = resolveTriggeredCombatAction(state, rider.id, () => 0.5);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.actors[participant.character.id].runtime.resources.giant_legacy).toBe(0);
+    expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpAfterAttack);
+  });
+
   it('restores sheet previews in fights persisted before scoped presentation keys', async () => {
     const participant = fighterSeed();
     const state = await createSoloCombatState({
@@ -356,5 +420,43 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[participant.character.id].runtime.hp.current).toBeLessThan(hpBefore);
     expect(gridDistanceFt(state.tokens[monsterId].position, state.tokens[participant.character.id].position)).toBe(5);
     expect(activeId(state)).toBe(participant.character.id);
+  });
+
+  it.each([true, false])('finishes a paused monster turn exactly once after a Shield decision (%s)', async (useShield) => {
+    const participant = wizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state = advanceTurn(state);
+    expect(activeId(state)).toBe(monsterId);
+
+    state = runMonsterTurn(state, () => 0.5);
+    const pending = state.world.pendingResolution;
+    expect(pending?.request.type).toBe('reaction');
+    if (!pending || pending.request.type !== 'reaction') throw new Error('expected Shield reaction');
+    const shield = pending.request.options.find((option) => option.spellSources?.length);
+    expect(shield).toBeDefined();
+    const source = shield?.spellSources?.[0];
+    const response = useShield && shield
+      ? {
+        kind: 'reaction' as const,
+        actionId: shield.actionId,
+        spell: source ? {
+          grantId: source.grantId,
+          mode: 'normal' as const,
+          ...(source.payment.kind === 'free_use' ? { preferFreeUse: true } : {}),
+          ...(source.payment.kind === 'slot' ? { preferFreeUse: false } : {}),
+        } : undefined,
+      }
+      : { kind: 'reaction' as const, actionId: null };
+
+    state = resolvePlayerReaction(state, response, () => 0.5);
+    expect(state.world.pendingResolution).toBeNull();
+    expect(activeId(state)).toBe(participant.character.id);
+    expect(state.world.actors[monsterId].runtime.resources.action).toBe(0);
+    expect(() => runMonsterTurn(state, () => 0.5)).not.toThrow();
   });
 });

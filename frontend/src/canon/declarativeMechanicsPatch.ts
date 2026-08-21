@@ -5,6 +5,7 @@ import type { SnapshotCatalogs } from './prodSnapshotL1Fixtures';
 
 type JsonObject = Record<string, unknown>;
 type PatchCollection = 'effects' | 'actions' | 'spells';
+type CreateCollection = 'effects' | 'actions';
 type FieldPatchCollection = 'cards' | 'classes' | 'races';
 type EntityReferenceCollection = 'cards' | 'effects';
 
@@ -43,10 +44,12 @@ export interface DeclarativeFieldPatch {
   fields: JsonObject;
 }
 
-export interface DeclarativeCreateEntity {
-  collection: 'effects';
-  entity: SnapshotCatalogs['effects'][number];
-}
+export type DeclarativeCreateEntity = {
+  [Collection in CreateCollection]: {
+    collection: Collection;
+    entity: SnapshotCatalogs[Collection][number];
+  }
+}[CreateCollection];
 
 export interface DeclarativeConditionPatch {
   cardNumber: string;
@@ -160,7 +163,8 @@ function declaredCreateIdentityAliases(catalogs: SnapshotCatalogs): {
   const declaredToActual = new Map<string, string>();
   for (const declaration of MICRO_MVP_L1_CONTENT_PATCH.createEntities) {
     const declared = declaration.entity;
-    const matches = catalogs.effects.filter((entity) => entity.card_number === declared.card_number);
+    const rows = catalogs[declaration.collection] as Array<{ id: string; card_number: string }>;
+    const matches = rows.filter((entity) => entity.card_number === declared.card_number);
     if (matches.length !== 1 || matches[0].id === declared.id) continue;
     // Relationships in declarative fields use stable card_number tokens; the
     // backend replaces those tokens with the assigned UUID after creating the
@@ -316,16 +320,21 @@ export function materializeMicroMvpL1ContentPatch(
       entityId: declaration.entity.id,
       cardNumber: declaration.entity.card_number,
     };
-    const cardMatches = catalogs.effects.filter((entity) => (
+    const rows = catalogs[declaration.collection] as unknown as Array<{
+      id: string;
+      card_number: string;
+      [key: string]: unknown;
+    }>;
+    const cardMatches = rows.filter((entity) => (
       entity.card_number === identity.cardNumber
     ));
     if (cardMatches.length > 1) {
-      problems.push(`effects:${identity.cardNumber}: declared card_number is duplicated`);
+      problems.push(`${declaration.collection}:${identity.cardNumber}: declared card_number is duplicated`);
       continue;
     }
     const existing = cardMatches[0] ?? null;
     const change: ContentPatchChange = {
-      collection: 'effects',
+      collection: declaration.collection,
       ...identity,
       operation: 'create',
     };
@@ -335,17 +344,17 @@ export function materializeMicroMvpL1ContentPatch(
       const declared = declaredMutableFields(declaration.entity as unknown as JsonObject);
       const currentProjection = selectedFields(existing as unknown as JsonObject, declared);
       if (!same(currentProjection, declared)) {
-        problems.push(`effects:${identity.cardNumber}: declared entity exists with different fields`);
+        problems.push(`${declaration.collection}:${identity.cardNumber}: declared entity exists with different fields`);
       } else {
         alreadyMaterialized.push(change);
       }
       continue;
     }
     if (mode === 'verify-only') {
-      problems.push(`effects:${identity.cardNumber}: declared entity is absent`);
+      problems.push(`${declaration.collection}:${identity.cardNumber}: declared entity is absent`);
       continue;
     }
-    catalogs.effects.push(cloneJson(declaration.entity));
+    rows.push(cloneJson(declaration.entity) as unknown as (typeof rows)[number]);
     changes.push(change);
   }
 

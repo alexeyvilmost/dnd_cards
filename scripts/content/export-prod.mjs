@@ -55,9 +55,9 @@ const contentPatch = JSON.parse(readFileSync(join(
 
 const PINNED_CONTENT_PATCH = Object.freeze({
   id: 'dnd5e-2024.micro-mvp-l1.content-patch.v1',
-  version: '1.6.0',
+  version: '1.7.0',
   sourceReleaseId: 'prod-snapshot@2026-07-15.micro-mvp-l1.v1',
-  hash: 'sha256:cde7a83dccfb5bf7c1a4de5d69dc98f05b3900d040548a360ce26ef17b6db209',
+  hash: 'sha256:3ec837f18864a9787f0fc8c1b2a2c40f7ddc438e321c08f755a8fa225b2862a4',
   conditionCount: 15,
 });
 

@@ -108,7 +108,6 @@ const SpellCreator = () => {
           const spell = await spellsApi.getSpell(sourceId);
           const locked = isEditMode && isMechanicsLocked(spell);
           setLockedEntity(locked);
-          if (locked) setError('Механика заклинания закреплена полной тестовой сертификацией. Редактирование запрещено.');
           reset({
             name: spell.name,
             name_en: spell.name_en || '',
@@ -192,10 +191,6 @@ const SpellCreator = () => {
   };
 
   const onSubmit = async (data: ScalarForm) => {
-    if (lockedEntity) {
-      setError('Закреплённое заклинание нельзя изменить через UI.');
-      return;
-    }
     setLoading(true);
     setError(null);
     setIdError(null);
@@ -248,7 +243,7 @@ const SpellCreator = () => {
       heal_dice: data.heal_dice || null,
       save_outcome: data.save_outcome || null,
       upcast_description: data.upcast_description || null,
-      mechanics: mechanics ?? null,
+      ...(lockedEntity ? {} : { mechanics: mechanics ?? null }),
       source: data.source || null,
     };
 
@@ -556,16 +551,22 @@ const SpellCreator = () => {
                       Исполняемая механика заклинания (attack_roll / save / auto), как у действий и эффектов.
                       JSON сохраняется в поле mechanics.
                     </p>
-                    <MechanicsBuilder
-                      value={mechanics}
-                      onChange={setMechanics}
-                      aiContext={{
-                        kind: 'spell',
-                        name: fd.name || '',
-                        description: [fd.description, fd.upcast_description].filter(Boolean).join('\n'),
-                        extra: `Уровень заклинания: ${Number(fd.level) || 0}`,
-                      }}
-                    />
+                    {lockedEntity ? (
+                      <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+                        Исполняемая механика закреплена тестовой сертификацией. Название, иконку, описание и остальные поля можно редактировать.
+                      </p>
+                    ) : (
+                      <MechanicsBuilder
+                        value={mechanics}
+                        onChange={setMechanics}
+                        aiContext={{
+                          kind: 'spell',
+                          name: fd.name || '',
+                          description: [fd.description, fd.upcast_description].filter(Boolean).join('\n'),
+                          extra: `Уровень заклинания: ${Number(fd.level) || 0}`,
+                        }}
+                      />
+                    )}
                   </div>
                 )}
 

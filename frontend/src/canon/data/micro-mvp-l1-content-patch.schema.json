@@ -101,7 +101,7 @@
       "additionalProperties": false,
       "required": ["collection", "entity"],
       "properties": {
-        "collection": { "const": "effects" },
+        "collection": { "enum": ["effects", "actions"] },
         "entity": {
           "type": "object",
           "required": ["id", "card_number", "name", "description", "mechanics"]

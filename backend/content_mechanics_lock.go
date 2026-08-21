@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,4 +41,29 @@ func rejectLockedContentMutation(c *gin.Context, support *JSONMap) bool {
 		"code":  "content_mechanics_locked",
 	})
 	return true
+}
+
+func normalizedMechanics(value *JSONMap) any {
+	if value == nil || len(*value) == 0 {
+		return nil
+	}
+	return map[string]any(*value)
+}
+
+// Descriptive metadata is intentionally mutable on certified entities. Only a
+// request that actually changes the mechanics document is rejected here; an
+// omitted mechanics field never becomes an accidental delete.
+func rejectLockedMechanicsMutation(
+	c *gin.Context,
+	support *JSONMap,
+	current *JSONMap,
+	requested *JSONMap,
+) bool {
+	if !isContentMechanicsLocked(support) || requested == nil {
+		return false
+	}
+	if reflect.DeepEqual(normalizedMechanics(current), normalizedMechanics(requested)) {
+		return false
+	}
+	return rejectLockedContentMutation(c, support)
 }

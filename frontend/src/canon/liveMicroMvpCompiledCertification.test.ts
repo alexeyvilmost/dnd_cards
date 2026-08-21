@@ -147,16 +147,19 @@ describe('live micro-MVP compiled certification boundary', () => {
   it('treats backend-assigned UUIDs for declared creates as surrogate identities', async () => {
     const reviewed = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
     const live = copy(reviewed);
-    const createdCardNumbers = [
-      ...MICRO_MVP_L1_CONTENT_PATCH.createEntities.map((item) => item.entity.card_number),
+    const declaredCreates = [
+      ...MICRO_MVP_L1_CONTENT_PATCH.createEntities.map((item) => ({
+        collection: item.collection,
+        cardNumber: item.entity.card_number,
+      })),
       ...MICRO_MVP_L1_CONTENT_PATCH.conditionPatches
         .filter((item) => item.entityId === null)
-        .map((item) => item.cardNumber),
+        .map((item) => ({ collection: 'effects' as const, cardNumber: item.cardNumber })),
     ];
-    createdCardNumbers.forEach((cardNumber, index) => {
-      const effect = live.effects.find((entity) => entity.card_number === cardNumber);
-      if (!effect) throw new Error(`missing declared create ${cardNumber}`);
-      effect.id = `00000000-0000-4000-8000-${String(index + 100).padStart(12, '0')}`;
+    declaredCreates.forEach(({ collection, cardNumber }, index) => {
+      const entity = live[collection].find((candidate) => candidate.card_number === cardNumber);
+      if (!entity) throw new Error(`missing declared create ${collection}:${cardNumber}`);
+      entity.id = `00000000-0000-4000-8000-${String(index + 100).padStart(12, '0')}`;
     });
 
     const result = await compileLiveMicroMvpCertification({

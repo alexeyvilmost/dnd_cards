@@ -15,6 +15,7 @@ export interface DeclaredWeaponActionPolicy {
   primitive: DeclaredWeaponActionPrimitive;
   hand: 'main' | 'off';
   timingResource: 'action' | 'bonus_action';
+  attackMode: 'melee' | 'ranged';
   activationCost: Dict[];
 }
 
@@ -86,6 +87,7 @@ function activationCostIssue(input: {
   action: RuleActionDefinition;
   phase: WeaponActionCostPhase;
   timingResource: 'action' | 'bonus_action';
+  attackMode: 'melee' | 'ranged';
 }): { issue: string } | { cost: Dict[] } {
   const activation = object(input.action.mechanics.activation);
   if (!activation || activation.mode !== 'active' || !Array.isArray(activation.cost)) {
@@ -112,12 +114,15 @@ function activationCostIssue(input: {
     return { issue: `${input.action.id} declares ambiguous equipped_weapon_ammo costs` };
   }
   if (input.phase === 'template') {
-    if (contextual.length !== 1) {
-      return { issue: `${input.action.id} template requires exactly one equipped_weapon_ammo marker` };
+    if (input.attackMode === 'ranged' && contextual.length !== 1) {
+      return { issue: `${input.action.id} ranged template requires exactly one equipped_weapon_ammo marker` };
     }
-    if (!Number.isSafeInteger(contextual[0].amount)
+    if (input.attackMode === 'melee' && contextual.length !== 0) {
+      return { issue: `${input.action.id} melee template cannot declare equipped_weapon_ammo` };
+    }
+    if (contextual[0] && (!Number.isSafeInteger(contextual[0].amount)
       || Number(contextual[0].amount) <= 0
-      || contextual[0].card_id !== undefined) {
+      || contextual[0].card_id !== undefined)) {
       return { issue: `${input.action.id} equipped_weapon_ammo marker is invalid` };
     }
   } else {
@@ -163,12 +168,16 @@ export function parseDeclaredWeaponActionPolicy(
   }
   const effectIssue = weaponEffectIssue(action, policy.hand);
   if (effectIssue) return { status: 'invalid', issue: effectIssue };
+  const effects = Array.isArray(action.mechanics.effects) ? action.mechanics.effects : [];
+  const effect = object(effects[0]);
+  const attackMode = effect?.attack_kind === 'weapon_ranged' ? 'ranged' as const : 'melee' as const;
   const targetIssue = targetingIssue(action);
   if (targetIssue) return { status: 'invalid', issue: targetIssue };
   const activation = activationCostIssue({
     action,
     phase,
     timingResource: policy.timingResource,
+    attackMode,
   });
   if ('issue' in activation) return { status: 'invalid', issue: activation.issue };
   return {
@@ -177,6 +186,7 @@ export function parseDeclaredWeaponActionPolicy(
       primitive: policy.primitive,
       hand: policy.hand,
       timingResource: policy.timingResource,
+      attackMode,
       activationCost: activation.cost,
     },
   };

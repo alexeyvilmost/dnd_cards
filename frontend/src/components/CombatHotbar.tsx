@@ -4,6 +4,7 @@ import { isFreeusePoolKey } from '../engine/freeuse';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import type { SoloCombatState } from '../solo-combat/types';
+import { isTriggeredCombatAction } from '../solo-combat/engine';
 import { findResource, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
@@ -108,7 +109,7 @@ export default function CombatHotbar({
     };
   const actions = state.playerActionIds.flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
-    return action ? [action] : [];
+    return action && !isTriggeredCombatAction(action) ? [action] : [];
   });
   const freeuseResources = Object.entries(actor.runtime.maxResources)
     .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key));

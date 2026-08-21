@@ -19,7 +19,7 @@ import generatedSheetCombatArtifact from './sheetCombatCertification.generated.j
 export const SHEET_COMBAT_CERTIFICATION_SCHEMA_VERSION = 1 as const;
 export const SHEET_COMBAT_CERTIFICATION_ARTIFACT_VERSION = '1.0.0' as const;
 export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT = 448 as const;
-export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT = 13 as const;
+export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT = 14 as const;
 export const SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT = 4 as const;
 export const MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID = 'FEAT-0009' as const;
 
@@ -680,18 +680,71 @@ export async function loadCertifiedSheetCombatCatalog(): Promise<CertifiedSheetC
   return certifySheetCombatArtifact(generatedSheetCombatArtifact);
 }
 
-/** Exact-byte semantic membership: a DB/sheet action must be in the reviewed release. */
+/**
+ * Display metadata is intentionally editable on a mechanics-locked entity. Keep
+ * it out of the execution certificate so renaming a reviewed action cannot make
+ * combat unavailable. Every field that can affect resolution remains exact.
+ */
+function certifiedExecutionProjection(action: RuleActionDefinition): Omit<RuleActionDefinition, 'name'> {
+  const { name: _displayName, ...execution } = action;
+  return execution;
+}
+
+function certifiedActionWithLiveMetadata(
+  expected: RuleActionDefinition,
+  live: RuleActionDefinition,
+): RuleActionDefinition {
+  return { ...clone(expected), name: live.name };
+}
+
+function firstExecutionDifference(
+  expected: unknown,
+  actual: unknown,
+  path = 'action',
+): string {
+  const equal = (left: unknown, right: unknown): boolean => {
+    if (left === undefined || right === undefined) return left === right;
+    return canonicalStringify(left) === canonicalStringify(right);
+  };
+  if (equal(expected, actual)) return path;
+  if (Array.isArray(expected) && Array.isArray(actual)) {
+    if (expected.length !== actual.length) return `${path}.length`;
+    for (let index = 0; index < expected.length; index += 1) {
+      if (!equal(expected[index], actual[index])) {
+        return firstExecutionDifference(expected[index], actual[index], `${path}[${index}]`);
+      }
+    }
+  }
+  const expectedObject = object(expected);
+  const actualObject = object(actual);
+  if (expectedObject && actualObject) {
+    const keys = [...new Set([...Object.keys(expectedObject), ...Object.keys(actualObject)])].sort();
+    for (const key of keys) {
+      if (!equal(expectedObject[key], actualObject[key])) {
+        return firstExecutionDifference(expectedObject[key], actualObject[key], `${path}.${key}`);
+      }
+    }
+  }
+  return path;
+}
+
+/** Exact semantic membership: a DB/sheet action's execution fields must be in the reviewed release. */
 export function assertCertifiedSheetCombatAction(
   action: RuleActionDefinition,
   certified: CertifiedSheetCombatCatalog,
 ): RuleActionDefinition {
   const expected = certified.catalog.getAction(action.id);
-  if (!expected || canonicalStringify(expected) !== canonicalStringify(action)) {
+  const expectedExecution = expected && certifiedExecutionProjection(expected);
+  const actualExecution = certifiedExecutionProjection(action);
+  if (!expectedExecution || canonicalStringify(expectedExecution)
+    !== canonicalStringify(actualExecution)) {
     throw new Error(
-      `Action ${action.id} differs from the reviewed micro-MVP combat catalog`,
+      `Action ${action.id} differs from the reviewed micro-MVP combat catalog at ${
+        expectedExecution ? firstExecutionDifference(expectedExecution, actualExecution) : 'action.id'
+      }`,
     );
   }
-  return clone(expected);
+  return certifiedActionWithLiveMetadata(expected, action);
 }
 
 /**
@@ -742,12 +795,16 @@ export function assertCertifiedSheetCombatActorAction(
   if (bound.status !== 'valid') {
     throw new Error(`Bound weapon action ${expected.id} is invalid: ${bound.issue}`);
   }
-  if (canonicalStringify(action) !== canonicalStringify(expectedBound)) {
+  const expectedExecution = certifiedExecutionProjection(expectedBound);
+  const actualExecution = certifiedExecutionProjection(action);
+  if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)) {
     throw new Error(
-      `Action ${action.id} differs from its actor-specific certified weapon binding`,
+      `Action ${action.id} differs from its actor-specific certified weapon binding at ${
+        firstExecutionDifference(expectedExecution, actualExecution)
+      }`,
     );
   }
-  return clone(expected);
+  return certifiedActionWithLiveMetadata(expected, action);
 }
 
 export function actionBelongsToSheetCombatSlice(action: RuleActionDefinition): boolean {

@@ -47,6 +47,8 @@ import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
 import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card } from '../types';
+import { isSpellActionPrepared } from '../rules-core/spellcastingAccess';
+import { collectSheetSpellCastOptions, type SheetSpellCastOption } from '../character/sheetSpellCastingUi';
 import type { EngineEvent, ExecuteContext, ReactionOffer, RollLog, RuntimeState, TargetContext } from '../mvp/contracts';
 import { getSettings } from '../settings';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
@@ -1665,8 +1667,37 @@ export default function SheetActionsPanel({
       await runPendingCombatAction(action, canonical);
       return;
     }
-    const activation = mech.activation as Record<string, unknown> | undefined;
-    const cost = (activation?.cost as Record<string, unknown>[]) ?? [];
+    let activation = mech.activation as Record<string, unknown> | undefined;
+    let cost = (activation?.cost as Record<string, unknown>[]) ?? [];
+    let canonicalSpellOption: SheetSpellCastOption | undefined;
+    if (action.spellRef && canonical) {
+      canonicalSpellOption = collectSheetSpellCastOptions({
+        runtime: canonical.runtime,
+        action: canonical.action,
+      }).sort((left, right) => {
+        const rank = (option: SheetSpellCastOption) => (
+          option.payment.kind === 'none' ? 0 : option.payment.kind === 'free_use' ? 1 : 2
+        );
+        return rank(left) - rank(right) || left.id.localeCompare(right.id);
+      })[0];
+      if (!canonicalSpellOption) {
+        setError('Нет доступного источника оплаты заклинания');
+        return;
+      }
+      const withoutSpellPayment = cost.filter((entry) => {
+        const resource = String(entry.resource ?? '');
+        return resource !== 'spell_slot'
+          && !resource.startsWith('spell_slot_')
+          && !resource.startsWith('freeuse-');
+      });
+      const payment = canonicalSpellOption.payment;
+      const paymentCost = payment.kind === 'none' || !payment.resource
+        ? []
+        : [{ resource: payment.resource, amount: 1 }];
+      cost = [...withoutSpellPayment, ...paymentCost];
+      activation = { ...(activation ?? {}), cost };
+      mech = { ...mech, activation };
+    }
     // D: недееспособность запрещает экономику хода — не запускаем действие с запрещённым типом.
     if (deniedActionReason(action, cost)) return;
     // freeuse: заклинание с пулом бесплатных использований (каст без ячейки). Считаем ДО гейта —
@@ -1728,7 +1759,14 @@ export default function SheetActionsPanel({
     // помечаем ctx.spell (для триггеров каста), castLevel не задаём.
     let spellCtx: { baseLevel: number; castLevel?: number } | undefined;
     const slotIdx = cost.findIndex((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
-    if (!authoritativePrimitive && (slotIdx >= 0 || freeuse)) {
+    if (canonicalSpellOption) {
+      const baseLevel = action.spellRef?.level ?? action.level ?? 0;
+      const paidLevel = canonicalSpellOption.payment.resource?.match(/_(\d+)$/)?.[1];
+      spellCtx = {
+        baseLevel,
+        castLevel: paidLevel === undefined ? baseLevel : Number(paidLevel),
+      };
+    } else if (!authoritativePrimitive && (slotIdx >= 0 || freeuse)) {
       const slotEntry = slotIdx >= 0 ? cost[slotIdx] : null;
       const baseLevel = slotEntry ? Number(slotEntry.level) || 0 : (action.spellRef?.level ?? action.level ?? 0);
       const need = slotEntry ? Number(slotEntry.amount ?? 1) || 1 : 1;
@@ -2244,12 +2282,26 @@ export default function SheetActionsPanel({
     apply(state, events);
   };
 
+  const spellIsPrepared = (action: SheetAction): boolean => {
+    if (!action.spellRef) return true;
+    const canonical = canonicalBuild.runtime;
+    if (!canonical) return false;
+    const access = canonical.world.actors[canonical.actorId]?.spellcastingAccess;
+    if (!access) return false;
+    const sourceActions = canonical.actionsFor?.(action) ?? [];
+    return sourceActions.some((candidate) => isSpellActionPrepared(access, candidate.id));
+  };
+
+  const actionBlockActions = actions.filter((action) => (
+    action.group !== 'spell' || spellIsPrepared(action)
+  ));
+
   const allGroups: { key: string; label: string; items: SheetAction[] }[] = [
-    { key: 'basic', label: 'Базовые', items: actions.filter((a) => a.group === 'basic') },
-    { key: 'race', label: 'Вид', items: actions.filter((a) => a.group === 'race') },
-    { key: 'class', label: 'Класс', items: actions.filter((a) => a.group === 'class') },
-    { key: 'item', label: 'Предметы', items: actions.filter((a) => a.group === 'item') },
-    { key: 'spell', label: 'Заклинания', items: actions.filter((a) => a.group === 'spell') },
+    { key: 'basic', label: 'Базовые', items: actionBlockActions.filter((a) => a.group === 'basic') },
+    { key: 'race', label: 'Вид', items: actionBlockActions.filter((a) => a.group === 'race') },
+    { key: 'class', label: 'Класс', items: actionBlockActions.filter((a) => a.group === 'class') },
+    { key: 'item', label: 'Предметы', items: actionBlockActions.filter((a) => a.group === 'item') },
+    { key: 'spell', label: 'Заклинания', items: actionBlockActions.filter((a) => a.group === 'spell') },
   ];
   // Режим «только заклинания»: группировка по кругам (тот же SheetActionLine и то же
   // поведение по клику/наведению, что и в блоке «Действия»).
@@ -2477,7 +2529,10 @@ export default function SheetActionsPanel({
           <h3 className="sheet-h3">{label}</h3>
           <div className={actionsAsIcons ? 'cs-action-tiles' : 'sheet-item-cols'}>
             {items.map((action) => {
-              const { disabled, reason } = disabledInfo(action);
+              const preparationBlocked = Boolean(action.spellRef && !spellIsPrepared(action));
+              const { disabled, reason } = preparationBlocked
+                ? { disabled: true, reason: 'Заклинание не подготовлено' }
+                : disabledInfo(action);
               const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined;
               return (
                 <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>

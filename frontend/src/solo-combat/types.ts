@@ -96,6 +96,21 @@ export interface CombatActorPresentation {
   traits: CombatActorTraitPresentation[];
 }
 
+/**
+ * Board-owned continuation for optional source-side abilities which become
+ * legal only after an observable combat event (for example a Goliath's
+ * post-hit Giant Ancestry rider). Keeping this in the persisted combat state
+ * makes refresh/retry deterministic and prevents triggered actions from being
+ * exposed as proactive hotbar buttons.
+ */
+export interface PendingTriggeredAction {
+  event: 'hit';
+  sourceActorId: string;
+  sourceActionId: string;
+  targetIds: string[];
+  optionActionIds: string[];
+}
+
 export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
@@ -120,6 +135,7 @@ export interface SoloCombatState {
   initiativeBonuses: Record<string, number>;
   initiative: InitiativeEntry[];
   log: CombatLogEntry[];
+  pendingTriggeredAction?: PendingTriggeredAction;
   outcome: 'active' | 'victory' | 'defeat';
 }
 

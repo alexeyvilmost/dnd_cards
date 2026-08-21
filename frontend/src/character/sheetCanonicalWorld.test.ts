@@ -35,6 +35,9 @@ type PatchRow = {
 const effectPatches = contentPatch.mechanicsPatches.effects as PatchRow[];
 const actionPatches = contentPatch.mechanicsPatches.actions as PatchRow[];
 const spellPatches = contentPatch.mechanicsPatches.spells as PatchRow[];
+const createdActions = contentPatch.createEntities
+  .filter((candidate) => candidate.collection === 'actions')
+  .map((candidate) => candidate.entity as unknown as Action);
 const generated = compiledFixture as unknown as {
   roots: Record<string, {
     actor: ActorState;
@@ -69,6 +72,8 @@ function patchEffect(cardNumber: string): PassiveEffect {
 }
 
 function patchAction(cardNumber: string): Action {
+  const created = createdActions.find((candidate) => candidate.card_number === cardNumber);
+  if (created) return clone(created);
   const row = actionPatches.find((candidate) => candidate.cardNumber === cardNumber);
   if (!row) throw new Error(`Missing content patch ${cardNumber}`);
   return {
@@ -250,7 +255,7 @@ function wizardRuleState(
 
 describe('real sheet canonical world materialization', () => {
   it('keeps bound ammunition in canonical activation.cost and pays it as an item', () => {
-    const entity = patchAction('action_basic_weapon');
+    const entity = patchAction('action_basic_weapon_ranged');
     const bow = withDeclaredTestWeaponProfile({
       id: 'card:bow', card_number: 'CARD-bow', name: 'Bow', type: 'weapon',
     } as unknown as Card, {

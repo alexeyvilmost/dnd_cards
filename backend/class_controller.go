@@ -69,7 +69,7 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		response.ChoiceRecommendations = recommendations[cl.CardNumber]
 		if light {
 			response.DetailedDescription = nil
-			response.ImageURL = listImageURL(cl.ImageCloudinaryURL)
+			response.ImageURL = listImageURL("classes", cl.ID, cl.ImageCloudinaryURL)
 		}
 		responses = append(responses, response)
 	}

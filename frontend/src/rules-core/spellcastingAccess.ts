@@ -84,6 +84,16 @@ function isPrepared(state: SpellcastingAccessState, grant: SpellGrantAccess): bo
   return state.preparedSources[grant.sourceId]?.preparedActionIds.includes(grant.actionId) === true;
 }
 
+/** Preparation is a property of a source-scoped grant, not of the visual spell card. */
+export function isSpellActionPrepared(
+  state: SpellcastingAccessState,
+  actionId: string,
+): boolean {
+  return state.grants
+    .filter((grant) => grant.actionId === actionId)
+    .some((grant) => isPrepared(state, grant));
+}
+
 /**
  * Resolve one immutable spell grant. The caller must name a grant when the same
  * spell is available from several sources; silently picking the first source

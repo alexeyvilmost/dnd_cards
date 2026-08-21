@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "patchId": "dnd5e-2024.micro-mvp-l1.content-patch.v1",
-  "patchVersion": "1.6.0",
+  "patchVersion": "1.7.0",
   "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
   "authorityTarget": "database-entity-mechanics",
   "mechanicsPatches": {
@@ -2352,10 +2352,6 @@
             "cost": [
               {
                 "resource": "action"
-              },
-              {
-                "resource": "equipped_weapon_ammo",
-                "amount": 1
               }
             ],
             "mode": "active"
@@ -2376,7 +2372,7 @@
               "vs": "ac"
             }
           ],
-          "name": "Атака оружием",
+        "name": "Рукопашная атака оружием",
           "targeting": {
             "domain": "actor",
             "actor_targets": true,
@@ -2406,10 +2402,6 @@
             "cost": [
               {
                 "resource": "bonus_action"
-              },
-              {
-                "resource": "equipped_weapon_ammo",
-                "amount": 1
               }
             ],
             "mode": "active"
@@ -6122,6 +6114,76 @@
     }
   ],
   "createEntities": [
+    {
+      "collection": "actions",
+      "entity": {
+        "id": "10800000-0000-4000-8000-000000000001",
+        "card_number": "action_basic_weapon_ranged",
+        "name": "Дальнобойная атака оружием",
+        "name_en": "Ranged Weapon Attack",
+        "description": "Атака надетым оружием в дальнобойном режиме. Боеприпас расходуется только если он объявлен профилем оружия.",
+        "image_url": "/icons/actions/ranged_weapon_attack.png",
+        "rarity": "common",
+        "resources": [
+          "action"
+        ],
+        "action_type": "base_action",
+        "type": "basic",
+        "author": "System",
+        "source": "PHB 2024; micro-MVP L1 overlay canonical entity v1",
+        "is_extended": false,
+        "created_at": "2026-08-21T00:00:00.000Z",
+        "updated_at": "2026-08-21T00:00:00.000Z",
+        "mechanics": {
+          "primitive": {
+            "type": "weapon_attack"
+          },
+          "name": "Дальнобойная атака оружием",
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              },
+              {
+                "resource": "equipped_weapon_ammo",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "attack_kind": "weapon_ranged",
+              "ability": "auto",
+              "vs": "ac",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon",
+                  "ability": "auto"
+                }
+              ]
+            }
+          ],
+          "targeting": {
+            "domain": "actor",
+            "actor_targets": true,
+            "shape": "single",
+            "min_targets": 1,
+            "max_targets": 1,
+            "range_ft": 600,
+            "requires_line_of_sight": true,
+            "allowed_relations": [
+              "ally",
+              "enemy",
+              "neutral"
+            ]
+          }
+        }
+      }
+    },
     {
       "collection": "effects",
       "entity": {

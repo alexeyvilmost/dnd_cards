@@ -60,12 +60,13 @@ func wantsListView(c *gin.Context) bool {
 }
 
 // listImageURL never ships embedded base64 originals in catalog projections.
-// A CDN asset remains useful as a thumbnail; otherwise detail loading owns the image.
-func listImageURL(cloudinaryURL string) string {
+// A CDN asset remains useful as a thumbnail; otherwise a stable media endpoint
+// loads only the image columns and lets the browser cache them independently.
+func listImageURL(entityType string, entityID uuid.UUID, cloudinaryURL string) string {
 	if strings.HasPrefix(cloudinaryURL, "https://") || strings.HasPrefix(cloudinaryURL, "http://") {
 		return cloudinaryURL
 	}
-	return ""
+	return "/api/content-images/" + entityType + "/" + entityID.String()
 }
 
 // CardController - контроллер для работы с карточками
@@ -87,6 +88,10 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	var cards []Card
 
 	query := cc.db.Model(&Card{})
+	light := wantsListView(c)
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics")
+	}
 
 	// Фильтрация по редкости
 	if rarity := c.Query("rarity"); rarity != "" {
@@ -166,13 +171,13 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	log.Printf("Загружено карточек: %d", len(cards))
 
 	// Преобразование в ответы
-	light := wantsListView(c)
 	responses := make([]CardResponse, 0, len(cards))
 	for _, card := range cards {
 		r := card.ToCardResponse()
 		if light {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
+			r.ImageURL = listImageURL("cards", card.ID, card.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}
@@ -919,6 +924,10 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	var actions []Action
 
 	query := ac.db.Model(&Action{})
+	light := wantsListView(c)
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics", "Script")
+	}
 
 	// Фильтрация по редкости
 	if rarity := c.Query("rarity"); rarity != "" {
@@ -959,7 +968,6 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	light := wantsListView(c)
 	responses := make([]ActionResponse, 0, len(actions))
 	for _, action := range actions {
 		// Конвертируем ActionResources в []ActionResource для ответа
@@ -968,6 +976,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
 			r.Script = nil
+			r.ImageURL = listImageURL("actions", action.ID, action.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}
@@ -1190,7 +1199,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действия"})
 		return
 	}
-	if rejectLockedContentMutation(c, action.Support) {
+	if rejectLockedMechanicsMutation(c, action.Support, action.Mechanics, req.Mechanics) {
 		return
 	}
 
@@ -1369,6 +1378,10 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	var effects []Effect
 
 	query := ec.db.Model(&Effect{})
+	light := wantsListView(c)
+	if light {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics", "Script", "ConditionDescription")
+	}
 
 	// Фильтрация по редкости
 	if rarity := c.Query("rarity"); rarity != "" {
@@ -1404,7 +1417,6 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	}
 
 	// Преобразование в ответы
-	light := wantsListView(c)
 	references := make([]string, 0, len(effects))
 	for _, effect := range effects {
 		references = append(references, effect.CardNumber)
@@ -1423,6 +1435,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 			r.Mechanics = nil
 			r.Script = nil
 			r.ConditionDescription = nil
+			r.ImageURL = listImageURL("effects", effect.ID, effect.ImageCloudinaryURL)
 		}
 		responses = append(responses, r)
 	}
@@ -1589,7 +1602,7 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффекта"})
 		return
 	}
-	if rejectLockedContentMutation(c, effect.Support) {
+	if rejectLockedMechanicsMutation(c, effect.Support, effect.Mechanics, req.Mechanics) {
 		return
 	}
 

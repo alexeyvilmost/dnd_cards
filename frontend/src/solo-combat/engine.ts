@@ -23,8 +23,10 @@ import type {
   WorldState,
 } from '../rules-core/domain';
 import { InMemoryRulesSession } from '../rules-core/session';
+import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
+import { canPay } from '../engine/cost';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
@@ -232,9 +234,35 @@ function commandBase(state: SoloCombatState, actorId: string) {
 
 function selectedSpellDeclaration(world: WorldState, actorId: string, action: RuleActionDefinition) {
   if (action.kind !== 'spell') return undefined;
-  const grant = world.actors[actorId].spellcastingAccess?.grants.find((candidate) => candidate.actionId === action.id);
-  if (!grant) throw new Error(`Для «${action.name}» не найден источник заклинания в листе`);
-  return { grantId: grant.grantId, mode: 'normal' as const, castLevel: action.spell.level };
+  const actor = world.actors[actorId];
+  const access = actor.spellcastingAccess;
+  const grants = access?.grants.filter((candidate) => candidate.actionId === action.id) ?? [];
+  const options = grants.flatMap((grant) => {
+    if (!access) return [];
+    const resolved = resolveSpellAccess({
+      state: access,
+      actionId: action.id,
+      grantId: grant.grantId,
+      mode: 'normal',
+      resources: actor.runtime.resources,
+      preferFreeUse: true,
+    });
+    return resolved.status === 'allowed' ? [{ grant, payment: resolved.payment }] : [];
+  }).sort((left, right) => {
+    const rank = (kind: 'none' | 'free_use' | 'slot') => kind === 'none' ? 0 : kind === 'free_use' ? 1 : 2;
+    return rank(left.payment.kind) - rank(right.payment.kind)
+      || left.grant.grantId.localeCompare(right.grant.grantId);
+  });
+  const selected = options[0];
+  if (!selected) throw new Error(`Для «${action.name}» не найден доступный источник заклинания в листе`);
+  const paidLevel = selected.payment.resource?.match(/_(\d+)$/)?.[1];
+  return {
+    grantId: selected.grant.grantId,
+    mode: 'normal' as const,
+    castLevel: paidLevel === undefined ? action.spell.level : Number(paidLevel),
+    ...(selected.payment.kind === 'free_use' ? { preferFreeUse: true } : {}),
+    ...(selected.payment.kind === 'slot' ? { preferFreeUse: false } : {}),
+  };
 }
 
 function declarationFor(
@@ -315,12 +343,30 @@ export function executeCombatAction(input: {
     input.choices,
   );
   const rng = input.rng ?? Math.random;
+  const withTriggeredHitOffer = (next: SoloCombatState) => offerTriggeredHitActions({
+    before: input.state,
+    after: next,
+    sourceActorId: input.actorId,
+    sourceActionId: action.id,
+    targetIds: input.targetIds,
+  });
+  if (action.attackReplacement) {
+    const command: GameCommand = {
+      ...commandBase(input.state, input.actorId),
+      type: 'UseAttackReplacement',
+      actionId: action.id,
+      targetIds: declaration.targetIds,
+      ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
+      ...(declaration.choices ? { choices: declaration.choices } : {}),
+    };
+    return withTriggeredHitOffer(dispatch({ state: input.state, command, rng, label: action.name }));
+  }
   if (input.actorId === input.state.characterId && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
     const transition = executeSheetCombatAction({
       session: sheetSession(input.state), actorId: input.actorId, actionId: action.id,
       declaration, commandId: newSheetRuntimeCommandId(), rng,
     });
-    return applySheetTransition(input.state, action, transition);
+    return withTriggeredHitOffer(applySheetTransition(input.state, action, transition));
   }
   const command: GameCommand = {
     ...commandBase(input.state, input.actorId),
@@ -335,19 +381,44 @@ export function executeCombatAction(input: {
         castLevel: declaration.spell.castLevel,
         grantId: declaration.spell.grantId,
         mode: declaration.spell.mode,
+        ...(declaration.spell.preferFreeUse === undefined
+          ? {}
+          : { preferFreeUse: declaration.spell.preferFreeUse }),
       },
     } : {}),
   };
   const next = dispatch({ state: input.state, command, rng, label: action.name });
-  if (action.id !== next.dashActionId) return next;
-  return {
+  if (action.id !== next.dashActionId) return withTriggeredHitOffer(next);
+  return withTriggeredHitOffer({
     ...next,
     movementRemainingFt: {
       ...next.movementRemainingFt,
       [input.actorId]: (next.movementRemainingFt[input.actorId] ?? 0)
         + effectiveActorSpeedFt(next.world.actors[input.actorId]),
     },
-  };
+  });
+}
+
+/** Resolve (or skip) a source-side optional action opened by an observed hit. */
+export function resolveTriggeredCombatAction(
+  state: SoloCombatState,
+  actionId: string | null,
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.pendingTriggeredAction;
+  if (!pending) throw new Error('Нет ожидающей способности после попадания');
+  const { pendingTriggeredAction: _cleared, ...cleared } = state;
+  if (actionId === null) return cleared as SoloCombatState;
+  if (!pending.optionActionIds.includes(actionId)) {
+    throw new Error('Эта способность недоступна для текущего события');
+  }
+  return executeCombatAction({
+    state: cleared as SoloCombatState,
+    actorId: pending.sourceActorId,
+    actionId,
+    targetIds: pending.targetIds,
+    rng,
+  });
 }
 
 function resolveDecision(
@@ -375,21 +446,120 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       : pending.request.type === 'shove_outcome'
         ? { kind: 'shove_outcome', outcome: 'push_5ft' }
         : { kind: 'roll', roll: { mode: 'system' } };
+    const beforeDecision = next;
     next = resolveDecision(next, response, rng);
+    if (pending.request.type === 'reaction'
+      && pending.request.trigger.type === 'hit_by_attack') {
+      next = offerTriggeredHitActions({
+        before: beforeDecision,
+        after: next,
+        sourceActorId: pending.request.trigger.sourceActorId,
+        sourceActionId: pending.request.trigger.actionId,
+        targetIds: [pending.request.actorId],
+      });
+    }
   }
   return next;
 }
 
 export function resolvePlayerReaction(
   state: SoloCombatState,
-  actionId: string | null,
+  response: Extract<DecisionResponse, { kind: 'reaction' }>,
   rng: Rng = Math.random,
 ): SoloCombatState {
   const pending = state.world.pendingResolution;
   if (!pending || pending.request.type !== 'reaction' || pending.request.actorId !== state.characterId) {
     throw new Error('Нет ожидающей реакции персонажа');
   }
-  return autoResolveSystemDecisions(resolveDecision(state, { kind: 'reaction', actionId }, rng), rng);
+  const actingActorId = activeActorId(state);
+  const monsterWasActing = state.world.actors[actingActorId]?.kind === 'monster';
+  let next = autoResolveSystemDecisions(resolveDecision(state, response, rng), rng);
+  if (pending.request.trigger.type === 'hit_by_attack') {
+    next = offerTriggeredHitActions({
+      before: state,
+      after: next,
+      sourceActorId: pending.request.trigger.sourceActorId,
+      sourceActionId: pending.request.trigger.actionId,
+      targetIds: [pending.request.actorId],
+    });
+  }
+
+  // A monster turn pauses inside runMonsterTurn while the player answers a
+  // reaction. Once the continuation is complete, that same controller call no
+  // longer exists to hand initiative back. Advancing here closes that paused
+  // turn exactly once. Reactions opened by opportunity attacks during the
+  // player's own turn deliberately do not advance initiative.
+  if (monsterWasActing
+    && next.outcome === 'active'
+    && !next.world.pendingResolution
+    && !next.pendingTriggeredAction
+    && activeActorId(next) === actingActorId) {
+    return advanceTurn(next);
+  }
+  return next;
+}
+
+function triggerEvents(action: RuleActionDefinition): string[] {
+  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  const trigger = activation?.trigger as Record<string, unknown> | undefined;
+  if (!trigger) return [];
+  if (typeof trigger.event === 'string') return [trigger.event];
+  return Array.isArray(trigger.events)
+    ? trigger.events.filter((event): event is string => typeof event === 'string')
+    : [];
+}
+
+/** Triggered catalog actions are capabilities/listeners, not proactive buttons. */
+export function isTriggeredCombatAction(action: RuleActionDefinition, event?: string): boolean {
+  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  if (activation?.mode !== 'triggered') return false;
+  const events = triggerEvents(action);
+  return event === undefined ? events.length > 0 : events.includes(event);
+}
+
+function hasHitRecord(
+  state: SoloCombatState,
+  fromLogIndex: number,
+  sourceActorId: string,
+): boolean {
+  return state.log.slice(fromLogIndex).some((entry) => entry.records?.some((record) => {
+    const roll = record.event?.type === 'roll' ? record.event.roll : undefined;
+    return record.sourceActorId === sourceActorId
+      && roll?.kind === 'd20'
+      && (roll.outcome === 'hit' || roll.outcome === 'crit');
+  }));
+}
+
+function offerTriggeredHitActions(input: {
+  before: SoloCombatState;
+  after: SoloCombatState;
+  sourceActorId: string;
+  sourceActionId: string;
+  targetIds: string[];
+}): SoloCombatState {
+  const { before, after, sourceActorId, sourceActionId, targetIds } = input;
+  if (after.world.pendingResolution || after.pendingTriggeredAction
+    || sourceActorId !== after.characterId
+    || !hasHitRecord(after, before.log.length, sourceActorId)) return after;
+  const actor = after.world.actors[sourceActorId];
+  if (!actor) return after;
+  const owned = new Set(actor.capabilities.actionIds);
+  const optionActionIds = after.catalogActions.flatMap((action) => {
+    if (action.id === sourceActionId || !owned.has(action.id)
+      || !isTriggeredCombatAction(action, 'hit')) return [];
+    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const costs = Array.isArray(activation?.cost)
+      ? activation.cost as Array<Record<string, unknown>>
+      : [];
+    return canPay(actor.runtime, costs).ok ? [action.id] : [];
+  });
+  return optionActionIds.length ? {
+    ...after,
+    pendingTriggeredAction: {
+      event: 'hit', sourceActorId, sourceActionId,
+      targetIds: [...targetIds], optionActionIds,
+    },
+  } : after;
 }
 
 function deniesOpportunityAttack(actor: ActorState): boolean {

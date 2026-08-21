@@ -11,6 +11,7 @@ import CombatActorInspector from '../components/CombatActorInspector';
 import CombatCharacterSidebar from '../components/CombatCharacterSidebar';
 import CombatLogPanel from '../components/CombatLogPanel';
 import MonsterTurnController from '../components/MonsterTurnController';
+import { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
 import TacticalBattleMap from '../components/TacticalBattleMap';
 import { monstersApi } from '../monsters/api';
 import {
@@ -21,6 +22,7 @@ import {
   executeCombatAction,
   moveActor,
   resolvePlayerReaction,
+  resolveTriggeredCombatAction,
   selectedTargetsForAction,
 } from '../solo-combat/engine';
 import { readSoloCombatState, writeSoloCombatState } from '../solo-combat/persistence';
@@ -187,7 +189,7 @@ export default function SoloCombatPage() {
   };
 
   const clickCell = (position: GridPosition, actorId?: string) => {
-    if (!state || !playerTurn || busy || state.world.pendingResolution) return;
+    if (!state || !playerTurn || busy || state.world.pendingResolution || state.pendingTriggeredAction) return;
     try {
       if (movementMode) {
         if (actorId) throw new Error('Для перемещения выберите свободную клетку');
@@ -234,8 +236,9 @@ export default function SoloCombatPage() {
   }
   const actor = activeActor(state);
   const pending = state.world.pendingResolution;
+  const pendingTriggered = state.pendingTriggeredAction;
   const reactionOptions = pending?.request.type === 'reaction' && pending.request.actorId === state.characterId
-    ? pending.request.options : [];
+    ? sheetReactionDecisionOptions(pending.request.options) : [];
   const reactionTitle = pending?.request.type === 'reaction'
     && pending.request.trigger.type === 'hit_by_attack'
     ? 'По вам попали'
@@ -275,9 +278,13 @@ export default function SoloCombatPage() {
       {inspectedActorId && state.world.actors[inspectedActorId] && (
         <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
-      <CombatHotbar state={state} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => setSheetOpen(true)} />
+      <CombatHotbar state={state} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => setSheetOpen(true)} />
       {sheetOpen && <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{character.name}</h2><p>Уровень {character.level} · КЗ {state.world.actors[id!].ac} · скорость {character.speed} фт.</p></header><CombatCharacterSidebar character={character} state={state} /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${id}`}>Открыть полный лист ↗</Link></aside>}
-      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2><div>{reactionOptions.map((option) => <button type="button" key={option.actionId} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.actionId))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, null))}>Пропустить</button></div></section></div>}
+      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2><div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
+      {pendingTriggered && <div className="combat-reaction-backdrop"><section><p>ПОПАДАНИЕ</p><h2>Применить дополнительную способность?</h2><div>{pendingTriggered.optionActionIds.map((actionId) => {
+        const option = state.catalogActions.find((action) => action.id === actionId);
+        return option ? <button type="button" key={actionId} disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, actionId))}>{option.name}</button> : null;
+      })}<button type="button" disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, null))}>Пропустить</button></div></section></div>}
       {state.outcome !== 'active' && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}
     </main>
   );

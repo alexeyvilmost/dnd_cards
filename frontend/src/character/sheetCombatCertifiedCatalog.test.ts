@@ -54,8 +54,8 @@ describe('448-root sheet combat certification', () => {
     expect(artifact.summary).toEqual({
       rootCount: 448,
       combatRootCount: 448,
-      actionOccurrenceCount: 1443,
-      uniqueActionCount: 13,
+      actionOccurrenceCount: 1891,
+      uniqueActionCount: 14,
     });
   });
 
@@ -106,7 +106,7 @@ describe('448-root sheet combat certification', () => {
         certified,
       )).not.toThrow();
     }
-    expect(occurrences).toBe(1440);
+    expect(occurrences).toBe(1888);
   });
 
   it('records every Magic Initiate combat spell choice and mental casting ability', () => {
@@ -207,10 +207,14 @@ describe('448-root sheet combat certification', () => {
     expect(() => assertCertifiedSheetCombatActorAccess(actor, actionIds, certified)).not.toThrow();
   });
 
-  it('rejects action bytes and generated artifact bytes after either is changed', async () => {
+  it('allows live display metadata but rejects execution or generated artifact drift', async () => {
     const action = clone(artifact.actions[0]);
     action.name = `${action.name} (tampered)`;
-    expect(() => assertCertifiedSheetCombatAction(action, certified)).toThrow('differs');
+    expect(assertCertifiedSheetCombatAction(action, certified).name).toBe(action.name);
+
+    const mechanicsTampered = clone(artifact.actions[0]);
+    mechanicsTampered.mechanics = { ...mechanicsTampered.mechanics, invented: true };
+    expect(() => assertCertifiedSheetCombatAction(mechanicsTampered, certified)).toThrow('differs');
 
     const tampered = clone(generatedArtifact) as unknown as SheetCombatCertificationArtifact;
     tampered.coverage[0].actionIds = [artifact.actions[0].id];

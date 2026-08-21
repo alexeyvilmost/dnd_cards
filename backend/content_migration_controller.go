@@ -55,6 +55,13 @@ type ContentMigrationEffectCreateRequest struct {
 	Entity        CreateEffectRequest `json:"entity"`
 }
 
+type ContentMigrationActionCreateRequest struct {
+	SchemaVersion int                 `json:"schema_version"`
+	PlanHash      string              `json:"plan_hash"`
+	OperationID   string              `json:"operation_id"`
+	Entity        CreateActionRequest `json:"entity"`
+}
+
 type ContentMigrationEffectRollbackRequest struct {
 	SchemaVersion       int       `json:"schema_version"`
 	BundleID            uuid.UUID `json:"bundle_id"`
@@ -85,6 +92,11 @@ type ContentMigrationEffectCreateResponse struct {
 	Rollback ContentMigrationReceiptResponse `json:"rollback"`
 }
 
+type ContentMigrationActionCreateResponse struct {
+	Entity   ActionResponse                  `json:"entity"`
+	Rollback ContentMigrationReceiptResponse `json:"rollback"`
+}
+
 type contentMigrationCreateEffectFunc func(
 	bundleID uuid.UUID,
 	request ContentMigrationEffectCreateRequest,
@@ -92,6 +104,18 @@ type contentMigrationCreateEffectFunc func(
 ) (ContentMigrationEffectCreateResponse, error)
 
 type contentMigrationRollbackEffectFunc func(
+	entityID uuid.UUID,
+	request ContentMigrationEffectRollbackRequest,
+	actorUserID uuid.UUID,
+) (alreadyRolledBack bool, err error)
+
+type contentMigrationCreateActionFunc func(
+	bundleID uuid.UUID,
+	request ContentMigrationActionCreateRequest,
+	actorUserID uuid.UUID,
+) (ContentMigrationActionCreateResponse, error)
+
+type contentMigrationRollbackActionFunc func(
 	entityID uuid.UUID,
 	request ContentMigrationEffectRollbackRequest,
 	actorUserID uuid.UUID,
@@ -109,6 +133,8 @@ type ContentMigrationController struct {
 	certificationKey string
 	createEffect     contentMigrationCreateEffectFunc
 	rollbackEffect   contentMigrationRollbackEffectFunc
+	createAction     contentMigrationCreateActionFunc
+	rollbackAction   contentMigrationRollbackActionFunc
 	restoreSupport   contentMigrationRestoreSupportFunc
 	batchSupport     contentMigrationBatchSupportFunc
 	exactUpdate      contentMigrationExactUpdateFunc
@@ -121,6 +147,8 @@ func NewContentMigrationController(db *gorm.DB) *ContentMigrationController {
 	}
 	controller.createEffect = controller.createEffectWithReceipt
 	controller.rollbackEffect = controller.rollbackCreatedEffect
+	controller.createAction = controller.createActionWithReceipt
+	controller.rollbackAction = controller.rollbackCreatedAction
 	controller.restoreSupport = controller.restoreExactSupport
 	controller.batchSupport = controller.applyExactSupportBatch
 	controller.exactUpdate = controller.updateExactContent
@@ -216,10 +244,66 @@ func effectFromContentMigrationRequest(request CreateEffectRequest) Effect {
 	}
 }
 
+func validateContentMigrationActionCreate(request ContentMigrationActionCreateRequest) error {
+	if request.SchemaVersion != 1 {
+		return errors.New("unsupported schema_version")
+	}
+	if err := validateContentMigrationIdentity(
+		request.PlanHash, request.OperationID, request.Entity.CardNumber,
+	); err != nil {
+		return err
+	}
+	if strings.TrimSpace(request.Entity.Name) == "" ||
+		strings.TrimSpace(request.Entity.Description) == "" ||
+		strings.TrimSpace(string(request.Entity.ActionType)) == "" ||
+		len(request.Entity.Resources) == 0 {
+		return errors.New("name, description, action_type and resources are required")
+	}
+	if !IsValidRarity(request.Entity.Rarity) ||
+		!ValidateProperties(request.Entity.Properties) ||
+		!ValidatePrice(request.Entity.Price) ||
+		!ValidateWeight(request.Entity.Weight) {
+		return errors.New("invalid action rarity, properties, price or weight")
+	}
+	return nil
+}
+
+func actionFromContentMigrationRequest(request CreateActionRequest) Action {
+	resources := make(ActionResources, len(request.Resources))
+	copy(resources, request.Resources)
+	author := request.Author
+	if author == "" {
+		author = "Admin"
+	}
+	return Action{
+		Name: request.Name, NameEn: request.NameEn, Description: request.Description,
+		DetailedDescription: request.DetailedDescription, ImageURL: request.ImageURL,
+		Rarity: request.Rarity, CardNumber: request.CardNumber, Resource: resources,
+		Distance: request.Distance, Recharge: request.Recharge, RechargeCustom: request.RechargeCustom,
+		Script: request.Script, Mechanics: request.Mechanics, ActionType: request.ActionType,
+		Type: request.Type, Author: author, Source: request.Source, Tags: request.Tags,
+		Price: request.Price, Weight: request.Weight, Properties: request.Properties,
+		RelatedCards: request.RelatedCards, RelatedActions: request.RelatedActions,
+		IsExtended: request.IsExtended, DescriptionFontSize: request.DescriptionFontSize,
+		TextAlignment: request.TextAlignment, TextFontSize: request.TextFontSize,
+		ShowDetailedDescription:      request.ShowDetailedDescription,
+		DetailedDescriptionAlignment: request.DetailedDescriptionAlignment,
+		DetailedDescriptionFontSize:  request.DetailedDescriptionFontSize,
+	}
+}
+
 // rollbackEffectSnapshotV1 includes every API/content field (including exact
 // support and created_at) except timestamps changed by transport/soft-delete.
 // It is server-internal: both ledger issuance and rollback CAS use this code.
 func rollbackEffectSnapshotV1(response EffectResponse) (JSONMap, string, error) {
+	return rollbackCreatedContentSnapshotV1(response)
+}
+
+func rollbackActionSnapshotV1(response ActionResponse) (JSONMap, string, error) {
+	return rollbackCreatedContentSnapshotV1(response)
+}
+
+func rollbackCreatedContentSnapshotV1(response any) (JSONMap, string, error) {
 	raw, err := json.Marshal(response)
 	if err != nil {
 		return nil, "", err
@@ -519,6 +603,95 @@ func (cc *ContentMigrationController) createEffectWithReceipt(
 	return response, err
 }
 
+func (cc *ContentMigrationController) createActionWithReceipt(
+	bundleID uuid.UUID,
+	request ContentMigrationActionCreateRequest,
+	actorUserID uuid.UUID,
+) (response ContentMigrationActionCreateResponse, err error) {
+	err = cc.db.Transaction(func(tx *gorm.DB) error {
+		var issued ContentMigrationCreateReceipt
+		receiptLookup := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(
+			"bundle_id = ? AND plan_hash = ? AND operation_id = ? AND entity_type = 'action' AND card_number = ?",
+			bundleID, request.PlanHash, request.OperationID, request.Entity.CardNumber,
+		).First(&issued)
+		if receiptLookup.Error == nil {
+			if issued.Status != "active" {
+				return errContentMigrationConflict
+			}
+			var issuedAction Action
+			if load := tx.Unscoped().Where(
+				"id = ? AND card_number = ? AND deleted_at IS NULL", issued.EntityID, issued.CardNumber,
+			).First(&issuedAction); load.Error != nil {
+				return errContentMigrationConflict
+			}
+			issuedResponse := issuedAction.ToActionResponse()
+			issuedSnapshot, issuedHash, snapshotErr := rollbackActionSnapshotV1(issuedResponse)
+			if snapshotErr != nil {
+				return snapshotErr
+			}
+			if issuedHash != issued.PostimageHash || !reflect.DeepEqual(issuedSnapshot, issued.Postimage) {
+				return errContentMigrationConflict
+			}
+			response = ContentMigrationActionCreateResponse{
+				Entity: issuedResponse,
+				Rollback: ContentMigrationReceiptResponse{
+					ReceiptID: issued.ID, BundleID: issued.BundleID, PlanHash: issued.PlanHash,
+					OperationID: issued.OperationID, EntityID: issued.EntityID,
+					CardNumber: issued.CardNumber, PostimageHash: issued.PostimageHash,
+				},
+			}
+			return nil
+		}
+		if !errors.Is(receiptLookup.Error, gorm.ErrRecordNotFound) {
+			return receiptLookup.Error
+		}
+
+		var existing Action
+		lookup := tx.Unscoped().Where("card_number = ?", request.Entity.CardNumber).First(&existing)
+		if lookup.Error == nil {
+			return errContentMigrationConflict
+		}
+		if !errors.Is(lookup.Error, gorm.ErrRecordNotFound) {
+			return lookup.Error
+		}
+
+		action := actionFromContentMigrationRequest(request.Entity)
+		if create := tx.Create(&action); create.Error != nil {
+			return create.Error
+		}
+		var persisted Action
+		if reload := tx.Where(
+			"id = ? AND card_number = ? AND deleted_at IS NULL", action.ID, action.CardNumber,
+		).First(&persisted); reload.Error != nil {
+			return reload.Error
+		}
+		entityResponse := persisted.ToActionResponse()
+		postimage, postimageHash, snapshotErr := rollbackActionSnapshotV1(entityResponse)
+		if snapshotErr != nil {
+			return snapshotErr
+		}
+		receipt := ContentMigrationCreateReceipt{
+			BundleID: bundleID, PlanHash: request.PlanHash, OperationID: request.OperationID,
+			EntityType: "action", EntityID: persisted.ID, CardNumber: persisted.CardNumber,
+			PostimageHash: postimageHash, Postimage: postimage,
+			CreatedByUserID: actorUserID, Status: "active",
+		}
+		if create := tx.Create(&receipt); create.Error != nil {
+			return create.Error
+		}
+		response = ContentMigrationActionCreateResponse{
+			Entity: entityResponse,
+			Rollback: ContentMigrationReceiptResponse{
+				ReceiptID: receipt.ID, BundleID: bundleID, PlanHash: request.PlanHash,
+				OperationID: request.OperationID, EntityID: persisted.ID,
+				CardNumber: persisted.CardNumber, PostimageHash: postimageHash,
+			},
+		}
+		return nil
+	})
+	return response, err
+}
+
 func (cc *ContentMigrationController) rollbackCreatedEffect(
 	entityID uuid.UUID,
 	request ContentMigrationEffectRollbackRequest,
@@ -593,6 +766,79 @@ func (cc *ContentMigrationController) rollbackCreatedEffect(
 	return alreadyRolledBack, err
 }
 
+func (cc *ContentMigrationController) rollbackCreatedAction(
+	entityID uuid.UUID,
+	request ContentMigrationEffectRollbackRequest,
+	actorUserID uuid.UUID,
+) (alreadyRolledBack bool, err error) {
+	err = cc.db.Transaction(func(tx *gorm.DB) error {
+		var receipt ContentMigrationCreateReceipt
+		lookup := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(
+			"bundle_id = ? AND plan_hash = ? AND operation_id = ? AND entity_type = 'action' AND entity_id = ? AND card_number = ?",
+			request.BundleID, request.PlanHash, request.OperationID, entityID, request.CardNumber,
+		).First(&receipt)
+		if errors.Is(lookup.Error, gorm.ErrRecordNotFound) {
+			return errContentMigrationNotFound
+		}
+		if lookup.Error != nil {
+			return lookup.Error
+		}
+		if receipt.PostimageHash != request.ExpectedCurrentHash {
+			return errContentMigrationConflict
+		}
+
+		var action Action
+		entityLookup := tx.Unscoped().Clauses(clause.Locking{Strength: "UPDATE"}).Where(
+			"id = ? AND card_number = ?", entityID, request.CardNumber,
+		).First(&action)
+		if receipt.Status == "rolled_back" {
+			if errors.Is(entityLookup.Error, gorm.ErrRecordNotFound) {
+				alreadyRolledBack = true
+				return nil
+			}
+			return errContentMigrationConflict
+		}
+		if entityLookup.Error != nil {
+			return errContentMigrationConflict
+		}
+		currentSnapshot, currentHash, snapshotErr := rollbackActionSnapshotV1(action.ToActionResponse())
+		if snapshotErr != nil {
+			return snapshotErr
+		}
+		if currentHash != receipt.PostimageHash || !reflect.DeepEqual(currentSnapshot, receipt.Postimage) {
+			return errContentMigrationConflict
+		}
+
+		if !action.DeletedAt.Valid {
+			softDelete := tx.Where("id = ? AND card_number = ?", entityID, request.CardNumber).Delete(&Action{})
+			if softDelete.Error != nil || softDelete.RowsAffected != 1 {
+				return errContentMigrationConflict
+			}
+			if reload := tx.Unscoped().Where("id = ?", entityID).First(&action); reload.Error != nil || !action.DeletedAt.Valid {
+				return errContentMigrationConflict
+			}
+		}
+		hardDelete := tx.Unscoped().Where(
+			"id = ? AND card_number = ? AND deleted_at IS NOT NULL", entityID, request.CardNumber,
+		).Delete(&Action{})
+		if hardDelete.Error != nil || hardDelete.RowsAffected != 1 {
+			return errContentMigrationConflict
+		}
+		now := time.Now().UTC()
+		update := tx.Model(&ContentMigrationCreateReceipt{}).Where(
+			"id = ? AND status = 'active'", receipt.ID,
+		).Updates(map[string]any{
+			"status": "rolled_back", "rolled_back_at": now,
+			"rolled_back_by_user_id": actorUserID,
+		})
+		if update.Error != nil || update.RowsAffected != 1 {
+			return errContentMigrationConflict
+		}
+		return nil
+	})
+	return alreadyRolledBack, err
+}
+
 func (cc *ContentMigrationController) CreateEffect(c *gin.Context) {
 	if !cc.authorize(c) {
 		return
@@ -623,6 +869,41 @@ func (cc *ContentMigrationController) CreateEffect(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Atomic effect create + receipt не выполнен"})
+		return
+	}
+	c.JSON(http.StatusCreated, response)
+}
+
+func (cc *ContentMigrationController) CreateAction(c *gin.Context) {
+	if !cc.authorize(c) {
+		return
+	}
+	bundleID, err := uuid.Parse(c.Param("bundleId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный bundle ID"})
+		return
+	}
+	var request ContentMigrationActionCreateRequest
+	if err = decodeStrictContentMigrationJSON(c, &request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Невалидный atomic create payload"})
+		return
+	}
+	if err = validateContentMigrationActionCreate(request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	actorUserID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Строгая авторизация не установила пользователя"})
+		return
+	}
+	response, err := cc.createAction(bundleID, request, actorUserID)
+	if err != nil {
+		if errors.Is(err, errContentMigrationConflict) {
+			c.JSON(http.StatusConflict, gin.H{"error": "Create identity уже существует или receipt конфликтует"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Atomic action create + receipt не выполнен"})
 		return
 	}
 	c.JSON(http.StatusCreated, response)
@@ -667,6 +948,50 @@ func (cc *ContentMigrationController) RollbackCreatedEffect(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"entity_type": "effect", "entity_id": entityID,
+		"card_number": request.CardNumber, "rolled_back": true,
+		"already_rolled_back": already, "cas": "server_issued_create_receipt_v1",
+	})
+}
+
+func (cc *ContentMigrationController) RollbackCreatedAction(c *gin.Context) {
+	if !cc.authorize(c) {
+		return
+	}
+	entityID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID действия"})
+		return
+	}
+	var request ContentMigrationEffectRollbackRequest
+	if err = decodeStrictContentMigrationJSON(c, &request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Невалидный ledger rollback payload"})
+		return
+	}
+	if request.SchemaVersion != 1 || request.BundleID == uuid.Nil ||
+		!contentMigrationSHA256Pattern.MatchString(request.ExpectedCurrentHash) ||
+		validateContentMigrationIdentity(request.PlanHash, request.OperationID, request.CardNumber) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Невалидная ledger identity"})
+		return
+	}
+	actorUserID, err := GetCurrentUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Строгая авторизация не установила пользователя"})
+		return
+	}
+	already, err := cc.rollbackAction(entityID, request, actorUserID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errContentMigrationNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Server-issued create receipt не найден"})
+		case errors.Is(err, errContentMigrationConflict):
+			c.JSON(http.StatusConflict, gin.H{"error": "Ledger identity или current postimage изменились"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ledger rollback не выполнен"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"entity_type": "action", "entity_id": entityID,
 		"card_number": request.CardNumber, "rolled_back": true,
 		"already_rolled_back": already, "cas": "server_issued_create_receipt_v1",
 	})

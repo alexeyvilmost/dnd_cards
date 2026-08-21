@@ -67,6 +67,18 @@ describe('weaponActionAvailability: доступность по экипиров
     expect(r.available).toBe(false);
   });
 
+  it('разделяет режимы: меч доступен только в melee, а метательный кинжал — в ranged', () => {
+    const ranged = structuredClone(MECH_WEAPON_ATTACK);
+    const effect = (ranged.effects as Array<Record<string, unknown>>)[0];
+    effect.attack_kind = 'weapon_ranged';
+    const sword = weaponActionAvailability(ranged, { main_hand: CARD_LONGSWORD.id }, ALL_CARDS);
+    expect(sword).toEqual({
+      available: false,
+      reason: 'Оружие в руке не поддерживает дальнобойную атаку',
+    });
+    expect(weaponActionAvailability(ranged, { main_hand: CARD_DAGGER.id }, ALL_CARDS).available).toBe(true);
+  });
+
   it('Атака второй рукой: нужно отдельное оружие во второй руке', () => {
     const dual = weaponActionAvailability(
       MECH_OFFHAND_ATTACK, { main_hand: CARD_LONGSWORD.id, off_hand: CARD_DAGGER.id }, ALL_CARDS);
