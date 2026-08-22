@@ -274,10 +274,11 @@ async function fetchAllLive<T extends { id: string }>(
   const seenIds = new Set<string>();
   let total: number | null = null;
   for (let page = 1; page <= 100; page += 1) {
+    const separator = path.includes('?') ? '&' : '?';
     const body = await checkedJSON<Record<string, unknown>>(
       api,
       'get',
-      `${path}?page=${page}&limit=1000`,
+      `${path}${separator}page=${page}&limit=1000`,
     );
     const batch = body[key];
     if (!Array.isArray(batch)) throw new Error(`${path}: response is missing ${key}`);
@@ -1174,11 +1175,11 @@ test('public mini-MVP sheet certificate: every root and Fighting Style crosses F
         'get',
         `/build-info.json?release=${expectedCommit}`,
       ),
-      fetchAllLive<CharacterClass>(auth.api, '/api/classes', 'classes'),
-      fetchAllLive<Race>(auth.api, '/api/races', 'races'),
-      fetchAllLive<Background>(auth.api, '/api/backgrounds', 'backgrounds'),
-      fetchAllLive<Feat>(auth.api, '/api/feats', 'feats'),
-      fetchAllLive<Card>(auth.api, '/api/cards', 'cards'),
+      fetchAllLive<CharacterClass>(auth.api, '/api/classes?fields=list', 'classes'),
+      fetchAllLive<Race>(auth.api, '/api/races?fields=list', 'races'),
+      fetchAllLive<Background>(auth.api, '/api/backgrounds?fields=list', 'backgrounds'),
+      fetchAllLive<Feat>(auth.api, '/api/feats?fields=list', 'feats'),
+      fetchAllLive<Card>(auth.api, '/api/cards?fields=list', 'cards'),
     ]);
     expect(health.source_commit, 'public backend commit').toBe(expectedCommit);
     expect(build.source_commit, 'public frontend commit').toBe(expectedCommit);

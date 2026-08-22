@@ -707,6 +707,13 @@ func GetAllMigrations() []Migration {
 			Up:          alignRangedWeaponActionDeclaration,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "112_inherit_lineage_source",
+			Description: "Наследовать отсутствующий источник варианта вида от его родительского вида",
+			Up:          inheritLineageSource,
+			// Явный источник устраняет неоднозначность каталога и не откатывается в NULL.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
