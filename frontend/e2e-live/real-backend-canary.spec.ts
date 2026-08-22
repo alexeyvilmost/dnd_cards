@@ -778,9 +778,9 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     expect(longbow).toMatchObject(CERTIFIED_LONGBOW);
     expect(arrow).toMatchObject(CERTIFIED_ARROW);
     const weaponAction = basicActions.actions?.find((action) => (
-      action.card_number === 'action_basic_weapon'
+      action.card_number === 'action_basic_weapon_ranged'
     ));
-    if (!weaponAction) throw new Error('Live catalog misses the basic Weapon Attack');
+    if (!weaponAction) throw new Error('Live catalog misses the basic Ranged Weapon Attack');
     character = await checkedJSON<CharacterResponse>(
       auth.api,
       'patch',
@@ -1051,6 +1051,10 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
       marker,
       apiOrigin,
     );
+    expect(
+      character.resolved_choices?.[preparedChoice],
+      'Forge must persist the Wizard prepared-spell choice used by the sheet',
+    ).toEqual(utilityIds);
     character = await checkedJSON<CharacterResponse>(
       auth.api,
       'patch',
@@ -1517,9 +1521,9 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       '/api/actions?type=basic&limit=50',
     );
     const weaponAction = basicActions.actions?.find((action) => (
-      action.card_number === 'action_basic_weapon'
+      action.card_number === 'action_basic_weapon_ranged'
     ));
-    if (!weaponAction) throw new Error('Live catalog misses the basic Weapon Attack');
+    if (!weaponAction) throw new Error('Live catalog misses the basic Ranged Weapon Attack');
     await pageAForge.goto(`/characters-v3/${characterA.id}`);
     const weaponButton = pageAForge.locator(`[data-action-id="${weaponAction.id}"]`)
       .getByRole('button')

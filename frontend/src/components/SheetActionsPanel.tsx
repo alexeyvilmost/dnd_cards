@@ -2529,7 +2529,16 @@ export default function SheetActionsPanel({
           <h3 className="sheet-h3">{label}</h3>
           <div className={actionsAsIcons ? 'cs-action-tiles' : 'sheet-item-cols'}>
             {items.map((action) => {
-              const preparationBlocked = Boolean(action.spellRef && !spellIsPrepared(action));
+              // Loading/build failures are not preparation failures. Preserve
+              // their real reason in the hover card until canonical access is
+              // available; only then can an actor-owned grant be called
+              // unprepared.
+              const preparationBlocked = Boolean(
+                action.spellRef
+                && canonicalBuild.runtime
+                && !canonicalBuild.error
+                && !spellIsPrepared(action),
+              );
               const { disabled, reason } = preparationBlocked
                 ? { disabled: true, reason: 'Заклинание не подготовлено' }
                 : disabledInfo(action);
