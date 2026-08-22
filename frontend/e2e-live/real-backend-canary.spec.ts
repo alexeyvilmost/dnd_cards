@@ -110,6 +110,7 @@ interface CharacterResponse extends JsonRecord {
   equipment?: JsonRecord;
   inventory_items?: Array<{ card_id: string; qty: number }>;
   resources?: JsonRecord;
+  max_resources?: JsonRecord;
   turn_state?: JsonRecord;
   currency?: Record<string, number>;
   resolved_choices?: Record<string, string[]>;
@@ -1059,7 +1060,10 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
       auth.api,
       'patch',
       `/api/characters-v3/${character.id}/runtime`,
-      { resources: { ...(character.resources ?? {}), spell_slot_1: 6 } },
+      {
+        resources: { ...(character.resources ?? {}), spell_slot_1: 6 },
+        max_resources: { ...(character.max_resources ?? {}), spell_slot_1: 6 },
+      },
     );
     await page.goto(`/characters-v3/${character.id}`);
     await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);
@@ -1750,7 +1754,10 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     ));
     await pageBSheet.goto(`/characters-v3/${characterB.id}`);
     await expect(pageBSheet.getByText(characterB.name, { exact: true }).first()).toBeVisible();
-    await expect(pageBSheet.locator('.sheet-hp-main strong')).toHaveText(String(characterB.current_hp));
+    await expect(pageBSheet.getByRole('button', {
+      name: `${characterB.current_hp} / ${characterB.max_hp} хиты`,
+      exact: true,
+    })).toBeVisible();
 
     encounter = await applyEncounter(authA.api, encounter, {
       patches: [{ actor_id: 'canary-wizard', set: { pendingSaves: [pendingSave] } }],
@@ -1765,6 +1772,7 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     await expect(saveDialog).toBeHidden();
 
     const hpAfter = Math.max(0, characterB.current_hp - 3);
+    const damagedHpButtonName = String(hpAfter) + ' / ' + String(characterB.max_hp) + ' хиты';
     await expect.poll(async () => {
       try {
         const persisted = await checkedJSON<CharacterResponse>(
@@ -1823,7 +1831,10 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
       }),
     ]));
 
-    await expect(pageBSheet.locator('.sheet-hp-main strong')).toHaveText(String(hpAfter));
+    await expect(pageBSheet.getByRole('button', {
+      name: damagedHpButtonName,
+      exact: true,
+    })).toBeVisible();
     await expect(pageBSheet.locator('.sheet-condition-name')).toContainText(prone.name);
     await expect(pageAEncounter.locator('[title="Снять"]').filter({ hasText: prone.name }).first())
       .toBeVisible();
@@ -1843,7 +1854,10 @@ test('persists a two-account UI turn, failed save, HP loss and canonical conditi
     await expect(pageBEncounter.getByText(`Ход: ${characterB.name}`).first()).toBeVisible();
 
     await pageBSheet.reload();
-    await expect(pageBSheet.locator('.sheet-hp-main strong')).toHaveText(String(hpAfter));
+    await expect(pageBSheet.getByRole('button', {
+      name: damagedHpButtonName,
+      exact: true,
+    })).toBeVisible();
     await expect(pageBSheet.locator('.sheet-condition-name')).toContainText(prone.name);
     if (browserDiagnostics.length > 0) {
       throw new Error(`Browser diagnostics are not clean:\n${browserDiagnostics.join('\n')}`);
