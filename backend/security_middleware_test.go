@@ -22,6 +22,10 @@ func securityTestRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	return router
 }
 
+func activeSecurityTestAuthService() *AuthService {
+	return &AuthService{activeIdentityValidator: func(uuid.UUID, string) error { return nil }}
+}
+
 func TestRequestIDMiddlewareValidatesAndEchoesID(t *testing.T) {
 	router := securityTestRouter(RequestIDMiddleware())
 
@@ -106,7 +110,7 @@ func TestFixedWindowRateLimiterResets(t *testing.T) {
 
 func TestStrictAuthMiddlewareNeverFallsBackToPublicUser(t *testing.T) {
 	t.Setenv("JWT_SECRET", "strict-auth-test-secret-at-least-32-bytes")
-	authService := &AuthService{}
+	authService := activeSecurityTestAuthService()
 	router := securityTestRouter(StrictAuthMiddleware(authService))
 
 	for name, authorization := range map[string]string{
@@ -146,7 +150,7 @@ func TestStrictAuthMiddlewareNeverFallsBackToPublicUser(t *testing.T) {
 func TestPresentedInvalidBearerNeverFallsBackToAnonymousIdentity(t *testing.T) {
 	const secret = "presented-bearer-test-secret-at-least-32-bytes"
 	t.Setenv("JWT_SECRET", secret)
-	authService := &AuthService{}
+	authService := activeSecurityTestAuthService()
 	userID := uuid.MustParse("00000000-0000-4000-8000-000000000124")
 	expiredClaims := JWTClaims{
 		UserID: userID, Username: "expired-user",
@@ -188,7 +192,7 @@ func TestPresentedInvalidBearerNeverFallsBackToAnonymousIdentity(t *testing.T) {
 
 func TestOptionalAuthAllowsAbsentBearerAndAcceptsValidStrictIdentity(t *testing.T) {
 	t.Setenv("JWT_SECRET", "optional-auth-test-secret-at-least-32-bytes")
-	authService := &AuthService{}
+	authService := activeSecurityTestAuthService()
 	router := securityTestRouter(OptionalAuthMiddleware(authService))
 
 	anonymous := httptest.NewRequest(http.MethodPost, "/write", nil)
@@ -227,9 +231,29 @@ func TestStrictAuthMiddlewareFailsClosedWithoutJWTSecret(t *testing.T) {
 	}
 }
 
+func TestStrictAuthMiddlewareFailsClosedWithoutIdentityStore(t *testing.T) {
+	t.Setenv("JWT_SECRET", "strict-auth-test-secret-at-least-32-bytes")
+	authService := &AuthService{}
+	token, err := authService.generateJWTToken(User{
+		ID:       uuid.MustParse("00000000-0000-4000-8000-000000000127"),
+		Username: "missing-store",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	router := securityTestRouter(StrictAuthMiddleware(authService))
+	request := httptest.NewRequest(http.MethodPost, "/write", nil)
+	request.Header.Set("Authorization", "Bearer "+token)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 without the identity store, got %d", response.Code)
+	}
+}
+
 func TestJWTIssuanceAndValidationHaveNoDevelopmentFallbackSecret(t *testing.T) {
 	t.Setenv("JWT_SECRET", "")
-	authService := &AuthService{}
+	authService := activeSecurityTestAuthService()
 	if _, err := authService.generateJWTToken(User{
 		ID:       uuid.MustParse("00000000-0000-4000-8000-000000000126"),
 		Username: "no-fallback",
@@ -318,7 +342,7 @@ func TestContentAdminAuthMiddlewareAllowsOnlyConfiguredUserIDs(t *testing.T) {
 		"CONTENT_ADMIN_USER_IDS",
 		"  "+allowedID.String()+", "+secondAllowedID.String()+"  ",
 	)
-	authService := &AuthService{}
+	authService := activeSecurityTestAuthService()
 	router := securityTestRouter(ContentAdminAuthMiddleware(authService))
 
 	for name, testCase := range map[string]struct {

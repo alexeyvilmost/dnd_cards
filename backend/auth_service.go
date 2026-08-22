@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -13,7 +14,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrJWTSecretNotConfigured = errors.New("JWT_SECRET is required for strict authentication")
+var (
+	ErrJWTSecretNotConfigured         = errors.New("JWT_SECRET is required for strict authentication")
+	ErrAuthenticatedUserInactive      = errors.New("authenticated user no longer exists")
+	ErrAuthenticationStoreUnavailable = errors.New("authentication identity store is unavailable")
+)
 
 // JWTClaims - структура для JWT токена
 type JWTClaims struct {
@@ -24,9 +29,10 @@ type JWTClaims struct {
 
 // AuthService - сервис для работы с авторизацией
 type AuthService struct {
-	db       *gorm.DB
-	publicMu sync.Mutex
-	publicID uuid.UUID
+	db                      *gorm.DB
+	activeIdentityValidator func(uuid.UUID, string) error
+	publicMu                sync.Mutex
+	publicID                uuid.UUID
 }
 
 // NewAuthService - создание нового сервиса авторизации
@@ -194,6 +200,32 @@ func (s *AuthService) ValidateTokenStrict(tokenString string) (*JWTClaims, error
 		return nil, errors.New("невалидный токен")
 	}
 	return claims, nil
+}
+
+// ValidateActiveIdentity binds a cryptographically valid JWT to the current
+// user row. Deleting or renaming an account therefore revokes every previously
+// issued token without rotating the global signing key for unrelated users.
+func (s *AuthService) ValidateActiveIdentity(claims *JWTClaims) error {
+	if claims == nil || claims.UserID == uuid.Nil || strings.TrimSpace(claims.Username) == "" {
+		return ErrAuthenticatedUserInactive
+	}
+	if s.activeIdentityValidator != nil {
+		return s.activeIdentityValidator(claims.UserID, claims.Username)
+	}
+	if s.db == nil {
+		return ErrAuthenticationStoreUnavailable
+	}
+
+	var matches int64
+	if err := s.db.Model(&User{}).
+		Where("id = ? AND username = ?", claims.UserID, claims.Username).
+		Count(&matches).Error; err != nil {
+		return fmt.Errorf("%w: %v", ErrAuthenticationStoreUnavailable, err)
+	}
+	if matches != 1 {
+		return ErrAuthenticatedUserInactive
+	}
+	return nil
 }
 
 // GetUserByID - получение пользователя по ID

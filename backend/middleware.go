@@ -73,6 +73,14 @@ func requireStrictJWT(authService *AuthService, c *gin.Context) (*JWTClaims, boo
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "невалидный токен авторизации"})
 		return nil, false
 	}
+	if err := authService.ValidateActiveIdentity(claims); err != nil {
+		if errors.Is(err, ErrAuthenticationStoreUnavailable) {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "проверка пользователя временно недоступна"})
+			return nil, false
+		}
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "пользователь токена больше не активен"})
+		return nil, false
+	}
 	return claims, true
 }
 

@@ -212,6 +212,24 @@ func TestCharacterV3RoutesRequireStrictJWT(t *testing.T) {
 	}
 }
 
+func TestCharacterV3TokenIsRevokedWhenUserIsDeleted(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	fixture := openCharacterV3AccessFixture(t)
+	token := fixture.token(t, fixture.owner)
+
+	before := performCharacterV3Request(t, fixture.router, http.MethodGet, "/api/characters-v3", token, nil)
+	if before.Code != http.StatusOK {
+		t.Fatalf("active owner token should pass, got %d: %s", before.Code, before.Body.String())
+	}
+	if err := fixture.db.Delete(&fixture.owner).Error; err != nil {
+		t.Fatal(err)
+	}
+	after := performCharacterV3Request(t, fixture.router, http.MethodGet, "/api/characters-v3", token, nil)
+	if after.Code != http.StatusUnauthorized {
+		t.Fatalf("deleted owner token should be revoked, got %d: %s", after.Code, after.Body.String())
+	}
+}
+
 func TestCharacterV3OwnerAndLegacyPublicAccessPolicy(t *testing.T) {
 	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
 	fixture := openCharacterV3AccessFixture(t)
