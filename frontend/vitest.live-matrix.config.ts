@@ -1,5 +1,20 @@
 import { defineConfig } from 'vitest/config';
 
+if (process.env.MVP_CONTENT !== '1') {
+  throw new Error('Live content tests require MVP_CONTENT=1; refusing to report a skipped suite as green');
+}
+
+const liveApiUrl = process.env.VITE_API_URL?.trim();
+if (!liveApiUrl) {
+  throw new Error('Live content tests require an explicit VITE_API_URL');
+}
+try {
+  const parsed = new URL(liveApiUrl);
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('unsupported protocol');
+} catch (error) {
+  throw new Error(`Live content tests received an invalid VITE_API_URL: ${String(error)}`);
+}
+
 /** Scheduled/manual read-only audit of the live content API. */
 export default defineConfig({
   test: {

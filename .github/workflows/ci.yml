@@ -134,7 +134,7 @@ jobs:
     timeout-minutes: 20
     env:
       MVP_CONTENT: '1'
-      VITE_API_URL: 'https://backend-production-41c3.up.railway.app'
+      VITE_API_URL: 'https://bagofholding.ru'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

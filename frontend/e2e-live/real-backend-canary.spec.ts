@@ -239,17 +239,33 @@ async function liveRequest(
   path: string,
   data?: unknown,
 ): Promise<APIResponse> {
-  const response = await api.request.fetch(path, {
-    method: method.toUpperCase(),
-    maxRedirects: 0,
-    ...(data === undefined ? {} : { data }),
-  });
-  assertLiveCanaryRequestOrigin(
-    response.url(),
-    api.origin,
-    `${api.label} ${method.toUpperCase()} ${path}`,
-  );
-  return response;
+  const upperMethod = method.toUpperCase();
+  const attempts = upperMethod === 'GET' ? 3 : 1;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await api.request.fetch(path, {
+        method: upperMethod,
+        maxRedirects: 0,
+        ...(data === undefined ? {} : { data }),
+      });
+      assertLiveCanaryRequestOrigin(
+        response.url(),
+        api.origin,
+        `${api.label} ${upperMethod} ${path}`,
+      );
+      if (attempt < attempts && [502, 503, 504].includes(response.status())) {
+        await response.dispose();
+      } else {
+        return response;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) throw error;
+    }
+    await new Promise<void>((resolve) => { setTimeout(resolve, attempt * 250); });
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 async function checkedJSON<T>(
@@ -1256,8 +1272,8 @@ test('public mini-MVP sheet certificate: every root and Fighting Style crosses F
     );
     await loginInBrowser(page, account, frontendOrigin, apiOrigin);
 
-    // This 16-row covering set reaches every class/species/background/origin
-    // feat at least once.  It is deliberately
+    // This generated covering set reaches every class/species/lineage/background/origin
+    // feat at least once. It is deliberately
     // smaller than the cartesian product while retaining per-entity evidence.
     for (const [index, root] of miniMvpForgeSheetFixture.roots.entries()) {
       const exact = <T extends { id: string; card_number: string }>(

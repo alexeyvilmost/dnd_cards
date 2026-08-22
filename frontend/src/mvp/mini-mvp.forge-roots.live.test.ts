@@ -27,8 +27,9 @@ async function fetchAll<T extends { id: string }>(path: string, key: string): Pr
   const seen = new Set<string>();
   let total: number | null = null;
   for (let page = 1; page <= 100; page += 1) {
+    const separator = path.includes('?') ? '&' : '?';
     const body = await readLiveJson<Record<string, unknown>>(
-      `${API_BASE_URL}${path}?page=${page}&limit=1000`,
+      `${API_BASE_URL}${path}${separator}page=${page}&limit=1000`,
       { label: path },
     );
     const batch = body[key];
@@ -62,11 +63,11 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live Forge root cover
       MINI_MVP_MANIFEST: MiniMvpForgeManifest;
     };
     const [classes, races, backgrounds, feats, spells] = await Promise.all([
-      fetchAll<CharacterClass>('/api/classes', 'classes'),
-      fetchAll<Race>('/api/races', 'races'),
-      fetchAll<Background>('/api/backgrounds', 'backgrounds'),
-      fetchAll<Feat>('/api/feats', 'feats'),
-      fetchAll<Spell>('/api/spells', 'spells'),
+      fetchAll<CharacterClass>('/api/classes?fields=list', 'classes'),
+      fetchAll<Race>('/api/races?fields=list', 'races'),
+      fetchAll<Background>('/api/backgrounds?fields=list', 'backgrounds'),
+      fetchAll<Feat>('/api/feats?fields=list', 'feats'),
+      fetchAll<Spell>('/api/spells?fields=list', 'spells'),
     ]);
     const spellNumbers = new Set([
       ...MINI_MVP_MANIFEST.collections.cantrips,
