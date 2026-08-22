@@ -53,7 +53,7 @@ const PHB = Object.freeze({ source: 'PHB 2024' });
 
 export const MINI_MVP_MANIFEST = Object.freeze({
   schemaVersion: MINI_MVP_MANIFEST_SCHEMA_VERSION,
-  manifestVersion: '1.0.0',
+  manifestVersion: '1.1.0',
   release: 'mini-mvp',
   systemId: 'dnd5e-2024',
   rulesetVersion: '2024',
@@ -79,15 +79,59 @@ export const MINI_MVP_MANIFEST = Object.freeze({
     ]),
     species: rows('species', PHB, [
       ['RACE-0010', 'Аасимар', { variantNames: [] }],
-      ['RACE-0005', 'Гном', { variantNames: ['Лесной гном', 'Скальный гном'] }],
-      ['RACE-0011', 'Голиаф', { variantNames: ['Облачный', 'Огненный', 'Морозный', 'Холмовой', 'Каменный', 'Штормовой'] }],
+      ['RACE-0005', 'Гном', {
+        variantNames: ['Лесной гном', 'Скальный гном'],
+        variantSelectors: [
+          { cardNumber: 'sub-forest', label: 'Лесной гном' },
+          { cardNumber: 'sub-rock', label: 'Скальный гном' },
+        ],
+      }],
+      ['RACE-0011', 'Голиаф', {
+        variantNames: ['Облачный', 'Огненный', 'Морозный', 'Холмовой', 'Каменный', 'Штормовой'],
+        variantSelectors: [
+          { cardNumber: 'RACE-0011-cloud', label: 'Наследие облачного великана' },
+          { cardNumber: 'RACE-0011-fire', label: 'Наследие огненного великана' },
+          { cardNumber: 'RACE-0011-frost', label: 'Наследие ледяного великана' },
+          { cardNumber: 'RACE-0011-hill', label: 'Наследие холмового великана' },
+          { cardNumber: 'RACE-0011-stone', label: 'Наследие каменного великана' },
+          { cardNumber: 'RACE-0011-storm', label: 'Наследие штормового великана' },
+        ],
+      }],
       ['RACE-0003', 'Дварф', { variantNames: [] }],
-      ['RACE-0008', 'Драконорождённый', { variantNames: ['Чёрный', 'Синий', 'Латунный', 'Бронзовый', 'Медный', 'Золотой', 'Зелёный', 'Красный', 'Серебряный', 'Белый'] }],
+      ['RACE-0008', 'Драконорождённый', {
+        variantNames: ['Чёрный', 'Синий', 'Латунный', 'Бронзовый', 'Медный', 'Золотой', 'Зелёный', 'Красный', 'Серебряный', 'Белый'],
+        variantSelectors: [
+          { cardNumber: 'sub-black', label: 'Чёрный' },
+          { cardNumber: 'sub-blue', label: 'Синий' },
+          { cardNumber: 'sub-brass', label: 'Латунный' },
+          { cardNumber: 'sub-bronze', label: 'Бронзовый' },
+          { cardNumber: 'sub-copper', label: 'Медный' },
+          { cardNumber: 'sub-gold', label: 'Золотой' },
+          { cardNumber: 'sub-green', label: 'Зелёный' },
+          { cardNumber: 'sub-red', label: 'Красный' },
+          { cardNumber: 'sub-silver', label: 'Серебряный' },
+          { cardNumber: 'sub-white', label: 'Белый' },
+        ],
+      }],
       ['RACE-0007', 'Орк', { variantNames: [] }],
       ['RACE-0006', 'Полурослик', { variantNames: [] }],
-      ['RACE-0009', 'Тифлинг', { variantNames: ['Бездны', 'Хтоническое', 'Преисподней'] }],
+      ['RACE-0009', 'Тифлинг', {
+        variantNames: ['Бездны', 'Хтоническое', 'Преисподней'],
+        variantSelectors: [
+          { cardNumber: 'sub-abyssal', label: 'Бездны' },
+          { cardNumber: 'sub-chthonic', label: 'Хтоническое' },
+          { cardNumber: 'sub-infernal', label: 'Инфернальное' },
+        ],
+      }],
       ['RACE-0002', 'Человек', { variantNames: [] }],
-      ['RACE-0004', 'Эльф', { variantNames: ['Дроу', 'Высший эльф', 'Лесной эльф'] }],
+      ['RACE-0004', 'Эльф', {
+        variantNames: ['Дроу', 'Высший эльф', 'Лесной эльф'],
+        variantSelectors: [
+          { cardNumber: 'sub-drow', label: 'Дроу' },
+          { cardNumber: 'sub-high_elf', label: 'Высший эльф' },
+          { cardNumber: 'sub-wood_elf', label: 'Лесной эльф' },
+        ],
+      }],
     ]),
     backgrounds: rows('background', PHB, [
       ['BG-0001', 'Артист'],
@@ -242,6 +286,23 @@ export function flattenMiniMvpManifest(manifest = MINI_MVP_MANIFEST) {
   ));
 }
 
+/** Stable child-race denominator used by Forge, audit and support tooling. */
+export function flattenMiniMvpSpeciesVariants(manifest = MINI_MVP_MANIFEST) {
+  return (manifest.collections?.species ?? []).flatMap((parent) => (
+    (parent.expected?.variantSelectors ?? []).map((selector, index) => ({
+      key: `${parent.key}.variant.${selector.cardNumber.toLowerCase()}`,
+      label: selector.label,
+      selector: { cardNumber: selector.cardNumber },
+      expected: {
+        source: parent.expected?.source,
+        parentCardNumber: parent.selector.cardNumber,
+        parentVariantName: parent.expected?.variantNames?.[index],
+      },
+      collection: 'speciesLineages',
+    }))
+  ));
+}
+
 export function validateMiniMvpManifest(manifest = MINI_MVP_MANIFEST) {
   const issues = [];
   if (manifest?.schemaVersion !== MINI_MVP_MANIFEST_SCHEMA_VERSION) {
@@ -272,6 +333,24 @@ export function validateMiniMvpManifest(manifest = MINI_MVP_MANIFEST) {
       issues.push(`${field}: empty stable identity`);
     }
     if (new Set(identities).size !== identities.length) issues.push(`${field}: duplicate identity`);
+  }
+  const variants = flattenMiniMvpSpeciesVariants(manifest);
+  const variantCardNumbers = variants.map((value) => value.selector.cardNumber);
+  if (new Set(variantCardNumbers).size !== variantCardNumbers.length) {
+    issues.push('species variants: duplicate cardNumber');
+  }
+  for (const species of manifest?.collections?.species ?? []) {
+    const names = species.expected?.variantNames ?? [];
+    const selectors = species.expected?.variantSelectors ?? [];
+    if (names.length !== selectors.length) {
+      issues.push(`${species.key}: variantNames and variantSelectors differ in length`);
+    }
+    if (selectors.some((selector) => (
+      typeof selector?.cardNumber !== 'string' || !selector.cardNumber.trim()
+      || typeof selector?.label !== 'string' || !selector.label.trim()
+    ))) {
+      issues.push(`${species.key}: invalid variant selector`);
+    }
   }
   return issues;
 }

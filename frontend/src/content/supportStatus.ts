@@ -189,9 +189,7 @@ export function supportStatusOf(entity: SupportableEntity | null | undefined): E
   const support = entity?.support;
   if (!support) return 'untested';
   if (DEPRECATED_CERTIFICATIONS.has(support.certification_version ?? '')) return 'untested';
-  if ([MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, MINI_MVP_V1_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
-    .includes(support.certification_version ?? '')
-    && certificationContractIssues(support).length > 0) {
+  if (certificationContractIssues(support).length > 0) {
     return 'untested';
   }
   return support.status;
@@ -284,10 +282,7 @@ export function effectiveSupportStatus(
   currentDependencyHash?: string,
 ): EntitySupportStatus {
   if (!isCertificationFresh(certification, currentContentHash, currentDependencyHash)
-    || (certification != null
-      && [MICRO_MVP_V3_CERTIFICATION, MICRO_MVP_V4_CERTIFICATION, MINI_MVP_V1_CERTIFICATION, BASIC_ACTIONS_CERTIFICATION]
-      .includes(certification?.certification_version ?? '')
-      && certificationContractIssues(certification).length > 0)) {
+    || (certification != null && certificationContractIssues(certification).length > 0)) {
     return 'untested';
   }
   return certification!.status;

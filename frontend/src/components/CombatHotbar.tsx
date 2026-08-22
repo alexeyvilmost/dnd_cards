@@ -1,6 +1,7 @@
 import { Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { isFreeusePoolKey } from '../engine/freeuse';
+import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import type { SoloCombatState } from '../solo-combat/types';
@@ -64,7 +65,30 @@ export function combatActionAvailability(
     spellSlotResource = access.grant.slotResource;
   }
 
-  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  let mechanics = action.mechanics;
+  const templateActivation = mechanics.activation as Record<string, unknown> | undefined;
+  const templateCosts = Array.isArray(templateActivation?.cost)
+    ? templateActivation.cost as Array<Record<string, unknown>>
+    : [];
+  if (templateCosts.some((cost) => cost.resource === 'equipped_weapon_ammo')) {
+    try {
+      const cards = [
+        ...(actor.character.knownCards ?? []),
+        ...(actor.character.equippedCards ?? []),
+      ];
+      mechanics = bindEquippedWeaponActionContext(
+        mechanics,
+        actor.runtime.equipment,
+        new Map(cards.map((card) => [card.id, card])),
+      );
+    } catch (error) {
+      return {
+        enabled: false,
+        reason: error instanceof Error ? error.message : 'Не удалось определить боеприпас оружия',
+      };
+    }
+  }
+  const activation = mechanics.activation as Record<string, unknown> | undefined;
   const costs = Array.isArray(activation?.cost) ? activation.cost as Array<Record<string, unknown>> : [];
   const genericCosts = costs.filter((cost) => {
     if (action.kind !== 'spell') return true;

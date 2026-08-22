@@ -10,6 +10,7 @@ import {
   MINI_MVP_COLLECTION_ENTITY_TYPES,
   MINI_MVP_MANIFEST,
   flattenMiniMvpManifest,
+  flattenMiniMvpSpeciesVariants,
 } from './mini-mvp-manifest.mjs';
 
 function supportFor(entity, type, index) {
@@ -86,6 +87,20 @@ function validCatalogs() {
     catalogs[type].push(entity);
   }
 
+  for (const entry of flattenMiniMvpSpeciesVariants()) {
+    const parent = catalogs.race.find((entity) => (
+      entity.card_number === entry.expected.parentCardNumber
+    ));
+    catalogs.race.push({
+      id: `id-${entry.selector.cardNumber}`,
+      card_number: entry.selector.cardNumber,
+      name: entry.label,
+      source: entry.expected.source,
+      parent_race_id: parent.id,
+      related_effects: [sharedEffect.id],
+    });
+  }
+
   const index = buildCertificationIndex(catalogs);
   for (const [type, entities] of Object.entries(catalogs)) {
     for (const entity of entities) entity.support = supportFor(entity, type, index);
@@ -95,8 +110,8 @@ function validCatalogs() {
 
 test('strict audit accepts only the exact fully certified mini-MVP denominator', () => {
   const report = assessMiniMvpCatalogs(validCatalogs());
-  assert.equal(report.summary.required, 156);
-  assert.equal(report.summary.ready, 156);
+  assert.equal(report.summary.required, 180);
+  assert.equal(report.summary.ready, 180);
   assert.equal(report.summary.issueCount, 0);
 });
 

@@ -81,12 +81,13 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live Forge root cover
     });
   }, 900_000);
 
-  it('assembles a complete 16-root set and matches the browser fixture byte-for-byte', () => {
-    expect(actual.roots).toHaveLength(16);
+  it('assembles every root and species lineage and matches the browser fixture byte-for-byte', () => {
+    expect(actual.roots.length).toBeGreaterThanOrEqual(24);
     expect(new Set(actual.roots.map((root) => root.classCardNumber)).size).toBe(12);
     expect(new Set(actual.roots.map((root) => root.raceCardNumber)).size).toBe(10);
     expect(new Set(actual.roots.map((root) => root.backgroundCardNumber)).size).toBe(16);
     expect(new Set(actual.roots.map((root) => root.featCardNumber)).size).toBe(10);
+    expect(new Set(actual.roots.flatMap((root) => root.lineageCardNumber ? [root.lineageCardNumber] : [])).size).toBe(24);
     expect(actual).toEqual(fixtureJson as unknown as MiniMvpForgeSheetFixture);
   });
 });

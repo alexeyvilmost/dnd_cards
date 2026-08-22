@@ -684,6 +684,14 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
   if (monster.runtime.hp.current <= 0) return advanceTurn(state);
+  // A persisted monster turn can resume after a player reaction without the
+  // original controller stack frame that would have advanced initiative. The
+  // action payment is the durable proof that the planner already committed its
+  // one supported turn action; never plan and charge that action a second time.
+  if ((monster.runtime.maxResources.action ?? 0) > 0
+    && (monster.runtime.resources.action ?? 0) <= 0) {
+    return advanceTurn(state);
+  }
   const plan = planMonsterTurn(state, monster, state.characterId);
   let next = state;
   const firstDestination = plan.firstMove.at(-1);

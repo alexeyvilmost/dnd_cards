@@ -5,6 +5,9 @@ import type { Background, CharacterClass, Feat, Race } from '../types';
 type ManifestEntry = {
   key: string;
   selector: { cardNumber?: string };
+  expected?: {
+    variantSelectors?: Array<{ cardNumber: string; label: string }>;
+  };
 };
 
 export interface MiniMvpForgeManifest {
@@ -14,17 +17,19 @@ export interface MiniMvpForgeManifest {
 export interface MiniMvpForgeSheetRoot {
   classCardNumber: string;
   raceCardNumber: string;
+  lineageCardNumber?: string;
   backgroundCardNumber: string;
   featCardNumber: string;
   draft: CharacterDraft;
 }
 
 export interface MiniMvpForgeSheetFixture {
-  schemaVersion: 1;
-  strategy: 'cyclic-covering-set-v1';
+  schemaVersion: 2;
+  strategy: 'cyclic-covering-set-with-lineages-v2';
   coverage: {
     classes: string[];
     species: string[];
+    lineages: string[];
     backgrounds: string[];
     originFeats: string[];
   };
@@ -65,16 +70,35 @@ export async function buildMiniMvpForgeSheetFixture(
   const species = resolveManifest<Race>(manifest, 'species', content.races);
   const backgrounds = resolveManifest<Background>(manifest, 'backgrounds', content.backgrounds);
   const originFeats = resolveManifest<Feat>(manifest, 'originFeats', content.feats);
+  const lineagesByRace = new Map<string, Race[]>();
+  for (const entry of manifest.collections.species) {
+    const parent = species.find((race) => race.card_number === entry.selector.cardNumber);
+    if (!parent) throw new Error(`${entry.key}: parent species disappeared`);
+    const variants = (entry.expected?.variantSelectors ?? []).map((selector) => {
+      const matches = content.races.filter((race) => race.card_number === selector.cardNumber);
+      if (matches.length !== 1) {
+        throw new Error(`${entry.key}: expected one ${selector.cardNumber}, got ${matches.length}`);
+      }
+      if (matches[0].parent_race_id !== parent.id) {
+        throw new Error(`${selector.cardNumber}: lineage parent differs from ${parent.card_number}`);
+      }
+      return matches[0];
+    });
+    lineagesByRace.set(parent.card_number, variants);
+  }
   const roots: MiniMvpForgeSheetRoot[] = [];
 
-  for (let index = 0; index < backgrounds.length; index += 1) {
-    const klass = classes[index % classes.length];
-    const race = species[index % species.length];
-    const background = backgrounds[index];
-    const feat = originFeats[index % originFeats.length];
+  const buildRoot = async (
+    klass: CharacterClass,
+    race: Race,
+    background: Background,
+    feat: Feat,
+    lineage?: Race,
+  ) => {
     const result = await autoBuildAt({
       classId: klass.id,
       raceId: race.id,
+      lineageId: lineage?.id ?? null,
       backgroundId: background.id,
       featIds: [feat.id],
       replaceBackgroundFeat: true,
@@ -86,7 +110,9 @@ export async function buildMiniMvpForgeSheetFixture(
       ...result.issues.map((issue) => `completion: ${issue}`),
     ];
     if (failures.length > 0) {
-      throw new Error(`${klass.card_number}/${background.card_number}: ${failures.join('; ')}`);
+      throw new Error(
+        `${klass.card_number}/${background.card_number}/${lineage?.card_number ?? race.card_number}: ${failures.join('; ')}`,
+      );
     }
     result.draft.name = `Mini-MVP · ${klass.card_number} · ${background.card_number}`;
     result.draft.classEquipmentOption = 'a';
@@ -94,18 +120,47 @@ export async function buildMiniMvpForgeSheetFixture(
     roots.push({
       classCardNumber: klass.card_number,
       raceCardNumber: race.card_number,
+      ...(lineage ? { lineageCardNumber: lineage.card_number } : {}),
       backgroundCardNumber: background.card_number,
       featCardNumber: feat.card_number,
       draft: result.draft,
     });
+  };
+
+  for (let index = 0; index < backgrounds.length; index += 1) {
+    const klass = classes[index % classes.length];
+    const race = species[index % species.length];
+    const background = backgrounds[index];
+    const feat = originFeats[index % originFeats.length];
+    const variants = lineagesByRace.get(race.card_number) ?? [];
+    await buildRoot(klass, race, background, feat, variants[index % Math.max(variants.length, 1)]);
+  }
+
+  const coveredLineages = new Set(roots.flatMap((root) => (
+    root.lineageCardNumber ? [root.lineageCardNumber] : []
+  )));
+  const allLineages = species.flatMap((race) => lineagesByRace.get(race.card_number) ?? []);
+  for (const [offset, lineage] of allLineages.entries()) {
+    if (coveredLineages.has(lineage.card_number)) continue;
+    const parent = species.find((race) => race.id === lineage.parent_race_id);
+    if (!parent) throw new Error(`${lineage.card_number}: parent species is absent from the manifest`);
+    const index = backgrounds.length + offset;
+    await buildRoot(
+      classes[index % classes.length],
+      parent,
+      backgrounds[index % backgrounds.length],
+      originFeats[index % originFeats.length],
+      lineage,
+    );
   }
 
   return {
-    schemaVersion: 1,
-    strategy: 'cyclic-covering-set-v1',
+    schemaVersion: 2,
+    strategy: 'cyclic-covering-set-with-lineages-v2',
     coverage: {
       classes: cardNumbers(classes),
       species: cardNumbers(species),
+      lineages: cardNumbers(allLineages),
       backgrounds: cardNumbers(backgrounds),
       originFeats: cardNumbers(originFeats),
     },

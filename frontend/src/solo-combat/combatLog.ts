@@ -159,7 +159,13 @@ export function combatLogDetails(
   const event = record.event;
   if (!event) return [];
   const targets = affectedActorIds(record);
-  const targetSuffix = targets.length ? ` → ${actorNames(targets, state)}` : '';
+  const actorScoped = [
+    'resource_spent',
+    'resource_restored',
+    'item_consumed',
+    'item_added',
+  ].includes(event.type);
+  const targetSuffix = !actorScoped && targets.length ? ` → ${actorNames(targets, state)}` : '';
   if (event.type === 'roll') return [rollDetail(event, event.roll)];
   if (event.type === 'damage') {
     return [

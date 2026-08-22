@@ -459,4 +459,35 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[monsterId].runtime.resources.action).toBe(0);
     expect(() => runMonsterTurn(state, () => 0.5)).not.toThrow();
   });
+
+  it('recovers a persisted monster turn whose interrupted action was already spent', async () => {
+    const participant = fighterSeed();
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state = advanceTurn(state);
+    expect(activeId(state)).toBe(monsterId);
+    state = {
+      ...state,
+      world: {
+        ...state.world,
+        actors: {
+          ...state.world.actors,
+          [monsterId]: {
+            ...state.world.actors[monsterId],
+            runtime: {
+              ...state.world.actors[monsterId].runtime,
+              resources: { ...state.world.actors[monsterId].runtime.resources, action: 0 },
+            },
+          },
+        },
+      },
+    };
+
+    expect(() => { state = runMonsterTurn(state, () => 0.5); }).not.toThrow();
+    expect(activeId(state)).toBe(participant.character.id);
+  });
 });

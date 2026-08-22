@@ -88,4 +88,55 @@ describe('combat hotbar action availability', () => {
       reason: 'Не хватает ресурса «предмет kit»',
     });
   });
+
+  it('binds equipped ranged-weapon ammo to the concrete inventory card before checking costs', () => {
+    const ranged = {
+      id: 'ranged-attack', name: 'Ranged attack', kind: 'nonSpell', sourceEntityIds: ['action:ranged'],
+      mechanics: {
+        primitive: { type: 'weapon_attack' },
+        activation: { mode: 'active', cost: [
+          { resource: 'action', amount: 1 },
+          { resource: 'equipped_weapon_ammo', amount: 1 },
+        ] },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+          max_targets: 1, range_ft: 600, requires_line_of_sight: true,
+          allowed_relations: ['enemy'],
+        },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'weapon_ranged', ability: 'auto', vs: 'ac',
+          on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'auto' }],
+        }],
+      },
+    } as unknown as RuleActionDefinition;
+    const bow = {
+      id: 'longbow', card_number: 'CARD-LONGBOW', name: 'Longbow', type: 'weapon',
+      properties: [], description: '', rarity: 'common', is_template: 'false',
+      created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z',
+      mechanics: {
+        weapon_profile: {
+          weapon_type: 'longbow', proficiency_category: 'martial', attack_ability: 'dex',
+          damage_lines: [{ dice: '1d8', type: 'piercing' }], default_attack_mode: 'ranged',
+          attack_modes: [{ kind: 'ranged', normal_ft: 150, long_ft: 600 }],
+          properties: ['ammunition', 'two_handed'],
+          ammo: { card_id: 'arrow', name: 'Arrow' },
+          mastery_effect_id: 'effect:slow',
+          enchantment: { attack_bonus: 0, damage_bonus: 0, extra_damage_lines: [] },
+          attunement: { required: false },
+        },
+      },
+    };
+    const rangedState = state(0, 1, { inventory: [{ cardId: 'arrow', qty: 20 }] });
+    const actor = rangedState.world.actors.hero;
+    actor.runtime.equipment.main_hand = bow.id;
+    actor.character.knownCards = [bow] as never;
+    actor.character.equippedCards = [bow] as never;
+
+    expect(combatActionAvailability(rangedState, ranged)).toEqual({ enabled: true });
+    actor.runtime.inventory = [];
+    expect(combatActionAvailability(rangedState, ranged)).toEqual({
+      enabled: false,
+      reason: 'Не хватает ресурса «предмет arrow»',
+    });
+  });
 });

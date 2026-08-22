@@ -176,12 +176,13 @@ const miniMvpForgeSheetFixture = JSON.parse(readFileSync(new URL(
   '../src/canon/data/mini-mvp-forge-sheet-fixture.v1.json',
   import.meta.url,
 ), 'utf8')) as {
-  schemaVersion: 1;
-  strategy: 'cyclic-covering-set-v1';
-  coverage: Record<'classes' | 'species' | 'backgrounds' | 'originFeats', string[]>;
+  schemaVersion: 2;
+  strategy: 'cyclic-covering-set-with-lineages-v2';
+  coverage: Record<'classes' | 'species' | 'lineages' | 'backgrounds' | 'originFeats', string[]>;
   roots: Array<{
     classCardNumber: string;
     raceCardNumber: string;
+    lineageCardNumber?: string;
     backgroundCardNumber: string;
     featCardNumber: string;
     draft: CompiledDraftRoot['draft'];
@@ -1188,6 +1189,9 @@ test('public mini-MVP sheet certificate: every root and Fighting Style crosses F
         collections: Record<string, Array<{
           key: string;
           selector: { cardNumber?: string };
+          expected?: {
+            variantSelectors?: Array<{ cardNumber: string; label: string }>;
+          };
         }>>;
       };
     };
@@ -1213,11 +1217,17 @@ test('public mini-MVP sheet certificate: every root and Fighting Style crosses F
     expect(scopedFightingStyles).toHaveLength(10);
 
     const cardById = new Map(cards.map((card) => [card.id, card]));
-    expect(miniMvpForgeSheetFixture.schemaVersion).toBe(1);
-    expect(miniMvpForgeSheetFixture.roots).toHaveLength(16);
+    const scopedLineages = scopedRaces.flatMap((race) => (
+      (MINI_MVP_MANIFEST.collections.species.find((entry) => (
+        entry.selector.cardNumber === race.card_number
+      ))?.expected?.variantSelectors ?? []).map((selector) => selector.cardNumber)
+    ));
+    expect(miniMvpForgeSheetFixture.schemaVersion).toBe(2);
+    expect(miniMvpForgeSheetFixture.roots.length).toBeGreaterThanOrEqual(24);
     expect(miniMvpForgeSheetFixture.coverage).toEqual({
       classes: scopedClasses.map((entity) => entity.card_number),
       species: scopedRaces.map((entity) => entity.card_number),
+      lineages: scopedLineages,
       backgrounds: scopedBackgrounds.map((entity) => entity.card_number),
       originFeats: scopedFeats.map((entity) => entity.card_number),
     });
@@ -1259,10 +1269,13 @@ test('public mini-MVP sheet certificate: every root and Fighting Style crosses F
       };
       const klass = exact(classes, root.classCardNumber);
       const race = exact(races, root.raceCardNumber);
+      const lineage = root.lineageCardNumber ? exact(races, root.lineageCardNumber) : undefined;
       const background = exact(backgrounds, root.backgroundCardNumber);
       const feat = exact(feats, root.featCardNumber);
       expect(root.draft.classId, `${klass.card_number} fixture class`).toBe(klass.id);
       expect(root.draft.raceId, `${race.card_number} fixture species`).toBe(race.id);
+      expect(root.draft.lineageId, `${lineage?.card_number ?? race.card_number} fixture lineage`)
+        .toBe(lineage?.id ?? null);
       expect(root.draft.backgroundId, `${background.card_number} fixture background`).toBe(background.id);
       expect(root.draft.featIds, `${feat.card_number} fixture origin feat`).toContain(feat.id);
 
@@ -1283,6 +1296,8 @@ test('public mini-MVP sheet certificate: every root and Fighting Style crosses F
         `/api/characters-v3/${character.id}`,
       );
       expect(persisted.class_id, `${klass.card_number} persisted class`).toBe(klass.id);
+      expect(persisted.lineage_id, `${lineage?.card_number ?? race.card_number} persisted lineage`)
+        .toBe(lineage?.id ?? null);
 
       const classOption = klass.equipment_options?.option_a;
       const backgroundOption = background.equipment_options?.option_a;

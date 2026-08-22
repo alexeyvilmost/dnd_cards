@@ -9,6 +9,7 @@ import {
   MINI_MVP_COLLECTION_ENTITY_TYPES,
   MINI_MVP_MANIFEST,
   flattenMiniMvpManifest,
+  flattenMiniMvpSpeciesVariants,
   validateMiniMvpManifest,
 } from './mini-mvp-manifest.mjs';
 
@@ -108,6 +109,14 @@ function validateShape(entry, entity) {
         `варианты 2024: ожидались [${expectedVariants.join(', ')}], получены [${actualVariants.join(', ')}]`,
       ));
     }
+  }
+
+  if (entry.collection === 'speciesLineages' && refs(entity).length === 0) {
+    issues.push(issue(
+      'mechanics',
+      'species_lineage_features_missing',
+      'вариант вида не ссылается ни на одно действие или эффект',
+    ));
   }
 
   if (entry.collection === 'backgrounds') {
@@ -269,8 +278,14 @@ export function assessMiniMvpCatalogs(catalogs, {
   const records = [];
   const dependencyRecords = new Map();
 
-  for (const entry of flattenMiniMvpManifest(manifest)) {
-    const entityType = MINI_MVP_COLLECTION_ENTITY_TYPES[entry.collection]
+  const expandedEntries = [
+    ...flattenMiniMvpManifest(manifest),
+    ...flattenMiniMvpSpeciesVariants(manifest),
+  ];
+  for (const entry of expandedEntries) {
+    const entityType = entry.collection === 'speciesLineages'
+      ? 'race'
+      : MINI_MVP_COLLECTION_ENTITY_TYPES[entry.collection]
       ?? manifest.collectionEntityTypes?.[entry.collection];
     const matches = (catalogs[entityType] ?? []).filter((entity) => (
       entity.card_number === entry.selector.cardNumber
@@ -284,6 +299,18 @@ export function assessMiniMvpCatalogs(catalogs, {
     }
     if (entity) {
       issues.push(...validateShape(entry, entity));
+      if (entry.collection === 'speciesLineages') {
+        const parents = (catalogs.race ?? []).filter((candidate) => (
+          candidate.card_number === entry.expected.parentCardNumber
+        ));
+        if (parents.length !== 1 || entity.parent_race_id !== parents[0].id) {
+          issues.push(issue(
+            'data',
+            'species_lineage_parent_mismatch',
+            `вариант должен принадлежать ${entry.expected.parentCardNumber}`,
+          ));
+        }
+      }
       issues.push(...validateCertification(entity, entityType, index));
       if (includeDependencyCertification) {
         issues.push(...inspectDependencies(entity, entityType, index, entry, dependencyRecords));
@@ -302,7 +329,8 @@ export function assessMiniMvpCatalogs(catalogs, {
     });
   }
 
-  const byCollection = Object.fromEntries(Object.keys(manifest.collections).map((collection) => {
+  const collections = [...Object.keys(manifest.collections), 'speciesLineages'];
+  const byCollection = Object.fromEntries(collections.map((collection) => {
     const collectionRecords = records.filter((record) => record.collection === collection);
     return [collection, {
       required: collectionRecords.length,

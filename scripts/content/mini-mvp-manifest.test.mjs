@@ -4,6 +4,7 @@ import {
   MINI_MVP_COLLECTION_SIZES,
   MINI_MVP_MANIFEST,
   flattenMiniMvpManifest,
+  flattenMiniMvpSpeciesVariants,
   validateMiniMvpManifest,
 } from './mini-mvp-manifest.mjs';
 import { flattenMicroMvpManifest } from './micro-mvp-manifest.mjs';
@@ -20,6 +21,8 @@ test('mini-MVP manifest pins the exact PHB 2024 level-1 denominator', () => {
     firstLevelSpells: 64,
   });
   assert.equal(flattenMiniMvpManifest().length, 156);
+  assert.equal(flattenMiniMvpSpeciesVariants().length, 24);
+  assert.equal(new Set(flattenMiniMvpSpeciesVariants().map((item) => item.selector.cardNumber)).size, 24);
 });
 
 test('mini-MVP is a strict superset of every micro-MVP stable selector', () => {
@@ -42,4 +45,3 @@ test('spell and feat entries pin level/category and PHB source', () => {
   }
   assert.equal(MINI_MVP_MANIFEST.sourceTrack, 'phb-2024');
 });
-

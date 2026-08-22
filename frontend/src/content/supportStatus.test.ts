@@ -103,6 +103,15 @@ describe('content support status', () => {
     expect(supportStatusOf({ support: complete })).toBe('verified_mechanical');
   });
 
+  it('не доверяет legacy verified-флагу без версии и хэшей', () => {
+    const legacy: EntitySupportCertification = {
+      status: 'verified_partial',
+      limitations: ['legacy'],
+    };
+    expect(supportStatusOf({ support: legacy })).toBe('untested');
+    expect(effectiveSupportStatus(legacy)).toBe('untested');
+  });
+
   it('mini-MVP certificate requires its exact scope before exposing or locking an entity', () => {
     const hash = `sha256:${'c'.repeat(64)}`;
     const certificate: EntitySupportCertification = {
@@ -205,7 +214,15 @@ describe('content support status', () => {
 
   it('фильтр сохраняет выбранную неподтверждённую сущность', () => {
     const entities = [
-      { id: 'verified', support: { status: 'verified_narrative' as const } },
+      {
+        id: 'verified',
+        support: {
+          status: 'verified_narrative' as const,
+          certification_version: 'test-v1',
+          content_hash: 'content-v1',
+          dependency_hash: 'deps-v1',
+        },
+      },
       { id: 'broken', support: { status: 'known_mismatch' as const } },
       { id: 'untested' },
     ];
@@ -220,6 +237,9 @@ describe('content support status', () => {
     expect(supportSelectionWarning({
       support: {
         status: 'verified_partial',
+        certification_version: 'test-v1',
+        content_hash: 'content-v1',
+        dependency_hash: 'deps-v1',
         limitations: ['Без автоматического выбора цели'],
       },
     })).toBeNull();
